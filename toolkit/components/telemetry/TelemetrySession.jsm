@@ -1050,8 +1050,8 @@ var Impl = {
     c("MEMORY_JS_COMPARTMENTS_USER", "JSMainRuntimeCompartmentsUser");
     b("MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED", "imagesContentUsedUncompressed");
     b("MEMORY_STORAGE_SQLITE", "storageSQLite");
-    cc("MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
-    cc("MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
+    cc("LOW_MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
+    cc("LOW_MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
     c("GHOST_WINDOWS", "ghostWindows");
     cc("PAGE_FAULTS_HARD", "pageFaultsHard");
 

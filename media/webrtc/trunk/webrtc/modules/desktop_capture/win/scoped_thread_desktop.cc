@@ -42,7 +42,7 @@ void ScopedThreadDesktop::Revert() {
 bool ScopedThreadDesktop::SetThreadDesktop(Desktop* desktop) {
   Revert();
 
-  scoped_ptr<Desktop> scoped_desktop(desktop);
+  rtc::scoped_ptr<Desktop> scoped_desktop(desktop);
 
   if (initial_->IsSame(*desktop))
     return true;

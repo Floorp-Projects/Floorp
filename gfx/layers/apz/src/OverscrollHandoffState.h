@@ -71,6 +71,9 @@ public:
   // |aStart| onwards, if any.
   void SnapBackOverscrolledApzc(const AsyncPanZoomController* aStart) const;
 
+  // Request snap on APZCs that cannot scroll on the opposing axis to |aAxis|.
+  void RequestSnapOnLock(Layer::ScrollDirection aAxis) const;
+
   // Determine whether the given APZC, or any APZC further in the chain,
   // has room to be panned.
   bool CanBePanned(const AsyncPanZoomController* aApzc) const;

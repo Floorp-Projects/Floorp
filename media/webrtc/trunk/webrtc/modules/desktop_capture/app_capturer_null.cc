@@ -24,13 +24,13 @@ public:
   virtual ~AppCapturerNull();
 
   // AppCapturer interface.
-  virtual bool GetAppList(AppList* apps) OVERRIDE;
-  virtual bool SelectApp(ProcessId id) OVERRIDE;
-  virtual bool BringAppToFront()	OVERRIDE;
+  virtual bool GetAppList(AppList* apps) override;
+  virtual bool SelectApp(ProcessId id) override;
+  virtual bool BringAppToFront()	override;
 
   // DesktopCapturer interface.
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
+  virtual void Start(Callback* callback) override;
+  virtual void Capture(const DesktopRegion& region) override;
 
 private:
   Callback* callback_;

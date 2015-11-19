@@ -22,11 +22,9 @@ extern int32_t WebRtcIsacfix_Log2Q8(uint32_t x);
 void WebRtcIsacfix_PCorr2Q32(const int16_t* in, int32_t* logcorQ8) {
   int16_t scaling,n,k;
   int32_t ysum32,csum32, lys, lcs;
-  int32_t oneQ8;
+  const int32_t oneQ8 = 1 << 8;  // 1.00 in Q8
   const int16_t* x;
   const int16_t* inptr;
-
-  oneQ8 = WEBRTC_SPL_LSHIFT_W32((int32_t)1, 8);  // 1.00 in Q8
 
   x = in + PITCH_MAX_LAG / 2 + 2;
   scaling = WebRtcSpl_GetScalingSquare((int16_t*)in,

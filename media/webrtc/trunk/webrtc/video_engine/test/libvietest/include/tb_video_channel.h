@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_VIDEO_CHANNEL_H_
 #define WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_TB_VIDEO_CHANNEL_H_
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/video_engine/test/libvietest/include/tb_interfaces.h"
 
 namespace webrtc {
@@ -44,7 +44,7 @@ class TbVideoChannel {
 
  private:
   TbInterfaces& ViE;
-  webrtc::scoped_ptr<webrtc::test::VideoChannelTransport> channel_transport_;
+  rtc::scoped_ptr<webrtc::test::VideoChannelTransport> channel_transport_;
 };
 
 

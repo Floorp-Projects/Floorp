@@ -631,7 +631,7 @@ class RtcpPacketParser {
   RtcpPacketParser();
   ~RtcpPacketParser();
 
-  void Parse(const void *packet, int packet_len);
+  void Parse(const void *packet, size_t packet_len);
 
   SenderReport* sender_report() { return &sender_report_; }
   ReceiverReport* receiver_report() { return &receiver_report_; }

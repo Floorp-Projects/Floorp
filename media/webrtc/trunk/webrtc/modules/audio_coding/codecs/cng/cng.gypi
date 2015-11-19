@@ -13,6 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
+        'audio_encoder_interface',
       ],
       'include_dirs': [
         'include',
@@ -25,7 +26,9 @@
         ],
       },
       'sources': [
+        'include/audio_encoder_cng.h',
         'include/webrtc_cng.h',
+        'audio_encoder_cng.cc',
         'webrtc_cng.c',
         'cng_helpfuns.c',
         'cng_helpfuns.h',

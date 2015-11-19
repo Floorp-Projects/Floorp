@@ -45,11 +45,36 @@ SSLStreamAdapter* SSLStreamAdapter::Create(StreamInterface* stream) {
 #endif
 }
 
+bool SSLStreamAdapter::GetSslCipher(std::string* cipher) {
+  return false;
+}
+
+bool SSLStreamAdapter::ExportKeyingMaterial(const std::string& label,
+                                            const uint8* context,
+                                            size_t context_len,
+                                            bool use_context,
+                                            uint8* result,
+                                            size_t result_len) {
+  return false;  // Default is unsupported
+}
+
+bool SSLStreamAdapter::SetDtlsSrtpCiphers(
+    const std::vector<std::string>& ciphers) {
+  return false;
+}
+
+bool SSLStreamAdapter::GetDtlsSrtpCipher(std::string* cipher) {
+  return false;
+}
+
 // Note: this matches the logic above with SCHANNEL dominating
 #if SSL_USE_SCHANNEL
 bool SSLStreamAdapter::HaveDtls() { return false; }
 bool SSLStreamAdapter::HaveDtlsSrtp() { return false; }
 bool SSLStreamAdapter::HaveExporter() { return false; }
+std::string SSLStreamAdapter::GetDefaultSslCipher() {
+  return std::string();
+}
 #elif SSL_USE_OPENSSL
 bool SSLStreamAdapter::HaveDtls() {
   return OpenSSLStreamAdapter::HaveDtls();
@@ -60,6 +85,9 @@ bool SSLStreamAdapter::HaveDtlsSrtp() {
 bool SSLStreamAdapter::HaveExporter() {
   return OpenSSLStreamAdapter::HaveExporter();
 }
+std::string SSLStreamAdapter::GetDefaultSslCipher() {
+  return OpenSSLStreamAdapter::GetDefaultSslCipher();
+}
 #elif SSL_USE_NSS
 bool SSLStreamAdapter::HaveDtls() {
   return NSSStreamAdapter::HaveDtls();
@@ -69,6 +97,9 @@ bool SSLStreamAdapter::HaveDtlsSrtp() {
 }
 bool SSLStreamAdapter::HaveExporter() {
   return NSSStreamAdapter::HaveExporter();
+}
+std::string SSLStreamAdapter::GetDefaultSslCipher() {
+  return NSSStreamAdapter::GetDefaultSslCipher();
 }
 #endif  // !SSL_USE_SCHANNEL && !SSL_USE_OPENSSL && !SSL_USE_NSS
 

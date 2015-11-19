@@ -10,11 +10,15 @@
 
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
 
+#include <android/log.h>
 #include <assert.h>
 
 #include "AndroidJNIWrapper.h"
 #include "webrtc/modules/utility/interface/helpers_android.h"
 #include "webrtc/system_wrappers/interface/trace.h"
+
+#define TAG "AudioManagerJni"
+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 
 namespace webrtc {
 
@@ -41,25 +45,31 @@ AudioManagerJni::AudioManagerJni()
   SetNativeFrameSize(env);
 }
 
-void AudioManagerJni::SetAndroidAudioDeviceObjects(void* jvm, void* env,
-                                                   void* context) {
+void AudioManagerJni::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
+  ALOGD("SetAndroidAudioDeviceObjects%s", GetThreadInfo().c_str());
+
   assert(jvm);
-  assert(env);
   assert(context);
 
   // Store global Java VM variables to be accessed by API calls.
   g_jvm_ = reinterpret_cast<JavaVM*>(jvm);
-  g_jni_env_ = reinterpret_cast<JNIEnv*>(env);
-  g_context_ = g_jni_env_->NewGlobalRef(reinterpret_cast<jobject>(context));
+  g_jni_env_ = GetEnv(g_jvm_);
 
-  // Create a global reference such that the class object is not recycled by
-  // the garbage collector.
-  g_audio_manager_class_ = jsjni_GetGlobalClassRef(
-    "org/webrtc/voiceengine/AudioManagerAndroid");
-  assert(g_audio_manager_class_);
+  if (!g_context_) {
+    g_context_ = g_jni_env_->NewGlobalRef(reinterpret_cast<jobject>(context));
+  }
+
+  if (!g_audio_manager_class_) {
+    // Create a global reference such that the class object is not recycled by
+    // the garbage collector.
+    g_audio_manager_class_ = jsjni_GetGlobalClassRef(
+                                 "org/webrtc/voiceengine/AudioManagerAndroid");
+    DCHECK(g_audio_manager_class_);
+  }
 }
 
 void AudioManagerJni::ClearAndroidAudioDeviceObjects() {
+  ALOGD("ClearAndroidAudioDeviceObjects%s", GetThreadInfo().c_str());
   g_jni_env_->DeleteGlobalRef(g_audio_manager_class_);
   g_audio_manager_class_ = NULL;
   g_jni_env_->DeleteGlobalRef(g_context_);

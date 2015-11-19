@@ -15,10 +15,10 @@
 
 #include <windows.h>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/win/scoped_thread_desktop.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -33,10 +33,10 @@ class ScreenCapturerWinGdi : public ScreenCapturer {
   virtual ~ScreenCapturerWinGdi();
 
   // Overridden from ScreenCapturer:
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
-  virtual bool GetScreenList(ScreenList* screens) OVERRIDE;
-  virtual bool SelectScreen(ScreenId id) OVERRIDE;
+  void Start(Callback* callback) override;
+  void Capture(const DesktopRegion& region) override;
+  bool GetScreenList(ScreenList* screens) override;
+  bool SelectScreen(ScreenId id) override;
 
  private:
   typedef HRESULT (WINAPI * DwmEnableCompositionFunc)(UINT);
@@ -74,7 +74,7 @@ class ScreenCapturerWinGdi : public ScreenCapturer {
   DesktopRect desktop_dc_rect_;
 
   // Class to calculate the difference between two screen bitmaps.
-  scoped_ptr<Differ> differ_;
+  rtc::scoped_ptr<Differ> differ_;
 
   HMODULE dwmapi_library_;
   DwmEnableCompositionFunc composition_func_;

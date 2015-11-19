@@ -168,8 +168,10 @@ if CONFIG['MOZ_WEBRTC']:
     ]
     wrjar.sources += [
         audio_root + 'AudioManagerAndroid.java',
+        audio_root + 'WebRtcAudioManager.java',
         audio_root + 'WebRtcAudioRecord.java',
         audio_root + 'WebRtcAudioTrack.java',
+        audio_root + 'WebRtcAudioUtils.java',
     ]
     wrjar.extra_jars = [
         'constants.jar',

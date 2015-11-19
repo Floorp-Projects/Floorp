@@ -10,13 +10,22 @@
     'target_conditions': [
       ['_target_name=="sanitizer_options"', {
         'conditions': [
+          ['lsan==1', {
+            # Replace Chromium's LSan suppressions with our own for WebRTC.
+            'sources/': [
+              ['exclude', 'lsan_suppressions.cc'],
+            ],
+            'sources': [
+              '<(webrtc_root)/build/sanitizers/lsan_suppressions_webrtc.cc',
+            ],
+          }],
           ['tsan==1', {
             # Replace Chromium's TSan v2 suppressions with our own for WebRTC.
             'sources/': [
               ['exclude', 'tsan_suppressions.cc'],
             ],
             'sources': [
-              '<(webrtc_root)/build/tsan_suppressions_webrtc.cc',
+              '<(webrtc_root)/build/sanitizers/tsan_suppressions_webrtc.cc',
             ],
           }],
         ],

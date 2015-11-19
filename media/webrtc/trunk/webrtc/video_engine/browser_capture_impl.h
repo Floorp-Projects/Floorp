@@ -36,7 +36,7 @@ namespace webrtc {
                                   VideoCaptureCapability& capability) { return 0;};
 
     virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
-                                   VideoCaptureRotation& orientation) { return 0; }
+                                   VideoRotation& orientation) { return 0; }
 
     virtual int32_t GetBestMatchedCapability(const char* deviceUniqueIdUTF8,
                                              const VideoCaptureCapability& requested,

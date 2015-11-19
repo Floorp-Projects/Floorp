@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet_source.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -46,13 +46,14 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
   Packet* NextPacket();
 
   // Inherited from AudioPacketizationCallback.
-  virtual int32_t SendData(
-      FrameType frame_type,
-      uint8_t payload_type,
-      uint32_t timestamp,
-      const uint8_t* payload_data,
-      uint16_t payload_len_bytes,
-      const RTPFragmentationHeader* fragmentation) OVERRIDE;
+  int32_t SendData(FrameType frame_type,
+                   uint8_t payload_type,
+                   uint32_t timestamp,
+                   const uint8_t* payload_data,
+                   size_t payload_len_bytes,
+                   const RTPFragmentationHeader* fragmentation) override;
+
+  AudioCodingModule* acm() { return acm_.get(); }
 
  private:
   static const int kBlockSizeMs = 10;
@@ -63,7 +64,7 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
   Packet* CreatePacket();
 
   SimulatedClock clock_;
-  scoped_ptr<AudioCodingModule> acm_;
+  rtc::scoped_ptr<AudioCodingModule> acm_;
   InputAudioFile* audio_source_;
   int source_rate_hz_;
   const int input_block_size_samples_;
@@ -77,6 +78,7 @@ class AcmSendTestOldApi : public AudioPacketizationCallback,
   uint32_t timestamp_;
   uint16_t sequence_number_;
   std::vector<uint8_t> last_payload_vec_;
+  bool data_to_send_;
 
   DISALLOW_COPY_AND_ASSIGN(AcmSendTestOldApi);
 };

@@ -410,8 +410,6 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
 
     // Create the nsIStreamIO layer used by the nsIStreamIOChannel.
     mIOThunk = new nsJSThunk();
-    if (!mIOThunk)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     // Create a stock input stream channel...
     // Remember, until AsyncOpen is called, the script will not be evaluated
@@ -1129,8 +1127,6 @@ nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         return NS_ERROR_NO_AGGREGATION;
 
     nsJSProtocolHandler* ph = new nsJSProtocolHandler();
-    if (!ph)
-        return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(ph);
     nsresult rv = ph->Init();
     if (NS_SUCCEEDED(rv)) {

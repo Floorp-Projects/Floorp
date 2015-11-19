@@ -27,7 +27,7 @@ child:
   async FrameSizeChange(int capEngine, int cap_id, int w, int h);
   // transfers ownership of |buffer| from parent to child
   async DeliverFrame(int capEngine, int cap_id,
-                     Shmem buffer, int size, uint32_t time_stamp,
+                     Shmem buffer, size_t size, uint32_t time_stamp,
                      int64_t ntp_time, int64_t render_time);
   async ReplyNumberOfCaptureDevices(int numdev);
   async ReplyNumberOfCapabilities(int numdev);

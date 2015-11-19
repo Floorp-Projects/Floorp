@@ -111,8 +111,8 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
   const size_t frame_length = 3 * width * height >> 1;
   I420VideoFrame ref_frame;
   I420VideoFrame test_frame;
-  scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length]);
-  scoped_ptr<uint8_t[]> test_buffer(new uint8_t[frame_length]);
+  rtc::scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length]);
+  rtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[frame_length]);
 
   // Set decoded image parameters.
   int half_width = (width + 1) / 2;
@@ -124,9 +124,9 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
   while (ref_bytes == frame_length && test_bytes == frame_length) {
     // Converting from buffer to plane representation.
     ConvertToI420(kI420, ref_buffer.get(), 0, 0, width, height, 0,
-                  kRotateNone, &ref_frame);
+                  kVideoRotation_0, &ref_frame);
     ConvertToI420(kI420, test_buffer.get(), 0, 0, width, height, 0,
-                  kRotateNone, &test_frame);
+                  kVideoRotation_0, &test_frame);
     switch (video_metrics_type) {
       case kPSNR:
         CalculateFrame(kPSNR, &ref_frame, &test_frame, frame_number,

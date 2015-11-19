@@ -236,23 +236,6 @@ int ViERenderImpl::ConfigureRender(int render_id, const unsigned int z_order,
   return 0;
 }
 
-int ViERenderImpl::MirrorRenderStream(const int render_id, const bool enable,
-                                      const bool mirror_xaxis,
-                                      const bool mirror_yaxis) {
-  ViERenderManagerScoped rs(*(shared_data_->render_manager()));
-  ViERenderer* renderer = rs.Renderer(render_id);
-  if (!renderer) {
-    shared_data_->SetLastError(kViERenderInvalidRenderId);
-    return -1;
-  }
-  if (renderer->EnableMirroring(render_id, enable, mirror_xaxis, mirror_yaxis)
-      != 0) {
-    shared_data_->SetLastError(kViERenderUnknownError);
-    return -1;
-  }
-  return 0;
-}
-
 int ViERenderImpl::AddRenderer(const int render_id,
                                RawVideoType video_input_format,
                                ExternalRenderer* external_renderer) {
@@ -321,31 +304,6 @@ int ViERenderImpl::AddRenderer(const int render_id,
     }
     return frame_provider->RegisterFrameCallback(render_id, renderer);
   }
-}
-
-int ViERenderImpl::AddRenderCallback(int render_id,
-                                     VideoRenderCallback* callback) {
-  if (render_id < kViEChannelIdBase || render_id > kViEChannelIdMax)
-    return -1;
-  // This is a channel.
-  ViEChannelManagerScoped cm(*(shared_data_->channel_manager()));
-  ViEFrameProviderBase* frame_provider = cm.Channel(render_id);
-  if (!frame_provider) {
-    shared_data_->SetLastError(kViERenderInvalidRenderId);
-    return -1;
-  }
-  ViERenderer* renderer = shared_data_->render_manager()->AddRenderStream(
-      render_id, NULL, 0, 0.0f, 0.0f, 1.0f, 1.0f);
-  if (!renderer) {
-    shared_data_->SetLastError(kViERenderUnknownError);
-    return -1;
-  }
-  if (renderer->SetVideoRenderCallback(render_id, callback) != 0) {
-    shared_data_->SetLastError(kViERenderUnknownError);
-    return -1;
-  }
-
-  return frame_provider->RegisterFrameCallback(render_id, renderer);
 }
 
 }  // namespace webrtc

@@ -11,8 +11,8 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/test/fake_network_pipe.h"
 
@@ -49,7 +49,7 @@ class FakeNetworkPipeTest : public ::testing::Test {
   }
 
   void SendPackets(FakeNetworkPipe* pipe, int number_packets, int kPacketSize) {
-    scoped_ptr<uint8_t[]> packet(new uint8_t[kPacketSize]);
+    rtc::scoped_ptr<uint8_t[]> packet(new uint8_t[kPacketSize]);
     for (int i = 0; i < number_packets; ++i) {
       pipe->SendPacket(packet.get(), kPacketSize);
     }
@@ -59,7 +59,7 @@ class FakeNetworkPipeTest : public ::testing::Test {
     return 8 * kPacketSize / capacity_kbps;
   }
 
-  scoped_ptr<MockReceiver> receiver_;
+  rtc::scoped_ptr<MockReceiver> receiver_;
 };
 
 void DeleteMemory(uint8_t* data, int length) { delete [] data; }
@@ -69,7 +69,7 @@ TEST_F(FakeNetworkPipeTest, CapacityTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb, and verify it takes one second to
@@ -112,7 +112,7 @@ TEST_F(FakeNetworkPipeTest, ExtraDelayTest) {
   config.queue_length_packets = 20;
   config.queue_delay_ms = 100;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   const int kNumPackets = 2;
@@ -148,7 +148,7 @@ TEST_F(FakeNetworkPipeTest, QueueLengthTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 2;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   const int kPacketSize = 1000;
@@ -172,7 +172,7 @@ TEST_F(FakeNetworkPipeTest, StatisticsTest) {
   config.queue_length_packets = 2;
   config.queue_delay_ms = 20;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   const int kPacketSize = 1000;
@@ -201,7 +201,7 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithEmptyPipeTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb, and verify it takes one second to
@@ -259,7 +259,7 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithPacketsInPipeTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb.

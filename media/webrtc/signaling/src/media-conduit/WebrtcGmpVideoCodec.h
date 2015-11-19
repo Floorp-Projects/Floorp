@@ -307,7 +307,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder
 
     int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                        int32_t aNumberOfCores,
-                       uint32_t aMaxPayloadSize) override
+                       size_t aMaxPayloadSize) override
     {
       return mEncoderImpl->InitEncode(aCodecSettings,
                                       aNumberOfCores,
@@ -336,7 +336,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder
     }
 
     int32_t SetChannelParameters(uint32_t aPacketLoss,
-                                 int aRTT) override
+                                 int64_t aRTT) override
     {
       return mEncoderImpl->SetChannelParameters(aPacketLoss, aRTT);
     }

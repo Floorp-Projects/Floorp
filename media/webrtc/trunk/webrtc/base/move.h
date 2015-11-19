@@ -1,5 +1,5 @@
 /*
- *  Copyright 2012 The WebRTC Project Authors. All rights reserved.
+ *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,8 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef THIRD_PARTY_WEBRTC_FILES_WEBRTC_BASE_MOVE_H_
-#define THIRD_PARTY_WEBRTC_FILES_WEBRTC_BASE_MOVE_H_
+// Borrowed from Chromium's src/base/move.h.
+
+#ifndef WEBRTC_BASE_MOVE_H_
+#define WEBRTC_BASE_MOVE_H_
+
+#include "webrtc/typedefs.h"
 
 // Macro with the boilerplate that makes a type move-only in C++03.
 //
@@ -32,7 +36,7 @@
 //
 //  template <typename T>
 //  class scoped_ptr {
-//     TALK_MOVE_ONLY_TYPE_FOR_CPP_03(scoped_ptr, RValue)
+//     RTC_MOVE_ONLY_TYPE_FOR_CPP_03(scoped_ptr, RValue)
 //   public:
 //    scoped_ptr(RValue& other) : ptr_(other.release()) { }
 //    scoped_ptr& operator=(RValue& other) {
@@ -94,7 +98,7 @@
 // Here's an example with comments explaining what gets triggered where:
 //
 //    class Foo {
-//      TALK_MOVE_ONLY_TYPE_FOR_CPP_03(Foo, RValue);
+//      RTC_MOVE_ONLY_TYPE_FOR_CPP_03(Foo, RValue);
 //
 //     public:
 //       ... API ...
@@ -140,6 +144,16 @@
 //
 // In optimized builds, both implementations generate the same assembly so we
 // choose the one that adheres to the standard.
+//
+//
+// WHY HAVE typedef void MoveOnlyTypeForCPP03
+//
+// Callback<>/Bind() needs to understand movable-but-not-copyable semantics
+// to call .Pass() appropriately when it is expected to transfer the value.
+// The cryptic typedef MoveOnlyTypeForCPP03 is added to make this check
+// easy and automatic in helper templates for Callback<>/Bind().
+// See IsMoveOnlyType template and its usage in base/callback_internal.h
+// for more details.
 //
 //
 // COMPARED TO C++11
@@ -197,7 +211,7 @@
 //
 // The workaround is to explicitly declare your copy constructor.
 //
-#define TALK_MOVE_ONLY_TYPE_FOR_CPP_03(type, rvalue_type) \
+#define RTC_MOVE_ONLY_TYPE_FOR_CPP_03(type, rvalue_type) \
  private: \
   struct rvalue_type { \
     explicit rvalue_type(type* object) : object(object) {} \
@@ -207,7 +221,17 @@
   void operator=(type&); \
  public: \
   operator rvalue_type() { return rvalue_type(this); } \
-  type Pass() { return type(rvalue_type(this)); } \
+  type Pass() WARN_UNUSED_RESULT { return type(rvalue_type(this)); } \
+  typedef void MoveOnlyTypeForCPP03; \
  private:
 
-#endif  // THIRD_PARTY_WEBRTC_FILES_WEBRTC_BASE_MOVE_H_
+#define RTC_MOVE_ONLY_TYPE_WITH_MOVE_CONSTRUCTOR_FOR_CPP_03(type) \
+ private: \
+  type(type&); \
+  void operator=(type&); \
+ public: \
+  type&& Pass() WARN_UNUSED_RESULT { return static_cast<type&&>(*this); } \
+  typedef void MoveOnlyTypeForCPP03; \
+ private:
+
+#endif  // WEBRTC_BASE_MOVE_H_

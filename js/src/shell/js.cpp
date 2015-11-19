@@ -3315,8 +3315,8 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     CompileOptions options(cx);
     if (args.length() > 1) {
         if (!args[1].isString()) {
-            JS_ReportError(cx, "expected filename string, got %s",
-                           JS_TypeOfValue(cx, args[1]));
+            const char* typeName = InformalValueTypeName(args[1]);
+            JS_ReportError(cx, "expected filename string, got %s", typeName);
             return false;
         }
 

@@ -11,8 +11,8 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CLOCK_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CLOCK_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -53,22 +53,21 @@ class SimulatedClock : public Clock {
  public:
   explicit SimulatedClock(int64_t initial_time_us);
 
-  virtual ~SimulatedClock();
+  ~SimulatedClock() override;
 
   // Return a timestamp in milliseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMilliseconds() const OVERRIDE;
+  int64_t TimeInMilliseconds() const override;
 
   // Return a timestamp in microseconds relative to some arbitrary source; the
   // source is fixed for this clock.
-  virtual int64_t TimeInMicroseconds() const OVERRIDE;
+  int64_t TimeInMicroseconds() const override;
 
   // Retrieve an NTP absolute timestamp in milliseconds.
-  virtual void CurrentNtp(uint32_t& seconds,
-                          uint32_t& fractions) const OVERRIDE;
+  void CurrentNtp(uint32_t& seconds, uint32_t& fractions) const override;
 
   // Converts an NTP timestamp to a millisecond timestamp.
-  virtual int64_t CurrentNtpInMilliseconds() const OVERRIDE;
+  int64_t CurrentNtpInMilliseconds() const override;
 
   // Advance the simulated clock with a given number of milliseconds or
   // microseconds.
@@ -77,7 +76,7 @@ class SimulatedClock : public Clock {
 
  private:
   int64_t time_us_;
-  scoped_ptr<RWLockWrapper> lock_;
+  rtc::scoped_ptr<RWLockWrapper> lock_;
 };
 
 };  // namespace webrtc

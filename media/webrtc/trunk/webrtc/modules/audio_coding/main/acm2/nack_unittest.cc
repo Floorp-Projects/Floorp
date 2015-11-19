@@ -15,9 +15,9 @@
 #include <algorithm>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -29,7 +29,7 @@ const int kNackThreshold = 3;
 const int kSampleRateHz = 16000;
 const int kPacketSizeMs = 30;
 const uint32_t kTimestampIncrement = 480;  // 30 ms.
-const int kShortRoundTripTimeMs = 1;
+const int64_t kShortRoundTripTimeMs = 1;
 
 bool IsNackListCorrect(const std::vector<uint16_t>& nack_list,
                        const uint16_t* lost_sequence_numbers,
@@ -58,7 +58,7 @@ bool IsNackListCorrect(const std::vector<uint16_t>& nack_list,
 }  // namespace
 
 TEST(NackTest, EmptyListWhenNoPacketLoss) {
-  scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+  rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
   nack->UpdateSampleRate(kSampleRateHz);
 
   int seq_num = 1;
@@ -76,7 +76,7 @@ TEST(NackTest, EmptyListWhenNoPacketLoss) {
 }
 
 TEST(NackTest, NoNackIfReorderWithinNackThreshold) {
-  scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+  rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
   nack->UpdateSampleRate(kSampleRateHz);
 
   int seq_num = 1;
@@ -104,7 +104,7 @@ TEST(NackTest, LatePacketsMovedToNackThenNackListDoesNotChange) {
       sizeof(kSequenceNumberLostPackets[0]);
 
   for (int k = 0; k < 2; k++) {  // Two iteration with/without wrap around.
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
 
     uint16_t sequence_num_lost_packets[kNumAllLostPackets];
@@ -152,7 +152,7 @@ TEST(NackTest, ArrivedPacketsAreRemovedFromNackList) {
       sizeof(kSequenceNumberLostPackets[0]);
 
   for (int k = 0; k < 2; ++k) {  // Two iteration with/without wrap around.
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
 
     uint16_t sequence_num_lost_packets[kNumAllLostPackets];
@@ -215,7 +215,7 @@ TEST(NackTest, EstimateTimestampAndTimeToPlay) {
 
 
   for (int k = 0; k < 4; ++k) {
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
 
     // Sequence number wrap around if |k| is 2 or 3;
@@ -286,7 +286,7 @@ TEST(NackTest, EstimateTimestampAndTimeToPlay) {
 TEST(NackTest, MissingPacketsPriorToLastDecodedRtpShouldNotBeInNackList) {
   for (int m = 0; m < 2; ++m) {
     uint16_t seq_num_offset = (m == 0) ? 0 : 65531;  // Wrap around if |m| is 1.
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
 
     // Two consecutive packets to have a correct estimate of timestamp increase.
@@ -337,7 +337,7 @@ TEST(NackTest, MissingPacketsPriorToLastDecodedRtpShouldNotBeInNackList) {
 }
 
 TEST(NackTest, Reset) {
-  scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+  rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
   nack->UpdateSampleRate(kSampleRateHz);
 
   // Two consecutive packets to have a correct estimate of timestamp increase.
@@ -364,7 +364,7 @@ TEST(NackTest, ListSizeAppliedFromBeginning) {
   const size_t kNackListSize = 10;
   for (int m = 0; m < 2; ++m) {
     uint16_t seq_num_offset = (m == 0) ? 0 : 65525;  // Wrap around if |m| is 1.
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
     nack->SetMaxNackListSize(kNackListSize);
 
@@ -388,7 +388,7 @@ TEST(NackTest, ChangeOfListSizeAppliedAndOldElementsRemoved) {
   const size_t kNackListSize = 10;
   for (int m = 0; m < 2; ++m) {
     uint16_t seq_num_offset = (m == 0) ? 0 : 65525;  // Wrap around if |m| is 1.
-    scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+    rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
     nack->UpdateSampleRate(kSampleRateHz);
 
     uint16_t seq_num = seq_num_offset;
@@ -398,7 +398,7 @@ TEST(NackTest, ChangeOfListSizeAppliedAndOldElementsRemoved) {
     // Packet lost more than NACK-list size limit.
     uint16_t num_lost_packets = kNackThreshold + kNackListSize + 5;
 
-    scoped_ptr<uint16_t[]> seq_num_lost(new uint16_t[num_lost_packets]);
+    rtc::scoped_ptr<uint16_t[]> seq_num_lost(new uint16_t[num_lost_packets]);
     for (int n = 0; n < num_lost_packets; ++n) {
       seq_num_lost[n] = ++seq_num;
     }
@@ -454,7 +454,7 @@ TEST(NackTest, ChangeOfListSizeAppliedAndOldElementsRemoved) {
 
 TEST(NackTest, RoudTripTimeIsApplied) {
   const int kNackListSize = 200;
-  scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
+  rtc::scoped_ptr<Nack> nack(Nack::Create(kNackThreshold));
   nack->UpdateSampleRate(kSampleRateHz);
   nack->SetMaxNackListSize(kNackListSize);
 

@@ -701,17 +701,30 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     // Implement VideoRenderer
     virtual void FrameSizeChange(unsigned int width,
                                  unsigned int height,
-                                 unsigned int number_of_streams) {
+                                 unsigned int number_of_streams) override {
       pipeline_->listener_->FrameSizeChange(width, height, number_of_streams);
     }
 
     virtual void RenderVideoFrame(const unsigned char* buffer,
-                                  unsigned int buffer_size,
+                                  size_t buffer_size,
                                   uint32_t time_stamp,
                                   int64_t render_time,
-                                  const ImageHandle& handle) {
-      pipeline_->listener_->RenderVideoFrame(buffer, buffer_size, time_stamp,
-                                             render_time,
+                                  const ImageHandle& handle) override {
+      pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
+                                             time_stamp, render_time,
+                                             handle.GetImage());
+    }
+
+    virtual void RenderVideoFrame(const unsigned char* buffer,
+                                  size_t buffer_size,
+                                  uint32_t y_stride,
+                                  uint32_t cbcr_stride,
+                                  uint32_t time_stamp,
+                                  int64_t render_time,
+                                  const ImageHandle& handle) override {
+      pipeline_->listener_->RenderVideoFrame(buffer, buffer_size,
+                                             y_stride, cbcr_stride,
+                                             time_stamp, render_time,
                                              handle.GetImage());
     }
 
@@ -745,7 +758,14 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     }
 
     void RenderVideoFrame(const unsigned char* buffer,
-                          unsigned int buffer_size,
+                          size_t buffer_size,
+                          uint32_t time_stamp,
+                          int64_t render_time,
+                          const RefPtr<layers::Image>& video_image);
+    void RenderVideoFrame(const unsigned char* buffer,
+                          size_t buffer_size,
+                          uint32_t y_stride,
+                          uint32_t cbcr_stride,
                           uint32_t time_stamp,
                           int64_t render_time,
                           const RefPtr<layers::Image>& video_image);

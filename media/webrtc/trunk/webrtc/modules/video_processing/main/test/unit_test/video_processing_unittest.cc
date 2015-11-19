@@ -18,16 +18,34 @@
 
 namespace webrtc {
 
-// The |sourceFrame| is scaled to |targetwidth_|,|targetheight_|, using the
-// filter mode set to |mode|. The |expected_psnr| is used to verify basic
-// quality when the resampled frame is scaled back up/down to the
-// original/source size. |expected_psnr| is set to be  ~0.1/0.05dB lower than
-// actual PSNR verified under the same conditions.
-void TestSize(const I420VideoFrame& sourceFrame, int targetwidth_,
-              int targetheight_, int mode, double expected_psnr,
-              VideoProcessingModule* vpm);
+static void PreprocessFrameAndVerify(const I420VideoFrame& source,
+                                     int target_width,
+                                     int target_height,
+                                     VideoProcessingModule* vpm,
+                                     I420VideoFrame** out_frame);
+static void CropFrame(const uint8_t* source_data,
+                      int source_width,
+                      int source_height,
+                      int offset_x,
+                      int offset_y,
+                      int cropped_width,
+                      int cropped_height,
+                      I420VideoFrame* cropped_frame);
+// The |source_data| is cropped and scaled to |target_width| x |target_height|,
+// and then scaled back to the expected cropped size. |expected_psnr| is used to
+// verify basic quality, and is set to be ~0.1/0.05dB lower than actual PSNR
+// verified under the same conditions.
+static void TestSize(const I420VideoFrame& source_frame,
+                     const I420VideoFrame& cropped_source_frame,
+                     int target_width,
+                     int target_height,
+                     double expected_psnr,
+                     VideoProcessingModule* vpm);
 bool CompareFrames(const webrtc::I420VideoFrame& frame1,
-                  const webrtc::I420VideoFrame& frame2);
+                   const webrtc::I420VideoFrame& frame2);
+static void WriteProcessedFrameForVisualInspection(
+    const I420VideoFrame& source,
+    const I420VideoFrame& processed);
 
 VideoProcessingModuleTest::VideoProcessingModuleTest()
     : vpm_(NULL),
@@ -73,8 +91,6 @@ TEST_F(VideoProcessingModuleTest, HandleNullBuffer) {
   VideoProcessingModule::FrameStats stats;
   // Video frame with unallocated buffer.
   I420VideoFrame videoFrame;
-  videoFrame.set_width(width_);
-  videoFrame.set_height(height_);
 
   EXPECT_EQ(-3, vpm_->GetFrameStats(&stats, videoFrame));
 
@@ -87,49 +103,26 @@ TEST_F(VideoProcessingModuleTest, HandleNullBuffer) {
 
 TEST_F(VideoProcessingModuleTest, HandleBadStats) {
   VideoProcessingModule::FrameStats stats;
-  scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
+  rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
   ASSERT_EQ(frame_length_, fread(video_buffer.get(), 1, frame_length_,
                                  source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                             width_, height_,
-                             0, kRotateNone, &video_frame_));
+  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
+                             0, kVideoRotation_0, &video_frame_));
 
   EXPECT_EQ(-1, vpm_->Deflickering(&video_frame_, &stats));
 
   EXPECT_EQ(-3, vpm_->BrightnessDetection(video_frame_, stats));
-}
-
-TEST_F(VideoProcessingModuleTest, HandleBadSize) {
-  VideoProcessingModule::FrameStats stats;
-
-  video_frame_.ResetSize();
-  video_frame_.set_width(width_);
-  video_frame_.set_height(0);
-  EXPECT_EQ(-3, vpm_->GetFrameStats(&stats, video_frame_));
-
-  EXPECT_EQ(-1, vpm_->ColorEnhancement(&video_frame_));
-
-  EXPECT_EQ(-1, vpm_->Deflickering(&video_frame_, &stats));
-
-  EXPECT_EQ(-3, vpm_->BrightnessDetection(video_frame_, stats));
-
-  EXPECT_EQ(VPM_PARAMETER_ERROR, vpm_->SetTargetResolution(0,0,0));
-
-  I420VideoFrame *out_frame = NULL;
-  EXPECT_EQ(VPM_PARAMETER_ERROR, vpm_->PreprocessFrame(video_frame_,
-                                                       &out_frame));
 }
 
 TEST_F(VideoProcessingModuleTest, IdenticalResultsAfterReset) {
   I420VideoFrame video_frame2;
   VideoProcessingModule::FrameStats stats;
   // Only testing non-static functions here.
-  scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
+  rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
   ASSERT_EQ(frame_length_, fread(video_buffer.get(), 1, frame_length_,
                                 source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                             width_, height_,
-                             0, kRotateNone, &video_frame_));
+  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
+                             0, kVideoRotation_0, &video_frame_));
   ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
   ASSERT_EQ(0, video_frame2.CopyFrame(video_frame_));
   ASSERT_EQ(0, vpm_->Deflickering(&video_frame_, &stats));
@@ -141,9 +134,8 @@ TEST_F(VideoProcessingModuleTest, IdenticalResultsAfterReset) {
 
   ASSERT_EQ(frame_length_, fread(video_buffer.get(), 1, frame_length_,
                                  source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                             width_, height_,
-                             0, kRotateNone, &video_frame_));
+  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
+                             0, kVideoRotation_0, &video_frame_));
   ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
   video_frame2.CopyFrame(video_frame_);
   ASSERT_EQ(0, vpm_->BrightnessDetection(video_frame_, stats));
@@ -154,12 +146,11 @@ TEST_F(VideoProcessingModuleTest, IdenticalResultsAfterReset) {
 
 TEST_F(VideoProcessingModuleTest, FrameStats) {
   VideoProcessingModule::FrameStats stats;
-  scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
+  rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
   ASSERT_EQ(frame_length_, fread(video_buffer.get(), 1, frame_length_,
                                  source_file_));
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                             width_, height_,
-                             0, kRotateNone, &video_frame_));
+  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
+                             0, kVideoRotation_0, &video_frame_));
 
   EXPECT_FALSE(vpm_->ValidFrameStats(stats));
   EXPECT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
@@ -190,13 +181,8 @@ TEST_F(VideoProcessingModuleTest, PreprocessorLogic) {
   I420VideoFrame* out_frame = NULL;
   // Set rescaling => output frame != NULL.
   vpm_->SetInputFrameResampleMode(kFastRescaling);
-  EXPECT_EQ(VPM_OK, vpm_->SetTargetResolution(resolution, resolution, 30));
-  EXPECT_EQ(VPM_OK, vpm_->PreprocessFrame(video_frame_, &out_frame));
-  EXPECT_FALSE(out_frame == NULL);
-  if (out_frame) {
-    EXPECT_EQ(resolution, out_frame->width());
-    EXPECT_EQ(resolution, out_frame->height());
-  }
+  PreprocessFrameAndVerify(video_frame_, resolution, resolution, vpm_,
+                           &out_frame);
   // No rescaling=> output frame = NULL.
   vpm_->SetInputFrameResampleMode(kNoRescaling);
   EXPECT_EQ(VPM_OK, vpm_->PreprocessFrame(video_frame_, &out_frame));
@@ -207,11 +193,7 @@ TEST_F(VideoProcessingModuleTest, Resampler) {
   enum { NumRuns = 1 };
 
   int64_t min_runtime = 0;
-  int64_t avg_runtime = 0;
-
-  TickTime t0;
-  TickTime t1;
-  TickInterval acc_ticks;
+  int64_t total_runtime = 0;
 
   rewind(source_file_);
   ASSERT_TRUE(source_file_ != NULL) <<
@@ -223,125 +205,145 @@ TEST_F(VideoProcessingModuleTest, Resampler) {
   vpm_->EnableTemporalDecimation(false);
 
   // Reading test frame
-  scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
+  rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
   ASSERT_EQ(frame_length_, fread(video_buffer.get(), 1, frame_length_,
                                  source_file_));
   // Using ConvertToI420 to add stride to the image.
-  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                             width_, height_,
-                             0, kRotateNone, &video_frame_));
+  EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_, height_,
+                             0, kVideoRotation_0, &video_frame_));
+  // Cropped source frame that will contain the expected visible region.
+  I420VideoFrame cropped_source_frame;
+  cropped_source_frame.CopyFrame(video_frame_);
 
   for (uint32_t run_idx = 0; run_idx < NumRuns; run_idx++) {
     // Initiate test timer.
-    t0 = TickTime::Now();
+    const TickTime time_start = TickTime::Now();
 
     // Init the sourceFrame with a timestamp.
-    video_frame_.set_render_time_ms(t0.MillisecondTimestamp());
-    video_frame_.set_timestamp(t0.MillisecondTimestamp() * 90);
+    video_frame_.set_render_time_ms(time_start.MillisecondTimestamp());
+    video_frame_.set_timestamp(time_start.MillisecondTimestamp() * 90);
 
     // Test scaling to different sizes: source is of |width|/|height| = 352/288.
-    // Scaling mode in VPM is currently fixed to kScaleBox (mode = 3).
-    TestSize(video_frame_, 100, 50, 3, 24.0, vpm_);
-    TestSize(video_frame_, 352/4, 288/4, 3, 25.2, vpm_);
-    TestSize(video_frame_, 352/2, 288/2, 3, 28.1, vpm_);
-    TestSize(video_frame_, 352, 288, 3, -1, vpm_);  // no resampling.
-    TestSize(video_frame_, 2*352, 2*288, 3, 32.2, vpm_);
-    TestSize(video_frame_, 400, 256, 3, 31.3, vpm_);
-    TestSize(video_frame_, 480, 640, 3, 32.15, vpm_);
-    TestSize(video_frame_, 960, 720, 3, 32.2, vpm_);
-    TestSize(video_frame_, 1280, 720, 3, 32.15, vpm_);
+    // Pure scaling:
+    TestSize(video_frame_, video_frame_, width_ / 4, height_ / 4, 25.2, vpm_);
+    TestSize(video_frame_, video_frame_, width_ / 2, height_ / 2, 28.1, vpm_);
+    // No resampling:
+    TestSize(video_frame_, video_frame_, width_, height_, -1, vpm_);
+    TestSize(video_frame_, video_frame_, 2 * width_, 2 * height_, 32.2, vpm_);
+
+    // Scaling and cropping. The cropped source frame is the largest center
+    // aligned region that can be used from the source while preserving aspect
+    // ratio.
+    CropFrame(video_buffer.get(), width_, height_, 0, 56, 352, 176,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 100, 50, 24.0, vpm_);
+
+    CropFrame(video_buffer.get(), width_, height_, 0, 30, 352, 225,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 400, 256, 31.3, vpm_);
+
+    CropFrame(video_buffer.get(), width_, height_, 68, 0, 216, 288,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 480, 640, 32.15, vpm_);
+
+    CropFrame(video_buffer.get(), width_, height_, 0, 12, 352, 264,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 960, 720, 32.2, vpm_);
+
+    CropFrame(video_buffer.get(), width_, height_, 0, 44, 352, 198,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 1280, 720, 32.15, vpm_);
+
     // Upsampling to odd size.
-    TestSize(video_frame_, 501, 333, 3, 32.05, vpm_);
+    CropFrame(video_buffer.get(), width_, height_, 0, 26, 352, 233,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 501, 333, 32.05, vpm_);
     // Downsample to odd size.
-    TestSize(video_frame_, 281, 175, 3, 29.3, vpm_);
+    CropFrame(video_buffer.get(), width_, height_, 0, 34, 352, 219,
+              &cropped_source_frame);
+    TestSize(video_frame_, cropped_source_frame, 281, 175, 29.3, vpm_);
 
-    // stop timer
-    t1 = TickTime::Now();
-    acc_ticks += (t1 - t0);
-
-    if (acc_ticks.Microseconds() < min_runtime || run_idx == 0)  {
-      min_runtime = acc_ticks.Microseconds();
+    // Stop timer.
+    const int64_t runtime = (TickTime::Now() - time_start).Microseconds();
+    if (runtime < min_runtime || run_idx == 0) {
+      min_runtime = runtime;
     }
-    avg_runtime += acc_ticks.Microseconds();
+    total_runtime += runtime;
   }
 
   printf("\nAverage run time = %d us / frame\n",
-         //static_cast<int>(avg_runtime / frameNum / NumRuns));
-         static_cast<int>(avg_runtime));
+         static_cast<int>(total_runtime));
   printf("Min run time = %d us / frame\n\n",
-         //static_cast<int>(min_runtime / frameNum));
          static_cast<int>(min_runtime));
 }
 
-void TestSize(const I420VideoFrame& source_frame, int targetwidth_,
-              int targetheight_, int mode, double expected_psnr,
+void PreprocessFrameAndVerify(const I420VideoFrame& source,
+                              int target_width,
+                              int target_height,
+                              VideoProcessingModule* vpm,
+                              I420VideoFrame** out_frame) {
+  ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(target_width, target_height, 30));
+  ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(source, out_frame));
+
+  // If no resizing is needed, expect NULL.
+  if (target_width == source.width() && target_height == source.height()) {
+    EXPECT_EQ(NULL, *out_frame);
+    return;
+  }
+
+  // Verify the resampled frame.
+  EXPECT_TRUE(*out_frame != NULL);
+  EXPECT_EQ(source.render_time_ms(), (*out_frame)->render_time_ms());
+  EXPECT_EQ(source.timestamp(), (*out_frame)->timestamp());
+  EXPECT_EQ(target_width, (*out_frame)->width());
+  EXPECT_EQ(target_height, (*out_frame)->height());
+}
+
+void CropFrame(const uint8_t* source_data,
+               int source_width,
+               int source_height,
+               int offset_x,
+               int offset_y,
+               int cropped_width,
+               int cropped_height,
+               I420VideoFrame* cropped_frame) {
+  cropped_frame->CreateEmptyFrame(cropped_width, cropped_height, cropped_width,
+                                  (cropped_width + 1) / 2,
+                                  (cropped_width + 1) / 2);
+  EXPECT_EQ(0,
+            ConvertToI420(kI420, source_data, offset_x, offset_y, source_width,
+                          source_height, 0, kVideoRotation_0, cropped_frame));
+}
+
+void TestSize(const I420VideoFrame& source_frame,
+              const I420VideoFrame& cropped_source_frame,
+              int target_width,
+              int target_height,
+              double expected_psnr,
               VideoProcessingModule* vpm) {
-  int sourcewidth_ = source_frame.width();
-  int sourceheight_ = source_frame.height();
+  // Resample source_frame to out_frame.
   I420VideoFrame* out_frame = NULL;
+  vpm->SetInputFrameResampleMode(kBox);
+  PreprocessFrameAndVerify(source_frame, target_width, target_height, vpm,
+                           &out_frame);
+  if (out_frame == NULL)
+    return;
+  WriteProcessedFrameForVisualInspection(source_frame, *out_frame);
 
-  ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(targetwidth_, targetheight_, 30));
-  ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(source_frame, &out_frame));
+  // Scale |resampled_source_frame| back to the source scale.
+  I420VideoFrame resampled_source_frame;
+  resampled_source_frame.CopyFrame(*out_frame);
+  PreprocessFrameAndVerify(resampled_source_frame, cropped_source_frame.width(),
+                           cropped_source_frame.height(), vpm, &out_frame);
+  WriteProcessedFrameForVisualInspection(resampled_source_frame, *out_frame);
 
-  if (out_frame) {
-    EXPECT_EQ(source_frame.render_time_ms(), out_frame->render_time_ms());
-    EXPECT_EQ(source_frame.timestamp(), out_frame->timestamp());
-  }
-
-  // If the frame was resampled (scale changed) then:
-  // (1) verify the new size and write out processed frame for viewing.
-  // (2) scale the resampled frame (|out_frame|) back to the original size and
-  // compute PSNR relative to |source_frame| (for automatic verification).
-  // (3) write out the processed frame for viewing.
-  if (targetwidth_ != static_cast<int>(sourcewidth_) ||
-      targetheight_ != static_cast<int>(sourceheight_))  {
-    // Write the processed frame to file for visual inspection.
-    std::ostringstream filename;
-    filename << webrtc::test::OutputPath() << "Resampler_"<< mode << "_" <<
-        "from_" << sourcewidth_ << "x" << sourceheight_ << "_to_" <<
-        targetwidth_ << "x" << targetheight_ << "_30Hz_P420.yuv";
-    std::cout << "Watch " << filename.str() << " and verify that it is okay."
-        << std::endl;
-    FILE* stand_alone_file = fopen(filename.str().c_str(), "wb");
-    if (PrintI420VideoFrame(*out_frame, stand_alone_file) < 0) {
-      fprintf(stderr, "Failed to write frame for scaling to width/height: "
-          " %d %d \n", targetwidth_, targetheight_);
-      return;
-    }
-    fclose(stand_alone_file);
-
-    I420VideoFrame resampled_source_frame;
-    resampled_source_frame.CopyFrame(*out_frame);
-
-    // Scale |resampled_source_frame| back to original/source size.
-    ASSERT_EQ(VPM_OK, vpm->SetTargetResolution(sourcewidth_,
-                                               sourceheight_,
-                                               30));
-    ASSERT_EQ(VPM_OK, vpm->PreprocessFrame(resampled_source_frame,
-                                           &out_frame));
-
-    // Write the processed frame to file for visual inspection.
-    std::ostringstream filename2;
-    filename2 << webrtc::test::OutputPath() << "Resampler_"<< mode << "_" <<
-          "from_" << targetwidth_ << "x" << targetheight_ << "_to_" <<
-          sourcewidth_ << "x" << sourceheight_ << "_30Hz_P420.yuv";
-    std::cout << "Watch " << filename2.str() << " and verify that it is okay."
-                << std::endl;
-    stand_alone_file = fopen(filename2.str().c_str(), "wb");
-    if (PrintI420VideoFrame(*out_frame, stand_alone_file) < 0) {
-      fprintf(stderr, "Failed to write frame for scaling to width/height "
-              "%d %d \n", sourcewidth_, sourceheight_);
-      return;
-    }
-    fclose(stand_alone_file);
-
-    // Compute the PSNR and check expectation.
-    double psnr = I420PSNR(&source_frame, out_frame);
-    EXPECT_GT(psnr, expected_psnr);
-    printf("PSNR: %f. PSNR is between source of size %d %d, and a modified "
-        "source which is scaled down/up to: %d %d, and back to source size \n",
-        psnr, sourcewidth_, sourceheight_, targetwidth_, targetheight_);
-  }
+  // Compute PSNR against the cropped source frame and check expectation.
+  double psnr = I420PSNR(&cropped_source_frame, out_frame);
+  EXPECT_GT(psnr, expected_psnr);
+  printf("PSNR: %f. PSNR is between source of size %d %d, and a modified "
+         "source which is scaled down/up to: %d %d, and back to source size \n",
+         psnr, source_frame.width(), source_frame.height(),
+         target_width, target_height);
 }
 
 bool CompareFrames(const webrtc::I420VideoFrame& frame1,
@@ -358,6 +360,22 @@ bool CompareFrames(const webrtc::I420VideoFrame& frame1,
       return false;
   }
   return true;
+}
+
+void WriteProcessedFrameForVisualInspection(const I420VideoFrame& source,
+                                            const I420VideoFrame& processed) {
+  // Write the processed frame to file for visual inspection.
+  std::ostringstream filename;
+  filename << webrtc::test::OutputPath() << "Resampler_from_" << source.width()
+           << "x" << source.height() << "_to_" << processed.width() << "x"
+           << processed.height() << "_30Hz_P420.yuv";
+  std::cout << "Watch " << filename.str() << " and verify that it is okay."
+            << std::endl;
+  FILE* stand_alone_file = fopen(filename.str().c_str(), "wb");
+  if (PrintI420VideoFrame(processed, stand_alone_file) < 0)
+    std::cerr << "Failed to write: " << filename.str() << std::endl;
+  if (stand_alone_file)
+    fclose(stand_alone_file);
 }
 
 }  // namespace webrtc

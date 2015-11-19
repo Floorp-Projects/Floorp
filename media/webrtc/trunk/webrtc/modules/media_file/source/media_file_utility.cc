@@ -13,17 +13,15 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <limits>
 
+#include "webrtc/base/format_macros.h"
 #include "webrtc/common_audio/wav_header.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/file_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
-
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-    #include "avi_file.h"
-#endif
 
 namespace {
 
@@ -61,372 +59,18 @@ ModuleFileUtility::ModuleFileUtility(const int32_t id)
       _readPos(0),
       _reading(false),
       _writing(false),
-      _tempData()
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-      ,
-      _aviAudioInFile(0),
-      _aviVideoInFile(0),
-      _aviOutFile(0)
-#endif
-{
+      _tempData() {
     WEBRTC_TRACE(kTraceMemory, kTraceFile, _id,
                  "ModuleFileUtility::ModuleFileUtility()");
     memset(&codec_info_,0,sizeof(CodecInst));
     codec_info_.pltype = -1;
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-    memset(&_videoCodec,0,sizeof(_videoCodec));
-#endif
 }
 
 ModuleFileUtility::~ModuleFileUtility()
 {
     WEBRTC_TRACE(kTraceMemory, kTraceFile, _id,
                  "ModuleFileUtility::~ModuleFileUtility()");
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-    delete _aviAudioInFile;
-    delete _aviVideoInFile;
-#endif
 }
-
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-int32_t ModuleFileUtility::InitAviWriting(
-    const char* filename,
-    const CodecInst& audioCodecInst,
-    const VideoCodec& videoCodecInst,
-    const bool videoOnly /*= false*/)
-{
-    _writing = false;
-
-    delete _aviOutFile;
-    _aviOutFile = new AviFile( );
-
-    AVISTREAMHEADER videoStreamHeader;
-    videoStreamHeader.fccType = AviFile::MakeFourCc('v', 'i', 'd', 's');
-
-#ifdef VIDEOCODEC_I420
-    if (strncmp(videoCodecInst.plName, "I420", 7) == 0)
-    {
-        videoStreamHeader.fccHandler = AviFile::MakeFourCc('I','4','2','0');
-    }
-#endif
-#ifdef VIDEOCODEC_VP8
-    if (strncmp(videoCodecInst.plName, "VP8", 7) == 0)
-    {
-        videoStreamHeader.fccHandler = AviFile::MakeFourCc('V','P','8','0');
-    }
-#endif
-    if (videoStreamHeader.fccHandler == 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "InitAviWriting() Codec not supported");
-
-        return -1;
-    }
-    videoStreamHeader.dwScale                = 1;
-    videoStreamHeader.dwRate                 = videoCodecInst.maxFramerate;
-    videoStreamHeader.dwSuggestedBufferSize  = videoCodecInst.height *
-        (videoCodecInst.width >> 1) * 3;
-    videoStreamHeader.dwQuality              = (uint32_t)-1;
-    videoStreamHeader.dwSampleSize           = 0;
-    videoStreamHeader.rcFrame.top            = 0;
-    videoStreamHeader.rcFrame.bottom         = videoCodecInst.height;
-    videoStreamHeader.rcFrame.left           = 0;
-    videoStreamHeader.rcFrame.right          = videoCodecInst.width;
-
-    BITMAPINFOHEADER bitMapInfoHeader;
-    bitMapInfoHeader.biSize         = sizeof(BITMAPINFOHEADER);
-    bitMapInfoHeader.biHeight       = videoCodecInst.height;
-    bitMapInfoHeader.biWidth        = videoCodecInst.width;
-    bitMapInfoHeader.biPlanes       = 1;
-    bitMapInfoHeader.biBitCount     = 12;
-    bitMapInfoHeader.biClrImportant = 0;
-    bitMapInfoHeader.biClrUsed      = 0;
-    bitMapInfoHeader.biCompression  = videoStreamHeader.fccHandler;
-    bitMapInfoHeader.biSizeImage    = bitMapInfoHeader.biWidth *
-        bitMapInfoHeader.biHeight * bitMapInfoHeader.biBitCount / 8;
-
-    if (_aviOutFile->CreateVideoStream(
-        videoStreamHeader,
-        bitMapInfoHeader,
-        NULL,
-        0) != 0)
-    {
-        return -1;
-    }
-
-    if(!videoOnly)
-    {
-        AVISTREAMHEADER audioStreamHeader;
-        audioStreamHeader.fccType = AviFile::MakeFourCc('a', 'u', 'd', 's');
-        // fccHandler is the FOURCC of the codec for decoding the stream.
-        // It's an optional parameter that is not used by audio streams.
-        audioStreamHeader.fccHandler   = 0;
-        audioStreamHeader.dwScale      = 1;
-
-        WAVEFORMATEX waveFormatHeader;
-        waveFormatHeader.cbSize          = 0;
-        waveFormatHeader.nChannels       = 1;
-
-        if (strncmp(audioCodecInst.plname, "PCMU", 4) == 0)
-        {
-            audioStreamHeader.dwSampleSize = 1;
-            audioStreamHeader.dwRate       = 8000;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
-            audioStreamHeader.dwSuggestedBufferSize = 80;
-
-            waveFormatHeader.nAvgBytesPerSec = 8000;
-            waveFormatHeader.nSamplesPerSec  = 8000;
-            waveFormatHeader.wBitsPerSample  = 8;
-            waveFormatHeader.nBlockAlign     = 1;
-            waveFormatHeader.wFormatTag      = kWavFormatMuLaw;
-
-        } else if (strncmp(audioCodecInst.plname, "PCMA", 4) == 0)
-        {
-            audioStreamHeader.dwSampleSize = 1;
-            audioStreamHeader.dwRate       = 8000;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
-            audioStreamHeader.dwSuggestedBufferSize = 80;
-
-            waveFormatHeader.nAvgBytesPerSec = 8000;
-            waveFormatHeader.nSamplesPerSec  = 8000;
-            waveFormatHeader.wBitsPerSample  = 8;
-            waveFormatHeader.nBlockAlign     = 1;
-            waveFormatHeader.wFormatTag      = kWavFormatALaw;
-
-        } else if (strncmp(audioCodecInst.plname, "L16", 3) == 0)
-        {
-            audioStreamHeader.dwSampleSize = 2;
-            audioStreamHeader.dwRate       = audioCodecInst.plfreq;
-            audioStreamHeader.dwQuality    = (uint32_t)-1;
-            audioStreamHeader.dwSuggestedBufferSize =
-                (audioCodecInst.plfreq/100) * 2;
-
-            waveFormatHeader.nAvgBytesPerSec = audioCodecInst.plfreq * 2;
-            waveFormatHeader.nSamplesPerSec  = audioCodecInst.plfreq;
-            waveFormatHeader.wBitsPerSample  = 16;
-            waveFormatHeader.nBlockAlign     = 2;
-            waveFormatHeader.wFormatTag      = kWavFormatPcm;
-        } else
-        {
-            return -1;
-        }
-
-        if(_aviOutFile->CreateAudioStream(
-            audioStreamHeader,
-            waveFormatHeader) != 0)
-        {
-            return -1;
-        }
-
-
-        if( InitWavCodec(waveFormatHeader.nSamplesPerSec,
-            waveFormatHeader.nChannels,
-            waveFormatHeader.wBitsPerSample,
-            waveFormatHeader.wFormatTag) != 0)
-        {
-            return -1;
-        }
-    }
-    _aviOutFile->Create(filename);
-    _writing = true;
-    return 0;
-}
-
-int32_t ModuleFileUtility::WriteAviAudioData(
-    const int8_t* buffer,
-    uint32_t bufferLengthInBytes)
-{
-    if( _aviOutFile != 0)
-    {
-        return _aviOutFile->WriteAudio(
-            reinterpret_cast<const uint8_t*>(buffer),
-            bufferLengthInBytes);
-    }
-    else
-    {
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id, "AVI file not initialized");
-        return -1;
-    }
-}
-
-int32_t ModuleFileUtility::WriteAviVideoData(
-        const int8_t* buffer,
-        uint32_t bufferLengthInBytes)
-{
-    if( _aviOutFile != 0)
-    {
-        return _aviOutFile->WriteVideo(
-            reinterpret_cast<const uint8_t*>(buffer),
-            bufferLengthInBytes);
-    }
-    else
-    {
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id, "AVI file not initialized");
-        return -1;
-    }
-}
-
-
-int32_t ModuleFileUtility::CloseAviFile( )
-{
-    if( _reading && _aviAudioInFile)
-    {
-        delete _aviAudioInFile;
-        _aviAudioInFile = 0;
-    }
-
-    if( _reading && _aviVideoInFile)
-    {
-        delete _aviVideoInFile;
-        _aviVideoInFile = 0;
-    }
-
-    if( _writing && _aviOutFile)
-    {
-        delete _aviOutFile;
-        _aviOutFile = 0;
-    }
-    return 0;
-}
-
-
-int32_t ModuleFileUtility::InitAviReading(const char* filename, bool videoOnly,
-                                          bool loop)
-{
-    _reading = false;
-    delete _aviVideoInFile;
-    _aviVideoInFile = new AviFile( );
-
-    if ((_aviVideoInFile != 0) && _aviVideoInFile->Open(AviFile::AVI_VIDEO,
-                                                        filename, loop) == -1)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
-                     "Unable to open AVI file (video)");
-        return -1;
-    }
-
-
-    AVISTREAMHEADER videoInStreamHeader;
-    BITMAPINFOHEADER bitmapInfo;
-    char codecConfigParameters[AviFile::CODEC_CONFIG_LENGTH] = {};
-    int32_t configLength = 0;
-    if( _aviVideoInFile->GetVideoStreamInfo(videoInStreamHeader, bitmapInfo,
-                                            codecConfigParameters,
-                                            configLength) != 0)
-    {
-        return -1;
-    }
-    _videoCodec.width = static_cast<uint16_t>(
-        videoInStreamHeader.rcFrame.right);
-    _videoCodec.height = static_cast<uint16_t>(
-        videoInStreamHeader.rcFrame.bottom);
-    _videoCodec.maxFramerate = static_cast<uint8_t>(
-        videoInStreamHeader.dwRate);
-
-    const size_t plnameLen = sizeof(_videoCodec.plName) / sizeof(char);
-    if (bitmapInfo.biCompression == AviFile::MakeFourCc('I','4','2','0'))
-    {
-        strncpy(_videoCodec.plName, "I420", plnameLen);
-       _videoCodec.codecType = kVideoCodecI420;
-    }
-    else if (bitmapInfo.biCompression ==
-             AviFile::MakeFourCc('V', 'P', '8', '0'))
-    {
-        strncpy(_videoCodec.plName, "VP8", plnameLen);
-        _videoCodec.codecType = kVideoCodecVP8;
-    }
-    else
-    {
-        return -1;
-    }
-
-    if(!videoOnly)
-    {
-        delete _aviAudioInFile;
-        _aviAudioInFile = new AviFile();
-
-        if ( (_aviAudioInFile != 0) &&
-            _aviAudioInFile->Open(AviFile::AVI_AUDIO, filename, loop) == -1)
-        {
-            WEBRTC_TRACE(kTraceError, kTraceVideo, -1,
-                         "Unable to open AVI file (audio)");
-            return -1;
-        }
-
-        WAVEFORMATEX waveHeader;
-        if(_aviAudioInFile->GetAudioStreamInfo(waveHeader) != 0)
-        {
-            return -1;
-        }
-        if(InitWavCodec(waveHeader.nSamplesPerSec, waveHeader.nChannels,
-                        waveHeader.wBitsPerSample, waveHeader.wFormatTag) != 0)
-        {
-            return -1;
-        }
-    }
-    _reading = true;
-    return 0;
-}
-
-int32_t ModuleFileUtility::ReadAviAudioData(
-    int8_t*  outBuffer,
-    const uint32_t bufferLengthInBytes)
-{
-    if(_aviAudioInFile == 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "AVI file not opened.");
-        return -1;
-    }
-
-    int32_t length = bufferLengthInBytes;
-    if(_aviAudioInFile->ReadAudio(
-        reinterpret_cast<uint8_t*>(outBuffer),
-        length) != 0)
-    {
-        return -1;
-    }
-    else
-    {
-        return length;
-    }
-}
-
-int32_t ModuleFileUtility::ReadAviVideoData(
-    int8_t* outBuffer,
-    const uint32_t bufferLengthInBytes)
-{
-    if(_aviVideoInFile == 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceVideo, -1, "AVI file not opened.");
-        return -1;
-    }
-
-    int32_t length = bufferLengthInBytes;
-    if( _aviVideoInFile->ReadVideo(
-        reinterpret_cast<uint8_t*>(outBuffer),
-        length) != 0)
-    {
-        return -1;
-    } else {
-        return length;
-    }
-}
-
-int32_t ModuleFileUtility::VideoCodecInst(VideoCodec& codecInst)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceFile, _id,
-               "ModuleFileUtility::CodecInst(codecInst= 0x%x)", &codecInst);
-
-   if(!_reading)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                     "CodecInst: not currently reading audio file!");
-        return -1;
-    }
-    memcpy(&codecInst,&_videoCodec,sizeof(VideoCodec));
-    return 0;
-}
-#endif
 
 int32_t ModuleFileUtility::ReadWavHeader(InStream& wav)
 {
@@ -774,14 +418,14 @@ int32_t ModuleFileUtility::InitWavReading(InStream& wav,
 int32_t ModuleFileUtility::ReadWavDataAsMono(
     InStream& wav,
     int8_t* outData,
-    const uint32_t bufferSize)
+    const size_t bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::ReadWavDataAsMono(wav= 0x%x, outData= 0x%d,\
- bufSize= %ld)",
+        "ModuleFileUtility::ReadWavDataAsMono(wav= 0x%x, outData= 0x%d, "
+        "bufSize= %" PRIuS ")",
         &wav,
         outData,
         bufferSize);
@@ -853,14 +497,14 @@ int32_t ModuleFileUtility::ReadWavDataAsStereo(
     InStream& wav,
     int8_t* outDataLeft,
     int8_t* outDataRight,
-    const uint32_t bufferSize)
+    const size_t bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::ReadWavDataAsStereo(wav= 0x%x, outLeft= 0x%x,\
- outRight= 0x%x, bufSize= %ld)",
+        "ModuleFileUtility::ReadWavDataAsStereo(wav= 0x%x, outLeft= 0x%x, "
+        "outRight= 0x%x, bufSize= %" PRIuS ")",
         &wav,
         outDataLeft,
         outDataRight,
@@ -1083,13 +727,14 @@ int32_t ModuleFileUtility::InitWavWriting(OutStream& wav,
 
 int32_t ModuleFileUtility::WriteWavData(OutStream& out,
                                         const int8_t*  buffer,
-                                        const uint32_t dataLength)
+                                        const size_t dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::WriteWavData(out= 0x%x, buf= 0x%x, dataLen= %d)",
+        "ModuleFileUtility::WriteWavData(out= 0x%x, buf= 0x%x, dataLen= %" PRIuS
+        ")",
         &out,
         buffer,
         dataLength);
@@ -1106,7 +751,7 @@ int32_t ModuleFileUtility::WriteWavData(OutStream& out,
         return -1;
     }
     _bytesWritten += dataLength;
-    return dataLength;
+    return static_cast<int32_t>(dataLength);
 }
 
 
@@ -1190,14 +835,14 @@ int32_t ModuleFileUtility::InitPreEncodedReading(InStream& in,
 int32_t ModuleFileUtility::ReadPreEncodedData(
     InStream& in,
     int8_t* outData,
-    const uint32_t bufferSize)
+    const size_t bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::ReadPreEncodedData(in= 0x%x, outData= 0x%x,\
- bufferSize= %d)",
+        "ModuleFileUtility::ReadPreEncodedData(in= 0x%x, outData= 0x%x, "
+        "bufferSize= %" PRIuS ")",
         &in,
         outData,
         bufferSize);
@@ -1257,14 +902,14 @@ int32_t ModuleFileUtility::InitPreEncodedWriting(
 int32_t ModuleFileUtility::WritePreEncodedData(
     OutStream& out,
     const int8_t*  buffer,
-    const uint32_t dataLength)
+    const size_t dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::WritePreEncodedData(out= 0x%x, inData= 0x%x,\
- dataLen= %d)",
+        "ModuleFileUtility::WritePreEncodedData(out= 0x%x, inData= 0x%x, "
+        "dataLen= %" PRIuS ")",
         &out,
         buffer,
         dataLength);
@@ -1274,11 +919,12 @@ int32_t ModuleFileUtility::WritePreEncodedData(
         WEBRTC_TRACE(kTraceError, kTraceFile, _id,"buffer NULL");
     }
 
-    int32_t bytesWritten = 0;
+    size_t bytesWritten = 0;
     // The first two bytes is the size of the frame.
     int16_t lengthBuf;
     lengthBuf = (int16_t)dataLength;
-    if(!out.Write(&lengthBuf, 2))
+    if(dataLength > static_cast<size_t>(std::numeric_limits<int16_t>::max()) ||
+       !out.Write(&lengthBuf, 2))
     {
        return -1;
     }
@@ -1289,7 +935,7 @@ int32_t ModuleFileUtility::WritePreEncodedData(
         return -1;
     }
     bytesWritten += dataLength;
-    return bytesWritten;
+    return static_cast<int32_t>(bytesWritten);
 }
 
 int32_t ModuleFileUtility::InitCompressedReading(
@@ -1307,8 +953,7 @@ int32_t ModuleFileUtility::InitCompressedReading(
         start,
         stop);
 
-#if defined(WEBRTC_CODEC_AMR) || defined(WEBRTC_CODEC_AMRWB) || \
-    defined(WEBRTC_CODEC_ILBC)
+#if defined(WEBRTC_CODEC_ILBC)
     int16_t read_len = 0;
 #endif
     _codecId = kCodecNoCodec;
@@ -1317,13 +962,6 @@ int32_t ModuleFileUtility::InitCompressedReading(
 
     _startPointInMs = start;
     _stopPointInMs = stop;
-
-#ifdef WEBRTC_CODEC_AMR
-    int32_t AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    int32_t AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
-#endif
 
     // Read the codec name
     int32_t cnt = 0;
@@ -1340,94 +978,6 @@ int32_t ModuleFileUtility::InitCompressedReading(
         buf[cnt]=0;
     }
 
-#ifdef WEBRTC_CODEC_AMR
-    if(!strcmp("#!AMR\n", buf))
-    {
-        strcpy(codec_info_.plname, "amr");
-        codec_info_.pacsize = 160;
-        _codecId = kCodecAmr;
-        codec_info_.pltype = 112;
-        codec_info_.rate = 12200;
-        codec_info_.plfreq = 8000;
-        codec_info_.channels = 1;
-
-        int16_t mode = 0;
-        if(_startPointInMs > 0)
-        {
-            while (_playoutPositionMs <= _startPointInMs)
-            {
-                // First read byte contain the AMR mode.
-                read_len = in.Read(buf, 1);
-                if(read_len != 1)
-                {
-                    return -1;
-                }
-
-                mode = (buf[0]>>3)&0xF;
-                if((mode < 0) || (mode > 8))
-                {
-                    if(mode != 15)
-                    {
-                        return -1;
-                    }
-                }
-                if(mode != 15)
-                {
-                    read_len = in.Read(&buf[1], AMRmode2bytes[mode]);
-                    if(read_len != AMRmode2bytes[mode])
-                    {
-                        return -1;
-                    }
-                }
-                _playoutPositionMs += 20;
-            }
-        }
-    }
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    if(!strcmp("#!AMRWB\n", buf))
-    {
-        strcpy(codec_info_.plname, "amr-wb");
-        codec_info_.pacsize = 320;
-        _codecId = kCodecAmrWb;
-        codec_info_.pltype = 120;
-        codec_info_.rate = 20000;
-        codec_info_.plfreq = 16000;
-        codec_info_.channels = 1;
-
-        int16_t mode = 0;
-        if(_startPointInMs > 0)
-        {
-            while (_playoutPositionMs <= _startPointInMs)
-            {
-                // First read byte contain the AMR mode.
-                read_len = in.Read(buf, 1);
-                if(read_len != 1)
-                {
-                    return -1;
-                }
-
-                mode = (buf[0]>>3)&0xF;
-                if((mode < 0) || (mode > 9))
-                {
-                    if(mode != 15)
-                    {
-                        return -1;
-                    }
-                }
-                if(mode != 15)
-                {
-                    read_len = in.Read(&buf[1], AMRWBmode2bytes[mode]);
-                    if(read_len != AMRWBmode2bytes[mode])
-                    {
-                        return -1;
-                    }
-                }
-                _playoutPositionMs += 20;
-            }
-        }
-    }
-#endif
 #ifdef WEBRTC_CODEC_ILBC
     if(!strcmp("#!iLBC20\n", buf))
     {
@@ -1493,24 +1043,18 @@ int32_t ModuleFileUtility::InitCompressedReading(
 
 int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
                                               int8_t* outData,
-                                              uint32_t bufferSize)
+                                              size_t bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::ReadCompressedData(in=0x%x, outData=0x%x,\
- bytes=%ld)",
+        "ModuleFileUtility::ReadCompressedData(in=0x%x, outData=0x%x, bytes=%"
+        PRIuS ")",
         &in,
         outData,
         bufferSize);
 
-#ifdef WEBRTC_CODEC_AMR
-    uint32_t AMRmode2bytes[9]={12,13,15,17,19,20,26,31,5};
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    uint32_t AMRWBmode2bytes[10]={17,23,32,36,40,46,50,58,60,6};
-#endif
     uint32_t bytesRead = 0;
 
     if(! _reading)
@@ -1519,119 +1063,6 @@ int32_t ModuleFileUtility::ReadCompressedData(InStream& in,
         return -1;
     }
 
-#ifdef WEBRTC_CODEC_AMR
-    if(_codecId == kCodecAmr)
-    {
-        int32_t res = in.Read(outData, 1);
-        if(res != 1)
-        {
-            if(!in.Rewind())
-            {
-                InitCompressedReading(in, _startPointInMs, _stopPointInMs);
-                res = in.Read(outData, 1);
-                if(res != 1)
-                {
-                    _reading = false;
-                    return -1;
-                }
-            }
-            else
-            {
-                _reading = false;
-                return -1;
-            }
-        }
-         const int16_t mode = (outData[0]>>3)&0xF;
-        if((mode < 0) ||
-           (mode > 8))
-        {
-            if(mode != 15)
-            {
-                return -1;
-            }
-        }
-        if(mode != 15)
-        {
-            if(bufferSize < AMRmode2bytes[mode] + 1)
-            {
-                WEBRTC_TRACE(
-                    kTraceError,
-                    kTraceFile,
-                    _id,
-                    "output buffer is too short to read AMR compressed data.");
-                assert(false);
-                return -1;
-            }
-            bytesRead = in.Read(&outData[1], AMRmode2bytes[mode]);
-            if(bytesRead != AMRmode2bytes[mode])
-            {
-                _reading = false;
-                return -1;
-            }
-            // Count the mode byte to bytes read.
-            bytesRead++;
-        }
-        else
-        {
-            bytesRead = 1;
-        }
-    }
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    if(_codecId == kCodecAmrWb)
-    {
-        int32_t res = in.Read(outData, 1);
-        if(res != 1)
-        {
-            if(!in.Rewind())
-            {
-                InitCompressedReading(in, _startPointInMs, _stopPointInMs);
-                res = in.Read(outData, 1);
-                if(res != 1)
-                {
-                    _reading = false;
-                    return -1;
-                }
-            }
-            else
-            {
-                _reading = false;
-                return -1;
-            }
-        }
-         int16_t mode = (outData[0]>>3)&0xF;
-        if((mode < 0) ||
-           (mode > 8))
-        {
-            if(mode != 15)
-            {
-                return -1;
-            }
-        }
-        if(mode != 15)
-        {
-            if(bufferSize < AMRWBmode2bytes[mode] + 1)
-            {
-                WEBRTC_TRACE(kTraceError, kTraceFile, _id,
-                           "output buffer is too short to read AMRWB\
- compressed.");
-                assert(false);
-                return -1;
-            }
-             bytesRead = in.Read(&outData[1], AMRWBmode2bytes[mode]);
-            if(bytesRead != AMRWBmode2bytes[mode])
-            {
-                _reading = false;
-                return -1;
-            }
-            bytesRead++;
-        }
-        else
-        {
-            bytesRead = 1;
-        }
-    }
-#endif
 #ifdef WEBRTC_CODEC_ILBC
     if((_codecId == kCodecIlbc20Ms) ||
         (_codecId == kCodecIlbc30Ms))
@@ -1709,32 +1140,6 @@ int32_t ModuleFileUtility::InitCompressedWriting(
 
     _writing = false;
 
-#ifdef WEBRTC_CODEC_AMR
-    if(STR_CASE_CMP(codecInst.plname, "amr") == 0)
-    {
-        if(codecInst.pacsize == 160)
-        {
-            memcpy(&codec_info_,&codecInst,sizeof(CodecInst));
-            _codecId = kCodecAmr;
-            out.Write("#!AMR\n",6);
-            _writing = true;
-            return 0;
-        }
-    }
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    if(STR_CASE_CMP(codecInst.plname, "amr-wb") == 0)
-    {
-        if(codecInst.pacsize == 320)
-        {
-            memcpy(&codec_info_,&codecInst,sizeof(CodecInst));
-            _codecId = kCodecAmrWb;
-            out.Write("#!AMRWB\n",8);
-            _writing = true;
-            return 0;
-        }
-    }
-#endif
 #ifdef WEBRTC_CODEC_ILBC
     if(STR_CASE_CMP(codecInst.plname, "ilbc") == 0)
     {
@@ -1768,14 +1173,14 @@ int32_t ModuleFileUtility::InitCompressedWriting(
 int32_t ModuleFileUtility::WriteCompressedData(
     OutStream& out,
     const int8_t* buffer,
-    const uint32_t dataLength)
+    const size_t dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::WriteCompressedData(out= 0x%x, buf= 0x%x,\
- dataLen= %d)",
+        "ModuleFileUtility::WriteCompressedData(out= 0x%x, buf= 0x%x, "
+        "dataLen= %" PRIuS ")",
         &out,
         buffer,
         dataLength);
@@ -1789,7 +1194,7 @@ int32_t ModuleFileUtility::WriteCompressedData(
     {
         return -1;
     }
-    return dataLength;
+    return static_cast<int32_t>(dataLength);
 }
 
 int32_t ModuleFileUtility::InitPCMReading(InStream& pcm,
@@ -1870,13 +1275,14 @@ int32_t ModuleFileUtility::InitPCMReading(InStream& pcm,
 
 int32_t ModuleFileUtility::ReadPCMData(InStream& pcm,
                                        int8_t* outData,
-                                       uint32_t bufferSize)
+                                       size_t bufferSize)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::ReadPCMData(pcm= 0x%x, outData= 0x%x, bufSize= %d)",
+        "ModuleFileUtility::ReadPCMData(pcm= 0x%x, outData= 0x%x, bufSize= %"
+        PRIuS ")",
         &pcm,
         outData,
         bufferSize);
@@ -2004,13 +1410,14 @@ int32_t ModuleFileUtility::InitPCMWriting(OutStream& out, uint32_t freq)
 
 int32_t ModuleFileUtility::WritePCMData(OutStream& out,
                                         const int8_t*  buffer,
-                                        const uint32_t dataLength)
+                                        const size_t dataLength)
 {
     WEBRTC_TRACE(
         kTraceStream,
         kTraceFile,
         _id,
-        "ModuleFileUtility::WritePCMData(out= 0x%x, buf= 0x%x, dataLen= %d)",
+        "ModuleFileUtility::WritePCMData(out= 0x%x, buf= 0x%x, dataLen= %" PRIuS
+        ")",
         &out,
         buffer,
         dataLength);
@@ -2026,7 +1433,7 @@ int32_t ModuleFileUtility::WritePCMData(OutStream& out,
     }
 
     _bytesWritten += dataLength;
-    return dataLength;
+    return static_cast<int32_t>(dataLength);
 }
 
 int32_t ModuleFileUtility::codec_info(CodecInst& codecInst)
@@ -2071,18 +1478,6 @@ int32_t ModuleFileUtility::set_codec_info(const CodecInst& codecInst)
             _codecId = kCodecL16_32Khz;
         }
     }
-#ifdef WEBRTC_CODEC_AMR
-    else if(STR_CASE_CMP(codecInst.plname, "amr") == 0)
-    {
-        _codecId = kCodecAmr;
-    }
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-    else if(STR_CASE_CMP(codecInst.plname, "amr-wb") == 0)
-    {
-        _codecId = kCodecAmrWb;
-    }
-#endif
 #ifdef WEBRTC_CODEC_ILBC
     else if(STR_CASE_CMP(codecInst.plname, "ilbc") == 0)
     {
@@ -2109,96 +1504,10 @@ int32_t ModuleFileUtility::set_codec_info(const CodecInst& codecInst)
         }
     }
 #endif
-#ifdef WEBRTC_CODEC_ISACLC
-    else if(STR_CASE_CMP(codecInst.plname, "isaclc") == 0)
-    {
-        _codecId = kCodecIsacLc;
-    }
-#endif
 #ifdef WEBRTC_CODEC_G722
     else if(STR_CASE_CMP(codecInst.plname, "G722") == 0)
     {
         _codecId = kCodecG722;
-    }
-#endif
-    else if(STR_CASE_CMP(codecInst.plname, "G7221") == 0)
-    {
-#ifdef WEBRTC_CODEC_G722_1
-        if(codecInst.plfreq == 16000)
-        {
-            if(codecInst.rate == 16000)
-            {
-                _codecId = kCodecG722_1_16Kbps;
-            }
-            else if(codecInst.rate == 24000)
-            {
-                _codecId = kCodecG722_1_24Kbps;
-            }
-            else if(codecInst.rate == 32000)
-            {
-                _codecId = kCodecG722_1_32Kbps;
-            }
-        }
-#endif
-#ifdef WEBRTC_CODEC_G722_1C
-        if(codecInst.plfreq == 32000)
-        {
-            if(codecInst.rate == 48000)
-            {
-                _codecId = kCodecG722_1c_48;
-            }
-            else if(codecInst.rate == 32000)
-            {
-                _codecId = kCodecG722_1c_32;
-            }
-            else if(codecInst.rate == 24000)
-            {
-                _codecId = kCodecG722_1c_24;
-            }
-        }
-#endif
-    }
-#ifdef WEBRTC_CODEC_G726
-    else if(STR_CASE_CMP(codecInst.plname, "G726-40") == 0)
-    {
-        _codecId = kCodecG726_40;
-    }
-    else if(STR_CASE_CMP(codecInst.plname, "G726-32") == 0)
-    {
-        _codecId = kCodecG726_24;
-    }
-    else if(STR_CASE_CMP(codecInst.plname, "G726-24") == 0)
-    {
-        _codecId = kCodecG726_32;
-    }
-    else if(STR_CASE_CMP(codecInst.plname, "G726-16") == 0)
-    {
-        _codecId = kCodecG726_16;
-    }
-#endif
-#ifdef WEBRTC_CODEC_G729
-    else if(STR_CASE_CMP(codecInst.plname, "G729") == 0)
-    {
-        _codecId = kCodecG729;
-    }
-#endif
-#ifdef WEBRTC_CODEC_G729_1
-    else if(STR_CASE_CMP(codecInst.plname, "G7291") == 0)
-    {
-        _codecId = kCodecG729_1;
-    }
-#endif
-#ifdef WEBRTC_CODEC_SPEEX
-    else if(STR_CASE_CMP(codecInst.plname, "speex") == 0)
-    {
-        if(codecInst.plfreq == 8000)
-        {
-            _codecId = kCodecSpeex8Khz;
-        }
-        else if(codecInst.plfreq == 16000)
-        {
-            _codecId = kCodecSpeex16Khz;
-        }
     }
 #endif
     if(_codecId == kCodecNoCodec)
@@ -2293,124 +1602,6 @@ int32_t ModuleFileUtility::FileDurationMs(const char* fileName,
             {
                 buf[cnt] = 0;
             }
-#ifdef WEBRTC_CODEC_AMR
-            if(!strcmp("#!AMR\n", buf))
-            {
-                uint8_t dummy;
-                read_len = inStreamObj->Read(&dummy, 1);
-                if(read_len != 1)
-                {
-                    return -1;
-                }
-
-                int16_t AMRMode = (dummy>>3)&0xF;
-
-                // TODO (hellner): use tables instead of hardcoding like this!
-                //                 Additionally, this calculation does not
-                //                 take octet alignment into consideration.
-                switch (AMRMode)
-                {
-                        // Mode 0: 4.75 kbit/sec -> 95 bits per 20 ms frame.
-                        // 20 ms = 95 bits ->
-                        // file size in bytes * 8 / 95 is the number of
-                        // 20 ms frames in the file ->
-                        // time_in_ms = file size * 8 / 95 * 20
-                    case 0:
-                        time_in_ms = ((file_size.st_size)*160)/95;
-                        break;
-                        // Mode 1: 5.15 kbit/sec -> 103 bits per 20 ms frame.
-                    case 1:
-                        time_in_ms = ((file_size.st_size)*160)/103;
-                        break;
-                        // Mode 2: 5.90 kbit/sec -> 118 bits per 20 ms frame.
-                    case 2:
-                        time_in_ms = ((file_size.st_size)*160)/118;
-                        break;
-                        // Mode 3: 6.70 kbit/sec -> 134 bits per 20 ms frame.
-                    case 3:
-                        time_in_ms = ((file_size.st_size)*160)/134;
-                        break;
-                        // Mode 4: 7.40 kbit/sec -> 148 bits per 20 ms frame.
-                    case 4:
-                        time_in_ms = ((file_size.st_size)*160)/148;
-                        break;
-                        // Mode 5: 7.95 bit/sec -> 159 bits per 20 ms frame.
-                    case 5:
-                        time_in_ms = ((file_size.st_size)*160)/159;
-                        break;
-                        // Mode 6: 10.2 bit/sec -> 204 bits per 20 ms frame.
-                    case 6:
-                        time_in_ms = ((file_size.st_size)*160)/204;
-                        break;
-                        // Mode 7: 12.2 bit/sec -> 244 bits per 20 ms frame.
-                    case 7:
-                        time_in_ms = ((file_size.st_size)*160)/244;
-                        break;
-                        // Mode 8: SID Mode -> 39 bits per 20 ms frame.
-                    case 8:
-                        time_in_ms = ((file_size.st_size)*160)/39;
-                        break;
-                    default:
-                        break;
-                }
-            }
-#endif
-#ifdef WEBRTC_CODEC_AMRWB
-            if(!strcmp("#!AMRWB\n", buf))
-            {
-                uint8_t dummy;
-                read_len = inStreamObj->Read(&dummy, 1);
-                if(read_len != 1)
-                {
-                    return -1;
-                }
-
-                // TODO (hellner): use tables instead of hardcoding like this!
-                int16_t AMRWBMode = (dummy>>3)&0xF;
-                switch(AMRWBMode)
-                {
-                        // Mode 0: 6.6 kbit/sec -> 132 bits per 20 ms frame.
-                    case 0:
-                        time_in_ms = ((file_size.st_size)*160)/132;
-                        break;
-                        // Mode 1: 8.85 kbit/sec -> 177 bits per 20 ms frame.
-                    case 1:
-                        time_in_ms = ((file_size.st_size)*160)/177;
-                        break;
-                        // Mode 2: 12.65 kbit/sec -> 253 bits per 20 ms frame.
-                    case 2:
-                        time_in_ms = ((file_size.st_size)*160)/253;
-                        break;
-                        // Mode 3: 14.25 kbit/sec -> 285 bits per 20 ms frame.
-                    case 3:
-                        time_in_ms = ((file_size.st_size)*160)/285;
-                        break;
-                        // Mode 4: 15.85 kbit/sec -> 317 bits per 20 ms frame.
-                    case 4:
-                        time_in_ms = ((file_size.st_size)*160)/317;
-                        break;
-                        // Mode 5: 18.25 kbit/sec -> 365 bits per 20 ms frame.
-                    case 5:
-                        time_in_ms = ((file_size.st_size)*160)/365;
-                        break;
-                        // Mode 6: 19.85 kbit/sec -> 397 bits per 20 ms frame.
-                    case 6:
-                        time_in_ms = ((file_size.st_size)*160)/397;
-                        break;
-                        // Mode 7: 23.05 kbit/sec -> 461 bits per 20 ms frame.
-                    case 7:
-                        time_in_ms = ((file_size.st_size)*160)/461;
-                        break;
-                        // Mode 8: 23.85 kbit/sec -> 477 bits per 20 ms frame.
-                    case 8:
-                        time_in_ms = ((file_size.st_size)*160)/477;
-                        break;
-                    default:
-                        delete inStreamObj;
-                        return -1;
-                }
-            }
-#endif
 #ifdef WEBRTC_CODEC_ILBC
             if(!strcmp("#!iLBC20\n", buf))
             {

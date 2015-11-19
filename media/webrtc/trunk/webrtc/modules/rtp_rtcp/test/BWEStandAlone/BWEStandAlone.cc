@@ -32,36 +32,36 @@ public:
     myTransportCB (RtpRtcp *rtpMod) : _rtpMod(rtpMod) {};
 protected:
     // Inherited from UdpTransportData
-    virtual void IncomingRTPPacket(const int8_t* incomingRtpPacket,
-                                   const int32_t rtpPacketLength,
-                                   const int8_t* fromIP,
-                                   const uint16_t fromPort) OVERRIDE;
+ void IncomingRTPPacket(const int8_t* incomingRtpPacket,
+                        const size_t rtpPacketLength,
+                        const int8_t* fromIP,
+                        const uint16_t fromPort) override;
 
-    virtual void IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
-                                    const int32_t rtcpPacketLength,
-                                    const int8_t* fromIP,
-                                    const uint16_t fromPort) OVERRIDE;
+ void IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
+                         const size_t rtcpPacketLength,
+                         const int8_t* fromIP,
+                         const uint16_t fromPort) override;
 
 private:
     RtpRtcp *_rtpMod;
 };
 
 void myTransportCB::IncomingRTPPacket(const int8_t* incomingRtpPacket,
-                                      const int32_t rtpPacketLength,
+                                      const size_t rtpPacketLength,
                                       const int8_t* fromIP,
                                       const uint16_t fromPort)
 {
     printf("Receiving RTP from IP %s, port %u\n", fromIP, fromPort);
-    _rtpMod->IncomingPacket((uint8_t *) incomingRtpPacket, static_cast<uint16_t>(rtpPacketLength));
+    _rtpMod->IncomingPacket((uint8_t *) incomingRtpPacket, rtpPacketLength);
 }
 
 void myTransportCB::IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
-                                       const int32_t rtcpPacketLength,
+                                       const size_t rtcpPacketLength,
                                        const int8_t* fromIP,
                                        const uint16_t fromPort)
 {
     printf("Receiving RTCP from IP %s, port %u\n", fromIP, fromPort);
-    _rtpMod->IncomingPacket((uint8_t *) incomingRtcpPacket, static_cast<uint16_t>(rtcpPacketLength));
+    _rtpMod->IncomingPacket((uint8_t *) incomingRtcpPacket, rtcpPacketLength);
 }
 
 

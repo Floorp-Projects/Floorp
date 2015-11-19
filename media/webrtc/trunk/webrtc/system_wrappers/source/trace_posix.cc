@@ -28,7 +28,6 @@ TracePosix::TracePosix()
 
 TracePosix::~TracePosix() {
   delete &crit_sect_;
-  StopThread();
 }
 
 int32_t TracePosix::AddTime(char* trace_message, const TraceLevel level) const {

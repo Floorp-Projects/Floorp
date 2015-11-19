@@ -15,25 +15,41 @@
       'target_name': 'webrtc_opus',
       'type': 'static_library',
       'conditions': [
-        ['build_with_mozilla==1', {
-          # Mozilla provides its own build of the opus library.
-          'include_dirs': [
-            '/media/libopus/include',
-            '/media/libopus/src',
-            '/media/libopus/celt',
+        ['build_opus==1', {
+          'dependencies': [
+            '<(opus_dir)/opus.gyp:opus'
+          ],
+          'export_dependent_settings': [
+            '<(opus_dir)/opus.gyp:opus',
           ],
           'direct_dependent_settings': {
-            'include_dirs': [
-              '/media/libopus/include',
-              '/media/libopus/src',
-              '/media/libopus/celt',
+            'include_dirs': [  # need by Neteq audio classifier.
+              '<(opus_dir)/src/src',
+              '<(opus_dir)/src/celt',
             ],
           },
         }, {
-          'dependencies': [
-            '<(DEPTH)/third_party/opus/opus.gyp:opus'
+          'conditions': [
+            ['build_with_mozilla==1', {
+              # Mozilla provides its own build of the opus library.
+              'include_dirs': [
+                '/media/libopus/include',
+                '/media/libopus/src',
+                '/media/libopus/celt',
+              ],
+              'direct_dependent_settings': {
+                'include_dirs': [
+                  '/media/libopus/include',
+                  '/media/libopus/src',
+                  '/media/libopus/celt',
+                ],
+              },
+            }],
           ],
         }],
+      ],
+      'dependencies': [
+        'audio_encoder_interface',
       ],
       'include_dirs': [
         '<(webrtc_root)',

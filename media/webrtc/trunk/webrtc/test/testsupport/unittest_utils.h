@@ -14,8 +14,8 @@
 namespace webrtc {
 namespace test {
 
-const int kPacketSizeInBytes = 1500;
-const int kPacketDataLength = kPacketSizeInBytes * 2 + 1;
+const size_t kPacketSizeInBytes = 1500;
+const size_t kPacketDataLength = kPacketSizeInBytes * 2 + 1;
 const int kPacketDataNumberOfPackets = 3;
 
 // A base test fixture for packet related tests. Contains

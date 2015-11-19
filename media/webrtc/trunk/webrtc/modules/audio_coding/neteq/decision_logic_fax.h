@@ -47,13 +47,13 @@ class DecisionLogicFax : public DecisionLogic {
   // should be set to true. The output variable |reset_decoder| will be set to
   // true if a reset is required; otherwise it is left unchanged (i.e., it can
   // remain true if it was true before the call).
-  virtual Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
-                                            const Expand& expand,
-                                            int decoder_frame_length,
-                                            const RTPHeader* packet_header,
-                                            Modes prev_mode,
-                                            bool play_dtmf,
-                                            bool* reset_decoder) OVERRIDE;
+  Operations GetDecisionSpecialized(const SyncBuffer& sync_buffer,
+                                    const Expand& expand,
+                                    int decoder_frame_length,
+                                    const RTPHeader* packet_header,
+                                    Modes prev_mode,
+                                    bool play_dtmf,
+                                    bool* reset_decoder) override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(DecisionLogicFax);

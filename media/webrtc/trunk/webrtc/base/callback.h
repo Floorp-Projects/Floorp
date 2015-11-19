@@ -62,7 +62,6 @@
 #ifndef WEBRTC_BASE_CALLBACK_H_
 #define WEBRTC_BASE_CALLBACK_H_
 
-#include "webrtc/base/logging.h"
 #include "webrtc/base/refcount.h"
 #include "webrtc/base/scoped_ref_ptr.h"
 

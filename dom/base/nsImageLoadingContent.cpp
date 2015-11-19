@@ -385,10 +385,6 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
   }
 
   observer->mNext = new ImageObserver(aObserver);
-  if (! observer->mNext) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   ReplayImageStatus(mCurrentRequest, aObserver);
   ReplayImageStatus(mPendingRequest, aObserver);
 

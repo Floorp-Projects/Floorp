@@ -10,6 +10,7 @@
 
 #include "webrtc/common_audio/lapped_transform.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -53,12 +54,7 @@ class FftCheckerCallback : public webrtc::LappedTransform::Callback {
     float full_length = (frames - 1) * 2;
     ++block_num_;
 
-    if (block_num_ == 1) {
-      for (int i = 0; i < frames; ++i) {
-        ASSERT_NEAR(in_block[0][i].real(), 0.0f, 1e-5f);
-        ASSERT_NEAR(in_block[0][i].imag(), 0.0f, 1e-5f);
-      }
-    } else {
+    if (block_num_ > 0) {
       ASSERT_NEAR(in_block[0][0].real(), full_length, 1e-5f);
       ASSERT_NEAR(in_block[0][0].imag(), 0.0f, 1e-5f);
       for (int i = 1; i < frames; ++i) {
@@ -92,9 +88,14 @@ TEST(LappedTransformTest, Windowless) {
   const int kChannels = 3;
   const int kChunkLength = 512;
   const int kBlockLength = 64;
-  const int kShiftAmount = 32;
+  const int kShiftAmount = 64;
   NoopCallback noop;
-  LappedTransform trans(kChannels, kChannels, kChunkLength, nullptr,
+
+  // Rectangular window.
+  float window[kBlockLength];
+  std::fill(window, &window[kBlockLength], 1.0f);
+
+  LappedTransform trans(kChannels, kChannels, kChunkLength, window,
                         kBlockLength, kShiftAmount, &noop);
   float in_buffer[kChannels][kChunkLength];
   float* in_chunk[kChannels];
@@ -114,7 +115,7 @@ TEST(LappedTransformTest, Windowless) {
 
   for (int i = 0; i < kChannels; ++i) {
     for (int j = 0; j < kChunkLength; ++j) {
-      ASSERT_NEAR(out_chunk[i][j], (j < kBlockLength) ? 0.0f : 2.0f, 1e-5f);
+      ASSERT_NEAR(out_chunk[i][j], 2.0f, 1e-5f);
     }
   }
 
@@ -126,11 +127,10 @@ TEST(LappedTransformTest, IdentityProcessor) {
   const int kBlockLength = 64;
   const int kShiftAmount = 32;
   NoopCallback noop;
-  float window[kBlockLength];
-  float* window_ptr = window;
 
   // Identity window for |overlap = block_size / 2|.
-  SetFloatArray(sqrtf(0.5f), 1, kBlockLength, &window_ptr);
+  float window[kBlockLength];
+  std::fill(window, &window[kBlockLength], std::sqrt(0.5f));
 
   LappedTransform trans(1, 1, kChunkLength, window, kBlockLength, kShiftAmount,
                         &noop);
@@ -145,7 +145,9 @@ TEST(LappedTransformTest, IdentityProcessor) {
   trans.ProcessChunk(&in_chunk, &out_chunk);
 
   for (int i = 0; i < kChunkLength; ++i) {
-    ASSERT_NEAR(out_chunk[i], (i < kBlockLength) ? 0.0f : 2.0f, 1e-5f);
+    ASSERT_NEAR(out_chunk[i],
+                (i < kBlockLength - kShiftAmount) ? 0.0f : 2.0f,
+                1e-5f);
   }
 
   ASSERT_EQ(kChunkLength / kShiftAmount, noop.block_num());
@@ -155,7 +157,12 @@ TEST(LappedTransformTest, Callbacks) {
   const int kChunkLength = 512;
   const int kBlockLength = 64;
   FftCheckerCallback call;
-  LappedTransform trans(1, 1, kChunkLength, nullptr, kBlockLength,
+
+  // Rectangular window.
+  float window[kBlockLength];
+  std::fill(window, &window[kBlockLength], 1.0f);
+
+  LappedTransform trans(1, 1, kChunkLength, window, kBlockLength,
                         kBlockLength, &call);
   float in_buffer[kChunkLength];
   float* in_chunk = in_buffer;

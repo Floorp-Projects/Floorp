@@ -52,7 +52,7 @@ class ByteIoTest : public ::testing::Test {
 
   // Test reading big endian numbers.
   // Template arguments: Type T, read method RM(buffer), B bytes of data.
-  template <typename T, T (*RM)(uint8_t*), int B>
+  template <typename T, T (*RM)(const uint8_t*), int B>
   void TestRead(bool big_endian) {
     // Test both for values that are positive and negative (if signed)
     for (int neg = 0; neg < 2; ++neg) {

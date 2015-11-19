@@ -529,8 +529,6 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         nsAutoArrayPtr<txStylesheetAttr> atts;
         if (attsCount > 0) {
             atts = new txStylesheetAttr[attsCount];
-            NS_ENSURE_TRUE(atts, NS_ERROR_OUT_OF_MEMORY);
-
             uint32_t counter;
             for (counter = 0; counter < attsCount; ++counter) {
                 txStylesheetAttr& att = atts[counter];

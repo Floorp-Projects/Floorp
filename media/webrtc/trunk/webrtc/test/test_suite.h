@@ -18,7 +18,7 @@
 // any gtest based tests that are linked into your executable.
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 namespace test {
@@ -41,7 +41,7 @@ class TestSuite {
   DISALLOW_COPY_AND_ASSIGN(TestSuite);
 
  private:
-  scoped_ptr<TraceToStderr> trace_to_stderr_;
+  rtc::scoped_ptr<TraceToStderr> trace_to_stderr_;
 };
 
 }  // namespace test

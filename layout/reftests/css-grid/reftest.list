@@ -70,3 +70,7 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-justify-content-001.html grid-justify-content-001-ref.html
 == grid-justify-content-002.html grid-justify-content-002-ref.html
 == grid-justify-content-003.html grid-justify-content-003-ref.html
+== grid-column-gap-001.html grid-column-gap-001-ref.html
+== grid-column-gap-002.html grid-column-gap-002-ref.html
+== grid-column-gap-003.html grid-column-gap-003-ref.html
+== grid-row-gap-001-ref.html grid-row-gap-001-ref.html

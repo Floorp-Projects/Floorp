@@ -2126,6 +2126,34 @@ CSS_PROP_SHORTHAND(
     CSS_PROPERTY_PARSE_FUNCTION,
     "layout.css.grid.enabled")
 CSS_PROP_POSITION(
+    grid-column-gap,
+    grid_column_gap,
+    GridColumnGap,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "layout.css.grid.enabled",
+    VARIANT_HL | VARIANT_CALC,
+    nullptr,
+    offsetof(nsStylePosition, mGridColumnGap),
+    eStyleAnimType_nscoord)
+CSS_PROP_POSITION(
+    grid-row-gap,
+    grid_row_gap,
+    GridRowGap,
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "layout.css.grid.enabled",
+    VARIANT_HL | VARIANT_CALC,
+    nullptr,
+    offsetof(nsStylePosition, mGridRowGap),
+    eStyleAnimType_nscoord)
+CSS_PROP_SHORTHAND(
+    grid-gap,
+    grid_gap,
+    GridGap,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled")
+CSS_PROP_POSITION(
     height,
     height,
     Height,

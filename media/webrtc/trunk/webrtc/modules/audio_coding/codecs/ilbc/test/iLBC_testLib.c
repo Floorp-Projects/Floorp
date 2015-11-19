@@ -44,8 +44,8 @@ int main(int argc, char* argv[])
   short len, mode, pli;
   int blockcount = 0;
 
-  iLBC_encinst_t *Enc_Inst;
-  iLBC_decinst_t *Dec_Inst;
+  IlbcEncoderInstance *Enc_Inst;
+  IlbcDecoderInstance *Dec_Inst;
 #ifdef JUNK_DATA
   int i;
   FILE *seedfile;

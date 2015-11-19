@@ -15,9 +15,9 @@
 
 #include <list>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -35,7 +35,7 @@ class Bitrate {
   void Process();
 
   // Update with a packet.
-  void Update(const int32_t bytes);
+  void Update(const size_t bytes);
 
   // Packet rate last second, updated roughly every 100 ms.
   uint32_t PacketRate() const;
@@ -60,7 +60,7 @@ class Bitrate {
   Clock* clock_;
 
  private:
-  scoped_ptr<CriticalSectionWrapper> crit_;
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
   uint32_t packet_rate_;
   uint32_t bitrate_;
   uint8_t bitrate_next_idx_;
@@ -68,7 +68,7 @@ class Bitrate {
   int64_t bitrate_array_[10];
   int64_t bitrate_diff_ms_[10];
   int64_t time_last_rate_update_;
-  uint32_t bytes_count_;
+  size_t bytes_count_;
   uint32_t packet_count_;
   Observer* const observer_;
 };

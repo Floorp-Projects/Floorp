@@ -174,13 +174,19 @@ LayerTransactionParent::RecvShutdown()
 void
 LayerTransactionParent::Destroy()
 {
-  mDestroyed = true;
   const ManagedContainer<PLayerParent>& layers = ManagedPLayerParent();
   for (auto iter = layers.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowLayerParent* slp =
       static_cast<ShadowLayerParent*>(iter.Get()->GetKey());
     slp->Destroy();
   }
+  InfallibleTArray<PTextureParent*> textures;
+  ManagedPTextureParent(textures);
+  for (unsigned int i = 0; i < textures.Length(); ++i) {
+    RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
+    tex->DeallocateDeviceData();
+  }
+  mDestroyed = true;
 }
 
 bool
@@ -987,6 +993,38 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
 void
 LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 {
+}
+
+bool
+LayerTransactionParent::AllocShmem(size_t aSize,
+                                   ipc::SharedMemory::SharedMemoryType aType,
+                                   ipc::Shmem* aShmem)
+{
+  if (!mIPCOpen || mDestroyed) {
+    return false;
+  }
+  return PLayerTransactionParent::AllocShmem(aSize, aType, aShmem);
+}
+
+bool
+LayerTransactionParent::AllocUnsafeShmem(size_t aSize,
+                                         ipc::SharedMemory::SharedMemoryType aType,
+                                         ipc::Shmem* aShmem)
+{
+  if (!mIPCOpen || mDestroyed) {
+    return false;
+  }
+
+  return PLayerTransactionParent::AllocUnsafeShmem(aSize, aType, aShmem);
+}
+
+void
+LayerTransactionParent::DeallocShmem(ipc::Shmem& aShmem)
+{
+  if (!mIPCOpen || mDestroyed) {
+    return;
+  }
+  PLayerTransactionParent::DeallocShmem(aShmem);
 }
 
 bool LayerTransactionParent::IsSameProcess() const

@@ -71,10 +71,10 @@ public:
                                            const VideoCaptureCapability& requested,
                                            VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
-                                 VideoCaptureRotation& orientation);
+                                 VideoRotation& orientation);
 protected:
   int32_t _id;
-  scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
+  rtc::scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
 
 };
 
@@ -109,10 +109,10 @@ public:
                                            const VideoCaptureCapability& requested,
                                            VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
-                                 VideoCaptureRotation& orientation);
+                                 VideoRotation& orientation);
 protected:
   int32_t _id;
-  scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
+  rtc::scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
 };
 
 class WindowDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
@@ -146,10 +146,10 @@ public:
                                            const VideoCaptureCapability& requested,
                                            VideoCaptureCapability& resulting);
   virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
-                                 VideoCaptureRotation& orientation);
+                                 VideoRotation& orientation);
 protected:
   int32_t _id;
-  scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
+  rtc::scoped_ptr<DesktopDeviceInfo> desktop_device_info_;
 
 };
 
@@ -168,48 +168,45 @@ public:
   static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const CaptureDeviceType type);
 
   int32_t Init(const char* uniqueId, const CaptureDeviceType type);
-  // Implements Module declared functions.
-  virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 
   //Call backs
-  virtual void RegisterCaptureDataCallback(VideoCaptureDataCallback& dataCallback) OVERRIDE;
-  virtual void DeRegisterCaptureDataCallback() OVERRIDE;
-  virtual void RegisterCaptureCallback(VideoCaptureFeedBack& callBack) OVERRIDE;
-  virtual void DeRegisterCaptureCallback() OVERRIDE;
+  virtual void RegisterCaptureDataCallback(VideoCaptureDataCallback& dataCallback) override;
+  virtual void DeRegisterCaptureDataCallback() override;
+  virtual void RegisterCaptureCallback(VideoCaptureFeedBack& callBack) override;
+  virtual void DeRegisterCaptureCallback() override;
 
-  virtual void SetCaptureDelay(int32_t delayMS) OVERRIDE;
-  virtual int32_t CaptureDelay() OVERRIDE;
-  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation) OVERRIDE;
+  virtual void SetCaptureDelay(int32_t delayMS) override;
+  virtual int32_t CaptureDelay() override;
+  virtual int32_t SetCaptureRotation(VideoRotation rotation) override;
+  virtual bool SetApplyRotation(bool enable) override;
+  virtual bool GetApplyRotation() { return true; }
 
-  virtual void EnableFrameRateCallback(const bool enable) OVERRIDE;
-  virtual void EnableNoPictureAlarm(const bool enable) OVERRIDE;
+  virtual void EnableFrameRateCallback(const bool enable) override;
+  virtual void EnableNoPictureAlarm(const bool enable) override;
 
-  virtual const char* CurrentDeviceName() const OVERRIDE;
+  virtual const char* CurrentDeviceName() const override;
 
   // Module handling
-  virtual int32_t TimeUntilNextProcess() OVERRIDE;
-  virtual int32_t Process() OVERRIDE;
+  virtual int64_t TimeUntilNextProcess() override;
+  virtual int32_t Process() override;
 
   // Implement VideoCaptureExternal
   // |capture_time| must be specified in the NTP time format in milliseconds.
   virtual int32_t IncomingFrame(uint8_t* videoFrame,
-                                int32_t videoFrameLength,
+                                size_t videoFrameLength,
                                 const VideoCaptureCapability& frameInfo,
-                                int64_t captureTime = 0) OVERRIDE;
-  virtual int32_t IncomingI420VideoFrame(
-                                         I420VideoFrame* video_frame,
-                                         int64_t captureTime = 0) OVERRIDE;
+                                int64_t captureTime = 0) override;
 
   // Platform dependent
-  virtual int32_t StartCapture(const VideoCaptureCapability& capability) OVERRIDE;
-  virtual int32_t StopCapture() OVERRIDE;
-  virtual bool CaptureStarted() OVERRIDE;
-  virtual int32_t CaptureSettings(VideoCaptureCapability& settings) OVERRIDE;
-  VideoCaptureEncodeInterface* GetEncodeInterface(const VideoCodec& codec) OVERRIDE { return NULL; }
+  virtual int32_t StartCapture(const VideoCaptureCapability& capability) override;
+  virtual int32_t StopCapture() override;
+  virtual bool CaptureStarted() override;
+  virtual int32_t CaptureSettings(VideoCaptureCapability& settings) override;
+  VideoCaptureEncodeInterface* GetEncodeInterface(const VideoCodec& codec) override { return NULL; }
 
   //ScreenCapturer::Callback
-  virtual SharedMemory* CreateSharedMemory(size_t size) OVERRIDE;
-  virtual void OnCaptureCompleted(DesktopFrame* frame) OVERRIDE;
+  virtual SharedMemory* CreateSharedMemory(size_t size) override;
+  virtual void OnCaptureCompleted(DesktopFrame* frame) override;
 
 protected:
   DesktopCaptureImpl(const int32_t id);
@@ -243,10 +240,9 @@ private:
 
   TickTime _lastProcessFrameCount;
   TickTime _incomingFrameTimes[kFrameRateCountHistorySize];// timestamp for local captured frames
-  VideoRotationMode _rotateFrame; //Set if the frame should be rotated by the capture module.
+  VideoRotation _rotateFrame; //Set if the frame should be rotated by the capture module.
 
   I420VideoFrame _captureFrame;
-  VideoFrame _capture_encoded_frame;
 
   // Used to make sure incoming timestamp is increasing for every frame.
   int64_t last_capture_time_;
@@ -262,9 +258,9 @@ public:
   void process();
 
 private:
-  scoped_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
-  EventWrapper& time_event_;
-  ThreadWrapper&  capturer_thread_;
+  rtc::scoped_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
+  rtc::scoped_ptr<EventWrapper> time_event_;
+  rtc::scoped_ptr<ThreadWrapper> capturer_thread_;
 };
 
 }  // namespace webrtc

@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_INCLUDE_VIDEO_CAPTURE_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_INCLUDE_VIDEO_CAPTURE_H_
 
+#include "webrtc/common_video/rotation.h"
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/modules/video_capture/include/video_capture_defines.h"
 
@@ -61,9 +62,8 @@ class VideoCaptureModule: public RefCountedModule {
 
     // Gets clockwise angle the captured frames should be rotated in order
     // to be displayed correctly on a normally rotated display.
-    virtual int32_t GetOrientation(
-        const char* deviceUniqueIdUTF8,
-        VideoCaptureRotation& orientation) = 0;
+    virtual int32_t GetOrientation(const char* deviceUniqueIdUTF8,
+                                   VideoRotation& orientation) = 0;
 
     // Gets the capability that best matches the requested width, height and
     // frame rate.
@@ -96,7 +96,7 @@ class VideoCaptureModule: public RefCountedModule {
     //   - packetLoss   : Fraction lost
     //                    (loss rate in percent = 100 * packetLoss / 255).
     //   - rtt          : Round-trip time in milliseconds.
-    virtual int32_t SetChannelParameters(uint32_t packetLoss, int rtt) = 0;
+    virtual int32_t SetChannelParameters(uint32_t packetLoss, int64_t rtt) = 0;
 
     // Encode the next frame as key frame.
     virtual int32_t EncodeFrameType(const FrameType type) = 0;
@@ -142,7 +142,16 @@ class VideoCaptureModule: public RefCountedModule {
   // If the rotation is set to the same as returned by
   // DeviceInfo::GetOrientation the captured frames are
   // displayed correctly if rendered.
-  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation) = 0;
+  virtual int32_t SetCaptureRotation(VideoRotation rotation) = 0;
+
+  // Tells the capture module whether to apply the pending rotation. By default,
+  // the rotation is applied and the generated frame is up right. When set to
+  // false, generated frames will carry the rotation information from
+  // SetCaptureRotation. Return value indicates whether this operation succeeds.
+  virtual bool SetApplyRotation(bool enable) = 0;
+
+  // Return whether the rotation is applied or left pending.
+  virtual bool GetApplyRotation() = 0;
 
   // Gets a pointer to an encode interface if the capture device supports the
   // requested type and size.  NULL otherwise.

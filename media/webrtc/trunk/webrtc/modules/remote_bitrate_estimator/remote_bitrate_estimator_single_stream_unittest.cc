@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testing/gtest/include/gtest/gtest.h"
-
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.h"
 
 namespace webrtc {
 
-class RemoteBitrateEstimatorSingleTest : public RemoteBitrateEstimatorTest {
+class RemoteBitrateEstimatorSingleTest :
+    public RemoteBitrateEstimatorTest {
  public:
   static const uint32_t kRemoteBitrateEstimatorMinBitrateBps = 30000;
 
@@ -32,53 +31,46 @@ class RemoteBitrateEstimatorSingleTest : public RemoteBitrateEstimatorTest {
 };
 
 TEST_F(RemoteBitrateEstimatorSingleTest, InitialBehavior) {
-  InitialBehaviorTestHelper(498075);
+  InitialBehaviorTestHelper(508017);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, RateIncreaseReordering) {
-  RateIncreaseReorderingTestHelper(498136);
+  RateIncreaseReorderingTestHelper(506422);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, RateIncreaseRtpTimestamps) {
   RateIncreaseRtpTimestampsTestHelper(1621);
 }
 
-// Verify that the time it takes for the estimator to reduce the bitrate when
-// the capacity is tightened stays the same.
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropOneStream) {
-  CapacityDropTestHelper(1, false, 367);
+  CapacityDropTestHelper(1, false, 733);
 }
 
-// Verify that the time it takes for the estimator to reduce the bitrate when
-// the capacity is tightened stays the same. This test also verifies that we
-// handle wrap-arounds in this scenario.
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropOneStreamWrap) {
-  CapacityDropTestHelper(1, true, 367);
+  CapacityDropTestHelper(1, true, 733);
 }
 
-// Verify that the time it takes for the estimator to reduce the bitrate when
-// the capacity is tightened stays the same. This test also verifies that we
-// handle wrap-arounds in this scenario. This is a multi-stream test.
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropTwoStreamsWrap) {
-  CapacityDropTestHelper(2, true, 267);
+  CapacityDropTestHelper(2, true, 700);
 }
 
-// Verify that the time it takes for the estimator to reduce the bitrate when
-// the capacity is tightened stays the same. This test also verifies that we
-// handle wrap-arounds in this scenario. This is a multi-stream test.
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThreeStreamsWrap) {
-  CapacityDropTestHelper(3, true, 333);
+  CapacityDropTestHelper(3, true, 733);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThirteenStreamsWrap) {
-  CapacityDropTestHelper(13, true, 300);
+  CapacityDropTestHelper(13, true, 733);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropNineteenStreamsWrap) {
-  CapacityDropTestHelper(19, true, 300);
+  CapacityDropTestHelper(19, true, 733);
 }
 
 TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThirtyStreamsWrap) {
-  CapacityDropTestHelper(30, true, 300);
+  CapacityDropTestHelper(30, true, 733);
+}
+
+TEST_F(RemoteBitrateEstimatorSingleTest, TestTimestampGrouping) {
+  TestTimestampGroupingTestHelper();
 }
 }  // namespace webrtc

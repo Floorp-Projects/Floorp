@@ -49,7 +49,7 @@ class VideoRenderCallback
 {
 public:
     virtual int32_t RenderFrame(const uint32_t streamId,
-                                I420VideoFrame& videoFrame) = 0;
+                                const I420VideoFrame& videoFrame) = 0;
 
 protected:
     virtual ~VideoRenderCallback()
@@ -78,14 +78,6 @@ enum StretchMode
     kStretchMatchWidth = 3,
     kStretchMatchHeight = 4,
     kStretchNone = 5
-};
-
-enum Rotation
-{
-    kRotation0 = 0,
-    kRotation90 = 1,
-    kRotation180 = 2,
-    kRotation270 = 3
 };
 
 }  // namespace webrtc

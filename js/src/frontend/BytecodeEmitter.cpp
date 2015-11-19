@@ -1581,6 +1581,25 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                         break;
                     }
                 }
+            } else if (ssi.type() == StaticScopeIter<NoGC>::Module) {
+                RootedScript moduleScript(cx, ssi.moduleScript());
+                uint32_t slot_;
+                if (lookupAliasedName(moduleScript, name, &slot_, pn)) {
+                    slot = Some(slot_);
+                    break;
+                }
+
+                // Convert module import accesses to use JSOP_GETIMPORT.
+                RootedModuleEnvironmentObject env(cx, ssi.module().environment());
+                RootedPropertyName propName(cx, name);
+                MOZ_ASSERT(env);
+                if (env->hasImportBinding(propName)) {
+                    if (pn->getOp() == JSOP_GETNAME) {
+                        pn->setOp(JSOP_GETIMPORT);
+                        return true;
+                    }
+                    return false;
+                }
             } else if (ssi.type() == StaticScopeIter<NoGC>::Block) {
                 RootedShape shape(cx, ssi.block().lookupAliasedName(name));
                 if (shape) {
@@ -1856,7 +1875,11 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
       }
 
       case Definition::PLACEHOLDER:
+        return true;
+
       case Definition::IMPORT:
+        if (op == JSOP_GETNAME)
+            pn->setOp(JSOP_GETIMPORT);
         return true;
 
       case Definition::MISSING:

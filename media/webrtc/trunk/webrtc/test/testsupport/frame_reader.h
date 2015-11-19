@@ -54,12 +54,12 @@ class FrameReaderImpl : public FrameReader {
   //   frame_length_in_bytes   The size of each frame.
   //                           For YUV this is 3 * width * height / 2
   FrameReaderImpl(std::string input_filename, size_t frame_length_in_bytes);
-  virtual ~FrameReaderImpl();
-  virtual bool Init() OVERRIDE;
-  virtual bool ReadFrame(uint8_t* source_buffer) OVERRIDE;
-  virtual void Close() OVERRIDE;
-  virtual size_t FrameLength() OVERRIDE;
-  virtual int NumberOfFrames() OVERRIDE;
+  ~FrameReaderImpl() override;
+  bool Init() override;
+  bool ReadFrame(uint8_t* source_buffer) override;
+  void Close() override;
+  size_t FrameLength() override;
+  int NumberOfFrames() override;
 
  private:
   std::string input_filename_;

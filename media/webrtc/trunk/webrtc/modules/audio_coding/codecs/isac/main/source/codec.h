@@ -42,7 +42,7 @@ int WebRtcIsac_EncodeLb(float* in, ISACLBEncStruct* ISACencLB_obj,
                         int16_t codingMode, int16_t
                         bottleneckIndex);
 
-int WebRtcIsac_EncodeStoredDataLb(const ISAC_SaveEncData_t* ISACSavedEnc_obj,
+int WebRtcIsac_EncodeStoredDataLb(const IsacSaveEncoderData* ISACSavedEnc_obj,
                                   Bitstr* ISACBitStr_obj, int BWnumber,
                                   float scale);
 
