@@ -17,7 +17,6 @@
 
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include "Latency.h"
@@ -688,7 +687,6 @@ int32_t AudioDeviceSndio::InitRecording()
 
 int32_t AudioDeviceSndio::StartRecording()
 {
-    unsigned int unused_thread_id;
     const char* threadName = "webrtc_audio_module_capture_thread";
 
     if (_recHandle == NULL)
@@ -703,7 +701,6 @@ int32_t AudioDeviceSndio::StartRecording()
 
     _ptrThreadRec = ThreadWrapper::CreateThread(RecThreadFunc,
                                                 this,
-                                                kRealtimePriority,
                                                 threadName);
     if (_ptrThreadRec == NULL)
     {
@@ -721,21 +718,19 @@ int32_t AudioDeviceSndio::StartRecording()
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "  couldn't start recording");
-        delete _ptrThreadRec;
-        _ptrThreadRec = NULL;
+        _ptrThreadRec.reset();
         delete [] _recordingBuffer;
         _recordingBuffer = NULL;
         return -1;
     }
 
-    if (!_ptrThreadRec->Start(unused_thread_id))
+    if (!_ptrThreadRec->Start())
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "  failed to start the rec audio thread");
         _recording = false;
         sio_stop(_recHandle);
-        delete _ptrThreadRec;
-        _ptrThreadRec = NULL;
+        _ptrThreadRec.reset();
         delete [] _recordingBuffer;
         _recordingBuffer = NULL;
         return -1;
@@ -758,8 +753,10 @@ int32_t AudioDeviceSndio::StopRecording()
       _recording = false;
     }
 
-    if (_ptrThreadRec && !_ptrThreadRec->Stop())
+    if (_ptrThreadRec)
     {
+        _ptrThreadRec->Stop();
+        _ptrThreadRec.reset();
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
                      "    failed to stop the rec audio thread");
         return -1;
@@ -767,8 +764,6 @@ int32_t AudioDeviceSndio::StopRecording()
 
     sio_stop(_recHandle);
 
-    delete _ptrThreadRec;
-    _ptrThreadRec = NULL;
     return 0;
 }
 
@@ -789,7 +784,6 @@ bool AudioDeviceSndio::PlayoutIsInitialized() const
 
 int32_t AudioDeviceSndio::StartPlayout()
 {
-    unsigned int unused_thread_id;
     const char* threadName = "webrtc_audio_module_play_thread";
 
     if (_playHandle == NULL)
@@ -804,7 +798,6 @@ int32_t AudioDeviceSndio::StartPlayout()
 
     _ptrThreadPlay =  ThreadWrapper::CreateThread(PlayThreadFunc,
                                                   this,
-                                                  kRealtimePriority,
                                                   threadName);
     if (_ptrThreadPlay == NULL)
     {
@@ -819,19 +812,18 @@ int32_t AudioDeviceSndio::StartPlayout()
     if (!sio_start(_playHandle)) {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "    failed to start audio playback");
-        delete _ptrThreadPlay;
-        _ptrThreadPlay = NULL;
+        _ptrThreadPlay.reset();
         delete [] _playoutBuffer;
         _playoutBuffer = NULL;
         return -1;
     }
 
-    if (!_ptrThreadPlay->Start(unused_thread_id))
+    if (!_ptrThreadPlay->Start())
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "  failed to start the play audio thread");
         sio_stop(_playHandle);
-        delete _ptrThreadPlay;
+        _ptrThreadPlay.reset();
         _ptrThreadPlay = NULL;
         delete [] _playoutBuffer;
         _playoutBuffer = NULL;
@@ -853,14 +845,10 @@ int32_t AudioDeviceSndio::StopPlayout()
       _playing = false;
     }
 
-    if (_ptrThreadPlay && !_ptrThreadPlay->Stop())
+    if (_ptrThreadPlay)
     {
-        WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
-                     "  failed to stop the play audio thread");
-        return -1;
-    } else {
-        delete _ptrThreadPlay;
-        _ptrThreadPlay = NULL;
+        _ptrThreadPlay->Stop();
+        _ptrThreadPlay.reset();
     }
 
     sio_stop(_playHandle);
@@ -869,8 +857,6 @@ int32_t AudioDeviceSndio::StopPlayout()
 
     delete [] _playoutBuffer;
     _playoutBuffer = NULL;
-    delete _ptrThreadPlay;
-    _ptrThreadPlay = NULL;
     return 0;
 }
 
