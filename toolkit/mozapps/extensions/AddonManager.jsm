@@ -21,6 +21,9 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
   }
 }
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
+const MOZ_COMPATIBILITY_NIGHTLY = !['aurora', 'beta', 'release', 'esr'].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_DEFAULT_PROVIDERS_ENABLED  = "extensions.defaultProviders.enabled";
@@ -55,11 +58,9 @@ const FILE_BLOCKLIST                  = "blocklist.xml";
 
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const PREF_EM_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
-#ifdef MOZ_COMPATIBILITY_NIGHTLY
-var PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly";
-#else
-var PREF_EM_CHECK_COMPATIBILITY;
-#endif
+var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY ?
+                                  PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly" :
+                                  undefined;
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
@@ -911,10 +912,10 @@ var AddonManagerInternal = {
         this.validateBlocklist();
       }
 
-#ifndef MOZ_COMPATIBILITY_NIGHTLY
-      PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
-                                    Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
-#endif
+      if (!MOZ_COMPATIBILITY_NIGHTLY) {
+        PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
+                                      Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+      }
 
       try {
         gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
@@ -3138,11 +3139,9 @@ this.AddonManager = {
   // case-by-case basis.
   STATE_ASK_TO_ACTIVATE: "askToActivate",
 
-#ifdef MOZ_EM_DEBUG
   get __AddonManagerInternal__() {
-    return AddonManagerInternal;
+    return AppConstants.DEBUG ? AddonManagerInternal : undefined;
   },
-#endif
 
   get isReady() {
     return gStartupComplete && !gShutdownInProgress;

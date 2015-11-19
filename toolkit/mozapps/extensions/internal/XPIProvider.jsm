@@ -11,10 +11,14 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["XPIProvider"];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Preferences.jsm");
+const CONSTANTS = {};
+Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
+const { ADDON_SIGNING, REQUIRE_SIGNING } = CONSTANTS
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
@@ -48,6 +52,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProductAddonChecker",
                                   "resource://gre/modules/addons/ProductAddonChecker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
                                    "@mozilla.org/extensions/blocklist;1",
@@ -158,9 +164,8 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-// The value for this is in Makefile.in
-#expand const DB_SCHEMA                       = __MOZ_EXTENSIONS_DB_SCHEMA__;
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", DB_SCHEMA);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 17);
+
 const NOTIFICATION_TOOLBOXPROCESS_LOADED      = "ToolboxProcessLoaded";
 
 // Properties that exist in the install manifest
@@ -288,6 +293,7 @@ function loadLazyObjects() {
     ADDON_SIGNING,
     SIGNED_TYPES,
     BOOTSTRAP_REASONS,
+    DB_SCHEMA,
     AddonInternal,
     XPIProvider,
     XPIStates,
@@ -6154,11 +6160,9 @@ AddonInstall.createUpdate = function AI_createUpdate(aCallback, aAddon, aUpdate)
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
-#ifdef MOZ_EM_DEBUG
   this.__defineGetter__("__AddonInstallInternal__", function AIW_debugGetter() {
-    return aInstall;
+    return AppConstants.DEBUG ? aInstall : undefined;
   });
-#endif
 
   ["name", "version", "icons", "releaseNotesURI", "file", "state", "error",
    "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
@@ -6722,11 +6726,9 @@ function createWrapper(aAddon) {
  * the public API.
  */
 function AddonWrapper(aAddon) {
-#ifdef MOZ_EM_DEBUG
   this.__defineGetter__("__AddonInternal__", function AW_debugGetter() {
-    return aAddon;
+    return AppConstants.DEBUG ? aAddon : undefined;
   });
-#endif
 
   function chooseValue(aObj, aProp) {
     let repositoryAddon = aAddon._repositoryAddon;
@@ -7962,7 +7964,6 @@ const TemporaryInstallLocation = {
   getStagingDir: () => {},
 }
 
-#ifdef XP_WIN
 /**
  * An object that identifies a registry install location for add-ons. The location
  * consists of a registry key which contains string values mapping ID to the
@@ -8012,11 +8013,9 @@ WinRegInstallLocation.prototype = {
     let appVendor = Services.appinfo.vendor;
     let appName = Services.appinfo.name;
 
-#ifdef MOZ_THUNDERBIRD
     // XXX Thunderbird doesn't specify a vendor string
-    if (appVendor == "")
+    if (AppConstants.MOZ_APP_NAME == "thunderbird" && appVendor == "")
       appVendor = "Mozilla";
-#endif
 
     // XULRunner-based apps may intentionally not specify a vendor
     if (appVendor != "")
@@ -8083,31 +8082,6 @@ WinRegInstallLocation.prototype = {
     return true;
   }
 };
-#endif
-
-// Make these non-changable properties so they can't be manipulated from other
-// code in the app.
-Object.defineProperty(this, "ADDON_SIGNING", {
-  configurable: false,
-  enumerable: false,
-  writable: false,
-#ifdef MOZ_ADDON_SIGNING
-  value: true,
-#else
-  value: false,
-#endif
-});
-
-Object.defineProperty(this, "REQUIRE_SIGNING", {
-  configurable: false,
-  enumerable: false,
-  writable: false,
-#ifdef MOZ_REQUIRE_SIGNING
-  value: true,
-#else
-  value: false,
-#endif
-});
 
 var addonTypes = [
   new AddonManagerPrivate.AddonType("extension", URI_EXTENSION_STRINGS,
