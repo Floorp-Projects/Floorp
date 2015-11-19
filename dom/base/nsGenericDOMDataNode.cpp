@@ -343,7 +343,6 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     // Allocate new buffer
     int32_t newLength = textLength - aCount + aLength;
     char16_t* to = new char16_t[newLength];
-    NS_ENSURE_TRUE(to, NS_ERROR_OUT_OF_MEMORY);
 
     // Copy over appropriate data
     if (aOffset) {

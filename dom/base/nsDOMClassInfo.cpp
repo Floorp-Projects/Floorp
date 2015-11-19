@@ -1411,7 +1411,6 @@ nsDOMConstructor::Create(const char16_t* aName,
                          IsConstructable(aData);
 
   *aResult = new nsDOMConstructor(aName, constructable, currentInner);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aResult);
   return NS_OK;
 }
