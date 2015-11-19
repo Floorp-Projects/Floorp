@@ -137,11 +137,9 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
             {
                 txNodeTypeTest* typeTest;
                 typeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
-                if (typeTest) {
-                    nsAutoString nodeName;
-                    txXPathNodeUtils::getNodeName(currNode, nodeName);
-                    typeTest->setNodeName(nodeName);
-                }
+                nsAutoString nodeName;
+                txXPathNodeUtils::getNodeName(currNode, nodeName);
+                typeTest->setNodeName(nodeName);
                 nodeTest = typeTest;
                 break;
             }
@@ -161,14 +159,8 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
                 break;
             }
         }
-        NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
-
+        MOZ_ASSERT(nodeTest);
         countPattern = new txStepPattern(nodeTest, false);
-        if (!countPattern) {
-            // XXX error reporting
-            delete nodeTest;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
     }
 
 
