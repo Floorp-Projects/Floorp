@@ -217,7 +217,15 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
-    case nsIContentPolicy::TYPE_DTD:
+    case nsIContentPolicy::TYPE_DTD: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(!requestingContext ||
+                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+                 "type_dtd requires requestingContext of type Document");
+      break;
+    }
+
     case nsIContentPolicy::TYPE_FONT: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;
