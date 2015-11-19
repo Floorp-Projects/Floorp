@@ -3060,9 +3060,9 @@ IsArrayConstructor(const Value& v)
 }
 
 static bool
-ArrayFromCallArgs(JSContext* cx, CallArgs& args, HandleObject proto = nullptr)
+ArrayFromCallArgs(JSContext* cx, CallArgs& args)
 {
-    JSObject* obj = NewCopiedArrayForCallingAllocationSite(cx, args.array(), args.length(), proto);
+    JSObject* obj = NewCopiedArrayForCallingAllocationSite(cx, args.array(), args.length());
     if (!obj)
         return false;
 
@@ -3183,12 +3183,8 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject proto(cx);
-    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
-        return false;
-
     if (args.length() != 1 || !args[0].isNumber())
-        return ArrayFromCallArgs(cx, args, proto);
+        return ArrayFromCallArgs(cx, args);
 
     uint32_t length;
     if (args[0].isInt32()) {
@@ -3207,7 +3203,7 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JSObject* obj = NewPartlyAllocatedArrayForCallingAllocationSite(cx, length, proto);
+    JSObject* obj = NewPartlyAllocatedArrayForCallingAllocationSite(cx, length);
     if (!obj)
         return false;
 
@@ -3314,6 +3310,12 @@ EnsureNewArrayElements(ExclusiveContext* cx, ArrayObject* obj, uint32_t length)
     return true;
 }
 
+static bool
+NewArrayIsCachable(ExclusiveContext* cxArg, NewObjectKind newKind)
+{
+    return cxArg->isJSContext() && newKind == GenericObject;
+}
+
 template <uint32_t maxLength>
 static MOZ_ALWAYS_INLINE ArrayObject*
 NewArray(ExclusiveContext* cxArg, uint32_t length,
@@ -3323,18 +3325,13 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
     MOZ_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayObject::class_));
     allocKind = GetBackgroundAllocKind(allocKind);
 
-    RootedObject proto(cxArg, protoArg);
-    if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
-        return nullptr;
-
-    Rooted<TaggedProto> taggedProto(cxArg, TaggedProto(proto));
-    bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, taggedProto, newKind, &ArrayObject::class_);
+    bool isCachable = NewArrayIsCachable(cxArg, newKind);
     if (isCachable) {
         JSContext* cx = cxArg->asJSContext();
         JSRuntime* rt = cx->runtime();
         NewObjectCache& cache = rt->newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
-        if (cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry)) {
+        if (cache.lookupGlobal(&ArrayObject::class_, cx->global(), allocKind, &entry)) {
             gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
             AutoSetNewObjectMetadata metadata(cx);
             JSObject* obj = cache.newObjectFromHit(cx, entry, heap);
@@ -3352,6 +3349,10 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
             }
         }
     }
+
+    RootedObject proto(cxArg, protoArg);
+    if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
+        return nullptr;
 
     RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, &ArrayObject::class_,
                                                                 TaggedProto(proto)));
@@ -3388,8 +3389,8 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
     if (isCachable) {
         NewObjectCache& cache = cxArg->asJSContext()->runtime()->newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
-        cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry);
-        cache.fillProto(entry, &ArrayObject::class_, taggedProto, allocKind, arr);
+        cache.lookupGlobal(&ArrayObject::class_, cxArg->global(), allocKind, &entry);
+        cache.fillGlobal(entry, &ArrayObject::class_, cxArg->global(), allocKind, arr);
     }
 
     if (maxLength > 0 && !EnsureNewArrayElements(cxArg, arr, std::min(maxLength, length)))
@@ -3489,9 +3490,7 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
 }
 
 // Return a new boxed or unboxed array with the specified length and allocated
-// capacity (up to maxLength), using the specified group if possible. If the
-// specified group cannot be used, ensure that the created array at least has
-// the given [[Prototype]].
+// capacity (up to maxLength), using the specified group if possible.
 template <uint32_t maxLength>
 static inline JSObject*
 NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
@@ -3505,15 +3504,14 @@ NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length
     if (group->shouldPreTenure() || group->maybePreliminaryObjects())
         newKind = TenuredObject;
 
-    RootedObject proto(cx, group->proto().toObject());
     if (group->maybeUnboxedLayout()) {
-        if (length > UnboxedArrayObject::MaximumCapacity) {
-            return NewArray<maxLength>(cx, length, proto, newKind);
-        }
+        if (length > UnboxedArrayObject::MaximumCapacity)
+            return NewArray<maxLength>(cx, length, nullptr, newKind);
+
         return UnboxedArrayObject::create(cx, group, length, newKind, maxLength);
     }
 
-    ArrayObject* res = NewArray<maxLength>(cx, length, proto, newKind);
+    ArrayObject* res = NewArray<maxLength>(cx, length, nullptr, newKind);
     if (!res)
         return nullptr;
 
@@ -3592,9 +3590,9 @@ js::NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
 }
 
 JSObject*
-js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto)
+js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length)
 {
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return nullptr;
     return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
@@ -3654,10 +3652,9 @@ js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
 }
 
 JSObject*
-js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length,
-                                           HandleObject proto /* = nullptr */)
+js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length)
 {
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return nullptr;
     return NewCopiedArrayTryUseGroup(cx, group, vp, length);
