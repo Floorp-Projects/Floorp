@@ -771,6 +771,20 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
 }
 #endif
 
+template <typename Units>
+Maybe<IntRectTyped<Units>>
+IntersectMaybeRects(const Maybe<IntRectTyped<Units>>& a,
+                    const Maybe<IntRectTyped<Units>>& b)
+{
+  if (!a) {
+    return b;
+  } else if (!b) {
+    return a;
+  } else {
+    return Some(a->Intersect(*b));
+  }
+}
+
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                                           bool* aOutFoundRoot)
@@ -886,11 +900,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // move with this APZC.
     if (metrics.HasClipRect()) {
       ParentLayerIntRect clip = metrics.ClipRect();
-      if (asyncClip) {
-        asyncClip = Some(clip.Intersect(*asyncClip));
-      } else {
-        asyncClip = Some(clip);
-      }
+      asyncClip = IntersectMaybeRects(Some(clip), asyncClip);
     }
 
     // Do the same for the ancestor mask layers: ancestorMaskLayers contains
