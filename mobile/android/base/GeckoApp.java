@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
@@ -1225,7 +1226,7 @@ public abstract class GeckoApp
             enableStrictMode();
         }
 
-        if (!isSupportedSDK()) {
+        if (!isSupportedSystem()) {
             // This build does not support the Android version of the device: Show an error and finish the app.
             super.onCreate(savedInstanceState);
             showSDKVersionError();
@@ -2148,7 +2149,7 @@ public abstract class GeckoApp
 
     @Override
     public void onDestroy() {
-        if (!isSupportedSDK()) {
+        if (!isSupportedSystem()) {
             // This build does not support the Android version of the device:
             // We did not initialize anything, so skip cleaning up.
             super.onDestroy();
@@ -2257,9 +2258,30 @@ public abstract class GeckoApp
         }
     }
 
-    protected boolean isSupportedSDK() {
-        return Build.VERSION.SDK_INT >= Versions.MIN_SDK_VERSION &&
-               Build.VERSION.SDK_INT <= Versions.MAX_SDK_VERSION;
+    protected boolean isSupportedSystem() {
+        if (Build.VERSION.SDK_INT < Versions.MIN_SDK_VERSION ||
+            Build.VERSION.SDK_INT > Versions.MAX_SDK_VERSION) {
+            return false;
+        }
+
+        // See http://developer.android.com/ndk/guides/abis.html
+        boolean isSystemARM = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("arm");
+        boolean isSystemX86 = Build.CPU_ABI != null && Build.CPU_ABI.startsWith("x86");
+
+        boolean isAppARM = AppConstants.ANDROID_CPU_ARCH.startsWith("arm");
+        boolean isAppX86 = AppConstants.ANDROID_CPU_ARCH.startsWith("x86");
+
+        // Only reject known incompatible ABIs. Better safe than sorry.
+        if ((isSystemX86 && isAppARM) || (isSystemARM && isAppX86)) {
+            return false;
+        }
+
+        if ((isSystemX86 && isAppX86) || (isSystemARM && isAppARM)) {
+            return true;
+        }
+
+        Log.w(LOGTAG, "Unknown app/system ABI combination: " + AppConstants.MOZ_APP_ABI + " / " + Build.CPU_ABI);
+        return true;
     }
 
     public void showSDKVersionError() {

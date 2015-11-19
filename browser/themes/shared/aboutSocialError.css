@@ -5,7 +5,7 @@
 }
 
 #errorTitle {
-  background: url("aboutNetError_info.svg") left 0 no-repeat;
+  background: url("chrome://global/skin/icons/info.svg") left 0 no-repeat;
   background-size: 2em;
   -moz-padding-start: 3em;
 }

@@ -15,7 +15,6 @@ const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
 
 const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 
 const REASON_ABORTED_SESSION = "aborted-session";
@@ -92,7 +91,7 @@ function run_test() {
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  Preferences.set(PREF_ENABLED, true);
+  Preferences.set(PREF_TELEMETRY_ENABLED, true);
 
   run_next_test();
 }

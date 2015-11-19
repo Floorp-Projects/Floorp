@@ -6,52 +6,43 @@
  */
 "use strict";
 
-const { injectLoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
-gMozLoopAPI = injectLoopAPI({});
+const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
+var [, gHandlers] = LoopAPI.inspect();
 
 var handlers = [
-  {
-    resolve: null,
-    windowId: null,
-    listener: function(err, windowId) {
-      handlers[0].windowId = windowId;
-      handlers[0].resolve();
-    }
-  },
-  {
-    resolve: null,
-    windowId: null,
-    listener: function(err, windowId) {
-      handlers[1].windowId = windowId;
-      handlers[1].resolve();
-    }
-  }
+  { windowId: null }, { windowId: null }
 ];
 
-function promiseWindowIdReceivedOnAdd(handler) {
+function promiseWindowId() {
   return new Promise(resolve => {
-    handler.resolve = resolve;
-    gMozLoopAPI.addBrowserSharingListener(handler.listener);
+    LoopAPI.stub([{
+      sendAsyncMessage: function(messageName, data) {
+        let [name, windowId] = data;
+        if (name == "BrowserSwitch") {
+          LoopAPI.restore();
+          resolve(windowId);
+        }
+      }
+    }]);
+    gHandlers.AddBrowserSharingListener({}, () => {});
   });
+}
+
+function* promiseWindowIdReceivedOnAdd(handler) {
+  handler.windowId = yield promiseWindowId();
 }
 
 var createdTabs = [];
 
-function promiseWindowIdReceivedNewTab(handlersParam = []) {
-  let promiseHandlers = [];
-
-  handlersParam.forEach(handler => {
-    promiseHandlers.push(new Promise(resolve => {
-      handler.resolve = resolve;
-    }));
-  });
-
+function* promiseWindowIdReceivedNewTab(handlersParam = []) {
   let createdTab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
   createdTabs.push(createdTab);
 
-  promiseHandlers.push(BrowserTestUtils.browserLoaded(createdTab.linkedBrowser));
+  let windowId = yield promiseWindowId();
 
-  return Promise.all(promiseHandlers);
+  for (let handler of handlersParam) {
+    handler.windowId = windowId;
+  }
 }
 
 function promiseRemoveTab(tab) {
@@ -87,7 +78,7 @@ add_task(function* test_singleListener() {
   Assert.notEqual(initialWindowId, newWindowId, "Tab contentWindow IDs shouldn't be the same");
 
   // Now remove the listener.
-  gMozLoopAPI.removeBrowserSharingListener(handlers[0].listener);
+  gHandlers.RemoveBrowserSharingListener();
 
   yield removeTabs();
 });
@@ -117,7 +108,7 @@ add_task(function* test_multipleListener() {
   Assert.notEqual(initialWindowId0, newWindowId0, "Tab contentWindow IDs shouldn't be the same");
 
   // Now remove the first listener.
-  gMozLoopAPI.removeBrowserSharingListener(handlers[0].listener);
+  gHandlers.RemoveBrowserSharingListener();
 
   // Check that a new tab updates the window id.
   yield promiseWindowIdReceivedNewTab([handlers[1]]);
@@ -130,7 +121,7 @@ add_task(function* test_multipleListener() {
   Assert.notEqual(newWindowId1, nextWindowId1, "Second listener should have updated");
 
   // Cleanup.
-  gMozLoopAPI.removeBrowserSharingListener(handlers[1].listener);
+  gHandlers.RemoveBrowserSharingListener();
 
   yield removeTabs();
 });
@@ -195,7 +186,7 @@ add_task(function* test_infoBar() {
   Assert.equal(getInfoBar(), null, "The notification should still be hidden");
 
   // Cleanup.
-  gMozLoopAPI.removeBrowserSharingListener(handlers[0].listener);
+  gHandlers.RemoveBrowserSharingListener();
   yield removeTabs();
   Services.prefs.clearUserPref(kPrefBrowserSharingInfoBar);
 });

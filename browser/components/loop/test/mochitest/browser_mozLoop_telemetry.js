@@ -7,9 +7,10 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
-
-add_task(loadLoopPanel);
+const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
+var [, gHandlers] = LoopAPI.inspect();
+var gConstants;
+gHandlers.GetAllConstants({}, constants => gConstants = constants);
 
 /**
  * Enable local telemetry recording for the duration of the tests.
@@ -28,7 +29,7 @@ add_task(function* test_initialize() {
 add_task(function* test_mozLoop_telemetryAdd_buckets() {
   let histogramId = "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  let CONN_LENGTH = gMozLoopAPI.TWO_WAY_MEDIA_CONN_LENGTH;
+  let CONN_LENGTH = gConstants.TWO_WAY_MEDIA_CONN_LENGTH;
 
   histogram.clear();
   for (let value of [CONN_LENGTH.SHORTER_THAN_10S,
@@ -41,7 +42,7 @@ add_task(function* test_mozLoop_telemetryAdd_buckets() {
                      CONN_LENGTH.MORE_THAN_5M,
                      CONN_LENGTH.MORE_THAN_5M,
                      CONN_LENGTH.MORE_THAN_5M]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -54,7 +55,7 @@ add_task(function* test_mozLoop_telemetryAdd_buckets() {
 add_task(function* test_mozLoop_telemetryAdd_sharing_buckets() {
   let histogramId = "LOOP_SHARING_STATE_CHANGE_1";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  const SHARING_STATES = gMozLoopAPI.SHARING_STATE_CHANGE;
+  const SHARING_STATES = gConstants.SHARING_STATE_CHANGE;
 
   histogram.clear();
   for (let value of [SHARING_STATES.WINDOW_ENABLED,
@@ -67,7 +68,7 @@ add_task(function* test_mozLoop_telemetryAdd_sharing_buckets() {
                      SHARING_STATES.BROWSER_DISABLED,
                      SHARING_STATES.BROWSER_DISABLED,
                      SHARING_STATES.BROWSER_DISABLED]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -80,7 +81,7 @@ add_task(function* test_mozLoop_telemetryAdd_sharing_buckets() {
 add_task(function* test_mozLoop_telemetryAdd_sharingURL_buckets() {
   let histogramId = "LOOP_SHARING_ROOM_URL";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  const SHARING_TYPES = gMozLoopAPI.SHARING_ROOM_URL;
+  const SHARING_TYPES = gConstants.SHARING_ROOM_URL;
 
   histogram.clear();
   for (let value of [SHARING_TYPES.COPY_FROM_PANEL,
@@ -93,7 +94,7 @@ add_task(function* test_mozLoop_telemetryAdd_sharingURL_buckets() {
                      SHARING_TYPES.EMAIL_FROM_CONVERSATION,
                      SHARING_TYPES.EMAIL_FROM_CONVERSATION,
                      SHARING_TYPES.EMAIL_FROM_CONVERSATION]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -110,13 +111,13 @@ add_task(function* test_mozLoop_telemetryAdd_sharingURL_buckets() {
 add_task(function* test_mozLoop_telemetryAdd_roomCreate_buckets() {
   let histogramId = "LOOP_ROOM_CREATE";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  const ACTION_TYPES = gMozLoopAPI.ROOM_CREATE;
+  const ACTION_TYPES = gConstants.ROOM_CREATE;
 
   histogram.clear();
   for (let value of [ACTION_TYPES.CREATE_SUCCESS,
                      ACTION_TYPES.CREATE_FAIL,
                      ACTION_TYPES.CREATE_FAIL]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -129,13 +130,13 @@ add_task(function* test_mozLoop_telemetryAdd_roomCreate_buckets() {
 add_task(function* test_mozLoop_telemetryAdd_roomDelete_buckets() {
   let histogramId = "LOOP_ROOM_DELETE";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  const ACTION_TYPES = gMozLoopAPI.ROOM_DELETE;
+  const ACTION_TYPES = gConstants.ROOM_DELETE;
 
   histogram.clear();
   for (let value of [ACTION_TYPES.DELETE_SUCCESS,
                      ACTION_TYPES.DELETE_FAIL,
                      ACTION_TYPES.DELETE_FAIL]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -148,13 +149,13 @@ add_task(function* test_mozLoop_telemetryAdd_roomDelete_buckets() {
 add_task(function* test_mozLoop_telemetryAdd_roomContextAdd_buckets() {
   let histogramId = "LOOP_ROOM_CONTEXT_ADD";
   let histogram = Services.telemetry.getHistogramById(histogramId);
-  const ACTION_TYPES = gMozLoopAPI.ROOM_CONTEXT_ADD;
+  const ACTION_TYPES = gConstants.ROOM_CONTEXT_ADD;
 
   histogram.clear();
   for (let value of [ACTION_TYPES.ADD_FROM_PANEL,
                      ACTION_TYPES.ADD_FROM_CONVERSATION,
                      ACTION_TYPES.ADD_FROM_CONVERSATION]) {
-    gMozLoopAPI.telemetryAddValue(histogramId, value);
+    gHandlers.TelemetryAddValue({ data: [histogramId, value] }, () => {});
   }
 
   let snapshot = histogram.snapshot();
@@ -172,7 +173,7 @@ add_task(function* test_mozLoop_telemetryAdd_roomContextClick() {
 
   let snapshot;
   for (let i = 1; i < 4; ++i) {
-    gMozLoopAPI.telemetryAddValue(histogramId, 1);
+    gHandlers.TelemetryAddValue({ data: [histogramId, 1] }, () => {});
     snapshot = histogram.snapshot();
     Assert.strictEqual(snapshot.counts[0], i);
   }
@@ -186,7 +187,7 @@ add_task(function* test_mozLoop_telemetryAdd_roomSessionWithChat() {
 
   let snapshot;
   for (let i = 1; i < 4; ++i) {
-    gMozLoopAPI.telemetryAddValue(histogramId, 1);
+    gHandlers.TelemetryAddValue({ data: [histogramId, 1] }, () => {});
     snapshot = histogram.snapshot();
     Assert.strictEqual(snapshot.counts[0], i);
   }

@@ -64,7 +64,8 @@
 :root[devtoolstheme="dark"] #identity-box {
   --identity-box-chrome-color: #46afe3;
   --identity-box-verified-background-color: transparent;
-  --identity-box-selected-background-color: rgba(231,230,230,.2);
+  --identity-box-hover-background-color: rgba(231,230,230,.2);
+  --identity-box-selected-background-color: rgba(211,210,210,.2);
 }
 
 :root[devtoolstheme="light"] {
