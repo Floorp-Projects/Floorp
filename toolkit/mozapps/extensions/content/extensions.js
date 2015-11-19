@@ -15,6 +15,12 @@ Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 
+const CONSTANTS = {};
+Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
+const SIGNING_REQUIRED = CONSTANTS.REQUIRE_SIGNING ?
+                         true :
+                         Services.prefs.getBoolPref("xpinstall.signatures.required");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
@@ -3796,9 +3802,3 @@ var gDragDrop = {
     aEvent.preventDefault();
   }
 };
-
-#ifdef MOZ_REQUIRE_SIGNING
-const SIGNING_REQUIRED = true;
-#else
-const SIGNING_REQUIRED = Services.prefs.getBoolPref("xpinstall.signatures.required");
-#endif

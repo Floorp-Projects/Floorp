@@ -41,9 +41,6 @@ const FILE_JSON_DB                    = "extensions.json";
 const FILE_OLD_DATABASE               = "extensions.rdf";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
-// The value for this is in Makefile.in
-#expand const DB_SCHEMA               = __MOZ_EXTENSIONS_DB_SCHEMA__;
-
 // The last version of DB_SCHEMA implemented in SQLITE
 const LAST_SQLITE_DB_SCHEMA           = 14;
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
