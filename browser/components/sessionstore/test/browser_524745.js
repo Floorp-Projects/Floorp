@@ -35,7 +35,8 @@ function test() {
 
         // Cleanup
         window.restore();
-        BrowserTestUtils.closeWindow(window_B).then(finish);
+        window_B.close();
+        finish();
       });
     }, window_B);
   });
