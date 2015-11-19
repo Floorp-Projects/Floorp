@@ -5703,6 +5703,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.ruby.enabled")) {
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
+  var isGridTemplateSubgridValueEnabled =
+    IsCSSPropertyPrefEnabled("layout.css.grid-template-subgrid-value.enabled");
+
   gCSSProperties["display"].other_values.push("grid", "inline-grid");
   gCSSProperties["grid-auto-flow"] = {
     domProp: "gridAutoFlow",
@@ -5797,15 +5800,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto [b c]) [d]",
       "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto) [d]",
       "[a] 2.5fr [z] Repeat(4, 20px [b c] auto [b c]) [d]",
-      "[a] 2.5fr [z] Repeat(4, 20px auto) [d]",
-
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
-      "[none auto subgrid min-content max-content foo] 40px",
-
-      "subgrid",
-      "subgrid [] [foo bar]",
-      "subgrid repeat(1, [])",
-      "subgrid Repeat(4, [a] [b c] [] [d])",
+      "[a] 2.5fr [z] Repeat(4, 20px auto) [d]"
     ],
     invalid_values: [
       "",
@@ -5842,6 +5837,23 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "repeat(2.5, 20px)",
       "repeat(2, (foo))",
       "repeat(2, foo)",
+      "40px calc(0px + rubbish)"
+    ],
+    unbalanced_values: [
+      "(foo] 40px",
+    ]
+  };
+  if (isGridTemplateSubgridValueEnabled) {
+    gCSSProperties["grid-template-columns"].other_values.push(
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
+      "[none auto subgrid min-content max-content foo] 40px",
+
+      "subgrid",
+      "subgrid [] [foo bar]",
+      "subgrid repeat(1, [])",
+      "subgrid Repeat(4, [a] [b c] [] [d])"
+    );
+    gCSSProperties["grid-template-columns"].invalid_values.push(
       "subgrid (foo) 40px",
       "subgrid (foo 40px)",
       "(foo) subgrid",
@@ -5854,13 +5866,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid repeat(1)",
       "subgrid repeat(1, )",
       "subgrid repeat(2, (40px))",
-      "subgrid repeat(2, foo)",
-      "40px calc(0px + rubbish)",
-    ],
-    unbalanced_values: [
-      "(foo] 40px",
-    ]
-  };
+      "subgrid repeat(2, foo)"
+    );
+  }
   gCSSProperties["grid-template-rows"] = {
     domProp: "gridTemplateRows",
     inherited: false,
@@ -5910,18 +5918,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "none / none",
     ],
     other_values: [
-      "subgrid",
       // <'grid-template-columns'> / <'grid-template-rows'>
       "40px / 100px",
       "[foo] 40px [bar] / [baz] 100px [fizz]",
       " none/100px",
       "40px/none",
-      "subgrid/40px 20px",
-      "subgrid [foo] [] [bar baz] / 40px 20px",
-      "40px 20px/subgrid",
-      "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
-      "subgrid/subgrid",
-      "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]",
       // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
       "'fizz'",
       "[bar] 'fizz'",
@@ -5933,15 +5934,28 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[foo] 40px / [bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b]",
     ],
     invalid_values: [
-      "subgrid []",
-      "subgrid [] / 'fizz'",
-      "subgrid / 'fizz'",
       "[foo] [bar] 40px / 100px",
       "40px / [fizz] [buzz] 100px",
       "40px / [fizz] [buzz] 'foo'",
       "none / 'foo'"
     ]
   };
+  if (isGridTemplateSubgridValueEnabled) {
+    gCSSProperties["grid-template"].other_values.push(
+      "subgrid",
+      "subgrid/40px 20px",
+      "subgrid [foo] [] [bar baz] / 40px 20px",
+      "40px 20px/subgrid",
+      "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
+      "subgrid/subgrid",
+      "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
+    );
+    gCSSProperties["grid-template"].invalid_values.push(
+      "subgrid []",
+      "subgrid [] / 'fizz'",
+      "subgrid / 'fizz'"
+    );
+  }
 
   gCSSProperties["grid"] = {
     domProp: "grid",

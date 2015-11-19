@@ -102,12 +102,12 @@ skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.ht
 # distinguish between italic and oblique
 == simple-oblique.html simple-oblique-ref.html
 == italic-oblique-1.html italic-oblique-ref.html
-fuzzy-if(Mulet,103,144) == italic-oblique-2.html italic-oblique-ref.html
+== italic-oblique-2.html italic-oblique-ref.html
 == italic-oblique-3.html italic-oblique-ref.html
 == italic-oblique-4.html italic-oblique-ref.html
 == italic-oblique-5.html italic-oblique-ref.html
-fuzzy-if(Mulet,103,144) == italic-oblique-6.html italic-oblique-ref.html
+== italic-oblique-6.html italic-oblique-ref.html
 == italic-oblique-7.html italic-oblique-ref.html
-fuzzy-if(Mulet,103,144) == italic-oblique-8.html italic-oblique-ref.html
-fuzzy-if(Mulet,103,144) == italic-oblique-9.html italic-oblique-ref.html
+== italic-oblique-8.html italic-oblique-ref.html
+== italic-oblique-9.html italic-oblique-ref.html
 != italic-oblique-kinnari.html italic-oblique-kinnari-ref.html
