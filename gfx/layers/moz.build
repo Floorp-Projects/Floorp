@@ -405,7 +405,7 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    if CONFIG['ANDROID_VERSION'] > '17':
+    if CONFIG['ANDROID_VERSION'] >= '17':
         includes = [
             'frameworks/av/include/media/stagefright',
             'frameworks/native/include/media/openmax',
