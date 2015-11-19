@@ -46,6 +46,193 @@ BluetoothSetupInterface::~BluetoothSetupInterface()
 { }
 
 //
+// Bluetooth Core Interface
+//
+
+// Notification handling
+//
+
+BluetoothCoreNotificationHandler::BluetoothCoreNotificationHandler()
+{ }
+
+BluetoothCoreNotificationHandler::~BluetoothCoreNotificationHandler()
+{ }
+
+void
+BluetoothCoreNotificationHandler::AdapterStateChangedNotification(bool aState)
+{ }
+
+void
+BluetoothCoreNotificationHandler::AdapterPropertiesNotification(
+  BluetoothStatus aStatus,int aNumProperties,
+  const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothCoreNotificationHandler::RemoteDevicePropertiesNotification(
+  BluetoothStatus aStatus, const BluetoothAddress& aBdAddr,
+  int aNumProperties, const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothCoreNotificationHandler::DeviceFoundNotification(
+  int aNumProperties, const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothCoreNotificationHandler::DiscoveryStateChangedNotification(
+  bool aState)
+{ }
+
+void
+BluetoothCoreNotificationHandler::PinRequestNotification(
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
+  uint32_t aCod)
+{ }
+
+void
+BluetoothCoreNotificationHandler::SspRequestNotification(
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
+  uint32_t aCod, BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
+{ }
+
+void
+BluetoothCoreNotificationHandler::BondStateChangedNotification(
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
+  BluetoothBondState aState)
+{ }
+
+void
+BluetoothCoreNotificationHandler::AclStateChangedNotification(
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
+  BluetoothAclState aState)
+{ }
+
+void
+BluetoothCoreNotificationHandler::DutModeRecvNotification(
+  uint16_t aOpcode,
+  const uint8_t* aBuf,
+  uint8_t aLen)
+{ }
+
+void
+BluetoothCoreNotificationHandler::LeTestModeNotification(
+  BluetoothStatus aStatus,
+  uint16_t aNumPackets)
+{ }
+
+void
+BluetoothCoreNotificationHandler::EnergyInfoNotification(
+  const BluetoothActivityEnergyInfo& aInfo)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothCoreResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_LOGR("Received error code %d", aStatus);
+}
+
+void
+BluetoothCoreResultHandler::Enable()
+{ }
+
+void
+BluetoothCoreResultHandler::Disable()
+{ }
+
+void
+BluetoothCoreResultHandler::GetAdapterProperties()
+{ }
+
+void
+BluetoothCoreResultHandler::GetAdapterProperty()
+{ }
+
+void
+BluetoothCoreResultHandler::SetAdapterProperty()
+{ }
+
+void
+BluetoothCoreResultHandler::GetRemoteDeviceProperties()
+{ }
+
+void
+BluetoothCoreResultHandler::GetRemoteDeviceProperty()
+{ }
+
+void
+BluetoothCoreResultHandler::SetRemoteDeviceProperty()
+{ }
+
+void
+BluetoothCoreResultHandler::GetRemoteServiceRecord()
+{ }
+
+void
+BluetoothCoreResultHandler::GetRemoteServices()
+{ }
+
+void
+BluetoothCoreResultHandler::StartDiscovery()
+{ }
+
+void
+BluetoothCoreResultHandler::CancelDiscovery()
+{ }
+
+void
+BluetoothCoreResultHandler::CreateBond()
+{ }
+
+void
+BluetoothCoreResultHandler::RemoveBond()
+{ }
+
+void
+BluetoothCoreResultHandler::CancelBond()
+{ }
+
+void
+BluetoothCoreResultHandler::GetConnectionState()
+{ }
+
+void
+BluetoothCoreResultHandler::PinReply()
+{ }
+
+void
+BluetoothCoreResultHandler::SspReply()
+{ }
+
+void
+BluetoothCoreResultHandler::DutModeConfigure()
+{ }
+
+void
+BluetoothCoreResultHandler::DutModeSend()
+{ }
+
+void
+BluetoothCoreResultHandler::LeTestMode()
+{ }
+
+void
+BluetoothCoreResultHandler::ReadEnergyInfo()
+{ }
+
+// Interface
+//
+
+BluetoothCoreInterface::BluetoothCoreInterface()
+{ }
+
+BluetoothCoreInterface::~BluetoothCoreInterface()
+{ }
+
+//
 // Socket Interface
 //
 
@@ -811,7 +998,7 @@ BluetoothGattInterface::~BluetoothGattInterface()
 { }
 
 //
-// Bluetooth Core Interface
+// Bluetooth Interface
 //
 
 // Notification handling
