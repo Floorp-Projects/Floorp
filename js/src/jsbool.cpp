@@ -116,13 +116,7 @@ Boolean(JSContext* cx, unsigned argc, Value* vp)
     bool b = args.length() != 0 ? JS::ToBoolean(args[0]) : false;
 
     if (args.isConstructing()) {
-        RootedObject newTarget (cx, &args.newTarget().toObject());
-        RootedObject proto(cx);
-
-        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-            return false;
-
-        JSObject* obj = BooleanObject::create(cx, b, proto);
+        JSObject* obj = BooleanObject::create(cx, b);
         if (!obj)
             return false;
         args.rval().setObject(*obj);

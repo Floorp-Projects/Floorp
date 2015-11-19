@@ -61,14 +61,14 @@ WeakSetObject::initClass(JSContext* cx, JSObject* obj)
 }
 
 WeakSetObject*
-WeakSetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
+WeakSetObject::create(JSContext* cx)
 {
-    RootedObject map(cx, NewBuiltinClassInstance<WeakMapObject>(cx));
-    if (!map)
+    Rooted<WeakSetObject*> obj(cx, NewBuiltinClassInstance<WeakSetObject>(cx));
+    if (!obj)
         return nullptr;
 
-    WeakSetObject* obj = NewObjectWithClassProto<WeakSetObject>(cx, proto);
-    if (!obj)
+    RootedObject map(cx, JS::NewWeakMapObject(cx));
+    if (!map)
         return nullptr;
 
     obj->setReservedSlot(WEAKSET_MAP_SLOT, ObjectValue(*map));
@@ -78,19 +78,14 @@ WeakSetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 bool
 WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
+    Rooted<WeakSetObject*> obj(cx, WeakSetObject::create(cx));
+    if (!obj)
+        return false;
+
     // Based on our "Set" implementation instead of the more general ES6 steps.
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (!ThrowIfNotConstructing(cx, args, "WeakSet"))
-        return false;
-
-    RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-        return false;
-
-    Rooted<WeakSetObject*> obj(cx, WeakSetObject::create(cx, proto));
-    if (!obj)
         return false;
 
     if (!args.get(0).isNullOrUndefined()) {
