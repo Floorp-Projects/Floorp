@@ -10,7 +10,11 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/Preferences.jsm", this);
+
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 
 const IS_CONTENT_PROCESS = (function() {
   // We cannot use Services.appinfo here because in telemetry xpcshell tests,
@@ -25,6 +29,14 @@ this.TelemetryUtils = {
    */
   get isContentProcess() {
     return IS_CONTENT_PROCESS;
+  },
+
+  /**
+   * Returns the state of the Telemetry enabled preference, making sure
+   * it correctly evaluates to a boolean type.
+   */
+  get isTelemetryEnabled() {
+    return Preferences.get(PREF_TELEMETRY_ENABLED, false) === true;
   },
 
   /**

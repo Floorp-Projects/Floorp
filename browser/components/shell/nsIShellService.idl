@@ -8,7 +8,7 @@
 interface nsIDOMElement;
 interface nsIFile;
 
-[scriptable, uuid(55cb78a8-2fc4-48f4-9345-ff0e541c5cc4)]
+[scriptable, uuid(53f4bc4a-5b86-4643-8e67-4907ecbab34c)]
 interface nsIShellService : nsISupports
 {
   /**
@@ -45,13 +45,6 @@ interface nsIShellService : nsISupports
    * is false.
    */
   attribute boolean shouldCheckDefaultBrowser;
-
-  /**
-   * Used to determine whether or not the "Set Default Browser" check
-   * should be skipped during first-run or after the browser has been
-   * run a few times.
-   */
-  readonly attribute boolean shouldSkipCheckDefaultBrowser;
 
   /**
    * Used to determine whether or not to offer "Set as desktop background"
