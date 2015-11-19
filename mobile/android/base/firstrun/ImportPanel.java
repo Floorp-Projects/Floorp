@@ -11,11 +11,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -84,7 +88,33 @@ public class ImportPanel extends FirstrunPanel {
                            }
                        });
 
-                builder.create().show();
+                final AlertDialog dialog = builder.create();
+                dialog.show();
+
+                final Button importButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                final ListView listView = dialog.getListView();
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        if (AppConstants.Versions.feature11Plus) {
+                            if (listView.getCheckedItemCount() == 0) {
+                                importButton.setEnabled(false);
+                            } else {
+                                importButton.setEnabled(true);
+                            }
+                        } else {
+                            final SparseBooleanArray checkedItems = listView.getCheckedItemPositions();
+                            for (int j = 0; j < checkedItems.size(); j++) {
+                               if (checkedItems.valueAt(j) == true) {
+                                   importButton.setEnabled(true);
+                                   return;
+                               }
+                            }
+                            importButton.setEnabled(false);
+                        }
+                    }
+                });
+
             }
         });
 

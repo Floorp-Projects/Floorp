@@ -183,26 +183,19 @@ browser.jar:
   skin/classic/browser/preferences/checkbox-xp.png             (preferences/checkbox-xp.png)
   skin/classic/browser/social/services-16.png                  (social/services-16.png)
   skin/classic/browser/social/services-64.png                  (social/services-64.png)
-  skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
-  skin/classic/browser/tabbrowser/newtab@2x.png                (tabbrowser/newtab@2x.png)
-  skin/classic/browser/tabbrowser/newtab-XPVista7.png          (tabbrowser/newtab-XPVista7.png)
-  skin/classic/browser/tabbrowser/newtab-XPVista7@2x.png       (tabbrowser/newtab-XPVista7@2x.png)
-  skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
-  skin/classic/browser/tabbrowser/newtab-inverted@2x.png       (tabbrowser/newtab-inverted@2x.png)
-  skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.png (tabbrowser/newtab-inverted-XPVista7.png)
-  skin/classic/browser/tabbrowser/newtab-inverted-XPVista7@2x.png (tabbrowser/newtab-inverted-XPVista7@2x.png)
+  skin/classic/browser/tabbrowser/newtab.svg                   (tabbrowser/newtab.svg)
+  skin/classic/browser/tabbrowser/newtab-XPVista7.svg          (tabbrowser/newtab-XPVista7.svg)
+  skin/classic/browser/tabbrowser/newtab-inverted.svg          (tabbrowser/newtab-inverted.svg)
+  skin/classic/browser/tabbrowser/newtab-inverted-XPVista7.svg (tabbrowser/newtab-inverted-XPVista7.svg)
   skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/connecting@2x.png            (tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/loading@2x.png               (tabbrowser/loading@2x.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left@2x.png        (tabbrowser/tab-arrow-left@2x.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left-XPVista7.png  (tabbrowser/tab-arrow-left-XPVista7.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left-XPVista7@2x.png  (tabbrowser/tab-arrow-left-XPVista7@2x.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left-inverted@2x.png  (tabbrowser/tab-arrow-left-inverted@2x.png)
+  skin/classic/browser/tabbrowser/tab-arrow-left.svg           (tabbrowser/tab-arrow-left.svg)
+  skin/classic/browser/tabbrowser/tab-arrow-left-XPVista7.svg  (tabbrowser/tab-arrow-left-XPVista7.svg)
+  skin/classic/browser/tabbrowser/tab-arrow-left-inverted.svg  (tabbrowser/tab-arrow-left-inverted.svg)
   skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
   skin/classic/browser/tabbrowser/tab-background-start@2x.png  (tabbrowser/tab-background-start@2x.png)
   skin/classic/browser/tabbrowser/tab-background-middle.png    (tabbrowser/tab-background-middle.png)
@@ -320,12 +313,9 @@ browser.jar:
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-XPVista7@2x.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/downloads/download-glow-menuPanel.png  chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png os=WINNT osversion<=6.1
 % override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab-inverted.png       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.png     os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab-inverted@2x.png    chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7@2x.png  os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png   os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab.svg                chrome://browser/skin/tabbrowser/newtab-XPVista7.svg              os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab-inverted.svg       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.svg     os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/tab-arrow-left.svg        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.svg      os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1

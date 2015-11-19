@@ -729,9 +729,9 @@ nsUnknownContentTypeDialog.prototype = {
       otherHandler.hidden = false;
     }
 
-    var useDefault = this.dialogElement("useSystemDefault");
     var openHandler = this.dialogElement("openHandler");
     openHandler.selectedIndex = 0;
+    var defaultOpenHandler = this.dialogElement("defaultHandler");
 
     if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault) {
       // Open (using system default).
@@ -739,7 +739,8 @@ nsUnknownContentTypeDialog.prototype = {
     } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp) {
       // Open with given helper app.
       modeGroup.selectedItem = this.dialogElement("open");
-      openHandler.selectedIndex = 1;
+      openHandler.selectedItem = (otherHandler && !otherHandler.hidden) ?
+                                 otherHandler : defaultOpenHandler;
     } else {
       // Save to disk.
       modeGroup.selectedItem = this.dialogElement("save");
@@ -747,11 +748,10 @@ nsUnknownContentTypeDialog.prototype = {
 
     // If we don't have a "default app" then disable that choice.
     if (!openWithDefaultOK) {
-      var useDefault = this.dialogElement("defaultHandler");
-      var isSelected = useDefault.selected;
+      var isSelected = defaultOpenHandler.selected;
 
       // Disable that choice.
-      useDefault.hidden = true;
+      defaultOpenHandler.hidden = true;
       // If that's the default, then switch to "save to disk."
       if (isSelected) {
         openHandler.selectedIndex = 1;

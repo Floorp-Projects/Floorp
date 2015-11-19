@@ -69,7 +69,7 @@
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
-  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4px);
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5px);
 }
 
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
@@ -81,7 +81,7 @@
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #notification-popup-box[hidden] + #identity-box {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
-  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4.01px);
+  padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 5.01px);
 }
 
 /* MAIN IDENTITY ICON */
