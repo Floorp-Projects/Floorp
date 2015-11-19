@@ -46,6 +46,9 @@ public:
 
   static BluetoothDaemonInterface* GetInstance();
 
+  void SetNotificationHandler(
+    BluetoothCoreNotificationHandler* aNotificationHandler) override;
+
   void Init(BluetoothNotificationHandler* aNotificationHandler,
             BluetoothResultHandler* aRes) override;
   void Cleanup(BluetoothResultHandler* aRes) override;
@@ -160,6 +163,8 @@ private:
 
   void DispatchError(BluetoothResultHandler* aRes, BluetoothStatus aStatus);
   void DispatchError(BluetoothResultHandler* aRes, nsresult aRv);
+
+  static BluetoothNotificationHandler* sNotificationHandler;
 
   nsCString mListenSocketName;
   RefPtr<mozilla::ipc::ListenSocket> mListenSocket;
