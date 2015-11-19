@@ -54,31 +54,6 @@ cx.fill();
 cx.closePath();
 
 
-var fileData =
-  atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
-var memFile = cx.canvas.mozGetAsFile("image/png");
-var fileFile = createFileWithData(fileData);
-var size = fileData.length;
-
-// This might fail if we dramatically improve the png encoder. If that happens
-// please increase the complexity or size of the image generated above to ensure
-// that we're testing with files that are large enough.
-ok(size > 65536, "test data sufficiently large");
-
-
-// Test that basic properties work
-testSlice(memFile, size, "image/png", fileData, "memFile");
-testSlice(fileFile, size, "", fileData, "fileFile");
-
-
-// Try loading directly from slice into an image
-var testBinaryData = "";
-for (var i = 0; i < 256; i++) {
-  testBinaryData += String.fromCharCode(i);
-}
-while (testBinaryData.length < 20000) {
-  testBinaryData += testBinaryData;
-}
 function imageLoadHandler(event) {
   var origcanvas = $("canvas");
   var testcanvas = $("testcanvas");
@@ -98,6 +73,32 @@ function imageLoadHandler(event) {
      "Content of correct image data");
 
   testHasRun();
+}
+
+var fileData =
+  atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
+var size = fileData.length;
+var testBinaryData = "";
+
+// This might fail if we dramatically improve the png encoder. If that happens
+// please increase the complexity or size of the image generated above to ensure
+// that we're testing with files that are large enough.
+ok(size > 65536, "test data sufficiently large");
+
+var fileFile = createFileWithData(fileData);
+
+// Test that basic properties work
+var memFile = cx.canvas.mozGetAsFile("image/png");
+testSlice(memFile, size, "image/png", fileData, "memFile");
+testSlice(fileFile, size, "", fileData, "fileFile");
+
+
+// Try loading directly from slice into an image
+for (var i = 0; i < 256; i++) {
+  testBinaryData += String.fromCharCode(i);
+}
+while (testBinaryData.length < 20000) {
+  testBinaryData += testBinaryData;
 }
 
 // image in the middle
