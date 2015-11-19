@@ -393,10 +393,15 @@ DeviceStorageRequestParent::ActorDestroy(ActorDestroyReason)
 {
   MutexAutoLock lock(mMutex);
   mActorDestroyed = true;
-  int32_t count = mRunnables.Length();
-  for (int32_t index = 0; index < count; index++) {
-    mRunnables[index]->Cancel();
+  for (auto& runnable : mRunnables) {
+    runnable->Cancel();
   }
+  // Ensure we clear all references to the runnables so that there won't
+  // be leak due to cyclic reference. Note that it is safe to release
+  // the references here, since if a runnable is not cancelled yet, the
+  // corresponding thread should still hold a reference to it, and thus
+  // the runnable will end up being released in that thread, not here.
+  mRunnables.Clear();
 }
 
 DeviceStorageRequestParent::PostFreeSpaceResultEvent::PostFreeSpaceResultEvent(
