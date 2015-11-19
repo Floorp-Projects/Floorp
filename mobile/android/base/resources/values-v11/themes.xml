@@ -44,7 +44,7 @@
         <item name="android:panelBackground">@drawable/menu_panel_bg</item>
         <item name="android:spinnerDropDownItemStyle">@style/Widget.DropDownItem.Spinner</item>
         <item name="android:spinnerItemStyle">@style/Widget.TextView.SpinnerItem</item>
-        <item name="menuItemSwitcherLayoutStyle">@style/Widget.MenuItemSwitcherLayout</item>
+        <item name="menuItemActionViewStyle">@style/Widget.MenuItemActionView</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
         <item name="menuItemSecondaryActionBarStyle">@style/Widget.MenuItemSecondaryActionBar</item>
         <item name="tabGridLayoutViewStyle">@style/Widget.TabsGridLayout</item>

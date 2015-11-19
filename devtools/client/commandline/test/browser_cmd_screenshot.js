@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* global helpers, btoa, whenDelayedStartupFinished, OpenBrowserWindow */
+
 // Test that screenshot command works properly
 const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_screenshot.html";
@@ -27,6 +29,7 @@ function* spawnTest() {
 
 function* addTabWithToolbarRunTests(win) {
   let options = yield helpers.openTab(TEST_URI, { chromeWindow: win });
+  let browser = options.browser;
   yield helpers.openToolbar(options);
 
   // Test input status
@@ -114,16 +117,32 @@ function* addTabWithToolbarRunTests(win) {
   ]);
 
   // Test capture to clipboard
-  let clipid = Ci.nsIClipboard;
-  let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
-  let trans = Cc["@mozilla.org/widget/transferable;1"]
-                .createInstance(Ci.nsITransferable);
-  trans.init(null);
-  trans.addDataFlavor("image/png");
-
   yield helpers.audit(options, [
     {
-      setup: 'screenshot --fullpage --clipboard',
+      setup: "screenshot --clipboard",
+      check: {
+        args: {
+          clipboard: { value: true },
+          chrome: { value: false },
+        },
+      },
+      exec: {
+        output: new RegExp("^Copied to clipboard.$"),
+      },
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let winSize = yield ContentTask.spawn(browser, {}, function*() {
+          return {
+            width: content.innerWidth,
+            height: content.innerHeight,
+          };
+        });
+        is(imgSize.width, winSize.width, "Image width matches window size");
+        is(imgSize.height, winSize.height, "Image height matches window size");
+      })
+    },
+    {
+      setup: "screenshot --fullpage --clipboard",
       check: {
         args: {
           fullpage: { value: true },
@@ -134,15 +153,151 @@ function* addTabWithToolbarRunTests(win) {
       exec: {
         output: new RegExp("^Copied to clipboard.$"),
       },
-      post: function() {
-        clip.getData(trans, clipid.kGlobalClipboard);
-        let str = new Object();
-        let strLength = new Object();
-        trans.getTransferData("image/png", str, strLength);
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let pageSize = yield ContentTask.spawn(browser, {}, function*() {
+          return {
+            width: content.innerWidth +
+                   content.scrollMaxX - content.scrollMinX,
+            height: content.innerHeight +
+                    content.scrollMaxY - content.scrollMinY,
+          };
+        });
+        is(imgSize.width, pageSize.width, "Image width matches page size");
+        is(imgSize.height, pageSize.height, "Image height matches page size");
+      })
+    },
+    {
+      setup: "screenshot --selector img#testImage --clipboard",
+      check: {
+        args: {
+          clipboard: { value: true },
+          chrome: { value: false },
+        },
+      },
+      exec: {
+        output: new RegExp("^Copied to clipboard.$"),
+      },
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let elemSize = yield ContentTask.spawn(browser, {}, function*() {
+          let img = content.document.querySelector("img#testImage");
+          return {
+            width: img.clientWidth,
+            height: img.clientHeight,
+          };
+        });
+        is(imgSize.width, elemSize.width,
+           "Image width matches element size");
+        is(imgSize.height, elemSize.height,
+           "Image height matches element size");
+      })
+    },
+  ]);
 
-        ok(str.value, "screenshot exists");
-        ok(strLength.value > 0, "screenshot has length");
-      }
+  // Trigger scrollbars by forcing document to overflow
+  // This only affects results on OSes with scrollbars that reduce document size
+  // (non-floating scrollbars).  With default OS settings, this means Windows
+  // and Linux are affected, but Mac is not.  For Mac to exhibit this behavior,
+  // change System Preferences -> General -> Show scroll bars to Always.
+  yield ContentTask.spawn(browser, {}, function*() {
+    content.document.body.classList.add("overflow");
+  });
+
+  let scrollbarSize = yield ContentTask.spawn(browser, {}, function*() {
+    const winUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    let scrollbarHeight = {};
+    let scrollbarWidth = {};
+    winUtils.getScrollbarSize(true, scrollbarWidth, scrollbarHeight);
+    return {
+      width: scrollbarWidth.value,
+      height: scrollbarHeight.value,
+    };
+  });
+
+  info(`Scrollbar size: ${scrollbarSize.width}x${scrollbarSize.height}`);
+
+  // Test capture to clipboard in presence of scrollbars
+  yield helpers.audit(options, [
+    {
+      setup: "screenshot --clipboard",
+      check: {
+        args: {
+          clipboard: { value: true },
+          chrome: { value: false },
+        },
+      },
+      exec: {
+        output: new RegExp("^Copied to clipboard.$"),
+      },
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let winSize = yield ContentTask.spawn(browser, {}, function*() {
+          return {
+            width: content.innerWidth,
+            height: content.innerHeight,
+          };
+        });
+        is(imgSize.width, winSize.width - scrollbarSize.width,
+           "Image width matches window size minus scrollbar size");
+        is(imgSize.height, winSize.height - scrollbarSize.height,
+           "Image height matches window size minus scrollbar size");
+      })
+    },
+    {
+      setup: "screenshot --fullpage --clipboard",
+      check: {
+        args: {
+          fullpage: { value: true },
+          clipboard: { value: true },
+          chrome: { value: false },
+        },
+      },
+      exec: {
+        output: new RegExp("^Copied to clipboard.$"),
+      },
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let pageSize = yield ContentTask.spawn(browser, {}, function*() {
+          return {
+            width: content.innerWidth +
+                   content.scrollMaxX - content.scrollMinX,
+            height: content.innerHeight +
+                    content.scrollMaxY - content.scrollMinY,
+          };
+        });
+        is(imgSize.width, pageSize.width - scrollbarSize.width,
+           "Image width matches page size minus scrollbar size");
+        is(imgSize.height, pageSize.height - scrollbarSize.height,
+           "Image height matches page size minus scrollbar size");
+      })
+    },
+    {
+      setup: "screenshot --selector img#testImage --clipboard",
+      check: {
+        args: {
+          clipboard: { value: true },
+          chrome: { value: false },
+        },
+      },
+      exec: {
+        output: new RegExp("^Copied to clipboard.$"),
+      },
+      post: Task.async(function*() {
+        let imgSize = yield getImageSizeFromClipboard();
+        let elemSize = yield ContentTask.spawn(browser, {}, function*() {
+          let img = content.document.querySelector("img#testImage");
+          return {
+            width: img.clientWidth,
+            height: img.clientHeight,
+          };
+        });
+        is(imgSize.width, elemSize.width,
+           "Image width matches element size");
+        is(imgSize.height, elemSize.height,
+           "Image height matches element size");
+      })
     },
   ]);
 
@@ -164,3 +319,70 @@ function addWindow(windowOptions) {
     });
   });
 }
+
+let getImageSizeFromClipboard = Task.async(function*() {
+  let clipid = Ci.nsIClipboard;
+  let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
+  let trans = Cc["@mozilla.org/widget/transferable;1"]
+                .createInstance(Ci.nsITransferable);
+  let flavor = "image/png";
+  trans.init(null);
+  trans.addDataFlavor(flavor);
+
+  clip.getData(trans, clipid.kGlobalClipboard);
+  let data = new Object();
+  let dataLength = new Object();
+  trans.getTransferData(flavor, data, dataLength);
+
+  ok(data.value, "screenshot exists");
+  ok(dataLength.value > 0, "screenshot has length");
+
+  let image = data.value;
+  let dataURI = `data:${flavor};base64,`;
+
+  // Due to the differences in how images could be stored in the clipboard the
+  // checks below are needed. The clipboard could already provide the image as
+  // byte streams, but also as pointer, or as image container. If it's not
+  // possible obtain a byte stream, the function returns `null`.
+  if (image instanceof Ci.nsISupportsInterfacePointer) {
+    image = image.data;
+  }
+
+  if (image instanceof Ci.imgIContainer) {
+    image = Cc["@mozilla.org/image/tools;1"]
+              .getService(Ci.imgITools)
+              .encodeImage(image, flavor);
+  }
+
+  if (image instanceof Ci.nsIInputStream) {
+    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"]
+                         .createInstance(Ci.nsIBinaryInputStream);
+    binaryStream.setInputStream(image);
+    let rawData = binaryStream.readBytes(binaryStream.available());
+    let charCodes = Array.from(rawData, c => c.charCodeAt(0) & 0xff);
+    let encodedData = String.fromCharCode(...charCodes);
+    encodedData = btoa(encodedData);
+    dataURI = dataURI + encodedData;
+  } else {
+    throw new Error("Unable to read image data");
+  }
+
+  let img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+
+  let loaded = new Promise(resolve => {
+    img.addEventListener("load", function onLoad() {
+      img.removeEventListener("load", onLoad);
+      resolve();
+    });
+  });
+
+  img.src = dataURI;
+  document.documentElement.appendChild(img);
+  yield loaded;
+  img.remove();
+
+  return {
+    width: img.width,
+    height: img.height,
+  };
+});
