@@ -30,8 +30,6 @@ public:
     // already initialized.
     virtual bool Init(int32_t id, uint8_t& numOfWorkThreads) = 0;
 
-    virtual int32_t ChangeUniqueId(const int32_t id) = 0;
-
     // Start listening to sockets that have been registered via the
     // AddSocket(..) API.
     virtual bool Start() = 0;

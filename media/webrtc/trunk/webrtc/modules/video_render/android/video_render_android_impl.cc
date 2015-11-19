@@ -13,7 +13,6 @@
 #include "webrtc/modules/video_render/video_render_internal.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
 #ifdef ANDROID
@@ -49,8 +48,7 @@ VideoRenderAndroid::VideoRenderAndroid(
     _javaShutdownEvent(*EventWrapper::Create()),
     _javaRenderEvent(*EventWrapper::Create()),
     _lastJavaRenderEvent(0),
-    _javaRenderJniEnv(NULL),
-    _javaRenderThread(NULL) {
+    _javaRenderJniEnv(NULL) {
 }
 
 VideoRenderAndroid::~VideoRenderAndroid() {
@@ -68,13 +66,6 @@ VideoRenderAndroid::~VideoRenderAndroid() {
   delete &_javaShutdownEvent;
   delete &_javaRenderEvent;
   delete &_critSect;
-}
-
-int32_t VideoRenderAndroid::ChangeUniqueId(const int32_t id) {
-  CriticalSectionScoped cs(&_critSect);
-  _id = id;
-
-  return 0;
 }
 
 int32_t VideoRenderAndroid::ChangeWindow(void* /*window*/) {
@@ -151,23 +142,17 @@ int32_t VideoRenderAndroid::StartRender() {
   }
 
   _javaRenderThread = ThreadWrapper::CreateThread(JavaRenderThreadFun, this,
-                                                  kRealtimePriority,
                                                   "AndroidRenderThread");
-  if (!_javaRenderThread) {
-    WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
-                 "%s: No thread", __FUNCTION__);
-    return -1;
-  }
 
-  unsigned int tId = 0;
-  if (_javaRenderThread->Start(tId))
+  if (_javaRenderThread->Start())
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id,
-                 "%s: thread started: %u", __FUNCTION__, tId);
+                 "%s: thread started", __FUNCTION__);
   else {
     WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
                  "%s: Could not start send thread", __FUNCTION__);
     return -1;
   }
+  _javaRenderThread->SetPriority(kRealtimePriority);
   return 0;
 }
 
@@ -185,17 +170,9 @@ int32_t VideoRenderAndroid::StopRender() {
 
   _javaShutdownEvent.Wait(3000);
   CriticalSectionScoped cs(&_critSect);
-  _javaRenderThread->SetNotAlive();
-  if (_javaRenderThread->Stop()) {
-    delete _javaRenderThread;
-    _javaRenderThread = NULL;
-  }
-  else {
-    assert(false);
-    WEBRTC_TRACE(kTraceWarning, kTraceVideoRenderer, _id,
-                 "%s: Not able to stop thread, leaking", __FUNCTION__);
-    _javaRenderThread = NULL;
-  }
+  _javaRenderThread->Stop();
+  _javaRenderThread.reset();
+
   return 0;
 }
 

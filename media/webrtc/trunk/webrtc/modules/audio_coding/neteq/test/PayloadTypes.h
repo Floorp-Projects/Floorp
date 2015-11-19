@@ -54,7 +54,6 @@
 #define NETEQ_CODEC_G729_1_PT			107
 #define NETEQ_CODEC_G729D_PT			123
 #define NETEQ_CODEC_MELPE_PT			124
-#define NETEQ_CODEC_CELT32_PT     114
 
 /* Extra dynamic codepoints */
 #define NETEQ_CODEC_AMRWB_PT			120

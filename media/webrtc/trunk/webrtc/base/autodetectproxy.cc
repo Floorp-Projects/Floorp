@@ -32,6 +32,12 @@ AutoDetectProxy::AutoDetectProxy(const std::string& user_agent)
     : agent_(user_agent), resolver_(NULL), socket_(NULL), next_(0) {
 }
 
+bool AutoDetectProxy::GetProxyForUrl(const char* agent,
+                                     const char* url,
+                                     rtc::ProxyInfo* proxy) {
+  return GetProxySettingsForUrl(agent, url, proxy, true);
+}
+
 AutoDetectProxy::~AutoDetectProxy() {
   if (resolver_) {
     resolver_->Destroy(false);
@@ -55,7 +61,7 @@ void AutoDetectProxy::DoWork() {
     LOG(LS_INFO) << "AutoDetectProxy initiating proxy classification";
     Next();
     // Process I/O until Stop()
-    Thread::Current()->ProcessMessages(kForever);
+    Thread::Current()->ProcessMessages(Thread::kForever);
     // Clean up the autodetect socket, from the thread that created it
     delete socket_;
   }

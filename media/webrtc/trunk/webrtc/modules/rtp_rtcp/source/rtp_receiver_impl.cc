@@ -114,7 +114,7 @@ int32_t RtpReceiverImpl::RegisterReceivePayload(
     if (rtp_media_receiver_->OnNewPayloadTypeCreated(payload_name, payload_type,
                                                      frequency) != 0) {
       LOG(LS_ERROR) << "Failed to register payload: " << payload_name << "/"
-                 << payload_type;
+                    << static_cast<int>(payload_type);
       return -1;
     }
   }
@@ -163,12 +163,9 @@ int32_t RtpReceiverImpl::Energy(
 bool RtpReceiverImpl::IncomingRtpPacket(
   const RTPHeader& rtp_header,
   const uint8_t* payload,
-  int payload_length,
+  size_t payload_length,
   PayloadUnion payload_specific,
   bool in_order) {
-  // Sanity check.
-  assert(payload_length >= 0);
-
   // Trigger our callbacks.
   CheckSSRCChanged(rtp_header);
 
@@ -198,7 +195,7 @@ bool RtpReceiverImpl::IncomingRtpPacket(
   webrtc_rtp_header.header = rtp_header;
   CheckCSRC(webrtc_rtp_header);
 
-  uint16_t payload_data_length = payload_length - rtp_header.paddingLength;
+  size_t payload_data_length = payload_length - rtp_header.paddingLength;
 
   bool is_first_packet_in_frame = false;
   {
@@ -321,7 +318,7 @@ void RtpReceiverImpl::CheckSSRCChanged(const RTPHeader& rtp_header) {
         rtp_header.payload_type_frequency, channels, rate)) {
       // New stream, same codec.
       LOG(LS_ERROR) << "Failed to create decoder for payload type: "
-                    << rtp_header.payloadType;
+                    << static_cast<int>(rtp_header.payloadType);
     }
   }
 }

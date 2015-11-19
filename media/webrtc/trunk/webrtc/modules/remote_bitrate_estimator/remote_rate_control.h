@@ -8,71 +8,44 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_REMOTE_RATE_CONTROL_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_REMOTE_RATE_CONTROL_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_RATE_CONTROL_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_RATE_CONTROL_H_
 
 #include "webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h"
+#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 
 namespace webrtc {
 
 class RemoteRateControl {
  public:
-  explicit RemoteRateControl(uint32_t min_bitrate_bps);
-  ~RemoteRateControl() {}
+  static RemoteRateControl* Create(RateControlType control_type,
+                                   uint32_t min_bitrate_bps);
 
-  void Reset();
+  virtual ~RemoteRateControl() {}
 
   // Returns true if there is a valid estimate of the incoming bitrate, false
   // otherwise.
-  bool ValidEstimate() const;
+  virtual bool ValidEstimate() const = 0;
+  virtual RateControlType GetControlType() const = 0;
+  virtual uint32_t GetMinBitrate() const = 0;
+  virtual int64_t GetFeedbackInterval() const = 0;
 
   // Returns true if the bitrate estimate hasn't been changed for more than
   // an RTT, or if the incoming_bitrate is more than 5% above the current
   // estimate. Should be used to decide if we should reduce the rate further
   // when over-using.
-  bool TimeToReduceFurther(int64_t time_now,
-                           unsigned int incoming_bitrate) const;
+  virtual bool TimeToReduceFurther(int64_t time_now,
+                                   uint32_t incoming_bitrate_bps) const = 0;
+  virtual uint32_t LatestEstimate() const = 0;
+  virtual uint32_t UpdateBandwidthEstimate(int64_t now_ms) = 0;
+  virtual void SetRtt(int64_t rtt) = 0;
+  virtual RateControlRegion Update(const RateControlInput* input,
+                                   int64_t now_ms) = 0;
+  virtual void SetEstimate(int bitrate_bps, int64_t time_now_ms) = 0;
 
-  int32_t SetConfiguredBitRates(uint32_t min_bit_rate, uint32_t max_bit_rate);
-  uint32_t LatestEstimate() const;
-  uint32_t UpdateBandwidthEstimate(int64_t now_ms);
-  void SetRtt(unsigned int rtt);
-  RateControlRegion Update(const RateControlInput* input, int64_t now_ms);
-
- private:
-  uint32_t ChangeBitRate(uint32_t current_bit_rate,
-                         uint32_t incoming_bit_rate,
-                         double delay_factor,
-                         int64_t now_ms);
-  double RateIncreaseFactor(int64_t now_ms,
-                            int64_t last_ms,
-                            uint32_t reaction_time_ms,
-                            double noise_var) const;
-  void UpdateChangePeriod(int64_t now_ms);
-  void UpdateMaxBitRateEstimate(float incoming_bit_rate_kbps);
-  void ChangeState(const RateControlInput& input, int64_t now_ms);
-  void ChangeState(RateControlState new_state);
-  void ChangeRegion(RateControlRegion region);
-
-  uint32_t min_configured_bit_rate_;
-  uint32_t max_configured_bit_rate_;
-  uint32_t current_bit_rate_;
-  uint32_t max_hold_rate_;
-  float avg_max_bit_rate_;
-  float var_max_bit_rate_;
-  RateControlState rate_control_state_;
-  RateControlState came_from_state_;
-  RateControlRegion rate_control_region_;
-  int64_t last_bit_rate_change_;
-  RateControlInput current_input_;
-  bool updated_;
-  int64_t time_first_incoming_estimate_;
-  bool initialized_bit_rate_;
-  float avg_change_period_;
-  int64_t last_change_ms_;
-  float beta_;
-  unsigned int rtt_;
+ protected:
+  static const int64_t kMaxFeedbackIntervalMs;
 };
 }  // namespace webrtc
 
-#endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_REMOTE_RATE_CONTROL_H_
+#endif // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_REMOTE_RATE_CONTROL_H_

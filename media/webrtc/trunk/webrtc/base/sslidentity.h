@@ -77,18 +77,9 @@ class SSLCertChain {
  public:
   // These constructors copy the provided SSLCertificate(s), so the caller
   // retains ownership.
-  explicit SSLCertChain(const std::vector<SSLCertificate*>& certs) {
-    ASSERT(!certs.empty());
-    certs_.resize(certs.size());
-    std::transform(certs.begin(), certs.end(), certs_.begin(), DupCert);
-  }
-  explicit SSLCertChain(const SSLCertificate* cert) {
-    certs_.push_back(cert->GetReference());
-  }
-
-  ~SSLCertChain() {
-    std::for_each(certs_.begin(), certs_.end(), DeleteCert);
-  }
+  explicit SSLCertChain(const std::vector<SSLCertificate*>& certs);
+  explicit SSLCertChain(const SSLCertificate* cert);
+  ~SSLCertChain();
 
   // Vector access methods.
   size_t GetSize() const { return certs_.size(); }

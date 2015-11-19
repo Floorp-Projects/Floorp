@@ -20,6 +20,7 @@
 #endif
 
 #include "gflags/gflags.h"
+#include "webrtc/base/format_macros.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
 #include "webrtc/modules/video_coding/codecs/test/stats.h"
@@ -204,7 +205,8 @@ int HandleCommandLineFlags(webrtc::test::TestConfig* config) {
             FLAGS_packet_size);
     return 7;
   }
-  config->networking_config.packet_size_in_bytes = FLAGS_packet_size;
+  config->networking_config.packet_size_in_bytes =
+      static_cast<size_t>(FLAGS_packet_size);
 
   if (FLAGS_max_payload_size <= 0) {
     fprintf(stderr, "Max payload size must be >0 bytes, was: %d\n",
@@ -212,7 +214,7 @@ int HandleCommandLineFlags(webrtc::test::TestConfig* config) {
     return 8;
   }
   config->networking_config.max_payload_size_in_bytes =
-      FLAGS_max_payload_size;
+      static_cast<size_t>(FLAGS_max_payload_size);
 
   // Check the width and height
   if (FLAGS_width <= 0 || FLAGS_height <= 0) {
@@ -290,10 +292,10 @@ void PrintConfigurationSummary(const webrtc::test::TestConfig& config) {
   Log("  Input filename   : %s\n", config.input_filename.c_str());
   Log("  Output directory : %s\n", config.output_dir.c_str());
   Log("  Output filename  : %s\n", config.output_filename.c_str());
-  Log("  Frame length       : %d bytes\n", config.frame_length_in_bytes);
-  Log("  Packet size      : %d bytes\n",
+  Log("  Frame length     : %" PRIuS " bytes\n", config.frame_length_in_bytes);
+  Log("  Packet size      : %" PRIuS " bytes\n",
       config.networking_config.packet_size_in_bytes);
-  Log("  Max payload size : %d bytes\n",
+  Log("  Max payload size : %" PRIuS " bytes\n",
       config.networking_config.max_payload_size_in_bytes);
   Log("  Packet loss:\n");
   Log("    Mode           : %s\n",
@@ -320,8 +322,8 @@ void PrintCsvOutput(const webrtc::test::Stats& stats,
     const webrtc::test::FrameStatistic& f = stats.stats_[i];
     const webrtc::test::FrameResult& ssim = ssim_result.frames[i];
     const webrtc::test::FrameResult& psnr = psnr_result.frames[i];
-    printf("%4d, %d, %d, %2d, %2d, %6d, %6d, %5d, %7d, %d, %2d, %2d, "
-           "%5.3f, %5.2f\n",
+    printf("%4d, %d, %d, %2d, %2d, %6d, %6d, %5d, %7" PRIuS ", %d, %2d, %2"
+           PRIuS ", %5.3f, %5.2f\n",
            f.frame_number,
            f.encoding_successful,
            f.decoding_successful,
@@ -352,13 +354,13 @@ void PrintPythonOutput(const webrtc::test::TestConfig& config,
          "{'name': 'input_filename',            'value': '%s'},\n"
          "{'name': 'output_filename',           'value': '%s'},\n"
          "{'name': 'output_dir',                'value': '%s'},\n"
-         "{'name': 'packet_size_in_bytes',      'value': '%d'},\n"
-         "{'name': 'max_payload_size_in_bytes', 'value': '%d'},\n"
+         "{'name': 'packet_size_in_bytes',      'value': '%" PRIuS "'},\n"
+         "{'name': 'max_payload_size_in_bytes', 'value': '%" PRIuS "'},\n"
          "{'name': 'packet_loss_mode',          'value': '%s'},\n"
          "{'name': 'packet_loss_probability',   'value': '%f'},\n"
          "{'name': 'packet_loss_burst_length',  'value': '%d'},\n"
          "{'name': 'exclude_frame_types',       'value': '%s'},\n"
-         "{'name': 'frame_length_in_bytes',     'value': '%d'},\n"
+         "{'name': 'frame_length_in_bytes',     'value': '%" PRIuS "'},\n"
          "{'name': 'use_single_core',           'value': '%s'},\n"
          "{'name': 'keyframe_interval;',        'value': '%d'},\n"
          "{'name': 'video_codec_type',          'value': '%s'},\n"
@@ -411,9 +413,9 @@ void PrintPythonOutput(const webrtc::test::TestConfig& config,
            "'encoding_successful': %s, 'decoding_successful': %s, "
            "'encode_time': %d, 'decode_time': %d, "
            "'encode_return_code': %d, 'decode_return_code': %d, "
-           "'bit_rate': %d, 'encoded_frame_length': %d, 'frame_type': %s, "
-           "'packets_dropped': %d, 'total_packets': %d, "
-           "'ssim': %f, 'psnr': %f},\n",
+           "'bit_rate': %d, 'encoded_frame_length': %" PRIuS ", "
+           "'frame_type': %s, 'packets_dropped': %d, "
+           "'total_packets': %" PRIuS ", 'ssim': %f, 'psnr': %f},\n",
            f.frame_number,
            f.encoding_successful ? "True " : "False",
            f.decoding_successful ? "True " : "False",

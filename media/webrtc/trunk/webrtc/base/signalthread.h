@@ -69,7 +69,7 @@ class SignalThread
   enum { ST_MSG_WORKER_DONE, ST_MSG_FIRST_AVAILABLE };
 
  protected:
-  virtual ~SignalThread();
+  ~SignalThread() override;
 
   Thread* worker() { return &worker_; }
 
@@ -92,7 +92,7 @@ class SignalThread
 
   // Context: Any Thread.  If subclass overrides, be sure to call the base
   // implementation.  Do not use (message_id < ST_MSG_FIRST_AVAILABLE)
-  virtual void OnMessage(Message *msg);
+  void OnMessage(Message* msg) override;
 
  private:
   enum State {
@@ -106,8 +106,8 @@ class SignalThread
   class Worker : public Thread {
    public:
     explicit Worker(SignalThread* parent) : parent_(parent) {}
-    virtual ~Worker() { Stop(); }
-    virtual void Run() { parent_->Run(); }
+    ~Worker() override;
+    void Run() override;
 
    private:
     SignalThread* parent_;

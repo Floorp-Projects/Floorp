@@ -220,18 +220,6 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
       return;
     }
 
-    // Set the scroll port size, which determines the scroll range. For example if
-    // a 500-pixel document is shown in a 100-pixel frame, the scroll port length would
-    // be 100, and gecko would limit the maximum scroll offset to 400 (so as to prevent
-    // overscroll). Note that if the content here was zoomed to 2x, the document would
-    // be 1000 pixels long but the frame would still be 100 pixels, and so the maximum
-    // scroll range would be 900. Therefore this calculation depends on the zoom applied
-    // to the content relative to the container.
-    // Note that this needs to happen before scrolling the frame (in UpdateFrameCommon),
-    // otherwise the scroll position may get clamped incorrectly.
-    CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
-    nsLayoutUtils::SetScrollPositionClampingScrollPortSize(shell, scrollPort);
-
     // The pres shell resolution is updated by the the async zoom since the
     // last paint.
     presShellResolution = aMetrics.GetPresShellResolution()

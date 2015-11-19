@@ -647,7 +647,7 @@ bool
 CamerasChild::RecvDeliverFrame(const int& capEngine,
                                const int& capId,
                                mozilla::ipc::Shmem&& shmem,
-                               const int& size,
+                               const size_t& size,
                                const uint32_t& time_stamp,
                                const int64_t& ntp_time,
                                const int64_t& render_time)

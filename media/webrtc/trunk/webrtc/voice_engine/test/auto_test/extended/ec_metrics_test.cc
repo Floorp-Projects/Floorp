@@ -41,14 +41,17 @@ TEST_F(EcMetricsTest, ManualTestEcMetrics) {
   int erl, erle, rerl, a_nlp;
   int delay_median = 0;
   int delay_std = 0;
+  float fraction_poor_delays = 0;
 
   for (int i = 0; i < 5; i++) {
     Sleep(1000);
     EXPECT_EQ(0, voe_apm_->GetEchoMetrics(erl, erle, rerl, a_nlp));
-    EXPECT_EQ(0, voe_apm_->GetEcDelayMetrics(delay_median, delay_std));
+    EXPECT_EQ(0, voe_apm_->GetEcDelayMetrics(delay_median, delay_std,
+                                             fraction_poor_delays));
     TEST_LOG("    Echo  : ERL=%5d, ERLE=%5d, RERL=%5d, A_NLP=%5d [dB], "
-        " delay median=%3d, delay std=%3d [ms]\n", erl, erle, rerl, a_nlp,
-        delay_median, delay_std);
+        " delay median=%3d, delay std=%3d [ms], "
+        "fraction_poor_delays=%3.1f [%%]\n", erl, erle, rerl, a_nlp,
+        delay_median, delay_std, fraction_poor_delays * 100);
   }
 
   EXPECT_EQ(0, voe_apm_->SetEcMetricsStatus(false));
@@ -63,8 +66,9 @@ TEST_F(EcMetricsTest, GetEcMetricsFailsIfEcNotEnabled) {
 
 TEST_F(EcMetricsTest, GetEcDelayMetricsFailsIfEcNotEnabled) {
   int dummy = 0;
+  float dummy_f = 0;
   EXPECT_EQ(0, voe_apm_->SetEcMetricsStatus(true));
-  EXPECT_EQ(-1, voe_apm_->GetEcDelayMetrics(dummy, dummy));
+  EXPECT_EQ(-1, voe_apm_->GetEcDelayMetrics(dummy, dummy, dummy_f));
   EXPECT_EQ(VE_APM_ERROR, voe_base_->LastError());
 }
 
@@ -76,8 +80,11 @@ TEST_F(EcMetricsTest, ManualVerifyEcDelayMetrics) {
 
   for (int i = 0; i < 5; i++) {
     int delay, delay_std;
-    EXPECT_EQ(0, voe_apm_->GetEcDelayMetrics(delay, delay_std));
-    TEST_LOG("Delay = %d, Delay Std = %d\n", delay, delay_std);
+    float fraction_poor_delays;
+    EXPECT_EQ(0, voe_apm_->GetEcDelayMetrics(delay, delay_std,
+                                             fraction_poor_delays));
+    TEST_LOG("Delay = %d, Delay Std = %d, Fraction poor delays = %3.1f\n",
+             delay, delay_std, fraction_poor_delays * 100);
     Sleep(1000);
   }
 }

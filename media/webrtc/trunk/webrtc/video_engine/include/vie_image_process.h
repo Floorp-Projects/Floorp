@@ -32,7 +32,7 @@ class WEBRTC_DLLEXPORT ViEEffectFilter {
  public:
   // This method is called with an I420 video frame allowing the user to
   // modify the video frame.
-  virtual int Transform(int size,
+  virtual int Transform(size_t size,
                         unsigned char* frame_buffer,
                         int64_t ntp_time_ms,
                         unsigned int timestamp,

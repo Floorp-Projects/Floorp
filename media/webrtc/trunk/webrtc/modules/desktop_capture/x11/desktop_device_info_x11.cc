@@ -4,7 +4,7 @@
 
 #include "webrtc/modules/desktop_capture/x11/desktop_device_info_x11.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 #include <inttypes.h>
 #include <unistd.h>

@@ -13,13 +13,13 @@
 
 #include <string.h>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 #define MAX_FILE_NAME_LENGTH_BYTE 500
 #define NO_OF_CLIENTS             15
@@ -53,11 +53,11 @@ class ISACTest : public ACMTest {
 
   void SwitchingSamplingRate(int testNr, int maxSampRateChange);
 
-  scoped_ptr<AudioCodingModule> _acmA;
-  scoped_ptr<AudioCodingModule> _acmB;
+  rtc::scoped_ptr<AudioCodingModule> _acmA;
+  rtc::scoped_ptr<AudioCodingModule> _acmB;
 
-  scoped_ptr<Channel> _channel_A2B;
-  scoped_ptr<Channel> _channel_B2A;
+  rtc::scoped_ptr<Channel> _channel_A2B;
+  rtc::scoped_ptr<Channel> _channel_B2A;
 
   PCMFile _inFileA;
   PCMFile _inFileB;

@@ -30,51 +30,50 @@ class VideoRenderIosImpl : IVideoRender {
   ~VideoRenderIosImpl();
 
   // Implementation of IVideoRender.
-  int32_t Init() OVERRIDE;
-  int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
-  int32_t ChangeWindow(void* window) OVERRIDE;
+  int32_t Init() override;
+  int32_t ChangeWindow(void* window) override;
 
   VideoRenderCallback* AddIncomingRenderStream(const uint32_t stream_id,
                                                const uint32_t z_order,
                                                const float left,
                                                const float top,
                                                const float right,
-                                               const float bottom) OVERRIDE;
+                                               const float bottom) override;
 
-  int32_t DeleteIncomingRenderStream(const uint32_t stream_id) OVERRIDE;
+  int32_t DeleteIncomingRenderStream(const uint32_t stream_id) override;
 
   int32_t GetIncomingRenderStreamProperties(const uint32_t stream_id,
                                             uint32_t& z_order,
                                             float& left,
                                             float& top,
                                             float& right,
-                                            float& bottom) const OVERRIDE;
+                                            float& bottom) const override;
 
-  int32_t StartRender() OVERRIDE;
-  int32_t StopRender() OVERRIDE;
+  int32_t StartRender() override;
+  int32_t StopRender() override;
 
-  VideoRenderType RenderType() OVERRIDE;
-  RawVideoType PerferedVideoType() OVERRIDE;
-  bool FullScreen() OVERRIDE;
+  VideoRenderType RenderType() override;
+  RawVideoType PerferedVideoType() override;
+  bool FullScreen() override;
   int32_t GetGraphicsMemory(
       uint64_t& total_graphics_memory,
-      uint64_t& available_graphics_memory) const OVERRIDE;  // NOLINT
+      uint64_t& available_graphics_memory) const override;  // NOLINT
   int32_t GetScreenResolution(
       uint32_t& screen_width,
-      uint32_t& screen_height) const OVERRIDE;  // NOLINT
+      uint32_t& screen_height) const override;  // NOLINT
   uint32_t RenderFrameRate(const uint32_t stream_id);
   int32_t SetStreamCropping(const uint32_t stream_id,
                             const float left,
                             const float top,
                             const float right,
-                            const float bottom) OVERRIDE;
+                            const float bottom) override;
   int32_t ConfigureRenderer(const uint32_t stream_id,
                             const unsigned int z_order,
                             const float left,
                             const float top,
                             const float right,
-                            const float bottom) OVERRIDE;
-  int32_t SetTransparentBackground(const bool enable) OVERRIDE;
+                            const float bottom) override;
+  int32_t SetTransparentBackground(const bool enable) override;
   int32_t SetText(const uint8_t text_id,
                   const uint8_t* text,
                   const int32_t text_length,
@@ -83,7 +82,7 @@ class VideoRenderIosImpl : IVideoRender {
                   const float left,
                   const float top,
                   const float right,
-                  const float bottom) OVERRIDE;
+                  const float bottom) override;
   int32_t SetBitmap(const void* bit_map,
                     const uint8_t picture_id,
                     const void* color_key,
@@ -99,7 +98,7 @@ class VideoRenderIosImpl : IVideoRender {
   bool full_screen_;
 
   CriticalSectionWrapper* crit_sec_;
-  webrtc::scoped_ptr<VideoRenderIosGles20> ptr_ios_render_;
+  rtc::scoped_ptr<VideoRenderIosGles20> ptr_ios_render_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_IOS_VIDEO_RENDER_IOS_IMPL_H_

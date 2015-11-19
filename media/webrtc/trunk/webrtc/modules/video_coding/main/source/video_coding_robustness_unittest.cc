@@ -80,7 +80,7 @@ class VCMRobustnessTest : public ::testing::Test {
   MockPacketRequestCallback request_callback_;
   NiceMock<MockVideoDecoder> decoder_;
   NiceMock<MockVideoDecoder> decoderCopy_;
-  scoped_ptr<SimulatedClock> clock_;
+  rtc::scoped_ptr<SimulatedClock> clock_;
   NullEventFactory event_factory_;
 };
 
@@ -159,100 +159,6 @@ TEST_F(VCMRobustnessTest, TestHardNackNoneDecoded) {
 
   EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
   ASSERT_EQ(VCM_OK, vcm_->Process());
-}
-
-TEST_F(VCMRobustnessTest, TestDualDecoder) {
-  Sequence s1, s2;
-  EXPECT_CALL(request_callback_, ResendPackets(_, 1))
-      .With(Args<0, 1>(ElementsAre(4)))
-      .Times(1);
-
-  EXPECT_CALL(decoder_, Copy())
-      .Times(1)
-      .WillOnce(Return(&decoderCopy_));
-  EXPECT_CALL(decoderCopy_, Copy())
-      .Times(1)
-      .WillOnce(Return(&decoder_));
-
-  // Decode operations
-  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 0),
-                                     Field(&EncodedImage::_completeFrame,
-                                           true)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s1);
-  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 3000),
-                                     Field(&EncodedImage::_completeFrame,
-                                           false)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s1);
-  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 6000),
-                                     Field(&EncodedImage::_completeFrame,
-                                           true)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s1);
-  EXPECT_CALL(decoder_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 9000),
-                                     Field(&EncodedImage::_completeFrame,
-                                           true)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s1);
-
-  EXPECT_CALL(decoderCopy_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 3000),
-                                     Field(&EncodedImage::_completeFrame,
-                                           true)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s2);
-  EXPECT_CALL(decoderCopy_, Decode(AllOf(Field(&EncodedImage::_timeStamp, 6000),
-                                     Field(&EncodedImage::_completeFrame,
-                                           true)),
-                               false, _, _, _))
-        .Times(1)
-        .InSequence(s2);
-
-
-  ASSERT_EQ(VCM_OK, vcm_->SetReceiverRobustnessMode(
-      VideoCodingModule::kDualDecoder, kWithErrors));
-
-  InsertPacket(0, 0, true, false, kVideoFrameKey);
-  InsertPacket(0, 1, false, false, kVideoFrameKey);
-  InsertPacket(0, 2, false, true, kVideoFrameKey);
-  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 0.
-
-  clock_->AdvanceTimeMilliseconds(33);
-  InsertPacket(3000, 3, true, false, kVideoFrameDelta);
-  // Packet 4 missing.
-  InsertPacket(3000, 5, false, true, kVideoFrameDelta);
-  EXPECT_EQ(VCM_FRAME_NOT_READY, vcm_->Decode(0));
-
-  clock_->AdvanceTimeMilliseconds(33);
-  InsertPacket(6000, 6, true, false, kVideoFrameDelta);
-  InsertPacket(6000, 7, false, false, kVideoFrameDelta);
-  InsertPacket(6000, 8, false, true, kVideoFrameDelta);
-
-  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 3000 incomplete.
-                                       // Spawn a decoder copy.
-  EXPECT_EQ(0, vcm_->DecodeDualFrame(0));  // Expect no dual decoder action.
-
-  clock_->AdvanceTimeMilliseconds(10);
-  EXPECT_EQ(VCM_OK, vcm_->Process());  // Generate NACK list.
-
-  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 6000 complete.
-  EXPECT_EQ(0, vcm_->DecodeDualFrame(0));  // Expect no dual decoder action.
-
-  InsertPacket(3000, 4, false, false, kVideoFrameDelta);
-  EXPECT_EQ(1, vcm_->DecodeDualFrame(0));  // Dual decode of timestamp 3000.
-  EXPECT_EQ(1, vcm_->DecodeDualFrame(0));  // Dual decode of timestamp 6000.
-  EXPECT_EQ(0, vcm_->DecodeDualFrame(0));  // No more frames.
-
-  InsertPacket(9000, 9, true, false, kVideoFrameDelta);
-  InsertPacket(9000, 10, false, false, kVideoFrameDelta);
-  InsertPacket(9000, 11, false, true, kVideoFrameDelta);
-  EXPECT_EQ(VCM_OK, vcm_->Decode(0));  // Decode timestamp 9000 complete.
-  EXPECT_EQ(0, vcm_->DecodeDualFrame(0));  // Expect no dual decoder action.
 }
 
 TEST_F(VCMRobustnessTest, TestModeNoneWithErrors) {

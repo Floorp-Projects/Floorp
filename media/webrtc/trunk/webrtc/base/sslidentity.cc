@@ -88,6 +88,20 @@ std::string SSLIdentity::DerToPem(const std::string& pem_type,
   return result.str();
 }
 
+SSLCertChain::SSLCertChain(const std::vector<SSLCertificate*>& certs) {
+  ASSERT(!certs.empty());
+  certs_.resize(certs.size());
+  std::transform(certs.begin(), certs.end(), certs_.begin(), DupCert);
+}
+
+SSLCertChain::SSLCertChain(const SSLCertificate* cert) {
+  certs_.push_back(cert->GetReference());
+}
+
+SSLCertChain::~SSLCertChain() {
+  std::for_each(certs_.begin(), certs_.end(), DeleteCert);
+}
+
 #if SSL_USE_SCHANNEL
 
 SSLCertificate* SSLCertificate::FromPEMString(const std::string& pem_string) {

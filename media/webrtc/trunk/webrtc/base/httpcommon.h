@@ -283,7 +283,7 @@ struct HttpData {
   HttpVersion version;
   scoped_ptr<StreamInterface> document;
 
-  HttpData() : version(HVER_1_1) { }
+  HttpData();
 
   enum HeaderCombine { HC_YES, HC_NO, HC_AUTO, HC_REPLACE, HC_NEW };
   void changeHeader(const std::string& name, const std::string& value,
@@ -368,7 +368,7 @@ struct HttpData {
   virtual HttpError parseLeader(const char* line, size_t len) = 0;
 
 protected:
-  virtual ~HttpData() { }
+ virtual ~HttpData();
   void clear(bool release_document);
   void copy(const HttpData& src);
 
@@ -385,8 +385,8 @@ struct HttpRequestData : public HttpData {
   void clear(bool release_document);
   void copy(const HttpRequestData& src);
 
-  virtual size_t formatLeader(char* buffer, size_t size) const;
-  virtual HttpError parseLeader(const char* line, size_t len);
+  size_t formatLeader(char* buffer, size_t size) const override;
+  HttpError parseLeader(const char* line, size_t len) override;
 
   bool getAbsoluteUri(std::string* uri) const;
   bool getRelativeUri(std::string* host, std::string* path) const;
@@ -408,8 +408,8 @@ struct HttpResponseData : public HttpData {
                     uint32 scode = HC_MOVED_TEMPORARILY);
   void set_error(uint32 scode);
 
-  virtual size_t formatLeader(char* buffer, size_t size) const;
-  virtual HttpError parseLeader(const char* line, size_t len);
+  size_t formatLeader(char* buffer, size_t size) const override;
+  HttpError parseLeader(const char* line, size_t len) override;
 };
 
 struct HttpTransaction {

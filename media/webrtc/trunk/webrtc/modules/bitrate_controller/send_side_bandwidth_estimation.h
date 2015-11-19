@@ -24,30 +24,30 @@ class SendSideBandwidthEstimation {
   SendSideBandwidthEstimation();
   virtual ~SendSideBandwidthEstimation();
 
-  void CurrentEstimate(uint32_t* bitrate, uint8_t* loss, uint32_t* rtt) const;
+  void CurrentEstimate(int* bitrate, uint8_t* loss, int64_t* rtt) const;
 
   // Call periodically to update estimate.
-  void UpdateEstimate(uint32_t now_ms);
+  void UpdateEstimate(int64_t now_ms);
 
   // Call when we receive a RTCP message with TMMBR or REMB.
   void UpdateReceiverEstimate(uint32_t bandwidth);
 
   // Call when we receive a RTCP message with a ReceiveBlock.
   void UpdateReceiverBlock(uint8_t fraction_loss,
-                           uint32_t rtt,
+                           int64_t rtt,
                            int number_of_packets,
-                           uint32_t now_ms);
+                           int64_t now_ms);
 
-  void SetSendBitrate(uint32_t bitrate);
-  void SetMinMaxBitrate(uint32_t min_bitrate, uint32_t max_bitrate);
-  void SetMinBitrate(uint32_t min_bitrate);
+  void SetSendBitrate(int bitrate);
+  void SetMinMaxBitrate(int min_bitrate, int max_bitrate);
+  int GetMinBitrate() const;
 
  private:
   enum UmaState { kNoUpdate, kFirstDone, kDone };
 
   bool IsInStartPhase(int64_t now_ms) const;
 
-  void UpdateUmaStats(int64_t now_ms, int rtt, int lost_packets);
+  void UpdateUmaStats(int64_t now_ms, int64_t rtt, int lost_packets);
 
   // Returns the input bitrate capped to the thresholds defined by the max,
   // min and incoming bandwidth.
@@ -56,9 +56,9 @@ class SendSideBandwidthEstimation {
   // Updates history of min bitrates.
   // After this method returns min_bitrate_history_.front().second contains the
   // min bitrate used during last kBweIncreaseIntervalMs.
-  void UpdateMinHistory(uint32_t now_ms);
+  void UpdateMinHistory(int64_t now_ms);
 
-  std::deque<std::pair<uint32_t, uint32_t> > min_bitrate_history_;
+  std::deque<std::pair<int64_t, uint32_t> > min_bitrate_history_;
 
   // incoming filters
   int accumulate_lost_packets_Q8_;
@@ -68,16 +68,17 @@ class SendSideBandwidthEstimation {
   uint32_t min_bitrate_configured_;
   uint32_t max_bitrate_configured_;
 
-  uint32_t time_last_receiver_block_ms_;
+  int64_t time_last_receiver_block_ms_;
   uint8_t last_fraction_loss_;
-  uint16_t last_round_trip_time_ms_;
+  int64_t last_round_trip_time_ms_;
 
   uint32_t bwe_incoming_;
-  uint32_t time_last_decrease_ms_;
+  int64_t time_last_decrease_ms_;
   int64_t first_report_time_ms_;
   int initially_lost_packets_;
   int bitrate_at_2_seconds_kbps_;
   UmaState uma_update_state_;
+  std::vector<bool> rampup_uma_stats_updated_;
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_

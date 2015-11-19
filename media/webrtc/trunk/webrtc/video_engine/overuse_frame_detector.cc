@@ -17,9 +17,9 @@
 #include <list>
 #include <map>
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/exp_filter.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
@@ -135,7 +135,7 @@ class OveruseFrameDetector::EncodeTimeAvg {
  private:
   const float kWeightFactor;
   const float kInitialAvgEncodeTimeMs;
-  scoped_ptr<rtc::ExpFilter> filtered_encode_time_ms_;
+  rtc::scoped_ptr<rtc::ExpFilter> filtered_encode_time_ms_;
 };
 
 // Class for calculating the processing usage on the send-side (the average
@@ -208,8 +208,8 @@ class OveruseFrameDetector::SendProcessingUsage {
   const float kMaxSampleDiffMs;
   uint64_t count_;
   CpuOveruseOptions options_;
-  scoped_ptr<rtc::ExpFilter> filtered_processing_ms_;
-  scoped_ptr<rtc::ExpFilter> filtered_frame_diff_ms_;
+  rtc::scoped_ptr<rtc::ExpFilter> filtered_processing_ms_;
+  rtc::scoped_ptr<rtc::ExpFilter> filtered_frame_diff_ms_;
 };
 
 // Class for calculating the processing time of frames.
@@ -314,12 +314,14 @@ class OveruseFrameDetector::CaptureQueueDelay {
   const float kWeightFactor;
   std::list<int64_t> frames_;
   int delay_ms_;
-  scoped_ptr<rtc::ExpFilter> filtered_delay_ms_per_s_;
+  rtc::scoped_ptr<rtc::ExpFilter> filtered_delay_ms_per_s_;
 };
 
-OveruseFrameDetector::OveruseFrameDetector(Clock* clock)
-    : crit_(CriticalSectionWrapper::CreateCriticalSection()),
-      observer_(NULL),
+OveruseFrameDetector::OveruseFrameDetector(
+    Clock* clock,
+    CpuOveruseMetricsObserver* metrics_observer)
+    : observer_(NULL),
+      metrics_observer_(metrics_observer),
       clock_(clock),
       next_process_time_(clock_->TimeInMilliseconds()),
       num_process_times_(0),
@@ -337,19 +339,21 @@ OveruseFrameDetector::OveruseFrameDetector(Clock* clock)
       frame_queue_(new FrameQueue()),
       last_sample_time_ms_(0),
       capture_queue_delay_(new CaptureQueueDelay()) {
+  DCHECK(metrics_observer != nullptr);
+  processing_thread_.DetachFromThread();
 }
 
 OveruseFrameDetector::~OveruseFrameDetector() {
 }
 
 void OveruseFrameDetector::SetObserver(CpuOveruseObserver* observer) {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   observer_ = observer;
 }
 
 void OveruseFrameDetector::SetOptions(const CpuOveruseOptions& options) {
   assert(options.min_frame_samples > 0);
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   if (options_.Equals(options)) {
     return;
   }
@@ -360,32 +364,31 @@ void OveruseFrameDetector::SetOptions(const CpuOveruseOptions& options) {
 }
 
 int OveruseFrameDetector::CaptureQueueDelayMsPerS() const {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   return capture_queue_delay_->delay_ms();
 }
 
 int OveruseFrameDetector::LastProcessingTimeMs() const {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   return frame_queue_->last_processing_time_ms();
 }
 
 int OveruseFrameDetector::FramesInQueue() const {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   return frame_queue_->NumFrames();
 }
 
-void OveruseFrameDetector::GetCpuOveruseMetrics(
-    CpuOveruseMetrics* metrics) const {
-  CriticalSectionScoped cs(crit_.get());
-  metrics->capture_jitter_ms = static_cast<int>(capture_deltas_.StdDev() + 0.5);
-  metrics->avg_encode_time_ms = encode_time_->Value();
-  metrics->encode_rsd = 0;
-  metrics->encode_usage_percent = usage_->Value();
-  metrics->capture_queue_delay_ms_per_s = capture_queue_delay_->Value();
+void OveruseFrameDetector::UpdateCpuOveruseMetrics() {
+  metrics_.capture_jitter_ms = static_cast<int>(capture_deltas_.StdDev() + 0.5);
+  metrics_.avg_encode_time_ms = encode_time_->Value();
+  metrics_.encode_usage_percent = usage_->Value();
+  metrics_.capture_queue_delay_ms_per_s = capture_queue_delay_->Value();
+
+  metrics_observer_->CpuOveruseMetricsUpdated(metrics_);
 }
 
-int32_t OveruseFrameDetector::TimeUntilNextProcess() {
-  CriticalSectionScoped cs(crit_.get());
+int64_t OveruseFrameDetector::TimeUntilNextProcess() {
+  DCHECK(processing_thread_.CalledOnValidThread());
   return next_process_time_ - clock_->TimeInMilliseconds();
 }
 
@@ -411,12 +414,13 @@ void OveruseFrameDetector::ResetAll(int num_pixels) {
   capture_queue_delay_->ClearFrames();
   last_capture_time_ = 0;
   num_process_times_ = 0;
+  UpdateCpuOveruseMetrics();
 }
 
 void OveruseFrameDetector::FrameCaptured(int width,
                                          int height,
                                          int64_t capture_time_ms) {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
 
   int64_t now = clock_->TimeInMilliseconds();
   if (FrameSizeChanged(width * height) || FrameTimeoutDetected(now)) {
@@ -434,15 +438,16 @@ void OveruseFrameDetector::FrameCaptured(int width,
   if (options_.enable_extended_processing_usage) {
     frame_queue_->Start(capture_time_ms, now);
   }
+  UpdateCpuOveruseMetrics();
 }
 
 void OveruseFrameDetector::FrameProcessingStarted() {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   capture_queue_delay_->FrameProcessingStarted(clock_->TimeInMilliseconds());
 }
 
 void OveruseFrameDetector::FrameEncoded(int encode_time_ms) {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   int64_t now = clock_->TimeInMilliseconds();
   if (last_encode_sample_ms_ != 0) {
     int64_t diff_ms = now - last_encode_sample_ms_;
@@ -453,10 +458,11 @@ void OveruseFrameDetector::FrameEncoded(int encode_time_ms) {
   if (!options_.enable_extended_processing_usage) {
     AddProcessingTime(encode_time_ms);
   }
+  UpdateCpuOveruseMetrics();
 }
 
 void OveruseFrameDetector::FrameSent(int64_t capture_time_ms) {
-  CriticalSectionScoped cs(crit_.get());
+  rtc::CritScope cs(&crit_);
   if (!options_.enable_extended_processing_usage) {
     return;
   }
@@ -465,6 +471,7 @@ void OveruseFrameDetector::FrameSent(int64_t capture_time_ms) {
   if (delay_ms > 0) {
     AddProcessingTime(delay_ms);
   }
+  UpdateCpuOveruseMetrics();
 }
 
 void OveruseFrameDetector::AddProcessingTime(int elapsed_ms) {
@@ -477,7 +484,7 @@ void OveruseFrameDetector::AddProcessingTime(int elapsed_ms) {
 }
 
 int32_t OveruseFrameDetector::Process() {
-  CriticalSectionScoped cs(crit_.get());
+  DCHECK(processing_thread_.CalledOnValidThread());
 
   int64_t now = clock_->TimeInMilliseconds();
 
@@ -487,9 +494,12 @@ int32_t OveruseFrameDetector::Process() {
 
   int64_t diff_ms = now - next_process_time_ + kProcessIntervalMs;
   next_process_time_ = now + kProcessIntervalMs;
+
+  rtc::CritScope cs(&crit_);
   ++num_process_times_;
 
   capture_queue_delay_->CalculateDelayChange(diff_ms);
+  UpdateCpuOveruseMetrics();
 
   if (num_process_times_ <= options_.min_process_count) {
     return 0;
@@ -535,6 +545,7 @@ int32_t OveruseFrameDetector::Process() {
                   << " encode usage " << usage_->Value()
                   << " overuse detections " << num_overuse_detections_
                   << " rampup delay " << rampup_delay;
+
   return 0;
 }
 

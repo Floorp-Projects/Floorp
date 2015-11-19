@@ -59,20 +59,16 @@ int Filter(FilterState* hpf, int16_t* data, int length) {
     //  y[i] = b[0] * x[i] + b[1] * x[i-1] + b[2] * x[i-2]
     //         + -a[1] * y[i-1] + -a[2] * y[i-2];
 
-    tmp_int32 =
-        WEBRTC_SPL_MUL_16_16(y[1], ba[3]); // -a[1] * y[i-1] (low part)
-    tmp_int32 +=
-        WEBRTC_SPL_MUL_16_16(y[3], ba[4]); // -a[2] * y[i-2] (low part)
+    tmp_int32 = y[1] * ba[3];  // -a[1] * y[i-1] (low part)
+    tmp_int32 += y[3] * ba[4];  // -a[2] * y[i-2] (low part)
     tmp_int32 = (tmp_int32 >> 15);
-    tmp_int32 +=
-        WEBRTC_SPL_MUL_16_16(y[0], ba[3]); // -a[1] * y[i-1] (high part)
-    tmp_int32 +=
-        WEBRTC_SPL_MUL_16_16(y[2], ba[4]); // -a[2] * y[i-2] (high part)
+    tmp_int32 += y[0] * ba[3];  // -a[1] * y[i-1] (high part)
+    tmp_int32 += y[2] * ba[4];  // -a[2] * y[i-2] (high part)
     tmp_int32 = (tmp_int32 << 1);
 
-    tmp_int32 += WEBRTC_SPL_MUL_16_16(data[i], ba[0]); // b[0]*x[0]
-    tmp_int32 += WEBRTC_SPL_MUL_16_16(x[0], ba[1]);    // b[1]*x[i-1]
-    tmp_int32 += WEBRTC_SPL_MUL_16_16(x[1], ba[2]);    // b[2]*x[i-2]
+    tmp_int32 += data[i] * ba[0];  // b[0]*x[0]
+    tmp_int32 += x[0] * ba[1];  // b[1]*x[i-1]
+    tmp_int32 += x[1] * ba[2];  // b[2]*x[i-2]
 
     // Update state (input part)
     x[1] = x[0];
@@ -118,13 +114,13 @@ int HighPassFilterImpl::ProcessCaptureAudio(AudioBuffer* audio) {
     return apm_->kNoError;
   }
 
-  assert(audio->samples_per_split_channel() <= 160);
+  assert(audio->num_frames_per_band() <= 160);
 
   for (int i = 0; i < num_handles(); i++) {
     Handle* my_handle = static_cast<Handle*>(handle(i));
     err = Filter(my_handle,
-                 audio->low_pass_split_data(i),
-                 audio->samples_per_split_channel());
+                 audio->split_bands(i)[kBand0To8kHz],
+                 audio->num_frames_per_band());
 
     if (err != apm_->kNoError) {
       return GetHandleError(my_handle);

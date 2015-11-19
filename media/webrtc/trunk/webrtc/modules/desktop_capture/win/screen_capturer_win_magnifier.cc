@@ -36,7 +36,7 @@ static LPCTSTR kMagnifierWindowName = L"MagnifierWindow";
 Atomic32 ScreenCapturerWinMagnifier::tls_index_(TLS_OUT_OF_INDEXES);
 
 ScreenCapturerWinMagnifier::ScreenCapturerWinMagnifier(
-    scoped_ptr<ScreenCapturer> fallback_capturer)
+    rtc::scoped_ptr<ScreenCapturer> fallback_capturer)
     : fallback_capturer_(fallback_capturer.Pass()),
       fallback_capturer_started_(false),
       callback_(NULL),
@@ -95,7 +95,7 @@ void ScreenCapturerWinMagnifier::Capture(const DesktopRegion& region) {
   }
   // Switch to the desktop receiving user input if different from the current
   // one.
-  scoped_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
+  rtc::scoped_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
   if (input_desktop.get() != NULL && !desktop_.IsSame(*input_desktop)) {
     // Release GDI resources otherwise SetThreadDesktop will fail.
     if (desktop_dc_) {
@@ -425,7 +425,7 @@ void ScreenCapturerWinMagnifier::CreateCurrentFrameIfNecessary(
         size.width() * size.height() * DesktopFrame::kBytesPerPixel;
     SharedMemory* shared_memory = callback_->CreateSharedMemory(buffer_size);
 
-    scoped_ptr<DesktopFrame> buffer;
+    rtc::scoped_ptr<DesktopFrame> buffer;
     if (shared_memory) {
       buffer.reset(new SharedMemoryDesktopFrame(
           size, size.width() * DesktopFrame::kBytesPerPixel, shared_memory));

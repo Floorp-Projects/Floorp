@@ -988,7 +988,6 @@ nsClipboardDragDropHookCommand::GetCommandStateParams(const char *aCommandName,
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                \
   {                                                                 \
     _cmdClass* theCmd = new _cmdClass();                            \
-    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                     \
     rv = inCommandTable->RegisterCommand(_cmdName,                  \
                    static_cast<nsIControllerCommand *>(theCmd));    \
   }
@@ -996,7 +995,6 @@ nsClipboardDragDropHookCommand::GetCommandStateParams(const char *aCommandName,
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)              \
   {                                                                 \
     _cmdClass* theCmd = new _cmdClass();                            \
-    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                     \
     rv = inCommandTable->RegisterCommand(_cmdName,                  \
                    static_cast<nsIControllerCommand *>(theCmd));
 

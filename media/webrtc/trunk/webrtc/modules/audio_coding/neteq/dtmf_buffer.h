@@ -69,7 +69,7 @@ class DtmfBuffer {
   // |rtp_timestamp| is simply copied into the struct.
   static int ParseEvent(uint32_t rtp_timestamp,
                         const uint8_t* payload,
-                        int payload_length_bytes,
+                        size_t payload_length_bytes,
                         DtmfEvent* event);
 
   // Inserts |event| into the buffer. The method looks for a matching event and

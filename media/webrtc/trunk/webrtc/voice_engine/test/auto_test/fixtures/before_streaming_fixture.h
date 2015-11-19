@@ -41,6 +41,9 @@ class BeforeStreamingFixture : public AfterInitializationFixture {
   // Resumes all sending and playout.
   void ResumePlaying();
 
+  // Waits until packet_count packetes have been processed by recipient.
+  void WaitForTransmittedPackets(int32_t packet_count);
+
  private:
   void SetUpLocalPlayback();
 

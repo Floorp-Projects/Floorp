@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
@@ -23,7 +24,6 @@
 #include "webrtc/modules/audio_coding/neteq/mock/mock_expand.h"
 #include "webrtc/modules/audio_coding/neteq/random_vector.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 using ::testing::_;
 
@@ -53,7 +53,7 @@ TEST(Normal, AvoidDivideByZero) {
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};
-  scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
+  rtc::scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
   for (size_t i = 0; i < channels; ++i) {
     mute_factor_array[i] = 16384;
   }
@@ -97,7 +97,7 @@ TEST(Normal, InputLengthAndChannelsDoNotMatch) {
   Normal normal(fs, &db, bgn, &expand);
 
   int16_t input[1000] = {0};
-  scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
+  rtc::scoped_ptr<int16_t[]> mute_factor_array(new int16_t[channels]);
   for (size_t i = 0; i < channels; ++i) {
     mute_factor_array[i] = 16384;
   }

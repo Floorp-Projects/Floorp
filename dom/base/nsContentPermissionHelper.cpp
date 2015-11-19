@@ -151,7 +151,6 @@ bool
 ContentPermissionRequestParent::Recvprompt()
 {
   mProxy = new nsContentPermissionRequestProxy();
-  NS_ASSERTION(mProxy, "Alloc of request proxy failed");
   if (NS_FAILED(mProxy->Init(mRequests, this))) {
     mProxy->Cancel();
   }

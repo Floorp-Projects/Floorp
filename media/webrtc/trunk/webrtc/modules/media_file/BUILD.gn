@@ -10,18 +10,12 @@ import("../../build/webrtc.gni")
 
 config("media_file_config") {
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
-  include_dirs = [
-    "interface",
-    "../interface",
-  ]
 }
 
 source_set("media_file") {
   sources = [
     "interface/media_file.h",
     "interface/media_file_defines.h",
-    "source/avi_file.cc",
-    "source/avi_file.h",
     "source/media_file_impl.cc",
     "source/media_file_impl.h",
     "source/media_file_utility.cc",
@@ -47,5 +41,9 @@ source_set("media_file") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  deps = [ "../../system_wrappers" ]
+  deps = [
+    "../..:webrtc_common",
+    "../../system_wrappers",
+    "../../common_audio",
+  ]
 }

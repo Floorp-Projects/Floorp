@@ -582,9 +582,6 @@ nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
                                            nsIOutputStream* *result)
 {
   nsPluginStreamToFile* stream = new nsPluginStreamToFile(target, mOwner);
-  if (!stream)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   return stream->QueryInterface(kIOutputStreamIID, (void**)result);
 }
 

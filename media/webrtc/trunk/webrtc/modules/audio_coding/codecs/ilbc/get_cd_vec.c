@@ -58,7 +58,7 @@ void WebRtcIlbcfix_GetCbVec(
 
     /* Calculate lag */
 
-    k=(int16_t)WEBRTC_SPL_MUL_16_16(2, (index-(lMem-cbveclen+1)))+cbveclen;
+    k = (int16_t)(2 * (index - (lMem - cbveclen + 1))) + cbveclen;
 
     lag = k / 2;
 

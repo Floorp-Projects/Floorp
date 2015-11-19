@@ -47,7 +47,6 @@ class RtpRtcpObserver {
 
   virtual EventTypeWrapper Wait() {
     EventTypeWrapper result = observation_complete_->Wait(timeout_ms_);
-    observation_complete_->Reset();
     return result;
   }
 
@@ -128,7 +127,7 @@ class RtpRtcpObserver {
           on_rtcp_(on_rtcp) {}
 
   private:
-    virtual bool SendRtp(const uint8_t* packet, size_t length) OVERRIDE {
+   bool SendRtp(const uint8_t* packet, size_t length) override {
       EXPECT_FALSE(RtpHeaderParser::IsRtcp(packet, length));
       Action action;
       {
@@ -145,7 +144,7 @@ class RtpRtcpObserver {
       return true;  // Will never happen, makes compiler happy.
     }
 
-    virtual bool SendRtcp(const uint8_t* packet, size_t length) OVERRIDE {
+    bool SendRtcp(const uint8_t* packet, size_t length) override {
       EXPECT_TRUE(RtpHeaderParser::IsRtcp(packet, length));
       Action action;
       {
@@ -170,9 +169,9 @@ class RtpRtcpObserver {
   };
 
  protected:
-  const scoped_ptr<CriticalSectionWrapper> crit_;
-  const scoped_ptr<EventWrapper> observation_complete_;
-  const scoped_ptr<RtpHeaderParser> parser_;
+  const rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+  const rtc::scoped_ptr<EventWrapper> observation_complete_;
+  const rtc::scoped_ptr<RtpHeaderParser> parser_;
 
  private:
   PacketTransport send_transport_, receive_transport_;

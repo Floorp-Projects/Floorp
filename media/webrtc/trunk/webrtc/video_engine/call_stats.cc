@@ -17,23 +17,70 @@
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
 namespace webrtc {
-
-// A rtt report is considered valid for this long.
-const int kRttTimeoutMs = 1500;
+namespace {
 // Time interval for updating the observers.
-const int kUpdateIntervalMs = 1000;
+const int64_t kUpdateIntervalMs = 1000;
+// Weight factor to apply to the average rtt.
+const float kWeightFactor = 0.3f;
+
+void RemoveOldReports(int64_t now, std::list<CallStats::RttTime>* reports) {
+  // A rtt report is considered valid for this long.
+  const int64_t kRttTimeoutMs = 1500;
+  while (!reports->empty() &&
+         (now - reports->front().time) > kRttTimeoutMs) {
+    reports->pop_front();
+  }
+}
+
+int64_t GetMaxRttMs(std::list<CallStats::RttTime>* reports) {
+  int64_t max_rtt_ms = 0;
+  for (std::list<CallStats::RttTime>::const_iterator it = reports->begin();
+       it != reports->end(); ++it) {
+    max_rtt_ms = std::max(it->rtt, max_rtt_ms);
+  }
+  return max_rtt_ms;
+}
+
+int64_t GetAvgRttMs(std::list<CallStats::RttTime>* reports) {
+  if (reports->empty()) {
+    return 0;
+  }
+  int64_t sum = 0;
+  for (std::list<CallStats::RttTime>::const_iterator it = reports->begin();
+       it != reports->end(); ++it) {
+    sum += it->rtt;
+  }
+  return sum / reports->size();
+}
+
+void UpdateAvgRttMs(std::list<CallStats::RttTime>* reports, int64_t* avg_rtt) {
+  uint32_t cur_rtt_ms = GetAvgRttMs(reports);
+  if (cur_rtt_ms == 0) {
+    // Reset.
+    *avg_rtt = 0;
+    return;
+  }
+  if (*avg_rtt == 0) {
+    // Initialize.
+    *avg_rtt = cur_rtt_ms;
+    return;
+  }
+  *avg_rtt = *avg_rtt * (1.0f - kWeightFactor) + cur_rtt_ms * kWeightFactor;
+}
+}  // namespace
 
 class RtcpObserver : public RtcpRttStats {
  public:
   explicit RtcpObserver(CallStats* owner) : owner_(owner) {}
   virtual ~RtcpObserver() {}
 
-  virtual void OnRttUpdate(uint32_t rtt) {
+  virtual void OnRttUpdate(int64_t rtt) {
     owner_->OnRttUpdate(rtt);
   }
 
-  virtual uint32_t LastProcessedRtt() const {
-    return owner_->last_processed_rtt_ms();
+  // Returns the average RTT.
+  virtual int64_t LastProcessedRtt() const {
+    return owner_->avg_rtt_ms();
   }
 
  private:
@@ -46,53 +93,45 @@ CallStats::CallStats()
     : crit_(CriticalSectionWrapper::CreateCriticalSection()),
       rtcp_rtt_stats_(new RtcpObserver(this)),
       last_process_time_(TickTime::MillisecondTimestamp()),
-      last_processed_rtt_ms_(0) {
+      max_rtt_ms_(0),
+      avg_rtt_ms_(0) {
 }
 
 CallStats::~CallStats() {
   assert(observers_.empty());
 }
 
-int32_t CallStats::TimeUntilNextProcess() {
+int64_t CallStats::TimeUntilNextProcess() {
   return last_process_time_ + kUpdateIntervalMs -
       TickTime::MillisecondTimestamp();
 }
 
 int32_t CallStats::Process() {
   CriticalSectionScoped cs(crit_.get());
-  if (TickTime::MillisecondTimestamp() < last_process_time_ + kUpdateIntervalMs)
+  int64_t now = TickTime::MillisecondTimestamp();
+  if (now < last_process_time_ + kUpdateIntervalMs)
     return 0;
 
-  // Remove invalid, as in too old, rtt values.
-  int64_t time_now = TickTime::MillisecondTimestamp();
-  while (!reports_.empty() && reports_.front().time + kRttTimeoutMs <
-         time_now) {
-    reports_.pop_front();
-  }
+  last_process_time_ = now;
 
-  // Find the max stored RTT.
-  uint32_t max_rtt = 0;
-  for (std::list<RttTime>::const_iterator it = reports_.begin();
-       it != reports_.end(); ++it) {
-    if (it->rtt > max_rtt)
-      max_rtt = it->rtt;
-  }
+  RemoveOldReports(now, &reports_);
+  max_rtt_ms_ = GetMaxRttMs(&reports_);
+  UpdateAvgRttMs(&reports_, &avg_rtt_ms_);
 
-  // If there is a valid rtt, update all observers.
-  if (max_rtt > 0) {
+  // If there is a valid rtt, update all observers with the max rtt.
+  // TODO(asapersson): Consider changing this to report the average rtt.
+  if (max_rtt_ms_ > 0) {
     for (std::list<CallStatsObserver*>::iterator it = observers_.begin();
          it != observers_.end(); ++it) {
-      (*it)->OnRttUpdate(max_rtt);
+      (*it)->OnRttUpdate(max_rtt_ms_);
     }
   }
-  last_processed_rtt_ms_ = max_rtt;
-  last_process_time_ = time_now;
   return 0;
 }
 
-uint32_t CallStats::last_processed_rtt_ms() const {
+int64_t CallStats::avg_rtt_ms() const {
   CriticalSectionScoped cs(crit_.get());
-  return last_processed_rtt_ms_;
+  return avg_rtt_ms_;
 }
 
 RtcpRttStats* CallStats::rtcp_rtt_stats() const {
@@ -120,10 +159,9 @@ void CallStats::DeregisterStatsObserver(CallStatsObserver* observer) {
   }
 }
 
-void CallStats::OnRttUpdate(uint32_t rtt) {
+void CallStats::OnRttUpdate(int64_t rtt) {
   CriticalSectionScoped cs(crit_.get());
-  int64_t time_now = TickTime::MillisecondTimestamp();
-  reports_.push_back(RttTime(rtt, time_now));
+  reports_.push_back(RttTime(rtt, TickTime::MillisecondTimestamp()));
 }
 
 }  // namespace webrtc

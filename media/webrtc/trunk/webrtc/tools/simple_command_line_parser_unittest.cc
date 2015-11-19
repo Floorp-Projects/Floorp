@@ -16,7 +16,7 @@ namespace test {
 
 class CommandLineParserTest : public ::testing::Test {
  protected:
-  virtual void SetUp() {
+  void SetUp() override {
     parser_ = new CommandLineParser();
 
     test_flags_length_ = 3;
@@ -29,7 +29,7 @@ class CommandLineParserTest : public ::testing::Test {
     strncpy(test_flags_[1], "--foo", flag_size);
     strncpy(test_flags_[2], "--bar=1", flag_size);
   }
-  virtual void TearDown() {
+  void TearDown() override {
     for (int i = 0; i < test_flags_length_; ++i) {
       delete[] test_flags_[i];
     }

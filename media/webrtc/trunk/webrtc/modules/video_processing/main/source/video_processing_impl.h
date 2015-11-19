@@ -27,54 +27,46 @@ class VideoProcessingModuleImpl : public VideoProcessingModule {
 
   virtual ~VideoProcessingModuleImpl();
 
-  int32_t Id() const;
+  void Reset() override;
 
-  virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
+  int32_t Deflickering(I420VideoFrame* frame, FrameStats* stats) override;
 
-  virtual void Reset() OVERRIDE;
-
-  virtual int32_t Deflickering(I420VideoFrame* frame,
-                               FrameStats* stats) OVERRIDE;
-
-  virtual int32_t BrightnessDetection(const I420VideoFrame& frame,
-                                      const FrameStats& stats) OVERRIDE;
+  int32_t BrightnessDetection(const I420VideoFrame& frame,
+                              const FrameStats& stats) override;
 
   // Frame pre-processor functions
 
   // Enable temporal decimation
-  virtual void EnableTemporalDecimation(bool enable) OVERRIDE;
+  void EnableTemporalDecimation(bool enable) override;
 
-  virtual void SetInputFrameResampleMode(
-      VideoFrameResampling resampling_mode) OVERRIDE;
+  void SetInputFrameResampleMode(VideoFrameResampling resampling_mode) override;
 
   // Enable content analysis
-  virtual void EnableContentAnalysis(bool enable) OVERRIDE;
+  void EnableContentAnalysis(bool enable) override;
 
   // Set Target Resolution: frame rate and dimension
-  virtual int32_t SetTargetResolution(uint32_t width,
-                                      uint32_t height,
-                                      uint32_t frame_rate) OVERRIDE;
-
+  int32_t SetTargetResolution(uint32_t width,
+                              uint32_t height,
+                              uint32_t frame_rate) override;
 
   // Get decimated values: frame rate/dimension
-  virtual uint32_t Decimatedframe_rate() OVERRIDE;
-  virtual uint32_t DecimatedWidth() const OVERRIDE;
-  virtual uint32_t DecimatedHeight() const OVERRIDE;
+  uint32_t Decimatedframe_rate() override;
+  uint32_t DecimatedWidth() const override;
+  uint32_t DecimatedHeight() const override;
 
   // Preprocess:
   // Pre-process incoming frame: Sample when needed and compute content
   // metrics when enabled.
   // If no resampling takes place - processed_frame is set to NULL.
-  virtual int32_t PreprocessFrame(const I420VideoFrame& frame,
-                                  I420VideoFrame** processed_frame) OVERRIDE;
-  virtual VideoContentMetrics* ContentMetrics() const OVERRIDE;
+  int32_t PreprocessFrame(const I420VideoFrame& frame,
+                          I420VideoFrame** processed_frame) override;
+  VideoContentMetrics* ContentMetrics() const override;
 
  private:
-  int32_t  id_;
   CriticalSectionWrapper& mutex_;
   VPMDeflickering deflickering_;
   VPMBrightnessDetection brightness_detection_;
-  VPMFramePreprocessor  frame_pre_processor_;
+  VPMFramePreprocessor frame_pre_processor_;
 };
 
 }  // namespace

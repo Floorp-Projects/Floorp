@@ -86,7 +86,7 @@ void AcmReceiveTest::RegisterNetEqTestCodecs() {
 }
 
 void AcmReceiveTest::Run() {
-  for (scoped_ptr<Packet> packet(packet_source_->NextPacket()); packet;
+  for (rtc::scoped_ptr<Packet> packet(packet_source_->NextPacket()); packet;
        packet.reset(packet_source_->NextPacket())) {
     // Pull audio until time to insert packet.
     while (clock_.TimeInMilliseconds() < packet->time_ms()) {
@@ -113,10 +113,9 @@ void AcmReceiveTest::Run() {
     header.header = packet->header();
     header.frameType = kAudioFrameSpeech;
     memset(&header.type.Audio, 0, sizeof(RTPAudioHeader));
-    EXPECT_TRUE(
-        acm_->InsertPacket(packet->payload(),
-                           static_cast<int32_t>(packet->payload_length_bytes()),
-                           header))
+    EXPECT_TRUE(acm_->InsertPacket(packet->payload(),
+                                   packet->payload_length_bytes(),
+                                   header))
         << "Failure when inserting packet:" << std::endl
         << "  PT = " << static_cast<int>(header.header.payloadType) << std::endl
         << "  TS = " << header.header.timestamp << std::endl

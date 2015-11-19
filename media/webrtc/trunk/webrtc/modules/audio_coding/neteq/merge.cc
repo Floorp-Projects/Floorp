@@ -15,12 +15,12 @@
 
 #include <algorithm>  // min, max
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
 #include "webrtc/modules/audio_coding/neteq/expand.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -310,7 +310,8 @@ int16_t Merge::CorrelateAndPeakSearch(int16_t expanded_max, int16_t input_max,
   // Normalize correlation to 14 bits and copy to a 16-bit array.
   const int pad_length = static_cast<int>(expand_->overlap_length() - 1);
   const int correlation_buffer_size = 2 * pad_length + kMaxCorrelationLength;
-  scoped_ptr<int16_t[]> correlation16(new int16_t[correlation_buffer_size]);
+  rtc::scoped_ptr<int16_t[]> correlation16(
+      new int16_t[correlation_buffer_size]);
   memset(correlation16.get(), 0, correlation_buffer_size * sizeof(int16_t));
   int16_t* correlation_ptr = &correlation16[pad_length];
   int32_t max_correlation = WebRtcSpl_MaxAbsValueW32(correlation,

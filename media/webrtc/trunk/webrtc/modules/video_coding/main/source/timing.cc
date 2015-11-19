@@ -13,6 +13,7 @@
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/jitter_buffer_common.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/metrics.h"
 #include "webrtc/system_wrappers/interface/timestamp_extrapolator.h"
 
 
@@ -30,7 +31,11 @@ VCMTiming::VCMTiming(Clock* clock,
       jitter_delay_ms_(0),
       current_delay_ms_(0),
       last_decode_ms_(0),
-      prev_frame_timestamp_(0) {
+      prev_frame_timestamp_(0),
+      num_decoded_frames_(0),
+      num_delayed_decoded_frames_(0),
+      first_decoded_frame_ms_(-1),
+      sum_missed_render_deadline_ms_(0) {
   if (master_timing == NULL) {
     master_ = true;
     ts_extrapolator_ = new TimestampExtrapolator(clock_->TimeInMilliseconds());
@@ -40,10 +45,32 @@ VCMTiming::VCMTiming(Clock* clock,
 }
 
 VCMTiming::~VCMTiming() {
+  UpdateHistograms();
   if (master_) {
     delete ts_extrapolator_;
   }
   delete crit_sect_;
+}
+
+void VCMTiming::UpdateHistograms() const {
+  CriticalSectionScoped cs(crit_sect_);
+  if (num_decoded_frames_ == 0) {
+    return;
+  }
+  int64_t elapsed_sec =
+      (clock_->TimeInMilliseconds() - first_decoded_frame_ms_) / 1000;
+  if (elapsed_sec < metrics::kMinRunTimeInSeconds) {
+    return;
+  }
+  RTC_HISTOGRAM_COUNTS_100("WebRTC.Video.DecodedFramesPerSecond",
+      static_cast<int>((num_decoded_frames_ / elapsed_sec) + 0.5f));
+  RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.DelayedFramesToRenderer",
+      num_delayed_decoded_frames_ * 100 / num_decoded_frames_);
+  if (num_delayed_decoded_frames_ > 0) {
+    RTC_HISTOGRAM_COUNTS_1000(
+        "WebRTC.Video.DelayedFramesToRenderer_AvgDelayInMs",
+            sum_missed_render_deadline_ms_ / num_delayed_decoded_frames_);
+  }
 }
 
 void VCMTiming::Reset() {
@@ -139,11 +166,23 @@ void VCMTiming::UpdateCurrentDelay(int64_t render_time_ms,
 
 int32_t VCMTiming::StopDecodeTimer(uint32_t time_stamp,
                                    int64_t start_time_ms,
-                                   int64_t now_ms) {
+                                   int64_t now_ms,
+                                   int64_t render_time_ms) {
   CriticalSectionScoped cs(crit_sect_);
   int32_t time_diff_ms = codec_timer_.StopTimer(start_time_ms, now_ms);
   assert(time_diff_ms >= 0);
   last_decode_ms_ = time_diff_ms;
+
+  // Update stats.
+  ++num_decoded_frames_;
+  if (num_decoded_frames_ == 1) {
+    first_decoded_frame_ms_ = now_ms;
+  }
+  int time_until_rendering_ms = render_time_ms - render_delay_ms_ - now_ms;
+  if (time_until_rendering_ms < 0) {
+    sum_missed_render_deadline_ms_ += -time_until_rendering_ms;
+    ++num_delayed_decoded_frames_;
+  }
   return 0;
 }
 

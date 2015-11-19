@@ -15,14 +15,15 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
+#include "webrtc/base/scoped_ptr.h"
 #if !defined(WEBRTC_GONK)
+#include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
 #endif
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -32,7 +33,7 @@ class FineAudioBuffer;
 class SingleRwFifo;
 class ThreadWrapper;
 
-#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
+#if defined(WEBRTC_ANDROID_OPENSLES_OUTPUT)
 // allow us to replace it with a dummy
 
 // OpenSL implementation that facilitate playing PCM data to an android device.
@@ -40,11 +41,11 @@ class ThreadWrapper;
 // to non-const methods require exclusive access to the object.
 class OpenSlesOutput : public PlayoutDelayProvider {
  public:
-  explicit OpenSlesOutput(const int32_t id);
+  // TODO(henrika): use this new audio manager instead of old.
+  explicit OpenSlesOutput(AudioManager* audio_manager);
   virtual ~OpenSlesOutput();
 
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* env,
                                               void* context);
   static void ClearAndroidAudioDeviceObjects();
 
@@ -198,15 +199,14 @@ class OpenSlesOutput : public PlayoutDelayProvider {
   AudioManagerJni audio_manager_;
 #endif
 
-  int id_;
   bool initialized_;
   bool speaker_initialized_;
   bool play_initialized_;
 
   // Members that are read/write accessed concurrently by the process thread and
   // threads calling public functions of this class.
-  scoped_ptr<ThreadWrapper> play_thread_;  // Processing thread
-  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::scoped_ptr<ThreadWrapper> play_thread_;  // Processing thread
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   // This member controls the starting and stopping of playing audio to the
   // the device.
   bool playing_;
@@ -214,7 +214,7 @@ class OpenSlesOutput : public PlayoutDelayProvider {
   // Only one thread, T1, may push and only one thread, T2, may pull. T1 may or
   // may not be the same thread as T2. T1 is the process thread and T2 is the
   // OpenSL thread.
-  scoped_ptr<SingleRwFifo> fifo_;
+  rtc::scoped_ptr<SingleRwFifo> fifo_;
   int num_fifo_buffers_needed_;
   LowLatencyEvent event_;
   int number_underruns_;
@@ -229,8 +229,8 @@ class OpenSlesOutput : public PlayoutDelayProvider {
 
   // Audio buffers
   AudioDeviceBuffer* audio_buffer_;
-  scoped_ptr<FineAudioBuffer> fine_buffer_;
-  scoped_ptr<scoped_ptr<int8_t[]>[]> play_buf_;
+  rtc::scoped_ptr<FineAudioBuffer> fine_buffer_;
+  rtc::scoped_ptr<rtc::scoped_ptr<int8_t[]>[]> play_buf_;
   // Index in |rec_buf_| pointing to the audio buffer that will be ready the
   // next time PlayerSimpleBufferQueueCallbackHandler is invoked.
   // Ready means buffer is ready to be played out to device.
@@ -266,14 +266,13 @@ class OpenSlesOutput : public PlayoutDelayProvider {
 // Dummy OpenSlesOutput
 class OpenSlesOutput : public PlayoutDelayProvider {
  public:
-  explicit OpenSlesOutput(const int32_t id) :
+  explicit OpenSlesOutput(AudioManager* audio_manager) :
     initialized_(false), speaker_initialized_(false),
     play_initialized_(false), playing_(false)
   {}
   virtual ~OpenSlesOutput() {}
 
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* env,
                                               void* context) { return 0; }
   static void ClearAndroidAudioDeviceObjects() {}
 

@@ -735,12 +735,7 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   } else {
     nsWeakPtr weakpeer =
     do_GetWeakReference(static_cast<nsISupportsWeakReference*>(this));
-    nsPluginByteRangeStreamListener *brrListener =
-    new nsPluginByteRangeStreamListener(weakpeer);
-    if (brrListener)
-      converter = brrListener;
-    else
-      return NS_ERROR_OUT_OF_MEMORY;
+    converter = new nsPluginByteRangeStreamListener(weakpeer);
   }
 
   mPendingRequests += numRequests;

@@ -46,7 +46,7 @@ class QmSelectTest : public ::testing::Test {
                         int native_height,
                         int num_layers);
 
-  void UpdateQmEncodedFrame(int* encoded_size, int num_updates);
+  void UpdateQmEncodedFrame(size_t* encoded_size, size_t num_updates);
 
   void UpdateQmRateData(int* target_rate,
                         int* encoder_sent_rate,
@@ -315,8 +315,8 @@ TEST_F(QmSelectTest, DownActionBufferUnderflow) {
 
   // Update with encoded size over a number of frames.
   // per-frame bandwidth = 15 = 450/30: simulate (decoder) buffer underflow:
-  int encoded_size[] = {200, 100, 50, 30, 60, 40, 20, 30, 20, 40};
-  UpdateQmEncodedFrame(encoded_size, 10);
+  size_t encoded_size[] = {200, 100, 50, 30, 60, 40, 20, 30, 20, 40};
+  UpdateQmEncodedFrame(encoded_size, GTEST_ARRAY_SIZE_(encoded_size));
 
   // Update rates for a sequence of intervals.
   int target_rate[] = {300, 300, 300};
@@ -359,8 +359,8 @@ TEST_F(QmSelectTest, NoActionBufferStable) {
 
   // Update with encoded size over a number of frames.
   // per-frame bandwidth = 15 = 450/30: simulate stable (decoder) buffer levels.
-  int32_t encoded_size[] = {40, 10, 10, 16, 18, 20, 17, 20, 16, 15};
-  UpdateQmEncodedFrame(encoded_size, 10);
+  size_t encoded_size[] = {40, 10, 10, 16, 18, 20, 17, 20, 16, 15};
+  UpdateQmEncodedFrame(encoded_size, GTEST_ARRAY_SIZE_(encoded_size));
 
   // Update rates for a sequence of intervals.
   int target_rate[] = {350, 350, 350};
@@ -1262,12 +1262,12 @@ void QmSelectTest::UpdateQmContentData(float motion_metric,
   qm_resolution_->UpdateContent(content_metrics_);
 }
 
-void QmSelectTest::UpdateQmEncodedFrame(int* encoded_size, int num_updates) {
-  FrameType frame_type = kVideoFrameDelta;
-  for (int i = 0; i < num_updates; ++i) {
+void QmSelectTest::UpdateQmEncodedFrame(size_t* encoded_size,
+                                        size_t num_updates) {
+  for (size_t i = 0; i < num_updates; ++i) {
     // Convert to bytes.
-    int32_t encoded_size_update = 1000 * encoded_size[i] / 8;
-    qm_resolution_->UpdateEncodedSize(encoded_size_update, frame_type);
+    size_t encoded_size_update = 1000 * encoded_size[i] / 8;
+    qm_resolution_->UpdateEncodedSize(encoded_size_update);
   }
 }
 

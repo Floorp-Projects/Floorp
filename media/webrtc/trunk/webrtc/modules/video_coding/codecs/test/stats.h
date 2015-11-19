@@ -31,14 +31,14 @@ struct FrameStatistic {
   int frame_number;
   // How many packets were discarded of the encoded frame data (if any).
   int packets_dropped;
-  int total_packets;
+  size_t total_packets;
 
   // Current bit rate. Calculated out of the size divided with the time
   // interval per frame.
   int bit_rate_in_kbps;
 
   // Copied from EncodedImage
-  int encoded_frame_length_in_bytes;
+  size_t encoded_frame_length_in_bytes;
   webrtc::VideoFrameType frame_type;
 };
 

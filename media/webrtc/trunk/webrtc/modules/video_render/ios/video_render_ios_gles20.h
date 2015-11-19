@@ -14,15 +14,15 @@
 #include <list>
 #include <map>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_render/ios/video_render_ios_channel.h"
 #include "webrtc/modules/video_render/ios/video_render_ios_view.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
 
 class CriticalSectionWrapper;
 class EventWrapper;
-class ThreadWrapper;
 
 class VideoRenderIosGles20 {
  public:
@@ -51,7 +51,6 @@ class VideoRenderIosGles20 {
                         const float bottom);
 
   int ChangeWindow(void* new_window);
-  int ChangeUniqueID(int unique_id);
   int StartRender();
   int StopRender();
 
@@ -63,9 +62,9 @@ class VideoRenderIosGles20 {
   int SwapAndDisplayBuffers();
 
  private:
-  scoped_ptr<CriticalSectionWrapper> gles_crit_sec_;
+  rtc::scoped_ptr<CriticalSectionWrapper> gles_crit_sec_;
   EventWrapper* screen_update_event_;
-  ThreadWrapper* screen_update_thread_;
+  rtc::scoped_ptr<ThreadWrapper> screen_update_thread_;
 
   VideoRenderIosView* view_;
   Rect window_rect_;
@@ -81,7 +80,6 @@ class VideoRenderIosGles20 {
   std::multimap<int, int> z_order_to_channel_;
   EAGLContext* gles_context_;
   bool is_rendering_;
-  int id_;
 };
 }  // namespace webrtc
 

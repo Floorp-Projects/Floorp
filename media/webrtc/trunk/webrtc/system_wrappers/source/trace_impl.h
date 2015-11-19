@@ -11,7 +11,8 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_IMPL_H_
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_TRACE_IMPL_H_
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/file_wrapper.h"
 #include "webrtc/system_wrappers/interface/static_instance.h"
@@ -20,16 +21,6 @@
 
 namespace webrtc {
 
-// TODO(pwestin) WEBRTC_TRACE_MAX_QUEUE needs to be tweaked
-// TODO(hellner) the buffer should be close to how much the system can write to
-//               file. Increasing the buffer will not solve anything. Sooner or
-//               later the buffer is going to fill up anyways.
-#if defined(WEBRTC_IOS)
-#define WEBRTC_TRACE_MAX_QUEUE  2000
-#else
-#define WEBRTC_TRACE_MAX_QUEUE  16000
-#endif
-#define WEBRTC_TRACE_NUM_ARRAY 2
 #define WEBRTC_TRACE_MAX_MESSAGE_SIZE 1024
 // Total buffer size is WEBRTC_TRACE_NUM_ARRAY (number of buffer partitions) *
 // WEBRTC_TRACE_MAX_QUEUE (number of lines per buffer partition) *
@@ -48,7 +39,6 @@ class TraceImpl : public Trace {
   static TraceImpl* CreateInstance();
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
-  void AllocateTraceBuffers();
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);
   int32_t TraceFileImpl(char file_name[FileWrapper::kMaxFileNameSize]);
 
@@ -56,8 +46,6 @@ class TraceImpl : public Trace {
 
   void AddImpl(const TraceLevel level, const TraceModule module,
                const int32_t id, const char* msg);
-
-  bool StopThread();
 
   bool TraceCheck(const TraceLevel level) const;
 
@@ -74,9 +62,6 @@ class TraceImpl : public Trace {
                           const TraceLevel level) const = 0;
 
   virtual int32_t AddDateTimeInfo(char* trace_message) const = 0;
-
-  static bool Run(void* obj);
-  bool Process();
 
  private:
   friend class Trace;
@@ -105,24 +90,15 @@ class TraceImpl : public Trace {
     char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize],
     const uint32_t new_count) const;
 
-  void WriteToFile();
+  void WriteToFile(const char* msg, uint16_t length)
+      EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
-  CriticalSectionWrapper* critsect_interface_;
-  TraceCallback* callback_;
-  uint32_t row_count_text_;
-  uint32_t file_count_text_;
+  TraceCallback* callback_ GUARDED_BY(crit_);
+  uint32_t row_count_text_ GUARDED_BY(crit_);
+  uint32_t file_count_text_ GUARDED_BY(crit_);
 
-  FileWrapper& trace_file_;
-  ThreadWrapper& thread_;
-  EventWrapper& event_;
-
-  // critsect_array_ protects active_queue_.
-  CriticalSectionWrapper* critsect_array_;
-  uint16_t next_free_idx_[WEBRTC_TRACE_NUM_ARRAY];
-  TraceLevel level_[WEBRTC_TRACE_NUM_ARRAY][WEBRTC_TRACE_MAX_QUEUE];
-  uint16_t length_[WEBRTC_TRACE_NUM_ARRAY][WEBRTC_TRACE_MAX_QUEUE];
-  char* message_queue_[WEBRTC_TRACE_NUM_ARRAY][WEBRTC_TRACE_MAX_QUEUE];
-  uint8_t active_queue_;
+  const rtc::scoped_ptr<FileWrapper> trace_file_ GUARDED_BY(crit_);
+  rtc::CriticalSection crit_;
 };
 
 }  // namespace webrtc

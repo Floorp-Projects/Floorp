@@ -35,8 +35,6 @@ class AudioManagerJni {
   // ClearAndroidAudioDeviceObjects will prevent this class' APIs to be called
   // successfully if SetAndroidAudioDeviceObjects is not called after it.
   static void SetAndroidAudioDeviceObjects(void* jvm, void* context);
-  static void SetAndroidAudioDeviceObjects(void* jvm, void* env,
-                                           void* context);
   // This function must be called when the AudioManagerJni class is no
   // longer needed. It frees up the global references acquired in
   // SetAndroidAudioDeviceObjects.

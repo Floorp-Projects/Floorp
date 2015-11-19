@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla += [
+    'D3DMessageUtils.h',
     'GfxMessageUtils.h'
 ]
 
@@ -23,6 +24,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 
 UNIFIED_SOURCES += [
+    'D3DMessageUtils.cpp',
     'SharedDIB.cpp',
 ]
 

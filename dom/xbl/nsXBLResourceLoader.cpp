@@ -197,9 +197,6 @@ void
 nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   nsXBLResource* res = new nsXBLResource(aResourceType, aSrc);
-  if (!res)
-    return;
-
   if (!mResourceList)
     mResourceList = res;
   else

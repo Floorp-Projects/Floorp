@@ -24,9 +24,8 @@
 
 #include "webrtc/voice_engine/test/auto_test/voe_stress_test.h"
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
 #include "webrtc/voice_engine/test/auto_test/voe_standard_test.h"
 #include "webrtc/voice_engine/test/auto_test/voe_test_defines.h"
@@ -145,7 +144,7 @@ int VoEStressTest::StartStopTest() {
   printf("Test will take approximately %d minutes. \n",
          numberOfLoops * loopSleep / 1000 / 60 + 1);
 
-  scoped_ptr<VoiceChannelTransport> voice_channel_transport(
+  rtc::scoped_ptr<VoiceChannelTransport> voice_channel_transport(
       new VoiceChannelTransport(voe_network, 0));
 
   for (i = 0; i < numberOfLoops; ++i) {
@@ -335,11 +334,9 @@ int VoEStressTest::MultipleThreadsTest() {
   int rnd(0);
 
   // Start extra thread
-  const char* threadName = "StressTest Extra API Thread";
   _ptrExtraApiThread = ThreadWrapper::CreateThread(RunExtraApi, this,
-                                                   kNormalPriority, threadName);
-  unsigned int id(0);
-  VALIDATE_STRESS(!_ptrExtraApiThread->Start(id));
+                                                   "StressTestExtraApiThread");
+  VALIDATE_STRESS(!_ptrExtraApiThread->Start());
 
   //       Some possible extensions include:
   //       Add more API calls to randomize
@@ -369,7 +366,6 @@ int VoEStressTest::MultipleThreadsTest() {
 
   // Stop extra thread
   VALIDATE_STRESS(!_ptrExtraApiThread->Stop());
-  delete _ptrExtraApiThread;
 
   ///////////// End test /////////////
 

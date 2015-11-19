@@ -29,6 +29,7 @@ struct VCMFrameInformation
     int64_t     renderTimeMs;
     int64_t     decodeStartTimeMs;
     void*             userData;
+    VideoRotation rotation;
 };
 
 class VCMDecodedFrameCallback : public DecodedImageCallback

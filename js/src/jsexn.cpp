@@ -537,6 +537,13 @@ js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
     if (JSREPORT_IS_WARNING(reportp->flags))
         return false;
 
+    // Similarly, we cannot throw a proper object inside the self-hosting
+    // compartment, as we cannot construct the Error constructor without
+    // self-hosted code. Tell our caller to report immediately.
+    // Without self-hosted code, we cannot get started anyway.
+    if (cx->runtime()->isSelfHostingCompartment(cx->compartment()))
+        return false;
+
     // Find the exception index associated with this error.
     JSErrNum errorNumber = static_cast<JSErrNum>(reportp->errorNumber);
     if (!callback)

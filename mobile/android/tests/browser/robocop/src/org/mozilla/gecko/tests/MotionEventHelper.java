@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.PrefsHelper;
 
 import android.app.Instrumentation;
 import android.os.SystemClock;
@@ -21,13 +22,29 @@ class MotionEventHelper {
     private final int mSurfaceOffsetX;
     private final int mSurfaceOffsetY;
     private final LayerView layerView;
+    private boolean mApzEnabled;
+    private float mTouchStartTolerance;
+    private final int mDpi;
 
     public MotionEventHelper(Instrumentation inst, int surfaceOffsetX, int surfaceOffsetY) {
         mInstrumentation = inst;
         mSurfaceOffsetX = surfaceOffsetX;
         mSurfaceOffsetY = surfaceOffsetY;
         layerView = GeckoAppShell.getLayerView();
+        mApzEnabled = false;
+        mTouchStartTolerance = 0.0f;
+        mDpi = GeckoAppShell.getDpi();
         Log.i(LOGTAG, "Initialized using offset (" + mSurfaceOffsetX + "," + mSurfaceOffsetY + ")");
+        PrefsHelper.getPref("layers.async-pan-zoom.enabled", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, boolean value) {
+                mApzEnabled = value;
+            }
+        });
+        PrefsHelper.getPref("apz.touch_start_tolerance", new PrefsHelper.PrefHandlerBase() {
+            @Override public void prefValue(String pref, String value) {
+                mTouchStartTolerance = Float.parseFloat(value);
+            }
+        });
     }
 
     public long down(float x, float y) {
@@ -75,6 +92,28 @@ class MotionEventHelper {
         return -1L;
     }
 
+    private long movePastTouchStartTolerance(float startX, float startY, float endX, float endY) {
+        long downTime = 0;
+        float eventDx = (endX - startX);
+        float eventDy = (endY - startY);
+        if (mApzEnabled && (mTouchStartTolerance > 0.0f) && (eventDx != 0 || eventDy !=0)) {
+            final float dragLength = (float)Math.sqrt((eventDx * eventDx) + (eventDy * eventDy));
+            final float extraDragLength = (float)Math.ceil(mTouchStartTolerance * mDpi);
+            final float extraDx = (eventDx / dragLength) * extraDragLength * (eventDx > 0.0f ? -1.0f : 1.0f);
+            final float extraDy = (eventDy / dragLength) * extraDragLength * (eventDy > 0.0f ? -1.0f : 1.0f);
+            downTime = down(startX + extraDx, startY + extraDy);
+            downTime = move(downTime, startX + extraDx, startY + extraDy);
+            try {
+                Thread.sleep(1000L / DRAG_EVENTS_PER_SECOND);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        } else {
+            downTime = down(startX, startY);
+        }
+        return downTime;
+    }
+
     public Thread dragAsync(final float startX, final float startY, final float endX, final float endY, final long durationMillis) {
         Thread t = new Thread() {
             @Override
@@ -84,7 +123,7 @@ class MotionEventHelper {
                 int numEvents = (int)(durationMillis * DRAG_EVENTS_PER_SECOND / 1000);
                 float eventDx = (endX - startX) / numEvents;
                 float eventDy = (endY - startY) / numEvents;
-                long downTime = down(startX, startY);
+                long downTime = movePastTouchStartTolerance(startX, startY, endX, endY);
                 for (int i = 0; i < numEvents - 1; i++) {
                     downTime = move(downTime, startX + (eventDx * i), startY + (eventDy * i));
                     try {
@@ -143,7 +182,7 @@ class MotionEventHelper {
                 long downTime = down(startX, startY);
                 downTime = move(downTime, downTime + time, startX + dx, startY + dy);
                 downTime = move(downTime, downTime + time + time, endX, endY);
-                downTime = up(downTime, downTime + time, endX, endY);
+                downTime = up(downTime, downTime + time + time + time, endX, endY);
             }
         };
         t.start();

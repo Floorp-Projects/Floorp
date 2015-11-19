@@ -56,9 +56,9 @@ void WebRtcIlbcfix_CbConstruct(
 
   gainPtr = &gain[0];
   for (j=0;j<veclen;j++) {
-    a32  = WEBRTC_SPL_MUL_16_16(*gainPtr++, cbvec0[j]);
-    a32 += WEBRTC_SPL_MUL_16_16(*gainPtr++, cbvec1[j]);
-    a32 += WEBRTC_SPL_MUL_16_16(*gainPtr, cbvec2[j]);
+    a32 = (*gainPtr++) * cbvec0[j];
+    a32 += (*gainPtr++) * cbvec1[j];
+    a32 += (*gainPtr) * cbvec2[j];
     gainPtr -= 2;
     decvector[j] = (int16_t)((a32 + 8192) >> 14);
   }

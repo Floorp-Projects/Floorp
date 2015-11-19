@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
   int16_t stream_len = 0;
   int16_t shortdata[480];
   int16_t decoded[480];
-  int16_t streamdata[500];
+  uint8_t streamdata[1000];
   int16_t speechType[1];
   char law[2];
   char versionNumber[40];

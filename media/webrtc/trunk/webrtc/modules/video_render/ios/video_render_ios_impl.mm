@@ -49,13 +49,6 @@ int32_t VideoRenderIosImpl::Init() {
   ;
 }
 
-int32_t VideoRenderIosImpl::ChangeUniqueId(const int32_t id) {
-  CriticalSectionScoped cs(crit_sec_);
-  id_ = id;
-
-  return ptr_ios_render_->ChangeUniqueID(id_);
-}
-
 int32_t VideoRenderIosImpl::ChangeWindow(void* window) {
   CriticalSectionScoped cs(crit_sec_);
   if (window == NULL) {

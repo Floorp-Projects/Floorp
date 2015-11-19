@@ -223,12 +223,10 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
 
 #ifdef MOZ_WIDGET_ANDROID
     jobject context = jsjni_GetGlobalContextRef();
-
     // get the JVM
     JavaVM *jvm = jsjni_GetVM();
-    JNIEnv* jenv = jsjni_GetJNIForThread();
 
-    if (webrtc::VoiceEngine::SetAndroidObjects(jvm, jenv, (void*)context) != 0) {
+    if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
       CSFLogError(logTag, "%s Unable to set Android objects", __FUNCTION__);
       return kMediaConduitSessionNotInited;
     }
@@ -839,7 +837,7 @@ WebrtcAudioConduit::StartReceiving()
 
 //WebRTC::RTP Callback Implementation
 // Called on AudioGUM or MSG thread
-int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
+int WebrtcAudioConduit::SendPacket(int channel, const void* data, size_t len)
 {
   CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, channel);
 
@@ -868,12 +866,12 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
 }
 
 // Called on WebRTC Process thread and perhaps others
-int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
+int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, size_t len)
 {
-  CSFLogDebug(logTag,  "%s : channel %d , len %d, first rtcp = %u ",
+  CSFLogDebug(logTag,  "%s : channel %d , len %lu, first rtcp = %u ",
               __FUNCTION__,
               channel,
-              len,
+              (unsigned long) len,
               static_cast<unsigned>(((uint8_t *) data)[1]));
 
   // We come here if we have only one pipeline/conduit setup,

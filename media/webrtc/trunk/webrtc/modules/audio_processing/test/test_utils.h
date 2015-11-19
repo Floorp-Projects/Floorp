@@ -12,12 +12,12 @@
 #include <limits>
 
 #include "webrtc/audio_processing/debug.pb.h"
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/wav_file.h"
-#include "webrtc/modules/audio_processing/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -66,7 +66,7 @@ static inline void WriteFloatData(const float* const* data,
                                   WavWriter* wav_file,
                                   RawFile* raw_file) {
   size_t length = num_channels * samples_per_channel;
-  scoped_ptr<float[]> buffer(new float[length]);
+  rtc::scoped_ptr<float[]> buffer(new float[length]);
   Interleave(data, samples_per_channel, num_channels, buffer.get());
   if (raw_file) {
     raw_file->WriteSamples(buffer.get(), length);
@@ -107,7 +107,7 @@ template <typename T>
 void SetContainerFormat(int sample_rate_hz,
                         int num_channels,
                         AudioFrame* frame,
-                        scoped_ptr<ChannelBuffer<T> >* cb) {
+                        rtc::scoped_ptr<ChannelBuffer<T> >* cb) {
   SetFrameSampleRate(frame, sample_rate_hz);
   frame->num_channels_ = num_channels;
   cb->reset(new ChannelBuffer<T>(frame->samples_per_channel_, num_channels));
@@ -128,8 +128,9 @@ static inline AudioProcessing::ChannelLayout LayoutFromChannels(
 
 // Allocates new memory in the scoped_ptr to fit the raw message and returns the
 // number of bytes read.
-static inline size_t ReadMessageBytesFromFile(FILE* file,
-                                              scoped_ptr<uint8_t[]>* bytes) {
+static inline size_t ReadMessageBytesFromFile(
+    FILE* file,
+    rtc::scoped_ptr<uint8_t[]>* bytes) {
   // The "wire format" for the size is little-endian. Assume we're running on
   // a little-endian machine.
   int32_t size = 0;
@@ -145,7 +146,7 @@ static inline size_t ReadMessageBytesFromFile(FILE* file,
 // Returns true on success, false on error or end-of-file.
 static inline bool ReadMessageFromFile(FILE* file,
                                        ::google::protobuf::MessageLite* msg) {
-  scoped_ptr<uint8_t[]> bytes;
+  rtc::scoped_ptr<uint8_t[]> bytes;
   size_t size = ReadMessageBytesFromFile(file, &bytes);
   if (!size)
     return false;
