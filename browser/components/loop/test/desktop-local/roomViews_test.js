@@ -14,48 +14,44 @@ describe("loop.roomViews", function() {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
 
   var sandbox, dispatcher, roomStore, activeRoomStore, view;
-  var clock, fakeWindow, fakeMozLoop, fakeContextURL;
+  var clock, fakeWindow, requestStubs, fakeContextURL;
   var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
 
-    dispatcher = new loop.Dispatcher();
-
-    fakeMozLoop = {
-      getAudioBlob: sinon.spy(function(name, callback) {
-        callback(null, new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
+    LoopMochaUtils.stubLoopRequest(requestStubs = {
+      GetAudioBlob: sinon.spy(function(name) {
+        return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });
       }),
-      getLoopPref: sinon.stub(),
-      getSelectedTabMetadata: sinon.stub().callsArgWith(0, {
+      GetLoopPref: sinon.stub(),
+      GetSelectedTabMetadata: sinon.stub().returns({
         favicon: favicon,
         previews: [],
         title: ""
       }),
-      openURL: sinon.stub(),
-      rooms: {
-        get: sinon.stub().callsArgWith(1, null, {
-          roomToken: "fakeToken",
+      OpenURL: sinon.stub(),
+      "Rooms:Get": sinon.stub().returns({
+        roomToken: "fakeToken",
+        roomName: "fakeName",
+        decryptedContext: {
           roomName: "fakeName",
-          decryptedContext: {
-            roomName: "fakeName",
-            urls: []
-          }
-        }),
-        update: sinon.stub().callsArgWith(2, null)
-      },
-      telemetryAddValue: sinon.stub(),
-      setLoopPref: sandbox.stub()
-    };
+          urls: []
+        }
+      }),
+      "Rooms:Update": sinon.stub().returns(null),
+      TelemetryAddValue: sinon.stub(),
+      SetLoopPref: sandbox.stub(),
+      GetDoNotDisturb: function() { return false; }
+    });
+
+    dispatcher = new loop.Dispatcher();
 
     clock = sandbox.useFakeTimers();
 
     fakeWindow = {
       close: sinon.stub(),
       document: {},
-      navigator: {
-        mozLoop: fakeMozLoop
-      },
       addEventListener: function() {},
       removeEventListener: function() {},
       setTimeout: function(callback) { callback(); }
@@ -69,11 +65,10 @@ describe("loop.roomViews", function() {
     });
 
     activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-      mozLoop: {},
       sdkDriver: {}
     });
     roomStore = new loop.store.RoomStore(dispatcher, {
-      mozLoop: fakeMozLoop,
+      constants: {},
       activeRoomStore: activeRoomStore
     });
     var textChatStore = new loop.store.TextChatStore(dispatcher, {
@@ -96,6 +91,7 @@ describe("loop.roomViews", function() {
     sandbox.restore();
     clock.restore();
     loop.shared.mixins.setRootObject(window);
+    LoopMochaUtils.restore();
     view = null;
   });
 
@@ -142,8 +138,7 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        failureReason: props && props.failureReason || FAILURE_DETAILS.UNKNOWN,
-        mozLoop: fakeMozLoop
+        failureReason: props && props.failureReason || FAILURE_DETAILS.UNKNOWN
       });
       return TestUtils.renderIntoDocument(
         React.createElement(loop.roomViews.RoomFailureView, props));
@@ -190,9 +185,8 @@ describe("loop.roomViews", function() {
     it("should play a failure sound, once", function() {
       view = mountTestComponent();
 
-      sinon.assert.calledOnce(fakeMozLoop.getAudioBlob);
-      sinon.assert.calledWithExactly(fakeMozLoop.getAudioBlob,
-                                     "failure", sinon.match.func);
+      sinon.assert.calledOnce(requestStubs.GetAudioBlob);
+      sinon.assert.calledWithExactly(requestStubs.GetAudioBlob, "failure");
       sinon.assert.calledOnce(fakeAudio.play);
       expect(fakeAudio.loop).to.equal(false);
     });
@@ -202,7 +196,6 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        mozLoop: fakeMozLoop,
         roomData: {},
         savingContext: false,
         show: true,
@@ -321,12 +314,14 @@ describe("loop.roomViews", function() {
     var onCallTerminatedStub;
 
     beforeEach(function() {
-      fakeMozLoop.getLoopPref = function(prefName) {
-        if (prefName === "contextInConversations.enabled") {
-          return true;
+      LoopMochaUtils.stubLoopRequest({
+        GetLoopPref: function(prefName) {
+          if (prefName === "contextInConversations.enabled") {
+            return true;
+          }
+          return "test";
         }
-        return "test";
-      };
+      });
       onCallTerminatedStub = sandbox.stub();
     });
 
@@ -335,7 +330,6 @@ describe("loop.roomViews", function() {
         chatWindowDetached: false,
         dispatcher: dispatcher,
         roomStore: roomStore,
-        mozLoop: fakeMozLoop,
         onCallTerminated: onCallTerminatedStub
       }, props);
       return TestUtils.renderIntoDocument(
@@ -824,7 +818,6 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        mozLoop: fakeMozLoop,
         savingContext: false,
         show: true,
         roomData: {
@@ -965,8 +958,8 @@ describe("loop.roomViews", function() {
         sinon.assert.calledOnce(fakeEvent.preventDefault);
         sinon.assert.calledOnce(fakeEvent.stopPropagation);
 
-        sinon.assert.notCalled(fakeMozLoop.openURL);
-        sinon.assert.notCalled(fakeMozLoop.telemetryAddValue);
+        sinon.assert.notCalled(requestStubs.OpenURL);
+        sinon.assert.notCalled(requestStubs.TelemetryAddValue);
       });
 
       it("should open a URL", function() {
@@ -983,10 +976,10 @@ describe("loop.roomViews", function() {
         sinon.assert.calledOnce(fakeEvent.preventDefault);
         sinon.assert.calledOnce(fakeEvent.stopPropagation);
 
-        sinon.assert.calledOnce(fakeMozLoop.openURL);
-        sinon.assert.calledWithExactly(fakeMozLoop.openURL, fakeContextURL.location);
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.OpenURL);
+        sinon.assert.calledWithExactly(requestStubs.OpenURL, fakeContextURL.location);
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_CONTEXT_CLICK", 1);
       });
     });

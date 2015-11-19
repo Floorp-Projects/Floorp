@@ -51,7 +51,7 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should store the value of the preference", function() {
-      mozLoop.setLoopPref("fakePref", "fakeValue");
+      loop.request("SetLoopPref", "fakePref", "fakeValue");
 
       expect(localStorage.getItem("fakePref")).eql("fakeValue");
     });
@@ -65,13 +65,15 @@ describe("loop.StandaloneMozLoop", function() {
     it("should return the value of the preference", function() {
       localStorage.setItem("fakePref", "fakeValue");
 
-      expect(mozLoop.getLoopPref("fakePref")).eql("fakeValue");
+      return loop.request("GetLoopPref", "fakePref").then(function(result) {
+        expect(result).eql("fakeValue");
+      });
     });
   });
 
   describe("#rooms.get", function() {
     it("should GET to the server", function() {
-      mozLoop.rooms.get("fakeToken", callback);
+      loop.request("Rooms:Get", "fakeToken");
 
       expect(requests).to.have.length.of(1);
       expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
@@ -79,7 +81,9 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with success parameters", function() {
-      mozLoop.rooms.get("fakeToken", callback);
+      var promise = loop.request("Rooms:Get", "fakeToken").then(function(result) {
+        expect(result).eql(roomDetails);
+      });
 
       var roomDetails = {
         roomName: "fakeName",
@@ -89,24 +93,25 @@ describe("loop.StandaloneMozLoop", function() {
       requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(roomDetails));
 
-      sinon.assert.calledOnce(callback);
-      sinon.assert.calledWithExactly(callback, null, roomDetails);
+      return promise;
     });
 
     it("should call the callback with failure parameters", function() {
-      mozLoop.rooms.get("fakeToken", callback);
+      var promise = loop.request("Rooms:Get", "fakeToken").then(function(result) {
+        expect(result.isError).eql(true);
+        expect(/HTTP 401 Unauthorized/.test(result.message)).eql(true);
+      });
 
       requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
-      sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-        return /HTTP 401 Unauthorized/.test(err.message);
-      }));
+
+      return promise;
     });
   });
 
   describe("#rooms.join", function() {
     it("should POST to the server", function() {
-      mozLoop.rooms.join("fakeToken", callback);
+      loop.request("Rooms:Join", "fakeToken");
 
       expect(requests).to.have.length.of(1);
       expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
@@ -117,7 +122,9 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with success parameters", function() {
-      mozLoop.rooms.join("fakeToken", callback);
+      var promise = loop.request("Rooms:Join", "fakeToken").then(function(result) {
+        expect(result).eql(sessionData);
+      });
 
       var sessionData = {
         apiKey: "12345",
@@ -129,18 +136,19 @@ describe("loop.StandaloneMozLoop", function() {
       requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(sessionData));
 
-      sinon.assert.calledOnce(callback);
-      sinon.assert.calledWithExactly(callback, null, sessionData);
+      return promise;
     });
 
     it("should call the callback with failure parameters", function() {
-      mozLoop.rooms.join("fakeToken", callback);
+      var promise = loop.request("Rooms:Join", "fakeToken").then(function(result) {
+        expect(result.isError).eql(true);
+        expect(/HTTP 401 Unauthorized/.test(result.message)).eql(true);
+      });
 
       requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
-      sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-        return /HTTP 401 Unauthorized/.test(err.message);
-      }));
+
+      return promise;
     });
   });
 
@@ -162,8 +170,7 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should POST to the server", function() {
-      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
-                                                callback);
+      loop.request("Rooms:RefreshMembership", "fakeToken", "fakeSessionToken");
 
       expect(requests).to.have.length.of(1);
       expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
@@ -177,8 +184,10 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with success parameters", function() {
-      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
-                                                callback);
+      var promise = loop.request("Rooms:RefreshMembership", "fakeToken",
+        "fakeSessionToken").then(function(result) {
+          expect(result).eql(responseData);
+        });
 
       var responseData = {
         expires: 20
@@ -187,25 +196,26 @@ describe("loop.StandaloneMozLoop", function() {
       requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(responseData));
 
-      sinon.assert.calledOnce(callback);
-      sinon.assert.calledWithExactly(callback, null, responseData);
+      return promise;
     });
 
     it("should call the callback with failure parameters", function() {
-      standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
-                                                callback);
+      var promise = loop.request("Rooms:RefreshMembership", "fakeToken",
+        "fakeSessionToken").then(function(result) {
+          expect(result.isError).eql(true);
+          expect(/HTTP 401 Unauthorized/.test(result.message)).eql(true);
+        });
 
       requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrDescription));
-      sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-        return /HTTP 401 Unauthorized/.test(err.message);
-      }));
+
+      return promise;
     });
   });
 
   describe("#rooms.leave", function() {
     it("should POST to the server", function() {
-      mozLoop.rooms.leave("fakeToken", "fakeSessionToken", callback);
+      loop.request("Rooms:Leave", "fakeToken", "fakeSessionToken");
 
       expect(requests).to.have.length.of(1);
       expect(requests[0].async).eql(false);
@@ -219,22 +229,27 @@ describe("loop.StandaloneMozLoop", function() {
     });
 
     it("should call the callback with success parameters", function() {
-      mozLoop.rooms.leave("fakeToken", "fakeSessionToken", callback);
+      var promise = loop.request("Rooms:Leave", "fakeToken", "fakeSessionToken")
+        .then(function(result) {
+          expect(result).eql({});
+        });
 
       requests[0].respond(204);
 
-      sinon.assert.calledOnce(callback);
-      sinon.assert.calledWithExactly(callback, null, {});
+      return promise;
     });
 
     it("should call the callback with failure parameters", function() {
-      mozLoop.rooms.leave("fakeToken", "fakeSessionToken", callback);
+      var promise = loop.request("Rooms:Leave", "fakeToken", "fakeSessionToken")
+        .then(function(result) {
+          expect(result.isError).eql(true);
+          expect(/HTTP 401 Unauthorized/.test(result.message)).eql(true);
+        });
 
       requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
-      sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
-        return /HTTP 401 Unauthorized/.test(err.message);
-      }));
+
+      return promise;
     });
   });
 });

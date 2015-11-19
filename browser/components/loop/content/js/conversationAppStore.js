@@ -16,7 +16,7 @@ loop.store.ConversationAppStore = (function() {
    * Constructor
    *
    * @param {Object} options Options for the store. Should contain the
-   *                         activeRoomStore, dispatcher and mozLoop objects.
+   *                         activeRoomStore and dispatcher objects.
    */
   var ConversationAppStore = function(options) {
     if (!options.activeRoomStore) {
@@ -25,13 +25,17 @@ loop.store.ConversationAppStore = (function() {
     if (!options.dispatcher) {
       throw new Error("Missing option dispatcher");
     }
-    if (!options.mozLoop) {
-      throw new Error("Missing option mozLoop");
+    if (!("feedbackPeriod" in options)) {
+      throw new Error("Missing option feedbackPeriod");
+    }
+    if (!("feedbackTimestamp" in options)) {
+      throw new Error("Missing option feedbackTimestamp");
     }
 
     this._activeRoomStore = options.activeRoomStore;
     this._dispatcher = options.dispatcher;
-    this._mozLoop = options.mozLoop;
+    this._feedbackPeriod = options.feedbackPeriod;
+    this._feedbackTimestamp = options.feedbackTimestamp;
     this._rootObj = ("rootObject" in options) ? options.rootObject : window;
     this._storeState = this.getInitialStoreState();
 
@@ -55,10 +59,9 @@ loop.store.ConversationAppStore = (function() {
       return {
         chatWindowDetached: false,
         // How often to display the form. Convert seconds to ms.
-        feedbackPeriod: this._mozLoop.getLoopPref("feedback.periodSec") * 1000,
+        feedbackPeriod: this._feedbackPeriod * 1000,
         // Date when the feedback form was last presented. Convert to ms.
-        feedbackTimestamp: this._mozLoop
-                               .getLoopPref("feedback.dateLastSeenSec") * 1000,
+        feedbackTimestamp: this._feedbackTimestamp * 1000,
         showFeedbackForm: false
       };
     },
@@ -89,7 +92,7 @@ loop.store.ConversationAppStore = (function() {
     showFeedbackForm: function() {
       var timestamp = Math.floor(new Date().getTime() / 1000);
 
-      this._mozLoop.setLoopPref("feedback.dateLastSeenSec", timestamp);
+      loop.request("SetLoopPref", "feedback.dateLastSeenSec", timestamp);
 
       this.setStoreState({
         showFeedbackForm: true
@@ -103,18 +106,19 @@ loop.store.ConversationAppStore = (function() {
      * @param {sharedActions.GetWindowData} actionData The action data
      */
     getWindowData: function(actionData) {
-      var windowData = this._mozLoop.getConversationWindowData(actionData.windowId);
+      loop.request("GetConversationWindowData", actionData.windowId)
+        .then(function(windowData) {
+          if (!windowData) {
+            console.error("Failed to get the window data");
+            this.setStoreState({ windowType: "failed" });
+            return;
+          }
 
-      if (!windowData) {
-        console.error("Failed to get the window data");
-        this.setStoreState({ windowType: "failed" });
-        return;
-      }
+          this.setStoreState({ windowType: windowData.type });
 
-      this.setStoreState({ windowType: windowData.type });
-
-      this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
-        windowId: actionData.windowId }, windowData)));
+          this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
+            windowId: actionData.windowId }, windowData)));
+        }.bind(this));
     },
 
     /**

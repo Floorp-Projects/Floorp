@@ -70,7 +70,7 @@ add_task(function*() {
   // Setup.
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
-  Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   yield TelemetryController.setup();
   yield TelemetrySession.setup();
 

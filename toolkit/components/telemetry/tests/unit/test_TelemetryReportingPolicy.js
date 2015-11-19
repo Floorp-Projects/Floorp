@@ -16,7 +16,6 @@ Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_DRS_ENABLED = "datareporting.healthreport.service.enabled";
 
@@ -47,7 +46,7 @@ function run_test() {
   do_get_profile(true);
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  Services.prefs.setBoolPref(PREF_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   // We need to disable FHR in order to use the policy from telemetry.
   Services.prefs.setBoolPref(PREF_DRS_ENABLED, false);
   // Don't bypass the notifications in this test, we'll fake it.

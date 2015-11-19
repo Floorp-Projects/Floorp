@@ -185,14 +185,14 @@ loop.webapp = (function(_, OT, mozL10n) {
       // For the standalone, always request data channels. If they aren't
       // implemented on the client, there won't be a similar message to us, and
       // we won't display the UI.
+      constants: {},
       useDataChannels: true,
       dispatcher: dispatcher,
       sdk: OT
     });
 
     var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-        mozLoop: standaloneMozLoop,
-        sdkDriver: sdkDriver
+      sdkDriver: sdkDriver
     });
 
     // Stores

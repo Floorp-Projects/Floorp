@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
-const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
 
 const MS_IN_A_MINUTE = 60 * 1000;

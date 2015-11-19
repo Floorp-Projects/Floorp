@@ -57,11 +57,11 @@ loop.store = loop.store || {};
    * @param {loop.Dispatcher} dispatcher  The dispatcher for dispatching actions
    *                                      and registering to consume actions.
    * @param {Object} options Options object:
-   * - {mozLoop}         mozLoop          The MozLoop API object.
    * - {ActiveRoomStore} activeRoomStore  An optional substore for active room
    *                                      state.
-   * - {Notifications}   notifications    An optional notifications item that is
-   *                                      required if create actions are to be used
+   * - {Notifications}   notifications    A notifications item that is required.
+   * - {Object}          constants        A set of constants that are used
+   *                                      throughout the store.
    */
   loop.store.RoomStore = loop.store.createStore({
     /**
@@ -96,11 +96,12 @@ loop.store = loop.store || {};
     ],
 
     initialize: function(options) {
-      if (!options.mozLoop) {
-        throw new Error("Missing option mozLoop");
+      if (!options.constants) {
+        throw new Error("Missing option constants");
       }
-      this._mozLoop = options.mozLoop;
+
       this._notifications = options.notifications;
+      this._constants = options.constants;
 
       if (options.activeRoomStore) {
         this.activeRoomStore = options.activeRoomStore;
@@ -122,16 +123,18 @@ loop.store = loop.store || {};
     },
 
     /**
-     * Registers mozLoop.rooms events.
+     * Registers Loop API rooms events.
      */
     startListeningToRoomEvents: function() {
       // Rooms event registration
-      this._mozLoop.rooms.on("add", this._onRoomAdded.bind(this));
-      this._mozLoop.rooms.on("close", this._onRoomClose.bind(this));
-      this._mozLoop.rooms.on("open", this._onRoomOpen.bind(this));
-      this._mozLoop.rooms.on("update", this._onRoomUpdated.bind(this));
-      this._mozLoop.rooms.on("delete", this._onRoomRemoved.bind(this));
-      this._mozLoop.rooms.on("refresh", this._onRoomsRefresh.bind(this));
+      loop.request("Rooms:PushSubscription", ["add", "close", "delete", "open",
+        "refresh", "update"]);
+      loop.subscribe("Rooms:Add", this._onRoomAdded.bind(this));
+      loop.subscribe("Rooms:Close", this._onRoomClose.bind(this));
+      loop.subscribe("Rooms:Open", this._onRoomOpen.bind(this));
+      loop.subscribe("Rooms:Update", this._onRoomUpdated.bind(this));
+      loop.subscribe("Rooms:Delete", this._onRoomRemoved.bind(this));
+      loop.subscribe("Rooms:Refresh", this._onRoomsRefresh.bind(this));
     },
 
     /**
@@ -144,10 +147,9 @@ loop.store = loop.store || {};
     /**
      * Updates current room list when a new room is available.
      *
-     * @param {String} eventName     The event name (unused).
      * @param {Object} addedRoomData The added room data.
      */
-    _onRoomAdded: function(eventName, addedRoomData) {
+    _onRoomAdded: function(addedRoomData) {
       addedRoomData.participants = addedRoomData.participants || [];
       addedRoomData.ctime = addedRoomData.ctime || new Date().getTime();
       this.dispatchAction(new sharedActions.UpdateRoomList({
@@ -170,10 +172,9 @@ loop.store = loop.store || {};
     /**
      * Updates the current active room.
      *
-     * @param {String} eventName The event name (unused).
      * @param {String} roomToken Identifier of the room.
      */
-    _onRoomOpen: function(eventName, roomToken) {
+    _onRoomOpen: function(roomToken) {
       this.setStoreState({
         openedRoom: roomToken
       });
@@ -182,10 +183,9 @@ loop.store = loop.store || {};
     /**
      * Executed when a room is updated.
      *
-     * @param {String} eventName       The event name (unused).
      * @param {Object} updatedRoomData The updated room data.
      */
-    _onRoomUpdated: function(eventName, updatedRoomData) {
+    _onRoomUpdated: function(updatedRoomData) {
       this.dispatchAction(new sharedActions.UpdateRoomList({
         roomList: this._storeState.rooms.map(function(room) {
           return room.roomToken === updatedRoomData.roomToken ?
@@ -197,10 +197,9 @@ loop.store = loop.store || {};
     /**
      * Executed when a room is deleted.
      *
-     * @param {String} eventName       The event name (unused).
      * @param {Object} removedRoomData The removed room data.
      */
-    _onRoomRemoved: function(eventName, removedRoomData) {
+    _onRoomRemoved: function(removedRoomData) {
       this.dispatchAction(new sharedActions.UpdateRoomList({
         roomList: this._storeState.rooms.filter(function(room) {
           return room.roomToken !== removedRoomData.roomToken;
@@ -211,16 +210,15 @@ loop.store = loop.store || {};
     /**
      * Executed when the user switches accounts.
      *
-     * @param {String} eventName The event name (unused).
      */
-    _onRoomsRefresh: function(eventName) {
+    _onRoomsRefresh: function() {
       this.dispatchAction(new sharedActions.UpdateRoomList({
         roomList: []
       }));
     },
 
     /**
-     * Maps and sorts the raw room list received from the mozLoop API.
+     * Maps and sorts the raw room list received from the Loop API.
      *
      * @param  {Array} rawRoomList Raw room list.
      * @return {Array}
@@ -260,25 +258,25 @@ loop.store = loop.store || {};
       }
 
       this._notifications.remove("create-room-error");
-      this._mozLoop.rooms.create(roomCreationData, function(err, createdRoom) {
-        var buckets = this._mozLoop.ROOM_CREATE;
-        if (err) {
-          this._mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
-          this.dispatchAction(new sharedActions.CreateRoomError({ error: err }));
+      loop.request("Rooms:Create", roomCreationData).then(function(result) {
+        var buckets = this._constants.ROOM_CREATE;
+        if (result && result.isError) {
+          loop.request("TelemetryAddValue", "LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
+          this.dispatchAction(new sharedActions.CreateRoomError({ error: result }));
           return;
         }
 
         this.dispatchAction(new sharedActions.CreatedRoom({
-          roomToken: createdRoom.roomToken
+          roomToken: result.roomToken
         }));
-        this._mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_SUCCESS);
+        loop.request("TelemetryAddValue", "LOOP_ROOM_CREATE", buckets.CREATE_SUCCESS);
 
         // Since creating a room with context is only possible from the panel,
         // we can record that as the action here.
         var URLs = roomCreationData.decryptedContext.urls;
         if (URLs && URLs.length) {
-          buckets = this._mozLoop.ROOM_CONTEXT_ADD;
-          this._mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_ADD",
+          buckets = this._constants.ROOM_CONTEXT_ADD;
+          loop.request("TelemetryAddValue", "LOOP_ROOM_CONTEXT_ADD",
             buckets.ADD_FROM_PANEL);
         }
       }.bind(this));
@@ -321,16 +319,17 @@ loop.store = loop.store || {};
      * @param  {sharedActions.CopyRoomUrl} actionData The action data.
      */
     copyRoomUrl: function(actionData) {
-      this._mozLoop.copyString(actionData.roomUrl);
-      this._mozLoop.notifyUITour("Loop:RoomURLCopied");
+      loop.requestMulti(
+        ["CopyString", actionData.roomUrl],
+        ["NotifyUITour", "Loop:RoomURLCopied"]);
 
       var from = actionData.from;
-      var bucket = this._mozLoop.SHARING_ROOM_URL["COPY_FROM_" + from.toUpperCase()];
+      var bucket = this._constants.SHARING_ROOM_URL["COPY_FROM_" + from.toUpperCase()];
       if (typeof bucket === "undefined") {
         console.error("No URL sharing type bucket found for '" + from + "'");
         return;
       }
-      this._mozLoop.telemetryAddValue("LOOP_SHARING_ROOM_URL", bucket);
+      loop.request("TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket);
     },
 
     /**
@@ -339,9 +338,18 @@ loop.store = loop.store || {};
      * @param  {sharedActions.EmailRoomUrl} actionData The action data.
      */
     emailRoomUrl: function(actionData) {
+      var from = actionData.from;
       loop.shared.utils.composeCallUrlEmail(actionData.roomUrl, null,
-        actionData.roomDescription, actionData.from);
-      this._mozLoop.notifyUITour("Loop:RoomURLEmailed");
+        actionData.roomDescription, from);
+
+      var bucket = this._constants.SHARING_ROOM_URL["EMAIL_FROM_" + (from || "").toUpperCase()];
+      if (typeof bucket === "undefined") {
+        console.error("No URL sharing type bucket found for '" + from + "'");
+        return;
+      }
+      loop.requestMulti(
+        ["NotifyUITour", "Loop:RoomURLEmailed"],
+        ["TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket]);
     },
 
     /**
@@ -370,9 +378,10 @@ loop.store = loop.store || {};
           break;
       }
 
-      this._mozLoop.socialShareRoom(actionData.provider.origin, actionData.roomUrl,
-        shareTitle, shareBody);
-      this._mozLoop.notifyUITour("Loop:RoomURLShared");
+      loop.requestMulti(
+        ["SocialShareRoom", actionData.provider.origin, actionData.roomUrl,
+         shareTitle, shareBody],
+        ["NotifyUITour", "Loop:RoomURLShared"]);
     },
 
     /**
@@ -381,7 +390,7 @@ loop.store = loop.store || {};
      * @param {sharedActions.AddSocialShareProvider} actionData The action data.
      */
     addSocialShareProvider: function(actionData) {
-      this._mozLoop.addSocialShareProvider();
+      loop.request("AddSocialShareProvider");
     },
 
     /**
@@ -390,12 +399,13 @@ loop.store = loop.store || {};
      * @param {sharedActions.DeleteRoom} actionData The action data.
      */
     deleteRoom: function(actionData) {
-      this._mozLoop.rooms.delete(actionData.roomToken, function(err) {
-        var buckets = this._mozLoop.ROOM_DELETE;
-        if (err) {
-          this.dispatchAction(new sharedActions.DeleteRoomError({ error: err }));
+      loop.request("Rooms:Delete", actionData.roomToken).then(function(result) {
+        var isError = (result && result.isError);
+        if (isError) {
+          this.dispatchAction(new sharedActions.DeleteRoomError({ error: result }));
         }
-        this._mozLoop.telemetryAddValue("LOOP_ROOM_DELETE", buckets[err ?
+        var buckets = this._constants.ROOM_DELETE;
+        loop.request("TelemetryAddValue", "LOOP_ROOM_DELETE", buckets[isError ?
           "DELETE_FAIL" : "DELETE_SUCCESS"]);
       }.bind(this));
     },
@@ -410,18 +420,18 @@ loop.store = loop.store || {};
     },
 
     /**
-     * Gather the list of all available rooms from the MozLoop API.
+     * Gather the list of all available rooms from the Loop API.
      */
     getAllRooms: function() {
-      this._mozLoop.rooms.getAll(null, function(err, rawRoomList) {
+      loop.request("Rooms:GetAll", null).then(function(result) {
         var action;
 
         this.setStoreState({ pendingInitialRetrieval: false });
 
-        if (err) {
-          action = new sharedActions.GetAllRoomsError({ error: err });
+        if (result && result.isError) {
+          action = new sharedActions.GetAllRoomsError({ error: result });
         } else {
-          action = new sharedActions.UpdateRoomList({ roomList: rawRoomList });
+          action = new sharedActions.UpdateRoomList({ roomList: result });
         }
 
         this.dispatchAction(action);
@@ -459,7 +469,7 @@ loop.store = loop.store || {};
      * @param {sharedActions.OpenRoom} actionData The action data.
      */
     openRoom: function(actionData) {
-      this._mozLoop.rooms.open(actionData.roomToken);
+      loop.request("Rooms:Open", actionData.roomToken);
     },
 
     /**
@@ -469,16 +479,16 @@ loop.store = loop.store || {};
      */
     updateRoomContext: function(actionData) {
       this.setStoreState({ savingContext: true });
-      this._mozLoop.rooms.get(actionData.roomToken, function(err, room) {
-        if (err) {
+      loop.request("Rooms:Get", actionData.roomToken).then(function(result) {
+        if (result.isError) {
           this.dispatchAction(new sharedActions.UpdateRoomContextError({
-            error: err
+            error: result
           }));
           return;
         }
 
         var roomData = {};
-        var context = room.decryptedContext;
+        var context = result.decryptedContext;
         var oldRoomName = context.roomName;
         var newRoomName = actionData.newRoomName.trim();
         if (newRoomName && oldRoomName !== newRoomName) {
@@ -529,22 +539,22 @@ loop.store = loop.store || {};
         var hadContextBefore = !!oldRoomURL;
 
         this.setStoreState({ error: null });
-        this._mozLoop.rooms.update(actionData.roomToken, roomData,
-          function(error, data) {
-            var action = error ?
-              new sharedActions.UpdateRoomContextError({ error: error }) :
-              new sharedActions.UpdateRoomContextDone();
-            this.dispatchAction(action);
+        loop.request("Rooms:Update", actionData.roomToken, roomData).then(function(result2) {
+          var isError = (result2 && result2.isError);
+          var action = isError ?
+            new sharedActions.UpdateRoomContextError({ error: result2 }) :
+            new sharedActions.UpdateRoomContextDone();
+          this.dispatchAction(action);
 
-            if (!err && !hadContextBefore) {
-              // Since updating the room context data is only possible from the
-              // conversation window, we can assume that any newly added URL was
-              // done from there.
-              var buckets = this._mozLoop.ROOM_CONTEXT_ADD;
-              this._mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_ADD",
-                buckets.ADD_FROM_CONVERSATION);
-            }
-          }.bind(this));
+          if (!isError && !hadContextBefore) {
+            // Since updating the room context data is only possible from the
+            // conversation window, we can assume that any newly added URL was
+            // done from there.
+            var buckets = this._constants.ROOM_CONTEXT_ADD;
+            loop.request("TelemetryAddValue", "LOOP_ROOM_CONTEXT_ADD",
+              buckets.ADD_FROM_CONVERSATION);
+          }
+        }.bind(this));
       }.bind(this));
     },
 
