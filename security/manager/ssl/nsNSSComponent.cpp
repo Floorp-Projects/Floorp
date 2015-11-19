@@ -926,8 +926,8 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profileFile));
   if (NS_FAILED(rv)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-           ("Unable to get profile directory - continuing with no NSS DB\n"));
+    NS_WARNING("NSS will be initialized without a profile directory. "
+               "Some things may not work as expected.");
     return NS_OK;
   }
 
@@ -950,6 +950,8 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
     return rv;
   }
 
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("NSS profile at '%s'\n", aProfilePath.get()));
   return NS_OK;
 }
 
@@ -1239,7 +1241,6 @@ nsNSSComponent::RandomUpdate(void* entropy, int32_t bufLen)
 }
 
 static const char* const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
-static const char* const PROFILE_DO_CHANGE_TOPIC = "profile-do-change";
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
@@ -1248,38 +1249,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
   if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("receiving profile change topic\n"));
     DoProfileBeforeChange();
-  }
-  else if (nsCRT::strcmp(aTopic, PROFILE_DO_CHANGE_TOPIC) == 0) {
-    if (someData && NS_LITERAL_STRING("startup").Equals(someData)) {
-      // The application is initializing against a known profile directory for
-      // the first time during process execution.
-      // However, earlier code execution might have already triggered NSS init.
-      // We must ensure that NSS gets shut down prior to any attempt to init
-      // it again. We use the same cleanup functionality used when switching
-      // profiles. The order of function calls must correspond to the order
-      // of notifications sent by Profile Manager (nsProfile).
-      DoProfileBeforeChange();
-    }
-
-    bool needsInit = true;
-
-    {
-      MutexAutoLock lock(mutex);
-
-      if (mNSSInitialized) {
-        // We have already initialized NSS before the profile came up,
-        // no need to do it again
-        needsInit = false;
-      }
-    }
-
-    if (needsInit) {
-      if (NS_FAILED(InitializeNSS())) {
-        MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("Unable to Initialize NSS after profile switch.\n"));
-      }
-    }
-  }
-  else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+  } else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
 
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent: XPCom shutdown observed\n"));
 
@@ -1426,7 +1396,6 @@ nsNSSComponent::RegisterObservers()
   // least as long as the observer service.
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, false);
-  observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC, false);
 
   return NS_OK;
 }
