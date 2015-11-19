@@ -365,8 +365,8 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
 
 MediaByteRange
 MP3TrackDemuxer::FindNextFrame() {
-  static const int BUFFER_SIZE = 4096;
-  static const int MAX_SKIPPED_BYTES = 10 * BUFFER_SIZE;
+  static const int BUFFER_SIZE = 64;
+  static const int MAX_SKIPPED_BYTES = 1024 * BUFFER_SIZE;
 
   MP3LOGV("FindNext() Begin mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
