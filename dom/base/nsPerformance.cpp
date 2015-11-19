@@ -935,15 +935,15 @@ PerformanceBase::TranslateTime(DOMHighResTimeStamp aTime,
     }
     otherCreationTimeStamp = performance->CreationTimeStamp();
   } else if (aTimeSource.IsWorker()) {
-    otherCreationTimeStamp = aTimeSource.GetAsWorker().NowBaseTimeStamp();
+    otherCreationTimeStamp = aTimeSource.GetAsWorker().CreationTimeStamp();
   } else if (aTimeSource.IsSharedWorker()) {
     SharedWorker& sharedWorker = aTimeSource.GetAsSharedWorker();
     WorkerPrivate* workerPrivate = sharedWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->NowBaseTimeStamp();
+    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
   } else if (aTimeSource.IsServiceWorker()) {
     ServiceWorker& serviceWorker = aTimeSource.GetAsServiceWorker();
     WorkerPrivate* workerPrivate = serviceWorker.GetWorkerPrivate();
-    otherCreationTimeStamp = workerPrivate->NowBaseTimeStamp();
+    otherCreationTimeStamp = workerPrivate->CreationTimeStamp();
   } else {
     MOZ_CRASH("This should not be possible.");
   }
