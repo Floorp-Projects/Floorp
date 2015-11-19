@@ -204,8 +204,6 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
         new txAttributeAtomTransaction(aPrefix, aLocalName,
                                        aLowercaseLocalName, aNsID,
                                        aValue);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -222,8 +220,6 @@ txBufferingHandler::attribute(nsIAtom* aPrefix, const nsSubstring& aLocalName,
 
     txOutputTransaction* transaction =
         new txAttributeTransaction(aPrefix, aLocalName, aNsID, aValue);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -247,8 +243,6 @@ txBufferingHandler::characters(const nsSubstring& aData, bool aDOE)
     }
 
     transaction = new txCharacterTransaction(type, aData.Length());
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     mBuffer->mStringValue.Append(aData);
     return mBuffer->addTransaction(transaction);
 }
@@ -261,8 +255,6 @@ txBufferingHandler::comment(const nsString& aData)
     mCanAddAttribute = false;
 
     txOutputTransaction* transaction = new txCommentTransaction(aData);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -273,8 +265,6 @@ txBufferingHandler::endDocument(nsresult aResult)
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eEndDocumentTransaction);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -287,8 +277,6 @@ txBufferingHandler::endElement()
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eEndElementTransaction);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -302,8 +290,6 @@ txBufferingHandler::processingInstruction(const nsString& aTarget,
 
     txOutputTransaction* transaction =
         new txPITransaction(aTarget, aData);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -314,8 +300,6 @@ txBufferingHandler::startDocument()
 
     txOutputTransaction* transaction =
         new txOutputTransaction(txOutputTransaction::eStartDocumentTransaction);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -331,8 +315,6 @@ txBufferingHandler::startElement(nsIAtom* aPrefix, nsIAtom* aLocalName,
     txOutputTransaction* transaction =
         new txStartElementAtomTransaction(aPrefix, aLocalName,
                                           aLowercaseLocalName, aNsID);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
@@ -347,8 +329,6 @@ txBufferingHandler::startElement(nsIAtom* aPrefix,
 
     txOutputTransaction* transaction =
         new txStartElementTransaction(aPrefix, aLocalName, aNsID);
-    NS_ENSURE_TRUE(transaction, NS_ERROR_OUT_OF_MEMORY);
-
     return mBuffer->addTransaction(transaction);
 }
 
