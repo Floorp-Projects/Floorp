@@ -28,6 +28,10 @@ function doConsoleCalls(aState)
   top.console.dir(top.document, top.location);
   top.console.log("foo", longString);
 
+  let sandbox = new Cu.Sandbox(null, { invisibleToDebugger: true });
+  let sandboxObj = sandbox.eval("new Object");
+  top.console.log(sandboxObj);
+
   function fromAsmJS() {
       top.console.error("foobarBaz-asmjs-error", undefined);
   }
@@ -116,6 +120,19 @@ function doConsoleCalls(aState)
             DebuggerServer.LONG_STRING_INITIAL_LENGTH),
           length: longString.length,
           actor: /[a-z]/,
+        },
+      ],
+    },
+    {
+      level: "log",
+      filename: /test_consoleapi/,
+      functionName: "doConsoleCalls",
+      timeStamp: /^\d+$/,
+      arguments: [
+        {
+          type: "object",
+          actor: /[a-z]/,
+          class: "Object",
         },
       ],
     },
