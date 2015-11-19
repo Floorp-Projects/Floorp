@@ -14,8 +14,8 @@
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
 #include "nsISimpleUnicharStreamFactory.h"
-#include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "nsNullPrincipal.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsTextFormatter.h"
@@ -28,7 +28,6 @@
 #include "nsError.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
-#include "nsContentUtils.h"
 
 #include "mozilla/Logging.h"
 
@@ -756,59 +755,73 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
                  baseURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // make sure the URI is allowed to be loaded in sync
-  bool isUIResource = false;
-  rv = NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                           &isUIResource);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> localURI;
-  if (!isUIResource) {
-    // Check to see if we can map the DTD to a known local DTD, or if a DTD
-    // file of the same name exists in the special DTD directory
+  // check if it is alright to load this uri
+  bool isChrome = false;
+  uri->SchemeIs("chrome", &isChrome);
+  if (!isChrome) {
+    // since the url is not a chrome url, check to see if we can map the DTD
+    // to a known local DTD, or if a DTD file of the same name exists in the
+    // special DTD directory
     if (aFPIStr) {
       // see if the Formal Public Identifier (FPI) maps to a catalog entry
       mCatalogData = LookupCatalogData(aFPIStr);
-      GetLocalDTDURI(mCatalogData, uri, getter_AddRefs(localURI));
     }
+
+    nsCOMPtr<nsIURI> localURI;
+    GetLocalDTDURI(mCatalogData, uri, getter_AddRefs(localURI));
     if (!localURI) {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
+
+    localURI.swap(uri);
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  if (localURI) {
-    localURI.swap(uri);
-    rv = NS_NewChannel(getter_AddRefs(channel),
-                       uri,
-                       nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                       nsIContentPolicy::TYPE_DTD);
+  nsCOMPtr<nsIDocument> doc;
+  NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
+               "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
+               "mOriginalSink not the same object as mSink?");
+  if (mOriginalSink)
+    doc = do_QueryInterface(mOriginalSink->GetTarget());
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
+                                uri,
+                                (doc ? doc->NodePrincipal() : nullptr),
+                                doc,
+                                EmptyCString(), //mime guess
+                                nullptr,         //extra
+                                &shouldLoad);
+  if (NS_FAILED(rv)) return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
   }
-  else {
-    NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
-                 "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
-                 "mOriginalSink not the same object as mSink?");
-    nsCOMPtr<nsIDocument> doc;
-    if (mOriginalSink) {
-      doc = do_QueryInterface(mOriginalSink->GetTarget());
-    }
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsAutoCString absURL;
+  uri->GetSpec(absURL);
+
+  CopyUTF8toUTF16(absURL, aAbsURL);
+
+  nsCOMPtr<nsIChannel> channel;
+  if (doc) {
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
                        doc,
-                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-                       nsILoadInfo::SEC_ALLOW_CHROME,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_DTD);
+  }
+  else {
+    nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
+    NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nullPrincipal,
+                       nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_DTD);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString absURL;
-  uri->GetSpec(absURL);
-  CopyUTF8toUTF16(absURL, aAbsURL);
-
   channel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
-  return channel->Open2(aStream);
+  return channel->Open(aStream);
 }
 
 static nsresult
