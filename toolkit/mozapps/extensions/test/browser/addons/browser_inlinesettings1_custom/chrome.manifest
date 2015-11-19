@@ -1,2 +1,2 @@
-content inlinesettings ./ contentaccessible=yes
+content inlinesettings ./
 locale inlinesettings en-US ./
