@@ -510,11 +510,10 @@ class ObjectGroup : public gc::TenuredCell
     // Get a non-singleton group to use for objects created at the specified
     // allocation site.
     static ObjectGroup* allocationSiteGroup(JSContext* cx, JSScript* script, jsbytecode* pc,
-                                            JSProtoKey key, HandleObject proto = nullptr);
+                                            JSProtoKey key);
 
     // Get a non-singleton group to use for objects created in a JSNative call.
-    static ObjectGroup* callingAllocationSiteGroup(JSContext* cx, JSProtoKey key,
-                                                   HandleObject proto = nullptr);
+    static ObjectGroup* callingAllocationSiteGroup(JSContext* cx, JSProtoKey key);
 
     // Set the group or singleton-ness of an object created for an allocation site.
     static bool
