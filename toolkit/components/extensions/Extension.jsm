@@ -62,6 +62,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js")
 ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
