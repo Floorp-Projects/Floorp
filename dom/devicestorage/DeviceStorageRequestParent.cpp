@@ -419,19 +419,6 @@ DeviceStorageRequestParent::PostFreeSpaceResultEvent::CancelableRun() {
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostUsedSpaceResultEvent::
-  PostUsedSpaceResultEvent(DeviceStorageRequestParent* aParent,
-                             const nsAString& aType,
-                             uint64_t aUsedSpace)
-  : CancelableRunnable(aParent)
-  , mType(aType)
-  , mUsedSpace(aUsedSpace)
-{
-}
-
-DeviceStorageRequestParent::PostUsedSpaceResultEvent::
-  ~PostUsedSpaceResultEvent() {}
-
 nsresult
 DeviceStorageRequestParent::PostUsedSpaceResultEvent::CancelableRun() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -448,8 +435,6 @@ DeviceStorageRequestParent::PostErrorEvent::
   CopyASCIItoUTF16(aError, mError);
 }
 
-DeviceStorageRequestParent::PostErrorEvent::~PostErrorEvent() {}
-
 nsresult
 DeviceStorageRequestParent::PostErrorEvent::CancelableRun() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -459,14 +444,6 @@ DeviceStorageRequestParent::PostErrorEvent::CancelableRun() {
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostSuccessEvent::
-  PostSuccessEvent(DeviceStorageRequestParent* aParent)
-  : CancelableRunnable(aParent)
-{
-}
-
-DeviceStorageRequestParent::PostSuccessEvent::~PostSuccessEvent() {}
-
 nsresult
 DeviceStorageRequestParent::PostSuccessEvent::CancelableRun() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -475,22 +452,6 @@ DeviceStorageRequestParent::PostSuccessEvent::CancelableRun() {
   Unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
 }
-
-DeviceStorageRequestParent::PostBlobSuccessEvent::
-  PostBlobSuccessEvent(DeviceStorageRequestParent* aParent,
-                       DeviceStorageFile* aFile,
-                       uint32_t aLength,
-                       nsACString& aMimeType,
-                       uint64_t aLastModifiedDate)
-  : CancelableRunnable(aParent)
-  , mLength(aLength)
-  , mLastModificationDate(aLastModifiedDate)
-  , mFile(aFile)
-  , mMimeType(aMimeType)
-{
-}
-
-DeviceStorageRequestParent::PostBlobSuccessEvent::~PostBlobSuccessEvent() {}
 
 nsresult
 DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
@@ -520,21 +481,6 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostEnumerationSuccessEvent::
-  PostEnumerationSuccessEvent(DeviceStorageRequestParent* aParent,
-                              const nsAString& aStorageType,
-                              const nsAString& aRelPath,
-                              InfallibleTArray<DeviceStorageFileValue>& aPaths)
-  : CancelableRunnable(aParent)
-  , mStorageType(aStorageType)
-  , mRelPath(aRelPath)
-  , mPaths(aPaths)
-{
-}
-
-DeviceStorageRequestParent::PostEnumerationSuccessEvent::
-  ~PostEnumerationSuccessEvent() {}
-
 nsresult
 DeviceStorageRequestParent::PostEnumerationSuccessEvent::CancelableRun() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -542,18 +488,6 @@ DeviceStorageRequestParent::PostEnumerationSuccessEvent::CancelableRun() {
   EnumerationResponse response(mStorageType, mRelPath, mPaths);
   Unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
-}
-
-DeviceStorageRequestParent::CreateFdEvent::
-  CreateFdEvent(DeviceStorageRequestParent* aParent,
-                 DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::CreateFdEvent::~CreateFdEvent()
-{
 }
 
 nsresult
@@ -586,22 +520,6 @@ DeviceStorageRequestParent::CreateFdEvent::CancelableRun()
   }
 
   return NS_DispatchToMainThread(r);
-}
-
-DeviceStorageRequestParent::WriteFileEvent::
-  WriteFileEvent(DeviceStorageRequestParent* aParent,
-                 DeviceStorageFile* aFile,
-                 nsIInputStream* aInputStream,
-                 int32_t aRequestType)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-  , mInputStream(aInputStream)
-  , mRequestType(aRequestType)
-{
-}
-
-DeviceStorageRequestParent::WriteFileEvent::~WriteFileEvent()
-{
 }
 
 nsresult
@@ -647,17 +565,6 @@ DeviceStorageRequestParent::WriteFileEvent::CancelableRun()
   return NS_DispatchToMainThread(r);
 }
 
-DeviceStorageRequestParent::DeleteFileEvent::
-  DeleteFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::DeleteFileEvent::~DeleteFileEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::DeleteFileEvent::CancelableRun()
 {
@@ -683,18 +590,6 @@ DeviceStorageRequestParent::DeleteFileEvent::CancelableRun()
   return NS_DispatchToMainThread(r);
 }
 
-DeviceStorageRequestParent::FreeSpaceFileEvent::
-  FreeSpaceFileEvent(DeviceStorageRequestParent* aParent,
-                     DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::FreeSpaceFileEvent::~FreeSpaceFileEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::FreeSpaceFileEvent::CancelableRun()
 {
@@ -708,18 +603,6 @@ DeviceStorageRequestParent::FreeSpaceFileEvent::CancelableRun()
   nsCOMPtr<nsIRunnable> r;
   r = new PostFreeSpaceResultEvent(mParent, static_cast<uint64_t>(freeSpace));
   return NS_DispatchToMainThread(r);
-}
-
-DeviceStorageRequestParent::UsedSpaceFileEvent::
-  UsedSpaceFileEvent(DeviceStorageRequestParent* aParent,
-                     DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::UsedSpaceFileEvent::~UsedSpaceFileEvent()
-{
 }
 
 nsresult
@@ -761,10 +644,6 @@ DeviceStorageRequestParent::ReadFileEvent::
   }
 }
 
-DeviceStorageRequestParent::ReadFileEvent::~ReadFileEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
 {
@@ -803,20 +682,6 @@ DeviceStorageRequestParent::ReadFileEvent::CancelableRun()
   return NS_DispatchToMainThread(r);
 }
 
-DeviceStorageRequestParent::EnumerateFileEvent::
-  EnumerateFileEvent(DeviceStorageRequestParent* aParent,
-                     DeviceStorageFile* aFile,
-                     uint64_t aSince)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-  , mSince(aSince)
-{
-}
-
-DeviceStorageRequestParent::EnumerateFileEvent::~EnumerateFileEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::EnumerateFileEvent::CancelableRun()
 {
@@ -848,19 +713,6 @@ DeviceStorageRequestParent::EnumerateFileEvent::CancelableRun()
   return NS_DispatchToMainThread(r);
 }
 
-
-DeviceStorageRequestParent::PostPathResultEvent::
-  PostPathResultEvent(DeviceStorageRequestParent* aParent,
-                      const nsAString& aPath)
-  : CancelableRunnable(aParent)
-  , mPath(aPath)
-{
-}
-
-DeviceStorageRequestParent::PostPathResultEvent::~PostPathResultEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::PostPathResultEvent::CancelableRun()
 {
@@ -871,19 +723,6 @@ DeviceStorageRequestParent::PostPathResultEvent::CancelableRun()
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostFileDescriptorResultEvent::
-  PostFileDescriptorResultEvent(DeviceStorageRequestParent* aParent,
-                                const FileDescriptor& aFileDescriptor)
-  : CancelableRunnable(aParent)
-  , mFileDescriptor(aFileDescriptor)
-{
-}
-
-DeviceStorageRequestParent::PostFileDescriptorResultEvent::
-  ~PostFileDescriptorResultEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::PostFileDescriptorResultEvent::CancelableRun()
 {
@@ -892,19 +731,6 @@ DeviceStorageRequestParent::PostFileDescriptorResultEvent::CancelableRun()
   FileDescriptorResponse response(mFileDescriptor);
   Unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
-}
-
-DeviceStorageRequestParent::PostFormatResultEvent::
-  PostFormatResultEvent(DeviceStorageRequestParent* aParent,
-                           DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::PostFormatResultEvent::
-  ~PostFormatResultEvent()
-{
 }
 
 nsresult
@@ -922,19 +748,6 @@ DeviceStorageRequestParent::PostFormatResultEvent::CancelableRun()
   return NS_OK;
 }
 
-DeviceStorageRequestParent::PostMountResultEvent::
-  PostMountResultEvent(DeviceStorageRequestParent* aParent,
-                           DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::PostMountResultEvent::
-  ~PostMountResultEvent()
-{
-}
-
 nsresult
 DeviceStorageRequestParent::PostMountResultEvent::CancelableRun()
 {
@@ -948,19 +761,6 @@ DeviceStorageRequestParent::PostMountResultEvent::CancelableRun()
   MountStorageResponse response(state);
   Unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
-}
-
-DeviceStorageRequestParent::PostUnmountResultEvent::
-  PostUnmountResultEvent(DeviceStorageRequestParent* aParent,
-                           DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::PostUnmountResultEvent::
-  ~PostUnmountResultEvent()
-{
 }
 
 nsresult
