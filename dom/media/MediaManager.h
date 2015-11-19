@@ -256,6 +256,7 @@ public:
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
   typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
+  typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
@@ -321,7 +322,7 @@ private:
 
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
-  media::CoatCheck<media::Pledge<bool, dom::MediaStreamError*>> mOutstandingVoidPledges;
+  media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   RefPtr<nsDOMCameraManager> mCameraManager;
 #endif
