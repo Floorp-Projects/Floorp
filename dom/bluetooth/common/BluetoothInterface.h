@@ -1144,93 +1144,14 @@ class BluetoothInterface
 public:
   static BluetoothInterface* GetInstance();
 
-  virtual void SetNotificationHandler(
-    BluetoothCoreNotificationHandler* aNotificationHandler) = 0;
-
   virtual void Init(BluetoothNotificationHandler* aNotificationHandler,
                     BluetoothResultHandler* aRes) = 0;
   virtual void Cleanup(BluetoothResultHandler* aRes) = 0;
 
-  virtual void Enable(BluetoothCoreResultHandler* aRes) = 0;
-  virtual void Disable(BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Adapter Properties */
-
-  virtual void GetAdapterProperties(BluetoothCoreResultHandler* aRes) = 0;
-  virtual void GetAdapterProperty(BluetoothPropertyType,
-                                  BluetoothCoreResultHandler* aRes) = 0;
-  virtual void SetAdapterProperty(const BluetoothProperty& aProperty,
-                                  BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Remote Device Properties */
-
-  virtual void GetRemoteDeviceProperties(const BluetoothAddress& aRemoteAddr,
-                                         BluetoothCoreResultHandler* aRes) = 0;
-  virtual void GetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                                       BluetoothPropertyType aType,
-                                       BluetoothCoreResultHandler* aRes) = 0;
-  virtual void SetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                                       const BluetoothProperty& aProperty,
-                                       BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Remote Services */
-
-  virtual void GetRemoteServiceRecord(const BluetoothAddress& aRemoteAddr,
-                                      const BluetoothUuid& aUuid,
-                                      BluetoothCoreResultHandler* aRes) = 0;
-  virtual void GetRemoteServices(const BluetoothAddress& aRemoteAddr,
-                                 BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Discovery */
-
-  virtual void StartDiscovery(BluetoothCoreResultHandler* aRes) = 0;
-  virtual void CancelDiscovery(BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Bonds */
-
-  virtual void CreateBond(const BluetoothAddress& aBdAddr,
-                          BluetoothTransport aTransport,
-                          BluetoothCoreResultHandler* aRes) = 0;
-  virtual void RemoveBond(const BluetoothAddress& aBdAddr,
-                          BluetoothCoreResultHandler* aRes) = 0;
-  virtual void CancelBond(const BluetoothAddress& aBdAddr,
-                          BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Connection */
-
-  virtual void GetConnectionState(const BluetoothAddress& aBdAddr,
-                                  BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Authentication */
-
-  virtual void PinReply(const BluetoothAddress& aBdAddr, bool aAccept,
-                        const BluetoothPinCode& aPinCode,
-                        BluetoothCoreResultHandler* aRes) = 0;
-
-  virtual void SspReply(const BluetoothAddress& aBdAddr,
-                        BluetoothSspVariant aVariant,
-                        bool aAccept, uint32_t aPasskey,
-                        BluetoothCoreResultHandler* aRes) = 0;
-
-  /* DUT Mode */
-
-  virtual void DutModeConfigure(bool aEnable,
-                                BluetoothCoreResultHandler* aRes) = 0;
-  virtual void DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
-                           BluetoothCoreResultHandler* aRes) = 0;
-
-  /* LE Mode */
-
-  virtual void LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
-                          BluetoothCoreResultHandler* aRes) = 0;
-
-  /* Energy Info */
-
-  virtual void ReadEnergyInfo(BluetoothCoreResultHandler* aRes) = 0;
-
   /* Profile Interfaces */
 
   virtual BluetoothSetupInterface* GetBluetoothSetupInterface() = 0;
+  virtual BluetoothCoreInterface* GetBluetoothCoreInterface() = 0;
   virtual BluetoothSocketInterface* GetBluetoothSocketInterface() = 0;
   virtual BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() = 0;
   virtual BluetoothA2dpInterface* GetBluetoothA2dpInterface() = 0;
