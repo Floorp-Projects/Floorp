@@ -123,6 +123,7 @@ XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
 XRE_StartupTimelineRecordType XRE_StartupTimelineRecord;
 XRE_mainType XRE_main;
 XRE_StopLateWriteChecksType XRE_StopLateWriteChecks;
+XRE_XPCShellMainType XRE_XPCShellMain;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
@@ -132,6 +133,7 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_StartupTimelineRecord", (NSFuncPtr*) &XRE_StartupTimelineRecord },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { "XRE_StopLateWriteChecks", (NSFuncPtr*) &XRE_StopLateWriteChecks },
+    { "XRE_XPCShellMain", (NSFuncPtr*) &XRE_XPCShellMain },
     { nullptr, nullptr }
 };
 
@@ -172,6 +174,11 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
     argv[2] = argv[0];
     argv += 2;
     argc -= 2;
+  } else if (argc > 1 && IsArg(argv[1], "xpcshell")) {
+    for (int i = 1; i < argc; i++) {
+      argv[i] = argv[i + 1];
+    }
+    return XRE_XPCShellMain(--argc, argv, environ);
   }
 
   if (appini) {
