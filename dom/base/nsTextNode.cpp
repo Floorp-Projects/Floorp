@@ -214,10 +214,6 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
   nsAttributeTextNode* textNode = new nsAttributeTextNode(ni,
                                                           aNameSpaceID,
                                                           aAttrName);
-  if (!textNode) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(*aResult = textNode);
 
   return NS_OK;

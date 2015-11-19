@@ -36,8 +36,6 @@ nsresult
 NS_NewContentPolicy(nsIContentPolicy **aResult)
 {
   *aResult = new nsContentPolicy;
-  if (!*aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
