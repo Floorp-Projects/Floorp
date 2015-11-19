@@ -45,7 +45,7 @@ public:
   NS_DECL_NSIAUTOCOMPLETERESULT
 
   nsTArray<nsString> mValues;
-  nsAutoString mSearchString;
+  nsString mSearchString;
   uint16_t mSearchResult;
 private:
   ~nsFileResult() {}
