@@ -136,7 +136,6 @@
   <string name="overlay_share_no_url">&overlay_share_no_url;</string>
   <string name="overlay_share_select_device">&overlay_share_select_device;</string>
   <string name="overlay_no_synced_devices">&overlay_no_synced_devices;</string>
-  <string name="menu_no_synced_devices">&menu_no_synced_devices;</string>
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
