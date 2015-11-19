@@ -952,7 +952,7 @@ gid16 CmapSubtable4Lookup(const void * pCmapSubtabel4, unsigned int nUnicodeId, 
     uint16 nSeg = be::swap(pTable->seg_count_x2) >> 1;
   
     uint16 n;
-        const uint16 * pLeft, * pMid;
+    const uint16 * pLeft, * pMid;
     uint16 cMid, chStart, chEnd;
 
     if (rangeKey)
