@@ -10,10 +10,10 @@ EXTRA_JS_MODULES += [
     'ExtensionManagement.jsm',
     'ExtensionStorage.jsm',
     'ExtensionUtils.jsm',
+    'Schemas.jsm',
 ]
 
 JAR_MANIFESTS += ['jar.mn']
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
-
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
