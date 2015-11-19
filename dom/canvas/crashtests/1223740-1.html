@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.shadowColor = "green";
+    ctx.rotate(0.9923);
+    ctx.transform(6, 0.13807760834183488, 256, -0.39007851257689263, 0.5767177072299453, 64);
+    ctx.transform(0.61, 0.08697788582345888, 6, 6, 64, 128);
+    ctx.scale(0.36690500480283633, 6);
+    ctx.shadowOffsetY = -1.7976931348623157e+308;
+    ctx.fillText("A",32,0.848476537933684);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
