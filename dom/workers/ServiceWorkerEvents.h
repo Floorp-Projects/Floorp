@@ -48,9 +48,9 @@ public:
 
 class ExtendableEvent : public Event
 {
+protected:
   nsTArray<RefPtr<Promise>> mPromises;
 
-protected:
   explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
   ~ExtendableEvent() {}
 
@@ -87,7 +87,7 @@ public:
   }
 
   void
-  WaitUntil(Promise& aPromise, ErrorResult& aRv);
+  WaitUntil(JSContext* aCx, Promise& aPromise, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   GetPromise();
