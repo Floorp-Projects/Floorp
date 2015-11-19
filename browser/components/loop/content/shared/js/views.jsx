@@ -219,8 +219,7 @@ loop.shared.views = (function(_, mozL10n) {
     propTypes: {
       // Set to true if the menu should be below the button rather than above.
       menuBelow: React.PropTypes.bool,
-      menuItems: React.PropTypes.array,
-      mozLoop: React.PropTypes.object
+      menuItems: React.PropTypes.array
     },
 
     mixins: [
@@ -296,8 +295,9 @@ loop.shared.views = (function(_, mozL10n) {
      */
     handleHelpEntry: function(event) {
       event.preventDefault();
-      var helloSupportUrl = this.props.mozLoop.getLoopPref("support_url");
-      this.props.mozLoop.openURL(helloSupportUrl);
+      loop.request("GetLoopPref", "support_url").then(function(helloSupportUrl) {
+        loop.request("OpenURL", helloSupportUrl);
+      });
     },
 
     /**
@@ -407,7 +407,6 @@ loop.shared.views = (function(_, mozL10n) {
       audio: React.PropTypes.object.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       hangup: React.PropTypes.func.isRequired,
-      mozLoop: React.PropTypes.object,
       publishStream: React.PropTypes.func.isRequired,
       screenShare: React.PropTypes.object,
       settingsMenuItems: React.PropTypes.array,
@@ -532,8 +531,7 @@ loop.shared.views = (function(_, mozL10n) {
                                       visible={this.props.screenShare.visible} />
           </li>
           <li className="conversation-toolbar-btn-box btn-edit-entry">
-            <SettingsControlButton menuItems={this.props.settingsMenuItems}
-                                   mozLoop={this.props.mozLoop} />
+            <SettingsControlButton menuItems={this.props.settingsMenuItems} />
           </li>
         </ul>
       );

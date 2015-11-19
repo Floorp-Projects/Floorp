@@ -1447,9 +1447,12 @@ void
 MediaDecoder::NotifyDataArrived() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->DispatchNotifyDataArrived();
+  // Don't publish events since task queues might be shutting down.
+  if (mShuttingDown) {
+    return;
   }
+
+  mDataArrivedEvent.Notify();
 
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
   // depends on the download rate.
@@ -1616,14 +1619,6 @@ bool
 MediaDecoder::IsAndroidMediaEnabled()
 {
   return Preferences::GetBool("media.plugins.enabled");
-}
-#endif
-
-#ifdef MOZ_APPLEMEDIA
-bool
-MediaDecoder::IsAppleMP3Enabled()
-{
-  return Preferences::GetBool("media.apple.mp3.enabled");
 }
 #endif
 

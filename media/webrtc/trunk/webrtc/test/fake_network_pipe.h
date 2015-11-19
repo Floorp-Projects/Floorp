@@ -14,8 +14,8 @@
 #include <queue>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -66,7 +66,7 @@ class FakeNetworkPipe {
   // Processes the network queues and trigger PacketReceiver::IncomingPacket for
   // packets ready to be delivered.
   void Process();
-  int TimeUntilNextProcess() const;
+  int64_t TimeUntilNextProcess() const;
 
   // Get statistics.
   float PercentageLoss();
@@ -75,7 +75,7 @@ class FakeNetworkPipe {
   size_t sent_packets() { return sent_packets_; }
 
  private:
-  scoped_ptr<CriticalSectionWrapper> lock_;
+  rtc::scoped_ptr<CriticalSectionWrapper> lock_;
   PacketReceiver* packet_receiver_;
   std::queue<NetworkPacket*> capacity_link_;
   std::queue<NetworkPacket*> delay_link_;

@@ -24,12 +24,12 @@ ViESharedData::ViESharedData(const Config& config)
       channel_manager_(new ViEChannelManager(0, number_cores_, config)),
       input_manager_(new ViEInputManager(0, config)),
       render_manager_(new ViERenderManager(0)),
-      module_process_thread_(ProcessThread::CreateProcessThread()),
+      module_process_thread_(ProcessThread::Create()),
       load_manager_(NULL),
       last_error_(0) {
   Trace::CreateTrace();
-  channel_manager_->SetModuleProcessThread(module_process_thread_);
-  input_manager_->SetModuleProcessThread(module_process_thread_);
+  channel_manager_->SetModuleProcessThread(module_process_thread_.get());
+  input_manager_->SetModuleProcessThread(module_process_thread_.get());
   module_process_thread_->Start();
 }
 
@@ -40,7 +40,6 @@ ViESharedData::~ViESharedData() {
   render_manager_.reset();
 
   module_process_thread_->Stop();
-  ProcessThread::DestroyProcessThread(module_process_thread_);
   Trace::ReturnTrace();
 }
 

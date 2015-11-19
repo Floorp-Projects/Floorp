@@ -56,13 +56,7 @@ public:
 
     virtual int SetOpusMaxPlaybackRate(int channel, int frequency_hz);
 
-    // Dual-streaming
-    virtual int SetSecondarySendCodec(int channel, const CodecInst& codec,
-                                      int red_payload_type);
-
-    virtual int RemoveSecondarySendCodec(int channel);
-
-    virtual int GetSecondarySendCodec(int channel, CodecInst& codec);
+    virtual int SetOpusDtx(int channel, bool enable_dtx);
 
 protected:
     VoECodecImpl(voe::SharedData* shared);

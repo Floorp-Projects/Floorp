@@ -61,7 +61,7 @@ GonkDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 }
 
 bool
-GonkDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+GonkDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
     aMimeType.EqualsLiteral("audio/3gpp") ||

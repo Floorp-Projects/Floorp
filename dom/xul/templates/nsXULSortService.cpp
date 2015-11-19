@@ -502,9 +502,6 @@ nsresult
 NS_NewXULSortService(nsIXULSortService** sortService)
 {
   *sortService = new XULSortServiceImpl();
-  if (!*sortService)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(*sortService);
   return NS_OK;
 }

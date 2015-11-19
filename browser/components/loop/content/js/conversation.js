@@ -28,7 +28,6 @@ loop.conversation = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
 
@@ -40,7 +39,6 @@ loop.conversation = (function(mozL10n) {
       this.setTitle(mozL10n.get("conversation_has_ended"));
 
       return (React.createElement(FeedbackView, {
-        mozLoop: this.props.mozLoop, 
         onAfterFeedbackReceived: this.closeWindow}));
     },
 
@@ -72,15 +70,13 @@ loop.conversation = (function(mozL10n) {
           return (React.createElement(DesktopRoomConversationView, {
             chatWindowDetached: this.state.chatWindowDetached, 
             dispatcher: this.props.dispatcher, 
-            mozLoop: this.props.mozLoop, 
             onCallTerminated: this.handleCallTerminated, 
             roomStore: this.props.roomStore}));
         }
         case "failed": {
           return (React.createElement(RoomFailureView, {
             dispatcher: this.props.dispatcher, 
-            failureReason: FAILURE_DETAILS.UNKNOWN, 
-            mozLoop: this.props.mozLoop}));
+            failureReason: FAILURE_DETAILS.UNKNOWN}));
         }
         default: {
           // If we don't have a windowType, we don't know what we are yet,
@@ -95,85 +91,107 @@ loop.conversation = (function(mozL10n) {
    * Conversation initialisation.
    */
   function init() {
-    // Do the initial L10n setup, we do this before anything
-    // else to ensure the L10n environment is setup correctly.
-    mozL10n.initialize(navigator.mozLoop);
+    return loop.requestMulti(
+      ["GetAllConstants"],
+      ["GetAllStrings"],
+      ["GetLocale"],
+      ["GetLoopPref", "ot.guid"],
+      ["GetLoopPref", "textChat.enabled"],
+      ["GetLoopPref", "feedback.periodSec"],
+      ["GetLoopPref", "feedback.dateLastSeenSec"]
+    ).then(function(results) {
+      var constants = results[0];
+      // Do the initial L10n setup, we do this before anything
+      // else to ensure the L10n environment is setup correctly.
+      var stringBundle = results[1];
+      var locale = results[2];
+      mozL10n.initialize({
+        locale: locale,
+        getStrings: function(key) {
+          if (!(key in stringBundle)) {
+            console.error("No string found for key: ", key);
+            return "{ textContent: '' }";
+          }
 
-    // Plug in an alternate client ID mechanism, as localStorage and cookies
-    // don't work in the conversation window
-    window.OT.overrideGuidStorage({
-      get: function(callback) {
-        callback(null, navigator.mozLoop.getLoopPref("ot.guid"));
-      },
-      set: function(guid, callback) {
-        // See nsIPrefBranch
-        const PREF_STRING = 32;
-        navigator.mozLoop.setLoopPref("ot.guid", guid, PREF_STRING);
-        callback(null);
+          return JSON.stringify({ textContent: stringBundle[key] });
+        }
+      });
+
+      // Plug in an alternate client ID mechanism, as localStorage and cookies
+      // don't work in the conversation window
+      window.OT.overrideGuidStorage({
+        get: function(callback) {
+          callback(null, results[3]);
+        },
+        set: function(guid, callback) {
+          // See nsIPrefBranch
+          var PREF_STRING = 32;
+          loop.request("SetLoopPref", "ot.guid", guid, PREF_STRING);
+          callback(null);
+        }
+      });
+
+      // We want data channels only if the text chat preference is enabled.
+      var useDataChannels = results[4];
+
+      var dispatcher = new loop.Dispatcher();
+      var sdkDriver = new loop.OTSdkDriver({
+        constants: constants,
+        isDesktop: true,
+        useDataChannels: useDataChannels,
+        dispatcher: dispatcher,
+        sdk: OT
+      });
+
+      // expose for functional tests
+      loop.conversation._sdkDriver = sdkDriver;
+
+      // Create the stores.
+      var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
+        isDesktop: true,
+        sdkDriver: sdkDriver
+      });
+      var conversationAppStore = new loop.store.ConversationAppStore({
+        activeRoomStore: activeRoomStore,
+        dispatcher: dispatcher,
+        feedbackPeriod: results[5],
+        feedbackTimestamp: results[6]
+      });
+      var roomStore = new loop.store.RoomStore(dispatcher, {
+        activeRoomStore: activeRoomStore,
+        constants: constants
+      });
+      var textChatStore = new loop.store.TextChatStore(dispatcher, {
+        sdkDriver: sdkDriver
+      });
+
+      loop.store.StoreMixin.register({
+        conversationAppStore: conversationAppStore,
+        textChatStore: textChatStore
+      });
+
+      // Obtain the windowId and pass it through
+      var locationHash = loop.shared.utils.locationData().hash;
+      var windowId;
+
+      var hash = locationHash.match(/#(.*)/);
+      if (hash) {
+        windowId = hash[1];
       }
+
+      React.render(
+        React.createElement(AppControllerView, {
+          dispatcher: dispatcher, 
+          roomStore: roomStore}), document.querySelector("#main"));
+
+      document.documentElement.setAttribute("lang", mozL10n.getLanguage());
+      document.documentElement.setAttribute("dir", mozL10n.getDirection());
+      document.body.setAttribute("platform", loop.shared.utils.getPlatform());
+
+      dispatcher.dispatch(new sharedActions.GetWindowData({
+        windowId: windowId
+      }));
     });
-
-    // We want data channels only if the text chat preference is enabled.
-    var useDataChannels = loop.shared.utils.getBoolPreference("textChat.enabled");
-
-    var dispatcher = new loop.Dispatcher();
-    var sdkDriver = new loop.OTSdkDriver({
-      isDesktop: true,
-      useDataChannels: useDataChannels,
-      dispatcher: dispatcher,
-      sdk: OT,
-      mozLoop: navigator.mozLoop
-    });
-
-    // expose for functional tests
-    loop.conversation._sdkDriver = sdkDriver;
-
-    // Create the stores.
-    var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-      isDesktop: true,
-      mozLoop: navigator.mozLoop,
-      sdkDriver: sdkDriver
-    });
-    var conversationAppStore = new loop.store.ConversationAppStore({
-      activeRoomStore: activeRoomStore,
-      dispatcher: dispatcher,
-      mozLoop: navigator.mozLoop
-    });
-    var roomStore = new loop.store.RoomStore(dispatcher, {
-      mozLoop: navigator.mozLoop,
-      activeRoomStore: activeRoomStore
-    });
-    var textChatStore = new loop.store.TextChatStore(dispatcher, {
-      sdkDriver: sdkDriver
-    });
-
-    loop.store.StoreMixin.register({
-      conversationAppStore: conversationAppStore,
-      textChatStore: textChatStore
-    });
-
-    // Obtain the windowId and pass it through
-    var locationHash = loop.shared.utils.locationData().hash;
-    var windowId;
-
-    var hash = locationHash.match(/#(.*)/);
-    if (hash) {
-      windowId = hash[1];
-    }
-
-    React.render(
-      React.createElement(AppControllerView, {
-        dispatcher: dispatcher, 
-        mozLoop: navigator.mozLoop, 
-        roomStore: roomStore}), document.querySelector("#main"));
-
-    document.documentElement.setAttribute("lang", mozL10n.getLanguage());
-    document.documentElement.setAttribute("dir", mozL10n.getDirection());
-    document.body.setAttribute("platform", loop.shared.utils.getPlatform());
-
-    dispatcher.dispatch(new sharedActions.GetWindowData({
-      windowId: windowId
-    }));
   }
 
   return {

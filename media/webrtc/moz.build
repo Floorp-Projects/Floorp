@@ -13,7 +13,10 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_coding/codecs/g722/g722_encode.c',               # Because of name clash in the saturate function
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c',   # Because of name clash in the kDampFilter variable
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c', # Because of name clash in the kDampFilter variable
+    'trunk/webrtc/modules/audio_coding/main/acm2/codec_manager.cc',              # Because of duplicate IsCodecRED/etc
     'trunk/webrtc/modules/audio_coding/neteq/audio_vector.cc',                   # Because of explicit template specializations
+    'trunk/webrtc/modules/audio_device/android/audio_record_jni.cc',             # Becuse of commonly named module static vars
+    'trunk/webrtc/modules/audio_device/android/audio_track_jni.cc',             # Becuse of commonly named module static vars
     'trunk/webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc',       # Because of LATE()
     'trunk/webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc',# Because of LATE()
     'trunk/webrtc/modules/audio_device/opensl/opensles_input.cc',                # Because of name clash in the kOption variable
@@ -23,17 +26,23 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_processing/aec/aec_core.c',                      # Because of name clash in the ComfortNoise function
     'trunk/webrtc/modules/audio_processing/aecm/aecm_core.c',                    # Because of name clash in the ComfortNoise function
     'trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.c',          # Because of name clash in the kInitCheck variable
-    'trunk/webrtc/modules/audio_processing/agc/analog_agc.c',                    # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_processing/agc/histogram.cc',                    # Because of duplicate definition of static consts with pitch_based_vad.cc
+    'trunk/webrtc/modules/audio_processing/agc/legacy/analog_agc.c',             # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.cc', # Because of needing to define _USE_MATH_DEFINES before including <cmath>
+    'trunk/webrtc/modules/audio_processing/beamformer/nonlinear_beamformer.cc',  # Because of needing to define _USE_MATH_DEFINES before including <cmath>
     'trunk/webrtc/modules/audio_processing/echo_cancellation_impl.cc',           # Because of name clash in the MapError function
     'trunk/webrtc/modules/audio_processing/echo_control_mobile_impl.cc',         # Because of name clash in the MapError function
     'trunk/webrtc/modules/audio_processing/gain_control_impl.cc',                # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/audio_processing/high_pass_filter_impl.cc',            # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc',           # Because of name clash in the Handle typedef
+    'trunk/webrtc/modules/remote_bitrate_estimator/mimd_rate_control.cc',        # Because of duplicate definitions of static consts against aimd_rate_control.cc
+    'trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc', # Because of duplicate definitions of static consts against remote_bitrate_estimator_abs_send_time.cc
     'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.mm',       # Because of name clash in the nsAutoreleasePool class
     'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.mm',  # Because of name clash in the nsAutoreleasePool class
     'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
     'trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc',           # Because of initguid.h
     'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
+    'trunk/webrtc/video_engine/overuse_frame_detector.cc',                       # Because of name clash with call_stats.cc on kWeightFactor
 ]
 
 GYP_DIRS += ['trunk']

@@ -699,8 +699,6 @@ nsresult
 txPushRTFHandler::execute(txExecutionState& aEs)
 {
     txAXMLEventHandler* handler = new txRtfHandler;
-    NS_ENSURE_TRUE(handler, NS_ERROR_OUT_OF_MEMORY);
-    
     nsresult rv = aEs.pushResultHandler(handler);
     if (NS_FAILED(rv)) {
         delete handler;
@@ -719,8 +717,6 @@ nsresult
 txPushStringHandler::execute(txExecutionState& aEs)
 {
     txAXMLEventHandler* handler = new txTextHandler(mOnlyText);
-    NS_ENSURE_TRUE(handler, NS_ERROR_OUT_OF_MEMORY);
-    
     nsresult rv = aEs.pushResultHandler(handler);
     if (NS_FAILED(rv)) {
         delete handler;

@@ -1,3 +1,4 @@
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,7 +7,6 @@
 
 import filter
 import json
-import mozinfo
 import logging
 import post_file
 import time
@@ -404,7 +404,7 @@ class PerfherderOutput(Output):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        logging.info("TALOSDATA: %s" % json.dumps(results))
+        logging.info("PERFHERDER_DATA: %s" % json.dumps(results))
         if results_scheme in ('file'):
             json.dump(results, file(results_path, 'w'), indent=2,
                       sort_keys=True)
@@ -412,41 +412,6 @@ class PerfherderOutput(Output):
     def post(self, results, server, path, scheme, tbpl_output):
         """conform to current code- not needed for perfherder"""
         pass
-
-    # TODO: this is copied directly from the old datazilla output. Using it
-    # as we have established platform names already
-    def test_machine(self):
-        """return test machine platform in a form appropriate to datazilla"""
-        platform = mozinfo.os
-        version = mozinfo.version
-        processor = mozinfo.processor
-        if self.results.title.endswith(".e") and \
-                not version.endswith('.e'):
-            # we are running this against e10s builds
-            version = '%s.e' % (version,)
-
-        return dict(name=self.results.title, os=platform, osversion=version,
-                    platform=processor)
-
-    # TODO: this is copied from datazilla output code, do we need all of this?
-    def run_options(self, test):
-        """test options for datazilla"""
-
-        options = {}
-        test_options = ['rss', 'cycles', 'tpmozafterpaint', 'responsiveness',
-                        'shutdown']
-        if 'tpmanifest' in test.test_config:
-            test_options += ['tpchrome', 'tpcycles', 'tppagecycles',
-                             'tprender', 'tploadaboutblank', 'tpdelay']
-
-        for option in test_options:
-            if option not in test.test_config:
-                continue
-            options[option] = test.test_config[option]
-        if test.extensions is not None:
-            options['extensions'] = [{'name': extension}
-                                     for extension in test.extensions]
-        return options
 
     def construct_results(self, vals, testname):
         if 'responsiveness' in testname:
@@ -463,33 +428,26 @@ class PerfherderOutput(Output):
             return filter.mean([i for i, j in vals])
 
     def __call__(self):
-        # platform
-        machine = self.test_machine()
-
-        # build information
-        browser_config = self.results.browser_config
-
-        test_results = []
+        suites = []
+        test_results = {
+            'framework': {
+                'name': 'talos',
+            },
+            'suites': suites,
+        }
 
         for test in self.results.results:
-            test_result = {
-                'test_machine': {},
-                'testrun': {},
-                'results': {},
-                'talos_counters': {},
-                'test_build': {}
-            }
-
-            test_result['testrun']['suite'] = test.name()
-            test_result['testrun']['options'] = self.run_options(test)
-            test_result['testrun']['date'] = self.results.date
-
             # serialize test results
-            results = {}
             tsresult = None
-            summary = {"suite": 0, "subtests": {}}
             if not test.using_xperf:
+                subtests = []
+                suite = {
+                    'name': test.name(),
+                    'subtests': subtests,
+                }
+                suites.append(suite)
                 vals = []
+                replicates = {}
 
                 # TODO: counters!!!! we don't have any, but they suffer the same
                 for result in test.results:
@@ -497,7 +455,7 @@ class PerfherderOutput(Output):
                     # the same page name twice. It also ignores cycles
                     for page, val in result.raw_values():
                         if page == 'NULL':
-                            results.setdefault(test.name(), []).extend(val)
+                            page = test.name()
                             if tsresult is None:
                                 tsresult = r = TalosResults.Results()
                                 r.results = [{'index': 0, 'page': test.name(),
@@ -506,40 +464,37 @@ class PerfherderOutput(Output):
                                 r = tsresult.results[0]
                                 if r['page'] == test.name():
                                     r['runs'].extend(val)
-                        else:
-                            results.setdefault(page, []).extend(val)
+                        replicates.setdefault(page, []).extend(val)
 
                 tresults = [tsresult] if tsresult else test.results
 
                 for result in tresults:
                     filtered_results = \
-                        result.values(test_result['testrun']['suite'],
+                        result.values(suite['name'],
                                       test.test_config['filters'])
                     vals.extend([[i['value'], j] for i, j in filtered_results])
                     for val, page in filtered_results:
-                        measurement_metadata = {}
-                        if test.test_config.get('lower_is_better') is not None:
-                            measurement_metadata['lowerIsBetter'] = test.test_config['lower_is_better']
-                        if test.test_config.get('unit'):
-                            measurement_metadata['unit'] = test.test_config['unit']
                         if page == 'NULL':
-                            summary['subtests'][test.name()] = val
-                            summary['subtests'][test.name()].update(measurement_metadata)
-                        else:
-                            summary['subtests'][page] = val
-                            summary['subtests'][page].update(measurement_metadata)
+                            # no real subtests
+                            page = test.name()
+                        subtest = {
+                            'name': page,
+                            'value': val['filtered'],
+                            'replicates': replicates[page],
+                        }
+                        subtests.append(subtest)
+                        if test.test_config.get('lower_is_better') is not None:
+                            subtest['lowerIsBetter'] = test.test_config['lower_is_better']
+                        if test.test_config.get('unit'):
+                            subtest['unit'] = test.test_config['unit']
 
-                suite_summary = self.construct_results(vals,
-                                                       testname=test.name())
-                summary['suite'] = suite_summary
+                suite['value'] = self.construct_results(vals,
+                                                        testname=test.name())
                 if test.test_config.get('lower_is_better') is not None:
-                    summary['lowerIsBetter'] = test.test_config['lower_is_better']
-                test_result['summary'] = summary
-
-                for result, values in results.items():
-                    test_result['results'][result] = values
+                    suite['lowerIsBetter'] = test.test_config['lower_is_better']
 
             # counters results_aux data
+            counter_subtests = []
             for cd in test.all_counter_results:
                 for name, vals in cd.items():
                     # We want to add the xperf data as talos_counters
@@ -553,42 +508,21 @@ class PerfherderOutput(Output):
                     if 'mainthreadio' in name:
                         continue
 
+                    subtest = {
+                        'name': name,
+                        'value': 0.0,
+                    }
+                    counter_subtests.append(subtest)
+
                     if test.using_xperf:
-                        test_result['talos_counters'][name] = {"mean": vals[0]}
+                        subtest['value'] = vals[0]
                     else:
-                        # calculate mean and max value
-                        varray = []
-                        counter_mean = 0
-                        counter_max = 0
+                        # calculate mean value
                         if len(vals) > 0:
-                            for v in vals:
-                                varray.append(float(v))
-                            counter_mean = "%.2f" % filter.mean(varray)
-                            counter_max = "%.2f" % max(varray)
-                        test_result['talos_counters'][name] = {
-                            "mean": counter_mean,
-                            "max": counter_max
-                        }
-
-            if browser_config['develop'] and not browser_config['sourcestamp']:
-                browser_config['sourcestamp'] = ''
-
-            test_result['test_build'] = {
-                'version': browser_config['browser_version'],
-                'revision': browser_config['sourcestamp'],
-                'id': browser_config['buildid'],
-                'branch': browser_config['branch_name'],
-                'name': browser_config['browser_name']
-            }
-
-            test_result['test_machine'] = {
-                'platform': machine['platform'],
-                'osversion': machine['osversion'],
-                'os': machine['os'],
-                'name': machine['name']
-            }
-
-            test_results.append(test_result)
+                            varray = [float(v) for v in vals]
+                            subtest['value'] = filter.mean(varray)
+            if counter_subtests:
+                suites.append({'name': test.name(), 'subtests': counter_subtests})
         return test_results
 
 # available output formats

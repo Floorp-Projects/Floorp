@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1223372
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1223372</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+/** Test for Bug 1223372 **/
+
+function go() {
+    SimpleTest.waitForExplicitFinish();
+
+    var frame = $('subframe');
+    frame.onload = null;
+
+    var w = frame.contentWindow;
+
+    w.eval("checkDead = function() { return Components.utils.isDeadWrapper(this); };");
+    var checkDead = w.checkDead;
+
+    w.eval("getObject = function() { return {}; }");
+    var getObject = w.getObject;
+
+    ok(!checkDead(), "WindowProxy shouldn't be dead yet");
+
+    // Load a content page in the chrome frame.
+    w.location = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    tryWindow();
+
+    function tryWindow() {
+        if (w.document.title != 'empty test page') {
+            info("Document not loaded yet - retrying");
+            SimpleTest.executeSoon(tryWindow);
+            return;
+        }
+
+        // Remove the frame. This will nuke the WindowProxy wrapper from our chrome
+        // document's global, so evaluating 'this' in it will return a dead wrapper.
+        frame.remove();
+
+        SimpleTest.executeSoon(function() {
+            ok(checkDead(), "Expected a dead object wrapper");
+
+            // Wrapping the Window should throw now.
+            var exc;
+            try {
+                Components.utils.getGlobalForObject(getObject());
+            } catch(e) {
+                exc = e;
+            }
+            is(exc.message, "Can't wrap dead object");
+
+            SimpleTest.finish();
+        });
+    }
+}
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1223372">Mozilla Bug 1223372</a>
+
+<iframe id="subframe" src="data:text/html," onload="go()"></iframe>
+
+</body>
+</html>

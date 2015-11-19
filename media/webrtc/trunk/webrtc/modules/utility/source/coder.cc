@@ -21,7 +21,6 @@ AudioCoder::AudioCoder(uint32_t instanceID)
       _encodedLengthInBytes(0),
       _decodeTimestamp(0)
 {
-    _acm->InitializeSender();
     _acm->InitializeReceiver();
     _acm->RegisterTransportCallback(this);
 }
@@ -54,7 +53,7 @@ int32_t AudioCoder::SetDecodeCodec(const CodecInst& codecInst,
 int32_t AudioCoder::Decode(AudioFrame& decodedAudio,
                            uint32_t sampFreqHz,
                            const int8_t*  incomingPayload,
-                           int32_t  payloadLength)
+                           size_t  payloadLength)
 {
     if (payloadLength > 0)
     {
@@ -79,7 +78,7 @@ int32_t AudioCoder::PlayoutData(AudioFrame& decodedAudio,
 
 int32_t AudioCoder::Encode(const AudioFrame& audio,
                            int8_t* encodedData,
-                           uint32_t& encodedLengthInBytes)
+                           size_t& encodedLengthInBytes)
 {
     // Fake a timestamp in case audio doesn't contain a correct timestamp.
     // Make a local copy of the audio frame since audio is const
@@ -96,10 +95,6 @@ int32_t AudioCoder::Encode(const AudioFrame& audio,
         return -1;
     }
     _encodedData = encodedData;
-    if(_acm->Process() == -1)
-    {
-        return -1;
-    }
     encodedLengthInBytes = _encodedLengthInBytes;
     return 0;
 }
@@ -109,7 +104,7 @@ int32_t AudioCoder::SendData(
     uint8_t   /* payloadType */,
     uint32_t  /* timeStamp */,
     const uint8_t*  payloadData,
-    uint16_t  payloadSize,
+    size_t  payloadSize,
     const RTPFragmentationHeader* /* fragmentation*/)
 {
     memcpy(_encodedData,payloadData,sizeof(uint8_t) * payloadSize);

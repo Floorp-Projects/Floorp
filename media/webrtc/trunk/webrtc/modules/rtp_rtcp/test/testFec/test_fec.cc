@@ -26,7 +26,7 @@
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
 
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 //#define VERBOSE_OUTPUT
@@ -161,8 +161,8 @@ TEST(FecTest, FecTest) {
              numFecPackets++) {
 
           // Loop over numImpPackets: usually <= (0.3*numMediaPackets).
-          // For this test we check up to ~ (0.5*numMediaPackets).
-          uint32_t maxNumImpPackets = numMediaPackets / 2 + 1;
+          // For this test we check up to ~ (numMediaPackets / 4).
+          uint32_t maxNumImpPackets = numMediaPackets / 4 + 1;
           for (uint32_t numImpPackets = 0; numImpPackets <= maxNumImpPackets &&
                                                numImpPackets <= packetMaskMax;
                numImpPackets++) {
@@ -232,7 +232,7 @@ TEST(FecTest, FecTest) {
             for (uint32_t i = 0; i < numMediaPackets; ++i) {
               mediaPacket = new ForwardErrorCorrection::Packet;
               mediaPacketList.push_back(mediaPacket);
-              mediaPacket->length = static_cast<uint16_t>(
+              mediaPacket->length = static_cast<size_t>(
                   (static_cast<float>(rand()) / RAND_MAX) *
                   (IP_PACKET_SIZE - 12 - 28 -
                    ForwardErrorCorrection::PacketOverhead()));
@@ -259,12 +259,13 @@ TEST(FecTest, FecTest) {
               // Only push one (fake) frame to the FEC.
               mediaPacket->data[1] &= 0x7f;
 
-              RtpUtility::AssignUWord16ToBuffer(&mediaPacket->data[2], seqNum);
-              RtpUtility::AssignUWord32ToBuffer(&mediaPacket->data[4],
-                                                timeStamp);
-              RtpUtility::AssignUWord32ToBuffer(&mediaPacket->data[8], ssrc);
+              ByteWriter<uint16_t>::WriteBigEndian(&mediaPacket->data[2],
+                                                   seqNum);
+              ByteWriter<uint32_t>::WriteBigEndian(&mediaPacket->data[4],
+                                                   timeStamp);
+              ByteWriter<uint32_t>::WriteBigEndian(&mediaPacket->data[8], ssrc);
               // Generate random values for payload
-              for (int32_t j = 12; j < mediaPacket->length; ++j) {
+              for (size_t j = 12; j < mediaPacket->length; ++j) {
                 mediaPacket->data[j] = static_cast<uint8_t>(rand() % 256);
               }
               seqNum++;
@@ -301,7 +302,7 @@ TEST(FecTest, FecTest) {
                 memcpy(receivedPacket->pkt->data, mediaPacket->data,
                        mediaPacket->length);
                 receivedPacket->seq_num =
-                    RtpUtility::BufferToUWord16(&mediaPacket->data[2]);
+                    ByteReader<uint16_t>::ReadBigEndian(&mediaPacket->data[2]);
                 receivedPacket->is_fec = false;
               }
               mediaPacketIdx++;

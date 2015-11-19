@@ -26,6 +26,8 @@ class ParseNode;
 
 typedef Rooted<ModuleObject*> RootedModuleObject;
 typedef Handle<ModuleObject*> HandleModuleObject;
+typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
+typedef Handle<ModuleEnvironmentObject*> HandleModuleEnvironmentObject;
 
 class ImportEntryObject : public NativeObject
 {
@@ -76,14 +78,44 @@ class ExportEntryObject : public NativeObject
     JSAtom* localName();
 };
 
-struct IndirectBinding
+class IndirectBindingMap
 {
-    IndirectBinding(Handle<ModuleEnvironmentObject*> environment, HandleId localName);
-    RelocatablePtr<ModuleEnvironmentObject*> environment;
-    RelocatableId localName;
-};
+  public:
+    bool init();
 
-typedef HashMap<jsid, IndirectBinding, JsidHasher, SystemAllocPolicy> IndirectBindingMap;
+    void trace(JSTracer* trc);
+
+    bool putNew(JSContext* cx, HandleId name,
+                HandleModuleEnvironmentObject environment, HandleId localName);
+
+    size_t count() const {
+        return map_.count();
+    }
+
+    bool has(jsid name) const {
+        return map_.has(name);
+    }
+
+    bool lookup(jsid name, ModuleEnvironmentObject** envOut, Shape** shapeOut) const;
+
+    template <typename Func>
+    void forEachExportedName(Func func) const {
+        for (auto r = map_.all(); !r.empty(); r.popFront())
+            func(r.front().key());
+    }
+
+  private:
+    struct Binding
+    {
+        Binding(ModuleEnvironmentObject* environment, Shape* shape);
+        RelocatablePtr<ModuleEnvironmentObject*> environment;
+        RelocatablePtrShape shape;
+    };
+
+    typedef HashMap<jsid, Binding, JsidHasher, SystemAllocPolicy> Map;
+
+    Map map_;
+};
 
 class ModuleNamespaceObject : public ProxyObject
 {

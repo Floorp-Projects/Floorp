@@ -1682,7 +1682,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
     padding-bottom: 4px;
   }
   #identity-box {
-    --identity-box-selected-background-color: rgb(240,237,237);
+    --identity-box-hover-background-color: rgb(240,237,237);
+    --identity-box-selected-background-color: rgb(220,217,217);
   }
 }
 

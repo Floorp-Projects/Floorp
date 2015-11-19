@@ -146,10 +146,15 @@ var fakeRooms = [
    * Faking the mozLoop object which doesn't exist in regular web pages.
    * @type {Object}
    */
-  navigator.mozLoop = {
-    ensureRegistered: function() {},
-    getAudioBlob: function() {},
-    getLoopPref: function(pref) {
+  LoopMochaUtils.stubLoopRequest({
+    EnsureRegistered: function() {},
+    GetAudioBlob: function() {
+      return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });
+    },
+    GetDoNotDisturb: function() { return true; },
+    GetErrors: function() {},
+    GetHasEncryptionKey: function() { return true; },
+    GetLoopPref: function(pref) {
       switch (pref) {
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
@@ -157,30 +162,27 @@ var fakeRooms = [
       }
       return null;
     },
-    hasEncryptionKey: true,
-    setLoopPref: function() {},
-    releaseCallData: function() {},
-    copyString: function() {},
-    getUserAvatar: function(emailAddress) {
+    HasEncryptionKey: true,
+    SetLoopPref: function() {},
+    CopyString: function() {},
+    GetUserAvatar: function(emailAddress) {
       var avatarUrl = "http://www.gravatar.com/avatar/0a996f0fe2727ef1668bdb11897e4459.jpg?default=blank&s=40";
       return Math.ceil(Math.random() * 3) === 2 ? avatarUrl : null;
     },
-    getSelectedTabMetadata: function(callback) {
-      callback({
+    GetSelectedTabMetadata: function() {
+      return {
         previews: ["chrome://branding/content/about-logo.png"],
         description: "sample webpage description",
         url: "https://www.example.com"
-      });
+      };
     },
-    rooms: {
-      getAll: function(version, callback) {
-        callback(null, [].concat(fakeRooms));
-      },
-      on: function() {}
+    "Rooms:GetAll": function(version) {
+      return [].concat(fakeRooms);
     },
-    fxAEnabled: true,
-    startAlerting: function() {},
-    stopAlerting: function() {},
-    userProfile: null
-  };
+    GetFxAEnabled: function() { return true; },
+    StartAlerting: function() {},
+    StopAlerting: function() {},
+    GetUserProfile: function() { return null; },
+    "Rooms:PushSubscription": function() {}
+  });
 })();

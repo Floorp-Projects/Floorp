@@ -19,14 +19,15 @@
 #include <security.h>
 #endif
 
-#include "webrtc/base/httpcommon-inl.h"
+#include <algorithm>
 
 #include "webrtc/base/base64.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/cryptstring.h"
+#include "webrtc/base/httpcommon-inl.h"
 #include "webrtc/base/httpcommon.h"
+#include "webrtc/base/messagedigest.h"
 #include "webrtc/base/socketaddress.h"
-#include "webrtc/base/stringdigest.h"
 #include "webrtc/base/stringencode.h"
 #include "webrtc/base/stringutils.h"
 
@@ -399,6 +400,11 @@ std::string HttpAddress(const SocketAddress& address, bool secure) {
 //////////////////////////////////////////////////////////////////////
 // HttpData
 //////////////////////////////////////////////////////////////////////
+
+HttpData::HttpData() : version(HVER_1_1) {
+}
+
+HttpData::~HttpData() = default;
 
 void
 HttpData::clear(bool release_document) {
@@ -954,26 +960,26 @@ HttpAuthResult HttpAuthenticate(
         std::string::size_type pos = username.find('\\');
         if (pos == std::string::npos) {
           auth_id.UserLength = static_cast<unsigned long>(
-            _min(sizeof(userbuf) - 1, username.size()));
+              std::min(sizeof(userbuf) - 1, username.size()));
           memcpy(userbuf, username.c_str(), auth_id.UserLength);
           userbuf[auth_id.UserLength] = 0;
           auth_id.DomainLength = 0;
           domainbuf[auth_id.DomainLength] = 0;
           auth_id.PasswordLength = static_cast<unsigned long>(
-            _min(sizeof(passbuf) - 1, password.GetLength()));
+              std::min(sizeof(passbuf) - 1, password.GetLength()));
           memcpy(passbuf, sensitive, auth_id.PasswordLength);
           passbuf[auth_id.PasswordLength] = 0;
         } else {
           auth_id.UserLength = static_cast<unsigned long>(
-            _min(sizeof(userbuf) - 1, username.size() - pos - 1));
+              std::min(sizeof(userbuf) - 1, username.size() - pos - 1));
           memcpy(userbuf, username.c_str() + pos + 1, auth_id.UserLength);
           userbuf[auth_id.UserLength] = 0;
-          auth_id.DomainLength = static_cast<unsigned long>(
-            _min(sizeof(domainbuf) - 1, pos));
+          auth_id.DomainLength =
+              static_cast<unsigned long>(std::min(sizeof(domainbuf) - 1, pos));
           memcpy(domainbuf, username.c_str(), auth_id.DomainLength);
           domainbuf[auth_id.DomainLength] = 0;
           auth_id.PasswordLength = static_cast<unsigned long>(
-            _min(sizeof(passbuf) - 1, password.GetLength()));
+              std::min(sizeof(passbuf) - 1, password.GetLength()));
           memcpy(passbuf, sensitive, auth_id.PasswordLength);
           passbuf[auth_id.PasswordLength] = 0;
         }

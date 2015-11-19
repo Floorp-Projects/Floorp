@@ -47,6 +47,11 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/interface/native_handle.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/video_engine/include/vie_errors.h"
+
 #include "logging.h"
 
 // Should come from MediaEngineWebRTC.h, but that's a pain to include here
@@ -1101,11 +1106,39 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     uint32_t width = graphicBuffer->getWidth();
     uint32_t height = graphicBuffer->getHeight();
     // XXX gralloc buffer's width and stride could be different depends on implementations.
-    conduit->SendVideoFrame(static_cast<unsigned char*>(basePtr),
-                            I420SIZE(width, height),
-                            width,
-                            height,
-                            destFormat, 0);
+
+    if (destFormat != mozilla::kVideoI420) {
+      unsigned char *video_frame = static_cast<unsigned char*>(basePtr);
+      webrtc::I420VideoFrame i420_frame;
+      int stride_y = width;
+      int stride_uv = (width + 1) / 2;
+      int target_width = width;
+      int target_height = height;
+      if (i420_frame.CreateEmptyFrame(target_width,
+                                      abs(target_height),
+                                      stride_y,
+                                      stride_uv, stride_uv) < 0) {
+        MOZ_ASSERT(false, "Can't allocate empty i420frame");
+        return;
+      }
+      webrtc::VideoType commonVideoType =
+        webrtc::RawVideoTypeToCommonVideoVideoType(
+          static_cast<webrtc::RawVideoType>((int)destFormat));
+      if (ConvertToI420(commonVideoType, video_frame, 0, 0, width, height,
+                        I420SIZE(width, height), webrtc::kVideoRotation_0,
+                        &i420_frame)) {
+        MOZ_ASSERT(false, "Can't convert video type for sending to I420");
+        return;
+      }
+      i420_frame.set_ntp_time_ms(0);
+      conduit->SendVideoFrame(i420_frame);
+    } else {
+      conduit->SendVideoFrame(static_cast<unsigned char*>(basePtr),
+                              I420SIZE(width, height),
+                              width,
+                              height,
+                              destFormat, 0);
+    }
     graphicBuffer->unlock();
     return;
   } else
@@ -1464,7 +1497,19 @@ MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
 
 void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
     const unsigned char* buffer,
-    unsigned int buffer_size,
+    size_t buffer_size,
+    uint32_t time_stamp,
+    int64_t render_time,
+    const RefPtr<Image>& video_image) {
+  RenderVideoFrame(buffer, buffer_size, width_, (width_ + 1) >> 1,
+                   time_stamp, render_time, video_image);
+}
+
+void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
+    const unsigned char* buffer,
+    size_t buffer_size,
+    uint32_t y_stride,
+    uint32_t cbcr_stride,
     uint32_t time_stamp,
     int64_t render_time,
     const RefPtr<Image>& video_image) {
@@ -1489,12 +1534,12 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
 
     PlanarYCbCrData yuvData;
     yuvData.mYChannel = frame;
-    yuvData.mYSize = IntSize(width_, height_);
-    yuvData.mYStride = width_;
-    yuvData.mCbCrStride = (width_ + 1) >> 1;
+    yuvData.mYSize = IntSize(y_stride, height_);
+    yuvData.mYStride = y_stride;
+    yuvData.mCbCrStride = cbcr_stride;
     yuvData.mCbChannel = frame + height_ * yuvData.mYStride;
     yuvData.mCrChannel = yuvData.mCbChannel + ((height_ + 1) >> 1) * yuvData.mCbCrStride;
-    yuvData.mCbCrSize = IntSize((width_ + 1) >> 1, (height_ + 1) >> 1);
+    yuvData.mCbCrSize = IntSize(yuvData.mCbCrStride, (height_ + 1) >> 1);
     yuvData.mPicX = 0;
     yuvData.mPicY = 0;
     yuvData.mPicSize = IntSize(width_, height_);

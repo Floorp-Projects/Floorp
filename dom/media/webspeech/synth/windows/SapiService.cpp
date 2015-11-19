@@ -167,6 +167,7 @@ SapiService::SpeechEventCallback(WPARAM aWParam, LPARAM aLParam)
 
 NS_INTERFACE_MAP_BEGIN(SapiService)
   NS_INTERFACE_MAP_ENTRY(nsISpeechService)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISpeechService)
 NS_INTERFACE_MAP_END
 
@@ -361,6 +362,13 @@ NS_IMETHODIMP
 SapiService::GetServiceType(SpeechServiceType* aServiceType)
 {
   *aServiceType = nsISpeechService::SERVICETYPE_INDIRECT_AUDIO;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SapiService::Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData)
+{
   return NS_OK;
 }
 

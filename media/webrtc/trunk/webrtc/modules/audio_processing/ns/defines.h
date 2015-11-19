@@ -14,6 +14,7 @@
 #define BLOCKL_MAX          160 // max processing block length: 160
 #define ANAL_BLOCKL_MAX     256 // max analysis block length: 256
 #define HALF_ANAL_BLOCKL    129 // half max analysis block length + 1
+#define NUM_HIGH_BANDS_MAX  2   // max number of high bands: 2
 
 #define QUANTILE            (float)0.25
 

@@ -11,7 +11,7 @@ describe("loop.feedbackViews", function() {
   var sandbox, mozL10nGet;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
     mozL10nGet = sandbox.stub(l10n, "get", function(x) {
       return "translated:" + x;
     });
@@ -27,7 +27,6 @@ describe("loop.feedbackViews", function() {
 
     function mountTestComponent(props) {
       props = _.extend({
-        mozLoop: mozLoop,
         onAfterFeedbackReceived: feedbackReceivedStub
       }, props);
 
@@ -39,14 +38,16 @@ describe("loop.feedbackViews", function() {
       openURLStub = sandbox.stub();
       getLoopPrefStub = sandbox.stub();
       feedbackReceivedStub = sandbox.stub();
-      mozLoop = {
-        openURL: openURLStub,
-        getLoopPref: getLoopPrefStub
-      };
+
+      LoopMochaUtils.stubLoopRequest({
+        OpenURL: openURLStub,
+        GetLoopPref: getLoopPrefStub
+      });
     });
 
     afterEach(function() {
       view = null;
+      LoopMochaUtils.restore();
     });
 
     it("should render a feedback view", function() {
@@ -68,8 +69,7 @@ describe("loop.feedbackViews", function() {
     });
 
     it("should open a new page to the feedback form", function() {
-      mozLoop.getLoopPref = sinon.stub().withArgs("feedback.formURL")
-                              .returns(fakeURL);
+      getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
       view = mountTestComponent();
 
       TestUtils.Simulate.click(view.refs.feedbackFormBtn.getDOMNode());
@@ -79,14 +79,13 @@ describe("loop.feedbackViews", function() {
     });
 
     it("should fetch the feedback form URL from the prefs", function() {
-      mozLoop.getLoopPref = sinon.stub().withArgs("feedback.formURL")
-                              .returns(fakeURL);
+      getLoopPrefStub.withArgs("feedback.formURL").returns(fakeURL);
       view = mountTestComponent();
 
       TestUtils.Simulate.click(view.refs.feedbackFormBtn.getDOMNode());
 
-      sinon.assert.calledOnce(mozLoop.getLoopPref);
-      sinon.assert.calledWithExactly(mozLoop.getLoopPref, "feedback.formURL");
+      sinon.assert.calledOnce(getLoopPrefStub);
+      sinon.assert.calledWithExactly(getLoopPrefStub, "feedback.formURL");
     });
 
     it("should close the window after opening the form", function() {

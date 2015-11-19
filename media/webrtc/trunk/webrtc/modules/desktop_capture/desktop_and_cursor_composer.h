@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_AND_CURSOR_COMPOSER_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_AND_CURSOR_COMPOSER_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capturer.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor_monitor.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -32,26 +32,26 @@ class DesktopAndCursorComposer : public DesktopCapturer,
   virtual ~DesktopAndCursorComposer();
 
   // DesktopCapturer interface.
-  virtual void Start(DesktopCapturer::Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
-  virtual void SetExcludedWindow(WindowId window) OVERRIDE;
+  void Start(DesktopCapturer::Callback* callback) override;
+  void Capture(const DesktopRegion& region) override;
+  void SetExcludedWindow(WindowId window) override;
 
  private:
   // DesktopCapturer::Callback interface.
-  virtual SharedMemory* CreateSharedMemory(size_t size) OVERRIDE;
-  virtual void OnCaptureCompleted(DesktopFrame* frame) OVERRIDE;
+  SharedMemory* CreateSharedMemory(size_t size) override;
+  void OnCaptureCompleted(DesktopFrame* frame) override;
 
   // MouseCursorMonitor::Callback interface.
-  virtual void OnMouseCursor(MouseCursor* cursor) OVERRIDE;
-  virtual void OnMouseCursorPosition(MouseCursorMonitor::CursorState state,
-                                     const DesktopVector& position) OVERRIDE;
+  void OnMouseCursor(MouseCursor* cursor) override;
+  void OnMouseCursorPosition(MouseCursorMonitor::CursorState state,
+                             const DesktopVector& position) override;
 
-  scoped_ptr<DesktopCapturer> desktop_capturer_;
-  scoped_ptr<MouseCursorMonitor> mouse_monitor_;
+  rtc::scoped_ptr<DesktopCapturer> desktop_capturer_;
+  rtc::scoped_ptr<MouseCursorMonitor> mouse_monitor_;
 
   DesktopCapturer::Callback* callback_;
 
-  scoped_ptr<MouseCursor> cursor_;
+  rtc::scoped_ptr<MouseCursor> cursor_;
   MouseCursorMonitor::CursorState cursor_state_;
   DesktopVector cursor_position_;
 

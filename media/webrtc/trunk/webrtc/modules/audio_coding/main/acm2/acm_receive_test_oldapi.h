@@ -12,8 +12,8 @@
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_ACM2_ACM_RECEIVE_TEST_H_
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 class AudioCodingModule;
@@ -52,7 +52,7 @@ class AcmReceiveTestOldApi {
   virtual void AfterGetAudio() {}
 
   SimulatedClock clock_;
-  scoped_ptr<AudioCodingModule> acm_;
+  rtc::scoped_ptr<AudioCodingModule> acm_;
   PacketSource* packet_source_;
   AudioSink* audio_sink_;
   int output_freq_hz_;
@@ -75,7 +75,7 @@ class AcmReceiveTestToggleOutputFreqOldApi : public AcmReceiveTestOldApi {
       NumOutputChannels exptected_output_channels);
 
  protected:
-  void AfterGetAudio() OVERRIDE;
+  void AfterGetAudio() override;
 
   const int output_freq_hz_1_;
   const int output_freq_hz_2_;

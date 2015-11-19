@@ -92,7 +92,7 @@ var DoPreloadPostfork = function(aCallback) {
   } catch (e) {
   }
 
-  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") == 1) {
+  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 0) {
     try {
       if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled") === false) {
         Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js", global);

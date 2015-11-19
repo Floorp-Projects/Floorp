@@ -18,7 +18,8 @@
         'libyuv/include',
       ],
       'dependencies': [
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
@@ -29,23 +30,26 @@
       'conditions': [
         ['build_libyuv==1', {
           'dependencies': ['<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',],
+          'export_dependent_settings': [
+            '<(DEPTH)/third_party/libyuv/libyuv.gyp:libyuv',
+          ],
         }, {
           # Need to add a directory normally exported by libyuv.gyp.
           'include_dirs': ['<(libyuv_dir)/include',],
         }],
       ],
       'sources': [
+        'interface/i420_buffer_pool.h',
         'interface/i420_video_frame.h',
         'interface/native_handle.h',
-        'interface/texture_video_frame.h',
+        'interface/video_frame_buffer.h',
+        'i420_buffer_pool.cc',
         'i420_video_frame.cc',
         'libyuv/include/webrtc_libyuv.h',
         'libyuv/include/scaler.h',
         'libyuv/webrtc_libyuv.cc',
         'libyuv/scaler.cc',
-        'plane.h',
-        'plane.cc',
-        'texture_video_frame.cc'
+        'video_frame_buffer.cc',
       ],
     },
   ],  # targets

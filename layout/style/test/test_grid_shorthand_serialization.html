@@ -19,6 +19,8 @@ var initial_values = {
     gridAutoFlow: "row",
     gridAutoColumns: "auto",
     gridAutoRows: "auto",
+    gridRowGap: "0px",
+    gridColumnGap: "0px",
 };
 
 // For various specified values of the grid-template subproperties,
@@ -106,7 +108,36 @@ grid_test_cases = grid_template_test_cases.concat([
         gridAutoRows: "100px",
         shorthand: "row 40px / 100px",
     },
+    {
+        gridAutoFlow: "row",
+        gridRowGap: "0px",
+        shorthand: "row auto / auto",
+    },
+    {
+        gridAutoFlow: "row",
+        gridRowGap: "1px",
+        shorthand: "",
+    },
+    {
+        gridAutoFlow: "row",
+        gridColumnGap: "1px",
+        shorthand: "",
+    },
 ]);
+
+var grid_important_test_cases = [
+    {
+        "grid-auto-flow": "row",
+        "grid-row-gap": "0px",
+        shorthand: "",
+    },
+    {
+        "grid-auto-flow": "row",
+        "grid-column-gap": "1px",
+        shorthand: "",
+    },
+];
+
 
 function run_tests(test_cases, shorthand, subproperties) {
     test_cases.forEach(function(test_case) {
@@ -122,12 +153,31 @@ function run_tests(test_cases, shorthand, subproperties) {
     });
 }
 
+function run_important_tests(test_cases, shorthand, subproperties) {
+    test_cases.forEach(function(test_case) {
+        test(function() {
+            var element = document.createElement('div');
+            document.body.appendChild(element);
+            subproperties.forEach(function(longhand) {
+                element.style.setProperty(longhand,
+                                          test_case[longhand] || initial_values[longhand],
+                                          "important");
+            });
+            assert_equals(element.style[shorthand], test_case.shorthand);
+        }, "test shorthand serialization " + JSON.stringify(test_case));
+    });
+}
+
 run_tests(grid_template_test_cases, "gridTemplate", [
     "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows"]);
 
 run_tests(grid_test_cases, "grid", [
     "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows",
-    "gridAutoFlow", "gridAutoColumns", "gridAutoRows"]);
+    "gridAutoFlow", "gridAutoColumns", "gridAutoRows", "gridColumnGap", "gridRowGap"]);
+
+run_important_tests(grid_important_test_cases, "grid", [
+    "grid-template-areas", "grid-template-columns", "grid-template-rows",
+    "grid-auto-flow", "grid-auto-columns", "grid-auto-rows", "grid-column-gap", "grid-row-gap"]);
 
 </script>
 </body>

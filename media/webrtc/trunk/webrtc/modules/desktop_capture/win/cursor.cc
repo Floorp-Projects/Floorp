@@ -12,13 +12,12 @@
 
 #include <algorithm>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/win/scoped_gdi_object.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
-#include "webrtc/system_wrappers/interface/compile_assert.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -78,8 +77,8 @@ void AddCursorOutline(int width, int height, uint32_t* data) {
 // Premultiplies RGB components of the pixel data in the given image by
 // the corresponding alpha components.
 void AlphaMul(uint32_t* data, int width, int height) {
-  COMPILE_ASSERT(sizeof(uint32_t) == kBytesPerPixel,
-                 size_of_uint32_should_be_the_bytes_per_pixel);
+  static_assert(sizeof(uint32_t) == kBytesPerPixel,
+                "size of uint32 should be the number of bytes per pixel");
 
   for (uint32_t* data_end = data + width * height; data != data_end; ++data) {
     RGBQUAD* from = reinterpret_cast<RGBQUAD*>(data);
@@ -137,7 +136,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
 
   int width = bitmap_info.bmWidth;
   int height = bitmap_info.bmHeight;
-  scoped_ptr<uint32_t[]> mask_data(new uint32_t[width * height]);
+  rtc::scoped_ptr<uint32_t[]> mask_data(new uint32_t[width * height]);
 
   // Get pixel data from |scoped_mask| converting it to 32bpp along the way.
   // GetDIBits() sets the alpha component of every pixel to 0.
@@ -164,7 +163,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
   }
 
   uint32_t* mask_plane = mask_data.get();
-  scoped_ptr<DesktopFrame> image(
+  rtc::scoped_ptr<DesktopFrame> image(
       new BasicDesktopFrame(DesktopSize(width, height)));
   bool has_alpha = false;
 

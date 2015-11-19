@@ -13,8 +13,9 @@
 
 #include <vector>
 
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/common_types.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -29,8 +30,7 @@ class ViEFrameCallback {
  public:
   virtual void DeliverFrame(int id,
                             I420VideoFrame* video_frame,
-                            int num_csrcs = 0,
-                            const uint32_t CSRC[kRtpCsrcSize] = NULL) = 0;
+                            const std::vector<uint32_t>& csrcs) = 0;
 
   // The capture delay has changed from the provider. |frame_delay| is given in
   // ms.
@@ -56,18 +56,20 @@ class ViEFrameProviderBase {
   virtual ~ViEFrameProviderBase();
 
   // Returns the frame provider id.
-  int Id();
+  int Id() const;
 
   // Register frame callbacks, i.e. a receiver of the captured frame.
-  virtual int RegisterFrameCallback(int observer_id,
-                                    ViEFrameCallback* callback_object);
+  // Must be called on the same thread as the provider was constructed on.
+  int RegisterFrameCallback(int observer_id, ViEFrameCallback* callback);
 
-  virtual int DeregisterFrameCallback(const ViEFrameCallback* callback_object);
+  // Unregisters a previously registered callback.  Returns -1 if the callback
+  // object hasn't been registered.
+  // Must be called on the same thread as the provider was constructed on.
+  int DeregisterFrameCallback(const ViEFrameCallback* callback);
 
-  virtual bool IsFrameCallbackRegistered(
-      const ViEFrameCallback* callback_object);
-
-  int NumberOfRegisteredFrameCallbacks();
+  // Determines if a callback is currently registered.
+  // Must be called on the same thread as the provider was constructed on.
+  bool IsFrameCallbackRegistered(const ViEFrameCallback* callback);
 
   // FrameCallbackChanged
   // Inherited classes should check for new frame_settings and reconfigure
@@ -76,24 +78,26 @@ class ViEFrameProviderBase {
 
  protected:
   void DeliverFrame(I420VideoFrame* video_frame,
-                    int num_csrcs = 0,
-                    const uint32_t CSRC[kRtpCsrcSize] = NULL);
+                    const std::vector<uint32_t>& csrcs);
   void SetFrameDelay(int frame_delay);
   int FrameDelay();
   int GetBestFormat(int* best_width,
                     int* best_height,
                     int* best_frame_rate);
 
-  int id_;
-  int engine_id_;
+  rtc::ThreadChecker thread_checker_;
+  rtc::ThreadChecker frame_delivery_thread_checker_;
+
+  const int id_;
+  const int engine_id_;
 
   // Frame callbacks.
   typedef std::vector<ViEFrameCallback*> FrameCallbacks;
   FrameCallbacks frame_callbacks_;
-  scoped_ptr<CriticalSectionWrapper> provider_cs_;
+  const rtc::scoped_ptr<CriticalSectionWrapper> provider_cs_;
 
  private:
-  scoped_ptr<I420VideoFrame> extra_frame_;
+  rtc::scoped_ptr<I420VideoFrame> extra_frame_;
   int frame_delay_;
 };
 

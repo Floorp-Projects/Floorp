@@ -24,7 +24,7 @@ class ExternalRendererEffectFilter : public webrtc::ViEEffectFilter {
   explicit ExternalRendererEffectFilter(webrtc::ExternalRenderer* renderer)
       : width_(0), height_(0), renderer_(renderer) {}
   virtual ~ExternalRendererEffectFilter() {}
-  virtual int Transform(int size,
+  virtual int Transform(size_t size,
                         unsigned char* frame_buffer,
                         int64_t ntp_time_ms,
                         unsigned int timestamp,

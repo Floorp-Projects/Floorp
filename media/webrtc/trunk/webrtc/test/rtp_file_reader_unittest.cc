@@ -11,8 +11,8 @@
 #include <map>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/rtp_file_reader.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -30,7 +30,7 @@ class TestRtpFileReader : public ::testing::Test {
   }
 
   int CountRtpPackets() {
-    test::RtpFileReader::Packet packet;
+    test::RtpPacket packet;
     int c = 0;
     while (rtp_packet_source_->NextPacket(&packet)) {
       if (headers_only_file_)
@@ -43,7 +43,7 @@ class TestRtpFileReader : public ::testing::Test {
   }
 
  private:
-  scoped_ptr<test::RtpFileReader> rtp_packet_source_;
+  rtc::scoped_ptr<test::RtpFileReader> rtp_packet_source_;
   bool headers_only_file_;
 };
 
@@ -71,7 +71,7 @@ class TestPcapFileReader : public ::testing::Test {
 
   int CountRtpPackets() {
     int c = 0;
-    test::RtpFileReader::Packet packet;
+    test::RtpPacket packet;
     while (rtp_packet_source_->NextPacket(&packet)) {
       EXPECT_EQ(packet.length, packet.original_length);
       c++;
@@ -81,7 +81,7 @@ class TestPcapFileReader : public ::testing::Test {
 
   PacketsPerSsrc CountRtpPacketsPerSsrc() {
     PacketsPerSsrc pps;
-    test::RtpFileReader::Packet packet;
+    test::RtpPacket packet;
     while (rtp_packet_source_->NextPacket(&packet)) {
       RtpUtility::RtpHeaderParser rtp_header_parser(packet.data, packet.length);
       webrtc::RTPHeader header;
@@ -93,7 +93,7 @@ class TestPcapFileReader : public ::testing::Test {
   }
 
  private:
-  scoped_ptr<test::RtpFileReader> rtp_packet_source_;
+  rtc::scoped_ptr<test::RtpFileReader> rtp_packet_source_;
 };
 
 TEST_F(TestPcapFileReader, TestEthernetIIFrame) {

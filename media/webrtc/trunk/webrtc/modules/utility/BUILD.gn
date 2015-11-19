@@ -40,18 +40,10 @@ source_set("utility") {
   }
 
   deps = [
+    "../..:webrtc_common",
     "../../common_audio",
     "../../system_wrappers",
     "../audio_coding",
     "../media_file",
   ]
-  if (rtc_enable_video) {
-    sources += [
-      "source/frame_scaler.cc",
-      "source/video_coder.cc",
-      "source/video_frames_queue.cc",
-    ]
-
-    deps += [ "../video_coding" ]
-  }
 }

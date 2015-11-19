@@ -62,7 +62,7 @@ nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow **aPluginNativeWindow)
 {
   NS_ENSURE_ARG_POINTER(aPluginNativeWindow);
   *aPluginNativeWindow = new nsPluginNativeWindowQt();
-  return *aPluginNativeWindow ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)

@@ -21,6 +21,7 @@
 #include <OpenGL/OpenGL.h>
 
 #include "webrtc/base/macutils.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
@@ -31,7 +32,6 @@
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
 namespace webrtc {
@@ -196,11 +196,11 @@ class ScreenCapturerMac : public ScreenCapturer {
   bool Init();
 
   // Overridden from ScreenCapturer:
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
-  virtual void SetExcludedWindow(WindowId window) OVERRIDE;
-  virtual bool GetScreenList(ScreenList* screens) OVERRIDE;
-  virtual bool SelectScreen(ScreenId id) OVERRIDE;
+  void Start(Callback* callback) override;
+  void Capture(const DesktopRegion& region) override;
+  void SetExcludedWindow(WindowId window) override;
+  bool GetScreenList(ScreenList* screens) override;
+  bool SelectScreen(ScreenId id) override;
 
  private:
   void GlBlitFast(const DesktopFrame& frame,
@@ -301,7 +301,7 @@ class InvertedDesktopFrame : public DesktopFrame {
   virtual ~InvertedDesktopFrame() {}
 
  private:
-  scoped_ptr<DesktopFrame> original_frame_;
+  rtc::scoped_ptr<DesktopFrame> original_frame_;
 
   DISALLOW_COPY_AND_ASSIGN(InvertedDesktopFrame);
 };
@@ -957,7 +957,7 @@ void ScreenCapturerMac::ScreenUpdateMoveCallback(
 }
 
 DesktopFrame* ScreenCapturerMac::CreateFrame() {
-  scoped_ptr<DesktopFrame> frame(
+  rtc::scoped_ptr<DesktopFrame> frame(
       new BasicDesktopFrame(screen_pixel_bounds_.size()));
 
   frame->set_dpi(DesktopVector(kStandardDPI * dip_to_pixel_scale_,
@@ -972,7 +972,7 @@ ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
   if (!options.configuration_monitor())
     return NULL;
 
-  scoped_ptr<ScreenCapturerMac> capturer(
+  rtc::scoped_ptr<ScreenCapturerMac> capturer(
       new ScreenCapturerMac(options.configuration_monitor()));
   if (!capturer->Init())
     capturer.reset();

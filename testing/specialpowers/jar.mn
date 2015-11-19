@@ -1,17 +1,12 @@
 specialpowers.jar:
-% content specialpowers %content/
+% content specialpowers %content/ contentaccessible=true
   content/specialpowers.js (content/specialpowers.js)
 * content/specialpowersAPI.js (content/specialpowersAPI.js)
   content/SpecialPowersObserverAPI.js (content/SpecialPowersObserverAPI.js)
+  content/SpecialPowersObserver.jsm (content/SpecialPowersObserver.jsm)
   content/MozillaLogger.js (content/MozillaLogger.js)
-
-% resource specialpowers %modules/
-  modules/MockFilePicker.jsm (content/MockFilePicker.jsm)
-  modules/MockColorPicker.jsm (content/MockColorPicker.jsm)
-  modules/MockPermissionPrompt.jsm (content/MockPermissionPrompt.jsm)
-  modules/MockPaymentsUIGlue.jsm (content/MockPaymentsUIGlue.jsm)
-  modules/Assert.jsm (../modules/Assert.jsm)
-
-% component {59a52458-13e0-4d93-9d85-a637344f29a1} components/SpecialPowersObserver.js
-% contract @mozilla.org/special-powers-observer;1 {59a52458-13e0-4d93-9d85-a637344f29a1}
-% category profile-after-change @mozilla.org/special-powers-observer;1 @mozilla.org/special-powers-observer;1
+  content/MockFilePicker.jsm (content/MockFilePicker.jsm)
+  content/MockColorPicker.jsm (content/MockColorPicker.jsm)
+  content/MockPermissionPrompt.jsm (content/MockPermissionPrompt.jsm)
+  content/MockPaymentsUIGlue.jsm (content/MockPaymentsUIGlue.jsm)
+  content/Assert.jsm (../modules/Assert.jsm)

@@ -83,6 +83,21 @@
       },
       'dependencies': [
         '<(webrtc_root)/modules/modules.gyp:modules_unittests',
+        'audio_device_java',
+      ],
+      'includes': [
+        '../../build/apk_test.gypi',
+      ],
+    },
+    {
+      'target_name': 'rtc_unittests_apk',
+      'type': 'none',
+      'variables': {
+        'test_suite_name': 'rtc_unittests',
+        'input_shlib_path': '<(SHARED_LIB_DIR)/<(SHARED_LIB_PREFIX)rtc_unittests<(SHARED_LIB_SUFFIX)',
+      },
+      'dependencies': [
+        '<(webrtc_root)/webrtc.gyp:rtc_unittests',
       ],
       'includes': [
         '../../build/apk_test.gypi',
@@ -96,7 +111,7 @@
         'input_shlib_path': '<(SHARED_LIB_DIR)/<(SHARED_LIB_PREFIX)system_wrappers_unittests<(SHARED_LIB_SUFFIX)',
       },
       'dependencies': [
-        '<(webrtc_root)/system_wrappers/source/system_wrappers_tests.gyp:system_wrappers_unittests',
+        '<(webrtc_root)/system_wrappers/system_wrappers_tests.gyp:system_wrappers_unittests',
       ],
       'includes': [
         '../../build/apk_test.gypi',
@@ -224,6 +239,17 @@
       'type': 'none',
       'variables': {
         'java_in_dir': '<(webrtc_root)/modules/video_capture/android/java',
+      },
+      'includes': [
+        '../../build/java.gypi',
+      ],
+    },
+    {
+      'target_name': 'audio_device_java',
+      'type': 'none',
+      'variables': {
+        'java_in_dir': '<(webrtc_root)/modules/audio_device/android/java',
+        'never_lint': 1,
       },
       'includes': [
         '../../build/java.gypi',

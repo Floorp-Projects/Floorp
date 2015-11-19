@@ -9,6 +9,7 @@
 #include "js/HashTable.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/devtools/DeserializedNode.h"
+#include "mozilla/devtools/DominatorTree.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/HashFunctions.h"
@@ -149,6 +150,8 @@ public:
 
   void TakeCensus(JSContext* cx, JS::HandleObject options,
                   JS::MutableHandleValue rval, ErrorResult& rv);
+
+  already_AddRefed<DominatorTree> ComputeDominatorTree(ErrorResult& rv);
 
   dom::Nullable<uint64_t> GetCreationTime() {
     static const uint64_t maxTime = uint64_t(1) << 53;

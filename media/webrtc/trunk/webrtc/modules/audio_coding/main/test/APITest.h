@@ -11,6 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_APITEST_H_
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_APITEST_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
@@ -18,7 +19,6 @@
 #include "webrtc/modules/audio_coding/main/test/utility.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -82,8 +82,8 @@ class APITest : public ACMTest {
   bool APIRunB();
 
   //--- ACMs
-  scoped_ptr<AudioCodingModule> _acmA;
-  scoped_ptr<AudioCodingModule> _acmB;
+  rtc::scoped_ptr<AudioCodingModule> _acmA;
+  rtc::scoped_ptr<AudioCodingModule> _acmB;
 
   //--- Channels
   Channel* _channel_A2B;

@@ -62,9 +62,9 @@ static __inline int16_t saturate(int32_t amp)
 }
 /*- End of function --------------------------------------------------------*/
 
-static void block4(g722_decode_state_t *s, int band, int d);
+static void block4(G722DecoderState *s, int band, int d);
 
-static void block4(g722_decode_state_t *s, int band, int d)
+static void block4(G722DecoderState *s, int band, int d)
 {
     int wd1;
     int wd2;
@@ -154,13 +154,12 @@ static void block4(g722_decode_state_t *s, int band, int d)
 }
 /*- End of function --------------------------------------------------------*/
 
-g722_decode_state_t *WebRtc_g722_decode_init(g722_decode_state_t *s,
-                                             int rate,
-                                             int options)
-{
+G722DecoderState* WebRtc_g722_decode_init(G722DecoderState* s,
+                                          int rate,
+                                          int options) {
     if (s == NULL)
     {
-        if ((s = (g722_decode_state_t *) malloc(sizeof(*s))) == NULL)
+        if ((s = (G722DecoderState *) malloc(sizeof(*s))) == NULL)
             return NULL;
     }
     memset(s, 0, sizeof(*s));
@@ -182,14 +181,14 @@ g722_decode_state_t *WebRtc_g722_decode_init(g722_decode_state_t *s,
 }
 /*- End of function --------------------------------------------------------*/
 
-int WebRtc_g722_decode_release(g722_decode_state_t *s)
+int WebRtc_g722_decode_release(G722DecoderState *s)
 {
     free(s);
     return 0;
 }
 /*- End of function --------------------------------------------------------*/
 
-int WebRtc_g722_decode(g722_decode_state_t *s, int16_t amp[],
+int WebRtc_g722_decode(G722DecoderState *s, int16_t amp[],
                        const uint8_t g722_data[], int len)
 {
     static const int wl[8] = {-60, -30, 58, 172, 334, 538, 1198, 3042 };

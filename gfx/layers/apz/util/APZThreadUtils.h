@@ -57,6 +57,11 @@ public:
    */
   static void RunDelayedTaskOnCurrentThread(Task* aTask,
                                             const TimeDuration& aDelay);
+
+  /**
+   * Returns true if currently on APZ "controller thread".
+   */
+  static bool IsControllerThread();
 };
 
 // A base class for GenericTimerCallback<Function>.

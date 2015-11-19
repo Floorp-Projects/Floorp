@@ -35,7 +35,7 @@ public:
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
-  bool SupportsMimeType(const nsACString& aMimeType) override;
+  bool SupportsMimeType(const nsACString& aMimeType) const override;
 
 };
 

@@ -44,6 +44,8 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
 
     ssl_adapter_.reset(rtc::SSLAdapter::Create(socket));
 
+    ssl_adapter_->SetMode(ssl_mode_);
+
     // Ignore any certificate errors for the purpose of testing.
     // Note: We do this only because we don't have a real certificate.
     // NEVER USE THIS IN PRODUCTION CODE!
@@ -55,6 +57,10 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
         &SSLAdapterTestDummyClient::OnSSLAdapterCloseEvent);
   }
 
+  rtc::SocketAddress GetAddress() const {
+    return ssl_adapter_->GetLocalAddress();
+  }
+
   rtc::AsyncSocket::ConnState GetState() const {
     return ssl_adapter_->GetState();
   }
@@ -64,16 +70,20 @@ class SSLAdapterTestDummyClient : public sigslot::has_slots<> {
   }
 
   int Connect(const std::string& hostname, const rtc::SocketAddress& address) {
-    LOG(LS_INFO) << "Starting " << GetSSLProtocolName(ssl_mode_)
-        << " handshake with " << hostname;
-
-    if (ssl_adapter_->StartSSL(hostname.c_str(), false) != 0) {
-      return -1;
-    }
-
     LOG(LS_INFO) << "Initiating connection with " << address;
 
-    return ssl_adapter_->Connect(address);
+    int rv = ssl_adapter_->Connect(address);
+
+    if (rv == 0) {
+      LOG(LS_INFO) << "Starting " << GetSSLProtocolName(ssl_mode_)
+          << " handshake with " << hostname;
+
+      if (ssl_adapter_->StartSSL(hostname.c_str(), false) != 0) {
+        return -1;
+      }
+    }
+
+    return rv;
   }
 
   int Close() {
@@ -126,10 +136,12 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
 
     server_socket_.reset(CreateSocket(ssl_mode_));
 
-    server_socket_->SignalReadEvent.connect(this,
-        &SSLAdapterTestDummyServer::OnServerSocketReadEvent);
+    if (ssl_mode_ == rtc::SSL_MODE_TLS) {
+      server_socket_->SignalReadEvent.connect(this,
+          &SSLAdapterTestDummyServer::OnServerSocketReadEvent);
 
-    server_socket_->Listen(1);
+      server_socket_->Listen(1);
+    }
 
     LOG(LS_INFO) << ((ssl_mode_ == rtc::SSL_MODE_DTLS) ? "UDP" : "TCP")
         << " server listening on " << server_socket_->GetLocalAddress();
@@ -170,38 +182,26 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
     }
   }
 
+  void AcceptConnection(const rtc::SocketAddress& address) {
+    // Only a single connection is supported.
+    ASSERT_TRUE(ssl_stream_adapter_ == NULL);
+
+    // This is only for DTLS.
+    ASSERT_EQ(rtc::SSL_MODE_DTLS, ssl_mode_);
+
+    // Transfer ownership of the socket to the SSLStreamAdapter object.
+    rtc::AsyncSocket* socket = server_socket_.release();
+
+    socket->Connect(address);
+
+    DoHandshake(socket);
+  }
+
   void OnServerSocketReadEvent(rtc::AsyncSocket* socket) {
-    if (ssl_stream_adapter_ != NULL) {
-      // Only a single connection is supported.
-      return;
-    }
+    // Only a single connection is supported.
+    ASSERT_TRUE(ssl_stream_adapter_ == NULL);
 
-    rtc::SocketAddress address;
-    rtc::AsyncSocket* new_socket = socket->Accept(&address);
-    rtc::SocketStream* stream = new rtc::SocketStream(new_socket);
-
-    ssl_stream_adapter_.reset(rtc::SSLStreamAdapter::Create(stream));
-    ssl_stream_adapter_->SetServerRole();
-
-    // SSLStreamAdapter is normally used for peer-to-peer communication, but
-    // here we're testing communication between a client and a server
-    // (e.g. a WebRTC-based application and an RFC 5766 TURN server), where
-    // clients are not required to provide a certificate during handshake.
-    // Accordingly, we must disable client authentication here.
-    ssl_stream_adapter_->set_client_auth_enabled(false);
-
-    ssl_stream_adapter_->SetIdentity(ssl_identity_->GetReference());
-
-    // Set a bogus peer certificate digest.
-    unsigned char digest[20];
-    size_t digest_len = sizeof(digest);
-    ssl_stream_adapter_->SetPeerCertificateDigest(rtc::DIGEST_SHA_1, digest,
-        digest_len);
-
-    ssl_stream_adapter_->StartSSLWithPeer();
-
-    ssl_stream_adapter_->SignalEvent.connect(this,
-        &SSLAdapterTestDummyServer::OnSSLStreamAdapterEvent);
+    DoHandshake(server_socket_->Accept(NULL));
   }
 
   void OnSSLStreamAdapterEvent(rtc::StreamInterface* stream, int sig, int err) {
@@ -226,6 +226,35 @@ class SSLAdapterTestDummyServer : public sigslot::has_slots<> {
   }
 
  private:
+  void DoHandshake(rtc::AsyncSocket* socket) {
+    rtc::SocketStream* stream = new rtc::SocketStream(socket);
+
+    ssl_stream_adapter_.reset(rtc::SSLStreamAdapter::Create(stream));
+
+    ssl_stream_adapter_->SetMode(ssl_mode_);
+    ssl_stream_adapter_->SetServerRole();
+
+    // SSLStreamAdapter is normally used for peer-to-peer communication, but
+    // here we're testing communication between a client and a server
+    // (e.g. a WebRTC-based application and an RFC 5766 TURN server), where
+    // clients are not required to provide a certificate during handshake.
+    // Accordingly, we must disable client authentication here.
+    ssl_stream_adapter_->set_client_auth_enabled(false);
+
+    ssl_stream_adapter_->SetIdentity(ssl_identity_->GetReference());
+
+    // Set a bogus peer certificate digest.
+    unsigned char digest[20];
+    size_t digest_len = sizeof(digest);
+    ssl_stream_adapter_->SetPeerCertificateDigest(rtc::DIGEST_SHA_1, digest,
+        digest_len);
+
+    ssl_stream_adapter_->StartSSLWithPeer();
+
+    ssl_stream_adapter_->SignalEvent.connect(this,
+        &SSLAdapterTestDummyServer::OnSSLStreamAdapterEvent);
+  }
+
   const rtc::SSLMode ssl_mode_;
 
   rtc::scoped_ptr<rtc::AsyncSocket> server_socket_;
@@ -262,6 +291,11 @@ class SSLAdapterTestBase : public testing::Test,
 
     // Now the state should be CS_CONNECTING
     ASSERT_EQ(rtc::AsyncSocket::CS_CONNECTING, client_->GetState());
+
+    if (ssl_mode_ == rtc::SSL_MODE_DTLS) {
+      // For DTLS, call AcceptConnection() with the client's address.
+      server_->AcceptConnection(client_->GetAddress());
+    }
 
     if (expect_success) {
       // If expecting success, the client should end up in the CS_CONNECTED
@@ -314,6 +348,10 @@ class SSLAdapterTestTLS : public SSLAdapterTestBase {
   SSLAdapterTestTLS() : SSLAdapterTestBase(rtc::SSL_MODE_TLS) {}
 };
 
+class SSLAdapterTestDTLS : public SSLAdapterTestBase {
+ public:
+  SSLAdapterTestDTLS() : SSLAdapterTestBase(rtc::SSL_MODE_DTLS) {}
+};
 
 #if SSL_USE_OPENSSL
 
@@ -326,6 +364,19 @@ TEST_F(SSLAdapterTestTLS, TestTLSConnect) {
 
 // Test transfer between client and server
 TEST_F(SSLAdapterTestTLS, TestTLSTransfer) {
+  TestHandshake(true);
+  TestTransfer("Hello, world!");
+}
+
+// Basic tests: DTLS
+
+// Test that handshake works
+TEST_F(SSLAdapterTestDTLS, TestDTLSConnect) {
+  TestHandshake(true);
+}
+
+// Test transfer between client and server
+TEST_F(SSLAdapterTestDTLS, TestDTLSTransfer) {
   TestHandshake(true);
   TestTransfer("Hello, world!");
 }

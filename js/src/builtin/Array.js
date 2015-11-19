@@ -774,7 +774,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         // See <https://bugs.ecmascript.org/show_bug.cgi?id=2883>.
         while (true) {
             // Steps 6.g.i-iii.
-            var next = iterator.next();
+            var next = callFunction(iterator.next, iterator);
             if (!IsObject(next))
                 ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 

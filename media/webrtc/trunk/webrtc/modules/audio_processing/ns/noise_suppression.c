@@ -18,9 +18,9 @@
 #include "webrtc/modules/audio_processing/ns/ns_core.h"
 
 int WebRtcNs_Create(NsHandle** NS_inst) {
-  *NS_inst = (NsHandle*) malloc(sizeof(NSinst_t));
+  *NS_inst = (NsHandle*)malloc(sizeof(NoiseSuppressionC));
   if (*NS_inst != NULL) {
-    (*(NSinst_t**)NS_inst)->initFlag = 0;
+    (*(NoiseSuppressionC**)NS_inst)->initFlag = 0;
     return 0;
   } else {
     return -1;
@@ -35,25 +35,27 @@ int WebRtcNs_Free(NsHandle* NS_inst) {
 
 
 int WebRtcNs_Init(NsHandle* NS_inst, uint32_t fs) {
-  return WebRtcNs_InitCore((NSinst_t*) NS_inst, fs);
+  return WebRtcNs_InitCore((NoiseSuppressionC*)NS_inst, fs);
 }
 
 int WebRtcNs_set_policy(NsHandle* NS_inst, int mode) {
-  return WebRtcNs_set_policy_core((NSinst_t*) NS_inst, mode);
+  return WebRtcNs_set_policy_core((NoiseSuppressionC*)NS_inst, mode);
 }
 
-int WebRtcNs_Analyze(NsHandle* NS_inst, float* spframe) {
-  return WebRtcNs_AnalyzeCore((NSinst_t*) NS_inst, spframe);
+void WebRtcNs_Analyze(NsHandle* NS_inst, const float* spframe) {
+  WebRtcNs_AnalyzeCore((NoiseSuppressionC*)NS_inst, spframe);
 }
 
-int WebRtcNs_Process(NsHandle* NS_inst, float* spframe, float* spframe_H,
-                     float* outframe, float* outframe_H) {
-  return WebRtcNs_ProcessCore(
-      (NSinst_t*) NS_inst, spframe, spframe_H, outframe, outframe_H);
+void WebRtcNs_Process(NsHandle* NS_inst,
+                      const float* const* spframe,
+                      int num_bands,
+                      float* const* outframe) {
+  WebRtcNs_ProcessCore((NoiseSuppressionC*)NS_inst, spframe, num_bands,
+                       outframe);
 }
 
 float WebRtcNs_prior_speech_probability(NsHandle* handle) {
-  NSinst_t* self = (NSinst_t*) handle;
+  NoiseSuppressionC* self = (NoiseSuppressionC*)handle;
   if (handle == NULL) {
     return -1;
   }

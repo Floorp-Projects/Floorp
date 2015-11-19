@@ -27,7 +27,7 @@ class MockFrameDropper : public FrameDropper {
   MOCK_METHOD0(DropFrame,
       bool());
   MOCK_METHOD2(Fill,
-      void(uint32_t frameSizeBytes, bool deltaFrame));
+      void(size_t frameSizeBytes, bool deltaFrame));
   MOCK_METHOD1(Leak,
       void(uint32_t inputFrameRate));
   MOCK_METHOD2(SetRates,

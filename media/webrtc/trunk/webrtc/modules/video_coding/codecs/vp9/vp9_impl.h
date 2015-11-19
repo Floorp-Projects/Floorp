@@ -14,13 +14,8 @@
 
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 
-// VPX forward declaration
-typedef struct vpx_codec_ctx vpx_codec_ctx_t;
-typedef struct vpx_codec_ctx vpx_dec_ctx_t;
-typedef struct vpx_codec_enc_cfg vpx_codec_enc_cfg_t;
-typedef struct vpx_image vpx_image_t;
-typedef struct vpx_ref_frame vpx_ref_frame_t;
-struct vpx_codec_cx_pkt;
+#include "vpx/vpx_decoder.h"
+#include "vpx/vpx_encoder.h"
 
 namespace webrtc {
 
@@ -30,24 +25,26 @@ class VP9EncoderImpl : public VP9Encoder {
 
   virtual ~VP9EncoderImpl();
 
-  virtual int Release() OVERRIDE;
+  int Release() override;
 
-  virtual int InitEncode(const VideoCodec* codec_settings,
-                         int number_of_cores,
-                         uint32_t max_payload_size) OVERRIDE;
+  int InitEncode(const VideoCodec* codec_settings,
+                 int number_of_cores,
+                 size_t max_payload_size) override;
 
-  virtual int Encode(const I420VideoFrame& input_image,
-                     const CodecSpecificInfo* codec_specific_info,
-                     const std::vector<VideoFrameType>* frame_types) OVERRIDE;
+  int Encode(const I420VideoFrame& input_image,
+             const CodecSpecificInfo* codec_specific_info,
+             const std::vector<VideoFrameType>* frame_types) override;
 
-  virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback)
-  OVERRIDE;
+  int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
-  virtual int SetChannelParameters(uint32_t packet_loss, int rtt) OVERRIDE;
+  int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
-  virtual int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) OVERRIDE;
+  int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
 
  private:
+  // Determine number of encoder threads to use.
+  int NumberOfThreads(int width, int height, int number_of_cores);
+
   // Call encoder initialize function and set control settings.
   int InitAndSetControlSettings(const VideoCodec* inst);
 
@@ -85,20 +82,19 @@ class VP9DecoderImpl : public VP9Decoder {
 
   virtual ~VP9DecoderImpl();
 
-  virtual int InitDecode(const VideoCodec* inst, int number_of_cores) OVERRIDE;
+  int InitDecode(const VideoCodec* inst, int number_of_cores) override;
 
-  virtual int Decode(const EncodedImage& input_image,
-                     bool missing_frames,
-                     const RTPFragmentationHeader* fragmentation,
-                     const CodecSpecificInfo* codec_specific_info,
-                     int64_t /*render_time_ms*/) OVERRIDE;
+  int Decode(const EncodedImage& input_image,
+             bool missing_frames,
+             const RTPFragmentationHeader* fragmentation,
+             const CodecSpecificInfo* codec_specific_info,
+             int64_t /*render_time_ms*/) override;
 
-  virtual int RegisterDecodeCompleteCallback(DecodedImageCallback* callback)
-  OVERRIDE;
+  int RegisterDecodeCompleteCallback(DecodedImageCallback* callback) override;
 
-  virtual int Release() OVERRIDE;
+  int Release() override;
 
-  virtual int Reset() OVERRIDE;
+  int Reset() override;
 
  private:
   int ReturnFrame(const vpx_image_t* img, uint32_t timeStamp);
@@ -106,7 +102,7 @@ class VP9DecoderImpl : public VP9Decoder {
   I420VideoFrame decoded_image_;
   DecodedImageCallback* decode_complete_callback_;
   bool inited_;
-  vpx_dec_ctx_t* decoder_;
+  vpx_codec_ctx_t* decoder_;
   VideoCodec codec_;
   bool key_frame_required_;
 };

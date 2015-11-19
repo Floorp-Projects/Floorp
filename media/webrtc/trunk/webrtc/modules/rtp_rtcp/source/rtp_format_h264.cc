@@ -11,8 +11,8 @@
 #include <string.h>
 
 #include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
@@ -267,7 +267,7 @@ void RtpPacketizerH264::NextAggregatePacket(uint8_t* buffer,
   *bytes_to_send += kNalHeaderSize;
   while (packet.aggregated) {
     // Add NAL unit length field.
-    RtpUtility::AssignUWord16ToBuffer(&buffer[index], packet.size);
+    ByteWriter<uint16_t>::WriteBigEndian(&buffer[index], packet.size);
     index += kLengthFieldSize;
     *bytes_to_send += kLengthFieldSize;
     // Add NAL unit.

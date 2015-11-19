@@ -41,8 +41,7 @@ void WebRtcSpl_ReflCoefToLpc(const int16_t *k, int use_order, int16_t *a)
         any[m + 1] = *kptr >> 3;
         for (i = 0; i < m; i++)
         {
-            *anyptr = (*aptr)
-                    + (int16_t)WEBRTC_SPL_MUL_16_16_RSFT((*aptr2), (*kptr), 15);
+            *anyptr = *aptr + (int16_t)((*aptr2 * *kptr) >> 15);
             anyptr++;
             aptr++;
             aptr2--;

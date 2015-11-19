@@ -49,25 +49,6 @@ const int kIsacPacSize480 = 480;
 const int kIsacPacSize960 = 960;
 const int kIsacPacSize1440 = 1440;
 
-// An encoded bit-stream is labeled by one of the following enumerators.
-//
-//   kNoEncoding              : There has been no encoding.
-//   kActiveNormalEncoded     : Active audio frame coded by the codec.
-//   kPassiveNormalEncoded    : Passive audio frame coded by the codec.
-//   kPassiveDTXNB            : Passive audio frame coded by narrow-band CN.
-//   kPassiveDTXWB            : Passive audio frame coded by wide-band CN.
-//   kPassiveDTXSWB           : Passive audio frame coded by super-wide-band CN.
-//   kPassiveDTXFB            : Passive audio frame coded by full-band CN.
-enum WebRtcACMEncodingType {
-  kNoEncoding,
-  kActiveNormalEncoded,
-  kPassiveNormalEncoded,
-  kPassiveDTXNB,
-  kPassiveDTXWB,
-  kPassiveDTXSWB,
-  kPassiveDTXFB
-};
-
 // A structure which contains codec parameters. For instance, used when
 // initializing encoder and decoder.
 //
