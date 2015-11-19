@@ -3716,8 +3716,8 @@ nsIDocument::ShouldThrottleFrameRequests()
     return false;
   }
 
-  if (Hidden()) {
-    // We're not visible (probably in a background tab or the bf cache).
+  if (!mIsShowing) {
+    // We're not showing (probably in a background tab or the bf cache).
     return true;
   }
 
