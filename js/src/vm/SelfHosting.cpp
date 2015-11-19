@@ -2038,7 +2038,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     // different thread than the clone target. In theory, these objects are all
     // tenured and will not be compacted; however, we simply avoid the issue
     // altogether by skipping the cycle-detection when off the main thread.
-    Maybe<AutoCycleDetector> detect;
+    mozilla::Maybe<AutoCycleDetector> detect;
     if (js::CurrentThreadCanAccessZone(selfHostedObject->zoneFromAnyThread())) {
         detect.emplace(cx, selfHostedObject);
         if (!detect->init())
