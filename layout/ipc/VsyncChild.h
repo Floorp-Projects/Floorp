@@ -38,14 +38,12 @@ public:
 
   // Bind a VsyncObserver into VsyncChild after ipc channel connected.
   void SetVsyncObserver(VsyncObserver* aVsyncObserver);
-  TimeDuration GetVsyncRate();
 
 private:
   VsyncChild();
   virtual ~VsyncChild();
 
   virtual bool RecvNotify(const TimeStamp& aVsyncTimestamp) override;
-  virtual bool RecvVsyncRate(const float& aVsyncRate) override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   bool mObservingVsync;
@@ -53,7 +51,6 @@ private:
 
   // The content side vsync observer.
   RefPtr<VsyncObserver> mObserver;
-  TimeDuration mVsyncRate;
 };
 
 } // namespace layout

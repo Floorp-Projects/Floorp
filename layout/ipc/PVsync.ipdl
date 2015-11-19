@@ -23,14 +23,10 @@ child:
   // Send vsync event from chrome to content process.
   async Notify(TimeStamp aVsyncTimestamp) compress;
 
-  // Send the vsync rate to the content process.
-  async VsyncRate(float aVsyncRate);
-
 parent:
   // Content process use these messages to acquire the vsync event.
   async Observe();
   async Unobserve();
-  async RequestVsyncRate();
 
   // This message is never sent. Each PVsync actor will stay alive as long as
   // its PBackground manager.

@@ -14,7 +14,6 @@ namespace layout {
 VsyncChild::VsyncChild()
   : mObservingVsync(false)
   , mIsShutdown(false)
-  , mVsyncRate(TimeDuration::Forever())
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -71,23 +70,6 @@ VsyncChild::SetVsyncObserver(VsyncObserver* aVsyncObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mObserver = aVsyncObserver;
-}
-
-TimeDuration
-VsyncChild::GetVsyncRate()
-{
-  if (mVsyncRate == TimeDuration::Forever()) {
-    PVsyncChild::SendRequestVsyncRate();
-  }
-
-  return mVsyncRate;
-}
-
-bool
-VsyncChild::RecvVsyncRate(const float& aVsyncRate)
-{
-  mVsyncRate = TimeDuration::FromMilliseconds(aVsyncRate);
-  return true;
 }
 
 } // namespace layout
