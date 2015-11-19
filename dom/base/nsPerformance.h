@@ -23,10 +23,15 @@ class nsPerformance;
 class nsIHttpChannel;
 
 namespace mozilla {
+
 class ErrorResult;
+
 namespace dom {
-  class PerformanceEntry;
-  class PerformanceObserver;
+
+class PerformanceEntry;
+class PerformanceObserver;
+class WindowOrWorkerOrSharedWorkerOrServiceWorker;
+
 } // namespace dom
 } // namespace mozilla
 
@@ -313,6 +318,11 @@ public:
 
   virtual DOMHighResTimeStamp Now() const = 0;
 
+  DOMHighResTimeStamp
+  TranslateTime(DOMHighResTimeStamp aTime,
+                const mozilla::dom::WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
+                mozilla::ErrorResult& aRv);
+
   void Mark(const nsAString& aName, mozilla::ErrorResult& aRv);
   void ClearMarks(const mozilla::dom::Optional<nsAString>& aName);
   void Measure(const nsAString& aName,
@@ -344,8 +354,9 @@ protected:
 
   virtual void DispatchBufferFullEvent() = 0;
 
-  virtual DOMHighResTimeStamp
-  DeltaFromNavigationStart(DOMHighResTimeStamp aTime) = 0;
+  virtual mozilla::TimeStamp CreationTimeStamp() const = 0;
+
+  virtual DOMHighResTimeStamp CreationTime() const = 0;
 
   virtual bool IsPerformanceTimingAttribute(const nsAString& aName) = 0;
 
@@ -362,6 +373,8 @@ protected:
 
   void RunNotificationObserversTask();
   void QueueEntry(PerformanceEntry* aEntry);
+
+  DOMHighResTimeStamp RoundTime(double aTime) const;
 
   nsTObserverArray<PerformanceObserver*> mObservers;
 
@@ -433,7 +446,11 @@ public:
 
   IMPL_EVENT_HANDLER(resourcetimingbufferfull)
 
-private:
+  mozilla::TimeStamp CreationTimeStamp() const override;
+
+  DOMHighResTimeStamp CreationTime() const override;
+
+protected:
   ~nsPerformance();
 
   nsISupports* GetAsISupports() override
@@ -444,9 +461,6 @@ private:
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   bool IsPerformanceTimingAttribute(const nsAString& aName) override;
-
-  DOMHighResTimeStamp
-  DeltaFromNavigationStart(DOMHighResTimeStamp aTime) override;
 
   DOMHighResTimeStamp
   GetPerformanceTimingFromString(const nsAString& aTimingName) override;

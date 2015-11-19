@@ -67,6 +67,9 @@ public:
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 
+  WorkerPrivate*
+  GetWorkerPrivate() const;
+
 private:
   // This class can only be created from the ServiceWorkerManager.
   ServiceWorker(nsPIDOMWindow* aWindow, ServiceWorkerInfo* aInfo);

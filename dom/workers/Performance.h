@@ -55,8 +55,9 @@ private:
   DOMHighResTimeStamp
   GetPerformanceTimingFromString(const nsAString& aTimingName) override;
 
-  DOMHighResTimeStamp
-  DeltaFromNavigationStart(DOMHighResTimeStamp aTime) override;
+  TimeStamp CreationTimeStamp() const override;
+
+  DOMHighResTimeStamp CreationTime() const override;
 };
 
 END_WORKERS_NAMESPACE
