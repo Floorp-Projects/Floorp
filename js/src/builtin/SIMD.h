@@ -350,7 +350,24 @@ class SIMDObject : public JSObject
     static bool toString(JSContext* cx, unsigned int argc, Value* vp);
 };
 
-// These classes exist for use with templates below.
+// These classes implement the concept containing the following constraints:
+// - requires typename Elem: this is the scalar lane type, stored in each lane
+// of the SIMD vector.
+// - requires static const unsigned lanes: this is the number of lanes (length)
+// of the SIMD vector.
+// - requires static const SimdTypeDescr::Type type: this is the SimdTypeDescr
+// enum value corresponding to the SIMD type.
+// - requires static TypeDescr& GetTypeDescr(GlobalObject& global): returns the
+// TypedObject type descriptor of the SIMD type.
+// - requires static bool Cast(JSContext*, JS::HandleValue, Elem*): casts a
+// given Value to the current scalar lane type and saves it in the Elem
+// out-param.
+// - requires static Value ToValue(Elem): returns a Value of the right type
+// containing the given value.
+//
+// This concept is used in the templates above to define the functions
+// associated to a given type and in their implementations, to avoid code
+// redundancy.
 
 struct Float32x4 {
     typedef float Elem;
