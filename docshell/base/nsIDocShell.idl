@@ -46,7 +46,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(539bce70-8261-462f-bbd0-40ee90b7d636)]
+[scriptable, builtinclass, uuid(44aca825-0080-49f1-8407-df62183e5ec1)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -463,11 +463,14 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param  aURI           nsIURI of the page where the error happened
    * @param  aURL           wstring of the page where the error happened
    * @param  aFailedChannel The channel related to this error
+   *
+   * Returns whether or not we displayed an error page (note: will always
+   * return false if in-content error pages are disabled!)
    */
-  void displayLoadError(in nsresult aError,
-                        in nsIURI aURI,
-                        in wstring aURL,
-                        [optional] in nsIChannel aFailedChannel);
+  boolean displayLoadError(in nsresult aError,
+                           in nsIURI aURI,
+                           in wstring aURL,
+                           [optional] in nsIChannel aFailedChannel);
 
   /**
    * The channel that failed to load and resulted in an error page.
