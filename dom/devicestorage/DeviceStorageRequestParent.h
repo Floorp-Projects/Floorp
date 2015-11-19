@@ -239,7 +239,6 @@ private:
       virtual ~PostPathResultEvent() {}
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
       nsString mPath;
   };
 
@@ -253,7 +252,6 @@ private:
       virtual ~PostFileDescriptorResultEvent() {}
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
       FileDescriptor mFileDescriptor;
   };
 
