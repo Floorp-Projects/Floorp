@@ -23,7 +23,6 @@ task:
       B2G_DEBUG: 0
       TARGET: 'nexus-5-l'
       DEBUG: 0
-      DOGFOOD: 1
       MOZHARNESS_CONFIG: b2g/taskcluster-phone-fota.py
     command:
       - >
