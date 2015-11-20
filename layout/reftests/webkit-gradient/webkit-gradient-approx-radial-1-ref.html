@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Reference</title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  50px;
+      height: 40px;
+      margin: 1px;
+      float: left;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Note: -webkit-gradient(radial, ...) expressions involve *two* circles,
+       with the gradient progressing between their edges. But, the standard
+       syntax (& hence our emulation) only supports *one* circle.
+
+       So, in our reference renderings below, we ignore the smaller circle from
+       the testcase's gradient expression, and we use a gradient that progresses
+       from the outer circle's center to its edge.  (Conceptually, we collapse
+       the smaller circle to a point at the center of the larger circle.) -->
+
+  <!-- Inner circle has nonzero radius, in testcase:
+       (We ignore it here.) -->
+  <div style="background: radial-gradient(circle 40px at left top,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at center center,
+                                          yellow, blue)"></div>
+  <br>
+
+  <!-- Both circles have the same radius, in testcase:
+       (We pretend the first one is 0-sized.) -->
+  <div style="background: radial-gradient(circle 40px at center center,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 10px at 10px 10px,
+                                          blue, yellow)"></div>
+  <br>
+
+  <!-- Inner circle has different center than outer circle, in testcase:
+       (We collapse it to center of outer circle.) -->
+  <div style="background: radial-gradient(circle 40px at left top,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 40px at 10px 20px,
+                                          yellow, blue)"></div>
+ <br>
+
+  <!-- Inner circle and outer circle do not even intersect, in testcase:
+       (We collapse smaller circle to center of larger circle.) -->
+  <div style="background: radial-gradient(circle 10px at 30px 10px,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 30px at 150px 10px,
+                                          blue, yellow)"></div>
+
+</body>
+</html>
