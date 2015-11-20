@@ -47,9 +47,11 @@ class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
+class ServiceWorkerRegisterJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
+class ServiceWorkerUpdateFinishCallback;
 
 class ServiceWorkerRegistrationInfo final : public nsIServiceWorkerRegistrationInfo
 {
@@ -75,6 +77,8 @@ public:
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
   uint64_t mLastUpdateCheckTime;
+
+  RefPtr<ServiceWorkerRegisterJob> mUpdateJob;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -143,6 +147,12 @@ public:
 
   void
   NotifyListenersOnChange();
+
+  bool
+  IsUpdating() const;
+
+  void
+  AppendUpdateCallback(ServiceWorkerUpdateFinishCallback* aCallback);
 };
 
 class ServiceWorkerUpdateFinishCallback
