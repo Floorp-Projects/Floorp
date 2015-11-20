@@ -13,6 +13,7 @@
 #include "jsfun.h"
 #include "jsutil.h"
 
+#include "builtin/SIMD.h"
 #include "gc/Marking.h"
 #include "js/Vector.h"
 #include "vm/GlobalObject.h"
@@ -2600,7 +2601,7 @@ js::GetFloat32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
-    args.rval().setObject(global->float32x4TypeDescr());
+    args.rval().setObject(*global->getOrCreateSimdTypeDescr<Float32x4>(cx));
     return true;
 }
 
@@ -2610,7 +2611,7 @@ js::GetFloat64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
-    args.rval().setObject(global->float64x2TypeDescr());
+    args.rval().setObject(*global->getOrCreateSimdTypeDescr<Float64x2>(cx));
     return true;
 }
 
@@ -2620,7 +2621,7 @@ js::GetInt8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
-    args.rval().setObject(global->int8x16TypeDescr());
+    args.rval().setObject(*global->getOrCreateSimdTypeDescr<Int8x16>(cx));
     return true;
 }
 
@@ -2630,7 +2631,7 @@ js::GetInt16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
-    args.rval().setObject(global->int16x8TypeDescr());
+    args.rval().setObject(*global->getOrCreateSimdTypeDescr<Int16x8>(cx));
     return true;
 }
 
@@ -2640,7 +2641,7 @@ js::GetInt32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
     MOZ_ASSERT(global);
-    args.rval().setObject(global->int32x4TypeDescr());
+    args.rval().setObject(*global->getOrCreateSimdTypeDescr<Int32x4>(cx));
     return true;
 }
 
