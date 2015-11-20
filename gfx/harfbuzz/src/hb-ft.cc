@@ -217,18 +217,6 @@ hb_ft_get_glyph_v_advance (hb_font_t *font HB_UNUSED,
 }
 
 static hb_bool_t
-hb_ft_get_glyph_h_origin (hb_font_t *font HB_UNUSED,
-			  void *font_data HB_UNUSED,
-			  hb_codepoint_t glyph HB_UNUSED,
-			  hb_position_t *x HB_UNUSED,
-			  hb_position_t *y HB_UNUSED,
-			  void *user_data HB_UNUSED)
-{
-  /* We always work in the horizontal coordinates. */
-  return true;
-}
-
-static hb_bool_t
 hb_ft_get_glyph_v_origin (hb_font_t *font HB_UNUSED,
 			  void *font_data,
 			  hb_codepoint_t glyph,
@@ -272,17 +260,6 @@ hb_ft_get_glyph_h_kerning (hb_font_t *font,
   return kerningv.x;
 }
 
-static hb_position_t
-hb_ft_get_glyph_v_kerning (hb_font_t *font HB_UNUSED,
-			   void *font_data HB_UNUSED,
-			   hb_codepoint_t top_glyph HB_UNUSED,
-			   hb_codepoint_t bottom_glyph HB_UNUSED,
-			   void *user_data HB_UNUSED)
-{
-  /* FreeType API doesn't support vertical kerning */
-  return 0;
-}
-
 static hb_bool_t
 hb_ft_get_glyph_extents (hb_font_t *font HB_UNUSED,
 			 void *font_data,
@@ -300,6 +277,16 @@ hb_ft_get_glyph_extents (hb_font_t *font HB_UNUSED,
   extents->y_bearing = ft_face->glyph->metrics.horiBearingY;
   extents->width = ft_face->glyph->metrics.width;
   extents->height = -ft_face->glyph->metrics.height;
+  if (font->x_scale < 0)
+  {
+    extents->x_bearing = -extents->x_bearing;
+    extents->width = -extents->width;
+  }
+  if (font->y_scale < 0)
+  {
+    extents->y_bearing = -extents->y_bearing;
+    extents->height = -extents->height;
+  }
   return true;
 }
 
@@ -380,23 +367,52 @@ hb_ft_get_glyph_from_name (hb_font_t *font HB_UNUSED,
 }
 
 
+static hb_font_funcs_t *static_ft_funcs = NULL;
+
+#ifdef HB_USE_ATEXIT
+static
+void free_static_ft_funcs (void)
+{
+  hb_font_funcs_destroy (static_ft_funcs);
+}
+#endif
+
 static void
 _hb_ft_font_set_funcs (hb_font_t *font, FT_Face ft_face, bool unref)
 {
-  static const hb_font_funcs_t ft_ffuncs = {
-    HB_OBJECT_HEADER_STATIC,
+retry:
+  hb_font_funcs_t *funcs = (hb_font_funcs_t *) hb_atomic_ptr_get (&static_ft_funcs);
 
-    true, /* immutable */
+  if (unlikely (!funcs))
+  {
+    funcs = hb_font_funcs_create ();
 
-    {
-#define HB_FONT_FUNC_IMPLEMENT(name) hb_ft_get_##name,
-      HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
-#undef HB_FONT_FUNC_IMPLEMENT
+    hb_font_funcs_set_glyph_func (funcs, hb_ft_get_glyph, NULL, NULL);
+    hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ft_get_glyph_h_advance, NULL, NULL);
+    hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ft_get_glyph_v_advance, NULL, NULL);
+    //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ft_get_glyph_h_origin, NULL, NULL);
+    hb_font_funcs_set_glyph_v_origin_func (funcs, hb_ft_get_glyph_v_origin, NULL, NULL);
+    hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ft_get_glyph_h_kerning, NULL, NULL);
+    //hb_font_funcs_set_glyph_v_kerning_func (funcs, hb_ft_get_glyph_v_kerning, NULL, NULL);
+    hb_font_funcs_set_glyph_extents_func (funcs, hb_ft_get_glyph_extents, NULL, NULL);
+    hb_font_funcs_set_glyph_contour_point_func (funcs, hb_ft_get_glyph_contour_point, NULL, NULL);
+    hb_font_funcs_set_glyph_name_func (funcs, hb_ft_get_glyph_name, NULL, NULL);
+    hb_font_funcs_set_glyph_from_name_func (funcs, hb_ft_get_glyph_from_name, NULL, NULL);
+
+    hb_font_funcs_make_immutable (funcs);
+
+    if (!hb_atomic_ptr_cmpexch (&static_ft_funcs, NULL, funcs)) {
+      hb_font_funcs_destroy (funcs);
+      goto retry;
     }
+
+#ifdef HB_USE_ATEXIT
+    atexit (free_static_ft_funcs); /* First person registers atexit() callback. */
+#endif
   };
 
   hb_font_set_funcs (font,
-		     const_cast<hb_font_funcs_t *> (&ft_ffuncs),
+		     funcs,
 		     _hb_ft_font_create (ft_face, unref),
 		     (hb_destroy_func_t) _hb_ft_font_destroy);
 }

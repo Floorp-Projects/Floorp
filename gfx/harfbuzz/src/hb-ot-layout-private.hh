@@ -49,7 +49,7 @@ hb_ot_layout_table_find_feature (hb_face_t    *face,
  * GDEF
  */
 
-typedef enum
+enum hb_ot_layout_glyph_props_flags_t
 {
   /* The following three match LookupFlags::Ignore* numbers. */
   HB_OT_LAYOUT_GLYPH_PROPS_BASE_GLYPH	= 0x02u,
@@ -64,7 +64,8 @@ typedef enum
   HB_OT_LAYOUT_GLYPH_PROPS_PRESERVE     = HB_OT_LAYOUT_GLYPH_PROPS_SUBSTITUTED |
 					  HB_OT_LAYOUT_GLYPH_PROPS_LIGATED |
 					  HB_OT_LAYOUT_GLYPH_PROPS_MULTIPLIED
-} hb_ot_layout_glyph_class_mask_t;
+};
+HB_MARK_AS_FLAG_T (hb_ot_layout_glyph_props_flags_t);
 
 
 /*
@@ -180,8 +181,7 @@ _hb_ot_layout_destroy (hb_ot_layout_t *layout);
  */
 
 /* buffer var allocations, used during the entire shaping process */
-#define unicode_props0()	var2.u8[0]
-#define unicode_props1()	var2.u8[1]
+#define unicode_props()		var2.u16[0]
 
 /* buffer var allocations, used during the GSUB/GPOS processing */
 #define glyph_props()		var1.u16[0] /* GDEF glyph properties */
@@ -214,48 +214,123 @@ _next_syllable (hb_buffer_t *buffer, unsigned int start)
 
 /* unicode_props */
 
-enum {
-  MASK0_ZWJ       = 0x20u,
-  MASK0_ZWNJ      = 0x40u,
-  MASK0_IGNORABLE = 0x80u,
-  MASK0_GEN_CAT   = 0x1Fu
+/* Design:
+ * unicode_props() is a two-byte number.  The low byte includes:
+ * - General_Category: 5 bits.
+ * - A bit each for:
+ *   * Is it Default_Ignorable(); we have a modified Default_Ignorable().
+ *   * Is it U+200D ZWJ?
+ *   * Is it U+200C ZWNJ?
+ *
+ * The high-byte has different meanings, switched by the Gen-Cat:
+ * - For Mn,Mc,Me: the modified Combining_Class.
+ * - For Ws: index of which space character this is, if space fallback
+ *   is needed, ie. we don't set this by default, only if asked to.
+ *
+ * If needed, we can use the ZWJ/ZWNJ to use the high byte as well,
+ * freeing two more bits.
+ */
+
+enum hb_unicode_props_flags_t {
+  UPROPS_MASK_ZWJ       = 0x20u,
+  UPROPS_MASK_ZWNJ      = 0x40u,
+  UPROPS_MASK_IGNORABLE = 0x80u,
+  UPROPS_MASK_GEN_CAT   = 0x1Fu
 };
+HB_MARK_AS_FLAG_T (hb_unicode_props_flags_t);
 
 static inline void
-_hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_unicode_funcs_t *unicode)
+_hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
 {
-  /* XXX This shouldn't be inlined, or at least not while is_default_ignorable() is inline. */
-  info->unicode_props0() = ((unsigned int) unicode->general_category (info->codepoint)) |
-			   (unicode->is_default_ignorable (info->codepoint) ? MASK0_IGNORABLE : 0) |
-			   (info->codepoint == 0x200Cu ? MASK0_ZWNJ : 0) |
-			   (info->codepoint == 0x200Du ? MASK0_ZWJ : 0);
-  info->unicode_props1() = unicode->modified_combining_class (info->codepoint);
+  hb_unicode_funcs_t *unicode = buffer->unicode;
+  unsigned int u = info->codepoint;
+  unsigned int gen_cat = (unsigned int) unicode->general_category (u);
+  unsigned int props = gen_cat;
+
+  if (u >= 0x80)
+  {
+    buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_NON_ASCII;
+    if (unlikely (unicode->is_default_ignorable (u)))
+    {
+      buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_DEFAULT_IGNORABLES;
+      props |=  UPROPS_MASK_IGNORABLE;
+      if (u == 0x200Cu) props |= UPROPS_MASK_ZWNJ;
+      if (u == 0x200Du) props |= UPROPS_MASK_ZWJ;
+    }
+    else if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_NON_ENCLOSING_MARK (gen_cat)))
+    {
+      /* Only Mn and Mc can have non-zero ccc:
+       * http://www.unicode.org/policies/stability_policy.html#Property_Value
+       * """
+       * Canonical_Combining_Class, General_Category
+       * All characters other than those with General_Category property values
+       * Spacing_Mark (Mc) and Nonspacing_Mark (Mn) have the Canonical_Combining_Class
+       * property value 0.
+       * 1.1.5+
+       * """
+       *
+       * Also, all Mn's that are Default_Ignorable, have ccc=0, hence
+       * the "else if".
+       */
+      props |= unicode->modified_combining_class (info->codepoint)<<8;
+    }
+  }
+
+  info->unicode_props() = props;
 }
 
 static inline void
 _hb_glyph_info_set_general_category (hb_glyph_info_t *info,
 				     hb_unicode_general_category_t gen_cat)
 {
-  info->unicode_props0() = (unsigned int) gen_cat | ((info->unicode_props0()) & ~MASK0_GEN_CAT);
+  /* Clears top-byte. */
+  info->unicode_props() = (unsigned int) gen_cat | (info->unicode_props() & (0xFF & ~UPROPS_MASK_GEN_CAT));
 }
 
 static inline hb_unicode_general_category_t
 _hb_glyph_info_get_general_category (const hb_glyph_info_t *info)
 {
-  return (hb_unicode_general_category_t) (info->unicode_props0() & MASK0_GEN_CAT);
+  return (hb_unicode_general_category_t) (info->unicode_props() & UPROPS_MASK_GEN_CAT);
 }
 
+static inline bool
+_hb_glyph_info_is_unicode_mark (const hb_glyph_info_t *info)
+{
+  return HB_UNICODE_GENERAL_CATEGORY_IS_MARK (info->unicode_props() & UPROPS_MASK_GEN_CAT);
+}
 static inline void
 _hb_glyph_info_set_modified_combining_class (hb_glyph_info_t *info,
 					     unsigned int modified_class)
 {
-  info->unicode_props1() = modified_class;
+  if (unlikely (!_hb_glyph_info_is_unicode_mark (info)))
+    return;
+  info->unicode_props() = (modified_class<<8) | (info->unicode_props() & 0xFF);
 }
-
 static inline unsigned int
 _hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
 {
-  return info->unicode_props1();
+  return _hb_glyph_info_is_unicode_mark (info) ? info->unicode_props()>>8 : 0;
+}
+
+static inline bool
+_hb_glyph_info_is_unicode_space (const hb_glyph_info_t *info)
+{
+  return _hb_glyph_info_get_general_category (info) ==
+	 HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR;
+}
+static inline void
+_hb_glyph_info_set_unicode_space_fallback_type (hb_glyph_info_t *info, hb_unicode_funcs_t::space_t s)
+{
+  if (unlikely (!_hb_glyph_info_is_unicode_space (info)))
+    return;
+  info->unicode_props() = (((unsigned int) s)<<8) | (info->unicode_props() & 0xFF);
+}
+static inline hb_unicode_funcs_t::space_t
+_hb_glyph_info_get_unicode_space_fallback_type (const hb_glyph_info_t *info)
+{
+  return _hb_glyph_info_is_unicode_space (info) ?
+	 (hb_unicode_funcs_t::space_t) (info->unicode_props()>>8) :
+	 hb_unicode_funcs_t::NOT_SPACE;
 }
 
 static inline bool _hb_glyph_info_ligated (const hb_glyph_info_t *info);
@@ -263,25 +338,25 @@ static inline bool _hb_glyph_info_ligated (const hb_glyph_info_t *info);
 static inline hb_bool_t
 _hb_glyph_info_is_default_ignorable (const hb_glyph_info_t *info)
 {
-  return (info->unicode_props0() & MASK0_IGNORABLE) && !_hb_glyph_info_ligated (info);
+  return (info->unicode_props() & UPROPS_MASK_IGNORABLE) && !_hb_glyph_info_ligated (info);
 }
 
 static inline hb_bool_t
 _hb_glyph_info_is_zwnj (const hb_glyph_info_t *info)
 {
-  return !!(info->unicode_props0() & MASK0_ZWNJ);
+  return !!(info->unicode_props() & UPROPS_MASK_ZWNJ);
 }
 
 static inline hb_bool_t
 _hb_glyph_info_is_zwj (const hb_glyph_info_t *info)
 {
-  return !!(info->unicode_props0() & MASK0_ZWJ);
+  return !!(info->unicode_props() & UPROPS_MASK_ZWJ);
 }
 
 static inline void
 _hb_glyph_info_flip_joiners (hb_glyph_info_t *info)
 {
-  info->unicode_props0() ^= MASK0_ZWNJ | MASK0_ZWJ;
+  info->unicode_props() ^= UPROPS_MASK_ZWNJ | UPROPS_MASK_ZWJ;
 }
 
 /* lig_props: aka lig_id / lig_comp
@@ -455,22 +530,19 @@ _hb_glyph_info_clear_substituted_and_ligated_and_multiplied (hb_glyph_info_t *in
 static inline void
 _hb_buffer_allocate_unicode_vars (hb_buffer_t *buffer)
 {
-  HB_BUFFER_ALLOCATE_VAR (buffer, unicode_props0);
-  HB_BUFFER_ALLOCATE_VAR (buffer, unicode_props1);
+  HB_BUFFER_ALLOCATE_VAR (buffer, unicode_props);
 }
 
 static inline void
 _hb_buffer_deallocate_unicode_vars (hb_buffer_t *buffer)
 {
-  HB_BUFFER_DEALLOCATE_VAR (buffer, unicode_props0);
-  HB_BUFFER_DEALLOCATE_VAR (buffer, unicode_props1);
+  HB_BUFFER_DEALLOCATE_VAR (buffer, unicode_props);
 }
 
 static inline void
 _hb_buffer_assert_unicode_vars (hb_buffer_t *buffer)
 {
-  HB_BUFFER_ASSERT_VAR (buffer, unicode_props0);
-  HB_BUFFER_ASSERT_VAR (buffer, unicode_props1);
+  HB_BUFFER_ASSERT_VAR (buffer, unicode_props);
 }
 
 static inline void
