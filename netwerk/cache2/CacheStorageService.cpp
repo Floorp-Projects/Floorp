@@ -2048,57 +2048,6 @@ CacheStorageService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) con
   return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
-namespace {
-
-class ReportStorageMemoryData
-{
-public:
-  nsIMemoryReporterCallback *mHandleReport;
-  nsISupports *mData;
-};
-
-PLDHashOperator ReportStorageMemory(const nsACString& aKey,
-                                    CacheEntryTable* aTable,
-                                    void* aClosure)
-{
-  CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
-
-  size_t size = 0;
-  mozilla::MallocSizeOf mallocSizeOf = CacheStorageService::MallocSizeOf;
-
-  size += aTable->ShallowSizeOfIncludingThis(mallocSizeOf);
-  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
-    size += iter.Key().SizeOfExcludingThisIfUnshared(mallocSizeOf);
-
-    // Bypass memory-only entries, those will be reported when iterating
-    // the memory only table. Memory-only entries are stored in both ALL_ENTRIES
-    // and MEMORY_ONLY hashtables.
-    RefPtr<mozilla::net::CacheEntry> const& entry = iter.Data();
-    if (aTable->Type() == CacheEntryTable::MEMORY_ONLY ||
-        entry->IsUsingDisk()) {
-      size += entry->SizeOfIncludingThis(mallocSizeOf);
-    }
-  }
-
-  ReportStorageMemoryData& data =
-    *static_cast<ReportStorageMemoryData*>(aClosure);
-  // These key names are not privacy-sensitive.
-  data.mHandleReport->Callback(
-    EmptyCString(),
-    nsPrintfCString("explicit/network/cache2/%s-storage(%s)",
-      aTable->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
-      aKey.BeginReading()),
-    nsIMemoryReporter::KIND_HEAP,
-    nsIMemoryReporter::UNITS_BYTES,
-    size,
-    NS_LITERAL_CSTRING("Memory used by the cache storage."),
-    data.mData);
-
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 NS_IMETHODIMP
 CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
                                     nsISupports* aData, bool aAnonymize)
@@ -2141,10 +2090,40 @@ CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
   //   1 CacheFileOutputStream
   //   N CacheFileInputStream
   if (sGlobalEntryTables) {
-    ReportStorageMemoryData data;
-    data.mHandleReport = aHandleReport;
-    data.mData = aData;
-    sGlobalEntryTables->EnumerateRead(&ReportStorageMemory, &data);
+    for (auto iter1 = sGlobalEntryTables->Iter(); !iter1.Done(); iter1.Next()) {
+      CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
+
+      CacheEntryTable* table = iter1.UserData();
+
+      size_t size = 0;
+      mozilla::MallocSizeOf mallocSizeOf = CacheStorageService::MallocSizeOf;
+
+      size += table->ShallowSizeOfIncludingThis(mallocSizeOf);
+      for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
+        size += iter2.Key().SizeOfExcludingThisIfUnshared(mallocSizeOf);
+
+        // Bypass memory-only entries, those will be reported when iterating the
+        // memory only table. Memory-only entries are stored in both ALL_ENTRIES
+        // and MEMORY_ONLY hashtables.
+        RefPtr<mozilla::net::CacheEntry> const& entry = iter2.Data();
+        if (table->Type() == CacheEntryTable::MEMORY_ONLY ||
+            entry->IsUsingDisk()) {
+          size += entry->SizeOfIncludingThis(mallocSizeOf);
+        }
+      }
+
+      // These key names are not privacy-sensitive.
+      aHandleReport->Callback(
+        EmptyCString(),
+        nsPrintfCString("explicit/network/cache2/%s-storage(%s)",
+          table->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
+          iter1.Key().BeginReading()),
+        nsIMemoryReporter::KIND_HEAP,
+        nsIMemoryReporter::UNITS_BYTES,
+        size,
+        NS_LITERAL_CSTRING("Memory used by the cache storage."),
+        aData);
+    }
   }
 
   return NS_OK;
