@@ -2538,7 +2538,10 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     if (sameTypeParent) {
       mUpgradeInsecureRequests =
         sameTypeParent->GetDocument()->GetUpgradeInsecureRequests();
+      // if the parent document makes use of upgrade-insecure-requests
+      // then subdocument preloads should always be upgraded.
       mUpgradeInsecurePreloads =
+        mUpgradeInsecureRequests ||
         sameTypeParent->GetDocument()->GetUpgradeInsecurePreloads();
     }
   }
