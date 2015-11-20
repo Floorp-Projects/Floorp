@@ -789,7 +789,11 @@ class Node {
 
     using Size = Base::Size;
     Size size(mozilla::MallocSizeOf mallocSizeof) const {
-        return base()->size(mallocSizeof);
+        auto size =  base()->size(mallocSizeof);
+        MOZ_ASSERT(size > 0,
+                   "C++ does not have zero-sized types! Choose 1 if you just need a "
+                   "conservative default.");
+        return size;
     }
 
     UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames = true) const {
