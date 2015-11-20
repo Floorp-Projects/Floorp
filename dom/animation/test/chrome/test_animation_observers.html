@@ -1450,7 +1450,7 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
 });
 
 // Run the tests.
-
+SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
 
 runAllAsyncTests().then(function() {

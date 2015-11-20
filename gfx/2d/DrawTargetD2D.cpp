@@ -472,6 +472,9 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   }
 
   srView = static_cast<SourceSurfaceD2DTarget*>(aSurface)->GetSRView();
+  if (!srView) {
+    return;
+  }
 
   EnsureViews();
 
@@ -758,6 +761,11 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   mDevice->OMSetBlendState(GetBlendStateForOperator(aOperator), nullptr, 0xffffffff);
 
   mDevice->Draw(4, 0);
+
+  srView = static_cast<SourceSurfaceD2DTarget*>(aSurface)->GetSRView();
+  if (!srView) {
+    return;
+  }
 
   mPrivateData->mEffect->GetVariableByName("QuadDesc")->AsVector()->
     SetFloatVector(ShaderConstantRectD3D10(-1.0f + ((aDest.x / mSize.width) * 2.0f),

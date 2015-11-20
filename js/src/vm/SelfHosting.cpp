@@ -2027,7 +2027,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     // different thread than the clone target. In theory, these objects are all
     // tenured and will not be compacted; however, we simply avoid the issue
     // altogether by skipping the cycle-detection when off the main thread.
-    Maybe<AutoCycleDetector> detect;
+    mozilla::Maybe<AutoCycleDetector> detect;
     if (js::CurrentThreadCanAccessZone(selfHostedObject->zoneFromAnyThread())) {
         detect.emplace(cx, selfHostedObject);
         if (!detect->init())
@@ -2195,7 +2195,8 @@ js::SelfHostedFunction(JSContext* cx, HandlePropertyName propName)
 bool
 js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name)
 {
-    return fun->isSelfHostedBuiltin() && fun->getExtendedSlot(0).toString() == name;
+    return fun->isSelfHostedBuiltin() &&
+           fun->getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString() == name;
 }
 
 static_assert(JSString::MAX_LENGTH <= INT32_MAX,

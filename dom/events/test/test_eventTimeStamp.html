@@ -74,8 +74,9 @@ function testWorkerEvents() {
   var worker = new Worker(window.URL.createObjectURL(blob));
   worker.onmessage = function(evt) {
     var timeAfterEvent = window.performance.now();
-    ok(evt.data > timeBeforeEvent &&
-       evt.data < timeAfterEvent,
+    var time = window.performance.translateTime(evt.data, worker);
+    ok(time >= timeBeforeEvent &&
+       time <= timeAfterEvent,
        "Event timestamp in dedicated worker (" + evt.data +
          ") is in expected range: (" +
          timeBeforeEvent + ", " + timeAfterEvent + ")");
