@@ -577,7 +577,7 @@ static void GetKeywordsForProperty(const nsCSSProperty aProperty,
     // Shorthand props have no keywords.
     return;
   }
-  const nsCSSProps::KTableValue *keywordTable =
+  const nsCSSProps::KTableEntry* keywordTable =
     nsCSSProps::kKeywordTableTable[aProperty];
   if (keywordTable) {
     for (size_t i = 0; keywordTable[i].mKeyword != eCSSKeyword_UNKNOWN; ++i) {
