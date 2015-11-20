@@ -93,9 +93,7 @@ public:
     if (mozilla::IsInfinite<double>(aValue)) {
       return FromInfinity();
     }
-    // Due to internal double representation, this
-    // operation is not commutative, do not attempt to simplify.
-    double val = (aValue + .0000005) * USECS_PER_S;
+    double val = aValue * USECS_PER_S;
     if (val >= double(INT64_MAX)) {
       return FromMicroseconds(INT64_MAX);
     } else if (val <= double(INT64_MIN)) {
