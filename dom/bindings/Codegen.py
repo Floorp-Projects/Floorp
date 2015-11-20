@@ -12172,11 +12172,9 @@ class CGDictionary(CGThing):
             if m.canHaveMissingValue():
                 memberAssign = CGGeneric(fill(
                     """
+                    ${name}.Reset();
                     if (aOther.${name}.WasPassed()) {
-                      ${name}.Construct();
-                      ${name}.Value() = aOther.${name}.Value();
-                    } else {
-                      ${name}.Reset();
+                      ${name}.Construct(aOther.${name}.Value());
                     }
                     """,
                     name=memberName))
