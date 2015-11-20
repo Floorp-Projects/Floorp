@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 chrome.jar:
-% content branding %content/branding/
+% content branding %content/branding/ contentaccessible=yes
   content/branding/about.png                     (about.png)
   content/branding/favicon32.png                 (favicon32.png)
   content/branding/favicon64.png                 (favicon64.png)
