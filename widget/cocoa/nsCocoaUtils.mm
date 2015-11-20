@@ -97,10 +97,10 @@ nsIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
   return rect;
 }
 
-LayoutDeviceIntRect nsCocoaUtils::CocoaRectToGeckoRectDevPix(
-  const NSRect& aCocoaRect, CGFloat aBackingScale)
+nsIntRect nsCocoaUtils::CocoaRectToGeckoRectDevPix(const NSRect &aCocoaRect,
+                                                   CGFloat aBackingScale)
 {
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   rect.x = NSToIntRound(aCocoaRect.origin.x * aBackingScale);
   rect.y = NSToIntRound(FlippedScreenY(aCocoaRect.origin.y + aCocoaRect.size.height) * aBackingScale);
   rect.width = NSToIntRound((aCocoaRect.origin.x + aCocoaRect.size.width) * aBackingScale) - rect.x;
