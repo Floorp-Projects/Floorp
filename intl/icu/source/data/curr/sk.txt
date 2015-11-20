@@ -10,7 +10,7 @@ sk{
     Currencies{
         ADP{
             "ADP",
-            "Andorská peseta",
+            "andorská peseta",
         }
         AED{
             "AED",
@@ -38,7 +38,7 @@ sk{
         }
         AOK{
             "AOK",
-            "Angolská kwanza (1977–1990)",
+            "angolská kwanza (1977–1990)",
         }
         AON{
             "AON",
@@ -46,15 +46,15 @@ sk{
         }
         AOR{
             "AOR",
-            "Angolská kwanza Reajustado (1995–1999)",
+            "angolská kwanza reajustado (1995–1999)",
         }
         ARA{
             "ARA",
-            "Argentinský austral",
+            "argentínsky austral",
         }
         ARP{
             "ARP",
-            "Argentinské peso (1983–1985)",
+            "argentínske peso (1983 – 1985)",
         }
         ARS{
             "ARS",
@@ -62,7 +62,7 @@ sk{
         }
         ATS{
             "ATS",
-            "Rakúsky šiling",
+            "rakúsky šiling",
         }
         AUD{
             "AUD",
@@ -74,7 +74,7 @@ sk{
         }
         AZM{
             "AZM",
-            "Azerbajdžanský manat (1993–2006)",
+            "azerbajdžanský manat (1993–2006)",
         }
         AZN{
             "AZN",
@@ -82,7 +82,7 @@ sk{
         }
         BAD{
             "BAD",
-            "Bosnianský dinár",
+            "bosniansko-hercegovinský dinár (1992–1994)",
         }
         BAM{
             "BAM",
@@ -98,19 +98,19 @@ sk{
         }
         BEC{
             "BEC",
-            "Belgický frank (konvertibilný)",
+            "belgický frank (konvertibilný)",
         }
         BEF{
             "BEF",
-            "Belgický frank",
+            "belgický frank",
         }
         BEL{
             "BEL",
-            "Belgický frank (finančný)",
+            "belgický frank (finančný)",
         }
         BGL{
             "BGL",
-            "Bulharský leva",
+            "bulharský tvrdý lev",
         }
         BGN{
             "BGN",
@@ -138,23 +138,23 @@ sk{
         }
         BOP{
             "BOP",
-            "Bolivíjske peso",
+            "bolívijské peso",
         }
         BOV{
             "BOV",
-            "Bolivíjske mvdol",
+            "bolívijské MVDOL",
         }
         BRB{
             "BRB",
-            "Bolivíjske Cruzeiro Novo (1967–1986)",
+            "brazílske cruzeiro novo (1967–1986)",
         }
         BRC{
             "BRC",
-            "Bolivíjske cruzado",
+            "brazílske cruzado (1986 – 1989)",
         }
         BRE{
             "BRE",
-            "Bolivíjske cruzeiro (1990–1993)",
+            "brazílske cruzeiro (1990 – 1993)",
         }
         BRL{
             "BRL",
@@ -1026,14 +1026,18 @@ sk{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1041,43 +1045,82 @@ sk{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
+        EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
+        GEL{"₾"}
         RUB{"₽"}
         TRY{"TL"}
     }
@@ -2139,5 +2182,5 @@ sk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
 }

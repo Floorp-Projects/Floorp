@@ -7,14 +7,7 @@
 // *
 // ***************************************************************************
 zh_Hans_MO{
-    NumberElements{
-        latn{
-            patterns{
-                currencyFormat{"¤#,##0.00"}
-            }
-        }
-    }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.79"}
     calendar{
         chinese{
             DateTimePatterns{

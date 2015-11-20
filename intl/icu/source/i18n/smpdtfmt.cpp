@@ -209,7 +209,11 @@ static const int32_t gFieldRangeBias[] = {
     -1,  // 'X' - UDAT_TIMEZONE_ISO_FIELD
     -1,  // 'x' - UDAT_TIMEZONE_ISO_LOCAL_FIELD
     -1,  // 'r' - UDAT_RELATED_YEAR_FIELD
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
     -1,  // ':' - UDAT_TIME_SEPARATOR_FIELD
+#else
+    -1,  // (no pattern character currently) - UDAT_TIME_SEPARATOR_FIELD
+#endif
 };
 
 // When calendar uses hebr numbering (i.e. he@calendar=hebrew),
@@ -930,7 +934,7 @@ void SimpleDateFormat::initializeBooleanAttributes()
 
     setBooleanAttribute(UDAT_PARSE_ALLOW_WHITESPACE, true, status);
     setBooleanAttribute(UDAT_PARSE_ALLOW_NUMERIC, true, status);
-    setBooleanAttribute(UDAT_PARSE_PARTIAL_MATCH, true, status);
+    setBooleanAttribute(UDAT_PARSE_PARTIAL_LITERAL_MATCH, true, status);
     setBooleanAttribute(UDAT_PARSE_MULTIPLE_PATTERNS_FOR_MATCH, true, status);
 }
 
@@ -1088,8 +1092,13 @@ int32_t SimpleDateFormat::getLevelFromChar(UChar ch) {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         //       !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
         //   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  0, -1, -1, -1, -1, -1,
+#else
+        //   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+#endif
         //   @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O
             -1, 40, -1, -1, 20, 30, 30,  0, 50, -1, -1, 50, 20, 20, -1,  0,
         //   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
@@ -1119,8 +1128,13 @@ UBool SimpleDateFormat::isSyntaxChar(UChar ch) {
         FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
         //  0      1      2      3      4      5      6      7
         FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
         //  8      9      :      ;      <      =      >      ?
         FALSE, FALSE,  TRUE, FALSE, FALSE, FALSE, FALSE, FALSE,
+#else
+        //  8      9      :      ;      <      =      >      ?
+        FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE,
+#endif
         //  @      A      B      C      D      E      F      G
         FALSE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,  TRUE,
         //  H      I      J      K      L      M      N      O
@@ -1164,7 +1178,11 @@ SimpleDateFormat::fgPatternIndexToCalendarField[] =
     /*O*/   UCAL_ZONE_OFFSET,
     /*Xx*/  UCAL_ZONE_OFFSET, UCAL_ZONE_OFFSET,
     /*r*/   UCAL_EXTENDED_YEAR,
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
     /*:*/   UCAL_FIELD_COUNT, /* => no useful mapping to any calendar field */
+#else
+    /*no pattern char for UDAT_TIME_SEPARATOR_FIELD*/   UCAL_FIELD_COUNT, /* => no useful mapping to any calendar field */
+#endif
 };
 
 // Map index into pattern character string to DateFormat field number
@@ -1188,7 +1206,11 @@ SimpleDateFormat::fgPatternIndexToDateFormatField[] = {
     /*O*/   UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD,
     /*Xx*/  UDAT_TIMEZONE_ISO_FIELD, UDAT_TIMEZONE_ISO_LOCAL_FIELD,
     /*r*/   UDAT_RELATED_YEAR_FIELD,
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
     /*:*/   UDAT_TIME_SEPARATOR_FIELD,
+#else
+    /*no pattern char for UDAT_TIME_SEPARATOR_FIELD*/   UDAT_TIME_SEPARATOR_FIELD,
+#endif
 };
 
 //----------------------------------------------------------------------
@@ -1628,7 +1650,8 @@ SimpleDateFormat::subFormat(UnicodeString &appendTo,
         }
         break;
 
-    // for ":", write out the time separator string
+    // if we see pattern character for UDAT_TIME_SEPARATOR_FIELD (none currently defined),
+    // write out the time separator string. Leave support in for future definition.
     case UDAT_TIME_SEPARATOR_FIELD:
         {
             UnicodeString separator;
@@ -2102,7 +2125,7 @@ SimpleDateFormat::parse(const UnicodeString& text, Calendar& cal, ParsePosition&
 
             abutPat = -1; // End of any abutting fields
             
-            if (! matchLiterals(fPattern, i, text, pos, getBooleanAttribute(UDAT_PARSE_ALLOW_WHITESPACE, status), getBooleanAttribute(UDAT_PARSE_PARTIAL_MATCH, status), isLenient())) {
+            if (! matchLiterals(fPattern, i, text, pos, getBooleanAttribute(UDAT_PARSE_ALLOW_WHITESPACE, status), getBooleanAttribute(UDAT_PARSE_PARTIAL_LITERAL_MATCH, status), isLenient())) {
                 status = U_PARSE_ERROR;
                 goto ExitParse;
             }
@@ -3240,7 +3263,9 @@ int32_t SimpleDateFormat::subParse(const UnicodeString& text, int32_t& start, UC
             }
             return -start;
         }
-    case UDAT_TIME_SEPARATOR_FIELD: // ':'
+    // currently no pattern character is defined for UDAT_TIME_SEPARATOR_FIELD
+    // so we should not get here. Leave support in for future definition.
+    case UDAT_TIME_SEPARATOR_FIELD: //
         {
             static const UChar def_sep = DateFormatSymbols::DEFAULT_TIME_SEPARATOR;
             static const UChar alt_sep = DateFormatSymbols::ALTERNATE_TIME_SEPARATOR;

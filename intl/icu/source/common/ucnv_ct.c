@@ -629,15 +629,7 @@ static const UConverterStaticData _CompoundTextStaticData = {
     0,
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
-const UConverterSharedData _CompoundTextData = {
-    sizeof(UConverterSharedData),
-    ~((uint32_t) 0),
-    NULL,
-    NULL,
-    &_CompoundTextStaticData,
-    FALSE,
-    &_CompoundTextImpl,
-    0
-};
+const UConverterSharedData _CompoundTextData =
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_CompoundTextStaticData, &_CompoundTextImpl);
 
 #endif /* #if !UCONFIG_NO_LEGACY_CONVERSION */

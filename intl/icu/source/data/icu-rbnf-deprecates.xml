@@ -1,0 +1,26 @@
+<!--
+/*
+*******************************************************************************
+* Copyright (C) 2015, International Business Machines Corporation and         *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
+-->
+<deprecates>
+   <alias from="es_DO" to="es_003" />
+   <alias from="es_GT" to="es_003" />
+   <alias from="es_HN" to="es_003" />
+   <alias from="es_MX" to="es_003" />
+   <alias from="es_NI" to="es_003" />
+   <alias from="es_PA" to="es_003" />
+   <alias from="es_PR" to="es_003" />
+   <alias from="es_SV" to="es_003" />
+   <alias from="es_US" to="es_003" />
+   <alias from="in" to="id" />
+   <alias from="iw" to="he" />
+   <alias from="no" to="nb" />
+   <alias from="sh" to="sr_Latn" />
+   <alias from="zh_HK" to="zh_Hant_HK" />
+   <alias from="zh_MO" to="zh_Hant_HK" />
+   <alias from="zh_TW" to="zh_Hant" />
+</deprecates>

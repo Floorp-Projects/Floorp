@@ -270,7 +270,7 @@ nl{
         }
         CNY{
             "CN¥",
-            "Chinese yuan renminbi",
+            "Chinese renminbi",
         }
         COP{
             "COP",
@@ -422,7 +422,7 @@ nl{
         }
         GNF{
             "GNF",
-            "Guinese franc",
+            "Guinese frank",
         }
         GNS{
             "GNS",
@@ -1042,7 +1042,7 @@ nl{
         }
         VNN{
             "VNN",
-            "Oude Vietnamese dong (1978–1985)",
+            "Vietnamese dong (1978–1985)",
         }
         VUV{
             "VUV",
@@ -1110,7 +1110,7 @@ nl{
         }
         XPF{
             "XPF",
-            "CFP-franc",
+            "CFP-frank",
         }
         XPT{
             "XPT",
@@ -1198,14 +1198,18 @@ nl{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1213,44 +1217,85 @@ nl{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
         RUR{"р."}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"ლ"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1514,8 +1559,8 @@ nl{
             other{"dollar van de Chinese Volksbank"}
         }
         CNY{
-            one{"Chinese renminbi"}
-            other{"Chinese renminbi"}
+            one{"Chinese yuan"}
+            other{"Chinese yuan"}
         }
         COP{
             one{"Colombiaanse peso"}
@@ -1666,8 +1711,8 @@ nl{
             other{"Gambiaanse dalasi"}
         }
         GNF{
-            one{"Guinese franc"}
-            other{"Guinese franc"}
+            one{"Guinese frank"}
+            other{"Guinese frank"}
         }
         GNS{
             one{"Guinese syli"}
@@ -2286,8 +2331,8 @@ nl{
             other{"Vietnamese dong"}
         }
         VNN{
-            one{"oude Vietnamese dong (1978–1985)"}
-            other{"oude Vietnamese dong (1978–1985)"}
+            one{"Vietnamese dong (1978–1985)"}
+            other{"Vietnamese dong (1978–1985)"}
         }
         VUV{
             one{"Vanuatuaanse vatu"}
@@ -2354,7 +2399,7 @@ nl{
             other{"Troy ounces palladium"}
         }
         XPF{
-            one{"CFP-franc"}
+            one{"CFP-frank"}
             other{"CFP-frank"}
         }
         XPT{
@@ -2446,5 +2491,5 @@ nl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.96"}
 }

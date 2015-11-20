@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -51,6 +51,7 @@ typedef enum EDigitListValues {
 U_NAMESPACE_BEGIN
 
 class CharString;
+class DigitInterval; 
 
 // Export an explicit template instantiation of the MaybeStackHeaderAndArray that
 //    is used as a data member of DigitList.
@@ -313,6 +314,7 @@ public:
      * Round the number to the given number of digits.
      * @param maximumDigits The maximum number of digits to be shown.
      * Upon return, count will be less than or equal to maximumDigits.
+     * result is guaranteed to be trimmed. 
      */
     void round(int32_t maximumDigits);
 
@@ -356,6 +358,78 @@ public:
      */
     uint8_t     getDigitValue(int32_t i);
 
+    /**
+     * Gets the upper bound exponent for this value. For 987, returns 3
+     * because 10^3 is the smallest power of 10 that is just greater than
+     * 987.
+     */
+    int32_t getUpperExponent() const;
+
+    /**
+     * Gets the lower bound exponent for this value. For 98.7, returns -1
+     * because the right most digit, is the 10^-1 place.
+     */
+    int32_t getLowerExponent() const { return fDecNumber->exponent; }
+
+    /**
+     * Sets result to the smallest DigitInterval needed to display this
+     * DigitList in fixed point form and returns result.
+     */
+    DigitInterval& getSmallestInterval(DigitInterval &result) const;
+
+    /**
+     * Like getDigitValue, but the digit is identified by exponent.
+     * For example, getDigitByExponent(7) returns the 10^7 place of this
+     * DigitList. Unlike getDigitValue, there are no upper or lower bounds
+     * for passed parameter. Instead, getDigitByExponent returns 0 if
+     * the exponent falls outside the interval for this DigitList.
+     */
+    uint8_t getDigitByExponent(int32_t exponent) const;
+
+    /**
+     * Appends the digits in this object to a CharString.
+     * 3 is appended as (char) 3, not '3'
+     */
+    void appendDigitsTo(CharString &str, UErrorCode &status) const;
+
+    /**
+     * Equivalent to roundFixedPoint(-digitExponent) except unlike
+     * roundFixedPoint, this works for any digitExponent value.
+     * If maxSigDigits is set then this instance is rounded to have no more
+     * than maxSigDigits. The end result is guaranteed to be trimmed.
+     */
+    void roundAtExponent(int32_t digitExponent, int32_t maxSigDigits=INT32_MAX);
+
+    /**
+     * Quantizes according to some amount and rounds according to the
+     * context of this instance. Quantizing 3.233 with 0.05 gives 3.25.
+     */
+    void quantize(const DigitList &amount, UErrorCode &status);
+
+    /**
+     * Like toScientific but only returns the exponent
+     * leaving this instance unchanged.
+     */ 
+    int32_t getScientificExponent(
+            int32_t minIntDigitCount, int32_t exponentMultiplier) const;
+
+    /**
+     * Converts this instance to scientific notation. This instance
+     * becomes the mantissa and the exponent is returned.
+     * @param minIntDigitCount minimum integer digits in mantissa
+     *   Exponent is set so that the actual number of integer digits
+     *   in mantissa is as close to the minimum as possible.
+     * @param exponentMultiplier The exponent is always a multiple of
+     *  This number. Usually 1, but set to 3 for engineering notation.
+     * @return exponent
+     */
+    int32_t toScientific(
+            int32_t minIntDigitCount, int32_t exponentMultiplier);
+
+    /**
+     * Shifts decimal to the right.
+     */
+    void shiftDecimalRight(int32_t numPlaces);
 
 private:
     /*
@@ -420,6 +494,7 @@ private:
     static inline void * U_EXPORT2 operator new(size_t size) U_NO_THROW { return ::operator new(size); };
     static inline void U_EXPORT2 operator delete(void *ptr )  U_NO_THROW { ::operator delete(ptr); };
 #endif
+    static char U_EXPORT2 getStrtodDecimalSeparator();
 
     /**
      * Placement new for stack usage

@@ -31,7 +31,7 @@ el{
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
@@ -90,6 +90,56 @@ el{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 χιλ'.' ¤"}
+                        other{"0 χιλ'.' ¤"}
+                    }
+                    10000{
+                        one{"00 χιλ'.' ¤"}
+                        other{"00 χιλ'.' ¤"}
+                    }
+                    100000{
+                        one{"000 χιλ'.' ¤"}
+                        other{"000 χιλ'.' ¤"}
+                    }
+                    1000000{
+                        one{"0 εκ'.' ¤"}
+                        other{"0 εκ'.' ¤"}
+                    }
+                    10000000{
+                        one{"00 εκ'.' ¤"}
+                        other{"00 εκ'.' ¤"}
+                    }
+                    100000000{
+                        one{"000 εκ'.' ¤"}
+                        other{"000 εκ'.' ¤"}
+                    }
+                    1000000000{
+                        one{"0 δισ'.' ¤"}
+                        other{"0 δισ'.' ¤"}
+                    }
+                    10000000000{
+                        one{"00 δισ'.' ¤"}
+                        other{"00 δισ'.' ¤"}
+                    }
+                    100000000000{
+                        one{"000 δισ'.' ¤"}
+                        other{"000 δισ'.' ¤"}
+                    }
+                    1000000000000{
+                        one{"0 τρισ'.' ¤"}
+                        other{"0 τρισ'.' ¤"}
+                    }
+                    10000000000000{
+                        one{"00 τρισ'.' ¤"}
+                        other{"00 τρισ'.' ¤"}
+                    }
+                    100000000000000{
+                        one{"000 τρισ'.' ¤"}
+                        other{"000 τρισ'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 χιλ'.'"}
@@ -160,7 +210,7 @@ el{
         native{"latn"}
         traditional{"grek"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     calendar{
         buddhist{
             eras{
@@ -179,21 +229,20 @@ el{
                 "d MMMM y G",
                 "d MMM y G",
                 "d/M/y GGGGG",
+                "{1}, {0}",
                 "{1} - {0}",
                 "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
-                HHmm{"HH:mm"}
-                HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -322,9 +371,13 @@ el{
                 "π.μ.",
                 "μ.μ.",
             }
+            AmPmMarkersAbbr{
+                "π.μ.",
+                "μ.μ.",
+            }
             AmPmMarkersNarrow{
-                "π",
-                "μ",
+                "πμ",
+                "μμ",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -341,8 +394,6 @@ el{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"μεσημέρι"}
-            NoonMarkerNarrow{"μεσ."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -358,10 +409,10 @@ el{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
-                HHmm{"HH:mm"}
-                HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
@@ -374,6 +425,8 @@ el{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -461,6 +514,54 @@ el{
                         "Πέμπτη",
                         "Παρασκευή",
                         "Σάββατο",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"μεσημ."}
+                        evening1{"απόγ."}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                    }
+                    narrow{
+                        afternoon1{"μεσημ."}
+                        evening1{"απόγ."}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                    }
+                    wide{
+                        afternoon1{"μεσημέρι"}
+                        evening1{"απόγευμα"}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"μεσημ."}
+                        am{"π.μ."}
+                        evening1{"απόγ."}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                        pm{"μ.μ."}
+                    }
+                    narrow{
+                        afternoon1{"μεσημέρι"}
+                        am{"π.μ."}
+                        evening1{"απόγευμα"}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                        pm{"μ.μ."}
+                    }
+                    wide{
+                        afternoon1{"μεσημέρι"}
+                        am{"π.μ."}
+                        evening1{"απόγευμα"}
+                        morning1{"πρωί"}
+                        night1{"βράδυ"}
+                        pm{"μ.μ."}
                     }
                 }
             }
@@ -563,8 +664,8 @@ el{
                     y{"E, dd MMM y – E, dd MMM y"}
                 }
                 yMMMM{
-                    M{"MMMM–MMMM y"}
-                    y{"MMMM y – MMMM y"}
+                    M{"LLLL–LLLL y"}
+                    y{"LLLL y – LLLL y"}
                 }
                 yMMMd{
                     M{"dd MMM – dd MMM y"}
@@ -730,11 +831,11 @@ el{
                 "d MMMM, y G",
                 "d MMM, y G",
                 "d/M/yy",
+                "{1}, {0}",
                 "{1} - {0}",
                 "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
-                "{1} - {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
                 Ed{"E d"}
@@ -777,7 +878,7 @@ el{
     }
     fields{
         day{
-            dn{"Ημέρα"}
+            dn{"ημέρα"}
             relative{
                 "-1"{"χθες"}
                 "-2"{"προχθές"}
@@ -800,12 +901,12 @@ el{
             dn{"ημέρα"}
             relativeTime{
                 future{
-                    one{"σε {0} ημέρα"}
-                    other{"σε {0} ημέρες"}
+                    one{"σε {0} ημ."}
+                    other{"σε {0} ημ."}
                 }
                 past{
-                    one{"πριν από {0} ημέρα"}
-                    other{"πριν από {0} ημέρες"}
+                    one{"{0} ημ. πριν"}
+                    other{"{0} ημ. πριν"}
                 }
             }
         }
@@ -826,7 +927,7 @@ el{
             dn{"π.μ./μ.μ."}
         }
         era{
-            dn{"Περίοδος"}
+            dn{"περίοδος"}
         }
         fri{
             relative{
@@ -850,7 +951,7 @@ el{
             }
         }
         hour{
-            dn{"Ώρα"}
+            dn{"ώρα"}
             relativeTime{
                 future{
                     one{"σε {0} ώρα"}
@@ -866,12 +967,12 @@ el{
             dn{"ώ"}
             relativeTime{
                 future{
-                    one{"+{0} ώ"}
-                    other{"+{0} ώ"}
+                    one{"σε {0} ώ."}
+                    other{"σε {0} ώ."}
                 }
                 past{
-                    one{"-{0} ώ"}
-                    other{"-{0} ώ"}
+                    one{"{0} ώ. πριν"}
+                    other{"{0} ώ. πριν"}
                 }
             }
         }
@@ -889,7 +990,7 @@ el{
             }
         }
         minute{
-            dn{"Λεπτό"}
+            dn{"λεπτό"}
             relativeTime{
                 future{
                     one{"σε {0} λεπτό"}
@@ -905,12 +1006,12 @@ el{
             dn{"λ"}
             relativeTime{
                 future{
-                    one{"+{0} λ"}
-                    other{"+{0} λ"}
+                    one{"σε {0} λ."}
+                    other{"σε {0} λ."}
                 }
                 past{
-                    one{"-{0} λ"}
-                    other{"-{0} λ"}
+                    one{"{0} λ. πριν"}
+                    other{"{0} λ. πριν"}
                 }
             }
         }
@@ -949,7 +1050,7 @@ el{
             }
         }
         month{
-            dn{"Μήνας"}
+            dn{"μήνας"}
             relative{
                 "-1"{"προηγούμενος μήνας"}
                 "0"{"τρέχων μήνας"}
@@ -970,12 +1071,12 @@ el{
             dn{"μήν."}
             relativeTime{
                 future{
-                    one{"+{0} μήν."}
-                    other{"+{0} μήν."}
+                    one{"σε {0} μ."}
+                    other{"σε {0} μ."}
                 }
                 past{
-                    one{"-{0} μήν."}
-                    other{"-{0} μήν."}
+                    one{"{0} μ. πριν"}
+                    other{"{0} μ. πριν"}
                 }
             }
         }
@@ -983,17 +1084,22 @@ el{
             dn{"μήν."}
             relativeTime{
                 future{
-                    one{"σε {0} μήν."}
-                    other{"σε {0} μήν."}
+                    one{"σε {0} μήνα"}
+                    other{"σε {0} μήνες"}
                 }
                 past{
-                    one{"πριν από {0} μήν."}
-                    other{"πριν από {0} μήν."}
+                    one{"πριν από {0} μήνα"}
+                    other{"πριν από {0} μήνες"}
                 }
             }
         }
         quarter{
-            dn{"Τρίμηνο"}
+            dn{"τρίμηνο"}
+            relative{
+                "-1"{"προηγούμενο τρίμηνο"}
+                "0"{"τρέχον τρίμηνο"}
+                "1"{"επόμενο τρίμηνο"}
+            }
             relativeTime{
                 future{
                     one{"σε {0} τρίμηνο"}
@@ -1007,19 +1113,29 @@ el{
         }
         quarter-narrow{
             dn{"τρίμ."}
+            relative{
+                "-1"{"προηγ. τρίμ."}
+                "0"{"τρέχον τρίμ."}
+                "1"{"επόμ. τρίμ."}
+            }
             relativeTime{
                 future{
-                    one{"+{0} Τ"}
-                    other{"+{0} Τ"}
+                    one{"σε {0} τρίμ."}
+                    other{"σε {0} τρίμ."}
                 }
                 past{
-                    one{"-{0} Τ"}
-                    other{"-{0} Τ"}
+                    one{"{0} τρίμ. πριν"}
+                    other{"{0} τρίμ. πριν"}
                 }
             }
         }
         quarter-short{
             dn{"τρίμ."}
+            relative{
+                "-1"{"προηγ. τρίμ."}
+                "0"{"τρέχον τρίμ."}
+                "1"{"επόμ. τρίμ."}
+            }
             relativeTime{
                 future{
                     one{"σε {0} τρίμ."}
@@ -1053,7 +1169,7 @@ el{
             }
         }
         second{
-            dn{"Δευτερόλεπτο"}
+            dn{"δευτερόλεπτο"}
             relative{
                 "0"{"τώρα"}
             }
@@ -1072,12 +1188,12 @@ el{
             dn{"δ"}
             relativeTime{
                 future{
-                    one{"+{0} δ"}
-                    other{"+{0} δ"}
+                    one{"σε {0} δ."}
+                    other{"σε {0} δ."}
                 }
                 past{
-                    one{"-{0} δ"}
-                    other{"-{0} δ"}
+                    one{"{0} δ. πριν"}
+                    other{"{0} δ. πριν"}
                 }
             }
         }
@@ -1117,7 +1233,7 @@ el{
         }
         thu{
             relative{
-                "-1"{"επόμενη Πέμπτη"}
+                "-1"{"προηγούμενη Πέμπτη"}
                 "0"{"αυτήν την Πέμπτη"}
                 "1"{"επόμενη Πέμπτη"}
             }
@@ -1179,7 +1295,7 @@ el{
             }
         }
         week{
-            dn{"Εβδομάδα"}
+            dn{"εβδομάδα"}
             relative{
                 "-1"{"προηγούμενη εβδομάδα"}
                 "0"{"αυτήν την εβδομάδα"}
@@ -1200,12 +1316,12 @@ el{
             dn{"εβδ."}
             relativeTime{
                 future{
-                    one{"+{0} εβδ."}
-                    other{"+{0} εβδ."}
+                    one{"σε {0} εβδ."}
+                    other{"σε {0} εβδ."}
                 }
                 past{
-                    one{"-{0} εβδ."}
-                    other{"-{0} εβδ."}
+                    one{"{0} εβδ. πριν"}
+                    other{"{0} εβδ. πριν"}
                 }
             }
         }
@@ -1223,12 +1339,12 @@ el{
             }
         }
         weekday{
-            dn{"Ημέρα εβδομάδας"}
+            dn{"καθημερινή"}
         }
         year{
-            dn{"Έτος"}
+            dn{"έτος"}
             relative{
-                "-1"{"προηγούμενο έτος"}
+                "-1"{"πέρσι"}
                 "0"{"φέτος"}
                 "1"{"επόμενο έτος"}
             }
@@ -1245,19 +1361,29 @@ el{
         }
         year-narrow{
             dn{"έτ."}
+            relative{
+                "-1"{"πέρσι"}
+                "0"{"φέτος"}
+                "1"{"επόμενο έτος"}
+            }
             relativeTime{
                 future{
-                    one{"+{0} έτος"}
-                    other{"+{0} έτη"}
+                    one{"σε {0} έτος"}
+                    other{"σε {0} έτη"}
                 }
                 past{
-                    one{"-{0} έτος"}
-                    other{"-{0} έτη"}
+                    one{"{0} έτος πριν"}
+                    other{"{0} έτη πριν"}
                 }
             }
         }
         year-short{
             dn{"έτ."}
+            relative{
+                "-1"{"πέρσι"}
+                "0"{"φέτος"}
+                "1"{"επόμενο έτος"}
+            }
             relativeTime{
                 future{
                     one{"σε {0} έτος"}
@@ -1270,7 +1396,7 @@ el{
             }
         }
         zone{
-            dn{"Ζώνη ώρας"}
+            dn{"ζώνη ώρας"}
         }
     }
     listPattern{
@@ -1281,16 +1407,16 @@ el{
             start{"{0}, {1}"}
         }
         unit{
-            2{"{0} και {1}"}
-            end{"{0} και {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
         unit-short{
             2{"{0}, {1}"}

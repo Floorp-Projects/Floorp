@@ -20,7 +20,7 @@ es_UY{
             }
         }
     }
-    Version{"2.1.11.86"}
+    Version{"2.1.19.14"}
     calendar{
         gregorian{
             monthNames{

@@ -143,19 +143,19 @@ et{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
+                minusSign{"−"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{"."}
+                timeSeparator{":"}
             }
         }
-        minimumGroupingDigits{"3"}
+        minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.20.4"}
     calendar{
         generic{
             DateTimePatterns{
@@ -168,12 +168,13 @@ et{
                 "dd.MM.y G",
                 "dd.MM.y GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, 'kell' {0}",
+                "{1}, 'kell' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -213,11 +214,11 @@ et{
                     H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH.mm–HH.mm"}
-                    m{"HH.mm–HH.mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH.mm–HH.mm v"}
+                    H{"HH:mm–HH:mm v"}
                     m{"HH:mm–HH:mm v"}
                 }
                 Hv{
@@ -227,18 +228,18 @@ et{
                     M{"M–M"}
                 }
                 MEd{
-                    M{"E, dd.MM–E, dd.MM"}
-                    d{"E, dd.MM–E, dd.MM"}
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d. MMM–E, d. MMM"}
-                    d{"E, d. MMM–E, d. MMM"}
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. MMM – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. MMM–d. MMM"}
+                    M{"d. MMM – d. MMM"}
                     d{"d.–d. MMM"}
                 }
                 Md{
@@ -275,27 +276,27 @@ et{
                     y{"MM.y–MM.y G"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y–E, dd.MM.y G"}
-                    d{"E, dd.MM.y–E, dd.MM.y G"}
-                    y{"E, dd.MM.y–E, dd.MM.y G"}
+                    M{"E, dd.MM.y – E, dd.MM.y G"}
+                    d{"E, dd.MM.y – E, dd.MM.y G"}
+                    y{"E, dd.MM.y – E, dd.MM.y G"}
                 }
                 yMMM{
                     M{"MMM–MMM y G"}
-                    y{"MMM y–MMM y G"}
+                    y{"MMM y – MMM y G"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM–E, d. MMM y G"}
-                    d{"E, d. MMM–E, d. MMM y G"}
-                    y{"E, d. MMM y–E, d. MMM y G"}
+                    M{"E, d. MMM – E, d. MMM y G"}
+                    d{"E, d. MMM – E, d. MMM y G"}
+                    y{"E, d. MMM y – E, d. MMM y G"}
                 }
                 yMMMM{
                     M{"MMMM–MMMM y G"}
                     y{"MMMM y – MMMM y G"}
                 }
                 yMMMd{
-                    M{"d. MMM–d. MMM y G"}
+                    M{"d. MMM – d. MMM y G"}
                     d{"d.–d. MMM y G"}
-                    y{"d. MMM y–d. MMM y G"}
+                    y{"d. MMM y – d. MMM y G"}
                 }
                 yMd{
                     M{"dd.MM.y–dd.MM.y G"}
@@ -310,8 +311,8 @@ et{
                 "PM",
             }
             AmPmMarkersAbbr{
-                "e.k.",
-                "p.k.",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "a",
@@ -332,18 +333,16 @@ et{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"keskpäev"}
-            NoonMarkerNarrow{"n"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
                 E{"ccc"}
                 EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
+                EHms{"E HH:mm.ss"}
                 Ed{"E, d"}
                 Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
+                Ehms{"E h:mm.ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMMM y G"}
@@ -351,6 +350,8 @@ et{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"H:mm.ss"}
+                Hmsv{"HH:mm.ss v"}
+                Hmv{"HH:mm v"}
                 M{"M"}
                 MEd{"E, d.M"}
                 MMM{"MMMM"}
@@ -363,11 +364,13 @@ et{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm.ss a"}
+                hmsv{"h:mm.ss a v"}
+                hmv{"h:mm a v"}
                 mmss{"mm.ss"}
                 ms{"mm.ss"}
                 y{"y"}
                 yM{"M.y"}
-                yMEd{"E, d.M y"}
+                yMEd{"E, d.M.y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d. MMMM y"}
                 yMMMM{"MMMM y"}
@@ -454,22 +457,56 @@ et{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    narrow{
+                        afternoon1{"pärastlõunal"}
+                        evening1{"õhtul"}
+                        midnight{"keskööl"}
+                        morning1{"hommikul"}
+                        night1{"öösel"}
+                        noon{"n"}
+                    }
+                    wide{
+                        afternoon1{"pärastlõunal"}
+                        evening1{"õhtul"}
+                        midnight{"keskööl"}
+                        morning1{"hommikul"}
+                        night1{"öösel"}
+                        noon{"keskpäeval"}
+                    }
+                }
+                stand-alone{
+                    wide{
+                        afternoon1{"pärastlõuna"}
+                        evening1{"õhtu"}
+                        midnight{"kesköö"}
+                        morning1{"hommik"}
+                        night1{"öö"}
+                        noon{"keskpäev"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
-                    "e.m.a.",
-                    "m.a.j.",
+                    "eKr",
+                    "pKr",
                 }
                 abbreviated%variant{
-                    "EMA",
-                    "MA",
+                    "e.m.a",
+                    "m.a.j",
                 }
                 narrow{
-                    "e.m.a.",
-                    "m.a.j.",
+                    "eKr",
+                    "pKr",
+                }
+                narrow%variant{
+                    "e.m.a",
+                    "m.a.j",
                 }
                 wide{
-                    "enne meie aega",
-                    "meie aja järgi",
+                    "enne Kristust",
+                    "pärast Kristust",
                 }
                 wide%variant{
                     "enne meie ajaarvamist",
@@ -481,11 +518,11 @@ et{
                     H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH.mm–HH.mm"}
-                    m{"HH.mm–HH.mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH.mm–HH.mm v"}
+                    H{"HH:mm–HH:mm v"}
                     m{"HH:mm–HH:mm v"}
                 }
                 Hv{
@@ -495,18 +532,18 @@ et{
                     M{"MM–MM"}
                 }
                 MEd{
-                    M{"E, dd.MM–E, dd.MM"}
-                    d{"E, dd.MM–E, dd.MM"}
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
                 }
                 MMM{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d. MMM–E, d. MMM"}
-                    d{"E, d. MMM–E, d. MMM"}
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. MMM – E, d. MMM"}
                 }
                 MMMd{
-                    M{"d. MMM–d. MMM"}
+                    M{"d. MMM – d. MMM"}
                     d{"d.–d. MMM"}
                 }
                 Md{
@@ -543,27 +580,27 @@ et{
                     y{"MM.y–MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.y–E, dd.MM.y"}
-                    d{"E, dd.MM.y–E, dd.MM.y"}
-                    y{"E, dd.MM.y–E, dd.MM.y"}
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
                     M{"MMM–MMM y"}
-                    y{"MMM y–MMM y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM–E, d. MMM y"}
-                    d{"E, d. MMM–E, d. MMM y"}
-                    y{"E, d. MMM y–E, d. MMM y"}
+                    M{"E, d. MMM – E, d. MMM y"}
+                    d{"E, d. MMM – E, d. MMM y"}
+                    y{"E, d. MMM y – E, d. MMM y"}
                 }
                 yMMMM{
                     M{"MMMM–MMMM y"}
                     y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"d. MMM–d. MMM y"}
+                    M{"d. MMM – d. MMM y"}
                     d{"d.–d. MMM y"}
-                    y{"d. MMM y–d. MMM y"}
+                    y{"d. MMM y – d. MMM y"}
                 }
                 yMd{
                     M{"dd.MM.y–dd.MM.y"}
@@ -802,12 +839,12 @@ et{
             dn{"t"}
             relativeTime{
                 future{
-                    one{"{0} h pärast"}
-                    other{"{0} h pärast"}
+                    one{"{0} t pärast"}
+                    other{"{0} t pärast"}
                 }
                 past{
-                    one{"{0} h tagasi"}
-                    other{"{0} h tagasi"}
+                    one{"{0} t tagasi"}
+                    other{"{0} t tagasi"}
                 }
             }
         }
@@ -815,12 +852,12 @@ et{
             dn{"t"}
             relativeTime{
                 future{
-                    one{"{0} h pärast"}
-                    other{"{0} h pärast"}
+                    one{"{0} t pärast"}
+                    other{"{0} t pärast"}
                 }
                 past{
-                    one{"{0} h tagasi"}
-                    other{"{0} h tagasi"}
+                    one{"{0} t tagasi"}
+                    other{"{0} t tagasi"}
                 }
             }
         }
@@ -929,7 +966,12 @@ et{
             }
         }
         quarter{
-            dn{"Kvartal"}
+            dn{"kvartal"}
+            relative{
+                "-1"{"eelmine kvartal"}
+                "0"{"käesolev kvartal"}
+                "1"{"järgmine kvartal"}
+            }
             relativeTime{
                 future{
                     one{"{0} kvartali pärast"}
@@ -943,6 +985,11 @@ et{
         }
         quarter-narrow{
             dn{"kv"}
+            relative{
+                "-1"{"eelmine kv"}
+                "0"{"käesolev kv"}
+                "1"{"järgmine kv"}
+            }
             relativeTime{
                 future{
                     one{"+{0} kv"}
@@ -956,6 +1003,11 @@ et{
         }
         quarter-short{
             dn{"kv"}
+            relative{
+                "-1"{"eelmine kv"}
+                "0"{"käesolev kv"}
+                "1"{"järgmine kv"}
+            }
             relativeTime{
                 future{
                     one{"{0} kv pärast"}
@@ -1021,12 +1073,12 @@ et{
             dn{"sek"}
             relativeTime{
                 future{
-                    one{"{0} s pärast"}
-                    other{"{0} s pärast"}
+                    one{"{0} sek pärast"}
+                    other{"{0} sek pärast"}
                 }
                 past{
-                    one{"{0} s tagasi"}
-                    other{"{0} s tagasi"}
+                    one{"{0} sek tagasi"}
+                    other{"{0} sek tagasi"}
                 }
             }
         }
@@ -1237,7 +1289,7 @@ et{
     }
     measurementSystemNames{
         UK{"inglise mõõdustik"}
-        US{"inglise mõõdustik"}
+        US{"USA mõõdustik"}
         metric{"meetermõõdustik"}
     }
     transformNames{
@@ -1245,8 +1297,8 @@ et{
         Numeric{"Numbriline"}
         Tone{"Toon"}
         UNGEGN{"UNGEGN"}
-        x-Accents{"Aktsendid"}
-        x-Fullwidth{"Täislai"}
+        x-Accents{"Diakriitikud"}
+        x-Fullwidth{"Täislaius"}
         x-Halfwidth{"Poolaius"}
         x-Jamo{"Jamo"}
         x-Pinyin{"Pinyin"}

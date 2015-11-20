@@ -7,24 +7,97 @@
 // *
 // ***************************************************************************
 zh_Hant_HK{
+    Ellipsis{
+        final{"{0}⋯"}
+        initial{"⋯{0}"}
+        medial{"{0}⋯{1}"}
+        word-final{"{0}⋯"}
+        word-initial{"⋯{0}"}
+        word-medial{"{0}⋯{1}"}
+    }
     NumberElements{
         latn{
-            patternsLong{
-                decimalFormat{
+            patternsShort{
+                currencyFormat{
                     1000{
-                        other{"0千"}
+                        other{"¤0K"}
                     }
                     10000{
-                        other{"0萬"}
+                        other{"¤00K"}
                     }
                     100000{
-                        other{"00萬"}
+                        other{"¤000K"}
+                    }
+                    1000000{
+                        other{"¤0M"}
+                    }
+                    10000000{
+                        other{"¤00M"}
+                    }
+                    100000000{
+                        other{"¤000M"}
+                    }
+                    1000000000{
+                        other{"¤0B"}
+                    }
+                    10000000000{
+                        other{"¤00B"}
+                    }
+                    100000000000{
+                        other{"¤000B"}
+                    }
+                    1000000000000{
+                        other{"¤0T"}
+                    }
+                    10000000000000{
+                        other{"¤00T"}
+                    }
+                    100000000000000{
+                        other{"¤000T"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        other{"0K"}
+                    }
+                    10000{
+                        other{"00K"}
+                    }
+                    100000{
+                        other{"000K"}
+                    }
+                    1000000{
+                        other{"0M"}
+                    }
+                    10000000{
+                        other{"00M"}
+                    }
+                    100000000{
+                        other{"000M"}
+                    }
+                    1000000000{
+                        other{"0B"}
+                    }
+                    10000000000{
+                        other{"00B"}
+                    }
+                    100000000000{
+                        other{"000B"}
+                    }
+                    1000000000000{
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        other{"000T"}
                     }
                 }
             }
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.94"}
     calendar{
         buddhist{
             availableFormats{
@@ -33,6 +106,21 @@ zh_Hant_HK{
             }
         }
         chinese{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ah:mm:ss",
+                "ah:mm",
+                "U（r）年MMMdEEEE",
+                "U（r）年MMMd",
+                "U年MMMd",
+                "U/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -155,6 +243,7 @@ zh_Hant_HK{
                 yyyyMEd{"Gy/M/dE"}
                 yyyyMMM{"Gy年M月"}
                 yyyyMMMEd{"Gy年M月d日E"}
+                yyyyMMMM{"Gy年M月"}
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy/M/d"}
                 yyyyQQQ{"Gy年QQQ"}
@@ -215,7 +304,7 @@ zh_Hant_HK{
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
-                "d/M/yy",
+                "d/M/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -223,6 +312,7 @@ zh_Hant_HK{
                 "{1} {0}",
             }
             availableFormats{
+                E{"cccc"}
                 Ed{"d日E"}
                 GyMMMEd{"Gy年M月d日E"}
                 MEd{"E, d/M"}
@@ -234,6 +324,73 @@ zh_Hant_HK{
                 yMM{"MM/y"}
                 yMMMEd{"y年M月d日E"}
                 yMd{"d/M/y"}
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                    narrow{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                    wide{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                    narrow{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                    wide{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        morning1{"清晨"}
+                        morning2{"早上"}
+                        night1{"凌晨"}
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "公元前",
+                    "公元",
+                }
+                wide{
+                    "公元前",
+                    "公元",
+                }
             }
             intervalFormats{
                 MEd{
@@ -288,17 +445,304 @@ zh_Hant_HK{
         }
     }
     fields{
+        day{
+            relative{
+                "-1"{"昨日"}
+                "-2"{"前日"}
+                "0"{"今日"}
+                "1"{"明日"}
+                "2"{"後日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 日後"}
+                }
+                past{
+                    other{"{0} 日前"}
+                }
+            }
+        }
+        day-narrow{
+            relative{
+                "-2"{"前日"}
+                "2"{"後日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}日後"}
+                }
+                past{
+                    other{"{0}日前"}
+                }
+            }
+        }
+        day-short{
+            relative{
+                "-2"{"前日"}
+                "2"{"後日"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 日後"}
+                }
+                past{
+                    other{"{0} 日前"}
+                }
+            }
+        }
+        fri{
+            relative{
+                "-1"{"上星期五"}
+                "0"{"本星期五"}
+                "1"{"下星期五"}
+            }
+        }
+        fri-short{
+            relative{
+                "-1"{"上星期五"}
+                "0"{"本星期五"}
+                "1"{"下星期五"}
+            }
+        }
         hour-narrow{
             dn{"時"}
+            relativeTime{
+                future{
+                    other{"{0}小時後"}
+                }
+                past{
+                    other{"{0}小時前"}
+                }
+            }
         }
         minute-narrow{
             dn{"分"}
+            relativeTime{
+                future{
+                    other{"{0}分後"}
+                }
+                past{
+                    other{"{0}分前"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"上星期一"}
+                "0"{"本星期一"}
+                "1"{"下星期一"}
+            }
+        }
+        mon-short{
+            relative{
+                "-1"{"上星期一"}
+                "0"{"本星期一"}
+                "1"{"下星期一"}
+            }
+        }
+        month-narrow{
+            relative{
+                "-1"{"上月"}
+                "0"{"本月"}
+                "1"{"下月"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}個月後"}
+                }
+                past{
+                    other{"{0}個月前"}
+                }
+            }
+        }
+        quarter{
+            relative{
+                "-1"{"上一季"}
+                "0"{"今季"}
+                "1"{"下一季"}
+            }
+        }
+        quarter-narrow{
+            relative{
+                "-1"{"上季"}
+                "0"{"今季"}
+                "1"{"下季"}
+            }
+            relativeTime{
+                future{
+                    other{"+{0}Q"}
+                }
+                past{
+                    other{"-{0}Q"}
+                }
+            }
+        }
+        quarter-short{
+            relative{
+                "-1"{"上季"}
+                "0"{"今季"}
+                "1"{"下季"}
+            }
+        }
+        sat{
+            relative{
+                "-1"{"上星期六"}
+                "0"{"本星期六"}
+                "1"{"下星期六"}
+            }
+        }
+        sat-short{
+            relative{
+                "-1"{"上星期六"}
+                "0"{"本星期六"}
+                "1"{"下星期六"}
+            }
+        }
+        second-narrow{
+            relativeTime{
+                future{
+                    other{"{0}秒後"}
+                }
+                past{
+                    other{"{0}秒前"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"上星期日"}
+                "0"{"本星期日"}
+                "1"{"下星期日"}
+            }
+        }
+        sun-short{
+            relative{
+                "-1"{"上星期日"}
+                "0"{"本星期日"}
+                "1"{"下星期日"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"上星期四"}
+                "0"{"本星期四"}
+                "1"{"下星期四"}
+            }
+        }
+        thu-short{
+            relative{
+                "-1"{"上星期四"}
+                "0"{"本星期四"}
+                "1"{"下星期四"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"上星期二"}
+                "0"{"本星期二"}
+                "1"{"下星期二"}
+            }
+        }
+        tue-short{
+            relative{
+                "-1"{"上星期二"}
+                "0"{"本星期二"}
+                "1"{"下星期二"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"上星期三"}
+                "0"{"本星期三"}
+                "1"{"下星期三"}
+            }
+        }
+        wed-short{
+            relative{
+                "-1"{"上星期三"}
+                "0"{"本星期三"}
+                "1"{"下星期三"}
+            }
         }
         week{
             dn{"星期"}
+            relative{
+                "-1"{"上星期"}
+                "0"{"本星期"}
+                "1"{"下星期"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 星期後"}
+                }
+                past{
+                    other{"{0} 星期前"}
+                }
+            }
+        }
+        week-narrow{
+            relativeTime{
+                future{
+                    other{"{0}週後"}
+                }
+                past{
+                    other{"{0}週前"}
+                }
+            }
+        }
+        week-short{
+            dn{"星期"}
+            relative{
+                "-1"{"上星期"}
+                "0"{"本星期"}
+                "1"{"下星期"}
+            }
+            relativeTime{
+                future{
+                    other{"{0} 星期後"}
+                }
+                past{
+                    other{"{0} 星期前"}
+                }
+            }
         }
         weekday{
             dn{"星期幾"}
+        }
+        year{
+            relative{
+                "-1"{"上年"}
+                "0"{"今年"}
+                "1"{"下年"}
+            }
+        }
+        year-narrow{
+            relative{
+                "-1"{"上年"}
+                "0"{"今年"}
+                "1"{"下年"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}年後"}
+                }
+                past{
+                    other{"{0}年前"}
+                }
+            }
+        }
+        year-short{
+            relative{
+                "-1"{"上年"}
+                "0"{"今年"}
+                "1"{"下年"}
+            }
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0}及{1}"}
+            end{"{0}及{1}"}
         }
     }
 }

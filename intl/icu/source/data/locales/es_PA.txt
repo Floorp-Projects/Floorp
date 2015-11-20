@@ -8,7 +8,7 @@
 // ***************************************************************************
 es_PA{
     %%Parent{"es_419"}
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -33,6 +33,33 @@ es_PA{
                 yMEd{"E MM/dd/y"}
                 yMd{"MM/dd/y"}
             }
+            intervalFormats{
+                MMMEd{
+                    M{"E d 'de' MMM 'al' E d 'de' MMM"}
+                    d{"E d 'al' E d 'de' MMM"}
+                }
+                MMMd{
+                    M{"d 'de' MMM 'al' d 'de' MMM"}
+                }
+                fallback{"{0} a el {1}"}
+                y{
+                    y{"y–y"}
+                }
+                yMMM{
+                    M{"MMM–MMM 'de' y"}
+                    y{"MMM 'de' y 'a' MMM 'de' y"}
+                }
+                yMMMEd{
+                    M{"E d 'de' MMM 'al' E d 'de' MMM 'de' y"}
+                    d{"E d 'al' E d 'de' MMM 'de' y"}
+                    y{"E d 'de' MMM 'de' y 'al' E d 'de' MMM 'de' y"}
+                }
+                yMMMd{
+                    M{"d 'de' MMM 'al' d 'de' MMM 'de' y"}
+                    d{"d–d 'de' MMM 'de' y"}
+                    y{"d 'de' MMM 'de' y 'al' d 'de' MMM 'de' y"}
+                }
+            }
         }
         gregorian{
             DateTimePatterns{
@@ -55,7 +82,96 @@ es_PA{
                 Md{"MM/dd"}
                 yM{"MM/y"}
                 yMEd{"E MM/dd/y"}
+                yMMM{"MMM y"}
+                yMMMd{"d MMM y"}
                 yMd{"MM/dd/y"}
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        noon{"mediodía"}
+                    }
+                    wide{
+                        noon{"mediodía"}
+                    }
+                }
+            }
+            intervalFormats{
+                MMMEd{
+                    M{"E d 'de' MMM 'al' E d 'de' MMM"}
+                    d{"E d 'al' E d 'de' MMM"}
+                }
+                MMMd{
+                    M{"d 'de' MMM 'al' d 'de' MMM"}
+                }
+                yM{
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
+                }
+                yMMM{
+                    y{"MMM 'de' y 'a' MMM 'de' y"}
+                }
+                yMMMEd{
+                    M{"E d 'de' MMM 'al' E d 'de' MMM 'de' y"}
+                    d{"E d 'al' E d 'de' MMM 'de' y"}
+                    y{"E d 'de' MMM 'de' y 'al' E d 'de' MMM 'de' y"}
+                }
+                yMMMd{
+                    M{"d 'de' MMM 'al' d 'de' MMM 'de' y"}
+                    y{"d 'de' MMM 'de' y 'al' d 'de' MMM 'de' y"}
+                }
+            }
+            monthNames{
+                format{
+                    narrow{
+                        "E",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "J",
+                        "J",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "E",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "J",
+                        "J",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    wide{
+                        "1er. trimestre",
+                        "2do. trimestre",
+                        "3er. trimestre",
+                        "4.º trimestre",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "1er. trimestre",
+                        "2do. trimestre",
+                        "3er. trimestre",
+                        "4.º trimestre",
+                    }
+                }
             }
         }
     }

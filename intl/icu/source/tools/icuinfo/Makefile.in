@@ -1,5 +1,5 @@
 ## Makefile.in for ICU - tools/icuinfo
-## Copyright (c) 1999-2012, International Business Machines Corporation and
+## Copyright (c) 1999-2015, International Business Machines Corporation and
 ## others. All Rights Reserved.
 ## Madhu Katragadda
 
@@ -25,7 +25,7 @@ CPPFLAGS+= -I$(top_srcdir)/i18n
 LIBS = $(LIBICUTOOLUTIL) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS) $(LIB_M)
 
 OBJECTS = icuinfo.o
-PLUGIN_OBJECTS = testplug.o
+@PLUGINS_TRUE@PLUGIN_OBJECTS = testplug.o
 
 DEPS = $(OBJECTS:.o=.d)
 
@@ -82,10 +82,14 @@ PLUGINDIR=$(shell pwd)
 
 PLUGINFILE=$(PLUGINDIR)/icuplugins$(SO_TARGET_VERSION_MAJOR).txt
 
+CFLAGS+=$(SHAREDLIBCFLAGS)
+
+@PLUGINS_TRUE@HAVE_PLUGINS=yes
+
+ifeq ($(HAVE_PLUGINS),yes)
 $(PLUGINFILE): Makefile
 	echo "$(CURR_FULL_DIR)/$(PLUGIN)	myPlugin	x=4" > $@
 
-CFLAGS+=$(SHAREDLIBCFLAGS)
 
 $(PLUGIN): $(PLUGIN_OBJECTS)
 	$(SHLIB.cc) $(SHAREDLIBCFLAGS) $(LD_SONAME) $(OUTOPT)$@ $^ $(LIBS)
@@ -94,7 +98,10 @@ plugin: $(PLUGIN)
 
 plugin-check: $(PLUGIN) $(PLUGINFILE)
 	$(INVOKE) ICU_PLUGINS="$(CURR_FULL_DIR)" ./$(TARGET) -v -L
-
+else
+plugin plugin-check $(PLUGIN):
+	@echo "Plugins are disabled (use --enable-plugins to enable)"
+endif
 
 ifeq (,$(MAKECMDGOALS))
 -include $(DEPS)

@@ -54,6 +54,42 @@
     <ClCompile Include="usearch.cpp">
       <Filter>collation</Filter>
     </ClCompile>
+    <ClCompile Include="affixpatternparser.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="decimfmtimpl.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="digitaffix.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="digitaffixesandpadding.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="digitformatter.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="digitgrouping.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="digitinterval.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="pluralaffix.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="precision.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="smallintformatter.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="valueformatter.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="visibledigits.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="astro.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -510,9 +546,6 @@
     <ClCompile Include="uregion.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
-    <ClCompile Include="filteredbrk.cpp">
-      <Filter>misc</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bocsu.cpp">
@@ -596,6 +629,50 @@
     <ClInclude Include="usrchimp.h">
       <Filter>collation</Filter>
     </ClInclude>
+
+    <ClInclude Include="affixpatternparser.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="decimalformatpatternimpl.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="decimfmtimpl.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="digitaffix.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="digitaffixesandpadding.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="digitformatter.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="digitgrouping.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="digitinterval.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="pluralaffix.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="precision.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="significantdigitinterval.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="smallintformatter.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="valueformatter.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="visibledigits.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+
     <ClInclude Include="astro.h">
       <Filter>formatting</Filter>
     </ClInclude>
@@ -699,9 +776,6 @@
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="shareddateformatsymbols.h">
-      <Filter>formatting</Filter>
-    </ClInclude>
-    <ClInclude Include="shareddatetimepatterngenerator.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="sharednumberformat.h">
@@ -1212,10 +1286,5 @@
     <CustomBuild Include="unicode\uformattable.h">
       <Filter>formatting</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="unicode\filteredbrk.h">
-      <Filter>misc</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

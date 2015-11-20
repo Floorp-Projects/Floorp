@@ -7,11 +7,11 @@
 // *
 // ***************************************************************************
 fa_AF{
-    Version{"2.0.89.0"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{"[import ps]"}
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

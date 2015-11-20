@@ -43,7 +43,6 @@ pa{
                 percentSign{"٪"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{"٫"}
             }
         }
         default{"latn"}
@@ -112,6 +111,56 @@ pa{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤ 0 ਹਜ਼ਾਰ"}
+                        other{"¤ 0 ਹਜ਼ਾਰ"}
+                    }
+                    10000{
+                        one{"¤ 00 ਹਜ਼ਾਰ"}
+                        other{"¤ 00 ਹਜ਼ਾਰ"}
+                    }
+                    100000{
+                        one{"¤ 0 ਲੱਖ"}
+                        other{"¤ 0 ਲੱਖ"}
+                    }
+                    1000000{
+                        one{"¤ 00 ਲੱਖ"}
+                        other{"¤ 00 ਲੱਖ"}
+                    }
+                    10000000{
+                        one{"¤ 0 ਕਰੋੜ"}
+                        other{"¤ 0 ਕਰੋੜ"}
+                    }
+                    100000000{
+                        one{"¤ 00 ਕਰੋੜ"}
+                        other{"¤ 00 ਕਰੋੜ"}
+                    }
+                    1000000000{
+                        one{"¤ 0 ਅਰਬ"}
+                        other{"¤ 0 ਅਰਬ"}
+                    }
+                    10000000000{
+                        one{"¤ 00 ਅਰਬ"}
+                        other{"¤ 00 ਅਰਬ"}
+                    }
+                    100000000000{
+                        one{"¤ 0 ਖਰਬ"}
+                        other{"¤ 0 ਖਰਬ"}
+                    }
+                    1000000000000{
+                        one{"¤ 00 ਖਰਬ"}
+                        other{"¤ 00 ਖਰਬ"}
+                    }
+                    10000000000000{
+                        one{"¤ 0 ਨੀਲ"}
+                        other{"¤ 0 ਨੀਲ"}
+                    }
+                    100000000000000{
+                        one{"¤ 00 ਨੀਲ"}
+                        other{"¤ 00 ਨੀਲ"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 ਹਜ਼ਾਰ"}
@@ -180,7 +229,7 @@ pa{
         minimumGroupingDigits{"1"}
         native{"guru"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.20.4"}
     calendar{
         generic{
             DateTimePatterns{
@@ -199,20 +248,22 @@ pa{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"G y"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM,y G"}
-                HHmmss{"HH:mm:ss"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
-                mmss{"mm:ss"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yMMM{"MMM y G"}
                 yQQQ{"QQQ y G"}
@@ -221,6 +272,7 @@ pa{
                 yyyyMEd{"E, d/M/y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
@@ -272,7 +324,7 @@ pa{
                 yMMMEd{
                     M{"E, d MMM – E, d MMM y G"}
                     d{"E, d MMM – E, d MMM y G"}
-                    y{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
                 }
                 yMMMM{
                     M{"MMMM – MMMM y G"}
@@ -281,7 +333,7 @@ pa{
                 yMMMd{
                     M{"d MMM – d MMM y G"}
                     d{"d – d, MMM y G"}
-                    y{"d, MMM – d, MMM y G"}
+                    y{"d, MMM y – d, MMM y G"}
                 }
                 yMd{
                     M{"d/M/y – d/M/y GGGGG"}
@@ -292,6 +344,10 @@ pa{
         }
         gregorian{
             AmPmMarkers{
+                "ਪੂ.ਦੁ.",
+                "ਬਾ.ਦੁ.",
+            }
+            AmPmMarkersAbbr{
                 "ਪੂ.ਦੁ.",
                 "ਬਾ.ਦੁ.",
             }
@@ -314,8 +370,6 @@ pa{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"ਦੁਪਹਿਰ"}
-            NoonMarkerNarrow{"ਦੁ."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -331,19 +385,23 @@ pa{
                 GyMMMEd{"E d MMM, G y"}
                 GyMMMd{"d MMM y"}
                 H{"HH"}
-                HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, dd-MM."}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y"}
@@ -351,6 +409,7 @@ pa{
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
+                yMMMM{"y MMMM"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
@@ -431,6 +490,60 @@ pa{
                         "ਵੀਰਵਾਰ",
                         "ਸ਼ੁੱਕਰਵਾਰ",
                         "ਸ਼ਨਿੱਚਰਵਾਰ",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"ਦੁਪਹਿਰੇ"}
+                        evening1{"ਸ਼ਾਮੀਂ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰੇ"}
+                        night1{"ਰਾਤੀਂ"}
+                    }
+                    narrow{
+                        afternoon1{"ਦੁਪ."}
+                        evening1{"ਸ਼ਾਮ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰ"}
+                        night1{"ਰਾਤ"}
+                    }
+                    wide{
+                        afternoon1{"ਦੁਪਹਿਰ"}
+                        evening1{"ਸ਼ਾਮ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰ"}
+                        night1{"ਰਾਤ"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"ਦੁਪਹਿਰ"}
+                        am{"ਪੂ.ਦੁ."}
+                        evening1{"ਸ਼ਾਮ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰ"}
+                        night1{"ਰਾਤ"}
+                        pm{"ਬਾ.ਦੁ."}
+                    }
+                    narrow{
+                        afternoon1{"ਦੁਪਹਿਰ"}
+                        am{"ਪੂ.ਦੁ."}
+                        evening1{"ਸ਼ਾਮ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰ"}
+                        night1{"ਰਾਤ"}
+                        pm{"ਬਾ.ਦੁ."}
+                    }
+                    wide{
+                        afternoon1{"ਦੁਪਹਿਰ"}
+                        am{"ਪੂ.ਦੁ."}
+                        evening1{"ਸ਼ਾਮ"}
+                        midnight{"ਅੱਧੀ ਰਾਤ"}
+                        morning1{"ਸਵੇਰ"}
+                        night1{"ਰਾਤ"}
+                        pm{"ਬਾ.ਦੁ."}
                     }
                 }
             }
@@ -983,6 +1096,11 @@ pa{
         }
         month-narrow{
             dn{"ਮਹੀਨਾ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਮਹੀਨਾ"}
+                "0"{"ਇਹ ਮਹੀਨਾ"}
+                "1"{"ਅਗਲਾ ਮਹੀਨਾ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਮਹੀਨੇ ਵਿੱਚ"}
@@ -996,6 +1114,11 @@ pa{
         }
         month-short{
             dn{"ਮਹੀਨਾ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਮਹੀਨਾ"}
+                "0"{"ਇਹ ਮਹੀਨਾ"}
+                "1"{"ਅਗਲਾ ਮਹੀਨਾ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਮਹੀਨੇ ਵਿੱਚ"}
@@ -1009,6 +1132,11 @@ pa{
         }
         quarter{
             dn{"ਤਿਮਾਹੀ"}
+            relative{
+                "-1"{"ਪਿਛਲੀ ਤਿਮਾਹੀ"}
+                "0"{"ਇਹ ਤਿਮਾਹੀ"}
+                "1"{"ਅਗਲੀ ਤਿਮਾਹੀ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਤਿਮਾਹੀ ਵਿੱਚ"}
@@ -1022,19 +1150,29 @@ pa{
         }
         quarter-narrow{
             dn{"ਤਿਮਾਹੀ"}
+            relative{
+                "-1"{"ਪਿਛਲੀ ਤਿਮਾਹੀ"}
+                "0"{"ਇਹ ਤਿਮਾਹੀ"}
+                "1"{"ਅਗਲੀ ਤਿਮਾਹੀ"}
+            }
             relativeTime{
                 future{
-                    one{"+{0} ਤਿਮਾਹੀ"}
-                    other{"+{0} ਤਿਮਾਹੀਆਂ"}
+                    one{"{0} ਤਿਮਾਹੀਆਂ ਵਿੱਚ"}
+                    other{"{0} ਤਿਮਾਹੀਆਂ ਵਿੱਚ"}
                 }
                 past{
-                    one{"-{0} ਤਿਮਾਹੀ"}
-                    other{"-{0} ਤਿਮਾਹੀਆਂ"}
+                    one{"{0} ਤਿਮਾਹੀਆਂ ਪਹਿਲਾਂ"}
+                    other{"{0} ਤਿਮਾਹੀਆਂ ਪਹਿਲਾਂ"}
                 }
             }
         }
         quarter-short{
             dn{"ਤਿਮਾਹੀ"}
+            relative{
+                "-1"{"ਪਿਛਲੀ ਤਿਮਾਹੀ"}
+                "0"{"ਇਹ ਤਿਮਾਹੀ"}
+                "1"{"ਅਗਲੀ ਤਿਮਾਹੀ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਤਿਮਾਹੀ ਵਿੱਚ"}
@@ -1213,6 +1351,11 @@ pa{
         }
         week-narrow{
             dn{"ਹਫ਼ਤਾ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਹਫ਼ਤਾ"}
+                "0"{"ਇਹ ਹਫ਼ਤਾ"}
+                "1"{"ਅਗਲਾ ਹਫ਼ਤਾ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਹਫ਼ਤੇ ਵਿੱਚ"}
@@ -1226,6 +1369,11 @@ pa{
         }
         week-short{
             dn{"ਹਫ਼ਤਾ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਹਫ਼ਤਾ"}
+                "0"{"ਇਹ ਹਫ਼ਤਾ"}
+                "1"{"ਅਗਲਾ ਹਫ਼ਤਾ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਹਫ਼ਤੇ ਵਿੱਚ"}
@@ -1260,6 +1408,11 @@ pa{
         }
         year-narrow{
             dn{"ਸਾਲ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਸਾਲ"}
+                "0"{"ਇਹ ਸਾਲ"}
+                "1"{"ਅਗਲਾ ਸਾਲ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਸਾਲ ਵਿੱਚ"}
@@ -1273,6 +1426,11 @@ pa{
         }
         year-short{
             dn{"ਸਾਲ"}
+            relative{
+                "-1"{"ਪਿਛਲਾ ਸਾਲ"}
+                "0"{"ਇਹ ਸਾਲ"}
+                "1"{"ਅਗਲਾ ਸਾਲ"}
+            }
             relativeTime{
                 future{
                     one{"{0} ਸਾਲ ਵਿੱਚ"}

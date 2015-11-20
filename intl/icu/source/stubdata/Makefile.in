@@ -126,7 +126,12 @@ endif
 
 ifneq ($(ENABLE_SHARED),)
 $(SHARED_OBJECT): $(OBJECTS)
+ifeq ($(BUILD_HOST_ICU),AIX_GCC)
+	$(SHLIB.c) $(LD_SONAME) $(OUTOPT)libicudata.so $^ $(LIBS)
+	mv libicudata.so $@
+else
 	$(SHLIB.c) $(LD_SONAME) $(OUTOPT)$@ $^ $(LIBS)
+endif
 ifeq ($(ENABLE_RPATH),YES)
 ifneq ($(wildcard $(libdir)/$(MIDDLE_SO_TARGET)),)
 	$(warning RPATH warning: --enable-rpath means test programs may use existing $(libdir)/$(MIDDLE_SO_TARGET))

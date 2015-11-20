@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ja{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.89"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"アビジャン"}
@@ -684,6 +684,9 @@ ja{
         "Asia:Calcutta"{
             ec{"コルカタ"}
         }
+        "Asia:Chita"{
+            ec{"チタ"}
+        }
         "Asia:Choibalsan"{
             ec{"チョイバルサン"}
         }
@@ -824,6 +827,9 @@ ja{
         }
         "Asia:Singapore"{
             ec{"シンガポール"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"スレドネコリムスク"}
         }
         "Asia:Taipei"{
             ec{"台北"}
@@ -1145,6 +1151,9 @@ ja{
         "Pacific:Auckland"{
             ec{"オークランド"}
         }
+        "Pacific:Bougainville"{
+            ec{"ブーゲンビル"}
+        }
         "Pacific:Chatham"{
             ec{"チャタム"}
         }
@@ -1316,9 +1325,9 @@ ja{
             ls{"アナディリ標準時"}
         }
         "meta:Apia"{
-            ld{"アピーア夏時間"}
-            lg{"アピーア時間"}
-            ls{"アピーア標準時"}
+            ld{"アピア夏時間"}
+            lg{"アピア時間"}
+            ls{"アピア標準時"}
         }
         "meta:Aqtau"{
             ld{"アクタウ夏時間"}
@@ -1517,9 +1526,9 @@ ja{
             ls{"ガンビエ諸島時間"}
         }
         "meta:Georgia"{
-            ld{"グルジア夏時間"}
-            lg{"グルジア時間"}
-            ls{"グルジア標準時"}
+            ld{"ジョージア夏時間"}
+            lg{"ジョージア時間"}
+            ls{"ジョージア標準時"}
         }
         "meta:Gilbert_Islands"{
             ls{"ギルバート諸島時間"}

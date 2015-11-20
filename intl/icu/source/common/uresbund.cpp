@@ -4,7 +4,7 @@
 * others. All Rights Reserved.
 ******************************************************************************
 *
-* File URESBUND.C
+* File uresbund.cpp
 *
 * Modification History:
 *
@@ -377,6 +377,7 @@ static UResourceDataEntry *init_entry(const char *localeID, const char *path, UE
                     const int32_t *poolIndexes = r->fPool->fData.pRoot + 1;
                     if(r->fData.pRoot[1 + URES_INDEX_POOL_CHECKSUM] == poolIndexes[URES_INDEX_POOL_CHECKSUM]) {
                         r->fData.poolBundleKeys = (const char *)(poolIndexes + (poolIndexes[URES_INDEX_LENGTH] & 0xff));
+                        r->fData.poolBundleStrings = r->fPool->fData.p16BitUnits;
                     } else {
                         r->fBogus = *status = U_INVALID_FORMAT_ERROR;
                     }

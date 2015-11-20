@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2008-2009, International Business Machines
+*   Copyright (C) 2008-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -16,6 +16,8 @@
 
 #include "unicode/translit.h"
 
+#include "unicode/localpointer.h"
+
 
 U_NAMESPACE_BEGIN
 
@@ -30,10 +32,6 @@ class UVector32;
 class BreakTransliterator : public Transliterator {
 public:
 
-    BreakTransliterator(const UnicodeString &ID, 
-                        UnicodeFilter *adoptedFilter,
-                        BreakIterator *bi, 
-                        const UnicodeString &insertion);
     /**
      * Constructs a transliterator.
      * @param adoptedFilter    the filter for this transliterator.
@@ -61,14 +59,6 @@ public:
     virtual void setInsertion(const UnicodeString &insertion);
 
     /**
-      *  Return the break iterator used by this transliterator.
-      *  Caution, this is the live break iterator; it must not be used while
-      *     there is any possibility that this transliterator is using it.
-      */
-    virtual BreakIterator *getBreakIterator();
-
-
-    /**
      * ICU "poor man's RTTI", returns a UClassID for the actual class.
      */
     virtual UClassID getDynamicClassID() const;
@@ -93,10 +83,9 @@ public:
                                      UBool isIncremental) const;
 
  private:
-     BreakIterator     *bi;
-     UnicodeString      fInsertion;
-     UVector32         *boundaries;
-     UnicodeString      sText;  // text from handleTransliterate().
+     LocalPointer<BreakIterator> cachedBI;
+     LocalPointer<UVector32>     cachedBoundaries;
+     UnicodeString               fInsertion;
 
      static UnicodeString replaceableAsString(Replaceable &r);
 

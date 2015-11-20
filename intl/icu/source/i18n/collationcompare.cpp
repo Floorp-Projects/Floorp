@@ -40,7 +40,6 @@ CollationCompare::compareUpToQuaternary(CollationIterator &left, CollationIterat
     UBool anyVariable = FALSE;
 
     // Fetch CEs, compare primaries, store secondary & tertiary weights.
-    U_ALIGN_CODE(16);
     for(;;) {
         // We fetch CEs until we get a non-ignorable primary or reach the end.
         uint32_t leftPrimary;

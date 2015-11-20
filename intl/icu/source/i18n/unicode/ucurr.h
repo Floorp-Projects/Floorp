@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2002-2014, International Business Machines
+* Copyright (c) 2002-2015, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -19,27 +19,25 @@
 
 /**
  * Currency Usage used for Decimal Format
- * @draft ICU 54
+ * @stable ICU 54
  */
 enum UCurrencyUsage {
-#ifndef U_HIDE_DRAFT_API
     /**
      * a setting to specify currency usage which determines currency digit
      * and rounding for standard usage, for example: "50.00 NT$"
      * used as DEFAULT value
-     * @draft ICU 54
+     * @stable ICU 54
      */
     UCURR_USAGE_STANDARD=0,
     /**
      * a setting to specify currency usage which determines currency digit
      * and rounding for cash usage, for example: "50 NT$"
-     * @draft ICU 54
+     * @stable ICU 54
      */
     UCURR_USAGE_CASH=1,
-#endif  /* U_HIDE_DRAFT_API */
     /**
      * One higher than the last enum UCurrencyUsage constant.
-     * @draft ICU 54
+     * @stable ICU 54
      */
     UCURR_USAGE_COUNT=2
 };
@@ -204,7 +202,6 @@ U_STABLE int32_t U_EXPORT2
 ucurr_getDefaultFractionDigits(const UChar* currency,
                                UErrorCode* ec);
 
-#ifndef U_HIDE_DRAFT_API
 /**
  * Returns the number of the number of fraction digits that should
  * be displayed for the given currency with usage.
@@ -213,13 +210,12 @@ ucurr_getDefaultFractionDigits(const UChar* currency,
  * @param ec input-output error code
  * @return a non-negative number of fraction digits to be
  * displayed, or 0 if there is an error
- * @draft ICU 54
+ * @stable ICU 54
  */
-U_DRAFT int32_t U_EXPORT2
+U_STABLE int32_t U_EXPORT2
 ucurr_getDefaultFractionDigitsForUsage(const UChar* currency, 
                                        const UCurrencyUsage usage,
                                        UErrorCode* ec);
-#endif  /* U_HIDE_DRAFT_API */
 
 /**
  * Returns the rounding increment for the given currency, or 0.0 if no
@@ -235,7 +231,6 @@ U_STABLE double U_EXPORT2
 ucurr_getRoundingIncrement(const UChar* currency,
                            UErrorCode* ec);
 
-#ifndef U_HIDE_DRAFT_API
 /**
  * Returns the rounding increment for the given currency, or 0.0 if no
  * rounding is done by the currency given usage.
@@ -244,13 +239,12 @@ ucurr_getRoundingIncrement(const UChar* currency,
  * @param ec input-output error code
  * @return the non-negative rounding increment, or 0.0 if none,
  * or 0.0 if there is an error
- * @draft ICU 54
+ * @stable ICU 54
  */
-U_DRAFT double U_EXPORT2
+U_STABLE double U_EXPORT2
 ucurr_getRoundingIncrementForUsage(const UChar* currency,
                                    const UCurrencyUsage usage,
                                    UErrorCode* ec);
-#endif  /* U_HIDE_DRAFT_API */
 
 /**
  * Selector constants for ucurr_openCurrencies().

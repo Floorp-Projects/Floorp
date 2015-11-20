@@ -102,6 +102,68 @@ hr{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0000¤"}
+                        one{"0000¤"}
+                        other{"0000¤"}
+                    }
+                    10000{
+                        few{"00 tis'.' ¤"}
+                        one{"00 tis'.' ¤"}
+                        other{"00 tis'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tis'.' ¤"}
+                        one{"000 tis'.' ¤"}
+                        other{"000 tis'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mil'.' ¤"}
+                        one{"0 mil'.' ¤"}
+                        other{"0 mil'.' ¤"}
+                    }
+                    10000000{
+                        few{"00 mil'.' ¤"}
+                        one{"00 mil'.' ¤"}
+                        other{"00 mil'.' ¤"}
+                    }
+                    100000000{
+                        few{"000 mil'.' ¤"}
+                        one{"000 mil'.' ¤"}
+                        other{"000 mil'.' ¤"}
+                    }
+                    1000000000{
+                        few{"0 mlr'.' ¤"}
+                        one{"0 mlr'.' ¤"}
+                        other{"0 mlr'.' ¤"}
+                    }
+                    10000000000{
+                        few{"00 mlr'.' ¤"}
+                        one{"00 mlr'.' ¤"}
+                        other{"00 mlr'.' ¤"}
+                    }
+                    100000000000{
+                        few{"000 mlr'.' ¤"}
+                        one{"000 mlr'.' ¤"}
+                        other{"000 mlr'.' ¤"}
+                    }
+                    1000000000000{
+                        few{"0 bil'.' ¤"}
+                        one{"0 bil'.' ¤"}
+                        other{"0 bil'.' ¤"}
+                    }
+                    10000000000000{
+                        few{"00 bil'.' ¤"}
+                        one{"00 bil'.' ¤"}
+                        other{"00 bil'.' ¤"}
+                    }
+                    100000000000000{
+                        few{"000 bil'.' ¤"}
+                        one{"000 bil'.' ¤"}
+                        other{"000 bil'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tis'.'"}
@@ -183,7 +245,7 @@ hr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         buddhist{
             eras{
@@ -365,15 +427,16 @@ hr{
                 "HH:mm",
                 "EEEE, d. MMMM y. G",
                 "d. MMMM y. G",
-                "d. M. y. G",
+                "d. MMM y. G",
                 "dd.MM.y. GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'u' {0}",
+                "{1} 'u' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d."}
                 Gy{"y. G"}
                 GyMMM{"LLL y. G"}
@@ -430,7 +493,7 @@ hr{
                     d{"E, dd.MM. – E, dd.MM."}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"LLL – LLL"}
                 }
                 MMMEd{
                     M{"E, dd. MMM – E, dd. MMM"}
@@ -479,7 +542,7 @@ hr{
                     y{"E, dd.MM.y. – E, dd.MM.y. G"}
                 }
                 yMMM{
-                    M{"LLL–LLL y. G"}
+                    M{"LLL – LLL y. G"}
                     y{"LLL y. – LLL y. G"}
                 }
                 yMMMEd{
@@ -527,9 +590,6 @@ hr{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"podne"}
-            NoonMarkerAbbr{"podne"}
-            NoonMarkerNarrow{"P"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -547,6 +607,8 @@ hr{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L."}
                 MEd{"E, dd.MM."}
                 MMM{"LLL"}
@@ -560,6 +622,8 @@ hr{
                 h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y."}
                 yM{"MM.y."}
@@ -651,6 +715,54 @@ hr{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"popodne"}
+                        evening1{"navečer"}
+                        midnight{"ponoć"}
+                        morning1{"ujutro"}
+                        night1{"noću"}
+                        noon{"podne"}
+                    }
+                    narrow{
+                        afternoon1{"popodne"}
+                        evening1{"navečer"}
+                        midnight{"ponoć"}
+                        morning1{"ujutro"}
+                        night1{"noću"}
+                        noon{"podne"}
+                    }
+                    wide{
+                        afternoon1{"poslije podne"}
+                        evening1{"navečer"}
+                        midnight{"ponoć"}
+                        morning1{"ujutro"}
+                        night1{"noću"}
+                        noon{"podne"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"popodne"}
+                        am{"AM"}
+                        evening1{"večer"}
+                        midnight{"ponoć"}
+                        morning1{"jutro"}
+                        night1{"noć"}
+                        noon{"podne"}
+                        pm{"PM"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "pr. Kr.",
@@ -665,8 +777,8 @@ hr{
                     "AD",
                 }
                 wide{
-                    "Prije Krista",
-                    "Poslije Krista",
+                    "prije Krista",
+                    "poslije Krista",
                 }
                 wide%variant{
                     "pr. n. e.",
@@ -675,7 +787,7 @@ hr{
             }
             intervalFormats{
                 H{
-                    H{"HH–HH'h'"}
+                    H{"HH – HH 'h'"}
                 }
                 Hm{
                     H{"HH:mm – HH:mm"}
@@ -713,7 +825,7 @@ hr{
                 d{
                     d{"dd. – dd."}
                 }
-                fallback{"{0} - {1}"}
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h'h' a"}
@@ -1016,8 +1128,8 @@ hr{
                 "d. M. y. G",
                 "d.M.y. GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'u' {0}",
+                "{1} 'u' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -1570,7 +1682,7 @@ hr{
     }
     fields{
         day{
-            dn{"Dan"}
+            dn{"dan"}
             relative{
                 "-1"{"jučer"}
                 "-2"{"prekjučer"}
@@ -1593,6 +1705,10 @@ hr{
         }
         day-narrow{
             dn{"d."}
+            relative{
+                "-2"{"prekjučer"}
+                "2"{"prekosutra"}
+            }
             relativeTime{
                 future{
                     few{"za {0} d"}
@@ -1608,6 +1724,10 @@ hr{
         }
         day-short{
             dn{"d."}
+            relative{
+                "-2"{"prekjučer"}
+                "2"{"prekosutra"}
+            }
             relativeTime{
                 future{
                     few{"za {0} dana"}
@@ -1625,7 +1745,7 @@ hr{
             dn{"AM/PM"}
         }
         era{
-            dn{"Era"}
+            dn{"era"}
         }
         fri{
             relative{
@@ -1649,7 +1769,7 @@ hr{
             }
         }
         hour{
-            dn{"Sat"}
+            dn{"sat"}
             relativeTime{
                 future{
                     few{"za {0} sata"}
@@ -1694,7 +1814,7 @@ hr{
             }
         }
         minute{
-            dn{"Minuta"}
+            dn{"minuta"}
             relativeTime{
                 future{
                     few{"za {0} minute"}
@@ -1760,7 +1880,7 @@ hr{
             }
         }
         month{
-            dn{"Mjesec"}
+            dn{"mjesec"}
             relative{
                 "-1"{"prošli mjesec"}
                 "0"{"ovaj mjesec"}
@@ -1781,6 +1901,11 @@ hr{
         }
         month-narrow{
             dn{"m."}
+            relative{
+                "-1"{"prošli mj."}
+                "0"{"ovaj mj."}
+                "1"{"sljedeći mj."}
+            }
             relativeTime{
                 future{
                     few{"+{0} mj."}
@@ -1796,6 +1921,11 @@ hr{
         }
         month-short{
             dn{"mj."}
+            relative{
+                "-1"{"prošli mj."}
+                "0"{"ovaj mj."}
+                "1"{"sljedeći mj."}
+            }
             relativeTime{
                 future{
                     few{"za {0} mj."}
@@ -1810,7 +1940,12 @@ hr{
             }
         }
         quarter{
-            dn{"Kvartal"}
+            dn{"kvartal"}
+            relative{
+                "-1"{"prošli kvartal"}
+                "0"{"ovaj kvartal"}
+                "1"{"sljedeći kvartal"}
+            }
             relativeTime{
                 future{
                     few{"za {0} kvartala"}
@@ -1826,6 +1961,11 @@ hr{
         }
         quarter-narrow{
             dn{"kv."}
+            relative{
+                "-1"{"prošli kv."}
+                "0"{"ovaj kv."}
+                "1"{"sljedeći kv."}
+            }
             relativeTime{
                 future{
                     few{"+{0} kv."}
@@ -1841,6 +1981,11 @@ hr{
         }
         quarter-short{
             dn{"kv."}
+            relative{
+                "-1"{"prošli kv."}
+                "0"{"ovaj kv."}
+                "1"{"sljedeći kv."}
+            }
             relativeTime{
                 future{
                     few{"za {0} kv."}
@@ -1876,7 +2021,7 @@ hr{
             }
         }
         second{
-            dn{"Sekunda"}
+            dn{"sekunda"}
             relative{
                 "0"{"sada"}
             }
@@ -2008,7 +2153,7 @@ hr{
             }
         }
         week{
-            dn{"Tjedan"}
+            dn{"tjedan"}
             relative{
                 "-1"{"prošli tjedan"}
                 "0"{"ovaj tjedan"}
@@ -2029,6 +2174,11 @@ hr{
         }
         week-narrow{
             dn{"tj."}
+            relative{
+                "-1"{"prošli tj."}
+                "0"{"ovaj tj."}
+                "1"{"sljedeći tj."}
+            }
             relativeTime{
                 future{
                     few{"+{0} tj."}
@@ -2044,6 +2194,11 @@ hr{
         }
         week-short{
             dn{"tj."}
+            relative{
+                "-1"{"prošli tj."}
+                "0"{"ovaj tj."}
+                "1"{"sljedeći tj."}
+            }
             relativeTime{
                 future{
                     few{"za {0} tj."}
@@ -2058,10 +2213,10 @@ hr{
             }
         }
         weekday{
-            dn{"Dan u tjednu"}
+            dn{"dan u tjednu"}
         }
         year{
-            dn{"Godina"}
+            dn{"godina"}
             relative{
                 "-1"{"prošle godine"}
                 "0"{"ove godine"}
@@ -2082,6 +2237,11 @@ hr{
         }
         year-narrow{
             dn{"g."}
+            relative{
+                "-1"{"prošle g."}
+                "0"{"ove g."}
+                "1"{"sljedeće g."}
+            }
             relativeTime{
                 future{
                     few{"+{0} g."}
@@ -2097,6 +2257,11 @@ hr{
         }
         year-short{
             dn{"g."}
+            relative{
+                "-1"{"prošle god."}
+                "0"{"ove god."}
+                "1"{"sljedeće god."}
+            }
             relativeTime{
                 future{
                     few{"za {0} g."}
@@ -2111,7 +2276,7 @@ hr{
             }
         }
         zone{
-            dn{"Vremenska zona"}
+            dn{"vremenska zona"}
         }
     }
     listPattern{

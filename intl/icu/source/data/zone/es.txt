@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 es{
-    Version{"2.1.13.21"}
+    Version{"2.1.20.15"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abiyán"}
@@ -684,6 +684,9 @@ es{
         "Asia:Calcutta"{
             ec{"Calcuta"}
         }
+        "Asia:Chita"{
+            ec{"Chitá"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -825,6 +828,9 @@ es{
         "Asia:Singapore"{
             ec{"Singapur"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolimsk"}
+        }
         "Asia:Taipei"{
             ec{"Taipéi"}
         }
@@ -934,7 +940,7 @@ es{
             ec{"Sídney"}
         }
         "Etc:Unknown"{
-            ec{"Ciudad desconocida"}
+            ec{"ciudad desconocida"}
         }
         "Europe:Amsterdam"{
             ec{"Ámsterdam"}
@@ -1144,6 +1150,9 @@ es{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}
@@ -1428,10 +1437,10 @@ es{
             ls{"hora estándar de Choibalsan"}
         }
         "meta:Christmas"{
-            ls{"hora de la isla Christmas"}
+            ls{"hora de la Isla de Navidad"}
         }
         "meta:Cocos"{
-            ls{"hora de las islas Cocos"}
+            ls{"hora de las Islas Cocos"}
         }
         "meta:Colombia"{
             ld{"hora de verano de Colombia"}
@@ -1439,9 +1448,9 @@ es{
             ls{"hora estándar de Colombia"}
         }
         "meta:Cook"{
-            ld{"hora de verano media de las islas Cook"}
-            lg{"hora de las islas Cook"}
-            ls{"hora estándar de las islas Cook"}
+            ld{"hora de verano media de las Islas Cook"}
+            lg{"hora de las Islas Cook"}
+            ls{"hora estándar de las Islas Cook"}
         }
         "meta:Cuba"{
             ld{"hora de verano de Cuba"}

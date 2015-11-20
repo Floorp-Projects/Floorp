@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 gd{
-    Version{"2.1.12.94"}
+    Version{"2.1.20.4"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ gd{
         "Asia:Calcutta"{
             ec{"Kolkata"}
         }
+        "Asia:Chita"{
+            ec{"Chita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -824,6 +827,9 @@ gd{
         }
         "Asia:Singapore"{
             ec{"Singeapòr"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
         }
         "Asia:Taipei"{
             ec{"Taipei"}
@@ -975,6 +981,7 @@ gd{
         "Europe:Dublin"{
             ec{"Baile Àtha Cliath"}
             ld{"Bun-àm na h-Èireann"}
+            sd{"TSÈ (Èirinn)"}
         }
         "Europe:Gibraltar"{
             ec{"Diobraltar"}
@@ -1008,7 +1015,7 @@ gd{
         }
         "Europe:London"{
             ec{"Dùn Èideann/Lunnainn"}
-            ld{"Tìde Samhraidh Bhreatainn"}
+            ld{"Tìde samhraidh Bhreatainn"}
             sd{"TSB"}
         }
         "Europe:Luxembourg"{
@@ -1146,6 +1153,9 @@ gd{
         "Pacific:Auckland"{
             ec{"Auckland"}
         }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
+        }
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
@@ -1181,6 +1191,9 @@ gd{
         }
         "Pacific:Honolulu"{
             ec{"Honolulu"}
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
         }
         "Pacific:Johnston"{
             ec{"Johnston"}
@@ -1269,7 +1282,7 @@ gd{
             ls{"Àm Afraga an Ear"}
         }
         "meta:Africa_Southern"{
-            ls{"Bun-àm Afraga a Deas"}
+            ls{"Àm Afraga a Deas"}
         }
         "meta:Africa_Western"{
             ld{"Tìde Samhraidh Afraga an Iar"}
@@ -1280,6 +1293,9 @@ gd{
             ld{"Tìde samhraidh Alaska"}
             lg{"Àm Alaska"}
             ls{"Bun-àm Alaska"}
+            sd{"AKDT"}
+            sg{"AKT"}
+            ss{"AKST"}
         }
         "meta:Almaty"{
             ld{"Tìde samhraidh Almaty"}
@@ -1295,21 +1311,33 @@ gd{
             ld{"Tìde samhraidh Meadhan Aimeireaga a Tuath"}
             lg{"Àm Meadhan Aimeireaga a Tuath"}
             ls{"Bun-àm Meadhan Aimeireaga a Tuath"}
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
         }
         "meta:America_Eastern"{
             ld{"Tìde samhraidh Aimeireaga a Tuath an Ear"}
             lg{"Àm Aimeireaga a Tuath an Ear"}
             ls{"Bun-àm Aimeireaga a Tuath an Ear"}
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
         }
         "meta:America_Mountain"{
             ld{"Tìde samhraidh Monadh Aimeireaga a Tuath"}
             lg{"Àm Monadh Aimeireaga a Tuath"}
             ls{"Bun-àm Monadh Aimeireaga a Tuath"}
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
         }
         "meta:America_Pacific"{
             ld{"Tìde samhraidh a’ Chuain Sèimh"}
             lg{"Àm a’ Chuain Sèimh"}
             ls{"Bun-àm a’ Chuain Sèimh"}
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
         }
         "meta:Anadyr"{
             ld{"Tìde samhraidh Anadyr"}
@@ -1355,6 +1383,9 @@ gd{
             ld{"Tìde samhraidh a’ Chuain Siar"}
             lg{"Àm a’ Chuain Siar"}
             ls{"Bun-àm a’ Chuain Siar"}
+            sd{"ADT"}
+            sg{"AT"}
+            ss{"AST"}
         }
         "meta:Australia_Central"{
             ld{"Tìde samhraidh Meadhan Astràilia"}
@@ -1478,11 +1509,17 @@ gd{
             ld{"Tìde samhraidh Meadhan na Roinn-Eòrpa"}
             lg{"Àm Meadhan na Roinn-Eòrpa"}
             ls{"Bun-àm Meadhan na Roinn-Eòrpa"}
+            sd{"CEST"}
+            sg{"CET"}
+            ss{"CET"}
         }
         "meta:Europe_Eastern"{
             ld{"Tìde samhraidh na Roinn-Eòrpa an Ear"}
             lg{"Àm na Roinn-Eòrpa an Ear"}
             ls{"Bun-àm na Roinn-Eòrpa an Ear"}
+            sd{"EEST"}
+            sg{"EET"}
+            ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
             ls{"Àm na Roinn-Eòrpa nas fhaide ear"}
@@ -1491,6 +1528,9 @@ gd{
             ld{"Tìde samhraidh na Roinn-Eòrpa an Iar"}
             lg{"Àm na Roinn-Eòrpa an Iar"}
             ls{"Bun-àm na Roinn-Eòrpa an Iar"}
+            sd{"WEST"}
+            sg{"WET"}
+            ss{"WET"}
         }
         "meta:Falkland"{
             ld{"Tìde samhraidh nan Eileanan Fàclannach"}
@@ -1510,6 +1550,7 @@ gd{
         }
         "meta:GMT"{
             ls{"Greenwich Mean Time"}
+            ss{"GMT"}
         }
         "meta:Galapagos"{
             ls{"Àm Ghalapagos"}
@@ -1545,9 +1586,12 @@ gd{
             ls{"Àm Guidheàna"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Tìde Samhraidh nan Eileanan Hawai’i ‘s Aleutach"}
-            lg{"Àm nan Eileanan Hawai’i ‘s Aleutach"}
-            ls{"Bun-àm nan Eileanan Hawai’i ‘s Aleutach"}
+            ld{"Tìde Samhraidh nan Eileanan Hawai’i ’s Aleutach"}
+            lg{"Àm nan Eileanan Hawai’i ’s Aleutach"}
+            ls{"Bun-àm nan Eileanan Hawai’i ’s Aleutach"}
+            sd{"HADT"}
+            sg{"HAT"}
+            ss{"HAST"}
         }
         "meta:Hong_Kong"{
             ld{"Tìde samhraidh Hong Kong"}
@@ -1658,7 +1702,7 @@ gd{
             ls{"Àm Eileanan a’ Mharcais"}
         }
         "meta:Marshall_Islands"{
-            ls{"Eileanan Mharshall"}
+            ls{"Àm Eileanan Mharshall"}
         }
         "meta:Mauritius"{
             ld{"Tìde samhraidh nan Eileanan Mhoiriseas"}
@@ -1777,9 +1821,9 @@ gd{
             ls{"Àm Pohnpei"}
         }
         "meta:Qyzylorda"{
-            ld{"Tìde samhraidh Qyzylorda"}
-            lg{"Àm Qyzylorda"}
-            ls{"Bun-àm Qyzylorda"}
+            ld{"Tìde samhraidh Qızılorda"}
+            lg{"Àm Qızılorda"}
+            ls{"Bun-àm Qızılorda"}
         }
         "meta:Reunion"{
             ls{"Àm Reunion"}

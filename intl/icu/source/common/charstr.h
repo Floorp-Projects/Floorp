@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (c) 2001-2012, International Business Machines
+*   Copyright (c) 2001-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -69,6 +69,9 @@ public:
     const char *data() const { return buffer.getAlias(); }
     char *data() { return buffer.getAlias(); }
 
+    /** @return last index of c, or -1 if c is not in this string */
+    int32_t lastIndexOf(char c) const;
+
     CharString &clear() { len=0; buffer[0]=0; return *this; }
     CharString &truncate(int32_t newLength);
 
@@ -113,6 +116,12 @@ public:
      * Does nothing if s is empty.
      */
     CharString &appendPathPart(const StringPiece &s, UErrorCode &errorCode);
+
+    /**
+     * Appends a U_FILE_SEP_CHAR if this string is not empty
+     * and does not already end with a U_FILE_SEP_CHAR or U_FILE_ALT_SEP_CHAR.
+     */
+    CharString &ensureEndsWithFileSeparator(UErrorCode &errorCode);
 
 private:
     MaybeStackArray<char, 40> buffer;

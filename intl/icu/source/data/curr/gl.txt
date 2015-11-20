@@ -879,6 +879,7 @@ gl{
         SGD{"$"}
         SRD{"$"}
         SSP{"£"}
+        THB{"฿"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
@@ -886,6 +887,9 @@ gl{
         USD{"$"}
         UYU{"$"}
         VND{"₫"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
     }
     CurrencyPlurals{
         ADP{
@@ -1405,7 +1409,7 @@ gl{
             other{"escudos portugueses"}
         }
         PYG{
-            one{"Guaraní paraguaio"}
+            one{"guaraní paraguaio"}
             other{"guaranís paraguaios"}
         }
         QAR{
@@ -1510,7 +1514,7 @@ gl{
         }
         TOP{
             one{"paʻanga de Tonga"}
-            other{"Paʻanga de Tonga"}
+            other{"pa’anga de Tonga"}
         }
         TRY{
             one{"lira turca"}
@@ -1605,5 +1609,5 @@ gl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }
