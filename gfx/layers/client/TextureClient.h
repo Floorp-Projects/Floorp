@@ -214,8 +214,7 @@ public:
 
   virtual void SyncWithObject(SyncObject* aFence) {};
 
-  /// Needed until the destruction sequence of TextureClient is revamped.
-  virtual void FinalizeOnIPDLThread(TextureClient*) {}
+  virtual TextureFlags GetTextureFlags() const { return TextureFlags::NO_FLAGS; }
 };
 
 /**
@@ -448,13 +447,11 @@ public:
 
   bool IsSharedWithCompositor() const;
 
-  bool ShouldDeallocateInDestructor() const;
-
   /**
    * If this method returns false users of TextureClient are not allowed
    * to access the shared data.
    */
-  bool IsValid() const { return mValid; }
+  bool IsValid() const { return !!mData; }
 
   /**
    * Called when TextureClient is added to CompositableClient.
@@ -466,16 +463,6 @@ public:
    * since its creation or recycling.
    */
   bool IsAddedToCompositableClient() const { return mAddedToCompositableClient; }
-
-  /**
-   * kee the passed object alive until the IPDL actor is destroyed. This can
-   * help avoid race conditions in some cases.
-   * It's a temporary hack to ensure that DXGI textures don't get destroyed
-   * between serialization and deserialization.
-   *
-   * This must not be called off the texture's IPDL thread.
-   */
-  void KeepUntilFullDeallocation(UniquePtr<KeepAlive> aKeep, bool aMainThreadOnly = false);
 
   /**
    * Create and init the TextureChild/Parent IPDL actor pair.
@@ -554,8 +541,6 @@ public:
 
   void SyncWithObject(SyncObject* aFence) { mData->SyncWithObject(aFence); }
 
-  void MarkShared() { mShared = true; }
-
   ISurfaceAllocator* GetAllocator() { return mAllocator; }
 
    TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
@@ -575,23 +560,11 @@ private:
    * Here goes the shut-down code that uses virtual methods.
    * Must only be called by Release().
    */
-  B2G_ACL_EXPORT void Finalize();
-
-  /**
-   * Called once during the destruction of the texture on the IPDL thread, if
-   * the texture is shared on the compositor (otherwise it is not called at all).
-   */
-  void FinalizeOnIPDLThread();
+  B2G_ACL_EXPORT void Finalize() {}
 
   friend class AtomicRefCountedWithFinalize<TextureClient>;
   friend class gl::SharedSurface_Gralloc;
 protected:
-  /**
-   * An invalid TextureClient cannot provide access to its shared data
-   * anymore. This usually means it will soon be destroyed.
-   */
-  void MarkInvalid() { mValid = false; }
-
   /**
    * Should only be called *once* per texture, in TextureClient::InitIPDLActor.
    * Some texture implementations rely on the fact that the descriptor will be
@@ -620,9 +593,8 @@ protected:
   DebugOnly<uint32_t> mExpectedDtRefs;
   bool mIsLocked;
 
-  bool mShared;
-  bool mValid;
   bool mAddedToCompositableClient;
+  bool mWorkaroundAnnoyingSharedSurfaceLifetimeIssues;
 
   RefPtr<TextureReadbackSink> mReadbackSink;
 

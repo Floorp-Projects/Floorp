@@ -51,19 +51,21 @@ enum class TextureFlags : uint32_t {
   // deallocation.
   // The default behaviour is to deallocate on the host side.
   DEALLOCATE_CLIENT  = 1 << 6,
+  DEALLOCATE_SYNC    = 1 << 6, // XXX - make it a separate flag.
+  DEALLOCATE_MAIN_THREAD = 1 << 8,
   // After being shared ith the compositor side, an immutable texture is never
   // modified, it can only be read. It is safe to not Lock/Unlock immutable
   // textures.
-  IMMUTABLE          = 1 << 7,
+  IMMUTABLE          = 1 << 9,
   // The contents of the texture must be uploaded or copied immediately
   // during the transaction, because the producer may want to write
   // to it again.
-  IMMEDIATE_UPLOAD   = 1 << 8,
+  IMMEDIATE_UPLOAD   = 1 << 10,
   // The texture is part of a component-alpha pair
-  COMPONENT_ALPHA    = 1 << 9,
+  COMPONENT_ALPHA    = 1 << 11,
 
   // OR union of all valid bits
-  ALL_BITS           = (1 << 10) - 1,
+  ALL_BITS           = (1 << 12) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

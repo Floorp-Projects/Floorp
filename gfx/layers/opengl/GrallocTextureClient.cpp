@@ -346,22 +346,15 @@ GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFor
   return data;
 }
 
-already_AddRefed<TextureClient>
-CreateGrallocTextureClientForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                     gfx::BackendType aMoz2dBackend,
-                                     TextureFlags aFlags,
-                                     ISurfaceAllocator* aAllocator)
+TextureFlags
+GrallocTextureData::GetTextureFlags() const
 {
-  TextureData* data = GrallocTextureData::CreateForDrawing(aSize, aFormat, aMoz2dBackend,
-                                                           aAllocator);
-  if (!data) {
-    return nullptr;
+  if (IsGrallocRBSwapped(mFormat)) {
+    return TextureFlags::RB_SWAPPED;
   }
-  if (IsGrallocRBSwapped(aFormat)) {
-    aFlags |= TextureFlags::RB_SWAPPED;
-  }
-  return MakeAndAddRef<TextureClient>(data, aFlags, aAllocator);
+  return TextureFlags::NO_FLAGS;
 }
+
 
 // static
 GrallocTextureData*

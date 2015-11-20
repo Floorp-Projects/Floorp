@@ -149,7 +149,7 @@ AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
 {
   MutexAutoLock lock(mMutex);
   TextureClientAutoLock texLock(aTextureClient, layers::OpenMode::OPEN_READ);
-  if (texLock.Succeeded()) {
+  if (!texLock.Succeeded()) {
     return;
   }
 
