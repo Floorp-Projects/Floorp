@@ -55,11 +55,6 @@ protected:
   bool mHasSynchronization;
 };
 
-already_AddRefed<TextureClient>
-CreateDXGITextureClient(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                        TextureFlags atextureFlags, TextureAllocationFlags aFlags,
-                        ISurfaceAllocator* aAllocator);
-
 class D3D11TextureData : public DXGITextureData
 {
 public:
@@ -94,8 +89,6 @@ protected:
   D3D11TextureData(ID3D11Texture2D* aTexture,
                    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                    bool aNeedsClear, bool aNeedsClearWhite);
-
-  virtual void FinalizeOnIPDLThread(TextureClient* aWrapper) override;
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
 
@@ -140,8 +133,6 @@ protected:
   D3D10TextureData(ID3D10Texture2D* aTexture,
                    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                    bool aNeedsClear, bool aNeedsClearWhite);
-
-  virtual void FinalizeOnIPDLThread(TextureClient*) override;
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
 
@@ -201,9 +192,12 @@ public:
 
   virtual bool UpdateFromSurface(gfx::SourceSurface*) override { return false; }
 
-protected:
-  virtual void FinalizeOnIPDLThread(TextureClient*) override;
+  virtual TextureFlags GetTextureFlags() const override
+  {
+    return TextureFlags::DEALLOCATE_MAIN_THREAD;
+  }
 
+protected:
    RefPtr<IUnknown> mHoldRefs[3];
    HANDLE mHandles[3];
    gfx::IntSize mSize;
@@ -421,9 +415,9 @@ class SyncObjectD3D11 : public SyncObject
 {
 public:
   SyncObjectD3D11(SyncHandle aSyncHandle);
+  virtual void FinalizeFrame();
 
   virtual SyncType GetSyncType() { return SyncType::D3D11; }
-  virtual void FinalizeFrame();
 
   void RegisterTexture(ID3D11Texture2D* aTexture);
   void RegisterTexture(ID3D10Texture2D* aTexture);

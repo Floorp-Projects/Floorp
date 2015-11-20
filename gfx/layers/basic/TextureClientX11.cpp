@@ -21,17 +21,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-already_AddRefed<TextureClient>
-CreateX11TextureClient(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       TextureFlags aFlags, ISurfaceAllocator* aAllocator)
-{
-  TextureData* data = X11TextureData::Create(aSize, aFormat, aFlags, aAllocator);
-  if (!data) {
-    return nullptr;
-  }
-  return MakeAndAddRef<TextureClient>(data, aFlags, aAllocator);
-}
-
 X11TextureData::X11TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                bool aClientDeallocation, bool aIsCrossProcess,
                                gfxXlibSurface* aSurface)

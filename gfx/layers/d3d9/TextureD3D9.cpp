@@ -487,14 +487,6 @@ D3D9TextureData::CreateSimilar(ISurfaceAllocator*, TextureFlags aFlags, TextureA
   return D3D9TextureData::Create(mSize, mFormat, aAllocFlags);
 }
 
-void
-D3D9TextureData::FinalizeOnIPDLThread(TextureClient* aWrapper)
-{
-  if (mTexture) {
-    aWrapper->KeepUntilFullDeallocation(MakeUnique<TKeepAlive<IDirect3DTexture9>>(mTexture));
-  }
-}
-
 bool
 D3D9TextureData::Lock(OpenMode aMode, FenceHandle*)
 {

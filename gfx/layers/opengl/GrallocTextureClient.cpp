@@ -33,14 +33,6 @@ DisableGralloc(SurfaceFormat aFormat, const gfx::IntSize& aSizeHint)
   if (aFormat == gfx::SurfaceFormat::A8) {
     return true;
   }
-#if ANDROID_VERSION <= 15
-  // Adreno 200 has a problem of drawing gralloc buffer width less than 64 and
-  // drawing gralloc buffer with a height 9px-16px.
-  // See Bug 983971.
-  if (aSizeHint.width < 64 || aSizeHint.height < 32) {
-    return true;
-  }
-#endif
 
   return false;
 }
@@ -118,7 +110,11 @@ GrallocTextureData::~GrallocTextureData()
 void
 GrallocTextureData::Deallocate(ISurfaceAllocator* aAllocator)
 {
-  aAllocator->DeallocGrallocBuffer(&mGrallocHandle);
+  MOZ_ASSERT(aAllocator);
+  if (aAllocator) {
+    aAllocator->DeallocGrallocBuffer(&mGrallocHandle);
+  }
+
   mGrallocHandle = null_t();
   mGraphicBuffer = nullptr;
 }
@@ -126,7 +122,11 @@ GrallocTextureData::Deallocate(ISurfaceAllocator* aAllocator)
 void
 GrallocTextureData::Forget(ISurfaceAllocator* aAllocator)
 {
-  aAllocator->DropGrallocBuffer(&mGrallocHandle);
+  MOZ_ASSERT(aAllocator);
+  if (aAllocator) {
+    aAllocator->DropGrallocBuffer(&mGrallocHandle);
+  }
+
   mGrallocHandle = null_t();
   mGraphicBuffer = nullptr;
 }
@@ -142,7 +142,7 @@ void
 GrallocTextureData::WaitForFence(FenceHandle* aFence)
 {
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 21 && ANDROID_VERSION >= 17
-   if (aFence->IsValid()) {
+   if (aFence && aFence->IsValid()) {
      RefPtr<FenceHandle::FdObj> fdObj = aFence->GetAndResetFdObj();
      android::sp<Fence> fence = new Fence(fdObj->GetAndResetFd());
 #if ANDROID_VERSION == 17
@@ -161,8 +161,6 @@ GrallocTextureData::Lock(OpenMode aMode, FenceHandle* aReleaseFence)
 {
   MOZ_ASSERT(!mMappedBuffer);
 
-  WaitForFence(aReleaseFence);
-
   uint32_t usage = 0;
   if (aMode & OpenMode::OPEN_READ) {
     usage |= GRALLOC_USAGE_SW_READ_OFTEN;
@@ -170,20 +168,30 @@ GrallocTextureData::Lock(OpenMode aMode, FenceHandle* aReleaseFence)
   if (aMode & OpenMode::OPEN_WRITE) {
     usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
   }
+
+  void** mappedBufferPtr = reinterpret_cast<void**>(&mMappedBuffer);
+
+  int32_t rv = 0;
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
-  RefPtr<FenceHandle::FdObj> fdObj = aReleaseFence->GetAndResetFdObj();
-  int32_t rv = mGraphicBuffer->lockAsync(usage,
-                                         reinterpret_cast<void**>(&mMappedBuffer),
-                                         fdObj->GetAndResetFd());
+  if (aReleaseFence) {
+    RefPtr<FenceHandle::FdObj> fdObj = aReleaseFence->GetAndResetFdObj();
+    rv = mGraphicBuffer->lockAsync(usage, mappedBufferPtr,
+                                   fdObj->GetAndResetFd());
+  } else {
+    rv = mGraphicBuffer->lock(usage, mappedBufferPtr);
+  }
 #else
-  int32_t rv = mGraphicBuffer->lock(usage,
-                                    reinterpret_cast<void**>(&mMappedBuffer));
+  // older versions of android don't have lockAsync
+  WaitForFence(aReleaseFence);
+  rv = mGraphicBuffer->lock(usage, mappedBufferPtr);
 #endif
+
   if (rv) {
     mMappedBuffer = nullptr;
     NS_WARNING("Couldn't lock graphic buffer");
     return false;
   }
+
   return true;
 }
 
@@ -271,6 +279,9 @@ GrallocTextureData::Create(gfx::IntSize aSize, AndroidFormat aAndroidFormat,
                            gfx::BackendType aMoz2dBackend, uint32_t aUsage,
                            ISurfaceAllocator* aAllocator)
 {
+  if (!aAllocator) {
+    return nullptr;
+  }
   int32_t maxSize = aAllocator->GetMaxTextureSize();
   if (aSize.width > maxSize || aSize.height > maxSize) {
     return nullptr;
@@ -326,6 +337,20 @@ GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFor
   if (DisableGralloc(aFormat, aSize)) {
     return nullptr;
   }
+
+#if ANDROID_VERSION <= 15
+  // Adreno 200 has a problem of drawing gralloc buffer width less than 64 and
+  // drawing gralloc buffer with a height 9px-16px.
+  // See Bug 983971.
+  // We only have this restriction in TextureClients that we'll use for drawing
+  // (not with WebGL for instance). Not sure why that's OK, but we have tests that
+  // rely on being able to create 32x32 webgl canvases with gralloc, so moving
+  // this check in DisableGralloc will break them.
+  if (aSizeHint.width < 64 || aSizeHint.height < 32) {
+    return true;
+  }
+#endif
+
   uint32_t usage = android::GraphicBuffer::USAGE_SW_READ_OFTEN |
                    android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
                    android::GraphicBuffer::USAGE_HW_TEXTURE;
@@ -346,22 +371,15 @@ GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFor
   return data;
 }
 
-already_AddRefed<TextureClient>
-CreateGrallocTextureClientForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                     gfx::BackendType aMoz2dBackend,
-                                     TextureFlags aFlags,
-                                     ISurfaceAllocator* aAllocator)
+TextureFlags
+GrallocTextureData::GetTextureFlags() const
 {
-  TextureData* data = GrallocTextureData::CreateForDrawing(aSize, aFormat, aMoz2dBackend,
-                                                           aAllocator);
-  if (!data) {
-    return nullptr;
+  if (IsGrallocRBSwapped(mFormat)) {
+    return TextureFlags::RB_SWAPPED;
   }
-  if (IsGrallocRBSwapped(aFormat)) {
-    aFlags |= TextureFlags::RB_SWAPPED;
-  }
-  return MakeAndAddRef<TextureClient>(data, aFlags, aAllocator);
+  return TextureFlags::NO_FLAGS;
 }
+
 
 // static
 GrallocTextureData*

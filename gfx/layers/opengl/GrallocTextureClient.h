@@ -107,6 +107,8 @@ public:
 
   ~GrallocTextureData();
 
+  virtual TextureFlags GetTextureFlags() const override;
+
 protected:
   GrallocTextureData(MaybeMagicGrallocBufferHandle aGrallocHandle,
                      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
@@ -127,10 +129,6 @@ protected:
 };
 
 gfx::SurfaceFormat SurfaceFormatForPixelFormat(android::PixelFormat aFormat);
-
-already_AddRefed<TextureClient> CreateGrallocTextureClientForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                                                     gfx::BackendType aMoz2dBackend, TextureFlags aFlags,
-                                                                     ISurfaceAllocator* aAllocator);
 
 } // namespace layers
 } // namespace mozilla

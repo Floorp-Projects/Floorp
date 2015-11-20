@@ -209,8 +209,6 @@ public:
   virtual void Deallocate(ISurfaceAllocator* aAllocator) {}
 
 protected:
-  virtual void FinalizeOnIPDLThread(TextureClient* aWrapper) override;
-
   D3D9TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                   IDirect3DTexture9* aTexture);
 
