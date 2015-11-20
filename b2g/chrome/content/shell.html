@@ -18,9 +18,6 @@
 
 <head>
   <link rel="stylesheet" href="shell.css" type="text/css">
-#ifdef FXOS_SIMULATOR
-  <link rel="stylesheet" href="desktop.css" type="text/css">
-#endif
   <script type="text/javascript">
   <!-- Add raptor performance marker -->
   window.performance.mark('gecko-shell-html-load');
@@ -52,17 +49,6 @@
           src="chrome://b2g/content/devtools/debugger.js"> </script>
 </head>
   <body id="container">
-#ifdef FXOS_SIMULATOR
-#ifndef MOZ_MULET
-    <!--
-     Some additional buttons are displayed on desktop to fake hardware buttons.
-    -->
-    <footer id="controls">
-      <button id="home-button"></button>
-      <button id="rotate-button"></button>
-    </footer>
-#endif
-#endif
 #ifndef MOZ_GRAPHENE
 #ifdef MOZ_WIDGET_COCOA
     <!--

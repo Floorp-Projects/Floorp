@@ -55,7 +55,8 @@ add_task(function* test_open_and_close() {
 
   yield promiseBrowserLoaded(tab.linkedBrowser);
 
-
+  yield TabStateFlusher.flushWindow(window);
+  yield TabStateFlusher.flushWindow(newWin);
 
   info("1. Making sure that before closing, we don't have closedAt");
   // For the moment, no "closedAt"
@@ -65,12 +66,10 @@ add_task(function* test_open_and_close() {
   is(state.windows[0].tabs[0].closedAt || false, false, "1. First tab doesn't have closedAt");
   is(state.windows[0].tabs[1].closedAt || false, false, "1. Second tab doesn't have closedAt");
 
-
-
   info("2. Making sure that after closing, we have closedAt");
 
   // Now close stuff, this should add closeAt
-  yield promiseWindowClosed(newWin);
+  yield BrowserTestUtils.closeWindow(newWin);
   yield promiseRemoveTab(newTab1);
   yield promiseRemoveTab(newTab2);
 
@@ -103,7 +102,7 @@ add_task(function* test_restore() {
   is(state.windows[0].tabs[0].closedAt || false, false, "3. First tab doesn't have closedAt");
   is(state.windows[0].tabs[1].closedAt || false, false, "3. Second tab doesn't have closedAt");
 
-  yield promiseWindowClosed(newWin);
+  yield BrowserTestUtils.closeWindow(newWin);
   gBrowser.removeTab(newTab1);
   gBrowser.removeTab(newTab2);
 });

@@ -66,6 +66,8 @@ var gCurrentUser = null;
 var gRoomsCache = null;
 // Global variable that keeps track of the link clicker channel.
 var gLinkClickerChannel = null;
+// Global variable that keeps track of in-progress getAll requests.
+var gGetAllPromise = null;
 
 /**
  * Extend a `target` object with the properties defined in `source`.
@@ -530,23 +532,19 @@ var LoopRoomsInternal = {
    *
    * @param {String}   [version] If set, we will fetch a list of changed rooms since
    *                             `version`. Optional.
-   * @param {Function} callback  Function that will be invoked once the operation
-   *                             finished. The first argument passed will be an
-   *                             `Error` object or `null`. The second argument will
-   *                             be the list of rooms, if it was fetched successfully.
+   * @return {Promise}           A promise that is resolved with a list of rooms
+   *                             on success, or rejected with an error if it fails.
    */
-  getAll: function(version = null, callback = null) {
-    if (!callback) {
-      callback = version;
-      version = null;
+  getAll: function(version) {
+    if (gGetAllPromise && !version) {
+      return gGetAllPromise;
     }
 
-    Task.spawn(function* () {
-      if (!gDirty) {
-        callback(null, [...this.rooms.values()]);
-        return;
-      }
+    if (!gDirty) {
+      return Promise.resolve([...this.rooms.values()]);
+    }
 
+    gGetAllPromise = Task.spawn(function* () {
       // Fetch the rooms from the server.
       let url = "/rooms" + (version ? "?version=" + encodeURIComponent(version) : "");
       let response = yield MozLoopService.hawkRequest(this.sessionType, url, "GET");
@@ -585,10 +583,15 @@ var LoopRoomsInternal = {
 
       // Set the 'dirty' flag back to FALSE, since the list is as fresh as can be now.
       gDirty = false;
-      callback(null, [...this.rooms.values()]);
+      gGetAllPromise = null;
+      return [...this.rooms.values()];
     }.bind(this)).catch(error => {
-      callback(error);
+      gGetAllPromise = null;
+      // Re-throw error so callers get notified.
+      throw error;
     });
+
+    return gGetAllPromise;
   },
 
   /**
@@ -940,6 +943,7 @@ var LoopRoomsInternal = {
 
     let oldDirty = gDirty;
     gDirty = true;
+
     // If we were already dirty, then get the full set of rooms. For example,
     // we'd already be dirty if we had started up but not got the list of rooms
     // yet.
@@ -1037,7 +1041,13 @@ this.LoopRooms = {
   },
 
   getAll: function(version, callback) {
-    return LoopRoomsInternal.getAll(version, callback);
+    if (!callback) {
+      callback = version;
+      version = null;
+    }
+
+    LoopRoomsInternal.getAll(version).then(result => callback(null, result))
+      .catch(error => callback(error));
   },
 
   get: function(roomToken, callback) {
@@ -1107,6 +1117,10 @@ this.LoopRooms = {
   },
 
   promise: function(method, ...params) {
+    if (method == "getAll") {
+      return LoopRoomsInternal.getAll(...params);
+    }
+
     return new Promise((resolve, reject) => {
       this[method](...params, (error, result) => {
         if (error) {
@@ -1140,6 +1154,7 @@ this.LoopRooms = {
       for (let [key, value] of roomsCache) {
         LoopRoomsInternal.rooms.set(key, value);
       }
+      gGetAllPromise = null;
       gDirty = false;
     }
   }
