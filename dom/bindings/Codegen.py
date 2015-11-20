@@ -1663,11 +1663,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
             JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
             JS::Rooted<JSObject*> obj(cx, &args.callee());
             $*{chromeOnlyCheck}
-            bool mayInvoke = args.isConstructing();
-            #ifdef RELEASE_BUILD
-            mayInvoke = mayInvoke || nsContentUtils::ThreadsafeIsCallerChrome();
-            #endif // RELEASE_BUILD
-            if (!mayInvoke) {
+            if (!args.isConstructing()) {
               // XXXbz wish I could get the name from the callee instead of
               // Adding more relocations
               return ThrowConstructorWithoutNew(cx, "${ctorName}");
