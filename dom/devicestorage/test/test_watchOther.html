@@ -31,7 +31,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function onChange(e) {
@@ -51,7 +51,7 @@ function onChange(e) {
   if (filename == gFileName) {
     ok(true, "we saw the file get created");
     storage.removeEventListener("change", onChange);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   }
   else {
     // we may see other file changes during the test, and

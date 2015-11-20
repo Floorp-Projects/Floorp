@@ -93,7 +93,7 @@ function runNextTests() {
   function runTests() {
     function cbError(e) {
       ok(false, "Should not arrive at cbError! Error: " + e.name);
-      devicestorage_cleanup();
+      SimpleTest.finish();
     }
 
     function cbSuccess(r) {
@@ -116,7 +116,7 @@ function runNextTests() {
         testNextRemove();
       }, function() {
         ok(false, "Failed to get test files.");
-        devicestorage_cleanup();
+        SimpleTest.finish();
       });
     }, cbError);
   };
@@ -124,7 +124,7 @@ function runNextTests() {
     runTests();
   }, function() {
     ok(false, "Failed to created test files.");
-    devicestorage_cleanup();
+    SimpleTest.finish();
   });
 }
 
@@ -156,7 +156,7 @@ function testNextRemove() {
     return;
   }
 
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");

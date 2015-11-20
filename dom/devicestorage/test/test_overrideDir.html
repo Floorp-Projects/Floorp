@@ -31,12 +31,12 @@ var gFileReader = new FileReader();
 
 function getAfterDeleteSuccess(e) {
   ok(false, "file was deleted not successfully");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function getAfterDeleteError(e) {
   ok(true, "file was deleted successfully");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function deleteSuccess(e) {
@@ -54,7 +54,7 @@ function deleteSuccess(e) {
 
 function deleteError(e) {
   ok(false, "deleteError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function getSuccess(e) {
@@ -92,7 +92,7 @@ function readerCallback(e) {
 
 function getError(e) {
   ok(false, "getError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
@@ -123,7 +123,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function startTest() {

@@ -26,19 +26,19 @@ devicestorage_setup(function () {
 
 function freeSpaceSuccess(e) {
   ok(e.target.result  > 0, "free bytes should exist and be greater than zero");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function freeSpaceError(e) {
   ok(false, "freeSpaceError was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
