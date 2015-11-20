@@ -282,7 +282,7 @@ GMPWrapper.prototype = {
       return this._updateTask;
     }
 
-    this._updateTask = Task.spawn(function* GMPProvider_updateTask() {
+    this._updateTask = Task.spawn(function*() {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
@@ -467,7 +467,7 @@ GMPWrapper.prototype = {
     return this._updateTask;
   },
 
-  _arePluginFilesOnDisk: function () {
+  _arePluginFilesOnDisk: function() {
     let fileExists = function(aGmpPath, aFileName) {
       let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       let path = OS.Path.join(aGmpPath, aFileName);
@@ -618,7 +618,7 @@ var GMPProvider = {
     this._log.trace("shutdown");
     Preferences.ignore(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
-    let shutdownTask = Task.spawn(function* GMPProvider_shutdownTask() {
+    let shutdownTask = Task.spawn(function*() {
       this._log.trace("shutdown - shutdownTask");
       let shutdownSucceeded = true;
 
