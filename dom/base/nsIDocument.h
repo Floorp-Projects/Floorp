@@ -155,8 +155,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xecc9e376, 0x6c31, 0x4f04, \
-  { 0xbe, 0xde, 0xd6, 0x27, 0x61, 0xd7, 0x00, 0x84 } }
+{ 0x13011a82, 0x46cd, 0x4c33, \
+  { 0x9d, 0x4e, 0x31, 0x41, 0xbb, 0x3f, 0x18, 0xe9 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -1290,8 +1290,7 @@ public:
   // Observation hooks for style data to propagate notifications
   // to document observers
   virtual void StyleRuleChanged(mozilla::CSSStyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aOldStyleRule,
-                                mozilla::css::Rule* aNewStyleRule) = 0;
+                                mozilla::css::Rule* aStyleRule) = 0;
   virtual void StyleRuleAdded(mozilla::CSSStyleSheet* aStyleSheet,
                               mozilla::css::Rule* aStyleRule) = 0;
   virtual void StyleRuleRemoved(mozilla::CSSStyleSheet* aStyleSheet,
