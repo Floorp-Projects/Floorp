@@ -127,7 +127,7 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<8);
 
   /**
-   * Allow chrome: to bypass security checks.
+   * Allow access to chrome: packages that are content accessible.
    */
   const unsigned long SEC_ALLOW_CHROME = (1<<9);
 
