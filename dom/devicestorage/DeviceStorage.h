@@ -310,7 +310,7 @@ public:
   nsresult CheckPermission(already_AddRefed<DeviceStorageRequest>&& aRequest);
 
   bool IsOwningThread();
-  nsresult DispatchToOwningThread(nsIRunnable* aRunnable);
+  nsresult DispatchToOwningThread(already_AddRefed<nsIRunnable>&& aRunnable);
 
 private:
   ~nsDOMDeviceStorage();
