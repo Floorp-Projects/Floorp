@@ -31,6 +31,6 @@ assertEq(format.format(date), "2012年12月12日 3:00:00");
 
 // Locale ar-MA; long format, Islamic civilian calendar.
 format = new Intl.DateTimeFormat("ar-ma-u-ca-islamicc", longFormatOptions);
-assertEq(format.format(date), "28 محرم، 1434 3:00:00 ص");
+assertEq(format.format(date), "28 محرم، 1434 03:00:00");
 
 reportCompare(0, 0, 'ok');
