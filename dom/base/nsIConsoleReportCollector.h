@@ -49,19 +49,19 @@ public:
                    const nsTArray<nsString>& aStringParams) = 0;
 
   // A version of AddConsoleReport() that accepts the message parameters
-  // as variable nsString arguments.  Note, the parameters must be exactly
-  // nsString and not another string class.  All other args the same as
-  // AddConsoleReport().
+  // as variable nsString arguments (or really, any sort of const nsAString).
+  // All other args the same as AddConsoleReport().
   template<typename... Params>
   void
   AddConsoleReport(uint32_t aErrorFlags, const nsACString& aCategory,
                    nsContentUtils::PropertiesFile aPropertiesFile,
                    const nsACString& aSourceFileURI, uint32_t aLineNumber,
                    uint32_t aColumnNumber, const nsACString& aMessageName,
-                   Params... aParams)
+                   Params&&... aParams)
   {
     nsTArray<nsString> params;
-    mozilla::dom::StringArrayAppender::Append(params, sizeof...(Params), aParams...);
+    mozilla::dom::StringArrayAppender::Append(params, sizeof...(Params),
+                                              mozilla::Forward<Params>(aParams)...);
     AddConsoleReport(aErrorFlags, aCategory, aPropertiesFile, aSourceFileURI,
                      aLineNumber, aColumnNumber, aMessageName, params);
   }

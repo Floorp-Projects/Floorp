@@ -2365,8 +2365,7 @@ Notification::ShowPersistentNotification(nsIGlobalObject *aGlobal,
 
     if (NS_WARN_IF(NS_FAILED(loadChecker->Result()))) {
       if (loadChecker->Result() == NS_ERROR_NOT_AVAILABLE) {
-        nsAutoString scope(aScope);
-        aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(&scope);
+        aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(aScope);
       } else {
         aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       }

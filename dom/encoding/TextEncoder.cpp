@@ -21,7 +21,7 @@ TextEncoder::Init(const nsAString& aEncoding, ErrorResult& aRv)
   // If encoding is failure, or is none of utf-8, utf-16, and utf-16be,
   // throw a RangeError (https://encoding.spec.whatwg.org/#dom-textencoder).
   if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
-    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(&label);
+    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
     return;
   }
 

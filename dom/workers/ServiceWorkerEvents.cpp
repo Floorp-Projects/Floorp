@@ -133,10 +133,14 @@ void
 AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
          const nsACString& aRespondWithScriptSpec,
          uint32_t aRespondWithLineNumber, uint32_t aRespondWithColumnNumber,
-         const nsACString& aMessageName, Params... aParams)
+         // We have to list one explicit string so that calls with an
+         // nsTArray of params won't end up in here.
+         const nsACString& aMessageName, const nsAString& aFirstParam,
+         Params&&... aParams)
 {
-  nsTArray<nsString> paramsList(sizeof...(Params));
-  StringArrayAppender::Append(paramsList, sizeof...(Params), aParams...);
+  nsTArray<nsString> paramsList(sizeof...(Params) + 1);
+  StringArrayAppender::Append(paramsList, sizeof...(Params) + 1,
+                              aFirstParam, Forward<Params>(aParams)...);
   AsyncLog(aInterceptedChannel, aRespondWithScriptSpec, aRespondWithLineNumber,
            aRespondWithColumnNumber, aMessageName, paramsList);
 }
@@ -295,7 +299,7 @@ private:
     if (!mRequestWasHandled) {
       ::AsyncLog(mInterceptedChannel, mRespondWithScriptSpec,
                  mRespondWithLineNumber, mRespondWithColumnNumber,
-                 NS_LITERAL_CSTRING("InterceptionFailedWithURL"), &mRequestURL);
+                 NS_LITERAL_CSTRING("InterceptionFailedWithURL"), mRequestURL);
       CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
     }
   }
@@ -349,7 +353,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
     AsyncLog(data->mInterceptedChannel, data->mRespondWithScriptSpec,
              data->mRespondWithLineNumber, data->mRespondWithColumnNumber,
              NS_LITERAL_CSTRING("InterceptionFailedWithURL"),
-             &data->mRequestURL);
+             data->mRequestURL);
     event = new CancelChannelRunnable(data->mInterceptedChannel,
                                       NS_ERROR_INTERCEPTION_FAILED);
   }
@@ -458,21 +462,22 @@ public:
   }
 
   template<typename... Params>
-  void SetCancelMessage(const nsACString& aMessageName, Params... aParams)
+  void SetCancelMessage(const nsACString& aMessageName, Params&&... aParams)
   {
     MOZ_ASSERT(mOwner);
     MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
     MOZ_ASSERT(mParams.Length() == 1);
     mMessageName = aMessageName;
     mParams.Clear();
-    StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
+    StringArrayAppender::Append(mParams, sizeof...(Params),
+                                Forward<Params>(aParams)...);
   }
 
   template<typename... Params>
   void SetCancelMessageAndLocation(const nsACString& aSourceSpec,
                                    uint32_t aLine, uint32_t aColumn,
                                    const nsACString& aMessageName,
-                                   Params... aParams)
+                                   Params&&... aParams)
   {
     MOZ_ASSERT(mOwner);
     MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
@@ -484,7 +489,8 @@ public:
 
     mMessageName = aMessageName;
     mParams.Clear();
-    StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
+    StringArrayAppender::Append(mParams, sizeof...(Params),
+                                Forward<Params>(aParams)...);
   }
 
   void Reset()
@@ -511,7 +517,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
     autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
                                            NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
-                                           &mRequestURL, &valueString);
+                                           mRequestURL, valueString);
     return;
   }
 
@@ -526,7 +532,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
     autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
                                            NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
-                                           &mRequestURL, &valueString);
+                                           mRequestURL, valueString);
     return;
   }
 
@@ -539,7 +545,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (response->Type() == ResponseType::Opaque &&
       !worker->OpaqueInterceptionEnabled()) {
     autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("OpaqueInterceptionDisabledWithURL"), &mRequestURL);
+      NS_LITERAL_CSTRING("OpaqueInterceptionDisabledWithURL"), mRequestURL);
     return;
   }
 
@@ -552,7 +558,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
   if (response->Type() == ResponseType::Error) {
     autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("InterceptedErrorResponseWithURL"), &mRequestURL);
+      NS_LITERAL_CSTRING("InterceptedErrorResponseWithURL"), mRequestURL);
     return;
   }
 
@@ -565,19 +571,19 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
     autoCancel.SetCancelMessage(
       NS_LITERAL_CSTRING("BadOpaqueInterceptionRequestModeWithURL"),
-      &mRequestURL, &modeString);
+      mRequestURL, modeString);
     return;
   }
 
   if (!mIsNavigationRequest && response->Type() == ResponseType::Opaqueredirect) {
     autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("BadOpaqueRedirectInterceptionWithURL"), &mRequestURL);
+      NS_LITERAL_CSTRING("BadOpaqueRedirectInterceptionWithURL"), mRequestURL);
     return;
   }
 
   if (NS_WARN_IF(response->BodyUsed())) {
     autoCancel.SetCancelMessage(
-      NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), &mRequestURL);
+      NS_LITERAL_CSTRING("InterceptedUsedResponseWithURL"), mRequestURL);
     return;
   }
 
@@ -650,7 +656,7 @@ RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
   ::AsyncLog(mInterceptedChannel, sourceSpec, line, column,
              NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
-             &mRequestURL, &valueString);
+             mRequestURL, valueString);
 
   CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
 }
@@ -738,7 +744,7 @@ FetchEvent::ReportCanceled()
 
   ::AsyncLog(mChannel.get(), mPreventDefaultScriptSpec,
              mPreventDefaultLineNumber, mPreventDefaultColumnNumber,
-             NS_LITERAL_CSTRING("InterceptionCanceledWithURL"), &requestURL);
+             NS_LITERAL_CSTRING("InterceptionCanceledWithURL"), requestURL);
 }
 
 namespace {
