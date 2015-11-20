@@ -2291,8 +2291,10 @@ nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const KTableEntry aTable[],
 nsCSSKeyword
 nsCSSProps::ValueToKeywordEnum(int32_t aValue, const KTableEntry aTable[])
 {
+#ifdef DEBUG
   typedef decltype(aTable[0].mValue) table_value_type;
   NS_ASSERTION(table_value_type(aValue) == aValue, "Value out of range");
+#endif
   for (int32_t i = 0; ; ++i) {
     const KTableEntry& entry = aTable[i];
     if (::IsKeyValSentinel(entry)) {
@@ -2333,8 +2335,10 @@ nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, int32_t aValue)
 {
   MOZ_ASSERT(aProp >= 0 && aProp < eCSSProperty_COUNT,
              "property out of range");
+#ifdef DEBUG
   typedef decltype(KTableEntry::mValue) table_value_type;
   NS_ASSERTION(table_value_type(aValue) == aValue, "Value out of range");
+#endif
 
   const KTableEntry* kwtable = nullptr;
   if (aProp < eCSSProperty_COUNT_no_shorthands)
