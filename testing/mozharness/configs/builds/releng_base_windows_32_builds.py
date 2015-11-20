@@ -60,6 +60,19 @@ config = {
     'enable_talos_sendchange': True,
     'enable_unittest_sendchange': True,
     'max_build_output_timeout': 60 * 80,
+
+    # Windows dep builds in infra don't pick up psutil correctly when configure
+    # doesn't run, but really we want it all the time. This is in the platform
+    # specific base windows configs, because doing this globally causes linux
+    # builders to fail trying to build psutil before a C compiler is installed
+    # as part of the build.
+    'virtualenv_modules': [
+        'pip>=1.5',
+        'psutil==3.1.1',
+        'requests==2.2.1',
+        'PyHawk-with-a-single-extra-commit==0.1.5',
+        'taskcluster==0.0.15',
+    ],
     #########################################################################
 
 

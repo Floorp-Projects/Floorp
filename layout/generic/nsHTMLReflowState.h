@@ -250,11 +250,11 @@ protected:
   // same as previous, but using mComputedBorderPadding, mComputedPadding,
   // and mComputedMargin
   nscoord ComputeISizeValue(nscoord aContainingBlockISize,
-                            uint8_t aBoxSizing,
+                            mozilla::StyleBoxSizing aBoxSizing,
                             const nsStyleCoord& aCoord);
 
   nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
-                            uint8_t aBoxSizing,
+                            mozilla::StyleBoxSizing aBoxSizing,
                             const nsStyleCoord& aCoord);
 };
 

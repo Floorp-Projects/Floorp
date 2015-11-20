@@ -42,6 +42,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  uint64_t Root() const { return mDominatorTree.root().identifier(); }
 };
 
 } // namespace devtools

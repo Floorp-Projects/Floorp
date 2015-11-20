@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import fileinput
 import glob
 import os
 import platform
@@ -80,7 +81,7 @@ AVD_DICT = {
                    20701, 20700)
 }
 
-def verify_android_device(build_obj, install=False, xre=False):
+def verify_android_device(build_obj, install=False, xre=False, debugger=False):
     """
        Determine if any Android device is connected via adb.
        If no device is found, prompt to start an emulator.
@@ -90,6 +91,8 @@ def verify_android_device(build_obj, install=False, xre=False):
        If 'xre' is specified, also check with MOZ_HOST_BIN is set
        to a valid xre/host-utils directory; if not, prompt to set
        one up.
+       If 'debugger' is specified, also check that JimDB is installed;
+       if JimDB is not found, prompt to set up JimDB.
        Returns True if the emulator was started or another device was
        already connected.
     """
@@ -160,18 +163,9 @@ def verify_android_device(build_obj, install=False, xre=False):
             if response.lower().startswith('y') or response == '':
                 _log_info("Installing host utilities. This may take a while...")
                 _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
-                if 'darwin' in str(sys.platform).lower():
-                    plat = 'macosx64'
-                elif 'linux' in str(sys.platform).lower():
-                    if '64' in platform.architecture()[0]:
-                        plat = 'linux64'
-                    else:
-                        plat = 'linux32'
-                else:
-                    plat = None
-                    _log_warning("Unable to install host utilities -- your platform is not supported!")
-                if plat:
-                    path = os.path.join(MANIFEST_PATH, plat, 'hostutils.manifest')
+                host_platform = _get_host_platform()
+                if host_platform:
+                    path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
                     _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
                     _tooltool_fetch()
                     xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
@@ -182,6 +176,55 @@ def verify_android_device(build_obj, install=False, xre=False):
                             break
                     if err:
                         _log_warning("Unable to install host utilities.")
+                else:
+                    _log_warning("Unable to install host utilities -- your platform is not supported!")
+
+    if debugger:
+        # Optionally set up JimDB. See https://wiki.mozilla.org/Mobile/Fennec/Android/GDB.
+        build_platform = _get_build_platform(build_obj.substs)
+        jimdb_path = os.path.join(EMULATOR_HOME_DIR, 'jimdb-%s' % build_platform)
+        jimdb_utils_path = os.path.join(jimdb_path, 'utils')
+        gdb_path = os.path.join(jimdb_path, 'bin', 'gdb')
+        err = None
+        if not os.path.isdir(jimdb_path):
+            err = '%s does not exist' % jimdb_path
+        elif not os.path.isfile(gdb_path):
+            err = '%s not found' % gdb_path
+        if err:
+            _log_info("JimDB (%s) not found: %s" % (build_platform, err))
+            response = raw_input(
+                "Download and setup JimDB (%s)? (Y/n) " % build_platform).strip()
+            if response.lower().startswith('y') or response == '':
+                host_platform = _get_host_platform()
+                if host_platform:
+                    _log_info("Installing JimDB (%s/%s). This may take a while..." % (host_platform, build_platform))
+                    path = os.path.join(MANIFEST_PATH, host_platform, 'jimdb-%s.manifest' % build_platform)
+                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
+                    _tooltool_fetch()
+                    if os.path.isfile(gdb_path):
+                        # Get JimDB utilities from git repository
+                        proc = ProcessHandler(['git', 'pull'], cwd=jimdb_utils_path)
+                        proc.run()
+                        git_pull_complete = False
+                        try:
+                            proc.wait()
+                            if proc.proc.returncode == 0:
+                                git_pull_complete = False
+                        except:
+                            if proc.poll() is None:
+                                proc.kill(signal.SIGTERM)
+                        if not git_pull_complete:
+                            _log_warning("Unable to update JimDB utils from git -- some JimDB features may be unavailable.")
+                    else:
+                        _log_warning("Unable to install JimDB -- unable to fetch from tooltool.")
+                else:
+                    _log_warning("Unable to install JimDB -- your platform is not supported!")
+        if os.path.isfile(gdb_path):
+            # sync gdbinit.local with build settings
+            _update_gdbinit(build_obj.substs, os.path.join(jimdb_utils_path, "gdbinit.local"))
+            # ensure JimDB is in system path, so that mozdebug can find it
+            bin_path = os.path.join(jimdb_path, 'bin')
+            os.environ['PATH'] = "%s:%s" % (bin_path, os.environ['PATH'])
 
     return device_verified
 
@@ -625,3 +668,48 @@ def _tooltool_fetch():
     except:
         if proc.poll() is None:
             proc.kill(signal.SIGTERM)
+
+def _get_host_platform():
+    plat = None
+    if 'darwin' in str(sys.platform).lower():
+        plat = 'macosx64'
+    elif 'linux' in str(sys.platform).lower():
+        if '64' in platform.architecture()[0]:
+            plat = 'linux64'
+        else:
+            plat = 'linux32'
+    return plat
+
+def _get_build_platform(substs):
+    if substs['TARGET_CPU'].startswith('arm'):
+        return 'arm'
+    return 'x86'
+
+def _update_gdbinit(substs, path):
+    if os.path.exists(path):
+        obj_replaced = False
+        src_replaced = False
+        # update existing objdir/srcroot in place
+        for line in fileinput.input(path, inplace=True):
+            if "feninit.default.objdir" in line and substs and 'MOZ_BUILD_ROOT' in substs:
+                print("python feninit.default.objdir = '%s'" % substs['MOZ_BUILD_ROOT'])
+                obj_replaced = True
+            elif "feninit.default.srcroot" in line and substs and 'top_srcdir' in substs:
+                print("python feninit.default.srcroot = '%s'" % substs['top_srcdir'])
+                src_replaced = True
+            else:
+                print(line.strip())
+        # append objdir/srcroot if not updated
+        if (not obj_replaced) and substs and 'MOZ_BUILD_ROOT' in substs:
+            with open(path, "a") as f:
+                f.write("\npython feninit.default.objdir = '%s'\n" % substs['MOZ_BUILD_ROOT'])
+        if (not src_replaced) and substs and 'top_srcdir' in substs:
+            with open(path, "a") as f:
+                f.write("python feninit.default.srcroot = '%s'\n" % substs['top_srcdir'])
+    else:
+        # write objdir/srcroot to new gdbinit file
+        with open(path, "w") as f:
+            if substs and 'MOZ_BUILD_ROOT' in substs:
+                f.write("python feninit.default.objdir = '%s'\n" % substs['MOZ_BUILD_ROOT'])
+            if substs and 'top_srcdir' in substs:
+                f.write("python feninit.default.srcroot = '%s'\n" % substs['top_srcdir'])
