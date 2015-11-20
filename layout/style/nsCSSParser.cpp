@@ -12540,26 +12540,27 @@ CSSParserImpl::ParseContent()
   // We need to divide the 'content' keywords into two classes for
   // ParseVariant's sake, so we can't just use nsCSSProps::kContentKTable.
   static const KTableValue kContentListKWs[] = {
-    eCSSKeyword_open_quote, NS_STYLE_CONTENT_OPEN_QUOTE,
-    eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE,
-    eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE,
-    eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE,
-    eCSSKeyword_UNKNOWN,-1
+    { eCSSKeyword_open_quote, NS_STYLE_CONTENT_OPEN_QUOTE },
+    { eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE },
+    { eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE },
+    { eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE },
+    { eCSSKeyword_UNKNOWN, -1 }
   };
 
   static const KTableValue kContentSolitaryKWs[] = {
-    eCSSKeyword__moz_alt_content, NS_STYLE_CONTENT_ALT_CONTENT,
-    eCSSKeyword_UNKNOWN,-1
+    { eCSSKeyword__moz_alt_content, NS_STYLE_CONTENT_ALT_CONTENT },
+    { eCSSKeyword_UNKNOWN, -1 }
   };
 
   // Verify that these two lists add up to the size of
   // nsCSSProps::kContentKTable.
   MOZ_ASSERT(nsCSSProps::kContentKTable[
                ArrayLength(kContentListKWs) +
-               ArrayLength(kContentSolitaryKWs) - 4] == eCSSKeyword_UNKNOWN &&
+               ArrayLength(kContentSolitaryKWs) - 2].mKeyword ==
+                 eCSSKeyword_UNKNOWN &&
              nsCSSProps::kContentKTable[
                ArrayLength(kContentListKWs) +
-               ArrayLength(kContentSolitaryKWs) - 3] == -1,
+               ArrayLength(kContentSolitaryKWs) - 2].mValue == -1,
              "content keyword tables out of sync");
 
   nsCSSValue value;
@@ -15689,15 +15690,15 @@ CSSParserImpl::ParsePaintOrder()
      "bitfield width insufficient for paint-order constants");
 
   static const KTableValue kPaintOrderKTable[] = {
-    eCSSKeyword_normal,  NS_STYLE_PAINT_ORDER_NORMAL,
-    eCSSKeyword_fill,    NS_STYLE_PAINT_ORDER_FILL,
-    eCSSKeyword_stroke,  NS_STYLE_PAINT_ORDER_STROKE,
-    eCSSKeyword_markers, NS_STYLE_PAINT_ORDER_MARKERS,
-    eCSSKeyword_UNKNOWN,-1
+    { eCSSKeyword_normal,  NS_STYLE_PAINT_ORDER_NORMAL },
+    { eCSSKeyword_fill,    NS_STYLE_PAINT_ORDER_FILL },
+    { eCSSKeyword_stroke,  NS_STYLE_PAINT_ORDER_STROKE },
+    { eCSSKeyword_markers, NS_STYLE_PAINT_ORDER_MARKERS },
+    { eCSSKeyword_UNKNOWN, -1 }
   };
 
   static_assert(MOZ_ARRAY_LENGTH(kPaintOrderKTable) ==
-                  2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
+                  NS_STYLE_PAINT_ORDER_LAST_VALUE + 2,
                 "missing paint-order values in kPaintOrderKTable");
 
   nsCSSValue value;

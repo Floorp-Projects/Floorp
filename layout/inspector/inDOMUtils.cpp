@@ -580,14 +580,10 @@ static void GetKeywordsForProperty(const nsCSSProperty aProperty,
   const nsCSSProps::KTableValue *keywordTable =
     nsCSSProps::kKeywordTableTable[aProperty];
   if (keywordTable) {
-    size_t i = 0;
-    while (nsCSSKeyword(keywordTable[i]) != eCSSKeyword_UNKNOWN) {
-      nsCSSKeyword word = nsCSSKeyword(keywordTable[i]);
+    for (size_t i = 0; keywordTable[i].mKeyword != eCSSKeyword_UNKNOWN; ++i) {
+      nsCSSKeyword word = keywordTable[i].mKeyword;
       InsertNoDuplicates(aArray,
                          NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(word)));
-      // Increment counter by 2, because in this table every second
-      // element is a nsCSSKeyword.
-      i += 2;
     }
   }
 }

@@ -307,7 +307,10 @@ enum nsStyleAnimType {
 
 class nsCSSProps {
 public:
-  typedef int16_t KTableValue;
+  struct KTableValue {
+    nsCSSKeyword mKeyword;
+    int16_t mValue;
+  };
 
   static void AddRefTable(void);
   static void ReleaseTable(void);
