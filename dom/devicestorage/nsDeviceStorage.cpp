@@ -836,8 +836,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "created");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "created"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -864,8 +863,7 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits)
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "created");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "created"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -881,8 +879,7 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits)
   outputStream->Write((char*) aBits.Elements(), aBits.Length(), &wrote);
   outputStream->Close();
 
-  iocomplete = new IOEventComplete(this, "modified");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "modified"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -935,8 +932,7 @@ DeviceStorageFile::Append(nsIInputStream* aInputStream, nsIOutputStream* aOutput
     bufSize -= wrote;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "modified");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "modified"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -973,8 +969,7 @@ DeviceStorageFile::Remove()
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "deleted");
-  return NS_DispatchToMainThread(iocomplete);
+  return NS_DispatchToMainThread(new IOEventComplete(this, "deleted"));
 }
 
 nsresult
@@ -1597,7 +1592,7 @@ DeviceStorageRequest::Allow()
     {
       self->Allow();
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   nsresult rv = AllowInternal();
@@ -1686,7 +1681,8 @@ DeviceStorageRequest::AllowInternal()
     nsCOMPtr<nsIEventTarget> target
       = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
     MOZ_ASSERT(target);
-    return target->Dispatch(this, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> self = this;
+    return target->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
   }
 
   DS_LOG_INFO("run %u", mId);
@@ -1706,7 +1702,7 @@ DeviceStorageRequest::SendToParentProcess()
         self->Reject(POST_ERROR_EVENT_UNKNOWN);
       }
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -1766,7 +1762,7 @@ DeviceStorageCursorRequest::SendContinueToParentProcess()
     {
       self->SendContinueToParentProcess();
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -1793,7 +1789,7 @@ DeviceStorageCursorRequest::Continue()
     {
       self->Continue();
     });
-    nsresult rv = NS_DispatchToMainThread(r);
+    nsresult rv = NS_DispatchToMainThread(r.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Reject(POST_ERROR_EVENT_UNKNOWN);
     }
