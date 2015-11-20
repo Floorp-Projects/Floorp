@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = randomFilename(20) + ".png"
 
@@ -68,6 +68,8 @@ ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;
 request.onerror = addError;
+
+});
 
 </script>
 </pre>

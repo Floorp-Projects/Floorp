@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823965
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
 var gData = "My name is Doug Turner (?!?).  My IRC nick is DougT.  I like Maple cookies."
@@ -99,8 +99,9 @@ ok(request, "Should have a non-null request");
 request.onsuccess = addSuccess;
 request.onerror = addError;
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

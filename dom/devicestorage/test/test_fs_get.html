@@ -21,7 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
+
 SimpleTest.requestCompleteLog();
 
 // The root directory object.
@@ -197,8 +198,9 @@ createTestFile("sub1/sub2/test.png", function() {
   promise.then(getSuccess, cbError);
 });
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-
