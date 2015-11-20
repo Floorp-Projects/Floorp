@@ -288,6 +288,7 @@ EventStateManager::DeltaAccumulator*
 
 EventStateManager::EventStateManager()
   : mLockCursor(0)
+  , mLastFrameConsumedSetCursor(false)
   , mPreLockPoint(0,0)
   , mCurrentTarget(nullptr)
     // init d&d gesture state machine variables
@@ -3527,8 +3528,19 @@ EventStateManager::UpdateCursor(nsPresContext* aPresContext,
       nsIFrame::Cursor framecursor;
       nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                                 aTargetFrame);
-      if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor)))
-        return;  // don't update the cursor if we failed to get it from the frame see bug 118877
+      // Avoid setting cursor when the mouse is over a windowless pluign.
+      if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor))) {
+        if (XRE_IsContentProcess()) {
+          mLastFrameConsumedSetCursor = true;
+        }
+        return;
+      }
+      // Make sure cursors get reset after the mouse leaves a
+      // windowless plugin frame.
+      if (mLastFrameConsumedSetCursor) {
+        ClearCachedWidgetCursor(aTargetFrame);
+        mLastFrameConsumedSetCursor = false;
+      }
       cursor = framecursor.mCursor;
       container = framecursor.mContainer;
       haveHotspot = framecursor.mHaveHotspot;
