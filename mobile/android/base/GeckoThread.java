@@ -486,6 +486,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         if ("Gecko:Ready".equals(event)) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
             setState(State.RUNNING);
+            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Gecko ready");
         }
     }
 
