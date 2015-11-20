@@ -164,6 +164,60 @@ struct MappedYCbCrTextureData {
   }
 };
 
+class TextureData {
+public:
+  TextureData() { MOZ_COUNT_CTOR(TextureData); }
+
+  virtual ~TextureData() { MOZ_COUNT_DTOR(TextureData); }
+
+  virtual gfx::IntSize GetSize() const = 0;
+
+  virtual gfx::SurfaceFormat GetFormat() const = 0;
+
+  virtual bool Lock(OpenMode aMode, FenceHandle* aFence) = 0;
+
+  virtual void Unlock() = 0;
+
+  virtual bool SupportsMoz2D() const { return false; }
+
+  virtual bool CanExposeMappedData() const { return false; }
+
+  virtual bool HasInternalBuffer() const = 0;
+
+  virtual bool HasSynchronization() const { return false; }
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() { return nullptr; }
+
+  virtual bool BorrowMappedData(MappedTextureData&) { return false; }
+
+  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData&) { return false; }
+
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) = 0;
+
+  /// Depending on the texture's flags either Deallocate or Forget is called.
+  virtual void Forget(ISurfaceAllocator* aAllocator) {}
+
+  virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
+
+  virtual TextureData*
+  CreateSimilar(ISurfaceAllocator* aAllocator,
+                TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const { return nullptr; }
+
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
+
+  virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
+
+  /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
+  /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
+  virtual void WaitForFence(FenceHandle* aFence) {};
+
+  virtual void SyncWithObject(SyncObject* aFence) {};
+
+  /// Needed until the destruction sequence of TextureClient is revamped.
+  virtual void FinalizeOnIPDLThread(TextureClient*) {}
+};
+
 /**
  * TextureClient is a thin abstraction over texture data that need to be shared
  * between the content process and the compositor process. It is the
@@ -191,8 +245,8 @@ class TextureClient
   : public AtomicRefCountedWithFinalize<TextureClient>
 {
 public:
-  explicit TextureClient(ISurfaceAllocator* aAllocator,
-                         TextureFlags aFlags = TextureFlags::DEFAULT);
+  explicit TextureClient(TextureData* aData, TextureFlags aFlags, ISurfaceAllocator* aAllocator);
+
   virtual ~TextureClient();
 
   static already_AddRefed<TextureClient>
@@ -235,24 +289,9 @@ public:
                        TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient of the same type.
-  virtual already_AddRefed<TextureClient>
+  already_AddRefed<TextureClient>
   CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const = 0;
-
-  /**
-   * Allocates for a given surface size, taking into account the pixel format
-   * which is part of the state of the TextureClient.
-   *
-   * Does not clear the surface by default, clearing the surface can be done
-   * by passing the CLEAR_BUFFER flag.
-   *
-   * TextureClients that can expose a DrawTarget should override this method.
-   */
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags flags = ALLOC_DEFAULT)
-  {
-    return false;
-  }
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const;
 
   /**
    * Locks the shared data, allowing the caller to get access to it.
@@ -260,15 +299,15 @@ public:
    * Please always lock/unlock when accessing the shared data.
    * If Lock() returns false, you should not attempt to access the shared data.
    */
-  virtual bool Lock(OpenMode aMode) { return IsValid(); }
+  bool Lock(OpenMode aMode);
 
-  virtual void Unlock() {}
+  void Unlock();
 
-  virtual bool IsLocked() const = 0;
+  bool IsLocked() const { return mIsLocked; }
 
-  virtual bool CanExposeDrawTarget() const { return false; }
+  bool CanExposeDrawTarget() const { return mData->SupportsMoz2D(); }
 
-  virtual bool CanExposeMappedData() const { return false; }
+  bool CanExposeMappedData() const { return mData->CanExposeMappedData(); }
 
   /**
    * Returns a DrawTarget to draw into the TextureClient.
@@ -296,32 +335,28 @@ public:
    * texture->Unlock();
    *
    */
-  virtual gfx::DrawTarget* BorrowDrawTarget() { return nullptr; }
+  gfx::DrawTarget* BorrowDrawTarget();
 
   /**
    * Similar to BorrowDrawTarget but provides direct access to the texture's bits
    * instead of a DrawTarget.
    */
-  virtual bool BorrowMappedData(MappedTextureData&) { return false; }
-  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData&) { return false; }
+  bool BorrowMappedData(MappedTextureData&);
+  bool BorrowMappedYCbCrData(MappedYCbCrTextureData&);
 
   /**
    * This function can be used to update the contents of the TextureClient
    * off the main thread.
    */
-  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) { MOZ_CRASH(); }
+  void UpdateFromSurface(gfx::SourceSurface* aSurface);
 
-  // TextureClients that can expose a DrawTarget should override this method.
-  virtual gfx::SurfaceFormat GetFormat() const
-  {
-    return gfx::SurfaceFormat::UNKNOWN;
-  }
+  virtual gfx::SurfaceFormat GetFormat() const;
 
   /**
    * This method is strictly for debugging. It causes locking and
    * needless copies.
    */
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() {
     Lock(OpenMode::OPEN_READ);
     RefPtr<gfx::SourceSurface> surf = BorrowDrawTarget()->Snapshot();
     RefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
@@ -336,9 +371,9 @@ public:
    * It is assumed that the necessary locks are in place; so this should at
    * least have a read lock and aTarget should at least have a write lock.
    */
-  virtual bool CopyToTextureClient(TextureClient* aTarget,
-                                   const gfx::IntRect* aRect,
-                                   const gfx::IntPoint* aPoint);
+  bool CopyToTextureClient(TextureClient* aTarget,
+                           const gfx::IntRect* aRect,
+                           const gfx::IntPoint* aPoint);
 
   /**
    * Returns true if this texture has a synchronization mechanism (mutex, fence, etc.).
@@ -347,14 +382,14 @@ public:
    * Even if a texture does not implement synchronization, Lock and Unlock need
    * to be used appropriately since the latter are also there to map/numap data.
    */
-  virtual bool HasSynchronization() const { return false; }
+  bool HasSynchronization() const { return false; }
  
   /**
    * Indicates whether the TextureClient implementation is backed by an
    * in-memory buffer. The consequence of this is that locking the
    * TextureClient does not contend with locking the texture on the host side.
    */
-  virtual bool HasInternalBuffer() const = 0;
+  bool HasInternalBuffer() const;
 
   /**
    * Allocate and deallocate a TextureChild actor.
@@ -372,9 +407,7 @@ public:
    */
   static TextureClient* AsTextureClient(PTextureChild* actor);
 
-  virtual bool IsAllocated() const = 0;
-
-  virtual gfx::IntSize GetSize() const = 0;
+  gfx::IntSize GetSize() const;
 
   /**
    * TextureFlags contain important information about various aspects
@@ -500,7 +533,7 @@ public:
   /**
    * This function waits until the buffer is no longer being used.
    */
-  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) {}
+  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true);
 
   /**
    * Track how much of this texture is wasted.
@@ -519,23 +552,18 @@ public:
     mReadbackSink = aReadbackSink;
   }
 
-  virtual void SyncWithObject(SyncObject* aSyncObject) { }
+  void SyncWithObject(SyncObject* aFence) { mData->SyncWithObject(aFence); }
 
-  void MarkShared() {
-    mShared = true;
-  }
+  void MarkShared() { mShared = true; }
 
-  ISurfaceAllocator* GetAllocator()
-  {
-    return mAllocator;
-  }
+  ISurfaceAllocator* GetAllocator() { return mAllocator; }
 
    TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
    void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
 
-  /// If you add new code that uses this funtion, you are probably doing something wrong.
-  virtual TextureData* GetInternalData() { return nullptr; }
-  virtual const TextureData* GetInternalData() const { return nullptr; }
+  /// If you add new code that uses this method, you are probably doing something wrong.
+  TextureData* GetInternalData() { return mData; }
+  const TextureData* GetInternalData() const { return mData; }
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
@@ -553,7 +581,7 @@ private:
    * Called once during the destruction of the texture on the IPDL thread, if
    * the texture is shared on the compositor (otherwise it is not called at all).
    */
-  virtual void FinalizeOnIPDLThread() {}
+  void FinalizeOnIPDLThread();
 
   friend class AtomicRefCountedWithFinalize<TextureClient>;
   friend class gl::SharedSurface_Gralloc;
@@ -572,17 +600,26 @@ protected:
    * or never constructing a TextureHost with aDescriptor may result in a memory
    * leak (see TextureClientD3D9 for example).
    */
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
+  bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor);
 
-  RefPtr<TextureChild> mActor;
+
   RefPtr<ISurfaceAllocator> mAllocator;
+  RefPtr<TextureChild> mActor;
   RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
   RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
+
+  TextureData* mData;
+  RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
 
   TextureFlags mFlags;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;
   gl::GfxTextureWasteTracker mWasteTracker;
+
+  OpenMode mOpenMode;
+  DebugOnly<uint32_t> mExpectedDtRefs;
+  bool mIsLocked;
+
   bool mShared;
   bool mValid;
   bool mAddedToCompositableClient;
@@ -599,124 +636,6 @@ public:
   // Pointer to the pool this tile came from.
   TextureClientPool* mPoolTracker;
 #endif
-};
-
-class TextureData {
-public:
-  TextureData() { MOZ_COUNT_CTOR(TextureData); }
-
-  virtual ~TextureData() { MOZ_COUNT_DTOR(TextureData); }
-
-  virtual gfx::IntSize GetSize() const = 0;
-
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
-
-  virtual bool Lock(OpenMode aMode, FenceHandle* aFence) = 0;
-
-  virtual void Unlock() = 0;
-
-  virtual bool SupportsMoz2D() const { return false; }
-
-  virtual bool CanExposeMappedData() const { return false; }
-
-  virtual bool HasInternalBuffer() const = 0;
-
-  virtual bool HasSynchronization() const { return false; }
-
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() { return nullptr; }
-
-  virtual bool BorrowMappedData(MappedTextureData&) { return false; }
-
-  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData&) { return false; }
-
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) = 0;
-
-  /// Depending on the texture's flags either Deallocate or Forget is called.
-  virtual void Forget(ISurfaceAllocator* aAllocator) {}
-
-  virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
-
-  virtual TextureData*
-  CreateSimilar(ISurfaceAllocator* aAllocator,
-                TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const { return nullptr; }
-
-  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
-
-  virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
-
-  /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
-  /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
-  virtual void WaitForFence(FenceHandle* aFence) {};
-
-  virtual void SyncWithObject(SyncObject* aFence) {};
-
-  /// Needed until the destruction sequence of TextureClient is revamped.
-  virtual void FinalizeOnIPDLThread(TextureClient*) {}
-};
-
-/// temporary class that will be merged back into TextureClient when all texture implementations
-/// are based on TextureData.
-class ClientTexture : public TextureClient {
-public:
-  ClientTexture(TextureData* aData, TextureFlags aFlags, ISurfaceAllocator* aAllocator);
-
-  ~ClientTexture();
-
-  virtual bool CanExposeDrawTarget() const override { return mData->SupportsMoz2D(); }
-
-  virtual bool CanExposeMappedData() const override { return mData->CanExposeMappedData(); }
-
-  virtual bool HasInternalBuffer() const override;
-
-  virtual bool HasSynchronization() const { return mData->HasSynchronization(); }
-
-  virtual gfx::IntSize GetSize() const override;
-
-  virtual gfx::SurfaceFormat GetFormat() const override;
-
-  virtual bool Lock(OpenMode aMode) override;
-
-  virtual void Unlock() override;
-
-  virtual bool IsLocked() const override { return mIsLocked; }
-
-  virtual gfx::DrawTarget* BorrowDrawTarget() override;
-
-  virtual bool BorrowMappedData(MappedTextureData&) override;
-
-  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData&) override;
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
-
-  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
-
-  // TODO - we should be able to make this implicit and not expose the method.
-  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
-
-  virtual void SyncWithObject(SyncObject* aFence) override { mData->SyncWithObject(aFence); }
-
-  // by construction, ClientTexture cannot be created without successful allocation.
-  virtual bool IsAllocated() const override { return true; }
-
-  /// If you add new code that uses this method, you are probably doing something wrong.
-  virtual TextureData* GetInternalData() override { return mData; }
-  virtual const TextureData* GetInternalData() const override { return mData; }
-
-  virtual void FinalizeOnIPDLThread() override;
-
-protected:
-  TextureData* mData;
-  RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
-  RefPtr<TextureReadbackSink> mReadbackSink;
-
-  OpenMode mOpenMode;
-  DebugOnly<uint32_t> mExpectedDtRefs;
-  bool mIsLocked;
 };
 
 /**

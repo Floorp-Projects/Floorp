@@ -29,7 +29,7 @@ CreateX11TextureClient(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   if (!data) {
     return nullptr;
   }
-  return MakeAndAddRef<ClientTexture>(data, aFlags, aAllocator);
+  return MakeAndAddRef<TextureClient>(data, aFlags, aAllocator);
 }
 
 X11TextureData::X11TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
