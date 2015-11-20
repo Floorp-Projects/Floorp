@@ -1,6 +1,6 @@
 /*
  * This is an adapted version of Android's original CursorLoader
- * without all the ContentProvider-specific bits.
+ * with the ContentProvider-specific bits pushed outside of this class.
  *
  * Copyright (C) 2011 The Android Open Source Project
  *
@@ -22,16 +22,26 @@ package org.mozilla.gecko.home;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.os.CancellationSignal;
+import android.support.v4.os.OperationCanceledException;
 
 /**
- * This implmentation may be causing the crash in bug 760956 – use at your own risk.
- * Prefer the framework implementation ({@link android.content.CursorLoader}) or {@link SimpleCancellableCursorLoader}.
+ * An implementation of the framework's CursorLoader class that pushes the
+ * ContentResolver access outside of the this class. It occurs in an abstract method
+ * {@link #loadCursor(CancellationSignal)}. We do this because the legacy code uses
+ * and wraps Cursors directly (e.g. {@link org.mozilla.gecko.db.TopSitesCursorWrapper},
+ * making it difficult and more work to do the ContentResolver work in here.
+ *
+ * This implementation was created because it may fix the crash from bug 760956 but the
+ * framework implementation ({@link android.content.CursorLoader}) is preferred.
  */
-abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
+abstract class SimpleCancellableCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
-    Cursor mCursor;
 
-    public SimpleCursorLoader(Context context) {
+    Cursor mCursor;
+    CancellationSignal mCancellationSignal;
+
+    public SimpleCancellableCursorLoader(Context context) {
         super(context);
         mObserver = new ForceLoadContentObserver();
     }
@@ -40,20 +50,46 @@ abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
      * Loads the target cursor for this loader. This method is called
      * on a worker thread.
      */
-    protected abstract Cursor loadCursor();
+    protected abstract Cursor loadCursor(CancellationSignal cancellationSignal);
 
     /* Runs on a worker thread */
     @Override
     public Cursor loadInBackground() {
-        Cursor cursor = loadCursor();
-
-        if (cursor != null) {
-            // Ensure the cursor window is filled
-            cursor.getCount();
-            cursor.registerContentObserver(mObserver);
+        synchronized (this) {
+            if (isLoadInBackgroundCanceled()) {
+                throw new OperationCanceledException();
+            }
+            mCancellationSignal = new CancellationSignal();
         }
+        try {
+            Cursor cursor = loadCursor(mCancellationSignal);
+            if (cursor != null) {
+                try {
+                    // Ensure the cursor window is filled
+                    cursor.getCount();
+                    cursor.registerContentObserver(mObserver);
+                } catch (RuntimeException ex) {
+                    cursor.close();
+                    throw ex;
+                }
+            }
+            return cursor;
+        } finally {
+            synchronized (this) {
+                mCancellationSignal = null;
+            }
+        }
+    }
 
-        return cursor;
+    @Override
+    public void cancelLoadInBackground() {
+        super.cancelLoadInBackground();
+
+        synchronized (this) {
+            if (mCancellationSignal != null) {
+                mCancellationSignal.cancel();
+            }
+        }
     }
 
     /* Runs on the UI thread */
