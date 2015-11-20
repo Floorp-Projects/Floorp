@@ -221,6 +221,8 @@ public:
                                                   CompositableClient* aCompositable,
                                                   TextureClient* aTexture) override;
 
+  virtual void RemoveTexture(TextureClient* aTexture) override;
+
   /**
    * Communicate to the compositor that aRegion in the texture identified by aLayer
    * and aIdentifier has been updated to aThebesBuffer.

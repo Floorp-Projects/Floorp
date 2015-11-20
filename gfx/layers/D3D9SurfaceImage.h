@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace layers {
 
-class TextureClient;
+class SharedTextureClientD3D9;
 
 class D3D9RecycleAllocator : public TextureClientRecycleAllocator
 {
@@ -26,7 +26,7 @@ public:
     , mDevice(aDevice)
   {}
 
-  already_AddRefed<TextureClient>
+  already_AddRefed<SharedTextureClientD3D9>
   CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                         const gfx::IntSize& aSize);
 
@@ -73,7 +73,7 @@ private:
 
   gfx::IntSize mSize;
   RefPtr<IDirect3DQuery9> mQuery;
-  RefPtr<TextureClient> mTextureClient;
+  RefPtr<SharedTextureClientD3D9> mTextureClient;
   bool mValid;
   bool mIsFirstFrame;
 };

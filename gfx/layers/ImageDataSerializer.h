@@ -39,8 +39,6 @@ public:
   static uint32_t ComputeMinBufferSize(gfx::IntSize aSize,
                                        gfx::SurfaceFormat aFormat);
 
-  size_t GetBufferSize() const { return mDataSize; }
-
 protected:
 
   ImageDataSerializerBase(uint8_t* aData, size_t aDataSize)

@@ -20,80 +20,101 @@ namespace mozilla {
 
 namespace layers {
 
-class EGLImageTextureData : public TextureData
+class EGLImageTextureClient : public TextureClient
 {
 public:
+  EGLImageTextureClient(ISurfaceAllocator* aAllocator,
+                        TextureFlags aFlags,
+                        EGLImageImage* aImage,
+                        gfx::IntSize aSize);
 
-  static already_AddRefed<TextureClient>
-  CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
-                      ISurfaceAllocator* aAllocator, TextureFlags aFlags);
+  virtual bool IsAllocated() const override { return true; }
 
   virtual bool HasInternalBuffer() const override { return false; }
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ISurfaceAllocator*) override { mImage = nullptr; }
+  // Useless functions.
+  virtual bool Lock(OpenMode mode) override;
 
-  virtual void Forget(ISurfaceAllocator*) override { mImage = nullptr; }
+  virtual void Unlock() override;
 
-  // Unused functions.
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
-
-  virtual void Unlock() override {}
+  virtual bool IsLocked() const override { return mIsLocked; }
 
   virtual gfx::SurfaceFormat GetFormat() const override
   {
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
-protected:
-  EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSize);
+  virtual already_AddRefed<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override
+  {
+    return nullptr;
+  }
 
+  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags) override
+  {
+    return false;
+  }
+
+protected:
   RefPtr<EGLImageImage> mImage;
   const gfx::IntSize mSize;
+  bool mIsLocked;
 };
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class AndroidSurfaceTextureData : public TextureData
+class SurfaceTextureClient : public TextureClient
 {
 public:
-  static already_AddRefed<TextureClient>
-  CreateTextureClient(gl::AndroidSurfaceTexture* aSurfTex,
-                      gfx::IntSize aSize,
-                      gl::OriginPos aOriginPos,
-                      ISurfaceAllocator* aAllocator,
-                      TextureFlags aFlags);
+  SurfaceTextureClient(ISurfaceAllocator* aAllocator,
+                       TextureFlags aFlags,
+                       gl::AndroidSurfaceTexture* aSurfTex,
+                       gfx::IntSize aSize,
+                       gl::OriginPos aOriginPos);
 
-  ~AndroidSurfaceTextureData();
+  ~SurfaceTextureClient();
+
+  virtual bool IsAllocated() const override { return true; }
 
   virtual bool HasInternalBuffer() const override { return false; }
 
-  virtual gfx::IntSize GetSize() const override { return mSize; }
+  virtual gfx::IntSize GetSize() const { return mSize; }
 
-  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
   // Useless functions.
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
+  virtual bool Lock(OpenMode mode) override;
 
-  virtual void Unlock() override {}
+  virtual void Unlock() override;
+
+  virtual bool IsLocked() const override { return mIsLocked; }
 
   virtual gfx::SurfaceFormat GetFormat() const override
   {
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
-  // Our data is always owned externally.
-  virtual void Deallocate(ISurfaceAllocator*) override {}
+  virtual already_AddRefed<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override
+  {
+    return nullptr;
+  }
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags) override
+  {
+    return false;
+  }
 
 protected:
-  AndroidSurfaceTextureData(gl::AndroidSurfaceTexture* aSurfTex,
-                            gfx::IntSize aSize);
-
   const RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
+  bool mIsLocked;
 };
 
 #endif // MOZ_WIDGET_ANDROID
