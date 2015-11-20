@@ -810,9 +810,10 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
   }
 
   // Allow widget to render a custom foreground.
-  mCompositor->GetWidget()->DrawWindowOverlay(
-    this, LayoutDeviceIntRect(actualBounds.x, actualBounds.y,
-                              actualBounds.width, actualBounds.height));
+  mCompositor->GetWidget()->DrawWindowOverlay(this, IntRect(actualBounds.x,
+                                                              actualBounds.y,
+                                                              actualBounds.width,
+                                                              actualBounds.height));
 
   // Debugging
   RenderDebugOverlay(actualBounds);
