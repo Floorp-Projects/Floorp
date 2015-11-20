@@ -1399,8 +1399,7 @@
             (!event.relatedTarget ||
              !event.relatedTarget.classList.contains("searchbar-engine-one-off-item") ||
              event.relatedTarget.classList.contains("dummy"))) {
-            textbox._changeVisuallySelectedButton(textbox.selectedButton);
-          }
+          textbox._changeVisuallySelectedButton(textbox.selectedButton);
         }
       ]]></handler>
 
