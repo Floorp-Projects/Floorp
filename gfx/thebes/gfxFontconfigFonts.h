@@ -25,7 +25,8 @@ class gfxPangoFontGroup : public gfxFontGroup {
 public:
     gfxPangoFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                       const gfxFontStyle *aStyle,
-                      gfxUserFontSet *aUserFontSet);
+                      gfxUserFontSet *aUserFontSet,
+                      gfxFloat aDevToCssSize);
     virtual ~gfxPangoFontGroup();
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);

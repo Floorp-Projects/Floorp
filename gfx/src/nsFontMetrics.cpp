@@ -150,8 +150,11 @@ nsFontMetrics::Init(const nsFont& aFont,
 
     aFont.AddFontFeaturesToStyle(&style);
 
+    gfxFloat devToCssSize = gfxFloat(mP2A) /
+        gfxFloat(mDeviceContext->AppUnitsPerCSSPixel());
     mFontGroup = gfxPlatform::GetPlatform()->
-        CreateFontGroup(aFont.fontlist, &style, aTextPerf, aUserFontSet);
+        CreateFontGroup(aFont.fontlist, &style, aTextPerf,
+                        aUserFontSet, devToCssSize);
     return NS_OK;
 }
 

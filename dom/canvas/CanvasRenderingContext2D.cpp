@@ -3973,10 +3973,13 @@ gfxFontGroup *CanvasRenderingContext2D::GetCurrentFontStyle()
       if (presShell && !presShell->IsDestroying()) {
         tp = presShell->GetPresContext()->GetTextPerfMetrics();
       }
+      int32_t perDevPixel, perCSSPixel;
+      GetAppUnitsValues(&perDevPixel, &perCSSPixel);
+      gfxFloat devToCssSize = gfxFloat(perDevPixel) / gfxFloat(perCSSPixel);
       CurrentState().fontGroup =
         gfxPlatform::GetPlatform()->CreateFontGroup(FontFamilyList(eFamily_sans_serif),
                                                     &style, tp,
-                                                    nullptr);
+                                                    nullptr, devToCssSize);
       if (CurrentState().fontGroup) {
         CurrentState().font = kDefaultFontStyle;
       } else {

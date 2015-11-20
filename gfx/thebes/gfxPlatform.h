@@ -337,7 +337,8 @@ public:
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
                     gfxTextPerfMetrics* aTextPerf,
-                    gfxUserFontSet *aUserFontSet) = 0;
+                    gfxUserFontSet *aUserFontSet,
+                    gfxFloat aDevToCssSize) = 0;
                                           
     /**
      * Look up a local platform font using the full font face name.
