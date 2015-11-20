@@ -308,7 +308,6 @@ public:
                                                          ErrorResult& aRv);
 
   nsresult CheckPermission(already_AddRefed<DeviceStorageRequest>&& aRequest);
-  void StorePermission(DeviceStorageRequest* aRequest, bool aAllow);
 
   bool IsOwningThread();
   nsresult DispatchToOwningThread(nsIRunnable* aRunnable);
