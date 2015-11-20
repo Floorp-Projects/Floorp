@@ -46,9 +46,11 @@ struct hb_ot_face_metrics_accelerator_t
   hb_blob_t *blob;
 
   inline void init (hb_face_t *face,
-		    hb_tag_t _hea_tag, hb_tag_t _mtx_tag)
+		    hb_tag_t _hea_tag, hb_tag_t _mtx_tag,
+		    unsigned int default_advance_)
   {
-    this->default_advance = face->get_upem ();
+    this->default_advance = default_advance_;
+    this->num_metrics = face->get_num_glyphs ();
 
     hb_blob_t *_hea_blob = OT::Sanitizer<OT::_hea>::sanitize (face->reference_table (_hea_tag));
     const OT::_hea *_hea = OT::Sanitizer<OT::_hea>::lock_instance (_hea_blob);
@@ -56,16 +58,8 @@ struct hb_ot_face_metrics_accelerator_t
     hb_blob_destroy (_hea_blob);
 
     this->blob = OT::Sanitizer<OT::_mtx>::sanitize (face->reference_table (_mtx_tag));
-
-    /* Cap num_metrics() and num_advances() based on table length. */
-    unsigned int len = hb_blob_get_length (this->blob);
-    if (unlikely (this->num_advances * 4 > len))
-      this->num_advances = len / 4;
-    this->num_metrics = this->num_advances + (len - 4 * this->num_advances) / 2;
-
-    /* We MUST set num_metrics to zero if num_advances is zero.
-     * Our get_advance() depends on that. */
-    if (unlikely (!this->num_advances))
+    if (unlikely (!this->num_advances ||
+		  2 * (this->num_advances + this->num_metrics) > hb_blob_get_length (this->blob)))
     {
       this->num_metrics = this->num_advances = 0;
       hb_blob_destroy (this->blob);
@@ -251,9 +245,11 @@ _hb_ot_font_create (hb_face_t *face)
   if (unlikely (!ot_font))
     return NULL;
 
+  unsigned int upem = face->get_upem ();
+
   ot_font->cmap.init (face);
-  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx);
-  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx); /* TODO Can we do this lazily? */
+  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, upem>>1);
+  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, upem); /* TODO Can we do this lazily? */
   ot_font->glyf.init (face);
 
   return ot_font;
@@ -305,6 +301,52 @@ hb_ot_get_glyph_v_advance (hb_font_t *font HB_UNUSED,
 }
 
 static hb_bool_t
+hb_ot_get_glyph_h_origin (hb_font_t *font HB_UNUSED,
+			  void *font_data HB_UNUSED,
+			  hb_codepoint_t glyph HB_UNUSED,
+			  hb_position_t *x HB_UNUSED,
+			  hb_position_t *y HB_UNUSED,
+			  void *user_data HB_UNUSED)
+{
+  /* We always work in the horizontal coordinates. */
+  return true;
+}
+
+static hb_bool_t
+hb_ot_get_glyph_v_origin (hb_font_t *font HB_UNUSED,
+			  void *font_data,
+			  hb_codepoint_t glyph,
+			  hb_position_t *x,
+			  hb_position_t *y,
+			  void *user_data HB_UNUSED)
+{
+  /* TODO */
+  return false;
+}
+
+static hb_position_t
+hb_ot_get_glyph_h_kerning (hb_font_t *font,
+			   void *font_data,
+			   hb_codepoint_t left_glyph,
+			   hb_codepoint_t right_glyph,
+			   void *user_data HB_UNUSED)
+{
+  /* TODO */
+  return 0;
+}
+
+static hb_position_t
+hb_ot_get_glyph_v_kerning (hb_font_t *font HB_UNUSED,
+			   void *font_data HB_UNUSED,
+			   hb_codepoint_t top_glyph HB_UNUSED,
+			   hb_codepoint_t bottom_glyph HB_UNUSED,
+			   void *user_data HB_UNUSED)
+{
+  /* OpenType doesn't have vertical-kerning other than GPOS. */
+  return 0;
+}
+
+static hb_bool_t
 hb_ot_get_glyph_extents (hb_font_t *font HB_UNUSED,
 			 void *font_data,
 			 hb_codepoint_t glyph,
@@ -320,52 +362,58 @@ hb_ot_get_glyph_extents (hb_font_t *font HB_UNUSED,
   return ret;
 }
 
-
-static hb_font_funcs_t *static_ot_funcs = NULL;
-
-#ifdef HB_USE_ATEXIT
-static
-void free_static_ot_funcs (void)
+static hb_bool_t
+hb_ot_get_glyph_contour_point (hb_font_t *font HB_UNUSED,
+			       void *font_data,
+			       hb_codepoint_t glyph,
+			       unsigned int point_index,
+			       hb_position_t *x,
+			       hb_position_t *y,
+			       void *user_data HB_UNUSED)
 {
-  hb_font_funcs_destroy (static_ot_funcs);
+  /* TODO */
+  return false;
 }
-#endif
+
+static hb_bool_t
+hb_ot_get_glyph_name (hb_font_t *font HB_UNUSED,
+		      void *font_data,
+		      hb_codepoint_t glyph,
+		      char *name, unsigned int size,
+		      void *user_data HB_UNUSED)
+{
+  /* TODO */
+  return false;
+}
+
+static hb_bool_t
+hb_ot_get_glyph_from_name (hb_font_t *font HB_UNUSED,
+			   void *font_data,
+			   const char *name, int len, /* -1 means nul-terminated */
+			   hb_codepoint_t *glyph,
+			   void *user_data HB_UNUSED)
+{
+  /* TODO */
+  return false;
+}
+
 
 static hb_font_funcs_t *
 _hb_ot_get_font_funcs (void)
 {
-retry:
-  hb_font_funcs_t *funcs = (hb_font_funcs_t *) hb_atomic_ptr_get (&static_ot_funcs);
+  static const hb_font_funcs_t ot_ffuncs = {
+    HB_OBJECT_HEADER_STATIC,
 
-  if (unlikely (!funcs))
-  {
-    funcs = hb_font_funcs_create ();
+    true, /* immutable */
 
-    hb_font_funcs_set_glyph_func (funcs, hb_ot_get_glyph, NULL, NULL);
-    hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ot_get_glyph_h_advance, NULL, NULL);
-    hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ot_get_glyph_v_advance, NULL, NULL);
-    //hb_font_funcs_set_glyph_h_origin_func (funcs, hb_ot_get_glyph_h_origin, NULL, NULL);
-    //hb_font_funcs_set_glyph_v_origin_func (funcs, hb_ot_get_glyph_v_origin, NULL, NULL);
-    //hb_font_funcs_set_glyph_h_kerning_func (funcs, hb_ot_get_glyph_h_kerning, NULL, NULL); TODO
-    //hb_font_funcs_set_glyph_v_kerning_func (funcs, hb_ot_get_glyph_v_kerning, NULL, NULL);
-    hb_font_funcs_set_glyph_extents_func (funcs, hb_ot_get_glyph_extents, NULL, NULL);
-    //hb_font_funcs_set_glyph_contour_point_func (funcs, hb_ot_get_glyph_contour_point, NULL, NULL); TODO
-    //hb_font_funcs_set_glyph_name_func (funcs, hb_ot_get_glyph_name, NULL, NULL); TODO
-    //hb_font_funcs_set_glyph_from_name_func (funcs, hb_ot_get_glyph_from_name, NULL, NULL); TODO
-
-    hb_font_funcs_make_immutable (funcs);
-
-    if (!hb_atomic_ptr_cmpexch (&static_ot_funcs, NULL, funcs)) {
-      hb_font_funcs_destroy (funcs);
-      goto retry;
+    {
+#define HB_FONT_FUNC_IMPLEMENT(name) hb_ot_get_##name,
+      HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
+#undef HB_FONT_FUNC_IMPLEMENT
     }
-
-#ifdef HB_USE_ATEXIT
-    atexit (free_static_ot_funcs); /* First person registers atexit() callback. */
-#endif
   };
 
-  return funcs;
+  return const_cast<hb_font_funcs_t *> (&ot_ffuncs);
 }
 
 
