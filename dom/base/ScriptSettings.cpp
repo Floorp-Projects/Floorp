@@ -544,25 +544,16 @@ AutoJSAPI::ReportException()
 }
 
 bool
-AutoJSAPI::PeekException(JS::MutableHandle<JS::Value> aVal)
-{
-  MOZ_ASSERT_IF(mIsMainThread, CxPusherIsStackTop());
-  MOZ_ASSERT(HasException());
-  MOZ_ASSERT(js::GetContextCompartment(cx()));
-  if (!JS_GetPendingException(cx(), aVal)) {
-    return false;
-  }
-  return true;
-}
-
-bool
 AutoJSAPI::StealException(JS::MutableHandle<JS::Value> aVal)
 {
-  if (!PeekException(aVal)) {
-    return false;
-  }
-  JS_ClearPendingException(cx());
-  return true;
+    MOZ_ASSERT_IF(mIsMainThread, CxPusherIsStackTop());
+    MOZ_ASSERT(HasException());
+    MOZ_ASSERT(js::GetContextCompartment(cx()));
+    if (!JS_GetPendingException(cx(), aVal)) {
+      return false;
+    }
+    JS_ClearPendingException(cx());
+    return true;
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
