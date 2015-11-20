@@ -960,10 +960,16 @@ public:
   static inline bool
   ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
   {
-    return aElement->IsAnyOfHTMLElements(nsGkAtoms::img,
-                                         nsGkAtoms::applet,
-                                         nsGkAtoms::embed,
-                                         nsGkAtoms::object);
+    if (aElement->IsAnyOfHTMLElements(nsGkAtoms::applet,
+                                      nsGkAtoms::embed,
+                                      nsGkAtoms::object)) {
+      return true;
+    }
+
+    // Per spec, <img> is exposed by id only if it also has a nonempty
+    // name (which doesn't have to match the id or anything).
+    // HasName() is true precisely when name is nonempty.
+    return aElement->IsHTMLElement(nsGkAtoms::img) && aElement->HasName();
   }
 
   static bool
