@@ -47,9 +47,11 @@ class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
+class ServiceWorkerRegisterJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
+class ServiceWorkerUpdateFinishCallback;
 
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
@@ -74,6 +76,8 @@ public:
   RefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   uint64_t mLastUpdateCheckTime;
+
+  RefPtr<ServiceWorkerRegisterJob> mUpdateJob;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -139,6 +143,12 @@ public:
 
   bool
   IsLastUpdateCheckTimeOverOneDay() const;
+
+  bool
+  IsUpdating() const;
+
+  void
+  AppendUpdateCallback(ServiceWorkerUpdateFinishCallback* aCallback);
 };
 
 class ServiceWorkerUpdateFinishCallback
