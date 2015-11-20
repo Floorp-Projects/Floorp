@@ -708,7 +708,6 @@ D3D10TextureData::BorrowDrawTarget()
       gfxCriticalNote << "Could not borrow DrawTarget (D3D10) " << (int)mFormat;
     }
   }
-}
 
   RefPtr<DrawTarget> result = mDrawTarget;
   return result.forget();
