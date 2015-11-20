@@ -9,7 +9,73 @@
 fr_CA{
     NumberElements{
         latn{
+            patternsLong{
+                decimalFormat{
+                    1000000000{
+                        one{"0 milliard"}
+                        other{"0 milliards"}
+                    }
+                    10000000000{
+                        one{"00 milliard"}
+                        other{"00 milliards"}
+                    }
+                    100000000000{
+                        one{"000 milliard"}
+                        other{"000 milliards"}
+                    }
+                    1000000000000{
+                        one{"0 billion"}
+                        other{"0 billions"}
+                    }
+                    10000000000000{
+                        one{"00 billion"}
+                        other{"00 billions"}
+                    }
+                    100000000000000{
+                        one{"000 billion"}
+                        other{"000 billions"}
+                    }
+                }
+            }
             patternsShort{
+                currencyFormat{
+                    1000000{
+                        one{"0 mn ¤"}
+                        other{"0 mns ¤"}
+                    }
+                    10000000{
+                        one{"00 mn ¤"}
+                        other{"00 mns ¤"}
+                    }
+                    100000000{
+                        one{"000 mn ¤"}
+                        other{"000 mns ¤"}
+                    }
+                    1000000000{
+                        one{"0 md ¤"}
+                        other{"0 mds ¤"}
+                    }
+                    10000000000{
+                        one{"00 md ¤"}
+                        other{"00 mds ¤"}
+                    }
+                    100000000000{
+                        one{"000 md ¤"}
+                        other{"000 mds ¤"}
+                    }
+                    1000000000000{
+                        one{"0 bn ¤"}
+                        other{"0 bns ¤"}
+                    }
+                    10000000000000{
+                        one{"00 bn ¤"}
+                        other{"00 bns ¤"}
+                    }
+                    100000000000000{
+                        one{"000 bn ¤"}
+                        other{"000 bns ¤"}
+                    }
+                }
                 decimalFormat{
                     1000000000{
                         one{"0 G"}
@@ -39,7 +105,7 @@ fr_CA{
             }
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -96,6 +162,10 @@ fr_CA{
             }
         }
         gregorian{
+            AmPmMarkersNarrow{
+                "a",
+                "p",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -106,8 +176,8 @@ fr_CA{
                 "d MMM y",
                 "yy-MM-dd",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -121,29 +191,35 @@ fr_CA{
                 yMM{"y-MM"}
                 yMd{"y-MM-dd"}
             }
-            dayNames{
-                stand-alone{
+            dayPeriod{
+                format{
                     abbreviated{
-                        "dim.",
-                        "lun.",
-                        "mar.",
-                        "mer.",
-                        "jeu.",
-                        "ven.",
-                        "sam.",
+                        afternoon1{"après-midi"}
+                        night1{"du matin"}
+                        noon{"midi"}
+                    }
+                    narrow{
+                        afternoon1{"après-midi"}
+                        midnight{"minuit"}
+                        night1{"nuit"}
+                        noon{"midi"}
                     }
                     wide{
-                        "dimanche",
-                        "lundi",
-                        "mardi",
-                        "mercredi",
-                        "jeudi",
-                        "vendredi",
-                        "samedi",
+                        afternoon1{"de l’après-midi"}
+                        evening1{"du soir"}
+                        morning1{"du matin"}
+                        night1{"du matin"}
+                        noon{"midi"}
                     }
                 }
             }
             intervalFormats{
+                H{
+                    H{"H 'h' – H 'h'"}
+                }
+                Hv{
+                    H{"H 'h' – H 'h' v"}
+                }
                 MEd{
                     M{"E MM-dd – E MM-dd"}
                     d{"E MM-dd – E MM-dd"}
@@ -155,8 +231,13 @@ fr_CA{
                 d{
                     d{"d – d"}
                 }
+                h{
+                    a{"h 'h' a – h 'h' a"}
+                    h{"h 'h' – h 'h' a"}
+                }
                 hv{
                     a{"h 'h' a – h 'h' a v"}
+                    h{"h 'h' – h 'h' a v"}
                 }
                 yM{
                     M{"y-MM – y-MM"}
@@ -171,38 +252,6 @@ fr_CA{
                     M{"y-MM-dd – y-MM-dd"}
                     d{"y-MM-dd – y-MM-dd"}
                     y{"y-MM-dd – y-MM-dd"}
-                }
-            }
-            monthNames{
-                stand-alone{
-                    abbreviated{
-                        "janv.",
-                        "févr.",
-                        "mars",
-                        "avr.",
-                        "mai",
-                        "juin",
-                        "juil.",
-                        "août",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "déc.",
-                    }
-                    wide{
-                        "janvier",
-                        "février",
-                        "mars",
-                        "avril",
-                        "mai",
-                        "juin",
-                        "juillet",
-                        "août",
-                        "septembre",
-                        "octobre",
-                        "novembre",
-                        "décembre",
-                    }
                 }
             }
         }
@@ -229,21 +278,27 @@ fr_CA{
                 yyyyMEd{"E y-MM-dd GGGGG"}
                 yyyyMd{"y-MM-dd GGGGG"}
             }
-        }
-    }
-    fields{
-        day{
-            relativeTime{
-                future{
-                    one{"Dans {0} jour"}
-                    other{"Dans {0} jours"}
-                }
-                past{
-                    one{"Il y a {0} jour"}
-                    other{"Il y a {0} jours"}
+            monthNames{
+                format{
+                    wide{
+                        "mouharram",
+                        "safar",
+                        "rabia al awal",
+                        "rabia ath-thani",
+                        "joumada al oula",
+                        "joumada ath-thania",
+                        "rajab",
+                        "chaabane",
+                        "ramadan",
+                        "chawwal",
+                        "dhou al qi`da",
+                        "dhou al-hijja",
+                    }
                 }
             }
         }
+    }
+    fields{
         day-short{
             relativeTime{
                 future{
@@ -252,15 +307,15 @@ fr_CA{
                 }
             }
         }
-        hour{
+        hour-narrow{
             relativeTime{
                 future{
-                    one{"Dans {0} heure"}
-                    other{"Dans {0} heures"}
+                    one{"+{0} h"}
+                    other{"+{0} h"}
                 }
                 past{
-                    one{"Il y a {0} heure"}
-                    other{"Il y a {0} heures"}
+                    one{"-{0} h"}
+                    other{"-{0} h"}
                 }
             }
         }
@@ -276,47 +331,11 @@ fr_CA{
                 }
             }
         }
-        month{
-            relativeTime{
-                future{
-                    one{"Dans {0} mois"}
-                    other{"Dans {0} mois"}
-                }
-                past{
-                    one{"Il y a {0} mois"}
-                    other{"Il y a {0} mois"}
-                }
-            }
-        }
-        second{
-            relativeTime{
-                future{
-                    one{"Dans {0} seconde"}
-                    other{"Dans {0} secondes"}
-                }
-                past{
-                    one{"Il y a {0} seconde"}
-                    other{"Il y a {0} secondes"}
-                }
-            }
-        }
         second-narrow{
             relativeTime{
                 future{
                     one{"+ {0} s"}
                     other{"+{0} s"}
-                }
-            }
-        }
-        week{
-            relativeTime{
-                future{
-                    one{"Dans {0} semaine"}
-                    other{"Dans {0} semaines"}
-                }
-                past{
-                    one{"Il y a {0} semaine"}
-                    other{"Il y a {0} semaines"}
                 }
             }
         }
@@ -331,6 +350,9 @@ fr_CA{
                     other{"Il y a {0} ans"}
                 }
             }
+        }
+        year-short{
+            dn{"a"}
         }
     }
     transformNames{

@@ -33,7 +33,7 @@ nnh{
             }
         }
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.67"}
     calendar{
         generic{
             DateTimePatterns{
@@ -165,7 +165,7 @@ nnh{
                         "saŋ cÿó",
                         "saŋ tsɛ̀ɛ cÿó",
                         "saŋ njÿoláʼ",
-                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀",
+                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ",
                         "saŋ mbʉ̀ŋ",
                         "saŋ ngwɔ̀ʼ mbÿɛ",
                         "saŋ tàŋa tsetsáʼ",
@@ -179,7 +179,7 @@ nnh{
                         "saŋ cÿó",
                         "saŋ tsɛ̀ɛ cÿó",
                         "saŋ njÿoláʼ",
-                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀",
+                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ",
                         "saŋ mbʉ̀ŋ",
                         "saŋ ngwɔ̀ʼ mbÿɛ",
                         "saŋ tàŋa tsetsáʼ",
@@ -195,7 +195,7 @@ nnh{
                         "saŋ cÿó",
                         "saŋ tsɛ̀ɛ cÿó",
                         "saŋ njÿoláʼ",
-                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀",
+                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ",
                         "saŋ mbʉ̀ŋ",
                         "saŋ ngwɔ̀ʼ mbÿɛ",
                         "saŋ tàŋa tsetsáʼ",
@@ -209,7 +209,7 @@ nnh{
                         "saŋ cÿó",
                         "saŋ tsɛ̀ɛ cÿó",
                         "saŋ njÿoláʼ",
-                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀",
+                        "saŋ tyɛ̀b tyɛ̀b mbʉ̀ŋ",
                         "saŋ mbʉ̀ŋ",
                         "saŋ ngwɔ̀ʼ mbÿɛ",
                         "saŋ tàŋa tsetsáʼ",

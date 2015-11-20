@@ -7,11 +7,12 @@
 // *
 // ***************************************************************************
 ps{
-    Version{"2.0.97.64"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[normalization on][reorder Arab]"
+                "[normalization on]"
+                "[reorder Arab]"
                 "&َ<<ِ<<ُ<<ً<<ٍ<<ٌ"
                 "&[before 1]ا<آ"
                 "&ا<<أ<<ٲ<<ٱ<<إ<<ٳ<ء"
@@ -29,7 +30,7 @@ ps{
                 "&ی<<*ىےيېۍ<<یٔ<<<ىٔ<<<ئ"
                 "&\u00A0<<\u200C<<\u200D"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

@@ -81,8 +81,8 @@ ee{
             "ɔstriaga schilling",
         }
         AUD{
-            "A$",
-            "australiaga dollar",
+            "AU$",
+            "Australiaga dollar",
         }
         AWG{
             "AWG",
@@ -190,7 +190,7 @@ ee{
         }
         BRL{
             "R$",
-            "brazilga real",
+            "Braziliaga real",
         }
         BRN{
             "BRN",
@@ -234,7 +234,7 @@ ee{
         }
         CAD{
             "CA$",
-            "kanadaga dollar",
+            "Canadaga dollar",
         }
         CDF{
             "CDF",
@@ -246,7 +246,7 @@ ee{
         }
         CHF{
             "CHF",
-            "swissga franc",
+            "Swissga franc",
         }
         CHW{
             "CHW",
@@ -270,7 +270,7 @@ ee{
         }
         CNY{
             "CN¥",
-            "tsainaga yuan",
+            "Chinesega yuan",
         }
         COP{
             "COP",
@@ -326,7 +326,7 @@ ee{
         }
         DKK{
             "DKK",
-            "danemarkga krone",
+            "Denmarkga krone",
         }
         DOP{
             "DOP",
@@ -374,7 +374,7 @@ ee{
         }
         EUR{
             "€",
-            "euro",
+            "EUR",
         }
         FIM{
             "FIM",
@@ -394,7 +394,7 @@ ee{
         }
         GBP{
             "£",
-            "britainga pound",
+            "Britishga pound",
         }
         GEK{
             "GEK",
@@ -454,7 +454,7 @@ ee{
         }
         HKD{
             "HK$",
-            "hong kongga dollar",
+            "Hong Kongga dollar",
         }
         HNL{
             "HNL",
@@ -478,7 +478,7 @@ ee{
         }
         IDR{
             "IDR",
-            "indinesiaga rupiah",
+            "Indonesiaga rupiah",
         }
         IEP{
             "IEP",
@@ -498,7 +498,7 @@ ee{
         }
         INR{
             "₹",
-            "indiaga rupee",
+            "Indiaga rupee",
         }
         IQD{
             "IQD",
@@ -530,7 +530,7 @@ ee{
         }
         JPY{
             "JP¥",
-            "dzapanga yen",
+            "Japanesega yen",
         }
         KES{
             "KES",
@@ -562,7 +562,7 @@ ee{
         }
         KRW{
             "₩",
-            "anyiehe koreaga won",
+            "South Koreaga won",
         }
         KWD{
             "KWD",
@@ -702,7 +702,7 @@ ee{
         }
         MXN{
             "MX$",
-            "meksikoga peso",
+            "Mexicoga peso",
         }
         MYR{
             "MYR",
@@ -726,7 +726,7 @@ ee{
         }
         NOK{
             "NOK",
-            "norwayga krone",
+            "Norwayga krone",
         }
         NPR{
             "NPR",
@@ -806,7 +806,7 @@ ee{
         }
         RUB{
             "RUB",
-            "rɔtsiaga ruble",
+            "Russiaga ruble",
         }
         RUR{
             "RUR",
@@ -818,7 +818,7 @@ ee{
         }
         SAR{
             "SAR",
-            "saudiga riyal",
+            "Saudi Arabiaga riyal",
         }
         SBD{
             "SBD",
@@ -842,7 +842,7 @@ ee{
         }
         SEK{
             "SEK",
-            "swedenga krona",
+            "Swedishga krone",
         }
         SGD{
             "SGD",
@@ -897,8 +897,8 @@ ee{
             "swaziga lilangeni",
         }
         THB{
-            "THB",
-            "thaiga baht",
+            "฿",
+            "Thailandga baht",
         }
         TJR{
             "TJR",
@@ -934,7 +934,7 @@ ee{
         }
         TRY{
             "TRY",
-            "tɛkiiga lira",
+            "Turkishga lira",
         }
         TTD{
             "TTD",
@@ -942,7 +942,7 @@ ee{
         }
         TWD{
             "NT$",
-            "taiwanga yeye dollar",
+            "Taiwanga dollar",
         }
         TZS{
             "TZS",
@@ -966,7 +966,7 @@ ee{
         }
         USD{
             "US$",
-            "us ga dollar",
+            "US ga dollar",
         }
         USN{
             "USN",
@@ -1122,7 +1122,7 @@ ee{
         }
         ZAR{
             "ZAR",
-            "anyiehe afrikaga rand",
+            "South Africaga rand",
         }
         ZMK{
             "ZMK",
@@ -1152,6 +1152,32 @@ ee{
             "ZWR",
             "zimbabwega dollar (2008)",
         }
+    }
+    Currencies%narrow{
+        AUD{"$"}
+        BRL{"R$"}
+        CAD{"$"}
+        CNY{"¥"}
+        DKK{"kr"}
+        EUR{"€"}
+        GBP{"£"}
+        HKD{"$"}
+        IDR{"Rp"}
+        INR{"₹"}
+        JPY{"¥"}
+        KRW{"₩"}
+        MXN{"$"}
+        NOK{"kr"}
+        RUB{"₽"}
+        SEK{"kr"}
+        THB{"฿"}
+        TRY{"₺"}
+        TWD{"$"}
+        USD{"$"}
+        ZAR{"R"}
+    }
+    Currencies%variant{
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1227,8 +1253,8 @@ ee{
             other{"ɔstriaga schilling"}
         }
         AUD{
-            one{"ɔstraliaga dollar"}
-            other{"ɔstraliaga dollar"}
+            one{"Australiaga dollar"}
+            other{"Australiaga dollar"}
         }
         AWG{
             one{"arubaga florin"}
@@ -1335,8 +1361,8 @@ ee{
             other{"braziliaga cruzeiro xoxotɔ gbãtɔwo (1990–1993)"}
         }
         BRL{
-            one{"braziliaga real"}
-            other{"braziliaga real"}
+            one{"Brazilga real"}
+            other{"Braziliaga real"}
         }
         BRN{
             one{"brazilia cruzado xoxotɔ (1989–1990)"}
@@ -1379,8 +1405,8 @@ ee{
             other{"belizega dollar"}
         }
         CAD{
-            one{"kanadaga dollar"}
-            other{"kanadaga dollar"}
+            one{"Canadaga dollar"}
+            other{"Canadaga dollar"}
         }
         CDF{
             one{"kongoga franc"}
@@ -1391,8 +1417,8 @@ ee{
             other{"WIR eurowo CHE"}
         }
         CHF{
-            one{"swissga franc"}
-            other{"swissga franc"}
+            one{"Swissga franc"}
+            other{"Swissga franc"}
         }
         CHW{
             one{"WIR euro CHW"}
@@ -1415,8 +1441,8 @@ ee{
             other{"tsainatɔwo ƒe gadzraɖoƒe dollarwo"}
         }
         CNY{
-            one{"tsainaga yuan"}
-            other{"tsainaga yuan"}
+            one{"Chinesega yuan"}
+            other{"Chinesega yuan"}
         }
         COP{
             one{"kolombiaga peso"}
@@ -1471,8 +1497,8 @@ ee{
             other{"dzibutiga franc"}
         }
         DKK{
-            one{"denmarkga krone"}
-            other{"denmarkga krone"}
+            one{"Denmarkga krone"}
+            other{"Denmarkga krone"}
         }
         DOP{
             one{"dominikaga peso"}
@@ -1539,8 +1565,8 @@ ee{
             other{"frentsiga franc"}
         }
         GBP{
-            one{"britainga pound"}
-            other{"britainga pound"}
+            one{"Britishga pound"}
+            other{"Britishga pound"}
         }
         GEK{
             one{"dzɔdziaga kupon larit"}
@@ -1599,8 +1625,8 @@ ee{
             other{"guyanaga dollar"}
         }
         HKD{
-            one{"hong kongga dollar"}
-            other{"hong kongga dollar"}
+            one{"Hong Kongga dollar"}
+            other{"Hong Kongga dollar"}
         }
         HNL{
             one{"honduraga lempira"}
@@ -1623,8 +1649,8 @@ ee{
             other{"hungariaga forint"}
         }
         IDR{
-            one{"indinesiaga rupiah"}
-            other{"indinesiaga rupiah"}
+            one{"Indonesiaga rupiah"}
+            other{"Indonesiaga rupiah"}
         }
         IEP{
             one{"ireland pound"}
@@ -1643,8 +1669,8 @@ ee{
             other{"israelga yeyetɔ sheqel"}
         }
         INR{
-            one{"indiaga rupee"}
-            other{"indiaga rupee"}
+            one{"Indiaga rupee"}
+            other{"Indiaga rupee"}
         }
         IQD{
             one{"irakga dinar"}
@@ -1675,8 +1701,8 @@ ee{
             other{"yɔdanga dinar"}
         }
         JPY{
-            one{"dzapanga yen"}
-            other{"dzapanga yen"}
+            one{"Japanesega yen"}
+            other{"Japanesega yen"}
         }
         KES{
             one{"kenyaga shilling"}
@@ -1707,8 +1733,8 @@ ee{
             other{"anyiehe koreaga won (1945–1953)"}
         }
         KRW{
-            one{"anyiehe koreaga won"}
-            other{"anyiehe koreaga won"}
+            one{"South Koreaga won"}
+            other{"South Koreaga won"}
         }
         KWD{
             one{"kuwaitga dinar"}
@@ -1847,8 +1873,8 @@ ee{
             other{"maldiviaga rufiyaa"}
         }
         MXN{
-            one{"meksikoga peso"}
-            other{"meksikoga peso"}
+            one{"Mexicoga peso"}
+            other{"Mexicoga peso"}
         }
         MYR{
             one{"malaysiaga ringit"}
@@ -1871,8 +1897,8 @@ ee{
             other{"hollandga guilder"}
         }
         NOK{
-            one{"nɔweiga krone"}
-            other{"nɔweiga krone"}
+            one{"Norwayga krone"}
+            other{"Norwayga krone"}
         }
         NPR{
             one{"nepalga rupee"}
@@ -1951,8 +1977,8 @@ ee{
             other{"serbiaga dinar"}
         }
         RUB{
-            one{"rɔtsiaga ruble"}
-            other{"rɔtsiaga ruble"}
+            one{"Russiaga ruble"}
+            other{"Russiaga ruble"}
         }
         RUR{
             one{"rɔtsiaga ruble (1991–1998)"}
@@ -1963,8 +1989,8 @@ ee{
             other{"rwandaga franc"}
         }
         SAR{
-            one{"saudiga riyal"}
-            other{"saudiga riyal"}
+            one{"Saudi Arabiaga riyal"}
+            other{"Saudi Arabiaga riyal"}
         }
         SBD{
             one{"solomon ƒudomekpo dukɔwo ƒe ga dollar"}
@@ -1987,8 +2013,8 @@ ee{
             other{"sudanga pound (1957–1998)"}
         }
         SEK{
-            one{"swedenga krona"}
-            other{"swedenga krona"}
+            one{"Swedishga krone"}
+            other{"Swedishga krone"}
         }
         SGD{
             one{"singapɔga dollar"}
@@ -2043,8 +2069,8 @@ ee{
             other{"swaziga lilangeni"}
         }
         THB{
-            one{"thaiga baht"}
-            other{"thaiga baht"}
+            one{"Thailandga baht"}
+            other{"Thailandga baht"}
         }
         TJR{
             one{"tajikistanga ruble"}
@@ -2079,16 +2105,16 @@ ee{
             other{"tɛkiiga lira (1922–2005)"}
         }
         TRY{
-            one{"tɛkiiga lira"}
-            other{"tɛkiiga lira"}
+            one{"Turkishga lira"}
+            other{"Turkishga lira"}
         }
         TTD{
             one{"trinidad kple tobagoga dollar"}
             other{"trinidad kple tobagoga dollar"}
         }
         TWD{
-            one{"taiwanga yeye dollar"}
-            other{"taiwanga yeye dollar"}
+            one{"Taiwanga dollar"}
+            other{"Taiwanga dollar"}
         }
         TZS{
             one{"tanzaniaga shilling"}
@@ -2111,8 +2137,8 @@ ee{
             other{"ugandaga shilling"}
         }
         USD{
-            one{"us ga dollar"}
-            other{"us ga dollar"}
+            one{"US ga dollar"}
+            other{"US ga dollar"}
         }
         USN{
             one{"us ga dollar (ŋkeke si gbɔna tɔ)"}
@@ -2267,8 +2293,8 @@ ee{
             other{"anyiehe afrikaga rand (gadzikpɔtɔ)"}
         }
         ZAR{
-            one{"anyiehe afrikaga rand"}
-            other{"anyiehe afrikaga rand"}
+            one{"South Africaga rand"}
+            other{"South Africaga rand"}
         }
         ZMK{
             one{"zambiaga kwacha (1968–2012)"}
@@ -2303,5 +2329,5 @@ ee{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
 }

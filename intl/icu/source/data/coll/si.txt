@@ -7,23 +7,25 @@
 // *
 // ***************************************************************************
 si{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         dictionary{
             Sequence{
-                "[normalization on][reorder Sinh Deva Beng Guru Gujr Orya Taml Telu Knda Mlym]"
+                "[normalization on]"
+                "[reorder Sinh Deva Beng Guru Gujr Orya Taml Telu Knda Mlym]"
                 "&ඖ<ං<ඃ"
                 "&ජ්ඤ<<ඥ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         standard{
             Sequence{
-                "[normalization on][reorder Sinh Deva Beng Guru Gujr Orya Taml Telu Knda Mlym]"
+                "[normalization on]"
+                "[reorder Sinh Deva Beng Guru Gujr Orya Taml Telu Knda Mlym]"
                 "&ඖ<ං<ඃ"
                 "&ඥ<ඤ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

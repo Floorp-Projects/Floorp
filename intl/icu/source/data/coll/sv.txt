@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 sv{
-    Version{"2.1.6.32"}
+    Version{"2.1.19.14"}
     collations{
         default{"reformed"}
         reformed{
@@ -18,11 +18,14 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         search{
-            Sequence{"[import und-u-co-search][import sv-u-co-standard]"}
-            Version{"27.0.1"}
+            Sequence{
+                "[import und-u-co-search]"
+                "[import sv-u-co-standard]"
+            }
+            Version{"28"}
         }
         standard{
             Sequence{
@@ -33,7 +36,7 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

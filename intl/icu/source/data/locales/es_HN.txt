@@ -8,17 +8,17 @@
 // ***************************************************************************
 es_HN{
     %%Parent{"es_419"}
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE dd 'de' MMMM 'de' y G",
                 "dd 'de' MMMM 'de' y G",
-                "dd/MM/y G",
+                "d/M/y G",
                 "dd/MM/yy GGGGG",
                 "{1} {0}",
                 "{1}, {0}",
@@ -29,10 +29,10 @@ es_HN{
         }
         gregorian{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE dd 'de' MMMM 'de' y",
                 "dd 'de' MMMM 'de' y",
                 "d MMM y",

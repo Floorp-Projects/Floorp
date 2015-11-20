@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-* Copyright (C) 2014, International Business Machines Corporation and
+* Copyright (C) 2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 ******************************************************************************
 *
@@ -28,17 +28,17 @@ U_NAMESPACE_BEGIN
 class UnifiedCache;
 
 /**
- * A base class for all cache keys
+ * A base class for all cache keys.
  */
 class U_COMMON_API CacheKeyBase : public UObject {
  public:
-   CacheKeyBase() : creationStatus(U_ZERO_ERROR) {}
+   CacheKeyBase() : fCreationStatus(U_ZERO_ERROR), fIsMaster(FALSE) {}
 
    /**
     * Copy constructor. Needed to support cloning.
     */
    CacheKeyBase(const CacheKeyBase &other) 
-           : UObject(other), creationStatus(other.creationStatus) { }
+           : UObject(other), fCreationStatus(other.fCreationStatus), fIsMaster(FALSE) { }
    virtual ~CacheKeyBase();
 
    /**
@@ -85,7 +85,8 @@ class U_COMMON_API CacheKeyBase : public UObject {
        return !(*this == other);
    }
  private:
-   mutable UErrorCode creationStatus;
+   mutable UErrorCode fCreationStatus;
+   mutable UBool fIsMaster;
    friend class UnifiedCache;
 };
 
@@ -174,18 +175,22 @@ class LocaleCacheKey : public CacheKey<T> {
 
 /**
  * The unified cache. A singleton type.
+ * Design doc here:
+ * https://docs.google.com/document/d/1RwGQJs4N4tawNbf809iYDRCvXoMKqDJihxzYt1ysmd8/edit?usp=sharing
  */
-class U_COMMON_API UnifiedCache : public UObject {
+class U_COMMON_API UnifiedCache : public UnifiedCacheBase {
  public:
    /**
     * @internal
+    * Do not call directly. Instead use UnifiedCache::getInstance() as
+    * there should be only one UnifiedCache in an application.
     */
    UnifiedCache(UErrorCode &status);
 
    /**
     * Returns the cache instance.
     */
-   static const UnifiedCache *getInstance(UErrorCode &status);
+   static UnifiedCache *getInstance(UErrorCode &status);
 
    /**
     * Fetches a value from the cache by key. Equivalent to
@@ -285,9 +290,66 @@ class U_COMMON_API UnifiedCache : public UObject {
     */
    void flush() const;
 
+   /**
+    * Configures at what point evcition of unused entries will begin.
+    * Eviction is triggered whenever the number of unused entries exeeds
+    * BOTH count AND (number of in-use items) * (percentageOfInUseItems / 100).
+    * Once the number of unused entries drops below one of these,
+    * eviction ceases. Because eviction happens incrementally,
+    * the actual unused entry count may exceed both these numbers
+    * from time to time.
+    *
+    * A cache entry is defined as unused if it is not essential to guarantee
+    * that for a given key X, the cache returns the same reference to the
+    * same value as long as the client already holds a reference to that
+    * value.
+    *
+    * If this method is never called, the default settings are 1000 and 100%.
+    *
+    * Although this method is thread-safe, it is designed to be called at
+    * application startup. If it is called in the middle of execution, it
+    * will have no immediate effect on the cache. However over time, the
+    * cache will perform eviction slices in an attempt to honor the new
+    * settings.
+    *
+    * If a client already holds references to many different unique values
+    * in the cache such that the number of those unique values far exeeds
+    * "count" then the cache may not be able to maintain this maximum.
+    * However, if this happens, the cache still guarantees that the number of
+    * unused entries will remain only a small percentage of the total cache
+    * size.
+    *
+    * If the parameters passed are negative, setEvctionPolicy sets status to
+    * U_ILLEGAL_ARGUMENT_ERROR.
+    */
+   void setEvictionPolicy(
+           int32_t count, int32_t percentageOfInUseItems, UErrorCode &status);
+
+
+   /**
+    * Returns how many entries have been auto evicted during the lifetime
+    * of this cache. This only includes auto evicted entries, not
+    * entries evicted because of a call to flush().
+    */
+   int64_t autoEvictedCount() const;
+
+   /**
+    * Returns the unused entry count in this cache. For testing only,
+    * Regular clients will not need this.
+    */
+   int32_t unusedCount() const;
+
+   virtual void incrementItemsInUse() const;
+   virtual void decrementItemsInUseWithLockingAndEviction() const;
+   virtual void decrementItemsInUse() const;
    virtual ~UnifiedCache();
  private:
    UHashtable *fHashtable;
+   mutable int32_t fEvictPos;
+   mutable int32_t fItemsInUseCount;
+   int32_t fMaxUnused;
+   int32_t fMaxPercentageOfInUse;
+   mutable int64_t fAutoEvictedCount;
    UnifiedCache(const UnifiedCache &other);
    UnifiedCache &operator=(const UnifiedCache &other);
    UBool _flush(UBool all) const;
@@ -309,18 +371,28 @@ class U_COMMON_API UnifiedCache : public UObject {
            const CacheKeyBase &key,
            const SharedObject *&value,
            UErrorCode &status) const;
+   const UHashElement *_nextElement() const;
+   int32_t _computeCountOfItemsToEvict() const;
+   void _runEvictionSlice() const;
+   void _registerMaster( 
+        const CacheKeyBase *theKey, const SharedObject *value) const;
+   void _put(
+           const UHashElement *element,
+           const SharedObject *value,
+           const UErrorCode status) const;
 #ifdef UNIFIED_CACHE_DEBUG
    void _dumpContents() const;
 #endif
-   static void _put(
-           const UHashElement *element,
-           const SharedObject *value,
-           const UErrorCode status);
+   static void copyPtr(const SharedObject *src, const SharedObject *&dest);
+   static void clearPtr(const SharedObject *&ptr);
    static void _fetch(
            const UHashElement *element,
            const SharedObject *&value,
            UErrorCode &status);
    static UBool _inProgress(const UHashElement *element);
+   static UBool _inProgress(
+           const SharedObject *theValue, UErrorCode creationStatus);
+   static UBool _isEvictable(const UHashElement *element);
 };
 
 U_NAMESPACE_END

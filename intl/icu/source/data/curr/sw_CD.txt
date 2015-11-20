@@ -45,5 +45,5 @@ sw_CD{
             "Faranga CFA BCEAO",
         }
     }
-    Version{"2.1.11.52"}
+    Version{"2.1.19.14"}
 }

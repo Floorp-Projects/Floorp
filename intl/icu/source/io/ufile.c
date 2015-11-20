@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1998-2014, International Business Machines
+*   Copyright (C) 1998-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -63,7 +63,19 @@ finit_owner(FILE         *f,
     uprv_memset(result, 0, sizeof(UFILE));
     result->fFileno = fileno(f);
 
-#if U_PLATFORM_USES_ONLY_WIN32_API
+#if U_PLATFORM_USES_ONLY_WIN32_API && _MSC_VER < 1900
+    /*
+     * Below is a very old workaround (ICU ticket:231).
+     *
+     * Previously, 'FILE*' from inside and outside ICU's DLL
+     * were different, because they pointed into local copies
+     * of the io block. At least by VS 2015 the implementation
+     * is something like:
+     *    stdio = _acrt_iob_func(0)
+     * .. which is a function call, so should return the same pointer
+     * regardless of call site.
+     * As of _MSC_VER 1900 this patch is retired, at 16 years old.
+     */
     if (0 <= result->fFileno && result->fFileno <= 2) {
         /* stdin, stdout and stderr need to be special cased for Windows 98 */
 #if _MSC_VER >= 1400

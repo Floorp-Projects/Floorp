@@ -15,7 +15,7 @@ gv{
             }
         }
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.14"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -63,8 +63,8 @@ gv{
                         "Luanistyn",
                         "M-fouyir",
                         "J-fouyir",
-                        "M.Houney",
-                        "M.Nollick",
+                        "M-Houney",
+                        "M-Nollick",
                     }
                     wide{
                         "Jerrey-geuree",

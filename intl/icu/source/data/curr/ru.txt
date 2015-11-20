@@ -354,7 +354,7 @@ ru{
         }
         GBP{
             "£",
-            "Английский фунт",
+            "Английский фунт стерлингов",
         }
         GEK{
             "GEK",
@@ -765,7 +765,7 @@ ru{
             "Сербский динар",
         }
         RUB{
-            "руб.",
+            "₽",
             "Российский рубль",
         }
         RUR{
@@ -1106,14 +1106,18 @@ ru{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1121,42 +1125,84 @@ ru{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
+        UAH{"грн."}
     }
     CurrencyPlurals{
         ADP{
@@ -1454,10 +1500,10 @@ ru{
             other{"фунта Фолклендских островов"}
         }
         GBP{
-            few{"английских фунта"}
-            many{"английских фунтов"}
-            one{"английский фунт"}
-            other{"английского фунта"}
+            few{"английских фунта стерлингов"}
+            many{"английских фунтов стерлингов"}
+            one{"английский фунт стерлингов"}
+            other{"английского фунта стерлингов"}
         }
         GEL{
             few{"грузинских лари"}
@@ -2002,7 +2048,7 @@ ru{
         TRY{
             few{"турецкие лиры"}
             many{"турецких лир"}
-            one{"новая турецкая лира"}
+            one{"турецкая лира"}
             other{"турецкой лиры"}
         }
         TTD{
@@ -2138,5 +2184,5 @@ ru{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.13.53"}
+    Version{"2.1.19.74"}
 }

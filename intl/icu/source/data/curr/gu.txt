@@ -194,7 +194,7 @@ gu{
         }
         GBP{
             "£",
-            "બ્રિટિશ પાઉન્ડ સ્ટર્લિંગ",
+            "બ્રિટિશ પાઉન્ડ",
         }
         GEL{
             "GEL",
@@ -474,7 +474,7 @@ gu{
         }
         RUB{
             "RUB",
-            "રશિયન રબલ",
+            "રશિયન રૂબલ",
         }
         RWF{
             "RWF",
@@ -610,7 +610,7 @@ gu{
         }
         XAF{
             "FCFA",
-            "[CFA] ફ્રેંક [BEAC]",
+            "મધ્ય આફ્રિકન [CFA] ફ્રેંક",
         }
         XCD{
             "EC$",
@@ -618,7 +618,7 @@ gu{
         }
         XOF{
             "CFA",
-            "[CFA] ફ્રેંક [BCEAO]",
+            "પશ્ચિમી આફ્રિકન [CFA] ફ્રેંક",
         }
         XPF{
             "CFPF",
@@ -646,14 +646,18 @@ gu{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -661,42 +665,83 @@ gu{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"રૂ."}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -884,8 +929,8 @@ gu{
             other{"ફૉકલેન્ડ આઇલેંડ્સ પાઉન્ડ"}
         }
         GBP{
-            one{"બ્રિટિશ પાઉન્ડ સ્ટર્લિંગ"}
-            other{"બ્રિટિશ પાઉન્ડ સ્ટર્લિંગ"}
+            one{"બ્રિટિશ પાઉન્ડ"}
+            other{"બ્રિટિશ પાઉન્ડ્સ"}
         }
         GEL{
             one{"જ્યોર્જિઅન લારી"}
@@ -1160,8 +1205,8 @@ gu{
             other{"સર્બિયન દિનાર"}
         }
         RUB{
-            one{"રશિયન રબલ"}
-            other{"રશિયન રબલ"}
+            one{"રશિયન રૂબલ"}
+            other{"રશિયન રૂબલ્સ"}
         }
         RWF{
             one{"રવાંડન ફ્રેંક"}
@@ -1296,16 +1341,16 @@ gu{
             other{"સમોઅન તાલા"}
         }
         XAF{
-            one{"[CFA] ફ્રેંક [BEAC]"}
-            other{"[CFA] ફ્રેંક [BEAC]"}
+            one{"મધ્ય આફ્રિકન [CFA] ફ્રેંક"}
+            other{"મધ્ય આફ્રિકન [CFA] ફ્રેંક્સ"}
         }
         XCD{
             one{"ઇસ્ટ કેરિબિયન ડોલર"}
             other{"ઇસ્ટ કેરિબિયન ડોલર"}
         }
         XOF{
-            one{"[CFA] ફ્રેંક [BCEAO]"}
-            other{"[CFA] ફ્રેંક [BCEAO]"}
+            one{"પશ્ચિમી આફ્રિકન [CFA] ફ્રેંક"}
+            other{"પશ્ચિમી આફ્રિકન [CFA] ફ્રેંક્સ"}
         }
         XPF{
             one{"[CFP] ફ્રેંક"}
@@ -1332,5 +1377,5 @@ gu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
 }

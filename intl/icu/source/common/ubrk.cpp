@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1996-2013, International Business Machines
+*   Copyright (C) 1996-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 */
@@ -164,10 +164,9 @@ ubrk_setText(UBreakIterator* bi,
              int32_t         textLength,
              UErrorCode*     status)
 {
-    BreakIterator *brit = (BreakIterator *)bi;
     UText  ut = UTEXT_INITIALIZER;
     utext_openUChars(&ut, text, textLength, status);
-    brit->setText(&ut, *status);
+    ((BreakIterator*)bi)->setText(&ut, *status);
     // A stack allocated UText wrapping a UChar * string
     //   can be dumped without explicitly closing it.
 }
@@ -179,8 +178,7 @@ ubrk_setUText(UBreakIterator *bi,
              UText          *text,
              UErrorCode     *status)
 {
-    RuleBasedBreakIterator *brit = (RuleBasedBreakIterator *)bi;
-    brit->RuleBasedBreakIterator::setText(text, *status);
+  ((BreakIterator*)bi)->setText(text, *status);
 }
 
 
@@ -191,35 +189,35 @@ U_CAPI int32_t U_EXPORT2
 ubrk_current(const UBreakIterator *bi)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::current();
+  return ((BreakIterator*)bi)->current();
 }
 
 U_CAPI int32_t U_EXPORT2
 ubrk_next(UBreakIterator *bi)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::next();
+  return ((BreakIterator*)bi)->next();
 }
 
 U_CAPI int32_t U_EXPORT2
 ubrk_previous(UBreakIterator *bi)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::previous();
+  return ((BreakIterator*)bi)->previous();
 }
 
 U_CAPI int32_t U_EXPORT2
 ubrk_first(UBreakIterator *bi)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::first();
+  return ((BreakIterator*)bi)->first();
 }
 
 U_CAPI int32_t U_EXPORT2
 ubrk_last(UBreakIterator *bi)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::last();
+  return ((BreakIterator*)bi)->last();
 }
 
 U_CAPI int32_t U_EXPORT2
@@ -227,7 +225,7 @@ ubrk_preceding(UBreakIterator *bi,
            int32_t offset)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::preceding(offset);
+  return ((BreakIterator*)bi)->preceding(offset);
 }
 
 U_CAPI int32_t U_EXPORT2
@@ -235,7 +233,7 @@ ubrk_following(UBreakIterator *bi,
            int32_t offset)
 {
 
-  return ((RuleBasedBreakIterator*)bi)->RuleBasedBreakIterator::following(offset);
+  return ((BreakIterator*)bi)->following(offset);
 }
 
 U_CAPI const char* U_EXPORT2
@@ -256,20 +254,20 @@ ubrk_countAvailable()
 U_CAPI  UBool U_EXPORT2
 ubrk_isBoundary(UBreakIterator *bi, int32_t offset)
 {
-    return ((RuleBasedBreakIterator *)bi)->RuleBasedBreakIterator::isBoundary(offset);
+    return ((BreakIterator*)bi)->isBoundary(offset);
 }
 
 
 U_CAPI  int32_t U_EXPORT2
 ubrk_getRuleStatus(UBreakIterator *bi)
 {
-    return ((RuleBasedBreakIterator *)bi)->RuleBasedBreakIterator::getRuleStatus();
+    return ((BreakIterator*)bi)->getRuleStatus();
 }
 
 U_CAPI  int32_t U_EXPORT2
 ubrk_getRuleStatusVec(UBreakIterator *bi, int32_t *fillInVec, int32_t capacity, UErrorCode *status)
 {
-    return ((RuleBasedBreakIterator *)bi)->RuleBasedBreakIterator::getRuleStatusVec(fillInVec, capacity, *status);
+    return ((BreakIterator*)bi)->getRuleStatusVec(fillInVec, capacity, *status);
 }
 
 

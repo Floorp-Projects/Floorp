@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2002-2014, International Business Machines
+*   Copyright (C) 2002-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -55,6 +55,7 @@ static UOption options[]={
     { "uchars", NULL, NULL, NULL, '\1', UOPT_NO_ARG, 0}, /* 6 */
     { "bytes", NULL, NULL, NULL, '\1', UOPT_NO_ARG, 0}, /* 7 */
     { "transform", NULL, NULL, NULL, '\1', UOPT_REQUIRES_ARG, 0}, /* 8 */
+    UOPTION_QUIET,              /* 9 */
 };
 
 enum arguments {
@@ -65,7 +66,8 @@ enum arguments {
     ARG_COPYRIGHT,
     ARG_UCHARS,
     ARG_BYTES,
-    ARG_TRANSFORM
+    ARG_TRANSFORM,
+    ARG_QUIET
 };
 
 // prints out the standard usage method describing command line arguments, 
@@ -79,6 +81,7 @@ static void usageAndDie(UErrorCode retCode) {
            "\t-V or --version     show a version message\n"
            "\t-c or --copyright   include a copyright notice\n"
            "\t-v or --verbose     turn on verbose output\n"
+           "\t-q or --quiet       do not display warnings and progress\n"
            "\t-i or --icudatadir  directory for locating any needed intermediate data files,\n" // TODO: figure out if we need this option
            "\t                    followed by path, defaults to %s\n"
            "\t--uchars            output a UCharsTrie (mutually exclusive with -b!)\n"
@@ -255,6 +258,7 @@ int  main(int argc, char **argv) {
     }
 
     UBool verbose = options[ARG_VERBOSE].doesOccur;
+    UBool quiet = options[ARG_QUIET].doesOccur;
 
     if (argc < 3) {
         fprintf(stderr, "input and output file must both be specified.\n");
@@ -444,7 +448,7 @@ int  main(int argc, char **argv) {
         exit(U_INTERNAL_PROGRAM_ERROR);
     }
 
-    printf("%s: done writing\t%s (%ds).\n", progName, outFileName, elapsedTime());
+    if (!quiet) { printf("%s: done writing\t%s (%ds).\n", progName, outFileName, elapsedTime()); }
 
 #ifdef TEST_GENDICT
     if (isBytesTrie) {

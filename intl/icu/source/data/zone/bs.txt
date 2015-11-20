@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 bs{
-    Version{"2.1.13.46"}
+    Version{"2.1.19.77"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -934,7 +934,7 @@ bs{
             ec{"Sydney"}
         }
         "Etc:Unknown"{
-            ec{"Nepoznati ili nevažeći grad"}
+            ec{"Nepoznati grad"}
         }
         "Europe:Amsterdam"{
             ec{"Amsterdam"}

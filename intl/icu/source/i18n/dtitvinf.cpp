@@ -574,6 +574,9 @@ DateIntervalInfo::calendarFieldToIntervalIndex(UCalendarDateFields field,
       case UCAL_MINUTE:
         index = kIPI_MINUTE;
         break;
+      case UCAL_SECOND:
+        index = kIPI_SECOND;
+        break;
       default:
         status = U_ILLEGAL_ARGUMENT_ERROR;
     }

@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1999-2012, International Business Machines
+*   Copyright (C) 1999-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -40,7 +40,7 @@ static UOption options[]={
   /*1*/ UOPTION_HELP_QUESTION_MARK,
   /*2*/ UOPTION_ICUDATADIR,
   /*3*/ UOPTION_VERBOSE,
-  /*4*/ UOPTION_DEF("list-plugins", 'L', UOPT_NO_ARG),
+  /*4*/ UOPTION_DEF("list-plugins", 'L', UOPT_NO_ARG), // may be a no-op if disabled
   /*5*/ UOPTION_DEF("milisecond-time", 'm', UOPT_NO_ARG),
   /*6*/ UOPTION_DEF("cleanup", 'K', UOPT_NO_ARG),
   /*7*/ UOPTION_DEF("xml", 'x', UOPT_REQUIRES_ARG),
@@ -108,13 +108,17 @@ void cmd_version(UBool /* noLoad */, UErrorCode &errorCode)
 
     printf("\n\nICU Initialization returned: %s\n", u_errorName(initStatus));
     
-    
+
+#if UCONFIG_ENABLE_PLUGINS    
 #if U_ENABLE_DYLOAD
     const char *pluginFile = uplug_getPluginFile();
     printf("Plugin file is: %s\n", (pluginFile&&*pluginFile)?pluginFile:"(not set. try setting ICU_PLUGINS to a directory.)");
 #else
     fprintf(stderr, "Dynamic Loading: is disabled. No plugins will be loaded at start-up.\n");
 #endif
+#else
+    fprintf(stderr, "Plugins are disabled.\n");
+#endif    
 }
 
 void cmd_cleanup()
@@ -125,6 +129,7 @@ void cmd_cleanup()
 
 
 void cmd_listplugins() {
+#if UCONFIG_ENABLE_PLUGINS
     int32_t i;
     UPlugData *plug;
 
@@ -201,7 +206,7 @@ void cmd_listplugins() {
 	if(i==0) {
 		printf("No plugins loaded.\n");
 	}
-
+#endif
 }
 
 
@@ -227,7 +232,9 @@ main(int argc, char* argv[]) {
               " -m     or  --millisecond-time     - Print the current UTC time in milliseconds.\n"
               " -d <dir>   or  --icudatadir <dir> - Set the ICU Data Directory\n"
               " -v                                - Print version and configuration information about ICU\n"
+#if UCONFIG_ENABLE_PLUGINS
               " -L         or  --list-plugins     - List and diagnose issues with ICU Plugins\n"
+#endif
               " -K         or  --cleanup          - Call u_cleanup() before exitting (will attempt to unload plugins)\n"
               "\n"
               "If no arguments are given, the tool will print ICU version and configuration information.\n"

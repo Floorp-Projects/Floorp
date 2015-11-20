@@ -44,11 +44,11 @@ fr{
                         other{"0 mille"}
                     }
                     10000{
-                        one{"00 millier"}
+                        one{"00 mille"}
                         other{"00 mille"}
                     }
                     100000{
-                        one{"000 millier"}
+                        one{"000 mille"}
                         other{"000 mille"}
                     }
                     1000000{
@@ -90,6 +90,56 @@ fr{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 k ¤"}
+                        other{"0 k ¤"}
+                    }
+                    10000{
+                        one{"00 k ¤"}
+                        other{"00 k ¤"}
+                    }
+                    100000{
+                        one{"000 k ¤"}
+                        other{"000 k ¤"}
+                    }
+                    1000000{
+                        one{"0 M ¤"}
+                        other{"0 M ¤"}
+                    }
+                    10000000{
+                        one{"00 M ¤"}
+                        other{"00 M ¤"}
+                    }
+                    100000000{
+                        one{"000 M ¤"}
+                        other{"000 M ¤"}
+                    }
+                    1000000000{
+                        one{"0 Md ¤"}
+                        other{"0 Md ¤"}
+                    }
+                    10000000000{
+                        one{"00 Md ¤"}
+                        other{"00 Md ¤"}
+                    }
+                    100000000000{
+                        one{"000 Md ¤"}
+                        other{"000 Md ¤"}
+                    }
+                    1000000000000{
+                        one{"0 Bn ¤"}
+                        other{"0 Bn ¤"}
+                    }
+                    10000000000000{
+                        one{"00 Bn ¤"}
+                        other{"00 Bn ¤"}
+                    }
+                    100000000000000{
+                        one{"000 Bn ¤"}
+                        other{"000 Bn ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 k"}
@@ -159,7 +209,7 @@ fr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.13.46"}
+    Version{"2.1.20.4"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -224,6 +274,7 @@ fr{
                 MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 ms{"mm:ss"}
@@ -234,6 +285,7 @@ fr{
                 yyyyMEd{"E d/M/y"}
                 yyyyMMM{"MMM U"}
                 yyyyMMMEd{"E d MMM U"}
+                yyyyMMMM{"MMMM U"}
                 yyyyMMMd{"d MMM U"}
                 yyyyMd{"d/M/y"}
                 yyyyQQQ{"QQQ U"}
@@ -398,6 +450,7 @@ fr{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -410,6 +463,7 @@ fr{
                 MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
@@ -535,8 +589,8 @@ fr{
                 "PM",
             }
             AmPmMarkersNarrow{
-                "a",
-                "p",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -547,14 +601,12 @@ fr{
                 "d MMMM y",
                 "d MMM y",
                 "dd/MM/y",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
                 "{1} {0}",
             }
-            NoonMarker{"midi"}
-            NoonMarkerNarrow{"midi"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -575,11 +627,12 @@ fr{
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
                 M{"L"}
-                MEd{"E d/M"}
+                MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
-                Md{"d/M"}
+                Md{"dd/MM"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -588,13 +641,13 @@ fr{
                 hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"M/y"}
-                yMEd{"E d/M/y"}
+                yM{"MM/y"}
+                yMEd{"E dd/MM/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
-                yMd{"d/M/y"}
+                yMd{"dd/MM/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -639,13 +692,13 @@ fr{
                 }
                 stand-alone{
                     abbreviated{
-                        "Dim.",
-                        "Lun.",
-                        "Mar.",
-                        "Mer.",
-                        "Jeu.",
-                        "Ven.",
-                        "Sam.",
+                        "dim.",
+                        "lun.",
+                        "mar.",
+                        "mer.",
+                        "jeu.",
+                        "ven.",
+                        "sam.",
                     }
                     narrow{
                         "D",
@@ -657,22 +710,82 @@ fr{
                         "S",
                     }
                     short{
-                        "Di",
-                        "Lu",
-                        "Ma",
-                        "Me",
-                        "Je",
-                        "Ve",
-                        "Sa",
+                        "di",
+                        "lu",
+                        "ma",
+                        "me",
+                        "je",
+                        "ve",
+                        "sa",
                     }
                     wide{
-                        "Dimanche",
-                        "Lundi",
-                        "Mardi",
-                        "Mercredi",
-                        "Jeudi",
-                        "Vendredi",
-                        "Samedi",
+                        "dimanche",
+                        "lundi",
+                        "mardi",
+                        "mercredi",
+                        "jeudi",
+                        "vendredi",
+                        "samedi",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"ap.m."}
+                        evening1{"soir"}
+                        midnight{"min."}
+                        morning1{"mat."}
+                        night1{"nuit"}
+                        noon{"midi"}
+                    }
+                    narrow{
+                        afternoon1{"ap.m."}
+                        evening1{"soir"}
+                        midnight{"min."}
+                        morning1{"mat."}
+                        night1{"nuit"}
+                        noon{"midi"}
+                    }
+                    wide{
+                        afternoon1{"de l’après-midi"}
+                        evening1{"du soir"}
+                        midnight{"minuit"}
+                        morning1{"du matin"}
+                        night1{"de nuit"}
+                        noon{"midi"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"ap.m."}
+                        am{"AM"}
+                        evening1{"soir"}
+                        midnight{"min."}
+                        morning1{"mat."}
+                        night1{"nuit"}
+                        noon{"midi"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"ap.m."}
+                        am{"AM"}
+                        evening1{"soir"}
+                        midnight{"min."}
+                        morning1{"mat."}
+                        night1{"nuit"}
+                        noon{"midi"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"après-midi"}
+                        am{"AM"}
+                        evening1{"soir"}
+                        midnight{"minuit"}
+                        morning1{"matin"}
+                        night1{"nuit"}
+                        noon{"midi"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -698,8 +811,8 @@ fr{
                     "après Jésus-Christ",
                 }
                 wide%variant{
-                    "AEC",
-                    "EC",
+                    "avant l’ère commune",
+                    "de l’ère commune",
                 }
             }
             intervalFormats{
@@ -766,7 +879,7 @@ fr{
                 }
                 yM{
                     M{"MM/y – MM/y"}
-                    y{"M/y – M/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
                     M{"E dd/MM/y – E dd/MM/y"}
@@ -792,8 +905,8 @@ fr{
                     y{"d MMM y – d MMM y"}
                 }
                 yMd{
-                    M{"d/M/y – d/M/y"}
-                    d{"d/M/y – d/M/y"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
                     y{"dd/MM/y – dd/MM/y"}
                 }
             }
@@ -844,18 +957,18 @@ fr{
                 }
                 stand-alone{
                     abbreviated{
-                        "Janv.",
-                        "Févr.",
-                        "Mars",
-                        "Avr.",
-                        "Mai",
-                        "Juin",
-                        "Juil.",
-                        "Août",
-                        "Sept.",
-                        "Oct.",
-                        "Nov.",
-                        "Déc.",
+                        "janv.",
+                        "févr.",
+                        "mars",
+                        "avr.",
+                        "mai",
+                        "juin",
+                        "juil.",
+                        "août",
+                        "sept.",
+                        "oct.",
+                        "nov.",
+                        "déc.",
                     }
                     narrow{
                         "J",
@@ -872,18 +985,18 @@ fr{
                         "D",
                     }
                     wide{
-                        "Janvier",
-                        "Février",
-                        "Mars",
-                        "Avril",
-                        "Mai",
-                        "Juin",
-                        "Juillet",
-                        "Août",
-                        "Septembre",
-                        "Octobre",
-                        "Novembre",
-                        "Décembre",
+                        "janvier",
+                        "février",
+                        "mars",
+                        "avril",
+                        "mai",
+                        "juin",
+                        "juillet",
+                        "août",
+                        "septembre",
+                        "octobre",
+                        "novembre",
+                        "décembre",
                     }
                 }
             }
@@ -1002,6 +1115,7 @@ fr{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -1011,6 +1125,7 @@ fr{
                 MEd{"E dd/MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
                 d{"d"}
@@ -1148,6 +1263,7 @@ fr{
                 MEd{"E d/M"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
@@ -1263,9 +1379,9 @@ fr{
         }
         fri-narrow{
             relative{
-                "-1"{"ven dernier"}
+                "-1"{"ven dern"}
                 "0"{"ce ven"}
-                "1"{"ven prochain"}
+                "1"{"ven proch"}
             }
         }
         fri-short{
@@ -1292,12 +1408,12 @@ fr{
             dn{"h"}
             relativeTime{
                 future{
-                    one{"+{0} h"}
-                    other{"+{0} h"}
+                    one{"+{0}h"}
+                    other{"+{0}h"}
                 }
                 past{
-                    one{"-{0} h"}
-                    other{"-{0} h"}
+                    one{"−{0}h"}
+                    other{"−{0}h"}
                 }
             }
         }
@@ -1362,9 +1478,9 @@ fr{
         }
         mon-narrow{
             relative{
-                "-1"{"lun dernier"}
+                "-1"{"lun dern"}
                 "0"{"ce lun"}
-                "1"{"lun prochain"}
+                "1"{"lun proch"}
             }
         }
         mon-short{
@@ -1393,7 +1509,7 @@ fr{
             }
         }
         month-narrow{
-            dn{"m"}
+            dn{"m."}
             relativeTime{
                 future{
                     one{"+{0} m."}
@@ -1466,9 +1582,9 @@ fr{
         }
         sat-narrow{
             relative{
-                "-1"{"sam dernier"}
+                "-1"{"sam dern"}
                 "0"{"ce sam"}
-                "1"{"sam prochain"}
+                "1"{"sam proch"}
             }
         }
         sat-short{
@@ -1529,9 +1645,9 @@ fr{
         }
         sun-narrow{
             relative{
-                "-1"{"dim dernier"}
+                "-1"{"dim dern"}
                 "0"{"ce dim"}
-                "1"{"dim prochain"}
+                "1"{"dim proch"}
             }
         }
         sun-short{
@@ -1550,9 +1666,9 @@ fr{
         }
         thu-narrow{
             relative{
-                "-1"{"jeu dernier"}
+                "-1"{"jeu dern"}
                 "0"{"ce jeu"}
-                "1"{"jeu prochain"}
+                "1"{"jeu proch"}
             }
         }
         thu-short{
@@ -1571,9 +1687,9 @@ fr{
         }
         tue-narrow{
             relative{
-                "-1"{"mar dernier"}
+                "-1"{"mar dern"}
                 "0"{"ce mar"}
-                "1"{"mar prochain"}
+                "1"{"mar proch"}
             }
         }
         tue-short{
@@ -1592,9 +1708,9 @@ fr{
         }
         wed-narrow{
             relative{
-                "-1"{"mer dernier"}
+                "-1"{"mer dern"}
                 "0"{"ce mer"}
-                "1"{"mer prochain"}
+                "1"{"mer proch"}
             }
         }
         wed-short{
@@ -1683,7 +1799,7 @@ fr{
             }
         }
         year-short{
-            dn{"a"}
+            dn{"ann."}
             relativeTime{
                 future{
                     one{"dans {0} a"}

@@ -94,6 +94,56 @@ te{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0వే"}
+                        other{"¤0వే"}
+                    }
+                    10000{
+                        one{"¤00వే"}
+                        other{"¤00వే"}
+                    }
+                    100000{
+                        one{"¤000వే"}
+                        other{"¤000వే"}
+                    }
+                    1000000{
+                        one{"¤0మి"}
+                        other{"¤0మి"}
+                    }
+                    10000000{
+                        one{"¤00మి"}
+                        other{"¤00మి"}
+                    }
+                    100000000{
+                        one{"¤000మి"}
+                        other{"¤000మి"}
+                    }
+                    1000000000{
+                        one{"¤0బి"}
+                        other{"¤0బి"}
+                    }
+                    10000000000{
+                        one{"¤00బి"}
+                        other{"¤00బి"}
+                    }
+                    100000000000{
+                        one{"¤000బి"}
+                        other{"¤000బి"}
+                    }
+                    1000000000000{
+                        one{"¤0ట్రి"}
+                        other{"¤0ట్రి"}
+                    }
+                    10000000000000{
+                        one{"¤00ట్రి"}
+                        other{"¤00ట్రి"}
+                    }
+                    100000000000000{
+                        one{"¤000ట్రి"}
+                        other{"¤000ట్రి"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0వే"}
@@ -163,7 +213,7 @@ te{
         minimumGroupingDigits{"1"}
         native{"telu"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -182,6 +232,7 @@ te{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -302,7 +353,7 @@ te{
                 }
                 yMMMd{
                     M{"d MMM – d MMM, y"}
-                    d{"d–d MMM, y"}
+                    d{"G y MMM d–d"}
                     y{"d MMM, y – d MMM, y"}
                 }
                 yMd{
@@ -316,6 +367,10 @@ te{
             AmPmMarkers{
                 "[AM]",
                 "[PM]",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "ఉ",
@@ -336,8 +391,6 @@ te{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"మధ్యాహ్నం"}
-            NoonMarkerNarrow{"మధ్యా"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -355,6 +408,8 @@ te{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
@@ -367,6 +422,8 @@ te{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -458,6 +515,60 @@ te{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"మధ్యాహ్నం"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                    }
+                    narrow{
+                        afternoon1{"మధ్యాహ్నం"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                    }
+                    wide{
+                        afternoon1{"మధ్యాహ్నం"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"మధ్యాహ్నం"}
+                        am{"AM"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"మధ్యాహ్నం"}
+                        am{"AM"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"మధ్యాహ్నం"}
+                        am{"AM"}
+                        evening1{"సాయంత్రం"}
+                        midnight{"అర్థరాత్రి"}
+                        morning1{"ఉదయం"}
+                        night1{"రాత్రి"}
+                        pm{"PM"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "క్రీపూ",
@@ -466,10 +577,6 @@ te{
                 abbreviated%variant{
                     "[BCE]",
                     "[CE]",
-                }
-                narrow{
-                    "ఈసాపూర్వ.",
-                    "సన్.",
                 }
                 wide{
                     "క్రీస్తు పూర్వం",
@@ -758,6 +865,10 @@ te{
         }
         day-narrow{
             dn{"ది"}
+            relative{
+                "-2"{"మొన్న"}
+                "2"{"ఎల్లుండి"}
+            }
             relativeTime{
                 future{
                     one{"+{0} రోజు"}
@@ -771,6 +882,10 @@ te{
         }
         day-short{
             dn{"దినం"}
+            relative{
+                "-2"{"మొన్న"}
+                "2"{"ఎల్లుండి"}
+            }
             relativeTime{
                 future{
                     one{"{0} రోజులో"}
@@ -928,6 +1043,11 @@ te{
         }
         month-narrow{
             dn{"నె"}
+            relative{
+                "-1"{"గత నెల"}
+                "0"{"ఈ నెల"}
+                "1"{"తదుపరి నెల"}
+            }
             relativeTime{
                 future{
                     one{"+{0} నెల"}
@@ -941,6 +1061,11 @@ te{
         }
         month-short{
             dn{"నెల"}
+            relative{
+                "-1"{"గత నెల"}
+                "0"{"ఈ నెల"}
+                "1"{"తదుపరి నెల"}
+            }
             relativeTime{
                 future{
                     one{"{0} నెలలో"}
@@ -1158,6 +1283,11 @@ te{
         }
         week-narrow{
             dn{"వా"}
+            relative{
+                "-1"{"గత వారం"}
+                "0"{"ఈ వారం"}
+                "1"{"తదుపరి వారం"}
+            }
             relativeTime{
                 future{
                     one{"+{0} వా."}
@@ -1171,6 +1301,11 @@ te{
         }
         week-short{
             dn{"వారము"}
+            relative{
+                "-1"{"గత వారం"}
+                "0"{"ఈ వారం"}
+                "1"{"తదుపరి వారం"}
+            }
             relativeTime{
                 future{
                     one{"{0} వారంలో"}

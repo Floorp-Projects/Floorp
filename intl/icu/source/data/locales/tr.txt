@@ -93,6 +93,56 @@ tr{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 B ¤"}
+                        other{"0 B ¤"}
+                    }
+                    10000{
+                        one{"00 B ¤"}
+                        other{"00 B ¤"}
+                    }
+                    100000{
+                        one{"000 B ¤"}
+                        other{"000 B ¤"}
+                    }
+                    1000000{
+                        one{"0 Mn ¤"}
+                        other{"0 Mn ¤"}
+                    }
+                    10000000{
+                        one{"00 Mn ¤"}
+                        other{"00 Mn ¤"}
+                    }
+                    100000000{
+                        one{"000 Mn ¤"}
+                        other{"000 Mn ¤"}
+                    }
+                    1000000000{
+                        one{"0 Mr ¤"}
+                        other{"0 Mr ¤"}
+                    }
+                    10000000000{
+                        one{"00 Mr ¤"}
+                        other{"00 Mr ¤"}
+                    }
+                    100000000000{
+                        one{"000 Mr ¤"}
+                        other{"000 Mr ¤"}
+                    }
+                    1000000000000{
+                        one{"0 Tn ¤"}
+                        other{"0 Tn ¤"}
+                    }
+                    10000000000000{
+                        one{"00 Tn ¤"}
+                        other{"00 Tn ¤"}
+                    }
+                    100000000000000{
+                        one{"000 Tn ¤"}
+                        other{"000 Tn ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0"}
@@ -162,7 +212,7 @@ tr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     calendar{
         buddhist{
             eras{
@@ -230,6 +280,7 @@ tr{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d E"}
                 Gy{"G y"}
                 GyMMM{"G MMM y"}
@@ -366,6 +417,10 @@ tr{
                 "ÖÖ",
                 "ÖS",
             }
+            AmPmMarkersAbbr{
+                "ÖÖ",
+                "ÖS",
+            }
             AmPmMarkersNarrow{
                 "öö",
                 "ös",
@@ -385,8 +440,6 @@ tr{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"öğle"}
-            NoonMarkerNarrow{"ö"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -509,6 +562,78 @@ tr{
                         "Perşembe",
                         "Cuma",
                         "Cumartesi",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        evening1{"akşam"}
+                        midnight{"gece yarısı"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"öğle"}
+                    }
+                    narrow{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        evening1{"akşam"}
+                        midnight{"gece"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"ö"}
+                    }
+                    wide{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        evening1{"akşam"}
+                        midnight{"gece yarısı"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"öğle"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        am{"ÖÖ"}
+                        evening1{"akşam"}
+                        midnight{"gece yarısı"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"öğle"}
+                        pm{"ÖS"}
+                    }
+                    narrow{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        am{"ÖÖ"}
+                        evening1{"akşam"}
+                        midnight{"gece yarısı"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"öğle"}
+                        pm{"ÖS"}
+                    }
+                    wide{
+                        afternoon1{"öğleden sonra"}
+                        afternoon2{"akşamüstü"}
+                        am{"ÖÖ"}
+                        evening1{"akşam"}
+                        midnight{"gece yarısı"}
+                        morning1{"sabah"}
+                        morning2{"öğleden önce"}
+                        night1{"gece"}
+                        noon{"öğle"}
+                        pm{"ÖS"}
                     }
                 }
             }
@@ -930,6 +1055,10 @@ tr{
         }
         day-narrow{
             dn{"gün"}
+            relative{
+                "-2"{"evvelsi gün"}
+                "2"{"öbür gün"}
+            }
             relativeTime{
                 future{
                     one{"{0} gün sonra"}
@@ -943,6 +1072,10 @@ tr{
         }
         day-short{
             dn{"gün"}
+            relative{
+                "-2"{"evvelsi gün"}
+                "2"{"öbür gün"}
+            }
             relativeTime{
                 future{
                     one{"{0} gün sonra"}
@@ -1100,6 +1233,11 @@ tr{
         }
         month-narrow{
             dn{"ay"}
+            relative{
+                "-1"{"geçen ay"}
+                "0"{"bu ay"}
+                "1"{"gelecek ay"}
+            }
             relativeTime{
                 future{
                     one{"{0} ay sonra"}
@@ -1113,6 +1251,11 @@ tr{
         }
         month-short{
             dn{"ay"}
+            relative{
+                "-1"{"geçen ay"}
+                "0"{"bu ay"}
+                "1"{"gelecek ay"}
+            }
             relativeTime{
                 future{
                     one{"{0} ay sonra"}
@@ -1377,6 +1520,11 @@ tr{
         }
         year-narrow{
             dn{"yıl"}
+            relative{
+                "-1"{"geçen yıl"}
+                "0"{"bu yıl"}
+                "1"{"gelecek yıl"}
+            }
             relativeTime{
                 future{
                     one{"{0} yıl sonra"}
@@ -1390,6 +1538,11 @@ tr{
         }
         year-short{
             dn{"yıl"}
+            relative{
+                "-1"{"geçen yıl"}
+                "0"{"bu yıl"}
+                "1"{"gelecek yıl"}
+            }
             relativeTime{
                 future{
                     one{"{0} yıl sonra"}

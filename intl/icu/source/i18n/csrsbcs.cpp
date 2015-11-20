@@ -167,6 +167,7 @@ NGramParser_IBM420::NGramParser_IBM420(const int32_t *theNgramList, const uint8_
 	alef = 0x00;
 }
 
+NGramParser_IBM420::~NGramParser_IBM420() {}
 
 int32_t NGramParser_IBM420::isLamAlef(int32_t b)
 {

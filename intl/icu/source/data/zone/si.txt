@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 si{
-    Version{"2.1.12.94"}
+    Version{"2.1.20.4"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"අබිජාන්"}
@@ -684,6 +684,9 @@ si{
         "Asia:Calcutta"{
             ec{"කල්කටා"}
         }
+        "Asia:Chita"{
+            ec{"චිටා"}
+        }
         "Asia:Choibalsan"{
             ec{"චොයිබල්සාන්"}
         }
@@ -824,6 +827,9 @@ si{
         }
         "Asia:Singapore"{
             ec{"සිංගප්පූරුව"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"ශ්‍රෙඩ්නෙකෝලිම්සක්"}
         }
         "Asia:Taipei"{
             ec{"තායිපෙ"}
@@ -1144,6 +1150,9 @@ si{
         }
         "Pacific:Auckland"{
             ec{"ඕක්ලන්ඩ්"}
+        }
+        "Pacific:Bougainville"{
+            ec{"බෝගන්විලා"}
         }
         "Pacific:Chatham"{
             ec{"චැතම්"}
@@ -1845,7 +1854,7 @@ si{
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"ග්‍රිමවේ{0}"}
         gmtZeroFormat{"ග්‍රිමවේ"}
-        hourFormat{"+HH:mm;-HH:mm"}
+        hourFormat{"+HH.mm;-HH.mm"}
         regionFormat{"{0} වේලාව"}
         regionFormatDaylight{"{0} දිවාආලෝක වේලාව"}
         regionFormatStandard{"{0} සම්මත වේලාව"}

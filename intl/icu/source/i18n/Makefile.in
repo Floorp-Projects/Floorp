@@ -94,8 +94,12 @@ uspoof.o uspoof_impl.o uspoof_build.o uspoof_conf.o uspoof_wsconf.o decfmtst.o s
 ztrans.o zrule.o vzone.o fphdlimp.o fpositer.o ufieldpositer.o locdspnm.o \
 decNumber.o decContext.o alphaindex.o tznames.o tznames_impl.o tzgnames.o \
 tzfmt.o compactdecimalformat.o gender.o region.o scriptset.o identifier_info.o \
-uregion.o reldatefmt.o quantityformatter.o measunit.o filteredbrk.o \
-sharedbreakiterator.o scientificnumberformatter.o
+uregion.o reldatefmt.o quantityformatter.o measunit.o \
+sharedbreakiterator.o scientificnumberformatter.o digitgrouping.o \
+digitinterval.o digitformatter.o digitaffix.o valueformatter.o \
+digitaffixesandpadding.o pluralaffix.o precision.o \
+affixpatternparser.o smallintformatter.o decimfmtimpl.o \
+visibledigits.o
 
 ## Header files to install
 HEADERS = $(srcdir)/unicode/*.h

@@ -745,7 +745,7 @@ bg{
             "Сръбски динар",
         }
         RUB{
-            "руб.",
+            "RUB",
             "Руска рубла",
         }
         RUR{
@@ -1118,6 +1118,7 @@ bg{
         SGD{"SGD"}
         SRD{"SRD"}
         SSP{"SSP"}
+        THB{"฿"}
         TRY{"TRY"}
         TTD{"TTD"}
         TWD{"TWD"}
@@ -1125,6 +1126,9 @@ bg{
         USD{"$"}
         UYU{"UYU"}
         VND{"VND"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
     }
     CurrencyPlurals{
         ADP{
@@ -2048,5 +2052,5 @@ bg{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }

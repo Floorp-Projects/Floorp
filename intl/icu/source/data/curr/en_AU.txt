@@ -13,20 +13,197 @@ en_AU{
             "$",
             "Australian Dollar",
         }
+        AWG{
+            "AWG",
+            "Aruba Guilder",
+        }
+        BAM{
+            "BAM",
+            "Bosnia-Herzegovina Convertible Marka",
+        }
+        BBD{
+            "BBD",
+            "Barbados Dollar",
+        }
+        BMD{
+            "BMD",
+            "Bermuda Dollar",
+        }
+        BOB{
+            "BOB",
+            "Boliviano",
+        }
+        BRL{
+            "BRL",
+            "Brazilian Real",
+        }
+        CAD{
+            "CAD",
+            "Canadian Dollar",
+        }
+        CNY{
+            "CNY",
+            "Chinese Yuan",
+        }
+        EUR{
+            "EUR",
+            "Euro",
+        }
+        GBP{
+            "GBP",
+            "British Pound",
+        }
+        HKD{
+            "HKD",
+            "Hong Kong Dollar",
+        }
+        ILS{
+            "ILS",
+            "Israeli Shekel",
+        }
+        INR{
+            "INR",
+            "Indian Rupee",
+        }
+        JPY{
+            "JPY",
+            "Japanese Yen",
+        }
+        KRW{
+            "KRW",
+            "South Korean Won",
+        }
+        MXN{
+            "MXN",
+            "Mexican Peso",
+        }
+        NZD{
+            "NZD",
+            "New Zealand Dollar",
+        }
+        QAR{
+            "QAR",
+            "Qatari Riyal",
+        }
         SCR{
-            "SCR",
-            "Seychelles Rupee",
+            "Rs",
+            "Seychellois Rupee",
+        }
+        SRD{
+            "SRD",
+            "Suriname Dollar",
+        }
+        TWD{
+            "TWD",
+            "New Taiwan Dollar",
+        }
+        USD{
+            "USD",
+            "US Dollar",
+        }
+        UYU{
+            "UYU",
+            "Peso Uruguayo",
+        }
+        VND{
+            "VND",
+            "Vietnamese Dong",
+        }
+        XAF{
+            "XAF",
+            "Central African CFA Franc",
+        }
+        XCD{
+            "XCD",
+            "East Caribbean Dollar",
+        }
+        XOF{
+            "XOF",
+            "West African CFA Franc",
+        }
+        XPF{
+            "CFP",
+            "CFP Franc",
         }
     }
+    Currencies%narrow{
+        BDT{"Tk"}
+        BOB{"$b"}
+        CUP{"₱"}
+        EGP{"£"}
+        ISK{"Kr"}
+        LBP{"ل.ل"}
+        PYG{"Gs"}
+        SEK{"Kr"}
+        UYU{"$U"}
+    }
+    Currencies%variant{
+        GEL{"GEL"}
+        TRY{"TRY"}
+    }
     CurrencyPlurals{
+        AWG{
+            one{"Aruba guilder"}
+            other{"Aruba guilders"}
+        }
+        BAM{
+            one{"Bosnia-Herzegovina convertible marka"}
+        }
+        BBD{
+            one{"Barbados dollar"}
+            other{"Barbados dollars"}
+        }
+        BMD{
+            one{"Bermuda dollar"}
+            other{"Bermuda dollars"}
+        }
+        BOB{
+            one{"boliviano"}
+            other{"bolivianos"}
+        }
         EUR{
             one{"euro"}
             other{"euro"}
         }
-        MGA{
-            one{"Malagasy ariary"}
-            other{"Malagasy ariarys"}
+        GEL{
+            other{"Georgian lari"}
+        }
+        ILS{
+            one{"Israeli shekel"}
+            other{"Israeli sheckles"}
+        }
+        KZT{
+            other{"Kazakhstani tenge"}
+        }
+        LAK{
+            other{"Laotian kip"}
+        }
+        MKD{
+            other{"Macedonian denar"}
+        }
+        PGK{
+            other{"Papua New Guinean kinas"}
+        }
+        QAR{
+            one{"Qatari riyal"}
+            other{"Quatari riyals"}
+        }
+        SRD{
+            one{"Suriname dollar"}
+            other{"Suriname dollars"}
+        }
+        TRY{
+            other{"Turkish lire"}
+        }
+        UZS{
+            other{"Uzbekistani soms"}
+        }
+        VND{
+            other{"Vietnamese dongs"}
+        }
+        WST{
+            other{"Samoan talas"}
         }
     }
-    Version{"2.1.11.59"}
+    Version{"2.1.20.4"}
 }

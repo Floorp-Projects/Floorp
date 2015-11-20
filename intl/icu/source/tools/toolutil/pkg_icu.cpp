@@ -1,9 +1,10 @@
 /******************************************************************************
- *   Copyright (C) 2008-2014, International Business Machines
+ *   Copyright (C) 2008-2015, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *******************************************************************************
  */
 #include "unicode/utypes.h"
+#include "unicode/localpointer.h"
 #include "unicode/putil.h"
 #include "cstring.h"
 #include "toolutil.h"
@@ -149,33 +150,25 @@ readList(const char *filesPath, const char *listname, UBool readContents, Packag
 
 U_CAPI int U_EXPORT2
 writePackageDatFile(const char *outFilename, const char *outComment, const char *sourcePath, const char *addList, Package *pkg, char outType) {
-    Package *addListPkg = NULL;
-    UBool pkgDelete = FALSE;
+    LocalPointer<Package> ownedPkg;
+    LocalPointer<Package> addListPkg;
 
     if (pkg == NULL) {
-        pkg = new Package;
-        if(pkg == NULL) {
+        ownedPkg.adoptInstead(new Package);
+        if(ownedPkg.isNull()) {
             fprintf(stderr, "icupkg: not enough memory\n");
             return U_MEMORY_ALLOCATION_ERROR;
         }
+        pkg = ownedPkg.getAlias();
 
-        addListPkg = readList(sourcePath, addList, TRUE, NULL);
-        if(addListPkg != NULL) {
+        addListPkg.adoptInstead(readList(sourcePath, addList, TRUE, NULL));
+        if(addListPkg.isValid()) {
             pkg->addItems(*addListPkg);
         } else {
             return U_ILLEGAL_ARGUMENT_ERROR;
         }
-
-        pkgDelete = TRUE;
     }
 
     pkg->writePackage(outFilename, outType, outComment);
-
-    if (pkgDelete) {
-        delete pkg;
-        delete addListPkg;
-    }
-
     return 0;
 }
-

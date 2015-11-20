@@ -1043,11 +1043,8 @@ static const UConverterStaticData _UTF8StaticData={
 };
 
 
-const UConverterSharedData _UTF8Data={
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF8StaticData, FALSE, &_UTF8Impl,
-    0
-};
+const UConverterSharedData _UTF8Data=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF8StaticData, &_UTF8Impl);
 
 /* CESU-8 converter data ---------------------------------------------------- */
 
@@ -1086,10 +1083,7 @@ static const UConverterStaticData _CESU8StaticData={
 };
 
 
-const UConverterSharedData _CESU8Data={
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_CESU8StaticData, FALSE, &_CESU8Impl,
-    0
-};
+const UConverterSharedData _CESU8Data=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_CESU8StaticData, &_CESU8Impl);
 
 #endif

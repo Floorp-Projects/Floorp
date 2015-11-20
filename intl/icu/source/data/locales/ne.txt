@@ -11,6 +11,7 @@ ne{
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
+        medial{"{0}…{1}"}
         word-final{"{0} …"}
         word-initial{"… {0}"}
         word-medial{"{0} … {1}"}
@@ -109,6 +110,56 @@ ne{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤ 0 हजार"}
+                        other{"¤ 0 हजार"}
+                    }
+                    10000{
+                        one{"¤ 00 हजार"}
+                        other{"¤ 00 हजार"}
+                    }
+                    100000{
+                        one{"¤ 0 लाख"}
+                        other{"¤ 0 लाख"}
+                    }
+                    1000000{
+                        one{"¤ 00 लाख"}
+                        other{"¤ 00 लाख"}
+                    }
+                    10000000{
+                        one{"¤ 0 करोड"}
+                        other{"¤ 0 करोड"}
+                    }
+                    100000000{
+                        one{"¤ 00 करोड"}
+                        other{"¤ 00 करोड"}
+                    }
+                    1000000000{
+                        one{"¤ 0 अरब"}
+                        other{"¤ 0 अरब"}
+                    }
+                    10000000000{
+                        one{"¤ 00 अरब"}
+                        other{"¤ 00 अरब"}
+                    }
+                    100000000000{
+                        one{"¤ 0 खरब"}
+                        other{"¤ 0 खरब"}
+                    }
+                    1000000000000{
+                        one{"¤ 00 खरब"}
+                        other{"¤ 00 खरब"}
+                    }
+                    10000000000000{
+                        one{"¤ 0 शंख"}
+                        other{"¤ 0 शंख"}
+                    }
+                    100000000000000{
+                        one{"¤ 00 शंख"}
+                        other{"¤ 00 शंख"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 हजार"}
@@ -175,10 +226,10 @@ ne{
                 timeSeparator{":"}
             }
         }
-        minimumGroupingDigits{"1"}
+        minimumGroupingDigits{"१"}
         native{"deva"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -197,6 +248,7 @@ ne{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d, E"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
@@ -206,6 +258,7 @@ ne{
                 MEd{"MM/dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
                 d{"d"}
@@ -215,6 +268,7 @@ ne{
                 yyyyMEd{"GGGGG y-MM-dd, E"}
                 yyyyMMM{"G y MMM"}
                 yyyyMMMEd{"G y MMM d, E"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"G y MMM d"}
                 yyyyMd{"GGGGG y-MM-dd"}
                 yyyyQQQ{"G y QQQ"}
@@ -308,8 +362,6 @@ ne{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"मध्यान्ह"}
-            NoonMarkerNarrow{"n"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -327,22 +379,28 @@ ne{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"y-MM"}
                 yMEd{"y-MM-dd, E"}
                 yMMM{"y MMM"}
                 yMMMEd{"y MMM d, E"}
+                yMMMM{"y MMMM"}
                 yMMMd{"y MMM d"}
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
@@ -426,17 +484,70 @@ ne{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"बेलुका"}
+                        evening1{"साँझ"}
+                        midnight{"मध्यरात"}
+                        morning1{"बिहान"}
+                        night1{"रात"}
+                        noon{"मध्यान्ह"}
+                    }
+                    narrow{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"बेलुका"}
+                        evening1{"साँझ"}
+                        midnight{"मध्यरात"}
+                        morning1{"बिहान"}
+                        night1{"रात"}
+                        noon{"n"}
+                    }
+                    wide{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"बेलुका"}
+                        evening1{"साँझ"}
+                        midnight{"मध्यरात"}
+                        morning1{"बिहान"}
+                        night1{"रात"}
+                        noon{"मध्यान्ह"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"साँझ"}
+                        am{"पूर्वाह्न"}
+                        evening1{"बेलुका"}
+                        midnight{"मध्यरात"}
+                        morning1{"बिहान"}
+                        night1{"रात"}
+                        noon{"मध्यान्ह"}
+                        pm{"अपराह्न"}
+                    }
+                    wide{
+                        afternoon1{"अपरान्ह"}
+                        afternoon2{"साँझ"}
+                        evening1{"बेलुका"}
+                        midnight{"मध्यरात"}
+                        morning1{"विहान"}
+                        night1{"रात"}
+                        noon{"मध्यान्ह"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "ईसा पूर्व",
                     "सन्",
                 }
                 abbreviated%variant{
-                    "इशा पूर्व",
+                    "इस्वीपूर्व",
                     "सिइ",
                 }
                 wide%variant{
-                    "इशा पूर्व",
+                    "इस्वीपूर्व",
                     "सिइ",
                 }
             }
@@ -702,7 +813,7 @@ ne{
                 "-1"{"हिजो"}
                 "-2"{"अस्ति"}
                 "0"{"आज"}
-                "1"{"भोली"}
+                "1"{"भोलि"}
                 "2"{"पर्सि"}
             }
             relativeTime{
@@ -823,6 +934,16 @@ ne{
         }
         minute-narrow{
             dn{"मिनेट"}
+            relativeTime{
+                future{
+                    one{"{0} मिनेटमा"}
+                    other{"{0} मिनेटमा"}
+                }
+                past{
+                    one{"{0} मिनेट पहिले"}
+                    other{"{0} मिनेट पहिले"}
+                }
+            }
         }
         minute-short{
             dn{"मिनेट"}
@@ -1000,9 +1121,23 @@ ne{
         }
         sun{
             relative{
-                "-1"{"गत आईतबार"}
-                "0"{"यो आईतबार"}
-                "1"{"अर्को आईतबार"}
+                "-1"{"गत आइतबार"}
+                "0"{"यो आइतबार"}
+                "1"{"अर्को आइतबार"}
+            }
+        }
+        sun-narrow{
+            relative{
+                "-1"{"गत आइतबार"}
+                "0"{"यो आइतबार"}
+                "1"{"अर्को आइतबार"}
+            }
+        }
+        sun-short{
+            relative{
+                "-1"{"गत आइतबार"}
+                "0"{"यो आइतबार"}
+                "1"{"अर्को आइतबार"}
             }
         }
         thu{

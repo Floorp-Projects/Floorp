@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2009-2011, International Business Machines
+*   Copyright (C) 2009-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -56,6 +56,7 @@ static UOption options[]={
     UOPTION_ICUDATADIR,         /* 6 */
     UOPTION_DESTDIR,            /* 7 */
     UOPTION_COPYRIGHT,          /* 8 */
+    UOPTION_QUIET,              /* 9 */
 };
 
 void usageAndDie(int retCode) {
@@ -66,6 +67,7 @@ void usageAndDie(int retCode) {
             "\t-V or --version     show a version message\n"
             "\t-c or --copyright   include a copyright notice\n"
             "\t-v or --verbose     turn on verbose output\n"
+            "\t-q or --quiet       do not display warnings and progress\n"
             "\t-i or --icudatadir  directory for locating any needed intermediate data files,\n"
             "\t                    followed by path, defaults to %s\n"
             "\t-d or --destdir     destination directory, followed by the path\n",
@@ -172,6 +174,11 @@ int  main(int argc, char **argv) {
     }
     if (options[8].doesOccur) {
         copyright = U_COPYRIGHT_STRING;
+    }
+
+    UBool quiet = FALSE;
+    if (options[9].doesOccur) {
+      quiet = TRUE;
     }
 
 #if UCONFIG_NO_REGULAR_EXPRESSIONS || UCONFIG_NO_NORMALIZATION || UCONFIG_NO_FILE_IO
@@ -290,7 +297,9 @@ int  main(int argc, char **argv) {
     delete [] confusables;
     delete [] wsConfsables;
     u_cleanup();
-    printf("gencfu: tool completed successfully.\n");
+    if (!quiet) {
+        printf("gencfu: tool completed successfully.\n");
+    }
     return 0;
 #endif   // UCONFIG_NO_REGULAR_EXPRESSIONS
 }

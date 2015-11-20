@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ar{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"أبيدجان"}
@@ -684,6 +684,9 @@ ar{
         "Asia:Calcutta"{
             ec{"كالكتا"}
         }
+        "Asia:Chita"{
+            ec{"تشيتا"}
+        }
         "Asia:Choibalsan"{
             ec{"تشوبالسان"}
         }
@@ -824,6 +827,9 @@ ar{
         }
         "Asia:Singapore"{
             ec{"سنغافورة"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"سريدنكوليمسك"}
         }
         "Asia:Taipei"{
             ec{"تايبيه"}
@@ -1144,6 +1150,9 @@ ar{
         }
         "Pacific:Auckland"{
             ec{"أوكلاند"}
+        }
+        "Pacific:Bougainville"{
+            ec{"بوغانفيل"}
         }
         "Pacific:Chatham"{
             ec{"تشاثام"}
@@ -1479,7 +1488,7 @@ ar{
             ls{"توقيت فيجي الرسمي"}
         }
         "meta:French_Guiana"{
-            ls{"توقيت غويانا الفرنسية"}
+            ls{"توقيت غايانا الفرنسية"}
         }
         "meta:French_Southern"{
             ls{"توقيت المقاطعات الفرنسية الجنوبية والأنتارتيكية"}

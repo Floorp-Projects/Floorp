@@ -8,6 +8,11 @@
 // ***************************************************************************
 numberingSystems:table(nofallback){
     numberingSystems{
+        ahom{
+            algorithmic:int{0}
+            desc{"𑜰𑜱𑜲𑜳𑜴𑜵𑜶𑜷𑜸𑜹"}
+            radix:int{10}
+        }
         arab{
             algorithmic:int{0}
             desc{"٠١٢٣٤٥٦٧٨٩"}
@@ -38,9 +43,24 @@ numberingSystems:table(nofallback){
             desc{"০১২৩৪৫৬৭৮৯"}
             radix:int{10}
         }
+        brah{
+            algorithmic:int{0}
+            desc{"𑁦𑁧𑁨𑁩𑁪𑁫𑁬𑁭𑁮𑁯"}
+            radix:int{10}
+        }
+        cakm{
+            algorithmic:int{0}
+            desc{"𑄶𑄷𑄸𑄹𑄺𑄻𑄼𑄽𑄾𑄿"}
+            radix:int{10}
+        }
         cham{
             algorithmic:int{0}
             desc{"꩐꩑꩒꩓꩔꩕꩖꩗꩘꩙"}
+            radix:int{10}
+        }
+        cyrl{
+            algorithmic:int{1}
+            desc{"%cyrillic-lower"}
             radix:int{10}
         }
         deva{
@@ -118,6 +138,11 @@ numberingSystems:table(nofallback){
             desc{"%hebrew"}
             radix:int{10}
         }
+        hmng{
+            algorithmic:int{0}
+            desc{"𖭐𖭑𖭒𖭓𖭔𖭕𖭖𖭗𖭘𖭙"}
+            radix:int{10}
+        }
         java{
             algorithmic:int{0}
             desc{"꧐꧑꧒꧓꧔꧕꧖꧗꧘꧙"}
@@ -178,14 +203,49 @@ numberingSystems:table(nofallback){
             desc{"᥆᥇᥈᥉᥊᥋᥌᥍᥎᥏"}
             radix:int{10}
         }
+        mathbold{
+            algorithmic:int{0}
+            desc{"𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗"}
+            radix:int{10}
+        }
+        mathdbl{
+            algorithmic:int{0}
+            desc{"𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡"}
+            radix:int{10}
+        }
+        mathmono{
+            algorithmic:int{0}
+            desc{"𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿"}
+            radix:int{10}
+        }
+        mathsanb{
+            algorithmic:int{0}
+            desc{"𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵"}
+            radix:int{10}
+        }
+        mathsans{
+            algorithmic:int{0}
+            desc{"𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫"}
+            radix:int{10}
+        }
         mlym{
             algorithmic:int{0}
             desc{"൦൧൨൩൪൫൬൭൮൯"}
             radix:int{10}
         }
+        modi{
+            algorithmic:int{0}
+            desc{"𑙐𑙑𑙒𑙓𑙔𑙕𑙖𑙗𑙘𑙙"}
+            radix:int{10}
+        }
         mong{
             algorithmic:int{0}
             desc{"᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙"}
+            radix:int{10}
+        }
+        mroo{
+            algorithmic:int{0}
+            desc{"𖩠𖩡𖩢𖩣𖩤𖩥𖩦𖩧𖩨𖩩"}
             radix:int{10}
         }
         mtei{
@@ -203,6 +263,11 @@ numberingSystems:table(nofallback){
             desc{"႐႑႒႓႔႕႖႗႘႙"}
             radix:int{10}
         }
+        mymrtlng{
+            algorithmic:int{0}
+            desc{"꧰꧱꧲꧳꧴꧵꧶꧷꧸꧹"}
+            radix:int{10}
+        }
         nkoo{
             algorithmic:int{0}
             desc{"߀߁߂߃߄߅߆߇߈߉"}
@@ -216,6 +281,11 @@ numberingSystems:table(nofallback){
         orya{
             algorithmic:int{0}
             desc{"୦୧୨୩୪୫୬୭୮୯"}
+            radix:int{10}
+        }
+        osma{
+            algorithmic:int{0}
+            desc{"𐒠𐒡𐒢𐒣𐒤𐒥𐒦𐒧𐒨𐒩"}
             radix:int{10}
         }
         roman{
@@ -233,9 +303,34 @@ numberingSystems:table(nofallback){
             desc{"꣐꣑꣒꣓꣔꣕꣖꣗꣘꣙"}
             radix:int{10}
         }
+        shrd{
+            algorithmic:int{0}
+            desc{"𑇐𑇑𑇒𑇓𑇔𑇕𑇖𑇗𑇘𑇙"}
+            radix:int{10}
+        }
+        sind{
+            algorithmic:int{0}
+            desc{"𑋰𑋱𑋲𑋳𑋴𑋵𑋶𑋷𑋸𑋹"}
+            radix:int{10}
+        }
+        sinh{
+            algorithmic:int{0}
+            desc{"෦෧෨෩෪෫෬෭෮෯"}
+            radix:int{10}
+        }
+        sora{
+            algorithmic:int{0}
+            desc{"𑃰𑃱𑃲𑃳𑃴𑃵𑃶𑃷𑃸𑃹"}
+            radix:int{10}
+        }
         sund{
             algorithmic:int{0}
             desc{"᮰᮱᮲᮳᮴᮵᮶᮷᮸᮹"}
+            radix:int{10}
+        }
+        takr{
+            algorithmic:int{0}
+            desc{"𑛀𑛁𑛂𑛃𑛄𑛅𑛆𑛇𑛈𑛉"}
             radix:int{10}
         }
         talu{
@@ -268,9 +363,19 @@ numberingSystems:table(nofallback){
             desc{"༠༡༢༣༤༥༦༧༨༩"}
             radix:int{10}
         }
+        tirh{
+            algorithmic:int{0}
+            desc{"𑓐𑓑𑓒𑓓𑓔𑓕𑓖𑓗𑓘𑓙"}
+            radix:int{10}
+        }
         vaii{
             algorithmic:int{0}
             desc{"꘠꘡꘢꘣꘤꘥꘦꘧꘨꘩"}
+            radix:int{10}
+        }
+        wara{
+            algorithmic:int{0}
+            desc{"𑣠𑣡𑣢𑣣𑣤𑣥𑣦𑣧𑣨𑣩"}
             radix:int{10}
         }
     }

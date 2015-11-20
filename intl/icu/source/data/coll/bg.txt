@@ -7,11 +7,11 @@
 // *
 // ***************************************************************************
 bg{
-    Version{"2.1.10.56"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{"[reorder Cyrl]"}
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

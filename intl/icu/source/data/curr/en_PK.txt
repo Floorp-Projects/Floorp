@@ -14,5 +14,5 @@ en_PK{
             "Pakistani Rupee",
         }
     }
-    Version{"2.1.11.51"}
+    Version{"2.1.19.14"}
 }

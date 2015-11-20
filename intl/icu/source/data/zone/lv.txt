@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 lv{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.19"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžana"}
@@ -684,6 +684,9 @@ lv{
         "Asia:Calcutta"{
             ec{"Kalkāta"}
         }
+        "Asia:Chita"{
+            ec{"Čita"}
+        }
         "Asia:Choibalsan"{
             ec{"Čoibalsana"}
         }
@@ -824,6 +827,9 @@ lv{
         }
         "Asia:Singapore"{
             ec{"Singapūra"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Sredņekolimska"}
         }
         "Asia:Taipei"{
             ec{"Taibei"}
@@ -1144,6 +1150,9 @@ lv{
         }
         "Pacific:Auckland"{
             ec{"Oklenda"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bugeinvile"}
         }
         "Pacific:Chatham"{
             ec{"Četema"}

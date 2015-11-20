@@ -14,7 +14,7 @@ lkt{
     }
     ExemplarCharactersIndex{"[A B Č E G Ǧ H Ȟ I K L M N Ŋ O P S Š T U W Y Z Ž]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . \u0022 “ ” ( ) \\[ \\] @ * / \\& #]"}
-    Version{"2.1.6.69"}
+    Version{"2.1.19.14"}
     calendar{
         gregorian{
             dayNames{

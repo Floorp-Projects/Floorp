@@ -169,7 +169,7 @@ uz_Cyrl{
             }
         }
     }
-    Version{"2.1.10.42"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -276,10 +276,6 @@ uz_Cyrl{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -288,7 +284,7 @@ uz_Cyrl{
                 "EEEE, y MMMM dd",
                 "y MMMM d",
                 "y MMM d",
-                "yy/MM/dd",
+                "dd/MM/yy",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -327,6 +323,7 @@ uz_Cyrl{
                 yMEd{"y-MM-dd, E"}
                 yMMM{"y MMM"}
                 yMMMEd{"y MMM d, E"}
+                yMMMM{"y MMMM"}
                 yMMMd{"y MMM d"}
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
@@ -838,6 +835,10 @@ uz_Cyrl{
         unit{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

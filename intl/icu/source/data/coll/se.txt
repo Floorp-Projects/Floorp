@@ -7,11 +7,14 @@
 // *
 // ***************************************************************************
 se{
-    Version{"2.1.6.32"}
+    Version{"2.1.19.14"}
     collations{
         search{
-            Sequence{"[import und-u-co-search][import se-u-co-standard]"}
-            Version{"27.0.1"}
+            Sequence{
+                "[import und-u-co-search]"
+                "[import se-u-co-standard]"
+            }
+            Version{"28"}
         }
         standard{
             Sequence{
@@ -56,7 +59,7 @@ se{
                 "<<<Ô<<ǫ"
                 "<<<Ǫ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

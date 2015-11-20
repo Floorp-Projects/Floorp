@@ -32,7 +32,7 @@ or{
         }
         native{"orya"}
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{

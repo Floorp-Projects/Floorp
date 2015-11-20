@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 kea{
-    Version{"2.1.10.42"}
+    Version{"2.1.19.74"}
     zoneStrings{
         "America:Blanc-Sablon"{
             ec{"Blank-Sablon"}

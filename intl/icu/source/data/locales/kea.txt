@@ -134,7 +134,7 @@ kea{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.10.42"}
+    Version{"2.1.19.74"}
     calendar{
         generic{
             DateTimePatterns{
@@ -159,8 +159,6 @@ kea{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 H{"HH"}
-                HHmm{"HH:mm"}
-                HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -319,8 +317,6 @@ kea{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"mei-dia"}
-            NoonMarkerNarrow{"m"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -336,8 +332,6 @@ kea{
                 GyMMMEd{"E, d 'di' MMM 'di' y G"}
                 GyMMMd{"d 'di' MMM 'di' y G"}
                 H{"HH"}
-                HHmm{"HH:mm"}
-                HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -1144,18 +1138,26 @@ kea{
     }
     listPattern{
         standard{
-            2{"{0} y {1}"}
-            end{"{0} y {1}"}
+            2{"{0} i {1}"}
+            end{"{0} i {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         unit{
-            2{"{0} y {1}"}
-            end{"{0} y {1}"}
+            2{"{0} i {1}"}
+            end{"{0} i {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

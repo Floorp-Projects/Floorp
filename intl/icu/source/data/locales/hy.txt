@@ -30,10 +30,10 @@ hy{
                 range{"{0}-{1}"}
             }
             patterns{
-                accountingFormat{"#0.00 ¤"}
-                currencyFormat{"#0.00 ¤"}
+                accountingFormat{"¤ #,##0.00"}
+                currencyFormat{"¤ #,##0.00"}
                 decimalFormat{"#0.###"}
-                percentFormat{"#0%"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             patternsLong{
@@ -159,7 +159,7 @@ hy{
         native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -306,12 +306,16 @@ hy{
         }
         gregorian{
             AmPmMarkers{
-                "կեսօրից առաջ",
-                "կեսօրից հետո",
+                "AM",
+                "PM",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "կա",
-                "կհ",
+                "a",
+                "p",
             }
             DateTimePatterns{
                 "H:mm:ss, zzzz",
@@ -328,10 +332,8 @@ hy{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"կեսօրին"}
-            NoonMarkerNarrow{"կ"}
             appendItems{
-                Timezone{"{0}, {1}"}
+                Timezone{"{0} {1}"}
             }
             availableFormats{
                 E{"ccc"}
@@ -351,6 +353,7 @@ hy{
                 MEd{"dd.MM, E"}
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
@@ -363,6 +366,7 @@ hy{
                 yMEd{"d.MM.yթ., E"}
                 yMMM{"yթ. LLL"}
                 yMMMEd{"yթ. MMM d, E"}
+                yMMMM{"yթ․ MMMM"}
                 yMMMd{"d MMM, yթ."}
                 yMd{"dd.MM.y"}
                 yQQQ{"y թ, QQQ"}
@@ -418,13 +422,13 @@ hy{
                         "շբթ",
                     }
                     narrow{
-                        "Կ",
-                        "Ե",
-                        "Ե",
-                        "Չ",
-                        "Հ",
+                        "Կր",
+                        "Եկ",
+                        "Եր",
+                        "Չր",
+                        "Հգ",
                         "Ու",
-                        "Շ",
+                        "Շբ",
                     }
                     short{
                         "կիր",
@@ -443,6 +447,60 @@ hy{
                         "հինգշաբթի",
                         "ուրբաթ",
                         "շաբաթ",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"ցրկ"}
+                        evening1{"երկ"}
+                        midnight{"կգ․"}
+                        morning1{"առվտ"}
+                        night1{"գշր"}
+                        noon{"կօ․"}
+                    }
+                    narrow{
+                        afternoon1{"ցրկ"}
+                        evening1{"երկ"}
+                        midnight{"կգ․"}
+                        morning1{"առվտ"}
+                        night1{"գշր"}
+                        noon{"կօ․"}
+                    }
+                    wide{
+                        afternoon1{"կեսօրից հետո"}
+                        evening1{"երեկոյան"}
+                        midnight{"կեսգիշեր"}
+                        morning1{"առավոտյան"}
+                        night1{"գիշերը"}
+                        noon{"կեսօր"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"ցերեկ"}
+                        am{"AM"}
+                        evening1{"երեկո"}
+                        midnight{"կեսգիշեր"}
+                        morning1{"առավոտ"}
+                        night1{"գիշեր"}
+                        noon{"կեսօր"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"ցերեկ"}
+                        am{"AM"}
+                        evening1{"երեկո"}
+                        midnight{"կեսգիշեր"}
+                        morning1{"առավոտ"}
+                        night1{"գիշեր"}
+                        noon{"կեսօր"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -515,13 +573,13 @@ hy{
                     m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a, v"}
-                    h{"h:mm–h:mm a, v"}
-                    m{"h:mm–h:mm a, v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a, v"}
-                    h{"h–h a, v"}
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y"}
@@ -537,7 +595,7 @@ hy{
                 }
                 yMMM{
                     M{"MMM–MMM yթ."}
-                    y{"MMM y – MMM yթ."}
+                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
                     M{"E, d MMM – E, d MMM, yթ."}
@@ -546,12 +604,12 @@ hy{
                 }
                 yMMMM{
                     M{"yթ. MMM – MMM"}
-                    y{"MMM y – MMM yթ."}
+                    y{"MMM yթ․ – MMM yթ."}
                 }
                 yMMMd{
                     M{"dd MMM – dd MMM, yթ."}
                     d{"dd–dd MMM, yթ."}
-                    y{"dd MMM, y – dd MMM, yթ."}
+                    y{"dd MMM, yթ․ – dd MMM, yթ."}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y"}
@@ -722,6 +780,13 @@ hy{
         }
         day-narrow{
             dn{"Օր"}
+            relative{
+                "-1"{"երեկ"}
+                "-2"{"երեկ չէ առաջի օրը"}
+                "0"{"այսօր"}
+                "1"{"վաղը"}
+                "2"{"վաղը չէ մյուս օրը"}
+            }
             relativeTime{
                 future{
                     one{"{0} օրից"}
@@ -735,6 +800,13 @@ hy{
         }
         day-short{
             dn{"Օր"}
+            relative{
+                "-1"{"երեկ"}
+                "-2"{"երեկ չէ առաջի օրը"}
+                "0"{"այսօր"}
+                "1"{"վաղը"}
+                "2"{"վաղը չէ մյուս օրը"}
+            }
             relativeTime{
                 future{
                     one{"{0} օրից"}
@@ -892,6 +964,11 @@ hy{
         }
         month-narrow{
             dn{"ամս."}
+            relative{
+                "-1"{"անցյալ ամիս"}
+                "0"{"այս ամիս"}
+                "1"{"հաջորդ ամիս"}
+            }
             relativeTime{
                 future{
                     one{"{0} ամիս անց"}
@@ -905,6 +982,11 @@ hy{
         }
         month-short{
             dn{"ամս."}
+            relative{
+                "-1"{"անցյալ ամիս"}
+                "0"{"այս ամիս"}
+                "1"{"հաջորդ ամիս"}
+            }
             relativeTime{
                 future{
                     one{"{0} ամիս անց"}
@@ -957,9 +1039,9 @@ hy{
         }
         sat{
             relative{
-                "-1"{"անցյալ շաբաթ"}
-                "0"{"այս շաբաթ"}
-                "1"{"հաջորդ շաբաթ"}
+                "-1"{"անցյալ շաբաթ օրը"}
+                "0"{"այս շաբաթ օրը"}
+                "1"{"հաջորդ շաբաթ օրը"}
             }
         }
         sat-narrow{
@@ -1226,6 +1308,6 @@ hy{
     measurementSystemNames{
         UK{"Անգլիական"}
         US{"Ամերիկյան"}
-        metric{"Մետրիկ"}
+        metric{"Մետրական"}
     }
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- *   Copyright (C) 2009-2012, International Business Machines
+ *   Copyright (C) 2009-2015, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *******************************************************************************
  */
@@ -21,8 +21,8 @@ static int32_t getFlagOffset(const char *buffer, int32_t bufferSize);
  */
 U_CAPI int32_t U_EXPORT2
 parseFlagsFile(const char *fileName, char **flagBuffer, int32_t flagBufferSize, const char ** flagNames, int32_t numOfFlags, UErrorCode *status) {
-    char* buffer = uprv_malloc(sizeof(char) * currentBufferSize);
-    char* tmpFlagBuffer = uprv_malloc(sizeof(char) * flagBufferSize);
+    char* buffer = NULL;
+    char* tmpFlagBuffer = NULL;
     UBool allocateMoreSpace = FALSE;
     int32_t idx, i;
     int32_t result = 0;
@@ -30,12 +30,15 @@ parseFlagsFile(const char *fileName, char **flagBuffer, int32_t flagBufferSize, 
     FileStream *f = T_FileStream_open(fileName, "r");
     if (f == NULL) {
         *status = U_FILE_ACCESS_ERROR;
-        return -1;
+        goto parseFlagsFile_cleanup;
     }
+    
+    buffer = uprv_malloc(sizeof(char) * currentBufferSize);
+    tmpFlagBuffer = uprv_malloc(sizeof(char) * flagBufferSize);
 
-    if (buffer == NULL) {
+    if (buffer == NULL || tmpFlagBuffer == NULL) {
         *status = U_MEMORY_ALLOCATION_ERROR;
-        return -1;
+        goto parseFlagsFile_cleanup;
     }
 
     do {
@@ -45,9 +48,8 @@ parseFlagsFile(const char *fileName, char **flagBuffer, int32_t flagBufferSize, 
             uprv_free(buffer);
             buffer = uprv_malloc(sizeof(char) * currentBufferSize);
             if (buffer == NULL) {
-                uprv_free(tmpFlagBuffer);
                 *status = U_MEMORY_ALLOCATION_ERROR;
-                return -1;
+                goto parseFlagsFile_cleanup;
             }
         }
         for (i = 0; i < numOfFlags;) {
@@ -89,10 +91,15 @@ parseFlagsFile(const char *fileName, char **flagBuffer, int32_t flagBufferSize, 
         }
     } while (allocateMoreSpace && U_SUCCESS(*status));
 
+parseFlagsFile_cleanup:
     uprv_free(tmpFlagBuffer);
     uprv_free(buffer);
 
     T_FileStream_close(f);
+
+    if (U_FAILURE(*status) && *status != U_BUFFER_OVERFLOW_ERROR) {
+        return -1;
+    }
 
     if (U_SUCCESS(*status) && result == 0) {
         currentBufferSize = DEFAULT_BUFFER_SIZE;
