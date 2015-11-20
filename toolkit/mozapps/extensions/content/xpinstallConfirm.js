@@ -6,7 +6,7 @@
 
 var XPInstallConfirm = {};
 
-XPInstallConfirm.init = function XPInstallConfirm_init()
+XPInstallConfirm.init = function()
 {
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
@@ -177,7 +177,7 @@ XPInstallConfirm.init = function XPInstallConfirm_init()
     okButton.label = bundle.getString("installButtonLabel");
 }
 
-XPInstallConfirm.onOK = function XPInstallConfirm_onOk()
+XPInstallConfirm.onOK = function()
 {
   Components.classes["@mozilla.org/base/telemetry;1"].
     getService(Components.interfaces.nsITelemetry).
@@ -188,7 +188,7 @@ XPInstallConfirm.onOK = function XPInstallConfirm_onOk()
   return true;
 }
 
-XPInstallConfirm.onCancel = function XPInstallConfirm_onCancel()
+XPInstallConfirm.onCancel = function()
 {
   // Perform the install or cancel after the window has unloaded
   XPInstallConfirm._installOK = false;

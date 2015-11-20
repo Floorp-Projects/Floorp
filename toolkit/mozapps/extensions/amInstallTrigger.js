@@ -203,7 +203,7 @@ InstallTrigger.prototype = {
     return this.startSoftwareUpdate(url);
   },
 
-  _resolveURL: function (url) {
+  _resolveURL: function(url) {
     return Services.io.newURI(url, null, this._url);
   },
 

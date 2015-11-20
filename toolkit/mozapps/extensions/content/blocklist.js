@@ -26,7 +26,7 @@ function init() {
 
   var richlist = document.getElementById("addonList");
   var list = gArgs.list;
-  list.sort(function listSort(a, b) { return String.localeCompare(a.name, b.name); });
+  list.sort(function(a, b) { return String.localeCompare(a.name, b.name); });
   for (let listItem of list) {
     let item = document.createElement("richlistitem");
     item.setAttribute("name", listItem.name);
