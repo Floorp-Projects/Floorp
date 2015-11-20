@@ -85,8 +85,8 @@ document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown, false);
 
 var gPendingInitializations = 1;
-this.__defineGetter__("gIsInitializing", function() {
-  return gPendingInitializations > 0;
+Object.defineProperty(this, "gIsInitializing", {
+  get: () => gPendingInitializations > 0
 });
 
 function initialize(event) {
