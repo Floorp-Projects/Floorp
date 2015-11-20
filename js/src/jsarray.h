@@ -101,7 +101,7 @@ NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
                                                bool forceAnalyze = false);
 
 extern JSObject*
-NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto);
+NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length);
 
 enum class ShouldUpdateTypes
 {
@@ -116,8 +116,7 @@ NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
                           ShouldUpdateTypes updateTypes = ShouldUpdateTypes::Update);
 
 extern JSObject*
-NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length,
-                                       HandleObject proto = nullptr);
+NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length);
 
 /*
  * Determines whether a write to the given element on |obj| should fail because

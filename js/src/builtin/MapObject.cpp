@@ -221,7 +221,7 @@ MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
 
 const Class MapObject::class_ = {
     "Map",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | 
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
     nullptr, // addProperty
     nullptr, // delProperty
@@ -412,20 +412,21 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
 }
 
 MapObject*
-MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
+MapObject::create(JSContext* cx)
 {
-    auto map = cx->make_unique<ValueMap>(cx->runtime());
+    Rooted<MapObject*> obj(cx, NewBuiltinClassInstance<MapObject>(cx));
+    if (!obj)
+        return nullptr;
+
+    ValueMap* map = cx->new_<ValueMap>(cx->runtime());
     if (!map || !map->init()) {
+        js_delete(map);
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    MapObject* mapObj = NewObjectWithClassProto<MapObject>(cx,  proto);
-    if (!mapObj)
-        return nullptr;
-
-    mapObj->setPrivate(map.release());
-    return mapObj;
+    obj->setPrivate(map);
+    return obj;
 }
 
 void
@@ -443,12 +444,7 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ThrowIfNotConstructing(cx, args, "Map"))
         return false;
 
-    RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-        return false;
-
-    Rooted<MapObject*> obj(cx, MapObject::create(cx, proto));
+    Rooted<MapObject*> obj(cx, MapObject::create(cx));
     if (!obj)
         return false;
 
@@ -1068,19 +1064,19 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
 }
 
 SetObject*
-SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
+SetObject::create(JSContext* cx)
 {
-    auto set = cx->make_unique<ValueSet>(cx->runtime());
-    if (!set || !set->init()) {
-        ReportOutOfMemory(cx);
-        return nullptr;
-    }
-
-    SetObject* obj = NewObjectWithClassProto<SetObject>(cx, proto);
+    SetObject* obj = NewBuiltinClassInstance<SetObject>(cx);
     if (!obj)
         return nullptr;
 
-    obj->setPrivate(set.release());
+    ValueSet* set = cx->new_<ValueSet>(cx->runtime());
+    if (!set || !set->init()) {
+        js_delete(set);
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+    obj->setPrivate(set);
     return obj;
 }
 
@@ -1110,12 +1106,7 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ThrowIfNotConstructing(cx, args, "Set"))
         return false;
 
-    RootedObject proto(cx);
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-        return false;
-
-    Rooted<SetObject*> obj(cx, SetObject::create(cx, proto));
+    Rooted<SetObject*> obj(cx, SetObject::create(cx));
     if (!obj)
         return false;
 

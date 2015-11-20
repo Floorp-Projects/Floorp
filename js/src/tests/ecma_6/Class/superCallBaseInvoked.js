@@ -53,6 +53,8 @@ testBase(p);
 handler.construct = (target, args, nt) => Reflect.construct(target, args, nt);
 testBase(p);
 
+// Object will have to wait for fixed builtins.
+
 `;
 
 if (classesEnabled())

@@ -689,9 +689,9 @@ NewObjectCache::fillProto(EntryIndex entry, const Class* clasp, js::TaggedProto 
     return fill(entry, clasp, proto.raw(), kind, obj);
 }
 
-bool
-js::NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
-                                       NewObjectKind newKind, const Class* clasp)
+static bool
+NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
+                                   NewObjectKind newKind, const Class* clasp)
 {
     return cxArg->isJSContext() &&
            proto.isObject() &&
@@ -883,9 +883,11 @@ js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj)
 JSObject*
 js::CreateThis(JSContext* cx, const Class* newclasp, HandleObject callee)
 {
-    RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, callee, &proto))
+    RootedValue protov(cx);
+    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
+
+    RootedObject proto(cx, protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr);
     gc::AllocKind kind = NewObjectGCKind(newclasp);
     return NewObjectWithClassProto(cx, newclasp, proto, kind);
 }
@@ -987,35 +989,16 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
     return res;
 }
 
-bool
-js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget, MutableHandleObject proto)
-{
-    RootedValue protov(cx);
-    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
-        return false;
-    proto.set(protov.isObject() ? &protov.toObject() : nullptr);
-    return true;
-}
-
-bool
-js::GetPrototypeFromCallableConstructor(JSContext* cx, const CallArgs& args, MutableHandleObject proto)
-{
-    RootedObject newTarget(cx);
-    if (args.isConstructing())
-        newTarget = &args.newTarget().toObject();
-    else
-        newTarget = &args.callee();
-    return GetPrototypeFromConstructor(cx, newTarget, proto);
-}
-
 JSObject*
 js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTarget,
                           NewObjectKind newKind)
 {
-    RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+    RootedValue protov(cx);
+    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
         return nullptr;
-
+    RootedObject proto(cx);
+    if (protov.isObject())
+        proto = &protov.toObject();
     JSObject* obj = CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
