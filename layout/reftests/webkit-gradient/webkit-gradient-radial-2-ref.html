@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(radial, ...) expressions
+    with various numeric positions and/or side keywords.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  50px;
+      height: 40px;
+      margin: 1px;
+      float: left;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Placing gradient's center outside of the element: -->
+  <div style="background: radial-gradient(circle 50px at -10px -20px,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at 15px -2px,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at -10px 55px,
+                                          blue, yellow)"></div>
+  <br>
+
+  <!-- Mixing side keywords with numeric values: -->
+  <div style="background: radial-gradient(circle 50px at left 5px,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at center 10px,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at right 30px,
+                                          blue, yellow)"></div>
+  <br>
+
+  <div style="background: radial-gradient(circle 50px at 5px top,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at 10px center,
+                                          blue, yellow)"></div>
+  <div style="background: radial-gradient(circle 50px at 30px bottom,
+                                          blue, yellow)"></div>
+</body>
+</html>

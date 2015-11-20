@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>CSS Reference</title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  100px;
+      height: 50px;
+      margin: 1px;
+      float: left;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Left to right gradients: -->
+  <div style="background: linear-gradient(to right,
+                                          blue, yellow)"></div>
+
+  <div style="background: linear-gradient(to right,
+                                          blue, pink 30%, yellow"></div>
+  <br>
+
+  <!-- Right to left gradients: -->
+  <div style="background: linear-gradient(to left,
+                                          blue, yellow)"></div>
+  <div style="background: linear-gradient(to left,
+                                          blue, pink 30%, yellow"></div>
+  <br>
+
+  <!-- Top to bottom gradients: -->
+  <div style="background: linear-gradient(to bottom,
+                                          blue, yellow)"></div>
+
+  <div style="background: linear-gradient(to bottom,
+                                          blue, pink 30%, yellow"></div>
+  <br>
+
+  <!-- Bottom to top gradients: -->
+  <div style="background: linear-gradient(to top,
+                                          blue, yellow)"></div>
+
+  <div style="background: linear-gradient(to top,
+                                          blue, pink 30%, yellow"></div>
+</body>
+</html>
