@@ -586,7 +586,7 @@ class TestRecursiveMakeBackend(BackendTester):
         var = 'DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=xyz']
         self.assertEqual(defines, expected)
 
     def test_host_defines(self):
@@ -599,7 +599,7 @@ class TestRecursiveMakeBackend(BackendTester):
         var = 'HOST_DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['HOST_DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['HOST_DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=xyz']
         self.assertEqual(defines, expected)
 
     def test_local_includes(self):

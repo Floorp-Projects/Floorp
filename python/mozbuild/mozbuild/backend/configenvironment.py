@@ -12,10 +12,8 @@ from types import StringTypes
 
 import mozpack.path as mozpath
 
-from ..util import (
-    ReadOnlyDict,
-    shell_quote,
-)
+from mozbuild.util import ReadOnlyDict
+from mozbuild.shellutil import quote as shell_quote
 
 
 if sys.version_info.major == 2:
