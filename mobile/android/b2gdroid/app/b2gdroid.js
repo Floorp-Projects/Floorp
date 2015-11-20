@@ -1011,6 +1011,9 @@ pref("dom.mozContacts.enabled", true);
 pref("dom.ipc.tabs.disabled", false);
 pref("dom.ipc.processCount", 100000);
 
+// Retain at most 10 processes' layers buffers
+pref("layers.compositor-lru-size", 10);
+
 // Enable pre-launching content processes for improved startup time
 // (hiding latency).
 pref("dom.ipc.processPrelaunch.enabled", true);
