@@ -81,7 +81,6 @@ SpecialPowersObserver.prototype._loadFrameScript = function()
     this._messageManager.addMessageListener("SPWebAppService", this);
     this._messageManager.addMessageListener("SPObserverService", this);
     this._messageManager.addMessageListener("SPLoadChromeScript", this);
-    this._messageManager.addMessageListener("SPImportInMainProcess", this);
     this._messageManager.addMessageListener("SPChromeScriptMessage", this);
     this._messageManager.addMessageListener("SPQuotaManager", this);
     this._messageManager.addMessageListener("SPSetTestPluginEnabledState", this);
@@ -163,7 +162,6 @@ SpecialPowersObserver.prototype.uninit = function()
     this._messageManager.removeMessageListener("SPWebAppService", this);
     this._messageManager.removeMessageListener("SPObserverService", this);
     this._messageManager.removeMessageListener("SPLoadChromeScript", this);
-    this._messageManager.removeMessageListener("SPImportInMainProcess", this);
     this._messageManager.removeMessageListener("SPChromeScriptMessage", this);
     this._messageManager.removeMessageListener("SPQuotaManager", this);
     this._messageManager.removeMessageListener("SPSetTestPluginEnabledState", this);
