@@ -442,7 +442,7 @@ CreateDXGITextureClient(IntSize aSize, SurfaceFormat aFormat,
   if (!data) {
     return nullptr;
   }
-  return MakeAndAddRef<ClientTexture>(data, aTextureFlags, aAllocator);
+  return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
 }
 
 
@@ -497,7 +497,7 @@ CreateD3D11TextureClientWithDevice(IntSize aSize, SurfaceFormat aFormat,
   if (!data) {
     return nullptr;
   }
-  return MakeAndAddRef<ClientTexture>(data, aTextureFlags, aAllocator);
+  return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
 }
 
 TextureData*

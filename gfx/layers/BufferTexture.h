@@ -56,7 +56,7 @@ public:
 
   virtual bool HasInternalBuffer() const override { return true; }
 
-  // use ClientTexture's default implementation
+  // use TextureClient's default implementation
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
 protected:
