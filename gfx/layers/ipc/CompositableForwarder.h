@@ -108,12 +108,6 @@ public:
                                                   TextureClient* aTexture) {}
 
   /**
-   * Tell the compositor side to delete the TextureHost corresponding to the
-   * TextureClient passed in parameter.
-   */
-  virtual void RemoveTexture(TextureClient* aTexture) = 0;
-
-  /**
    * Holds a reference to a TextureClient until after the next
    * compositor transaction, and then drops it.
    */
