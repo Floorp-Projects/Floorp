@@ -11,13 +11,14 @@ fr_CH{
         latn{
             patterns{
                 currencyFormat{"¤ #,##0.00;¤-#,##0.00"}
+                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{"."}
             }
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -46,10 +47,10 @@ fr_CH{
                 "d MMMM y",
                 "d MMM y",
                 "dd.MM.yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
+                "{1} 'à' {0}",
                 "{1} {0}",
             }
         }

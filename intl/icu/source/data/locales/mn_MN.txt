@@ -3,9 +3,9 @@
 // * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/icu-locale-deprecates.xml & build.xml
+// * Source File: <path>/common/main/mn_MN.xml
 // *
 // ***************************************************************************
 mn_MN{
-    "%%ALIAS"{"mn_Cyrl_MN"}
+    Version{"2.1.19.14"}
 }

@@ -468,6 +468,16 @@
     "extended_statistics_ok": true,
     "description": "Resident memory size (KB)"
   },
+  "MEMORY_UNIQUE": {
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1198209],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": "32 * 1024",
+    "high": "16 * 1024 * 1024",
+    "n_buckets": 100,
+    "description": "Unique Set Size (KB)"
+  },
   "MEMORY_VSIZE": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",

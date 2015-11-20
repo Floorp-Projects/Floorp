@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 2001-2014, International Business Machines
+*   Copyright (C) 2001-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *
@@ -34,13 +34,9 @@ U_NAMESPACE_USE
 #define DEFAULT_BUFFER_SIZE 16
 #define BUFFER_GROW 8
 
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
-
 #define ARRAY_COPY(dst, src, count) uprv_memcpy((void *) (dst), (void *) (src), (count) * sizeof (src)[0])
 
 #define NEW_ARRAY(type, count) (type *) uprv_malloc((count) * sizeof(type))
-
-#define GROW_ARRAY(array, newSize) uprv_realloc((void *) (array), (newSize) * sizeof (array)[0])
 
 #define DELETE_ARRAY(array) uprv_free((void *) (array))
 
@@ -63,8 +59,8 @@ struct RCEBuffer
     RCEBuffer();
     ~RCEBuffer();
 
-    UBool empty() const;
-    void  put(uint32_t ce, int32_t ixLow, int32_t ixHigh);
+    UBool isEmpty() const;
+    void  put(uint32_t ce, int32_t ixLow, int32_t ixHigh, UErrorCode &errorCode);
     const RCEI *get();
 };
 
@@ -82,15 +78,22 @@ RCEBuffer::~RCEBuffer()
     }
 }
 
-UBool RCEBuffer::empty() const
+UBool RCEBuffer::isEmpty() const
 {
     return bufferIndex <= 0;
 }
 
-void RCEBuffer::put(uint32_t ce, int32_t ixLow, int32_t ixHigh)
+void RCEBuffer::put(uint32_t ce, int32_t ixLow, int32_t ixHigh, UErrorCode &errorCode)
 {
+    if (U_FAILURE(errorCode)) {
+        return;
+    }
     if (bufferIndex >= bufferSize) {
         RCEI *newBuffer = NEW_ARRAY(RCEI, bufferSize + BUFFER_GROW);
+        if (newBuffer == NULL) {
+            errorCode = U_MEMORY_ALLOCATION_ERROR;
+            return;
+        }
 
         ARRAY_COPY(newBuffer, buffer, bufferSize);
 
@@ -137,15 +140,22 @@ void PCEBuffer::reset()
     bufferIndex = 0;
 }
 
-UBool PCEBuffer::empty() const
+UBool PCEBuffer::isEmpty() const
 {
     return bufferIndex <= 0;
 }
 
-void PCEBuffer::put(uint64_t ce, int32_t ixLow, int32_t ixHigh)
+void PCEBuffer::put(uint64_t ce, int32_t ixLow, int32_t ixHigh, UErrorCode &errorCode)
 {
+    if (U_FAILURE(errorCode)) {
+        return;
+    }
     if (bufferIndex >= bufferSize) {
         PCEI *newBuffer = NEW_ARRAY(PCEI, bufferSize + BUFFER_GROW);
+        if (newBuffer == NULL) {
+            errorCode = U_MEMORY_ALLOCATION_ERROR;
+            return;
+        }
 
         ARRAY_COPY(newBuffer, buffer, bufferSize);
 
@@ -381,7 +391,7 @@ UCollationPCE::previousProcessed(
 
     // pceBuffer.reset();
 
-    while (pceBuffer.empty()) {
+    while (pceBuffer.isEmpty()) {
         // buffer raw CEs up to non-ignorable primary
         RCEBuffer rceb;
         int32_t ce;
@@ -393,30 +403,33 @@ UCollationPCE::previousProcessed(
             low  = cei->getOffset();
 
             if (ce == UCOL_NULLORDER) {
-                if (! rceb.empty()) {
+                if (!rceb.isEmpty()) {
                     break;
                 }
 
                 goto finish;
             }
 
-            rceb.put((uint32_t)ce, low, high);
-        } while ((ce & UCOL_PRIMARYORDERMASK) == 0 || isContinuation(ce));
+            rceb.put((uint32_t)ce, low, high, *status);
+        } while (U_SUCCESS(*status) && ((ce & UCOL_PRIMARYORDERMASK) == 0 || isContinuation(ce)));
 
         // process the raw CEs
-        while (! rceb.empty()) {
+        while (U_SUCCESS(*status) && !rceb.isEmpty()) {
             const RCEI *rcei = rceb.get();
 
             result = processCE(rcei->ce);
 
             if (result != UCOL_IGNORABLE) {
-                pceBuffer.put(result, rcei->low, rcei->high);
+                pceBuffer.put(result, rcei->low, rcei->high, *status);
             }
+        }
+        if (U_FAILURE(*status)) {
+            return UCOL_PROCESSED_NULLORDER;
         }
     }
 
 finish:
-    if (pceBuffer.empty()) {
+    if (pceBuffer.isEmpty()) {
         // **** Is -1 the right value for ixLow, ixHigh? ****
     	if (ixLow != NULL) {
     		*ixLow = -1;

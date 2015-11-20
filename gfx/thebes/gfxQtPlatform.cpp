@@ -123,9 +123,11 @@ gfxFontGroup *
 gfxQtPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                const gfxFontStyle *aStyle,
                                gfxTextPerfMetrics* aTextPerf,
-                               gfxUserFontSet* aUserFontSet)
+                               gfxUserFontSet* aUserFontSet,
+                               gfxFloat aDevToCssSize)
 {
-    return new gfxPangoFontGroup(aFontFamilyList, aStyle, aUserFontSet);
+    return new gfxPangoFontGroup(aFontFamilyList, aStyle,
+                                 aUserFontSet, aDevToCssSize);
 }
 
 gfxFontEntry*

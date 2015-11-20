@@ -21,14 +21,14 @@ ak{
             }
         }
     }
-    Version{"2.1.7.39"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, G y MMMM dd",
                 "G y MMMM d",
                 "G y MMM d",
@@ -70,10 +70,10 @@ ak{
                 "EW",
             }
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, y MMMM dd",
                 "y MMMM d",
                 "y MMM d",

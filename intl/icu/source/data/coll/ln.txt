@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ln{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         phonetic{
             Sequence{
@@ -22,14 +22,14 @@ ln{
                 "&S<sh<<<sH<<<Sh<<<SH"
                 "&T<ts<<<tS<<<Ts<<<TS"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         standard{
             Sequence{
                 "&E<ɛ<<<Ɛ"
                 "&O<<ɔ<<<Ɔ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

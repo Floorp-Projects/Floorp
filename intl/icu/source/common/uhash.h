@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -58,10 +58,13 @@
  * hashcode.  During iteration an element may be deleted by calling
  * uhash_removeElement(); iteration may safely continue thereafter.
  * The uhash_remove() function may also be safely called in
- * mid-iteration.  However, if uhash_put() is called during iteration
- * then the iteration will be out of sync.  Under no circumstances
- * should the UHashElement returned by uhash_nextElement be modified
- * directly.
+ * mid-iteration.  If uhash_put() is called during iteration,
+ * the iteration is still guaranteed to terminate reasonably, but
+ * there is no guarantee that every element will be returned or that
+ * some won't be returned more than once.
+ *
+ * Under no circumstances should the UHashElement returned by
+ * uhash_nextElement be modified directly.
  *
  * By default, the hashtable grows when necessary, but never shrinks,
  * even if all items are removed.  For most applications this is

@@ -18,7 +18,7 @@ bem{
             }
         }
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -190,7 +190,9 @@ bem{
         day{
             dn{"Ubushiku"}
             relative{
+                "-1"{"yesterday"}
                 "0"{"Lelo"}
+                "1"{"tomorrow"}
             }
         }
         dayperiod{

@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 2005-2013, International Business Machines
+*   Copyright (C) 2005-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -52,7 +52,7 @@ public:
 
     UnicodeString &format(Calendar &cal, UnicodeString &appendTo, FieldPosition &pos) const;
 
-    UnicodeString& format(UDate date, UnicodeString& appendTo) const;
+    using DateFormat::format;
 
     void parse(const UnicodeString& text, Calendar& cal, ParsePosition& pos) const;
 
@@ -126,10 +126,6 @@ private:
     UnicodeString fZoneID;
     TIME_ZONE_INFORMATION *fTZI;
 };
-
-inline UnicodeString &Win32DateFormat::format(UDate date, UnicodeString& appendTo) const {
-    return DateFormat::format(date, appendTo);
-}
 
 U_NAMESPACE_END
 

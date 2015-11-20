@@ -333,10 +333,7 @@ nsHttpChannel::Connect()
         // the promise to CSP and mixed content blocking to upgrade the channel
         // from http to https.
         if (mLoadInfo) {
-            bool isPreload =
-              (mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
-               mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD ||
-               mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD);
+            bool isPreload = nsContentUtils::IsPreloadType(mLoadInfo->InternalContentPolicyType());
             bool upgradeRequests =
               ((isPreload && mLoadInfo->GetUpgradeInsecurePreloads()) ||
                (mLoadInfo->GetUpgradeInsecureRequests()));

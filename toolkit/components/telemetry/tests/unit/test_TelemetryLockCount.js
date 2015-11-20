@@ -12,7 +12,7 @@ const N_FAILED_LOCKS = 10;
 const PR_WRONLY = 0x2;
 const PR_CREATE_FILE = 0x8;
 const PR_TRUNCATE = 0x20;
-const RW_OWNER = 0600;
+const RW_OWNER = parseInt("0600", 8);
 
 function write_string_to_file(file, contents) {
   let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]

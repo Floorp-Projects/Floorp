@@ -386,7 +386,7 @@ lo{
         }
         GBP{
             "£",
-            "ພາວ​ດ໌ ສະ​ເຕີ​ຣິງ (ອັງ​ກິດ)",
+            "ປອນ ສະ​ເຕີ​ຣິງ (ອັງ​ກິດ)",
         }
         GEK{
             "GEK",
@@ -1170,14 +1170,18 @@ lo{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1185,42 +1189,83 @@ lo{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"ລາຣີ"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -1261,6 +1306,9 @@ lo{
         }
         BDT{
             other{"ບັງ​ຄລາ​ເທດ ຕາ​ກາ"}
+        }
+        BGN{
+            other{"ເລບ ບູນກາຣີ"}
         }
         BHD{
             other{"ບາ​ໄຣ​ນິ ດິ​ນາ"}
@@ -1359,7 +1407,7 @@ lo{
             other{"ຟອ​ລ໌ກ​ແລນ ໄອ​ແລນ​ສ໌ ພາວ​ດ໌"}
         }
         GBP{
-            other{"ພາວ​ດ໌ ສະ​ເຕີ​ຣິງ (ອັງ​ກິດ)"}
+            other{"ປອນ ສະເຕີຣິງ (ອັງກິດ)"}
         }
         GEL{
             other{"ຈໍ​ຈຽນ ລາ​ຣິ"}
@@ -1390,6 +1438,9 @@ lo{
         }
         HRK{
             other{"ໂຄຣ​ເອ​ທຽນ ຄູ​ນາ"}
+        }
+        HTG{
+            other{"ໄຮ​ຕຽນ ກົວ​ເດ"}
         }
         HUF{
             other{"ຮັງ​ກາ​ຣຽນ ຟໍ​ຣິນ"}
@@ -1550,6 +1601,9 @@ lo{
         PLN{
             other{"ໂປ​ລິ​ຊ ຊະ​ລໍ​ຕີ"}
         }
+        PYG{
+            other{"ກວາຣານີ ປາຣາກວາຍ"}
+        }
         QAR{
             other{"ຄາ​ຕາ​ຣິ ຣຽວ"}
         }
@@ -1628,6 +1682,9 @@ lo{
         TTD{
             other{"ທ​ຣິ​ນິ​ແດດ ແອນ ໂທ​ບາ​ໂກ ໂດ​ລ່າ"}
         }
+        TWD{
+            other{"ນິວ ໄຕ້​ຫວັນ ໂດ​ລ່າ"}
+        }
         TZS{
             other{"ທານ​ຊາ​ນຽນ ຊິວ​ລິງ"}
         }
@@ -1658,8 +1715,14 @@ lo{
         WST{
             other{"ຊາ​ໂມນ ທາ​ລາ"}
         }
+        XAF{
+            other{"ຟຣັງ ເຊຟານ ທະນາຄານລັດອາຟຣິກາກາງ"}
+        }
         XCD{
             other{"ອີ​ສ ຄາ​ຣິ​ບຽນ ໂດ​ລ່າ"}
+        }
+        XOF{
+            other{"ຟັງເຊຟານ ອາຟຣິກາຕາເວັນຕົກ"}
         }
         XPF{
             other{"ຊີ​ເອັບ​ພີ ຟຣັງ"}
@@ -1680,5 +1743,5 @@ lo{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }

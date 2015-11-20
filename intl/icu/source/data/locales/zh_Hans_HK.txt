@@ -9,9 +9,6 @@
 zh_Hans_HK{
     NumberElements{
         latn{
-            patterns{
-                currencyFormat{"¤#,##0.00"}
-            }
             patternsLong{
                 decimalFormat{
                     1000000000000{
@@ -40,7 +37,7 @@ zh_Hans_HK{
             }
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.79"}
     calendar{
         buddhist{
             DateTimePatterns{

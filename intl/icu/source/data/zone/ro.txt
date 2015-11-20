@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ro{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ ro{
         "Asia:Calcutta"{
             ec{"Calcutta"}
         }
+        "Asia:Chita"{
+            ec{"Cita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -824,6 +827,9 @@ ro{
         }
         "Asia:Singapore"{
             ec{"Singapore"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolimsk"}
         }
         "Asia:Taipei"{
             ec{"Taipei"}
@@ -1144,6 +1150,9 @@ ro{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}

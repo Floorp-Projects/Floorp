@@ -7,11 +7,12 @@
 // *
 // ***************************************************************************
 ta{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[normalization on][reorder Taml Deva Beng Guru Gujr Orya Telu Knda Mlym Sinh]"
+                "[normalization on]"
+                "[reorder Taml Deva Beng Guru Gujr Orya Telu Knda Mlym Sinh]"
                 "&ஔ<ஂ<ஃ"
                 "&ஹ<க்ஷ"
                 "&[before 1]க<க்"
@@ -39,7 +40,7 @@ ta{
                 "&[before 1]ஹ<ஹ்"
                 "&[before 1]க்ஷ<க்ஷ்"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

@@ -12,10 +12,13 @@ de_CH{
             "BYR",
             "Weissrussischer Rubel",
         }
-        CHF{
-            "CHF",
-            "Schweizer Franken",
+        EUR{
+            "EUR",
+            "Euro",
         }
+    }
+    Currencies%narrow{
+        EUR{"EUR"}
     }
     CurrencyPlurals{
         BYR{
@@ -23,5 +26,5 @@ de_CH{
             other{"Weissrussische Rubel"}
         }
     }
-    Version{"2.1.11.70"}
+    Version{"2.1.19.87"}
 }

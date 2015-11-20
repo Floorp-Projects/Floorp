@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
-* Copyright (C) 1999-2010, International Business Machines Corporation and   *
-* others. All Rights Reserved.                                               *
+* Copyright (C) 1999-2015, International Business Machines Corporation and
+* others. All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
 *   10/22/99    alan        Creation.
@@ -196,6 +196,9 @@ int32_t UVector32::indexOf(int32_t key, int32_t startIndex) const {
 
 
 UBool UVector32::expandCapacity(int32_t minimumCapacity, UErrorCode &status) {
+    if (U_FAILURE(status)) {
+        return FALSE;
+    }
     if (minimumCapacity < 0) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return FALSE;

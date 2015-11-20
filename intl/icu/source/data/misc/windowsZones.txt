@@ -322,7 +322,6 @@ windowsZones:table(nofallback){
         }
         "Korea Standard Time"{
             001{"Asia/Seoul"}
-            KP{"Asia/Pyongyang"}
             KR{"Asia/Seoul"}
         }
         "Libya Standard Time"{
