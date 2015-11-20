@@ -58,6 +58,7 @@ _DEBUGGER_PRIORITIES = {
       'win': ['devenv.exe', 'wdexpress.exe'],
       'linux': ['gdb', 'cgdb', 'lldb'],
       'mac': ['lldb', 'gdb'],
+      'android': ['gdb'],
       'unknown': ['gdb']
 }
 

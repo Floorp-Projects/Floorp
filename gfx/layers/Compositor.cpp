@@ -200,15 +200,8 @@ Compositor::FillRect(const gfx::Rect& aRect, const gfx::Color& aColor,
 static float
 WrapTexCoord(float v)
 {
-    // fmodf gives negative results for negative numbers;
-    // that is, fmodf(0.75, 1.0) == 0.75, but
-    // fmodf(-0.75, 1.0) == -0.75.  For the negative case,
-    // the result we need is 0.25, so we add 1.0f.
-    if (v < 0.0f) {
-        return 1.0f + fmodf(v, 1.0f);
-    }
-
-    return fmodf(v, 1.0f);
+    // This should return values in range [0, 1.0)
+    return v - floorf(v);
 }
 
 static void

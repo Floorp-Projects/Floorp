@@ -121,16 +121,15 @@ GetISizeInfo(nsRenderingContext *aRenderingContext,
         }
         else {
             switch (stylePos->mBoxSizing) {
-                case NS_STYLE_BOX_SIZING_CONTENT:
+                case StyleBoxSizing::Content:
                     boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
                     break;
-                case NS_STYLE_BOX_SIZING_PADDING:
+                case StyleBoxSizing::Padding:
                     minCoord += offsets.hPadding;
                     prefCoord += offsets.hPadding;
                     boxSizingToBorderEdge = offsets.hBorder;
                     break;
-                default:
-                    // NS_STYLE_BOX_SIZING_BORDER
+                case StyleBoxSizing::Border:
                     minCoord += offsets.hPadding + offsets.hBorder;
                     prefCoord += offsets.hPadding + offsets.hBorder;
                     break;
