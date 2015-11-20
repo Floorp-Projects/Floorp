@@ -178,7 +178,7 @@ _cairo_error (cairo_status_t status)
 	abort_on_error = (getenv("MOZ_CAIRO_ERROR_ABORT") != NULL) ? 1 : 0;
     }
     if (abort_on_error) {
-	*(int*)0x0 = 10;
+	abort();
     }
 #endif
     return status;
