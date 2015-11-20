@@ -111,7 +111,7 @@ if CONFIG['_MSC_VER']:
     # a console application.
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
-LDFLAGS += [CONFIG['MOZ_ALLOW_HEAP_EXECUTE_FLAGS']]
+LDFLAGS += CONFIG['MOZ_ALLOW_HEAP_EXECUTE_FLAGS']
 
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
