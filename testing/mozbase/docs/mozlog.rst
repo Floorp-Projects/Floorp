@@ -210,6 +210,33 @@ StructuredLogger Objects
 .. autoclass:: StructuredLogFileLike
   :members:
 
+ProxyLogger Objects
+-------------------
+
+Since :func:`mozlog.structuredlog.get_default_logger` return None when
+the default logger is not initialized, it is not possible to directly
+use it at the module level.
+
+With ProxyLogger, it is possible to write the following code: ::
+
+  from mozlog import get_proxy_logger
+
+  LOG = get_proxy_logger('component_name')
+
+
+  def my_function():
+      LOG.info('logging with a module level object')
+
+
+.. note::
+
+   mozlog still needs to be initialized before the first call occurs
+   to a ProxyLogger instance, for example with
+   :func:`mozlog.commandline.setup_logging`.
+
+.. automodule:: mozlog.proxy
+  :members: get_proxy_logger, ProxyLogger
+
 Handlers
 --------
 
