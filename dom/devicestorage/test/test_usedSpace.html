@@ -26,19 +26,19 @@ devicestorage_setup(function () {
 
 function usedSpaceSuccess(e) {
   ok(e.target.result > 0, "total bytes should exist and be greater than zero");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function usedSpaceError(e) {
   ok(false, "usedSpaceError was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {

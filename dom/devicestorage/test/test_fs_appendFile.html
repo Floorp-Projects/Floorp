@@ -29,12 +29,12 @@ var appendFile   = new Blob([" Another text file."], {type: "text/plain"});
 devicestorage_setup(function () {
 
 function deleteSuccess(e) {
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function deleteError(e) {
   ok(false, "deleteError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function appendSuccess(e) {
@@ -47,7 +47,7 @@ function appendSuccess(e) {
 
 function appendError(e) {
   ok(false, "appendError was called.");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {

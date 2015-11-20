@@ -39,7 +39,7 @@ try {
 }
 catch (e) {
   ok(true, "Calling continue before enumerateSuccess fires should throw");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 });

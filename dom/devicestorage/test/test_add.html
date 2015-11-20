@@ -40,7 +40,7 @@ var tests = [
 
 function fail(e) {
   ok(false, "onerror was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function next(e) {
@@ -51,7 +51,7 @@ function next(e) {
   var f = tests.pop();
 
   if (f == undefined) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
