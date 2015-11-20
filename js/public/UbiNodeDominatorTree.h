@@ -290,6 +290,7 @@ class JS_PUBLIC_API(DominatorTree)
     NodeToIndexMap nodeToPostOrderIndex;
     mozilla::Vector<uint32_t> doms;
     DominatedSets dominatedSets;
+    mozilla::Maybe<mozilla::Vector<JS::ubi::Node::Size>> retainedSizes;
 
   private:
     // We use `UNDEFINED` as a sentinel value in the `doms` vector to signal
@@ -303,6 +304,7 @@ class JS_PUBLIC_API(DominatorTree)
         , nodeToPostOrderIndex(mozilla::Move(nodeToPostOrderIndex))
         , doms(mozilla::Move(doms))
         , dominatedSets(mozilla::Move(dominatedSets))
+        , retainedSizes(mozilla::Nothing())
     { }
 
     static uint32_t intersect(mozilla::Vector<uint32_t>& doms, uint32_t finger1, uint32_t finger2) {
@@ -415,6 +417,47 @@ class JS_PUBLIC_API(DominatorTree)
     void assertSanity() const {
         MOZ_ASSERT(postOrder.length() == doms.length());
         MOZ_ASSERT(postOrder.length() == nodeToPostOrderIndex.count());
+        MOZ_ASSERT_IF(retainedSizes.isSome(), postOrder.length() == retainedSizes->length());
+    }
+
+    bool computeRetainedSizes(mozilla::MallocSizeOf mallocSizeOf) {
+        MOZ_ASSERT(retainedSizes.isNothing());
+        auto length = postOrder.length();
+
+        retainedSizes.emplace();
+        if (!retainedSizes->growBy(length)) {
+            retainedSizes = mozilla::Nothing();
+            return false;
+        }
+
+        // Iterate in forward order so that we know all of a node's children in
+        // the dominator tree have already had their retained size
+        // computed. Then we can simply say that the retained size of a node is
+        // its shallow size (JS::ubi::Node::size) plus the retained sizes of its
+        // immediate children in the tree.
+
+        for (uint32_t i = 0; i < length; i++) {
+            auto size = postOrder[i].size(mallocSizeOf);
+
+            for (const auto& dominated : dominatedSets.dominatedSet(postOrder, i)) {
+                // The root node dominates itself, but shouldn't contribute to
+                // its own retained size.
+                if (dominated == postOrder[length - 1]) {
+                    MOZ_ASSERT(i == length - 1);
+                    continue;
+                }
+
+                auto ptr = nodeToPostOrderIndex.lookup(dominated);
+                MOZ_ASSERT(ptr);
+                auto idxOfDominated = ptr->value();
+                MOZ_ASSERT(idxOfDominated < i);
+                size += retainedSizes.ref()[idxOfDominated];
+            }
+
+            retainedSizes.ref()[i] = size;
+        }
+
+        return true;
     }
 
   public:
@@ -428,6 +471,7 @@ class JS_PUBLIC_API(DominatorTree)
       , nodeToPostOrderIndex(mozilla::Move(rhs.nodeToPostOrderIndex))
       , doms(mozilla::Move(rhs.doms))
       , dominatedSets(mozilla::Move(rhs.dominatedSets))
+      , retainedSizes(mozilla::Move(rhs.retainedSizes))
     {
         MOZ_ASSERT(this != &rhs, "self-move is not allowed");
     }
@@ -594,7 +638,30 @@ class JS_PUBLIC_API(DominatorTree)
         auto idx = ptr->value();
         MOZ_ASSERT(idx < postOrder.length());
         return mozilla::Some(dominatedSets.dominatedSet(postOrder, idx));
-    };
+    }
+
+    /**
+     * Get the retained size of the given `node`. The size is placed in
+     * `outSize`, or 0 if `node` is not a member of the dominator tree. Returns
+     * false on OOM failure, leaving `outSize` unchanged.
+     */
+    bool getRetainedSize(const Node& node, mozilla::MallocSizeOf mallocSizeOf,
+                         Node::Size& outSize) {
+        assertSanity();
+        auto ptr = nodeToPostOrderIndex.lookup(node);
+        if (!ptr) {
+            outSize = 0;
+            return true;
+        }
+
+        if (retainedSizes.isNothing() && !computeRetainedSizes(mallocSizeOf))
+            return false;
+
+        auto idx = ptr->value();
+        MOZ_ASSERT(idx < postOrder.length());
+        outSize = retainedSizes.ref()[idx];
+        return true;
+    }
 };
 
 } // namespace ubi

@@ -9,7 +9,6 @@
 #include "js/HashTable.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/devtools/DeserializedNode.h"
-#include "mozilla/devtools/DominatorTree.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/HashFunctions.h"
@@ -29,6 +28,8 @@
 
 namespace mozilla {
 namespace devtools {
+
+class DominatorTree;
 
 struct NSFreePolicy {
   void operator()(void* ptr) {
@@ -146,6 +147,13 @@ public:
     MOZ_ASSERT(p);
     const DeserializedNode& node = *p;
     return JS::ubi::Node(const_cast<DeserializedNode*>(&node));
+  }
+
+  Maybe<JS::ubi::Node> getNodeById(JS::ubi::Node::Id nodeId) {
+    auto p = nodes.lookup(nodeId);
+    if (!p)
+      return Nothing();
+    return Some(JS::ubi::Node(const_cast<DeserializedNode*>(&*p)));
   }
 
   void TakeCensus(JSContext* cx, JS::HandleObject options,
