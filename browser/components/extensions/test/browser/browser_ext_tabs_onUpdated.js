@@ -103,7 +103,7 @@ function* do_test_update(background) {
 add_task(function* test_pinned() {
   yield do_test_update(function background() {
     // Create a new tab for testing update.
-    browser.tabs.create(null, function(tab) {
+    browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
         // Check callback
         browser.test.assertEq(tabId, tab.id, "Check tab id");
@@ -147,7 +147,7 @@ add_task(function* test_unpinned() {
 add_task(function* test_url() {
   yield do_test_update(function background() {
     // Create a new tab for testing update.
-    browser.tabs.create(null, function(tab) {
+    browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
         // Check callback
         browser.test.assertEq(tabId, tab.id, "Check tab id");

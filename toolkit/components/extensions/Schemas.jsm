@@ -135,8 +135,9 @@ class ChoiceType extends Type {
 };
 
 // This is a reference to another type--essentially a typedef.
-// FIXME
 class RefType extends Type {
+  // For a reference to a type named T declared in namespace NS,
+  // namespaceName will be NS and reference will be T.
   constructor(namespaceName, reference) {
     super();
     this.namespaceName = namespaceName;
@@ -573,7 +574,7 @@ let Schemas = {
       let allowedSet = new Set([...allowedProperties, ...extra, "description"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
-          throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property ${prop} in type ${type.name}`);
+          throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property "${prop}" in type "${type.name}"`);
         }
       }
     };
@@ -585,7 +586,12 @@ let Schemas = {
       return new ChoiceType(choices);
     } else if ("$ref" in type) {
       checkTypeProperties("$ref");
-      return new RefType(namespaceName, type["$ref"]);
+      let ref = type["$ref"];
+      let ns = namespaceName;
+      if (ref.includes('.')) {
+        [ns, ref] = ref.split('.');
+      }
+      return new RefType(ns, ref);
     }
 
     if (!("type" in type)) {
@@ -597,7 +603,21 @@ let Schemas = {
     // Otherwise it's a normal type...
     if (type.type == "string") {
       checkTypeProperties("enum", "minLength", "maxLength");
-      return new StringType(type["enum"] || null,
+
+      let enumeration = type["enum"] || null;
+      if (enumeration) {
+        // The "enum" property is either a list of strings that are
+        // valid values or else a list of {name, description} objects,
+        // where the .name values are the valid values.
+        enumeration = enumeration.map(e => {
+          if (typeof(e) == "object") {
+            return e.name;
+          } else {
+            return e;
+          }
+        });
+      }
+      return new StringType(enumeration,
                             type.minLength || 0,
                             type.maxLength || Infinity);
     } else if (type.type == "object") {
@@ -607,8 +627,10 @@ let Schemas = {
       }
       let properties = {};
       for (let propName of Object.keys(type.properties)) {
+        let propType = this.parseType(namespaceName, type.properties[propName],
+                                      ["optional", "unsupported", "deprecated"]);
         properties[propName] = {
-          type: this.parseType(namespaceName, type.properties[propName], ["optional", "unsupported"]),
+          type: propType,
           optional: type.properties[propName].optional || false,
           unsupported: type.properties[propName].unsupported || false,
         };
@@ -648,7 +670,8 @@ let Schemas = {
       checkTypeProperties("parameters");
       return new FunctionType(parameters);
     } else if (type.type == "any") {
-      checkTypeProperties();
+      // Need to see what minimum and maximum are supposed to do here.
+      checkTypeProperties("minimum", "maximum");
       return new AnyType();
     } else {
       throw new Error(`Unexpected type ${type.type}`);
@@ -669,8 +692,12 @@ let Schemas = {
   },
 
   loadFunction(namespaceName, fun) {
+    // We ignore this property for now.
+    let returns = fun.returns;
+
     let f = new FunctionEntry(namespaceName, fun.name,
-                              this.parseType(namespaceName, fun, ["name", "unsupported"]),
+                              this.parseType(namespaceName, fun,
+                                             ["name", "unsupported", "deprecated", "returns"]),
                               fun.unsupported || false);
     this.register(namespaceName, fun.name, f);
   },
@@ -690,7 +717,8 @@ let Schemas = {
     let filters = event.filters;
 
     let type = this.parseType(namespaceName, event,
-                              ["name", "unsupported", "extraParameters", "returns", "filters"]);
+                              ["name", "unsupported", "deprecated",
+                               "extraParameters", "returns", "filters"]);
 
     let e = new Event(namespaceName, event.name, type, extras,
                       event.unsupported || false);
