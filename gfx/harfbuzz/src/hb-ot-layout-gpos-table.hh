@@ -426,6 +426,7 @@ struct MarkArray : ArrayOf<MarkRecord>	/* Array of MarkRecords--in Coverage orde
     o.x_offset = base_x - mark_x;
     o.y_offset = base_y - mark_y;
     o.attach_lookback() = buffer->idx - glyph_pos;
+    buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_ATTACHMENT;
 
     buffer->idx++;
     return_trace (true);
@@ -993,6 +994,7 @@ struct CursivePosFormat1
     reverse_cursive_minor_offset (pos, child, c->direction, parent);
 
     pos[child].cursive_chain() = parent - child;
+    buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_CURSIVE;
     if (likely (HB_DIRECTION_IS_HORIZONTAL (c->direction)))
       pos[child].y_offset = y_offset;
     else
@@ -1599,12 +1601,14 @@ GPOS::position_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer)
   hb_direction_t direction = buffer->props.direction;
 
   /* Handle cursive connections */
-  for (unsigned int i = 0; i < len; i++)
-    fix_cursive_minor_offset (pos, i, direction);
+  if (buffer->scratch_flags & HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_CURSIVE)
+    for (unsigned int i = 0; i < len; i++)
+      fix_cursive_minor_offset (pos, i, direction);
 
   /* Handle attachments */
-  for (unsigned int i = 0; i < len; i++)
-    fix_mark_attachment (pos, i, direction);
+  if (buffer->scratch_flags & HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_ATTACHMENT)
+    for (unsigned int i = 0; i < len; i++)
+      fix_mark_attachment (pos, i, direction);
 }
 
 

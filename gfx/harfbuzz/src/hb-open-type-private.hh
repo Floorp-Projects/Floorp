@@ -185,7 +185,7 @@ struct hb_dispatch_context_t
 
 /* This limits sanitizing time on really broken fonts. */
 #ifndef HB_SANITIZE_MAX_EDITS
-#define HB_SANITIZE_MAX_EDITS 100
+#define HB_SANITIZE_MAX_EDITS 8
 #endif
 
 struct hb_sanitize_context_t :
@@ -399,9 +399,9 @@ struct Sanitizer
 
 struct hb_serialize_context_t
 {
-  inline hb_serialize_context_t (void *start, unsigned int size)
+  inline hb_serialize_context_t (void *start_, unsigned int size)
   {
-    this->start = (char *) start;
+    this->start = (char *) start_;
     this->end = this->start + size;
 
     this->ran_out_of_room = false;
@@ -495,10 +495,10 @@ struct hb_serialize_context_t
     return reinterpret_cast<Type *> (&obj);
   }
 
-  inline void truncate (void *head)
+  inline void truncate (void *new_head)
   {
-    assert (this->start < head && head <= this->head);
-    this->head = (char *) head;
+    assert (this->start < new_head && new_head <= this->head);
+    this->head = (char *) new_head;
   }
 
   unsigned int debug_depth;
