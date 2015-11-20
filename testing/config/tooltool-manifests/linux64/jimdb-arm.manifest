@@ -4,6 +4,7 @@
 "visibility": "public",
 "digest": "929cb2192b0fdfeecd3d1cf210c10bfe54cf5a617420751a69815d390a0a646cb7240d1326c80fc6bee5d913f851a398a64ecb7a604c06f02799d62cd8117e3b",
 "algorithm": "sha512",
-"filename": "jimdb-arm-linux_x64.tar.bz2"
+"filename": "jimdb-arm-linux_x64.tar.bz2",
+"unpack": true
 }
 ]

@@ -22,10 +22,17 @@ function test() {
 function closeFirstWin(win) {
   win.gBrowser.pinTab(win.gBrowser.tabs[0]);
   win.gBrowser.pinTab(win.gBrowser.tabs[1]);
+
+  let winClosed = BrowserTestUtils.windowClosed(win);
+  // We need to call BrowserTryToCloseWindow in order to trigger
+  // the machinery that chooses whether or not to save the session
+  // for the last window.
   win.BrowserTryToCloseWindow();
   ok(win.closed, "window closed");
 
-  openWinWithCb(checkSecondWin, URIS_NORMAL_B, URIS_PINNED.concat(URIS_NORMAL_B));
+  winClosed.then(() => {
+    openWinWithCb(checkSecondWin, URIS_NORMAL_B, URIS_PINNED.concat(URIS_NORMAL_B));
+  });
 }
 
 function checkSecondWin(win) {
@@ -33,11 +40,12 @@ function checkSecondWin(win) {
   is(win.gBrowser.browsers[1].currentURI.spec, URIS_PINNED[1], "second pinned tab restored");
   ok(win.gBrowser.tabs[0].pinned, "first pinned tab is still pinned");
   ok(win.gBrowser.tabs[1].pinned, "second pinned tab is still pinned");
-  win.close();
 
-  // cleanup
-  document.documentElement.setAttribute("windowtype", "navigator:browser");
-  finish();
+  BrowserTestUtils.closeWindow(win).then(() => {
+    // cleanup
+    document.documentElement.setAttribute("windowtype", "navigator:browser");
+    finish();
+  });
 }
 
 function openWinWithCb(cb, argURIs, expectedURIs) {

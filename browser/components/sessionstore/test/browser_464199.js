@@ -69,18 +69,17 @@ function test() {
 
     ForgetAboutSite.removeDataFromDomain("example.net");
     waitForClearHistory(function() {
-      closedTabs = JSON.parse(ss.getClosedTabData(newWin));
-      is(closedTabs.length, remember_count,
-         "The correct amout of tabs was removed");
-      is(countByTitle(closedTabs, FORGET), 0,
-         "All tabs to be forgotten were indeed removed");
-      is(countByTitle(closedTabs, REMEMBER), remember_count,
-         "... and tabs to be remembered weren't.");
+        closedTabs = JSON.parse(ss.getClosedTabData(newWin));
+        is(closedTabs.length, remember_count,
+           "The correct amout of tabs was removed");
+        is(countByTitle(closedTabs, FORGET), 0,
+           "All tabs to be forgotten were indeed removed");
+        is(countByTitle(closedTabs, REMEMBER), remember_count,
+           "... and tabs to be remembered weren't.");
 
-      // clean up
-      newWin.close();
-      gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
-     finish();
+        // clean up
+        gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
+        BrowserTestUtils.closeWindow(newWin).then(finish);
     });
   });
 }

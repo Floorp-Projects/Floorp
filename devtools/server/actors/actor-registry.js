@@ -55,14 +55,14 @@ const ActorRegistryActor = protocol.ActorClass({
   },
 
   registerActor: method(function (sourceText, fileName, options) {
-    registerActor(sourceText, fileName, options);
+    return registerActor(sourceText, fileName, options).then(() => {
+      let { constructor, type } = options;
 
-    let { constructor, type } = options;
-
-    return ActorActor(this.conn, {
-      name: constructor,
-      tab: type.tab,
-      global: type.global
+      return ActorActor(this.conn, {
+        name: constructor,
+        tab: type.tab,
+        global: type.global
+      });
     });
   }, {
     request: {

@@ -528,6 +528,9 @@ pref("layout.frame_rate.precise", true);
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);
 
+// Display simulator software buttons
+pref("b2g.software-buttons", false);
+
 // Screen timeout in seconds
 pref("power.screen.timeout", 60);
 

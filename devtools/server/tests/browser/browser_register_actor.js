@@ -1,30 +1,7 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-Bug 895360 - [app manager] Device meta data actor
--->
-<head>
-  <meta charset="utf-8">
-  <title>Mozilla Bug</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
-</head>
-<body>
-<pre id="test">
-<script>
 var gClient;
-window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
 
-  var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/shared/client/main");
-  var {DebuggerServer} = require("devtools/server/main");
-  Cu.import("resource://gre/modules/Services.jsm");
-
-  SimpleTest.waitForExplicitFinish();
-
+function test() {
+  waitForExplicitFinish();
   var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
   var actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
@@ -56,7 +33,8 @@ window.onload = function() {
             actorFront.unregister().then(() => {
               gClient.close(() => {
                  DebuggerServer.destroy();
-                 SimpleTest.finish();
+                 gClient = null;
+                 finish();
               });
             });
           });
@@ -96,7 +74,3 @@ function getCount(actor, callback) {
     type: "count"
   }, callback);
 }
-</script>
-</pre>
-</body>
-</html>

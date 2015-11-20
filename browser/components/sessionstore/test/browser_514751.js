@@ -31,8 +31,7 @@ function test() {
           gotError = true;
       }
       ok(!gotError, "Didn't get a malformed URI error.");
-      theWin.close();
-      finish();
+      BrowserTestUtils.closeWindow(theWin).then(finish);
     });
   }, false);
 }

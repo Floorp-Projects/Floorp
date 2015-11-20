@@ -69,7 +69,6 @@ var chromeGlobal = this;
 
       m[setupChild].apply(m, args);
 
-      return true;
     } catch(e) {
       let error_msg = "exception during actor module setup running in the child process: ";
       DevToolsUtils.reportException(error_msg + e);
@@ -78,6 +77,12 @@ var chromeGlobal = this;
             DevToolsUtils.safeErrorString(e));
       return false;
     }
+    if (msg.data.id) {
+      // Send a message back to know when it is processed
+      sendAsyncMessage("debug:setup-in-child-response",
+                       {id: msg.data.id});
+    }
+    return true;
   });
 
   addMessageListener("debug:setup-in-child", onSetupInChild);
