@@ -55,7 +55,7 @@ var PluginProvider = {
   // A dictionary mapping IDs to names and descriptions
   plugins: null,
 
-  startup: function PL_startup() {
+  startup: function() {
     Services.obs.addObserver(this, LIST_UPDATED_TOPIC, false);
     Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
   },
@@ -64,7 +64,7 @@ var PluginProvider = {
    * Called when the application is shutting down. Only necessary for tests
    * to be able to simulate a shutdown.
    */
-  shutdown: function PL_shutdown() {
+  shutdown: function() {
     this.plugins = null;
     Services.obs.removeObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
     Services.obs.removeObserver(this, LIST_UPDATED_TOPIC);
@@ -73,7 +73,7 @@ var PluginProvider = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
     case AddonManager.OPTIONS_NOTIFICATION_DISPLAYED:
-      this.getAddonByID(aData, function PL_displayPluginInfo(plugin) {
+      this.getAddonByID(aData, function(plugin) {
         if (!plugin)
           return;
 
@@ -102,7 +102,7 @@ var PluginProvider = {
   /**
    * Creates a PluginWrapper for a plugin object.
    */
-  buildWrapper: function PL_buildWrapper(aPlugin) {
+  buildWrapper: function(aPlugin) {
     return new PluginWrapper(aPlugin.id,
                              aPlugin.name,
                              aPlugin.description,
@@ -117,7 +117,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddonByID: function PL_getAddon(aId, aCallback) {
+  getAddonByID: function(aId, aCallback) {
     if (!this.plugins)
       this.buildPluginList();
 
@@ -135,7 +135,7 @@ var PluginProvider = {
    * @param  callback
    *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes: function PL_getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes: function(aTypes, aCallback) {
     if (aTypes && aTypes.indexOf("plugin") < 0) {
       aCallback([]);
       return;
@@ -163,7 +163,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsWithOperationsByTypes: function PL_getAddonsWithOperationsByTypes(aTypes, aCallback) {
+  getAddonsWithOperationsByTypes: function(aTypes, aCallback) {
     aCallback([]);
   },
 
@@ -175,7 +175,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass the array of AddonInstalls to
    */
-  getInstallsByTypes: function PL_getInstallsByTypes(aTypes, aCallback) {
+  getInstallsByTypes: function(aTypes, aCallback) {
     aCallback([]);
   },
 
@@ -184,7 +184,7 @@ var PluginProvider = {
    *
    * @return a dictionary of plugins indexed by our generated ID
    */
-  getPluginList: function PL_getPluginList() {
+  getPluginList: function() {
     let tags = Cc["@mozilla.org/plugin/host;1"].
                getService(Ci.nsIPluginHost).
                getPluginTags({});
@@ -216,7 +216,7 @@ var PluginProvider = {
   /**
    * Builds the list of known plugins from the plugin host
    */
-  buildPluginList: function PL_buildPluginList() {
+  buildPluginList: function() {
     this.plugins = this.getPluginList();
   },
 
@@ -225,7 +225,7 @@ var PluginProvider = {
    * to the last known list sending out any necessary API notifications for
    * changes.
    */
-  updatePluginList: function PL_updatePluginList() {
+  updatePluginList: function() {
     let newList = this.getPluginList();
 
     let lostPlugins = Object.keys(this.plugins).filter(id => !(id in newList)).

@@ -42,12 +42,12 @@ const PERSIST_FILES = {
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
-this.__defineGetter__("_prefs", function prefsGetter() {
+this.__defineGetter__("_prefs", function() {
   delete this._prefs;
   return this._prefs = Services.prefs.getBranch("lightweightThemes.");
 });
 
-this.__defineGetter__("_maxUsedThemes", function maxUsedThemesGetter() {
+this.__defineGetter__("_maxUsedThemes", function() {
   delete this._maxUsedThemes;
   try {
     this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes");
@@ -58,7 +58,7 @@ this.__defineGetter__("_maxUsedThemes", function maxUsedThemesGetter() {
   return this._maxUsedThemes;
 });
 
-this.__defineSetter__("_maxUsedThemes", function maxUsedThemesSetter(aVal) {
+this.__defineSetter__("_maxUsedThemes", function(aVal) {
   delete this._maxUsedThemes;
   return this._maxUsedThemes = aVal;
 });
@@ -72,7 +72,7 @@ var _themeIDBeingDisabled = null;
 // Convert from the old storage format (in which the order of usedThemes
 // was combined with isThemeSelected to determine which theme was selected)
 // to the new one (where a selectedThemeID determines which theme is selected).
-(function migrateToNewStorageFormat() {
+(function() {
   let wasThemeSelected = false;
   try {
     wasThemeSelected = _prefs.getBoolPref("isThemeSelected");
@@ -145,11 +145,11 @@ this.LightweightThemeManager = {
     return _setCurrentTheme(aData, false);
   },
 
-  setLocalTheme: function LightweightThemeManager_setLocalTheme(aData) {
+  setLocalTheme: function(aData) {
     _setCurrentTheme(aData, true);
   },
 
-  getUsedTheme: function LightweightThemeManager_getUsedTheme(aId) {
+  getUsedTheme: function(aId) {
     var usedThemes = this.usedThemes;
     for (let usedTheme of usedThemes) {
       if (usedTheme.id == aId)
@@ -158,7 +158,7 @@ this.LightweightThemeManager = {
     return null;
   },
 
-  forgetUsedTheme: function LightweightThemeManager_forgetUsedTheme(aId) {
+  forgetUsedTheme: function(aId) {
     let theme = this.getUsedTheme(aId);
     if (!theme || LightweightThemeManager._builtInThemes.has(theme.id))
       return;
@@ -176,7 +176,7 @@ this.LightweightThemeManager = {
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   },
 
-  addBuiltInTheme: function LightweightThemeManager_addBuiltInTheme(theme) {
+  addBuiltInTheme: function(theme) {
     if (!theme || !theme.id || this.usedThemes.some(t => t.id == theme.id)) {
       throw new Error("Trying to add invalid builtIn theme");
     }
@@ -184,7 +184,7 @@ this.LightweightThemeManager = {
     this._builtInThemes.set(theme.id, theme);
   },
 
-  forgetBuiltInTheme: function LightweightThemeManager_forgetBuiltInTheme(id) {
+  forgetBuiltInTheme: function(id) {
     if (!this._builtInThemes.has(id)) {
       let currentTheme = this.currentTheme;
       if (currentTheme && currentTheme.id == id) {
@@ -194,13 +194,13 @@ this.LightweightThemeManager = {
     return this._builtInThemes.delete(id);
   },
 
-  clearBuiltInThemes: function LightweightThemeManager_clearBuiltInThemes() {
+  clearBuiltInThemes: function() {
     for (let id of this._builtInThemes.keys()) {
       this.forgetBuiltInTheme(id);
     }
   },
 
-  previewTheme: function LightweightThemeManager_previewTheme(aData) {
+  previewTheme: function(aData) {
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
     Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
@@ -219,7 +219,7 @@ this.LightweightThemeManager = {
     _notifyWindows(aData);
   },
 
-  resetPreview: function LightweightThemeManager_resetPreview() {
+  resetPreview: function() {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
@@ -227,7 +227,7 @@ this.LightweightThemeManager = {
     }
   },
 
-  parseTheme: function LightweightThemeManager_parseTheme(aString, aBaseURI) {
+  parseTheme: function(aString, aBaseURI) {
     try {
       return _sanitizeTheme(JSON.parse(aString), aBaseURI, false);
     } catch (e) {
@@ -235,7 +235,7 @@ this.LightweightThemeManager = {
     }
   },
 
-  updateCurrentTheme: function LightweightThemeManager_updateCurrentTheme() {
+  updateCurrentTheme: function() {
     try {
       if (!_prefs.getBoolPref("update.enabled"))
         return;
@@ -259,7 +259,7 @@ this.LightweightThemeManager = {
     req.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
     var self = this;
-    req.addEventListener("load", function loadEventListener() {
+    req.addEventListener("load", function() {
       if (req.status != 200)
         return;
 
@@ -283,7 +283,7 @@ this.LightweightThemeManager = {
    * @param  aData
    *         The lightweight theme to switch to
    */
-  themeChanged: function LightweightThemeManager_themeChanged(aData) {
+  themeChanged: function(aData) {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
@@ -295,7 +295,7 @@ this.LightweightThemeManager = {
       _updateUsedThemes(usedThemes);
       if (PERSIST_ENABLED) {
         LightweightThemeImageOptimizer.purge();
-        _persistImages(aData, function themeChanged_persistImages() {
+        _persistImages(aData, function() {
           _notifyWindows(this.currentThemeForDisplay);
         }.bind(this));
       }
@@ -314,7 +314,7 @@ this.LightweightThemeManager = {
    * Starts the Addons provider and enables the new lightweight theme if
    * necessary.
    */
-  startup: function LightweightThemeManager_startup() {
+  startup: function() {
     if (Services.prefs.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
       let id = Services.prefs.getCharPref(PREF_LWTHEME_TO_SELECT);
       if (id)
@@ -330,7 +330,7 @@ this.LightweightThemeManager = {
   /**
    * Shuts down the provider.
    */
-  shutdown: function LightweightThemeManager_shutdown() {
+  shutdown: function() {
     _prefs.removeObserver("", _prefObserver);
   },
 
@@ -346,7 +346,7 @@ this.LightweightThemeManager = {
    *         true if the newly enabled add-on will only become enabled after a
    *         restart
    */
-  addonChanged: function LightweightThemeManager_addonChanged(aId, aType, aPendingRestart) {
+  addonChanged: function(aId, aType, aPendingRestart) {
     if (aType != ADDON_TYPE)
       return;
 
@@ -419,7 +419,7 @@ this.LightweightThemeManager = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddonByID: function LightweightThemeManager_getAddonByID(aId, aCallback) {
+  getAddonByID: function(aId, aCallback) {
     let id = _getInternalID(aId);
     if (!id) {
       aCallback(null);
@@ -443,7 +443,7 @@ this.LightweightThemeManager = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes: function LightweightThemeManager_getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes: function(aTypes, aCallback) {
     if (aTypes && aTypes.indexOf(ADDON_TYPE) == -1) {
       aCallback([]);
       return;
@@ -458,57 +458,55 @@ this.LightweightThemeManager = {
  * consumers of the AddonManager API.
  */
 function AddonWrapper(aTheme) {
-  this.__defineGetter__("id", function AddonWrapper_idGetter() {
+  this.__defineGetter__("id", function() {
     return aTheme.id + ID_SUFFIX;
   });
-  this.__defineGetter__("type", function AddonWrapper_typeGetter() {
+  this.__defineGetter__("type", function() {
     return ADDON_TYPE;
   });
-  this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {
+  this.__defineGetter__("isActive", function() {
     let current = LightweightThemeManager.currentTheme;
     if (current)
       return aTheme.id == current.id;
     return false;
   });
 
-  this.__defineGetter__("name", function AddonWrapper_nameGetter() {
+  this.__defineGetter__("name", function() {
     return aTheme.name;
   });
-  this.__defineGetter__("version", function AddonWrapper_versionGetter() {
+  this.__defineGetter__("version", function() {
     return "version" in aTheme ? aTheme.version : "";
   });
 
   ["description", "homepageURL", "iconURL"].forEach(function(prop) {
-    this.__defineGetter__(prop, function AddonWrapper_optionalPropGetter() {
+    this.__defineGetter__(prop, function() {
       return prop in aTheme ? aTheme[prop] : null;
     });
   }, this);
 
   ["installDate", "updateDate"].forEach(function(prop) {
-    this.__defineGetter__(prop, function AddonWrapper_datePropGetter() {
+    this.__defineGetter__(prop, function() {
       return prop in aTheme ? new Date(aTheme[prop]) : null;
     });
   }, this);
 
-  this.__defineGetter__("creator", function AddonWrapper_creatorGetter() {
+  this.__defineGetter__("creator", function() {
     return "author" in aTheme ? new AddonManagerPrivate.AddonAuthor(aTheme.author) : null;
   });
 
-  this.__defineGetter__("screenshots", function AddonWrapper_screenshotsGetter() {
+  this.__defineGetter__("screenshots", function() {
     let url = aTheme.previewURL;
     return [new AddonManagerPrivate.AddonScreenshot(url)];
   });
 
-  this.__defineGetter__("pendingOperations",
-                       function AddonWrapper_pendingOperationsGetter() {
+  this.__defineGetter__("pendingOperations", function() {
     let pending = AddonManager.PENDING_NONE;
     if (this.isActive == this.userDisabled)
       pending |= this.isActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE;
     return pending;
   });
 
-  this.__defineGetter__("operationsRequiringRestart", 
-               function AddonWrapper_operationsRequiringRestartGetter() {
+  this.__defineGetter__("operationsRequiringRestart", function() {
     // If a non-default theme is in use then a restart will be required to
     // enable lightweight themes unless dynamic theme switching is enabled
     if (Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN)) {
@@ -524,13 +522,13 @@ function AddonWrapper(aTheme) {
     return AddonManager.OP_NEEDS_RESTART_NONE;
   });
 
-  this.__defineGetter__("size", function AddonWrapper_sizeGetter() {
+  this.__defineGetter__("size", function() {
     // The size changes depending on whether the theme is in use or not, this is
     // probably not worth exposing.
     return null;
   });
 
-  this.__defineGetter__("permissions", function AddonWrapper_permissionsGetter() {
+  this.__defineGetter__("permissions", function() {
     let permissions = 0;
 
     // Do not allow uninstall of builtIn themes.
@@ -543,7 +541,7 @@ function AddonWrapper(aTheme) {
     return permissions;
   });
 
-  this.__defineGetter__("userDisabled", function AddonWrapper_userDisabledGetter() {
+  this.__defineGetter__("userDisabled", function() {
     if (_themeIDBeingEnabled == aTheme.id)
       return false;
     if (_themeIDBeingDisabled == aTheme.id)
@@ -559,7 +557,7 @@ function AddonWrapper(aTheme) {
     }
   });
 
-  this.__defineSetter__("userDisabled", function AddonWrapper_userDisabledSetter(val) {
+  this.__defineSetter__("userDisabled", function(val) {
     if (val == this.userDisabled)
       return val;
 
@@ -571,15 +569,15 @@ function AddonWrapper(aTheme) {
     return val;
   });
 
-  this.uninstall = function AddonWrapper_uninstall() {
+  this.uninstall = function() {
     LightweightThemeManager.forgetUsedTheme(aTheme.id);
   };
 
-  this.cancelUninstall = function AddonWrapper_cancelUninstall() {
+  this.cancelUninstall = function() {
     throw new Error("Theme is not marked to be uninstalled");
   };
 
-  this.findUpdates = function AddonWrapper_findUpdates(listener, reason, appVersion, platformVersion) {
+  this.findUpdates = function(listener, reason, appVersion, platformVersion) {
     AddonManagerPrivate.callNoUpdateListeners(this, listener, reason, appVersion, platformVersion);
   };
 }
@@ -608,7 +606,7 @@ AddonWrapper.prototype = {
   },
 
   // Lightweight themes are always compatible
-  isCompatibleWith: function AddonWrapper_isCompatibleWith(appVersion, platformVersion) {
+  isCompatibleWith: function(appVersion, platformVersion) {
     return true;
   },
 
@@ -742,8 +740,7 @@ function _sanitizeTheme(aData, aBaseURI, aLocal) {
 }
 
 function _usedThemesExceptId(aId) {
-  return LightweightThemeManager.usedThemes.filter(
-    function usedThemesExceptId_filterID(t) {
+  return LightweightThemeManager.usedThemes.filter(function(t) {
       return "id" in t && t.id != aId;
     });
 }
@@ -783,7 +780,7 @@ function _notifyWindows(aThemeData) {
 
 var _previewTimer;
 var _previewTimerCallback = {
-  notify: function _previewTimerCallback_notify() {
+  notify: function() {
     LightweightThemeManager.resetPreview();
   }
 };
@@ -860,11 +857,11 @@ function _persistImage(sourceURL, localFileName, successCallback) {
 }
 
 function _persistProgressListener(successCallback) {
-  this.onLocationChange = function persistProgressListener_onLocationChange() {};
-  this.onProgressChange = function persistProgressListener_onProgressChange() {};
-  this.onStatusChange   = function persistProgressListener_onStatusChange() {};
-  this.onSecurityChange = function persistProgressListener_onSecurityChange() {};
-  this.onStateChange    = function persistProgressListener_onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+  this.onLocationChange = function() {};
+  this.onProgressChange = function() {};
+  this.onStatusChange   = function() {};
+  this.onSecurityChange = function() {};
+  this.onStateChange    = function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aRequest &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
