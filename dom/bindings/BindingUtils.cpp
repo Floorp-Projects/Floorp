@@ -209,6 +209,7 @@ ErrorResult::SetPendingExceptionWithMessage(JSContext* aCx)
                               argCount > 0 ? args : nullptr);
 
   ClearMessage();
+  mResult = NS_OK;
 }
 
 void
@@ -263,9 +264,7 @@ ErrorResult::SetPendingJSException(JSContext* cx)
   // what, go ahead and unroot mJSException.
   js::RemoveRawValueRoot(cx, &mJSException);
 
-  // We no longer have a useful exception but we do want to signal that an error
-  // occured.
-  mResult = NS_ERROR_FAILURE;
+  mResult = NS_OK;
 #ifdef DEBUG
   mUnionState = HasNothing;
 #endif // DEBUG
@@ -333,6 +332,7 @@ ErrorResult::SetPendingDOMException(JSContext* cx)
   dom::Throw(cx, mDOMExceptionInfo->mRv, mDOMExceptionInfo->mMessage);
 
   ClearDOMExceptionInfo();
+  mResult = NS_OK;
 }
 
 void
@@ -372,6 +372,7 @@ ErrorResult::SetPendingGenericErrorException(JSContext* cx)
   MOZ_ASSERT(!IsJSException());
   MOZ_ASSERT(!IsDOMException());
   dom::Throw(cx, ErrorCode());
+  mResult = NS_OK;
 }
 
 ErrorResult&
@@ -468,12 +469,14 @@ ErrorResult::SetPendingException(JSContext* cx)
     JS_ClearPendingException(cx);
     // Don't do any reporting.  Just return, to create an
     // uncatchable exception.
+    mResult = NS_OK;
     return;
   }
   if (IsJSContextException()) {
     // Whatever we need to throw is on the JSContext already.  We
     // can't assert that there is a pending exception on it, though,
     // because in the uncatchable exception case there won't be one.
+    mResult = NS_OK;
     return;
   }
   if (IsErrorWithMessage()) {

@@ -6,6 +6,17 @@
 
 /**
  * A struct for tracking exceptions that need to be thrown to JS.
+ *
+ * Conceptually, an ErrorResult represents either success or an exception in the
+ * process of being thrown.  This means that a failing ErrorResult _must_ be
+ * handled in one of the following ways before coming off the stack:
+ *
+ * 1) Suppressed via SuppressException().
+ * 2) Converted to a pure nsresult return value via StealNSResult().
+ * 3) Converted to an actual pending exception on a JSContext via
+ *    MaybeSetPendingException.
+ * 4) Converted to an exception JS::Value (probably to then reject a Promise
+ *    with) via dom::ToJSValue.
  */
 
 #ifndef mozilla_ErrorResult_h
@@ -87,8 +98,9 @@ public:
 
 #ifdef DEBUG
   ~ErrorResult() {
-    MOZ_ASSERT_IF(IsErrorWithMessage(), !mMessage);
-    MOZ_ASSERT_IF(IsDOMException(), !mDOMExceptionInfo);
+    // Consumers should have called one of MaybeSetPendingException
+    // (possibly via ToJSValue), StealNSResult, and SuppressException
+    MOZ_ASSERT(!Failed());
     MOZ_ASSERT(!mMightHaveUnreportedJSException);
     MOZ_ASSERT(mUnionState == HasNothing);
   }
@@ -158,6 +170,9 @@ public:
   // exception on aCx, due to uncatchable exceptions.  It should still be
   // considered equivalent to a JSAPI failure in terms of what callers should do
   // after true is returned.
+  //
+  // After this call, the ErrorResult will no longer return true from Failed(),
+  // since the exception will have moved to the JSContext.
   bool MaybeSetPendingException(JSContext* cx)
   {
     WouldReportJSException();
