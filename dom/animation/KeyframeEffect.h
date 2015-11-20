@@ -51,17 +51,11 @@ struct AnimationTiming
   TimeDuration mIterationDuration;
   TimeDuration mDelay;
   float mIterationCount; // mozilla::PositiveInfinity<float>() means infinite
-  uint8_t mDirection;
-  uint8_t mFillMode;
+  dom::PlaybackDirection mDirection;
+  dom::FillMode mFillMode;
 
-  bool FillsForwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
-  }
-  bool FillsBackwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
-  }
+  bool FillsForwards() const;
+  bool FillsBackwards() const;
   bool operator==(const AnimationTiming& aOther) const {
     return mIterationDuration == aOther.mIterationDuration &&
            mDelay == aOther.mDelay &&
