@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   file name:  nfrs.h
@@ -30,8 +30,10 @@ U_NAMESPACE_BEGIN
 
 class NFRuleSet : public UMemory {
 public:
-    NFRuleSet(UnicodeString* descriptions, int32_t index, UErrorCode& status);
-    void parseRules(UnicodeString& rules, const RuleBasedNumberFormat* owner, UErrorCode& status);
+    NFRuleSet(RuleBasedNumberFormat *owner, UnicodeString* descriptions, int32_t index, UErrorCode& status);
+    void parseRules(UnicodeString& rules, UErrorCode& status);
+    void setNonNumericalRule(NFRule *rule);
+    void setBestFractionRule(int32_t originalIndex, NFRule *newRule, UBool rememberRule);
     void makeIntoFractionRuleSet() { fIsFractionRuleSet = TRUE; }
 
     ~NFRuleSet();
@@ -48,27 +50,32 @@ public:
     void  getName(UnicodeString& result) const { result.setTo(name); }
     UBool isNamed(const UnicodeString& _name) const { return this->name == _name; }
 
-    void  format(int64_t number, UnicodeString& toAppendTo, int32_t pos, UErrorCode& status) const;
-    void  format(double number, UnicodeString& toAppendTo, int32_t pos, UErrorCode& status) const;
+    void  format(int64_t number, UnicodeString& toAppendTo, int32_t pos, int32_t recursionCount, UErrorCode& status) const;
+    void  format(double number, UnicodeString& toAppendTo, int32_t pos, int32_t recursionCount, UErrorCode& status) const;
 
     UBool parse(const UnicodeString& text, ParsePosition& pos, double upperBound, Formattable& result) const;
 
     void appendRules(UnicodeString& result) const; // toString
 
+    void setDecimalFormatSymbols(const DecimalFormatSymbols &newSymbols, UErrorCode& status);
+
+    const RuleBasedNumberFormat *getOwner() const { return owner; }
 private:
-    NFRule * findNormalRule(int64_t number) const;
-    NFRule * findDoubleRule(double number) const;
-    NFRule * findFractionRuleSetRule(double number) const;
+    const NFRule * findNormalRule(int64_t number) const;
+    const NFRule * findDoubleRule(double number) const;
+    const NFRule * findFractionRuleSetRule(double number) const;
+    
+    friend class NFSubstitution;
 
 private:
     UnicodeString name;
     NFRuleList rules;
-    NFRule *negativeNumberRule;
-    NFRule *fractionRules[3];
+    NFRule *nonNumericalRules[6];
+    RuleBasedNumberFormat *owner;
+    NFRuleList fractionRules;
     UBool fIsFractionRuleSet;
     UBool fIsPublic;
     UBool fIsParseable;
-    int32_t fRecursionCount;
 
     NFRuleSet(const NFRuleSet &other); // forbid copying of this class
     NFRuleSet &operator=(const NFRuleSet &other); // forbid copying of this class

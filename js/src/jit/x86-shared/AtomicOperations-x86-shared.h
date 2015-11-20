@@ -511,7 +511,7 @@ MSC_CAS(uint64_t, __int64, _InterlockedCompareExchange64)
     template<> inline T                                                       \
     js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val) {               \
         static_assert(sizeof(T) <= 4, "not available for 8-byte values yet"); \
-        return (T)xadd((U volatile*)addr, (U)-val);                           \
+        return (T)xadd((U volatile*)addr, -(U)val);                           \
     }
 
 MSC_FETCHADDOP(int8_t, char, _InterlockedExchangeAdd8)

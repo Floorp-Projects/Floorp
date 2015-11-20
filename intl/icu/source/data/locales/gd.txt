@@ -23,7 +23,304 @@ gd{
     ExemplarCharactersIndex{"[A B C D E F G H I L M N O P R S T U]"}
     MoreInformation{"?"}
     NumberElements{
+        arab{
+            symbols{
+                decimal{"٫"}
+                exponential{"اس"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                minusSign{"‏-"}
+                nan{"NaN"}
+                perMille{"؉"}
+                percentSign{"٪"}
+                plusSign{"‏+"}
+                superscriptingExponent{"×"}
+                timeSeparator{":"}
+            }
+        }
+        arabext{
+            symbols{
+                decimal{"٫"}
+                exponential{"×۱۰^"}
+                group{"٬"}
+                infinity{"∞"}
+                list{"؛"}
+                minusSign{"‎-‎"}
+                nan{"NaN"}
+                perMille{"؉"}
+                percentSign{"٪"}
+                plusSign{"‎+‎"}
+                superscriptingExponent{"×"}
+            }
+        }
+        bali{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        beng{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        brah{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        cakm{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        cham{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         default{"latn"}
+        deva{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        fullwide{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}–{1}"}
+            }
+            patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        gujr{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        guru{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        hanidec{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        java{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        kali{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        khmr{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        knda{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        lana{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        lanatham{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        laoo{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -52,9 +349,9 @@ gd{
                     }
                     100000{
                         few{"000 mìle"}
-                        one{"000 mìle"}
+                        one{"000 mhìle"}
                         other{"000 mìle"}
-                        two{"000 mìle"}
+                        two{"000 mhìle"}
                     }
                     1000000{
                         few{"0 millean"}
@@ -70,9 +367,9 @@ gd{
                     }
                     100000000{
                         few{"000 millean"}
-                        one{"000 millean"}
+                        one{"000 mhillean"}
                         other{"000 millean"}
-                        two{"000 millean"}
+                        two{"000 mhillean"}
                     }
                     1000000000{
                         few{"0 billean"}
@@ -87,9 +384,9 @@ gd{
                         two{"00 bhillean"}
                     }
                     100000000000{
-                        few{"000 billean"}
+                        few{"000 bhillean"}
                         one{"000 billean"}
-                        other{"000 billean"}
+                        other{"000 bhillean"}
                         two{"000 billean"}
                     }
                     1000000000000{
@@ -105,14 +402,88 @@ gd{
                         two{"00 thrillean"}
                     }
                     100000000000000{
-                        few{"000T"}
-                        one{"000T"}
+                        few{"000 trillean"}
+                        one{"000 trillean"}
                         other{"000 trillean"}
-                        two{"000T"}
+                        two{"000 thrillean"}
                     }
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"¤0K"}
+                        one{"¤0K"}
+                        other{"¤0K"}
+                        two{"¤0K"}
+                    }
+                    10000{
+                        few{"¤00K"}
+                        one{"¤00K"}
+                        other{"¤00K"}
+                        two{"¤00K"}
+                    }
+                    100000{
+                        few{"¤000K"}
+                        one{"¤000K"}
+                        other{"¤000K"}
+                        two{"¤000K"}
+                    }
+                    1000000{
+                        few{"¤0M"}
+                        one{"¤0M"}
+                        other{"¤0M"}
+                        two{"¤0M"}
+                    }
+                    10000000{
+                        few{"¤00M"}
+                        one{"¤00M"}
+                        other{"¤00M"}
+                        two{"¤00M"}
+                    }
+                    100000000{
+                        few{"¤000M"}
+                        one{"¤000M"}
+                        other{"¤000M"}
+                        two{"¤000M"}
+                    }
+                    1000000000{
+                        few{"¤0B"}
+                        one{"¤0B"}
+                        other{"¤0B"}
+                        two{"¤0B"}
+                    }
+                    10000000000{
+                        few{"¤00B"}
+                        one{"¤00B"}
+                        other{"¤00B"}
+                        two{"¤00B"}
+                    }
+                    100000000000{
+                        few{"¤000B"}
+                        one{"¤000B"}
+                        other{"¤000B"}
+                        two{"¤000B"}
+                    }
+                    1000000000000{
+                        few{"¤0T"}
+                        one{"¤0T"}
+                        other{"¤0T"}
+                        two{"¤0T"}
+                    }
+                    10000000000000{
+                        few{"¤00T"}
+                        one{"¤00T"}
+                        other{"¤00T"}
+                        two{"¤00T"}
+                    }
+                    100000000000000{
+                        few{"¤000T"}
+                        one{"¤000T"}
+                        other{"¤000T"}
+                        two{"¤000T"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0K"}
@@ -193,6 +564,7 @@ gd{
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
+                list{";"}
                 minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
@@ -202,11 +574,360 @@ gd{
                 timeSeparator{":"}
             }
         }
+        lepc{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        limb{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         minimumGroupingDigits{"1"}
+        mlym{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        mong{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        mtei{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        mymr{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        mymrshan{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
         native{"latn"}
+        nkoo{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        olck{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        orya{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        osma{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        saur{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        shrd{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        sora{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        sund{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        takr{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        talu{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        tamldec{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        telu{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        thai{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        tibt{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        vaii{
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.20.4"}
     calendar{
+        buddhist{
+            intervalFormats{
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
+                }
+                fallback{"{0} – {1}"}
+            }
+        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -224,6 +945,7 @@ gd{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"G y"}
                 GyMMM{"LLL y G"}
@@ -235,10 +957,12 @@ gd{
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
+                MMdd{"dd/MM"}
                 Md{"d/M"}
                 d{"d"}
                 y{"y G"}
                 yMEd{"E, d/M/y"}
+                yMM{"MM/y"}
                 yMMM{"LLL y"}
                 yMMMM{"LLLL y"}
                 yyyy{"y G"}
@@ -246,12 +970,27 @@ gd{
                 yyyyMEd{"E, d/M/y GGGGG"}
                 yyyyMMM{"LLL y G"}
                 yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
+                }
                 M{
                     M{"M – M"}
                 }
@@ -278,6 +1017,24 @@ gd{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
+                h{
+                    a{"ha – ha"}
+                    h{"h – ha"}
+                }
+                hm{
+                    a{"h:mma – h:mma"}
+                    h{"h:mm – h:mma"}
+                    m{"h:mm – h:mma"}
+                }
+                hmv{
+                    a{"h:mma – h:mma v"}
+                    h{"h:mm – h:mma v"}
+                    m{"h:mm – h:mma v"}
+                }
+                hv{
+                    a{"ha – ha v"}
+                    h{"h – ha v"}
+                }
                 y{
                     y{"y – y G"}
                 }
@@ -320,6 +1077,10 @@ gd{
                 "m",
                 "f",
             }
+            AmPmMarkersAbbr{
+                "m",
+                "f",
+            }
             AmPmMarkersNarrow{
                 "m",
                 "f",
@@ -339,8 +1100,6 @@ gd{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"meadhan-latha"}
-            NoonMarkerNarrow{"f"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -358,6 +1117,8 @@ gd{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
@@ -370,6 +1131,8 @@ gd{
                 h{"ha"}
                 hm{"h:mma"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mma v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -461,10 +1224,26 @@ gd{
                     }
                 }
             }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"m"}
+                        pm{"f"}
+                    }
+                    narrow{
+                        am{"m"}
+                        pm{"f"}
+                    }
+                    wide{
+                        am{"m"}
+                        pm{"f"}
+                    }
+                }
+            }
             eras{
-                abbreviated%variant{
-                    "RLC",
-                    "LC",
+                abbreviated{
+                    "RC",
+                    "AD",
                 }
                 narrow{
                     "R",
@@ -473,10 +1252,6 @@ gd{
                 wide{
                     "Ro Chrìosta",
                     "An dèidh Chrìosta",
-                }
-                wide%variant{
-                    "RLC",
-                    "LC",
                 }
             }
             intervalFormats{
@@ -727,6 +1502,20 @@ gd{
                 Ed{"E, d"}
                 d{"d"}
             }
+            eras{
+                abbreviated{
+                    "Ro PnS",
+                    "Mínguó",
+                }
+                narrow{
+                    "Ro PnS",
+                    "Mínguó",
+                }
+                wide{
+                    "Ro Ph. na Sìne",
+                    "Mínguó",
+                }
+            }
         }
     }
     delimiters{
@@ -754,15 +1543,23 @@ gd{
                     two{"an ceann {0} latha"}
                 }
                 past{
-                    few{"o chionn {0} làithean"}
-                    one{"o chionn {0} latha"}
-                    other{"o chionn {0} latha"}
-                    two{"o chionn {0} latha"}
+                    few{"{0} làithean air ais"}
+                    one{"{0} latha air ais"}
+                    other{"{0} latha air ais"}
+                    two{"{0} latha air ais"}
                 }
             }
         }
         day-narrow{
             dn{"là"}
+            relative{
+                "-1"{"an-dè"}
+                "-2"{"a-bhòin-dè"}
+                "0"{"an-diugh"}
+                "1"{"a-màireach"}
+                "2"{"an-earar"}
+                "3"{"an-eararais"}
+            }
             relativeTime{
                 future{
                     few{"+{0} là"}
@@ -780,6 +1577,14 @@ gd{
         }
         day-short{
             dn{"là"}
+            relative{
+                "-1"{"an-dè"}
+                "-2"{"a-bhòin-dè"}
+                "0"{"an-diugh"}
+                "1"{"a-màireach"}
+                "2"{"an-earar"}
+                "3"{"an-eararais"}
+            }
             relativeTime{
                 future{
                     few{"an {0} là."}
@@ -832,10 +1637,10 @@ gd{
                     two{"an ceann {0} uair a thìde"}
                 }
                 past{
-                    few{"o chionn {0} uairean a thìde"}
-                    one{"o chionn {0} uair a thìde"}
-                    other{"o chionn {0} uair a thìde"}
-                    two{"o chionn {0} uair a thìde"}
+                    few{"{0} uairean a thìde air ais"}
+                    one{"{0} uair a thìde air ais"}
+                    other{"{0} uair a thìde air ais"}
+                    two{"{0} uair a thìde air ais"}
                 }
             }
         }
@@ -883,10 +1688,10 @@ gd{
                     two{"an ceann {0} mhionaid"}
                 }
                 past{
-                    few{"o chionn {0} mionaidean"}
-                    one{"o chionn {0} mhionaid"}
-                    other{"o chionn {0} mionaid"}
-                    two{"o chionn {0} mhionaid"}
+                    few{"{0} mionaidean air ais"}
+                    one{"{0} mhionaid air ais"}
+                    other{"{0} mionaid air ais"}
+                    two{"{0} mhionaid air ais"}
                 }
             }
         }
@@ -960,49 +1765,64 @@ gd{
                     two{"an ceann {0} mhìosa"}
                 }
                 past{
-                    few{"o chionn {0} mìosan"}
-                    one{"o chionn {0} mhìosa"}
-                    other{"o chionn {0} mìosa"}
-                    two{"o chionn {0} mhìosa"}
+                    few{"{0} mìosan air ais"}
+                    one{"{0} mhìos air ais"}
+                    other{"{0} mìos air ais"}
+                    two{"{0} mhìos air ais"}
                 }
             }
         }
         month-narrow{
             dn{"mì."}
+            relative{
+                "-1"{"mì. ch."}
+                "0"{"am mì. seo"}
+                "1"{"ath-mhì."}
+            }
             relativeTime{
                 future{
                     few{"+{0} mì."}
-                    one{"+{0} mì."}
+                    one{"+{0} mhì."}
                     other{"+{0} mì."}
-                    two{"+{0} mì."}
+                    two{"+{0} mhì."}
                 }
                 past{
                     few{"-{0} mì."}
-                    one{"-{0} mì."}
+                    one{"-{0} mhì."}
                     other{"-{0} mì."}
-                    two{"-{0} mì."}
+                    two{"-{0} mhì."}
                 }
             }
         }
         month-short{
             dn{"mìos"}
+            relative{
+                "-1"{"am mìos sa chaidh"}
+                "0"{"am mìos seo"}
+                "1"{"an ath-mhìos"}
+            }
             relativeTime{
                 future{
                     few{"an {0} mìos."}
-                    one{"an {0} mìos."}
+                    one{"an {0} mhìos."}
                     other{"an {0} mìos."}
-                    two{"an {0} mìos."}
+                    two{"an {0} mhìos."}
                 }
                 past{
                     few{"o {0} mìos."}
-                    one{"o {0} mìos."}
+                    one{"o {0} mhìos."}
                     other{"o {0} mìos."}
-                    two{"o {0} mìos."}
+                    two{"o {0} mhìos."}
                 }
             }
         }
         quarter{
             dn{"cairteal"}
+            relative{
+                "-1"{"an cairteal seo chaidh"}
+                "0"{"an cairteal seo"}
+                "1"{"an ath-chairteal"}
+            }
             relativeTime{
                 future{
                     few{"an ceann {0} cairtealan"}
@@ -1020,6 +1840,11 @@ gd{
         }
         quarter-narrow{
             dn{"c."}
+            relative{
+                "-1"{"c. ch."}
+                "0"{"an c. seo"}
+                "1"{"ath-ch."}
+            }
             relativeTime{
                 future{
                     few{"+{0} c."}
@@ -1037,6 +1862,11 @@ gd{
         }
         quarter-short{
             dn{"cairt."}
+            relative{
+                "-1"{"an cairt. sa chaidh"}
+                "0"{"an cairt. seo"}
+                "1"{"an ath-chairt."}
+            }
             relativeTime{
                 future{
                     few{"an {0} cairt."}
@@ -1075,6 +1905,9 @@ gd{
         }
         second{
             dn{"diog"}
+            relative{
+                "0"{"an-dràsta"}
+            }
             relativeTime{
                 future{
                     few{"an ceann {0} diogan"}
@@ -1083,15 +1916,18 @@ gd{
                     two{"an ceann {0} dhiog"}
                 }
                 past{
-                    few{"o chionn {0} diogan"}
-                    one{"o chionn {0} diog"}
-                    other{"o chionn {0} diog"}
-                    two{"o chionn {0} dhiog"}
+                    few{"{0} diogan air ais"}
+                    one{"{0} diog air ais"}
+                    other{"{0} diog air ais"}
+                    two{"{0} dhiog air ais"}
                 }
             }
         }
         second-narrow{
             dn{"d"}
+            relative{
+                "0"{"an-dràsta"}
+            }
             relativeTime{
                 future{
                     few{"+{0} d"}
@@ -1109,6 +1945,9 @@ gd{
         }
         second-short{
             dn{"diog"}
+            relative{
+                "0"{"an-dràsta"}
+            }
             relativeTime{
                 future{
                     few{"an {0} diog."}
@@ -1223,15 +2062,20 @@ gd{
                     two{"an ceann {0} sheachdain"}
                 }
                 past{
-                    few{"o chionn {0} seachdainean"}
-                    one{"o chionn {0} seachdain"}
-                    other{"o chionn {0} seachdain"}
-                    two{"o chionn {0} sheachdain"}
+                    few{"{0} seachdainean air ais"}
+                    one{"{0} seachdain air ais"}
+                    other{"{0} seachdain air ais"}
+                    two{"{0} sheachdain air ais"}
                 }
             }
         }
         week-narrow{
             dn{"sn."}
+            relative{
+                "-1"{"sn. ch."}
+                "0"{"an t-sn. seo"}
+                "1"{"ath-shn."}
+            }
             relativeTime{
                 future{
                     few{"+{0} sn."}
@@ -1249,6 +2093,11 @@ gd{
         }
         week-short{
             dn{"seachd."}
+            relative{
+                "-1"{"seachd. sa chaidh"}
+                "0"{"an t-seachd. seo"}
+                "1"{"an ath-sheachd."}
+            }
             relativeTime{
                 future{
                     few{"an {0} seachd."}
@@ -1283,32 +2132,44 @@ gd{
                     two{"an ceann {0} bhliadhna"}
                 }
                 past{
-                    few{"o chionn {0} bliadhnaichean"}
-                    one{"o chionn {0} bhliadhna"}
-                    other{"o chionn {0} bliadhna"}
-                    two{"o chionn {0} bhliadhna"}
+                    few{"{0} bhliadhnaichean air ais"}
+                    one{"{0} bhliadhna air ais"}
+                    other{"{0} bliadhna air ais"}
+                    two{"{0} bhliadhna air ais"}
                 }
             }
         }
         year-narrow{
             dn{"bl."}
+            relative{
+                "-1"{"an-uir."}
+                "-2"{"a-bh-uir."}
+                "0"{"am bl."}
+                "1"{"an ath-bhl."}
+            }
             relativeTime{
                 future{
                     few{"+{0} bl."}
-                    one{"+{0} bl."}
+                    one{"+{0} bhl."}
                     other{"+{0} bl."}
-                    two{"+{0} bl."}
+                    two{"+{0} bhl."}
                 }
                 past{
                     few{"-{0} bl."}
-                    one{"-{0} bl."}
+                    one{"-{0} bhl."}
                     other{"-{0} bl."}
-                    two{"-{0} bl."}
+                    two{"-{0} bhl."}
                 }
             }
         }
         year-short{
             dn{"blia."}
+            relative{
+                "-1"{"an-uiridh"}
+                "-2"{"a-bhòn-uiridh"}
+                "0"{"am bliadhna"}
+                "1"{"an ath-bhliadhna"}
+            }
             relativeTime{
                 future{
                     few{"an {0} blia."}
@@ -1348,8 +2209,8 @@ gd{
             start{"{0} {1}"}
         }
         unit-short{
-            2{"{0} ‘s {1}"}
-            end{"{0} ‘s {1}"}
+            2{"{0} ’s {1}"}
+            end{"{0} ’s {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

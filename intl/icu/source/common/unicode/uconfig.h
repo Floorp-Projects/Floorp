@@ -135,6 +135,15 @@
 #endif
 
 /**
+ * \def UCONFIG_ENABLE_PLUGINS
+ * Determines whether to enable ICU plugins.
+ * @internal
+ */
+#ifndef UCONFIG_ENABLE_PLUGINS
+#define UCONFIG_ENABLE_PLUGINS 0
+#endif
+
+/**
  * \def U_ENABLE_DYLOAD
  * Whether to enable Dynamic loading in ICU.
  * @internal
@@ -151,7 +160,6 @@
 #ifndef U_CHECK_DYLOAD
 #define U_CHECK_DYLOAD 1
 #endif
-
 
 /**
  * \def U_DEFAULT_SHOW_DRAFT
@@ -437,9 +445,6 @@
  */
 #ifndef UCONFIG_NO_FILTERED_BREAK_ITERATION
 #   define UCONFIG_NO_FILTERED_BREAK_ITERATION 0
-
-
-
 #endif
 
 #endif

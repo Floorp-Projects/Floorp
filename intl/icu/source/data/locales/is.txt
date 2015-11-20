@@ -159,7 +159,7 @@ is{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -172,12 +172,13 @@ is{
                 "d.M.y G",
                 "d.M.y GGGGG",
                 "{1}, {0}",
-                "{1} 'kl.' {0}",
-                "{1} 'kl.' {0}",
+                "{1} 'kl'. {0}",
+                "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d."}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -315,6 +316,10 @@ is{
                 "f.h.",
                 "e.h.",
             }
+            AmPmMarkersAbbr{
+                "f.h.",
+                "e.h.",
+            }
             AmPmMarkersNarrow{
                 "f.",
                 "e.",
@@ -329,13 +334,11 @@ is{
                 "d. MMM y",
                 "d.M.y",
                 "{1}, {0}",
-                "{1} 'kl.' {0}",
-                "{1} 'kl.' {0}",
+                "{1} 'kl'. {0}",
+                "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"hádegi"}
-            NoonMarkerNarrow{"h."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -353,6 +356,8 @@ is{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
@@ -365,6 +370,8 @@ is{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M. y"}
@@ -452,6 +459,62 @@ is{
                         "fimmtudagur",
                         "föstudagur",
                         "laugardagur",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"síðd."}
+                        evening1{"að kv."}
+                        midnight{"miðn."}
+                        morning1{"að morgni"}
+                        night1{"að nóttu"}
+                        noon{"hád."}
+                    }
+                    narrow{
+                        afternoon1{"sd."}
+                        evening1{"kv."}
+                        midnight{"mn."}
+                        morning1{"mrg."}
+                        night1{"n."}
+                        noon{"h."}
+                    }
+                    wide{
+                        afternoon1{"síðdegis"}
+                        evening1{"að kvöldi"}
+                        midnight{"miðnætti"}
+                        morning1{"að morgni"}
+                        night1{"að nóttu"}
+                        noon{"hádegi"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"síðd."}
+                        evening1{"kv."}
+                        midnight{"miðn."}
+                        morning1{"morg."}
+                        night1{"nótt"}
+                        noon{"hád."}
+                    }
+                    narrow{
+                        afternoon1{"sd."}
+                        evening1{"kv."}
+                        midnight{"mn."}
+                        morning1{"mrg."}
+                        night1{"n."}
+                        noon{"hd."}
+                    }
+                    wide{
+                        afternoon1{"eftir hádegi"}
+                        am{"f.h."}
+                        evening1{"kvöld"}
+                        midnight{"miðnætti"}
+                        morning1{"morgunn"}
+                        night1{"nótt"}
+                        noon{"hádegi"}
+                        pm{"e.h."}
                     }
                 }
             }
@@ -737,7 +800,11 @@ is{
             }
         }
         day-narrow{
-            dn{"dagur"}
+            dn{"d."}
+            relative{
+                "-2"{"í fyrradag"}
+                "2"{"eftir tvo daga"}
+            }
             relativeTime{
                 future{
                     one{"+{0} dag"}
@@ -751,6 +818,10 @@ is{
         }
         day-short{
             dn{"dagur"}
+            relative{
+                "-2"{"í fyrradag"}
+                "2"{"eftir tvo daga"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} dag"}
@@ -869,9 +940,9 @@ is{
         }
         mon{
             relative{
-                "-1"{"mánudagur í síðustu viku"}
+                "-1"{"síðasta mánudag"}
                 "0"{"mánudagur í þessari viku"}
-                "1"{"mánudagur í næstu viku"}
+                "1"{"næsta mánudag"}
             }
         }
         mon-narrow{
@@ -883,9 +954,9 @@ is{
         }
         mon-short{
             relative{
-                "-1"{"síðasti mán."}
+                "-1"{"síðasta mán."}
                 "0"{"þessi mán."}
-                "1"{"næstkomandi mán."}
+                "1"{"næsta mán."}
             }
         }
         month{
@@ -908,6 +979,11 @@ is{
         }
         month-narrow{
             dn{"mán."}
+            relative{
+                "-1"{"í síðasta mán."}
+                "0"{"í þessum mán."}
+                "1"{"í næsta mán."}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} mán."}
@@ -921,6 +997,11 @@ is{
         }
         month-short{
             dn{"mán."}
+            relative{
+                "-1"{"í síðasta mán."}
+                "0"{"í þessum mán."}
+                "1"{"í næsta mán."}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} mán."}
@@ -934,6 +1015,11 @@ is{
         }
         quarter{
             dn{"ársfjórðungur"}
+            relative{
+                "-1"{"síðasti ársfjórðungur"}
+                "0"{"þessi ársfjórðungur"}
+                "1"{"næsti ársfjórðungur"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} ársfjórðung"}
@@ -946,7 +1032,12 @@ is{
             }
         }
         quarter-narrow{
-            dn{"ársfjórðungur"}
+            dn{"ársfj."}
+            relative{
+                "-1"{"síðasti ársfj."}
+                "0"{"þessi ársfj."}
+                "1"{"næsti ársfj."}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} ársfj."}
@@ -959,7 +1050,12 @@ is{
             }
         }
         quarter-short{
-            dn{"ársfjórðungur"}
+            dn{"ársfjórð."}
+            relative{
+                "-1"{"síðasti ársfj."}
+                "0"{"þessi ársfj."}
+                "1"{"næsti ársfj."}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} ársfj."}
@@ -1036,9 +1132,9 @@ is{
         }
         sun{
             relative{
-                "-1"{"sunnudagur í síðustu viku"}
+                "-1"{"síðasta sunnudag"}
                 "0"{"sunnudagur í þessari viku"}
-                "1"{"sunnudagur í næstu viku"}
+                "1"{"næsta sunnudag"}
             }
         }
         sun-narrow{
@@ -1052,7 +1148,7 @@ is{
             relative{
                 "-1"{"síðasti sun."}
                 "0"{"þessi sun."}
-                "1"{"næstkomandi sun."}
+                "1"{"næsta sun."}
             }
         }
         thu{
@@ -1078,9 +1174,9 @@ is{
         }
         tue{
             relative{
-                "-1"{"þriðjudagur í síðustu viku"}
+                "-1"{"síðasta þriðjudag"}
                 "0"{"þriðjudagur í þessari viku"}
-                "1"{"þriðjudagur í næstu viku"}
+                "1"{"næsta þriðjudag"}
             }
         }
         tue-narrow{
@@ -1137,7 +1233,12 @@ is{
             }
         }
         week-narrow{
-            dn{"vika"}
+            dn{"v."}
+            relative{
+                "-1"{"í síðustu viku"}
+                "0"{"í þessari viku"}
+                "1"{"í næstu viku"}
+            }
             relativeTime{
                 future{
                     one{"+{0} viku"}
@@ -1151,6 +1252,11 @@ is{
         }
         week-short{
             dn{"vika"}
+            relative{
+                "-1"{"í síðustu viku"}
+                "0"{"í þessari viku"}
+                "1"{"í næstu viku"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} vikur"}
@@ -1185,6 +1291,11 @@ is{
         }
         year-narrow{
             dn{"ár"}
+            relative{
+                "-1"{"á síðasta ári"}
+                "0"{"á þessu ári"}
+                "1"{"á næsta ári"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} ár"}
@@ -1198,6 +1309,11 @@ is{
         }
         year-short{
             dn{"ár"}
+            relative{
+                "-1"{"á síðasta ári"}
+                "0"{"á þessu ári"}
+                "1"{"á næsta ári"}
+            }
             relativeTime{
                 future{
                     one{"eftir {0} ár"}

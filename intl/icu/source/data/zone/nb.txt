@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 nb{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.96"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ nb{
         "Asia:Calcutta"{
             ec{"Kolkata"}
         }
+        "Asia:Chita"{
+            ec{"Chita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choybalsan"}
         }
@@ -824,6 +827,9 @@ nb{
         }
         "Asia:Singapore"{
             ec{"Singapore"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
         }
         "Asia:Taipei"{
             ec{"Taipei"}
@@ -1145,6 +1151,9 @@ nb{
         "Pacific:Auckland"{
             ec{"Auckland"}
         }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
+        }
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
@@ -1279,6 +1288,9 @@ nb{
             ld{"alaskisk sommertid"}
             lg{"alaskisk tid"}
             ls{"alaskisk normaltid"}
+            sd{"AKDT"}
+            sg{"AKT"}
+            ss{"AKST"}
         }
         "meta:Almaty"{
             ld{"Almaty, sommertid"}
@@ -1294,21 +1306,33 @@ nb{
             ld{"sommertid for det sentrale Nord-Amerika"}
             lg{"tidssone for det sentrale Nord-Amerika"}
             ls{"normaltid for det sentrale Nord-Amerika"}
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
         }
         "meta:America_Eastern"{
             ld{"sommertid for den nordamerikanske østkysten"}
             lg{"tidssone for den nordamerikanske østkysten"}
             ls{"normaltid for den nordamerikanske østkysten"}
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
         }
         "meta:America_Mountain"{
             ld{"sommertid for Rocky Mountains (USA)"}
             lg{"tidssone for Rocky Mountains (USA)"}
             ls{"normaltid for Rocky Mountains (USA)"}
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
         }
         "meta:America_Pacific"{
             ld{"sommertid for den nordamerikanske Stillehavskysten"}
             lg{"tidssone for den nordamerikanske Stillehavskysten"}
             ls{"normaltid for den nordamerikanske Stillehavskysten"}
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
         }
         "meta:Anadyr"{
             ld{"Russisk (Anadyr) sommertid"}
@@ -1316,7 +1340,7 @@ nb{
             ls{"Russisk (Anadyr) normaltid"}
         }
         "meta:Apia"{
-            ld{"sommetid for Apia"}
+            ld{"sommertid for Apia"}
             lg{"tidssone for Apia"}
             ls{"normaltid for Apia"}
         }
@@ -1354,6 +1378,9 @@ nb{
             ld{"atlanterhavskystlig sommertid"}
             lg{"atlanterhavskystlig tid"}
             ls{"atlanterhavskystlig standardtid"}
+            sd{"ADT"}
+            sg{"AT"}
+            ss{"AST"}
         }
         "meta:Australia_Central"{
             ld{"sentralaustralsk sommertid"}
@@ -1428,7 +1455,7 @@ nb{
         "meta:China"{
             ld{"kinesisk sommertid"}
             lg{"kinesisk tid"}
-            ls{"kinesisk standardtid"}
+            ls{"kinesisk normaltid"}
         }
         "meta:Choibalsan"{
             ld{"sommertid for Tsjojbalsan"}
@@ -1557,6 +1584,9 @@ nb{
             ld{"sommertid for Hawaii og Aleutene"}
             lg{"tidssone for Hawaii og Aleutene"}
             ls{"normaltid for Hawaii og Aleutene"}
+            sd{"HADT"}
+            sg{"HAT"}
+            ss{"HAST"}
         }
         "meta:Hong_Kong"{
             ld{"sommertid for Hongkong"}

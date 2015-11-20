@@ -34,14 +34,33 @@ yi{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.7.41"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "G y MMMM d, EEEE",
+                "G y MMMM d",
+                "G y MMM d",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             intervalFormats{
                 fallback{"{0} – {1}"}
             }
         }
         gregorian{
+            AmPmMarkers{
+                "פֿאַרמיטאָג",
+                "נאָכמיטאָג",
+            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -51,13 +70,12 @@ yi{
                 "dטן MMMM y",
                 "dטן MMM y",
                 "dd/MM/yy",
+                "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
                 "{1} {0}",
             }
-            NoonMarker{"האַלבערטאָג"}
             appendItems{
                 Timezone{"{1} {0}"}
             }
@@ -72,6 +90,8 @@ yi{
                 GyMMMd{"dטן MMM y G"}
                 Hms{"HH:mm:ss"}
                 MEd{"E, d/M"}
+                MMMEd{"MMM d, E"}
+                MMMd{"MMM d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
@@ -245,7 +265,7 @@ yi{
                         "מיי",
                         "יוני",
                         "יולי",
-                        "אויגוסט",
+                        "אויג",
                         "סעפּ",
                         "אקט",
                         "נאוו",
@@ -275,11 +295,11 @@ yi{
                 "HH:mm:ss",
                 "HH:mm",
                 {
-                    "EEEE, d בMMMM y",
+                    "EEEE, d MMMM y",
                     "hebr",
                 }
                 {
-                    "d בMMMM y",
+                    "d MMMM y",
                     "hebr",
                 }
                 {
@@ -434,8 +454,10 @@ yi{
     }
     fields{
         day{
+            dn{"טאָג"}
             relative{
                 "-1"{"נעכטן"}
+                "0"{"היינט"}
                 "1"{"מארגן"}
             }
             relativeTime{
@@ -450,6 +472,9 @@ yi{
         }
         day-short{
             dn{"טאָג"}
+        }
+        era{
+            dn{"תקופֿה"}
         }
         hour{
             dn{"שעה"}
@@ -470,6 +495,7 @@ yi{
             dn{"מינוט"}
         }
         month{
+            dn{"מאנאַט"}
             relative{
                 "-1"{"פֿאַרגאנגענעם חודש"}
                 "0"{"דעם חודש"}
@@ -521,14 +547,11 @@ yi{
         second-short{
             dn{"סעקונדע"}
         }
-        sun{
-            relative{
-                "1"{"קומענדיקן זונטיק"}
-            }
-        }
         week{
             dn{"וואך"}
             relative{
+                "-1"{"last week"}
+                "0"{"this week"}
                 "1"{"איבער אַכט טאָג"}
             }
         }
@@ -542,6 +565,7 @@ yi{
             dn{"טאָג אין דער וואך"}
         }
         year{
+            dn{"יאָר"}
             relative{
                 "-1"{"פֿאַראַיאָר"}
                 "0"{"הײַ יאָר"}
@@ -590,5 +614,16 @@ yi{
     }
     layout{
         characters{"right-to-left"}
+    }
+    listPattern{
+        standard{
+            2{"{0} און {1}"}
+            end{"{0} און {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        metric{"מעטריש"}
     }
 }

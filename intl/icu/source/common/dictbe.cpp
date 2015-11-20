@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * Copyright (C) 2006-2014, International Business Machines Corporation
+ * Copyright (C) 2006-2015, International Business Machines Corporation
  * and others. All Rights Reserved.
  *******************************************************************************
  */
@@ -1138,12 +1138,12 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
         return 0;
     }
 
-    // UnicodeString version of input UText, NFKC normalized in necessary.
-    UnicodeString *inString;
+    // UnicodeString version of input UText, NFKC normalized if necessary.
+    UnicodeString inString;
 
     // inputMap[inStringIndex] = corresponding native index from UText inText.
     // If NULL then mapping is 1:1
-    UVector32     *inputMap    = NULL;
+    LocalPointer<UVector32>     inputMap;
 
     UErrorCode     status      = U_ZERO_ERROR;
 
@@ -1153,12 +1153,12 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
          inText->chunkNativeStart <= rangeStart &&
          inText->chunkNativeLimit >= rangeEnd   &&
          inText->nativeIndexingLimit >= rangeEnd - inText->chunkNativeStart) {
-         
-        // Input UTtxt is in one contiguous UTF-16 chunk.
-        // Use Read-only aliasing UnicodeString constructor on it.
-        inString = new UnicodeString(FALSE, 
-                              inText->chunkContents + rangeStart - inText->chunkNativeStart,
-                              rangeEnd - rangeStart);
+
+        // Input UText is in one contiguous UTF-16 chunk.
+        // Use Read-only aliasing UnicodeString.
+        inString.setTo(FALSE,
+                       inText->chunkContents + rangeStart - inText->chunkNativeStart,
+                       rangeEnd - rangeStart);
     } else {
         // Copy the text from the original inText (UText) to inString (UnicodeString).
         // Create a map from UnicodeString indices -> UText offsets.
@@ -1168,14 +1168,16 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
         if (limit > utext_nativeLength(inText)) {
             limit = utext_nativeLength(inText);
         }
-        inString = new UnicodeString;
-        inputMap = new UVector32(status);
+        inputMap.adoptInsteadAndCheckErrorCode(new UVector32(status), status);
+        if (U_FAILURE(status)) {
+            return 0;
+        }
         while (utext_getNativeIndex(inText) < limit) {
             int32_t nativePosition = utext_getNativeIndex(inText);
             UChar32 c = utext_next32(inText);
             U_ASSERT(c != U_SENTINEL);
-            inString->append(c);
-            while (inputMap->size() < inString->length()) {
+            inString.append(c);
+            while (inputMap->size() < inString.length()) {
                 inputMap->addElement(nativePosition, status);
             }
         }
@@ -1183,67 +1185,70 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
     }
 
 
-    if (!nfkcNorm2->isNormalized(*inString, status)) {
-        UnicodeString *normalizedInput = new UnicodeString();   
+    if (!nfkcNorm2->isNormalized(inString, status)) {
+        UnicodeString normalizedInput;
         //  normalizedMap[normalizedInput position] ==  original UText position.
-        UVector32 *normalizedMap = new UVector32(status);
+        LocalPointer<UVector32> normalizedMap(new UVector32(status), status);
         if (U_FAILURE(status)) {
             return 0;
         }
         
         UnicodeString fragment;
         UnicodeString normalizedFragment;
-        for (int32_t srcI = 0; srcI < inString->length();) {                 // Once per normalization chunk
+        for (int32_t srcI = 0; srcI < inString.length();) {  // Once per normalization chunk
             fragment.remove();
             int32_t fragmentStartI = srcI;
-            UChar32 c = inString->char32At(srcI);
+            UChar32 c = inString.char32At(srcI);
             for (;;) {
                 fragment.append(c);
-                srcI = inString->moveIndex32(srcI, 1);
-                if (srcI == inString->length()) {
+                srcI = inString.moveIndex32(srcI, 1);
+                if (srcI == inString.length()) {
                     break;
                 }
-                c = inString->char32At(srcI);
+                c = inString.char32At(srcI);
                 if (nfkcNorm2->hasBoundaryBefore(c)) {
                     break;
                 }
             }
             nfkcNorm2->normalize(fragment, normalizedFragment, status);
-            normalizedInput->append(normalizedFragment);
+            normalizedInput.append(normalizedFragment);
 
             // Map every position in the normalized chunk to the start of the chunk
             //   in the original input.
-            int32_t fragmentOriginalStart = inputMap? inputMap->elementAti(fragmentStartI) : fragmentStartI+rangeStart;
-            while (normalizedMap->size() < normalizedInput->length()) {
+            int32_t fragmentOriginalStart = inputMap.isValid() ?
+                    inputMap->elementAti(fragmentStartI) : fragmentStartI+rangeStart;
+            while (normalizedMap->size() < normalizedInput.length()) {
                 normalizedMap->addElement(fragmentOriginalStart, status);
                 if (U_FAILURE(status)) {
                     break;
                 }
             }
         }
-        U_ASSERT(normalizedMap->size() == normalizedInput->length());
-        int32_t nativeEnd = inputMap? inputMap->elementAti(inString->length()) : inString->length()+rangeStart;
+        U_ASSERT(normalizedMap->size() == normalizedInput.length());
+        int32_t nativeEnd = inputMap.isValid() ?
+                inputMap->elementAti(inString.length()) : inString.length()+rangeStart;
         normalizedMap->addElement(nativeEnd, status);
 
-        delete inputMap;
-        inputMap = normalizedMap;
-        delete inString;
-        inString = normalizedInput;
+        inputMap.moveFrom(normalizedMap);
+        inString.moveFrom(normalizedInput);
     }
 
-    int32_t numCodePts = inString->countChar32();
-    if (numCodePts != inString->length()) {
+    int32_t numCodePts = inString.countChar32();
+    if (numCodePts != inString.length()) {
         // There are supplementary characters in the input.
         // The dictionary will produce boundary positions in terms of code point indexes,
         //   not in terms of code unit string indexes.
         // Use the inputMap mechanism to take care of this in addition to indexing differences
         //    from normalization and/or UTF-8 input.
-        UBool hadExistingMap = (inputMap != NULL);
+        UBool hadExistingMap = inputMap.isValid();
         if (!hadExistingMap) {
-            inputMap = new UVector32(status);
+            inputMap.adoptInsteadAndCheckErrorCode(new UVector32(status), status);
+            if (U_FAILURE(status)) {
+                return 0;
+            }
         }
         int32_t cpIdx = 0;
-        for (int32_t cuIdx = 0; ; cuIdx = inString->moveIndex32(cuIdx, 1)) {
+        for (int32_t cuIdx = 0; ; cuIdx = inString.moveIndex32(cuIdx, 1)) {
             U_ASSERT(cuIdx >= cpIdx);
             if (hadExistingMap) {
                 inputMap->setElementAt(inputMap->elementAti(cuIdx), cpIdx);
@@ -1251,7 +1256,7 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
                 inputMap->addElement(cuIdx+rangeStart, status);
             }
             cpIdx++;
-            if (cuIdx == inString->length()) {
+            if (cuIdx == inString.length()) {
                break;
             }
         }
@@ -1280,7 +1285,7 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
     lengths.setSize(numCodePts);
 
     UText fu = UTEXT_INITIALIZER;
-    utext_openUnicodeString(&fu, inString, &status);
+    utext_openUnicodeString(&fu, &inString, &status);
 
     // Dynamic programming to find the best segmentation.
 
@@ -1288,7 +1293,7 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
     //                ix is the corresponding string (code unit) index.
     //    They differ when the string contains supplementary characters.
     int32_t ix = 0;
-    for (int32_t i = 0;  i < numCodePts;  ++i, ix = inString->moveIndex32(ix, 1)) {
+    for (int32_t i = 0;  i < numCodePts;  ++i, ix = inString.moveIndex32(ix, 1)) {
         if ((uint32_t)bestSnlp.elementAti(i) == kuint32max) {
             continue;
         }
@@ -1306,7 +1311,7 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
         // Exclude Korean characters from this treatment, as they should be left
         // together by default.
         if ((count == 0 || lengths.elementAti(0) != 1) &&
-                !fHangulWordSet.contains(inString->char32At(ix))) {
+                !fHangulWordSet.contains(inString.char32At(ix))) {
             values.setElementAt(maxSnlp, count);   // 255
             lengths.setElementAt(1, count++);
         }
@@ -1327,14 +1332,14 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
         // specified in the katakanaCost table according to its length.
 
         bool is_prev_katakana = false;
-        bool is_katakana = isKatakana(inString->char32At(ix));
+        bool is_katakana = isKatakana(inString.char32At(ix));
         int32_t katakanaRunLength = 1;
         if (!is_prev_katakana && is_katakana) {
-            int32_t j = inString->moveIndex32(ix, 1);
+            int32_t j = inString.moveIndex32(ix, 1);
             // Find the end of the continuous run of Katakana characters
-            while (j < inString->length() && katakanaRunLength < kMaxKatakanaGroupLength &&
-                    isKatakana(inString->char32At(j))) {
-                j = inString->moveIndex32(j, 1);
+            while (j < inString.length() && katakanaRunLength < kMaxKatakanaGroupLength &&
+                    isKatakana(inString.char32At(j))) {
+                j = inString.moveIndex32(j, 1);
                 katakanaRunLength++;
             }
             if (katakanaRunLength < kMaxKatakanaGroupLength) {
@@ -1380,14 +1385,14 @@ CjkBreakEngine::divideUpDictionaryRange( UText *inText,
     // while reversing t_boundary and pushing values to foundBreaks.
     for (int32_t i = numBreaks-1; i >= 0; i--) {
         int32_t cpPos = t_boundary.elementAti(i);
-        int32_t utextPos =  inputMap ? inputMap->elementAti(cpPos) : cpPos + rangeStart;
+        int32_t utextPos =  inputMap.isValid() ? inputMap->elementAti(cpPos) : cpPos + rangeStart;
         // Boundaries are added to foundBreaks output in ascending order.
         U_ASSERT(foundBreaks.size() == 0 ||foundBreaks.peeki() < utextPos);
         foundBreaks.push(utextPos, status);
     }
 
-    delete inString;
-    delete inputMap;
+    // inString goes out of scope
+    // inputMap goes out of scope
     return numBreaks;
 }
 #endif

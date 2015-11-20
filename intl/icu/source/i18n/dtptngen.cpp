@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2007-2014, International Business Machines Corporation and
+* Copyright (C) 2007-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -34,8 +34,6 @@
 #include "hash.h"
 #include "uresimp.h"
 #include "dtptngen_impl.h"
-#include "shareddatetimepatterngenerator.h"
-#include "unifiedcache.h"
 
 #if U_CHARSET_FAMILY==U_EBCDIC_FAMILY
 /**
@@ -125,28 +123,6 @@ static const UChar *ures_a_getNextString(UResourceBundleAIterator *aiter, int32_
 
 
 U_NAMESPACE_BEGIN
-
-SharedDateTimePatternGenerator::~SharedDateTimePatternGenerator() {
-    delete ptr;
-}
-
-template<> U_I18N_API
-const SharedDateTimePatternGenerator *LocaleCacheKey<SharedDateTimePatternGenerator>::createObject(
-        const void * /*creationContext*/, UErrorCode &status) const {
-    DateTimePatternGenerator *fmt = DateTimePatternGenerator::internalMakeInstance(fLoc, status);
-    if (U_FAILURE(status)) {
-        return NULL;
-    }
-    SharedDateTimePatternGenerator *result = new SharedDateTimePatternGenerator(fmt);
-    if (result == NULL) {
-        delete fmt;
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return NULL;
-    }
-    result->addRef();
-    return result;
-}
-
 
 // *****************************************************************************
 // class DateTimePatternGenerator
@@ -268,32 +244,12 @@ DateTimePatternGenerator::createInstance(UErrorCode& status) {
 
 DateTimePatternGenerator* U_EXPORT2
 DateTimePatternGenerator::createInstance(const Locale& locale, UErrorCode& status) {
-    const SharedDateTimePatternGenerator *shared = NULL;
-    UnifiedCache::getByLocale(locale, shared, status);
     if (U_FAILURE(status)) {
         return NULL;
     }
-    DateTimePatternGenerator *result = new DateTimePatternGenerator(**shared);
-    shared->removeRef();
-    if (result == NULL) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-    }
-    return result;
-}
-
-
-DateTimePatternGenerator* U_EXPORT2
-DateTimePatternGenerator::internalMakeInstance(const Locale& locale, UErrorCode& status) {
-    DateTimePatternGenerator *result = new DateTimePatternGenerator(locale, status);
-    if (result == NULL) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return NULL;
-    }
-    if (U_FAILURE(status)) {
-        delete result;
-        return NULL;
-    }
-    return result;
+    LocalPointer<DateTimePatternGenerator> result(
+            new DateTimePatternGenerator(locale, status), status);
+    return U_SUCCESS(status) ? result.orphan() : NULL;
 }
 
 DateTimePatternGenerator*  U_EXPORT2
@@ -441,16 +397,23 @@ DateTimePatternGenerator::initData(const Locale& locale, UErrorCode &status) {
 } // DateTimePatternGenerator::initData
 
 UnicodeString
-DateTimePatternGenerator::getSkeleton(const UnicodeString& pattern, UErrorCode&
-/*status*/) {
-    dtMatcher->set(pattern, fp);
-    return dtMatcher->getSkeletonPtr()->getSkeleton();
+DateTimePatternGenerator::staticGetSkeleton(
+        const UnicodeString& pattern, UErrorCode& /*status*/) {
+    FormatParser fp;
+    DateTimeMatcher matcher;
+    PtnSkeleton localSkeleton;
+    matcher.set(pattern, &fp, localSkeleton);
+    return localSkeleton.getSkeleton();
 }
 
 UnicodeString
-DateTimePatternGenerator::getBaseSkeleton(const UnicodeString& pattern, UErrorCode& /*status*/) {
-    dtMatcher->set(pattern, fp);
-    return dtMatcher->getSkeletonPtr()->getBaseSkeleton();
+DateTimePatternGenerator::staticGetBaseSkeleton(
+        const UnicodeString& pattern, UErrorCode& /*status*/) {
+    FormatParser fp;
+    DateTimeMatcher matcher;
+    PtnSkeleton localSkeleton;
+    matcher.set(pattern, &fp, localSkeleton);
+    return localSkeleton.getBaseSkeleton();
 }
 
 void
@@ -1884,7 +1847,7 @@ FormatParser::getCanonicalIndex(const UnicodeString& s, UBool strict) {
 }
 
 UBool
-FormatParser::isQuoteLiteral(const UnicodeString& s) const {
+FormatParser::isQuoteLiteral(const UnicodeString& s) {
     return (UBool)(s.charAt(0)==SINGLE_QUOTE);
 }
 

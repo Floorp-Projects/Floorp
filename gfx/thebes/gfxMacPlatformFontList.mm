@@ -1092,18 +1092,19 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 static const char kSystemFont_system[] = "-apple-system";
 
 gfxFontFamily*
-gfxMacPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
+gfxMacPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
+                                   gfxFloat aDevToCssSize)
 {
     // search for special system font name, -apple-system
     if (aFamily.EqualsLiteral(kSystemFont_system)) {
         if (mUseSizeSensitiveSystemFont &&
-            aStyle && aStyle->size >= kTextDisplayCrossover) {
+            aStyle && (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover) {
             return mSystemDisplayFontFamily;
         }
         return mSystemTextFontFamily;
     }
 
-    return gfxPlatformFontList::FindFamily(aFamily, aStyle);
+    return gfxPlatformFontList::FindFamily(aFamily, aStyle, aDevToCssSize);
 }
 
 void

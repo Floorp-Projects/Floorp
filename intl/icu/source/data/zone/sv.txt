@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 sv{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ sv{
         "Asia:Calcutta"{
             ec{"Kolkata"}
         }
+        "Asia:Chita"{
+            ec{"Tjita"}
+        }
         "Asia:Choibalsan"{
             ec{"Tjojbalsan"}
         }
@@ -825,6 +828,9 @@ sv{
         "Asia:Singapore"{
             ec{"Singapore"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
         "Asia:Taipei"{
             ec{"Taipei"}
         }
@@ -844,7 +850,7 @@ sv{
             ec{"Tokyo"}
         }
         "Asia:Ulaanbaatar"{
-            ec{"Ulan Bator"}
+            ec{"Ulaanbaatar"}
         }
         "Asia:Urumqi"{
             ec{"Ürümqi"}
@@ -1144,6 +1150,9 @@ sv{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}
@@ -1466,9 +1475,9 @@ sv{
             ls{"östtimorisk tid"}
         }
         "meta:Easter"{
-            ld{"Påsköns sommartid"}
-            lg{"Påsköns tid"}
-            ls{"Påsköns normaltid"}
+            ld{"Påskön, sommartid"}
+            lg{"Påskötid"}
+            ls{"Påskön, normaltid"}
         }
         "meta:Ecuador"{
             ls{"ecuadoriansk tid"}
@@ -1501,9 +1510,9 @@ sv{
             ss{"WET"}
         }
         "meta:Falkland"{
-            ld{"Falklandsöarnas sommartid"}
+            ld{"Falklandsöarna, sommartid"}
             lg{"Falklandsöarnas tid"}
-            ls{"Falklandsöarnas normaltid"}
+            ls{"Falklandsöarna, normaltid"}
         }
         "meta:Fiji"{
             ld{"Fiji, sommartid"}
@@ -1678,9 +1687,9 @@ sv{
             ls{"Mawsontid"}
         }
         "meta:Mexico_Northwest"{
-            ld{"nordvästra Mexiko, sommartid"}
-            lg{"nordvästra Mexiko-tid"}
-            ls{"nordvästra Mexiko, normaltid"}
+            ld{"nordvästmexikansk sommartid"}
+            lg{"nordvästmexikansk tid"}
+            ls{"nordvästmexikansk normaltid"}
         }
         "meta:Mexico_Pacific"{
             ld{"mexikansk stillahavstid, sommartid"}

@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ee{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidzan nutomegaƒoƒome"}
@@ -1163,49 +1163,123 @@ ee{
             ss{"CAT"}
         }
         "meta:Africa_Eastern"{
-            ls{"Ɣedzeƒe Afrika gaƒoƒome"}
+            ls{"Ɣedzeƒe Africa gaƒoƒome"}
             ss{"EAT"}
         }
         "meta:Africa_Southern"{
-            ls{"Anyiehe Afrika gaƒoƒome"}
+            ls{"Anyiehe Africa gaƒoƒome"}
             ss{"SAST"}
         }
         "meta:Africa_Western"{
-            ld{"Ɣetoɖoƒe Afrika dzomeŋɔli gaƒoƒome"}
-            lg{"Ɣetoɖoƒe Afrika gaƒoƒome"}
+            ld{"Ɣetoɖoƒe Africa ŋkekeme gaƒoƒome"}
+            lg{"Ɣetoɖoƒe Africa gaƒoƒome"}
             ls{"Ɣetoɖoƒe Afrika gaƒoƒoɖoanyime"}
             sd{"WAST"}
             sg{"WAT"}
             ss{"WAT"}
         }
         "meta:America_Central"{
-            ld{"Titina Amerika ŋkekeme gaƒoƒome"}
-            lg{"Titina Amerika gaƒoƒome"}
-            ls{"Titina Amerika gaƒoƒoɖoanyime"}
+            ld{"Titina America ŋkekeme gaƒoƒome"}
+            lg{"Titina America gaƒoƒome"}
+            ls{"Titina America gaƒoƒoɖoanyime"}
         }
         "meta:America_Eastern"{
-            ld{"Ɣedzeƒe Amerika ŋkekeme gaƒoƒome"}
-            lg{"Ɣedzeƒe Amerika gaƒoƒome"}
-            ls{"Ɣedzeƒe Amerika gaƒoƒoɖoanyime"}
+            ld{"Ɣedzeƒe America ŋkekeme gaƒoƒome"}
+            lg{"Ɣedzeƒe America gaƒoƒome"}
+            ls{"Ɣedzeƒe America gaƒoƒoɖoanyime"}
         }
         "meta:America_Mountain"{
-            ld{"Amerika Todzidukɔwo ƒe ŋkekme gaƒoƒome"}
-            lg{"Amerika Todzidukɔwo ƒe gaƒoƒome"}
-            ls{"Amerika Todzidukɔwo ƒe gaƒoƒoɖoanyime"}
+            ld{"America Todzidukɔwo ƒe ŋkekme gaƒoƒome"}
+            lg{"America Todzidukɔwo ƒe gaƒoƒome"}
+            ls{"America Todzidukɔwo ƒe gaƒoƒoɖoanyime"}
         }
         "meta:America_Pacific"{
-            ld{"Amerika Pasifik ŋkekeme gaƒoƒome"}
-            lg{"Amerika Pasifik gaƒoƒome"}
-            ls{"Amerika Pasifik gaƒoƒoɖoanyime"}
+            ld{"Pacific ŋkekme gaƒoƒome"}
+            lg{"Pacific gaƒoƒome"}
+            ls{"Pacific gaƒoƒoɖoanyime"}
+        }
+        "meta:Arabian"{
+            ld{"Arabia ŋkekeme gaƒoƒome"}
+            lg{"Arabia gaƒoƒome"}
+            ls{"Arabia gaƒoƒoɖoanyime"}
         }
         "meta:Atlantic"{
             ld{"Atlantic ŋkekeme gaƒoƒome"}
             lg{"Atlantic gaƒoƒome"}
             ls{"Atlantic gaƒoƒoɖoanyime"}
         }
+        "meta:Australia_Central"{
+            ld{"Titina Australia ŋkekeme gaƒoƒome"}
+            lg{"Titina Australia gaƒoƒome"}
+            ls{"Titina Australia gaƒoƒoɖoanyime"}
+        }
+        "meta:Australia_CentralWestern"{
+            ld{"Australia ɣetoɖofe ŋkekeme gaƒoƒome"}
+            lg{"Australia ɣetoɖofe gaƒoƒome"}
+            ls{"Australia ɣetoɖofe gaƒoƒoɖoanyime"}
+        }
+        "meta:Australia_Eastern"{
+            ld{"Ɣedzeƒe Australia ŋkekeme gaƒoƒome"}
+            lg{"Ɣedzeƒe Australia gaƒoƒome"}
+            ls{"Ɣedzeƒe Australia gaƒoƒoɖoanyime"}
+        }
+        "meta:Australia_Western"{
+            ld{"Ɣetoɖoƒe Australia ŋkekeme gaƒoƒome"}
+            lg{"Ɣetoɖoƒe Australia gaƒoƒome"}
+            ls{"Ɣetoɖoƒe Australia gaƒoƒoɖoanyime"}
+        }
+        "meta:China"{
+            ld{"China ŋkekeme gaƒoƒome"}
+            lg{"China gaƒoƒome"}
+            ls{"China gaƒoƒoɖoanyime"}
+        }
+        "meta:Europe_Central"{
+            ld{"Titina Europe ŋkekeme gaƒoƒome"}
+            lg{"Titina Europe gaƒoƒome"}
+            ls{"Titina Europe gaƒoƒoɖoanyime"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"Ɣedzeƒe Europe ŋkekeme gaƒoƒome"}
+            lg{"Ɣedzeƒe Europe gaƒoƒome"}
+            ls{"Ɣedzeƒe Europe gaƒoƒoɖoanyime"}
+        }
+        "meta:Europe_Western"{
+            ld{"Ɣetoɖoƒe Europe ŋkekeme gaƒoƒome"}
+            lg{"Ɣetoɖoƒe Europe gaƒoƒome"}
+            ls{"Ɣetoɖoƒe Europe gaƒoƒoɖoanyime"}
+        }
+        "meta:GMT"{
+            ls{"Greenwich gaƒoƒome"}
+        }
+        "meta:Israel"{
+            ld{"Israel ŋkekeme gaƒoƒome"}
+            lg{"Israel gaƒoƒome"}
+            ls{"Israel gaƒoƒoɖoanyime"}
+        }
+        "meta:Japan"{
+            ld{"Japan ŋkekeme gaƒoƒome"}
+            lg{"Japan gaƒoƒome"}
+            ls{"Japan gaƒoƒoɖanyime"}
+        }
+        "meta:Korea"{
+            ld{"Korea ŋkekeme gaƒoƒome"}
+            lg{"Korea gaƒoƒome"}
+            ls{"Korea gaƒoƒoɖoanyime"}
+        }
+        "meta:Moscow"{
+            ld{"Moscow ŋkekeme gaƒoƒome"}
+            lg{"Moscow gaƒoƒome"}
+            ls{"Moscow gaƒoƒoɖoanyime"}
+        }
         "meta:Suriname"{
             ls{"Suriname gaƒoƒome"}
         }
-        regionFormat{"{0} gaƒoƒo"}
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
+        hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"{0}"}
+        regionFormatDaylight{"{0}"}
+        regionFormatStandard{"{0}"}
     }
 }

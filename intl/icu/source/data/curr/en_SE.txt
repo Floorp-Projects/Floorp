@@ -1,0 +1,18 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/en_SE.xml
+// *
+// ***************************************************************************
+en_SE{
+    %%Parent{"en_150"}
+    Currencies{
+        SEK{
+            "kr",
+            "Swedish Krona",
+        }
+    }
+    Version{"2.1.19.69"}
+}

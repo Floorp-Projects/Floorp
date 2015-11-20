@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2000, International Business Machines
+*   Copyright (C) 2000-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -60,8 +60,15 @@ u_parseArgs(int argc, char* argv[],
                             option->value=argv[++i];
                         } else if(option->hasArg==UOPT_REQUIRES_ARG) {
                             /* there is no argument, but one is required: return with error */
+                            option->doesOccur=0;
                             return -i;
                         }
+                    }
+
+                    if(option->optionFn!=NULL && option->optionFn(option->context, option)<0) {
+                        /* the option function was called and returned an error */
+                        option->doesOccur=0;
+                        return -i;
                     }
                 }
             } else {
@@ -95,19 +102,21 @@ u_parseArgs(int argc, char* argv[],
                             break;
                         } else if(option->hasArg==UOPT_REQUIRES_ARG) {
                             /* there is no argument, but one is required: return with error */
+                            option->doesOccur=0;
                             return -i;
                         }
+                    }
+
+                    if(option->optionFn!=NULL && option->optionFn(option->context, option)<0) {
+                        /* the option function was called and returned an error */
+                        option->doesOccur=0;
+                        return -i;
                     }
 
                     /* get the next option letter */
                     option=NULL;
                     c=*arg++;
                 } while(c!=0);
-            }
-
-            if(option!=0 && option->optionFn!=0 && option->optionFn(option->context, option)<0) {
-                /* the option function was called and returned an error */
-                return -i;
             }
 
             /* go to next argv[] */

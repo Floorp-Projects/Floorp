@@ -15,6 +15,7 @@ keyTypeData:table(nofallback){
     }
     keyMap{
         calendar{"ca"}
+        cf{""}
         colalternate{"ka"}
         colbackwards{"kb"}
         colcasefirst{"kf"}
@@ -26,8 +27,11 @@ keyTypeData:table(nofallback){
         colreorder{"kr"}
         colstrength{"ks"}
         currency{"cu"}
+        fw{""}
+        hours{"hc"}
         kv{""}
         numbers{"nu"}
+        sd{""}
         timezone{"tz"}
         va{""}
         variabletop{"vt"}
@@ -58,6 +62,10 @@ keyTypeData:table(nofallback){
             japanese{""}
             persian{""}
             roc{""}
+        }
+        cf{
+            account{""}
+            standard{""}
         }
         colalternate{
             non-ignorable{"noignore"}
@@ -418,6 +426,21 @@ keyTypeData:table(nofallback){
             zwl{""}
             zwr{""}
         }
+        fw{
+            fri{""}
+            mon{""}
+            sat{""}
+            sun{""}
+            thu{""}
+            tue{""}
+            wed{""}
+        }
+        hours{
+            h11{""}
+            h12{""}
+            h23{""}
+            h24{""}
+        }
         kv{
             currency{""}
             punct{""}
@@ -425,6 +448,7 @@ keyTypeData:table(nofallback){
             symbol{""}
         }
         numbers{
+            ahom{""}
             arab{""}
             arabext{""}
             armn{""}
@@ -434,6 +458,7 @@ keyTypeData:table(nofallback){
             brah{""}
             cakm{""}
             cham{""}
+            cyrl{""}
             deva{""}
             ethi{""}
             finance{""}
@@ -450,6 +475,7 @@ keyTypeData:table(nofallback){
             hant{""}
             hantfin{""}
             hebr{""}
+            hmng{""}
             java{""}
             jpan{""}
             jpanfin{""}
@@ -462,11 +488,19 @@ keyTypeData:table(nofallback){
             latn{""}
             lepc{""}
             limb{""}
+            mathbold{""}
+            mathdbl{""}
+            mathmono{""}
+            mathsanb{""}
+            mathsans{""}
             mlym{""}
+            modi{""}
             mong{""}
+            mroo{""}
             mtei{""}
             mymr{""}
             mymrshan{""}
+            mymrtlng{""}
             native{""}
             nkoo{""}
             olck{""}
@@ -476,6 +510,8 @@ keyTypeData:table(nofallback){
             romanlow{""}
             saur{""}
             shrd{""}
+            sind{""}
+            sinh{""}
             sora{""}
             sund{""}
             takr{""}
@@ -485,8 +521,13 @@ keyTypeData:table(nofallback){
             telu{""}
             thai{""}
             tibt{""}
+            tirh{""}
             traditional{"traditio"}
             vaii{""}
+            wara{""}
+        }
+        sd{
+            SUBDIVISION_CODE{""}
         }
         timezone:alias{"/ICUDATA/timezoneTypes/typeMap/timezone"}
         va{

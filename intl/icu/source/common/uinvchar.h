@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1999-2010, International Business Machines
+*   Copyright (C) 1999-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -21,6 +21,9 @@
 #define __UINVCHAR_H__
 
 #include "unicode/utypes.h"
+#ifdef __cplusplus
+#include "unicode/unistr.h"
+#endif
 
 /**
  * Check if a char string only contains invariant characters.
@@ -47,6 +50,22 @@ uprv_isInvariantString(const char *s, int32_t length);
  */
 U_INTERNAL UBool U_EXPORT2
 uprv_isInvariantUString(const UChar *s, int32_t length);
+
+#ifdef __cplusplus
+
+/**
+ * Check if a UnicodeString only contains invariant characters.
+ * See utypes.h for details.
+ *
+ * @param s Input string.
+ * @return TRUE if s contains only invariant characters.
+ */
+U_INTERNAL inline UBool U_EXPORT2
+uprv_isInvariantUnicodeString(const icu::UnicodeString &s) {
+    return uprv_isInvariantUString(s.getBuffer(), s.length());
+}
+
+#endif  /* __cplusplus */
 
 /**
  * \def U_UPPER_ORDINAL

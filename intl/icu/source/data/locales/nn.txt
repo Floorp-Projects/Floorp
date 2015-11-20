@@ -32,7 +32,7 @@ nn{
             }
         }
     }
-    Version{"2.1.10.42"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -196,7 +196,7 @@ nn{
                 "dd.MM.y",
                 "{1}, {0}",
                 "{1} {0}",
-                "{1} 'kl.' {0}",
+                "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
@@ -344,7 +344,7 @@ nn{
                 yMMMEd{
                     M{"E d. MMM–E d. MMM y"}
                     d{"E d.–E d. MMM y"}
-                    y{"E d. MMM y–E d. MMM"}
+                    y{"E d. MMM y–E d. MMM y"}
                 }
                 yMMMM{
                     M{"MMMM–MMMM y"}

@@ -7,18 +7,20 @@
 // *
 // ***************************************************************************
 kn{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[normalization on][reorder Knda Deva Beng Guru Gujr Orya Taml Telu Mlym Sinh]"
+                "[normalization on]"
+                "[reorder Knda Deva Beng Guru Gujr Orya Taml Telu Mlym Sinh]"
                 "&ಔ<ಂ<ಃ<ೱ<ೲ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         traditional{
             Sequence{
-                "[normalization on][reorder Knda Deva Beng Guru Gujr Orya Taml Telu Mlym Sinh]"
+                "[normalization on]"
+                "[reorder Knda Deva Beng Guru Gujr Orya Taml Telu Mlym Sinh]"
                 "&ಔ<ಂ<ಃ<ೱ<ೲ<ಕ್<ಖ್<ಗ್<ಘ್<ಙ್<ಚ್<ಛ್<ಜ್<ಝ್<ಞ್<ಟ್<ಠ್<ಡ್<ಢ್<ಣ್<ತ್<ಥ್<ದ್<ಧ್<ನ್<ಪ್<ಫ್<ಬ್<ಭ್"
                 "<ಮ್<ಯ್<ರ್<ಱ್<ಲ್<ವ್<ಶ್<ಷ್<ಸ್<ಹ್<ಳ್<ೞ್"
                 "&ಕ್ಅ=ಕ"
@@ -655,7 +657,7 @@ kn{
                 "&ಫೋ<<<ಫ಼ೋ"
                 "&ಫೌ<<<ಫ಼ೌ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

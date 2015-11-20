@@ -265,43 +265,41 @@ GetIndexFromSelectionType(SelectionType aType)
 {
     switch (aType)
     {
-    case nsISelectionController::SELECTION_NORMAL: return 0; break;
-    case nsISelectionController::SELECTION_SPELLCHECK: return 1; break;
-    case nsISelectionController::SELECTION_IME_RAWINPUT: return 2; break;
-    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT: return 3; break;
-    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT: return 4; break;
-    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
-    case nsISelectionController::SELECTION_ACCESSIBILITY: return 6; break;
-    case nsISelectionController::SELECTION_FIND: return 7; break;
-    case nsISelectionController::SELECTION_URLSECONDARY: return 8; break;
-    case nsISelectionController::SELECTION_URLSTRIKEOUT: return 9; break;
+    case nsISelectionController::SELECTION_NORMAL: return 0;
+    case nsISelectionController::SELECTION_SPELLCHECK: return 1;
+    case nsISelectionController::SELECTION_IME_RAWINPUT: return 2;
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT: return 3;
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT: return 4;
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5;
+    case nsISelectionController::SELECTION_ACCESSIBILITY: return 6;
+    case nsISelectionController::SELECTION_FIND: return 7;
+    case nsISelectionController::SELECTION_URLSECONDARY: return 8;
+    case nsISelectionController::SELECTION_URLSTRIKEOUT: return 9;
     default:
-      return -1; break;
+      return -1;
     }
     /* NOTREACHED */
-    return 0;
 }
 
-static SelectionType 
+static SelectionType
 GetSelectionTypeFromIndex(int8_t aIndex)
 {
   switch (aIndex)
   {
-    case 0: return nsISelectionController::SELECTION_NORMAL; break;
-    case 1: return nsISelectionController::SELECTION_SPELLCHECK; break;
-    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT; break;
-    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT; break;
-    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT; break;
-    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT; break;
-    case 6: return nsISelectionController::SELECTION_ACCESSIBILITY; break;
-    case 7: return nsISelectionController::SELECTION_FIND; break;
-    case 8: return nsISelectionController::SELECTION_URLSECONDARY; break;
-    case 9: return nsISelectionController::SELECTION_URLSTRIKEOUT; break;
+    case 0: return nsISelectionController::SELECTION_NORMAL;
+    case 1: return nsISelectionController::SELECTION_SPELLCHECK;
+    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT;
+    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
+    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
+    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
+    case 6: return nsISelectionController::SELECTION_ACCESSIBILITY;
+    case 7: return nsISelectionController::SELECTION_FIND;
+    case 8: return nsISelectionController::SELECTION_URLSECONDARY;
+    case 9: return nsISelectionController::SELECTION_URLSTRIKEOUT;
     default:
-      return nsISelectionController::SELECTION_NORMAL; break;
+      return nsISelectionController::SELECTION_NORMAL;
   }
   /* NOTREACHED */
-  return 0;
 }
 
 /*
@@ -5669,7 +5667,6 @@ Selection::GetSelectionAnchorGeometry(SelectionRegion aRegion, nsRect* aRect)
     case nsISelectionController::SELECTION_ANCHOR_REGION:
     case nsISelectionController::SELECTION_FOCUS_REGION:
       return GetSelectionEndPointGeometry(aRegion, aRect);
-      break;
     case nsISelectionController::SELECTION_WHOLE_SELECTION:
       break;
     default:

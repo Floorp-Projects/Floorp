@@ -107,7 +107,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin55.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin56.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib\icuin.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -151,7 +151,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin55d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin56d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib\icuind.pdb</ProgramDatabaseFile>
@@ -192,7 +192,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin55.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin56.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\..\lib64\icuin.pdb</ProgramDatabaseFile>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -234,7 +234,7 @@
       <AdditionalIncludeDirectories>../common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin55d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin56d.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\..\lib64\icuind.pdb</ProgramDatabaseFile>
@@ -244,7 +244,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="filteredbrk.cpp" />
     <ClCompile Include="region.cpp" />
     <ClCompile Include="uregion.cpp" />
     <ClCompile Include="alphaindex.cpp" />
@@ -282,6 +281,18 @@
     <ClCompile Include="ucol_res.cpp" />
     <ClCompile Include="ucol_sit.cpp" />
     <ClCompile Include="ucoleitr.cpp" />
+    <ClCompile Include="affixpatternparser.cpp" />
+    <ClCompile Include="decimfmtimpl.cpp" />
+    <ClCompile Include="digitaffix.cpp" />
+    <ClCompile Include="digitaffixesandpadding.cpp" />
+    <ClCompile Include="digitformatter.cpp" />
+    <ClCompile Include="digitgrouping.cpp" />
+    <ClCompile Include="digitinterval.cpp" />
+    <ClCompile Include="pluralaffix.cpp" />
+    <ClCompile Include="precision.cpp" />
+    <ClCompile Include="smallintformatter.cpp" />
+    <ClCompile Include="valueformatter.cpp" />
+    <ClCompile Include="visibledigits.cpp" />
     <ClCompile Include="uitercollationiterator.cpp" />
     <ClCompile Include="usearch.cpp" />
     <ClCompile Include="astro.cpp" />
@@ -565,6 +576,20 @@
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
+    <ClInclude Include="affixpatternparser.h" />
+    <ClInclude Include="decimalformatpatternimpl.h" />
+    <ClInclude Include="decimfmtimpl.h" />
+    <ClInclude Include="digitaffix.h" />
+    <ClInclude Include="digitaffixesandpadding.h" />
+    <ClInclude Include="digitformatter.h" />
+    <ClInclude Include="digitgrouping.h" />
+    <ClInclude Include="digitinterval.h" />
+    <ClInclude Include="pluralaffix.h" />
+    <ClInclude Include="precision.h" />
+    <ClInclude Include="significantdigitinterval.h" />
+    <ClInclude Include="smallintformatter.h" />
+    <ClInclude Include="valueformatter.h" />
+    <ClInclude Include="visibledigits.h" />
     <ClInclude Include="collation.h" />
     <ClInclude Include="collationbuilder.h" />
     <ClInclude Include="collationcompare.h" />
@@ -668,7 +693,6 @@
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
-    <ClInclude Include="unicode\filteredbrk.h" />
     <ClInclude Include="usrchimp.h" />
     <ClInclude Include="astro.h" />
     <CustomBuild Include="unicode\basictz.h">
@@ -1152,7 +1176,6 @@
     <ClInclude Include="sharedbreakiterator.h" />
     <ClInclude Include="sharedcalendar.h" />
     <ClInclude Include="shareddateformatsymbols.h" />
-    <ClInclude Include="shareddatetimepatterngenerator.h" />
     <ClInclude Include="sharednumberformat.h" />
     <ClInclude Include="sharedpluralrules.h" />
     <CustomBuild Include="unicode\rbnf.h">

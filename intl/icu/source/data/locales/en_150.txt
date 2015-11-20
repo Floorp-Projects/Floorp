@@ -11,6 +11,7 @@ en_150{
     NumberElements{
         latn{
             patterns{
+                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
             }
             symbols{
@@ -19,52 +20,23 @@ en_150{
             }
         }
     }
-    Version{"2.1.11.50"}
+    Version{"2.1.19.76"}
     calendar{
-        generic{
-            DateTimePatterns{
-                "HH 'h' mm 'min' ss 's' zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE, d MMMM y G",
-                "d MMMM y G",
-                "dd MMM y G",
-                "dd/MM/y GGGGG",
-                "{1}, {0}",
-                "{1} 'at' {0}",
-                "{1} 'at' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            availableFormats{
-                MEd{"E, d/M"}
-                Md{"d/M"}
-                yyyyMEd{"E, d/M/y G"}
-                yyyyMd{"d/M/y G"}
-            }
-        }
         gregorian{
             DateTimePatterns{
-                "HH 'h' mm 'min' ss 's' zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y",
                 "d MMMM y",
-                "dd MMM y",
-                "dd/MM/yy",
+                "d MMM y",
+                "dd/MM/y",
                 "{1}, {0}",
                 "{1} 'at' {0}",
                 "{1} 'at' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-            }
-            availableFormats{
-                MEd{"E, d/M"}
-                Md{"d/M"}
-                yMEd{"E, d/M/y"}
-                yMd{"d/M/y"}
             }
         }
     }

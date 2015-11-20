@@ -2,11 +2,12 @@
     <!ENTITY icu-config SYSTEM "./icu-config.xml">
     <!ENTITY icu-locale-deprecates SYSTEM "./icu-locale-deprecates.xml">
     <!ENTITY icu-coll-deprecates SYSTEM "./icu-coll-deprecates.xml">
+    <!ENTITY icu-rbnf-deprecates SYSTEM "./icu-rbnf-deprecates.xml">
 ]>
 <!--
 /*
 *******************************************************************************
-* Copyright (C) 2005-2014, International Business Machines Corporation and    *
+* Copyright (C) 2005-2015, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 */
@@ -56,7 +57,7 @@
         </taskdef>
     </target>
     <!-- target for generating ICU data -->
-    <target name="all" depends="locales, collation, rbnf, supplementalData, metadata, metaZones, windowsZones, likelySubtags, plurals, numberingSystems, translit, brkitr, keyTypeData, genderList, postalCodeData, dayPeriods" />
+    <target name="all" depends="locales, collation, rbnf, supplementalData, metadata, metaZones, windowsZones, likelySubtags, plurals, numberingSystems, translit, brkitr, keyTypeData, genderList, dayPeriods" />
     <!-- parallel target -->
     <target name="pall" depends="init">
         <parallel threadsPerProcessor ="1">
@@ -88,9 +89,6 @@
           </sequential>
           <sequential>
           	<ant target='genderList'/>
-          </sequential>
-          <sequential>
-          	<ant target='postalCodeData'/>
           </sequential>
           <sequential>
           	<ant target='dayPeriods'/>
@@ -176,6 +174,7 @@
                 </args>
                 <!-- http://ant.apache.org/faq.html#xml-entity-include -->
                 &icu-config;
+                &icu-rbnf-deprecates;
             </run>
         </cldr-build>
     </target>
@@ -275,18 +274,6 @@
                     <arg name="-s" value="${env.CLDR_DIR}/common/supplemental" />
                     <arg name="-d" value="${env.ICU4C_DIR}/source/data/misc"/>
                     <arg name="-t" value="genderList"/>
-                </args>
-            </run>
-        </cldr-build>
-    </target>
-    <target name="postalCodeData" depends="init,setup" description="builds postalCodeData.txt from postalCodeData.xml">
-        <cldr-build toolName="org.unicode.cldr.icu.NewLdml2IcuConverter" destFile="postalCodeData.txt" noArgs="true">
-            <!-- launch the tool and generate the data after reading the config file -->
-            <run>
-                <args>
-                    <arg name="-s" value="${env.CLDR_DIR}/common/supplemental" />
-                    <arg name="-d" value="${env.ICU4C_DIR}/source/data/misc"/>
-                    <arg name="-t" value="postalCodeData"/>
                 </args>
             </run>
         </cldr-build>
@@ -439,9 +426,6 @@
             </fileset>
             <fileset id="genderList" dir="${env.ICU4C_DIR}/source/data/misc">
                 <include name="genderList.txt" />
-            </fileset>
-            <fileset id="postalCodeData" dir="${env.ICU4C_DIR}/source/data/misc">
-                <include name="postalCodeData.txt" />
             </fileset>
             <fileset id="dayPeriods" dir="${env.ICU4C_DIR}/source/data/misc">
                 <include name="dayPeriods.txt" />

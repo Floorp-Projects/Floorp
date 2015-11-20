@@ -7,18 +7,18 @@
 // *
 // ***************************************************************************
 es{
-    Version{"2.1.6.32"}
+    Version{"2.1.19.14"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "&N<ñ<<<Ñ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         standard{
             Sequence{"&N<ñ<<<Ñ"}
-            Version{"27.0.1"}
+            Version{"28"}
         }
         traditional{
             Sequence{
@@ -26,7 +26,7 @@ es{
                 "&C<ch<<<Ch<<<CH"
                 "&l<ll<<<Ll<<<LL"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }
