@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 // The root directory object.
 var gRoot;
@@ -98,8 +98,10 @@ ok(promise, "Should have a non-null promise for getRoot.");
 
 gName = storage.storageName;
 promise.then(getSuccess, cbError);
+
+});
+
 </script>
 </pre>
 </body>
 </html>
-

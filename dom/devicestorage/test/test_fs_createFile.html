@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 let gTestCount = 0;
 let gFileReader = new FileReader();
@@ -125,8 +125,9 @@ storage.getRoot().then(function(dir) {
   devicestorage_cleanup();
 });
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

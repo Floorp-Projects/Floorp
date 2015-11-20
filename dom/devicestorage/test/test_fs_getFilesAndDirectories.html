@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 SimpleTest.requestCompleteLog();
 
 // The root directory object.
@@ -90,8 +90,9 @@ createTestFiles(gStorage, ["sub/a.png", "sub/b.png", "sub/sub2/c.png", "sub/sub3
   devicestorage_cleanup();
 });
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

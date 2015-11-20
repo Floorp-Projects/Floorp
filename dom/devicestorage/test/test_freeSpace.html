@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 function freeSpaceSuccess(e) {
   ok(e.target.result  > 0, "free bytes should exist and be greater than zero");
@@ -54,8 +54,9 @@ request = storage.addNamed(createRandomBlob('image/png'), prefix + "/a/b.png");
 request.onsuccess = addSuccess;
 request.onerror = addError;
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

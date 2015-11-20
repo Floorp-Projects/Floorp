@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=934368
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 let gStorage = null;
 let gTestCount = 0;
@@ -168,8 +168,9 @@ ok(gStorage, "Should have gotten a storage.");
 gRemoveDeep = true;
 runNextTests();
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

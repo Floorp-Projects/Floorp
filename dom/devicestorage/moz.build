@@ -41,7 +41,6 @@ LOCAL_INCLUDES += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    'ipc/mochitest.ini',
     'test/mochitest.ini',
 ]
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
