@@ -161,9 +161,6 @@ user_pref("layout.css.object-fit-and-position.enabled", true);
 // Enable CSS Ruby for testing
 user_pref("layout.css.ruby.enabled", true);
 
-// Enable unicode-range for testing
-user_pref("layout.css.unicode-range.enabled", true);
-
 // Enable webkit prefixed CSS features for testing
 user_pref("layout.css.prefixes.webkit", true);
 
