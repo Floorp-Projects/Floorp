@@ -160,6 +160,7 @@ public:
   // after true is returned.
   bool MaybeSetPendingException(JSContext* cx)
   {
+    WouldReportJSException();
     if (!Failed()) {
       return false;
     }
@@ -187,9 +188,8 @@ public:
   // Facilities for throwing a preexisting JS exception value via this
   // ErrorResult.  The contract is that any code which might end up calling
   // ThrowJSException() must call MightThrowJSException() even if no exception
-  // is being thrown.  Code that would call MaybeSetPendingException or
-  // StealJSException as needed must first call WouldReportJSException even if
-  // this ErrorResult has not failed.
+  // is being thrown.  Code that would call StealJSException as needed must
+  // first call WouldReportJSException even if this ErrorResult has not failed.
   //
   // The exn argument to ThrowJSException can be in any compartment.  It does
   // not have to be in the compartment of cx.  If someone later uses it, they

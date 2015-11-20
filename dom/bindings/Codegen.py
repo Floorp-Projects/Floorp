@@ -1728,7 +1728,6 @@ class CGConstructNavigatorObject(CGAbstractMethod):
             JS::Rooted<JS::Value> v(aCx);
             {  // Scope to make sure |result| goes out of scope while |v| is rooted
               RefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
-              rv.WouldReportJSException();
               if (rv.MaybeSetPendingException(aCx)) {
                 return nullptr;
               }
@@ -6770,7 +6769,6 @@ class CGCallGenerator(CGThing):
             self.cgRoot.prepend(CGGeneric("ErrorResult rv;\n"))
             self.cgRoot.append(CGGeneric(dedent(
                 """
-                rv.WouldReportJSException();
                 if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx))) {
                   return false;
                 }
@@ -8243,7 +8241,6 @@ class CGEnumerateHook(CGAbstractBindingMethod):
             nsAutoTArray<nsString, 8> names;
             ErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
-            rv.WouldReportJSException();
             if (rv.MaybeSetPendingException(cx)) {
               return false;
             }
@@ -10301,7 +10298,6 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
             nsAutoTArray<nsString, 8> names;
             ErrorResult rv;
             self->GetOwnPropertyNames(cx, names, rv);
-            rv.WouldReportJSException();
             if (rv.MaybeSetPendingException(cx)) {
               return false;
             }
