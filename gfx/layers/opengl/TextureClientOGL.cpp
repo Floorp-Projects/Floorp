@@ -63,63 +63,52 @@ EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// SurfaceTextureClient
+// AndroidSurface
 
 #ifdef MOZ_WIDGET_ANDROID
 
-SurfaceTextureClient::SurfaceTextureClient(ISurfaceAllocator* aAllocator,
-                                           TextureFlags aFlags,
-                                           AndroidSurfaceTexture* aSurfTex,
-                                           gfx::IntSize aSize,
-                                           gl::OriginPos aOriginPos)
-  : TextureClient(aAllocator, aFlags)
-  , mSurfTex(aSurfTex)
-  , mSize(aSize)
-  , mIsLocked(false)
+already_AddRefed<TextureClient>
+AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTexture* aSurfTex,
+                                               gfx::IntSize aSize,
+                                               gl::OriginPos aOriginPos,
+                                               ISurfaceAllocator* aAllocator,
+                                               TextureFlags aFlags)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
-             "Can't pass pointers between processes.");
+             "Can't pass an android surfaces between processes.");
 
-  // Our data is always owned externally.
-  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
+  if (!aSurfTex || !XRE_IsParentProcess()) {
+    return nullptr;
+  }
+
+  // XXX - This is quite sad and slow.
+  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
 
   if (aOriginPos == gl::OriginPos::BottomLeft) {
-    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
+    aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }
+
+  return TextureClient::CreateWithData(
+    new AndroidSurfaceTextureData(aSurfTex, aSize),
+    aFlags, aAllocator
+  );
 }
 
-SurfaceTextureClient::~SurfaceTextureClient()
-{
-  // Our data is always owned externally.
-}
+AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTexture* aSurfTex,
+                                                     gfx::IntSize aSize)
+  : mSurfTex(aSurfTex)
+  , mSize(aSize)
+{}
+
+AndroidSurfaceTextureData::~AndroidSurfaceTextureData()
+{}
 
 bool
-SurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(IsAllocated());
-
   aOutDescriptor = SurfaceTextureDescriptor((uintptr_t)mSurfTex.get(),
                                             mSize);
   return true;
-}
-
-bool
-SurfaceTextureClient::Lock(OpenMode mode)
-{
-  MOZ_ASSERT(!mIsLocked);
-  if (!IsValid() || !IsAllocated()) {
-    return false;
-  }
-  mIsLocked = true;
-  return true;
-}
-
-void
-SurfaceTextureClient::Unlock()
-{
-  MOZ_ASSERT(mIsLocked);
-  mIsLocked = false;
 }
 
 #endif // MOZ_WIDGET_ANDROID
