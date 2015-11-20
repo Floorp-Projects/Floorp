@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for privilege escalation into content pages</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+add_task(function* testBackgroundWindow() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "new " + function() {
+      const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+
+      browser.test.log("background script executed");
+      window.location = `${BASE}/file_privilege_escalation.html`;
+    },
+  });
+
+  let awaitConsole = new Promise(resolve => {
+    let chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("file_ext_background_api_injection.js"));
+
+    chromeScript.addMessageListener("console-message", resolve);
+  });
+
+  yield extension.startup();
+
+  let message = yield awaitConsole;
+
+  ok(message.message.includes("WebExt Privilege Escalation: typeof(browser) = undefined"),
+     "Document does not have `browser` APIs.");
+
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>
