@@ -161,21 +161,20 @@ this.AddonRepository_SQLiteMigrator = {
    *         The callback to pass the add-ons back to
    */
   _retrieveStoredData: function(aCallback) {
-    let self = this;
     let addons = {};
 
     // Retrieve all data from the addon table
-    function getAllAddons() {
-      self.getAsyncStatement("getAllAddons").executeAsync({
-        handleResult: function(aResults) {
+    let getAllAddons = () => {
+      this.getAsyncStatement("getAllAddons").executeAsync({
+        handleResult: aResults => {
           let row = null;
           while ((row = aResults.getNextRow())) {
             let internal_id = row.getResultByName("internal_id");
-            addons[internal_id] = self._makeAddonFromAsyncRow(row);
+            addons[internal_id] = this._makeAddonFromAsyncRow(row);
           }
         },
 
-        handleError: self.asyncErrorLogger,
+        handleError: this.asyncErrorLogger,
 
         handleCompletion: function(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
@@ -190,9 +189,9 @@ this.AddonRepository_SQLiteMigrator = {
     }
 
     // Retrieve all data from the developer table
-    function getAllDevelopers() {
-      self.getAsyncStatement("getAllDevelopers").executeAsync({
-        handleResult: function(aResults) {
+    let getAllDevelopers = () => {
+      this.getAsyncStatement("getAllDevelopers").executeAsync({
+        handleResult: aResults => {
           let row = null;
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
@@ -205,11 +204,11 @@ this.AddonRepository_SQLiteMigrator = {
             if (!addon.developers)
               addon.developers = [];
 
-            addon.developers.push(self._makeDeveloperFromAsyncRow(row));
+            addon.developers.push(this._makeDeveloperFromAsyncRow(row));
           }
         },
 
-        handleError: self.asyncErrorLogger,
+        handleError: this.asyncErrorLogger,
 
         handleCompletion: function(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
@@ -224,9 +223,9 @@ this.AddonRepository_SQLiteMigrator = {
     }
 
     // Retrieve all data from the screenshot table
-    function getAllScreenshots() {
-      self.getAsyncStatement("getAllScreenshots").executeAsync({
-        handleResult: function(aResults) {
+    let getAllScreenshots = () => {
+      this.getAsyncStatement("getAllScreenshots").executeAsync({
+        handleResult: aResults => {
           let row = null;
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
@@ -238,11 +237,11 @@ this.AddonRepository_SQLiteMigrator = {
             let addon = addons[addon_internal_id];
             if (!addon.screenshots)
               addon.screenshots = [];
-            addon.screenshots.push(self._makeScreenshotFromAsyncRow(row));
+            addon.screenshots.push(this._makeScreenshotFromAsyncRow(row));
           }
         },
 
-        handleError: self.asyncErrorLogger,
+        handleError: this.asyncErrorLogger,
 
         handleCompletion: function(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
@@ -256,9 +255,9 @@ this.AddonRepository_SQLiteMigrator = {
       });
     }
 
-    function getAllCompatOverrides() {
-      self.getAsyncStatement("getAllCompatOverrides").executeAsync({
-        handleResult: function(aResults) {
+    let getAllCompatOverrides = () => {
+      this.getAsyncStatement("getAllCompatOverrides").executeAsync({
+        handleResult: aResults => {
           let row = null;
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
@@ -270,11 +269,11 @@ this.AddonRepository_SQLiteMigrator = {
             let addon = addons[addon_internal_id];
             if (!addon.compatibilityOverrides)
               addon.compatibilityOverrides = [];
-            addon.compatibilityOverrides.push(self._makeCompatOverrideFromAsyncRow(row));
+            addon.compatibilityOverrides.push(this._makeCompatOverrideFromAsyncRow(row));
           }
         },
 
-        handleError: self.asyncErrorLogger,
+        handleError: this.asyncErrorLogger,
 
         handleCompletion: function(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
@@ -288,9 +287,9 @@ this.AddonRepository_SQLiteMigrator = {
       });
     }
 
-    function getAllIcons() {
-      self.getAsyncStatement("getAllIcons").executeAsync({
-        handleResult: function(aResults) {
+    let getAllIcons = () => {
+      this.getAsyncStatement("getAllIcons").executeAsync({
+        handleResult: aResults => {
           let row = null;
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
@@ -300,14 +299,14 @@ this.AddonRepository_SQLiteMigrator = {
             }
 
             let addon = addons[addon_internal_id];
-            let { size, url } = self._makeIconFromAsyncRow(row);
+            let { size, url } = this._makeIconFromAsyncRow(row);
             addon.icons[size] = url;
             if (size == 32)
               addon.iconURL = url;
           }
         },
 
-        handleError: self.asyncErrorLogger,
+        handleError: this.asyncErrorLogger,
 
         handleCompletion: function(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {

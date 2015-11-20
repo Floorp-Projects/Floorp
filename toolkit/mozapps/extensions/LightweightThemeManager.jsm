@@ -258,20 +258,19 @@ this.LightweightThemeManager = {
     // Prevent the request from writing to the cache.
     req.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
-    var self = this;
-    req.addEventListener("load", function() {
+    req.addEventListener("load", () => {
       if (req.status != 200)
         return;
 
-      let newData = self.parseTheme(req.responseText, theme.updateURL);
+      let newData = this.parseTheme(req.responseText, theme.updateURL);
       if (!newData ||
           newData.id != theme.id ||
           _version(newData) == _version(theme))
         return;
 
-      var currentTheme = self.currentTheme;
+      var currentTheme = this.currentTheme;
       if (currentTheme && currentTheme.id == theme.id)
-        self.currentTheme = newData;
+        this.currentTheme = newData;
     }, false);
 
     req.send(null);
