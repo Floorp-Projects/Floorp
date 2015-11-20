@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ca{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ ca{
         "Asia:Calcutta"{
             ec{"Calcuta"}
         }
+        "Asia:Chita"{
+            ec{"Txità"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -825,6 +828,9 @@ ca{
         "Asia:Singapore"{
             ec{"Singapur"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolimsk"}
+        }
         "Asia:Taipei"{
             ec{"Taipei"}
         }
@@ -874,7 +880,7 @@ ca{
             ec{"Bermudes"}
         }
         "Atlantic:Canary"{
-            ec{"illes Canàries"}
+            ec{"Illes Canàries"}
         }
         "Atlantic:Cape_Verde"{
             ec{"Cap Verd"}
@@ -1144,6 +1150,9 @@ ca{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}

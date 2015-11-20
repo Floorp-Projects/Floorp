@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1999-2011 International Business Machines
+*   Copyright (C) 1999-2015 International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -93,15 +93,15 @@ typedef struct UConverterStaticData {   /* +offset: size */
  */
 struct UConverterSharedData {
     uint32_t structSize;            /* Size of this structure */
-    uint32_t referenceCounter;      /* used to count number of clients, 0xffffffff for static SharedData */
+    uint32_t referenceCounter;      /* used to count number of clients, unused for static/immutable SharedData */
 
     const void *dataMemory;         /* from udata_openChoice() - for cleanup */
-    void *table;                    /* Unused. This used to be a UConverterTable - Pointer to conversion data - see mbcs below */
 
     const UConverterStaticData *staticData; /* pointer to the static (non changing) data. */
 
     UBool                sharedDataCached;   /* TRUE:  shared data is in cache, don't destroy on ucnv_close() if 0 ref.  FALSE: shared data isn't in the cache, do attempt to clean it up if the ref is 0 */
-  /*UBool               staticDataOwned;   TRUE if static data owned by shared data & should be freed with it, NEVER true for udata() loaded statics. This ignored variable was removed to make space for sharedDataCached.   */
+    /** If FALSE, then referenceCounter is not used. Must not change after initialization. */
+    UBool isReferenceCounted;
 
     const UConverterImpl *impl;     /* vtable-style struct of mostly function pointers */
 
@@ -115,15 +115,20 @@ struct UConverterSharedData {
      *   which always has a UConverterMBCSTable
      *
      * To eliminate one allocation, I am making the UConverterMBCSTable
-     * a member of the shared data. It is the last member so that static
-     * definitions of UConverterSharedData work as before.
-     * The table field above also remains to avoid updating all static
-     * definitions, but is now unused.
+     * a member of the shared data.
      *
      * markus 2003-nov-07
      */
     UConverterMBCSTable mbcs;
 };
+
+/** UConverterSharedData initializer for static, non-reference-counted converters. */
+#define UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(pStaticData, pImpl) \
+    { \
+        sizeof(UConverterSharedData), ~((uint32_t)0), \
+        NULL, pStaticData, FALSE, FALSE, pImpl, \
+        0, UCNV_MBCS_TABLE_INITIALIZER \
+    }
 
 /* Defines a UConverter, the lightweight mutable part the user sees */
 
@@ -266,7 +271,7 @@ ucnv_load(UConverterLoadArgs *pArgs, UErrorCode *err);
 
 /**
  * Unload a non-algorithmic converter.
- * It must be sharedData->referenceCounter != ~0
+ * It must be sharedData->isReferenceCounted
  * and this function must be called inside umtx_lock(&cnvCacheMutex).
  */
 U_CAPI void

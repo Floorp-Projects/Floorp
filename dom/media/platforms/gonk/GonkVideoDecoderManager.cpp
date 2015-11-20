@@ -8,6 +8,7 @@
 #include <gui/Surface.h>
 #include <ICrypto.h>
 #include "GonkVideoDecoderManager.h"
+#include "GrallocImages.h"
 #include "MediaDecoderReader.h"
 #include "ImageContainer.h"
 #include "VideoUtils.h"
@@ -45,7 +46,6 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   const VideoInfo& aConfig)
   : mImageContainer(aImageContainer)
   , mColorConverterBufferSize(0)
-  , mNativeWindow(nullptr)
   , mPendingReleaseItemsLock("GonkVideoDecoderManager::mPendingReleaseItemsLock")
   , mNeedsCopyBuffer(false)
 {
@@ -122,7 +122,13 @@ GonkVideoDecoderManager::Init()
   uint32_t capability = MediaCodecProxy::kEmptyCapability;
   if (mDecoder->getCapability(&capability) == OK && (capability &
       MediaCodecProxy::kCanExposeGraphicBuffer)) {
+#if ANDROID_VERSION >= 21
+    sp<IGonkGraphicBufferConsumer> consumer;
+    GonkBufferQueue::createBufferQueue(&mGraphicBufferProducer, &consumer);
+    mNativeWindow = new GonkNativeWindow(consumer);
+#else
     mNativeWindow = new GonkNativeWindow();
+#endif
   }
 
   mVideoCodecRequest.Begin(mDecoder->AsyncAllocateVideoMediaCodec()
@@ -604,7 +610,11 @@ GonkVideoDecoderManager::codecReserved()
   // the video decoding.
   format->setInt32("moz-use-undequeued-bufs", 1);
   if (mNativeWindow != nullptr) {
+#if ANDROID_VERSION >= 21
+    surface = new Surface(mGraphicBufferProducer);
+#else
     surface = new Surface(mNativeWindow->getBufferQueue());
+#endif
   }
   mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();

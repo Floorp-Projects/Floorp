@@ -31,8 +31,8 @@ lv{
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#0.00"}
-                currencyFormat{"¤#0.00"}
+                accountingFormat{"#0.00 ¤"}
+                currencyFormat{"#0.00 ¤"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -102,6 +102,68 @@ lv{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0 tūkst'.'"}
+                        other{"¤0 tūkst'.'"}
+                        zero{"¤0 tūkst'.'"}
+                    }
+                    10000{
+                        one{"¤00 tūkst'.'"}
+                        other{"¤00 tūkst'.'"}
+                        zero{"¤00 tūkst'.'"}
+                    }
+                    100000{
+                        one{"¤000 tūkst'.'"}
+                        other{"¤000 tūkst'.'"}
+                        zero{"¤000 tūkst'.'"}
+                    }
+                    1000000{
+                        one{"¤0 milj'.'"}
+                        other{"¤0 milj'.'"}
+                        zero{"¤0 milj'.'"}
+                    }
+                    10000000{
+                        one{"¤00 milj'.'"}
+                        other{"¤00 milj'.'"}
+                        zero{"¤00 milj'.'"}
+                    }
+                    100000000{
+                        one{"¤000 milj'.'"}
+                        other{"¤000 milj'.'"}
+                        zero{"¤000 milj'.'"}
+                    }
+                    1000000000{
+                        one{"¤0 mljrd'.'"}
+                        other{"¤0 mljrd'.'"}
+                        zero{"¤0 mljrd'.'"}
+                    }
+                    10000000000{
+                        one{"¤00 mljrd'.'"}
+                        other{"¤00 mljrd'.'"}
+                        zero{"¤00 mljrd'.'"}
+                    }
+                    100000000000{
+                        one{"¤000 mljrd'.'"}
+                        other{"¤000 mljrd'.'"}
+                        zero{"¤000 mljrd'.'"}
+                    }
+                    1000000000000{
+                        one{"¤0 trilj'.'"}
+                        other{"¤0 trilj'.'"}
+                        zero{"¤0 trilj'.'"}
+                    }
+                    10000000000000{
+                        one{"¤00 trilj'.'"}
+                        other{"¤00 trilj'.'"}
+                        zero{"¤00 trilj'.'"}
+                    }
+                    100000000000000{
+                        one{"¤000 trilj'.'"}
+                        other{"¤000 trilj'.'"}
+                        zero{"¤000 trilj'.'"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 tūkst'.'"}
@@ -183,7 +245,7 @@ lv{
         minimumGroupingDigits{"3"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.19"}
     calendar{
         generic{
             DateTimePatterns{
@@ -196,12 +258,13 @@ lv{
                 "y. 'gada' d. MMM G",
                 "dd.MM.y GGGGG",
                 "{1}, {0}",
-                "{1} 'plkst.' {0}",
-                "{1} 'plkst.' {0}",
+                "{1} 'plkst'. {0}",
+                "{1} 'plkst'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d."}
                 Gy{"y. 'g'. G"}
                 GyMMM{"y. 'g'. MMM G"}
@@ -355,8 +418,6 @@ lv{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"pusdienlaikā"}
-            NoonMarkerNarrow{"pusd."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -374,6 +435,8 @@ lv{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, dd.MM."}
                 MMM{"LLL"}
@@ -386,6 +449,8 @@ lv{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y. 'g'."}
@@ -474,6 +539,65 @@ lv{
                         "Ceturtdiena",
                         "Piektdiena",
                         "Sestdiena",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"pēcpusd."}
+                        evening1{"vakarā"}
+                        midnight{"pusnaktī"}
+                        morning1{"no rīta"}
+                        night1{"naktī"}
+                        noon{"pusd."}
+                    }
+                    narrow{
+                        afternoon1{"pēcpusdienā"}
+                        evening1{"vakarā"}
+                        midnight{"pusnaktī"}
+                        morning1{"no rīta"}
+                        night1{"naktī"}
+                        noon{"pusd."}
+                    }
+                    wide{
+                        afternoon1{"pēcpusdienā"}
+                        evening1{"vakarā"}
+                        midnight{"pusnaktī"}
+                        morning1{"no rīta"}
+                        night1{"naktī"}
+                        noon{"pusdienlaikā"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"pēcpusdiena"}
+                        am{"priekšp."}
+                        evening1{"vakars"}
+                        midnight{"pusnakts"}
+                        morning1{"rīts"}
+                        night1{"nakts"}
+                        pm{"pēcpusd."}
+                    }
+                    narrow{
+                        afternoon1{"pēcpusdiena"}
+                        am{"priekšp."}
+                        evening1{"vakars"}
+                        midnight{"pusnakts"}
+                        morning1{"rīts"}
+                        night1{"nakts"}
+                        noon{"pusd."}
+                        pm{"pēcp."}
+                    }
+                    wide{
+                        afternoon1{"pēcpusdiena"}
+                        am{"priekšpusdienā"}
+                        evening1{"vakars"}
+                        midnight{"pusnakts"}
+                        morning1{"rīts"}
+                        night1{"nakts"}
+                        noon{"pusdienlaiks"}
+                        pm{"pēcpusdiena"}
                     }
                 }
             }
@@ -822,10 +946,10 @@ lv{
             }
         }
         dayperiod{
-            dn{"Priekšpusdienā/pēcpusdienā"}
+            dn{"priekšpusdienā/pēcpusdienā"}
         }
         era{
-            dn{"Ēra"}
+            dn{"ēra"}
         }
         fri{
             relative{
@@ -849,7 +973,7 @@ lv{
             }
         }
         hour{
-            dn{"Stundas"}
+            dn{"stundas"}
             relativeTime{
                 future{
                     one{"pēc {0} stundas"}
@@ -894,7 +1018,7 @@ lv{
             }
         }
         minute{
-            dn{"Minūtes"}
+            dn{"minūtes"}
             relativeTime{
                 future{
                     one{"pēc {0} minūtes"}
@@ -960,7 +1084,7 @@ lv{
             }
         }
         month{
-            dn{"Mēnesis"}
+            dn{"mēnesis"}
             relative{
                 "-1"{"pagājušajā mēnesī"}
                 "0"{"šajā mēnesī"}
@@ -1076,7 +1200,7 @@ lv{
             }
         }
         second{
-            dn{"Sekundes"}
+            dn{"sekundes"}
             relative{
                 "0"{"tagad"}
             }
@@ -1261,7 +1385,7 @@ lv{
             dn{"nedēļas diena"}
         }
         year{
-            dn{"Gads"}
+            dn{"gads"}
             relative{
                 "-1"{"pagājušajā gadā"}
                 "0"{"šajā gadā"}
@@ -1311,7 +1435,7 @@ lv{
             }
         }
         zone{
-            dn{"Laika josla"}
+            dn{"laika josla"}
         }
     }
     listPattern{

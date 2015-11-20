@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 sq{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abixhan"}
@@ -16,7 +16,7 @@ sq{
             ec{"Akra"}
         }
         "Africa:Addis_Ababa"{
-            ec{"Adis Ababë"}
+            ec{"Adis-Ababë"}
         }
         "Africa:Algiers"{
             ec{"Algjer"}
@@ -61,7 +61,7 @@ sq{
             ec{"Dakar"}
         }
         "Africa:Dar_es_Salaam"{
-            ec{"Dar es Salam"}
+            ec{"Dar-es-Salam"}
         }
         "Africa:Djibouti"{
             ec{"Xhibuti"}
@@ -154,7 +154,7 @@ sq{
             ec{"Porto-Novo"}
         }
         "Africa:Sao_Tome"{
-            ec{"Sao Tome"}
+            ec{"Sao-Tome"}
         }
         "Africa:Tripoli"{
             ec{"Tripoli"}
@@ -184,16 +184,16 @@ sq{
             ec{"La Rioha"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"Rio Galegos"}
+            ec{"Rio-Galegos"}
         }
         "America:Argentina:Salta"{
             ec{"Saltë"}
         }
         "America:Argentina:San_Juan"{
-            ec{"San Huan"}
+            ec{"San-Huan"}
         }
         "America:Argentina:San_Luis"{
-            ec{"Shën Luis"}
+            ec{"Shën-Luis"}
         }
         "America:Argentina:Tucuman"{
             ec{"Tukuman"}
@@ -211,7 +211,7 @@ sq{
             ec{"Bahia"}
         }
         "America:Bahia_Banderas"{
-            ec{"Bahia Banderas"}
+            ec{"Bahia-Banderas"}
         }
         "America:Barbados"{
             ec{"Barbados"}
@@ -226,7 +226,7 @@ sq{
             ec{"Blank-Sablon"}
         }
         "America:Boa_Vista"{
-            ec{"Boa Vista"}
+            ec{"Boa-Vista"}
         }
         "America:Bogota"{
             ec{"Bogotë"}
@@ -235,13 +235,13 @@ sq{
             ec{"Boizë"}
         }
         "America:Buenos_Aires"{
-            ec{"Buenos Aires"}
+            ec{"Buenos-Ajres"}
         }
         "America:Cambridge_Bay"{
             ec{"Gjiri i Kembrixhit"}
         }
         "America:Campo_Grande"{
-            ec{"Kampo Grande"}
+            ec{"Kampo-Grande"}
         }
         "America:Cancun"{
             ec{"Kankun"}
@@ -271,7 +271,7 @@ sq{
             ec{"Kordoba"}
         }
         "America:Costa_Rica"{
-            ec{"Kosta Rikë"}
+            ec{"Kosta-Rikë"}
         }
         "America:Creston"{
             ec{"Kreston"}
@@ -358,7 +358,7 @@ sq{
             ec{"Petërsburg, Indiana"}
         }
         "America:Indiana:Tell_City"{
-            ec{"Tell Siti, Indiana"}
+            ec{"Tell-Siti, Indiana"}
         }
         "America:Indiana:Vevay"{
             ec{"Vevëj, Indiana"}
@@ -406,7 +406,7 @@ sq{
             ec{"Luizvilë"}
         }
         "America:Lower_Princes"{
-            ec{"Louer Prinsis Kuortër"}
+            ec{"Louer-Prinsis-Kuortër"}
         }
         "America:Maceio"{
             ec{"Makejo"}
@@ -463,7 +463,7 @@ sq{
             ec{"Nasao"}
         }
         "America:New_York"{
-            ec{"Nju Jork"}
+            ec{"Nju-Jork"}
         }
         "America:Nipigon"{
             ec{"Nipigon"}
@@ -481,7 +481,7 @@ sq{
             ec{"Qendër, Dakota e Veriut"}
         }
         "America:North_Dakota:New_Salem"{
-            ec{"Nju Salem, Dakota e Veriut"}
+            ec{"Nju-Salem, Dakota e Veriut"}
         }
         "America:Ojinaga"{
             ec{"Ohinaga"}
@@ -505,10 +505,10 @@ sq{
             ec{"Porti i Spanjës"}
         }
         "America:Porto_Velho"{
-            ec{"Porto Velho"}
+            ec{"Porto-Velho"}
         }
         "America:Puerto_Rico"{
-            ec{"Porto Riko"}
+            ec{"Porto-Riko"}
         }
         "America:Rainy_River"{
             ec{"Lumi i Shirave"}
@@ -526,10 +526,10 @@ sq{
             ec{"Rezolutë"}
         }
         "America:Rio_Branco"{
-            ec{"Rio Branko"}
+            ec{"Rio-Branko"}
         }
         "America:Santa_Isabel"{
-            ec{"Santa Izabela"}
+            ec{"Santa-Izabela"}
         }
         "America:Santarem"{
             ec{"Santarem"}
@@ -538,10 +538,10 @@ sq{
             ec{"Santiago"}
         }
         "America:Santo_Domingo"{
-            ec{"Santo Domingo"}
+            ec{"Santo-Domingo"}
         }
         "America:Sao_Paulo"{
-            ec{"Sao Paulo"}
+            ec{"Sao-Paulo"}
         }
         "America:Scoresbysund"{
             ec{"Itokorturmit"}
@@ -550,22 +550,22 @@ sq{
             ec{"Sitka"}
         }
         "America:St_Barthelemy"{
-            ec{"Shën Bartolemeo"}
+            ec{"Shën-Bartolemeo"}
         }
         "America:St_Johns"{
-            ec{"Shën Gjon"}
+            ec{"Shën-Gjon"}
         }
         "America:St_Kitts"{
-            ec{"Shën Kits"}
+            ec{"Shën-Kits"}
         }
         "America:St_Lucia"{
-            ec{"Shën Luçia"}
+            ec{"Shën-Luçia"}
         }
         "America:St_Thomas"{
-            ec{"Shën Tomas"}
+            ec{"Shën-Tomas"}
         }
         "America:St_Vincent"{
-            ec{"Shën Vinsent"}
+            ec{"Shën-Vinsent"}
         }
         "America:Swift_Current"{
             ec{"Rryma e Shpejtë"}
@@ -610,7 +610,7 @@ sq{
             ec{"Dejvis"}
         }
         "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urvillë"}
+            ec{"Dumont-d’Urvilë"}
         }
         "Antarctica:Macquarie"{
             ec{"Mekuari"}
@@ -684,6 +684,9 @@ sq{
         "Asia:Calcutta"{
             ec{"Kalkutë"}
         }
+        "Asia:Chita"{
+            ec{"Çita"}
+        }
         "Asia:Choibalsan"{
             ec{"Çoibalsan"}
         }
@@ -712,7 +715,7 @@ sq{
             ec{"Hebron"}
         }
         "Asia:Hong_Kong"{
-            ec{"Hong Kong"}
+            ec{"Hong-Kong"}
         }
         "Asia:Hovd"{
             ec{"Hovd"}
@@ -748,7 +751,7 @@ sq{
             ec{"Krasnojarsk"}
         }
         "Asia:Kuala_Lumpur"{
-            ec{"Kuala Lumpur"}
+            ec{"Kuala-Lumpur"}
         }
         "Asia:Kuching"{
             ec{"Kuçing"}
@@ -787,7 +790,7 @@ sq{
             ec{"Oral"}
         }
         "Asia:Phnom_Penh"{
-            ec{"Pnom Pen"}
+            ec{"Pnom-Pen"}
         }
         "Asia:Pontianak"{
             ec{"Pontianak"}
@@ -808,7 +811,7 @@ sq{
             ec{"Riad"}
         }
         "Asia:Saigon"{
-            ec{"Ho Çi Min"}
+            ec{"Ho-Çi-Min"}
         }
         "Asia:Sakhalin"{
             ec{"Sakalin"}
@@ -824,6 +827,9 @@ sq{
         }
         "Asia:Singapore"{
             ec{"Singapor"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolimsk"}
         }
         "Asia:Taipei"{
             ec{"Tajpej"}
@@ -853,7 +859,7 @@ sq{
             ec{"Ust-Nera"}
         }
         "Asia:Vientiane"{
-            ec{"Vjentjanë"}
+            ec{"Vjentianë"}
         }
         "Asia:Vladivostok"{
             ec{"Vladivostok"}
@@ -892,7 +898,7 @@ sq{
             ec{"Gjeorgjia e Jugut"}
         }
         "Atlantic:St_Helena"{
-            ec{"Shën Helenë"}
+            ec{"Shën-Helenë"}
         }
         "Atlantic:Stanley"{
             ec{"Stenli"}
@@ -904,7 +910,7 @@ sq{
             ec{"Brisbejn"}
         }
         "Australia:Broken_Hill"{
-            ec{"Brokën Hill"}
+            ec{"Brokën-Hill"}
         }
         "Australia:Currie"{
             ec{"Kuri"}
@@ -1053,7 +1059,7 @@ sq{
             ec{"Samara"}
         }
         "Europe:San_Marino"{
-            ec{"San Marino"}
+            ec{"San-Marino"}
         }
         "Europe:Sarajevo"{
             ec{"Sarajevë"}
@@ -1145,6 +1151,9 @@ sq{
         "Pacific:Auckland"{
             ec{"Okland"}
         }
+        "Pacific:Bougainville"{
+            ec{"Bunganvilë"}
+        }
         "Pacific:Chatham"{
             ec{"Çatman"}
         }
@@ -1215,7 +1224,7 @@ sq{
             ec{"Noumea"}
         }
         "Pacific:Pago_Pago"{
-            ec{"Pago Pago"}
+            ec{"Pago-Pago"}
         }
         "Pacific:Palau"{
             ec{"Palau"}
@@ -1227,7 +1236,7 @@ sq{
             ec{"Ponapei"}
         }
         "Pacific:Port_Moresby"{
-            ec{"Port Moresbi"}
+            ec{"Port-Moresbi"}
         }
         "Pacific:Rarotonga"{
             ec{"Rarotongë"}
@@ -1361,9 +1370,9 @@ sq{
             ls{"Ora standarde e Australisë Qendrore"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Ora verore e Australisë Qendrore-Perëndimore"}
-            lg{"Ora e Australisë Qendrore-Perëndimore"}
-            ls{"Ora standarde e Australisë Qendrore-Perëndimore"}
+            ld{"Ora verore e Australisë Qendroro-Perëndimore"}
+            lg{"Ora e Australisë Qendroro-Perëndimore"}
+            ls{"Ora standarde e Australisë Qendroro-Perëndimore"}
         }
         "meta:Australia_Eastern"{
             ld{"Ora verore e Australisë Lindore"}
@@ -1402,7 +1411,7 @@ sq{
             ls{"Ora standarde e Brasilës"}
         }
         "meta:Brunei"{
-            ls{"Ora e Brunei Durasalamit"}
+            ls{"Ora e Brunei-Durasalamit"}
         }
         "meta:Cape_Verde"{
             ld{"Ora verore e Kepit të Gjelbër"}
@@ -1549,9 +1558,9 @@ sq{
             ls{"Ora standarde e Ishujve Hauai-Aleutian"}
         }
         "meta:Hong_Kong"{
-            ld{"Ora verore e Hong Kongut"}
-            lg{"Ora e Hong Kongut"}
-            ls{"Ora standarde e Hong Kongut"}
+            ld{"Ora verore e Hong-Kongut"}
+            lg{"Ora e Hong-Kongut"}
+            ls{"Ora standarde e Hong-Kongut"}
         }
         "meta:Hovd"{
             ld{"Ora verore e Hovdit"}
@@ -1582,9 +1591,9 @@ sq{
             ls{"Ora standarde e Iranit"}
         }
         "meta:Irkutsk"{
-            ld{"Ora verore e Irkutskit"}
-            lg{"Ora e Irkutskit"}
-            ls{"Ora standarde e Irkutskit"}
+            ld{"Ora verore e Irkutskut"}
+            lg{"Ora e Irkutskut"}
+            ls{"Ora standarde e Irkutskut"}
         }
         "meta:Israel"{
             ld{"Ora verore e Izraelit"}
@@ -1630,9 +1639,9 @@ sq{
             ls{"Ora e Ishujve Sporadikë Ekuatorialë"}
         }
         "meta:Lord_Howe"{
-            ld{"Ora verore e Lord Houit"}
-            lg{"Ora e Lord Houit"}
-            ls{"Ora standarde e Lord Houit"}
+            ld{"Ora verore e Lord-Houit"}
+            lg{"Ora e Lord-Houit"}
+            ls{"Ora standarde e Lord-Houit"}
         }
         "meta:Macau"{
             ld{"Ora verore e Makaos"}
@@ -1678,9 +1687,9 @@ sq{
             ls{"Ora standarde meksikane e Bregut të Paqësorit"}
         }
         "meta:Mongolia"{
-            ld{"Ora verore e Ulan Batorit"}
-            lg{"Ora e Ulan Batorit"}
-            ls{"Ora standarde e Ulan Batorit"}
+            ld{"Ora verore e Ulan-Batorit"}
+            lg{"Ora e Ulan-Batorit"}
+            ls{"Ora standarde e Ulan-Batorit"}
         }
         "meta:Moscow"{
             ld{"Ora verore e Moskës"}
@@ -1718,9 +1727,9 @@ sq{
             ls{"Ora e Ishullit Norfolk"}
         }
         "meta:Noronha"{
-            ld{"Ora verore e Fernando de Noronjës"}
-            lg{"Ora e Fernando de Noronjës"}
-            ls{"Ora standarde e Fernando de Noronjës"}
+            ld{"Ora verore e Fernando-de-Noronjës"}
+            lg{"Ora e Fernando-de-Noronjës"}
+            ls{"Ora standarde e Fernando-de-Noronjës"}
         }
         "meta:North_Mariana"{
             ls{"Ora e Ishujve të Marianës së Veriut"}
@@ -1765,9 +1774,9 @@ sq{
             ls{"Ora e Ishujve Feniks"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Ora verore e Shën Pierr dhe Mikuelon"}
-            lg{"Ora e Shën Pierr dhe Mikuelon"}
-            ls{"Ora standarde e Shën Pierr dhe Mikuelon"}
+            ld{"Ora verore e Shën-Pier dhe Mikuelon"}
+            lg{"Ora e Shën-Pier dhe Mikuelon"}
+            ls{"Ora standarde e Shën-Pier dhe Mikuelon"}
         }
         "meta:Pitcairn"{
             ls{"Ora e Pitkernit"}
@@ -1802,7 +1811,7 @@ sq{
             ls{"Ora standarde e Samoas"}
         }
         "meta:Seychelles"{
-            ls{"Ora e Sejçelës"}
+            ls{"Ora e Sishelës"}
         }
         "meta:Singapore"{
             ls{"Ora e Singaporit"}
@@ -1897,8 +1906,8 @@ sq{
             ls{"Ora standarde e Ekaterinburgut"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
+        gmtFormat{"Ora e Grenuiçit: {0}"}
+        gmtZeroFormat{"Ora e Grenuiçit"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ora: {0}"}
         regionFormatDaylight{"Ora verore: {0}"}

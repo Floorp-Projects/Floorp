@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 de{
-    Version{"2.1.6.34"}
+    Version{"2.1.19.14"}
     collations{
         phonebook{
             Sequence{
@@ -15,11 +15,14 @@ de{
                 "&OE<<ö<<<Ö"
                 "&UE<<ü<<<Ü"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         search{
-            Sequence{"[import und-u-co-search][import de-u-co-phonebk]"}
-            Version{"27.0.1"}
+            Sequence{
+                "[import und-u-co-search]"
+                "[import de-u-co-phonebk]"
+            }
+            Version{"28"}
         }
     }
 }

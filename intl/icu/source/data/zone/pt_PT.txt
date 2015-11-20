@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 pt_PT{
-    Version{"2.1.13.23"}
+    Version{"2.1.19.79"}
     zoneStrings{
         "Africa:Djibouti"{
             ec{"Jibuti"}
@@ -157,7 +157,7 @@ pt_PT{
             ec{"Podgorica"}
         }
         "Europe:San_Marino"{
-            ec{"São Marino"}
+            ec{"São Marinho"}
         }
         "Indian:Christmas"{
             ec{"Ilha do Natal"}
@@ -238,7 +238,7 @@ pt_PT{
         }
         "meta:America_Mountain"{
             ld{"Hora de verão da Montanha"}
-            lg{"Hora da Montanha"}
+            lg{"Hora de Montanha"}
             ls{"Hora padrão da Montanha"}
         }
         "meta:America_Pacific"{
@@ -250,6 +250,11 @@ pt_PT{
             ld{"Hora de verão de Anadyr"}
             lg{"Hora de Anadyr"}
             ls{"Hora padrão de Anadyr"}
+        }
+        "meta:Apia"{
+            ld{"Hora de verão de Apia"}
+            lg{"Hora de Apia"}
+            ls{"Hora padrão de Apia"}
         }
         "meta:Aqtau"{
             ld{"Hora de verão de Aqtau"}

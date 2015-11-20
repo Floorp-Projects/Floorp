@@ -1,6 +1,6 @@
 /*
  ************************************************************************************
- * Copyright (C) 2006-2014, International Business Machines Corporation
+ * Copyright (C) 2006-2015, International Business Machines Corporation
  * and others. All Rights Reserved.
  ************************************************************************************
  */
@@ -23,6 +23,7 @@
 #include "unicode/bytestrie.h"
 #include "charstr.h"
 #include "dictionarydata.h"
+#include "mutex.h"
 #include "uvector.h"
 #include "umutex.h"
 #include "uresimp.h"
@@ -138,82 +139,38 @@ static void U_CALLCONV _deleteEngine(void *obj) {
 U_CDECL_END
 U_NAMESPACE_BEGIN
 
+static UMutex gBreakEngineMutex = U_MUTEX_INITIALIZER;
+
 const LanguageBreakEngine *
 ICULanguageBreakFactory::getEngineFor(UChar32 c, int32_t breakType) {
-    UBool       needsInit;
-    int32_t     i;
     const LanguageBreakEngine *lbe = NULL;
     UErrorCode  status = U_ZERO_ERROR;
 
-    // TODO: The global mutex should not be used.
-    // The global mutex should only be used for short periods.
-    // A ICULanguageBreakFactory specific mutex should be used.
-    umtx_lock(NULL);
-    needsInit = (UBool)(fEngines == NULL);
-    if (!needsInit) {
-        i = fEngines->size();
+    Mutex m(&gBreakEngineMutex);
+
+    if (fEngines == NULL) {
+        UStack  *engines = new UStack(_deleteEngine, NULL, status);
+        if (U_FAILURE(status) || engines == NULL) {
+            // Note: no way to return error code to caller.
+            delete engines;
+            return NULL;
+        }
+        fEngines = engines;
+    } else {
+        int32_t i = fEngines->size();
         while (--i >= 0) {
             lbe = (const LanguageBreakEngine *)(fEngines->elementAt(i));
             if (lbe != NULL && lbe->handles(c, breakType)) {
-                break;
+                return lbe;
             }
-            lbe = NULL;
         }
     }
-    umtx_unlock(NULL);
     
+    // We didn't find an engine. Create one.
+    lbe = loadEngineFor(c, breakType);
     if (lbe != NULL) {
-        return lbe;
+        fEngines->push((void *)lbe, status);
     }
-    
-    if (needsInit) {
-        UStack  *engines = new UStack(_deleteEngine, NULL, status);
-        if (U_SUCCESS(status) && engines == NULL) {
-            status = U_MEMORY_ALLOCATION_ERROR;
-        }
-        else if (U_FAILURE(status)) {
-            delete engines;
-            engines = NULL;
-        }
-        else {
-            umtx_lock(NULL);
-            if (fEngines == NULL) {
-                fEngines = engines;
-                engines = NULL;
-            }
-            umtx_unlock(NULL);
-            delete engines;
-        }
-    }
-    
-    if (fEngines == NULL) {
-        return NULL;
-    }
-
-    // We didn't find an engine the first time through, or there was no
-    // stack. Create an engine.
-    const LanguageBreakEngine *newlbe = loadEngineFor(c, breakType);
-    
-    // Now get the lock, and see if someone else has created it in the
-    // meantime
-    umtx_lock(NULL);
-    i = fEngines->size();
-    while (--i >= 0) {
-        lbe = (const LanguageBreakEngine *)(fEngines->elementAt(i));
-        if (lbe != NULL && lbe->handles(c, breakType)) {
-            break;
-        }
-        lbe = NULL;
-    }
-    if (lbe == NULL && newlbe != NULL) {
-        fEngines->push((void *)newlbe, status);
-        lbe = newlbe;
-        newlbe = NULL;
-    }
-    umtx_unlock(NULL);
-    
-    delete newlbe;
-
     return lbe;
 }
 

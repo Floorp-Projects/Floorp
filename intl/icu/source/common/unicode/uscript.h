@@ -300,7 +300,7 @@ typedef enum UScriptCode {
       USCRIPT_REJANG                        = 110,/* Rjng */
       /** @stable ICU 3.8 */
       USCRIPT_SAURASHTRA                    = 111,/* Saur */
-      /** @stable ICU 3.8 */
+      /** Sutton SignWriting @stable ICU 3.8 */
       USCRIPT_SIGN_WRITING                  = 112,/* Sgnw */
       /** @stable ICU 3.8 */
       USCRIPT_SUNDANESE                     = 113,/* Sund */

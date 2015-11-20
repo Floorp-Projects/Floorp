@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="derb.c">
+    <ClCompile Include="derb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

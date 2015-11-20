@@ -18,7 +18,7 @@ it_CH{
             }
         }
     }
-    Version{"2.1.11.71"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -52,6 +52,24 @@ it_CH{
                 "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            monthNames{
+                stand-alone{
+                    wide{
+                        "gennaio",
+                        "febbraio",
+                        "marzo",
+                        "aprile",
+                        "maggio",
+                        "giugno",
+                        "luglio",
+                        "agosto",
+                        "settembre",
+                        "ottobre",
+                        "novembre",
+                        "dicembre",
+                    }
+                }
             }
         }
     }

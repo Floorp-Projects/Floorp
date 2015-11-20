@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 2008-2014, International Business Machines Corporation and
+ * Copyright (C) 2008-2015, International Business Machines Corporation and
  * others. All Rights Reserved.
  *******************************************************************************
  *
@@ -353,6 +353,7 @@ private:
         kIPI_AM_PM,
         kIPI_HOUR,
         kIPI_MINUTE,
+        kIPI_SECOND,
         kIPI_MAX_INDEX
     };
 public:

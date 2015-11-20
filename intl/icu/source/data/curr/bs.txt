@@ -986,7 +986,7 @@ bs{
         }
         UZS{
             "UZS",
-            "Uzbekistanski som",
+            "uzbekistanski som",
         }
         VEB{
             "VEB",
@@ -1014,7 +1014,7 @@ bs{
         }
         XAF{
             "FCFA",
-            "CFA franak BEAC",
+            "centralnoafrički franak CFA",
         }
         XAG{
             "XAG",
@@ -1062,7 +1062,7 @@ bs{
         }
         XOF{
             "CFA",
-            "CFA franak BCEAO",
+            "zapadnoafrički franak CFA",
         }
         XPD{
             "XPD",
@@ -1460,7 +1460,7 @@ bs{
             other{"belizeanskih dolara"}
         }
         CAD{
-            few{"Kanadska dolara"}
+            few{"kanadski dolari"}
             one{"kanadski dolar"}
             other{"kanadskih dolara"}
         }
@@ -1735,7 +1735,7 @@ bs{
             other{"hrvatskih dinara"}
         }
         HRK{
-            few{"Hrvatske kune"}
+            few{"hrvatske kune"}
             one{"hrvatska kuna"}
             other{"hrvatskih kuna"}
         }
@@ -1956,8 +1956,8 @@ bs{
         }
         MGA{
             few{"malagaska ariarija"}
-            one{"malagaski ariari"}
-            other{"madagaskarski ariariji"}
+            one{"malgaški arijari"}
+            other{"malgaški arijariji"}
         }
         MGF{
             few{"madagaskarska franka"}
@@ -2021,7 +2021,7 @@ bs{
         }
         MWK{
             few{"malavske kvače"}
-            one{"malavska kvača"}
+            one{"malavijska kvača"}
             other{"malavijskih kvača"}
         }
         MXN{
@@ -2085,8 +2085,8 @@ bs{
             other{"holandskih guldena"}
         }
         NOK{
-            few{"Norveške kune"}
-            one{"Norveška kuna"}
+            few{"norveških kruna"}
+            one{"norveška kruna"}
             other{"norveških kruna"}
         }
         NPR{
@@ -2281,7 +2281,7 @@ bs{
         }
         STD{
             few{"dobre Sao Toma i Principa"}
-            one{"dobra Sao Toma i Principa"}
+            one{"svetotomska dobra"}
             other{"dobri Sao Toma i Principa"}
         }
         SUR{
@@ -2357,7 +2357,7 @@ bs{
         TTD{
             few{"trinidadtobaška dolara"}
             one{"trinidadtobaški dolar"}
-            other{"trinidadtobaški dolar"}
+            other{"trinidadtobaški dolari"}
         }
         TWD{
             few{"nova tajvanska dolara"}
@@ -2422,7 +2422,7 @@ bs{
         UZS{
             few{"uzbekistanska soma"}
             one{"uzbekistanski som"}
-            other{"uzbekistanskih soma"}
+            other{"uzbekistanski somi"}
         }
         VEB{
             few{"venecuelska bolivara (1871–2008)"}
@@ -2455,9 +2455,9 @@ bs{
             other{"samoanskih tala"}
         }
         XAF{
-            few{"CFA franka BEAC"}
-            one{"CFA franak BEAC"}
-            other{"CFA franaka BEAC"}
+            few{"centralnoafrička franka CFA"}
+            one{"centralnoafrički franak CFA"}
+            other{"centralnoafričkih franaka CFA"}
         }
         XAG{
             few{"srebra"}
@@ -2515,9 +2515,9 @@ bs{
             other{"francuskih UIC-franaka"}
         }
         XOF{
-            few{"CFA franka BCEAO"}
-            one{"CFA franak BCEAO"}
-            other{"CFA franaka BCEAO"}
+            few{"zapadnoafrički franci CFA"}
+            one{"zapadnoafrički franak CFA"}
+            other{"zapadnoafrički franci CFA"}
         }
         XPD{
             few{"paladijuma"}
@@ -2625,5 +2625,5 @@ bs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.13.46"}
+    Version{"2.1.19.77"}
 }

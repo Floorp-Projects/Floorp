@@ -225,10 +225,6 @@ void RegexMatcher::init(UErrorCode &status) {
     fInput             = NULL;
     fInputLength       = 0;
     fInputUniStrMaybeMutable = FALSE;
-
-    if (U_FAILURE(status)) {
-        fDeferredStatus = status;
-    }
 }
 
 //
@@ -2500,6 +2496,10 @@ REStackFrame *RegexMatcher::resetStack() {
     fStack->removeAllElements();
 
     REStackFrame *iFrame = (REStackFrame *)fStack->reserveBlock(fPattern->fFrameSize, fDeferredStatus);
+    if(U_FAILURE(fDeferredStatus)) {
+        return NULL;
+    }
+
     int32_t i;
     for (i=0; i<fPattern->fFrameSize-RESTACKFRAME_HDRCOUNT; i++) {
         iFrame->fExtra[i] = -1;
@@ -2687,9 +2687,12 @@ void RegexMatcher::IncrementTime(UErrorCode &status) {
 //
 //--------------------------------------------------------------------------------
 inline REStackFrame *RegexMatcher::StateSave(REStackFrame *fp, int64_t savePatIdx, UErrorCode &status) {
+    if (U_FAILURE(status)) {
+        return fp;
+    }
     // push storage for a new frame.
     int64_t *newFP = fStack->reserveBlock(fFrameSize, status);
-    if (newFP == NULL) {
+    if (U_FAILURE(status)) {
         // Failure on attempted stack expansion.
         //   Stack function set some other error code, change it to a more
         //   specific one for regular expressions.
@@ -2781,6 +2784,10 @@ void RegexMatcher::MatchAt(int64_t startIdx, UBool toEnd, UErrorCode &status) {
 
     fFrameSize = fPattern->fFrameSize;
     REStackFrame        *fp            = resetStack();
+    if (U_FAILURE(fDeferredStatus)) {
+        status = fDeferredStatus;
+        return;
+    }
 
     fp->fPatIdx   = 0;
     fp->fInputIdx = startIdx;
@@ -4344,6 +4351,10 @@ void RegexMatcher::MatchChunkAt(int32_t startIdx, UBool toEnd, UErrorCode &statu
 
     fFrameSize = fPattern->fFrameSize;
     REStackFrame        *fp            = resetStack();
+    if (U_FAILURE(fDeferredStatus)) {
+        status = fDeferredStatus;
+        return;
+    }
 
     fp->fPatIdx   = 0;
     fp->fInputIdx = startIdx;

@@ -114,6 +114,80 @@ pl{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0 tys'.' ¤"}
+                        many{"0 tys'.' ¤"}
+                        one{"0 tys'.' ¤"}
+                        other{"0 tys'.' ¤"}
+                    }
+                    10000{
+                        few{"00 tys'.' ¤"}
+                        many{"00 tys'.' ¤"}
+                        one{"00 tys'.' ¤"}
+                        other{"00 tys'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tys'.' ¤"}
+                        many{"000 tys'.' ¤"}
+                        one{"000 tys'.' ¤"}
+                        other{"000 tys'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mln ¤"}
+                        many{"0 mln ¤"}
+                        one{"0 mln ¤"}
+                        other{"0 mln ¤"}
+                    }
+                    10000000{
+                        few{"00 mln ¤"}
+                        many{"00 mln ¤"}
+                        one{"00 mln ¤"}
+                        other{"00 mln ¤"}
+                    }
+                    100000000{
+                        few{"000 mln ¤"}
+                        many{"000 mln ¤"}
+                        one{"000 mln ¤"}
+                        other{"000 mln ¤"}
+                    }
+                    1000000000{
+                        few{"0 mld ¤"}
+                        many{"0 mld ¤"}
+                        one{"0 mld ¤"}
+                        other{"0 mld ¤"}
+                    }
+                    10000000000{
+                        few{"00 mld ¤"}
+                        many{"00 mld ¤"}
+                        one{"00 mld ¤"}
+                        other{"00 mld ¤"}
+                    }
+                    100000000000{
+                        few{"000 mld ¤"}
+                        many{"000 mld ¤"}
+                        one{"000 mld ¤"}
+                        other{"000 mld ¤"}
+                    }
+                    1000000000000{
+                        few{"0 bln ¤"}
+                        many{"0 bln ¤"}
+                        one{"0 bln ¤"}
+                        other{"0 bln ¤"}
+                    }
+                    10000000000000{
+                        few{"00 bln ¤"}
+                        many{"00 bln ¤"}
+                        one{"00 bln ¤"}
+                        other{"00 bln ¤"}
+                    }
+                    100000000000000{
+                        few{"000 bln ¤"}
+                        many{"000 bln ¤"}
+                        one{"000 bln ¤"}
+                        other{"000 bln ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tys'.'"}
@@ -207,7 +281,7 @@ pl{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         buddhist{
             eras{
@@ -448,6 +522,7 @@ pl{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
@@ -583,6 +658,10 @@ pl{
                 "AM",
                 "PM",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -602,8 +681,6 @@ pl{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"w południe"}
-            NoonMarkerNarrow{"n"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -615,8 +692,8 @@ pl{
                 Ehm{"E, h:mm a"}
                 Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"MM.y G"}
-                GyMMMEd{"E, d.MM.y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
                 GyMMMM{"LLLL y G"}
                 GyMMMMEd{"E, d MMMM y G"}
                 GyMMMMd{"d MMMM y G"}
@@ -729,6 +806,58 @@ pl{
                         "czwartek",
                         "piątek",
                         "sobota",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"po południu"}
+                        evening1{"wieczorem"}
+                        midnight{"o północy"}
+                        morning1{"rano"}
+                        morning2{"przed południem"}
+                        night1{"w nocy"}
+                        noon{"w południe"}
+                    }
+                    narrow{
+                        afternoon1{"po południu"}
+                        evening1{"wieczorem"}
+                        midnight{"o półn."}
+                        morning1{"rano"}
+                        morning2{"przed południem"}
+                        night1{"w nocy"}
+                        noon{"n"}
+                    }
+                    wide{
+                        afternoon1{"po południu"}
+                        evening1{"wieczorem"}
+                        midnight{"o północy"}
+                        morning1{"rano"}
+                        morning2{"przed południem"}
+                        night1{"w nocy"}
+                        noon{"w południe"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"a"}
+                        pm{"p"}
+                    }
+                    wide{
+                        afternoon1{"popołudnie"}
+                        am{"AM"}
+                        evening1{"wieczór"}
+                        midnight{"północ"}
+                        morning1{"rano"}
+                        morning2{"przedpołudnie"}
+                        night1{"noc"}
+                        noon{"południe"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -1609,6 +1738,11 @@ pl{
         }
         quarter{
             dn{"kwartał"}
+            relative{
+                "-1"{"w zeszłym kwartale"}
+                "0"{"w tym kwartale"}
+                "1"{"w przyszłym kwartale"}
+            }
             relativeTime{
                 future{
                     few{"za {0} kwartały"}
@@ -1626,6 +1760,11 @@ pl{
         }
         quarter-narrow{
             dn{"kw."}
+            relative{
+                "-1"{"w zeszłym kwartale"}
+                "0"{"w tym kwartale"}
+                "1"{"w przyszłym kwartale"}
+            }
             relativeTime{
                 future{
                     few{"+{0} kw."}
@@ -1643,6 +1782,11 @@ pl{
         }
         quarter-short{
             dn{"kw."}
+            relative{
+                "-1"{"w zeszłym kwartale"}
+                "0"{"w tym kwartale"}
+                "1"{"w przyszłym kwartale"}
+            }
             relativeTime{
                 future{
                     few{"za {0} kw."}

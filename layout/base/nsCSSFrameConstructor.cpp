@@ -12062,8 +12062,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       return false;
     }
 
-    // We might have some inline kids for this block.  Just reconstruct.
-    break;
+    // We might have some inline kids for this block.  Just fall out of the
+    // loop and reconstruct.
   } while (0);
 
   // If we don't have a containing block, start with aFrame and look for one.
