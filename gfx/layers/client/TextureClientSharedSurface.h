@@ -59,7 +59,7 @@ public:
   gl::SharedSurface* Surf() const { return mSurf.get(); }
 };
 
-class SharedSurfaceTextureClient : public ClientTexture
+class SharedSurfaceTextureClient : public TextureClient
 {
 public:
   SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,

@@ -51,7 +51,7 @@ SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 SharedSurfaceTextureClient::SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,
                                                        TextureFlags aFlags,
                                                        ISurfaceAllocator* aAllocator)
-: ClientTexture(aData, aFlags, aAllocator)
+: TextureClient(aData, aFlags, aAllocator)
 {}
 
 already_AddRefed<SharedSurfaceTextureClient>
