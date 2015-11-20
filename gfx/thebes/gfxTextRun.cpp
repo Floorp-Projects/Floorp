@@ -1532,11 +1532,13 @@ gfxTextRun::Dump(FILE* aOutput) {
 gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
                            const gfxFontStyle *aStyle,
                            gfxTextPerfMetrics* aTextPerf,
-                           gfxUserFontSet *aUserFontSet)
+                           gfxUserFontSet *aUserFontSet,
+                           gfxFloat aDevToCssSize)
     : mFamilyList(aFontFamilyList)
     , mStyle(*aStyle)
     , mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
     , mHyphenWidth(-1)
+    , mDevToCssSize(aDevToCssSize)
     , mUserFontSet(aUserFontSet)
     , mTextPerf(aTextPerf)
     , mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aStyle->language))
@@ -1619,7 +1621,7 @@ gfxFontGroup::AddPlatformFont(const nsAString& aName,
     // Not known in the user font set ==> check system fonts
     if (!family) {
         gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
-        family = fontList->FindFamily(aName, &mStyle);
+        family = fontList->FindFamily(aName, &mStyle, mDevToCssSize);
     }
 
     if (family) {
@@ -1896,7 +1898,8 @@ gfxFontGroup *
 gfxFontGroup::Copy(const gfxFontStyle *aStyle)
 {
     gfxFontGroup *fg =
-        new gfxFontGroup(mFamilyList, aStyle, mTextPerf, mUserFontSet);
+        new gfxFontGroup(mFamilyList, aStyle, mTextPerf,
+                         mUserFontSet, mDevToCssSize);
     return fg;
 }
 
