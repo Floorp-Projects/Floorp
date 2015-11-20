@@ -61,14 +61,14 @@ struct StringArrayAppender
   }
 
   template<typename... Ts>
-  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString* aFirst, Ts... aOtherArgs)
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString& aFirst, Ts&&... aOtherArgs)
   {
     if (aCount == 0) {
       MOZ_ASSERT(false, "There should not be more string arguments provided than are required by the ErrNum.");
       return;
     }
-    aArgs.AppendElement(*aFirst);
-    Append(aArgs, aCount - 1, aOtherArgs...);
+    aArgs.AppendElement(aFirst);
+    Append(aArgs, aCount - 1, Forward<Ts>(aOtherArgs)...);
   }
 };
 
@@ -135,15 +135,17 @@ public:
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowTypeError(Ts... messageArgs)
+  void ThrowTypeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR, messageArgs...);
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR,
+                                       Forward<Ts>(messageArgs)...);
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowRangeError(Ts... messageArgs)
+  void ThrowRangeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR, messageArgs...);
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR,
+                                       Forward<Ts>(messageArgs)...);
   }
 
   void ReportErrorWithMessage(JSContext* cx);
@@ -264,7 +266,7 @@ private:
   nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
 
   template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowErrorWithMessage(nsresult errorType, Ts... messageArgs)
+  void ThrowErrorWithMessage(nsresult errorType, Ts&&... messageArgs)
   {
 #if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
     static_assert(dom::ErrorFormatNumArgs[errorNumber] == sizeof...(messageArgs),
@@ -275,7 +277,8 @@ private:
 
     nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
-    dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
+    dom::StringArrayAppender::Append(messageArgsArray, argCount,
+                                     Forward<Ts>(messageArgs)...);
 #ifdef DEBUG
     mUnionState = HasMessage;
 #endif // DEBUG

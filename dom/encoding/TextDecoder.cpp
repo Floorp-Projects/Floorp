@@ -26,7 +26,7 @@ TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
   if (!EncodingUtils::FindEncodingForLabelNoReplacement(aLabel, encoding)) {
     nsAutoString label(aLabel);
     EncodingUtils::TrimSpaceCharacters(label);
-    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(&label);
+    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(label);
     return;
   }
   InitWithEncoding(encoding, aFatal);

@@ -180,7 +180,7 @@ InternalHeaders::IsInvalidName(const nsACString& aName, ErrorResult& aRv)
 {
   if (!NS_IsValidHTTPToken(aName)) {
     NS_ConvertUTF8toUTF16 label(aName);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_NAME>(&label);
+    aRv.ThrowTypeError<MSG_INVALID_HEADER_NAME>(label);
     return true;
   }
 
@@ -193,7 +193,7 @@ InternalHeaders::IsInvalidValue(const nsACString& aValue, ErrorResult& aRv)
 {
   if (!NS_IsReasonableHTTPHeaderValue(aValue)) {
     NS_ConvertUTF8toUTF16 label(aValue);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(&label);
+    aRv.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(label);
     return true;
   }
   return false;

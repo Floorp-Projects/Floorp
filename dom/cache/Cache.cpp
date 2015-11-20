@@ -46,8 +46,8 @@ IsValidPutRequestURL(const nsAString& aUrl, ErrorResult& aRv)
   }
 
   if (!validScheme) {
-    NS_NAMED_LITERAL_STRING(label, "Request");
-    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(&label, &aUrl);
+    aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(NS_LITERAL_STRING("Request"),
+                                               aUrl);
     return false;
   }
 
@@ -61,7 +61,7 @@ IsValidPutRequestMethod(const Request& aRequest, ErrorResult& aRv)
   aRequest.GetMethod(method);
   if (!method.LowerCaseEqualsLiteral("get")) {
     NS_ConvertASCIItoUTF16 label(method);
-    aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(&label);
+    aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(label);
     return false;
   }
 
