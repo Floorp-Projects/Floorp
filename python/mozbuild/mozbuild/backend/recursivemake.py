@@ -927,7 +927,7 @@ class RecursiveMakeBackend(CommonBackend):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())
         if defines:
-            defines = ' '.join(defines)
+            defines = ' '.join(shell_quote(d) for d in defines)
             backend_file.write_once('%s += %s\n' % (which, defines))
 
     def _process_test_harness_files(self, obj, backend_file):
