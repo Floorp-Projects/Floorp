@@ -29,6 +29,7 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
+#include "gfxPlatformGtk.h"
 #endif
 
 using namespace mozilla;
@@ -400,6 +401,21 @@ gfxFontconfigFontEntry::~gfxFontconfigFontEntry()
 {
 }
 
+static bool
+PatternHasLang(const FcPattern *aPattern, const FcChar8 *aLang)
+{
+    FcLangSet *langset;
+
+    if (FcPatternGetLangSet(aPattern, FC_LANG, 0, &langset) != FcResultMatch) {
+        return false;
+    }
+
+    if (FcLangSetHasLang(langset, aLang) != FcLangDifferentLang) {
+        return true;
+    }
+    return false;
+}
+
 bool
 gfxFontconfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
 {
@@ -415,16 +431,7 @@ gfxFontconfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
     }
 
     // is lang included in the underlying pattern?
-    FcLangSet *langset;
-    if (FcPatternGetLangSet(mFontPattern, FC_LANG, 0, &langset) != FcResultMatch) {
-        return false;
-    }
-
-    if (FcLangSetHasLang(langset, (FcChar8 *)fcLang.get()) != FcLangDifferentLang) {
-        return true;
-    }
-
-    return false;
+    return PatternHasLang(mFontPattern, ToFcChar8Ptr(fcLang.get()));
 }
 
 nsresult
@@ -1551,7 +1558,7 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
 void
 gfxFcPlatformFontList::ClearLangGroupPrefFonts()
 {
-    mGenericMappings.Clear();
+    ClearGenericMappings();
     gfxPlatformFontList::ClearLangGroupPrefFonts();
     mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
 }
@@ -1595,9 +1602,6 @@ gfxFcPlatformFontList::GetFTLibrary()
 
     return sCairoFTLibrary;
 }
-
-// a given generic will map to at most this many families
-const uint32_t kMaxGenericFamilies = 3;
 
 gfxPlatformFontList::PrefFontList*
 gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
@@ -1651,6 +1655,8 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
 
     // -- select the fonts to be used for the generic
     prefFonts = new PrefFontList; // can be empty but in practice won't happen
+    uint32_t limit = gfxPlatformGtk::GetPlatform()->MaxGenericSubstitions();
+    bool foundFontWithLang = false;
     for (int i = 0; i < faces->nfont; i++) {
         FcPattern* font = faces->fonts[i];
         FcChar8* mappedGeneric = nullptr;
@@ -1668,14 +1674,25 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
             gfxFontFamily* genericFamily =
                 gfxPlatformFontList::FindFamily(mappedGenericName);
             if (genericFamily && !prefFonts->Contains(genericFamily)) {
-                //printf("generic %s ==> %s\n", genericLang.get(), (const char*)mappedGeneric);
                 prefFonts->AppendElement(genericFamily);
-                if (prefFonts->Length() >= kMaxGenericFamilies) {
+                bool foundLang = !fcLang.IsEmpty() &&
+                                 PatternHasLang(font, ToFcChar8Ptr(fcLang.get()));
+                foundFontWithLang = foundFontWithLang || foundLang;
+                // stop at the first family for which the lang matches (or
+                // when there is no lang)
+                if (fcLang.IsEmpty() ||
+                    prefFonts->Length() >= limit || foundLang) {
                     break;
                 }
             }
         }
     }
+
+    // if no font in the list matches the lang, trim all but the first one
+    if (!prefFonts->IsEmpty() && !foundFontWithLang) {
+        prefFonts->TruncateLength(1);
+    }
+
     mGenericMappings.Put(genericLang, prefFonts);
     return prefFonts;
 }

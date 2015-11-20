@@ -906,13 +906,13 @@ MConstant::canProduceFloat32() const
 MDefinition*
 MSimdValueX4::foldsTo(TempAllocator& alloc)
 {
-    DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type());
+    DebugOnly<MIRType> laneType = SimdTypeToLaneType(type());
     bool allConstants = true;
     bool allSame = true;
 
     for (size_t i = 0; i < 4; ++i) {
         MDefinition* op = getOperand(i);
-        MOZ_ASSERT(op->type() == scalarType);
+        MOZ_ASSERT(op->type() == laneType);
         if (!op->isConstantValue())
             allConstants = false;
         if (i > 0 && op != getOperand(i - 1))
@@ -952,11 +952,11 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
 MDefinition*
 MSimdSplatX4::foldsTo(TempAllocator& alloc)
 {
-    DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type());
+    DebugOnly<MIRType> laneType = SimdTypeToLaneType(type());
     MDefinition* op = getOperand(0);
     if (!op->isConstantValue())
         return this;
-    MOZ_ASSERT(op->type() == scalarType);
+    MOZ_ASSERT(op->type() == laneType);
 
     SimdConstant cst;
     switch (type()) {

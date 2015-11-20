@@ -117,6 +117,13 @@ function saveNewHeapSnapshot(opts = { runtime: true }) {
   return filePath;
 }
 
+function readHeapSnapshot(filePath) {
+  const snapshot = ChromeUtils.readHeapSnapshot(filePath);
+  ok(snapshot, "Should have read a heap snapshot back from " + filePath);
+  ok(snapshot instanceof HeapSnapshot, "snapshot should be an instance of HeapSnapshot");
+  return snapshot;
+}
+
 /**
  * Save a heap snapshot to the file with the given name in the current
  * directory, read it back as a HeapSnapshot instance, and then take a census of
@@ -138,16 +145,38 @@ function saveNewHeapSnapshot(opts = { runtime: true }) {
  */
 function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined) {
   const snapshotOptions = dbg ? { debugger: dbg } : { runtime: true };
-  const filePath = ChromeUtils.saveHeapSnapshot(snapshotOptions);
-  ok(filePath, "Should get a file path to save the core dump to.");
-  ok(true, "Should have saved a heap snapshot to " + filePath);
-
-  const snapshot = ChromeUtils.readHeapSnapshot(filePath);
-  ok(snapshot, "Should have read a heap snapshot back from " + filePath);
-  ok(snapshot instanceof HeapSnapshot, "snapshot should be an instance of HeapSnapshot");
+  const filePath = saveNewHeapSnapshot(snapshotOptions);
+  const snapshot = readHeapSnapshot(filePath);
 
   equal(typeof snapshot.takeCensus, "function", "snapshot should have a takeCensus method");
+
   return snapshot.takeCensus(censusOptions);
+}
+
+/**
+ * Save a heap snapshot to disk, read it back as a HeapSnapshot instance, and
+ * then compute its dominator tree.
+ *
+ * @param {Debugger|null} dbg
+ *        If a Debugger object is given, only serialize the subgraph covered by
+ *        the Debugger's debuggees. If null, serialize the whole heap graph.
+ *
+ * @returns {DominatorTree}
+ */
+function saveHeapSnapshotAndComputeDominatorTree(dbg = null) {
+  const snapshotOptions = dbg ? { debugger: dbg } : { runtime: true };
+  const filePath = saveNewHeapSnapshot(snapshotOptions);
+  const snapshot = readHeapSnapshot(filePath);
+
+  equal(typeof snapshot.computeDominatorTree, "function",
+        "snapshot should have a `computeDominatorTree` method");
+
+  const dominatorTree = snapshot.computeDominatorTree();
+
+  ok(dominatorTree, "Should be able to compute a dominator tree");
+  ok(dominatorTree instanceof DominatorTree, "Should be an instance of DominatorTree");
+
+  return dominatorTree;
 }
 
 function isSavedFrame(obj) {

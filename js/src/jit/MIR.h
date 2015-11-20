@@ -1401,16 +1401,16 @@ class MSimdValueX4
     static MSimdValueX4* NewAsmJS(TempAllocator& alloc, MIRType type, MDefinition* x,
                                   MDefinition* y, MDefinition* z, MDefinition* w)
     {
-        mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
-        MOZ_ASSERT(scalarType == x->type());
-        MOZ_ASSERT(scalarType == y->type());
-        MOZ_ASSERT(scalarType == z->type());
-        MOZ_ASSERT(scalarType == w->type());
+        mozilla::DebugOnly<MIRType> laneType = SimdTypeToLaneType(type);
+        MOZ_ASSERT(laneType == x->type());
+        MOZ_ASSERT(laneType == y->type());
+        MOZ_ASSERT(laneType == z->type());
+        MOZ_ASSERT(laneType == w->type());
         return MSimdValueX4::New(alloc, type, x, y, z, w);
     }
 
     bool canConsumeFloat32(MUse* use) const override {
-        return SimdTypeToScalarType(type()) == MIRType_Float32;
+        return SimdTypeToLaneType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const override {
@@ -1445,7 +1445,7 @@ class MSimdSplatX4
 
     static MSimdSplatX4* NewAsmJS(TempAllocator& alloc, MDefinition* v, MIRType type)
     {
-        MOZ_ASSERT(SimdTypeToScalarType(type) == v->type());
+        MOZ_ASSERT(SimdTypeToLaneType(type) == v->type());
         return new(alloc) MSimdSplatX4(type, v);
     }
 
@@ -1455,7 +1455,7 @@ class MSimdSplatX4
     }
 
     bool canConsumeFloat32(MUse* use) const override {
-        return SimdTypeToScalarType(type()) == MIRType_Float32;
+        return SimdTypeToLaneType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const override {
@@ -1596,17 +1596,17 @@ class MSimdExtractElement
   protected:
     SimdLane lane_;
 
-    MSimdExtractElement(MDefinition* obj, MIRType vecType, MIRType scalarType, SimdLane lane)
+    MSimdExtractElement(MDefinition* obj, MIRType vecType, MIRType laneType, SimdLane lane)
       : MUnaryInstruction(obj), lane_(lane)
     {
         MOZ_ASSERT(IsSimdType(vecType));
         MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(vecType));
-        MOZ_ASSERT(!IsSimdType(scalarType));
-        MOZ_ASSERT(SimdTypeToScalarType(vecType) == scalarType);
+        MOZ_ASSERT(!IsSimdType(laneType));
+        MOZ_ASSERT(SimdTypeToLaneType(vecType) == laneType);
 
         setMovable();
         specialization_ = vecType;
-        setResultType(scalarType);
+        setResultType(laneType);
     }
 
   public:
@@ -1665,7 +1665,7 @@ class MSimdInsertElement
                                          MIRType type, SimdLane lane)
     {
         MOZ_ASSERT(vec->type() == type);
-        MOZ_ASSERT(SimdTypeToScalarType(type) == val->type());
+        MOZ_ASSERT(SimdTypeToLaneType(type) == val->type());
         return new(alloc) MSimdInsertElement(vec, val, type, lane);
     }
 
@@ -1696,7 +1696,7 @@ class MSimdInsertElement
     }
 
     bool canConsumeFloat32(MUse* use) const override {
-        return use == getUseFor(1) && SimdTypeToScalarType(type()) == MIRType_Float32;
+        return use == getUseFor(1) && SimdTypeToLaneType(type()) == MIRType_Float32;
     }
 
     AliasSet getAliasSet() const override {

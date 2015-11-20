@@ -6,6 +6,8 @@ var loop = loop || {};
 (function() {
   "use strict";
 
+  var _slice = Array.prototype.slice;
+
   var kMessageName = "Loop:Message";
   var kPushMessageName = "Loop:Message:Push";
   var kBatchMessage = "Batch";
@@ -51,7 +53,7 @@ var loop = loop || {};
    *                   script sent a reply. It never gets rejected.
    */
   loop.request = function request() {
-    var args = Array.slice(arguments);
+    var args = _slice.call(arguments);
 
     return new Promise(function(resolve) {
       var payload = buildRequestArray(args);
@@ -107,7 +109,7 @@ var loop = loop || {};
       throw new Error("loop.requestMulti: please pass in a list of calls to process in parallel.");
     }
 
-    var calls = Array.slice(arguments);
+    var calls = _slice.call(arguments);
     calls.forEach(function(call) {
       if (!Array.isArray(call)) {
         throw new Error("loop.requestMulti: each call must be an array of options, " +

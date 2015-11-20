@@ -103,14 +103,14 @@ async_test(function(t) {
           return with_iframe(scope);
         })
       .then(function(frame) {
-          assert_equals(frame.contentWindow.navigator.serviceWorker.controller,
-                        null,
-                        'document should not load with a controller');
+          assert_equals(frame.contentWindow.navigator.serviceWorker.controller.scriptURL,
+                        normalizeURL(worker_url),
+                        'register() should always abort uninstalling the registration');
           frame.remove();
           t.done();
         })
       .catch(unreached_rejection(t));
-}, 'Registering a new script URL that 404s does not resurrect an ' +
+}, 'Registering a new script URL that 404s does resurrect an ' +
        'unregistered registration');
 
 async_test(function(t) {
@@ -144,9 +144,9 @@ async_test(function(t) {
           return with_iframe(scope);
         })
       .then(function(frame) {
-          assert_equals(frame.contentWindow.navigator.serviceWorker.controller,
-                        null,
-                        'document should not load with a controller');
+          assert_equals(frame.contentWindow.navigator.serviceWorker.controller.scriptURL,
+                        normalizeURL(worker_url),
+                        'register() should always abort uninstalling the registration');
           frame.remove();
           return registration.unregister();
         })
@@ -154,6 +154,6 @@ async_test(function(t) {
           t.done();
         })
       .catch(unreached_rejection(t));
-  }, 'Registering a new script URL that fails to install does not resurrect ' +
+  }, 'Registering a new script URL that fails to install does resurrect ' +
        'an unregistered registration');
 </script>

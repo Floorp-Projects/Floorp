@@ -127,23 +127,6 @@ function testHasRun() {
   }
 }
 
-function createFileWithData(fileData) {
-  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"].getService(SpecialPowers.Ci.nsIProperties);
-  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-  testFile.append("fileAPItestfile2-" + fileNum);
-  fileNum++;
-  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"].createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-  outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                 0666, 0);
-  outStream.write(fileData, fileData.length);
-  outStream.close();
-
-  var fileList = document.getElementById('fileList');
-  SpecialPowers.wrap(fileList).value = testFile.path;
-
-  return fileList.files[0];
-}
-
 function gc() {
   window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
         .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils)

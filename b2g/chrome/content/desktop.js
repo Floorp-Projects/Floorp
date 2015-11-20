@@ -15,13 +15,24 @@ function enableTouch() {
   touchEventSimulator.start();
 }
 
+// Some additional buttons are displayed on simulators to fake hardware buttons.
 function setupButtons() {
-  let homeButton = document.getElementById('home-button');
-  if (!homeButton) {
-    // The toolbar only exists in b2g desktop build with
-    // FXOS_SIMULATOR turned on.
-    return;
-  }
+  let link = document.createElement('link');
+  link.type = 'text/css';
+  link.rel = 'stylesheet';
+  link.href = 'chrome://b2g/content/desktop.css';
+  document.head.appendChild(link);
+
+  let footer = document.createElement('footer');
+  footer.id = 'controls';
+  document.body.appendChild(footer);
+  let homeButton = document.createElement('button');
+  homeButton.id = 'home-button';
+  footer.appendChild(homeButton);
+  let rotateButton = document.createElement('button');
+  rotateButton.id = 'rotate-button';
+  footer.appendChild(rotateButton);
+
   homeButton.addEventListener('mousedown', function() {
     let window = shell.contentBrowser.contentWindow;
     let e = new window.KeyboardEvent('keydown', {key: 'Home'});
@@ -36,7 +47,6 @@ function setupButtons() {
   });
 
   Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
-  let rotateButton = document.getElementById('rotate-button');
   rotateButton.addEventListener('mousedown', function() {
     rotateButton.classList.add('active');
   });
@@ -165,7 +175,9 @@ window.addEventListener('ContentStart', function() {
   if (!isMulet) {
     enableTouch();
   }
-  setupButtons();
+  if (Services.prefs.getBoolPref('b2g.software-buttons')) {
+    setupButtons();
+  }
   checkDebuggerPort();
   setupStorage();
   // On Firefox mulet, we automagically enable the responsive mode
