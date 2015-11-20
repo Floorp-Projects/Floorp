@@ -2399,7 +2399,9 @@ public class BrowserApp extends GeckoApp
             mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
                 @Override
                 public void onFinish() {
-                    enterEditingMode();
+                    if (mFirstrunPane.showBrowserHint()) {
+                        enterEditingMode();
+                    }
                 }
             });
         }
