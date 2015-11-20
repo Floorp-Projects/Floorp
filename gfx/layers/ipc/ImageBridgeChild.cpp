@@ -198,7 +198,7 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     for (int i = textures.Length() - 1; i >= 0; --i) {
       RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
       if (client) {
-        client->ForceRemove();
+        client->Destroy();
       }
     }
     sImageBridgeChildSingleton->SendWillStop();
@@ -766,7 +766,7 @@ bool InImageBridgeChildThread()
 
 MessageLoop * ImageBridgeChild::GetMessageLoop() const
 {
-  return sImageBridgeChildThread->message_loop();
+  return sImageBridgeChildThread ? sImageBridgeChildThread->message_loop() : nullptr;
 }
 
 void ImageBridgeChild::ConnectAsync(ImageBridgeParent* aParent)
@@ -1128,38 +1128,6 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
   // Hold AsyncTransactionTracker until receving reply
   CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
                                         aAsyncTransactionTracker);
-}
-
-static void RemoveTextureSync(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)
-{
-  aTexture->ForceRemove();
-
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
-void ImageBridgeChild::RemoveTexture(TextureClient* aTexture)
-{
-  if (InImageBridgeChildThread()) {
-    MOZ_ASSERT(!mShuttingDown);
-    aTexture->ForceRemove();
-    return;
-  }
-
-  ReentrantMonitor barrier("RemoveTexture Lock");
-  ReentrantMonitorAutoEnter autoMon(barrier);
-  bool done = false;
-
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&RemoveTextureSync, aTexture, &barrier, &done));
-
-  // should stop the thread until the ImageClient has been created on
-  // the other thread
-  while (!done) {
-    barrier.Wait();
-  }
 }
 
 bool ImageBridgeChild::IsSameProcess() const
