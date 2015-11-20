@@ -9,11 +9,11 @@ fails == webkit-gradient-approx-linear-1.html webkit-gradient-approx-linear-1-re
 fails == webkit-gradient-approx-radial-1.html webkit-gradient-approx-radial-1-ref.html
 
 # Tests for -webkit-gradient(linear, ...)
-fails == webkit-gradient-linear-1a.html webkit-gradient-linear-1-ref.html
+== webkit-gradient-linear-1a.html webkit-gradient-linear-1-ref.html
 fails == webkit-gradient-linear-1b.html webkit-gradient-linear-1-ref.html
 fails == webkit-gradient-linear-1c.html webkit-gradient-linear-1-ref.html
 fails == webkit-gradient-linear-1d.html webkit-gradient-linear-1-ref.html
-fails == webkit-gradient-linear-2.html webkit-gradient-linear-2-ref.html
+== webkit-gradient-linear-2.html webkit-gradient-linear-2-ref.html
 
 # Tests for -webkit-gradient(radial, ...)
 fails == webkit-gradient-radial-1a.html webkit-gradient-radial-1-ref.html

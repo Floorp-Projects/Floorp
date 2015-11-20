@@ -11,6 +11,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm> // for std::stable_sort
+
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -1240,6 +1242,23 @@ protected:
                             const nsString& aId);
   bool ParseGradientColorStops(nsCSSValueGradient* aGradient,
                                nsCSSValue& aValue);
+
+  // For the ancient "-webkit-gradient(linear|radial, ...)" syntax:
+  bool ParseWebkitGradientPointComponent(nsCSSValue& aComponent,
+                                         bool aIsHorizontal);
+  bool ParseWebkitGradientPoint(nsCSSValuePair& aPoint);
+  bool ParseWebkitGradientRadius(float& aRadius);
+  bool ParseWebkitGradientColorStop(nsCSSValueGradient* aGradient);
+  bool ParseWebkitGradientColorStops(nsCSSValueGradient* aGradient);
+  void FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
+                                    const nsCSSValuePair& aStartPoint,
+                                    const nsCSSValuePair& aSecondPoint);
+  void FinalizeRadialWebkitGradient(nsCSSValueGradient* aGradient,
+                                    const nsCSSValuePair& aFirstCenter,
+                                    const nsCSSValuePair& aSecondCenter,
+                                    const float aFirstRadius,
+                                    const float aSecondRadius);
+  bool ParseWebkitGradient(nsCSSValue& aValue);
 
   void SetParsingCompoundProperty(bool aBool) {
     mParsingCompoundProperty = aBool;
@@ -7647,6 +7666,18 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       }
       return CSSParseResult::Ok;
     }
+    if ((gradientFlags == eGradient_WebkitLegacy) &&
+        tmp.LowerCaseEqualsLiteral("gradient")) {
+      // Note: we check gradientFlags using '==' to select *exactly*
+      // eGradient_WebkitLegacy -- and exclude eGradient_Repeating -- because
+      // we don't want to accept -webkit-repeating-gradient() expressions.
+      // (This is not a recognized syntax.)
+      if (!ParseWebkitGradient(aValue)) {
+        return CSSParseResult::Error;
+      }
+      return CSSParseResult::Ok;
+    }
+
     if (ShouldUseUnprefixingService() &&
         !gradientFlags &&
         StringBeginsWith(tmp, NS_LITERAL_STRING("-webkit-"))) {
@@ -10013,7 +10044,365 @@ CSSParserImpl::ParseGradientColorStops(nsCSSValueGradient* aGradient,
   return true;
 }
 
-int32_t
+// Parses the x or y component of a -webkit-gradient() <point> expression.
+// See ParseWebkitGradientPoint() documentation for more.
+bool
+CSSParserImpl::ParseWebkitGradientPointComponent(nsCSSValue& aComponent,
+                                                 bool aIsHorizontal)
+{
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  // Keyword tables to use for keyword-matching
+  // (Keyword order is important; we assume the index can be multiplied by 50%
+  // to convert to a percent-valued component.)
+  static const nsCSSKeyword kHorizKeywords[] = {
+    eCSSKeyword_left,   //   0%
+    eCSSKeyword_center, //  50%
+    eCSSKeyword_right   // 100%
+  };
+  static const nsCSSKeyword kVertKeywords[] = {
+    eCSSKeyword_top,     //   0%
+    eCSSKeyword_center,  //  50%
+    eCSSKeyword_bottom   // 100%
+  };
+  static const size_t kNumKeywords = MOZ_ARRAY_LENGTH(kHorizKeywords);
+  static_assert(kNumKeywords == MOZ_ARRAY_LENGTH(kVertKeywords),
+                "Horizontal & vertical keyword tables must have same count");
+
+  // Try to parse the component as a number, or a percent, or a
+  // keyword-converted-to-percent.
+  if (mToken.mType == eCSSToken_Number) {
+    aComponent.SetFloatValue(mToken.mNumber, eCSSUnit_Pixel);
+  } else if (mToken.mType == eCSSToken_Percentage) {
+    aComponent.SetPercentValue(mToken.mNumber);
+  } else if (mToken.mType == eCSSToken_Ident) {
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+    if (keyword == eCSSKeyword_UNKNOWN) {
+      return false;
+    }
+    // Choose our keyword table:
+    const nsCSSKeyword* kwTable = aIsHorizontal ? kHorizKeywords : kVertKeywords;
+    // Convert keyword to percent value (0%, 50%, or 100%)
+    bool didAcceptKeyword = false;
+    for (size_t i = 0; i < kNumKeywords; i++) {
+      if (keyword == kwTable[i]) {
+        // 0%, 50%, or 100%:
+        aComponent.SetPercentValue(i * 0.5);
+        didAcceptKeyword = true;
+        break;
+      }
+    }
+    if (!didAcceptKeyword) {
+      return false;
+    }
+  } else {
+    // Unrecognized token type. Put it back. (It might be a closing-paren of an
+    // invalid -webkit-gradient(...) expression, and we need to be sure caller
+    // can see it & stops parsing at that point.)
+    UngetToken();
+    return false;
+  }
+
+  MOZ_ASSERT(aComponent.GetUnit() == eCSSUnit_Pixel ||
+             aComponent.GetUnit() == eCSSUnit_Percent,
+             "If we get here, we should've successfully parsed a number (as a "
+             "pixel length), a percent, or a keyword (converted to percent)");
+  return true;
+}
+
+// This function parses a "<point>" expression for -webkit-gradient(...)
+// Quoting https://www.webkit.org/blog/175/introducing-css-gradients/ :
+//   "A point is a pair of space-separated values.
+//    The syntax supports numbers, percentages or
+//    the keywords top, bottom, left and right
+//    for point values."
+//
+// Two additional notes:
+//  - WebKit also accepts the "center" keyword (not listed in the text above).
+//  - WebKit only accepts horizontal-flavored keywords (left/center/right) in
+//    the first ("x") component, and vertical-flavored keywords
+//    (top/center/bottom) in the second ("y") component. (This is different
+//    from the standard gradient syntax, which accepts both orderings, e.g.
+//    "top left" as well as "left top".)
+bool
+CSSParserImpl::ParseWebkitGradientPoint(nsCSSValuePair& aPoint)
+{
+  return ParseWebkitGradientPointComponent(aPoint.mXValue, true) &&
+    ParseWebkitGradientPointComponent(aPoint.mYValue, false);
+}
+
+// Parse the next token as a <number> (for a <radius> in a -webkit-gradient
+// expresison).  Returns true on success; returns false & puts back
+// whatever it parsed on failure.
+bool
+CSSParserImpl::ParseWebkitGradientRadius(float& aRadius)
+{
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  if (mToken.mType != eCSSToken_Number) {
+    UngetToken();
+    return false;
+  }
+
+  aRadius = mToken.mNumber;
+  return true;
+}
+
+// Parse one of:
+//  color-stop(number|percent, color)
+//  from(color)
+//  to(color)
+//
+// Quoting https://www.webkit.org/blog/175/introducing-css-gradients/ :
+//   A stop is a function, color-stop, that takes two arguments, the stop value
+//   (either a percentage or a number between 0 and 1.0), and a color (any
+//   valid CSS color). In addition the shorthand functions from and to are
+//   supported. These functions only require a color argument and are
+//   equivalent to color-stop(0, ...) and color-stop(1.0, …) respectively.
+bool
+CSSParserImpl::ParseWebkitGradientColorStop(nsCSSValueGradient* aGradient)
+{
+  MOZ_ASSERT(aGradient, "null gradient");
+
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  // We're expecting color-stop(...), from(...), or to(...) which are all
+  // functions. Bail if we got anything else.
+  if (mToken.mType != eCSSToken_Function) {
+    UngetToken();
+    return false;
+  }
+
+  nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
+
+  // Parse color-stop location (or infer it, for shorthands "from"/"to"):
+  if (mToken.mIdent.LowerCaseEqualsLiteral("color-stop")) {
+    // Parse stop location, followed by comma.
+    if (!ParseSingleTokenVariant(stop->mLocation,
+                                 VARIANT_NUMBER | VARIANT_PERCENT,
+                                 nullptr) ||
+        !ExpectSymbol(',', true)) {
+      SkipUntil(')'); // Skip to end of color-stop(...) expression.
+      return false;
+    }
+
+    // If we got a <number>, convert it to percentage for consistency:
+    if (stop->mLocation.GetUnit() == eCSSUnit_Number) {
+      stop->mLocation.SetPercentValue(stop->mLocation.GetFloatValue());
+    }
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("from")) {
+    // Shorthand for color-stop(0%, ...)
+    stop->mLocation.SetPercentValue(0.0f);
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("to")) {
+    // Shorthand for color-stop(100%, ...)
+    stop->mLocation.SetPercentValue(1.0f);
+  } else {
+    // Unrecognized function name (invalid for a -webkit-gradient color stop).
+    UngetToken();
+    return false;
+  }
+
+  CSSParseResult result = ParseVariant(stop->mColor, VARIANT_COLOR, nullptr);
+  if (result != CSSParseResult::Ok ||
+      (stop->mColor.GetUnit() == eCSSUnit_EnumColor &&
+       stop->mColor.GetIntValue() == NS_COLOR_CURRENTCOLOR)) {
+    // Parse failure, or parsed "currentColor" which is forbidden in
+    // -webkit-gradient for some reason.
+    SkipUntil(')');
+    return false;
+  }
+
+  // Parse color-stop function close-paren
+  if (!ExpectSymbol(')', true)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  MOZ_ASSERT(stop->mLocation.GetUnit() == eCSSUnit_Percent,
+             "Should produce only percent-valued stop-locations. "
+             "(Caller depends on this when sorting color stops.)");
+
+  return true;
+}
+
+// Comparatison function to use for sorting -webkit-gradient() stops by
+// location. This function assumes stops have percent-valued locations (and
+// CSSParserImpl::ParseWebkitGradientColorStop should enforce this).
+static bool
+IsColorStopPctLocationLessThan(const nsCSSValueGradientStop& aStop1,
+                               const nsCSSValueGradientStop& aStop2) {
+  return (aStop1.mLocation.GetPercentValue() <
+          aStop2.mLocation.GetPercentValue());
+}
+
+// This function parses a list of comma-separated color-stops for a
+// -webkit-gradient(...) expression, and then pads & sorts the list as-needed.
+bool
+CSSParserImpl::ParseWebkitGradientColorStops(nsCSSValueGradient* aGradient)
+{
+  MOZ_ASSERT(aGradient, "null gradient");
+
+  // Parse any number of ", <color-stop>" expressions. (0 or more)
+  // Note: This is different from unprefixed gradient syntax, which
+  // requires at least 2 stops.
+  while (ExpectSymbol(',', true)) {
+    if (!ParseWebkitGradientColorStop(aGradient)) {
+      return false;
+    }
+  }
+
+  // Pad up to 2 stops as-needed:
+  // (Modern gradient expressions are required to have at least 2 stops, so we
+  // depend on this internally -- e.g. we have an assertion about this in
+  // nsCSSRendering.cpp. -webkit-gradient syntax allows 0 stops or 1 stop,
+  // though, so we just pad up to 2 stops in this case).
+
+  // If we have no stops, pad with transparent-black:
+  if (aGradient->mStops.IsEmpty()) {
+    nsCSSValueGradientStop* stop1 = aGradient->mStops.AppendElement();
+    stop1->mColor.SetIntegerColorValue(NS_RGBA(0, 0, 0, 0),
+                                       eCSSUnit_RGBAColor);
+    nsCSSValueGradientStop* stop2 = aGradient->mStops.AppendElement();
+    stop2->mColor.SetIntegerColorValue(NS_RGBA(0, 0, 0, 0),
+                                       eCSSUnit_RGBAColor);
+  } else if (aGradient->mStops.Length() == 1) {
+    // Copy whatever the author provided in the first stop:
+    nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
+    *stop = aGradient->mStops[0];
+  } else {
+    // We have >2 stops. Sort them in order of increasing location.
+    std::stable_sort(aGradient->mStops.begin(),
+                     aGradient->mStops.end(),
+                     IsColorStopPctLocationLessThan);
+  }
+  return true;
+}
+
+// Finalize our internal representation of a -webkit-gradient(linear, ...)
+// expression, given the parsed points.  (The parsed color stops
+// should already be hanging off of the passed-in nsCSSValueGradient.)
+void
+CSSParserImpl::FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
+                                            const nsCSSValuePair& aStartPoint,
+                                            const nsCSSValuePair& aEndPoint)
+{
+  MOZ_ASSERT(!aGradient->mIsRadial, "passed-in gradient must be linear");
+
+  aGradient->mIsLegacySyntax = true; // (Needed in order to use non-% points)
+  aGradient->mBgPos = aStartPoint;
+
+  // XXXdholbert Do further positioning/angling here.
+}
+
+// Finalize our internal representation of a -webkit-gradient(radial, ...)
+// expression, given the parsed points & radii.  (The parsed color-stops
+// should already be hanging off of the passed-in nsCSSValueGradient).
+void
+CSSParserImpl::FinalizeRadialWebkitGradient(nsCSSValueGradient* aGradient,
+                                            const nsCSSValuePair& aFirstCenter,
+                                            const nsCSSValuePair& aSecondCenter,
+                                            const float aFirstRadius,
+                                            const float aSecondRadius)
+{
+  MOZ_ASSERT(aGradient->mIsRadial, "passed-in gradient must be radial");
+
+  aGradient->mBgPos = aFirstCenter;
+
+  // XXXdholbert Do further positioning/sizing here.
+}
+
+bool
+CSSParserImpl::ParseWebkitGradient(nsCSSValue& aValue)
+{
+  // Parse type of gradient
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  if (mToken.mType != eCSSToken_Ident) {
+    UngetToken(); // Important; the token might be ")", which we're about to
+                  // seek to.
+    SkipUntil(')');
+    return false;
+  }
+
+  bool isRadial;
+  if (mToken.mIdent.LowerCaseEqualsLiteral("radial")) {
+    isRadial = true;
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("linear")) {
+    isRadial = false;
+  } else {
+    // Unrecognized gradient type.
+    SkipUntil(')');
+    return false;
+  }
+
+  // Parse a comma + first point:
+  nsCSSValuePair firstPoint;
+  if (!ExpectSymbol(',', true) ||
+      !ParseWebkitGradientPoint(firstPoint)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  // If radial, parse comma + first radius:
+  float firstRadius;
+  if (isRadial) {
+    if (!ExpectSymbol(',', true) ||
+        !ParseWebkitGradientRadius(firstRadius)) {
+      SkipUntil(')');
+      return false;
+    }
+  }
+
+  // Parse a comma + second point:
+  nsCSSValuePair secondPoint;
+  if (!ExpectSymbol(',', true) ||
+      !ParseWebkitGradientPoint(secondPoint)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  // If radial, parse comma + second radius:
+  float secondRadius;
+  if (isRadial) {
+    if (!ExpectSymbol(',', true) ||
+        !ParseWebkitGradientRadius(secondRadius)) {
+      SkipUntil(')');
+      return false;
+    }
+  }
+
+  // Construct a nsCSSValueGradient object, and parse color stops into it:
+  RefPtr<nsCSSValueGradient> cssGradient =
+    new nsCSSValueGradient(isRadial, false /* aIsRepeating */);
+
+  if (!ParseWebkitGradientColorStops(cssGradient) ||
+      !ExpectSymbol(')', true)) {
+    // Failed to parse color-stops, or found trailing junk between them & ')'.
+    SkipUntil(')');
+    return false;
+  }
+
+  // Finish building cssGradient, based on our parsed positioning/sizing info:
+  if (isRadial) {
+    FinalizeRadialWebkitGradient(cssGradient, firstPoint, secondPoint,
+                           firstRadius, secondRadius);
+  } else {
+    FinalizeLinearWebkitGradient(cssGradient, firstPoint, secondPoint);
+  }
+
+  aValue.SetGradientValue(cssGradient);
+  return true;
+}
+
+  int32_t
 CSSParserImpl::ParseChoice(nsCSSValue aValues[],
                            const nsCSSProperty aPropIDs[], int32_t aNumIDs)
 {
