@@ -84,7 +84,7 @@ let gTestCases = [
 
 function next() {
   if (gTestCount >= gTestCases.length) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
   let c = gTestCases[gTestCount++];
@@ -122,7 +122,7 @@ storage.getRoot().then(function(dir) {
   next();
 }, function(e) {
   ok(false, e.name + " error should not arrive here!");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 });
 
 });

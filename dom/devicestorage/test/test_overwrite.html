@@ -29,17 +29,17 @@ devicestorage_setup(function () {
 
 
 function deleteSuccess(e) {
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function deleteError(e) {
   ok(false, "deleteError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addOverwritingSuccess(e) {
   ok(false, "addOverwritingSuccess was called.");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addOverwritingError(e) {

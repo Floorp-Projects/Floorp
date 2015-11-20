@@ -26,12 +26,12 @@ devicestorage_setup(function () {
 
 function availableSuccess(e) {
   isnot(e.target.result, null, "result should not be null");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function availableError(e) {
   ok(false, "availableError was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");

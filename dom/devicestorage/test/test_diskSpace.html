@@ -38,7 +38,7 @@ function stat(s, file_list_length) {
   stats = stats + 1;
 
   if (stats == 2) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
   }
 }
 
@@ -59,7 +59,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(true, "hi");

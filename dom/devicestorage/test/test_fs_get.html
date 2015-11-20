@@ -78,7 +78,7 @@ function getSuccess(r) {
       break;
     default:
       ok(false, "Should not arrive at getSuccess!");
-      devicestorage_cleanup();
+      SimpleTest.finish();
       break;
   }
   gTestCount++;
@@ -138,11 +138,11 @@ function getFailure(e) {
       testGetFailure(gRoot, "sub1//sub2");
       break;
     case 17:
-      devicestorage_cleanup();
+      SimpleTest.finish();
       break;
     default:
       ok(false, "Should not arrive here!");
-      devicestorage_cleanup();
+      SimpleTest.finish();
       break;
   }
   gTestCount++;
@@ -150,12 +150,12 @@ function getFailure(e) {
 
 function cbError(e) {
   ok(false, "Should not arrive at cbError! Error: " + e.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function cbSuccess(e) {
   ok(false, "Should not arrive at cbSuccess!");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
@@ -174,7 +174,7 @@ function createTestFile(path, callback) {
 
     req.onerror = function(e) {
       ok(false, "Failed to create " + path + ": " + e.target.error.name);
-      devicestorage_cleanup();
+      SimpleTest.finish();
     };
   }
 

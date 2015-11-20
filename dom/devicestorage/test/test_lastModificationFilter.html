@@ -45,7 +45,7 @@ function verifyAndDelete(prefix, files, e) {
     ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
     dump("We still have length = " + files.length + "\n");
     dump(files + "\n");
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
@@ -87,12 +87,12 @@ function addFile(filename, callback) {
     }
     getReq.onerror = function(e) {
       ok(false, "getError was called : " + e.target.error.name);
-      devicestorage_cleanup();
+      SimpleTest.finish();
     };
   }
   addReq.onerror = function(e) {
     ok(false, "addError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   }
 }
 
@@ -116,7 +116,7 @@ function delFile(filename, callback) {
   };
   req.onerror = function(e) {
     ok(false, "delError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   };
 }
 
@@ -130,7 +130,7 @@ function afterNewFiles() {
   };
   cursor.onerror = function (e) {
     ok(false, "handleError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   };
 }
 

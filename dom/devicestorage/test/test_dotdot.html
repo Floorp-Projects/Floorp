@@ -40,7 +40,7 @@ var gFileName = "../owned.png";
 function fail(e) {
   ok(false, "addSuccess was called");
   dump(request);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function next(e) {
@@ -53,7 +53,7 @@ function next(e) {
   var f = tests.pop();
 
   if (f == undefined) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
