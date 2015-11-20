@@ -217,7 +217,7 @@ D3D9RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  return MakeAndAddRef<ClientTexture>(data, aTextureFlags, mSurfaceAllocator);
+  return MakeAndAddRef<TextureClient>(data, aTextureFlags, mSurfaceAllocator);
 }
 
 already_AddRefed<TextureClient>
