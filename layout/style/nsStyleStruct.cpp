@@ -1434,7 +1434,7 @@ nsStylePosition::nsStylePosition(void)
   mGridAutoRowsMax.SetAutoValue();
 
   mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
-  mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  mBoxSizing = StyleBoxSizing::Content;
   mAlignContent = NS_STYLE_ALIGN_AUTO;
   mAlignItems = NS_STYLE_ALIGN_AUTO;
   mAlignSelf = NS_STYLE_ALIGN_AUTO;
