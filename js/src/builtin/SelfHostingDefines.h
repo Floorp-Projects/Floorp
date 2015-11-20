@@ -30,6 +30,10 @@
 #define ATTR_NONCONFIGURABLE    0x10
 #define ATTR_NONWRITABLE        0x20
 
+// The extended slot in which the self-hosted name for self-hosted builtins is
+// stored.
+#define LAZY_FUNCTION_NAME_SLOT 0
+
 // Stores the private WeakMap slot used for WeakSets
 #define WEAKSET_MAP_SLOT 0
 

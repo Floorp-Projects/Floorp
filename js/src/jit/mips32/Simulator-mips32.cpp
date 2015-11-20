@@ -3426,7 +3426,7 @@ Simulator::callInternal(uint8_t* entry)
     setRegister(fp, fp_val);
 }
 
-int64_t
+int32_t
 Simulator::call(uint8_t* entry, int argument_count, ...)
 {
     va_list parameters;
@@ -3462,7 +3462,7 @@ Simulator::call(uint8_t* entry, int argument_count, ...)
     MOZ_ASSERT(entry_stack == getRegister(sp));
     setRegister(sp, original_stack);
 
-    int64_t result = (int64_t(getRegister(v1)) << 32) | getRegister(v0);
+    int32_t result = getRegister(v0);
     return result;
 }
 

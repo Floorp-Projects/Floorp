@@ -2281,7 +2281,9 @@ public:
     }
 
     // unref stored DBusMessages before clearing the hashtable
-    sPairingReqTable->EnumerateRead(UnrefDBusMessage, nullptr);
+    for (auto iter = sPairingReqTable->Iter(); !iter.Done(); iter.Next()) {
+      dbus_message_unref(iter.UserData());
+    }
     sPairingReqTable->Clear();
 
     sIsPairing = 0;
@@ -2298,14 +2300,6 @@ public:
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to BT thread!");
     }
-  }
-
-private:
-  static PLDHashOperator
-  UnrefDBusMessage(const BluetoothAddress& key, DBusMessage* value, void* arg)
-  {
-    dbus_message_unref(value);
-    return PL_DHASH_NEXT;
   }
 };
 

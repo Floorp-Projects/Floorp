@@ -400,7 +400,7 @@ function promiseAllButPrimaryWindowClosed() {
     }
   }
 
-  return Promise.all(windows.map(promiseWindowClosed));
+  return Promise.all(windows.map(BrowserTestUtils.closeWindow));
 }
 
 // Forget all closed windows.
@@ -438,7 +438,8 @@ function whenNewWindowLoaded(aOptions, aCallback) {
 
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad);
-      resolve(promiseBrowserLoaded(win.gBrowser.selectedBrowser));
+      let browser = win.gBrowser.selectedBrowser;
+      promiseBrowserLoaded(browser).then(resolve);
     });
   });
 
@@ -446,24 +447,6 @@ function whenNewWindowLoaded(aOptions, aCallback) {
 }
 function promiseNewWindowLoaded(aOptions) {
   return new Promise(resolve => whenNewWindowLoaded(aOptions, resolve));
-}
-
-/**
- * Chrome windows aren't closed synchronously. Provide a helper method to close
- * a window and wait until we received the "domwindowclosed" notification for it.
- */
-function promiseWindowClosed(win) {
-  let promise = new Promise(resolve => {
-    Services.obs.addObserver(function obs(subject, topic) {
-      if (subject == win) {
-        Services.obs.removeObserver(obs, topic);
-        resolve();
-      }
-    }, "domwindowclosed", false);
-  });
-
-  win.close();
-  return promise;
 }
 
 function runInContent(browser, func, arg, callback = null) {
@@ -565,5 +548,17 @@ function modifySessionStorage(browser, data, options = {}) {
         frame.sessionStorage[key] = data[key];
       }
     });
+  });
+}
+
+function pushPrefs(...aPrefs) {
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
+}
+
+function popPrefs() {
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
   });
 }
