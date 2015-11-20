@@ -158,9 +158,8 @@ DeviceStorageRequestParent::Dispatch()
 
       RefPtr<DeviceStorageFile> dsf =
         new DeviceStorageFile(p.type(), p.storageName());
-      RefPtr<UsedSpaceFileEvent> r = new UsedSpaceFileEvent(this, dsf.forget());
-
-      usedSpaceCache->Dispatch(r);
+      usedSpaceCache->Dispatch(
+        MakeAndAddRef<UsedSpaceFileEvent>(this, dsf.forget()));
       break;
     }
 

@@ -2217,7 +2217,8 @@ public:
       DeviceStorageUsedSpaceCache* usedSpaceCache
         = DeviceStorageUsedSpaceCache::CreateOrGet();
       MOZ_ASSERT(usedSpaceCache);
-      usedSpaceCache->Dispatch(this);
+      nsCOMPtr<nsIRunnable> self = this;
+      usedSpaceCache->Dispatch(self.forget());
       return NS_OK;
     }
 
