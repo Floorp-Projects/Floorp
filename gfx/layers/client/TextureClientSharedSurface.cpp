@@ -23,31 +23,47 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-SharedSurfaceTextureClient::SharedSurfaceTextureClient(ISurfaceAllocator* aAllocator,
-                                                       TextureFlags aFlags,
-                                                       UniquePtr<gl::SharedSurface> surf,
-                                                       gl::SurfaceFactory* factory)
-  : TextureClient(aAllocator,
-                  aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags())
-  , mSurf(Move(surf))
-{
-}
 
-SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
-{
-  // Free the ShSurf implicitly.
-}
+SharedSurfaceTextureData::SharedSurfaceTextureData(UniquePtr<gl::SharedSurface> surf)
+  : mSurf(Move(surf))
+{}
+
+SharedSurfaceTextureData::~SharedSurfaceTextureData()
+{}
+
+void
+SharedSurfaceTextureData::Deallocate(ISurfaceAllocator*)
+{}
 
 gfx::IntSize
-SharedSurfaceTextureClient::GetSize() const
+SharedSurfaceTextureData::GetSize() const
 {
   return mSurf->mSize;
 }
 
 bool
-SharedSurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
   return mSurf->ToSurfaceDescriptor(&aOutDescriptor);
+}
+
+
+SharedSurfaceTextureClient::SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,
+                                                       TextureFlags aFlags,
+                                                       ISurfaceAllocator* aAllocator)
+: ClientTexture(aData, aFlags, aAllocator)
+{}
+
+already_AddRefed<SharedSurfaceTextureClient>
+SharedSurfaceTextureClient::Create(UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
+                                   ISurfaceAllocator* aAllocator, TextureFlags aFlags)
+{
+  if (!surf) {
+    return nullptr;
+  }
+  TextureFlags flags = aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags();
+  SharedSurfaceTextureData* data = new SharedSurfaceTextureData(Move(surf));
+  return MakeAndAddRef<SharedSurfaceTextureClient>(data, flags, aAllocator);
 }
 
 void
@@ -55,8 +71,8 @@ SharedSurfaceTextureClient::SetReleaseFenceHandle(const FenceHandle& aReleaseFen
 {
 #ifdef MOZ_WIDGET_GONK
   gl::SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
-    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     surf->GetTextureClient()->SetReleaseFenceHandle(aReleaseFenceHandle);
@@ -71,8 +87,8 @@ SharedSurfaceTextureClient::GetAndResetReleaseFenceHandle()
 {
 #ifdef MOZ_WIDGET_GONK
   gl::SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
-    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAndResetReleaseFenceHandle();
@@ -86,8 +102,8 @@ SharedSurfaceTextureClient::SetAcquireFenceHandle(const FenceHandle& aAcquireFen
 {
 #ifdef MOZ_WIDGET_GONK
   gl::SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
-    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->SetAcquireFenceHandle(aAcquireFenceHandle);
@@ -101,8 +117,8 @@ SharedSurfaceTextureClient::GetAcquireFenceHandle() const
 {
 #ifdef MOZ_WIDGET_GONK
   gl::SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
-    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAcquireFenceHandle();
