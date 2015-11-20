@@ -134,12 +134,12 @@ public:
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
   }
 
-  void Dispatch(nsIRunnable* aRunnable)
+  void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mIOThread);
 
-    mIOThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+    mIOThread->Dispatch(mozilla::Move(aRunnable), NS_DISPATCH_NORMAL);
   }
 
   nsresult AccumUsedSizes(const nsAString& aStorageName,
