@@ -438,16 +438,16 @@ SafeInstallOperation.prototype = {
     // embedded filesystem has this issue, see bug 772238), and to remove
     // normal files before their resource forks on OSX (see bug 733436).
     let entries = getDirectoryEntries(aDirectory, true);
-    entries.forEach(function(aEntry) {
+    for (let entry of entries) {
       try {
-        this._installDirEntry(aEntry, newDir, aCopy);
+        this._installDirEntry(entry, newDir, aCopy);
       }
       catch (e) {
         logger.error("Failed to " + (aCopy ? "copy" : "move") + " entry " +
-              aEntry.path, e);
+                     entry.path, e);
         throw e;
       }
-    }, this);
+    }
 
     // If this is only a copy operation then there is nothing else to do
     if (aCopy)
@@ -1045,17 +1045,17 @@ function loadManifestFromRDF(aUri, aStream) {
       }
     }
 
-    PROP_LOCALE_SINGLE.forEach(function(aProp) {
-      locale[aProp] = getRDFProperty(aDs, aSource, aProp);
-    });
+    for (let prop of PROP_LOCALE_SINGLE) {
+      locale[prop] = getRDFProperty(aDs, aSource, prop);
+    }
 
-    PROP_LOCALE_MULTI.forEach(function(aProp) {
+    for (let prop of PROP_LOCALE_MULTI) {
       // Don't store empty arrays
       let props = getPropertyArray(aDs, aSource,
-                                   aProp.substring(0, aProp.length - 1));
+                                   prop.substring(0, prop.length - 1));
       if (props.length > 0)
-        locale[aProp] = props;
-    });
+        locale[prop] = props;
+    }
 
     return locale;
   }
@@ -1091,9 +1091,9 @@ function loadManifestFromRDF(aUri, aStream) {
 
   let root = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
   let addon = new AddonInternal();
-  PROP_METADATA.forEach(function(aProp) {
-    addon[aProp] = getRDFProperty(ds, root, aProp);
-  });
+  for (let prop of PROP_METADATA) {
+    addon[prop] = getRDFProperty(ds, root, prop);
+  }
   addon.unpack = getRDFProperty(ds, root, "unpack") == "true";
 
   if (!addon.type) {
@@ -1174,9 +1174,9 @@ function loadManifestFromRDF(aUri, aStream) {
   while (targets.hasMoreElements()) {
     let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
     let targetAppInfo = {};
-    PROP_TARGETAPP.forEach(function(aProp) {
-      targetAppInfo[aProp] = getRDFProperty(ds, target, aProp);
-    });
+    for (let prop of PROP_TARGETAPP) {
+      targetAppInfo[prop] = getRDFProperty(ds, target, prop);
+    }
     if (!targetAppInfo.id || !targetAppInfo.minVersion ||
         !targetAppInfo.maxVersion) {
       logger.warn("Ignoring invalid targetApplication entry in install manifest");
@@ -1195,23 +1195,23 @@ function loadManifestFromRDF(aUri, aStream) {
   // the RDF service coalesces them for us.
   let targetPlatforms = getPropertyArray(ds, root, "targetPlatform");
   addon.targetPlatforms = [];
-  targetPlatforms.forEach(function(aPlatform) {
+  for (let targetPlatform of targetPlatforms) {
     let platform = {
       os: null,
       abi: null
     };
 
-    let pos = aPlatform.indexOf("_");
+    let pos = targetPlatform.indexOf("_");
     if (pos != -1) {
-      platform.os = aPlatform.substring(0, pos);
-      platform.abi = aPlatform.substring(pos + 1);
+      platform.os = targetPlatform.substring(0, pos);
+      platform.abi = targetPlatform.substring(pos + 1);
     }
     else {
-      platform.os = aPlatform;
+      platform.os = targetPlatform;
     }
 
     addon.targetPlatforms.push(platform);
-  });
+  }
 
   // A theme's userDisabled value is true if the theme is not the selected skin
   // or if there is an active lightweight theme. We ignore whether softblocking
@@ -1507,11 +1507,9 @@ function syncLoadManifestFromFile(aFile, aInstallLocation) {
 function getURIForResourceInFile(aFile, aPath) {
   if (aFile.isDirectory()) {
     let resource = aFile.clone();
-    if (aPath) {
-      aPath.split("/").forEach(function(aPart) {
-        resource.append(aPart);
-      });
-    }
+    if (aPath)
+      aPath.split("/").forEach(part => resource.append(part));
+
     return NetUtil.newURI(resource);
   }
 
@@ -3172,21 +3170,21 @@ this.XPIProvider = {
    */
   processPendingFileChanges: function(aManifests) {
     let changed = false;
-    this.installLocations.forEach(function(aLocation) {
-      aManifests[aLocation.name] = {};
+    for (let location of this.installLocations) {
+      aManifests[location.name] = {};
       // We can't install or uninstall anything in locked locations
-      if (aLocation.locked)
-        return;
+      if (location.locked)
+        continue;
 
-      let stagingDir = aLocation.getStagingDir();
+      let stagingDir = location.getStagingDir();
 
       try {
         if (!stagingDir || !stagingDir.exists() || !stagingDir.isDirectory())
-          return;
+          continue;
       }
       catch (e) {
         logger.warn("Failed to find staging directory", e);
-        return;
+        continue;
       }
 
       let seenFiles = [];
@@ -3239,20 +3237,20 @@ this.XPIProvider = {
           // If the install manifest doesn't exist uninstall this add-on in this
           // install location.
           if (!manifest) {
-            logger.debug("Processing uninstall of " + id + " in " + aLocation.name);
+            logger.debug("Processing uninstall of " + id + " in " + location.name);
             try {
-              aLocation.uninstallAddon(id);
+              location.uninstallAddon(id);
               seenFiles.push(stageDirEntry.leafName);
             }
             catch (e) {
-              logger.error("Failed to uninstall add-on " + id + " in " + aLocation.name, e);
+              logger.error("Failed to uninstall add-on " + id + " in " + location.name, e);
             }
             // The file check later will spot the removal and cleanup the database
             continue;
           }
         }
 
-        aManifests[aLocation.name][id] = null;
+        aManifests[location.name][id] = null;
         let existingAddonID = id;
 
         let jsonfile = stagingDir.clone();
@@ -3262,7 +3260,7 @@ this.XPIProvider = {
         let addon;
 
         try {
-          addon = syncLoadManifestFromFile(stageDirEntry, aLocation);
+          addon = syncLoadManifestFromFile(stageDirEntry, location);
         }
         catch (e) {
           logger.error("Unable to read add-on manifest from " + stageDirEntry.path, e);
@@ -3284,7 +3282,7 @@ this.XPIProvider = {
         // Check for a cached metadata for this add-on, it may contain updated
         // compatibility information
         if (!foreignInstall) {
-          logger.debug("Found updated metadata for " + id + " in " + aLocation.name);
+          logger.debug("Found updated metadata for " + id + " in " + location.name);
           let fis = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
           let json = Cc["@mozilla.org/dom/json;1"].
@@ -3297,7 +3295,7 @@ this.XPIProvider = {
 
             // Pass this through to addMetadata so it knows this add-on was
             // likely installed through the UI
-            aManifests[aLocation.name][id] = addon;
+            aManifests[location.name][id] = addon;
           }
           catch (e) {
             // If some data can't be recovered from the cached metadata then it
@@ -3314,7 +3312,7 @@ this.XPIProvider = {
         existingAddonID = addon.existingAddonID || id;
 
         var oldBootstrap = null;
-        logger.debug("Processing install of " + id + " in " + aLocation.name);
+        logger.debug("Processing install of " + id + " in " + location.name);
         if (existingAddonID in this.bootstrappedAddons) {
           try {
             var existingAddon = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -3342,19 +3340,19 @@ this.XPIProvider = {
         }
 
         try {
-          addon._sourceBundle = aLocation.installAddon(id, stageDirEntry,
+          addon._sourceBundle = location.installAddon(id, stageDirEntry,
                                                        existingAddonID);
         }
         catch (e) {
-          logger.error("Failed to install staged add-on " + id + " in " + aLocation.name,
+          logger.error("Failed to install staged add-on " + id + " in " + location.name,
                 e);
           // Re-create the staged install
-          AddonInstall.createStagedInstall(aLocation, stageDirEntry,
+          AddonInstall.createStagedInstall(location, stageDirEntry,
                                            addon);
           // Make sure not to delete the cached manifest json file
           seenFiles.pop();
 
-          delete aManifests[aLocation.name][id];
+          delete aManifests[location.name][id];
 
           if (oldBootstrap) {
             // Re-install the old add-on
@@ -3367,13 +3365,13 @@ this.XPIProvider = {
       }
 
       try {
-        aLocation.cleanStagingDir(seenFiles);
+        location.cleanStagingDir(seenFiles);
       }
       catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
         logger.debug("Error cleaning staging dir " + stagingDir.path, e);
       }
-    }, this);
+    }
     return changed;
   },
 
@@ -3977,11 +3975,11 @@ this.XPIProvider = {
 
     XPIDatabase.getVisibleAddonsWithPendingOperations(typesToGet, function(aAddons) {
       let results = aAddons.map(a => a.wrapper);
-      XPIProvider.installs.forEach(function(aInstall) {
-        if (aInstall.state == AddonManager.STATE_INSTALLED &&
-            !(aInstall.addon.inDatabase))
-          results.push(aInstall.addon.wrapper);
-      });
+      for (let install of XPIProvider.installs) {
+        if (install.state == AddonManager.STATE_INSTALLED &&
+            !(install.addon.inDatabase))
+          results.push(install.addon.wrapper);
+      }
       aCallback(results);
     });
   },
@@ -3996,12 +3994,14 @@ this.XPIProvider = {
    *         A callback to pass the array of AddonInstalls to
    */
   getInstallsByTypes: function(aTypes, aCallback) {
-    let results = [];
-    this.installs.forEach(function(aInstall) {
-      if (!aTypes || aTypes.indexOf(getExternalType(aInstall.type)) >= 0)
-        results.push(aInstall.wrapper);
-    });
-    aCallback(results);
+    let results = this.installs.slice(0);
+    if (aTypes) {
+      results = results.filter(install => {
+        return aTypes.includes(getExternalType(install.type));
+      });
+    }
+
+    aCallback(results.map(install => install.wrapper));
   },
 
   /**
@@ -4062,14 +4062,14 @@ this.XPIProvider = {
     let previousTheme = null;
     let newSkin = this.defaultSkin;
     let addons = XPIDatabase.getAddonsByType("theme");
-    addons.forEach(function(aTheme) {
-      if (!aTheme.visible)
+    for (let theme of addons) {
+      if (!theme.visible)
         return;
-      if (aTheme.id == aId)
-        newSkin = aTheme.internalName;
-      else if (aTheme.userDisabled == false && !aTheme.pendingUninstall)
-        previousTheme = aTheme;
-    }, this);
+      if (theme.id == aId)
+        newSkin = theme.internalName;
+      else if (theme.userDisabled == false && !theme.pendingUninstall)
+        previousTheme = theme;
+    }
 
     if (aPendingRestart) {
       Services.prefs.setBoolPref(PREF_DSS_SWITCHPENDING, true);
@@ -4106,9 +4106,9 @@ this.XPIProvider = {
    */
   updateAddonAppDisabledStates: function() {
     let addons = XPIDatabase.getAddons();
-    addons.forEach(function(aAddon) {
-      this.updateAddonDisabledState(aAddon);
-    }, this);
+    for (let addon of addons) {
+      this.updateAddonDisabledState(addon);
+    }
   },
 
   /**
@@ -6586,15 +6586,15 @@ AddonInternal.prototype = {
   },
 
   applyCompatibilityUpdate: function(aUpdate, aSyncCompatibility) {
-    this.targetApplications.forEach(function(aTargetApp) {
-      aUpdate.targetApplications.forEach(function(aUpdateTarget) {
-        if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
-            Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
-          aTargetApp.minVersion = aUpdateTarget.minVersion;
-          aTargetApp.maxVersion = aUpdateTarget.maxVersion;
+    for (let targetApp of this.targetApplications) {
+      for (let updateTarget of aUpdate.targetApplications) {
+        if (targetApp.id == updateTarget.id && (aSyncCompatibility ||
+            Services.vc.compare(targetApp.maxVersion, updateTarget.maxVersion) < 0)) {
+          targetApp.minVersion = updateTarget.minVersion;
+          targetApp.maxVersion = updateTarget.maxVersion;
         }
-      });
-    });
+      }
+    }
     if (aUpdate.multiprocessCompatible !== undefined)
       this.multiprocessCompatible = aUpdate.multiprocessCompatible;
     this.appDisabled = !isUsableAddon(this);
@@ -6667,12 +6667,12 @@ AddonInternal.prototype = {
    *         A JS object containing the cached metadata
    */
   importMetadata: function(aObj) {
-    PENDING_INSTALL_METADATA.forEach(function(aProp) {
-      if (!(aProp in aObj))
-        return;
+    for (let prop of PENDING_INSTALL_METADATA) {
+      if (!(prop in aObj))
+        continue;
 
-      this[aProp] = aObj[aProp];
-    }, this);
+      this[prop] = aObj[prop];
+    }
 
     // Compatibility info may have changed so update appDisabled
     this.appDisabled = !isUsableAddon(this);
@@ -7080,11 +7080,8 @@ AddonWrapper.prototype = {
     }
 
     if (isDir) {
-      if (aPath) {
-        aPath.split("/").forEach(function(aPart) {
-          bundle.append(aPart);
-        });
-      }
+      if (aPath)
+        aPath.split("/").forEach(part => bundle.append(part));
       let result = bundle.exists();
       addon._hasResourceCache.set(aPath, result);
       return result;
@@ -7232,11 +7229,11 @@ PROP_LOCALE_MULTI.forEach(function(aProp) {
       if (list.length > 0) {
         list.sort();
         results = [];
-        list.forEach(function(aPref) {
-          let value = Preferences.get(aPref, null, Ci.nsIPrefLocalizedString);
+        for (let childPref of list) {
+          let value = Preferences.get(childPref, null, Ci.nsIPrefLocalizedString);
           if (value)
             results.push(value);
-        });
+        }
       }
     }
 
