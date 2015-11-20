@@ -18,9 +18,11 @@ TextureClient*
 MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
 {
   if (!mTextureClient) {
-    mTextureClient = MacIOSurfaceTextureClientOGL::Create(aClient->GetForwarder(),
-                                                          TextureFlags::DEFAULT,
-                                                          mSurface);
+    mTextureClient = TextureClient::CreateWithData(
+      MacIOSurfaceTextureData::Create(mSurface),
+      TextureFlags::DEFAULT,
+      aClient->GetForwarder()
+    );
   }
   return mTextureClient;
 }
