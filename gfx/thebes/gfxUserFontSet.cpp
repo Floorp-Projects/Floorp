@@ -129,8 +129,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
     mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
 
-    if (aUnicodeRanges &&
-        Preferences::GetBool("layout.css.unicode-range.enabled")) {
+    if (aUnicodeRanges) {
         mCharacterMap = new gfxCharacterMap(*aUnicodeRanges);
     }
 }
