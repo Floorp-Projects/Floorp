@@ -278,7 +278,7 @@ if test -n "$gonkdir" ; then
         AC_DEFINE(MOZ_OMX_ENCODER)
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        MOZ_FMP4=
+        MOZ_FMP4=1
         MOZ_B2G_CAMERA=1
         if test -d "$gonkdir/system/bluetoothd"; then
             MOZ_B2G_BT=1
