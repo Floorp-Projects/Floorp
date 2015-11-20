@@ -1459,7 +1459,7 @@ struct nsStylePosition {
   nsStyleCoord  mGridAutoRowsMin;       // [reset] coord, percent, enum, calc, flex
   nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
   uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
-  uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
+  mozilla::StyleBoxSizing mBoxSizing;   // [reset] see nsStyleConsts.h
 private:
   friend class nsRuleNode;
   // Helper for the ComputedAlign/Justify* methods.

@@ -62,7 +62,7 @@ struct nsMediaFeature {
       const void* mInitializer_;
       // If mValueType == eEnumerated:  const int32_t*: keyword table in
       //   the same format as the keyword tables in nsCSSProps.
-      const nsCSSProps::KTableValue* mKeywordTable;
+      const nsCSSProps::KTableEntry* mKeywordTable;
       // If mGetter == GetSystemMetric (which implies mValueType ==
       //   eBoolInteger): nsIAtom * const *, for the system metric.
       nsIAtom * const * mMetric;
