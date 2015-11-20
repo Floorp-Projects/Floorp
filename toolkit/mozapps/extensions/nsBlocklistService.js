@@ -615,11 +615,8 @@ Blocklist.prototype = {
     request.setRequestHeader("Cache-Control", "no-cache");
     request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
 
-    var self = this;
-    request.addEventListener("error", function(event) {
-                                      self.onXMLError(event); }, false);
-    request.addEventListener("load", function(event) {
-                                     self.onXMLLoad(event);  }, false);
+    request.addEventListener("error", event => this.onXMLError(event), false);
+    request.addEventListener("load", event => this.onXMLLoad(event), false);
     request.send(null);
 
     // When the blocklist loads we need to compare it to the current copy so
@@ -1235,15 +1232,13 @@ Blocklist.prototype = {
       for (let pref of prefs)
         gPref.clearUserPref(pref);
     }
-    var self = this;
     const types = ["extension", "theme", "locale", "dictionary", "service"];
-    AddonManager.getAddonsByTypes(types, function(addons) {
-
+    AddonManager.getAddonsByTypes(types, addons => {
       for (let addon of addons) {
         let oldState = Ci.nsIBlocklistService.STATE_NOTBLOCKED;
         if (oldAddonEntries)
-          oldState = self._getAddonBlocklistState(addon, oldAddonEntries);
-        let state = self.getAddonBlocklistState(addon);
+          oldState = this._getAddonBlocklistState(addon, oldAddonEntries);
+        let state = this.getAddonBlocklistState(addon);
 
         LOG("Blocklist state for " + addon.id + " changed from " +
             oldState + " to " + state);
@@ -1254,7 +1249,7 @@ Blocklist.prototype = {
 
         if (state === Ci.nsIBlocklistService.STATE_BLOCKED) {
           // It's a hard block. We must reset certain preferences.
-          let prefs = self._getAddonPrefs(addon);
+          let prefs = this._getAddonPrefs(addon);
           resetPrefs(prefs);
          }
 
@@ -1286,7 +1281,7 @@ Blocklist.prototype = {
           disable: false,
           blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
           item: addon,
-          url: self.getAddonBlocklistURL(addon),
+          url: this.getAddonBlocklistURL(addon),
         });
       }
 
@@ -1299,8 +1294,8 @@ Blocklist.prototype = {
       for (let plugin of plugins) {
         let oldState = -1;
         if (oldPluginEntries)
-          oldState = self._getPluginBlocklistState(plugin, oldPluginEntries);
-        let state = self.getPluginBlocklistState(plugin);
+          oldState = this._getPluginBlocklistState(plugin, oldPluginEntries);
+        let state = this.getPluginBlocklistState(plugin);
         LOG("Blocklist state for " + plugin.name + " changed from " +
             oldState + " to " + state);
         // We don't want to re-warn about items
@@ -1324,14 +1319,14 @@ Blocklist.prototype = {
               disable: false,
               blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
               item: plugin,
-              url: self.getPluginBlocklistURL(plugin),
+              url: this.getPluginBlocklistURL(plugin),
             });
           }
         }
       }
 
       if (addonList.length == 0) {
-        self._notifyObserversBlocklistUpdated();
+        this._notifyObserversBlocklistUpdated();
         return;
       }
 
@@ -1343,7 +1338,7 @@ Blocklist.prototype = {
         } catch (e) {
           LOG(e);
         }
-        self._notifyObserversBlocklistUpdated();
+        this._notifyObserversBlocklistUpdated();
         return;
       }
 
@@ -1358,7 +1353,7 @@ Blocklist.prototype = {
         Some tests run without UI, so the async code listens to a message
         that can be sent programatically
       */
-      let applyBlocklistChanges = function() {
+      let applyBlocklistChanges = () => {
         for (let addon of addonList) {
           if (!addon.disable)
             continue;
@@ -1369,7 +1364,7 @@ Blocklist.prototype = {
             // This add-on is softblocked.
             addon.item.softDisabled = true;
             // We must revert certain prefs.
-            let prefs = self._getAddonPrefs(addon.item);
+            let prefs = this._getAddonPrefs(addon.item);
             resetPrefs(prefs);
           }
         }
@@ -1377,7 +1372,7 @@ Blocklist.prototype = {
         if (args.restart)
           restartApp();
 
-        self._notifyObserversBlocklistUpdated();
+        this._notifyObserversBlocklistUpdated();
         Services.obs.removeObserver(applyBlocklistChanges, "addon-blocklist-closed");
       }
 

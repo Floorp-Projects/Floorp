@@ -146,11 +146,8 @@ var PluginProvider = {
 
     let results = [];
 
-    for (let id in this.plugins) {
-      this.getAddonByID(id, function(aAddon) {
-        results.push(aAddon);
-      });
-    }
+    for (let id in this.plugins)
+      this.getAddonByID(id, (addon) => results.push(addon));
 
     aCallback(results);
   },
