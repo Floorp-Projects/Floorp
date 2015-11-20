@@ -299,10 +299,10 @@ class TestRecursiveMakeBackend(BackendTester):
             ],
             'MOZBUILD_CXXFLAGS': [
                 'MOZBUILD_CXXFLAGS += -fcxx-exceptions',
-                'MOZBUILD_CXXFLAGS += -include foo.h',
+                "MOZBUILD_CXXFLAGS += '-option with spaces'",
             ],
             'MOZBUILD_LDFLAGS': [
-                'MOZBUILD_LDFLAGS += -framework Foo',
+                "MOZBUILD_LDFLAGS += '-ld flag with spaces'",
                 'MOZBUILD_LDFLAGS += -x',
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:foo.dll',
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:bar.dll',

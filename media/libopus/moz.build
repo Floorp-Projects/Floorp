@@ -111,4 +111,4 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     if CONFIG['CLANG_CXX']:
-        CFLAGS += ['-Wno-\#pragma-messages']
+        CFLAGS += ['-Wno-#pragma-messages']
