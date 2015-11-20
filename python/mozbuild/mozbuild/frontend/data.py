@@ -18,7 +18,6 @@ structures.
 from __future__ import absolute_import, unicode_literals
 
 from mozbuild.util import StrictOrderingOnAppendList
-from mozbuild.shellutil import quote as shell_quote
 from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
@@ -186,7 +185,7 @@ class BaseDefines(ContextDerived):
             elif value is False:
                 yield('-U%s' % define)
             else:
-                yield('-D%s=%s' % (define, shell_quote(value)))
+                yield('-D%s=%s' % (define, value))
 
     def update(self, more_defines):
         if isinstance(more_defines, Defines):
