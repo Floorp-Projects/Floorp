@@ -15,6 +15,7 @@
 #include "nsHtml5OwningUTF16Buffer.h"
 #include "nsIInputStream.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Speculation.h"
 #include "nsITimer.h"
@@ -398,7 +399,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The buffer for sniffing the character encoding
      */
-    nsAutoArrayPtr<uint8_t>       mSniffingBuffer;
+    mozilla::UniquePtr<uint8_t[]> mSniffingBuffer;
 
     /**
      * The number of meaningful bytes in mSniffingBuffer
