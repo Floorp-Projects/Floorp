@@ -18,57 +18,48 @@ namespace layers {
 class CompositableForwarder;
 
 ////////////////////////////////////////////////////////////////////////
-// EGLImageTextureClient
+// EGLImage
 
-EGLImageTextureClient::EGLImageTextureClient(ISurfaceAllocator* aAllocator,
-                                             TextureFlags aFlags,
-                                             EGLImageImage* aImage,
-                                             gfx::IntSize aSize)
-  : TextureClient(aAllocator, aFlags)
-  , mImage(aImage)
-  , mSize(aSize)
-  , mIsLocked(false)
+EGLImageTextureData::EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSize)
+: mImage(aImage)
+, mSize(aSize)
+{
+  MOZ_ASSERT(aImage);
+}
+
+already_AddRefed<TextureClient>
+EGLImageTextureData::CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
+                                         ISurfaceAllocator* aAllocator, TextureFlags aFlags)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Can't pass an `EGLImage` between processes.");
 
-  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
+  if (!aImage || !XRE_IsParentProcess()) {
+    return nullptr;
+  }
+
+  // XXX - This is quite sad and slow.
+  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
 
   if (aImage->GetOriginPos() == gl::OriginPos::BottomLeft) {
-    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
+    aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }
+
+  return TextureClient::CreateWithData(
+    new EGLImageTextureData(aImage, aSize),
+    aFlags, aAllocator
+  );
 }
 
 bool
-EGLImageTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(IsAllocated());
-
   const bool hasAlpha = true;
   aOutDescriptor =
     EGLImageDescriptor((uintptr_t)mImage->GetImage(),
                        (uintptr_t)mImage->GetSync(),
                        mImage->GetSize(), hasAlpha);
   return true;
-}
-
-bool
-EGLImageTextureClient::Lock(OpenMode mode)
-  {
-    MOZ_ASSERT(!mIsLocked);
-    if (!IsValid() || !IsAllocated()) {
-      return false;
-    }
-    mIsLocked = true;
-    return true;
-  }
-
-void
-EGLImageTextureClient::Unlock()
-{
-  MOZ_ASSERT(mIsLocked);
-  mIsLocked = false;
 }
 
 ////////////////////////////////////////////////////////////////////////
