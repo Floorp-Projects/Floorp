@@ -360,7 +360,7 @@ CreateGrallocTextureClientForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFor
   if (IsGrallocRBSwapped(aFormat)) {
     aFlags |= TextureFlags::RB_SWAPPED;
   }
-  return MakeAndAddRef<ClientTexture>(data, aFlags, aAllocator);
+  return MakeAndAddRef<TextureClient>(data, aFlags, aAllocator);
 }
 
 // static

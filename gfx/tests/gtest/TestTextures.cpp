@@ -268,7 +268,7 @@ TEST(Layers, TextureSerialization) {
     );
     ASSERT_TRUE(!!texData);
 
-    RefPtr<TextureClient> client = new ClientTexture(
+    RefPtr<TextureClient> client = new TextureClient(
       texData, TextureFlags::DEALLOCATE_CLIENT, nullptr
     );
 
