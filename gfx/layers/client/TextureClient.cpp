@@ -593,10 +593,9 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
       aAllocator->IsSameProcess() &&
       moz2DBackend == gfx::BackendType::CAIRO &&
       NS_IsMainThread()) {
-    if (aAllocator->IsSameProcess()) {
-      texture = new TextureClientMemoryDIB(aAllocator, aFormat, aTextureFlags);
-    } else {
-      texture = new TextureClientShmemDIB(aAllocator, aFormat, aTextureFlags);
+    TextureData* data = DIBTextureData::Create(aSize, aFormat, aAllocator);
+    if (data) {
+      return MakeAndAddRef<ClientTexture>(data, aTextureFlags, aAllocator);
     }
   }
 #endif
