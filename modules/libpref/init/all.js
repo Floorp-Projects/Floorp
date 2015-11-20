@@ -3886,6 +3886,9 @@ pref("gfx.font_rendering.fontconfig.fontlist.enabled", false);
 #else
 pref("gfx.font_rendering.fontconfig.fontlist.enabled", true);
 #endif
+
+// maximum number of fonts to substitute for a generic
+pref("gfx.font_rendering.fontconfig.max_generic_substitutions", 3);
 #endif
 
 # XP_UNIX
