@@ -42,8 +42,6 @@ public:
 protected:
   explicit MacIOSurfaceTextureData(MacIOSurface* aSurface);
 
-  virtual void FinalizeOnIPDLThread(TextureClient* aWrapper) override;
-
   RefPtr<MacIOSurface> mSurface;
 };
 
