@@ -13,13 +13,14 @@ var Int32x4 = SIMD.Int32x4;
 
 function getMask(i, maskLength) {
     var args = [];
-    for (var j = 0; j < maskLength; j++) args.push(!!((i >> j) & 1));
+    for (var j = 0; j < maskLength; j++)
+        args.push((!!((i >> j) & 1)) ? -1 : 0);
     if (maskLength == 4)
-        return Int32x4.bool(...args);
+        return Int32x4(...args);
     else if (maskLength == 8)
-        return Int16x8.bool(...args);
+        return Int16x8(...args);
     else if (maskLength == 16)
-        return Int8x16.bool(...args);
+        return Int8x16(...args);
     else
         throw new Error("Invalid mask length.");
 }

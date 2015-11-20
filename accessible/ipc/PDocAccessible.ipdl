@@ -86,6 +86,9 @@ child:
   prio(high) sync LandmarkRole(uint64_t aID) returns(nsString landmark);
   prio(high) sync ARIARoleAtom(uint64_t aID) returns(nsString role);
   prio(high) sync GetLevelInternal(uint64_t aID) returns(int32_t aLevel);
+  async ScrollTo(uint64_t aID, uint32_t aScrollType);
+  async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
+                      int32_t aY);
 
   // AccessibleText
 

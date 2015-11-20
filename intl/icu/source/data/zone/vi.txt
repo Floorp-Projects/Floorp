@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 vi{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -205,7 +205,7 @@ vi{
             ec{"Aruba"}
         }
         "America:Asuncion"{
-            ec{"Asuncion"}
+            ec{"Asunción"}
         }
         "America:Bahia"{
             ec{"Bahia"}
@@ -684,6 +684,9 @@ vi{
         "Asia:Calcutta"{
             ec{"Kolkata"}
         }
+        "Asia:Chita"{
+            ec{"Chita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -825,6 +828,9 @@ vi{
         "Asia:Singapore"{
             ec{"Singapore"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
         "Asia:Taipei"{
             ec{"Đài Bắc"}
         }
@@ -847,7 +853,7 @@ vi{
             ec{"Ulaanbaatar"}
         }
         "Asia:Urumqi"{
-            ec{"Ô Lỗ Mộc Tề"}
+            ec{"Urumqi"}
         }
         "Asia:Ust-Nera"{
             ec{"Ust-Nera"}
@@ -1144,6 +1150,9 @@ vi{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}
@@ -1763,8 +1772,8 @@ vi{
         }
         "meta:Pierre_Miquelon"{
             ld{"Giờ Mùa Hè Saint Pierre và Miquelon"}
-            lg{"Giờ Saint Pierre và Miquelon"}
-            ls{"Giờ Chuẩn Saint Pierre và Miquelon"}
+            lg{"Giờ St. Pierre và Miquelon"}
+            ls{"Giờ Chuẩn St. Pierre và Miquelon"}
         }
         "meta:Pitcairn"{
             ls{"Giờ Pitcairn"}

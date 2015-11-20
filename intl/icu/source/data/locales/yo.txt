@@ -12,7 +12,7 @@ yo{
         "[a á à b d e é è ẹ {ẹ\u0301} {ẹ\u0300} f g {gb} h i í ì j k l m n o ó ò ọ {ọ"
         "\u0301} {ọ\u0300} p r s ṣ t u ú ù w y]"
     }
-    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersIndex{"[A B D E F G H I J K L M N O P R S T U W Y]"}
     NumberElements{
         latn{
             patterns{
@@ -21,7 +21,7 @@ yo{
             }
         }
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.80"}
     calendar{
         generic{
             DateTimePatterns{

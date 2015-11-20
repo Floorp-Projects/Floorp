@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seeking to a negative time with readyState HAVE_NOTHING</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var type = getMajorMimeType(test.type);
+  var v = document.createElement(type);
+  v.token = token;
+  manager.started(token);
+
+  // Seek to negative start time.
+  v.currentTime = -123;
+  is(v.readyState, v.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  ok(!v.seeking, "can't be seeking prior src defined");
+  is(v.currentTime, -123, "currentTime is original seek time");
+
+  v.src = test.name;
+
+  // Initialize running variables.
+  v._name = test.name;
+  v._seekStarted = false;
+  v._seekCompleted = false;
+  v._metadata = false;
+
+  var events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart",
+                 "loadedmetadata", "loadeddata", "playing", "ended", "error",
+                 "stalled", "emptied", "abort", "waiting", "pause" ];
+  function logEvent(e) {
+    var v = e.target;
+    Log(e.target.token, "got " + e.type + " with currentTime = " + v.currentTime);
+  }
+  events.forEach(function(e) {
+    v.addEventListener(e, logEvent, false);
+  });
+
+  once(v, "seeking", function() {
+    v._seekStarted = true;
+    ok(v.currentTime >= 0, "currentTime should be positive");
+  });
+  once(v, "seeked", function() {
+    v._seekCompleted = true;
+    ok(v.currentTime >= 0, "currentTime should be positive");
+  });
+  once(v, "loadedmetadata", function() {
+    v._metadata = true;
+    ok(v.seeking, "element is seeking once readyState is HAVE_METADATA");
+    ok(v.currentTime >= 0, "currentTime should be positive");
+  });
+  once(v, "ended", function() {
+    ok(v._seekStarted, "seek should have started");
+    ok(v._seekCompleted, "seek should have completed");
+    ok(v._metadata, "loadedmetadata fired");
+    ok(v.currentTime >= 0, "currentTime should be positive");
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  });
+
+  v.play();
+}
+
+
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

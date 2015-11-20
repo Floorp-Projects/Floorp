@@ -73,7 +73,8 @@ public:
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                     const gfxFontStyle *aStyle,
                     gfxTextPerfMetrics* aTextPerf,
-                    gfxUserFontSet *aUserFontSet) override;
+                    gfxUserFontSet *aUserFontSet,
+                    gfxFloat aDevToCssSize) override;
 
     virtual bool FontHintingEnabled() override;
     virtual bool RequiresLinearZoom() override;

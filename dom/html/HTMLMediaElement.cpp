@@ -3442,7 +3442,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     NotifyOwnerDocumentActivityChangedInternal();
   }
 
-  if (mDefaultPlaybackStartPosition > 0) {
+  if (mDefaultPlaybackStartPosition != 0.0) {
     SetCurrentTime(mDefaultPlaybackStartPosition);
     mDefaultPlaybackStartPosition = 0.0;
   }

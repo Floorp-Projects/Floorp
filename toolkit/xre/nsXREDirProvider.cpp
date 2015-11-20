@@ -394,6 +394,13 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     if (NS_SUCCEEDED(rv))
       rv = file->AppendNative(NS_LITERAL_CSTRING("features"));
   }
+  else if (!strcmp(aProperty, XRE_ADDON_APP_DIR)) {
+    nsCOMPtr<nsIDirectoryServiceProvider> dirsvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    bool unused;
+    rv = dirsvc->GetFile("XCurProcD", &unused, getter_AddRefs(file));
+  }
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.

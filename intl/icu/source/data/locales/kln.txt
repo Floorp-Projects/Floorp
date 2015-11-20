@@ -18,14 +18,14 @@ kln{
             }
         }
     }
-    Version{"2.1.11.39"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y G",
                 "d MMMM y G",
                 "d MMM y G",
@@ -70,10 +70,10 @@ kln{
                 "koosk",
             }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
@@ -84,8 +84,6 @@ kln{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"beetkween"}
-            NoonMarkerAbbr{"beet"}
             availableFormats{
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

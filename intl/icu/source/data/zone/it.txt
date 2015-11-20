@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 it{
-    Version{"2.1.13.6"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -169,7 +169,7 @@ it{
             ec{"Adak"}
         }
         "America:Anchorage"{
-            ec{"Fuso orario Alaska"}
+            ec{"Anchorage"}
         }
         "America:Anguilla"{
             ec{"Anguilla"}
@@ -684,6 +684,9 @@ it{
         "Asia:Calcutta"{
             ec{"Calcutta"}
         }
+        "Asia:Chita"{
+            ec{"Čita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -825,6 +828,9 @@ it{
         "Asia:Singapore"{
             ec{"Singapore"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
         "Asia:Taipei"{
             ec{"Taipei"}
         }
@@ -880,7 +886,7 @@ it{
             ec{"Capo Verde"}
         }
         "Atlantic:Faeroe"{
-            ec{"Isole Faeroe"}
+            ec{"Isole Fær Øer"}
         }
         "Atlantic:Madeira"{
             ec{"Madeira"}
@@ -974,7 +980,7 @@ it{
         }
         "Europe:Dublin"{
             ec{"Dublino"}
-            ld{"Ora legale Irlanda"}
+            ld{"Ora legale dell’Irlanda"}
         }
         "Europe:Gibraltar"{
             ec{"Gibilterra"}
@@ -1008,7 +1014,7 @@ it{
         }
         "Europe:London"{
             ec{"Londra"}
-            ld{"Ora legale Regno Unito"}
+            ld{"Ora legale del Regno Unito"}
         }
         "Europe:Luxembourg"{
             ec{"Lussemburgo"}
@@ -1145,6 +1151,9 @@ it{
         "Pacific:Auckland"{
             ec{"Auckland"}
         }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
+        }
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
@@ -1271,9 +1280,9 @@ it{
             ls{"Ora standard dell’Africa occidentale"}
         }
         "meta:Alaska"{
-            ld{"Ora legale Alaska"}
+            ld{"Ora legale dell’Alaska"}
             lg{"Ora dell’Alaska"}
-            ls{"Ora standard Alaska"}
+            ls{"Ora standard dell’Alaska"}
         }
         "meta:Amazon"{
             ld{"Ora legale dell’Amazzonia"}
@@ -1413,7 +1422,7 @@ it{
             ls{"Ora standard di Choibalsan"}
         }
         "meta:Christmas"{
-            ls{"Ora dell’Isola di Natale"}
+            ls{"Ora dell’Isola Christmas"}
         }
         "meta:Cocos"{
             ls{"Ora delle Isole Cocos"}

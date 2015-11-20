@@ -1,6 +1,6 @@
 #******************************************************************************
 #
-#   Copyright (C) 1998-2014, International Business Machines
+#   Copyright (C) 1998-2015, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -339,7 +339,6 @@ $(top_builddir)/config/icu-config: $(top_builddir)/Makefile $(top_srcdir)/config
 	LC_ALL=C sed -f $(top_srcdir)/config/make2sh.sed < $(top_builddir)/config/Makefile.inc | grep -v '#M#' | uniq >> $@
 	LC_ALL=C sed -f $(top_srcdir)/config/make2sh.sed < @platform_make_fragment@ | grep -v '#M#' | uniq >> $@
 	cat $(top_srcdir)/config/icu-config-bottom >> $@
-	echo "# Rebuilt on "`date` >> $@
 	chmod u-w $@
 
 config.status: $(srcdir)/configure $(srcdir)/common/unicode/uvernum.h

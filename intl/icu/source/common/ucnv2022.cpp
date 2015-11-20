@@ -1421,8 +1421,8 @@ static const StateEnum jpCharsetPref[]={
     ASCII,
     JISX201,
     ISO8859_1,
-    ISO8859_7,
     JISX208,
+    ISO8859_7,
     JISX212,
     GB2312,
     KSC5601,
@@ -3806,16 +3806,8 @@ static const UConverterStaticData _ISO2022StaticData={
     0,
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
-const UConverterSharedData _ISO2022Data={
-    sizeof(UConverterSharedData),
-    ~((uint32_t) 0),
-    NULL,
-    NULL,
-    &_ISO2022StaticData,
-    FALSE,
-    &_ISO2022Impl,
-    0, UCNV_MBCS_TABLE_INITIALIZER
-};
+const UConverterSharedData _ISO2022Data=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_ISO2022StaticData, &_ISO2022Impl);
 
 /*************JP****************/
 static const UConverterImpl _ISO2022JPImpl={
@@ -3862,16 +3854,8 @@ static const UConverterStaticData _ISO2022JPStaticData={
 
 namespace {
 
-const UConverterSharedData _ISO2022JPData={
-    sizeof(UConverterSharedData),
-    ~((uint32_t) 0),
-    NULL,
-    NULL,
-    &_ISO2022JPStaticData,
-    FALSE,
-    &_ISO2022JPImpl,
-    0, UCNV_MBCS_TABLE_INITIALIZER
-};
+const UConverterSharedData _ISO2022JPData=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_ISO2022JPStaticData, &_ISO2022JPImpl);
 
 }  // namespace
 
@@ -3921,16 +3905,8 @@ static const UConverterStaticData _ISO2022KRStaticData={
 
 namespace {
 
-const UConverterSharedData _ISO2022KRData={
-    sizeof(UConverterSharedData),
-    ~((uint32_t) 0),
-    NULL,
-    NULL,
-    &_ISO2022KRStaticData,
-    FALSE,
-    &_ISO2022KRImpl,
-    0, UCNV_MBCS_TABLE_INITIALIZER
-};
+const UConverterSharedData _ISO2022KRData=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_ISO2022KRStaticData, &_ISO2022KRImpl);
 
 }  // namespace
 
@@ -3980,16 +3956,8 @@ static const UConverterStaticData _ISO2022CNStaticData={
 
 namespace {
 
-const UConverterSharedData _ISO2022CNData={
-    sizeof(UConverterSharedData),
-    ~((uint32_t) 0),
-    NULL,
-    NULL,
-    &_ISO2022CNStaticData,
-    FALSE,
-    &_ISO2022CNImpl,
-    0, UCNV_MBCS_TABLE_INITIALIZER
-};
+const UConverterSharedData _ISO2022CNData=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_ISO2022CNStaticData, &_ISO2022CNImpl);
 
 }  // namespace
 #endif /* #if !UCONFIG_ONLY_HTML_CONVERSION */

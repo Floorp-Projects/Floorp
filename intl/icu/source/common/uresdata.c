@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1999-2014, International Business Machines Corporation
+* Copyright (C) 1999-2015, International Business Machines Corporation
 *               and others. All Rights Reserved.
 *******************************************************************************
 *   file name:  uresdata.c
@@ -145,7 +145,7 @@ isAcceptable(void *context,
         pInfo->dataFormat[1]==0x65 &&
         pInfo->dataFormat[2]==0x73 &&
         pInfo->dataFormat[3]==0x42 &&
-        (pInfo->formatVersion[0]==1 || pInfo->formatVersion[0]==2));
+        (1<=pInfo->formatVersion[0] && pInfo->formatVersion[0]<=3));
 }
 
 /* semi-public functions ---------------------------------------------------- */
@@ -198,11 +198,20 @@ res_init(ResourceData *pResData,
         if(indexes[URES_INDEX_KEYS_TOP]>(1+indexLength)) {
             pResData->localKeyLimit=indexes[URES_INDEX_KEYS_TOP]<<2;
         }
+        if(formatVersion[0]>=3) {
+            // In formatVersion 1, the indexLength took up this whole int.
+            // In version 2, bits 31..8 were reserved and always 0.
+            // In version 3, they contain bits 23..0 of the poolStringIndexLimit.
+            // Bits 27..24 are in indexes[URES_INDEX_ATTRIBUTES] bits 15..12.
+            pResData->poolStringIndexLimit=(int32_t)((uint32_t)indexes[URES_INDEX_LENGTH]>>8);
+        }
         if(indexLength>URES_INDEX_ATTRIBUTES) {
             int32_t att=indexes[URES_INDEX_ATTRIBUTES];
             pResData->noFallback=(UBool)(att&URES_ATT_NO_FALLBACK);
             pResData->isPoolBundle=(UBool)((att&URES_ATT_IS_POOL_BUNDLE)!=0);
             pResData->usesPoolBundle=(UBool)((att&URES_ATT_USES_POOL_BUNDLE)!=0);
+            pResData->poolStringIndexLimit|=(att&0xf000)<<12;  // bits 15..12 -> 27..24
+            pResData->poolStringIndex16Limit=(int32_t)((uint32_t)att>>16);
         }
         if((pResData->isPoolBundle || pResData->usesPoolBundle) && indexLength<=URES_INDEX_POOL_CHECKSUM) {
             *errorCode=U_INVALID_FORMAT_ERROR;
@@ -301,7 +310,11 @@ res_getString(const ResourceData *pResData, Resource res, int32_t *pLength) {
     int32_t length;
     if(RES_GET_TYPE(res)==URES_STRING_V2) {
         int32_t first;
-        p=(const UChar *)(pResData->p16BitUnits+offset);
+        if(offset<pResData->poolStringIndexLimit) {
+            p=(const UChar *)pResData->poolBundleStrings+offset;
+        } else {
+            p=(const UChar *)pResData->p16BitUnits+(offset-pResData->poolStringIndexLimit);
+        }
         first=*p;
         if(!U16_IS_TRAIL(first)) {
             length=u_strlen(p);
@@ -410,6 +423,18 @@ res_countArrayItems(const ResourceData *pResData, Resource res) {
     }
 }
 
+static Resource
+makeResourceFrom16(const ResourceData *pResData, int32_t res16) {
+    if(res16<pResData->poolStringIndex16Limit) {
+        // Pool string, nothing to do.
+    } else {
+        // Local string, adjust the 16-bit offset to a regular one,
+        // with a larger pool string index limit.
+        res16=res16-pResData->poolStringIndex16Limit+pResData->poolStringIndexLimit;
+    }
+    return URES_MAKE_RESOURCE(URES_STRING_V2, res16);
+}
+
 U_CAPI Resource U_EXPORT2
 res_getTableItemByKey(const ResourceData *pResData, Resource table,
                       int32_t *indexR, const char **key) {
@@ -437,7 +462,7 @@ res_getTableItemByKey(const ResourceData *pResData, Resource table,
         length=*p++;
         *indexR=idx=_res_findTableItem(pResData, p, length, *key, key);
         if(idx>=0) {
-            return URES_MAKE_RESOURCE(URES_STRING_V2, p[length+idx]);
+            return makeResourceFrom16(pResData, p[length+idx]);
         }
         break;
     }
@@ -486,7 +511,7 @@ res_getTableItemByIndex(const ResourceData *pResData, Resource table,
             if(key!=NULL) {
                 *key=RES_GET_KEY16(pResData, p[indexR]);
             }
-            return URES_MAKE_RESOURCE(URES_STRING_V2, p[length+indexR]);
+            return makeResourceFrom16(pResData, p[length+indexR]);
         }
         break;
     }
@@ -533,7 +558,7 @@ res_getArrayItem(const ResourceData *pResData, Resource array, int32_t indexR) {
     case URES_ARRAY16: {
         const uint16_t *p=pResData->p16BitUnits+offset;
         if(indexR<*p) {
-            return URES_MAKE_RESOURCE(URES_STRING_V2, p[1+indexR]);
+            return makeResourceFrom16(pResData, p[1+indexR]);
         }
         break;
     }
@@ -990,8 +1015,9 @@ ures_swap(const UDataSwapper *ds,
         pInfo->dataFormat[1]==0x65 &&
         pInfo->dataFormat[2]==0x73 &&
         pInfo->dataFormat[3]==0x42 &&
-        ((pInfo->formatVersion[0]==1 && pInfo->formatVersion[1]>=1) ||  /* formatVersion 1.1+ or 2.x */
-         pInfo->formatVersion[0]==2)
+        /* formatVersion 1.1+ or 2.x or 3.x */
+        ((pInfo->formatVersion[0]==1 && pInfo->formatVersion[1]>=1) ||
+            pInfo->formatVersion[0]==2 || pInfo->formatVersion[0]==3)
     )) {
         udata_printError(ds, "ures_swap(): data format %02x.%02x.%02x.%02x (format version %02x.%02x) is not a resource bundle\n",
                          pInfo->dataFormat[0], pInfo->dataFormat[1],

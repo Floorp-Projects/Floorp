@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 mk{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиџан"}
@@ -684,6 +684,9 @@ mk{
         "Asia:Calcutta"{
             ec{"Колката"}
         }
+        "Asia:Chita"{
+            ec{"Чита"}
+        }
         "Asia:Choibalsan"{
             ec{"Чојбалсан"}
         }
@@ -825,6 +828,9 @@ mk{
         "Asia:Singapore"{
             ec{"Сингапур"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Среднеколимск"}
+        }
         "Asia:Taipei"{
             ec{"Тајпеј"}
         }
@@ -934,7 +940,7 @@ mk{
             ec{"Сиднеј"}
         }
         "Etc:Unknown"{
-            ec{"Непознато"}
+            ec{"Непознат град"}
         }
         "Europe:Amsterdam"{
             ec{"Амстердам"}
@@ -974,7 +980,7 @@ mk{
         }
         "Europe:Dublin"{
             ec{"Даблин"}
-            ld{"Ирско летно време"}
+            ld{"Ирско стандардно време"}
         }
         "Europe:Gibraltar"{
             ec{"Гибралтар"}
@@ -1077,7 +1083,7 @@ mk{
             ec{"Тирана"}
         }
         "Europe:Uzhgorod"{
-            ec{"Ужгород"}
+            ec{"Ужхород"}
         }
         "Europe:Vaduz"{
             ec{"Вадуц"}
@@ -1144,6 +1150,9 @@ mk{
         }
         "Pacific:Auckland"{
             ec{"Окленд"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Буганвил"}
         }
         "Pacific:Chatham"{
             ec{"Чатам"}

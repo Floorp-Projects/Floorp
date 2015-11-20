@@ -1,6 +1,6 @@
 /*
 ***************************************************************************
-* Copyright (C) 1999-2014, International Business Machines Corporation
+* Copyright (C) 1999-2015, International Business Machines Corporation
 * and others. All Rights Reserved.
 ***************************************************************************
 *   Date        Name        Description
@@ -368,6 +368,28 @@ public:
      * @stable ICU 2.4
      */
     UnicodeSet(UChar32 start, UChar32 end);
+
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     * @internal
+     */
+    enum ESerialization {
+      kSerialized  /* result of serialize() */
+    };
+
+    /**
+     * Constructs a set from the output of serialize().
+     *
+     * @param buffer the 16 bit array
+     * @param bufferLen the original length returned from serialize()
+     * @param serialization the value 'kSerialized'
+     * @param status error code
+     *
+     * @internal
+     */
+    UnicodeSet(const uint16_t buffer[], int32_t bufferLen,
+               ESerialization serialization, UErrorCode &status);
+#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * Constructs a set from the given pattern.  See the class

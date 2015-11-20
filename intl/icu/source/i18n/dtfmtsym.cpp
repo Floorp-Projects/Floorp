@@ -51,18 +51,30 @@
  * resource data.
  */
 
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
 #define PATTERN_CHARS_LEN 36
+#else
+#define PATTERN_CHARS_LEN 35
+#endif
 
 /**
  * Unlocalized date-time pattern characters. For example: 'y', 'd', etc. All
  * locales use the same these unlocalized pattern characters.
  */
 static const UChar gPatternChars[] = {
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
     // GyMdkHmsSEDFwWahKzYeugAZvcLQqVUOXxr:
+#else
+    // GyMdkHmsSEDFwWahKzYeugAZvcLQqVUOXxr
+#endif
     0x47, 0x79, 0x4D, 0x64, 0x6B, 0x48, 0x6D, 0x73, 0x53, 0x45,
     0x44, 0x46, 0x77, 0x57, 0x61, 0x68, 0x4B, 0x7A, 0x59, 0x65,
     0x75, 0x67, 0x41, 0x5A, 0x76, 0x63, 0x4c, 0x51, 0x71, 0x56,
+#if UDAT_HAS_PATTERN_CHAR_FOR_TIME_SEPARATOR
     0x55, 0x4F, 0x58, 0x78, 0x72, 0x3a, 0
+#else
+    0x55, 0x4F, 0x58, 0x78, 0x72, 0
+#endif
 };
 
 /* length of an array */
