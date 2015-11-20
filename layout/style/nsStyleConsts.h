@@ -18,13 +18,12 @@ namespace mozilla {
 namespace css {
 typedef mozilla::Side Side;
 } // namespace css
-} // namespace mozilla
 
 #define NS_FOR_CSS_SIDES(var_) for (mozilla::css::Side var_ = NS_SIDE_TOP; var_ <= NS_SIDE_LEFT; var_++)
-static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
+static inline css::Side operator++(css::Side& side, int) {
     NS_PRECONDITION(side >= NS_SIDE_TOP &&
                     side <= NS_SIDE_LEFT, "Out of range side");
-    side = mozilla::css::Side(side + 1);
+    side = css::Side(side + 1);
     return side;
 }
 
@@ -57,9 +56,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
   ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
 
 // box-sizing
-#define NS_STYLE_BOX_SIZING_CONTENT       0
-#define NS_STYLE_BOX_SIZING_PADDING       1
-#define NS_STYLE_BOX_SIZING_BORDER        2
+enum class StyleBoxSizing : uint8_t {
+  Content,
+  Padding,
+  Border
+};
 
 // clip-path sizing
 #define NS_STYLE_CLIP_SHAPE_SIZING_NOBOX   0
@@ -1157,5 +1158,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // scan
 #define NS_STYLE_SCAN_PROGRESSIVE               0
 #define NS_STYLE_SCAN_INTERLACE                 1
+
+} // namespace mozilla
 
 #endif /* nsStyleConsts_h___ */

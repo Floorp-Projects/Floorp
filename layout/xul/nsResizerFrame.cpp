@@ -81,11 +81,14 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           // adjust to get the desired content rectangle.
           nsRect rect = frameToResize->GetScreenRectInAppUnits();
           switch (frameToResize->StylePosition()->mBoxSizing) {
-            case NS_STYLE_BOX_SIZING_CONTENT:
+            case StyleBoxSizing::Content:
               rect.Deflate(frameToResize->GetUsedPadding());
-            case NS_STYLE_BOX_SIZING_PADDING:
+              // fall through
+            case StyleBoxSizing::Padding:
               rect.Deflate(frameToResize->GetUsedBorder());
-            default:
+              // fall through
+            case StyleBoxSizing::Border:
+              // nothing
               break;
           }
 
