@@ -1524,25 +1524,6 @@ function getSignedStatus(aRv, aCert, aAddonID) {
   }
 }
 
-function shouldVerifySignedState(aAddon) {
-  // Updated system add-ons should always have their signature checked
-  if (aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS)
-    return true;
-
-  // We don't care about signatures for default system add-ons
-  if (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS)
-    return false;
-
-  // Hotfixes should always have their signature checked
-  let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
-  if (hotfixID && aAddon.id == hotfixID)
-    return true;
-
-  // Otherwise only check signatures if signing is enabled and the add-on is one
-  // of the signed types.
-  return ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
-}
-
 /**
  * Verifies that a zip file's contents are all correctly signed by an
  * AMO-issued certificate
@@ -1554,7 +1535,7 @@ function shouldVerifySignedState(aAddon) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyZipSignedState(aFile, aAddon) {
-  if (!shouldVerifySignedState(aAddon))
+  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -1584,7 +1565,7 @@ function verifyZipSignedState(aFile, aAddon) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyDirSignedState(aDir, aAddon) {
-  if (!shouldVerifySignedState(aAddon))
+  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
