@@ -586,7 +586,7 @@ struct JS_PUBLIC_API(MovableCellHasher)
 };
 
 template <typename T>
-struct MovableCellHasher<JS::Heap<T>>
+struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
 {
     using Key = JS::Heap<T>;
     using Lookup = T;
