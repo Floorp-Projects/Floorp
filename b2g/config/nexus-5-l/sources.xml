@@ -134,7 +134,7 @@
   <project name="platform/system/netd" path="system/netd" revision="d113f0ceefa9ce29eb3c86e2d23c7417a70b4048"/>
   <project name="platform/system/security" path="system/security" revision="94e1617f6f2bc2286d005e79cffa6bf0721b06b3"/>
   <project name="platform/system/vold" path="system/vold" revision="c065e301e38ea0c241164e2a373e1ecefbeaf2ec"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="e372b6a77f71c8f9fbbf6f8adbfa7bf8ef45dc60"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="6971327dda6bead878724ac1c767ee2d23a2a9e1"/>
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="04e26ebdc36ca83f4ee3e9e2082b3fcf04c5b971"/>
   <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="0dbf5baafadf6d233c0a29e392fa3293f0121673"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="f594bc64eacac490857748b1139ffcb34c856bbd"/>
