@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import shlex
+from mozbuild import shellutil
 
 def check_top_objdir(topobjdir):
     top_make = os.path.join(topobjdir, 'Makefile')
@@ -44,11 +44,9 @@ def get_flags(topobjdir, make_dir, build_vars, name):
     #   * -DR_PLATFORM_INT_TYPES='<stdint.h>'
     #   * -DAPP_ID='{ec8030f7-c20a-464f-9b0e-13a3a9e97384}
     #   * -D__UNUSED__='__attribute__((unused))'
-    lex = shlex.shlex(build_vars[name])
-    lex.quotes = '"'
-    lex.wordchars += '+/\'"-=.*{}()[]<>'
+    args = shellutil.split(build_vars[name])
 
-    for arg in list(lex):
+    for arg in list(args):
         if new_args and new_args[-1] in flags:
             arg = os.path.normpath(os.path.join(path, arg))
         else:
@@ -60,4 +58,4 @@ def get_flags(topobjdir, make_dir, build_vars, name):
                     arg = flag + os.path.normpath(os.path.join(path, val))
         new_args.append(arg)
 
-    return ' '.join(new_args)
+    return new_args
