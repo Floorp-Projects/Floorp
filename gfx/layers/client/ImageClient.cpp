@@ -203,10 +203,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
         if (image->GetFormat() == ImageFormat::EGLIMAGE) {
           EGLImageImage* typedImage = image->AsEGLImageImage();
-          texture = new EGLImageTextureClient(GetForwarder(),
-                                              mTextureFlags,
-                                              typedImage,
-                                              size);
+          texture = EGLImageTextureData::CreateTextureClient(
+            typedImage, size, GetForwarder(), mTextureFlags);
 #ifdef MOZ_WIDGET_ANDROID
         } else if (image->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
           SurfaceTextureImage* typedImage = image->AsSurfaceTextureImage();
