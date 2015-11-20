@@ -15,6 +15,7 @@ from mozbuild.frontend.data import (
     UnifiedSources,
     GeneratedSources,
 )
+from mozbuild.shellutil import quote as shell_quote
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
 
@@ -117,29 +118,26 @@ class CompileDBBackend(CommonBackend):
         prefix = 'HOST_' if ishost else ''
         if canonical_suffix == '.c':
             compiler = cenv.substs[prefix + 'CC']
-            cflags = flags['COMPILE_CFLAGS']
+            cflags = list(flags['COMPILE_CFLAGS'])
             # Add the Objective-C flags if needed.
             if filename.endswith('.m'):
-                cflags += ' ' + flags['COMPILE_CMFLAGS']
+                cflags.extend(flags['COMPILE_CMFLAGS'])
         elif canonical_suffix == '.cpp':
             compiler = cenv.substs[prefix + 'CXX']
-            cflags = flags['COMPILE_CXXFLAGS']
+            cflags = list(flags['COMPILE_CXXFLAGS'])
             # Add the Objective-C++ flags if needed.
             if filename.endswith('.mm'):
-                cflags += ' ' + flags['COMPILE_CMMFLAGS']
+                cflags.extend(flags['COMPILE_CMMFLAGS'])
         else:
             return
 
-        cmd = ' '.join([
-          compiler,
-          '-o', '/dev/null', '-c',
-          cflags,
-          filename,
-        ])
+        cmd = compiler.split() + [
+          '-o', '/dev/null', '-c'
+        ] + cflags + [ filename ]
 
         self._db.append({
             'directory': objdir,
-            'command': cmd,
+            'command': ' '.join(shell_quote(a) for a in cmd),
             'file': filename
         })
 
