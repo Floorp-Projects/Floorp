@@ -270,3 +270,8 @@
 <!-- Localization note: the format string below will be replaced
      with the Firefox Account's email address. -->
 <!ENTITY fxaccount_sync_finish_migrating_notification_text 'Tap to sign in as &formatS;'>
+
+<!-- Localization note: the following strings are used in a
+     notification and should be kept as short as possible. -->
+<!ENTITY old_sync_deprecated_notification_title 'Sign in to continue syncing'>
+<!ENTITY old_sync_deprecated_notification_content 'Your account is no longer supported'>
