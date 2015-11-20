@@ -124,6 +124,12 @@
 #define XRE_APP_FEATURES_DIR "XREAppFeat"
 
 /**
+ * A directory service key which specifies the location for app dir add-ons.
+ * Should be a synonym for XCurProcD everywhere except in tests.
+ */
+#define XRE_ADDON_APP_DIR "XREAddonAppDir"
+
+/**
  * A directory service key which provides the update directory.
  * At present this is supported only on Windows.
  * Windows: Documents and Settings\<User>\Local Settings\Application Data\

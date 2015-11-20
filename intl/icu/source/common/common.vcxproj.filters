@@ -103,6 +103,9 @@
     <ClCompile Include="ucol_swp.cpp">
       <Filter>collation</Filter>
     </ClCompile>
+    <ClCompile Include="pluralmap.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
     <ClCompile Include="propsvec.c">
       <Filter>collections</Filter>
     </ClCompile>
@@ -575,6 +578,9 @@
     <ClCompile Include="uloc_keytype.cpp">
       <Filter>locales &amp; resources</Filter>
     </ClCompile>
+    <ClCompile Include="filteredbrk.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ubidi_props.h">
@@ -620,6 +626,9 @@
       <Filter>collation</Filter>
     </ClInclude>
     <ClInclude Include="hash.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="pluralmap.h">
       <Filter>collections</Filter>
     </ClInclude>
     <ClInclude Include="propsvec.h">
@@ -826,6 +835,9 @@
     <ClInclude Include="uinvchar.h">
       <Filter>strings</Filter>
     </ClInclude>
+    <ClInclude Include="unistrappender.h">
+      <Filter>strings</Filter>
+    </ClInclude>
     <ClInclude Include="ustr_cnv.h">
       <Filter>strings</Filter>
     </ClInclude>
@@ -861,6 +873,9 @@
     </ClInclude>
     <ClInclude Include="patternprops.h">
       <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="unicode\filteredbrk.h">
+      <Filter>break iteration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

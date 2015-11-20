@@ -1,0 +1,21 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/qu_BO.xml
+// *
+// ***************************************************************************
+qu_BO{
+    Version{"2.1.19.14"}
+    zoneStrings{
+        "meta:Bolivia"{
+            ss{"BOT"}
+        }
+        "meta:Peru"{
+            sd{"∅∅∅"}
+            sg{"∅∅∅"}
+            ss{"∅∅∅"}
+        }
+    }
+}

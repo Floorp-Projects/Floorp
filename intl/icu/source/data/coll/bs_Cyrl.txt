@@ -7,11 +7,11 @@
 // *
 // ***************************************************************************
 bs_Cyrl{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{"[import sr]"}
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

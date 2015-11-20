@@ -639,7 +639,8 @@ gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
 }
 
 gfxFontFamily* 
-gfxPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
+gfxPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
+                                gfxFloat aDevToCssSize)
 {
     nsAutoString key;
     gfxFontFamily *familyEntry;

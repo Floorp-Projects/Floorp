@@ -17,9 +17,6 @@
 #ifndef UBIDIIMP_H
 #define UBIDIIMP_H
 
-/*  set import/export definitions */
-#ifdef U_COMMON_IMPLEMENTATION
-
 #include "unicode/utypes.h"
 #include "unicode/uchar.h"
 #include "ubidi_props.h"
@@ -466,7 +463,5 @@ ubidi_getMemory(BidiMemoryForAllocation *pMemory, int32_t *pSize, UBool mayAlloc
 #define getInitialIsolatesMemory(pBiDi, length) \
         ubidi_getMemory((BidiMemoryForAllocation *)&(pBiDi)->isolatesMemory, &(pBiDi)->isolatesSize, \
                         TRUE, (length)*sizeof(Isolate))
-
-#endif
 
 #endif

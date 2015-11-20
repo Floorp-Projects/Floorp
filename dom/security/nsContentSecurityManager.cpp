@@ -421,7 +421,9 @@ nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTru
   *aIsTrustWorthy = false;
   nsAutoCString scheme;
   nsresult rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
 
   if (scheme.EqualsLiteral("https") ||
       scheme.EqualsLiteral("file") ||
@@ -433,7 +435,9 @@ nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTru
 
   nsAutoCString host;
   rv = aURI->GetHost(host);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
 
   if (host.Equals("127.0.0.1") ||
       host.Equals("localhost") ||
@@ -441,6 +445,5 @@ nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTru
     *aIsTrustWorthy = true;
     return NS_OK;
   }
-
   return NS_OK;
 }

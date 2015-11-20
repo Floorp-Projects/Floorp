@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 2009-2011, International Business Machines Corporation and         *
+ * Copyright (C) 2009-2015, International Business Machines Corporation and         *
  * others. All Rights Reserved.                                                *
  *******************************************************************************
  */
@@ -191,6 +191,7 @@ public:
 
 private:
     friend class DecimalFormat;
+    friend class DecimalFormatImpl;
 
     void initialize(const Locale& loc, UErrorCode& status);
    

@@ -342,7 +342,7 @@ el{
         }
         GBP{
             "£",
-            "Λίρα Βρετανίας",
+            "Λίρα Στερλίνα Βρετανίας",
         }
         GEK{
             "GEK",
@@ -595,7 +595,7 @@ el{
         }
         MKD{
             "MKD",
-            "Δηνάριο Π.Γ.Δ.Μ.",
+            "Δηνάριο ΠΓΔΜ",
         }
         MLF{
             "MLF",
@@ -1075,14 +1075,18 @@ el{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1090,42 +1094,83 @@ el{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
-        TWD{"NT$"}
+        TWD{"$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1461,8 +1506,8 @@ el{
             other{"φράγκα Γαλλίας"}
         }
         GBP{
-            one{"λίρα Βρετανίας"}
-            other{"λίρες Βρετανίας"}
+            one{"λίρα στερλίνα Βρετανίας"}
+            other{"λίρες στερλίνες Βρετανίας"}
         }
         GEK{
             one{"κούπον λάρι Γεωργίας"}
@@ -1701,8 +1746,8 @@ el{
             other{"φράγκα Μαδαγασκάρης"}
         }
         MKD{
-            one{"δηνάριο Π.Γ.Δ.Μ."}
-            other{"δηνάρια Π.Γ.Δ.Μ."}
+            one{"δηνάριο ΠΓΔΜ"}
+            other{"δηνάρια ΠΓΔΜ"}
         }
         MLF{
             one{"φράγκο Μαλί"}
@@ -2185,5 +2230,5 @@ el{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }

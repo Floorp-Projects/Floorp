@@ -93,6 +93,56 @@ ka{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 ათ'.' ¤"}
+                        other{"0 ათ'.' ¤"}
+                    }
+                    10000{
+                        one{"00 ათ'.' ¤"}
+                        other{"00 ათ'.' ¤"}
+                    }
+                    100000{
+                        one{"000 ათ'.' ¤"}
+                        other{"000 ათ'.' ¤"}
+                    }
+                    1000000{
+                        one{"0 მლნ'.' ¤"}
+                        other{"0 მლნ'.' ¤"}
+                    }
+                    10000000{
+                        one{"00 მლნ'.' ¤"}
+                        other{"00 მლნ'.' ¤"}
+                    }
+                    100000000{
+                        one{"000 მლნ'.' ¤"}
+                        other{"000 მლნ'.' ¤"}
+                    }
+                    1000000000{
+                        one{"0 მლრდ'.' ¤"}
+                        other{"0 მლრდ'.' ¤"}
+                    }
+                    10000000000{
+                        one{"00 მლრდ'.' ¤"}
+                        other{"00 მლრდ'.' ¤"}
+                    }
+                    100000000000{
+                        one{"000 მლრ'.' ¤"}
+                        other{"000 მლრ'.' ¤"}
+                    }
+                    1000000000000{
+                        one{"0 ტრლ'.' ¤"}
+                        other{"0 ტრლ'.' ¤"}
+                    }
+                    10000000000000{
+                        one{"00 ტრლ'.' ¤"}
+                        other{"00 ტრლ'.' ¤"}
+                    }
+                    100000000000000{
+                        one{"000 ტრლ'.' ¤"}
+                        other{"000 ტრლ'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 ათ'.'"}
@@ -163,7 +213,7 @@ ka{
         native{"latn"}
         traditional{"geor"}
     }
-    Version{"2.1.13.22"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -182,6 +232,7 @@ ka{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d E"}
                 Gy{"y G"}
                 GyMMM{"MMM, y G"}
@@ -194,6 +245,7 @@ ka{
                 MEd{"E, d.M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d.M"}
                 d{"d"}
@@ -207,6 +259,7 @@ ka{
                 yyyyMEd{"E, d.M.y G"}
                 yyyyMMM{"MMM, y G"}
                 yyyyMMMEd{"E, d MMM, y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM, y G"}
                 yyyyMd{"d.M.y G"}
                 yyyyQQQ{"QQQ, y G"}
@@ -328,50 +381,54 @@ ka{
                 "HH:mm",
                 "EEEE, dd MMMM, y",
                 "d MMMM, y",
-                "d MMM, y",
+                "d MMM. y",
                 "dd.MM.yy",
-                "{1} {0}",
-                "{1} {0}",
                 "{1}, {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"შუადღე"}
-            NoonMarkerNarrow{"შუადღე"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
                 E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"d E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"MMM, y G"}
-                GyMMMEd{"E, d MMM, y G"}
-                GyMMMd{"d MMM, y G"}
+                GyMMM{"MMM. y G"}
+                GyMMMEd{"E, d MMM. y G"}
+                GyMMMd{"d MMM. y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d.M"}
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d.M"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
-                yMMM{"MMM, y"}
-                yMMMEd{"E, d MMM, y"}
-                yMMMd{"d MMM, y"}
+                yMMM{"MMM. y"}
+                yMMMEd{"E, d MMM. y"}
+                yMMMM{"MMMM, y"}
+                yMMMd{"d MMM. y"}
                 yMd{"d.M.y"}
                 yQQQ{"QQQ, y"}
                 yQQQQ{"QQQQ, y"}
@@ -454,10 +511,74 @@ ka{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"ნაშუადღ."}
+                        evening1{"საღ."}
+                        midnight{"შუაღამეს"}
+                        morning1{"დილ."}
+                        night1{"ღამ."}
+                        noon{"შუადღ."}
+                    }
+                    narrow{
+                        afternoon1{"ნაშუადღევს"}
+                        evening1{"საღამოს"}
+                        midnight{"შუაღამეს"}
+                        morning1{"დილას"}
+                        night1{"ღამით"}
+                        noon{"შუადღ."}
+                    }
+                    wide{
+                        afternoon1{"ნაშუადღევს"}
+                        evening1{"საღამოს"}
+                        midnight{"შუაღამეს"}
+                        morning1{"დილით"}
+                        night1{"ღამით"}
+                        noon{"შუადღეს"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"ნაშუადღევი"}
+                        am{"AM"}
+                        evening1{"საღამო"}
+                        midnight{"შუაღამე"}
+                        morning1{"დილა"}
+                        night1{"ღამე"}
+                        noon{"შუადღე"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"ნაშუადღევი"}
+                        am{"a"}
+                        evening1{"საღამო"}
+                        midnight{"შუაღამე"}
+                        morning1{"დილა"}
+                        night1{"ღამე"}
+                        noon{"შუადღე"}
+                        pm{"p"}
+                    }
+                    wide{
+                        afternoon1{"ნაშუადღევი"}
+                        am{"შუადღემდე"}
+                        evening1{"საღამო"}
+                        midnight{"შუაღამე"}
+                        morning1{"დილა"}
+                        night1{"ღამე"}
+                        noon{"შუადღე"}
+                        pm{"შუადღ. შემდეგ"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "ძვ. წ.",
                     "ახ. წ.",
+                }
+                abbreviated%variant{
+                    "ჩვ. ერამდე",
+                    "ჩვ. ერა",
                 }
                 wide{
                     "ძველი წელთაღრიცხვით",
@@ -544,18 +665,18 @@ ka{
                     y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, d MMM – E, d MMM, y"}
-                    d{"E, d MMM – E, d MMM, y"}
-                    y{"E, d MMM, y – E, d MMM, y"}
+                    M{"E, d MMM. – E, d MMM. y"}
+                    d{"E, d MMM. – E, d MMM. y"}
+                    y{"E, d MMM. y – E, d MMM. y"}
                 }
                 yMMMM{
-                    M{"MM – MM.y"}
-                    y{"MM.y – MM.y"}
+                    M{"MMMM – MMMM, y"}
+                    y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"dd MM – dd MM, y"}
+                    M{"dd MMM. – dd MMM. y"}
                     d{"d–d MMM, y"}
-                    y{"dd MMM, y – d MMM, y"}
+                    y{"dd MMM. y – d MMM. y"}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y"}
@@ -726,6 +847,13 @@ ka{
         }
         day-narrow{
             dn{"დღე"}
+            relative{
+                "-1"{"გუშინ"}
+                "-2"{"გუშინწინ"}
+                "0"{"დღეს"}
+                "1"{"ხვალ"}
+                "2"{"ზეგ"}
+            }
             relativeTime{
                 future{
                     one{"{0} დღეში"}
@@ -739,6 +867,13 @@ ka{
         }
         day-short{
             dn{"დღე"}
+            relative{
+                "-1"{"გუშინ"}
+                "-2"{"გუშინწინ"}
+                "0"{"დღეს"}
+                "1"{"ხვალ"}
+                "2"{"ზეგ"}
+            }
             relativeTime{
                 future{
                     one{"{0} დღეში"}
@@ -896,6 +1031,11 @@ ka{
         }
         month-narrow{
             dn{"თვე"}
+            relative{
+                "-1"{"გასულ თვეს"}
+                "0"{"ამ თვეში"}
+                "1"{"მომავალ თვეს"}
+            }
             relativeTime{
                 future{
                     one{"{0} თვეში"}
@@ -909,6 +1049,11 @@ ka{
         }
         month-short{
             dn{"თვე"}
+            relative{
+                "-1"{"გასულ თვეს"}
+                "0"{"ამ თვეში"}
+                "1"{"მომავალ თვეს"}
+            }
             relativeTime{
                 future{
                     one{"{0} თვეში"}
@@ -1126,6 +1271,11 @@ ka{
         }
         week-narrow{
             dn{"კვ."}
+            relative{
+                "-1"{"გასულ კვირაში"}
+                "0"{"ამ კვირაში"}
+                "1"{"მომავალ კვირაში"}
+            }
             relativeTime{
                 future{
                     one{"{0} კვირაში"}
@@ -1139,6 +1289,11 @@ ka{
         }
         week-short{
             dn{"კვ."}
+            relative{
+                "-1"{"გასულ კვირაში"}
+                "0"{"ამ კვირაში"}
+                "1"{"მომავალ კვირაში"}
+            }
             relativeTime{
                 future{
                     one{"{0} კვირაში"}
@@ -1173,6 +1328,11 @@ ka{
         }
         year-narrow{
             dn{"წ."}
+            relative{
+                "-1"{"გასულ წელს"}
+                "0"{"ამ წელს"}
+                "1"{"მომავალ წელს"}
+            }
             relativeTime{
                 future{
                     one{"{0} წელში"}
@@ -1186,6 +1346,11 @@ ka{
         }
         year-short{
             dn{"წ."}
+            relative{
+                "-1"{"გასულ წელს"}
+                "0"{"ამ წელს"}
+                "1"{"მომავალ წელს"}
+            }
             relativeTime{
                 future{
                     one{"{0} წელში"}

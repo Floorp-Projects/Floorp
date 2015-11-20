@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals CSS */
 
 "use strict";
 
@@ -17,6 +16,8 @@ const {PSEUDO_ELEMENT_SET} = require("devtools/shared/styleinspector/css-logic")
 // This will also add the "stylesheet" actor type for protocol.js to recognize
 const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} =
       require("devtools/server/actors/stylesheets");
+
+loader.lazyRequireGetter(this, "CSS", "CSS");
 
 loader.lazyGetter(this, "CssLogic", () => {
   return require("devtools/shared/styleinspector/css-logic").CssLogic;

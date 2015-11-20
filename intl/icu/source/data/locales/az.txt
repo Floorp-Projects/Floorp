@@ -90,6 +90,56 @@ az{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤ 0K"}
+                        other{"¤ 0K"}
+                    }
+                    10000{
+                        one{"¤ 00K"}
+                        other{"¤ 00K"}
+                    }
+                    100000{
+                        one{"¤ 000K"}
+                        other{"¤ 000K"}
+                    }
+                    1000000{
+                        one{"¤ 0M"}
+                        other{"¤ 0M"}
+                    }
+                    10000000{
+                        one{"¤ 00M"}
+                        other{"¤ 00M"}
+                    }
+                    100000000{
+                        one{"¤ 000M"}
+                        other{"¤ 000M"}
+                    }
+                    1000000000{
+                        one{"¤ 0G"}
+                        other{"¤ 0G"}
+                    }
+                    10000000000{
+                        one{"¤ 00G"}
+                        other{"¤ 00G"}
+                    }
+                    100000000000{
+                        one{"¤ 000G"}
+                        other{"¤ 000G"}
+                    }
+                    1000000000000{
+                        one{"¤ 0T"}
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        one{"¤ 00T"}
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        one{"¤ 000T"}
+                        other{"¤ 000T"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0K"}
@@ -159,7 +209,7 @@ az{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.83"}
     calendar{
         generic{
             DateTimePatterns{
@@ -178,6 +228,7 @@ az{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d, E"}
                 Gy{"G y"}
                 GyMMM{"G MMM y"}
@@ -187,6 +238,7 @@ az{
                 MEd{"dd.MM, E"}
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
@@ -196,6 +248,7 @@ az{
                 yyyyMEd{"GGGGG dd.MM.y, E"}
                 yyyyMMM{"G MMM y"}
                 yyyyMMMEd{"G d MMM y, E"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"G d MMM y"}
                 yyyyMd{"GGGGG dd.MM.y"}
                 yyyyQQQ{"G y QQQ"}
@@ -289,8 +342,6 @@ az{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"günorta"}
-            NoonMarkerNarrow{"g"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -308,22 +359,28 @@ az{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"dd.MM, E"}
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"MM.y"}
                 yMEd{"dd.MM.y, E"}
                 yMMM{"MMM y"}
                 yMMMEd{"d MMM y, E"}
+                yMMMM{"y MMMM"}
                 yMMMd{"d MMM y"}
                 yMd{"dd.MM.y"}
                 yQQQ{"y QQQ"}
@@ -407,6 +464,56 @@ az{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    narrow{
+                        afternoon1{"gündüz"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"g"}
+                    }
+                    wide{
+                        afternoon1{"gündüz"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"günorta"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"gündüz"}
+                        am{"AM"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"günorta"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"gündüz"}
+                        am{"AM"}
+                        evening1{"axşamüstü"}
+                        midnight{"gecəyarı"}
+                        morning1{"sübh"}
+                        morning2{"səhər"}
+                        night1{"axşam"}
+                        night2{"gecə"}
+                        noon{"günorta"}
+                        pm{"PM"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "e.ə.",
@@ -418,11 +525,11 @@ az{
                 }
                 wide{
                     "eramızdan əvvəl",
-                    "bizim eramızın",
+                    "eramız",
                 }
                 wide%variant{
                     "ümumi eradan öncə",
-                    "ümumi eranın",
+                    "ümumi era",
                 }
             }
             intervalFormats{

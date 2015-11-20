@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 en_001{
-    Version{"2.1.12.90"}
+    Version{"2.1.19.14"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -179,6 +179,7 @@ en_001{
                 "{1}, {0}",
             }
             availableFormats{
+                Ed{"E d"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 MEd{"E, dd/MM"}

@@ -10,8 +10,8 @@ sk{
     AuxExemplarCharacters{"[à ă â å ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ö ø ō œ ř ù ŭ û ü ū ÿ]"}
     Ellipsis{
         final{"{0}…"}
-        initial{"… {0}"}
-        medial{"{0}… {1}"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
         word-final{"{0} …"}
         word-initial{"… {0}"}
         word-medial{"{0} … {1}"}
@@ -28,7 +28,7 @@ sk{
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
-                range{"{0}–{1}"}
+                range{"{0} – {1}"}
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
@@ -40,80 +40,154 @@ sk{
             patternsLong{
                 decimalFormat{
                     1000{
-                        few{"0 tisíc"}
-                        many{"0 tisíc"}
+                        few{"0 tisíce"}
+                        many{"0 tisíca"}
                         one{"0 tisíc"}
                         other{"0 tisíc"}
                     }
                     10000{
                         few{"00 tisíc"}
-                        many{"00 tisíc"}
+                        many{"00 tisíca"}
                         one{"00 tisíc"}
                         other{"00 tisíc"}
                     }
                     100000{
                         few{"000 tisíc"}
-                        many{"000 tisíc"}
+                        many{"000 tisíca"}
                         one{"000 tisíc"}
                         other{"000 tisíc"}
                     }
                     1000000{
                         few{"0 milióny"}
-                        many{"0 miliónov"}
+                        many{"0 milióna"}
                         one{"0 milión"}
                         other{"0 miliónov"}
                     }
                     10000000{
-                        few{"00 milióny"}
-                        many{"00 miliónov"}
-                        one{"00 milión"}
+                        few{"00 miliónov"}
+                        many{"00 milióna"}
+                        one{"00 miliónov"}
                         other{"00 miliónov"}
                     }
                     100000000{
-                        few{"000 milióny"}
-                        many{"000 miliónov"}
-                        one{"000 milión"}
+                        few{"000 miliónov"}
+                        many{"000 milióna"}
+                        one{"000 miliónov"}
                         other{"000 miliónov"}
                     }
                     1000000000{
                         few{"0 miliardy"}
-                        many{"0 miliard"}
+                        many{"0 miliardy"}
                         one{"0 miliarda"}
-                        other{"0 miliard"}
+                        other{"0 miliárd"}
                     }
                     10000000000{
-                        few{"00 miliárdy"}
-                        many{"00 miliárd"}
-                        one{"00 miliarda"}
+                        few{"00 miliárd"}
+                        many{"00 miliardy"}
+                        one{"00 miliárd"}
                         other{"00 miliárd"}
                     }
                     100000000000{
-                        few{"000 miliárdy"}
-                        many{"000 miliárd"}
-                        one{"000 miliarda"}
+                        few{"000 miliárd"}
+                        many{"000 miliardy"}
+                        one{"000 miliárd"}
                         other{"000 miliárd"}
                     }
                     1000000000000{
                         few{"0 bilióny"}
-                        many{"0 biliónov"}
+                        many{"0 bilióna"}
                         one{"0 bilión"}
                         other{"0 biliónov"}
                     }
                     10000000000000{
-                        few{"00 bilióny"}
-                        many{"00 biliónov"}
-                        one{"00 bilión"}
+                        few{"00 biliónov"}
+                        many{"00 bilióna"}
+                        one{"00 biliónov"}
                         other{"00 biliónov"}
                     }
                     100000000000000{
-                        few{"000 bilióny"}
-                        many{"000 biliónov"}
-                        one{"000 bilión"}
+                        few{"000 biliónov"}
+                        many{"000 bilióna"}
+                        one{"000 biliónov"}
                         other{"000 biliónov"}
                     }
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0 tis'.' ¤"}
+                        many{"0 tis'.' ¤"}
+                        one{"0 tis'.' ¤"}
+                        other{"0 tis'.' ¤"}
+                    }
+                    10000{
+                        few{"00 tis'.' ¤"}
+                        many{"00 tis'.' ¤"}
+                        one{"00 tis'.' ¤"}
+                        other{"00 tis'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tis'.' ¤"}
+                        many{"000 tis'.' ¤"}
+                        one{"000 tis'.' ¤"}
+                        other{"000 tis'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mil'.' ¤"}
+                        many{"0 mil'.' ¤"}
+                        one{"0 mil'.' ¤"}
+                        other{"0 mil'.' ¤"}
+                    }
+                    10000000{
+                        few{"00 mil'.' ¤"}
+                        many{"00 mil'.' ¤"}
+                        one{"00 mil'.' ¤"}
+                        other{"00 mil'.' ¤"}
+                    }
+                    100000000{
+                        few{"000 mil'.' ¤"}
+                        many{"000 mil'.' ¤"}
+                        one{"000 mil'.' ¤"}
+                        other{"000 mil'.' ¤"}
+                    }
+                    1000000000{
+                        few{"0 mld'.' ¤"}
+                        many{"0 mld'.' ¤"}
+                        one{"0 mld'.' ¤"}
+                        other{"0 mld'.' ¤"}
+                    }
+                    10000000000{
+                        few{"00 mld'.' ¤"}
+                        many{"00 mld'.' ¤"}
+                        one{"00 mld'.' ¤"}
+                        other{"00 mld'.' ¤"}
+                    }
+                    100000000000{
+                        few{"000 mld'.' ¤"}
+                        many{"000 mld'.' ¤"}
+                        one{"000 mld'.' ¤"}
+                        other{"000 mld'.' ¤"}
+                    }
+                    1000000000000{
+                        few{"0 bil'.' ¤"}
+                        many{"0 bil'.' ¤"}
+                        one{"0 bil'.' ¤"}
+                        other{"0 bil'.' ¤"}
+                    }
+                    10000000000000{
+                        few{"00 bil'.' ¤"}
+                        many{"00 bil'.' ¤"}
+                        one{"00 bil'.' ¤"}
+                        other{"00 bil'.' ¤"}
+                    }
+                    100000000000000{
+                        few{"000 bil'.' ¤"}
+                        many{"000 bil'.' ¤"}
+                        one{"000 bil'.' ¤"}
+                        other{"000 bil'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tis'.'"}
@@ -207,7 +281,7 @@ sk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -215,34 +289,35 @@ sk{
                 "H:mm:ss z",
                 "H:mm:ss",
                 "H:mm",
-                "EEEE, d. MMMM y G",
-                "d. MMMM y G",
-                "d.M.y G",
+                "EEEE, d. M. y G",
+                "d. M. y G",
+                "d. M. y G",
                 "d.M.y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d."}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
-                GyMMMEd{"E, d. MMM y G"}
-                GyMMMMd{"d. MMMM y G"}
-                GyMMMd{"d.M.y G"}
+                GyMMMEd{"E d. M. y G"}
+                GyMMMMd{"d. M. y G"}
+                GyMMMd{"d. M. y G"}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                M{"L."}
-                MEd{"E, d.M."}
+                M{"M."}
+                MEd{"E d. M."}
                 MMM{"LLL"}
-                MMMEd{"E, d. MMM"}
-                MMMMEd{"E, d. MMMM"}
+                MMMEd{"E d. M."}
+                MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
-                MMMd{"d. MMM"}
-                Md{"d.M."}
+                MMMd{"d. M."}
+                Md{"d. M."}
                 d{"d."}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -251,14 +326,14 @@ sk{
                 ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
-                yyyyM{"M.y G"}
-                yyyyMEd{"E d. M. y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E d. M. y GGGGG"}
                 yyyyMMM{"LLL y G"}
-                yyyyMMMEd{"E, d. MMM y G"}
+                yyyyMMMEd{"E d. M. y G"}
                 yyyyMMMM{"LLLL y G"}
                 yyyyMMMMd{"d. MMMM y G"}
-                yyyyMMMd{"d.M.y G"}
-                yyyyMd{"d.M.y G"}
+                yyyyMMMd{"d. M. y G"}
+                yyyyMd{"d. M. y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
@@ -281,26 +356,26 @@ sk{
                     M{"M. – M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d.M. – E, d.M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. M. – E d. M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
-                    M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. – E d. M."}
                 }
                 MMMM{
-                    M{"LLLL–LLLL"}
+                    M{"LLLL – LLLL"}
                 }
                 MMMd{
-                    M{"d. MMM – d. MMM"}
-                    d{"d. – d. MMM"}
+                    M{"d. M. – d. M."}
+                    d{"d. – d. M."}
                 }
                 Md{
-                    M{"d.M. – d.M."}
-                    d{"d.M. – d.M."}
+                    M{"d. M. – d. M."}
+                    d{"d. M. – d. M."}
                 }
                 d{
                     d{"d. – d."}
@@ -328,47 +403,51 @@ sk{
                     y{"y – y G"}
                 }
                 yM{
-                    M{"M.y – M.y G"}
-                    y{"M.y – M.y G"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
                 }
                 yMEd{
-                    M{"E, d.M.y – E, d.M.y G"}
-                    d{"E, d.M.y – E, d.M.y G"}
-                    y{"E, d.M.y – E, d.M.y G"}
+                    M{"E d. M. y – E d. M. y G"}
+                    d{"E d. M. y – E d. M. y G"}
+                    y{"E d. M. y – E d. M. y G"}
                 }
                 yMMM{
                     M{"LLL – LLL y G"}
                     y{"LLL y – LLL y G"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM – E, d. MMM y G"}
-                    d{"E, d. – E, d. MMM y G"}
-                    y{"E, d. MMM y – E, d. MMM y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. – E d. M. y G"}
+                    y{"E d. M. y – E d. M. y G"}
                 }
                 yMMMM{
                     M{"LLLL – LLLL y G"}
                     y{"LLLL y – LLLL y G"}
                 }
                 yMMMd{
-                    M{"d. MMM – d. MMM y G"}
-                    d{"d. – d. MMM y G"}
-                    y{"d. MMM y – d. MMM y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
+                    y{"d. M. y – d. M. y G"}
                 }
                 yMd{
-                    M{"d.M.y – d.M.y G"}
-                    d{"d.M.y – d.M.y G"}
-                    y{"d.M.y – d.M.y G"}
+                    M{"d. M. y – d. M. y G"}
+                    d{"d. M. y – d. M. y G"}
+                    y{"d. M. y – d. M. y G"}
                 }
             }
         }
         gregorian{
             AmPmMarkers{
-                "dopoludnia",
-                "odpoludnia",
+                "AM",
+                "PM",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
-                "dop.",
-                "odp.",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "H:mm:ss zzzz",
@@ -378,15 +457,13 @@ sk{
                 "EEEE, d. MMMM y",
                 "d. MMMM y",
                 "d. M. y",
-                "dd.MM.yy",
+                "d.M.yy",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1} {0}",
             }
-            NoonMarker{"poludnie"}
-            NoonMarkerNarrow{"pol."}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -399,30 +476,34 @@ sk{
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLLL y G"}
-                GyMMMEd{"E, d. MMMM y G"}
-                GyMMMMd{"d. MMMM y G"}
+                GyMMMEd{"E, d. M. y G"}
+                GyMMMMd{"d. M. y G"}
                 GyMMMd{"d. M. y G"}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
+                Hmsv{"H:mm:ss v"}
+                Hmv{"H:mm v"}
                 M{"L."}
-                MEd{"E, d. M."}
+                MEd{"E d. M."}
                 MMM{"LLL"}
-                MMMEd{"E, d. M."}
-                MMMMEd{"E, d. MMMM"}
+                MMMEd{"E d. M."}
+                MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
-                MMMd{"d. M"}
+                MMMd{"d. M."}
                 Md{"d. M."}
                 d{"d."}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E d. M. y"}
-                yMMM{"LLLL y"}
+                yMMM{"M/y"}
                 yMMMEd{"E d. M. y"}
                 yMMMM{"LLLL y"}
                 yMMMMd{"d. MMMM y"}
@@ -443,22 +524,22 @@ sk{
                         "so",
                     }
                     narrow{
-                        "N",
-                        "P",
-                        "U",
-                        "S",
-                        "Š",
-                        "P",
-                        "S",
+                        "n",
+                        "p",
+                        "u",
+                        "s",
+                        "š",
+                        "p",
+                        "s",
                     }
                     short{
-                        "Ne",
-                        "Po",
-                        "Ut",
-                        "St",
-                        "Št",
-                        "Pi",
-                        "So",
+                        "ne",
+                        "po",
+                        "ut",
+                        "st",
+                        "št",
+                        "pi",
+                        "so",
                     }
                     wide{
                         "nedeľa",
@@ -481,22 +562,22 @@ sk{
                         "so",
                     }
                     narrow{
-                        "N",
-                        "P",
-                        "U",
-                        "S",
-                        "Š",
-                        "P",
-                        "S",
+                        "n",
+                        "p",
+                        "u",
+                        "s",
+                        "š",
+                        "p",
+                        "s",
                     }
                     short{
-                        "Ne",
-                        "Po",
-                        "Ut",
-                        "St",
-                        "Št",
-                        "Pi",
-                        "So",
+                        "ne",
+                        "po",
+                        "ut",
+                        "st",
+                        "št",
+                        "pi",
+                        "so",
                     }
                     wide{
                         "nedeľa",
@@ -506,6 +587,72 @@ sk{
                         "štvrtok",
                         "piatok",
                         "sobota",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"popol."}
+                        evening1{"večer"}
+                        midnight{"o poln."}
+                        morning1{"ráno"}
+                        morning2{"dopol."}
+                        night1{"v noci"}
+                        noon{"napol."}
+                    }
+                    narrow{
+                        afternoon1{"pop."}
+                        evening1{"več."}
+                        midnight{"o poln."}
+                        morning1{"ráno"}
+                        morning2{"dop."}
+                        night1{"v n."}
+                        noon{"nap."}
+                    }
+                    wide{
+                        afternoon1{"popoludní"}
+                        evening1{"večer"}
+                        midnight{"o polnoci"}
+                        morning1{"ráno"}
+                        morning2{"dopoludnia"}
+                        night1{"v noci"}
+                        noon{"napoludnie"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"popol."}
+                        am{"AM"}
+                        evening1{"večer"}
+                        midnight{"poln."}
+                        morning1{"ráno"}
+                        morning2{"dopol."}
+                        night1{"noc"}
+                        noon{"pol."}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"pop."}
+                        am{"AM"}
+                        evening1{"več."}
+                        midnight{"poln."}
+                        morning1{"ráno"}
+                        morning2{"dop."}
+                        night1{"noc"}
+                        noon{"pol."}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"popoludnie"}
+                        am{"AM"}
+                        evening1{"večer"}
+                        midnight{"polnoc"}
+                        morning1{"ráno"}
+                        morning2{"dopoludnie"}
+                        night1{"noc"}
+                        noon{"poludnie"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -546,26 +693,26 @@ sk{
                     M{"M. – M."}
                 }
                 MEd{
-                    M{"E, d.M. – E, d.M."}
-                    d{"E, d.M. – E, d.M."}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. M. – E d. M."}
                 }
                 MMM{
                     M{"LLL – LLL"}
                 }
                 MMMEd{
-                    M{"E, d. MMM – E, d. MMM"}
-                    d{"E, d. – E, d. MMM"}
+                    M{"E d. M. – E d. M."}
+                    d{"E d. – E d. M."}
                 }
                 MMMM{
                     M{"LLLL – LLLL"}
                 }
                 MMMd{
-                    M{"d. MMM – d. MMM"}
-                    d{"d. – d. MMM"}
+                    M{"d. M. – d. M."}
+                    d{"d. – d. M."}
                 }
                 Md{
-                    M{"d.M. – d.M."}
-                    d{"d.M. – d.M."}
+                    M{"d. M. – d. M."}
+                    d{"d. M. – d. M."}
                 }
                 d{
                     d{"d. – d."}
@@ -593,36 +740,36 @@ sk{
                     y{"y – y"}
                 }
                 yM{
-                    M{"M.y – M.y"}
-                    y{"M.y – M.y"}
+                    M{"M/y – M/y"}
+                    y{"M/y – M/y"}
                 }
                 yMEd{
-                    M{"E, d.M.y – E, d.M.y"}
-                    d{"E, d.M.y – E, d.M.y"}
-                    y{"E, d.M.y – E, d.M.y"}
+                    M{"E d. M. y – E d. M. y"}
+                    d{"E d. M. y – E d. M. y"}
+                    y{"E d. M. y – E d. M. y"}
                 }
                 yMMM{
-                    M{"LLL – LLL y"}
-                    y{"LLL – LLL y"}
+                    M{"M – M/y"}
+                    y{"M/y – M/y"}
                 }
                 yMMMEd{
-                    M{"E, d. MMM – E, d. MMM y"}
-                    d{"E, d. – E, d. MMM y"}
-                    y{"E, d. MMM y – E, d. MMM y"}
+                    M{"E d. M. – E d. M. y"}
+                    d{"E d. – E d. M. y"}
+                    y{"E d. M. y – E d. M. y"}
                 }
                 yMMMM{
-                    M{"LLLL y – LLLL y"}
+                    M{"LLLL – LLLL y"}
                     y{"LLLL y – LLLL y"}
                 }
                 yMMMd{
-                    M{"y MMM d – MMM d"}
-                    d{"d. – d. MMM y"}
-                    y{"d. MMM y – d. MMM y"}
+                    M{"d. M. – d. M. y"}
+                    d{"d. – d. M. y"}
+                    y{"d. M. y – d. M. y"}
                 }
                 yMd{
-                    M{"d.M.y – d.M.y"}
-                    d{"d.M.y – d.M.y"}
-                    y{"d.M.y – d.M.y"}
+                    M{"d. M. y – d. M. y"}
+                    d{"d. M. y – d. M. y"}
+                    y{"d. M. y – d. M. y"}
                 }
             }
             monthNames{
@@ -806,7 +953,7 @@ sk{
                 }
                 past{
                     few{"pred {0} dňami"}
-                    many{"pred {0} dňom"}
+                    many{"pred {0} dňa"}
                     one{"pred {0} dňom"}
                     other{"pred {0} dňami"}
                 }
@@ -816,16 +963,16 @@ sk{
             dn{"d."}
             relativeTime{
                 future{
-                    few{"o {0} d"}
-                    many{"o {0} d"}
-                    one{"o {0} d"}
-                    other{"o {0} d"}
+                    few{"o {0} d."}
+                    many{"o {0} d."}
+                    one{"o {0} d."}
+                    other{"o {0} d."}
                 }
                 past{
-                    few{"pred {0} d"}
-                    many{"pred {0} d"}
-                    one{"pred {0} d"}
-                    other{"pred {0} d"}
+                    few{"pred {0} d."}
+                    many{"pred {0} d."}
+                    one{"pred {0} d."}
+                    other{"pred {0} d."}
                 }
             }
         }
@@ -935,7 +1082,7 @@ sk{
                 }
                 past{
                     few{"pred {0} minútami"}
-                    many{"pred {0} minútou"}
+                    many{"pred {0} minúty"}
                     one{"pred {0} minútou"}
                     other{"pred {0} minútami"}
                 }
@@ -1012,7 +1159,7 @@ sk{
                 }
                 past{
                     few{"pred {0} mesiacmi"}
-                    many{"pred {0} mesiacom"}
+                    many{"pred {0} mesiaca"}
                     one{"pred {0} mesiacom"}
                     other{"pred {0} mesiacmi"}
                 }
@@ -1054,6 +1201,11 @@ sk{
         }
         quarter{
             dn{"štvrťrok"}
+            relative{
+                "-1"{"minulý štvrťrok"}
+                "0"{"tento štvrťrok"}
+                "1"{"budúci štvrťrok"}
+            }
             relativeTime{
                 future{
                     few{"o {0} štvrťroky"}
@@ -1063,7 +1215,7 @@ sk{
                 }
                 past{
                     few{"pred {0} štvrťrokmi"}
-                    many{"pred {0} štvrťrokom"}
+                    many{"pred {0} štvrťroka"}
                     one{"pred {0} štvrťrokom"}
                     other{"pred {0} štvrťrokmi"}
                 }
@@ -1071,6 +1223,11 @@ sk{
         }
         quarter-narrow{
             dn{"Q"}
+            relative{
+                "-1"{"minulý štvrťr."}
+                "0"{"tento štvrťr."}
+                "1"{"budúci štvrťr."}
+            }
             relativeTime{
                 future{
                     few{"o {0} štvrťr."}
@@ -1088,6 +1245,11 @@ sk{
         }
         quarter-short{
             dn{"Q"}
+            relative{
+                "-1"{"minulý štvrťr."}
+                "0"{"tento štvrťr."}
+                "1"{"budúci štvrťr."}
+            }
             relativeTime{
                 future{
                     few{"o {0} štvrťr."}
@@ -1138,7 +1300,7 @@ sk{
                 }
                 past{
                     few{"pred {0} sekundami"}
-                    many{"Pred {0} sekundami"}
+                    many{"pred {0} sekundy"}
                     one{"pred {0} sekundou"}
                     other{"pred {0} sekundami"}
                 }
@@ -1236,9 +1398,9 @@ sk{
         }
         tue-short{
             relative{
-                "-1"{"minulý ut."}
-                "0"{"tento ut."}
-                "1"{"budúci ut."}
+                "-1"{"minulý utor."}
+                "0"{"tento utor."}
+                "1"{"budúci utor."}
             }
         }
         wed{
@@ -1278,7 +1440,7 @@ sk{
                 }
                 past{
                     few{"pred {0} týždňami"}
-                    many{"pred {0} týždňom"}
+                    many{"pred {0} týždňa"}
                     one{"pred {0} týždňom"}
                     other{"pred {0} týždňami"}
                 }
@@ -1337,7 +1499,7 @@ sk{
                 }
                 past{
                     few{"pred {0} rokmi"}
-                    many{"pred {0} rokom"}
+                    many{"pred {0} roka"}
                     one{"pred {0} rokom"}
                     other{"pred {0} rokmi"}
                 }
@@ -1383,7 +1545,7 @@ sk{
     }
     listPattern{
         standard{
-            2{"{0} a {1}"}
+            2{"{0} a {1}"}
             end{"{0} a {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}

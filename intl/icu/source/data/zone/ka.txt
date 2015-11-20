@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ka{
-    Version{"2.1.13.22"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"აბიჯანი"}
@@ -684,6 +684,9 @@ ka{
         "Asia:Calcutta"{
             ec{"კალკუტა"}
         }
+        "Asia:Chita"{
+            ec{"ჩიტა"}
+        }
         "Asia:Choibalsan"{
             ec{"ჩოიბალსანი"}
         }
@@ -824,6 +827,9 @@ ka{
         }
         "Asia:Singapore"{
             ec{"სინგაპური"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"სრედნეკოლიმსკი"}
         }
         "Asia:Taipei"{
             ec{"ტაიპეი"}
@@ -1144,6 +1150,9 @@ ka{
         }
         "Pacific:Auckland"{
             ec{"ოკლენდი"}
+        }
+        "Pacific:Bougainville"{
+            ec{"ბუგენვილი"}
         }
         "Pacific:Chatham"{
             ec{"ჩათამი"}

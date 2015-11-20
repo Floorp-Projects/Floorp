@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 he{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"אביג׳אן"}
@@ -684,6 +684,9 @@ he{
         "Asia:Calcutta"{
             ec{"קולקטה"}
         }
+        "Asia:Chita"{
+            ec{"צ׳יטה"}
+        }
         "Asia:Choibalsan"{
             ec{"צ׳ואיבלסאן"}
         }
@@ -820,10 +823,13 @@ he{
             ec{"סיאול"}
         }
         "Asia:Shanghai"{
-            ec{"אסיה/שנחאי"}
+            ec{"שנחאי"}
         }
         "Asia:Singapore"{
             ec{"סינגפור"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"סרדנייקולימסק"}
         }
         "Asia:Taipei"{
             ec{"טאיפיי"}
@@ -1145,6 +1151,9 @@ he{
         "Pacific:Auckland"{
             ec{"אוקלנד"}
         }
+        "Pacific:Bougainville"{
+            ec{"בוגנוויל"}
+        }
         "Pacific:Chatham"{
             ec{"צ׳אטהאם"}
         }
@@ -1297,7 +1306,7 @@ he{
         }
         "meta:America_Pacific"{
             ld{"שעון קיץ, מערב ארה״ב (לוס אנג׳לס)"}
-            lg{"שעון מערב ארה״ב (לוס אנג׳לס)"}
+            lg{"שעון מערב ארה״ב"}
             ls{"שעון רגיל האוקיינוס השקט"}
         }
         "meta:Anadyr"{
@@ -1715,7 +1724,7 @@ he{
             ls{"שעון פפואה גיניאה החדשה"}
         }
         "meta:Paraguay"{
-            ld{"שעון קיץ פרגוואי"}
+            ld{"שעון פרגוואי (קיץ)"}
             lg{"שעון פרגוואי"}
             ls{"שעון פרגוואי (חורף)"}
         }
@@ -1860,9 +1869,9 @@ he{
             ls{"שעון יקטרינבורג (חורף)"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
+        gmtFormat{"GMT{0}‎"}
         gmtZeroFormat{"GMT"}
-        hourFormat{"+H:mm;-H:mm"}
+        hourFormat{"‎+HH:mm;-HH:mm‎"}
         regionFormat{"שעון {0}"}
         regionFormatDaylight{"שעון {0} (קיץ)"}
         regionFormatStandard{"שעון {0} (חורף)"}

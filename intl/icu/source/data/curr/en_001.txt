@@ -67,5 +67,5 @@ en_001{
             other{"Tajikistani roubles"}
         }
     }
-    Version{"2.1.12.90"}
+    Version{"2.1.19.14"}
 }

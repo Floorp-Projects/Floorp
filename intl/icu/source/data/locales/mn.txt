@@ -158,7 +158,7 @@ mn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -327,8 +327,6 @@ mn{
                 "{1} {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"үд дунд"}
-            NoonMarkerNarrow{"үд"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -445,18 +443,48 @@ mn{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    narrow{
+                        afternoon1{"өдөр"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд"}
+                    }
+                    wide{
+                        afternoon1{"өдөр"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд дунд"}
+                    }
+                }
+                stand-alone{
+                    wide{
+                        afternoon1{"өдөр"}
+                        evening1{"орой"}
+                        midnight{"шөнө дунд"}
+                        morning1{"өглөө"}
+                        night1{"шөнө"}
+                        noon{"үд дунд"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
-                    "МЭӨ",
-                    "МЭ",
+                    "м.э.ө",
+                    "м.э.",
                 }
                 abbreviated%variant{
                     "НТӨ",
                     "НТ",
                 }
                 narrow{
-                    "м.э.ө",
-                    "м.э.",
+                    "МЭӨ",
+                    "МЭ",
                 }
                 wide{
                     "манай эриний өмнөх",

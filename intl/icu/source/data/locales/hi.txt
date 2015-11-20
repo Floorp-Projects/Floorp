@@ -94,6 +94,56 @@ hi{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0 हज़ार"}
+                        other{"¤0 हज़ार"}
+                    }
+                    10000{
+                        one{"¤00 हज़ार"}
+                        other{"¤00 हज़ार"}
+                    }
+                    100000{
+                        one{"¤0 लाख"}
+                        other{"¤0 लाख"}
+                    }
+                    1000000{
+                        one{"¤00 लाख"}
+                        other{"¤00 लाख"}
+                    }
+                    10000000{
+                        one{"¤0 क'.'"}
+                        other{"¤0 क'.'"}
+                    }
+                    100000000{
+                        one{"¤00 क'.'"}
+                        other{"¤00 क'.'"}
+                    }
+                    1000000000{
+                        one{"¤0 अ'.'"}
+                        other{"¤0 अ'.'"}
+                    }
+                    10000000000{
+                        one{"¤00 अ'.'"}
+                        other{"¤00 अ'.'"}
+                    }
+                    100000000000{
+                        one{"¤0 ख'.'"}
+                        other{"¤0 ख'.'"}
+                    }
+                    1000000000000{
+                        one{"¤00 ख'.'"}
+                        other{"¤00 ख'.'"}
+                    }
+                    10000000000000{
+                        one{"¤0 नील"}
+                        other{"¤0 नील"}
+                    }
+                    100000000000000{
+                        one{"¤00 नील"}
+                        other{"¤00 नील"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 हज़ार"}
@@ -163,7 +213,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.47"}
     calendar{
         ethiopic{
             monthNames{
@@ -203,6 +253,7 @@ hi{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d E"}
                 Gy{"G y"}
                 GyMMM{"G y MMM"}
@@ -215,6 +266,7 @@ hi{
                 MEd{"E, d/M"}
                 MMM{"MMM"}
                 MMMEd{"E, d MMM"}
+                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
                 Md{"d/M"}
@@ -229,6 +281,7 @@ hi{
                 yyyyMEd{"G E, d/M/y"}
                 yyyyMMM{"G MMM y"}
                 yyyyMMMEd{"G E, d MMM y"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"G d MMM y"}
                 yyyyMMdd{"dd-MM-y G"}
                 yyyyMd{"G d/M/y"}
@@ -359,8 +412,6 @@ hi{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            NoonMarker{"दोपहर"}
-            NoonMarkerNarrow{"दोप"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -378,6 +429,8 @@ hi{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d/M"}
                 MMM{"LLL"}
@@ -391,6 +444,8 @@ hi{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -480,6 +535,51 @@ hi{
                         "गुरुवार",
                         "शुक्रवार",
                         "शनिवार",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"अपराह्न"}
+                        evening1{"शाम"}
+                        midnight{"मध्यरात्रि"}
+                        morning1{"सुबह"}
+                        night1{"रात"}
+                    }
+                    narrow{
+                        afternoon1{"अपराह्न"}
+                        evening1{"शाम"}
+                        midnight{"आधी रात"}
+                        morning1{"सुबह"}
+                        night1{"शाम"}
+                    }
+                    wide{
+                        afternoon1{"अपराह्न"}
+                        evening1{"शाम"}
+                        midnight{"मध्यरात्रि"}
+                        morning1{"सुबह"}
+                        night1{"रात"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        afternoon1{"अपराह्न"}
+                        am{"पू"}
+                        evening1{"शाम"}
+                        midnight{"आधी रात"}
+                        morning1{"सुबह"}
+                        night1{"रात"}
+                        pm{"अ"}
+                    }
+                    wide{
+                        afternoon1{"दोपहर"}
+                        am{"पूर्वाह्न"}
+                        evening1{"शाम"}
+                        midnight{"आधी रात"}
+                        morning1{"सुबह"}
+                        night1{"रात"}
+                        pm{"अपराह्न"}
                     }
                 }
             }
@@ -1334,6 +1434,11 @@ hi{
         }
         quarter{
             dn{"तिमाही"}
+            relative{
+                "-1"{"अंतिम तिमाही"}
+                "0"{"इस तिमाही"}
+                "1"{"अगली तिमाही"}
+            }
             relativeTime{
                 future{
                     one{"{0} तिमाही में"}
@@ -1347,6 +1452,11 @@ hi{
         }
         quarter-narrow{
             dn{"तिमाही"}
+            relative{
+                "-1"{"अंतिम तिमाही"}
+                "0"{"इस तिमाही"}
+                "1"{"अगली तिमाही"}
+            }
             relativeTime{
                 future{
                     one{"{0} ति. में"}
@@ -1360,6 +1470,11 @@ hi{
         }
         quarter-short{
             dn{"तिमाही"}
+            relative{
+                "-1"{"अंतिम तिमाही"}
+                "0"{"इस तिमाही"}
+                "1"{"अगली तिमाही"}
+            }
             relativeTime{
                 future{
                     one{"{0} तिमाही में"}

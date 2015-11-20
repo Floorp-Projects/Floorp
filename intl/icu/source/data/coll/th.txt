@@ -7,11 +7,13 @@
 // *
 // ***************************************************************************
 th{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[normalization on][alternate shifted][reorder Thai]"
+                "[normalization on]"
+                "[alternate shifted]"
+                "[reorder Thai]"
                 "&[before 1]๚<ฯ"
                 "&๛<ๆ"
                 "&๎<<์"
@@ -21,7 +23,7 @@ th{
                 "&ๅํ<<<ํๅ"
                 "&ไ<ฺ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

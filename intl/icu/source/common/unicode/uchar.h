@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -39,7 +39,7 @@ U_CDECL_BEGIN
  * @see u_getUnicodeVersion
  * @stable ICU 2.0
  */
-#define U_UNICODE_VERSION "7.0"
+#define U_UNICODE_VERSION "8.0"
 
 /**
  * \file
@@ -1519,8 +1519,31 @@ enum UBlockCode {
     /** @stable ICU 54 */
     UBLOCK_WARANG_CITI = 252, /*[118A0]*/
 
+    /* New blocks in Unicode 8.0 */
+
+    /** @stable ICU 56 */
+    UBLOCK_AHOM = 253, /*[11700]*/
+    /** @stable ICU 56 */
+    UBLOCK_ANATOLIAN_HIEROGLYPHS = 254, /*[14400]*/
+    /** @stable ICU 56 */
+    UBLOCK_CHEROKEE_SUPPLEMENT = 255, /*[AB70]*/
+    /** @stable ICU 56 */
+    UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E = 256, /*[2B820]*/
+    /** @stable ICU 56 */
+    UBLOCK_EARLY_DYNASTIC_CUNEIFORM = 257, /*[12480]*/
+    /** @stable ICU 56 */
+    UBLOCK_HATRAN = 258, /*[108E0]*/
+    /** @stable ICU 56 */
+    UBLOCK_MULTANI = 259, /*[11280]*/
+    /** @stable ICU 56 */
+    UBLOCK_OLD_HUNGARIAN = 260, /*[10C80]*/
+    /** @stable ICU 56 */
+    UBLOCK_SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS = 261, /*[1F900]*/
+    /** @stable ICU 56 */
+    UBLOCK_SUTTON_SIGNWRITING = 262, /*[1D800]*/
+
     /** @stable ICU 2.0 */
-    UBLOCK_COUNT = 253,
+    UBLOCK_COUNT = 263,
 
     /** @stable ICU 2.0 */
     UBLOCK_INVALID_CODE=-1

@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 id{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ id{
         "Asia:Calcutta"{
             ec{"Kolkata"}
         }
+        "Asia:Chita"{
+            ec{"Chita"}
+        }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
         }
@@ -824,6 +827,9 @@ id{
         }
         "Asia:Singapore"{
             ec{"Singapura"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
         }
         "Asia:Taipei"{
             ec{"Taipei"}
@@ -974,7 +980,7 @@ id{
         }
         "Europe:Dublin"{
             ec{"Dublin"}
-            ld{"Musim Panas Irlandia"}
+            ld{"Waktu Standar Irlandia"}
         }
         "Europe:Gibraltar"{
             ec{"Gibraltar"}
@@ -1008,7 +1014,7 @@ id{
         }
         "Europe:London"{
             ec{"London"}
-            ld{"Musim Panas Inggris"}
+            ld{"Waktu Musim Panas Inggris"}
         }
         "Europe:Luxembourg"{
             ec{"Luksemburg"}
@@ -1145,6 +1151,9 @@ id{
         "Pacific:Auckland"{
             ec{"Auckland"}
         }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
+        }
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
@@ -1276,7 +1285,7 @@ id{
             ls{"Waktu Standar Afrika Barat"}
         }
         "meta:Alaska"{
-            ld{"Waktu Terang Alaska"}
+            ld{"Waktu Musim Panas Alaska"}
             lg{"Waktu Alaska"}
             ls{"Waktu Standar Alaska"}
         }
@@ -1291,22 +1300,22 @@ id{
             ls{"Waktu Standar Amazon"}
         }
         "meta:America_Central"{
-            ld{"Waktu Terang Hari Tengah"}
+            ld{"Waktu Musim Panas Tengah"}
             lg{"Waktu Tengah"}
             ls{"Waktu Standar Tengah"}
         }
         "meta:America_Eastern"{
-            ld{"Waktu Terang Hari Timur"}
+            ld{"Waktu Musim Panas Timur"}
             lg{"Waktu Timur"}
             ls{"Waktu Standar Timur"}
         }
         "meta:America_Mountain"{
-            ld{"Waktu Terang Hari Pegunungan"}
+            ld{"Waktu Musim Panas Pegunungan"}
             lg{"Waktu Pegunungan"}
             ls{"Waktu Standar Pegunungan"}
         }
         "meta:America_Pacific"{
-            ld{"Waktu Terang Hari Pasifik"}
+            ld{"Waktu Musim Panas Pasifik"}
             lg{"Waktu Pasifik"}
             ls{"Waktu Standar Pasifik"}
         }
@@ -1331,7 +1340,7 @@ id{
             ls{"Waktu Standar Aqtobe"}
         }
         "meta:Arabian"{
-            ld{"Waktu Terang Arab"}
+            ld{"Waktu Musim Panas Arab"}
             lg{"Waktu Arab"}
             ls{"Waktu Standar Arab"}
         }
@@ -1351,28 +1360,28 @@ id{
             ls{"Waktu Standar Armenia"}
         }
         "meta:Atlantic"{
-            ld{"Waktu Terang Atlantik"}
+            ld{"Waktu Musim Panas Atlantik"}
             lg{"Waktu Atlantik"}
             ls{"Waktu Standar Atlantik"}
         }
         "meta:Australia_Central"{
-            ld{"Waktu Terang Tengah Australia"}
+            ld{"Waktu Musim Panas Tengah Australia"}
             lg{"Waktu Tengah Australia"}
             ls{"Waktu Standar Tengah Australia"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Waktu Terang Barat Tengah Australia"}
+            ld{"Waktu Musim Panas Barat Tengah Australia"}
             lg{"Waktu Barat Tengah Australia"}
             ls{"Waktu Standar Barat Tengah Australia"}
         }
         "meta:Australia_Eastern"{
-            ld{"Waktu Terang Timur Australia"}
+            ld{"Waktu Musim Panas Timur Australia"}
             lg{"Waktu Timur Australia"}
             ls{"Waktu Standar Timur Australia"}
         }
         "meta:Australia_Western"{
-            ld{"Waktu Terang Barat Australia"}
-            lg{"Waktu Australia Barat"}
+            ld{"Waktu Musim Panas Barat Australia"}
+            lg{"Waktu Barat Australia"}
             ls{"Waktu Standar Barat Australia"}
         }
         "meta:Azerbaijan"{
@@ -1416,7 +1425,7 @@ id{
             ls{"Waktu Chamorro"}
         }
         "meta:Chatham"{
-            ld{"Waktu Terang Chatham"}
+            ld{"Waktu Musim Panas Chatham"}
             lg{"Waktu Chatham"}
             ls{"Waktu Standar Chatham"}
         }
@@ -1544,7 +1553,7 @@ id{
             ls{"Waktu Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Waktu Terang Hawaii-Aleutian"}
+            ld{"Waktu Musim Panas Hawaii-Aleutian"}
             lg{"Waktu Hawaii-Aleutian"}
             ls{"Waktu Standar Hawaii-Aleutian"}
         }
@@ -1633,7 +1642,7 @@ id{
             ls{"Waktu Kep. Line"}
         }
         "meta:Lord_Howe"{
-            ld{"Waktu Terang Lord Howe"}
+            ld{"Waktu Musim Panas Lord Howe"}
             lg{"Waktu Lord Howe"}
             ls{"Waktu Standar Lord Howe"}
         }
@@ -1705,12 +1714,12 @@ id{
             ls{"Waktu Standar Kaledonia Baru"}
         }
         "meta:New_Zealand"{
-            ld{"Waktu Terang Selandia Baru"}
+            ld{"Waktu Musim Panas Selandia Baru"}
             lg{"Waktu Selandia Baru"}
             ls{"Waktu Standar Selandia Baru"}
         }
         "meta:Newfoundland"{
-            ld{"Waktu Siang Hari Newfoundland"}
+            ld{"Waktu Musim Panas Newfoundland"}
             lg{"Waktu Newfoundland"}
             ls{"Waktu Standar Newfoundland"}
         }
