@@ -199,6 +199,50 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
     }
   }
 
+  /* Space estimates based on:
+   * http://www.unicode.org/charts/PDF/U2000.pdf
+   * https://www.microsoft.com/typography/developers/fdsspec/spaces.aspx
+   */
+  enum space_t {
+    NOT_SPACE = 0,
+    SPACE_EM   = 1,
+    SPACE_EM_2 = 2,
+    SPACE_EM_3 = 3,
+    SPACE_EM_4 = 4,
+    SPACE_EM_5 = 5,
+    SPACE_EM_6 = 6,
+    SPACE_EM_16 = 16,
+    SPACE_4_EM_18,	/* 4/18th of an EM! */
+    SPACE,
+    SPACE_FIGURE,
+    SPACE_PUNCTUATION,
+    SPACE_NARROW,
+  };
+  static inline space_t
+  space_fallback_type (hb_codepoint_t u)
+  {
+    switch (u)
+    {
+      /* All GC=Zs chars that can use a fallback. */
+      default:	    return NOT_SPACE;	/* Shouldn't happen. */
+      case 0x0020u: return SPACE;	/* U+0020 SPACE */
+      case 0x00A0u: return SPACE;	/* U+00A0 NO-BREAK SPACE */
+      case 0x2000u: return SPACE_EM_2;	/* U+2000 EN QUAD */
+      case 0x2001u: return SPACE_EM;	/* U+2001 EM QUAD */
+      case 0x2002u: return SPACE_EM_2;	/* U+2002 EN SPACE */
+      case 0x2003u: return SPACE_EM;	/* U+2003 EM SPACE */
+      case 0x2004u: return SPACE_EM_3;	/* U+2004 THREE-PER-EM SPACE */
+      case 0x2005u: return SPACE_EM_4;	/* U+2005 FOUR-PER-EM SPACE */
+      case 0x2006u: return SPACE_EM_6;	/* U+2006 SIX-PER-EM SPACE */
+      case 0x2007u: return SPACE_FIGURE;	/* U+2007 FIGURE SPACE */
+      case 0x2008u: return SPACE_PUNCTUATION;	/* U+2008 PUNCTUATION SPACE */
+      case 0x2009u: return SPACE_EM_5;		/* U+2009 THIN SPACE */
+      case 0x200Au: return SPACE_EM_16;		/* U+200A HAIR SPACE */
+      case 0x202Fu: return SPACE_NARROW;	/* U+202F NARROW NO-BREAK SPACE */
+      case 0x205Fu: return SPACE_4_EM_18;	/* U+205F MEDIUM MATHEMATICAL SPACE */
+      case 0x3000u: return SPACE_EM;		/* U+3000 IDEOGRAPHIC SPACE */
+    }
+  }
 
   struct {
 #define HB_UNICODE_FUNC_IMPLEMENT(name) hb_unicode_##name##_func_t name;
@@ -313,5 +357,9 @@ extern HB_INTERNAL const hb_unicode_funcs_t _hb_unicode_funcs_nil;
 	  FLAG (HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK) | \
 	  FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
 
+#define HB_UNICODE_GENERAL_CATEGORY_IS_NON_ENCLOSING_MARK(gen_cat) \
+	(FLAG_SAFE (gen_cat) & \
+	 (FLAG (HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK) | \
+	  FLAG (HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)))
 
 #endif /* HB_UNICODE_PRIVATE_HH */
