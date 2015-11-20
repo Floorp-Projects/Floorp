@@ -6132,6 +6132,11 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
   }
 };
 
+// This map is shared between AddonInstallWrapper and AddonWrapper
+const wrapperMap = new WeakMap();
+let installFor = wrapper => wrapperMap.get(wrapper);
+let addonFor = installFor;
+
 /**
  * Creates a wrapper for an AddonInstall that only exposes the public API
  *
@@ -6139,57 +6144,69 @@ AddonInstall.createUpdate = function(aCallback, aAddon, aUpdate) {
  *         The AddonInstall to create a wrapper for
  */
 function AddonInstallWrapper(aInstall) {
-  this.__defineGetter__("__AddonInstallInternal__", function() {
-    return AppConstants.DEBUG ? aInstall : undefined;
-  });
-
-  ["name", "version", "icons", "releaseNotesURI", "file", "state", "error",
-   "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      return aInstall[aProp];
-    });
-  }, this);
-
-  this.__defineGetter__("type", () => getExternalType(aInstall.type));
-
-  this.__defineGetter__("iconURL", function() {
-    return aInstall.icons[32];
-  });
-
-  this.__defineGetter__("existingAddon", function() {
-    return aInstall.existingAddon ? aInstall.existingAddon.wrapper : null;
-  });
-  this.__defineGetter__("addon", function() {
-    return aInstall.addon ? aInstall.addon.wrapper : null;
-  });
-  this.__defineGetter__("sourceURI", function() {
-    return aInstall.sourceURI;
-  });
-
-  this.__defineGetter__("linkedInstalls", function() {
-    if (!aInstall.linkedInstalls)
-      return null;
-    return aInstall.linkedInstalls.map(i => i.wrapper);
-  });
-
-  this.install = function() {
-    aInstall.install();
-  }
-
-  this.cancel = function() {
-    aInstall.cancel();
-  }
-
-  this.addListener = function(listener) {
-    aInstall.addListener(listener);
-  }
-
-  this.removeListener = function(listener) {
-    aInstall.removeListener(listener);
-  }
+  wrapperMap.set(this, aInstall);
 }
 
-AddonInstallWrapper.prototype = {};
+AddonInstallWrapper.prototype = {
+  get __AddonInstallInternal__() {
+    return AppConstants.DEBUG ? installFor(this) : undefined;
+  },
+
+  get type() {
+    return getExternalType(installFor(this).type);
+  },
+
+  get iconURL() {
+    return installFor(this).icons[32];
+  },
+
+  get existingAddon() {
+    let install = installFor(this);
+    return install.existingAddon ? install.existingAddon.wrapper : null;
+  },
+
+  get addon() {
+    let install = installFor(this);
+    return install.addon ? install.addon.wrapper : null;
+  },
+
+  get sourceURI() {
+    return installFor(this).sourceURI;
+  },
+
+  get linkedInstalls() {
+    let install = installFor(this);
+    if (!install.linkedInstalls)
+      return null;
+    return install.linkedInstalls.map(i => i.wrapper);
+  },
+
+  install: function() {
+    installFor(this).install();
+  },
+
+  cancel: function() {
+    installFor(this).cancel();
+  },
+
+  addListener: function(listener) {
+    installFor(this).addListener(listener);
+  },
+
+  removeListener: function(listener) {
+    installFor(this).removeListener(listener);
+  },
+};
+
+["name", "version", "icons", "releaseNotesURI", "file", "state", "error",
+ "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
+  Object.defineProperty(AddonInstallWrapper.prototype, aProp, {
+    get: function() {
+      return installFor(this)[aProp];
+    },
+    enumerable: true,
+  });
+});
 
 /**
  * Creates a new update checker.
@@ -6698,92 +6715,49 @@ AddonInternal.prototype = {
  * the public API.
  */
 function AddonWrapper(aAddon) {
-  this.__defineGetter__("__AddonInternal__", function() {
-    return AppConstants.DEBUG ? aAddon : undefined;
-  });
+  wrapperMap.set(this, aAddon);
+}
 
-  function chooseValue(aObj, aProp) {
-    let repositoryAddon = aAddon._repositoryAddon;
-    let objValue = aObj[aProp];
+AddonWrapper.prototype = {
+  get __AddonInternal__() {
+    return AppConstants.DEBUG ? addonFor(this) : undefined;
+  },
 
-    if (repositoryAddon && (aProp in repositoryAddon) &&
-        (objValue === undefined || objValue === null)) {
-      return [repositoryAddon[aProp], true];
-    }
+  get type() {
+    return getExternalType(addonFor(this).type);
+  },
 
-    return [objValue, false];
-  }
+  get aboutURL() {
+    return this.isActive ? addonFor(this)["aboutURL"] : null;
+  },
 
-  ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
-   "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
-   "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
-   "strictCompatibility", "compatibilityOverrides", "updateURL",
-   "getDataDirectory", "multiprocessCompatible", "signedState"].forEach(function(aProp) {
-     this.__defineGetter__(aProp, function() {
-       return aAddon[aProp];
-     });
-  }, this);
-
-  this.__defineGetter__("type", () => getExternalType(aAddon.type));
-
-  ["fullDescription", "developerComments", "eula", "supportURL",
-   "contributionURL", "contributionAmount", "averageRating", "reviewCount",
-   "reviewURL", "totalDownloads", "weeklyDownloads", "dailyUsers",
-   "repositoryStatus"].forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      if (aAddon._repositoryAddon)
-        return aAddon._repositoryAddon[aProp];
-
-      return null;
-    });
-  }, this);
-
-  this.__defineGetter__("aboutURL", function() {
-    return this.isActive ? aAddon["aboutURL"] : null;
-  });
-
-  ["installDate", "updateDate"].forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      return new Date(aAddon[aProp]);
-    });
-  }, this);
-
-  ["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      let [target, fromRepo] = chooseValue(aAddon, aProp);
-      if (!target)
-        return null;
-      if (fromRepo)
-        return target;
-      return NetUtil.newURI(target);
-    });
-  }, this);
-
-  this.__defineGetter__("optionsURL", function() {
-    if (this.isActive && aAddon.optionsURL)
-      return aAddon.optionsURL;
+  get optionsURL() {
+    let addon = addonFor(this);
+    if (this.isActive && addon.optionsURL)
+      return addon.optionsURL;
 
     if (this.isActive && this.hasResource("options.xul"))
       return this.getResourceURI("options.xul").spec;
 
     return null;
-  }, this);
+  },
 
-  this.__defineGetter__("optionsType", function() {
+  get optionsType() {
     if (!this.isActive)
       return null;
 
+    let addon = addonFor(this);
     let hasOptionsXUL = this.hasResource("options.xul");
     let hasOptionsURL = !!this.optionsURL;
 
-    if (aAddon.optionsType) {
-      switch (parseInt(aAddon.optionsType, 10)) {
+    if (addon.optionsType) {
+      switch (parseInt(addon.optionsType, 10)) {
       case AddonManager.OPTIONS_TYPE_DIALOG:
       case AddonManager.OPTIONS_TYPE_TAB:
-        return hasOptionsURL ? aAddon.optionsType : null;
+        return hasOptionsURL ? addon.optionsType : null;
       case AddonManager.OPTIONS_TYPE_INLINE:
       case AddonManager.OPTIONS_TYPE_INLINE_INFO:
-        return (hasOptionsXUL || hasOptionsURL) ? aAddon.optionsType : null;
+        return (hasOptionsXUL || hasOptionsURL) ? addon.optionsType : null;
       }
       return null;
     }
@@ -6795,28 +6769,29 @@ function AddonWrapper(aAddon) {
       return AddonManager.OPTIONS_TYPE_DIALOG;
 
     return null;
-  }, this);
+  },
 
-  this.__defineGetter__("iconURL", function() {
+  get iconURL() {
     return AddonManager.getPreferredIconURL(this, 48);
-  }, this);
+  },
 
-  this.__defineGetter__("icon64URL", function() {
+  get icon64URL() {
     return AddonManager.getPreferredIconURL(this, 64);
-  }, this);
+  },
 
-  this.__defineGetter__("icons", function() {
+  get icons() {
+    let addon = addonFor(this);
     let icons = {};
 
-    if (aAddon._repositoryAddon) {
-      for (let size in aAddon._repositoryAddon.icons) {
-        icons[size] = aAddon._repositoryAddon.icons[size];
+    if (addon._repositoryAddon) {
+      for (let size in addon._repositoryAddon.icons) {
+        icons[size] = addon._repositoryAddon.icons[size];
       }
     }
 
-    if (aAddon.icons) {
-      for (let size in aAddon.icons) {
-        icons[size] = this.getResourceURI(aAddon.icons[size]).spec;
+    if (addon.icons) {
+      for (let size in addon.icons) {
+        icons[size] = this.getResourceURI(addon.icons[size]).spec;
       }
     } else {
       // legacy add-on that did not update its icon data yet
@@ -6828,103 +6803,41 @@ function AddonWrapper(aAddon) {
       }
     }
 
-    if(this.isActive && aAddon.iconURL){
-      icons[32] = aAddon.iconURL;
-      icons[48] = aAddon.iconURL;
+    if(this.isActive && addon.iconURL){
+      icons[32] = addon.iconURL;
+      icons[48] = addon.iconURL;
     }
 
-    if(this.isActive && aAddon.icon64URL){
-      icons[64] = aAddon.icon64URL;
+    if(this.isActive && addon.icon64URL){
+      icons[64] = addon.icon64URL;
     }
 
     Object.freeze(icons);
     return icons;
-  }, this);
+  },
 
-  PROP_LOCALE_SINGLE.forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      // Override XPI creator if repository creator is defined
-      if (aProp == "creator" &&
-          aAddon._repositoryAddon && aAddon._repositoryAddon.creator) {
-        return aAddon._repositoryAddon.creator;
-      }
-
-      let result = null;
-
-      if (aAddon.active) {
-        try {
-          let pref = PREF_EM_EXTENSION_FORMAT + aAddon.id + "." + aProp;
-          let value = Preferences.get(pref, null, Ci.nsIPrefLocalizedString);
-          if (value)
-            result = value;
-        }
-        catch (e) {
-        }
-      }
-
-      if (result == null)
-        [result, ] = chooseValue(aAddon.selectedLocale, aProp);
-
-      if (aProp == "creator")
-        return result ? new AddonManagerPrivate.AddonAuthor(result) : null;
-
-      return result;
-    });
-  }, this);
-
-  PROP_LOCALE_MULTI.forEach(function(aProp) {
-    this.__defineGetter__(aProp, function() {
-      let results = null;
-      let usedRepository = false;
-
-      if (aAddon.active) {
-        let pref = PREF_EM_EXTENSION_FORMAT + aAddon.id + "." +
-                   aProp.substring(0, aProp.length - 1);
-        let list = Services.prefs.getChildList(pref, {});
-        if (list.length > 0) {
-          list.sort();
-          results = [];
-          list.forEach(function(aPref) {
-            let value = Preferences.get(aPref, null, Ci.nsIPrefLocalizedString);
-            if (value)
-              results.push(value);
-          });
-        }
-      }
-
-      if (results == null)
-        [results, usedRepository] = chooseValue(aAddon.selectedLocale, aProp);
-
-      if (results && !usedRepository) {
-        results = results.map(function(aResult) {
-          return new AddonManagerPrivate.AddonAuthor(aResult);
-        });
-      }
-
-      return results;
-    });
-  }, this);
-
-  this.__defineGetter__("screenshots", function() {
-    let repositoryAddon = aAddon._repositoryAddon;
+  get screenshots() {
+    let addon = addonFor(this);
+    let repositoryAddon = addon._repositoryAddon;
     if (repositoryAddon && ("screenshots" in repositoryAddon)) {
       let repositoryScreenshots = repositoryAddon.screenshots;
       if (repositoryScreenshots && repositoryScreenshots.length > 0)
         return repositoryScreenshots;
     }
 
-    if (aAddon.type == "theme" && this.hasResource("preview.png")) {
+    if (addon.type == "theme" && this.hasResource("preview.png")) {
       let url = this.getResourceURI("preview.png").spec;
       return [new AddonManagerPrivate.AddonScreenshot(url)];
     }
 
     return null;
-  });
+  },
 
-  this.__defineGetter__("applyBackgroundUpdates", function() {
-    return aAddon.applyBackgroundUpdates;
-  });
-  this.__defineSetter__("applyBackgroundUpdates", function(val) {
+  get applyBackgroundUpdates() {
+    return addonFor(this).applyBackgroundUpdates;
+  },
+  set applyBackgroundUpdates(val) {
+    let addon = addonFor(this);
     if (this.type == "experiment") {
       logger.warn("Setting applyBackgroundUpdates on an experiment is not supported.");
       return;
@@ -6937,185 +6850,198 @@ function AddonWrapper(aAddon) {
                   AddonManager.AUTOUPDATE_DISABLE;
     }
 
-    if (val == aAddon.applyBackgroundUpdates)
+    if (val == addon.applyBackgroundUpdates)
       return val;
 
-    XPIDatabase.setAddonProperties(aAddon, {
+    XPIDatabase.setAddonProperties(addon, {
       applyBackgroundUpdates: val
     });
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
 
     return val;
-  });
+  },
 
-  this.__defineSetter__("syncGUID", function(val) {
-    if (aAddon.syncGUID == val)
+  set syncGUID(val) {
+    let addon = addonFor(this);
+    if (addon.syncGUID == val)
       return val;
 
-    if (aAddon.inDatabase)
-      XPIDatabase.setAddonSyncGUID(aAddon, val);
+    if (addon.inDatabase)
+      XPIDatabase.setAddonSyncGUID(addon, val);
 
-    aAddon.syncGUID = val;
+    addon.syncGUID = val;
 
     return val;
-  });
+  },
 
-  this.__defineGetter__("install", function() {
-    if (!("_install" in aAddon) || !aAddon._install)
+  get install() {
+    let addon = addonFor(this);
+    if (!("_install" in addon) || !addon._install)
       return null;
-    return aAddon._install.wrapper;
-  });
+    return addon._install.wrapper;
+  },
 
-  this.__defineGetter__("pendingUpgrade", function() {
-    return aAddon.pendingUpgrade ? aAddon.pendingUpgrade.wrapper : null;
-  });
+  get pendingUpgrade() {
+    let addon = addonFor(this);
+    return addon.pendingUpgrade ? addon.pendingUpgrade.wrapper : null;
+  },
 
-  this.__defineGetter__("scope", function() {
-    if (aAddon._installLocation)
-      return aAddon._installLocation.scope;
+  get scope() {
+    let addon = addonFor(this);
+    if (addon._installLocation)
+      return addon._installLocation.scope;
 
     return AddonManager.SCOPE_PROFILE;
-  });
+  },
 
-  this.__defineGetter__("pendingOperations", function() {
+  get pendingOperations() {
+    let addon = addonFor(this);
     let pending = 0;
-    if (!(aAddon.inDatabase)) {
+    if (!(addon.inDatabase)) {
       // Add-on is pending install if there is no associated install (shouldn't
       // happen here) or if the install is in the process of or has successfully
       // completed the install. If an add-on is pending install then we ignore
       // any other pending operations.
-      if (!aAddon._install || aAddon._install.state == AddonManager.STATE_INSTALLING ||
-          aAddon._install.state == AddonManager.STATE_INSTALLED)
+      if (!addon._install || addon._install.state == AddonManager.STATE_INSTALLING ||
+          addon._install.state == AddonManager.STATE_INSTALLED)
         return AddonManager.PENDING_INSTALL;
     }
-    else if (aAddon.pendingUninstall) {
+    else if (addon.pendingUninstall) {
       // If an add-on is pending uninstall then we ignore any other pending
       // operations
       return AddonManager.PENDING_UNINSTALL;
     }
 
-    if (aAddon.active && aAddon.disabled)
+    if (addon.active && addon.disabled)
       pending |= AddonManager.PENDING_DISABLE;
-    else if (!aAddon.active && !aAddon.disabled)
+    else if (!addon.active && !addon.disabled)
       pending |= AddonManager.PENDING_ENABLE;
 
-    if (aAddon.pendingUpgrade)
+    if (addon.pendingUpgrade)
       pending |= AddonManager.PENDING_UPGRADE;
 
     return pending;
-  });
+  },
 
-  this.__defineGetter__("operationsRequiringRestart", function() {
+  get operationsRequiringRestart() {
+    let addon = addonFor(this);
     let ops = 0;
-    if (XPIProvider.installRequiresRestart(aAddon))
+    if (XPIProvider.installRequiresRestart(addon))
       ops |= AddonManager.OP_NEEDS_RESTART_INSTALL;
-    if (XPIProvider.uninstallRequiresRestart(aAddon))
+    if (XPIProvider.uninstallRequiresRestart(addon))
       ops |= AddonManager.OP_NEEDS_RESTART_UNINSTALL;
-    if (XPIProvider.enableRequiresRestart(aAddon))
+    if (XPIProvider.enableRequiresRestart(addon))
       ops |= AddonManager.OP_NEEDS_RESTART_ENABLE;
-    if (XPIProvider.disableRequiresRestart(aAddon))
+    if (XPIProvider.disableRequiresRestart(addon))
       ops |= AddonManager.OP_NEEDS_RESTART_DISABLE;
 
     return ops;
-  });
+  },
 
-  this.__defineGetter__("isDebuggable", function() {
-    return this.isActive && aAddon.bootstrap;
-  });
+  get isDebuggable() {
+    return this.isActive && addonFor(this).bootstrap;
+  },
 
-  this.__defineGetter__("permissions", function() {
-    return aAddon.permissions();
-  });
+  get permissions() {
+    return addonFor(this).permissions();
+  },
 
-  this.__defineGetter__("isActive", function() {
-    if (!aAddon.active)
+  get isActive() {
+    let addon = addonFor(this);
+    if (!addon.active)
       return false;
     if (!Services.appinfo.inSafeMode)
       return true;
-    return aAddon.bootstrap && canRunInSafeMode(aAddon);
-  });
+    return addon.bootstrap && canRunInSafeMode(addon);
+  },
 
-  this.__defineGetter__("userDisabled", function() {
-    return aAddon.softDisabled || aAddon.userDisabled;
-  });
-  this.__defineSetter__("userDisabled", function(val) {
+  get userDisabled() {
+    let addon = addonFor(this);
+    return addon.softDisabled || addon.userDisabled;
+  },
+  set userDisabled(val) {
+    let addon = addonFor(this);
     if (val == this.userDisabled) {
       return val;
     }
 
-    if (aAddon.inDatabase) {
-      if (aAddon.type == "theme" && val) {
-        if (aAddon.internalName == XPIProvider.defaultSkin)
+    if (addon.inDatabase) {
+      if (addon.type == "theme" && val) {
+        if (addon.internalName == XPIProvider.defaultSkin)
           throw new Error("Cannot disable the default theme");
         XPIProvider.enableDefaultTheme();
       }
       else {
-        XPIProvider.updateAddonDisabledState(aAddon, val);
+        XPIProvider.updateAddonDisabledState(addon, val);
       }
     }
     else {
-      aAddon.userDisabled = val;
+      addon.userDisabled = val;
       // When enabling remove the softDisabled flag
       if (!val)
-        aAddon.softDisabled = false;
+        addon.softDisabled = false;
     }
 
     return val;
-  });
+  },
 
-  this.__defineSetter__("softDisabled", function(val) {
-    if (val == aAddon.softDisabled)
+  set softDisabled(val) {
+    let addon = addonFor(this);
+    if (val == addon.softDisabled)
       return val;
 
-    if (aAddon.inDatabase) {
+    if (addon.inDatabase) {
       // When softDisabling a theme just enable the active theme
-      if (aAddon.type == "theme" && val && !aAddon.userDisabled) {
-        if (aAddon.internalName == XPIProvider.defaultSkin)
+      if (addon.type == "theme" && val && !addon.userDisabled) {
+        if (addon.internalName == XPIProvider.defaultSkin)
           throw new Error("Cannot disable the default theme");
         XPIProvider.enableDefaultTheme();
       }
       else {
-        XPIProvider.updateAddonDisabledState(aAddon, undefined, val);
+        XPIProvider.updateAddonDisabledState(addon, undefined, val);
       }
     }
     else {
       // Only set softDisabled if not already disabled
-      if (!aAddon.userDisabled)
-        aAddon.softDisabled = val;
+      if (!addon.userDisabled)
+        addon.softDisabled = val;
     }
 
     return val;
-  });
+  },
 
-  this.__defineGetter__("hidden", function() {
-    if (aAddon._installLocation.name == KEY_APP_TEMPORARY)
+  get hidden() {
+    let addon = addonFor(this);
+    if (addon._installLocation.name == KEY_APP_TEMPORARY)
       return false;
 
-    return (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
-            aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS);
-  });
+    return (addon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
+            addon._installLocation.name == KEY_APP_SYSTEM_ADDONS);
+  },
 
-  this.isCompatibleWith = function(aAppVersion, aPlatformVersion) {
-    return aAddon.isCompatibleWith(aAppVersion, aPlatformVersion);
-  };
+  isCompatibleWith: function(aAppVersion, aPlatformVersion) {
+    return addonFor(this).isCompatibleWith(aAppVersion, aPlatformVersion);
+  },
 
-  this.uninstall = function() {
-    if (!(aAddon.inDatabase))
+  uninstall: function() {
+    let addon = addonFor(this);
+    if (!(addon.inDatabase))
       throw new Error("Cannot uninstall an add-on that isn't installed");
-    if (aAddon.pendingUninstall)
+    if (addon.pendingUninstall)
       throw new Error("Add-on is already marked to be uninstalled");
-    XPIProvider.uninstallAddon(aAddon);
-  };
+    XPIProvider.uninstallAddon(addon);
+  },
 
-  this.cancelUninstall = function() {
-    if (!(aAddon.inDatabase))
+  cancelUninstall: function() {
+    let addon = addonFor(this);
+    if (!(addon.inDatabase))
       throw new Error("Cannot cancel uninstall for an add-on that isn't installed");
-    if (!aAddon.pendingUninstall)
+    if (!addon.pendingUninstall)
       throw new Error("Add-on is not marked to be uninstalled");
-    XPIProvider.cancelUninstallAddon(aAddon);
-  };
+    XPIProvider.cancelUninstallAddon(addon);
+  },
 
-  this.findUpdates = function(aListener, aReason, aAppVersion, aPlatformVersion) {
+  findUpdates: function(aListener, aReason, aAppVersion, aPlatformVersion) {
     // Short-circuit updates for experiments because updates are handled
     // through the Experiments Manager.
     if (this.type == "experiment") {
@@ -7124,30 +7050,32 @@ function AddonWrapper(aAddon) {
       return;
     }
 
-    new UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion);
-  };
+    new UpdateChecker(addonFor(this), aListener, aReason, aAppVersion, aPlatformVersion);
+  },
 
   // Returns true if there was an update in progress, false if there was no update to cancel
-  this.cancelUpdate = function() {
-    if (aAddon._updateCheck) {
-      aAddon._updateCheck.cancel();
+  cancelUpdate: function() {
+    let addon = addonFor(this);
+    if (addon._updateCheck) {
+      addon._updateCheck.cancel();
       return true;
     }
     return false;
-  };
+  },
 
-  this.hasResource = function(aPath) {
-    if (aAddon._hasResourceCache.has(aPath))
-      return aAddon._hasResourceCache.get(aPath);
+  hasResource: function(aPath) {
+    let addon = addonFor(this);
+    if (addon._hasResourceCache.has(aPath))
+      return addon._hasResourceCache.get(aPath);
 
-    let bundle = aAddon._sourceBundle.clone();
+    let bundle = addon._sourceBundle.clone();
 
     // Bundle may not exist any more if the addon has just been uninstalled,
     // but explicitly first checking .exists() results in unneeded file I/O.
     try {
       var isDir = bundle.isDirectory();
     } catch (e) {
-      aAddon._hasResourceCache.set(aPath, false);
+      addon._hasResourceCache.set(aPath, false);
       return false;
     }
 
@@ -7158,7 +7086,7 @@ function AddonWrapper(aAddon) {
         });
       }
       let result = bundle.exists();
-      aAddon._hasResourceCache.set(aPath, result);
+      addon._hasResourceCache.set(aPath, result);
       return result;
     }
 
@@ -7167,11 +7095,11 @@ function AddonWrapper(aAddon) {
     try {
       zipReader.open(bundle);
       let result = zipReader.hasEntry(aPath);
-      aAddon._hasResourceCache.set(aPath, result);
+      addon._hasResourceCache.set(aPath, result);
       return result;
     }
     catch (e) {
-      aAddon._hasResourceCache.set(aPath, false);
+      addon._hasResourceCache.set(aPath, false);
       return false;
     }
     finally {
@@ -7190,13 +7118,140 @@ function AddonWrapper(aAddon) {
    *         the file or directory the add-on is installed as.
    * @return an nsIURI
    */
-  this.getResourceURI = function(aPath) {
+  getResourceURI: function(aPath) {
+    let addon = addonFor(this);
     if (!aPath)
-      return NetUtil.newURI(aAddon._sourceBundle);
+      return NetUtil.newURI(addon._sourceBundle);
 
-    return getURIForResourceInFile(aAddon._sourceBundle, aPath);
+    return getURIForResourceInFile(addon._sourceBundle, aPath);
   }
+};
+
+function chooseValue(aAddon, aObj, aProp) {
+  let repositoryAddon = aAddon._repositoryAddon;
+  let objValue = aObj[aProp];
+
+  if (repositoryAddon && (aProp in repositoryAddon) &&
+      (objValue === undefined || objValue === null)) {
+    return [repositoryAddon[aProp], true];
+  }
+
+  return [objValue, false];
 }
+
+function defineAddonWrapperProperty(name, getter) {
+  Object.defineProperty(AddonWrapper.prototype, name, {
+    get: getter,
+    enumerable: true,
+  });
+}
+
+["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
+ "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
+ "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
+ "strictCompatibility", "compatibilityOverrides", "updateURL",
+ "getDataDirectory", "multiprocessCompatible", "signedState"].forEach(function(aProp) {
+   defineAddonWrapperProperty(aProp, function() {
+     return addonFor(this)[aProp];
+   });
+});
+
+["fullDescription", "developerComments", "eula", "supportURL",
+ "contributionURL", "contributionAmount", "averageRating", "reviewCount",
+ "reviewURL", "totalDownloads", "weeklyDownloads", "dailyUsers",
+ "repositoryStatus"].forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    let addon = addonFor(this);
+    if (addon._repositoryAddon)
+      return addon._repositoryAddon[aProp];
+
+    return null;
+  });
+});
+
+["installDate", "updateDate"].forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    return new Date(addonFor(this)[aProp]);
+  });
+});
+
+["sourceURI", "releaseNotesURI"].forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    let addon = addonFor(this);
+    let [target, fromRepo] = chooseValue(addon, addon, aProp);
+    if (!target)
+      return null;
+    if (fromRepo)
+      return target;
+    return NetUtil.newURI(target);
+  });
+});
+
+PROP_LOCALE_SINGLE.forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    let addon = addonFor(this);
+    // Override XPI creator if repository creator is defined
+    if (aProp == "creator" &&
+        addon._repositoryAddon && addon._repositoryAddon.creator) {
+      return addon._repositoryAddon.creator;
+    }
+
+    let result = null;
+
+    if (addon.active) {
+      try {
+        let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." + aProp;
+        let value = Preferences.get(pref, null, Ci.nsIPrefLocalizedString);
+        if (value)
+          result = value;
+      }
+      catch (e) {
+      }
+    }
+
+    if (result == null)
+      [result, ] = chooseValue(addon, addon.selectedLocale, aProp);
+
+    if (aProp == "creator")
+      return result ? new AddonManagerPrivate.AddonAuthor(result) : null;
+
+    return result;
+  });
+});
+
+PROP_LOCALE_MULTI.forEach(function(aProp) {
+  defineAddonWrapperProperty(aProp, function() {
+    let addon = addonFor(this);
+    let results = null;
+    let usedRepository = false;
+
+    if (addon.active) {
+      let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." +
+                 aProp.substring(0, aProp.length - 1);
+      let list = Services.prefs.getChildList(pref, {});
+      if (list.length > 0) {
+        list.sort();
+        results = [];
+        list.forEach(function(aPref) {
+          let value = Preferences.get(aPref, null, Ci.nsIPrefLocalizedString);
+          if (value)
+            results.push(value);
+        });
+      }
+    }
+
+    if (results == null)
+      [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
+
+    if (results && !usedRepository) {
+      results = results.map(function(aResult) {
+        return new AddonManagerPrivate.AddonAuthor(aResult);
+      });
+    }
+
+    return results;
+  });
+});
 
 /**
  * An object which identifies a directory install location for add-ons. The

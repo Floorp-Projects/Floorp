@@ -135,8 +135,5 @@ add_task(function shutdown_during_check() {
   response.write(data);
   response.finish();
 
-  // trying to cancel again should return false, i.e. nothing to cancel
-  do_check_false(a1.cancelUpdate());
-
   yield testserver.stop(Promise.defer().resolve);
 });

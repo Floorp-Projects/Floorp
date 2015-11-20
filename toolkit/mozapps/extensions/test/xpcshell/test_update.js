@@ -230,7 +230,7 @@ for (let test of testParams) {
 
       startupManager();
 
-      do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
+      do_check_true(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
         do_check_neq(a1, null);
