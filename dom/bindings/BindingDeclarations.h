@@ -139,23 +139,10 @@ public:
   }
 
   // Return InternalType here so we can work with it usefully.
-  InternalType& Construct()
+  template<typename... Args>
+  InternalType& Construct(Args&&... aArgs)
   {
-    mImpl.emplace();
-    return *mImpl;
-  }
-
-  template <class T1>
-  InternalType& Construct(const T1 &t1)
-  {
-    mImpl.emplace(t1);
-    return *mImpl;
-  }
-
-  template <class T1, class T2>
-  InternalType& Construct(const T1 &t1, const T2 &t2)
-  {
-    mImpl.emplace(t1, t2);
+    mImpl.emplace(Forward<Args>(aArgs)...);
     return *mImpl;
   }
 
