@@ -847,7 +847,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
 
   bool ocspMustStapleEnabled = Preferences::GetBool("security.ssl.enable_ocsp_must_staple",
-                                                    false);
+                                                    true);
   PublicSSLState()->SetOCSPMustStapleEnabled(ocspMustStapleEnabled);
   PrivateSSLState()->SetOCSPMustStapleEnabled(ocspMustStapleEnabled);
 
