@@ -10384,9 +10384,38 @@ CSSParserImpl::FinalizeRadialWebkitGradient(nsCSSValueGradient* aGradient,
 {
   MOZ_ASSERT(aGradient->mIsRadial, "passed-in gradient must be radial");
 
-  aGradient->mBgPos = aFirstCenter;
+  // NOTE: -webkit-gradient(radial, ...) has *two arbitrary circles*, with the
+  // gradient stretching between the circles' edges.  In contrast, the standard
+  // syntax (and hence our data structures) can only represent *one* circle,
+  // with the gradient going from its center to its edge.  To bridge this gap
+  // in expressiveness, we'll just see which of our two circles is smaller, and
+  // we'll treat that circle as if it were zero-sized and located at the center
+  // of the larger circle. Then, we'll be able to use the same data structures
+  // that we use for the standard radial-gradient syntax.
+  if (aSecondRadius >= aFirstRadius) {
+    // Second circle is larger.
+    aGradient->mBgPos = aSecondCenter;
+    aGradient->mIsExplicitSize = true;
+    aGradient->GetRadiusX().SetFloatValue(aSecondRadius, eCSSUnit_Pixel);
+    return;
+  }
 
-  // XXXdholbert Do further positioning/sizing here.
+  // First circle is larger, so we'll have it be the outer circle.
+  aGradient->mBgPos = aFirstCenter;
+  aGradient->mIsExplicitSize = true;
+  aGradient->GetRadiusX().SetFloatValue(aFirstRadius, eCSSUnit_Pixel);
+
+  // For this to work properly (with the earlier color stops attached to the
+  // first circle), we need to also reverse the color-stop list, so that
+  // e.g. the author's "from" color is attached to the outer edge (the first
+  // circle), rather than attached to the center (the collapsed second circle).
+  std::reverse(aGradient->mStops.begin(), aGradient->mStops.end());
+
+  // And now invert the stop locations:
+  for (nsCSSValueGradientStop& colorStop : aGradient->mStops) {
+    float origLocation = colorStop.mLocation.GetPercentValue();
+    colorStop.mLocation.SetPercentValue(1.0f - origLocation);
+  }
 }
 
 bool
