@@ -89,7 +89,7 @@ public:
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
-  // use ClientTexture's default implementation
+  // use TextureClient's default implementation
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
   /// Hold android::MediaBuffer.

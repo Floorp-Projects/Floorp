@@ -328,7 +328,7 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             return -ENOMEM;
         }
 
-        RefPtr<TextureClient> textureClient = new ClientTexture(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
+        RefPtr<TextureClient> textureClient = new TextureClient(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
 
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);
