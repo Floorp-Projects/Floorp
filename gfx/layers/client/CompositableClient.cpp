@@ -225,7 +225,7 @@ CompositableClient::CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
-  if(!aClient || !aClient->IsAllocated()) {
+  if(!aClient) {
     return false;
   }
   aClient->SetAddedToCompositableClient();
