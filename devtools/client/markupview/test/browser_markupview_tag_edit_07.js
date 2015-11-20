@@ -72,9 +72,31 @@ var TEST_DATA = [{
     let visibleAttrText = editor.attrElements.get("src").querySelector(".attr-value").textContent;
     is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
   }
+}, {
+  desc: "Try to add long attribute with collapseAttributeLength == -1" +
+  "to make sure it isn't collapsed in attribute editor.",
+  text: 'data-long="' + LONG_ATTRIBUTE + '"',
+  expectedAttributes: {
+    "data-long": LONG_ATTRIBUTE
+  },
+  setUp: function(inspector) {
+    inspector.markup.collapseAttributeLength = -1;
+  },
+  validate: (element, container, inspector) => {
+    let editor = container.editor;
+    let visibleAttrText = editor.attrElements
+      .get("data-long")
+      .querySelector(".attr-value")
+      .textContent;
+    is(visibleAttrText, LONG_ATTRIBUTE);
+  },
+  tearDown: function(inspector) {
+    inspector.markup.collapseAttributeLength = 120;
+  }
 }];
 
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
   yield runAddAttributesTests(TEST_DATA, "div", inspector)
 });
+
