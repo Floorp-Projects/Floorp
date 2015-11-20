@@ -92,9 +92,6 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
                  prototypes::ID aProtoId);
 
-bool
-ThrowMethodFailed(JSContext* cx, ErrorResult& rv);
-
 // Returns true if the JSClass is used for DOM objects.
 inline bool
 IsDOMClass(const JSClass* clasp)

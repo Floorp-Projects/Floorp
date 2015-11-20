@@ -134,6 +134,40 @@ public:
     return rv;
   }
 
+  // Use MaybeSetPendingException to convert an ErrorResult to a pending
+  // exception on the given JSContext.  This is the normal "throw an exception"
+  // codepath.
+  //
+  // The return value is false if the ErrorResult represents success, true
+  // otherwise.  This does mean that in JSAPI method implementations you can't
+  // just use this as |return rv.MaybeSetPendingException(cx)| (though you could
+  // |return !rv.MaybeSetPendingException(cx)|), but in practice pretty much any
+  // consumer would want to do some more work on the success codepath.  So
+  // instead the way you use this is:
+  //
+  //   if (rv.MaybeSetPendingException(cx)) {
+  //     bail out here
+  //   }
+  //   go on to do something useful
+  //
+  // The success path is inline, since it should be the common case and we don't
+  // want to pay the price of a function call in some of the consumers of this
+  // method in the common case.
+  //
+  // Note that a true return value does NOT mean there is now a pending
+  // exception on aCx, due to uncatchable exceptions.  It should still be
+  // considered equivalent to a JSAPI failure in terms of what callers should do
+  // after true is returned.
+  bool MaybeSetPendingException(JSContext* cx)
+  {
+    if (!Failed()) {
+      return false;
+    }
+
+    SetPendingException(cx);
+    return true;
+  }
+
   template<dom::ErrNum errorNumber, typename... Ts>
   void ThrowTypeError(Ts&&... messageArgs)
   {
@@ -308,6 +342,10 @@ private:
   // change mResult to something that will not involve us touching the union
   // anymore.
   void ClearUnionData();
+
+  // Implementation of MaybeSetPendingException for the case when we're a
+  // failure result.
+  void SetPendingException(JSContext* cx);
 
   // Special values of mResult:
   // NS_ERROR_TYPE_ERR -- ThrowTypeError() called on us.
