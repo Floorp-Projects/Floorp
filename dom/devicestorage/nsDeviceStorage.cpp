@@ -2402,10 +2402,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DeviceStoragePermissionCheck,
                                            nsIContentPermissionRequest)
 
-  DeviceStoragePermissionCheck(DeviceStorageRequest* aRequest,
-                               uint64_t aWindowID,
-                               const PrincipalInfo &aPrincipalInfo)
-    : mRequest(aRequest)
+  DeviceStoragePermissionCheck(
+    already_AddRefed<DeviceStorageRequest>&& aRequest,
+    uint64_t aWindowID, const PrincipalInfo &aPrincipalInfo)
+    : mRequest(Move(aRequest))
     , mWindowID(aWindowID)
     , mPrincipalInfo(aPrincipalInfo)
   {
@@ -2557,37 +2557,31 @@ nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
 }
 
 nsresult
-nsDOMDeviceStorage::CheckPermission(DeviceStorageRequest* aRequest)
+nsDOMDeviceStorage::CheckPermission(
+  already_AddRefed<DeviceStorageRequest>&& aRequest)
 {
   MOZ_ASSERT(mManager);
-  uint32_t cache = mManager->CheckPermission(aRequest->GetAccess());
+  RefPtr<DeviceStorageRequest> request(aRequest);
+  uint32_t cache = mManager->CheckPermission(request->GetAccess());
   switch (cache) {
     case nsIPermissionManager::ALLOW_ACTION:
-      return aRequest->Allow();
+      return request->Allow();
     case nsIPermissionManager::DENY_ACTION:
-      return aRequest->Cancel();
+      return request->Cancel();
     case nsIPermissionManager::PROMPT_ACTION:
     default:
     {
       nsCOMPtr<nsIThread> mainThread;
       nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return aRequest->Reject(POST_ERROR_EVENT_UNKNOWN);
+        return request->Reject(POST_ERROR_EVENT_UNKNOWN);
       }
 
-      /* We need to do a bit of a song and dance here to release the object
-         because while we can initially increment the ownership count (no one
-         else is using it), we cannot safely decrement after dispatching because
-         it uses cycle collection and requires the main thread to free it. */
-      nsCOMPtr<nsIRunnable> r
-        = new DeviceStoragePermissionCheck(aRequest, mInnerWindowID,
-                                           *mPrincipalInfo);
-      rv = mainThread->Dispatch(r, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        rv = aRequest->Reject(POST_ERROR_EVENT_UNKNOWN);
-      }
-      NS_ProxyRelease(mainThread, r.forget().take());
-      return rv;
+      return mainThread->Dispatch(
+        MakeAndAddRef<DeviceStoragePermissionCheck>(request.forget(),
+                                                    mInnerWindowID,
+                                                    *mPrincipalInfo),
+        NS_DISPATCH_NORMAL);
     }
   }
 }
@@ -3117,7 +3111,7 @@ nsDOMDeviceStorage::AddOrAppendNamed(Blob* aBlob, const nsAString& aPath,
     request = new DeviceStorageAppendRequest();
   }
   request->Initialize(mManager, dsf, id, aBlob->Impl());
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3153,7 +3147,7 @@ nsDOMDeviceStorage::GetInternal(const nsAString& aPath, bool aEditable,
   RefPtr<DeviceStorageRequest> request = new DeviceStorageOpenRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3187,7 +3181,7 @@ nsDOMDeviceStorage::Delete(const nsAString& aPath, ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageDeleteRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3208,7 +3202,7 @@ nsDOMDeviceStorage::FreeSpace(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageFreeSpaceRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3233,7 +3227,7 @@ nsDOMDeviceStorage::UsedSpace(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageUsedSpaceRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3254,7 +3248,7 @@ nsDOMDeviceStorage::Available(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageAvailableRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3275,7 +3269,7 @@ nsDOMDeviceStorage::StorageStatus(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageStatusRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3296,7 +3290,7 @@ nsDOMDeviceStorage::Format(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageFormatRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3317,7 +3311,7 @@ nsDOMDeviceStorage::Mount(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageMountRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3339,7 +3333,7 @@ nsDOMDeviceStorage::Unmount(ErrorResult& aRv)
   RefPtr<DeviceStorageRequest> request = new DeviceStorageUnmountRequest();
   request->Initialize(mManager, dsf, id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3387,7 +3381,7 @@ nsDOMDeviceStorage::CreateFileDescriptor(const nsAString& aPath,
   RefPtr<DeviceStorageRequest> request = new DeviceStorageCreateFdRequest();
   request->Initialize(mManager, dsf, id, aDSFileDescriptor);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3493,7 +3487,7 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
     aRv = mManager->Reject(id, POST_ERROR_EVENT_PERMISSION_DENIED);
   } else {
     request->Initialize(mManager, dsf, id, since);
-    aRv = CheckPermission(request);
+    aRv = CheckPermission(request.forget());
   }
 
   return cursor.forget();
@@ -3696,7 +3690,7 @@ nsDOMDeviceStorage::EventListenerWasAdded(const nsAString& aType,
                                                           mStorageName);
   RefPtr<DeviceStorageRequest> request = new DeviceStorageWatchRequest();
   request->Initialize(mManager, dsf, id);
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
 }
 
 Atomic<uint32_t> DeviceStorageRequestManager::sLastRequestId(0);
