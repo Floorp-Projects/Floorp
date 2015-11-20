@@ -1290,21 +1290,10 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     RootedObject object(cx, &args[0].toObject());
     JSProtoKey protoKey = StandardProtoKeyOrNull(object);
     MOZ_ASSERT(protoKey);
+    RootedValue ctor(cx, cx->global()->getConstructor(protoKey));
+    MOZ_ASSERT(ctor.isObject());
 
-    // While it may seem like an invariant that in any compartment,
-    // seeing a typed array object implies that the TypedArray constructor
-    // for that type is initialized on the compartment's global, this is not
-    // the case. When we construct a typed array given a cross-compartment
-    // ArrayBuffer, we put the constructed TypedArray in the same compartment
-    // as the ArrayBuffer. Since we use the prototype from the initial
-    // compartment, and never call the constructor in the ArrayBuffer's
-    // compartment from script, we are not guaranteed to have initialized
-    // the constructor.
-    RootedObject ctor(cx);
-    if (!GetBuiltinConstructor(cx, protoKey, &ctor))
-        return false;
-
-    args.rval().setObject(*ctor);
+    args.rval().set(ctor);
     return true;
 }
 
