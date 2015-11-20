@@ -635,7 +635,6 @@ this.AddonRepository = {
     let ids = [a.id for (a of allAddons)];
     logger.debug("Repopulate add-on cache with " + ids.toSource());
 
-    let self = this;
     let addonsToCache = yield new Promise((resolve, reject) =>
       getAddonsToCache(ids, resolve));
 
@@ -646,15 +645,15 @@ this.AddonRepository = {
     }
 
     yield new Promise((resolve, reject) =>
-      self._beginGetAddons(addonsToCache, {
-        searchSucceeded: function(aAddons) {
-          self._addons = new Map();
+      this._beginGetAddons(addonsToCache, {
+        searchSucceeded: aAddons => {
+          this._addons = new Map();
           for (let addon of aAddons) {
-            self._addons.set(addon.id, addon);
+            this._addons.set(addon.id, addon);
           }
           AddonDatabase.repopulate(aAddons, resolve);
         },
-        searchFailed: function() {
+        searchFailed: () => {
           logger.warn("Search failed when repopulating cache");
           resolve();
         }
@@ -683,8 +682,7 @@ this.AddonRepository = {
       return;
     }
 
-    let self = this;
-    getAddonsToCache(aIds, function(aAddons) {
+    getAddonsToCache(aIds, aAddons => {
       // If there are no add-ons to cache, act as if caching is disabled
       if (aAddons.length == 0) {
         if (aCallback)
@@ -692,14 +690,14 @@ this.AddonRepository = {
         return;
       }
 
-      self.getAddonsByIDs(aAddons, {
-        searchSucceeded: function(aAddons) {
+      this.getAddonsByIDs(aAddons, {
+        searchSucceeded: aAddons => {
           for (let addon of aAddons) {
-            self._addons.set(addon.id, addon);
+            this._addons.set(addon.id, addon);
           }
           AddonDatabase.insertAddons(aAddons, aCallback);
         },
-        searchFailed: function() {
+        searchFailed: () => {
           logger.warn("Search failed when adding add-ons to cache");
           if (aCallback)
             aCallback();
@@ -829,13 +827,12 @@ this.AddonRepository = {
 
     let url = this._formatURLPref(pref, params);
 
-    let self = this;
-    function handleResults(aElements, aTotalResults, aCompatData) {
+    let  handleResults = (aElements, aTotalResults, aCompatData) => {
       // Don't use this._parseAddons() so that, for example,
       // incompatible add-ons are not filtered out
       let results = [];
-      for (let i = 0; i < aElements.length && results.length < self._maxResults; i++) {
-        let result = self._parseAddon(aElements[i], null, aCompatData);
+      for (let i = 0; i < aElements.length && results.length < this._maxResults; i++) {
+        let result = this._parseAddon(aElements[i], null, aCompatData);
         if (result == null)
           continue;
 
@@ -874,7 +871,7 @@ this.AddonRepository = {
       }
 
       // aTotalResults irrelevant
-      self._reportSuccess(results, -1);
+      this._reportSuccess(results, -1);
     }
 
     this._beginSearch(url, ids.length, aCallback, handleResults, aTimeout);
@@ -910,11 +907,10 @@ this.AddonRepository = {
       MAX_RESULTS : 2 * aMaxResults
     });
 
-    let self = this;
-    function handleResults(aElements, aTotalResults) {
-      self._getLocalAddonIds(function(aLocalAddonIds) {
+    let handleResults = (aElements, aTotalResults) => {
+      this._getLocalAddonIds(aLocalAddonIds => {
         // aTotalResults irrelevant
-        self._parseAddons(aElements, -1, aLocalAddonIds);
+        this._parseAddons(aElements, -1, aLocalAddonIds);
       });
     }
 
@@ -949,10 +945,9 @@ this.AddonRepository = {
 
     let url = this._formatURLPref(PREF_GETADDONS_GETSEARCHRESULTS, substitutions);
 
-    let self = this;
-    function handleResults(aElements, aTotalResults) {
-      self._getLocalAddonIds(function(aLocalAddonIds) {
-        self._parseAddons(aElements, aTotalResults, aLocalAddonIds);
+    let handleResults = (aElements, aTotalResults) => {
+      this._getLocalAddonIds(aLocalAddonIds => {
+        this._parseAddons(aElements, aTotalResults, aLocalAddonIds);
       });
     }
 
@@ -1046,7 +1041,6 @@ this.AddonRepository = {
     if (aCompatData && guid in aCompatData)
       addon.compatibilityOverrides = aCompatData[guid].compatRanges;
 
-    let self = this;
     for (let node = aElement.firstChild; node; node = node.nextSibling) {
       if (!(node instanceof Ci.nsIDOMElement))
         continue;
@@ -1117,8 +1111,8 @@ this.AddonRepository = {
         case "authors":
           let authorNodes = node.getElementsByTagName("author");
           for (let authorNode of authorNodes) {
-            let name = self._getDescendantTextContent(authorNode, "name");
-            let link = self._getDescendantTextContent(authorNode, "link");
+            let name = this._getDescendantTextContent(authorNode, "name");
+            let link = this._getDescendantTextContent(authorNode, "link");
             if (name == null || link == null)
               continue;
 
@@ -1136,22 +1130,22 @@ this.AddonRepository = {
         case "previews":
           let previewNodes = node.getElementsByTagName("preview");
           for (let previewNode of previewNodes) {
-            let full = self._getUniqueDescendant(previewNode, "full");
+            let full = this._getUniqueDescendant(previewNode, "full");
             if (full == null)
               continue;
 
-            let fullURL = self._getTextContent(full);
+            let fullURL = this._getTextContent(full);
             let fullWidth = full.getAttribute("width");
             let fullHeight = full.getAttribute("height");
 
             let thumbnailURL, thumbnailWidth, thumbnailHeight;
-            let thumbnail = self._getUniqueDescendant(previewNode, "thumbnail");
+            let thumbnail = this._getUniqueDescendant(previewNode, "thumbnail");
             if (thumbnail) {
-              thumbnailURL = self._getTextContent(thumbnail);
+              thumbnailURL = this._getTextContent(thumbnail);
               thumbnailWidth = thumbnail.getAttribute("width");
               thumbnailHeight = thumbnail.getAttribute("height");
             }
-            let caption = self._getDescendantTextContent(previewNode, "caption");
+            let caption = this._getDescendantTextContent(previewNode, "caption");
             let screenshot = new AddonManagerPrivate.AddonScreenshot(fullURL, fullWidth, fullHeight,
                                                                      thumbnailURL, thumbnailWidth,
                                                                      thumbnailHeight, caption);
@@ -1255,12 +1249,9 @@ this.AddonRepository = {
   },
 
   _parseAddons: function(aElements, aTotalResults, aSkip) {
-    let self = this;
     let results = [];
 
-    function isSameApplication(aAppNode) {
-      return self._getTextContent(aAppNode) == Services.appinfo.ID;
-    }
+    let isSameApplication = aAppNode => this._getTextContent(aAppNode) == Services.appinfo.ID;
 
     for (let i = 0; i < aElements.length && results.length < this._maxResults; i++) {
       let element = aElements[i];
@@ -1270,13 +1261,13 @@ this.AddonRepository = {
         continue;
 
       let applications = tags.getElementsByTagName("appID");
-      let compatible = Array.some(applications, function(aAppNode) {
+      let compatible = Array.some(applications, aAppNode => {
         if (!isSameApplication(aAppNode))
           return false;
 
         let parent = aAppNode.parentNode;
-        let minVersion = self._getDescendantTextContent(parent, "min_version");
-        let maxVersion = self._getDescendantTextContent(parent, "max_version");
+        let minVersion = this._getDescendantTextContent(parent, "min_version");
+        let maxVersion = this._getDescendantTextContent(parent, "max_version");
         if (minVersion == null || maxVersion == null)
           return false;
 
@@ -1335,24 +1326,24 @@ this.AddonRepository = {
     }
 
     // Create an AddonInstall for each result
-    results.forEach(function(aResult) {
-      let addon = aResult.addon;
-      let callback = function(aInstall) {
+    for (let result of results) {
+      let addon = result.addon;
+      let callback = aInstall => {
         addon.install = aInstall;
         pendingResults--;
         if (pendingResults == 0)
-          self._reportSuccess(results, aTotalResults);
+          this._reportSuccess(results, aTotalResults);
       }
 
-      if (aResult.xpiURL) {
-        AddonManager.getInstallForURL(aResult.xpiURL, callback,
-                                      "application/x-xpinstall", aResult.xpiHash,
+      if (result.xpiURL) {
+        AddonManager.getInstallForURL(result.xpiURL, callback,
+                                      "application/x-xpinstall", result.xpiHash,
                                       addon.name, addon.icons, addon.version);
       }
       else {
         callback(null);
       }
-    });
+    }
   },
 
   // Parses addon_compatibility nodes, that describe compatibility overrides.
@@ -1498,7 +1489,6 @@ this.AddonRepository = {
   // Gets the id's of local add-ons, and the sourceURI's of local installs,
   // passing the results to aCallback
   _getLocalAddonIds: function(aCallback) {
-    let self = this;
     let localAddonIds = {ids: null, sourceURIs: null};
 
     AddonManager.getAllAddons(function(aAddons) {

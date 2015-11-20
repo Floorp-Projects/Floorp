@@ -4118,8 +4118,7 @@ this.XPIProvider = {
    *         Function to call when operation is complete.
    */
   updateAddonRepositoryData: function(aCallback) {
-    let self = this;
-    XPIDatabase.getVisibleAddons(null, function(aAddons) {
+    XPIDatabase.getVisibleAddons(null, aAddons => {
       let pending = aAddons.length;
       logger.debug("updateAddonRepositoryData found " + pending + " visible add-ons");
       if (pending == 0) {
@@ -4133,12 +4132,12 @@ this.XPIProvider = {
       }
 
       for (let addon of aAddons) {
-        AddonRepository.getCachedAddonByID(addon.id, function(aRepoAddon) {
+        AddonRepository.getCachedAddonByID(addon.id, aRepoAddon => {
           if (aRepoAddon) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
             addon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
-            self.updateAddonDisabledState(addon);
+            this.updateAddonDisabledState(addon);
           }
 
           notifyComplete();
@@ -5047,37 +5046,36 @@ AddonInstall.prototype = {
       }
     }
 
-    let self = this;
     this.loadManifest(this.file).then(() => {
-      XPIDatabase.getVisibleAddonForID(self.addon.id, function(aAddon) {
-        self.existingAddon = aAddon;
+      XPIDatabase.getVisibleAddonForID(this.addon.id, aAddon => {
+        this.existingAddon = aAddon;
         if (aAddon)
-          applyBlocklistChanges(aAddon, self.addon);
-        self.addon.updateDate = Date.now();
-        self.addon.installDate = aAddon ? aAddon.installDate : self.addon.updateDate;
+          applyBlocklistChanges(aAddon, this.addon);
+        this.addon.updateDate = Date.now();
+        this.addon.installDate = aAddon ? aAddon.installDate : this.addon.updateDate;
 
-        if (!self.addon.isCompatible) {
+        if (!this.addon.isCompatible) {
           // TODO Should we send some event here?
-          self.state = AddonManager.STATE_CHECKING;
-          new UpdateChecker(self.addon, {
-            onUpdateFinished: function(aAddon) {
-              self.state = AddonManager.STATE_DOWNLOADED;
-              XPIProvider.installs.push(self);
+          this.state = AddonManager.STATE_CHECKING;
+          new UpdateChecker(this.addon, {
+            onUpdateFinished: aAddon => {
+              this.state = AddonManager.STATE_DOWNLOADED;
+              XPIProvider.installs.push(this);
               AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                                       self.listeners,
-                                                       self.wrapper);
+                                                       this.listeners,
+                                                       this.wrapper);
 
-              aCallback(self);
+              aCallback(this);
             }
           }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
         }
         else {
-          XPIProvider.installs.push(self);
+          XPIProvider.installs.push(this);
           AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                                   self.listeners,
-                                                   self.wrapper);
+                                                   this.listeners,
+                                                   this.wrapper);
 
-          aCallback(self);
+          aCallback(this);
         }
       });
     }, ([error, message]) => {
@@ -5085,8 +5083,8 @@ AddonInstall.prototype = {
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = error;
       AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                               self.listeners,
-                                               self.wrapper);
+                                               this.listeners,
+                                               this.wrapper);
 
       aCallback(this);
     });
@@ -5702,18 +5700,15 @@ AddonInstall.prototype = {
           return;
         }
 
-        let self = this;
         this.loadManifest(this.file).then(() => {
-          if (self.addon.isCompatible) {
-            self.downloadCompleted();
+          if (this.addon.isCompatible) {
+            this.downloadCompleted();
           }
           else {
             // TODO Should we send some event here (bug 557716)?
-            self.state = AddonManager.STATE_CHECKING;
-            new UpdateChecker(self.addon, {
-              onUpdateFinished: function(aAddon) {
-                self.downloadCompleted();
-              }
+            this.state = AddonManager.STATE_CHECKING;
+            new UpdateChecker(this.addon, {
+              onUpdateFinished: aAddon => this.downloadCompleted(),
             }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
           }
         }, ([error, message]) => {
@@ -5765,34 +5760,33 @@ AddonInstall.prototype = {
    * Notify listeners that the download completed.
    */
   downloadCompleted: function() {
-    let self = this;
-    XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
+    XPIDatabase.getVisibleAddonForID(this.addon.id, aAddon => {
       if (aAddon)
-        self.existingAddon = aAddon;
+        this.existingAddon = aAddon;
 
-      self.state = AddonManager.STATE_DOWNLOADED;
-      self.addon.updateDate = Date.now();
+      this.state = AddonManager.STATE_DOWNLOADED;
+      this.addon.updateDate = Date.now();
 
-      if (self.existingAddon) {
-        self.addon.existingAddonID = self.existingAddon.id;
-        self.addon.installDate = self.existingAddon.installDate;
-        applyBlocklistChanges(self.existingAddon, self.addon);
+      if (this.existingAddon) {
+        this.addon.existingAddonID = this.existingAddon.id;
+        this.addon.installDate = this.existingAddon.installDate;
+        applyBlocklistChanges(this.existingAddon, this.addon);
       }
       else {
-        self.addon.installDate = self.addon.updateDate;
+        this.addon.installDate = this.addon.updateDate;
       }
 
       if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
-                                                   self.listeners,
-                                                   self.wrapper)) {
+                                                   this.listeners,
+                                                   this.wrapper)) {
         // If a listener changed our state then do not proceed with the install
-        if (self.state != AddonManager.STATE_DOWNLOADED)
+        if (this.state != AddonManager.STATE_DOWNLOADED)
           return;
 
-        self.install();
+        this.install();
 
-        if (self.linkedInstalls) {
-          for (let install of self.linkedInstalls) {
+        if (this.linkedInstalls) {
+          for (let install of this.linkedInstalls) {
             if (install.state == AddonManager.STATE_DOWNLOADED)
               install.install();
           }
@@ -6368,9 +6362,8 @@ UpdateChecker.prototype = {
         return;
       }
 
-      let self = this;
-      AddonInstall.createUpdate(function(aInstall) {
-        sendUpdateAvailableMessages(self, aInstall);
+      AddonInstall.createUpdate(aInstall => {
+        sendUpdateAvailableMessages(this, aInstall);
       }, this.addon, update);
     }
     else {
@@ -7530,15 +7523,14 @@ Object.assign(MutableDirectoryInstallLocation.prototype, {
 
     let transaction = new SafeInstallOperation();
 
-    let self = this;
-    function moveOldAddon(aId) {
-      let file = self._directory.clone();
+    let moveOldAddon = aId => {
+      let file = this._directory.clone();
       file.append(aId);
 
       if (file.exists())
         transaction.moveUnder(file, trashDir);
 
-      file = self._directory.clone();
+      file = this._directory.clone();
       file.append(aId + ".xpi");
       if (file.exists()) {
         flushJarCache(file);

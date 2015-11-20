@@ -1076,11 +1076,8 @@ var AddonManagerInternal = {
           };
 
           let typeListeners = this.typeListeners.slice(0);
-          for (let listener of typeListeners) {
-            safeCall(function() {
-              listener.onTypeAdded(aType);
-            });
-          }
+          for (let listener of typeListeners)
+            safeCall(() => listener.onTypeAdded(aType));
         }
         else {
           this.types[aType.id].providers.push(aProvider);
@@ -1121,11 +1118,8 @@ var AddonManagerInternal = {
         delete this.types[type];
 
         let typeListeners = this.typeListeners.slice(0);
-        for (let listener of typeListeners) {
-          safeCall(function() {
-            listener.onTypeRemoved(oldType);
-          });
-        }
+        for (let listener of typeListeners)
+          safeCall(() => listener.onTypeRemoved(oldType));
       }
     }
 
@@ -2206,9 +2200,8 @@ var AddonManagerInternal = {
 
     if (!("@mozilla.org/addons/web-install-listener;1" in Cc)) {
       logger.warn("No web installer available, cancelling all installs");
-      aInstalls.forEach(function(aInstall) {
-        aInstall.cancel();
-      });
+      for (let install of aInstalls)
+        install.cancel();
       return;
     }
 
@@ -2256,16 +2249,14 @@ var AddonManagerInternal = {
       if (!this.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
         if (weblistener.onWebInstallBlocked(topBrowser, aInstallingPrincipal.URI,
                                             aInstalls, aInstalls.length)) {
-          aInstalls.forEach(function(aInstall) {
-            aInstall.install();
-          });
+          for (let install of aInstalls)
+            install.install();
         }
       }
       else if (weblistener.onWebInstallRequested(topBrowser, aInstallingPrincipal.URI,
                                                  aInstalls, aInstalls.length)) {
-        aInstalls.forEach(function(aInstall) {
-          aInstall.install();
-        });
+        for (let install of aInstalls)
+          install.install();
       }
     }
     catch (e) {
@@ -2273,9 +2264,8 @@ var AddonManagerInternal = {
       // calling onWebInstallBlocked or onWebInstallRequested all of the
       // installs should get cancelled.
       logger.warn("Failure calling web installer", e);
-      aInstalls.forEach(function(aInstall) {
-        aInstall.cancel();
-      });
+      for (let install of aInstalls)
+        install.cancel();
     }
   },
 
@@ -2612,8 +2602,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aListener must be an AddonManagerListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (!this.managerListeners.some(function(i) {
-      return i == aListener; }))
+    if (!this.managerListeners.some(i => i == aListener))
       this.managerListeners.push(aListener);
   },
 
@@ -2648,8 +2637,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aListener must be an AddonListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (!this.addonListeners.some(function(i) {
-      return i == aListener; }))
+    if (!this.addonListeners.some(i => i == aListener))
       this.addonListeners.push(aListener);
   },
 
@@ -2684,8 +2672,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aListener must be a TypeListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (!this.typeListeners.some(function(i) {
-      return i == aListener; }))
+    if (!this.typeListeners.some(i => i == aListener))
       this.typeListeners.push(aListener);
   },
 

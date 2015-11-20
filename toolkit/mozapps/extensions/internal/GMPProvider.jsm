@@ -287,9 +287,7 @@ GMPWrapper.prototype = {
       try {
         let installManager = new GMPInstallManager();
         let gmpAddons = yield installManager.checkForAddons();
-        let update = gmpAddons.find(function(aAddon) {
-          return aAddon.id === this._plugin.id;
-        }, this);
+        let update = gmpAddons.find(addon => addon.id === this._plugin.id);
         if (update && update.isValid && !update.isInstalled) {
           this._log.trace("findUpdates() - found update for " +
                           this._plugin.id + ", installing");

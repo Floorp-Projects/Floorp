@@ -1124,18 +1124,17 @@
               (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DISABLE ||
                (this.mAddon.applyBackgroundUpdates == AddonManager.AUTOUPDATE_DEFAULT &&
                 !AddonManager.autoUpdateDefault))) {
-            var self = this;
-            AddonManager.getAllInstalls(function(aInstallsList) {
+            AddonManager.getAllInstalls(aInstallsList => {
               // This can return after the binding has been destroyed,
               // so try to detect that and return early
-              if (!("onNewInstall" in self))
+              if (!("onNewInstall" in this))
                 return;
               for (let install of aInstallsList) {
                 if (install.existingAddon &&
-                    install.existingAddon.id == self.mAddon.id &&
+                    install.existingAddon.id == this.mAddon.id &&
                     install.state == AddonManager.STATE_AVAILABLE) {
-                  self.onNewInstall(install);
-                  self.onIncludeUpdateChanged();
+                  this.onNewInstall(install);
+                  this.onIncludeUpdateChanged();
                 }
               }
             });
@@ -1413,7 +1412,6 @@
       <method name="_fetchReleaseNotes">
         <parameter name="aURI"/>
         <body><![CDATA[
-          var self = this;
           if (!aURI || this._relNotesLoaded) {
             sendToggleEvent();
             return;
@@ -1425,17 +1423,17 @@
           this._relNotesLoading.hidden = false;
           this._relNotesError.hidden = true;
 
-          function sendToggleEvent() {
+          let sendToggleEvent = () => {
             var event = document.createEvent("Events");
             event.initEvent("RelNotesToggle", true, true);
-            self.dispatchEvent(event);
+            this.dispatchEvent(event);
           }
 
-          function showRelNotes() {
+          let showRelNotes = () => {
             if (!relNotesData || !transformData)
               return;
 
-            self._relNotesLoading.hidden = true;
+            this._relNotesLoading.hidden = true;
 
             var processor = Components.classes["@mozilla.org/document-transformer;1?type=xslt"]
                                       .createInstance(Components.interfaces.nsIXSLTProcessor);
@@ -1443,20 +1441,20 @@
 
             processor.importStylesheet(transformData);
             var fragment = processor.transformToFragment(relNotesData, document);
-            self._relNotes.appendChild(fragment);
-            if (self.hasAttribute("show-relnotes")) {
-              var container = self._relNotesContainer;
+            this._relNotes.appendChild(fragment);
+            if (this.hasAttribute("show-relnotes")) {
+              var container = this._relNotesContainer;
               container.style.height = container.scrollHeight + "px";
             }
             sendToggleEvent();
           }
 
-          function handleError() {
+          let handleError = () => {
             dataReq.abort();
             styleReq.abort();
-            self._relNotesLoading.hidden = true;
-            self._relNotesError.hidden = false;
-            self._relNotesLoaded = false; // allow loading to be re-tried
+            this._relNotesLoading.hidden = true;
+            this._relNotesError.hidden = false;
+            this._relNotesLoaded = false; // allow loading to be re-tried
             sendToggleEvent();
           }
 

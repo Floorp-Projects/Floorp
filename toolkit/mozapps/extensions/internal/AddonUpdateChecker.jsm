@@ -582,10 +582,9 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
     this.request.overrideMimeType("text/plain");
     this.request.setRequestHeader("Moz-XPI-Update", "1", true);
     this.request.timeout = TIMEOUT;
-    var self = this;
-    this.request.addEventListener("load", function(event) { self.onLoad() }, false);
-    this.request.addEventListener("error", function(event) { self.onError() }, false);
-    this.request.addEventListener("timeout", function(event) { self.onTimeout() }, false);
+    this.request.addEventListener("load", () => this.onLoad(), false);
+    this.request.addEventListener("error", () => this.onError(), false);
+    this.request.addEventListener("timeout", () => this.onTimeout(), false);
     this.request.send(null);
   }
   catch (e) {

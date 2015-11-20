@@ -152,8 +152,6 @@ this.ChromeManifestParser = {
   * @return True if any matching instructions were found in the manifest.
   */
   hasType: function(aManifest, aType) {
-    return aManifest.some(function(aEntry) {
-      return aEntry.type == aType;
-    });
+    return aManifest.some(entry => entry.type == aType);
   }
 };
