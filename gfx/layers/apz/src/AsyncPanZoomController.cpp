@@ -2603,15 +2603,20 @@ static CSSSize
 CalculateDisplayPortSize(const CSSSize& aCompositionSize,
                          const CSSPoint& aVelocity)
 {
-  float xMultiplier = fabsf(aVelocity.x) < gfxPrefs::APZMinSkateSpeed()
+  bool xIsStationarySpeed = fabsf(aVelocity.x) < gfxPrefs::APZMinSkateSpeed();
+  bool yIsStationarySpeed = fabsf(aVelocity.y) < gfxPrefs::APZMinSkateSpeed();
+  float xMultiplier = xIsStationarySpeed
                         ? gfxPrefs::APZXStationarySizeMultiplier()
                         : gfxPrefs::APZXSkateSizeMultiplier();
-  float yMultiplier = fabsf(aVelocity.y) < gfxPrefs::APZMinSkateSpeed()
+  float yMultiplier = yIsStationarySpeed
                         ? gfxPrefs::APZYStationarySizeMultiplier()
                         : gfxPrefs::APZYSkateSizeMultiplier();
 
-  if (IsHighMemSystem()) {
+  if (IsHighMemSystem() && !xIsStationarySpeed) {
     xMultiplier += gfxPrefs::APZXSkateHighMemAdjust();
+  }
+
+  if (IsHighMemSystem() && !yIsStationarySpeed) {
     yMultiplier += gfxPrefs::APZYSkateHighMemAdjust();
   }
 
