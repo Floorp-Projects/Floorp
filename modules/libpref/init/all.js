@@ -1993,6 +1993,9 @@ pref("security.mixed_content.block_display_content", false);
 // Sub-resource integrity
 pref("security.sri.enable", true);
 
+// OCSP must-staple
+pref("security.ssl.enable_ocsp_must_staple", true);
+
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
 // Do not process hpkp headers rooted by not built in roots by default.
