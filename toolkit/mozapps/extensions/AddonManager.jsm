@@ -1061,26 +1061,26 @@ var AddonManagerInternal = {
     this.pendingProviders.add(aProvider);
 
     if (aTypes) {
-      aTypes.forEach(function(aType) {
-        if (!(aType.id in this.types)) {
-          if (!VALID_TYPES_REGEXP.test(aType.id)) {
-            logger.warn("Ignoring invalid type " + aType.id);
+      for (let type of aTypes) {
+        if (!(type.id in this.types)) {
+          if (!VALID_TYPES_REGEXP.test(type.id)) {
+            logger.warn("Ignoring invalid type " + type.id);
             return;
           }
 
-          this.types[aType.id] = {
-            type: aType,
+          this.types[type.id] = {
+            type: type,
             providers: [aProvider]
           };
 
           let typeListeners = this.typeListeners.slice(0);
           for (let listener of typeListeners)
-            safeCall(() => listener.onTypeAdded(aType));
+            safeCall(() => listener.onTypeAdded(type));
         }
         else {
-          this.types[aType.id].providers.push(aProvider);
+          this.types[type.id].providers.push(aProvider);
         }
-      }, this);
+      }
     }
 
     // If we're registering after startup call this provider's startup.

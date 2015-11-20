@@ -1499,10 +1499,10 @@ this.AddonRepository = {
 
     AddonManager.getAllInstalls(function(aInstalls) {
       localAddonIds.sourceURIs = [];
-      aInstalls.forEach(function(aInstall) {
-        if (aInstall.state != AddonManager.STATE_AVAILABLE)
-          localAddonIds.sourceURIs.push(aInstall.sourceURI.spec);
-      });
+      for (let install of aInstalls) {
+        if (install.state != AddonManager.STATE_AVAILABLE)
+          localAddonIds.sourceURIs.push(install.sourceURI.spec);
+      }
 
       if (localAddonIds.ids)
         aCallback(localAddonIds);
