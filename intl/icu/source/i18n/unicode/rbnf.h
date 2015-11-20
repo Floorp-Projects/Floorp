@@ -38,6 +38,7 @@
 
 U_NAMESPACE_BEGIN
 
+class NFRule;
 class NFRuleSet;
 class LocalizationInfo;
 class PluralFormat;
@@ -264,16 +265,46 @@ enum URBNFRuleSetTag {
  *   </tr>
  *   <tr>
  *     <td>x.x:</td>
- *     <td>The rule is an <em>improper fraction rule.</em></td>
+ *     <td>The rule is an <em>improper fraction rule</em>. If the full stop in
+ *     the middle of the rule name is replaced with the decimal point
+ *     that is used in the language or DecimalFormatSymbols, then that rule will
+ *     have precedence when formatting and parsing this rule. For example, some
+ *     languages use the comma, and can thus be written as x,x instead. For example,
+ *     you can use "x.x: &lt;&lt; point &gt;&gt;;x,x: &lt;&lt; comma &gt;&gt;;" to
+ *     handle the decimal point that matches the language's natural spelling of
+ *     the punctuation of either the full stop or comma.</td>
  *   </tr>
  *   <tr>
  *     <td>0.x:</td>
- *     <td>The rule is a <em>proper fraction rule.</em></td>
+ *     <td>The rule is a <em>proper fraction rule</em>. If the full stop in
+ *     the middle of the rule name is replaced with the decimal point
+ *     that is used in the language or DecimalFormatSymbols, then that rule will
+ *     have precedence when formatting and parsing this rule. For example, some
+ *     languages use the comma, and can thus be written as 0,x instead. For example,
+ *     you can use "0.x: point &gt;&gt;;0,x: comma &gt;&gt;;" to
+ *     handle the decimal point that matches the language's natural spelling of
+ *     the punctuation of either the full stop or comma.</td>
  *   </tr>
  *   <tr>
  *     <td>x.0:</td>
- *     <td>The rule is a <em>master rule.</em></td>
+ *     <td>The rule is a <em>master rule</em>. If the full stop in
+ *     the middle of the rule name is replaced with the decimal point
+ *     that is used in the language or DecimalFormatSymbols, then that rule will
+ *     have precedence when formatting and parsing this rule. For example, some
+ *     languages use the comma, and can thus be written as x,0 instead. For example,
+ *     you can use "x.0: &lt;&lt; point;x,0: &lt;&lt; comma;" to
+ *     handle the decimal point that matches the language's natural spelling of
+ *     the punctuation of either the full stop or comma.</td>
  *   </tr>
+ *   <tr>
+ *     <td>Inf:</td>
+ *     <td>The rule for infinity.</td>
+ *   </tr>
+ *   <tr>
+ *     <td>NaN:</td>
+ *     <td>The rule for an IEEE 754 NaN (not a number).</td>
+ *   </tr>
+ *   <tr>
  *   <tr>
  *     <td><em>nothing</em></td>
  *     <td>If the rule's rule descriptor is left out, the base value is one plus the
@@ -980,11 +1011,17 @@ private:
     /* friend access */
     friend class NFSubstitution;
     friend class NFRule;
+    friend class NFRuleSet;
     friend class FractionalPartSubstitution;
 
     inline NFRuleSet * getDefaultRuleSet() const;
     const RuleBasedCollator * getCollator() const;
-    DecimalFormatSymbols * getDecimalFormatSymbols() const;
+    DecimalFormatSymbols * initializeDecimalFormatSymbols(UErrorCode &status);
+    const DecimalFormatSymbols * getDecimalFormatSymbols() const;
+    NFRule * initializeDefaultInfinityRule(UErrorCode &status);
+    const NFRule * getDefaultInfinityRule() const;
+    NFRule * initializeDefaultNaNRule(UErrorCode &status);
+    const NFRule * getDefaultNaNRule() const;
     PluralFormat *createPluralFormat(UPluralType pluralType, const UnicodeString &pattern, UErrorCode& status) const;
     UnicodeString& adjustForCapitalizationContext(int32_t startPos, UnicodeString& currentResult) const;
 
@@ -996,6 +1033,8 @@ private:
     Locale locale;
     RuleBasedCollator* collator;
     DecimalFormatSymbols* decimalFormatSymbols;
+    NFRule *defaultInfinityRule;
+    NFRule *defaultNaNRule;
     UBool lenient;
     UnicodeString* lenientParseRules;
     LocalizationInfo* localizations;

@@ -1,6 +1,6 @@
 /*
  *****************************************************************************
- * Copyright (C) 1996-2014, International Business Machines Corporation and
+ * Copyright (C) 1996-2015, International Business Machines Corporation and
  * others. All Rights Reserved.
  *****************************************************************************
  */
@@ -508,6 +508,13 @@ Hashtable *CanonicalIterator::extract(Hashtable *fillinResult, UChar32 comp, con
     int32_t inputLen=temp.length();
     UnicodeString decompString;
     nfd.normalize(temp, decompString, status);
+    if (U_FAILURE(status)) {
+        return NULL;
+    }
+    if (decompString.isBogus()) {
+        status = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
+    }
     const UChar *decomp=decompString.getBuffer();
     int32_t decompLen=decompString.length();
 

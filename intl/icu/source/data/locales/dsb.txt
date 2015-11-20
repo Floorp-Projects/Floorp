@@ -201,7 +201,7 @@ dsb{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -331,8 +331,6 @@ dsb{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"połdnjo"}
-            NoonMarkerNarrow{"połd."}
             appendItems{
                 Timezone{"{0} {1}"}
             }

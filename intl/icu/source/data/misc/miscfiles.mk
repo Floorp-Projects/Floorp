@@ -1,4 +1,4 @@
-# *   Copyright (C) 2003-2012, International Business Machines
+# *   Copyright (C) 2003-2015, International Business Machines
 # *   Corporation and others.  All Rights Reserved.
 # A list of txt's to build
 # Note: 
@@ -26,4 +26,4 @@ MISC_SOURCE = \
 zoneinfo64.txt supplementalData.txt likelySubtags.txt plurals.txt \
 numberingSystems.txt icuver.txt icustd.txt metadata.txt metaZones.txt \
 windowsZones.txt keyTypeData.txt timezoneTypes.txt currencyNumericCodes.txt \
-genderList.txt postalCodeData.txt dayPeriods.txt
+genderList.txt dayPeriods.txt

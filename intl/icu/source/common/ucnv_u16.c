@@ -1,6 +1,6 @@
 /*  
 **********************************************************************
-*   Copyright (C) 2002-2010, International Business Machines
+*   Copyright (C) 2002-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  ucnv_u16.c
@@ -635,11 +635,8 @@ static const UConverterStaticData _UTF16BEStaticData={
 };
 
 
-const UConverterSharedData _UTF16BEData={
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF16BEStaticData, FALSE, &_UTF16BEImpl, 
-    0
-};
+const UConverterSharedData _UTF16BEData=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF16BEStaticData, &_UTF16BEImpl);
 
 /* UTF-16LE ----------------------------------------------------------------- */
 
@@ -1235,11 +1232,8 @@ static const UConverterStaticData _UTF16LEStaticData={
 };
 
 
-const UConverterSharedData _UTF16LEData={
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF16LEStaticData, FALSE, &_UTF16LEImpl, 
-    0
-};
+const UConverterSharedData _UTF16LEData=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF16LEStaticData, &_UTF16LEImpl);
 
 /* UTF-16 (Detect BOM) ------------------------------------------------------ */
 
@@ -1511,11 +1505,8 @@ static const UConverterStaticData _UTF16StaticData = {
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
 
-const UConverterSharedData _UTF16Data = {
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF16StaticData, FALSE, &_UTF16Impl, 
-    0
-};
+const UConverterSharedData _UTF16Data =
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF16StaticData, &_UTF16Impl);
 
 static const UConverterImpl _UTF16v2Impl = {
     UCNV_UTF16,
@@ -1552,10 +1543,7 @@ static const UConverterStaticData _UTF16v2StaticData = {
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
 
-static const UConverterSharedData _UTF16v2Data = {
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF16v2StaticData, FALSE, &_UTF16v2Impl, 
-    0
-};
+static const UConverterSharedData _UTF16v2Data =
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF16v2StaticData, &_UTF16v2Impl);
 
 #endif

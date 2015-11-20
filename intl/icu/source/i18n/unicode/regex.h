@@ -881,6 +881,11 @@ public:
     *    Returns a string containing the text captured by the given group
     *    during the previous match operation.  Group(0) is the entire match.
     *
+    *    A zero length string is returned both for capture groups that did not
+    *    participate in the match and for actual zero length matches.
+    *    To distinguish between these two cases use the function start(),
+    *    which returns -1 for non-participating groups.
+    *
     *    @param groupNum the capture group number
     *    @param   status     A reference to a UErrorCode to receive any errors.
     *                        Possible errors are  U_REGEX_INVALID_STATE if no match
@@ -918,6 +923,11 @@ public:
    /**
     *   Returns a shallow clone of the entire live input string with the UText current native index
     *   set to the beginning of the requested group.
+    *
+    *   A group length of zero is returned both for capture groups that did not
+    *   participate in the match and for actual zero length matches.
+    *   To distinguish between these two cases use the function start(),
+    *   which returns -1 for non-participating groups.
     *
     *   @param   groupNum   The capture group number.
     *   @param   dest        The UText into which the input should be cloned, or NULL to create a new UText.

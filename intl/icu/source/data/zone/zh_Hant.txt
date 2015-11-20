@@ -8,7 +8,7 @@
 // ***************************************************************************
 zh_Hant{
     %%Parent{"root"}
-    Version{"2.1.12.94"}
+    Version{"2.1.19.89"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比讓"}
@@ -685,6 +685,9 @@ zh_Hant{
         "Asia:Calcutta"{
             ec{"加爾各答"}
         }
+        "Asia:Chita"{
+            ec{"赤塔"}
+        }
         "Asia:Choibalsan"{
             ec{"喬巴山"}
         }
@@ -770,7 +773,7 @@ zh_Hant{
             ec{"馬尼拉"}
         }
         "Asia:Muscat"{
-            ec{"馬斯喀特"}
+            ec{"馬斯開特"}
         }
         "Asia:Nicosia"{
             ec{"尼古西亞"}
@@ -825,6 +828,9 @@ zh_Hant{
         }
         "Asia:Singapore"{
             ec{"新加坡"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"中科雷姆斯克"}
         }
         "Asia:Taipei"{
             ec{"台北"}
@@ -1099,7 +1105,7 @@ zh_Hant{
             ec{"華沙"}
         }
         "Europe:Zagreb"{
-            ec{"札格雷布"}
+            ec{"札格瑞布"}
         }
         "Europe:Zaporozhye"{
             ec{"札波羅結"}
@@ -1120,7 +1126,7 @@ zh_Hant{
             ec{"科科斯群島"}
         }
         "Indian:Comoro"{
-            ec{"葛摩"}
+            ec{"科摩羅群島"}
         }
         "Indian:Kerguelen"{
             ec{"凱爾蓋朗島"}
@@ -1145,6 +1151,9 @@ zh_Hant{
         }
         "Pacific:Auckland"{
             ec{"奧克蘭"}
+        }
+        "Pacific:Bougainville"{
+            ec{"布干維爾"}
         }
         "Pacific:Chatham"{
             ec{"查坦"}

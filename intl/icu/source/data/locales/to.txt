@@ -137,7 +137,7 @@ to{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -156,6 +156,7 @@ to{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -191,6 +192,7 @@ to{
                 yyyyMEd{"E dd-MM-y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E d MMM y G"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"dd/MM/y GGGGG"}
                 yyyyQQQ{"y QQQ G"}
@@ -302,8 +304,6 @@ to{
                 "{1}, {0}",
                 "{1} {0}",
             }
-            NoonMarker{"hoʻatā"}
-            NoonMarkerNarrow{"h"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -321,6 +321,8 @@ to{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E d/M"}
                 MMM{"LLL"}
@@ -333,6 +335,8 @@ to{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -424,18 +428,26 @@ to{
                     }
                 }
             }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "KM",
                     "TS",
-                }
-                abbreviated%variant{
-                    "BCE",
-                    "CE",
-                }
-                narrow{
-                    "KāMā",
-                    "TāSā",
                 }
                 wide{
                     "ki muʻa",
@@ -702,6 +714,10 @@ to{
         }
         day-narrow{
             dn{"ʻaho"}
+            relative{
+                "-2"{"ʻaneheafi"}
+                "2"{"ʻahepongipongi"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he ʻaho ʻe {0}"}
@@ -713,6 +729,10 @@ to{
         }
         day-short{
             dn{"ʻaho"}
+            relative{
+                "-2"{"ʻaneheafi"}
+                "2"{"ʻahepongipongi"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he ʻaho ʻe {0}"}
@@ -854,6 +874,11 @@ to{
         }
         month-narrow{
             dn{"māhina"}
+            relative{
+                "-1"{"māhina kuoʻosi"}
+                "0"{"māhiná ni"}
+                "1"{"māhina kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he māhina ʻe {0}"}
@@ -865,6 +890,11 @@ to{
         }
         month-short{
             dn{"māhina"}
+            relative{
+                "-1"{"māhina kuoʻosi"}
+                "0"{"māhiná ni"}
+                "1"{"māhina kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he māhina ʻe {0}"}
@@ -876,6 +906,11 @@ to{
         }
         quarter{
             dn{"kuata"}
+            relative{
+                "-1"{"kuata kuoʻosi"}
+                "0"{"kuata koʻeni"}
+                "1"{"kuata hoko"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he kuata ʻe {0}"}
@@ -887,6 +922,11 @@ to{
         }
         quarter-narrow{
             dn{"kuata"}
+            relative{
+                "-1"{"kuata kuoʻosi"}
+                "0"{"kuata koʻeni"}
+                "1"{"kuata hoko"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he kuata ʻe {0}"}
@@ -898,6 +938,11 @@ to{
         }
         quarter-short{
             dn{"kuata"}
+            relative{
+                "-1"{"kuata kuoʻosi"}
+                "0"{"kuata koʻeni"}
+                "1"{"kuata hoko"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he kuata ʻe {0}"}
@@ -1066,6 +1111,11 @@ to{
         }
         week-narrow{
             dn{"uike"}
+            relative{
+                "-1"{"uike kuoʻosi"}
+                "0"{"uiké ni"}
+                "1"{"uike kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he uike ʻe {0}"}
@@ -1077,6 +1127,11 @@ to{
         }
         week-short{
             dn{"uike"}
+            relative{
+                "-1"{"uike kuoʻosi"}
+                "0"{"uiké ni"}
+                "1"{"uike kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he uike ʻe {0}"}
@@ -1107,6 +1162,11 @@ to{
         }
         year-narrow{
             dn{"taʻu"}
+            relative{
+                "-1"{"taʻu kuoʻosi"}
+                "0"{"taʻú ni"}
+                "1"{"taʻu kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he taʻu ʻe {0}"}
@@ -1118,6 +1178,11 @@ to{
         }
         year-short{
             dn{"taʻu"}
+            relative{
+                "-1"{"taʻu kuoʻosi"}
+                "0"{"taʻú ni"}
+                "1"{"taʻu kahaʻu"}
+            }
             relativeTime{
                 future{
                     other{"ʻi he taʻu ʻe {0}"}

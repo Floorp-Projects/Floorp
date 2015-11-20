@@ -7,11 +7,14 @@
 // *
 // ***************************************************************************
 fi{
-    Version{"2.1.8.12"}
+    Version{"2.1.19.14"}
     collations{
         search{
-            Sequence{"[import und-u-co-search][import fi-u-co-trad]"}
-            Version{"27.0.1"}
+            Sequence{
+                "[import und-u-co-search]"
+                "[import fi-u-co-trad]"
+            }
+            Version{"28"}
         }
         standard{
             Sequence{
@@ -23,7 +26,7 @@ fi{
                 "&Z\u0335<<ʒ<<<Ʒ"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<ö<<<Ö<<ø<<<Ø"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         traditional{
             Sequence{
@@ -34,7 +37,7 @@ fi{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<õ<<<Õ<<œ<<<Œ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

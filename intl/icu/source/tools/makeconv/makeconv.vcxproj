@@ -240,7 +240,7 @@
   <ItemGroup>
     <ClCompile Include="gencnvex.c" />
     <ClCompile Include="genmbcs.cpp" />
-    <ClCompile Include="makeconv.c" />
+    <ClCompile Include="makeconv.cpp" />
     <ClCompile Include="ucnvstat.c" />
   </ItemGroup>
   <ItemGroup>

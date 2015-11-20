@@ -74,7 +74,7 @@ sq{
         }
         BMD{
             "BMD",
-            "Dollari e Bermudeve",
+            "Dollari i Bermudeve",
         }
         BND{
             "BND",
@@ -98,7 +98,7 @@ sq{
         }
         BWP{
             "BWP",
-            "Pula botsvane",
+            "Pula botsuane",
         }
         BYR{
             "BYR",
@@ -138,11 +138,11 @@ sq{
         }
         CUC{
             "CUC",
-            "Pezoja kubane e shkëmbyeshme",
+            "Pezoja kubaneze e shkëmbyeshme",
         }
         CUP{
             "CUP",
-            "Pezoja kubane",
+            "Pezoja kubaneze",
         }
         CVE{
             "CVE",
@@ -326,7 +326,7 @@ sq{
         }
         LKR{
             "LKR",
-            "Rupia e Sri Lankës",
+            "Rupia e Sri-Lankës",
         }
         LRD{
             "LRD",
@@ -482,11 +482,11 @@ sq{
         }
         SBD{
             "SBD",
-            "Dollari i Ishujve Solomon",
+            "Dollari i Ishujve Solomonë",
         }
         SCR{
             "SCR",
-            "Rupia e Ishujve Sejçelë",
+            "Rupia e Ishujve Sishelë",
         }
         SDG{
             "SDG",
@@ -502,11 +502,11 @@ sq{
         }
         SHP{
             "SHP",
-            "Stërlina e Ishullit të Shën Helenës",
+            "Stërlina e Ishullit të Shën-Helenës",
         }
         SLL{
             "SLL",
-            "Leoni i Sierra Leones",
+            "Leoni i Sierra-Leones",
         }
         SOS{
             "SOS",
@@ -522,7 +522,7 @@ sq{
         }
         STD{
             "STD",
-            "Dobra e Sao Tomes dhe Prinsipes",
+            "Dobra e Sao-Tomes dhe Prinsipes",
         }
         SYP{
             "SYP",
@@ -530,7 +530,7 @@ sq{
         }
         SZL{
             "SZL",
-            "Lilangeni i Svazilandit",
+            "Lilangeni i Suazilandës",
         }
         THB{
             "฿",
@@ -727,8 +727,8 @@ sq{
             other{"ngultrumë butanez"}
         }
         BWP{
-            one{"pulë botsvane"}
-            other{"pula botsvane"}
+            one{"pulë botsuane"}
+            other{"pula botsuane"}
         }
         BYR{
             one{"rubël bjelloruse"}
@@ -767,12 +767,12 @@ sq{
             other{"kolonë kostarikan"}
         }
         CUC{
-            one{"pezo kubane e shkëmbyeshme"}
-            other{"pezo kubane të shkëmbyeshme"}
+            one{"pezo kubaneze e shkëmbyeshme"}
+            other{"pezo kubaneze të shkëmbyeshme"}
         }
         CUP{
-            one{"pezo kubane"}
-            other{"pezo kubane"}
+            one{"pezo kubaneze"}
+            other{"pezo kubaneze"}
         }
         CVE{
             one{"eskudo e Kepit të Gjelbër"}
@@ -880,7 +880,7 @@ sq{
         }
         ILS{
             one{"shekel izrealit"}
-            other{"shekelë izrealite"}
+            other{"shekelë izrealit"}
         }
         INR{
             one{"rupi indiane"}
@@ -1111,12 +1111,12 @@ sq{
             other{"rialë saudit"}
         }
         SBD{
-            one{"dollar i Ishujve Solomon"}
-            other{"dollarë të Ishujve Solomon"}
+            one{"dollar i Ishujve Solomonë"}
+            other{"dollarë të Ishujve Solomonë"}
         }
         SCR{
-            one{"rupi e Ishujve Sejçelë"}
-            other{"rupi të Ishujve Sejçelë"}
+            one{"rupi e Ishujve Sishelë"}
+            other{"rupi të Ishujve Sishelë"}
         }
         SDG{
             one{"stërlinë sudaneze"}
@@ -1131,12 +1131,12 @@ sq{
             other{"dollarë singapori"}
         }
         SHP{
-            one{"stërlinë e Ishullit të Shën Helenës"}
-            other{"stërlina të Ishullit të Shën Helenës"}
+            one{"stërlinë e Ishullit të Shën-Helenës"}
+            other{"stërlina të Ishullit të Shën-Helenës"}
         }
         SLL{
-            one{"leon i Sierra Leones"}
-            other{"leonë të Sierra Leones"}
+            one{"leon i Sierra-Leones"}
+            other{"leonë të Sierra-Leones"}
         }
         SOS{
             one{"shilingë somaleze"}
@@ -1151,16 +1151,16 @@ sq{
             other{"stërlina të Sudanit të Jugut"}
         }
         STD{
-            one{"dobër e Sao Tomes dhe Prinsipes"}
-            other{"dobra të Sao Tomes dhe Prinsipes"}
+            one{"dobër e Sao-Tomes dhe Prinsipes"}
+            other{"dobra të Sao-Tomes dhe Prinsipes"}
         }
         SYP{
             one{"sterlinë siriane"}
             other{"sterlina siriane"}
         }
         SZL{
-            one{"lilangen svazilandi"}
-            other{"lilangenë svazilandi"}
+            one{"lilangen suazilande"}
+            other{"lilangenë suazilande"}
         }
         THB{
             one{"batë tajlandeze"}
@@ -1251,8 +1251,8 @@ sq{
             other{"franga franceze të Polinezisë"}
         }
         XXX{
-            one{"(njësi e panjohur valute)"}
-            other{"(njësi të panjohura valute)"}
+            one{"(njësi e panjohur valutore)"}
+            other{"(njësi të panjohura valutore)"}
         }
         YER{
             one{"rial jemeni"}
@@ -1271,5 +1271,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
 }

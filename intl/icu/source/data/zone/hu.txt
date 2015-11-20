@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 hu{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ hu{
         "Asia:Calcutta"{
             ec{"Kalkutta"}
         }
+        "Asia:Chita"{
+            ec{"Csita"}
+        }
         "Asia:Choibalsan"{
             ec{"Csojbalszan"}
         }
@@ -824,6 +827,9 @@ hu{
         }
         "Asia:Singapore"{
             ec{"Szingapúr"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Szrednekolimszk"}
         }
         "Asia:Taipei"{
             ec{"Tajpej"}
@@ -1144,6 +1150,9 @@ hu{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham-szigetek"}
@@ -1487,7 +1496,7 @@ hu{
             ss{"EET"}
         }
         "meta:Europe_Further_Eastern"{
-            ls{"kalinyingrádi idő"}
+            ls{"minszki idő"}
         }
         "meta:Europe_Western"{
             ld{"nyugat-európai nyári idő"}

@@ -495,11 +495,8 @@ static const UConverterStaticData _UTF32BEStaticData = {
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
 
-const UConverterSharedData _UTF32BEData = {
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF32BEStaticData, FALSE, &_UTF32BEImpl, 
-    0
-};
+const UConverterSharedData _UTF32BEData =
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF32BEStaticData, &_UTF32BEImpl);
 
 /* UTF-32LE ---------------------------------------------------------- */
 
@@ -991,11 +988,8 @@ static const UConverterStaticData _UTF32LEStaticData = {
 };
 
 
-const UConverterSharedData _UTF32LEData = {
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF32LEStaticData, FALSE, &_UTF32LEImpl, 
-    0
-};
+const UConverterSharedData _UTF32LEData =
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF32LEStaticData, &_UTF32LEImpl);
 
 /* UTF-32 (Detect BOM) ------------------------------------------------------ */
 
@@ -1240,10 +1234,7 @@ static const UConverterStaticData _UTF32StaticData = {
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
 
-const UConverterSharedData _UTF32Data = {
-    sizeof(UConverterSharedData), ~((uint32_t) 0),
-    NULL, NULL, &_UTF32StaticData, FALSE, &_UTF32Impl, 
-    0
-};
+const UConverterSharedData _UTF32Data = 
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_UTF32StaticData, &_UTF32Impl);
 
 #endif

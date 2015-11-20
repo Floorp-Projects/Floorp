@@ -233,5 +233,5 @@ bm{
             "zimbabuwe Dolar",
         }
     }
-    Version{"2.1.10.42"}
+    Version{"2.1.19.14"}
 }

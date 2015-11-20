@@ -487,7 +487,7 @@ uregex_matches64(URegularExpression *regexp,
   *
   *   <p>If the match succeeds then more information can be obtained via the
   *    <code>uregexp_start()</code>, <code>uregexp_end()</code>,
-  *    and <code>uregexp_group()</code> functions.</p>
+  *    and <code>uregex_group()</code> functions.</p>
   *
   *    @param   regexp      The compiled regular expression.
   *    @param   startIndex  The input string (native) index at which to begin matching, or
@@ -516,7 +516,7 @@ uregex_lookingAt(URegularExpression *regexp,
   *
   *   <p>If the match succeeds then more information can be obtained via the
   *    <code>uregexp_start()</code>, <code>uregexp_end()</code>,
-  *    and <code>uregexp_group()</code> functions.</p>
+  *    and <code>uregex_group()</code> functions.</p>
   *
   *    @param   regexp      The compiled regular expression.
   *    @param   startIndex  The input string (native) index at which to begin matching, or

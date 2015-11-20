@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 2008-2014, International Business Machines
+*   Copyright (C) 2008-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 */
@@ -28,12 +28,11 @@ U_NAMESPACE_BEGIN
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(SpoofImpl)
 
 SpoofImpl::SpoofImpl(SpoofData *data, UErrorCode &status) :
-        fMagic(0), fChecks(USPOOF_ALL_CHECKS), fSpoofData(NULL), fAllowedCharsSet(NULL) , 
+        fMagic(0), fChecks(USPOOF_ALL_CHECKS), fSpoofData(data), fAllowedCharsSet(NULL) , 
         fAllowedLocales(NULL), fCachedIdentifierInfo(NULL) {
     if (U_FAILURE(status)) {
         return;
     }
-    fSpoofData = data;
     fRestrictionLevel = USPOOF_HIGHLY_RESTRICTIVE;
 
     UnicodeSet *allowedCharsSet = new UnicodeSet(0, 0x10ffff);
@@ -500,11 +499,12 @@ spoofDataIsAcceptable(void *context,
 
 //
 //  SpoofData::getDefault() - return a wrapper around the spoof data that is
-//                           baked into the default ICU data.
+//                            baked into the default ICU data.
+//
+//               Called once, from the initOnce() function in uspoof_impl.cpp; the resulting
+//               SpoofData is shared by all spoof checkers using the default data.
 //
 SpoofData *SpoofData::getDefault(UErrorCode &status) {
-    // TODO:  Cache it.  Lazy create, keep until cleanup.
-
     UDataMemory *udm = udata_openChoice(NULL, "cfu", "confusables",
                                         spoofDataIsAcceptable, 
                                         NULL,       // context, would receive dataVersion if supplied.
@@ -567,7 +567,6 @@ SpoofData::SpoofData(UErrorCode &status) {
         return;
     }
     fDataOwned = true;
-    fRefCount = 1;
 
     // The spoof header should already be sized to be a multiple of 16 bytes.
     // Just in case it's not, round it up.

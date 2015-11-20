@@ -11,7 +11,7 @@
  */
 root{
     UCARules:process(uca_rules){"../unidata/UCARules.txt"}
-    Version{"2.1.14.33"}
+    Version{"2.1.19.14"}
     collations{
         default{"standard"}
         emoji{
@@ -103,7 +103,7 @@ root{
                 "<*🆎🅱🆑🆒🆓ℹ🆔Ⓜ🆕🆖🅾🆗🅿🆘™🆙🆚🈁🈂🈹🉑🈴🈺🉐"
                 "<*🈯🈷🈶🈵🈚🈸㊗🈲㊙🈳"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         eor{
             Sequence{
@@ -643,7 +643,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         private-unihan{
             Sequence{
@@ -737,6 +737,7 @@ root{
                 "&父=\uFDD0父"
                 "&爻=\uFDD0爻"
                 "&丬=\uFDD0爿"
+                "&𬌒=\uFDD0丬"
                 "&片=\uFDD0片"
                 "&牙=\uFDD0牙"
                 "&牛=\uFDD0牛"
@@ -860,7 +861,7 @@ root{
                 "&鳥=\uFDD0鳥"
                 "&鸟=\uFDD0鸟"
                 "&鹵=\uFDD0鹵"
-                "&𫠗=\uFDD0卤"
+                "&𬸵=\uFDD0卤"
                 "&鹿=\uFDD0鹿"
                 "&麥=\uFDD0麥"
                 "&麦=\uFDD0麦"
@@ -885,11 +886,12 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         search{
             Sequence{
-                "[normalization on][suppressContractions [เ-ไ ເ-ໄ ꪵ ꪶ ꪹ ꪻ ꪼ]]"
+                "[normalization on]"
+                "[suppressContractions [เ-ไ ເ-ໄ ꪵ ꪶ ꪹ ꪻ ꪼ\u19B5-\u19B7\u19BA]]"
                 "&'='<'≠'"
                 "&ا"
                 "<<<ﺎ<<<ﺍ"
@@ -1001,11 +1003,11 @@ root{
                 "&ᅮᅵ"
                 "=ᅱ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
         standard{
             Sequence{""}
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

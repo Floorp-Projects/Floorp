@@ -98,6 +98,56 @@ bn{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 হাজার¤"}
+                        other{"0 হাজার¤"}
+                    }
+                    10000{
+                        one{"00 হাজার¤"}
+                        other{"00 হাজার¤"}
+                    }
+                    100000{
+                        one{"0 লাখ¤"}
+                        other{"0 লাখ¤"}
+                    }
+                    1000000{
+                        one{"0 লাখ¤"}
+                        other{"0 লাখ¤"}
+                    }
+                    10000000{
+                        one{"00 কোটি¤"}
+                        other{"00 কোটি¤"}
+                    }
+                    100000000{
+                        one{"000 কোটি¤"}
+                        other{"000 কোটি¤"}
+                    }
+                    1000000000{
+                        one{"0 একশো কোটি¤"}
+                        other{"0 একশো কোটি¤"}
+                    }
+                    10000000000{
+                        one{"00 হাজার কোটি¤"}
+                        other{"00 হাজার কোটি¤"}
+                    }
+                    100000000000{
+                        one{"000 সহস্র কোটি¤"}
+                        other{"000 সহস্র কোটি¤"}
+                    }
+                    1000000000000{
+                        one{"0 দশ সহস্রের ত্রিঘাত¤"}
+                        other{"0 দশ সহস্রের ত্রিঘাত¤"}
+                    }
+                    10000000000000{
+                        one{"00 একশো সহস্রের ত্রিঘাত¤"}
+                        other{"00 একশো সহস্রের ত্রিঘাত¤"}
+                    }
+                    100000000000000{
+                        one{"000 সহস্র সহস্রের ত্রিঘাত¤"}
+                        other{"000 সহস্র সহস্রের ত্রিঘাত¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 হাজার"}
@@ -167,7 +217,7 @@ bn{
         minimumGroupingDigits{"1"}
         native{"beng"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -186,6 +236,7 @@ bn{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d E"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -319,8 +370,12 @@ bn{
         }
         gregorian{
             AmPmMarkers{
-                "পূর্বাহ্ণ",
+                "AM",
                 "অপরাহ্ণ",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "পূর্বাহ্ণ",
@@ -341,8 +396,6 @@ bn{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"দুপুর"}
-            NoonMarkerNarrow{"দুপুর"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -360,6 +413,8 @@ bn{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d-M"}
                 MMM{"LLL"}
@@ -373,6 +428,8 @@ bn{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
@@ -464,6 +521,66 @@ bn{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                    }
+                    narrow{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                    }
+                    wide{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        am{"AM"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        am{"AM"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"দুপুর"}
+                        afternoon2{"বিকাল"}
+                        am{"AM"}
+                        evening1{"সন্ধ্যা"}
+                        morning1{"ভোর"}
+                        morning2{"সকাল"}
+                        night1{"রাত্রি"}
+                        pm{"PM"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "খ্রিস্টপূর্ব",
@@ -505,7 +622,7 @@ bn{
                     d{"E, d/M – E, d/M"}
                 }
                 MMM{
-                    M{"LLL–LLL"}
+                    M{"MMM – MMM"}
                 }
                 MMMEd{
                     M{"E, d MMM – E, d MMM"}
@@ -683,8 +800,8 @@ bn{
                     }
                     wide{
                         "ত্রৈমাসিক",
-                        "ষাণ্মাসিক",
-                        "তৃতীয় চতুর্থাংশ",
+                        "দ্বিতীয় ত্রৈমাসিক",
+                        "তৃতীয় ত্রৈমাসিক",
                         "চতুর্থ ত্রৈমাসিক",
                     }
                 }
@@ -703,8 +820,8 @@ bn{
                     }
                     wide{
                         "ত্রৈমাসিক",
-                        "ষাণ্মাসিক",
-                        "তৃতীয় চতুর্থাংশ",
+                        "দ্বিতীয় ত্রৈমাসিক",
+                        "তৃতীয় ত্রৈমাসিক",
                         "চতুর্থ ত্রৈমাসিক",
                     }
                 }
@@ -822,6 +939,10 @@ bn{
         }
         day-narrow{
             dn{"দিন"}
+            relative{
+                "-2"{"গত পরশু"}
+                "2"{"আগামী পরশু"}
+            }
             relativeTime{
                 future{
                     one{"{0} দিনের মধ্যে"}
@@ -835,6 +956,10 @@ bn{
         }
         day-short{
             dn{"দিন"}
+            relative{
+                "-2"{"গত পরশু"}
+                "2"{"আগামী পরশু"}
+            }
             relativeTime{
                 future{
                     one{"{0} দিনের মধ্যে"}
@@ -992,6 +1117,11 @@ bn{
         }
         month-narrow{
             dn{"মাস"}
+            relative{
+                "-1"{"গত মাস"}
+                "0"{"এই মাস"}
+                "1"{"পরের মাস"}
+            }
             relativeTime{
                 future{
                     one{"{0} মাসে"}
@@ -1005,6 +1135,11 @@ bn{
         }
         month-short{
             dn{"মাস"}
+            relative{
+                "-1"{"গত মাস"}
+                "0"{"এই মাস"}
+                "1"{"পরের মাস"}
+            }
             relativeTime{
                 future{
                     one{"{0} মাসে"}
@@ -1222,6 +1357,11 @@ bn{
         }
         week-narrow{
             dn{"সপ্তাহ"}
+            relative{
+                "-1"{"গত সপ্তাহ"}
+                "0"{"এই সপ্তাহ"}
+                "1"{"পরের সপ্তাহ"}
+            }
             relativeTime{
                 future{
                     one{"{0} সপ্তাহে"}
@@ -1235,6 +1375,11 @@ bn{
         }
         week-short{
             dn{"সপ্তাহ"}
+            relative{
+                "-1"{"গত সপ্তাহ"}
+                "0"{"এই সপ্তাহ"}
+                "1"{"পরের সপ্তাহ"}
+            }
             relativeTime{
                 future{
                     one{"{0} সপ্তাহে"}
@@ -1269,6 +1414,11 @@ bn{
         }
         year-narrow{
             dn{"বছর"}
+            relative{
+                "-1"{"গত বছর"}
+                "0"{"এই বছর"}
+                "1"{"পরের বছর"}
+            }
             relativeTime{
                 future{
                     one{"{0} বছরে"}
@@ -1282,6 +1432,11 @@ bn{
         }
         year-short{
             dn{"বছর"}
+            relative{
+                "-1"{"গত বছর"}
+                "0"{"এই বছর"}
+                "1"{"পরের বছর"}
+            }
             relativeTime{
                 future{
                     one{"{0} বছরে"}

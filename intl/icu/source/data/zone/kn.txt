@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 kn{
-    Version{"2.1.13.51"}
+    Version{"2.1.19.77"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ಅಬಿದ್‌ಜನ್"}
@@ -184,7 +184,7 @@ kn{
             ec{"ಲಾ ರಿಯೋಜಾ"}
         }
         "America:Argentina:Rio_Gallegos"{
-            ec{"ರಿಯೋ ಗಯೇಗೋ"}
+            ec{"ರಿಯೋ ಗಲ್ಲೆಗೊಸ್"}
         }
         "America:Argentina:Salta"{
             ec{"ಸಾಲ್ಟಾ"}
@@ -684,6 +684,9 @@ kn{
         "Asia:Calcutta"{
             ec{"ಕೊಲ್ಕತ್ತಾ"}
         }
+        "Asia:Chita"{
+            ec{"ಚಿಟ"}
+        }
         "Asia:Choibalsan"{
             ec{"ಚೊಯ್‍ಬಾಲ್ಸನ್"}
         }
@@ -824,6 +827,9 @@ kn{
         }
         "Asia:Singapore"{
             ec{"ಸಿಂಗಾಪೂರ್"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"ಸ್ರೇದ್ನೇಕೋಲೀಮಸ್ಕ"}
         }
         "Asia:Taipei"{
             ec{"ತೈಪೆ"}
@@ -1144,6 +1150,9 @@ kn{
         }
         "Pacific:Auckland"{
             ec{"ಆಕ್ ಲ್ಯಾಂಡ್"}
+        }
+        "Pacific:Bougainville"{
+            ec{"ಬೌಗೆನ್‍ವಿಲ್ಲೆ"}
         }
         "Pacific:Chatham"{
             ec{"ಚತಮ್"}
@@ -1543,10 +1552,10 @@ kn{
             ls{"ಇಂಡೊಚೈನಾ ಸಮಯ"}
         }
         "meta:Indonesia_Central"{
-            ls{"ಮಧ್ಯ ಇಂಡೋನೇಷಿಯ ಸಮಯ"}
+            ls{"ಮಧ್ಯ ಇಂಡೋನೇಷಿಯಾ ಸಮಯ"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"ಪೂರ್ವ ಇಂಡೋನೇಷಿಯ ಸಮಯ"}
+            ls{"ಪೂರ್ವ ಇಂಡೋನೇಷಿಯಾ ಸಮಯ"}
         }
         "meta:Indonesia_Western"{
             ls{"ಪಶ್ಚಿಮ ಇಂಡೋನೇಷಿಯ ಸಮಯ"}
@@ -1592,7 +1601,7 @@ kn{
         }
         "meta:Krasnoyarsk"{
             ld{"ಕ್ರಾಸ್‌ನೊಯಾರ್ಸ್ಕ್ ಬೇಸಿಗೆ ಸಮಯ"}
-            lg{"ಕ್ರಸ್ನಿಯಾರ್ಕ್ಸ್ ಸಮಯ"}
+            lg{"ಕ್ರಾಸ್‌ನೊಯಾರ್ಸ್ಕ್ ಸಮಯ"}
             ls{"ಕ್ರಾಸ್‌ನೊಯಾರ್ಸ್ಕ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:Kyrgystan"{
@@ -1764,7 +1773,7 @@ kn{
             ls{"ಸೀಷೆಲ್ಸ್ ಸಮಯ"}
         }
         "meta:Singapore"{
-            ls{"ಸಿಂಗಪುರ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
+            ls{"ಸಿಂಗಾಪುರ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:Solomon"{
             ls{"ಸಾಲಮನ್ ದ್ವೀಪಗಳ ಸಮಯ"}

@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1998-2013, International Business Machines
+*   Copyright (C) 1998-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -295,12 +295,7 @@ ucnv_safeClone(const UConverter* cnv, void *stackBuffer, int32_t *pBufferSize, U
     }
 
     /* increment refcount of shared data if needed */
-    /*
-    Checking whether it's an algorithic converter is okay
-    in multithreaded applications because the value never changes.
-    Don't check referenceCounter for any other value.
-    */
-    if (cnv->sharedData->referenceCounter != ~0) {
+    if (cnv->sharedData->isReferenceCounted) {
         ucnv_incrementRefCount(cnv->sharedData);
     }
 
@@ -385,12 +380,7 @@ ucnv_close (UConverter * converter)
         uprv_free(converter->subChars);
     }
 
-    /*
-    Checking whether it's an algorithic converter is okay
-    in multithreaded applications because the value never changes.
-    Don't check referenceCounter for any other value.
-    */
-    if (converter->sharedData->referenceCounter != ~0) {
+    if (converter->sharedData->isReferenceCounted) {
         ucnv_unloadSharedDataIfReady(converter->sharedData);
     }
 

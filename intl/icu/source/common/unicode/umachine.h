@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2014, International Business Machines
+*   Copyright (C) 1999-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -132,7 +132,7 @@
  * @internal
  */
 
-#if defined(__cplusplus) && __cplusplus>=201103L
+#if U_CPLUSPLUS_VERSION >= 11
 /* C++11 */
 #ifndef U_OVERRIDE
 #define U_OVERRIDE override

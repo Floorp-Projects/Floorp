@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -114,6 +114,33 @@ inline int32_t umtx_atomic_inc(u_atomic_int32_t *var) {
 
 inline int32_t umtx_atomic_dec(u_atomic_int32_t *var) {
     return InterlockedDecrement(var);
+}
+U_NAMESPACE_END
+
+
+#elif U_HAVE_CLANG_ATOMICS
+/*
+ *  Clang __c11 atomic built-ins
+ */
+
+U_NAMESPACE_BEGIN
+typedef _Atomic(int32_t) u_atomic_int32_t;
+#define ATOMIC_INT32_T_INITIALIZER(val) val
+
+inline int32_t umtx_loadAcquire(u_atomic_int32_t &var) {
+     return __c11_atomic_load(&var, __ATOMIC_ACQUIRE);
+}
+
+inline void umtx_storeRelease(u_atomic_int32_t &var, int32_t val) {
+   return __c11_atomic_store(&var, val, __ATOMIC_RELEASE);
+}
+
+inline int32_t umtx_atomic_inc(u_atomic_int32_t *var) {
+    return __c11_atomic_fetch_add(var, 1, __ATOMIC_SEQ_CST) + 1;
+}
+
+inline int32_t umtx_atomic_dec(u_atomic_int32_t *var) {
+    return __c11_atomic_fetch_sub(var, 1, __ATOMIC_SEQ_CST) - 1;
 }
 U_NAMESPACE_END
 

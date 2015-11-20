@@ -393,17 +393,17 @@ metadata:table(nofallback){
                 reason{"macrolanguage"}
                 replacement{"gba"}
             }
-            ha_GH{
+            ha_Latn_GH{
                 reason{"legacy"}
-                replacement{"ha_Latn_GH"}
+                replacement{"ha_GH"}
             }
-            ha_NE{
+            ha_Latn_NE{
                 reason{"legacy"}
-                replacement{"ha_Latn_NE"}
+                replacement{"ha_NE"}
             }
-            ha_NG{
+            ha_Latn_NG{
                 reason{"legacy"}
-                replacement{"ha_Latn_NG"}
+                replacement{"ha_NG"}
             }
             hat{
                 reason{"overlong"}
@@ -613,9 +613,9 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"ky"}
             }
-            kk_KZ{
+            kk_Cyrl_KZ{
                 reason{"legacy"}
-                replacement{"kk_Cyrl_KZ"}
+                replacement{"kk_KZ"}
             }
             kmr{
                 reason{"macrolanguage"}
@@ -649,9 +649,9 @@ metadata:table(nofallback){
                 reason{"macrolanguage"}
                 replacement{"kv"}
             }
-            ks_IN{
+            ks_Arab_IN{
                 reason{"legacy"}
-                replacement{"ks_Arab_IN"}
+                replacement{"ks_IN"}
             }
             kua{
                 reason{"overlong"}
@@ -661,9 +661,9 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"ku"}
             }
-            ky_KG{
+            ky_Cyrl_KG{
                 reason{"legacy"}
-                replacement{"ky_Cyrl_KG"}
+                replacement{"ky_KG"}
             }
             lao{
                 reason{"overlong"}
@@ -749,9 +749,9 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"mt"}
             }
-            mn_MN{
+            mn_Cyrl_MN{
                 reason{"legacy"}
-                replacement{"mn_Cyrl_MN"}
+                replacement{"mn_MN"}
             }
             mnk{
                 reason{"macrolanguage"}
@@ -773,17 +773,17 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"mi"}
             }
-            ms_BN{
+            ms_Latn_BN{
                 reason{"legacy"}
-                replacement{"ms_Latn_BN"}
+                replacement{"ms_BN"}
             }
-            ms_MY{
+            ms_Latn_MY{
                 reason{"legacy"}
-                replacement{"ms_Latn_MY"}
+                replacement{"ms_MY"}
             }
-            ms_SG{
+            ms_Latn_SG{
                 reason{"legacy"}
-                replacement{"ms_Latn_SG"}
+                replacement{"ms_SG"}
             }
             msa{
                 reason{"overlong"}
@@ -1181,13 +1181,13 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"ak"}
             }
-            tzm_MA{
+            tzm_Latn_MA{
                 reason{"legacy"}
-                replacement{"tzm_Latn_MA"}
+                replacement{"tzm_MA"}
             }
-            ug_CN{
+            ug_Arab_CN{
                 reason{"legacy"}
-                replacement{"ug_Arab_CN"}
+                replacement{"ug_CN"}
             }
             uig{
                 reason{"overlong"}
@@ -1338,6 +1338,104 @@ metadata:table(nofallback){
             Qaai{
                 reason{"deprecated"}
                 replacement{"Zinh"}
+            }
+        }
+        subdivision{
+            CN-71{
+                reason{"overlong"}
+                replacement{"TW"}
+            }
+            CN-91{
+                reason{"overlong"}
+                replacement{"HK"}
+            }
+            CN-92{
+                reason{"overlong"}
+                replacement{"MO"}
+            }
+            FR-BL{
+                reason{"overlong"}
+                replacement{"BL"}
+            }
+            FR-GF{
+                reason{"overlong"}
+                replacement{"GF"}
+            }
+            FR-GP{
+                reason{"overlong"}
+                replacement{"GP"}
+            }
+            FR-MF{
+                reason{"overlong"}
+                replacement{"MF"}
+            }
+            FR-MQ{
+                reason{"overlong"}
+                replacement{"MQ"}
+            }
+            FR-NC{
+                reason{"overlong"}
+                replacement{"NC"}
+            }
+            FR-PF{
+                reason{"overlong"}
+                replacement{"PF"}
+            }
+            FR-PM{
+                reason{"overlong"}
+                replacement{"PM"}
+            }
+            FR-RE{
+                reason{"overlong"}
+                replacement{"RE"}
+            }
+            FR-TF{
+                reason{"overlong"}
+                replacement{"TF"}
+            }
+            FR-WF{
+                reason{"overlong"}
+                replacement{"WF"}
+            }
+            FR-YT{
+                reason{"overlong"}
+                replacement{"YT"}
+            }
+            NL-AW{
+                reason{"overlong"}
+                replacement{"AW"}
+            }
+            NL-CW{
+                reason{"overlong"}
+                replacement{"CW"}
+            }
+            NL-SX{
+                reason{"overlong"}
+                replacement{"SX"}
+            }
+            US-AS{
+                reason{"overlong"}
+                replacement{"AS"}
+            }
+            US-GU{
+                reason{"overlong"}
+                replacement{"GU"}
+            }
+            US-MP{
+                reason{"overlong"}
+                replacement{"MP"}
+            }
+            US-PR{
+                reason{"overlong"}
+                replacement{"PR"}
+            }
+            US-UM{
+                reason{"overlong"}
+                replacement{"UM"}
+            }
+            US-VI{
+                reason{"overlong"}
+                replacement{"VI"}
             }
         }
         territory{
@@ -3928,6 +4026,7 @@ metadata:table(nofallback){
         "as_IN",
         "asa_TZ",
         "ast_ES",
+        "az_Arab_IR",
         "az_Cyrl_AZ",
         "az_Latn",
         "az_Latn_AZ",
@@ -3937,8 +4036,8 @@ metadata:table(nofallback){
         "bem_ZM",
         "bez_TZ",
         "bg_BG",
-        "bm_Latn",
-        "bm_Latn_ML",
+        "bgn_PK",
+        "bm_ML",
         "bm_Nkoo_ML",
         "bn_BD",
         "bo_CN",
@@ -3958,6 +4057,7 @@ metadata:table(nofallback){
         "co_FR",
         "cs_CZ",
         "cu_RU",
+        "cv_RU",
         "cy_GB",
         "da_DK",
         "dav_KE",
@@ -3997,8 +4097,7 @@ metadata:table(nofallback){
         "guz_KE",
         "gv_IM",
         "ha_Arab_NG",
-        "ha_Latn",
-        "ha_Latn_NG",
+        "ha_NG",
         "haw_US",
         "he_IL",
         "hi_IN",
@@ -4012,8 +4111,7 @@ metadata:table(nofallback){
         "ii_CN",
         "is_IS",
         "it_IT",
-        "iu_Cans",
-        "iu_Cans_CA",
+        "iu_CA",
         "iu_Latn_CA",
         "ja_JP",
         "jgo_CM",
@@ -4029,8 +4127,7 @@ metadata:table(nofallback){
         "ken_CM",
         "khq_ML",
         "ki_KE",
-        "kk_Cyrl",
-        "kk_Cyrl_KZ",
+        "kk_KZ",
         "kkj_CM",
         "kl_GL",
         "kln_KE",
@@ -4039,22 +4136,20 @@ metadata:table(nofallback){
         "ko_KR",
         "kok_IN",
         "kpe_LR",
-        "ks_Arab",
-        "ks_Arab_IN",
+        "ks_IN",
         "ksb_TZ",
         "ksf_CM",
         "ksh_DE",
-        "ku_Latn",
-        "ku_Latn_TR",
+        "ku_TR",
         "kw_GB",
-        "ky_Cyrl",
-        "ky_Cyrl_KG",
+        "ky_KG",
         "lag_TZ",
         "lb_LU",
         "lg_UG",
         "lkt_US",
         "ln_CD",
         "lo_LA",
+        "lrc_IR",
         "lt_LT",
         "lu_CD",
         "luo_KE",
@@ -4069,17 +4164,16 @@ metadata:table(nofallback){
         "mi_NZ",
         "mk_MK",
         "ml_IN",
-        "mn_Cyrl",
-        "mn_Cyrl_MN",
+        "mn_MN",
         "mn_Mong_CN",
         "moh_CA",
         "mr_IN",
         "ms_Arab_MY",
-        "ms_Latn",
-        "ms_Latn_MY",
+        "ms_MY",
         "mt_MT",
         "mua_CM",
         "my_MM",
+        "mzn_IR",
         "naq_NA",
         "nb_NO",
         "nd_ZW",
@@ -4092,7 +4186,7 @@ metadata:table(nofallback){
         "nqo_GN",
         "nr_ZA",
         "nso_ZA",
-        "nus_SD",
+        "nus_SS",
         "ny_MW",
         "nyn_UG",
         "oc_FR",
@@ -4119,8 +4213,8 @@ metadata:table(nofallback){
         "sah_RU",
         "saq_KE",
         "sbp_TZ",
-        "sd_Arab",
-        "sd_Arab_PK",
+        "sd_PK",
+        "sdh_IR",
         "se_NO",
         "seh_MZ",
         "ses_ML",
@@ -4151,13 +4245,11 @@ metadata:table(nofallback){
         "ta_IN",
         "te_IN",
         "teo_UG",
-        "tg_Cyrl",
-        "tg_Cyrl_TJ",
+        "tg_TJ",
         "th_TH",
         "ti_ET",
         "tig_ER",
-        "tk_Latn",
-        "tk_Latn_TM",
+        "tk_TM",
         "tn_ZA",
         "to_TO",
         "tr_TR",
@@ -4165,10 +4257,8 @@ metadata:table(nofallback){
         "ts_ZA",
         "tt_RU",
         "twq_NE",
-        "tzm_Latn",
-        "tzm_Latn_MA",
-        "ug_Arab",
-        "ug_Arab_CN",
+        "tzm_MA",
+        "ug_CN",
         "uk_UA",
         "ur_PK",
         "uz_Arab_AF",
@@ -4186,8 +4276,7 @@ metadata:table(nofallback){
         "wae_CH",
         "wal_ET",
         "wbp_AU",
-        "wo_Latn",
-        "wo_Latn_SN",
+        "wo_SN",
         "xh_ZA",
         "xog_UG",
         "yav_CM",
@@ -4198,296 +4287,5 @@ metadata:table(nofallback){
         "zh_Hans_CN",
         "zh_Hant_TW",
         "zu_ZA",
-    }
-    regionCodes{
-        "001",
-        "002",
-        "003",
-        "005",
-        "009",
-        "011",
-        "013",
-        "014",
-        "015",
-        "017",
-        "018",
-        "019",
-        "021",
-        "029",
-        "030",
-        "034",
-        "035",
-        "039",
-        "053",
-        "054",
-        "057",
-        "061",
-        "142",
-        "143",
-        "145",
-        "150",
-        "151",
-        "154",
-        "155",
-        "419",
-        "AC",
-        "AD",
-        "AE",
-        "AF",
-        "AG",
-        "AI",
-        "AL",
-        "AM",
-        "AO",
-        "AQ",
-        "AR",
-        "AS",
-        "AT",
-        "AU",
-        "AW",
-        "AX",
-        "AZ",
-        "BA",
-        "BB",
-        "BD",
-        "BE",
-        "BF",
-        "BG",
-        "BH",
-        "BI",
-        "BJ",
-        "BL",
-        "BM",
-        "BN",
-        "BO",
-        "BQ",
-        "BR",
-        "BS",
-        "BT",
-        "BV",
-        "BW",
-        "BY",
-        "BZ",
-        "CA",
-        "CC",
-        "CD",
-        "CF",
-        "CG",
-        "CH",
-        "CI",
-        "CK",
-        "CL",
-        "CM",
-        "CN",
-        "CO",
-        "CP",
-        "CR",
-        "CU",
-        "CV",
-        "CW",
-        "CX",
-        "CY",
-        "CZ",
-        "DE",
-        "DG",
-        "DJ",
-        "DK",
-        "DM",
-        "DO",
-        "DZ",
-        "EA",
-        "EC",
-        "EE",
-        "EG",
-        "EH",
-        "ER",
-        "ES",
-        "ET",
-        "EU",
-        "FI",
-        "FJ",
-        "FK",
-        "FM",
-        "FO",
-        "FR",
-        "GA",
-        "GB",
-        "GD",
-        "GE",
-        "GF",
-        "GG",
-        "GH",
-        "GI",
-        "GL",
-        "GM",
-        "GN",
-        "GP",
-        "GQ",
-        "GR",
-        "GS",
-        "GT",
-        "GU",
-        "GW",
-        "GY",
-        "HK",
-        "HM",
-        "HN",
-        "HR",
-        "HT",
-        "HU",
-        "IC",
-        "ID",
-        "IE",
-        "IL",
-        "IM",
-        "IN",
-        "IO",
-        "IQ",
-        "IR",
-        "IS",
-        "IT",
-        "JE",
-        "JM",
-        "JO",
-        "JP",
-        "KE",
-        "KG",
-        "KH",
-        "KI",
-        "KM",
-        "KN",
-        "KP",
-        "KR",
-        "KW",
-        "KY",
-        "KZ",
-        "LA",
-        "LB",
-        "LC",
-        "LI",
-        "LK",
-        "LR",
-        "LS",
-        "LT",
-        "LU",
-        "LV",
-        "LY",
-        "MA",
-        "MC",
-        "MD",
-        "ME",
-        "MF",
-        "MG",
-        "MH",
-        "MK",
-        "ML",
-        "MM",
-        "MN",
-        "MO",
-        "MP",
-        "MQ",
-        "MR",
-        "MS",
-        "MT",
-        "MU",
-        "MV",
-        "MW",
-        "MX",
-        "MY",
-        "MZ",
-        "NA",
-        "NC",
-        "NE",
-        "NF",
-        "NG",
-        "NI",
-        "NL",
-        "NO",
-        "NP",
-        "NR",
-        "NU",
-        "NZ",
-        "OM",
-        "PA",
-        "PE",
-        "PF",
-        "PG",
-        "PH",
-        "PK",
-        "PL",
-        "PM",
-        "PN",
-        "PR",
-        "PS",
-        "PT",
-        "PW",
-        "PY",
-        "QA",
-        "QO",
-        "RE",
-        "RO",
-        "RS",
-        "RU",
-        "RW",
-        "SA",
-        "SB",
-        "SC",
-        "SD",
-        "SE",
-        "SG",
-        "SH",
-        "SI",
-        "SJ",
-        "SK",
-        "SL",
-        "SM",
-        "SN",
-        "SO",
-        "SR",
-        "SS",
-        "ST",
-        "SV",
-        "SX",
-        "SY",
-        "SZ",
-        "TA",
-        "TC",
-        "TD",
-        "TF",
-        "TG",
-        "TH",
-        "TJ",
-        "TK",
-        "TL",
-        "TM",
-        "TN",
-        "TO",
-        "TR",
-        "TT",
-        "TV",
-        "TW",
-        "TZ",
-        "UA",
-        "UG",
-        "UM",
-        "US",
-        "UY",
-        "UZ",
-        "VA",
-        "VC",
-        "VE",
-        "VG",
-        "VI",
-        "VN",
-        "VU",
-        "WF",
-        "WS",
-        "XK",
-        "YE",
-        "YT",
-        "ZA",
-        "ZM",
-        "ZW",
-        "ZZ",
     }
 }

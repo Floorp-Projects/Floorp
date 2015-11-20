@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2007-2014, International Business Machines Corporation and
+* Copyright (C) 2007-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -31,6 +31,9 @@
 #include "uvectr32.h"
 #include "sharedpluralrules.h"
 #include "unifiedcache.h"
+#include "digitinterval.h" 
+#include "visibledigits.h"
+
 
 #if !UCONFIG_NO_FORMATTING
 
@@ -252,6 +255,16 @@ PluralRules::select(const FixedDecimal &number) const {
         return mRules->select(number);
     }
 }
+
+UnicodeString
+PluralRules::select(const VisibleDigitsWithExponent &number) const {
+    if (number.getExponent() != NULL) {
+        return UnicodeString(TRUE, PLURAL_DEFAULT_RULE, -1);
+    }
+    return select(FixedDecimal(number.getMantissa()));
+}
+
+
 
 StringEnumeration*
 PluralRules::getKeywords(UErrorCode& status) const {
@@ -1370,7 +1383,14 @@ PluralKeywordEnumeration::count(UErrorCode& /*status*/) const {
 PluralKeywordEnumeration::~PluralKeywordEnumeration() {
 }
 
-
+FixedDecimal::FixedDecimal(const VisibleDigits &digits) {
+    digits.getFixedDecimal(
+            source, intValue, decimalDigits,
+            decimalDigitsWithoutTrailingZeros,
+            visibleDecimalDigitCount, hasIntegerValue);
+    isNegative = digits.isNegative();
+    isNanOrInfinity = digits.isNaNOrInfinity();
+}
 
 FixedDecimal::FixedDecimal(double n, int32_t v, int64_t f) {
     init(n, v, f);

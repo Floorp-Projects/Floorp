@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2008, International Business Machines
+*   Copyright (C) 1998-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -136,6 +136,16 @@ ucbuf_getBuffer(UCHARBUF* buf,int32_t* len,UErrorCode* err);
  */
 U_CAPI void U_EXPORT2
 ucbuf_close(UCHARBUF* buf);
+
+#if U_SHOW_CPLUSPLUS_API
+
+U_NAMESPACE_BEGIN
+
+U_DEFINE_LOCAL_OPEN_POINTER(LocalUCHARBUFPointer, UCHARBUF, ucbuf_close);
+
+U_NAMESPACE_END
+
+#endif
 
 /**
  * Rewinds the buffer by one codepoint. Does not rewind over escaped characters.

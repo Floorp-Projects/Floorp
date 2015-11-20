@@ -158,11 +158,62 @@ public:
      * @param p simple pointer to an array of T items that is adopted
      */
     explicit LocalMemory(T *p=NULL) : LocalPointerBase<T>(p) {}
+#if U_HAVE_RVALUE_REFERENCES
+    /**
+     * Move constructor, leaves src with isNull().
+     * @param src source smart pointer
+     */
+    LocalMemory(LocalMemory<T> &&src) U_NOEXCEPT : LocalPointerBase<T>(src.ptr) {
+        src.ptr=NULL;
+    }
+#endif
     /**
      * Destructor deletes the memory it owns.
      */
     ~LocalMemory() {
         uprv_free(LocalPointerBase<T>::ptr);
+    }
+#if U_HAVE_RVALUE_REFERENCES
+    /**
+     * Move assignment operator, leaves src with isNull().
+     * The behavior is undefined if *this and src are the same object.
+     * @param src source smart pointer
+     * @return *this
+     */
+    LocalMemory<T> &operator=(LocalMemory<T> &&src) U_NOEXCEPT {
+        return moveFrom(src);
+    }
+#endif
+    /**
+     * Move assignment, leaves src with isNull().
+     * The behavior is undefined if *this and src are the same object.
+     *
+     * Can be called explicitly, does not need C++11 support.
+     * @param src source smart pointer
+     * @return *this
+     */
+    LocalMemory<T> &moveFrom(LocalMemory<T> &src) U_NOEXCEPT {
+        delete[] LocalPointerBase<T>::ptr;
+        LocalPointerBase<T>::ptr=src.ptr;
+        src.ptr=NULL;
+        return *this;
+    }
+    /**
+     * Swap pointers.
+     * @param other other smart pointer
+     */
+    void swap(LocalMemory<T> &other) U_NOEXCEPT {
+        T *temp=LocalPointerBase<T>::ptr;
+        LocalPointerBase<T>::ptr=other.ptr;
+        other.ptr=temp;
+    }
+    /**
+     * Non-member LocalMemory swap function.
+     * @param p1 will get p2's pointer
+     * @param p2 will get p1's pointer
+     */
+    friend inline void swap(LocalMemory<T> &p1, LocalMemory<T> &p2) U_NOEXCEPT {
+        p1.swap(p2);
     }
     /**
      * Deletes the array it owns,

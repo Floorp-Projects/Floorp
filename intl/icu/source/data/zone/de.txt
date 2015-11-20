@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 de{
-    Version{"2.1.13.4"}
+    Version{"2.1.19.72"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -684,6 +684,9 @@ de{
         "Asia:Calcutta"{
             ec{"Kalkutta"}
         }
+        "Asia:Chita"{
+            ec{"Tschita"}
+        }
         "Asia:Choibalsan"{
             ec{"Tschoibalsan"}
         }
@@ -824,6 +827,9 @@ de{
         }
         "Asia:Singapore"{
             ec{"Singapur"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
         }
         "Asia:Taipei"{
             ec{"Taipeh"}
@@ -1089,7 +1095,7 @@ de{
             ec{"Wien"}
         }
         "Europe:Vilnius"{
-            ec{"Wilna"}
+            ec{"Vilnius"}
         }
         "Europe:Volgograd"{
             ec{"Wolgograd"}
@@ -1144,6 +1150,9 @@ de{
         }
         "Pacific:Auckland"{
             ec{"Auckland"}
+        }
+        "Pacific:Bougainville"{
+            ec{"Bougainville"}
         }
         "Pacific:Chatham"{
             ec{"Chatham"}
@@ -1316,9 +1325,9 @@ de{
             ls{"Anadyr Normalzeit"}
         }
         "meta:Apia"{
-            ld{"Sommerzeit in Apia"}
-            lg{"Zeit in Apia"}
-            ls{"Normalzeit in Apia"}
+            ld{"Apia-Sommerzeit"}
+            lg{"Apia-Zeit"}
+            ls{"Apia-Normalzeit"}
         }
         "meta:Aqtau"{
             ld{"Aqtau-Sommerzeit"}

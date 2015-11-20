@@ -33,7 +33,7 @@ wae{
             "Yen",
         }
         RUB{
-            "руб",
+            "RUB",
             "Rubel",
         }
         USD{
@@ -87,5 +87,5 @@ wae{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.10.93"}
+    Version{"2.1.19.14"}
 }

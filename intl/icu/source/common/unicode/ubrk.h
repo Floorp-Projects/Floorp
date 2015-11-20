@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-* Copyright (C) 1996-2014, International Business Machines Corporation and others.
+* Copyright (C) 1996-2015, International Business Machines Corporation and others.
 * All Rights Reserved.
 ******************************************************************************
 */
@@ -45,9 +45,19 @@
  * when line-wrapping. The mechanism correctly handles punctuation and
  * hyphenated words.
  * <p>
+ * Note: The locale keyword "lb" can be used to modify line break
+ * behavior according to the CSS level 3 line-break options, see
+ * <http://dev.w3.org/csswg/css-text/#line-breaking>. For example:
+ * "ja@lb=strict", "zh@lb=loose".
+ * <p>
  * Sentence boundary analysis allows selection with correct
  * interpretation of periods within numbers and abbreviations, and
  * trailing punctuation marks such as quotation marks and parentheses.
+ * <p>
+ * Note: The locale keyword "ss" can be used to enable use of
+ * segmentation suppression data (preventing breaks in English after
+ * abbreviations such as "Mr." or "Est.", for example), as follows:
+ * "en@ss=standard".
  * <p>
  * Word boundary analysis is used by search and replace functions, as
  * well as within text editing applications that allow the user to
@@ -202,7 +212,9 @@ typedef enum USentenceBreakTag {
  * and sentence breaks in text.
  * @param type The type of UBreakIterator to open: one of UBRK_CHARACTER, UBRK_WORD,
  * UBRK_LINE, UBRK_SENTENCE
- * @param locale The locale specifying the text-breaking conventions.
+ * @param locale The locale specifying the text-breaking conventions. Note that
+ * locale keys such as "lb" and "ss" may be used to modify text break behavior,
+ * see general discussion of BreakIterator C API.
  * @param text The text to be iterated over.
  * @param textLength The number of characters in text, or -1 if null-terminated.
  * @param status A UErrorCode to receive any errors.

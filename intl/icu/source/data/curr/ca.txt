@@ -395,7 +395,7 @@ ca{
         }
         GBP{
             "£",
-            "lliura britànica",
+            "lliura esterlina britànica",
         }
         GEK{
             "GEK",
@@ -1098,7 +1098,7 @@ ca{
             "franc UIC francès",
         }
         XOF{
-            "XOF",
+            "CFA",
             "franc CFA BCEAO",
         }
         XPD{
@@ -1187,14 +1187,102 @@ ca{
         }
     }
     Currencies%narrow{
+        AOA{"AOA"}
+        ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
         BMD{"$"}
-        BZD{"USD"}
+        BND{"$"}
+        BOB{"BOB"}
+        BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
+        BYR{"р."}
+        BZD{"$"}
         CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"DKK"}
+        DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"GTQ"}
+        GYD{"$"}
+        HKD{"$"}
+        HNL{"HNL"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"ISK"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
+        NIO{"C$"}
+        NOK{"NOK"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
+        PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"SEK"}
+        SGD{"$"}
+        SHP{"£"}
+        SRD{"$"}
+        SSP{"£"}
+        STD{"STD"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"$"}
+        UAH{"₴"}
         USD{"$"}
+        UYU{"$"}
+        VEF{"VEF"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1582,8 +1670,8 @@ ca{
             other{"francs francesos"}
         }
         GBP{
-            one{"lliura britànica"}
-            other{"lliures britàniques"}
+            one{"lliura esterlina britànica"}
+            other{"lliures esterlines britàniques"}
         }
         GEK{
             one{"cupó de lari georgià"}
@@ -2378,5 +2466,5 @@ ca{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }

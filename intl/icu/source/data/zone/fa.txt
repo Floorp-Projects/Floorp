@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 fa{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"آبیجان"}
@@ -226,7 +226,7 @@ fa{
             ec{"بلان‐سابلون"}
         }
         "America:Boa_Vista"{
-            ec{"بوئاویشتا"}
+            ec{"بوئاویستا"}
         }
         "America:Bogota"{
             ec{"بوگوتا"}
@@ -283,7 +283,7 @@ fa{
             ec{"کوراسائو"}
         }
         "America:Danmarkshavn"{
-            ec{"دانمارک‌شاون"}
+            ec{"دانمارکس‌هاون"}
         }
         "America:Dawson"{
             ec{"داوسن"}
@@ -316,7 +316,7 @@ fa{
             ec{"گلیس‌بی"}
         }
         "America:Godthab"{
-            ec{"گودهوب"}
+            ec{"نووک"}
         }
         "America:Goose_Bay"{
             ec{"گوس‌بی"}
@@ -325,7 +325,7 @@ fa{
             ec{"گراند تورک"}
         }
         "America:Grenada"{
-            ec{"گرانادا"}
+            ec{"گرنادا"}
         }
         "America:Guadeloupe"{
             ec{"گوادلوپ"}
@@ -568,7 +568,7 @@ fa{
             ec{"سنت وینسنت"}
         }
         "America:Swift_Current"{
-            ec{"سوئیفت‌کرنت"}
+            ec{"سویفت‌کارنت"}
         }
         "America:Tegucigalpa"{
             ec{"تگوسیگالپا"}
@@ -683,6 +683,9 @@ fa{
         }
         "Asia:Calcutta"{
             ec{"کلکته"}
+        }
+        "Asia:Chita"{
+            ec{"چیتا"}
         }
         "Asia:Choibalsan"{
             ec{"چویبالسان"}
@@ -824,6 +827,9 @@ fa{
         }
         "Asia:Singapore"{
             ec{"سنگاپور"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"اسردنکولیمسک"}
         }
         "Asia:Taipei"{
             ec{"تایپه"}
@@ -1145,6 +1151,9 @@ fa{
         "Pacific:Auckland"{
             ec{"اوکلند"}
         }
+        "Pacific:Bougainville"{
+            ec{"بوگنویل"}
+        }
         "Pacific:Chatham"{
             ec{"چتم"}
         }
@@ -1263,7 +1272,7 @@ fa{
             ls{"وقت شرق افریقا"}
         }
         "meta:Africa_Southern"{
-            ls{"وقت جنوب افریقا"}
+            ls{"وقت عادی جنوب افریقا"}
         }
         "meta:Africa_Western"{
             ld{"وقت تابستانی غرب افریقا"}
@@ -1395,7 +1404,7 @@ fa{
             ls{"وقت عادی کیپ‌ورد"}
         }
         "meta:Chamorro"{
-            ls{"وقت چامورو"}
+            ls{"وقت عادی چامورو"}
         }
         "meta:Chatham"{
             ld{"وقت تابستانی چت‌هام"}
@@ -1879,8 +1888,8 @@ fa{
             ls{"وقت عادی یکاترینبورگ"}
         }
         fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
+        gmtFormat{"{0} گرینویچ"}
+        gmtZeroFormat{"گرینویچ"}
         hourFormat{"+HH:mm;−HH:mm"}
         regionFormat{"وقت {0}"}
         regionFormatDaylight{"وقت تابستانی {0}"}

@@ -3,9 +3,9 @@
 // * Copyright (C) 2015 International Business Machines
 // * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
-// * Source File: <path>/icu-locale-deprecates.xml & build.xml
+// * Source File: <path>/common/main/ky_KG.xml
 // *
 // ***************************************************************************
 ky_KG{
-    "%%ALIAS"{"ky_Cyrl_KG"}
+    Version{"2.1.19.14"}
 }

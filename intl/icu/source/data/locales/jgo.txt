@@ -44,7 +44,7 @@ jgo{
         }
         native{"latn"}
     }
-    Version{"2.1.7.39"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
             DateTimePatterns{
@@ -160,6 +160,10 @@ jgo{
             }
             eras{
                 abbreviated{
+                    "BCE",
+                    "CE",
+                }
+                wide{
                     "tsɛttsɛt mɛŋguꞌ mi ɛ́ lɛɛnɛ Kɛlísɛtɔ gɔ ńɔ́",
                     "tsɛttsɛt mɛŋguꞌ mi ɛ́ fúnɛ Kɛlísɛtɔ tɔ́ mɔ́",
                 }
@@ -268,7 +272,9 @@ jgo{
     fields{
         day{
             relative{
+                "-1"{"yesterday"}
                 "0"{"lɔꞋɔ"}
+                "1"{"tomorrow"}
             }
             relativeTime{
                 future{

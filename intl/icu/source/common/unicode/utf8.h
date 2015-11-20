@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1999-2014, International Business Machines
+*   Copyright (C) 1999-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -815,7 +815,7 @@ utf8_back1SafeBody(const uint8_t *s, int32_t start, int32_t i);
  * @stable ICU 2.4
  */
 #define U8_SET_CP_LIMIT(s, start, i, length) { \
-    if((start)<(i) && ((i)<(length) || ((length)<0 && (s)[i]!=0))) { \
+    if((start)<(i) && ((i)<(length) || (length)<0)) { \
         U8_BACK_1(s, start, i); \
         U8_FWD_1(s, i, length); \
     } \

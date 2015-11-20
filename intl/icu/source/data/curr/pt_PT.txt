@@ -108,6 +108,10 @@ pt_PT{
             "FKP",
             "Libra das Ilhas Falkland",
         }
+        GBP{
+            "£",
+            "Libra esterlina britânica",
+        }
         GHS{
             "GHS",
             "Cedi de Gana",
@@ -411,6 +415,10 @@ pt_PT{
             one{"Libra das Ilhas Falkland"}
             other{"Libras das Ilhas Falkland"}
         }
+        GBP{
+            one{"Libra esterlina britânica"}
+            other{"Libras esterlinas britânicas"}
+        }
         GHS{
             one{"Cedi de Gana"}
             other{"Cedis de Gana"}
@@ -640,5 +648,5 @@ pt_PT{
             other{"Kwachas zambianos (1968–2012)"}
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.79"}
 }

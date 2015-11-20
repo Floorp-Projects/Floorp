@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -212,7 +212,7 @@ typedef size_t uintptr_t;
  */
 #ifdef U_HAVE_STD_ATOMICS
     /* Use the predefined value. */
-#elif !defined(__cplusplus) || __cplusplus<201103L
+#elif U_CPLUSPLUS_VERSION < 11
     /* Not C++11, disable use of atomics */
 #   define U_HAVE_STD_ATOMICS 0
 #elif __clang__ && __clang_major__==3 && __clang_minor__<=1
@@ -229,25 +229,21 @@ typedef size_t uintptr_t;
 #endif
 
 
-/*===========================================================================*/
-/** @{ Code alignment                                                        */
-/*===========================================================================*/
-
 /**
- * \def U_ALIGN_CODE
- * This is used to align code fragments to a specific byte boundary.
- * This is useful for getting consistent performance test results.
- * @internal
+ *  \def U_HAVE_CLANG_ATOMICS
+ *  Defines whether Clang c11 style built-in atomics are avaialable.
+ *  These are used in preference to gcc atomics when both are available.
  */
-#ifdef U_ALIGN_CODE
+#ifdef U_HAVE_CLANG_ATOMICS
     /* Use the predefined value. */
-#elif defined(_MSC_VER) && defined(_M_IX86) && !defined(_MANAGED)
-#   define U_ALIGN_CODE(boundarySize) __asm  align boundarySize
+#elif __has_builtin(__c11_atomic_load) && \
+    __has_builtin(__c11_atomic_store) && \
+    __has_builtin(__c11_atomic_fetch_add) && \
+    __has_builtin(__c11_atomic_fetch_sub)
+#    define U_HAVE_CLANG_ATOMICS 1
 #else
-#   define U_ALIGN_CODE(boundarySize) 
+#    define U_HAVE_CLANG_ATOMICS 0
 #endif
-
-/** @} */
 
 /*===========================================================================*/
 /** @{ Programs used by ICU code                                             */

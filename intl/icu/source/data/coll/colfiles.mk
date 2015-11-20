@@ -32,10 +32,9 @@ COLLATION_SYNTHETIC_ALIAS = de_.txt de__PHONEBOOK.txt es_.txt es__TRADITIONAL.tx
  pa_Guru.txt pa_Guru_IN.txt pa_IN.txt ro_MD.txt sh.txt\
  sh_BA.txt sh_CS.txt sh_YU.txt sr_BA.txt sr_Cyrl.txt\
  sr_Cyrl_BA.txt sr_Cyrl_ME.txt sr_Cyrl_RS.txt sr_Latn_BA.txt sr_Latn_RS.txt\
- sr_ME.txt sr_RS.txt ug_Arab.txt ug_Arab_CN.txt ug_CN.txt\
- zh_CN.txt zh_HK.txt zh_Hans.txt zh_Hans_CN.txt zh_Hans_SG.txt\
- zh_Hant_HK.txt zh_Hant_MO.txt zh_Hant_TW.txt zh_MO.txt zh_SG.txt\
- zh_TW.txt
+ sr_ME.txt sr_RS.txt zh_CN.txt zh_HK.txt zh_Hans.txt\
+ zh_Hans_CN.txt zh_Hans_SG.txt zh_Hant_HK.txt zh_Hant_MO.txt zh_Hant_TW.txt\
+ zh_MO.txt zh_SG.txt zh_TW.txt
 
 
 # All aliases (to not be included under 'installed'), but not including root.
@@ -47,21 +46,22 @@ COLLATION_EMPTY_SOURCE =
 
 
 # Ordinary resources
-COLLATION_SOURCE = $(COLLATION_EMPTY_SOURCE) af.txt ar.txt as.txt\
- az.txt be.txt bg.txt bn.txt bs.txt\
- bs_Cyrl.txt ca.txt chr.txt cs.txt cy.txt\
- da.txt de.txt de_AT.txt dsb.txt dz.txt\
- ee.txt el.txt en.txt en_US.txt en_US_POSIX.txt\
- eo.txt es.txt et.txt fa.txt fa_AF.txt\
- fi.txt fil.txt fo.txt fr.txt fr_CA.txt\
- ga.txt gl.txt gu.txt ha.txt haw.txt\
- he.txt hi.txt hr.txt hsb.txt hu.txt\
- hy.txt id.txt ig.txt is.txt it.txt\
- ja.txt ka.txt kk.txt kl.txt km.txt\
- kn.txt ko.txt kok.txt ky.txt lb.txt\
- lkt.txt ln.txt lt.txt lv.txt mk.txt\
- ml.txt mr.txt ms.txt mt.txt my.txt\
- nb.txt nl.txt nn.txt om.txt or.txt\
+COLLATION_SOURCE = $(COLLATION_EMPTY_SOURCE) af.txt am.txt ar.txt\
+ as.txt az.txt be.txt bg.txt bn.txt\
+ bo.txt bs.txt bs_Cyrl.txt ca.txt chr.txt\
+ cs.txt cy.txt da.txt de.txt de_AT.txt\
+ dsb.txt dz.txt ee.txt el.txt en.txt\
+ en_US.txt en_US_POSIX.txt eo.txt es.txt et.txt\
+ fa.txt fa_AF.txt fi.txt fil.txt fo.txt\
+ fr.txt fr_CA.txt ga.txt gl.txt gu.txt\
+ ha.txt haw.txt he.txt hi.txt hr.txt\
+ hsb.txt hu.txt hy.txt id.txt ig.txt\
+ is.txt it.txt ja.txt ka.txt kk.txt\
+ kl.txt km.txt kn.txt ko.txt kok.txt\
+ ky.txt lb.txt lkt.txt ln.txt lo.txt\
+ lt.txt lv.txt mk.txt ml.txt mn.txt\
+ mr.txt ms.txt mt.txt my.txt nb.txt\
+ ne.txt nl.txt nn.txt om.txt or.txt\
  pa.txt pl.txt ps.txt pt.txt ro.txt\
  ru.txt se.txt si.txt sk.txt sl.txt\
  smn.txt sq.txt sr.txt sr_Latn.txt sv.txt\

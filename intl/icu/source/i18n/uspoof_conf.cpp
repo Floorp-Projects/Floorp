@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 2008-2013, International Business Machines
+*   Copyright (C) 2008-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -300,8 +300,31 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
                             uregex_start(fParseLine, 5, &status) >= 0 ? fMLTable :
                             uregex_start(fParseLine, 6, &status) >= 0 ? fMATable :
                             NULL;
-        U_ASSERT(table != NULL);
-        uhash_iput(table, keyChar, smapString, &status);
+        if (U_SUCCESS(status) && table == NULL) {
+            status = U_PARSE_ERROR;
+        }
+        if (U_FAILURE(status)) {
+            return;
+        }
+
+        // For Unicode 8, the SL, SA and ML tables have been discontinued.
+        //                All input data from confusables.txt is tagged MA.
+        //                ICU spoof check functions should ignore the specified table and always
+        //                use this MA Data.
+        //                For now, implement by populating the MA data into all four tables, and
+        //                keep the multiple table implementation in place, in case it comes back
+        //                at some time in the future.
+        //                There is no run time size penalty to keeping the four table implementation -
+        //                the data is shared when it's the same betweeen tables.
+        if (table != fMATable) {
+            status = U_PARSE_ERROR;
+            return;
+        };
+        //  uhash_iput(table, keyChar, smapString, &status);
+        uhash_iput(fSLTable, keyChar, smapString, &status);
+        uhash_iput(fSATable, keyChar, smapString, &status);
+        uhash_iput(fMLTable, keyChar, smapString, &status);
+        uhash_iput(fMATable, keyChar, smapString, &status);
         fKeySet->add(keyChar);
         if (U_FAILURE(status)) {
             return;
