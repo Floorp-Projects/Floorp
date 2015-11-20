@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.sync.receivers;
 
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -16,8 +19,10 @@ import org.mozilla.gecko.sync.config.ClientRecordTerminator;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 
+import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.IntentService;
 import android.content.Context;
@@ -40,6 +45,27 @@ public class SyncAccountDeletedService extends IntentService {
     }
 
     final Context context = this;
+
+    if (SyncConstants.SYNC_ACCOUNT_DEPRECATED_ACTION.equals(intent.getAction())) {
+      // Delete Old Sync account.
+      final Account[] accounts = SyncAccounts.syncAccounts(this);
+      for (Account account : accounts) {
+        AccountManager.get(this).removeAccount(account, null, null);
+      }
+
+      // Offer signin for Firefox Account if we don't already have one.
+      if (!FirefoxAccounts.firefoxAccountsExist(this)) {
+        final Intent fxAccountWebIntent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+        fxAccountWebIntent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_PREFERENCES);
+        fxAccountWebIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        fxAccountWebIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        context.startActivity(fxAccountWebIntent);
+      }
+
+      // Return early. The SYNC_ACCOUNT_DELETED_ACTION spawn by the account
+      // deletion above will remove the pickle file.
+      return;
+    }
 
     long intentVersion = intent.getLongExtra(Constants.JSON_KEY_VERSION, 0);
     long expectedVersion = SyncConstants.SYNC_ACCOUNT_DELETED_INTENT_VERSION;
