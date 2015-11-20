@@ -190,9 +190,9 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
 }
 
 void
-ErrorResult::ReportErrorWithMessage(JSContext* aCx)
+ErrorResult::SetPendingExceptionWithMessage(JSContext* aCx)
 {
-  MOZ_ASSERT(mMessage, "ReportErrorWithMessage() can be called only once");
+  MOZ_ASSERT(mMessage, "SetPendingExceptionWithMessage() can be called only once");
   MOZ_ASSERT(mUnionState == HasMessage);
 
   Message* message = mMessage;
@@ -248,7 +248,7 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 }
 
 void
-ErrorResult::ReportJSException(JSContext* cx)
+ErrorResult::SetPendingJSException(JSContext* cx)
 {
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to handle JS exceptions?");
@@ -341,9 +341,10 @@ ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
 }
 
 void
-ErrorResult::ReportDOMException(JSContext* cx)
+ErrorResult::SetPendingDOMException(JSContext* cx)
 {
-  MOZ_ASSERT(mDOMExceptionInfo, "ReportDOMException() can be called only once");
+  MOZ_ASSERT(mDOMExceptionInfo,
+             "SetPendingDOMException() can be called only once");
   MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
 
   dom::Throw(cx, mDOMExceptionInfo->mRv, mDOMExceptionInfo->mMessage);
@@ -382,7 +383,7 @@ ErrorResult::ClearUnionData()
 }
 
 void
-ErrorResult::ReportGenericError(JSContext* cx)
+ErrorResult::SetPendingGenericErrorException(JSContext* cx)
 {
   MOZ_ASSERT(!IsErrorWithMessage());
   MOZ_ASSERT(!IsJSException());
@@ -493,18 +494,18 @@ ErrorResult::SetPendingException(JSContext* cx)
     return;
   }
   if (IsErrorWithMessage()) {
-    ReportErrorWithMessage(cx);
+    SetPendingExceptionWithMessage(cx);
     return;
   }
   if (IsJSException()) {
-    ReportJSException(cx);
+    SetPendingJSException(cx);
     return;
   }
   if (IsDOMException()) {
-    ReportDOMException(cx);
+    SetPendingDOMException(cx);
     return;
   }
-  ReportGenericError(cx);
+  SetPendingGenericErrorException(cx);
 }
 
 namespace dom {
