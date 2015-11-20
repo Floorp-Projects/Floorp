@@ -451,7 +451,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
             return -ENOMEM;
         }
 
-        RefPtr<TextureClient> textureClient = new ClientTexture(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
+        RefPtr<TextureClient> textureClient = new TextureClient(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
 
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);

@@ -86,7 +86,7 @@ GrallocImage::SetData(const Data& aData)
     return false;
   }
 
-  mTextureClient = new ClientTexture(texData, TextureFlags::DEFAULT, allocator);
+  mTextureClient = new TextureClient(texData, TextureFlags::DEFAULT, allocator);
   sp<GraphicBuffer> graphicBuffer = texData->GetGraphicBuffer();
 
   void* vaddr;
