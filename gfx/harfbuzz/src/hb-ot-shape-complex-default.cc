@@ -35,6 +35,7 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_default =
   NULL, /* data_create */
   NULL, /* data_destroy */
   NULL, /* preprocess_text */
+  NULL, /* postprocess_glyphs */
   HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
   NULL, /* decompose */
   NULL, /* compose */

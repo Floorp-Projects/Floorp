@@ -35,8 +35,36 @@
 #include "hb-unicode-private.hh"
 
 
+#ifndef HB_BUFFER_MAX_EXPANSION_FACTOR
+#define HB_BUFFER_MAX_EXPANSION_FACTOR 32
+#endif
+#ifndef HB_BUFFER_MAX_LEN_MIN
+#define HB_BUFFER_MAX_LEN_MIN 8192
+#endif
+#ifndef HB_BUFFER_MAX_LEN_DEFAULT
+#define HB_BUFFER_MAX_LEN_DEFAULT 0x3FFFFFFF /* Shaping more than a billion chars? Let us know! */
+#endif
+
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == 20);
 ASSERT_STATIC (sizeof (hb_glyph_info_t) == sizeof (hb_glyph_position_t));
+
+HB_MARK_AS_FLAG_T (hb_buffer_flags_t);
+HB_MARK_AS_FLAG_T (hb_buffer_serialize_flags_t);
+
+enum hb_buffer_scratch_flags_t {
+  HB_BUFFER_SCRATCH_FLAG_DEFAULT			= 0x00000000u,
+  HB_BUFFER_SCRATCH_FLAG_HAS_NON_ASCII			= 0x00000001u,
+  HB_BUFFER_SCRATCH_FLAG_HAS_DEFAULT_IGNORABLES		= 0x00000002u,
+  HB_BUFFER_SCRATCH_FLAG_HAS_SPACE_FALLBACK		= 0x00000004u,
+  HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_CURSIVE		= 0x00000008u,
+  HB_BUFFER_SCRATCH_FLAG_HAS_GPOS_ATTACHMENT		= 0x00000010u,
+  /* Reserved for complex shapers' internal use. */
+  HB_BUFFER_SCRATCH_FLAG_COMPLEX0			= 0x01000000u,
+  HB_BUFFER_SCRATCH_FLAG_COMPLEX1			= 0x02000000u,
+  HB_BUFFER_SCRATCH_FLAG_COMPLEX2			= 0x04000000u,
+  HB_BUFFER_SCRATCH_FLAG_COMPLEX3			= 0x08000000u,
+};
+HB_MARK_AS_FLAG_T (hb_buffer_scratch_flags_t);
 
 
 /*
@@ -52,6 +80,8 @@ struct hb_buffer_t {
   hb_buffer_flags_t flags; /* BOT / EOT / etc. */
   hb_buffer_cluster_level_t cluster_level;
   hb_codepoint_t replacement; /* U+FFFD or something else. */
+  hb_buffer_scratch_flags_t scratch_flags; /* Have space-flallback, etc. */
+  unsigned int max_len; /* Maximum allowed len. */
 
   /* Buffer contents */
   hb_buffer_content_type_t content_type;
@@ -76,8 +106,8 @@ struct hb_buffer_t {
   inline hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
   inline hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
 
-  inline hb_glyph_info_t &prev (void) { return out_info[out_len - 1]; }
-  inline hb_glyph_info_t prev (void) const { return info[out_len - 1]; }
+  inline hb_glyph_info_t &prev (void) { return out_info[out_len ? out_len - 1 : 0]; }
+  inline hb_glyph_info_t prev (void) const { return out_info[out_len ? out_len - 1 : 0]; }
 
   inline bool has_separate_output (void) const { return info != out_info; }
 
@@ -144,12 +174,13 @@ struct hb_buffer_t {
     if (have_output)
     {
       if (unlikely (out_info != info || out_len != idx)) {
-	if (unlikely (!make_room_for (1, 1))) return;
+	if (unlikely (!make_room_for (1, 1)))
+	  goto done;
 	out_info[out_len] = info[idx];
       }
       out_len++;
     }
-
+  done:
     idx++;
   }
 
