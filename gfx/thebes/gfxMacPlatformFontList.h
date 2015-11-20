@@ -96,7 +96,8 @@ public:
                                    uint32_t aLength) override;
 
     gfxFontFamily* FindFamily(const nsAString& aFamily,
-                              gfxFontStyle* aStyle = nullptr) override;
+                              gfxFontStyle* aStyle = nullptr,
+                              gfxFloat aDevToCssSize = 1.0) override;
 
     // lookup the system font for a particular system font type and set
     // the name and style characteristics

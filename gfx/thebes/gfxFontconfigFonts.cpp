@@ -1258,8 +1258,9 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
 
 gfxPangoFontGroup::gfxPangoFontGroup(const FontFamilyList& aFontFamilyList,
                                      const gfxFontStyle *aStyle,
-                                     gfxUserFontSet *aUserFontSet)
-    : gfxFontGroup(aFontFamilyList, aStyle, nullptr, aUserFontSet),
+                                     gfxUserFontSet *aUserFontSet,
+                                     gfxFloat aDevToCssSize)
+    : gfxFontGroup(aFontFamilyList, aStyle, nullptr, aUserFontSet, aDevToCssSize),
       mPangoLanguage(GuessPangoLanguage(aStyle->language))
 {
     // This language is passed to the font for shaping.
@@ -1280,7 +1281,7 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 gfxFontGroup *
 gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 {
-    return new gfxPangoFontGroup(mFamilyList, aStyle, mUserFontSet);
+    return new gfxPangoFontGroup(mFamilyList, aStyle, mUserFontSet, mDevToCssSize);
 }
 
 void
@@ -1813,7 +1814,7 @@ gfxPangoFontGroup::GetFTLibrary()
         gfxFontStyle style;
         RefPtr<gfxPangoFontGroup> fontGroup =
             new gfxPangoFontGroup(FontFamilyList(eFamily_sans_serif),
-                                  &style, nullptr);
+                                  &style, nullptr, 1.0);
 
         gfxFcFont *font = fontGroup->GetBaseFont();
         if (!font)

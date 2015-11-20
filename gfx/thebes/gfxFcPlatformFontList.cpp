@@ -1310,7 +1310,8 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 }
 
 gfxFontFamily*
-gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
+gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle,
+                                  gfxFloat aDevToCssSize)
 {
     nsAutoString familyName(aFamily);
     ToLowerCase(familyName);

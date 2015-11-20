@@ -247,13 +247,16 @@ gfxFontGroup *
 gfxPlatformGtk::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle* aStyle,
                                 gfxTextPerfMetrics* aTextPerf,
-                                gfxUserFontSet* aUserFontSet)
+                                gfxUserFontSet* aUserFontSet,
+                                gfxFloat aDevToCssSize)
 {
     if (sUseFcFontList) {
-        return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf, aUserFontSet);
+        return new gfxFontGroup(aFontFamilyList, aStyle, aTextPerf,
+                                aUserFontSet, aDevToCssSize);
     }
 
-    return new gfxPangoFontGroup(aFontFamilyList, aStyle, aUserFontSet);
+    return new gfxPangoFontGroup(aFontFamilyList, aStyle,
+                                 aUserFontSet, aDevToCssSize);
 }
 
 gfxFontEntry*

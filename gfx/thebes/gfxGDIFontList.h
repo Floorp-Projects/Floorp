@@ -306,7 +306,8 @@ public:
     virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
     gfxFontFamily* FindFamily(const nsAString& aFamily,
-                              gfxFontStyle* aStyle = nullptr) override;
+                              gfxFontStyle* aStyle = nullptr,
+                              gfxFloat aDevToCssSize = 1.0) override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
