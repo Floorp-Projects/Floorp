@@ -6,8 +6,8 @@
  */
 "use strict";
 
-var escope = require("eslint/node_modules/escope");
-var espree = require("eslint/node_modules/espree");
+var escope = require("escope");
+var espree = require("espree");
 
 var regexes = [
   /^(?:Cu|Components\.utils)\.import\(".*\/(.*?)\.jsm?"\);?$/,
