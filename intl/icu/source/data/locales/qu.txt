@@ -35,7 +35,7 @@ qu{
             }
         }
     }
-    Version{"2.1.6.71"}
+    Version{"2.1.19.14"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -45,8 +45,8 @@ qu{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
-                "hh:mm:ss a",
-                "hh:mm a",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM, y",
                 "y MMMM d",
                 "y MMM d",

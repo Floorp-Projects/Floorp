@@ -279,8 +279,13 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsCoreUtils::ScrollTo(acc->Document()->PresShell(),
-                        acc->GetContent(), aScrollType);
+  if (acc->IsProxy()) {
+    acc->Proxy()->ScrollTo(aScrollType);
+  } else {
+    nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
+                          aScrollType);
+  }
+
   return S_OK;
 
   A11Y_TRYBLOCK_END
@@ -300,7 +305,12 @@ ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  acc->ScrollToPoint(geckoCoordType, aX, aY);
+  if (acc->IsProxy()) {
+    acc->Proxy()->ScrollToPoint(geckoCoordType, aX, aY);
+  } else {
+    acc->ScrollToPoint(geckoCoordType, aX, aY);
+  }
+
   return S_OK;
 
   A11Y_TRYBLOCK_END

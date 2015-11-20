@@ -373,6 +373,30 @@ DocAccessibleChild::RecvGetLevelInternal(const uint64_t& aID, int32_t* aLevel)
 }
 
 bool
+DocAccessibleChild::RecvScrollTo(const uint64_t& aID,
+                                 const uint32_t& aScrollType)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
+                          aScrollType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvScrollToPoint(const uint64_t& aID, const uint32_t& aScrollType, const int32_t& aX, const int32_t& aY)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ScrollToPoint(aScrollType, aX, aY);
+  }
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvCaretLineNumber(const uint64_t& aID, int32_t* aLineNumber)
 {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);

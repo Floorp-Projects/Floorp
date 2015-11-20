@@ -77,6 +77,44 @@ ms{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"¤0K"}
+                    }
+                    10000{
+                        other{"¤00K"}
+                    }
+                    100000{
+                        other{"¤000K"}
+                    }
+                    1000000{
+                        other{"¤0J"}
+                    }
+                    10000000{
+                        other{"¤00J"}
+                    }
+                    100000000{
+                        other{"¤000J"}
+                    }
+                    1000000000{
+                        other{"¤0B"}
+                    }
+                    10000000000{
+                        other{"¤00B"}
+                    }
+                    100000000000{
+                        other{"¤000B"}
+                    }
+                    1000000000000{
+                        other{"¤0T"}
+                    }
+                    10000000000000{
+                        other{"¤00T"}
+                    }
+                    100000000000000{
+                        other{"¤000T"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         other{"0K"}
@@ -134,7 +172,7 @@ ms{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     calendar{
         buddhist{
             eras{
@@ -267,6 +305,7 @@ ms{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -294,6 +333,7 @@ ms{
                 yyyyMEd{"E, d/M/y G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y G"}
                 yyyyQQQ{"QQQ y G"}
@@ -401,8 +441,8 @@ ms{
                 "PTG",
             }
             AmPmMarkersAbbr{
-                "pg",
-                "ptg",
+                "PG",
+                "PTG",
             }
             AmPmMarkersNarrow{
                 "a",
@@ -423,8 +463,6 @@ ms{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"t/hari"}
-            NoonMarkerNarrow{"t"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -443,6 +481,8 @@ ms{
                 Hm{"HH:mm"}
                 Hmm{"H:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, d-M"}
                 MMM{"LLL"}
@@ -455,12 +495,15 @@ ms{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M-y"}
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
+                yMMMM{"y MMMM"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
@@ -541,6 +584,60 @@ ms{
                         "Khamis",
                         "Jumaat",
                         "Sabtu",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"tengah hari"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                    }
+                    narrow{
+                        afternoon1{"tengah hari"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                    }
+                    wide{
+                        afternoon1{"tengah hari"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"tengah hari"}
+                        am{"PG"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                        pm{"PTG"}
+                    }
+                    narrow{
+                        afternoon1{"tengah hari"}
+                        am{"a"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                        pm{"p"}
+                    }
+                    wide{
+                        afternoon1{"tengah hari"}
+                        am{"PG"}
+                        evening1{"petang"}
+                        morning1{"tengah malam"}
+                        morning2{"pagi"}
+                        night1{"malam"}
+                        pm{"PTG"}
                     }
                 }
             }
@@ -842,6 +939,13 @@ ms{
         }
         day-narrow{
             dn{"hari"}
+            relative{
+                "-1"{"semlm"}
+                "-2"{"kelmarin"}
+                "0"{"hari ini"}
+                "1"{"esok"}
+                "2"{"lusa"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} hari"}
@@ -853,6 +957,13 @@ ms{
         }
         day-short{
             dn{"hari"}
+            relative{
+                "-1"{"semlm"}
+                "-2"{"kelmarin"}
+                "0"{"hari ini"}
+                "1"{"esok"}
+                "2"{"lusa"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} hari"}
@@ -994,6 +1105,11 @@ ms{
         }
         month-narrow{
             dn{"bln"}
+            relative{
+                "-1"{"bln lalu"}
+                "0"{"bln ini"}
+                "1"{"bln depan"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} bln lalu"}
@@ -1005,6 +1121,11 @@ ms{
         }
         month-short{
             dn{"bln"}
+            relative{
+                "-1"{"bln lalu"}
+                "0"{"bln ini"}
+                "1"{"bln depan"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} bln"}
@@ -1016,6 +1137,11 @@ ms{
         }
         quarter{
             dn{"Suku Tahun"}
+            relative{
+                "-1"{"suku lepas"}
+                "0"{"suku ini"}
+                "1"{"suku seterusnya"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} suku"}
@@ -1027,6 +1153,11 @@ ms{
         }
         quarter-narrow{
             dn{"suku"}
+            relative{
+                "-1"{"suku lepas"}
+                "0"{"suku ini"}
+                "1"{"suku seterusnya"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} suku"}
@@ -1038,6 +1169,11 @@ ms{
         }
         quarter-short{
             dn{"suku"}
+            relative{
+                "-1"{"suku lepas"}
+                "0"{"suku ini"}
+                "1"{"suku seterusnya"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} suku"}
@@ -1206,6 +1342,11 @@ ms{
         }
         week-narrow{
             dn{"mgu"}
+            relative{
+                "-1"{"mng lepas"}
+                "0"{"mng ini"}
+                "1"{"mng depan"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} mgu"}
@@ -1217,6 +1358,11 @@ ms{
         }
         week-short{
             dn{"mgu"}
+            relative{
+                "-1"{"mng lepas"}
+                "0"{"mng ini"}
+                "1"{"mng depan"}
+            }
             relativeTime{
                 future{
                     other{"dlm {0} mgu"}
@@ -1247,6 +1393,11 @@ ms{
         }
         year-narrow{
             dn{"thn"}
+            relative{
+                "-1"{"thn lepas"}
+                "0"{"thn ini"}
+                "1"{"thn depan"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} thn"}
@@ -1258,6 +1409,11 @@ ms{
         }
         year-short{
             dn{"thn"}
+            relative{
+                "-1"{"thn lepas"}
+                "0"{"thn ini"}
+                "1"{"thn depan"}
+            }
             relativeTime{
                 future{
                     other{"dalam {0} thn"}

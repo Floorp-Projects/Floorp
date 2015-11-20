@@ -831,7 +831,7 @@ DeviceStorageStatics::ListenerWrapper::OnFileWatcherUpdate(const nsCString& aDat
       listener->OnFileWatcherUpdate(data, file);
     }
   });
-  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
+  mOwningThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -844,7 +844,7 @@ DeviceStorageStatics::ListenerWrapper::OnDiskSpaceWatcher(bool aLowDiskSpace)
       listener->OnDiskSpaceWatcher(aLowDiskSpace);
     }
   });
-  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
+  mOwningThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -857,7 +857,7 @@ DeviceStorageStatics::ListenerWrapper::OnWritableNameChanged()
       listener->OnWritableNameChanged();
     }
   });
-  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
+  mOwningThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -872,7 +872,7 @@ DeviceStorageStatics::ListenerWrapper::OnVolumeStateChanged(nsIVolume* aVolume)
       listener->OnVolumeStateChanged(volume);
     }
   });
-  mOwningThread->Dispatch(r, NS_DISPATCH_NORMAL);
+  mOwningThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 #endif
 

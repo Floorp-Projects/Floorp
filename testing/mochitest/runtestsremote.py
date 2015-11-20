@@ -13,7 +13,7 @@ sys.path.insert(
 
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
-from runtests import Mochitest, MessageLogger
+from runtests import MochitestDesktop, MessageLogger
 from mochitest_options import MochitestArgumentParser
 
 import devicemanager
@@ -22,14 +22,15 @@ import mozinfo
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
 
-class MochiRemote(Mochitest):
+# TODO inherit from MochitestBase instead
+class MochiRemote(MochitestDesktop):
     _automation = None
     _dm = None
     localProfile = None
     logMessages = []
 
     def __init__(self, automation, devmgr, options):
-        Mochitest.__init__(self, options)
+        MochitestDesktop.__init__(self, options)
 
         self._automation = automation
         self._dm = devmgr
@@ -63,7 +64,7 @@ class MochiRemote(Mochitest):
         blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if blobberUploadDir:
             self._dm.getDirectory(self.remoteNSPR, blobberUploadDir)
-        Mochitest.cleanup(self, options)
+        MochitestDesktop.cleanup(self, options)
 
     def findPath(self, paths, filename=None):
         for path in paths:
@@ -155,7 +156,7 @@ class MochiRemote(Mochitest):
         """ Create the servers on the host and start them up """
         restoreRemotePaths = self.switchToLocalPaths(options)
         # ignoreSSLTunnelExts is a workaround for bug 1109310
-        Mochitest.startServers(
+        MochitestDesktop.startServers(
             self,
             options,
             debuggerInfo,
@@ -164,7 +165,7 @@ class MochiRemote(Mochitest):
 
     def buildProfile(self, options):
         restoreRemotePaths = self.switchToLocalPaths(options)
-        manifest = Mochitest.buildProfile(self, options)
+        manifest = MochitestDesktop.buildProfile(self, options)
         self.localProfile = options.profilePath
         self._dm.removeDir(self.remoteProfile)
 
@@ -185,7 +186,7 @@ class MochiRemote(Mochitest):
         options.fileLevel = 'INFO'
         options.profilePath = self.localProfile
         env["MOZ_HIDE_RESULTS_TABLE"] = "1"
-        retVal = Mochitest.buildURLOptions(self, options, env)
+        retVal = MochitestDesktop.buildURLOptions(self, options, env)
 
         # we really need testConfig.js (for browser chrome)
         try:
@@ -239,7 +240,7 @@ class MochiRemote(Mochitest):
         return None
 
     def buildBrowserEnv(self, options, debugger=False):
-        browserEnv = Mochitest.buildBrowserEnv(
+        browserEnv = MochitestDesktop.buildBrowserEnv(
             self,
             options,
             debugger=debugger)
@@ -248,7 +249,7 @@ class MochiRemote(Mochitest):
             del browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"]
         if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
             del browserEnv["XPCOM_MEM_BLOAT_LOG"]
-        # override nsprLogs to avoid processing in Mochitest base class
+        # override nsprLogs to avoid processing in MochitestDesktop base class
         self.nsprLogs = None
         browserEnv["NSPR_LOG_FILE"] = os.path.join(
             self.remoteNSPR,

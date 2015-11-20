@@ -233,7 +233,7 @@ sv{
             "belizisk dollar",
         }
         CAD{
-            "CAN$",
+            "CA$",
             "kanadensisk dollar",
         }
         CDF{
@@ -682,7 +682,7 @@ sv{
         }
         MRO{
             "MRO",
-            "mauretansk ouquiya",
+            "mauretansk ouguiya",
         }
         MTL{
             "MTL",
@@ -1134,7 +1134,7 @@ sv{
         }
         XXX{
             "XXX",
-            "okänd eller ogiltig valuta",
+            "okänd valuta",
         }
         YDD{
             "YDD",
@@ -1198,14 +1198,18 @@ sv{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1213,43 +1217,84 @@ sv{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         ESP{"ESP"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1390,7 +1435,7 @@ sv{
         }
         BHD{
             one{"bahrainsk dinar"}
-            other{"Bahrain-dinar"}
+            other{"bahrainska dinarer"}
         }
         BIF{
             one{"burundisk franc"}
@@ -1925,8 +1970,8 @@ sv{
             other{"macaoska pataca"}
         }
         MRO{
-            one{"mauretansk ouquiya"}
-            other{"mauretanska ouquiya"}
+            one{"mauretansk ouguiya"}
+            other{"mauretanska ouguiya"}
         }
         MTL{
             one{"maltesisk lire"}
@@ -2445,5 +2490,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
 }

@@ -91,7 +91,7 @@ zh{
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
-                currencyFormat{"¤ #,##0.00"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -99,7 +99,7 @@ zh{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0万"}
@@ -137,9 +137,47 @@ zh{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"0"}
+                    }
+                    10000{
+                        other{"¤0万"}
+                    }
+                    100000{
+                        other{"¤00万"}
+                    }
+                    1000000{
+                        other{"¤000万"}
+                    }
+                    10000000{
+                        other{"¤0000万"}
+                    }
+                    100000000{
+                        other{"¤0亿"}
+                    }
+                    1000000000{
+                        other{"¤00亿"}
+                    }
+                    10000000000{
+                        other{"¤000亿"}
+                    }
+                    100000000000{
+                        other{"¤0000亿"}
+                    }
+                    1000000000000{
+                        other{"¤0兆"}
+                    }
+                    10000000000000{
+                        other{"¤00兆"}
+                    }
+                    100000000000000{
+                        other{"¤000兆"}
+                    }
+                }
                 decimalFormat{
                     1000{
-                        other{"0千"}
+                        other{"0"}
                     }
                     10000{
                         other{"0万"}
@@ -195,7 +233,7 @@ zh{
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.20.31"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -218,6 +256,7 @@ zh{
                 MEd{"M-dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M-d"}
                 d{"d日"}
@@ -273,6 +312,7 @@ zh{
                 M{"MMM"}
                 MEd{"M-dE"}
                 MMMEd{"MMMd日E"}
+                MMMMd{"MMMMd日"}
                 MMMd{"MMMd日"}
                 Md{"M-d"}
                 UM{"U年MMM"}
@@ -287,6 +327,7 @@ zh{
                 yyyyMEd{"rU年MMMd，E"}
                 yyyyMMM{"rU年MMM"}
                 yyyyMMMEd{"rU年MMMdE"}
+                yyyyMMMM{"rU年MMMM"}
                 yyyyMMMd{"r年MMMd"}
                 yyyyMd{"r年MMMd"}
                 yyyyQQQ{"rU年QQQQ"}
@@ -831,6 +872,7 @@ zh{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
@@ -843,6 +885,7 @@ zh{
                 MEd{"M/dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M/d"}
                 d{"d日"}
@@ -959,6 +1002,10 @@ zh{
                 "上午",
                 "下午",
             }
+            AmPmMarkersAbbr{
+                "上午",
+                "下午",
+            }
             AmPmMarkersNarrow{
                 "上午",
                 "下午",
@@ -971,15 +1018,13 @@ zh{
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
-                "yy/M/d",
+                "y/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"中午"}
-            NoonMarkerNarrow{"中午"}
             appendItems{
                 Timezone{"{1}{0}"}
             }
@@ -988,8 +1033,8 @@ zh{
                 EHm{"EHH:mm"}
                 EHms{"EHH:mm:ss"}
                 Ed{"d日E"}
-                Ehm{"Eah:mm"}
-                Ehms{"Eah:mm:ss"}
+                Ehm{"E ah:mm"}
+                Ehms{"E ah:mm:ss"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
                 GyMMMEd{"Gy年M月d日E"}
@@ -1003,7 +1048,7 @@ zh{
                 MEd{"M/dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
-                MMMMdd{"M月dd日"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 MMdd{"MM/dd"}
                 Md{"M/d"}
@@ -1104,10 +1149,80 @@ zh{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"下午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                    }
+                    narrow{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                    }
+                    wide{
+                        afternoon1{"下午"}
+                        afternoon2{"下午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"清晨"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        am{"上午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"早上"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                        pm{"下午"}
+                    }
+                    narrow{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        am{"上午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"早上"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                        pm{"下午"}
+                    }
+                    wide{
+                        afternoon1{"中午"}
+                        afternoon2{"下午"}
+                        am{"上午"}
+                        evening1{"晚上"}
+                        midnight{"午夜"}
+                        morning1{"早上"}
+                        morning2{"上午"}
+                        night1{"凌晨"}
+                        pm{"下午"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "公元前",
                     "公元",
+                }
+                abbreviated%variant{
+                    "西元前",
+                    "西元",
                 }
                 narrow{
                     "公元前",
@@ -1116,6 +1231,10 @@ zh{
                 wide{
                     "公元前",
                     "公元",
+                }
+                wide%variant{
+                    "西元前",
+                    "西元",
                 }
             }
             intervalFormats{
@@ -1556,13 +1675,14 @@ zh{
                 MEd{"M-dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M-d"}
                 d{"d日"}
             }
             eras{
                 abbreviated{
-                    "回历",
+                    "伊斯兰历",
                 }
             }
             monthNames{
@@ -1685,6 +1805,7 @@ zh{
                 MEd{"M-dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M-d"}
                 d{"d日"}
@@ -1698,6 +1819,7 @@ zh{
                 yyyyMEd{"Gy-M-d（E）"}
                 yyyyMMM{"Gy年M月"}
                 yyyyMMMEd{"Gy年M月d日E"}
+                yyyyMMMM{"Gy年M月"}
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy-MM-dd"}
                 yyyyQQQ{"Gy年第Q季度"}
@@ -2058,6 +2180,7 @@ zh{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d日E"}
                 Gy{"Gy年"}
                 GyMMM{"Gy年M月"}
@@ -2067,6 +2190,7 @@ zh{
                 MEd{"M/dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
+                MMMMd{"M月d日"}
                 MMMd{"M月d日"}
                 Md{"M/d"}
                 d{"d日"}

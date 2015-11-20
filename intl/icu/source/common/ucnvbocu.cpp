@@ -399,8 +399,6 @@ _Bocu1FromUnicodeWithOffsets(UConverterFromUnicodeArgs *pArgs,
 
     int32_t sourceIndex, nextSourceIndex;
 
-U_ALIGN_CODE(16)
-
     /* set up the local pointers */
     cnv=pArgs->converter;
     source=pArgs->source;
@@ -1171,8 +1169,6 @@ _Bocu1ToUnicode(UConverterToUnicodeArgs *pArgs,
     int8_t byteIndex;
     uint8_t *bytes;
 
-U_ALIGN_CODE(16)
-
     /* set up the local pointers */
     cnv=pArgs->converter;
     source=(const uint8_t *)pArgs->source;
@@ -1392,11 +1388,7 @@ static const UConverterStaticData _Bocu1StaticData={
     { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } /* reserved */
 };
 
-const UConverterSharedData _Bocu1Data={
-    sizeof(UConverterSharedData), ~((uint32_t)0),
-    NULL, NULL, &_Bocu1StaticData, FALSE, &_Bocu1Impl,
-    0,
-    UCNV_MBCS_TABLE_INITIALIZER
-};
+const UConverterSharedData _Bocu1Data=
+        UCNV_IMMUTABLE_SHARED_DATA_INITIALIZER(&_Bocu1StaticData, &_Bocu1Impl);
 
 #endif

@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 hi{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.47"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिदजान"}
@@ -388,7 +388,7 @@ hi{
             ec{"ज्यूनाउ"}
         }
         "America:Kentucky:Monticello"{
-            ec{"मोंटीसेलो, केंचुकी"}
+            ec{"मोंटीसेलो, केंटकी"}
         }
         "America:Kralendijk"{
             ec{"क्रालैंडिजिक"}
@@ -684,6 +684,9 @@ hi{
         "Asia:Calcutta"{
             ec{"कोलकाता"}
         }
+        "Asia:Chita"{
+            ec{"त्शिता"}
+        }
         "Asia:Choibalsan"{
             ec{"चोइबालसन"}
         }
@@ -824,6 +827,9 @@ hi{
         }
         "Asia:Singapore"{
             ec{"सिंगापुर"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"स्रेद्निकोलिमस्क"}
         }
         "Asia:Taipei"{
             ec{"ताईपेई"}
@@ -1144,6 +1150,9 @@ hi{
         }
         "Pacific:Auckland"{
             ec{"ऑकलैंड"}
+        }
+        "Pacific:Bougainville"{
+            ec{"बोगनविल"}
         }
         "Pacific:Chatham"{
             ec{"चाथम"}

@@ -9,9 +9,9 @@
 chr{
     AuxExemplarCharacters{"[]"}
     ExemplarCharacters{
-        "[Ꭰ Ꭱ Ꭲ Ꭳ Ꭴ Ꭵ Ꭶ Ꭷ Ꭸ Ꭹ Ꭺ Ꭻ Ꭼ Ꭽ Ꭾ Ꭿ Ꮀ Ꮁ Ꮂ Ꮃ Ꮄ Ꮅ Ꮆ Ꮇ Ꮈ Ꮉ Ꮊ Ꮋ Ꮌ Ꮍ Ꮎ Ꮏ Ꮐ Ꮑ Ꮒ Ꮓ Ꮔ Ꮕ"
-        " Ꮖ Ꮗ Ꮘ Ꮙ Ꮚ Ꮛ Ꮜ Ꮝ Ꮞ Ꮟ Ꮠ Ꮡ Ꮢ Ꮣ Ꮤ Ꮥ Ꮦ Ꮧ Ꮨ Ꮩ Ꮪ Ꮫ Ꮬ Ꮭ Ꮮ Ꮯ Ꮰ Ꮱ Ꮲ Ꮳ Ꮴ Ꮵ Ꮶ Ꮷ Ꮸ Ꮹ Ꮺ Ꮻ"
-        " Ꮼ Ꮽ Ꮾ Ꮿ Ᏸ Ᏹ Ᏺ Ᏻ Ᏼ]"
+        "[ꭰ ꭱ ꭲ ꭳ ꭴ ꭵ ꭶ ꭷ ꭸ ꭹ ꭺ ꭻ ꭼ ꭽ ꭾ ꭿ ꮀ ꮁ ꮂ ꮃ ꮄ ꮅ ꮆ ꮇ ꮈ ꮉ ꮊ ꮋ ꮌ ꮍ ꮎ ꮏ ꮐ ꮑ ꮒ ꮓ ꮔ ꮕ"
+        " ꮖ ꮗ ꮘ ꮙ ꮚ ꮛ ꮜ ꮝ ꮞ ꮟ ꮠ ꮡ ꮢ ꮣ ꮤ ꮥ ꮦ ꮧ ꮨ ꮩ ꮪ ꮫ ꮬ ꮭ ꮮ ꮯ ꮰ ꮱ ꮲ ꮳ ꮴ ꮵ ꮶ ꮷ ꮸ ꮹ ꮺ ꮻ"
+        " ꮼ ꮽ ꮾ ꮿ ᏸ ᏹ ᏺ ᏻ ᏼ]"
     }
     ExemplarCharactersIndex{"[Ꭰ Ꭶ Ꭽ Ꮃ Ꮉ Ꮎ Ꮖ Ꮜ Ꮣ Ꮬ Ꮳ Ꮹ Ꮿ]"}
     NumberElements{
@@ -37,7 +37,7 @@ chr{
             }
         }
     }
-    Version{"2.1.6.69"}
+    Version{"2.1.19.77"}
     calendar{
         generic{
             DateTimePatterns{
@@ -150,7 +150,6 @@ chr{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"ᎢᎦ"}
             availableFormats{
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -203,6 +202,24 @@ chr{
                         "Ꮕ",
                         "Ꮷ",
                         "Ꭴ",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    wide{
+                        afternoon1{"ᏒᎯᏱᎢᏗᏢ"}
+                        morning1{"ᏌᎾᎴ"}
+                        noon{"ᎢᎦ"}
+                    }
+                }
+                stand-alone{
+                    wide{
+                        afternoon1{"ᏒᎯᏱᎢᏗᏢ"}
+                        am{"ᏌᎾᎴ"}
+                        morning1{"ᏌᎾᎴ"}
+                        noon{"ᎢᎦ"}
+                        pm{"ᏒᎯᏱᎢᏗᏢ"}
                     }
                 }
             }

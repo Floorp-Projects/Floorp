@@ -7,14 +7,15 @@
 // *
 // ***************************************************************************
 hi{
-    Version{"2.0.96.14"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[normalization on][reorder Deva Beng Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
+                "[normalization on]"
+                "[reorder Deva Beng Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
                 "&ॐ<ं<<ँ<ः"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

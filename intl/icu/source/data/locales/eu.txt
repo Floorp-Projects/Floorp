@@ -155,7 +155,7 @@ eu{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
     calendar{
         buddhist{
             eras{
@@ -299,7 +299,7 @@ eu{
                 yMMMEd{
                     M{"G y('e')'ko' MMMM dd, EEEE – MMMM dd, EEEE"}
                     d{"G y('e')'ko' MMMM dd, EEEE – MMMM dd, EEEE"}
-                    y{"G y('e')'ko' MMMM dd, EEEE – MMMM dd, EEEE"}
+                    y{"G y('e')'ko' MMMM dd, EEEE – y('e')'ko' MMMM dd, EEEE"}
                 }
                 yMMMM{
                     M{"G y('e')'ko' MMMM – MMMM"}
@@ -345,8 +345,6 @@ eu{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"eguerdia"}
-            NoonMarkerNarrow{"e"}
             appendItems{
                 Timezone{"{0} ({1})"}
             }
@@ -463,6 +461,21 @@ eu{
                         "Osteguna",
                         "Ostirala",
                         "Larunbata",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    wide{
+                        afternoon1{"eguerdia"}
+                        afternoon2{"arratsaldea"}
+                        am{"AM"}
+                        evening1{"iluntzea"}
+                        midnight{"gauerdia"}
+                        morning1{"goizaldea"}
+                        morning2{"goiza"}
+                        night1{"gaua"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -1189,6 +1202,11 @@ eu{
         }
         year-narrow{
             dn{"urtea"}
+            relative{
+                "-1"{"aurreko urtea"}
+                "0"{"aurten"}
+                "1"{"hurrengo urtea"}
+            }
             relativeTime{
                 future{
                     one{"{0} urte barru"}
@@ -1202,6 +1220,11 @@ eu{
         }
         year-short{
             dn{"urtea"}
+            relative{
+                "-1"{"aurreko urtea"}
+                "0"{"aurten"}
+                "1"{"hurrengo urtea"}
+            }
             relativeTime{
                 future{
                     one{"{0} urte barru"}

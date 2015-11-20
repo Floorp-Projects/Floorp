@@ -722,12 +722,10 @@ nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent)
         case NS_STYLE_FRAME_YES:
         case NS_STYLE_FRAME_1:
           return eFrameborder_Yes;
-          break;
 
         case NS_STYLE_FRAME_NO:
         case NS_STYLE_FRAME_0:
           return eFrameborder_No;
-          break;
       }
     }
   }

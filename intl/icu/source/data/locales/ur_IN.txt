@@ -10,7 +10,7 @@ ur_IN{
     NumberElements{
         default{"arabext"}
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -27,18 +27,6 @@ ur_IN{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
-            }
-        }
-        gregorian{
-            eras{
-                abbreviated{
-                    "قبل مسیح",
-                    "عیسوی",
-                }
-                wide{
-                    "قبل مسیح",
-                    "عیسوی",
-                }
             }
         }
     }
@@ -140,12 +128,6 @@ ur_IN{
         }
         month-short{
             dn{"مہینہ"}
-        }
-        sat{
-            relative{
-                "-1"{"پچھلے ہفتہ"}
-                "0"{"اس ہفتہ"}
-            }
         }
         second{
             relativeTime{

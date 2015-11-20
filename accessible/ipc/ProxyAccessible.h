@@ -144,6 +144,8 @@ public:
   nsIAtom* ARIARoleAtom() const;
 
   int32_t GetLevelInternal();
+  void ScrollTo(uint32_t aScrollType);
+  void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 
   int32_t CaretLineNumber();
   int32_t CaretOffset();
