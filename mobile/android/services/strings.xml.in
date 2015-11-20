@@ -242,3 +242,7 @@
 
 <!-- Log Personal information -->
 <string name="fxaccount_enable_debug_mode">&fxaccount_enable_debug_mode;</string>
+
+<!-- Old Sync Account deprecated notification. -->
+<string name="old_sync_deprecated_notification_title">&old_sync_deprecated_notification_title;</string>
+<string name="old_sync_deprecated_notification_content">&old_sync_deprecated_notification_content;</string>
