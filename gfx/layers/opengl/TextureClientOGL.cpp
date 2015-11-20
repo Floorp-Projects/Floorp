@@ -18,42 +18,33 @@ namespace layers {
 class CompositableForwarder;
 
 ////////////////////////////////////////////////////////////////////////
-// EGLImage
+// EGLImageTextureClient
 
-EGLImageTextureData::EGLImageTextureData(EGLImageImage* aImage, gfx::IntSize aSize)
-: mImage(aImage)
-, mSize(aSize)
-{
-  MOZ_ASSERT(aImage);
-}
-
-already_AddRefed<TextureClient>
-EGLImageTextureData::CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSize,
-                                         ISurfaceAllocator* aAllocator, TextureFlags aFlags)
+EGLImageTextureClient::EGLImageTextureClient(ISurfaceAllocator* aAllocator,
+                                             TextureFlags aFlags,
+                                             EGLImageImage* aImage,
+                                             gfx::IntSize aSize)
+  : TextureClient(aAllocator, aFlags)
+  , mImage(aImage)
+  , mSize(aSize)
+  , mIsLocked(false)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Can't pass an `EGLImage` between processes.");
 
-  if (!aImage || !XRE_IsParentProcess()) {
-    return nullptr;
-  }
-
-  // XXX - This is quite sad and slow.
-  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
+  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
   if (aImage->GetOriginPos() == gl::OriginPos::BottomLeft) {
-    aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
+    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
   }
-
-  return TextureClient::CreateWithData(
-    new EGLImageTextureData(aImage, aSize),
-    aFlags, aAllocator
-  );
 }
 
 bool
-EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+EGLImageTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
+  MOZ_ASSERT(IsValid());
+  MOZ_ASSERT(IsAllocated());
+
   const bool hasAlpha = true;
   aOutDescriptor =
     EGLImageDescriptor((uintptr_t)mImage->GetImage(),
@@ -62,53 +53,82 @@ EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
+bool
+EGLImageTextureClient::Lock(OpenMode mode)
+  {
+    MOZ_ASSERT(!mIsLocked);
+    if (!IsValid() || !IsAllocated()) {
+      return false;
+    }
+    mIsLocked = true;
+    return true;
+  }
+
+void
+EGLImageTextureClient::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
+}
+
 ////////////////////////////////////////////////////////////////////////
-// AndroidSurface
+// SurfaceTextureClient
 
 #ifdef MOZ_WIDGET_ANDROID
 
-already_AddRefed<TextureClient>
-AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTexture* aSurfTex,
-                                               gfx::IntSize aSize,
-                                               gl::OriginPos aOriginPos,
-                                               ISurfaceAllocator* aAllocator,
-                                               TextureFlags aFlags)
+SurfaceTextureClient::SurfaceTextureClient(ISurfaceAllocator* aAllocator,
+                                           TextureFlags aFlags,
+                                           AndroidSurfaceTexture* aSurfTex,
+                                           gfx::IntSize aSize,
+                                           gl::OriginPos aOriginPos)
+  : TextureClient(aAllocator, aFlags)
+  , mSurfTex(aSurfTex)
+  , mSize(aSize)
+  , mIsLocked(false)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
-             "Can't pass an android surfaces between processes.");
+             "Can't pass pointers between processes.");
 
-  if (!aSurfTex || !XRE_IsParentProcess()) {
-    return nullptr;
-  }
-
-  // XXX - This is quite sad and slow.
-  aFlags |= TextureFlags::DEALLOCATE_CLIENT;
+  // Our data is always owned externally.
+  AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
   if (aOriginPos == gl::OriginPos::BottomLeft) {
-    aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
+    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
   }
-
-  return TextureClient::CreateWithData(
-    new AndroidSurfaceTextureData(aSurfTex, aSize),
-    aFlags, aAllocator
-  );
 }
 
-AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTexture* aSurfTex,
-                                                     gfx::IntSize aSize)
-  : mSurfTex(aSurfTex)
-  , mSize(aSize)
-{}
-
-AndroidSurfaceTextureData::~AndroidSurfaceTextureData()
-{}
+SurfaceTextureClient::~SurfaceTextureClient()
+{
+  // Our data is always owned externally.
+}
 
 bool
-AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+SurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
+  MOZ_ASSERT(IsValid());
+  MOZ_ASSERT(IsAllocated());
+
   aOutDescriptor = SurfaceTextureDescriptor((uintptr_t)mSurfTex.get(),
                                             mSize);
   return true;
+}
+
+bool
+SurfaceTextureClient::Lock(OpenMode mode)
+{
+  MOZ_ASSERT(!mIsLocked);
+  if (!IsValid() || !IsAllocated()) {
+    return false;
+  }
+  mIsLocked = true;
+  return true;
+}
+
+void
+SurfaceTextureClient::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
 }
 
 #endif // MOZ_WIDGET_ANDROID
