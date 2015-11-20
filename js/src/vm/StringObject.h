@@ -29,7 +29,6 @@ class StringObject : public NativeObject
      * [[Prototype]] is determined from context.
      */
     static inline StringObject* create(JSContext* cx, HandleString str,
-                                       HandleObject proto = nullptr,
                                        NewObjectKind newKind = GenericObject);
 
     /*

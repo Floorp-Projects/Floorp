@@ -24,11 +24,10 @@ class BooleanObject : public NativeObject
     static const Class class_;
 
     /*
-     * Creates a new Boolean object boxing the given primitive bool.
-     * If proto is nullptr, the [[Prototype]] will default to Boolean.prototype.
+     * Creates a new Boolean object boxing the given primitive bool.  The
+     * object's [[Prototype]] is determined from context.
      */
-    static inline BooleanObject* create(JSContext* cx, bool b,
-                                        HandleObject proto = nullptr);
+    static inline BooleanObject* create(JSContext* cx, bool b);
 
     bool unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toBoolean();
