@@ -431,7 +431,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
             ST_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
             return -ENOMEM;
         }
-        RefPtr<TextureClient> textureClient = new ClientTexture(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
+        RefPtr<TextureClient> textureClient = new TextureClient(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
         sp<GraphicBuffer> graphicBuffer = texData->GetGraphicBuffer();
 
         { // Scope for the lock
