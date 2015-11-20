@@ -13,8 +13,6 @@ const Services = require("Services");
 const {DebuggerServer} = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-Cu.importGlobalProperties(["atob"]);
-
 loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconsole/network-helper"));
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
