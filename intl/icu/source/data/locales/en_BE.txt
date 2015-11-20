@@ -19,14 +19,14 @@ en_BE{
             }
         }
     }
-    Version{"2.1.11.50"}
+    Version{"2.1.19.14"}
     calendar{
         generic{
             DateTimePatterns{
-                "HH 'h' mm 'min' ss 's' zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y G",
                 "d MMMM y G",
                 "dd MMM y G",
@@ -46,10 +46,10 @@ en_BE{
         }
         gregorian{
             DateTimePatterns{
-                "HH 'h' mm 'min' ss 's' zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "dd MMM y",

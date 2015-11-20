@@ -1,6 +1,6 @@
 /*
 *****************************************************************************************
-* Copyright (C) 2010-2012, International Business Machines
+* Copyright (C) 2010-2012,2015 International Business Machines
 * Corporation and others. All Rights Reserved.
 *****************************************************************************************
 */
@@ -160,6 +160,9 @@ U_NAMESPACE_END
  *            the beginning and ending indices of field number position->field,
  *            if such a field exists. This parameter may be NULL, in which case
  *            no field position data is returned.
+ *            There may be multiple instances of a given field type in an
+ *            interval format; in this case the position indices refer to the
+ *            first instance.
  * @param status
  *            A pointer to a UErrorCode to receive any errors.
  * @return

@@ -1198,14 +1198,18 @@ fi{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1213,40 +1217,83 @@ fi{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
+        KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$U"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -2298,12 +2345,12 @@ fi{
             other{"CFA-frangia BEAC"}
         }
         XAG{
-            one{"hopeayksikkö"}
-            other{"hopeayksikköä"}
+            one{"troy-unssi hopeaa"}
+            other{"troy-unssia hopeaa"}
         }
         XAU{
-            one{"kultayksikkö"}
-            other{"kultayksikköä"}
+            one{"troy-unssi kultaa"}
+            other{"troy-unssia kultaa"}
         }
         XBA{
             one{"EURCO"}
@@ -2346,16 +2393,16 @@ fi{
             other{"CFA-frangia BCEAO"}
         }
         XPD{
-            one{"palladiumyksikkö"}
-            other{"palladiumyksikköä"}
+            one{"troy-unssi palladiumia"}
+            other{"troy-unssia palladiumia"}
         }
         XPF{
             one{"CFP-frangi"}
             other{"CFP-frangia"}
         }
         XPT{
-            one{"platinayksikkö"}
-            other{"platinayksikköä"}
+            one{"troy-unssi platinaa"}
+            other{"troy-unssia platinaa"}
         }
         XRE{
             one{"RINET-rahastoyksikkö"}
@@ -2442,5 +2489,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.13.33"}
+    Version{"2.1.19.14"}
 }

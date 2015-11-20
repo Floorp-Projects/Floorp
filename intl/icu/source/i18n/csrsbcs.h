@@ -54,14 +54,15 @@ public:
 #if !UCONFIG_ONLY_HTML_CONVERSION
 class NGramParser_IBM420 : public NGramParser
 {
-private:
-	int32_t alef;
-	int32_t isLamAlef(int32_t b);
-	int32_t nextByte(InputText *det);
-	void parseCharacters(InputText *det);
-
 public:
     NGramParser_IBM420(const int32_t *theNgramList, const uint8_t *theCharMap);
+    ~NGramParser_IBM420();
+
+private:
+    int32_t alef;
+    int32_t isLamAlef(int32_t b);
+    int32_t nextByte(InputText *det);
+    void parseCharacters(InputText *det);
 };
 #endif
 

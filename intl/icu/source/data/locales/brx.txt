@@ -41,7 +41,7 @@ brx{
         }
         native{"deva"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.74"}
     calendar{
         generic{
             DateTimePatterns{
@@ -60,7 +60,10 @@ brx{
                 "{1} {0}",
             }
             availableFormats{
-                GGGGyMMMMEEEEdd{"EEEE,dd MMMM GGGGy"}
+                Gy{"y G"}
+                GyMMM{"MMM, y G"}
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -105,7 +108,10 @@ brx{
                 "{1} {0}",
             }
             availableFormats{
-                GGGGyMMMMEEEEdd{"EEEE,dd MMMM GGGGy"}
+                Gy{"y G"}
+                GyMMM{"MMM, y G"}
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}

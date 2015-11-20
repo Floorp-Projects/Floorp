@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2004-2014, International Business Machines
+* Copyright (c) 2004-2015, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -34,47 +34,47 @@ UOBJECT_DEFINE_RTTI_IMPLEMENTATION(MeasureUnit)
 static const int32_t gOffsets[] = {
     0,
     2,
-    6,
-    15,
-    17,
-    277,
-    287,
-    297,
-    301,
-    307,
-    311,
-    329,
-    330,
-    341,
-    347,
-    352,
-    353,
+    7,
+    16,
+    19,
+    279,
+    289,
+    300,
+    304,
+    310,
+    314,
+    333,
+    334,
+    345,
+    351,
     356,
-    359,
-    381
+    357,
+    361,
+    365,
+    389
 };
 
 static const int32_t gIndexes[] = {
     0,
     2,
-    6,
-    15,
-    17,
-    17,
-    27,
-    37,
-    41,
-    47,
-    51,
-    69,
-    70,
-    81,
-    87,
-    92,
-    93,
+    7,
+    16,
+    19,
+    19,
+    29,
+    40,
+    44,
+    50,
+    54,
+    73,
+    74,
+    85,
+    91,
     96,
-    99,
-    121
+    97,
+    101,
+    105,
+    129
 };
 
 // Must be sorted alphabetically.
@@ -108,6 +108,7 @@ static const char * const gSubTypes[] = {
     "arc-second",
     "degree",
     "radian",
+    "revolution",
     "acre",
     "hectare",
     "square-centimeter",
@@ -117,6 +118,7 @@ static const char * const gSubTypes[] = {
     "square-meter",
     "square-mile",
     "square-yard",
+    "liter-per-100kilometers",
     "liter-per-kilometer",
     "mile-per-gallon",
     "ADP",
@@ -389,6 +391,7 @@ static const char * const gSubTypes[] = {
     "megabyte",
     "terabit",
     "terabyte",
+    "century",
     "day",
     "hour",
     "microsecond",
@@ -425,6 +428,7 @@ static const char * const gSubTypes[] = {
     "meter",
     "micrometer",
     "mile",
+    "mile-scandinavian",
     "millimeter",
     "nanometer",
     "nautical-mile",
@@ -456,10 +460,12 @@ static const char * const gSubTypes[] = {
     "pound-per-square-inch",
     "karat",
     "kilometer-per-hour",
+    "knot",
     "meter-per-second",
     "mile-per-hour",
     "celsius",
     "fahrenheit",
+    "generic",
     "kelvin",
     "acre-foot",
     "bushel",
@@ -472,6 +478,7 @@ static const char * const gSubTypes[] = {
     "cubic-mile",
     "cubic-yard",
     "cup",
+    "cup-metric",
     "deciliter",
     "fluid-ounce",
     "gallon",
@@ -480,6 +487,7 @@ static const char * const gSubTypes[] = {
     "megaliter",
     "milliliter",
     "pint",
+    "pint-metric",
     "quart",
     "tablespoon",
     "teaspoon"
@@ -487,12 +495,12 @@ static const char * const gSubTypes[] = {
 
 // Must be sorted by first value and then second value.
 static int32_t unitPerUnitToSingleUnit[][4] = {
-        {318, 288, 16, 0},
-        {320, 294, 16, 1},
-        {322, 288, 16, 2},
-        {322, 372, 3, 1},
-        {338, 10, 14, 4},
-        {374, 318, 3, 0}
+        {321, 291, 16, 0},
+        {323, 297, 16, 2},
+        {325, 291, 16, 3},
+        {325, 379, 3, 2},
+        {342, 11, 14, 4},
+        {381, 321, 3, 1}
 };
 
 MeasureUnit *MeasureUnit::createGForce(UErrorCode &status) {
@@ -517,6 +525,10 @@ MeasureUnit *MeasureUnit::createDegree(UErrorCode &status) {
 
 MeasureUnit *MeasureUnit::createRadian(UErrorCode &status) {
     return MeasureUnit::create(1, 3, status);
+}
+
+MeasureUnit *MeasureUnit::createRevolutionAngle(UErrorCode &status) {
+    return MeasureUnit::create(1, 4, status);
 }
 
 MeasureUnit *MeasureUnit::createAcre(UErrorCode &status) {
@@ -555,12 +567,16 @@ MeasureUnit *MeasureUnit::createSquareYard(UErrorCode &status) {
     return MeasureUnit::create(2, 8, status);
 }
 
-MeasureUnit *MeasureUnit::createLiterPerKilometer(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createLiterPer100Kilometers(UErrorCode &status) {
     return MeasureUnit::create(3, 0, status);
 }
 
-MeasureUnit *MeasureUnit::createMilePerGallon(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createLiterPerKilometer(UErrorCode &status) {
     return MeasureUnit::create(3, 1, status);
+}
+
+MeasureUnit *MeasureUnit::createMilePerGallon(UErrorCode &status) {
+    return MeasureUnit::create(3, 2, status);
 }
 
 MeasureUnit *MeasureUnit::createBit(UErrorCode &status) {
@@ -603,44 +619,48 @@ MeasureUnit *MeasureUnit::createTerabyte(UErrorCode &status) {
     return MeasureUnit::create(5, 9, status);
 }
 
-MeasureUnit *MeasureUnit::createDay(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createCentury(UErrorCode &status) {
     return MeasureUnit::create(6, 0, status);
 }
 
-MeasureUnit *MeasureUnit::createHour(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createDay(UErrorCode &status) {
     return MeasureUnit::create(6, 1, status);
 }
 
-MeasureUnit *MeasureUnit::createMicrosecond(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createHour(UErrorCode &status) {
     return MeasureUnit::create(6, 2, status);
 }
 
-MeasureUnit *MeasureUnit::createMillisecond(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMicrosecond(UErrorCode &status) {
     return MeasureUnit::create(6, 3, status);
 }
 
-MeasureUnit *MeasureUnit::createMinute(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMillisecond(UErrorCode &status) {
     return MeasureUnit::create(6, 4, status);
 }
 
-MeasureUnit *MeasureUnit::createMonth(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMinute(UErrorCode &status) {
     return MeasureUnit::create(6, 5, status);
 }
 
-MeasureUnit *MeasureUnit::createNanosecond(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMonth(UErrorCode &status) {
     return MeasureUnit::create(6, 6, status);
 }
 
-MeasureUnit *MeasureUnit::createSecond(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createNanosecond(UErrorCode &status) {
     return MeasureUnit::create(6, 7, status);
 }
 
-MeasureUnit *MeasureUnit::createWeek(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createSecond(UErrorCode &status) {
     return MeasureUnit::create(6, 8, status);
 }
 
-MeasureUnit *MeasureUnit::createYear(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createWeek(UErrorCode &status) {
     return MeasureUnit::create(6, 9, status);
+}
+
+MeasureUnit *MeasureUnit::createYear(UErrorCode &status) {
+    return MeasureUnit::create(6, 10, status);
 }
 
 MeasureUnit *MeasureUnit::createAmpere(UErrorCode &status) {
@@ -747,28 +767,32 @@ MeasureUnit *MeasureUnit::createMile(UErrorCode &status) {
     return MeasureUnit::create(10, 11, status);
 }
 
-MeasureUnit *MeasureUnit::createMillimeter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMileScandinavian(UErrorCode &status) {
     return MeasureUnit::create(10, 12, status);
 }
 
-MeasureUnit *MeasureUnit::createNanometer(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMillimeter(UErrorCode &status) {
     return MeasureUnit::create(10, 13, status);
 }
 
-MeasureUnit *MeasureUnit::createNauticalMile(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createNanometer(UErrorCode &status) {
     return MeasureUnit::create(10, 14, status);
 }
 
-MeasureUnit *MeasureUnit::createParsec(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createNauticalMile(UErrorCode &status) {
     return MeasureUnit::create(10, 15, status);
 }
 
-MeasureUnit *MeasureUnit::createPicometer(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createParsec(UErrorCode &status) {
     return MeasureUnit::create(10, 16, status);
 }
 
-MeasureUnit *MeasureUnit::createYard(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createPicometer(UErrorCode &status) {
     return MeasureUnit::create(10, 17, status);
+}
+
+MeasureUnit *MeasureUnit::createYard(UErrorCode &status) {
+    return MeasureUnit::create(10, 18, status);
 }
 
 MeasureUnit *MeasureUnit::createLux(UErrorCode &status) {
@@ -871,12 +895,16 @@ MeasureUnit *MeasureUnit::createKilometerPerHour(UErrorCode &status) {
     return MeasureUnit::create(16, 0, status);
 }
 
-MeasureUnit *MeasureUnit::createMeterPerSecond(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createKnot(UErrorCode &status) {
     return MeasureUnit::create(16, 1, status);
 }
 
-MeasureUnit *MeasureUnit::createMilePerHour(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMeterPerSecond(UErrorCode &status) {
     return MeasureUnit::create(16, 2, status);
+}
+
+MeasureUnit *MeasureUnit::createMilePerHour(UErrorCode &status) {
+    return MeasureUnit::create(16, 3, status);
 }
 
 MeasureUnit *MeasureUnit::createCelsius(UErrorCode &status) {
@@ -887,8 +915,12 @@ MeasureUnit *MeasureUnit::createFahrenheit(UErrorCode &status) {
     return MeasureUnit::create(17, 1, status);
 }
 
-MeasureUnit *MeasureUnit::createKelvin(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createGenericTemperature(UErrorCode &status) {
     return MeasureUnit::create(17, 2, status);
+}
+
+MeasureUnit *MeasureUnit::createKelvin(UErrorCode &status) {
+    return MeasureUnit::create(17, 3, status);
 }
 
 MeasureUnit *MeasureUnit::createAcreFoot(UErrorCode &status) {
@@ -935,48 +967,56 @@ MeasureUnit *MeasureUnit::createCup(UErrorCode &status) {
     return MeasureUnit::create(18, 10, status);
 }
 
-MeasureUnit *MeasureUnit::createDeciliter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createCupMetric(UErrorCode &status) {
     return MeasureUnit::create(18, 11, status);
 }
 
-MeasureUnit *MeasureUnit::createFluidOunce(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createDeciliter(UErrorCode &status) {
     return MeasureUnit::create(18, 12, status);
 }
 
-MeasureUnit *MeasureUnit::createGallon(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createFluidOunce(UErrorCode &status) {
     return MeasureUnit::create(18, 13, status);
 }
 
-MeasureUnit *MeasureUnit::createHectoliter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createGallon(UErrorCode &status) {
     return MeasureUnit::create(18, 14, status);
 }
 
-MeasureUnit *MeasureUnit::createLiter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createHectoliter(UErrorCode &status) {
     return MeasureUnit::create(18, 15, status);
 }
 
-MeasureUnit *MeasureUnit::createMegaliter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createLiter(UErrorCode &status) {
     return MeasureUnit::create(18, 16, status);
 }
 
-MeasureUnit *MeasureUnit::createMilliliter(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMegaliter(UErrorCode &status) {
     return MeasureUnit::create(18, 17, status);
 }
 
-MeasureUnit *MeasureUnit::createPint(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMilliliter(UErrorCode &status) {
     return MeasureUnit::create(18, 18, status);
 }
 
-MeasureUnit *MeasureUnit::createQuart(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createPint(UErrorCode &status) {
     return MeasureUnit::create(18, 19, status);
 }
 
-MeasureUnit *MeasureUnit::createTablespoon(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createPintMetric(UErrorCode &status) {
     return MeasureUnit::create(18, 20, status);
 }
 
-MeasureUnit *MeasureUnit::createTeaspoon(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createQuart(UErrorCode &status) {
     return MeasureUnit::create(18, 21, status);
+}
+
+MeasureUnit *MeasureUnit::createTablespoon(UErrorCode &status) {
+    return MeasureUnit::create(18, 22, status);
+}
+
+MeasureUnit *MeasureUnit::createTeaspoon(UErrorCode &status) {
+    return MeasureUnit::create(18, 23, status);
 }
 
 // End generated code

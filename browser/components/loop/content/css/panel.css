@@ -382,6 +382,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
   right: 21px;
   bottom: auto;
   left: auto;
+  z-index: 1;
 }
 
 /* Keep ".room-list > .room-entry > h2" in sync with these. */

@@ -16,7 +16,7 @@ bs{
         word-initial{"… {0}"}
         word-medial{"{0}… {1}"}
     }
-    ExemplarCharacters{"[a b c ć č d đ {dž} e f g h i j k l {lj} m n {nj} o p r s š t u v z ž]"}
+    ExemplarCharacters{"[a b c č ć d {dž} đ e f g h i j k l {lj} m n {nj} o p r s š t u v z ž]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -177,7 +177,7 @@ bs{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.13.46"}
+    Version{"2.1.19.77"}
     calendar{
         generic{
             DateTimePatterns{
@@ -196,6 +196,7 @@ bs{
                 "{1}, {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E, dd."}
                 Gy{"y. G"}
                 GyMMM{"MMM y. G"}
@@ -315,8 +316,6 @@ bs{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"podne"}
-            NoonMarkerNarrow{"podne"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -334,6 +333,8 @@ bs{
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"E, dd.MM."}
                 MMM{"LLL"}
@@ -347,6 +348,8 @@ bs{
                 h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y."}
                 yM{"MM.y."}
@@ -438,13 +441,58 @@ bs{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"poslijepodne"}
+                        evening1{"večer"}
+                        midnight{"ponoć"}
+                        morning1{"jutro"}
+                        night1{"noć"}
+                        noon{"podne"}
+                    }
+                    narrow{
+                        afternoon1{"poslijepodne"}
+                        evening1{"večer"}
+                        midnight{"ponoć"}
+                        morning1{"jutro"}
+                        night1{"noć"}
+                        noon{"podne"}
+                    }
+                    wide{
+                        afternoon1{"poslijepodne"}
+                        evening1{"večer"}
+                        midnight{"ponoć"}
+                        morning1{"jutro"}
+                        night1{"noć"}
+                        noon{"podne"}
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        am{"prijepodne"}
+                        noon{"podne"}
+                        pm{"popodne"}
+                    }
+                    wide{
+                        afternoon1{"poslijepodne"}
+                        am{"prije podne"}
+                        evening1{"veče"}
+                        midnight{"u ponoć"}
+                        morning1{"jutro"}
+                        night1{"noć"}
+                        noon{"podne"}
+                        pm{"popodne"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "p. n. e.",
                     "n. e.",
                 }
                 abbreviated%variant{
-                    "pr. n. e.",
+                    "pr.n.e.",
                     "n.e.",
                 }
                 wide{
@@ -741,7 +789,7 @@ bs{
         day{
             dn{"dan"}
             relative{
-                "-1"{"juče"}
+                "-1"{"jučer"}
                 "-2"{"prekjuče"}
                 "0"{"danas"}
                 "1"{"sutra"}

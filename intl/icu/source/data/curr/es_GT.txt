@@ -11,8 +11,18 @@ es_GT{
     Currencies{
         GTQ{
             "Q",
-            "quetzal guatemalteco",
+            "quetzal",
         }
     }
-    Version{"2.1.13.23"}
+    CurrencyPlurals{
+        GTQ{
+            one{"quetzal"}
+            other{"quetzales"}
+        }
+    }
+    CurrencyUnitPatterns{
+        one{"{1} {0}"}
+        other{"{1} {0}"}
+    }
+    Version{"2.1.20.32"}
 }

@@ -354,7 +354,7 @@ ml{
         }
         GBP{
             "£",
-            "ബ്രിട്ടീഷ് പൗണ്ട് സ്‌റ്റെർലിംഗ്",
+            "ബ്രിട്ടീഷ് പൗണ്ട്",
         }
         GEK{
             "GEK",
@@ -482,7 +482,7 @@ ml{
         }
         JPY{
             "¥",
-            "ജപ്പാനീസ് യെൻ",
+            "ജാപ്പനീസ് യെൻ",
         }
         KES{
             "KES",
@@ -978,7 +978,7 @@ ml{
         }
         XAF{
             "FCFA",
-            "CFA ഫ്രാങ്ക് BEAC",
+            "മദ്ധ്യ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്",
         }
         XAG{
             "XAG",
@@ -1026,7 +1026,7 @@ ml{
         }
         XOF{
             "CFA",
-            "CFA ഫ്രാങ്ക് BCEAO",
+            "പശ്ചിമ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്",
         }
         XPD{
             "XPD",
@@ -1102,14 +1102,18 @@ ml{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -1117,42 +1121,83 @@ ml{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1361,7 +1406,7 @@ ml{
         }
         CHF{
             one{"സ്വിസ് ഫ്രാങ്ക്"}
-            other{"സ്വിസ് ഫ്രാങ്ക്സ്"}
+            other{"സ്വിസ് ഫ്രാങ്ക്"}
         }
         CHW{
             one{"WIR ഫ്രാങ്ക്"}
@@ -1500,8 +1545,8 @@ ml{
             other{"ഫ്രെഞ്ച് ഫ്രാങ്ക്സ്"}
         }
         GBP{
-            one{"ബ്രിട്ടീഷ് പൗണ്ട് സ്‌റ്റെർലിംഗ്"}
-            other{"ബ്രിട്ടീഷ് പൗണ്ട് സ്‌റ്റെർലിംഗ്"}
+            one{"ബ്രിട്ടീഷ് പൗണ്ട്"}
+            other{"ബ്രിട്ടീഷ് പൗണ്ട്"}
         }
         GEK{
             one{"ജോർ‍ജ്ജിയൻ ക്യൂപോൺ ലാരിറ്റ്"}
@@ -1992,8 +2037,8 @@ ml{
             other{"ഉഗാണ്ടൻ ഷില്ലിംഗ്"}
         }
         USD{
-            one{"യു.എസ് ഡോളർ"}
-            other{"യു.എസ് ഡോളർ"}
+            one{"യു.എസ്. ഡോളർ"}
+            other{"യു.എസ്. ഡോളർ"}
         }
         USS{
             one{"യുഎസ് ഡോളർ (അതേ ദിവസം)"}
@@ -2036,8 +2081,8 @@ ml{
             other{"സമോവൻ താല"}
         }
         XAF{
-            one{"CFA ഫ്രാങ്ക് BEAC"}
-            other{"CFA ഫ്രാങ്ക് BEAC"}
+            one{"മദ്ധ്യ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്"}
+            other{"മദ്ധ്യ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്"}
         }
         XAG{
             one{"വെള്ളി"}
@@ -2084,8 +2129,8 @@ ml{
             other{"ഫ്രെഞ്ച് UIC-ഫ്രാങ്ക്സ്"}
         }
         XOF{
-            one{"CFA ഫ്രാങ്ക് BCEAO"}
-            other{"CFA ഫ്രാങ്ക് BCEAO"}
+            one{"പശ്ചിമ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്"}
+            other{"പശ്ചിമ ആഫ്രിക്കൻ [CFA] ഫ്രാങ്ക്"}
         }
         XPD{
             one{"പലാഡിയം"}
@@ -2164,5 +2209,5 @@ ml{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.77"}
 }

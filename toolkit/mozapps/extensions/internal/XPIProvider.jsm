@@ -134,7 +134,7 @@ const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
 const KEY_PROFILEDIR                  = "ProfD";
-const KEY_APPDIR                      = "XCurProcD";
+const KEY_ADDON_APP_DIR               = "XREAddonAppDir";
 const KEY_TEMPDIR                     = "TmpD";
 const KEY_APP_DISTRIBUTION            = "XREAppDist";
 const KEY_APP_FEATURES                = "XREAppFeat";
@@ -2567,11 +2567,9 @@ this.XPIProvider = {
         }
       }
 
-      if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
-        addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_APPDIR,
-                                    [DIR_EXTENSIONS],
-                                    AddonManager.SCOPE_APPLICATION, true);
-      }
+      addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_ADDON_APP_DIR,
+                                  [DIR_EXTENSIONS],
+                                  AddonManager.SCOPE_APPLICATION, true);
 
       if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
         addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",

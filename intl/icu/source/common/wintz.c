@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 2005-2014, International Business Machines
+*   Copyright (C) 2005-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -44,7 +44,7 @@ typedef struct
  * Various registry keys and key fragments.
  */
 static const char CURRENT_ZONE_REGKEY[] = "SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation\\";
-static const char STANDARD_NAME_REGKEY[] = "StandardName";
+/* static const char STANDARD_NAME_REGKEY[] = "StandardName"; Currently unused constant */
 static const char STANDARD_TIME_REGKEY[] = " Standard Time";
 static const char TZI_REGKEY[] = "TZI";
 static const char STD_REGKEY[] = "Std";

@@ -116,6 +116,10 @@ private:
   size_t mColorConverterBufferSize;
 
   android::sp<android::GonkNativeWindow> mNativeWindow;
+#if ANDROID_VERSION >= 21
+  android::sp<android::IGraphicBufferProducer> mGraphicBufferProducer;
+#endif
+
   enum {
     kNotifyPostReleaseBuffer = 'nprb',
   };

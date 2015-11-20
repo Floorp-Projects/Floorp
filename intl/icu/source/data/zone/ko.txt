@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ko{
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"아비장"}
@@ -684,6 +684,9 @@ ko{
         "Asia:Calcutta"{
             ec{"콜카타"}
         }
+        "Asia:Chita"{
+            ec{"치타"}
+        }
         "Asia:Choibalsan"{
             ec{"초이발산"}
         }
@@ -824,6 +827,9 @@ ko{
         }
         "Asia:Singapore"{
             ec{"싱가포르"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"스레드네콜림스크"}
         }
         "Asia:Taipei"{
             ec{"타이베이"}
@@ -1008,7 +1014,7 @@ ko{
         }
         "Europe:London"{
             ec{"런던"}
-            ld{"영국 일광 절약 시간"}
+            ld{"영국 하계 표준시"}
         }
         "Europe:Luxembourg"{
             ec{"룩셈부르크"}
@@ -1144,6 +1150,9 @@ ko{
         }
         "Pacific:Auckland"{
             ec{"오클랜드"}
+        }
+        "Pacific:Bougainville"{
+            ec{"부갱빌"}
         }
         "Pacific:Chatham"{
             ec{"채텀"}
@@ -1357,7 +1366,7 @@ ko{
         }
         "meta:Australia_Central"{
             ld{"오스트레일리아 중부 하계 표준시"}
-            lg{"중앙 오스트레일리아 시간"}
+            lg{"오스트레일리아 중부 시간"}
             ls{"오스트레일리아 중부 표준시"}
         }
         "meta:Australia_CentralWestern"{
@@ -1367,12 +1376,12 @@ ko{
         }
         "meta:Australia_Eastern"{
             ld{"오스트레일리아 동부 하계 표준시"}
-            lg{"동부 오스트레일리아 시간"}
+            lg{"오스트레일리아 동부 시간"}
             ls{"오스트레일리아 동부 표준시"}
         }
         "meta:Australia_Western"{
             ld{"오스트레일리아 서부 하계 표준시"}
-            lg{"서부 오스트레일리아 시간"}
+            lg{"오스트레일리아 서부 시간"}
             ls{"오스트레일리아 서부 표준시"}
         }
         "meta:Azerbaijan"{
@@ -1474,14 +1483,14 @@ ko{
             ls{"에콰도르 시간"}
         }
         "meta:Europe_Central"{
-            ld{"중부유럽 하계 표준시"}
+            ld{"중부 유럽 하계 표준시"}
             lg{"중부 유럽 시간"}
             ls{"중부 유럽 표준시"}
         }
         "meta:Europe_Eastern"{
-            ld{"동부유럽 하계 표준시"}
-            lg{"동부유럽 시간"}
-            ls{"동부유럽 표준시"}
+            ld{"동유럽 하계 표준시"}
+            lg{"동유럽 시간"}
+            ls{"동유럽 표준시"}
         }
         "meta:Europe_Further_Eastern"{
             ls{"극동 유럽 표준시"}
@@ -1492,8 +1501,8 @@ ko{
             ls{"서유럽 표준시"}
         }
         "meta:Falkland"{
-            ld{"포클랜드 하계 표준시"}
-            lg{"포클랜드 시간"}
+            ld{"포클랜드 제도 하계 표준시"}
+            lg{"포클랜드 제도 시간"}
             ls{"포클랜드 제도 표준시"}
         }
         "meta:Fiji"{
@@ -1691,7 +1700,7 @@ ko{
             ls{"네팔 시간"}
         }
         "meta:New_Caledonia"{
-            ld{"뉴 칼레도니아 하계 표준시"}
+            ld{"뉴칼레도니아 하계 표준시"}
             lg{"뉴칼레도니아 시간"}
             ls{"뉴칼레도니아 표준시"}
         }
@@ -1727,7 +1736,7 @@ ko{
             ls{"옴스크 표준시"}
         }
         "meta:Pakistan"{
-            ld{"파키스탄 서머 타임"}
+            ld{"파키스탄 하계 표준시"}
             lg{"파키스탄 시간"}
             ls{"파키스탄 표준시"}
         }

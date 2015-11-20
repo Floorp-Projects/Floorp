@@ -51,7 +51,7 @@ ko{
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
-                range{"{0}-{1}"}
+                range{"{0}~{1}"}
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
@@ -63,7 +63,7 @@ ko{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0000"}
+                        other{"0"}
                     }
                     10000{
                         other{"0만"}
@@ -101,9 +101,47 @@ ko{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"0"}
+                    }
+                    10000{
+                        other{"¤0만"}
+                    }
+                    100000{
+                        other{"¤00만"}
+                    }
+                    1000000{
+                        other{"¤000만"}
+                    }
+                    10000000{
+                        other{"¤0000만"}
+                    }
+                    100000000{
+                        other{"¤0억"}
+                    }
+                    1000000000{
+                        other{"¤00억"}
+                    }
+                    10000000000{
+                        other{"¤000억"}
+                    }
+                    100000000000{
+                        other{"¤0000억"}
+                    }
+                    1000000000000{
+                        other{"¤0조"}
+                    }
+                    10000000000000{
+                        other{"¤00조"}
+                    }
+                    100000000000000{
+                        other{"¤000조"}
+                    }
+                }
                 decimalFormat{
                     1000{
-                        other{"0000"}
+                        other{"0"}
                     }
                     10000{
                         other{"0만"}
@@ -158,7 +196,7 @@ ko{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.94"}
     calendar{
         buddhist{
             eras{
@@ -199,6 +237,7 @@ ko{
                 MMM{"LLL"}
                 MMMEEEEd{"MMM d일 EEEE"}
                 MMMEd{"MMM d일 (E)"}
+                MMMMd{"MMMM d일"}
                 MMMd{"MMM d일"}
                 Md{"M. d."}
                 d{"d일"}
@@ -214,6 +253,7 @@ ko{
                 yyyyMMM{"U년 MMM"}
                 yyyyMMMEEEEd{"U년 MMM d일 EEEE"}
                 yyyyMMMEd{"U년 MMM d일 (E)"}
+                yyyyMMMM{"U년 MMMM"}
                 yyyyMMMd{"U년 MMM d일"}
                 yyyyMd{"U. M. d."}
                 yyyyQQQ{"U년 QQQ"}
@@ -401,6 +441,21 @@ ko{
                         "미스라",
                         "나시",
                     }
+                    wide{
+                        "투트",
+                        "바바흐",
+                        "하투르",
+                        "키야흐크",
+                        "투바흐",
+                        "암쉬르",
+                        "바라마트",
+                        "바라문다흐",
+                        "바샨스",
+                        "바우나흐",
+                        "아비브",
+                        "미스라",
+                        "나시",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -456,6 +511,20 @@ ko{
                 dayParts{
                     format{
                         abbreviated{
+                            "자",
+                            "축",
+                            "인",
+                            "묘",
+                            "진",
+                            "사",
+                            "오",
+                            "미",
+                            "신",
+                            "유",
+                            "술",
+                            "해",
+                        }
+                        wide{
                             "자",
                             "축",
                             "인",
@@ -570,6 +639,20 @@ ko{
                 zodiacs{
                     format{
                         abbreviated{
+                            "자",
+                            "축",
+                            "인",
+                            "묘",
+                            "진",
+                            "사",
+                            "오",
+                            "미",
+                            "신",
+                            "유",
+                            "술",
+                            "해",
+                        }
+                        wide{
                             "자",
                             "축",
                             "인",
@@ -712,6 +795,21 @@ ko{
                         "내하세",
                         "파구맨",
                     }
+                    wide{
+                        "매스캐램",
+                        "테켐트",
+                        "헤다르",
+                        "타흐사스",
+                        "테르",
+                        "얘카티트",
+                        "매가비트",
+                        "미야지야",
+                        "겐보트",
+                        "새네",
+                        "함레",
+                        "내하세",
+                        "파구맨",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -764,13 +862,14 @@ ko{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 EEEEd{"d일 EEEE"}
                 Ed{"d일 (E)"}
                 Gy{"G y년"}
-                GyMMM{"G y년 MMM"}
-                GyMMMEEEEd{"G y년 MMM d일 EEEE"}
-                GyMMMEd{"G y년 MMM d일 (E)"}
-                GyMMMd{"G y년 MMM d일"}
+                GyMMM{"G y년 MMM월"}
+                GyMMMEEEEd{"G y년 MMM월 d일 EEEE"}
+                GyMMMEd{"G y년 MMM월 d일 (E)"}
+                GyMMMd{"G y년 MMM월 d일"}
                 H{"H시"}
                 HHmmss{"HH:mm:ss"}
                 Hm{"HH:mm"}
@@ -779,9 +878,10 @@ ko{
                 MEEEEd{"M. d. EEEE"}
                 MEd{"M. d. (E)"}
                 MMM{"LLL"}
-                MMMEEEEd{"MMM d일 EEEE"}
-                MMMEd{"MMM d일 (E)"}
-                MMMd{"MMM d일"}
+                MMMEEEEd{"MMM월 d일 EEEE"}
+                MMMEd{"MMM월 d일 (E)"}
+                MMMMd{"MMMM월 d일"}
+                MMMd{"MMM월 d일"}
                 Md{"M. d."}
                 d{"d일"}
                 h{"a h시"}
@@ -793,10 +893,11 @@ ko{
                 yyyyM{"G y. M."}
                 yyyyMEEEEd{"G y. M. d. EEEE"}
                 yyyyMEd{"G y. M. d. (E)"}
-                yyyyMMM{"G y년 MMM"}
-                yyyyMMMEEEEd{"G y년 MMM d일 EEEE"}
-                yyyyMMMEd{"G y년 MMM d일 (E)"}
-                yyyyMMMd{"G y년 MMM d일"}
+                yyyyMMM{"G y년 MMM월"}
+                yyyyMMMEEEEd{"G y년 MMM월 d일 EEEE"}
+                yyyyMMMEd{"G y년 MMM월 d일 (E)"}
+                yyyyMMMM{"G y년 MMMM월"}
+                yyyyMMMd{"G y년 MMM월 d일"}
                 yyyyMd{"G y. M. d."}
                 yyyyQQQ{"G y년 QQQ"}
                 yyyyQQQQ{"G y년 QQQQ"}
@@ -835,7 +936,7 @@ ko{
                     d{"M월 d일 (E) ~ d일 (E)"}
                 }
                 MMMM{
-                    M{"LLLL–LLLL"}
+                    M{"LLLL ~ LLLL"}
                 }
                 MMMd{
                     M{"M월 d일 ~ M월 d일"}
@@ -914,9 +1015,13 @@ ko{
                 "오전",
                 "오후",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
-                "오전",
-                "오후",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "a h시 m분 s초 zzzz",
@@ -933,8 +1038,6 @@ ko{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"정오"}
-            NoonMarkerNarrow{"정오"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -963,6 +1066,7 @@ ko{
                 MMM{"LLL"}
                 MMMEEEEd{"MMM d일 EEEE"}
                 MMMEd{"MMM d일 (E)"}
+                MMMMd{"MMMM d일"}
                 MMMd{"MMM d일"}
                 Md{"M. d."}
                 d{"d일"}
@@ -981,6 +1085,7 @@ ko{
                 yMMM{"y년 MMM"}
                 yMMMEEEEd{"y년 MMM d일 EEEE"}
                 yMMMEd{"y년 MMM d일 (E)"}
+                yMMMM{"y년 MMMM"}
                 yMMMd{"y년 MMM d일"}
                 yMd{"y. M. d."}
                 yQQQ{"y년 QQQ"}
@@ -1064,10 +1169,76 @@ ko{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"오후"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                    }
+                    narrow{
+                        afternoon1{"오후"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                    }
+                    wide{
+                        afternoon1{"오후"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"오후"}
+                        am{"오전"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                        pm{"오후"}
+                    }
+                    narrow{
+                        afternoon1{"오후"}
+                        am{"AM"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"오후"}
+                        am{"오전"}
+                        evening1{"저녁"}
+                        midnight{"자정"}
+                        morning1{"새벽"}
+                        morning2{"오전"}
+                        night1{"밤"}
+                        noon{"정오"}
+                        pm{"오후"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
-                    "기원전",
-                    "서기",
+                    "BC",
+                    "AD",
                 }
                 abbreviated%variant{
                     "BCE",
@@ -1076,6 +1247,10 @@ ko{
                 wide{
                     "기원전",
                     "서기",
+                }
+                wide%variant{
+                    "BCE",
+                    "CE",
                 }
             }
             intervalFormats{
@@ -1338,6 +1513,22 @@ ko{
                         "엘룰월",
                         "아달월 2",
                     }
+                    wide{
+                        "디스리월",
+                        "말케스월",
+                        "기슬르월",
+                        "데벳월",
+                        "스밧월",
+                        "아달월 1",
+                        "아달월",
+                        "닛산월",
+                        "이야르월",
+                        "시완월",
+                        "담무르월",
+                        "압월",
+                        "엘룰월",
+                        "아달월 2",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -1379,6 +1570,40 @@ ko{
             eras{
                 abbreviated{
                     "AH",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "무하람",
+                        "사파르",
+                        "라비 알 아왈",
+                        "라비 알 쎄니",
+                        "주마다 알 아왈",
+                        "주마다 알 쎄니",
+                        "라잡",
+                        "쉐아반",
+                        "라마단",
+                        "쉐왈",
+                        "듀 알 까다",
+                        "듀 알 히자",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "무하람",
+                        "사파르",
+                        "라비 알 아왈",
+                        "라비 알 쎄니",
+                        "주마다 알 아왈",
+                        "주마다 알 쎄니",
+                        "라잡",
+                        "쉐아반",
+                        "라마단",
+                        "쉐왈",
+                        "듀 알 까다",
+                        "듀 알 히자",
+                    }
                 }
             }
         }
@@ -1621,6 +1846,70 @@ ko{
                     "다이쇼",
                     "쇼와",
                     "헤이세이",
+                }
+            }
+        }
+        persian{
+            monthNames{
+                format{
+                    abbreviated{
+                        "화르바딘",
+                        "오르디베헤쉬트",
+                        "호르다드",
+                        "티르",
+                        "모르다드",
+                        "샤흐리바르",
+                        "메흐르",
+                        "아반",
+                        "아자르",
+                        "다이",
+                        "바흐만",
+                        "에스판드",
+                    }
+                    wide{
+                        "화르바딘",
+                        "오르디베헤쉬트",
+                        "호르다드",
+                        "티르",
+                        "모르다드",
+                        "샤흐리바르",
+                        "메흐르",
+                        "아반",
+                        "아자르",
+                        "다이",
+                        "바흐만",
+                        "에스판드",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "화르바딘",
+                        "오르디베헤쉬트",
+                        "호르다드",
+                        "티르",
+                        "모르다드",
+                        "샤흐리바르",
+                        "메흐르",
+                        "아반",
+                        "아자르",
+                        "다이",
+                        "바흐만",
+                        "에스판드",
+                    }
+                    wide{
+                        "화르바딘",
+                        "오르디베헤쉬트",
+                        "호르다드",
+                        "티르",
+                        "모르다드",
+                        "샤흐리바르",
+                        "메흐르",
+                        "아반",
+                        "아자르",
+                        "다이",
+                        "바흐만",
+                        "에스판드",
+                    }
                 }
             }
         }

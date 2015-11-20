@@ -28,5 +28,5 @@ en_GB{
             other{"Israeli new shekels"}
         }
     }
-    Version{"2.1.11.59"}
+    Version{"2.1.19.79"}
 }

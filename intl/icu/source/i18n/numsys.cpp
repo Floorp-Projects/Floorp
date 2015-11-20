@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2010-2013, International Business Machines Corporation and
+* Copyright (C) 2010-2015, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -85,7 +85,7 @@ NumberingSystem::createInstance(int32_t radix_in, UBool isAlgorithmic_in, const 
     }
 
     if ( !isAlgorithmic_in ) {
-       if ( desc_in.countChar32() != radix_in || !isValidDigitString(desc_in)) {
+       if ( desc_in.countChar32() != radix_in ) {
            status = U_ILLEGAL_ARGUMENT_ERROR;
            return NULL;
        }
@@ -244,7 +244,7 @@ UBool NumberingSystem::isAlgorithmic() const {
 }
 
 StringEnumeration* NumberingSystem::getAvailableNames(UErrorCode &status) {
-
+    // TODO(ticket #11908): Init-once static cache, with u_cleanup() callback.
     static StringEnumeration* availableNames = NULL;
 
     if (U_FAILURE(status)) {
@@ -252,9 +252,9 @@ StringEnumeration* NumberingSystem::getAvailableNames(UErrorCode &status) {
     }
 
     if ( availableNames == NULL ) {
-        UVector *fNumsysNames = new UVector(uprv_deleteUObject, NULL, status);
+        // TODO: Simple array of UnicodeString objects, based on length of table resource?
+        LocalPointer<UVector> numsysNames(new UVector(uprv_deleteUObject, NULL, status), status);
         if (U_FAILURE(status)) {
-            status = U_MEMORY_ALLOCATION_ERROR;
             return NULL;
         }
         
@@ -270,37 +270,28 @@ StringEnumeration* NumberingSystem::getAvailableNames(UErrorCode &status) {
         while ( ures_hasNext(numberingSystemsInfo) ) {
             UResourceBundle *nsCurrent = ures_getNextResource(numberingSystemsInfo,NULL,&rbstatus);
             const char *nsName = ures_getKey(nsCurrent);
-            fNumsysNames->addElement(new UnicodeString(nsName, -1, US_INV),status);
+            numsysNames->addElement(new UnicodeString(nsName, -1, US_INV),status);
             ures_close(nsCurrent);
         }
 
         ures_close(numberingSystemsInfo);
-        availableNames = new NumsysNameEnumeration(fNumsysNames,status);
-
+        if (U_FAILURE(status)) {
+            return NULL;
+        }
+        availableNames = new NumsysNameEnumeration(numsysNames.getAlias(), status);
+        if (availableNames == NULL) {
+            status = U_MEMORY_ALLOCATION_ERROR;
+            return NULL;
+        }
+        numsysNames.orphan();  // The names got adopted.
     }
 
     return availableNames;
 }
 
-UBool NumberingSystem::isValidDigitString(const UnicodeString& str) {
-
-    StringCharacterIterator it(str);
-    UChar32 c;
-    int32_t i = 0;
-
-    for ( it.setToStart(); it.hasNext(); ) {
-       c = it.next32PostInc();
-       if ( c > 0xFFFF ) { // Digits outside the BMP are not currently supported
-          return FALSE;
-       }
-       i++;
-    }
-    return TRUE;   
-}
-
-NumsysNameEnumeration::NumsysNameEnumeration(UVector *fNameList, UErrorCode& /*status*/) {
+NumsysNameEnumeration::NumsysNameEnumeration(UVector *numsysNames, UErrorCode& /*status*/) {
     pos=0;
-    fNumsysNames = fNameList;
+    fNumsysNames = numsysNames;
 }
 
 const UnicodeString*

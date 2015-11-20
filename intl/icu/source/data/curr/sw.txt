@@ -14,7 +14,7 @@ sw{
         }
         AFN{
             "AFN",
-            "Afghani ya Afuganistani",
+            "Afghani ya Afghanistan",
         }
         ALL{
             "ALL",
@@ -66,7 +66,7 @@ sw{
         }
         BHD{
             "BHD",
-            "Dinari ya Bahareni",
+            "Dinar ya Bahareni",
         }
         BIF{
             "BIF",
@@ -146,7 +146,7 @@ sw{
         }
         CVE{
             "CVE",
-            "Eskudo ya Kepuvede",
+            "Eskudo ya Cape Verde",
         }
         CZK{
             "CZK",
@@ -178,7 +178,7 @@ sw{
         }
         ETB{
             "ETB",
-            "Nirr ya Uhabeshi",
+            "Birr ya Uhabeshi",
         }
         EUR{
             "€",
@@ -266,7 +266,7 @@ sw{
         }
         IQD{
             "IQD",
-            "Dinari ya Iraki",
+            "Dinar ya Iraki",
         }
         IRR{
             "IRR",
@@ -274,7 +274,7 @@ sw{
         }
         ISK{
             "ISK",
-            "Krona ya Isilandi",
+            "Krona ya Aisilandi",
         }
         JMD{
             "JMD",
@@ -282,7 +282,7 @@ sw{
         }
         JOD{
             "JOD",
-            "Dinari ya Yordani",
+            "Dinar ya Yordani",
         }
         JPY{
             "JP¥",
@@ -294,7 +294,7 @@ sw{
         }
         KGS{
             "KGS",
-            "Som ya Kirigistani",
+            "Som ya Kyrgystani",
         }
         KHR{
             "KHR",
@@ -314,7 +314,7 @@ sw{
         }
         KWD{
             "KWD",
-            "Dinari ya Kuwaiti",
+            "Dinar ya Kuwaiti",
         }
         KYD{
             "KYD",
@@ -334,7 +334,7 @@ sw{
         }
         LKR{
             "LKR",
-            "Rupia ya Sirilanka",
+            "Rupia ya Sri Lanka",
         }
         LRD{
             "LRD",
@@ -474,7 +474,7 @@ sw{
         }
         QAR{
             "QAR",
-            "Rial ya Katari",
+            "Rial ya Qatari",
         }
         RON{
             "RON",
@@ -526,7 +526,7 @@ sw{
         }
         SLL{
             "SLL",
-            "Leoni",
+            "Leone",
         }
         SOS{
             "SOS",
@@ -614,7 +614,7 @@ sw{
         }
         VND{
             "₫",
-            "Dong ya Vietinamu",
+            "Dong ya Vietnam",
         }
         VUV{
             "VUV",
@@ -642,7 +642,7 @@ sw{
         }
         XXX{
             "XXX",
-            "Fedha Zisizojulikana",
+            "Sarafu isiyojulikana",
         }
         YER{
             "YER",
@@ -666,14 +666,18 @@ sw{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
         AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
         BDT{"৳"}
         BMD{"$"}
         BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
         BYR{"р."}
         BZD{"$"}
         CAD{"$"}
@@ -681,42 +685,83 @@ sw{
         CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
+        CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
         FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
         GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
         LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
         NAD{"$"}
         NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RUB{"₽"}
+        RWF{"RF"}
         SBD{"$"}
+        SEK{"kr"}
         SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STD{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
         VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -724,8 +769,8 @@ sw{
             other{"dirham za Falme za Kiarabu"}
         }
         AFN{
-            one{"Afghani ya Afuganistani"}
-            other{"Afghani za Afuganistani"}
+            one{"Afghani ya Afghanistan"}
+            other{"Afghani za Afghanistan"}
         }
         ALL{
             one{"Lek ya Albania"}
@@ -776,8 +821,8 @@ sw{
             other{"Lev za Bulgaria"}
         }
         BHD{
-            one{"dinari ya Bahareni"}
-            other{"dinari za Bahareni"}
+            one{"Dinar ya Bahareni"}
+            other{"Dinar za Bahareni"}
         }
         BIF{
             one{"faranga ya Burundi"}
@@ -856,8 +901,8 @@ sw{
             other{"Peso za Cuba"}
         }
         CVE{
-            one{"eskudo ya Kepuvede"}
-            other{"eskudo za Kepuvede"}
+            one{"Eskudo ya Cape Verde"}
+            other{"Eskudo za Cape Verde"}
         }
         CZK{
             one{"Koruna ya Jamhuri ya Cheki"}
@@ -968,24 +1013,24 @@ sw{
             other{"rupia za India"}
         }
         IQD{
-            one{"Dinari ya Iraki"}
-            other{"Dinari za Iraki"}
+            one{"Dinar ya Iraki"}
+            other{"Dinar za Iraki"}
         }
         IRR{
             one{"Rial ya Iran"}
             other{"Rial za Iran"}
         }
         ISK{
-            one{"Krona ya Isilandi"}
-            other{"Krona za Isilandi"}
+            one{"Krona ya Aisilandi"}
+            other{"Krona za Aisilandi"}
         }
         JMD{
             one{"Dola ya Jamaica"}
             other{"Dola za Jamaica"}
         }
         JOD{
-            one{"Dinari ya Yordani"}
-            other{"Dinari za Yordani"}
+            one{"Dinar ya Yordani"}
+            other{"Dinar za Yordani"}
         }
         JPY{
             one{"Yen ya Japani"}
@@ -996,8 +1041,8 @@ sw{
             other{"shilingi za Kenya"}
         }
         KGS{
-            one{"Som ya Kirigistani"}
-            other{"Som za Kirigistani"}
+            one{"Som ya Kyrgystani"}
+            other{"Som za Kyrgystani"}
         }
         KHR{
             one{"Riel ya Kambodia"}
@@ -1016,8 +1061,8 @@ sw{
             other{"Won za Korea Kusini"}
         }
         KWD{
-            one{"Dinari ya Kuwaiti"}
-            other{"Dinari za Kuwaiti"}
+            one{"Dinar ya Kuwaiti"}
+            other{"Dinar za Kuwaiti"}
         }
         KYD{
             one{"Dola ya Visiwa vya Cayman"}
@@ -1036,8 +1081,8 @@ sw{
             other{"Pauni za Lebanon"}
         }
         LKR{
-            one{"Rupia ya Sirilanka"}
-            other{"Rupia za Sirilanka"}
+            one{"Rupia ya Sri Lanka"}
+            other{"Rupia za Sri Lanka"}
         }
         LRD{
             one{"dola ya Liberia"}
@@ -1172,8 +1217,8 @@ sw{
             other{"Guarani za Paragwai"}
         }
         QAR{
-            one{"Rial ya Katari"}
-            other{"Rial za Katari"}
+            one{"Rial ya Qatari"}
+            other{"Rial za Qatari"}
         }
         RON{
             one{"Leu ya Romania"}
@@ -1224,8 +1269,8 @@ sw{
             other{"pauni za Santahelena"}
         }
         SLL{
-            one{"leoni"}
-            other{"leoni"}
+            one{"Leone"}
+            other{"Leone"}
         }
         SOS{
             one{"shilingi ya Somalia"}
@@ -1312,8 +1357,8 @@ sw{
             other{"Bolivar za Venezuela"}
         }
         VND{
-            one{"Dong ya Vietinamu"}
-            other{"Dong za Vietinamu"}
+            one{"Dong ya Vietnam"}
+            other{"Dong za Vietnam"}
         }
         VUV{
             one{"Vatu ya Vanuatu"}
@@ -1340,8 +1385,8 @@ sw{
             other{"Faranga za CFP"}
         }
         XXX{
-            one{"Fedha Zisizojulikana"}
-            other{"Fedha Zisizojulikana"}
+            one{"sarafu isiyojulikana"}
+            other{"sarafu zisizojulikana"}
         }
         YER{
             one{"Rial ya Yemeni"}
@@ -1360,5 +1405,5 @@ sw{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.14"}
 }

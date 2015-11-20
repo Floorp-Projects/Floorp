@@ -7,8 +7,19 @@
 // *
 // ***************************************************************************
 es_419{
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     zoneStrings{
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
+        "Etc:Unknown"{
+            ec{"Ciudad desconocida"}
+        }
+        "meta:Cook"{
+            ld{"hora de verano media de las islas Cook"}
+            lg{"hora de las islas Cook"}
+            ls{"hora estándar de las islas Cook"}
+        }
         "meta:Europe_Central"{
             sd{"∅∅∅"}
             sg{"∅∅∅"}
@@ -19,6 +30,9 @@ es_419{
             sg{"∅∅∅"}
             ss{"∅∅∅"}
         }
+        "meta:Europe_Further_Eastern"{
+            ls{"horario del lejano este de Europa"}
+        }
         "meta:Europe_Western"{
             sd{"∅∅∅"}
             sg{"∅∅∅"}
@@ -27,5 +41,7 @@ es_419{
         "meta:GMT"{
             ss{"∅∅∅"}
         }
+        regionFormatDaylight{"hora de verano de {0}"}
+        regionFormatStandard{"hora estándar de {0}"}
     }
 }

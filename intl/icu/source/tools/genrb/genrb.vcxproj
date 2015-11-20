@@ -239,17 +239,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="errmsg.c" />
-    <ClCompile Include="genrb.c" />
+    <ClCompile Include="genrb.cpp" />
     <ClCompile Include="parse.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="prscmnts.cpp" />
     <ClCompile Include="rbutil.c" />
     <ClCompile Include="read.c" />
-    <ClCompile Include="reslist.c" />
+    <ClCompile Include="reslist.cpp" />
     <ClCompile Include="rle.c" />
     <ClCompile Include="ustr.c" />
-    <ClCompile Include="wrtjava.c" />
+    <ClCompile Include="wrtjava.cpp" />
     <ClCompile Include="wrtxml.cpp" />
   </ItemGroup>
   <ItemGroup>

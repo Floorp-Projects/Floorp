@@ -10,7 +10,7 @@
  * ICU <specials> source: <path>/common/main/root.xml
  */
 root{
-    Version{"2.1.12.90"}
+    Version{"2.1.19.19"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
