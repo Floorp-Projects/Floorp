@@ -2090,7 +2090,6 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
     {
         RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : nullptr);
         if (getter && !(attrs & JSPROP_GETTER)) {
-            RootedObject global(cx, (JSObject*) &obj->global());
             JSFunction* getobj = NewNativeFunction(cx, (Native) getter, 0, atom);
             if (!getobj)
                 return false;
@@ -2104,7 +2103,6 @@ DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
         if (setter && !(attrs & JSPROP_SETTER)) {
             // Root just the getter, since the setter is not yet a JSObject.
             AutoRooterGetterSetter getRoot(cx, JSPROP_GETTER, &getter, nullptr);
-            RootedObject global(cx, (JSObject*) &obj->global());
             JSFunction* setobj = NewNativeFunction(cx, (Native) setter, 1, atom);
             if (!setobj)
                 return false;
@@ -3453,8 +3451,13 @@ IsFunctionCloneable(HandleFunction fun)
         if (IsStaticGlobalLexicalScope(scope))
             return true;
 
-        // 'eval' and non-syntactic scopes are always scoped immediately under
-        // a non-extensible lexical scope.
+        // If the script already deals with non-syntactic scopes, we can clone
+        // it.
+        if (scope->is<StaticNonSyntacticScopeObjects>())
+            return true;
+
+        // 'eval' scopes are always scoped immediately under a non-extensible
+        // lexical scope.
         if (scope->is<StaticBlockObject>()) {
             StaticBlockObject& block = scope->as<StaticBlockObject>();
             if (block.needsClone())
@@ -3466,11 +3469,6 @@ IsFunctionCloneable(HandleFunction fun)
             // under the global, we can clone it.
             if (enclosing->is<StaticEvalObject>())
                 return !enclosing->as<StaticEvalObject>().isNonGlobal();
-
-            // If the script already deals with a non-syntactic scope, we can
-            // clone it.
-            if (enclosing->is<StaticNonSyntacticScopeObjects>())
-                return true;
         }
 
         // Any other enclosing static scope (e.g., function, block) cannot be
@@ -3536,7 +3534,16 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject dynamicScop
         return CloneFunctionReuseScript(cx, fun, dynamicScope, fun->getAllocKind());
     }
 
-    return CloneFunctionAndScript(cx, fun, dynamicScope, staticScope, fun->getAllocKind());
+    JSFunction* clone = CloneFunctionAndScript(cx, fun, dynamicScope, staticScope,
+                                               fun->getAllocKind());
+
+#ifdef DEBUG
+    // The cloned function should itself be cloneable.
+    RootedFunction cloneRoot(cx, clone);
+    MOZ_ASSERT_IF(cloneRoot, IsFunctionCloneable(cloneRoot));
+#endif
+
+    return clone;
 }
 
 namespace JS {

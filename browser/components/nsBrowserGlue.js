@@ -14,6 +14,9 @@ const POLARIS_ENABLED = "browser.polaris.enabled";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
                                   "resource:///modules/AboutHome.jsm");
 
@@ -26,14 +29,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "DirectoryLinksProvider",
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
-                                  "resource:///modules/RemoteAboutNewTab.jsm");
+if(!AppConstants.RELEASE_BUILD) {
+  XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
+                                    "resource:///modules/RemoteAboutNewTab.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
-                                  "resource:///modules/RemoteNewTabUtils.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
+                                    "resource:///modules/RemoteNewTabUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
-                                  "resource:///modules/NewTabPrefsProvider.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
+                                    "resource:///modules/NewTabPrefsProvider.jsm");
+}
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                   "resource:///modules/UITour.jsm");
@@ -180,9 +185,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
@@ -849,10 +851,12 @@ BrowserGlue.prototype = {
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
     AboutNewTab.init();
 
-    RemoteNewTabUtils.init();
-    RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
-    RemoteAboutNewTab.init();
-    NewTabPrefsProvider.prefs.init();
+    if(!AppConstants.RELEASE_BUILD) {
+      RemoteNewTabUtils.init();
+      RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
+      RemoteAboutNewTab.init();
+      NewTabPrefsProvider.prefs.init();
+    }
 
     SessionStore.init();
     BrowserUITelemetry.init();
@@ -1173,8 +1177,10 @@ BrowserGlue.prototype = {
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
-    RemoteAboutNewTab.uninit();
-    NewTabPrefsProvider.prefs.uninit();
+    if (!AppConstants.RELEASE_BUILD) {
+      RemoteAboutNewTab.uninit();
+      NewTabPrefsProvider.prefs.uninit();
+    }
     AboutNewTab.uninit();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
@@ -2585,9 +2591,11 @@ AboutNewTabService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutNewTabService]),
 
   get newTabURL() {
-    if (Services.prefs.getBoolPref("browser.newtabpage.remote")) {
+
+    if (!AppConstants.RELEASE_BUILD && Services.prefs.getBoolPref("browser.newtabpage.remote")) {
       return "about:remote-newtab";
     }
+
     return this._newTabURL;
   },
 

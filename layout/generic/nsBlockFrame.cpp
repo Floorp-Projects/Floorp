@@ -693,6 +693,9 @@ nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
     curFrame->LazyMarkLinesDirty();
   }
 
+  if (RenumberLists(PresContext())) {
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
   InlineMinISizeData data;
@@ -778,6 +781,9 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
     curFrame->LazyMarkLinesDirty();
   }
 
+  if (RenumberLists(PresContext())) {
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
   InlinePrefISizeData data;

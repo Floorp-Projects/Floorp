@@ -181,7 +181,7 @@ class Simulator
     void execute();
 
     // Sets up the simulator state and grabs the result on return.
-    int64_t call(uint8_t* entry, int argument_count, ...);
+    int32_t call(uint8_t* entry, int argument_count, ...);
 
     // Debugger input.
     void setLastDebuggerInput(char* input);

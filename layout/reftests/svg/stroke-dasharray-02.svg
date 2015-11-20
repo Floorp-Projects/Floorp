@@ -30,4 +30,19 @@
   <circle cx="250" cy="205" r="11" fill="lime"/>
   <circle cx="206" cy="225" r="11" fill="lime"/>
 
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1131264 -->
+  <!-- small circles take a different code path -->
+
+  <!-- Test circle element dashes cover two red circles -->
+  <circle cx="125" cy="325" r="8" fill="red"/>
+  <circle cx="50" cy="380" r="8" fill="red"/>
+  <circle cx="0" cy="0" r=".0008" fill="none" stroke="lime" stroke-width=".0003" stroke-dasharray=".0005 .0005 .0005 100"
+          transform="translate(50, 300) scale(1e5, 1e5)"/>
+
+  <!-- Sanity test to check that two circles cover circle element dashes (i.e. that the previous check didn't pass because the stroke was solid) -->
+  <circle cx="0" cy="0" r=".0008" fill="none" stroke="red" stroke-width=".0001" stroke-dasharray=".0001 .0005 .0001 100"
+          transform="translate(180, 300) scale(1e5, 1e5)"/>
+  <circle cx="260" cy="305" r="11" fill="lime"/>
+  <circle cx="235" cy="358" r="11" fill="lime"/>
+
 </svg>

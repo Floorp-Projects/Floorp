@@ -533,12 +533,15 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
 
   nsMargin adjustment;
   switch(stylePos->mBoxSizing) {
-    case NS_STYLE_BOX_SIZING_BORDER:
+    case StyleBoxSizing::Border:
       adjustment += mInnerFrame->GetUsedBorder();
       // fall through
-
-    case NS_STYLE_BOX_SIZING_PADDING:
+    case StyleBoxSizing::Padding:
       adjustment += mInnerFrame->GetUsedPadding();
+      // fall through
+    case StyleBoxSizing::Content:
+      // nothing
+      break;
   }
 
   return adjustment;
@@ -1791,7 +1794,7 @@ nsComputedDOMStyle::DoGetFontVariantPosition()
 CSSValue*
 nsComputedDOMStyle::GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
                                       uint32_t nsStyleBackground::* aCount,
-                                      const KTableValue aTable[])
+                                      const KTableEntry aTable[])
 {
   const nsStyleBackground* bg = StyleBackground();
 
@@ -3310,7 +3313,7 @@ nsComputedDOMStyle::DoGetVerticalAlign()
 
 CSSValue*
 nsComputedDOMStyle::CreateTextAlignValue(uint8_t aAlign, bool aAlignTrue,
-                                         const KTableValue aTable[])
+                                         const KTableEntry aTable[])
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   val->SetIdent(nsCSSProps::ValueToKeywordEnum(aAlign, aTable));
@@ -3779,7 +3782,7 @@ nsComputedDOMStyle::DoGetBoxSizing()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
   val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StylePosition()->mBoxSizing,
+    nsCSSProps::ValueToKeywordEnum(uint8_t(StylePosition()->mBoxSizing),
                                    nsCSSProps::kBoxSizingKTable));
   return val;
 }
@@ -4866,7 +4869,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                     const nsStyleCoord& aCoord,
                                     bool aClampNegativeCalc,
                                     PercentageBaseGetter aPercentageBaseGetter,
-                                    const KTableValue aTable[],
+                                    const KTableEntry aTable[],
                                     nscoord aMinAppUnits,
                                     nscoord aMaxAppUnits)
 {

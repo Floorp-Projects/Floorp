@@ -201,7 +201,7 @@ class Simulator {
     void execute();
 
     // Sets up the simulator state and grabs the result on return.
-    int64_t call(uint8_t* entry, int argument_count, ...);
+    int32_t call(uint8_t* entry, int argument_count, ...);
 
     // Push an address onto the JS stack.
     uintptr_t pushAddress(uintptr_t address);

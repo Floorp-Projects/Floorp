@@ -404,7 +404,7 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
 
   // Subtract the parent border unless it uses border-box sizing.
   if (parent &&
-      parent->StylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
+      parent->StylePosition()->mBoxSizing != StyleBoxSizing::Border) {
     const nsStyleBorder* border = parent->StyleBorder();
     origin.x -= border->GetComputedBorderWidth(NS_SIDE_LEFT);
     origin.y -= border->GetComputedBorderWidth(NS_SIDE_TOP);

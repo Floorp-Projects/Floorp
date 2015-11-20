@@ -669,16 +669,15 @@ nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
       // for bsize)
       if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
         switch (position->mBoxSizing) {
-          case NS_STYLE_BOX_SIZING_CONTENT:
+          case StyleBoxSizing::Content:
             outsideBoxSizing =
               aCellFrame->GetLogicalUsedBorderAndPadding(aWM).BStartEnd(aWM);
             break;
-          case NS_STYLE_BOX_SIZING_PADDING:
+          case StyleBoxSizing::Padding:
             outsideBoxSizing =
               aCellFrame->GetLogicalUsedBorder(aWM).BStartEnd(aWM);
             break;
-          default:
-            // NS_STYLE_BOX_SIZING_BORDER
+          case StyleBoxSizing::Border:
             break;
         }
       }

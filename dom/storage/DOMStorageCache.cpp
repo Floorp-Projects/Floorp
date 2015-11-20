@@ -151,19 +151,6 @@ DOMStorageCache::Persist(const DOMStorage* aStorage) const
          !aStorage->IsPrivate();
 }
 
-namespace {
-
-PLDHashOperator
-CloneSetData(const nsAString& aKey, const nsString aValue, void* aArg)
-{
-  DOMStorageCache::Data* target = static_cast<DOMStorageCache::Data*>(aArg);
-  target->mKeys.Put(aKey, aValue);
-
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 DOMStorageCache::Data&
 DOMStorageCache::DataSet(const DOMStorage* aStorage)
 {
@@ -178,7 +165,9 @@ DOMStorageCache::DataSet(const DOMStorage* aStorage)
     Data& defaultSet = mData[kDefaultSet];
     Data& sessionSet = mData[kSessionSet];
 
-    defaultSet.mKeys.EnumerateRead(CloneSetData, &sessionSet);
+    for (auto iter = defaultSet.mKeys.Iter(); !iter.Done(); iter.Next()) {
+      sessionSet.mKeys.Put(iter.Key(), iter.UserData());
+    }
 
     mSessionOnlyDataSetActive = true;
 
@@ -363,36 +352,6 @@ DOMStorageCache::GetLength(const DOMStorage* aStorage, uint32_t* aRetval)
   return NS_OK;
 }
 
-namespace {
-
-class IndexFinderData
-{
-public:
-  IndexFinderData(uint32_t aIndex, nsAString& aRetval)
-    : mIndex(aIndex), mKey(aRetval)
-  {
-    mKey.SetIsVoid(true);
-  }
-
-  uint32_t mIndex;
-  nsAString& mKey;
-};
-
-PLDHashOperator
-FindKeyOrder(const nsAString& aKey, const nsString aValue, void* aArg)
-{
-  IndexFinderData* data = static_cast<IndexFinderData*>(aArg);
-
-  if (data->mIndex--) {
-    return PL_DHASH_NEXT;
-  }
-
-  data->mKey = aKey;
-  return PL_DHASH_STOP;
-}
-
-} // namespace
-
 nsresult
 DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& aRetval)
 {
@@ -407,23 +366,17 @@ DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& 
     }
   }
 
-  IndexFinderData data(aIndex, aRetval);
-  DataSet(aStorage).mKeys.EnumerateRead(FindKeyOrder, &data);
+  aRetval.SetIsVoid(true);
+  for (auto iter = DataSet(aStorage).mKeys.Iter(); !iter.Done(); iter.Next()) {
+    if (aIndex == 0) {
+      aRetval = iter.Key();
+      break;
+    }
+    aIndex--;
+  }
+
   return NS_OK;
 }
-
-namespace {
-
-static PLDHashOperator
-KeysArrayBuilder(const nsAString& aKey, const nsString aValue, void* aArg)
-{
-  nsTArray<nsString>* keys = static_cast<nsTArray<nsString>* >(aArg);
-
-  keys->AppendElement(aKey);
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
 
 void
 DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
@@ -436,7 +389,9 @@ DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
     return;
   }
 
-  DataSet(aStorage).mKeys.EnumerateRead(KeysArrayBuilder, &aKeys);
+  for (auto iter = DataSet(aStorage).mKeys.Iter(); !iter.Done(); iter.Next()) {
+    aKeys.AppendElement(iter.Key());
+  }
 }
 
 nsresult
@@ -598,7 +553,9 @@ DOMStorageCache::CloneFrom(const DOMStorageCache* aThat)
   mSessionOnlyDataSetActive = aThat->mSessionOnlyDataSetActive;
 
   for (uint32_t i = 0; i < kDataSetCount; ++i) {
-    aThat->mData[i].mKeys.EnumerateRead(CloneSetData, &mData[i]);
+    for (auto it = aThat->mData[i].mKeys.ConstIter(); !it.Done(); it.Next()) {
+      mData[i].mKeys.Put(it.Key(), it.UserData());
+    }
     ProcessUsageDelta(i, aThat->mData[i].mOriginQuotaUsage);
   }
 }
