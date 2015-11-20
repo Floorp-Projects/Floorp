@@ -10284,9 +10284,40 @@ CSSParserImpl::ParseWebkitGradientColorStops(nsCSSValueGradient* aGradient)
   return true;
 }
 
+// Compares aStartCoord to aEndCoord, and returns true iff they share the same
+// unit (both pixel, or both percent) and aStartCoord is larger.
+static bool
+IsWebkitGradientCoordLarger(const nsCSSValue& aStartCoord,
+                            const nsCSSValue& aEndCoord)
+{
+  if (aStartCoord.GetUnit() == eCSSUnit_Percent &&
+      aEndCoord.GetUnit() == eCSSUnit_Percent) {
+    return aStartCoord.GetPercentValue() > aEndCoord.GetPercentValue();
+  }
+
+  if (aStartCoord.GetUnit() == eCSSUnit_Pixel &&
+      aEndCoord.GetUnit() == eCSSUnit_Pixel) {
+    return aStartCoord.GetFloatValue() > aEndCoord.GetFloatValue();
+  }
+
+  // We can't compare them, since their units differ. Returning false suggests
+  // that aEndCoord is larger, which is probably a decent guess anyway.
+  return false;
+}
+
 // Finalize our internal representation of a -webkit-gradient(linear, ...)
 // expression, given the parsed points.  (The parsed color stops
 // should already be hanging off of the passed-in nsCSSValueGradient.)
+//
+// Note: linear gradients progress along a line between two points.  The
+// -webkit-gradient(linear, ...) syntax lets the author precisely specify the
+// starting and ending point point. However, our internal gradient structures
+// only store one point, and the other point is implicitly its reflection
+// across the painted area's center. (The legacy -moz-linear-gradient syntax
+// also lets us store an angle.)
+//
+// In this function, we try to go from the two-point representation to an
+// equivalent or approximately-equivalent one-point representation.
 void
 CSSParserImpl::FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
                                             const nsCSSValuePair& aStartPoint,
@@ -10294,10 +10325,51 @@ CSSParserImpl::FinalizeLinearWebkitGradient(nsCSSValueGradient* aGradient,
 {
   MOZ_ASSERT(!aGradient->mIsRadial, "passed-in gradient must be linear");
 
-  aGradient->mIsLegacySyntax = true; // (Needed in order to use non-% points)
-  aGradient->mBgPos = aStartPoint;
+  // If the start & end points have the same Y-coordinate, then we can treat
+  // this as a horizontal gradient progressing towards the center of the left
+  // or right side.
+  if (aStartPoint.mYValue == aEndPoint.mYValue) {
+    aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_BG_POSITION_CENTER,
+                                          eCSSUnit_Enumerated);
+    if (IsWebkitGradientCoordLarger(aStartPoint.mXValue, aEndPoint.mXValue)) {
+      aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_BG_POSITION_LEFT,
+                                            eCSSUnit_Enumerated);
+    } else {
+      aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_BG_POSITION_RIGHT,
+                                            eCSSUnit_Enumerated);
+    }
+    return;
+  }
 
-  // XXXdholbert Do further positioning/angling here.
+  // If the start & end points have the same X-coordinate, then we can treat
+  // this as a horizontal gradient progressing towards the center of the top
+  // or bottom side.
+  if (aStartPoint.mXValue == aEndPoint.mXValue) {
+    aGradient->mBgPos.mXValue.SetIntValue(NS_STYLE_BG_POSITION_CENTER,
+                                          eCSSUnit_Enumerated);
+    if (IsWebkitGradientCoordLarger(aStartPoint.mYValue, aEndPoint.mYValue)) {
+      aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_BG_POSITION_TOP,
+                                            eCSSUnit_Enumerated);
+    } else {
+      aGradient->mBgPos.mYValue.SetIntValue(NS_STYLE_BG_POSITION_BOTTOM,
+                                            eCSSUnit_Enumerated);
+    }
+    return;
+  }
+
+  // OK, the gradient is angled, which means we likely can't represent it
+  // exactly in |aGradient|, without doing analysis on the two points to
+  // extract an angle (which we might not be able to do depending on the units
+  // used).  For now, we'll just do something really basic -- just use the
+  // first point as if it were the starting point in a legacy
+  // -moz-linear-gradient() expression. That way, the rendered gradient will
+  // progress from this first point, towards the center of the covered element,
+  // to a reflected end point on the far side. Note that we have to use
+  // mIsLegacySyntax=true for this to work, because standardized (non-legacy)
+  // gradients place some restrictions on the reference point [namely, that it
+  // use percent units & be on the border of the element].
+  aGradient->mIsLegacySyntax = true;
+  aGradient->mBgPos = aStartPoint;
 }
 
 // Finalize our internal representation of a -webkit-gradient(radial, ...)
