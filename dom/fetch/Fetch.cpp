@@ -1064,13 +1064,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
 
   error.WouldReportJSException();
   if (error.Failed()) {
-    if (error.IsJSException()) {
-      JS::Rooted<JS::Value> exn(cx);
-      error.StealJSException(cx, &exn);
-      localPromise->MaybeReject(cx, exn);
-    } else {
-      localPromise->MaybeReject(error);
-    }
+    localPromise->MaybeReject(error);
   }
 }
 

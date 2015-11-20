@@ -238,9 +238,8 @@ protected:
     rv.WouldReportJSException();
     if (rv.Failed()) {
       JS::Rooted<JS::Value> exn(cx);
-      if (rv.IsJSException()) {
-        rv.StealJSException(cx, &exn);
-      } else {
+      { // Scope for JSAutoCompartment
+
         // Convert the ErrorResult to a JS exception object that we can reject
         // ourselves with.  This will be exactly the exception that would get
         // thrown from a binding method whose ErrorResult ended up with
@@ -696,25 +695,19 @@ Promise::CallInitFunction(const GlobalObject& aGlobal,
              CallbackObject::eRethrowExceptions, Compartment());
   aRv.WouldReportJSException();
 
-  if (aRv.IsJSException()) {
-    JS::Rooted<JS::Value> value(cx);
-    aRv.StealJSException(cx, &value);
-
-    // we want the same behavior as this JS implementation:
+  if (aRv.Failed()) {
+    // We want the same behavior as this JS implementation:
+    //
     // function Promise(arg) { try { arg(a, b); } catch (e) { this.reject(e); }}
-    if (!JS_WrapValue(cx, &value)) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
+    //
+    // In particular, that means not using MaybeReject(aRv) here, since that
+    // would create the exception object in our reflector compartment, while we
+    // want to create it in whatever the current compartment on cx is.
+    JS::Rooted<JS::Value> value(cx);
+    DebugOnly<bool> conversionResult = ToJSValue(cx, aRv, &value);
+    MOZ_ASSERT(conversionResult);
     MaybeRejectInternal(cx, value);
   }
-
-  // Else aRv is an error.  We _could_ reject ourselves with that error, but
-  // we're just going to propagate aRv out to the binding code, which will then
-  // throw us away and create a new promise rejected with the error on aRv.  So
-  // there's no need to worry about rejecting ourselves here; the bindings
-  // will do the right thing.
 }
 
 /* static */ already_AddRefed<Promise>
