@@ -716,22 +716,6 @@ def lock_file(lockfile, max_wait = 600):
     return LockFile(lockfile)
 
 
-def shell_quote(s):
-    '''Given a string, returns a version enclosed with single quotes for use
-    in a shell command line.
-
-    As a special case, if given an int, returns a string containing the int,
-    not enclosed in quotes.
-    '''
-    if type(s) == int:
-        return '%d' % s
-    # Single quoted strings can contain any characters unescaped except the
-    # single quote itself, which can't even be escaped, so the string needs to
-    # be closed, an escaped single quote added, and reopened.
-    t = type(s)
-    return t("'%s'") % s.replace(t("'"), t("'\\''"))
-
-
 class OrderedDefaultDict(OrderedDict):
     '''A combination of OrderedDict and defaultdict.'''
     def __init__(self, default_factory, *args, **kwargs):
