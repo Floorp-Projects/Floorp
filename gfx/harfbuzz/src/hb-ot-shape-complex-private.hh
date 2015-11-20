@@ -110,6 +110,15 @@ struct hb_ot_complex_shaper_t
 			   hb_buffer_t              *buffer,
 			   hb_font_t                *font);
 
+  /* postprocess_glyphs()
+   * Called during shape().
+   * Shapers can use to modify glyphs after shaping ends.
+   * May be NULL.
+   */
+  void (*postprocess_glyphs) (const hb_ot_shape_plan_t *plan,
+			      hb_buffer_t              *buffer,
+			      hb_font_t                *font);
+
 
   hb_ot_shape_normalization_mode_t normalization_preference;
 
