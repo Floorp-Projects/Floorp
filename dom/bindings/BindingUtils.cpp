@@ -271,23 +271,6 @@ ErrorResult::SetPendingJSException(JSContext* cx)
 #endif // DEBUG
 }
 
-void
-ErrorResult::StealJSException(JSContext* cx,
-                              JS::MutableHandle<JS::Value> value)
-{
-  MOZ_ASSERT(!mMightHaveUnreportedJSException,
-             "Must call WouldReportJSException unconditionally in all codepaths that might call StealJSException");
-  MOZ_ASSERT(IsJSException(), "No exception to steal");
-  MOZ_ASSERT(mUnionState == HasJSException);
-
-  value.set(mJSException);
-  js::RemoveRawValueRoot(cx, &mJSException);
-  mResult = NS_OK;
-#ifdef DEBUG
-  mUnionState = HasNothing;
-#endif // DEBUG
-}
-
 struct ErrorResult::DOMExceptionInfo {
   DOMExceptionInfo(nsresult rv, const nsACString& message)
     : mMessage(message)
