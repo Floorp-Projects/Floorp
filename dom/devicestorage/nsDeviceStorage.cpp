@@ -2595,9 +2595,10 @@ nsDOMDeviceStorage::IsOwningThread()
 }
 
 nsresult
-nsDOMDeviceStorage::DispatchToOwningThread(nsIRunnable* aRunnable)
+nsDOMDeviceStorage::DispatchToOwningThread(
+  already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mOwningThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  return mOwningThread->Dispatch(Move(aRunnable), NS_DISPATCH_NORMAL);
 }
 
 /* virtual */ JSObject*
@@ -3754,14 +3755,15 @@ DeviceStorageRequestManager::IsOwningThread()
 }
 
 nsresult
-DeviceStorageRequestManager::DispatchToOwningThread(nsIRunnable* aRunnable)
+DeviceStorageRequestManager::DispatchToOwningThread(
+  already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mOwningThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  return mOwningThread->Dispatch(Move(aRunnable), NS_DISPATCH_NORMAL);
 }
 
 nsresult
-DeviceStorageRequestManager::DispatchOrAbandon(uint32_t aId,
-                                               nsIRunnable* aRunnable)
+DeviceStorageRequestManager::DispatchOrAbandon(
+  uint32_t aId, already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MutexAutoLock lock(mMutex);
   if (mShutdown) {
@@ -3770,10 +3772,11 @@ DeviceStorageRequestManager::DispatchOrAbandon(uint32_t aId,
        safe to be freed off the owner thread but the dispatch method
        does not know that. */
     DS_LOG_DEBUG("shutdown %u", aId);
+    nsCOMPtr<nsIRunnable> runnable(aRunnable);
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
-  nsresult rv = DispatchToOwningThread(aRunnable);
+  nsresult rv = DispatchToOwningThread(Move(aRunnable));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     DS_LOG_ERROR("abandon %u", aId);
   }
@@ -3840,7 +3843,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, bool aForceDispatch)
     {
       self->Resolve(aId, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u", aId);
@@ -3872,7 +3875,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, const nsString& aResult,
     {
       self->Resolve(aId, result, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %s", aId,
@@ -3917,7 +3920,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, uint64_t aValue,
     {
       self->Resolve(aId, aValue, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %" PRIu64, aId, aValue);
@@ -3997,7 +4000,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, BlobImpl* aBlobImpl,
     {
       self->Resolve(aId, blobImpl, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %p", aId, aBlobImpl);
@@ -4125,7 +4128,7 @@ DeviceStorageRequestManager::Reject(uint32_t aId, const nsString& aReason)
 
     self->RejectInternal(i, reason);
   });
-  return DispatchOrAbandon(aId, r);
+  return DispatchOrAbandon(aId, r.forget());
 }
 
 nsresult
