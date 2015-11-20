@@ -18,6 +18,7 @@
 namespace mozilla {
 namespace layers {
 
+class BufferTextureClient;
 class ImageClient;
 class TextureClient;
 
@@ -50,7 +51,7 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 private:
-  RefPtr<TextureClient> mTextureClient;
+  RefPtr<BufferTextureClient> mTextureClient;
   RefPtr<ImageClient> mCompositable;
 };
 

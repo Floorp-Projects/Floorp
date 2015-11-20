@@ -4,34 +4,71 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurfaceTextureClientOGL.h"
-#include "mozilla/gfx/MacIOSurface.h" 
+#include "mozilla/gfx/MacIOSurface.h"
 
 namespace mozilla {
 namespace layers {
 
-MacIOSurfaceTextureData::MacIOSurfaceTextureData(MacIOSurface* aSurface)
-: mSurface(aSurface)
-{
-  MOZ_ASSERT(mSurface);
-}
-
-MacIOSurfaceTextureData::~MacIOSurfaceTextureData()
+MacIOSurfaceTextureClientOGL::MacIOSurfaceTextureClientOGL(ISurfaceAllocator* aAllcator,
+                                                           TextureFlags aFlags)
+  : TextureClient(aAllcator, aFlags)
+  , mIsLocked(false)
 {}
 
-// static
-MacIOSurfaceTextureData*
-MacIOSurfaceTextureData::Create(MacIOSurface* aSurface)
+MacIOSurfaceTextureClientOGL::~MacIOSurfaceTextureClientOGL()
 {
-  MOZ_ASSERT(aSurface);
-  if (!aSurface) {
-    return nullptr;
+}
+
+void
+MacIOSurfaceTextureClientOGL::FinalizeOnIPDLThread()
+{
+  if (mActor && mSurface) {
+    KeepUntilFullDeallocation(MakeUnique<TKeepAlive<MacIOSurface>>(mSurface));
   }
-  return new MacIOSurfaceTextureData(aSurface);
+}
+
+// static
+already_AddRefed<MacIOSurfaceTextureClientOGL>
+MacIOSurfaceTextureClientOGL::Create(ISurfaceAllocator* aAllocator,
+                                     TextureFlags aFlags,
+                                     MacIOSurface* aSurface)
+{
+  RefPtr<MacIOSurfaceTextureClientOGL> texture =
+      new MacIOSurfaceTextureClientOGL(aAllocator, aFlags);
+  MOZ_ASSERT(texture->IsValid());
+  MOZ_ASSERT(!texture->IsAllocated());
+  texture->mSurface = aSurface;
+  return texture.forget();
 }
 
 bool
-MacIOSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+MacIOSurfaceTextureClientOGL::Lock(OpenMode aMode)
 {
+  MOZ_ASSERT(!mIsLocked);
+  mIsLocked = true;
+  return IsValid() && IsAllocated();
+}
+
+void
+MacIOSurfaceTextureClientOGL::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
+}
+
+bool
+MacIOSurfaceTextureClientOGL::IsLocked() const
+{
+  return mIsLocked;
+}
+
+bool
+MacIOSurfaceTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  MOZ_ASSERT(IsValid());
+  if (!IsAllocated()) {
+    return false;
+  }
   aOutDescriptor = SurfaceDescriptorMacIOSurface(mSurface->GetIOSurfaceID(),
                                                  mSurface->GetContentsScaleFactor(),
                                                  !mSurface->HasAlpha());
@@ -39,19 +76,13 @@ MacIOSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 }
 
 gfx::IntSize
-MacIOSurfaceTextureData::GetSize() const
+MacIOSurfaceTextureClientOGL::GetSize() const
 {
   return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
 }
 
-gfx::SurfaceFormat
-MacIOSurfaceTextureData::GetFormat() const
-{
-  return mSurface->GetFormat();
-}
-
 already_AddRefed<gfx::DataSourceSurface>
-MacIOSurfaceTextureData::GetAsSurface()
+MacIOSurfaceTextureClientOGL::GetAsSurface()
 {
   RefPtr<gfx::SourceSurface> surf = mSurface->GetAsSurface();
   return surf->GetDataSurface();
