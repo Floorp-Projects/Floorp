@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(radial, ...) expressions,
+    with 0-sized inner circle listed first
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  40px;
+      height: 50px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- left top: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left top, 0, left top, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           left top, 0, left top, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- center top: -->
+  <div style="background: -webkit-gradient(radial,
+                                           center top, 0, center top, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           center top, 0, center top, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- right top: -->
+  <div style="background: -webkit-gradient(radial,
+                                           right top, 0, right top, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           right top, 0, right top, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <br>
+
+  <!-- left center: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left center, 0, left center, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           left center, 0, left center, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- center center: -->
+  <div style="background: -webkit-gradient(radial,
+                                           center center, 0, center center, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           center center, 0, center center, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- right center: -->
+  <div style="background: -webkit-gradient(radial,
+                                           right center, 0, right center, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           right center, 0, right center, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <br>
+
+  <!-- left bottom: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left bottom, 0, left bottom, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           left bottom, 0, left bottom, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- center bottom: -->
+  <div style="background: -webkit-gradient(radial,
+                                           center bottom, 0, center bottom, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           center bottom, 0, center bottom, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <!-- right bottom: -->
+  <div style="background: -webkit-gradient(radial,
+                                           right bottom, 0, right bottom, 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           right bottom, 0, right bottom, 40,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+</body>
+</html>

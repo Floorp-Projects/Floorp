@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(radial, ...) expressions
+    with various numeric positions and/or side keywords.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  50px;
+      height: 40px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Placing gradient's center outside of the element: -->
+  <div style="background: -webkit-gradient(radial,
+                                           -10 -20, 0, -10 -20, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           15 -2, 0, 15 -2, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           -10 55, 0, -10 55, 50,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Mixing side keywords with numeric values: -->
+  <div style="background: -webkit-gradient(radial,
+                                           left 5, 0, left 5, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           center 10, 0, center 10, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           right 30, 0, right 30, 50,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <div style="background: -webkit-gradient(radial,
+                                           5 top, 0, 5 top, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           10 center, 0, 10 center, 50,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(radial,
+                                           30 bottom, 0, 30 bottom, 50,
+                                           from(blue), to(yellow))"></div>
+</body>
+</html>
