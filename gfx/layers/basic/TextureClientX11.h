@@ -56,10 +56,6 @@ protected:
   bool mIsCrossProcess;
 };
 
-already_AddRefed<TextureClient>
-CreateX11TextureClient(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       TextureFlags aFlags, ISurfaceAllocator* aAllocator);
-
 } // namespace layers
 } // namespace mozilla
 
