@@ -182,13 +182,12 @@ public:
                                        Forward<Ts>(messageArgs)...);
   }
 
-  void ReportErrorWithMessage(JSContext* cx);
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
   // Facilities for throwing a preexisting JS exception value via this
   // ErrorResult.  The contract is that any code which might end up calling
   // ThrowJSException() must call MightThrowJSException() even if no exception
-  // is being thrown.  Code that would call ReportJSException or
+  // is being thrown.  Code that would call MaybeSetPendingException or
   // StealJSException as needed must first call WouldReportJSException even if
   // this ErrorResult has not failed.
   //
@@ -196,7 +195,6 @@ public:
   // not have to be in the compartment of cx.  If someone later uses it, they
   // will wrap it into whatever compartment they're working in, as needed.
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
-  void ReportJSException(JSContext* cx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
 
   // Facilities for throwing a DOMException.  If an empty message string is
@@ -205,7 +203,6 @@ public:
   // passed in must be one we create DOMExceptions for; otherwise you may get an
   // XPConnect Exception.
   void ThrowDOMException(nsresult rv, const nsACString& message = EmptyCString());
-  void ReportDOMException(JSContext* cx);
   bool IsDOMException() const { return ErrorCode() == NS_ERROR_DOM_DOMEXCEPTION; }
 
   // Flag on the ErrorResult that whatever needs throwing has been
@@ -218,10 +215,6 @@ public:
   bool IsJSContextException() {
     return ErrorCode() == NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
   }
-
-  // Report a generic error.  This should only be used if we're not
-  // some more specific exception type.
-  void ReportGenericError(JSContext* cx);
 
   // Support for uncatchable exceptions.
   void ThrowUncatchableException() {
@@ -347,6 +340,13 @@ private:
   // failure result.
   void SetPendingException(JSContext* cx);
 
+  // Methods for setting various specific kinds of pending exceptions.
+  void SetPendingExceptionWithMessage(JSContext* cx);
+  void SetPendingJSException(JSContext* cx);
+  void SetPendingDOMException(JSContext* cx);
+  void SetPendingGenericErrorException(JSContext* cx);
+
+
   // Special values of mResult:
   // NS_ERROR_TYPE_ERR -- ThrowTypeError() called on us.
   // NS_ERROR_RANGE_ERR -- ThrowRangeError() called on us.
@@ -358,11 +358,11 @@ private:
   struct Message;
   struct DOMExceptionInfo;
   // mMessage is set by ThrowErrorWithMessage and reported (and deallocated) by
-  // ReportErrorWithMessage.
+  // SetPendingExceptionWithMessage.
   // mJSException is set (and rooted) by ThrowJSException and reported
-  // (and unrooted) by ReportJSException.
+  // (and unrooted) by SetPendingJSException.
   // mDOMExceptionInfo is set by ThrowDOMException and reported
-  // (and deallocated) by ReportDOMException.
+  // (and deallocated) by SetPendingDOMException.
   union {
     Message* mMessage; // valid when IsErrorWithMessage()
     JS::Value mJSException; // valid when IsJSException()
