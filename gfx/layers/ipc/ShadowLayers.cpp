@@ -470,38 +470,6 @@ ShadowLayerForwarder::InWorkerThread()
   return MessageLoop::current() && (GetMessageLoop()->id() == MessageLoop::current()->id());
 }
 
-static void RemoveTextureWorker(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)
-{
-  aTexture->ForceRemove();
-
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
-void
-ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
-{
-  MOZ_ASSERT(aTexture);
-  if (InWorkerThread()) {
-    aTexture->ForceRemove();
-    return;
-  }
-
-  ReentrantMonitor barrier("ShadowLayerForwarder::RemoveTexture Lock");
-  ReentrantMonitorAutoEnter autoMon(barrier);
-  bool done = false;
-
-  GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&RemoveTextureWorker, aTexture, &barrier, &done));
-
-  // Wait until the TextureClient has been ForceRemoved on the worker thread
-  while (!done) {
-    barrier.Wait();
-  }
-}
-
 void
 ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
                                                       aConfigurations)

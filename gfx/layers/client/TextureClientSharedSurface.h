@@ -66,6 +66,8 @@ public:
                              TextureFlags aFlags,
                              ISurfaceAllocator* aAllocator);
 
+  ~SharedSurfaceTextureClient();
+
   static already_AddRefed<SharedSurfaceTextureClient>
   Create(UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
          ISurfaceAllocator* aAllocator, TextureFlags aFlags);

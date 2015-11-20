@@ -279,7 +279,7 @@ SharedSurface_Gralloc::WaitForBufferOwnership()
 bool
 SharedSurface_Gralloc::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
-    mTextureClient->MarkShared();
+    mTextureClient->mWorkaroundAnnoyingSharedSurfaceOwnershipIssues = true;
     return mTextureClient->ToSurfaceDescriptor(*out_descriptor);
 }
 

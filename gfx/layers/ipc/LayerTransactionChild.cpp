@@ -40,7 +40,7 @@ LayerTransactionChild::Destroy()
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
     TextureClient* texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
     if (texture) {
-      texture->ForceRemove();
+      texture->Destroy();
     }
   }
 
