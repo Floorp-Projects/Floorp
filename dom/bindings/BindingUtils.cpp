@@ -126,38 +126,6 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
 }
 
 bool
-ThrowMethodFailed(JSContext* cx, ErrorResult& rv)
-{
-  if (rv.IsUncatchableException()) {
-    // Nuke any existing exception on aCx, to make sure we're uncatchable.
-    JS_ClearPendingException(cx);
-    // Don't do any reporting.  Just return false, to create an
-    // uncatchable exception.
-    return false;
-  }
-  if (rv.IsJSContextException()) {
-    // Whatever we need to throw is on the JSContext already.  We
-    // can't assert that there is a pending exception on it, though,
-    // because in the uncatchable exception case there won't be one.
-    return false;
-  }
-  if (rv.IsErrorWithMessage()) {
-    rv.ReportErrorWithMessage(cx);
-    return false;
-  }
-  if (rv.IsJSException()) {
-    rv.ReportJSException(cx);
-    return false;
-  }
-  if (rv.IsDOMException()) {
-    rv.ReportDOMException(cx);
-    return false;
-  }
-  rv.ReportGenericError(cx);
-  return false;
-}
-
-bool
 ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
 {
   nsPrintfCString errorMessage("%s attribute setter",
@@ -506,6 +474,37 @@ ErrorResult::SuppressException()
   // We don't use AssignErrorCode, because we want to override existing error
   // states, which AssignErrorCode is not allowed to do.
   mResult = NS_OK;
+}
+
+void
+ErrorResult::SetPendingException(JSContext* cx)
+{
+  if (IsUncatchableException()) {
+    // Nuke any existing exception on cx, to make sure we're uncatchable.
+    JS_ClearPendingException(cx);
+    // Don't do any reporting.  Just return, to create an
+    // uncatchable exception.
+    return;
+  }
+  if (IsJSContextException()) {
+    // Whatever we need to throw is on the JSContext already.  We
+    // can't assert that there is a pending exception on it, though,
+    // because in the uncatchable exception case there won't be one.
+    return;
+  }
+  if (IsErrorWithMessage()) {
+    ReportErrorWithMessage(cx);
+    return;
+  }
+  if (IsJSException()) {
+    ReportJSException(cx);
+    return;
+  }
+  if (IsDOMException()) {
+    ReportDOMException(cx);
+    return;
+  }
+  ReportGenericError(cx);
 }
 
 namespace dom {
@@ -2777,10 +2776,10 @@ ConvertExceptionToPromise(JSContext* cx,
   JS_ClearPendingException(cx);
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Reject(global, exn, rv);
-  if (rv.Failed()) {
-    // We just give up.  Make sure to not leak memory on the
-    // ErrorResult, but then just put the original exception back.
-    ThrowMethodFailed(cx, rv);
+  if (rv.MaybeSetPendingException(cx)) {
+    // We just give up.  We put the exception from the ErrorResult on
+    // the JSContext just to make sure to not leak memory on the
+    // ErrorResult, but now just put the original exception back.
     JS_SetPendingException(cx, exn);
     return false;
   }
