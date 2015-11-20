@@ -1,0 +1,14 @@
+diff --git a/intl/icu/source/tools/pkgdata/pkgdata.cpp b/intl/icu/source/tools/pkgdata/pkgdata.cpp
+--- a/intl/icu/source/tools/toolutil/flagparser.c
++++ b/intl/icu/source/tools/toolutil/flagparser.c
+@@ -96,8 +96,8 @@
+     uprv_free(buffer);
+ 
+     T_FileStream_close(f);
+-    
+-    if (U_FAILURE(*status)) {
++
++    if (U_FAILURE(*status) && *status != U_BUFFER_OVERFLOW_ERROR) {
+         return -1;
+     }
+ 
