@@ -433,19 +433,6 @@ DXGITextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocationF
   }
 }
 
-already_AddRefed<TextureClient>
-CreateDXGITextureClient(IntSize aSize, SurfaceFormat aFormat,
-                        TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags,
-                        ISurfaceAllocator* aAllocator)
-{
-  TextureData* data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
-  if (!data) {
-    return nullptr;
-  }
-  return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
-}
-
-
 DXGITextureData*
 D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocationFlags aFlags,
                          ID3D11Device* aDevice)
@@ -654,26 +641,6 @@ DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-class YCbCrKeepAliveD3D11 : public KeepAlive
-{
-public:
-  YCbCrKeepAliveD3D11(RefPtr<IUnknown> aTextures[3])
-  {
-    mTextures[0] = aTextures[0];
-    mTextures[1] = aTextures[1];
-    mTextures[2] = aTextures[2];
-  }
-
-protected:
-  RefPtr<IUnknown> mTextures[3];
-};
-
-void
-DXGIYCbCrTextureData::FinalizeOnIPDLThread(TextureClient* aWrapper)
-{
-  aWrapper->KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mHoldRefs));
-}
-
 void
 DXGIYCbCrTextureData::Deallocate(ISurfaceAllocator*)
 {
@@ -810,18 +777,6 @@ D3D10TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   srcSurf->Unmap();
 
   return true;
-}
-
-void
-D3D11TextureData::FinalizeOnIPDLThread(TextureClient* aWrapper)
-{
-  aWrapper->KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D11Texture2D>>(mTexture));
-}
-
-void
-D3D10TextureData::FinalizeOnIPDLThread(TextureClient* aWrapper)
-{
-  aWrapper->KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D10Texture2D>>(mTexture));
 }
 
 DXGITextureHostD3D11::DXGITextureHostD3D11(TextureFlags aFlags,
