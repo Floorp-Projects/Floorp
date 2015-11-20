@@ -97,6 +97,56 @@ hu{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 E ¤"}
+                        other{"0 E ¤"}
+                    }
+                    10000{
+                        one{"00 E ¤"}
+                        other{"00 E ¤"}
+                    }
+                    100000{
+                        one{"000 E ¤"}
+                        other{"000 E ¤"}
+                    }
+                    1000000{
+                        one{"0 M ¤"}
+                        other{"0 M ¤"}
+                    }
+                    10000000{
+                        one{"00 M ¤"}
+                        other{"00 M ¤"}
+                    }
+                    100000000{
+                        one{"000 M ¤"}
+                        other{"000 M ¤"}
+                    }
+                    1000000000{
+                        one{"0 Mrd ¤"}
+                        other{"0 Mrd ¤"}
+                    }
+                    10000000000{
+                        one{"00 Mrd ¤"}
+                        other{"00 Mrd ¤"}
+                    }
+                    100000000000{
+                        one{"000 Mrd ¤"}
+                        other{"000 Mrd ¤"}
+                    }
+                    1000000000000{
+                        one{"0 B ¤"}
+                        other{"0 B ¤"}
+                    }
+                    10000000000000{
+                        one{"00 B ¤"}
+                        other{"00 B ¤"}
+                    }
+                    100000000000000{
+                        one{"000 B ¤"}
+                        other{"000 B ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 E"}
@@ -166,7 +216,7 @@ hu{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.17"}
     calendar{
         buddhist{
             eras{
@@ -392,6 +442,7 @@ hu{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d., E"}
                 Gy{"G y."}
                 GyMMM{"G y. MMM"}
@@ -525,6 +576,10 @@ hu{
                 "de.",
                 "du.",
             }
+            AmPmMarkersAbbr{
+                "de.",
+                "du.",
+            }
             AmPmMarkersNarrow{
                 "de.",
                 "du.",
@@ -544,8 +599,6 @@ hu{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"dél"}
-            NoonMarkerNarrow{"dél"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -563,6 +616,8 @@ hu{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
                 M{"L"}
                 MEd{"M. d., E"}
                 MMM{"LLL"}
@@ -574,6 +629,8 @@ hu{
                 h{"a h"}
                 hm{"a h:mm"}
                 hms{"a h:mm:ss"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y."}
@@ -662,6 +719,78 @@ hu{
                         "csütörtök",
                         "péntek",
                         "szombat",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"délután"}
+                        evening1{"este"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"reggel"}
+                        night1{"éjszaka"}
+                        night2{"éjszaka"}
+                        noon{"dél"}
+                    }
+                    narrow{
+                        afternoon1{"délután"}
+                        evening1{"délután"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"reggel"}
+                        night1{"éjszaka"}
+                        night2{"éjszaka"}
+                        noon{"dél"}
+                    }
+                    wide{
+                        afternoon1{"délután"}
+                        evening1{"este"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"reggel"}
+                        night1{"éjszaka"}
+                        night2{"éjszaka"}
+                        noon{"dél"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"délután"}
+                        am{"de."}
+                        evening1{"este"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"délelőtt"}
+                        night1{"éjjel"}
+                        night2{"hajnal"}
+                        noon{"dél"}
+                        pm{"du."}
+                    }
+                    narrow{
+                        afternoon1{"délután"}
+                        am{"de."}
+                        evening1{"este"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"délelőtt"}
+                        night1{"éjjel"}
+                        night2{"hajnal"}
+                        noon{"dél"}
+                        pm{"du."}
+                    }
+                    wide{
+                        afternoon1{"délután"}
+                        am{"de."}
+                        evening1{"este"}
+                        midnight{"éjfél"}
+                        morning1{"reggel"}
+                        morning2{"délelőtt"}
+                        night1{"éjjel"}
+                        night2{"hajnal"}
+                        noon{"dél"}
+                        pm{"du."}
                     }
                 }
             }
@@ -1063,8 +1192,8 @@ hu{
                     abbreviated{
                         "Moh.",
                         "Saf.",
-                        "Rébi I",
-                        "Rébi II",
+                        "Réb. 1",
+                        "Réb. 2",
                         "Dsem. I",
                         "Dsem. II",
                         "Red.",
@@ -1240,6 +1369,10 @@ hu{
         }
         day-narrow{
             dn{"nap"}
+            relative{
+                "-2"{"tegnapelőtt"}
+                "2"{"holnapután"}
+            }
             relativeTime{
                 future{
                     one{"{0} nap múlva"}
@@ -1253,6 +1386,10 @@ hu{
         }
         day-short{
             dn{"nap"}
+            relative{
+                "-2"{"tegnapelőtt"}
+                "2"{"holnapután"}
+            }
             relativeTime{
                 future{
                     one{"{0} nap múlva"}
@@ -1410,6 +1547,11 @@ hu{
         }
         month-narrow{
             dn{"hónap"}
+            relative{
+                "-1"{"előző hónap"}
+                "0"{"ez a hónap"}
+                "1"{"következő hónap"}
+            }
             relativeTime{
                 future{
                     one{"{0} hónap múlva"}
@@ -1423,6 +1565,11 @@ hu{
         }
         month-short{
             dn{"hónap"}
+            relative{
+                "-1"{"előző hónap"}
+                "0"{"ez a hónap"}
+                "1"{"következő hónap"}
+            }
             relativeTime{
                 future{
                     one{"{0} hónap múlva"}
@@ -1436,6 +1583,11 @@ hu{
         }
         quarter{
             dn{"negyedév"}
+            relative{
+                "-1"{"előző negyedév"}
+                "0"{"ez a negyedév"}
+                "1"{"következő negyedév"}
+            }
             relativeTime{
                 future{
                     one{"{0} negyedév múlva"}
@@ -1449,6 +1601,11 @@ hu{
         }
         quarter-narrow{
             dn{"negyedév"}
+            relative{
+                "-1"{"előző negyedév"}
+                "0"{"ez a negyedév"}
+                "1"{"következő negyedév"}
+            }
             relativeTime{
                 future{
                     one{"{0} negyedév múlva"}
@@ -1462,6 +1619,11 @@ hu{
         }
         quarter-short{
             dn{"negyedév"}
+            relative{
+                "-1"{"előző negyedév"}
+                "0"{"ez a negyedév"}
+                "1"{"következő negyedév"}
+            }
             relativeTime{
                 future{
                     one{"{0} negyedév múlva"}
@@ -1640,6 +1802,11 @@ hu{
         }
         week-narrow{
             dn{"hét"}
+            relative{
+                "-1"{"előző hét"}
+                "0"{"ez a hét"}
+                "1"{"következő hét"}
+            }
             relativeTime{
                 future{
                     one{"{0} hét múlva"}
@@ -1653,6 +1820,11 @@ hu{
         }
         week-short{
             dn{"hét"}
+            relative{
+                "-1"{"előző hét"}
+                "0"{"ez a hét"}
+                "1"{"következő hét"}
+            }
             relativeTime{
                 future{
                     one{"{0} hét múlva"}
@@ -1687,6 +1859,11 @@ hu{
         }
         year-narrow{
             dn{"év"}
+            relative{
+                "-1"{"előző év"}
+                "0"{"ez az év"}
+                "1"{"következő év"}
+            }
             relativeTime{
                 future{
                     one{"{0} év múlva"}
@@ -1700,6 +1877,11 @@ hu{
         }
         year-short{
             dn{"év"}
+            relative{
+                "-1"{"előző év"}
+                "0"{"ez az év"}
+                "1"{"következő év"}
+            }
             relativeTime{
                 future{
                     one{"{0} év múlva"}

@@ -1613,6 +1613,7 @@
 #define uspoof_getSkeleton U_ICU_ENTRY_POINT_RENAME(uspoof_getSkeleton)
 #define uspoof_getSkeletonUTF8 U_ICU_ENTRY_POINT_RENAME(uspoof_getSkeletonUTF8)
 #define uspoof_getSkeletonUnicodeString U_ICU_ENTRY_POINT_RENAME(uspoof_getSkeletonUnicodeString)
+#define uspoof_internalInitStatics U_ICU_ENTRY_POINT_RENAME(uspoof_internalInitStatics)
 #define uspoof_open U_ICU_ENTRY_POINT_RENAME(uspoof_open)
 #define uspoof_openFromSerialized U_ICU_ENTRY_POINT_RENAME(uspoof_openFromSerialized)
 #define uspoof_openFromSource U_ICU_ENTRY_POINT_RENAME(uspoof_openFromSource)

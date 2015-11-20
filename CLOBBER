@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-bug 1168113's backout needs a CLOBBER to clear up some TC bustage
+Bug 1210165 - Update ICU to release 56.1.
+Bug 966038 - Updating ICU doesn't properly notify the Mozilla build system, necessitating a clobber.

@@ -1,10 +1,13 @@
 ## -*-makefile-*-
-## Copyright (c) 2003-2009 IBM, Ken Foskey, and others. All rights reserved.
+## Copyright (c) 2003-2015 IBM, Ken Foskey, and others. All rights reserved.
 ##
 ## Aix-specific setup (for gcc)
 ##
 ## Please note: AIX does NOT have library versioning per se (there is no 'SONAME' capability). 
 ## So, we are using 'windows' style library names, that is, libicuuc20.1.so instead of libicuuc.so.20.1
+
+# When building stubdata, special considerations need to be made when building on AIX with GCC
+BUILD_HOST_ICU=AIX_GCC
 
 # Certain files don't compile in -ansi mode (e.g. umutex.c, toolutil.c, and cdatatst.c)
 CFLAGS += -D_ALL_SOURCE

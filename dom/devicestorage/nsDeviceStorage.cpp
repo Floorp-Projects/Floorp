@@ -836,8 +836,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "created");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "created"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -864,8 +863,7 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits)
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "created");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "created"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -881,8 +879,7 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits)
   outputStream->Write((char*) aBits.Elements(), aBits.Length(), &wrote);
   outputStream->Close();
 
-  iocomplete = new IOEventComplete(this, "modified");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "modified"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -935,8 +932,7 @@ DeviceStorageFile::Append(nsIInputStream* aInputStream, nsIOutputStream* aOutput
     bufSize -= wrote;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "modified");
-  rv = NS_DispatchToMainThread(iocomplete);
+  rv = NS_DispatchToMainThread(new IOEventComplete(this, "modified"));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -973,8 +969,7 @@ DeviceStorageFile::Remove()
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "deleted");
-  return NS_DispatchToMainThread(iocomplete);
+  return NS_DispatchToMainThread(new IOEventComplete(this, "deleted"));
 }
 
 nsresult
@@ -1534,7 +1529,7 @@ DeviceStorageRequest::~DeviceStorageRequest()
 
 void
 DeviceStorageRequest::Initialize(DeviceStorageRequestManager* aManager,
-                                 DeviceStorageFile* aFile,
+                                 already_AddRefed<DeviceStorageFile>&& aFile,
                                  uint32_t aId)
 {
   DS_LOG_DEBUG("%p manages %p", aManager, this);
@@ -1548,11 +1543,11 @@ DeviceStorageRequest::Initialize(DeviceStorageRequestManager* aManager,
 
 void
 DeviceStorageRequest::Initialize(DeviceStorageRequestManager* aManager,
-                                 DeviceStorageFile* aFile,
+                                 already_AddRefed<DeviceStorageFile>&& aFile,
                                  uint32_t aRequest,
                                  BlobImpl* aBlob)
 {
-  Initialize(aManager, aFile, aRequest);
+  Initialize(aManager, Move(aFile), aRequest);
   mBlob = aBlob;
   mCheckBlob = true;
   mCheckFile = true;
@@ -1561,11 +1556,11 @@ DeviceStorageRequest::Initialize(DeviceStorageRequestManager* aManager,
 
 void
 DeviceStorageRequest::Initialize(DeviceStorageRequestManager* aManager,
-                                 DeviceStorageFile* aFile,
+                                 already_AddRefed<DeviceStorageFile>&& aFile,
                                  uint32_t aRequest,
                                  DeviceStorageFileDescriptor* aDSFileDescriptor)
 {
-  Initialize(aManager, aFile, aRequest);
+  Initialize(aManager, Move(aFile), aRequest);
   mDSFileDescriptor = aDSFileDescriptor;
   MOZ_ASSERT(mDSFileDescriptor);
 }
@@ -1597,7 +1592,7 @@ DeviceStorageRequest::Allow()
     {
       self->Allow();
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   nsresult rv = AllowInternal();
@@ -1686,7 +1681,8 @@ DeviceStorageRequest::AllowInternal()
     nsCOMPtr<nsIEventTarget> target
       = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
     MOZ_ASSERT(target);
-    return target->Dispatch(this, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> self = this;
+    return target->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
   }
 
   DS_LOG_INFO("run %u", mId);
@@ -1706,7 +1702,7 @@ DeviceStorageRequest::SendToParentProcess()
         self->Reject(POST_ERROR_EVENT_UNKNOWN);
       }
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -1736,11 +1732,11 @@ DeviceStorageCursorRequest::DeviceStorageCursorRequest()
 
 void
 DeviceStorageCursorRequest::Initialize(DeviceStorageRequestManager* aManager,
-                                       DeviceStorageFile* aFile,
+                                       already_AddRefed<DeviceStorageFile>&& aFile,
                                        uint32_t aRequest,
                                        PRTime aSince)
 {
-  Initialize(aManager, aFile, aRequest);
+  Initialize(aManager, Move(aFile), aRequest);
   mStorageType = mFile->mStorageType;
   mSince = aSince;
 }
@@ -1766,7 +1762,7 @@ DeviceStorageCursorRequest::SendContinueToParentProcess()
     {
       self->SendContinueToParentProcess();
     });
-    return NS_DispatchToMainThread(r);
+    return NS_DispatchToMainThread(r.forget());
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -1793,7 +1789,7 @@ DeviceStorageCursorRequest::Continue()
     {
       self->Continue();
     });
-    nsresult rv = NS_DispatchToMainThread(r);
+    nsresult rv = NS_DispatchToMainThread(r.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Reject(POST_ERROR_EVENT_UNKNOWN);
     }
@@ -1943,11 +1939,11 @@ public:
   }
 
   void Initialize(DeviceStorageRequestManager* aManager,
-                  DeviceStorageFile* aFile,
+                  already_AddRefed<DeviceStorageFile>&& aFile,
                   uint32_t aRequest) override
   {
-    DeviceStorageRequest::Initialize(aManager, aFile, aRequest);
-    mUseMainThread = aFile->mPath.IsEmpty();
+    DeviceStorageRequest::Initialize(aManager, Move(aFile), aRequest);
+    mUseMainThread = mFile->mPath.IsEmpty();
   }
 
 protected:
@@ -2087,10 +2083,10 @@ public:
   }
 
   void Initialize(DeviceStorageRequestManager* aManager,
-                  DeviceStorageFile* aFile,
+                  already_AddRefed<DeviceStorageFile>&& aFile,
                   uint32_t aRequest) override
   {
-    DeviceStorageRequest::Initialize(aManager, aFile, aRequest);
+    DeviceStorageRequest::Initialize(aManager, Move(aFile), aRequest);
     mAccess = mFile->mEditable ? DEVICE_STORAGE_ACCESS_WRITE
                                : DEVICE_STORAGE_ACCESS_READ;
   }
@@ -2217,7 +2213,8 @@ public:
       DeviceStorageUsedSpaceCache* usedSpaceCache
         = DeviceStorageUsedSpaceCache::CreateOrGet();
       MOZ_ASSERT(usedSpaceCache);
-      usedSpaceCache->Dispatch(this);
+      nsCOMPtr<nsIRunnable> self = this;
+      usedSpaceCache->Dispatch(self.forget());
       return NS_OK;
     }
 
@@ -2402,10 +2399,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DeviceStoragePermissionCheck,
                                            nsIContentPermissionRequest)
 
-  DeviceStoragePermissionCheck(DeviceStorageRequest* aRequest,
-                               uint64_t aWindowID,
-                               const PrincipalInfo &aPrincipalInfo)
-    : mRequest(aRequest)
+  DeviceStoragePermissionCheck(
+    already_AddRefed<DeviceStorageRequest>&& aRequest,
+    uint64_t aWindowID, const PrincipalInfo &aPrincipalInfo)
+    : mRequest(Move(aRequest))
     , mWindowID(aWindowID)
     , mPrincipalInfo(aPrincipalInfo)
   {
@@ -2557,37 +2554,31 @@ nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
 }
 
 nsresult
-nsDOMDeviceStorage::CheckPermission(DeviceStorageRequest* aRequest)
+nsDOMDeviceStorage::CheckPermission(
+  already_AddRefed<DeviceStorageRequest>&& aRequest)
 {
   MOZ_ASSERT(mManager);
-  uint32_t cache = mManager->CheckPermission(aRequest->GetAccess());
+  RefPtr<DeviceStorageRequest> request(aRequest);
+  uint32_t cache = mManager->CheckPermission(request->GetAccess());
   switch (cache) {
     case nsIPermissionManager::ALLOW_ACTION:
-      return aRequest->Allow();
+      return request->Allow();
     case nsIPermissionManager::DENY_ACTION:
-      return aRequest->Cancel();
+      return request->Cancel();
     case nsIPermissionManager::PROMPT_ACTION:
     default:
     {
       nsCOMPtr<nsIThread> mainThread;
       nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return aRequest->Reject(POST_ERROR_EVENT_UNKNOWN);
+        return request->Reject(POST_ERROR_EVENT_UNKNOWN);
       }
 
-      /* We need to do a bit of a song and dance here to release the object
-         because while we can initially increment the ownership count (no one
-         else is using it), we cannot safely decrement after dispatching because
-         it uses cycle collection and requires the main thread to free it. */
-      nsCOMPtr<nsIRunnable> r
-        = new DeviceStoragePermissionCheck(aRequest, mInnerWindowID,
-                                           *mPrincipalInfo);
-      rv = mainThread->Dispatch(r, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        rv = aRequest->Reject(POST_ERROR_EVENT_UNKNOWN);
-      }
-      NS_ProxyRelease(mainThread, r.forget().take());
-      return rv;
+      return mainThread->Dispatch(
+        MakeAndAddRef<DeviceStoragePermissionCheck>(request.forget(),
+                                                    mInnerWindowID,
+                                                    *mPrincipalInfo),
+        NS_DISPATCH_NORMAL);
     }
   }
 }
@@ -2601,9 +2592,10 @@ nsDOMDeviceStorage::IsOwningThread()
 }
 
 nsresult
-nsDOMDeviceStorage::DispatchToOwningThread(nsIRunnable* aRunnable)
+nsDOMDeviceStorage::DispatchToOwningThread(
+  already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mOwningThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  return mOwningThread->Dispatch(Move(aRunnable), NS_DISPATCH_NORMAL);
 }
 
 /* virtual */ JSObject*
@@ -3116,8 +3108,8 @@ nsDOMDeviceStorage::AddOrAppendNamed(Blob* aBlob, const nsAString& aPath,
   } else {
     request = new DeviceStorageAppendRequest();
   }
-  request->Initialize(mManager, dsf, id, aBlob->Impl());
-  aRv = CheckPermission(request);
+  request->Initialize(mManager, dsf.forget(), id, aBlob->Impl());
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3151,9 +3143,9 @@ nsDOMDeviceStorage::GetInternal(const nsAString& aPath, bool aEditable,
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageOpenRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3185,9 +3177,9 @@ nsDOMDeviceStorage::Delete(const nsAString& aPath, ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageDeleteRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3206,9 +3198,9 @@ nsDOMDeviceStorage::FreeSpace(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageFreeSpaceRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3231,9 +3223,9 @@ nsDOMDeviceStorage::UsedSpace(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageUsedSpaceRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3252,9 +3244,9 @@ nsDOMDeviceStorage::Available(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageAvailableRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3273,9 +3265,9 @@ nsDOMDeviceStorage::StorageStatus(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageStatusRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3294,9 +3286,9 @@ nsDOMDeviceStorage::Format(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageFormatRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3315,9 +3307,9 @@ nsDOMDeviceStorage::Mount(ErrorResult& aRv)
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageMountRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3337,9 +3329,9 @@ nsDOMDeviceStorage::Unmount(ErrorResult& aRv)
 
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageUnmountRequest();
-  request->Initialize(mManager, dsf, id);
+  request->Initialize(mManager, dsf.forget(), id);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3385,9 +3377,9 @@ nsDOMDeviceStorage::CreateFileDescriptor(const nsAString& aPath,
   }
 
   RefPtr<DeviceStorageRequest> request = new DeviceStorageCreateFdRequest();
-  request->Initialize(mManager, dsf, id, aDSFileDescriptor);
+  request->Initialize(mManager, dsf.forget(), id, aDSFileDescriptor);
 
-  aRv = CheckPermission(request);
+  aRv = CheckPermission(request.forget());
   return domRequest.forget();
 }
 
@@ -3492,8 +3484,8 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
   if (!dsf->IsSafePath()) {
     aRv = mManager->Reject(id, POST_ERROR_EVENT_PERMISSION_DENIED);
   } else {
-    request->Initialize(mManager, dsf, id, since);
-    aRv = CheckPermission(request);
+    request->Initialize(mManager, dsf.forget(), id, since);
+    aRv = CheckPermission(request.forget());
   }
 
   return cursor.forget();
@@ -3695,8 +3687,8 @@ nsDOMDeviceStorage::EventListenerWasAdded(const nsAString& aType,
   RefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
                                                           mStorageName);
   RefPtr<DeviceStorageRequest> request = new DeviceStorageWatchRequest();
-  request->Initialize(mManager, dsf, id);
-  aRv = CheckPermission(request);
+  request->Initialize(mManager, dsf.forget(), id);
+  aRv = CheckPermission(request.forget());
 }
 
 Atomic<uint32_t> DeviceStorageRequestManager::sLastRequestId(0);
@@ -3760,14 +3752,15 @@ DeviceStorageRequestManager::IsOwningThread()
 }
 
 nsresult
-DeviceStorageRequestManager::DispatchToOwningThread(nsIRunnable* aRunnable)
+DeviceStorageRequestManager::DispatchToOwningThread(
+  already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mOwningThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  return mOwningThread->Dispatch(Move(aRunnable), NS_DISPATCH_NORMAL);
 }
 
 nsresult
-DeviceStorageRequestManager::DispatchOrAbandon(uint32_t aId,
-                                               nsIRunnable* aRunnable)
+DeviceStorageRequestManager::DispatchOrAbandon(
+  uint32_t aId, already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MutexAutoLock lock(mMutex);
   if (mShutdown) {
@@ -3776,10 +3769,11 @@ DeviceStorageRequestManager::DispatchOrAbandon(uint32_t aId,
        safe to be freed off the owner thread but the dispatch method
        does not know that. */
     DS_LOG_DEBUG("shutdown %u", aId);
+    nsCOMPtr<nsIRunnable> runnable(aRunnable);
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
-  nsresult rv = DispatchToOwningThread(aRunnable);
+  nsresult rv = DispatchToOwningThread(Move(aRunnable));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     DS_LOG_ERROR("abandon %u", aId);
   }
@@ -3846,7 +3840,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, bool aForceDispatch)
     {
       self->Resolve(aId, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u", aId);
@@ -3878,7 +3872,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, const nsString& aResult,
     {
       self->Resolve(aId, result, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %s", aId,
@@ -3923,7 +3917,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, uint64_t aValue,
     {
       self->Resolve(aId, aValue, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %" PRIu64, aId, aValue);
@@ -4003,7 +3997,7 @@ DeviceStorageRequestManager::Resolve(uint32_t aId, BlobImpl* aBlobImpl,
     {
       self->Resolve(aId, blobImpl, false);
     });
-    return DispatchOrAbandon(aId, r);
+    return DispatchOrAbandon(aId, r.forget());
   }
 
   DS_LOG_INFO("posted %u w/ %p", aId, aBlobImpl);
@@ -4131,7 +4125,7 @@ DeviceStorageRequestManager::Reject(uint32_t aId, const nsString& aReason)
 
     self->RejectInternal(i, reason);
   });
-  return DispatchOrAbandon(aId, r);
+  return DispatchOrAbandon(aId, r.forget());
 }
 
 nsresult

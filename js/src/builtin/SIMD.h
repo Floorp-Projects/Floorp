@@ -163,9 +163,6 @@
   V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                            \
   V(store, (Store<Int8x16, 16>), 3)
 
-#define INT8X16_BOOL_FUNCTION_LIST(V)                                                 \
-  V(bool, Bool<Int8x16>, 16)
-
 #define INT8X16_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int8x16>, 17)                                                    \
   V(shuffle, Shuffle<Int8x16>, 18)
@@ -174,7 +171,6 @@
   INT8X16_UNARY_FUNCTION_LIST(V)                                                      \
   INT8X16_BINARY_FUNCTION_LIST(V)                                                     \
   INT8X16_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT8X16_BOOL_FUNCTION_LIST(V)                                                       \
   INT8X16_SHUFFLE_FUNCTION_LIST(V)
 
 #define INT16X8_UNARY_FUNCTION_LIST(V)                                                \
@@ -212,9 +208,6 @@
   V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                            \
   V(store, (Store<Int16x8, 8>), 3)
 
-#define INT16X8_BOOL_FUNCTION_LIST(V)                                                 \
-  V(bool, Bool<Int16x8>, 8)
-
 #define INT16X8_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int16x8>, 9)                                                     \
   V(shuffle, Shuffle<Int16x8>, 10)
@@ -223,7 +216,6 @@
   INT16X8_UNARY_FUNCTION_LIST(V)                                                      \
   INT16X8_BINARY_FUNCTION_LIST(V)                                                     \
   INT16X8_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT16X8_BOOL_FUNCTION_LIST(V)                                                       \
   INT16X8_SHUFFLE_FUNCTION_LIST(V)
 
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                                \
@@ -269,9 +261,6 @@
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
   V(store1, (Store<Int32x4, 1>), 3)
 
-#define INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                          \
-  V(bool, Bool<Int32x4>, 4)
-
 #define INT32X4_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int32x4>, 5)                                                     \
   V(shuffle, Shuffle<Int32x4>, 6)
@@ -280,7 +269,6 @@
   INT32X4_UNARY_FUNCTION_LIST(V)                                                      \
   INT32X4_BINARY_FUNCTION_LIST(V)                                                     \
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                                \
   INT32X4_SHUFFLE_FUNCTION_LIST(V)
 
 #define CONVERSION_INT32X4_SIMD_OP(_) \
@@ -344,8 +332,6 @@
     _(store2)                        \
     _(store3)                        \
     _(check)
-#define ION_ONLY_INT32X4_SIMD_OP(_)  \
-    _(bool)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(_)
@@ -370,22 +356,18 @@ struct Float32x4 {
     typedef float Elem;
     static const unsigned lanes = 4;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
-
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.float32x4TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return a;
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         double d;
         if (!ToNumber(cx, v, &d))
             return false;
         *out = float(d);
         return true;
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setDouble(JS::CanonicalizeNaN(value));
+    static Value ToValue(Elem value) {
+        return DoubleValue(JS::CanonicalizeNaN(value));
     }
 };
 
@@ -393,18 +375,14 @@ struct Float64x2 {
     typedef double Elem;
     static const unsigned lanes = 2;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
-
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.float64x2TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return a;
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToNumber(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setDouble(JS::CanonicalizeNaN(value));
+    static Value ToValue(Elem value) {
+        return DoubleValue(JS::CanonicalizeNaN(value));
     }
 };
 
@@ -416,14 +394,11 @@ struct Int8x16 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int8x16TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt8(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt8(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 
@@ -435,14 +410,11 @@ struct Int16x8 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int16x8TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt16(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt16(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 
@@ -454,14 +426,11 @@ struct Int32x4 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int32x4TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt32(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt32(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 

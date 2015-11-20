@@ -87,6 +87,56 @@ da{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"0 td ¤"}
+                        other{"0 td ¤"}
+                    }
+                    10000{
+                        one{"00 td ¤"}
+                        other{"00 td ¤"}
+                    }
+                    100000{
+                        one{"000 td ¤"}
+                        other{"000 td ¤"}
+                    }
+                    1000000{
+                        one{"0 mio ¤"}
+                        other{"0 mio ¤"}
+                    }
+                    10000000{
+                        one{"00 mio ¤"}
+                        other{"00 mio ¤"}
+                    }
+                    100000000{
+                        one{"000 mio ¤"}
+                        other{"000 mio ¤"}
+                    }
+                    1000000000{
+                        one{"0 mia ¤"}
+                        other{"0 mia ¤"}
+                    }
+                    10000000000{
+                        one{"00 mia ¤"}
+                        other{"00 mia ¤"}
+                    }
+                    100000000000{
+                        one{"000 mia ¤"}
+                        other{"000 mia ¤"}
+                    }
+                    1000000000000{
+                        one{"0 bio ¤"}
+                        other{"0 bio ¤"}
+                    }
+                    10000000000000{
+                        one{"00 bio ¤"}
+                        other{"00 bio ¤"}
+                    }
+                    100000000000000{
+                        one{"000 bio ¤"}
+                        other{"000 bio ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         one{"0 td"}
@@ -125,16 +175,16 @@ da{
                         other{"000 mia"}
                     }
                     1000000000000{
-                        one{"0 bill"}
-                        other{"0 bill"}
+                        one{"0 bio"}
+                        other{"0 bio"}
                     }
                     10000000000000{
-                        one{"00 bill"}
-                        other{"00 bill"}
+                        one{"00 bio"}
+                        other{"00 bio"}
                     }
                     100000000000000{
-                        one{"000 bill"}
-                        other{"000 bill"}
+                        one{"000 bio"}
+                        other{"000 bio"}
                     }
                 }
             }
@@ -156,7 +206,7 @@ da{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.12.94"}
+    Version{"2.1.19.44"}
     calendar{
         buddhist{
             eras{
@@ -182,6 +232,7 @@ da{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E 'd'. d."}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
@@ -195,6 +246,7 @@ da{
                 MMM{"MMM"}
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
+                MMMMd{"d MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d/M"}
                 d{"d."}
@@ -208,6 +260,7 @@ da{
                 yyyyMEd{"E d/M/y G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E d. MMM y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d. MMM y G"}
                 yyyyMd{"d/M/y G"}
                 yyyyQQQ{"QQQ y G"}
@@ -314,6 +367,10 @@ da{
                 "AM",
                 "PM",
             }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -328,14 +385,11 @@ da{
                 "d. MMM y",
                 "dd/MM/y",
                 "{1} {0}",
-                "{1} 'kl.' {0}",
-                "{1} 'kl.' {0}",
+                "{1} 'kl'. {0}",
+                "{1} 'kl'. {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"middag"}
-            NoonMarkerAbbr{"middag"}
-            NoonMarkerNarrow{"middag"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -360,6 +414,7 @@ da{
                 MMM{"MMM"}
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
@@ -376,6 +431,7 @@ da{
                 yMM{"MM/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d. MMM y"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d. MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
@@ -456,6 +512,66 @@ da{
                         "torsdag",
                         "fredag",
                         "lørdag",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"om eftermiddagen"}
+                        evening1{"om aftenen"}
+                        midnight{"midnat"}
+                        morning1{"om morgenen"}
+                        morning2{"om formiddagen"}
+                        night1{"om natten"}
+                    }
+                    narrow{
+                        afternoon1{"om eftermiddagen"}
+                        evening1{"om aftenen"}
+                        midnight{"midnat"}
+                        morning1{"om morgenen"}
+                        morning2{"om formiddagen"}
+                        night1{"om natten"}
+                    }
+                    wide{
+                        afternoon1{"om eftermiddagen"}
+                        evening1{"om aftenen"}
+                        midnight{"midnat"}
+                        morning1{"om morgenen"}
+                        morning2{"om formiddagen"}
+                        night1{"om natten"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"eftermiddag"}
+                        am{"AM"}
+                        evening1{"aften"}
+                        midnight{"midnat"}
+                        morning1{"morgen"}
+                        morning2{"formiddag"}
+                        night1{"nat"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        afternoon1{"eftermiddag"}
+                        am{"AM"}
+                        evening1{"aften"}
+                        midnight{"midnat"}
+                        morning1{"morgen"}
+                        morning2{"formiddag"}
+                        night1{"nat"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        afternoon1{"eftermiddag"}
+                        am{"AM"}
+                        evening1{"aften"}
+                        midnight{"midnat"}
+                        morning1{"morgen"}
+                        morning2{"formiddag"}
+                        night1{"nat"}
+                        pm{"PM"}
                     }
                 }
             }
@@ -767,7 +883,7 @@ da{
     }
     fields{
         day{
-            dn{"Dag"}
+            dn{"dag"}
             relative{
                 "-1"{"i går"}
                 "-2"{"i forgårs"}
@@ -788,6 +904,10 @@ da{
         }
         day-narrow{
             dn{"dag"}
+            relative{
+                "-2"{"i forgårs"}
+                "2"{"i overmorgen"}
+            }
             relativeTime{
                 future{
                     one{"om {0} dag"}
@@ -801,6 +921,10 @@ da{
         }
         day-short{
             dn{"dag"}
+            relative{
+                "-2"{"i forgårs"}
+                "2"{"i overmorgen"}
+            }
             relativeTime{
                 future{
                     one{"om {0} dag"}
@@ -816,7 +940,7 @@ da{
             dn{"AM/PM"}
         }
         era{
-            dn{"Æra"}
+            dn{"æra"}
         }
         fri{
             relative{
@@ -840,7 +964,7 @@ da{
             }
         }
         hour{
-            dn{"Time"}
+            dn{"time"}
             relativeTime{
                 future{
                     one{"om {0} time"}
@@ -879,7 +1003,7 @@ da{
             }
         }
         minute{
-            dn{"Minut"}
+            dn{"minut"}
             relativeTime{
                 future{
                     one{"om {0} minut"}
@@ -939,7 +1063,7 @@ da{
             }
         }
         month{
-            dn{"Måned"}
+            dn{"måned"}
             relative{
                 "-1"{"sidste måned"}
                 "0"{"denne måned"}
@@ -958,6 +1082,11 @@ da{
         }
         month-narrow{
             dn{"md."}
+            relative{
+                "-1"{"sidste md."}
+                "0"{"denne md."}
+                "1"{"næste md."}
+            }
             relativeTime{
                 future{
                     one{"om {0} md."}
@@ -971,6 +1100,11 @@ da{
         }
         month-short{
             dn{"md."}
+            relative{
+                "-1"{"sidste md."}
+                "0"{"denne md."}
+                "1"{"næste md."}
+            }
             relativeTime{
                 future{
                     one{"om {0} md."}
@@ -983,7 +1117,12 @@ da{
             }
         }
         quarter{
-            dn{"Kvartal"}
+            dn{"kvartal"}
+            relative{
+                "-1"{"sidste kvartal"}
+                "0"{"dette kvartal"}
+                "1"{"næste kvartal"}
+            }
             relativeTime{
                 future{
                     one{"om {0} kvartal"}
@@ -997,6 +1136,11 @@ da{
         }
         quarter-narrow{
             dn{"kvt."}
+            relative{
+                "-1"{"sidste kvt."}
+                "0"{"dette kvt."}
+                "1"{"næste kvt."}
+            }
             relativeTime{
                 future{
                     one{"om {0} kvt."}
@@ -1010,6 +1154,11 @@ da{
         }
         quarter-short{
             dn{"kvt."}
+            relative{
+                "-1"{"sidste kvt."}
+                "0"{"dette kvt."}
+                "1"{"næste kvt."}
+            }
             relativeTime{
                 future{
                     one{"om {0} kvt."}
@@ -1043,7 +1192,7 @@ da{
             }
         }
         second{
-            dn{"Sekund"}
+            dn{"sekund"}
             relative{
                 "0"{"nu"}
             }
@@ -1169,7 +1318,7 @@ da{
             }
         }
         week{
-            dn{"Uge"}
+            dn{"uge"}
             relative{
                 "-1"{"sidste uge"}
                 "0"{"denne uge"}
@@ -1188,6 +1337,11 @@ da{
         }
         week-narrow{
             dn{"uge"}
+            relative{
+                "-1"{"sidste uge"}
+                "0"{"denne uge"}
+                "1"{"næste uge"}
+            }
             relativeTime{
                 future{
                     one{"om {0} uge"}
@@ -1201,6 +1355,11 @@ da{
         }
         week-short{
             dn{"uge"}
+            relative{
+                "-1"{"sidste uge"}
+                "0"{"denne uge"}
+                "1"{"næste uge"}
+            }
             relativeTime{
                 future{
                     one{"om {0} uge"}
@@ -1213,10 +1372,10 @@ da{
             }
         }
         weekday{
-            dn{"Ugedag"}
+            dn{"ugedag"}
         }
         year{
-            dn{"År"}
+            dn{"år"}
             relative{
                 "-1"{"sidste år"}
                 "0"{"i år"}
@@ -1235,6 +1394,11 @@ da{
         }
         year-narrow{
             dn{"år"}
+            relative{
+                "-1"{"sidste år"}
+                "0"{"i år"}
+                "1"{"næste år"}
+            }
             relativeTime{
                 future{
                     one{"om {0} år"}
@@ -1248,6 +1412,11 @@ da{
         }
         year-short{
             dn{"år"}
+            relative{
+                "-1"{"sidste år"}
+                "0"{"i år"}
+                "1"{"næste år"}
+            }
             relativeTime{
                 future{
                     one{"om {0} år"}
@@ -1260,7 +1429,7 @@ da{
             }
         }
         zone{
-            dn{"Tidszone"}
+            dn{"tidszone"}
         }
     }
     listPattern{

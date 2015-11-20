@@ -16,6 +16,7 @@ de_CH{
         latn{
             patterns{
                 currencyFormat{"¤ #,##0.00;¤-#,##0.00"}
+                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{"."}
@@ -23,5 +24,5 @@ de_CH{
             }
         }
     }
-    Version{"2.1.11.70"}
+    Version{"2.1.19.87"}
 }

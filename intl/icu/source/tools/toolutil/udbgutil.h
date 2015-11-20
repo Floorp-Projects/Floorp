@@ -1,6 +1,6 @@
 /*
 ************************************************************************
-* Copyright (c) 2008-2013, International Business Machines
+* Copyright (c) 2008-2015, International Business Machines
 * Corporation and others.  All Rights Reserved.
 ************************************************************************
 */
@@ -20,8 +20,10 @@ enum UDebugEnumType {
     UDBG_UCalendarMonths, /* UCalendarMonths. Count= (UCAL_UNDECIMBER+1) */
     UDBG_UDateFormatStyle, /* Count = UDAT_SHORT=1 */
 #endif
+#if UCONFIG_ENABLE_PLUGINS
     UDBG_UPlugReason,   /* Count = UPLUG_REASON_COUNT */
     UDBG_UPlugLevel,    /* COUNT = UPLUG_LEVEL_COUNT */
+#endif
     UDBG_UAcceptResult, /* Count = ULOC_ACCEPT_FALLBACK+1=3 */
 
     /* All following enums may be discontiguous. */

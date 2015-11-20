@@ -1,0 +1,18 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2015 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/en_DK.xml
+// *
+// ***************************************************************************
+en_DK{
+    %%Parent{"en_150"}
+    Currencies{
+        DKK{
+            "kr.",
+            "Danish Krone",
+        }
+    }
+    Version{"2.1.19.69"}
+}

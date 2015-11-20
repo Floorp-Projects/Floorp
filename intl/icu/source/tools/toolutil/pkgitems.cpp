@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2003-2014, International Business Machines
+*   Copyright (C) 2003-2015, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -410,7 +410,8 @@ ures_enumDependencies(const char *itemName, const UDataInfo *pInfo,
             fprintf(stderr, "icupkg: %s is not a pool bundle\n", poolName);
             return;
         }
-        const int32_t *poolIndexes=(const int32_t *)nativePool.getBytes()+1;
+        const int32_t *poolRoot=(const int32_t *)nativePool.getBytes();
+        const int32_t *poolIndexes=poolRoot+1;
         int32_t poolIndexLength=poolIndexes[URES_INDEX_LENGTH]&0xff;
         if(!(poolIndexLength>URES_INDEX_POOL_CHECKSUM &&
              (poolIndexes[URES_INDEX_ATTRIBUTES]&URES_ATT_IS_POOL_BUNDLE))
@@ -420,6 +421,7 @@ ures_enumDependencies(const char *itemName, const UDataInfo *pInfo,
         }
         if(resData.pRoot[1+URES_INDEX_POOL_CHECKSUM]==poolIndexes[URES_INDEX_POOL_CHECKSUM]) {
             resData.poolBundleKeys=(const char *)(poolIndexes+poolIndexLength);
+            resData.poolBundleStrings=(const uint16_t *)(poolRoot+poolIndexes[URES_INDEX_KEYS_TOP]);
         } else {
             fprintf(stderr, "icupkg: %s has mismatched checksum for %s\n", poolName, itemName);
             return;
