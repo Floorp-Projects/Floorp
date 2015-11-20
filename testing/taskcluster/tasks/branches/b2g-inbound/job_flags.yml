@@ -4,22 +4,3 @@
 
 $inherits:
   from: tasks/branches/base_jobs.yml
-
-tests:
-  gaia-ui-test-functional:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_functional.yml
-  gaia-ui-test-functional-dsds:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_functional_dsds.yml
-  gaia-ui-test-sanity:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_sanity.yml
-  gaia-ui-test-unit:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_unit.yml
-

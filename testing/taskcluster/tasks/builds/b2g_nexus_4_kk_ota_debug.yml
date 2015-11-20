@@ -23,7 +23,6 @@ task:
       B2G_DEBUG: 0
       TARGET: 'nexus-4-kk'
       DEBUG: 0
-      DOGFOOD: 1
     command:
       - >
         checkout-gecko workspace &&
