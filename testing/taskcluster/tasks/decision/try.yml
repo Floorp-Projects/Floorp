@@ -35,6 +35,7 @@ tasks:
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
+        - "docker-worker:cache:gecko-decision"
         - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
         - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
 
