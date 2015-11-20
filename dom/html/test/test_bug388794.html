@@ -50,14 +50,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=388794
 SimpleTest.waitForExplicitFinish();
 
 var pendingLoads = 0;
-
+/* Use regex due to rounding error in Fennec with C++APZ enabled */
 var hrefs = {
-  test1: "data:text/html,?testImage.x=0&testImage.y=0",
-  test2: "data:text/html,?x=0&y=0",
-  test3: "data:text/html,?testImage.x=0&testImage.y=0",
-  test4: "data:text/html,?x=0&y=0",
-  test5: "data:text/html,?testImage.x=5&testImage.y=5",
-  test6: "data:text/html,?x=5&y=5",
+  test1: /data:text\/html,\?testImage\.x=0&testImage\.y=0/,
+  test2: /data:text\/html,\?x=0&y=0/,
+  test3: /data:text\/html,\?testImage\.x=0&testImage\.y=0/,
+  test4: /data:text\/html,\?x=0&y=0/,
+  test5: /data:text\/html,\?testImage\.x=[4-6]&testImage\.y=[4-6]/,
+  test6: /data:text\/html,\?x=[4-6]&y=[4-6]/,
 };
 
 function submitForm(idNum) {
@@ -91,8 +91,8 @@ addLoadEvent(function() {
 });
 
 function frameLoaded(frame) {
-  is(frame.contentWindow.location.href, hrefs[frame.name],
-     "Unexpected href for frame " + frame.name);
+  ok(hrefs[frame.name].test(frame.contentWindow.location.href),
+     "Unexpected href for frame " + frame.name, "expected to match: " + hrefs[frame.name].toString() + " got: " + frame.contentWindow.location.href);
   if (--pendingLoads == 0) {
     SimpleTest.finish();
   }
