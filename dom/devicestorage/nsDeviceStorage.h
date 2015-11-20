@@ -130,8 +130,8 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mIOThread);
 
-    RefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
-    mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
+    mIOThread->Dispatch(new InvalidateRunnable(this, aStorageName),
+                        NS_DISPATCH_NORMAL);
   }
 
   void Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
