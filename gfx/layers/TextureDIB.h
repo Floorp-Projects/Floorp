@@ -15,101 +15,42 @@
 namespace mozilla {
 namespace layers {
 
-class TextureClientDIB : public TextureClient
+class DIBTextureData : public TextureData
 {
 public:
-  virtual bool IsAllocated() const override { return !!mSurface; }
+  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
 
-  virtual bool Lock(OpenMode aOpenMode) override;
-
-  virtual void Unlock() override;
-
-  virtual bool IsLocked() const override{ return mIsLocked; }
+  virtual void Unlock() override {}
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual bool CanExposeDrawTarget() const override { return true; }
+  virtual bool SupportsMoz2D() const override { return true; }
 
-  virtual gfx::DrawTarget* BorrowDrawTarget() override;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
   virtual bool HasInternalBuffer() const override { return true; }
 
+  static
+  DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                         ISurfaceAllocator* aAllocator);
+
 protected:
-  TextureClientDIB(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat, TextureFlags aFlags)
-    : TextureClient(aAllocator, aFlags)
-    , mFormat(aFormat)
-    , mIsLocked(false)
-  { }
+  DIBTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                 gfxWindowsSurface* aSurface)
+  : mSurface(aSurface)
+  , mSize(aSize)
+  , mFormat(aFormat)
+  {
+    MOZ_ASSERT(aSurface);
+  }
 
   RefPtr<gfxWindowsSurface> mSurface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  bool mIsLocked;
-};
-
-/**
-  * Can only be drawn into through Cairo.
-  * Prefer CairoTextureClient when possible.
-  * The coresponding TextureHost depends on the compositor
-  */
-class TextureClientMemoryDIB : public TextureClientDIB
-{
-public:
-  TextureClientMemoryDIB(ISurfaceAllocator* aAllocator,
-                         gfx::SurfaceFormat aFormat,
-                         TextureFlags aFlags);
-
-  virtual ~TextureClientMemoryDIB();
-
-  // TextureClient
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-    TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
-
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
-
-
-};
-
-/**
-  * Can only be drawn into through Cairo.
-  * Prefer CairoTextureClient when possible.
-  * The coresponding TextureHost depends on the compositor
-  */
-class TextureClientShmemDIB : public TextureClientDIB
-{
-public:
-  TextureClientShmemDIB(ISurfaceAllocator* aAllocator,
-                        gfx::SurfaceFormat aFormat,
-                        TextureFlags aFlags);
-
-  virtual ~TextureClientShmemDIB();
-
-  // TextureClient
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-    TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
-
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
-
-protected:
-  HANDLE mFileMapping;
-  HANDLE mHostHandle;
-  HDC mDC;
-  HBITMAP mBitmap;
 };
 
 /**
