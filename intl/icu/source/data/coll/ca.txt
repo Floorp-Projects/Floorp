@@ -7,14 +7,14 @@
 // *
 // ***************************************************************************
 ca{
-    Version{"2.1.6.32"}
+    Version{"2.1.19.14"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "&L<ŀ=l·<<<Ŀ=L·"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

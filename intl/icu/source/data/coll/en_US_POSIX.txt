@@ -7,14 +7,14 @@
 // *
 // ***************************************************************************
 en_US_POSIX{
-    Version{"2.1.14.33"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
                 "&A<*'\u0020'-'/'<*0-'@'<*ABCDEFGHIJKLMNOPQRSTUVWXYZ<*'['-'`'<*abcdefghijklmnopqrstuvwxyz"
                 "<*'{'-'\u007F'"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

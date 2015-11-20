@@ -259,7 +259,8 @@ udatpg_getBestPatternWithOptions(UDateTimePatternGenerator *dtpg,
   * Consecutive calls to this function do not affect each other,
   * but this function cannot be used concurrently on a single generator object.
   *
-  * @param dtpg     a pointer to UDateTimePatternGenerator.
+  * @param unusedDtpg     a pointer to UDateTimePatternGenerator.
+  *    This parameter is no longer used. Callers may pass NULL.
   * @param pattern  input pattern, such as "dd/MMM".
   * @param length   the length of pattern.
   * @param skeleton such as "MMMdd"
@@ -270,7 +271,7 @@ udatpg_getBestPatternWithOptions(UDateTimePatternGenerator *dtpg,
   * @stable ICU 3.8
   */
 U_STABLE int32_t U_EXPORT2
-udatpg_getSkeleton(UDateTimePatternGenerator *dtpg,
+udatpg_getSkeleton(UDateTimePatternGenerator *unusedDtpg,
                    const UChar *pattern, int32_t length,
                    UChar *skeleton, int32_t capacity,
                    UErrorCode *pErrorCode);
@@ -288,7 +289,8 @@ udatpg_getSkeleton(UDateTimePatternGenerator *dtpg,
  * Consecutive calls to this function do not affect each other,
  * but this function cannot be used concurrently on a single generator object.
  *
- * @param dtpg     a pointer to UDateTimePatternGenerator.
+ * @param unusedDtpg     a pointer to UDateTimePatternGenerator.
+ *    This parameter is no longer used. Callers may pass NULL.
  * @param pattern  input pattern, such as "dd/MMM".
  * @param length   the length of pattern.
  * @param baseSkeleton such as "Md"
@@ -299,7 +301,7 @@ udatpg_getSkeleton(UDateTimePatternGenerator *dtpg,
  * @stable ICU 3.8
  */
 U_STABLE int32_t U_EXPORT2
-udatpg_getBaseSkeleton(UDateTimePatternGenerator *dtpg,
+udatpg_getBaseSkeleton(UDateTimePatternGenerator *unusedDtpg,
                        const UChar *pattern, int32_t length,
                        UChar *baseSkeleton, int32_t capacity,
                        UErrorCode *pErrorCode);

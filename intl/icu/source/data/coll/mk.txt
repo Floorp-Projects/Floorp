@@ -7,15 +7,16 @@
 // *
 // ***************************************************************************
 mk{
-    Version{"2.1.10.56"}
+    Version{"2.1.19.14"}
     collations{
         standard{
             Sequence{
-                "[reorder Cyrl][suppressContractions [Ии]]"
+                "[reorder Cyrl]"
+                "[suppressContractions [Ии]]"
                 "&ԃ<ѓ<<<Ѓ"
                 "&ћ<ќ<<<Ќ"
             }
-            Version{"27.0.1"}
+            Version{"28"}
         }
     }
 }

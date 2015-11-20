@@ -344,8 +344,8 @@ umtx_atomic_dec(u_atomic_int32_t *p) {
 
 U_COMMON_API int32_t U_EXPORT2
 umtx_loadAcquire(u_atomic_int32_t &var) {
-    int32_t val = var;
     umtx_lock(&gIncDecMutex);
+    int32_t val = var;
     umtx_unlock(&gIncDecMutex);
     return val;
 }
@@ -353,8 +353,8 @@ umtx_loadAcquire(u_atomic_int32_t &var) {
 U_COMMON_API void U_EXPORT2
 umtx_storeRelease(u_atomic_int32_t &var, int32_t val) {
     umtx_lock(&gIncDecMutex);
-    umtx_unlock(&gIncDecMutex);
     var = val;
+    umtx_unlock(&gIncDecMutex);
 }
 
 U_NAMESPACE_END

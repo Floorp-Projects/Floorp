@@ -307,11 +307,10 @@ public:
   already_AddRefed<DOMRequest> CreateAndRejectDOMRequest(const char *aReason,
                                                          ErrorResult& aRv);
 
-  nsresult CheckPermission(DeviceStorageRequest* aRequest);
-  void StorePermission(DeviceStorageRequest* aRequest, bool aAllow);
+  nsresult CheckPermission(already_AddRefed<DeviceStorageRequest>&& aRequest);
 
   bool IsOwningThread();
-  nsresult DispatchToOwningThread(nsIRunnable* aRunnable);
+  nsresult DispatchToOwningThread(already_AddRefed<nsIRunnable>&& aRunnable);
 
 private:
   ~nsDOMDeviceStorage();

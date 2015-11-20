@@ -117,6 +117,80 @@ lt{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0 tūkst'.' ¤"}
+                        many{"0 tūkst'.' ¤"}
+                        one{"0 tūkst'.' ¤"}
+                        other{"0 tūkst'.' ¤"}
+                    }
+                    10000{
+                        few{"00 tūkst'.' ¤"}
+                        many{"00 tūkst'.' ¤"}
+                        one{"00 tūkst'.' ¤"}
+                        other{"00 tūkst'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tūkst'.' ¤"}
+                        many{"000 tūkst'.' ¤"}
+                        one{"000 tūkst'.' ¤"}
+                        other{"000 tūkst'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mln'.' ¤"}
+                        many{"0 mln'.' ¤"}
+                        one{"0 mln'.' ¤"}
+                        other{"0 mln'.' ¤"}
+                    }
+                    10000000{
+                        few{"00 mln'.' ¤"}
+                        many{"00 mln'.' ¤"}
+                        one{"00 mln'.' ¤"}
+                        other{"00 mln'.' ¤"}
+                    }
+                    100000000{
+                        few{"000 mln'.' ¤"}
+                        many{"000 mln'.' ¤"}
+                        one{"000 mln'.' ¤"}
+                        other{"000 mln'.' ¤"}
+                    }
+                    1000000000{
+                        few{"0 mlrd'.' ¤"}
+                        many{"0 mlrd'.' ¤"}
+                        one{"0 mlrd'.' ¤"}
+                        other{"0 mlrd'.' ¤"}
+                    }
+                    10000000000{
+                        few{"00 mlrd'.' ¤"}
+                        many{"00 mlrd'.' ¤"}
+                        one{"00 mlrd'.' ¤"}
+                        other{"00 mlrd'.' ¤"}
+                    }
+                    100000000000{
+                        few{"000 mlrd'.' ¤"}
+                        many{"000 mlrd'.' ¤"}
+                        one{"000 mlrd'.' ¤"}
+                        other{"000 mlrd'.' ¤"}
+                    }
+                    1000000000000{
+                        few{"0 trln'.' ¤"}
+                        many{"0 trln'.' ¤"}
+                        one{"0 trln'.' ¤"}
+                        other{"0 trln'.' ¤"}
+                    }
+                    10000000000000{
+                        few{"00 trln'.' ¤"}
+                        many{"00 trln'.' ¤"}
+                        one{"00 trln'.' ¤"}
+                        other{"00 trln'.' ¤"}
+                    }
+                    100000000000000{
+                        few{"000 trln'.' ¤"}
+                        many{"000 trln'.' ¤"}
+                        one{"000 trln'.' ¤"}
+                        other{"000 trln'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tūkst'.'"}
@@ -210,7 +284,7 @@ lt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.13.46"}
+    Version{"2.1.19.14"}
     calendar{
         buddhist{
             eras{
@@ -1152,6 +1226,7 @@ lt{
                 "{1} {0}",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"d, E"}
                 Gy{"y G"}
                 GyMMM{"y MMM G"}
@@ -1164,6 +1239,7 @@ lt{
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM-d, E"}
+                MMMMd{"MMMM d"}
                 MMMd{"MMM-d"}
                 MMdd{"MM.dd"}
                 Md{"MM-dd"}
@@ -1178,6 +1254,7 @@ lt{
                 yyyyMEd{"y-MM-dd G, E"}
                 yyyyMMM{"y MMM G"}
                 yyyyMMMEd{"y MMM d G, E"}
+                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"y MMM d G"}
                 yyyyMd{"y-MM-dd G"}
                 yyyyQQQ{"y G QQQ"}
@@ -1285,11 +1362,11 @@ lt{
                 "popiet",
             }
             AmPmMarkersAbbr{
-                "pr.p.",
-                "pop.",
+                "priešpiet",
+                "popiet",
             }
             AmPmMarkersNarrow{
-                "pr.p.",
+                "pr. p.",
                 "pop.",
             }
             DateTimePatterns{
@@ -1307,8 +1384,6 @@ lt{
                 "{1} {0}",
                 "{1} {0}",
             }
-            NoonMarker{"perpiet"}
-            NoonMarkerNarrow{"perpiet"}
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -1319,23 +1394,25 @@ lt{
                 Ed{"d, E"}
                 Ehm{"hh:mm a, E"}
                 Ehms{"hh:mm:ss a, E"}
-                Gy{"y G"}
+                Gy{"y 'm'. G"}
                 GyMMM{"y-MM G"}
                 GyMMMEd{"y-MM-dd G, E"}
-                GyMMMM{"y G LLLL"}
-                GyMMMMEd{"y G MMMM d, E"}
-                GyMMMMd{"y G MMMM d"}
+                GyMMMM{"y 'm'. G, LLLL"}
+                GyMMMMEd{"y 'm'. G MMMM d 'd'., E"}
+                GyMMMMd{"y 'm'. G MMMM d 'd'."}
                 GyMMMd{"y-MM-dd G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss; v"}
+                Hmv{"HH:mm; v"}
                 M{"MM"}
                 MEd{"MM-dd, E"}
                 MMM{"MM"}
                 MMMEd{"MM-dd, E"}
                 MMMM{"LLLL"}
-                MMMMEd{"MMMM d, E"}
-                MMMMd{"MMMM d"}
+                MMMMEd{"MMMM d 'd'., E"}
+                MMMMd{"MMMM d 'd'."}
                 MMMd{"MM-dd"}
                 MMdd{"MM-dd"}
                 Md{"MM-d"}
@@ -1343,15 +1420,17 @@ lt{
                 h{"hh a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
+                hmsv{"hh:mm:ss a; v"}
+                hmv{"hh:mm a; v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"y-MM"}
                 yMEd{"y-MM-dd, E"}
                 yMMM{"y-MM"}
                 yMMMEd{"y-MM-dd, E"}
-                yMMMM{"y LLLL"}
-                yMMMMEd{"y MMMM d, E"}
-                yMMMMd{"y MMMM d"}
+                yMMMM{"y 'm'. LLLL"}
+                yMMMMEd{"y 'm'. MMMM d 'd'., E"}
+                yMMMMd{"y 'm'. MMMM d 'd'."}
                 yMMMd{"y-MM-dd"}
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
@@ -1435,6 +1514,66 @@ lt{
                     }
                 }
             }
+            dayPeriod{
+                format{
+                    abbreviated{
+                        afternoon1{"popietė"}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"perpiet"}
+                    }
+                    narrow{
+                        afternoon1{"popietė"}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"perpiet"}
+                    }
+                    wide{
+                        afternoon1{"popietė"}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"perpiet"}
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        afternoon1{"diena"}
+                        am{"priešpiet"}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"vidurdienis"}
+                        pm{"popiet"}
+                    }
+                    narrow{
+                        afternoon1{"diena"}
+                        am{"pr. p."}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"vidurdienis"}
+                        pm{"pop."}
+                    }
+                    wide{
+                        afternoon1{"diena"}
+                        am{"priešpiet"}
+                        evening1{"vakaras"}
+                        midnight{"vidurnaktis"}
+                        morning1{"rytas"}
+                        night1{"naktis"}
+                        noon{"vidurdienis"}
+                        pm{"popiet"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "pr. Kr.",
@@ -1480,11 +1619,11 @@ lt{
                     d{"MM-dd, E – MM-dd, E"}
                 }
                 MMM{
-                    M{"MM–MM"}
+                    M{"LLL–LLL"}
                 }
                 MMMEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
+                    M{"MMM d, E – MMM d, E"}
+                    d{"MMM d, E – MMM d, E"}
                 }
                 MMMM{
                     M{"LLLL–LLLL"}
@@ -1498,8 +1637,8 @@ lt{
                     d{"MMMM d–d"}
                 }
                 MMMd{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
+                    M{"MMM d – MMM d"}
+                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd – MM-dd"}
@@ -1540,17 +1679,17 @@ lt{
                     y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"y-MM – y-MM"}
-                    y{"y-MM – y-MM"}
+                    M{"y MMM–MMM"}
+                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
-                    M{"y-MM-dd, E – y-MM-dd, E"}
-                    d{"y-MM-dd, E – y-MM-dd, E"}
-                    y{"y-MM-dd, E – y-MM-dd, E"}
+                    M{"y MMM d, E – MMM d, E"}
+                    d{"y MMM d, E – MMM d, E"}
+                    y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
                     M{"y LLLL–LLLL"}
-                    y{"y LLLL – LLLL"}
+                    y{"y LLLL – y LLLL"}
                 }
                 yMMMMEd{
                     M{"y MMMM d, E. – MMMM d, E."}
@@ -1563,9 +1702,9 @@ lt{
                     y{"y MMMM d – y MMMM d"}
                 }
                 yMMMd{
-                    M{"y-MM-dd – y-MM-dd"}
-                    d{"y-MM-dd – y-MM-dd"}
-                    y{"y-MM-dd – y-MM-dd"}
+                    M{"y MMM d – MMM d"}
+                    d{"y MMM d–d"}
+                    y{"y MMM d – y MMM d"}
                 }
                 yMd{
                     M{"y-MM-dd – y-MM-dd"}
@@ -2366,7 +2505,7 @@ lt{
     }
     fields{
         day{
-            dn{"Diena"}
+            dn{"diena"}
             relative{
                 "-1"{"vakar"}
                 "-2"{"užvakar"}
@@ -2424,10 +2563,10 @@ lt{
             }
         }
         dayperiod{
-            dn{"Iki pietų / po pietų"}
+            dn{"iki pietų / po pietų"}
         }
         era{
-            dn{"Era"}
+            dn{"era"}
         }
         fri{
             relative{
@@ -2451,7 +2590,7 @@ lt{
             }
         }
         hour{
-            dn{"Valanda"}
+            dn{"valanda"}
             relativeTime{
                 future{
                     few{"po {0} valandų"}
@@ -2502,7 +2641,7 @@ lt{
             }
         }
         minute{
-            dn{"Minutė"}
+            dn{"minutė"}
             relativeTime{
                 future{
                     few{"po {0} minučių"}
@@ -2574,7 +2713,7 @@ lt{
             }
         }
         month{
-            dn{"Mėnuo"}
+            dn{"mėnuo"}
             relative{
                 "-1"{"praėjusį mėnesį"}
                 "0"{"šį mėnesį"}
@@ -2630,7 +2769,7 @@ lt{
             }
         }
         quarter{
-            dn{"Ketvirtis"}
+            dn{"ketvirtis"}
             relativeTime{
                 future{
                     few{"po {0} ketvirčių"}
@@ -2702,7 +2841,7 @@ lt{
             }
         }
         second{
-            dn{"Sekundė"}
+            dn{"sekundė"}
             relative{
                 "0"{"dabar"}
             }
@@ -2840,7 +2979,7 @@ lt{
             }
         }
         week{
-            dn{"Savaitė"}
+            dn{"savaitė"}
             relative{
                 "-1"{"praėjusią savaitę"}
                 "0"{"šią savaitę"}
@@ -2896,10 +3035,10 @@ lt{
             }
         }
         weekday{
-            dn{"Savaitės diena"}
+            dn{"savaitės diena"}
         }
         year{
-            dn{"Metai"}
+            dn{"metai"}
             relative{
                 "-1"{"praėjusiais metais"}
                 "0"{"šiais metais"}
@@ -2955,7 +3094,7 @@ lt{
             }
         }
         zone{
-            dn{"Laiko juosta"}
+            dn{"laiko juosta"}
         }
     }
     listPattern{

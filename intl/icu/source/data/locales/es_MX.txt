@@ -32,14 +32,14 @@ es_MX{
             }
         }
     }
-    Version{"2.1.13.23"}
+    Version{"2.1.19.94"}
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d MMM, y G",
@@ -80,15 +80,11 @@ es_MX{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a.m.",
-                "p.m.",
-            }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "dd/MM/y",
@@ -268,7 +264,11 @@ es_MX{
     fields{
         day{
             relative{
+                "-1"{"ayer"}
                 "-2"{"antier"}
+                "0"{"hoy"}
+                "1"{"mañana"}
+                "2"{"pasado mañana"}
             }
         }
         day-narrow{
@@ -291,14 +291,10 @@ es_MX{
                 }
             }
         }
-        dayperiod{
-            dn{"a.m./p.m."}
-        }
-        era{
-            dn{"era"}
-        }
         fri{
             relative{
+                "-1"{"el viernes pasado"}
+                "0"{"este viernes"}
                 "1"{"el viernes próximo"}
             }
         }
@@ -351,11 +347,15 @@ es_MX{
         }
         mon{
             relative{
+                "-1"{"el lunes pasado"}
+                "0"{"este lunes"}
                 "1"{"el lunes próximo"}
             }
         }
         month{
             relative{
+                "-1"{"el mes pasado"}
+                "0"{"este mes"}
                 "1"{"el mes próximo"}
             }
             relativeTime{
@@ -415,6 +415,8 @@ es_MX{
         }
         sat{
             relative{
+                "-1"{"el sábado pasado"}
+                "0"{"este sábado"}
                 "1"{"el sábado próximo"}
             }
         }
@@ -440,21 +442,29 @@ es_MX{
         }
         sun{
             relative{
+                "-1"{"el domingo pasado"}
+                "0"{"este domingo"}
                 "1"{"el domingo próximo"}
             }
         }
         thu{
             relative{
+                "-1"{"el jueves pasado"}
+                "0"{"este jueves"}
                 "1"{"el jueves próximo"}
             }
         }
         tue{
             relative{
+                "-1"{"el martes pasado"}
+                "0"{"este martes"}
                 "1"{"el martes próximo"}
             }
         }
         wed{
             relative{
+                "-1"{"el miércoles pasado"}
+                "0"{"este miércoles"}
                 "1"{"el miércoles próximo"}
             }
         }
@@ -467,6 +477,8 @@ es_MX{
         }
         week{
             relative{
+                "-1"{"la semana pasada"}
+                "0"{"esta semana"}
                 "1"{"la semana próxima"}
             }
         }
@@ -492,6 +504,8 @@ es_MX{
         }
         year{
             relative{
+                "-1"{"el año pasado"}
+                "0"{"este año"}
                 "1"{"el año próximo"}
             }
         }

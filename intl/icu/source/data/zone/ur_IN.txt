@@ -7,7 +7,7 @@
 // *
 // ***************************************************************************
 ur_IN{
-    Version{"2.1.13.23"}
+    Version{"2.1.19.14"}
     zoneStrings{
         "Africa:Accra"{
             ec{"اکرا"}
@@ -32,9 +32,6 @@ ur_IN{
         }
         "Asia:Dubai"{
             ec{"دبئی"}
-        }
-        "Atlantic:Faeroe"{
-            ec{"فارو"}
         }
         "Europe:Budapest"{
             ec{"بوڈاپیسٹ"}

@@ -24,40 +24,35 @@
 
 #if !UCONFIG_NO_FORMATTING && !UCONFIG_NO_BREAK_ITERATION
 
-#ifndef U_HIDE_DRAFT_API
-
 /**
  * The formatting style
- * @draft ICU 54
+ * @stable ICU 54
  */
 typedef enum UDateRelativeDateTimeFormatterStyle {
-
   /**
    * Everything spelled out.
-   * @draft ICU 54
+   * @stable ICU 54
    */
   UDAT_STYLE_LONG,
 
   /**
    * Abbreviations used when possible.
-   * @draft ICU 54
+   * @stable ICU 54
    */
   UDAT_STYLE_SHORT,
 
   /**
    * Use the shortest possible form.
-   * @draft ICU 54
+   * @stable ICU 54
    */
   UDAT_STYLE_NARROW,
 
   /**
    * The number of styles.
-   * @draft ICU 54
+   * @stable ICU 54
    */
   UDAT_STYLE_COUNT
-} UDateRelativeDateTimeFormatterStyle; 
-
-#endif /* U_HIDE_DRAFT_API */
+} UDateRelativeDateTimeFormatterStyle;
 
 /**
  * Represents the unit for formatting a relative date. e.g "in 5 days"
@@ -358,7 +353,6 @@ public:
     RelativeDateTimeFormatter(
         const Locale& locale, NumberFormat *nfToAdopt, UErrorCode& status);
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Create RelativeDateTimeFormatter with given locale, NumberFormat,
      * and capitalization context.
@@ -372,7 +366,7 @@ public:
      * @param capitalizationContext A value from UDisplayContext that pertains to
      * capitalization.
      * @status Any error is returned here. 
-     * @draft ICU 54
+     * @stable ICU 54
      */
     RelativeDateTimeFormatter(
             const Locale& locale,
@@ -380,7 +374,6 @@ public:
             UDateRelativeDateTimeFormatterStyle style,
             UDisplayContext capitalizationContext,
             UErrorCode& status);
-#endif  /* U_HIDE_DRAFT_API */
 
     /**
      * Copy constructor.
@@ -466,21 +459,19 @@ public:
      */
     const NumberFormat& getNumberFormat() const;
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Returns the capitalization context.
      *
-     * @draft ICU 54
+     * @stable ICU 54
      */
     UDisplayContext getCapitalizationContext() const;
 
     /**
      * Returns the format style.
      *
-     * @draft ICU 54
+     * @stable ICU 54
      */
     UDateRelativeDateTimeFormatterStyle getFormatStyle() const;
-#endif  /* U_HIDE_DRAFT_API */
 
 private:
     const RelativeDateTimeCacheData* fCache;

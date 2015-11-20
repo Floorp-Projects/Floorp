@@ -15,7 +15,6 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1763,10 +1762,6 @@ PromiseWorkerProxy::CustomWriteHandler(JSContext* aCx,
 // Specializations of MaybeRejectBrokenly we actually support.
 template<>
 void Promise::MaybeRejectBrokenly(const RefPtr<DOMError>& aArg) {
-  MaybeSomething(aArg, &Promise::MaybeReject);
-}
-template<>
-void Promise::MaybeRejectBrokenly(const RefPtr<DOMException>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 template<>

@@ -47,9 +47,9 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
-  RefPtr<DOMException> exception =
-    DOMException::Create(aArg, aReason);
-  Promise::MaybeRejectBrokenly(exception);
+  ErrorResult rv;
+  rv.ThrowDOMException(aArg, aReason);
+  Promise::MaybeReject(rv);
 }
 
 void
