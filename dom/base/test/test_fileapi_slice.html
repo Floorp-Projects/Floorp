@@ -54,31 +54,6 @@ cx.fill();
 cx.closePath();
 
 
-var fileData =
-  atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
-var memFile = cx.canvas.mozGetAsFile("image/png");
-var fileFile = createFileWithData(fileData);
-var size = fileData.length;
-
-// This might fail if we dramatically improve the png encoder. If that happens
-// please increase the complexity or size of the image generated above to ensure
-// that we're testing with files that are large enough.
-ok(size > 65536, "test data sufficiently large");
-
-
-// Test that basic properties work
-testSlice(memFile, size, "image/png", fileData, "memFile");
-testSlice(fileFile, size, "", fileData, "fileFile");
-
-
-// Try loading directly from slice into an image
-var testBinaryData = "";
-for (var i = 0; i < 256; i++) {
-  testBinaryData += String.fromCharCode(i);
-}
-while (testBinaryData.length < 20000) {
-  testBinaryData += testBinaryData;
-}
 function imageLoadHandler(event) {
   var origcanvas = $("canvas");
   var testcanvas = $("testcanvas");
@@ -100,37 +75,93 @@ function imageLoadHandler(event) {
   testHasRun();
 }
 
-// image in the middle
-var imgfile = createFileWithData(testBinaryData + fileData + testBinaryData);
-is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+var fileData =
+  atob(cx.canvas.toDataURL("image/png").substring("data:text/png;base64,".length + 1));
+var size = fileData.length;
+var testBinaryData = "";
 
-// image at start
-var imgfile = createFileWithData(fileData + testBinaryData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(0, size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+// This might fail if we dramatically improve the png encoder. If that happens
+// please increase the complexity or size of the image generated above to ensure
+// that we're testing with files that are large enough.
+ok(size > 65536, "test data sufficiently large");
 
-// image at end
-var imgfile = createFileWithData(testBinaryData + fileData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+SpecialPowers.createFiles([{name: "basicTestFile", data: fileData}],
+                          basicTest);
 
-// image past end
-var imgfile = createFileWithData(testBinaryData + fileData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+function basicTest(files) {
+  var fileFile = files[0];
+
+  // Test that basic properties work
+  var memFile = cx.canvas.mozGetAsFile("image/png");
+  testSlice(memFile, size, "image/png", fileData, "memFile");
+  testSlice(fileFile, size, "", fileData, "fileFile");
+
+  // Try loading directly from slice into an image
+  for (var i = 0; i < 256; i++) {
+    testBinaryData += String.fromCharCode(i);
+  }
+  while (testBinaryData.length < 20000) {
+    testBinaryData += testBinaryData;
+  }
+
+  // image in the middle
+  SpecialPowers.createFiles([{name: "middleTestFile",
+                             data: testBinaryData + fileData + testBinaryData}],
+                            imageMiddleTest);
+}
+
+function imageMiddleTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image at start
+  SpecialPowers.createFiles([{name: "startTestFile",
+                             data: fileData + testBinaryData}],
+                            imageStartTest);
+}
+
+function imageStartTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(0, size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image at end
+  SpecialPowers.createFiles([{name: "endTestFile",
+                             data: testBinaryData + fileData}],
+                            imageEndTest);
+}
+
+function imageEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image past end
+  SpecialPowers.createFiles([{name: "pastEndTestFile",
+                             data: testBinaryData + fileData}],
+                            imagePastEndTest);
+}
+
+function imagePastEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+}
+
 </script>
 </pre>
-</body> </html>
+</body>
+</html>
