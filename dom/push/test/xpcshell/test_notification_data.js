@@ -30,7 +30,9 @@ function putRecord(channelID, scope, publicKey, privateKey) {
   });
 }
 
-add_task(function* test_notification_ack_data() {
+let ackDone;
+let server;
+add_task(function* test_notification_ack_data_setup() {
   db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
@@ -77,19 +79,9 @@ add_task(function* test_notification_ack_data() {
     }
   );
 
-  let updates = [];
-  let notifyPromise = promiseObserverNotification('push-notification', function(subject, data) {
-    let notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
-    updates.push({
-      scope: data,
-      data: notification.data,
-    });
-    return updates.length == 3;
-  });
+  let setupDone;
+  let setupDonePromise = new Promise(r => setupDone = r);
 
-  let acks = 0;
-  let ackDone;
-  let ackPromise = new Promise(resolve => ackDone = resolve);
   PushService.init({
     serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -98,96 +90,111 @@ add_task(function* test_notification_ack_data() {
       return new MockWebSocket(uri, {
         onHello(request) {
           equal(request.uaid, userAgentID,
-            'Should send matching device IDs in handshake');
+                'Should send matching device IDs in handshake');
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             uaid: userAgentID,
             status: 200,
             use_webpush: true,
           }));
-          // subscription1 will send a message with no rs and padding
-          // length 1.
-          this.serverSendMsg(JSON.stringify({
-            messageType: 'notification',
-            channelID: 'subscription1',
-            headers: {
-              encryption_key: 'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
-              encryption: 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"',
-            },
-            data: 'NwrrOWPxLE8Sv5Rr0Kep7n0-r_j3rsYrUw_CXPo',
-            version: 'v1',
-          }));
+          server = this;
+          setupDone();
         },
         onACK(request) {
-          switch (++acks) {
-          case 1:
-            deepEqual([{
-              channelID: 'subscription1',
-              version: 'v1',
-            }], request.updates, 'Wrong updates for acknowledgement 1');
-            // subscription2 will send a message with no rs and padding
-            // length 16.
-            this.serverSendMsg(JSON.stringify({
-              messageType: 'notification',
-              channelID: 'subscription2',
-              headers: {
-                encryption_key: 'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
-                encryption: 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"',
-              },
-              data: 'Zt9dEdqgHlyAL_l83385aEtb98ZBilz5tgnGgmwEsl5AOCNgesUUJ4p9qUU',
-              version: 'v2',
-            }));
-            break;
-
-          case 2:
-            deepEqual([{
-              channelID: 'subscription2',
-              version: 'v2',
-            }], request.updates, 'Wrong updates for acknowledgement 2');
-            // subscription3 will send a message with rs equal 24 and
-            // padding length 16.
-            this.serverSendMsg(JSON.stringify({
-              messageType: 'notification',
-              channelID: 'subscription3',
-              headers: {
-                encryption_key: 'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
-                encryption: 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
-              },
-              data: 'LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA',
-              version: 'v3',
-            }));
-            break;
-
-          case 3:
-            deepEqual([{
-              channelID: 'subscription3',
-              version: 'v3',
-            }], request.updates, 'Wrong updates for acknowledgement 3');
-            ackDone();
-            break;
-
-          default:
-            ok(false, 'Unexpected acknowledgement ' + acks);
+          if (ackDone) {
+            ackDone(request.updates);
           }
         }
       });
     }
   });
+  yield waitForPromise(setupDonePromise, DEFAULT_TIMEOUT,
+                       'Timed out waiting for notifications');
+});
 
-  yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for notifications');
-  yield waitForPromise(ackPromise, DEFAULT_TIMEOUT,
-    'Timed out waiting for multiple acknowledgements');
+add_task(function* test_notification_ack_data() {
+  let allTestData = [
+    {
+      channelID: 'subscription1',
+      version: 'v1',
+      send: {
+        headers: {
+          encryption_key: 'keyid="notification1"; dh="BO_tgGm-yvYAGLeRe16AvhzaUcpYRiqgsGOlXpt0DRWDRGGdzVLGlEVJMygqAUECarLnxCiAOHTP_znkedrlWoU"',
+          encryption: 'keyid="notification1";salt="uAZaiXpOSfOLJxtOCZ09dA"',
+        },
+        data: 'NwrrOWPxLE8Sv5Rr0Kep7n0-r_j3rsYrUw_CXPo',
+        version: 'v1',
+      },
+      receive: {
+        scope: 'https://example.com/page/1',
+        data: 'Some message'
+      }
+    },
+    {
+      channelID: 'subscription2',
+      version: 'v2',
+      send: {
+        headers: {
+          encryption_key: 'keyid="notification2"; dh="BKVdQcgfncpNyNWsGrbecX0zq3eHIlHu5XbCGmVcxPnRSbhjrA6GyBIeGdqsUL69j5Z2CvbZd-9z1UBH0akUnGQ"',
+          encryption: 'keyid="notification2";salt="vFn3t3M_k42zHBdpch3VRw"',
+        },
+        data: 'Zt9dEdqgHlyAL_l83385aEtb98ZBilz5tgnGgmwEsl5AOCNgesUUJ4p9qUU',
+      },
+      receive: {
+        scope: 'https://example.com/page/2',
+        data: 'Some message'
+      }
+    },
+    {
+      channelID: 'subscription3',
+      version: 'v3',
+      send: {
+        headers: {
+          encryption_key: 'keyid="notification3";dh="BD3xV_ACT8r6hdIYES3BJj1qhz9wyv7MBrG9vM2UCnjPzwE_YFVpkD-SGqE-BR2--0M-Yf31wctwNsO1qjBUeMg"',
+          encryption: 'keyid="notification3"; salt="DFq188piWU7osPBgqn4Nlg"; rs=24',
+        },
+        data: 'LKru3ZzxBZuAxYtsaCfaj_fehkrIvqbVd1iSwnwAUgnL-cTeDD-83blxHXTq7r0z9ydTdMtC3UjAcWi8LMnfY-BFzi0qJAjGYIikDA',
+      },
+      receive: {
+        scope: 'https://example.com/page/3',
+        data: 'Some message'
+      }
+    }
+  ];
 
-  updates.sort((a, b) => a.scope < b.scope ? -1 : a.scope > b.scope ? 1 : 0);
-  deepEqual([{
-    scope: 'https://example.com/page/1',
-    data: 'Some message',
-  }, {
-    scope: 'https://example.com/page/2',
-    data: 'Some message',
-  }, {
-    scope: 'https://example.com/page/3',
-    data: 'Some message',
-  }], updates, 'Wrong data for notifications');
+  let sendAndReceive = testData => {
+    let messageReceived = promiseObserverNotification('push-notification', (subject, data) => {
+      dump("push-notification\n");
+      let notification = subject.QueryInterface(Ci.nsIPushObserverNotification);
+      equal(notification.data, testData.receive.data,
+            'Wrong data for notification ' + testData.version);
+      equal(data, testData.receive.scope,
+            'Wrong scope for notification ' + testData.version);
+      return true;
+    });
+
+    let ackReceived = new Promise(resolve => ackDone = resolve)
+        .then(ackData => {
+          dump("push-ack\n");
+          deepEqual([{
+            channelID: testData.channelID,
+            version: testData.version
+          }], ackData, 'Wrong updates for acknowledgment ' + testData.version);
+        });
+
+    let msg = JSON.parse(JSON.stringify(testData.send));
+    msg.messageType = 'notification';
+    msg.channelID = testData.channelID;
+    msg.version = testData.version;
+    server.serverSendMsg(JSON.stringify(msg));
+
+    return Promise.all([messageReceived, ackReceived]);
+  };
+
+  yield waitForPromise(
+    allTestData.reduce((p, testData) => {
+      return p.then(_ => sendAndReceive(testData));
+    }, Promise.resolve()),
+    DEFAULT_TIMEOUT,
+    'Timed out waiting for message exchange to complete');
 });
