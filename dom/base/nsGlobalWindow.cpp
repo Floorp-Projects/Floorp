@@ -6138,10 +6138,12 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
     mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"),
                                        this, rv);
     NS_WARN_IF_FALSE(!rv.Failed(), "Failed to lock the wakelock");
+    rv.SuppressException();
   } else if (mWakeLock && !mFullScreen) {
     ErrorResult rv;
     mWakeLock->Unlock(rv);
     mWakeLock = nullptr;
+    rv.SuppressException();
   }
 }
 
@@ -11764,6 +11766,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
     ErrorResult ignored;
     JS::Rooted<JS::Value> ignoredVal(CycleCollectedJSRuntime::Get()->Runtime());
     callback->Call(me, handler->GetArgs(), &ignoredVal, ignored, reason);
+    ignored.SuppressException();
   }
 
   // We ignore any failures from calling EvaluateString() on the context or

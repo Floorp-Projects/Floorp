@@ -356,6 +356,7 @@ nsXULTemplateQueryProcessorXML::AddBinding(nsIDOMNode* aRuleNode,
     nsAutoPtr<XPathExpression> compiledexpr;
     compiledexpr = CreateExpression(aExpr, ruleNode, rv);
     if (rv.Failed()) {
+        rv.SuppressException();
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_BINDING_XPATH);
         return NS_OK;
     }
