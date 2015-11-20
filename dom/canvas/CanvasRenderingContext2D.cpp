@@ -3967,6 +3967,7 @@ gfxFontGroup *CanvasRenderingContext2D::GetCurrentFontStyle()
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     bool fontUpdated = SetFontInternal(kDefaultFontStyle, err);
     if (err.Failed() || !fontUpdated) {
+      err.SuppressException();
       gfxFontStyle style;
       style.size = kDefaultFontSize;
       gfxTextPerfMetrics* tp = nullptr;
