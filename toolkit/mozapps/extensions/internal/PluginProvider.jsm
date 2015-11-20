@@ -291,63 +291,99 @@ function canDisableFlashProtectedMode(aPlugin) {
   return isFlashPlugin(aPlugin) && Services.appinfo.XPCOMABI == "x86-msvc";
 }
 
+const wrapperMap = new WeakMap();
+let pluginFor = wrapper => wrapperMap.get(wrapper);
+
 /**
  * The PluginWrapper wraps a set of nsIPluginTags to provide the data visible to
  * public callers through the API.
  */
-function PluginWrapper(aId, aName, aDescription, aTags) {
-  let safedesc = aDescription.replace(/<\/?[a-z][^>]*>/gi, " ");
-  let homepageURL = null;
-  if (/<A\s+HREF=[^>]*>/i.test(aDescription))
-    homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(aDescription)[1];
+function PluginWrapper(id, name, description, tags) {
+  wrapperMap.set(this, { id, name, description, tags });
+}
 
-  this.__defineGetter__("id", () => aId);
-  this.__defineGetter__("type", () => "plugin");
-  this.__defineGetter__("name", () => aName);
-  this.__defineGetter__("creator", () => null);
-  this.__defineGetter__("description", () => safedesc);
-  this.__defineGetter__("version", () => aTags[0].version);
-  this.__defineGetter__("homepageURL", () => homepageURL);
+PluginWrapper.prototype = {
+  get id() {
+    return pluginFor(this).id;
+  },
 
-  this.__defineGetter__("isActive", () => !aTags[0].blocklisted && !aTags[0].disabled);
-  this.__defineGetter__("appDisabled", () => aTags[0].blocklisted);
+  get type() {
+    return "plugin";
+  },
 
-  this.__defineGetter__("userDisabled", function() {
-    if (aTags[0].disabled)
+  get name() {
+    return pluginFor(this).name;
+  },
+
+  get creator() {
+    return null;
+  },
+
+  get description() {
+    return pluginFor(this).description.replace(/<\/?[a-z][^>]*>/gi, " ");
+  },
+
+  get version() {
+    let { tags: [tag] } = pluginFor(this);
+    return tag.version;
+  },
+
+  get homepageURL() {
+    let { description } = pluginFor(this);
+    if (/<A\s+HREF=[^>]*>/i.test(description))
+      return /<A\s+HREF=["']?([^>"'\s]*)/i.exec(description)[1];
+    return null;
+  },
+
+  get isActive() {
+    let { tags: [tag] } = pluginFor(this);
+    return !tag.blocklisted && !tag.disabled;
+  },
+
+  get appDisabled() {
+    let { tags: [tag] } = pluginFor(this);
+    return tag.blocklisted;
+  },
+
+  get userDisabled() {
+    let { tags: [tag] } = pluginFor(this);
+    if (tag.disabled)
       return true;
 
-    if ((Services.prefs.getBoolPref("plugins.click_to_play") && aTags[0].clicktoplay) ||
+    if ((Services.prefs.getBoolPref("plugins.click_to_play") && tag.clicktoplay) ||
         this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE ||
         this.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE)
       return AddonManager.STATE_ASK_TO_ACTIVATE;
 
     return false;
-  });
+  },
 
-  this.__defineSetter__("userDisabled", function(aVal) {
+  set userDisabled(val) {
     let previousVal = this.userDisabled;
-    if (aVal === previousVal)
-      return aVal;
+    if (val === previousVal)
+      return val;
 
-    for (let tag of aTags) {
-      if (aVal === true)
+    let { tags } = pluginFor(this);
+
+    for (let tag of tags) {
+      if (val === true)
         tag.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-      else if (aVal === false)
+      else if (val === false)
         tag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-      else if (aVal == AddonManager.STATE_ASK_TO_ACTIVATE)
+      else if (val == AddonManager.STATE_ASK_TO_ACTIVATE)
         tag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
     }
 
     // If 'userDisabled' was 'true' and we're going to a state that's not
     // that, we're enabling, so call those listeners.
-    if (previousVal === true && aVal !== true) {
+    if (previousVal === true && val !== true) {
       AddonManagerPrivate.callAddonListeners("onEnabling", this, false);
       AddonManagerPrivate.callAddonListeners("onEnabled", this);
     }
 
     // If 'userDisabled' was not 'true' and we're going to a state where
     // it is, we're disabling, so call those listeners.
-    if (previousVal !== true && aVal === true) {
+    if (previousVal !== true && val === true) {
       AddonManagerPrivate.callAddonListeners("onDisabling", this, false);
       AddonManagerPrivate.callAddonListeners("onDisabled", this);
     }
@@ -355,27 +391,28 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     // If the 'userDisabled' value involved AddonManager.STATE_ASK_TO_ACTIVATE,
     // call the onPropertyChanged listeners.
     if (previousVal == AddonManager.STATE_ASK_TO_ACTIVATE ||
-        aVal == AddonManager.STATE_ASK_TO_ACTIVATE) {
+        val == AddonManager.STATE_ASK_TO_ACTIVATE) {
       AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["userDisabled"]);
     }
 
-    return aVal;
-  });
+    return val;
+  },
 
-
-  this.__defineGetter__("blocklistState", function() {
+  get blocklistState() {
+    let { tags: [tag] } = pluginFor(this);
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
-    return bs.getPluginBlocklistState(aTags[0]);
-  });
+    return bs.getPluginBlocklistState(tag);
+  },
 
-  this.__defineGetter__("blocklistURL", function() {
+  get blocklistURL() {
+    let { tags: [tag] } = pluginFor(this);
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
-    return bs.getPluginBlocklistURL(aTags[0]);
-  });
+    return bs.getPluginBlocklistURL(tag);
+  },
 
-  this.__defineGetter__("size", function() {
+  get size() {
     function getDirectorySize(aFile) {
       let size = 0;
       let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
@@ -392,7 +429,7 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
     let size = 0;
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    for (let tag of aTags) {
+    for (let tag of pluginFor(this).tags) {
       file.initWithPath(tag.fullpath);
       if (file.isDirectory())
         size += getDirectorySize(file);
@@ -400,25 +437,25 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
         size += file.fileSize;
     }
     return size;
-  });
+  },
 
-  this.__defineGetter__("pluginLibraries", function() {
+  get pluginLibraries() {
     let libs = [];
-    for (let tag of aTags)
+    for (let tag of pluginFor(this).tags)
       libs.push(tag.filename);
     return libs;
-  });
+  },
 
-  this.__defineGetter__("pluginFullpath", function() {
+  get pluginFullpath() {
     let paths = [];
     for (let tag of aTags)
       paths.push(tag.fullpath);
     return paths;
-  })
+  },
 
-  this.__defineGetter__("pluginMimeTypes", function() {
+  get pluginMimeTypes() {
     let types = [];
-    for (let tag of aTags) {
+    for (let tag of pluginFor(this).tags) {
       let mimeTypes = tag.getMimeTypes({});
       let mimeDescriptions = tag.getMimeDescriptions({});
       let extensions = tag.getExtensions({});
@@ -432,18 +469,19 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
       }
     }
     return types;
-  });
+  },
 
-  this.__defineGetter__("installDate", function() {
+  get installDate() {
     let date = 0;
-    for (let tag of aTags) {
+    for (let tag of pluginFor(this).tags) {
       date = Math.max(date, tag.lastModifiedTime);
     }
     return new Date(date);
-  });
+  },
 
-  this.__defineGetter__("scope", function() {
-    let path = aTags[0].fullpath;
+  get scope() {
+    let { tags: [tag] } = pluginFor(this);
+    let path = tag.fullpath;
     // Plugins inside the application directory are in the application scope
     let dir = Services.dirsvc.get("APlugns", Ci.nsIFile);
     if (path.startsWith(dir.path))
@@ -466,19 +504,20 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
 
     // Any other locations are system scope
     return AddonManager.SCOPE_SYSTEM;
-  });
+  },
 
-  this.__defineGetter__("pendingOperations", function() {
+  get pendingOperations() {
     return AddonManager.PENDING_NONE;
-  });
+  },
 
-  this.__defineGetter__("operationsRequiringRestart", function() {
+  get operationsRequiringRestart() {
     return AddonManager.OP_NEEDS_RESTART_NONE;
-  });
+  },
 
-  this.__defineGetter__("permissions", function() {
+  get permissions() {
+    let { tags: [tag] } = pluginFor(this);
     let permissions = 0;
-    if (aTags[0].isEnabledStateLocked) {
+    if (tag.isEnabledStateLocked) {
       return permissions;
     }
     if (!this.appDisabled) {
@@ -502,18 +541,18 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
       }
     }
     return permissions;
-  });
+  },
 
-  this.__defineGetter__("optionsType", function() {
+  get optionsType() {
     if (canDisableFlashProtectedMode(this)) {
       return AddonManager.OPTIONS_TYPE_INLINE;
     }
     return AddonManager.OPTIONS_TYPE_INLINE_INFO;
-  });
-}
+  },
 
-PluginWrapper.prototype = {
-  optionsURL: "chrome://mozapps/content/extensions/pluginPrefs.xul",
+  get optionsURL() {
+    return "chrome://mozapps/content/extensions/pluginPrefs.xul";
+  },
 
   get updateDate() {
     return this.installDate;

@@ -646,11 +646,9 @@ function AddonType(aID, aLocaleURI, aLocaleKey, aViewType, aUIPriority, aFlags) 
   this.flags = aFlags;
 
   if (aLocaleURI) {
-    this.__defineGetter__("name", function() {
-      delete this.name;
+    XPCOMUtils.defineLazyGetter(this, "name", () => {
       let bundle = Services.strings.createBundle(aLocaleURI);
-      this.name = bundle.GetStringFromName(aLocaleKey.replace("%ID%", aID));
-      return this.name;
+      return bundle.GetStringFromName(aLocaleKey.replace("%ID%", aID));
     });
   }
   else {

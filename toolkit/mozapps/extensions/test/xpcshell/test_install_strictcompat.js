@@ -197,8 +197,9 @@ function check_test_1() {
 
 // Tests that an install from a url downloads.
 function run_test_2(aAddon) {
+  let { id, version } = aAddon;
   restartManager();
-  do_check_not_in_crash_annotation(aAddon.id, aAddon.version);
+  do_check_not_in_crash_annotation(id, version);
 
   let url = "http://localhost:4444/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
