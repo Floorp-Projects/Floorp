@@ -75,9 +75,7 @@ exports.PSEUDO_ELEMENT_SET = PSEUDO_ELEMENT_SET;
 
 // This should be ok because none of the functions that use this should be used
 // on the worker thread, where Cu is not available.
-if (Cu) {
-  Cu.importGlobalProperties(["CSS"]);
-}
+loader.lazyRequireGetter(this, "CSS", "CSS");
 
 function CssLogic()
 {

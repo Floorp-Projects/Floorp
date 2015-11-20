@@ -67,6 +67,10 @@ XPCOMUtils.defineLazyGetter(loaderModules, "indexedDB", () => {
   }
 });
 
+XPCOMUtils.defineLazyGetter(loaderModules, "CSS", () => {
+  return Cu.Sandbox(this, {wantGlobalProperties: ["CSS"]}).CSS;
+});
+
 var sharedGlobalBlacklist = ["sdk/indexed-db"];
 
 /**
@@ -378,6 +382,7 @@ DevToolsLoader.prototype = {
     this._provider.globals = {
       isWorker: false,
       reportError: Cu.reportError,
+      atob: atob,
       btoa: btoa,
       _Iterator: Iterator,
       loader: {

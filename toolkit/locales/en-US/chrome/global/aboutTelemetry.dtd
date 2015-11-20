@@ -108,8 +108,8 @@ Ping
   Late Writes
 ">
 
-<!ENTITY aboutTelemetry.systemInfoSection "
-  System Information
+<!ENTITY aboutTelemetry.sessionInfoSection "
+  Session Information
 ">
 
 <!ENTITY aboutTelemetry.addonHistogramsSection "
