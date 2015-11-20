@@ -78,6 +78,8 @@ const {
 const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
   require("devtools/server/actors/layout");
 
+loader.lazyRequireGetter(this, "CSS", "CSS");
+
 const {EventParsers} = require("devtools/shared/event-parsers");
 
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
