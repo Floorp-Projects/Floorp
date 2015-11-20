@@ -32,10 +32,7 @@ function test() {
 
     let browser = newWin.gBrowser.selectedBrowser;
     setInputChecked(browser, {id: "chk", checked: true}).then(() => {
-      newWin.close();
-
-      // Now give it time to close
-      executeSoon(function() {
+      BrowserTestUtils.closeWindow(newWin).then(() => {
         is(ss.getClosedWindowCount(), 1,
            "The closed window was added to Recently Closed Windows");
         let data = JSON.parse(ss.getClosedWindowData())[0];
@@ -75,8 +72,7 @@ function test() {
              "The window correctly restored the data associated with it");
 
           // clean up
-          newWin2.close();
-          finish();
+          BrowserTestUtils.closeWindow(newWin2).then(finish);
         }, true);
       });
     });

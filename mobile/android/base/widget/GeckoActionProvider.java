@@ -10,9 +10,9 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.menu.MenuItemActionView;
 import org.mozilla.gecko.menu.QuickShareBarActionView;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -97,10 +97,10 @@ public class GeckoActionProvider {
     public View onCreateActionView(final int maxHistorySize, final ActionViewType viewType) {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-        final MenuItemActionView view;
+        final MenuItemSwitcherLayout view;
         switch (viewType) {
             case DEFAULT:
-                view = new MenuItemActionView(mContext, null);
+                view = new MenuItemSwitcherLayout(mContext, null);
                 break;
 
             case QUICK_SHARE_ICON:
@@ -108,7 +108,7 @@ public class GeckoActionProvider {
                 break;
 
             case CONTEXT_MENU:
-                view = new MenuItemActionView(mContext, null);
+                view = new MenuItemSwitcherLayout(mContext, null);
                 view.initContextMenuStyles();
                 break;
 
