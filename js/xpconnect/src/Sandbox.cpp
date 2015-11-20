@@ -289,7 +289,6 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     ErrorResult rv;
     RefPtr<dom::Promise> response =
         FetchRequest(global, Constify(request), Constify(options), rv);
-    rv.WouldReportJSException();
     if (rv.MaybeSetPendingException(cx)) {
         return false;
     }
