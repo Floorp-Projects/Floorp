@@ -21,8 +21,8 @@ class Rule;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0x21c8ad67, 0x3a7d, 0x4881, \
-  { 0xa5, 0x43, 0xcb, 0xa9, 0xbb, 0xe4, 0x9e, 0x39 } }
+{ 0x71041fa3, 0x6dd7, 0x4cde, \
+  { 0xbb, 0x76, 0xae, 0xcc, 0x69, 0xe1, 0x75, 0x78 } }
 
 typedef uint32_t nsUpdateType;
 
@@ -143,26 +143,13 @@ public:
    * the document. The notification is passed on to all of 
    * the document observers.
    *
-   * Since nsIStyleRule objects are immutable, there is a new object
-   * replacing the old one.  However, the use of this method (rather
-   * than StyleRuleAdded and StyleRuleRemoved) implies that the new rule
-   * matches the same elements and has the same priority (weight,
-   * origin, specificity) as the old one.  (However, if it is a CSS
-   * style rule, there may be a change in whether it has an important
-   * rule.)
-   *
    * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that contians the rule
-   * @param aOldStyleRule The rule being removed.  This rule may not be
-   *                      fully valid anymore -- however, it can still
-   *                      be used for pointer comparison and
-   *                      |QueryInterface|.
-   * @param aNewStyleRule The rule being added.
+   * @param aStyleRule The rule being changed.
    */
   virtual void StyleRuleChanged(nsIDocument *aDocument,
                                 mozilla::CSSStyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aOldStyleRule,
-                                mozilla::css::Rule* aNewStyleRule) = 0;
+                                mozilla::css::Rule* aStyleRule) = 0;
 
   /**
    * A StyleRule has just been added to a style sheet.
@@ -238,8 +225,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULECHANGED                         \
     virtual void StyleRuleChanged(nsIDocument* aDocument,                    \
                                   mozilla::CSSStyleSheet* aStyleSheet,       \
-                                  mozilla::css::Rule* aOldStyleRule,         \
-                                  mozilla::css::Rule* aNewStyleRule) override;
+                                  mozilla::css::Rule* aStyleRule) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEADDED                           \
     virtual void StyleRuleAdded(nsIDocument* aDocument,                      \
@@ -327,8 +313,7 @@ _class::StyleSheetApplicableStateChanged(nsIDocument* aDocument,          \
 void                                                                      \
 _class::StyleRuleChanged(nsIDocument* aDocument,                          \
                          mozilla::CSSStyleSheet* aStyleSheet,             \
-                         mozilla::css::Rule* aOldStyleRule,               \
-                         mozilla::css::Rule* aNewStyleRule)               \
+                         mozilla::css::Rule* aStyleRule)                  \
 {                                                                         \
 }                                                                         \
 void                                                                      \
