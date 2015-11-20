@@ -21,7 +21,7 @@ module.exports = function(context) {
   // Helpers
   //--------------------------------------------------------------------------
 
-  function checkFile(fileArray, context) {
+  function checkFile(fileArray) {
     var filePath = fileArray.pop();
 
     while (filePath) {
@@ -82,17 +82,17 @@ module.exports = function(context) {
   //--------------------------------------------------------------------------
 
   return {
-    Program: function(node) {
+    Program: function() {
       if (!helpers.getIsBrowserMochitest(this)) {
         return;
       }
 
-      var pathAndFilename = this.getFilename();
-      var processPath = process.cwd();
-      var testFilename = path.basename(pathAndFilename);
-      var testPath = path.join(processPath, testFilename);
-      var headjs = path.join(processPath, "head.js");
-      checkFile([testPath, headjs], context);
+      var testPath = this.getFilename();
+      var testFilename = path.basename(testPath);
+      var fullTestPath = path.resolve(testFilename);
+      var fullHeadjsPath = path.resolve("head.js");
+
+      checkFile([fullTestPath, fullHeadjsPath]);
     }
   };
 };
