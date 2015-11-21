@@ -15,9 +15,6 @@ TEST_DIRS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     TEST_DIRS += ['windows']
 
-if CONFIG['DEHYDRA_PATH']:
-    TEST_DIRS += ['static-checker']
-
 EXPORTS.testing += [
     'TestHarness.h',
 ]
