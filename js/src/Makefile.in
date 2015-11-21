@@ -12,18 +12,6 @@ ifneq ($(make_min_ver),$(firstword $(sort $(make_min_ver) $(MAKE_VERSION))))
 $(error GNU Make $(make_min_ver) or higher is required)
 endif
 
-ifdef JS_HAS_CTYPES
-ifdef MOZ_NATIVE_FFI
-LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
-endif
-
-# Windows needs this to be linked with a static library.
-ifndef MOZ_NATIVE_FFI
-DEFINES += -DFFI_BUILDING
-endif
-
-endif # JS_HAS_CTYPES
-
 DASH_R		= -r
 
 # Define keyword generator before rules.mk, see bug 323979 comment 50
