@@ -39,6 +39,7 @@ LOCAL_INCLUDES += [
 USE_LIBS += [
     '/media/webrtc/signalingstandalone/signaling_ecc/ecc',
     'fallible',
+    'js', # Turns out, binding implementations use JS, who knew.
     'media_standalone',
     'mfbt',
     'mozglue',

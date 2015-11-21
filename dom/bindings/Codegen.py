@@ -6267,21 +6267,14 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             resultLoc = result
         conversion = fill(
             """
-            {
-              // Scope for resultStr
-              MOZ_ASSERT(uint32_t(${result}) < ArrayLength(${strings}));
-              JSString* resultStr = JS_NewStringCopyN(cx, ${strings}[uint32_t(${result})].value, ${strings}[uint32_t(${result})].length);
-              if (!resultStr) {
-                $*{exceptionCode}
-              }
-              $*{setResultStr}
+            if (!ToJSValue(cx, ${result}, $${jsvalHandle})) {
+              $*{exceptionCode}
             }
+            $*{successCode}
             """,
             result=resultLoc,
-            strings=(type.unroll().inner.identifier.name + "Values::" +
-                     ENUM_ENTRY_VARIABLE_NAME),
             exceptionCode=exceptionCode,
-            setResultStr=setString("resultStr"))
+            successCode=successCode)
 
         if type.nullable():
             conversion = CGIfElseWrapper(
@@ -9054,11 +9047,53 @@ def getEnumValueName(value):
                           ' rename our internal EndGuard_ to something else')
     return nativeName
 
+class CGEnumToJSValue(CGAbstractMethod):
+    def __init__(self, enum):
+        enumType = enum.identifier.name
+        self.stringsArray = enumType + "Values::" + ENUM_ENTRY_VARIABLE_NAME
+        CGAbstractMethod.__init__(self, None, "ToJSValue", "bool",
+                                  [Argument("JSContext*", "aCx"),
+                                   Argument(enumType, "aArgument"),
+                                   Argument("JS::MutableHandle<JS::Value>",
+                                            "aValue")])
+
+    def definition_body(self):
+        return fill(
+            """
+            MOZ_ASSERT(uint32_t(aArgument) < ArrayLength(${strings}));
+            JSString* resultStr =
+              JS_NewStringCopyN(aCx, ${strings}[uint32_t(aArgument)].value,
+                                ${strings}[uint32_t(aArgument)].length);
+            if (!resultStr) {
+              return false;
+            }
+            aValue.setString(resultStr);
+            return true;
+            """,
+            strings=self.stringsArray)
+
 
 class CGEnum(CGThing):
     def __init__(self, enum):
         CGThing.__init__(self)
         self.enum = enum
+        strings = CGNamespace(
+            self.stringsNamespace(),
+            CGGeneric(declare=("extern const EnumEntry %s[%d];\n" %
+                               (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings())),
+                      define=fill(
+                          """
+                          extern const EnumEntry ${name}[${count}] = {
+                            $*{entries}
+                            { nullptr, 0 }
+                          };
+                          """,
+                          name=ENUM_ENTRY_VARIABLE_NAME,
+                          count=self.nEnumStrings(),
+                          entries=''.join('{"%s", %d},\n' % (val, len(val))
+                                          for val in self.enum.values()))))
+        toJSValue = CGEnumToJSValue(enum)
+        self.cgThings = CGList([strings, toJSValue], "\n")
 
     def stringsNamespace(self):
         return self.enum.identifier.name + "Values"
@@ -9079,22 +9114,10 @@ class CGEnum(CGThing):
         strings = CGNamespace(self.stringsNamespace(),
                               CGGeneric(declare="extern const EnumEntry %s[%d];\n"
                                         % (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings())))
-        return decl + "\n" + strings.declare()
+        return decl + "\n" + self.cgThings.declare()
 
     def define(self):
-        strings = fill(
-            """
-            extern const EnumEntry ${name}[${count}] = {
-              $*{entries}
-              { nullptr, 0 }
-            };
-            """,
-            name=ENUM_ENTRY_VARIABLE_NAME,
-            count=self.nEnumStrings(),
-            entries=''.join('{"%s", %d},\n' % (val, len(val))
-                            for val in self.enum.values()))
-        return CGNamespace(self.stringsNamespace(),
-                           CGGeneric(define=indent(strings))).define()
+        return self.cgThings.define()
 
     def deps(self):
         return self.enum.getDeps()
@@ -12997,6 +13020,11 @@ class CGBindingRoot(CGThing):
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
         bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries  # AutoJSAPI
         bindingHeaders["xpcpublic.h"] = dictionaries  # xpc::UnprivilegedJunkScope
+        # Ensure we see our enums in the generated .cpp file, for the ToJSValue
+        # method body.  Also ensure that we see jsapi.h.
+        if enums:
+            bindingHeaders[CGHeaders.getDeclarationFilename(enums[0])] = True
+            bindingHeaders["jsapi.h"] = True
 
         # For things that have [UseCounter]
         def descriptorRequiresTelemetry(desc):
