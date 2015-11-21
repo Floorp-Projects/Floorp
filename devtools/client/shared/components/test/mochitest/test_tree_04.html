@@ -1,8 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Test trees get displayed with the items in correct order and at the correct
-depth.
+Test that we only render visible tree items.
 -->
 <head>
   <meta charset="utf-8">
@@ -16,21 +15,15 @@ depth.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
-    let React = bRequire("devtools/client/shared/vendor/react");
-    let Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
-
-    ok(React, "Should get React");
-    ok(Tree, "Should get Tree");
-
-    const t = Tree(TEST_TREE_INTERFACE);
-    ok(t, "Should be able to create Tree instances");
-
-    const tree = ReactDOM.render(t, window.document.body);
-    ok(tree, "Should be able to mount Tree instances");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
     yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
+      height: 3,
+      scroll: 1
     });
 
     isRenderedTree(document.body.textContent, [
@@ -39,17 +32,19 @@ window.onload = Task.async(function* () {
       "--E:false",
       "---K:false",
       "---L:false",
+    ], "Tree should show the second, third, and fourth items + buffer of 1 item at the end");
+
+    yield setState(tree, {
+      height: 2,
+      scroll: 3
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "--E:false",
+      "---K:false",
+      "---L:false",
       "--F:false",
-      "--G:false",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "Should get the items rendered and indented as expected");
+    ], "Tree should show the third and fourth item + buffer of 1 item at each end");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
