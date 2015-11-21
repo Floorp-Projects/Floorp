@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   build-essential \
   ca-certificates \
   ccache \
+  clang \
   curl \
   fonts-kacst \
   fonts-kacst-one \
@@ -114,7 +115,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   yasm \
   zip
 
-ENV NODE_VERSION v0.10.36
+ENV NODE_VERSION v4.2.2
 RUN cd /usr/local/ && \
     curl https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.gz | tar -xz --strip-components 1 && \
     node -v
