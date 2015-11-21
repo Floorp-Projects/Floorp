@@ -2428,6 +2428,30 @@ js::GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp)
 }
 
 bool
+js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* native)
+{
+    JS::AutoCheckCannotGC nogc;
+    *native = nullptr;
+    Shape* shape;
+    if (!LookupOwnPropertyPure(cx, obj, id, &shape))
+        return false;
+
+    if (!shape || IsImplicitDenseOrTypedArrayElement(shape) || !shape->hasGetterObject())
+        return true;
+
+    JSObject* getterObj = shape->getterObject();
+    if (!getterObj->is<JSFunction>())
+        return true;
+
+    JSFunction* getter = &getterObj->as<JSFunction>();
+    if (!getter->isNative())
+        return true;
+
+    *native = getter->native();
+    return true;
+}
+
+bool
 JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
