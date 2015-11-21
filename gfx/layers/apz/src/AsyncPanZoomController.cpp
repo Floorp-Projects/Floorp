@@ -34,6 +34,7 @@
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
+#include "mozilla/Telemetry.h"          // for Telemetry
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
 #include "mozilla/dom/KeyframeEffect.h" // for ComputedTimingFunction
 #include "mozilla/dom/Touch.h"          // for Touch
@@ -851,6 +852,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mPanDirRestricted(false),
      mZoomConstraints(false, false, MIN_ZOOM, MAX_ZOOM),
      mLastSampleTime(GetFrameTime()),
+     mLastCheckerboardReport(GetFrameTime()),
      mState(NOTHING),
      mNotificationBlockers(0),
      mInputQueue(aInputQueue),
@@ -3054,6 +3056,39 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 
   return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0).
            PostScale(zoomChange.width, zoomChange.height, 1);
+}
+
+uint32_t
+AsyncPanZoomController::GetCheckerboardMagnitude() const
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  CSSPoint currentScrollOffset = mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset;
+  CSSRect painted = mLastContentPaintMetrics.GetDisplayPort() + mLastContentPaintMetrics.GetScrollOffset();
+  CSSRect visible = CSSRect(currentScrollOffset, mFrameMetrics.CalculateCompositedSizeInCssPixels());
+
+  CSSIntRegion checkerboard;
+  // Round so as to minimize checkerboarding; if we're only showing fractional
+  // pixels of checkerboarding it's not really worth counting
+  checkerboard.Sub(RoundedIn(visible), RoundedOut(painted));
+  return checkerboard.Area();
+}
+
+void
+AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime)
+{
+  if (mLastCheckerboardReport == aSampleTime) {
+    // This function will get called multiple times for each APZC on a single
+    // composite (once for each layer it is attached to). Only report the
+    // checkerboard once per composite though.
+    return;
+  }
+  uint32_t time = (aSampleTime - mLastCheckerboardReport).ToMilliseconds();
+  uint32_t magnitude = GetCheckerboardMagnitude();
+  // TODO: make this a function of velocity
+  mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::CHECKERBOARDED_CSSPIXELS_MS, magnitude * time);
+  mLastCheckerboardReport = aSampleTime;
 }
 
 bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
