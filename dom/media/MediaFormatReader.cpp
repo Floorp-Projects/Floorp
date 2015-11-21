@@ -419,6 +419,8 @@ MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
               [self, aTrack] (MediaDataDecoder::DecoderFailureReason aResult) {
                 auto& decoder = self->GetDecoderData(aTrack);
                 decoder.mInitPromise.Complete();
+                decoder.mDecoder->Shutdown();
+                decoder.mDecoder = nullptr;
                 self->NotifyError(aTrack);
               }));
   return false;
