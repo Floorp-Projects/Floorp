@@ -14,6 +14,9 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Locale",
+                                  "resource://gre/modules/Locale.jsm");
+
 // Run a function and report exceptions.
 function runSafeSyncWithoutClone(f, ...args)
 {
@@ -107,6 +110,172 @@ DefaultWeakMap.prototype = {
     } else {
       this.defaultValue = value;
     }
+  },
+};
+
+function LocaleData(data) {
+  this.defaultLocale = data.defaultLocale;
+  this.selectedLocale = data.selectedLocale;
+  this.locales = data.locales || new Map();
+
+  // Map(locale-name -> Map(message-key -> localized-strings))
+  //
+  // Contains a key for each loaded locale, each of which is a
+  // Map of message keys to their localized strings.
+  this.messages = data.messages || new Map();
+};
+
+LocaleData.prototype = {
+  // Representation of the object to send to content processes. This
+  // should include anything the content process might need.
+  serialize() {
+    return {
+      defaultLocale: this.defaultLocale,
+      selectedLocale: this.selectedLocale,
+      messages: this.messages,
+      locales: this.locales,
+    };
+  },
+
+  has(locale) {
+    return this.messages.has(locale);
+  },
+
+  // https://developer.chrome.com/extensions/i18n
+  localizeMessage(message, substitutions = [], locale = this.selectedLocale, defaultValue = "??") {
+    let locales = new Set([locale, this.defaultLocale]
+                          .filter(locale => this.messages.has(locale)));
+
+    // Message names are case-insensitive, so normalize them to lower-case.
+    message = message.toLowerCase();
+    for (let locale of locales) {
+      let messages = this.messages.get(locale);
+      if (messages.has(message)) {
+        let str = messages.get(message)
+
+        if (!Array.isArray(substitutions)) {
+          substitutions = [substitutions];
+        }
+
+        let replacer = (matched, index, dollarSigns) => {
+          if (index) {
+            // This is not quite Chrome-compatible. Chrome consumes any number
+            // of digits following the $, but only accepts 9 substitutions. We
+            // accept any number of substitutions.
+            index = parseInt(index) - 1;
+            return index in substitutions ? substitutions[index] : "";
+          } else {
+            // For any series of contiguous `$`s, the first is dropped, and
+            // the rest remain in the output string.
+            return dollarSigns;
+          }
+        };
+        return str.replace(/\$(?:([1-9]\d*)|(\$+))/g, replacer);
+      }
+    }
+
+    // Check for certain pre-defined messages.
+    if (message == "@@extension_id") {
+      if ("uuid" in this) {
+        // Per Chrome, this isn't available before an ID is guaranteed
+        // to have been assigned, namely, in manifest files.
+        // This should only be present in instances of the |Extension|
+        // subclass.
+        return this.uuid;
+      }
+    } else if (message == "@@ui_locale") {
+      // Return the browser locale, but convert it to a Chrome-style
+      // locale code.
+      return Locale.getLocale().replace(/-/g, "_");
+    } else if (message.startsWith("@@bidi_")) {
+      let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+      let rtl = registry.isLocaleRTL("global");
+
+      if (message == "@@bidi_dir") {
+        return rtl ? "rtl" : "ltr";
+      } else if (message == "@@bidi_reversed_dir") {
+        return rtl ? "ltr" : "rtl";
+      } else if (message == "@@bidi_start_edge") {
+        return rtl ? "right" : "left";
+      } else if (message == "@@bidi_end_edge") {
+        return rtl ? "left" : "right";
+      }
+    }
+
+    Cu.reportError(`Unknown localization message ${message}`);
+    return defaultValue;
+  },
+
+  // Localize a string, replacing all |__MSG_(.*)__| tokens with the
+  // matching string from the current locale, as determined by
+  // |this.selectedLocale|.
+  //
+  // This may not be called before calling either |initLocale| or
+  // |initAllLocales|.
+  localize(str, locale = this.selectedLocale) {
+    if (!str) {
+      return str;
+    }
+
+    return str.replace(/__MSG_([A-Za-z0-9@_]+?)__/g, (matched, message) => {
+      return this.localizeMessage(message, [], locale, matched);
+    });
+  },
+
+  // Validates the contents of a locale JSON file, normalizes the
+  // messages into a Map of message key -> localized string pairs.
+  addLocale(locale, messages, extension) {
+    let result = new Map();
+
+    // Chrome does not document the semantics of its localization
+    // system very well. It handles replacements by pre-processing
+    // messages, replacing |$[a-zA-Z0-9@_]+$| tokens with the value of their
+    // replacements. Later, it processes the resulting string for
+    // |$[0-9]| replacements.
+    //
+    // Again, it does not document this, but it accepts any number
+    // of sequential |$|s, and replaces them with that number minus
+    // 1. It also accepts |$| followed by any number of sequential
+    // digits, but refuses to process a localized string which
+    // provides more than 9 substitutions.
+    if (!instanceOf(messages, "Object")) {
+      extension.packagingError(`Invalid locale data for ${locale}`);
+      return result;
+    }
+
+    for (let key of Object.keys(messages)) {
+      let msg = messages[key];
+
+      if (!instanceOf(msg, "Object") || typeof(msg.message) != "string") {
+        extension.packagingError(`Invalid locale message data for ${locale}, message ${JSON.stringify(key)}`);
+        continue;
+      }
+
+      // Substitutions are case-insensitive, so normalize all of their names
+      // to lower-case.
+      let placeholders = new Map();
+      if (instanceOf(msg.placeholders, "Object")) {
+        for (let key of Object.keys(msg.placeholders)) {
+          placeholders.set(key.toLowerCase(), msg.placeholders[key]);
+        }
+      }
+
+      let replacer = (match, name) => {
+        let replacement = placeholders.get(name.toLowerCase());
+        if (instanceOf(replacement, "Object") && "content" in replacement) {
+          return replacement.content;
+        }
+        return "";
+      };
+
+      let value = msg.message.replace(/\$([A-Za-z0-9@_]+)\$/g, replacer);
+
+      // Message names are also case-insensitive, so normalize them to lower-case.
+      result.set(key.toLowerCase(), value);
+    }
+
+    this.messages.set(locale, result);
+    return result;
   },
 };
 
@@ -633,6 +802,7 @@ this.ExtensionUtils = {
   runSafeSync,
   DefaultWeakMap,
   EventManager,
+  LocaleData,
   SingletonEventManager,
   ignoreEvent,
   injectAPI,
