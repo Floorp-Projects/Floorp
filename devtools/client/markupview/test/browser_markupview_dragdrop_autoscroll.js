@@ -18,7 +18,7 @@ add_task(function*() {
   markup.isDragging = true;
 
   info("Simulate a mousemove on the view, at the bottom, and expect scrolling");
-  let onScrolled = waitForViewScroll(markup);
+  let onScrolled = waitForScrollStop(markup);
 
   markup._onMouseMove({
     preventDefault: () => {},
@@ -30,7 +30,7 @@ add_task(function*() {
   ok(bottomScrollPos > 0, "The view was scrolled down");
 
   info("Simulate a mousemove at the top and expect more scrolling");
-  onScrolled = waitForViewScroll(markup);
+  onScrolled = waitForScrollStop(markup);
 
   markup._onMouseMove({
     preventDefault: () => {},
@@ -46,22 +46,28 @@ add_task(function*() {
   markup._onMouseUp();
 });
 
-function waitForViewScroll(markup) {
+/**
+ * Waits until the element has not scrolled for 30 consecutive frames.
+ */
+function* waitForScrollStop(markup) {
   let el = markup.doc.documentElement;
-  let startPos = el.scrollTop;
+  let win = markup.doc.defaultView;
+  let lastScrollTop = el.scrollTop;
+  let stopFrameCount = 0;
+  while (stopFrameCount < 30) {
+    // Wait for a frame.
+    yield new Promise(resolve => win.requestAnimationFrame(resolve));
 
-  return new Promise(resolve => {
-    let isDone = () => {
-      if (el.scrollTop === startPos) {
-        resolve(el.scrollTop);
-      } else {
-        startPos = el.scrollTop;
-        // Continue checking every 50ms.
-        setTimeout(isDone, 50);
-      }
-    };
+    // Check if the element has scrolled.
+    if (lastScrollTop == el.scrollTop) {
+      // No scrolling since the last frame.
+      stopFrameCount++;
+    } else {
+      // The element has scrolled. Reset the frame counter.
+      stopFrameCount = 0;
+      lastScrollTop = el.scrollTop;
+    }
+  }
 
-    // Start checking if the view scrolled after a while.
-    setTimeout(isDone, 50);
-  });
+  return lastScrollTop;
 }
