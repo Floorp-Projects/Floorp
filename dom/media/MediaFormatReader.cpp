@@ -346,9 +346,15 @@ MediaFormatReader::OnDemuxerInitFailed(DemuxerFailureReason aFailure)
 }
 
 bool
-MediaFormatReader::EnsureDecodersCreated()
+MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
+
+  auto& decoder = GetDecoderData(aTrack);
+
+  if (decoder.mDecoder) {
+    return true;
+  }
 
   if (!mPlatform) {
     mPlatform = new PDMFactory();
@@ -364,34 +370,34 @@ MediaFormatReader::EnsureDecodersCreated()
     }
   }
 
-  if (HasAudio() && !mAudio.mDecoder) {
-    mAudio.mDecoderInitialized = false;
-    mAudio.mDecoder =
-      mPlatform->CreateDecoder(mAudio.mInfo ?
-                                 *mAudio.mInfo->GetAsAudioInfo() :
-                                 mInfo.mAudio,
-                               mAudio.mTaskQueue,
-                               mAudio.mCallback);
-    NS_ENSURE_TRUE(mAudio.mDecoder != nullptr, false);
-  }
+  decoder.mDecoderInitialized = false;
 
-  if (HasVideo() && !mVideo.mDecoder) {
-    mVideo.mDecoderInitialized = false;
-    // Decoders use the layers backend to decide if they can use hardware decoding,
-    // so specify LAYERS_NONE if we want to forcibly disable it.
-    mVideo.mDecoder =
-      mPlatform->CreateDecoder(mVideo.mInfo ?
-                                 *mVideo.mInfo->GetAsVideoInfo() :
-                                 mInfo.mVideo,
-                               mVideo.mTaskQueue,
-                               mVideo.mCallback,
-                               mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
-                                                               mLayersBackendType,
-                               GetImageContainer());
-    NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, false);
+  switch (aTrack) {
+    case TrackType::kAudioTrack:
+      decoder.mDecoder =
+        mPlatform->CreateDecoder(decoder.mInfo ?
+                                   *decoder.mInfo->GetAsAudioInfo() :
+                                   mInfo.mAudio,
+                                 decoder.mTaskQueue,
+                                 decoder.mCallback);
+      break;
+    case TrackType::kVideoTrack:
+      // Decoders use the layers backend to decide if they can use hardware decoding,
+      // so specify LAYERS_NONE if we want to forcibly disable it.
+      decoder.mDecoder =
+        mPlatform->CreateDecoder(mVideo.mInfo ?
+                                   *mVideo.mInfo->GetAsVideoInfo() :
+                                   mInfo.mVideo,
+                                 decoder.mTaskQueue,
+                                 decoder.mCallback,
+                                 mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
+                                 mLayersBackendType,
+                                 GetImageContainer());
+      break;
+    default:
+      break;
   }
-
-  return true;
+  return decoder.mDecoder != nullptr;
 }
 
 bool
@@ -452,7 +458,7 @@ MediaFormatReader::DisableHardwareAcceleration()
     Flush(TrackInfo::kVideoTrack);
     mVideo.mDecoder->Shutdown();
     mVideo.mDecoder = nullptr;
-    if (!EnsureDecodersCreated()) {
+    if (!EnsureDecoderCreated(TrackType::kVideoTrack)) {
       LOG("Unable to re-create decoder, aborting");
       NotifyError(TrackInfo::kVideoTrack);
       return;
@@ -830,7 +836,7 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
     return;
   }
 
-  if (!EnsureDecodersCreated()) {
+  if (!EnsureDecoderCreated(aTrack)) {
     NS_WARNING("Error constructing decoders");
     NotifyError(aTrack);
     return;
