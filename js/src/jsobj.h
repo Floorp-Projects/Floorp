@@ -1229,6 +1229,9 @@ bool
 GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* native);
 
 bool
+HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result);
+
+bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
