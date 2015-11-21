@@ -786,7 +786,6 @@ void HTMLMediaElement::NoSupportedMediaSourceError()
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
   DispatchAsyncEvent(NS_LITERAL_STRING("error"));
   ChangeDelayLoadStatus(false);
-  UpdateAudioChannelPlayingState();
 }
 
 typedef void (HTMLMediaElement::*SyncSectionFn)();
@@ -3531,7 +3530,6 @@ void HTMLMediaElement::Error(uint16_t aErrorCode)
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
   }
   ChangeDelayLoadStatus(false);
-  UpdateAudioChannelPlayingState();
 }
 
 void HTMLMediaElement::PlaybackEnded()
@@ -4755,11 +4753,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
 {
   // Are we paused or muted
   if (mPaused || Muted()) {
-    return false;
-  }
-
-  // If we have an error, we are not playing.
-  if (mError) {
     return false;
   }
 
