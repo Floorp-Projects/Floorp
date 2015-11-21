@@ -203,7 +203,7 @@ nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
-  return NSCoordSaturatingMultiply(aSize, aPresContext->TextZoom());
+  return NSToCoordTruncClamped(float(aSize) * aPresContext->TextZoom());
 }
 
 /* static */ nscoord
@@ -211,7 +211,7 @@ nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
-  return NSCoordSaturatingMultiply(aSize, 1.0 / aPresContext->TextZoom());
+  return NSToCoordTruncClamped(float(aSize) / aPresContext->TextZoom());
 }
 
 /* static */ already_AddRefed<nsIAtom>
