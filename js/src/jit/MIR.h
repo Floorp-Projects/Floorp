@@ -7992,6 +7992,31 @@ class MRegExpTester
     }
 };
 
+class MRegExpPrototypeOptimizable
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MRegExpPrototypeOptimizable(MDefinition* object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpPrototypeOptimizable)
+
+    static MRegExpPrototypeOptimizable* New(TempAllocator& alloc, MDefinition* obj) {
+        return new(alloc) MRegExpPrototypeOptimizable(obj);
+    }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 template <class Policy1>
 class MStrReplace
   : public MTernaryInstruction,

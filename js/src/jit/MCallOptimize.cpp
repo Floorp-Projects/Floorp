@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsmath.h"
+#include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -181,6 +182,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineRegExpTester(callInfo);
       case InlinableNative::IsRegExpObject:
         return inlineIsRegExpObject(callInfo);
+      case InlinableNative::RegExpPrototypeOptimizable:
+        return inlineRegExpPrototypeOptimizable(callInfo);
 
       // String natives.
       case InlinableNative::String:
@@ -1878,6 +1881,31 @@ IonBuilder::inlineIsRegExpObject(CallInfo& callInfo)
     pushConstant(BooleanValue(isRegExpObject));
 
     callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineRegExpPrototypeOptimizable(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* protoArg = callInfo.getArg(0);
+
+    if (protoArg->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* opt = MRegExpPrototypeOptimizable::New(alloc(), protoArg);
+    current->add(opt);
+    current->push(opt);
+
     return InliningStatus_Inlined;
 }
 
