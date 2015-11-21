@@ -657,6 +657,7 @@ SampleAPZAnimations(const LayerMetricsWrapper& aLayer, TimeStamp aSampleTime)
   }
 
   if (AsyncPanZoomController* apzc = aLayer.GetApzc()) {
+    apzc->ReportCheckerboard(aSampleTime);
     activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
   }
 
