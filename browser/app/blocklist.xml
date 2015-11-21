@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1447453044000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1447879967000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -444,6 +444,15 @@
     </emItem>
       <emItem  blockID="i1038" id="344141-fasf9jas08hasoiesj9ia8ws@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1056" id="{82AF8DCA-6DE9-405D-BD5E-43525BDAD38A}">
+                        <versionRange  minVersion="0" maxVersion="7.5.0.9082" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="43.0a1" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -3347,7 +3356,7 @@
                       <device>0x9807</device>
                   </devices>
             <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS, WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g974">      <os>WINNT 10.0</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x6920</device>
                       <device>0x6921</device>
@@ -3395,6 +3404,7 @@
                       <device>0x9877</device>
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1057">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
