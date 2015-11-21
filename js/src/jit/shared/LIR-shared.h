@@ -4374,6 +4374,25 @@ class LRegExpTester : public LCallInstructionHelper<1, 4, 0>
     }
 };
 
+class LRegExpPrototypeOptimizable : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(RegExpPrototypeOptimizable);
+    explicit LRegExpPrototypeOptimizable(const LAllocation& object, const LDefinition& temp) {
+        setOperand(0, object);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+    MRegExpPrototypeOptimizable* mir() const {
+        return mir_->toRegExpPrototypeOptimizable();
+    }
+};
 
 class LStrReplace : public LCallInstructionHelper<1, 3, 0>
 {
