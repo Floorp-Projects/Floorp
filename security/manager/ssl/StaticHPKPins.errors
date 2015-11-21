@@ -1,5 +1,7 @@
 Can't find hash in builtin certs for Chrome nickname RapidSSL, inserting GOOGLE_PIN_RapidSSL
+Can't find hash in builtin certs for Chrome nickname VeriSignClass4_G3, inserting GOOGLE_PIN_VeriSignClass4_G3
 Can't find hash in builtin certs for Chrome nickname Entrust_SSL, inserting GOOGLE_PIN_Entrust_SSL
+Can't find hash in builtin certs for Chrome nickname UTNDATACorpSGC, inserting GOOGLE_PIN_UTNDATACorpSGC
 Can't find hash in builtin certs for Chrome nickname GTECyberTrustGlobalRoot, inserting GOOGLE_PIN_GTECyberTrustGlobalRoot
 Can't find hash in builtin certs for Chrome nickname GoDaddySecure, inserting GOOGLE_PIN_GoDaddySecure
 Can't find hash in builtin certs for Chrome nickname ThawtePremiumServer, inserting GOOGLE_PIN_ThawtePremiumServer
@@ -13,3 +15,4 @@ Writing pinset twitterCDN
 Writing pinset dropbox
 Writing pinset facebook
 Writing pinset spideroak
+Writing pinset yahoo
