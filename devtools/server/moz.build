@@ -33,6 +33,7 @@ DevToolsModules(
     'content-globals.js',
     'content-server.jsm',
     'main.js',
+    'primitive.js',
     'protocol.js',
     'worker.js'
 )
