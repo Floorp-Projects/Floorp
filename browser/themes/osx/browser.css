@@ -370,7 +370,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton)[open="true"] {
 }
 
 toolbarbutton.bookmark-item > menupopup {
-  margin-top: 2px;
   -moz-margin-start: 3px;
 }
 
