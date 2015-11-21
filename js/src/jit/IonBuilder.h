@@ -823,6 +823,7 @@ class IonBuilder
     InliningStatus inlineRegExpMatcher(CallInfo& callInfo);
     InliningStatus inlineRegExpTester(CallInfo& callInfo);
     InliningStatus inlineIsRegExpObject(CallInfo& callInfo);
+    InliningStatus inlineRegExpPrototypeOptimizable(CallInfo& callInfo);
 
     // Object natives and intrinsics.
     InliningStatus inlineObjectCreate(CallInfo& callInfo);
