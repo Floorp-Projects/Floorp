@@ -705,3 +705,10 @@ selfhosted.inputs = [
     'builtin/TypedObject.js',
     'builtin/WeakSet.js'
 ]
+
+if CONFIG['JS_HAS_CTYPES']:
+    if CONFIG['MOZ_NATIVE_FFI']:
+        CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
+    else:
+        # Windows needs this to be linked with a static library.
+        DEFINES['FFI_BUILDING'] = True
