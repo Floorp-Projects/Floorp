@@ -50,9 +50,6 @@ with Files('../public/TrackedOptimizationInfo.h'):
     BUG_COMPONENT = component_jit
 
 
-if CONFIG['DEHYDRA_PATH']:
-    DIRS += ['analysis-tests']
-
 if CONFIG['JS_BUNDLED_EDITLINE']:
     DIRS += ['editline']
 
