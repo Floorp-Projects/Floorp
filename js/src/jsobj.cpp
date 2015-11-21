@@ -2452,6 +2452,18 @@ js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* nati
 }
 
 bool
+js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result)
+{
+    Shape* shape = nullptr;
+    if (!LookupOwnPropertyPure(cx, obj, id, &shape))
+        return false;
+
+    *result = shape && !IsImplicitDenseOrTypedArrayElement(shape) && shape->hasDefaultGetter() &&
+              shape->hasSlot();
+    return true;
+}
+
+bool
 JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
