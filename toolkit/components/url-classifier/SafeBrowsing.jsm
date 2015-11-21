@@ -53,6 +53,7 @@ const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
 const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
 const trackingProtectionLists = getLists("urlclassifier.trackingTable");
 const trackingProtectionWhitelists = getLists("urlclassifier.trackingWhitelistTable");
+const forbiddenLists = getLists("urlclassifier.forbiddenTable");
 
 this.SafeBrowsing = {
 
@@ -102,12 +103,17 @@ this.SafeBrowsing = {
     for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
       this.registerTableWithURLs(trackingProtectionWhitelists[i]);
     }
+    for (let i = 0; i < forbiddenLists.length; ++i) {
+      this.registerTableWithURLs(forbiddenLists[i]);
+    }
   },
 
 
-  initialized:     false,
-  phishingEnabled: false,
-  malwareEnabled:  false,
+  initialized:      false,
+  phishingEnabled:  false,
+  malwareEnabled:   false,
+  trackingEnabled:  false,
+  forbiddenEnabled: false,
 
   updateURL:             null,
   gethashURL:            null,
@@ -153,6 +159,7 @@ this.SafeBrowsing = {
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
+    this.forbiddenEnabled = Services.prefs.getBoolPref("browser.safebrowsing.forbiddenURIs.enabled");
     this.updateProviderURLs();
     this.registerTables();
 
@@ -228,7 +235,8 @@ this.SafeBrowsing = {
 
   controlUpdateChecking: function() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
-        this.malwareEnabled, "trackingEnabled:", this.trackingEnabled);
+        this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
+       "forbiddenEnabled:", this.forbiddenEnabled);
 
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
@@ -270,6 +278,13 @@ this.SafeBrowsing = {
         listManager.disableUpdate(trackingProtectionWhitelists[i]);
       }
     }
+    for (let i = 0; i < forbiddenLists.length; ++i) {
+      if (this.forbiddenEnabled) {
+        listManager.enableUpdate(forbiddenLists[i]);
+      } else {
+        listManager.disableUpdate(forbiddenLists[i]);
+      }
+    }
     listManager.maybeToggleUpdateChecking();
   },
 
@@ -285,6 +300,7 @@ this.SafeBrowsing = {
       "itisatracker.org/",
     ];
     const whitelistURL = "itisatrap.org/?resource=itisatracker.org";
+    const forbiddenURL  = "itisatrap.org/firefox/forbidden.html";
 
     let update = "n:1000\ni:test-malware-simple\nad:1\n" +
                  "a:1:32:" + malwareURL.length + "\n" +
@@ -304,6 +320,9 @@ this.SafeBrowsing = {
     update += "n:1000\ni:test-trackwhite-simple\nad:1\n" +
               "a:1:32:" + whitelistURL.length + "\n" +
               whitelistURL;
+    update += "n:1000\ni:test-forbid-simple\nad:1\n" +
+              "a:1:32:" + forbiddenURL.length + "\n" +
+              forbiddenURL;
     log("addMozEntries:", update);
 
     let db = Cc["@mozilla.org/url-classifier/dbservice;1"].
@@ -318,7 +337,7 @@ this.SafeBrowsing = {
     };
 
     try {
-      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple";
+      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-forbid-simple";
       db.beginUpdate(dummyListener, tables, "");
       db.beginStream("", "");
       db.updateStream(update);

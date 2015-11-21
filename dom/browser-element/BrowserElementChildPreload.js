@@ -2037,6 +2037,9 @@ BrowserElementChild.prototype = {
           case Cr.NS_ERROR_UNWANTED_URI :
             sendAsyncMsg('error', { type: 'unwantedBlocked' });
             return;
+          case Cr.NS_ERROR_FORBIDDEN_URI :
+            sendAsyncMsg('error', { type: 'forbiddenBlocked' });
+            return;
 
           case Cr.NS_ERROR_OFFLINE :
             sendAsyncMsg('error', { type: 'offline' });
