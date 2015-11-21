@@ -175,6 +175,10 @@ be temporary, and you can try again later.</li>
 <p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>
 ">
 
+<!ENTITY forbiddenBlocked.title "Forbidden Site">
+<!ENTITY forbiddenBlocked.longDesc "<p>&brandShortName; prevented this page from loading because it is configured to block it.</p>
+">
+
 <!ENTITY cspBlocked.title "Blocked by Content Security Policy">
 <!ENTITY cspBlocked.longDesc "<p>&brandShortName; prevented this page from loading in this way because the page has a content security policy that disallows it.</p>">
 
