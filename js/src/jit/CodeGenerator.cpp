@@ -19,6 +19,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 #include "jsprf.h"
+#include "jsstr.h"
 
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
@@ -38,6 +39,7 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/SharedICHelpers.h"
 #include "vm/MatchPairs.h"
+#include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
 #include "vm/Unicode.h"
@@ -1962,6 +1964,75 @@ CodeGenerator::visitRegExpTester(LRegExpTester* lir)
 
     masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultFailed), ool->entry());
     masm.bind(ool->rejoin());
+}
+
+class OutOfLineRegExpPrototypeOptimizable : public OutOfLineCodeBase<CodeGenerator>
+{
+    LRegExpPrototypeOptimizable* ins_;
+
+  public:
+    explicit OutOfLineRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
+      : ins_(ins)
+    { }
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineRegExpPrototypeOptimizable(this);
+    }
+    LRegExpPrototypeOptimizable* ins() const {
+        return ins_;
+    }
+};
+
+void
+CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    OutOfLineRegExpPrototypeOptimizable* ool = new(alloc()) OutOfLineRegExpPrototypeOptimizable(ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    masm.loadJSContext(temp);
+    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
+    masm.loadPtr(Address(temp, JSCompartment::offsetOfRegExps()), temp);
+    masm.loadPtr(Address(temp, RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape()),
+                 temp);
+
+    masm.loadPtr(Address(object, JSObject::offsetOfShape()), output);
+    masm.branchPtr(Assembler::NotEqual, output, temp, ool->entry());
+    masm.move32(Imm32(0x1), output);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototypeOptimizable* ool)
+{
+    LRegExpPrototypeOptimizable* ins = ool->ins();
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    saveVolatile(output);
+
+    masm.reserveStack(sizeof(void*));
+    masm.moveStackPtrTo(temp);
+
+    masm.setupUnalignedABICall(output);
+    masm.loadJSContext(output);
+    masm.passABIArg(output);
+    masm.passABIArg(object);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, RegExpPrototypeOptimizableRaw));
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    masm.load8ZeroExtend(Address(masm.getStackPointer(), 0), output);
+    masm.freeStack(sizeof(void*));
+
+    restoreVolatile(output);
+
+    masm.jump(ool->rejoin());
 }
 
 typedef JSString* (*RegExpReplaceFn)(JSContext*, HandleString, HandleObject, HandleString);
