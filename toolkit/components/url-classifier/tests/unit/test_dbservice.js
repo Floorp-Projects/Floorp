@@ -48,13 +48,15 @@ var chunk6Urls = [
 var chunk6 = chunk6Urls.join("\n");
 
 // we are going to add chunks 1, 2, 4, 5, and 6 to phish-simple,
-// chunk 2 to malware-simple and chunk 3 to unwanted-simple.
+// chunk 2 to malware-simple, chunk 3 to unwanted-simple and
+// chunk 4 to forbid-simple.
 // Then we'll remove the urls in chunk3 from phish-simple, then
 // expire chunk 1 and chunks 4-6 from phish-simple.
 var phishExpected = {};
 var phishUnexpected = {};
 var malwareExpected = {};
 var unwantedExpected = {};
+var forbiddenExpected = {};
 for (var i = 0; i < chunk2Urls.length; i++) {
   phishExpected[chunk2Urls[i]] = true;
   malwareExpected[chunk2Urls[i]] = true;
@@ -69,6 +71,7 @@ for (var i = 0; i < chunk1Urls.length; i++) {
   phishUnexpected[chunk1Urls[i]] = true;
 }
 for (var i = 0; i < chunk4Urls.length; i++) {
+  forbiddenExpected[chunk4Urls[i]] = true;
   // chunk4 urls are expired
   phishUnexpected[chunk4Urls[i]] = true;
 }
@@ -117,7 +120,7 @@ function tablesCallbackWithoutSub(tables)
   // there's a leading \n here because splitting left an empty string
   // after the trailing newline, which will sort first
   do_check_eq(parts.join("\n"),
-              "\ntest-malware-simple;a:1\ntest-phish-simple;a:2\ntest-unwanted-simple;a:1");
+              "\ntest-forbid-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2\ntest-unwanted-simple;a:1");
 
   checkNoHost();
 }
@@ -135,7 +138,7 @@ function tablesCallbackWithSub(tables)
   // there's a leading \n here because splitting left an empty string
   // after the trailing newline, which will sort first
   do_check_eq(parts.join("\n"),
-              "\ntest-malware-simple;a:1\ntest-phish-simple;a:2:s:3\ntest-unwanted-simple;a:1");
+              "\ntest-forbid-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2:s:3\ntest-unwanted-simple;a:1");
 
   // verify that expiring a sub chunk removes its name from the list
   var data =
@@ -194,6 +197,16 @@ function unwantedExists(result) {
   }
 }
 
+function forbiddenExists(result) {
+  dumpn("forbiddenExists: " + result);
+
+  try {
+    do_check_true(result.indexOf("test-forbid-simple") != -1);
+  } finally {
+    checkDone();
+  }
+}
+
 function checkState()
 {
   numExpecting = 0;
@@ -220,6 +233,12 @@ function checkState()
   for (var key in unwantedExpected) {
     var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
     dbservice.lookup(principal, allTables, unwantedExists, true);
+    numExpecting++;
+  }
+
+  for (var key in forbiddenExpected) {
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    dbservice.lookup(principal, allTables, forbiddenExists, true);
     numExpecting++;
   }
 }
@@ -268,10 +287,13 @@ function do_adds() {
     chunk6 + "\n" +
     "i:test-malware-simple\n" +
     "a:1:32:" + chunk2.length + "\n" +
-      chunk2 + "\n" +
+    chunk2 + "\n" +
     "i:test-unwanted-simple\n" +
     "a:1:32:" + chunk3.length + "\n" +
-      chunk3 + "\n";
+    chunk3 + "\n" +
+    "i:test-forbid-simple\n" +
+    "a:1:32:" + chunk4.length + "\n" +
+    chunk4 + "\n";
 
   doSimpleUpdate(data, testAddSuccess, testFailure);
 }
