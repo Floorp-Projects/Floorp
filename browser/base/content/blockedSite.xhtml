@@ -134,6 +134,10 @@
         document.getElementById(error + "_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_" + error)
                                  .innerHTML;
+
+        // Inform the test harness that we're done loading the page
+        var event = new CustomEvent("AboutBlockedLoaded");
+        document.dispatchEvent(event);
       }
     ]]></script>
     <style type="text/css">
