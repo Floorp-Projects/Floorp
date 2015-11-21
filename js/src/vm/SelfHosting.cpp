@@ -1542,6 +1542,18 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
+    MOZ_ASSERT(!args.isConstructing());
+
+    return RegExpCreate(cx, args[0], args[1], args.rval());
+}
+
 bool
 CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
 {
@@ -2358,6 +2370,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpMatcher),
     JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
+    JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2,0),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
