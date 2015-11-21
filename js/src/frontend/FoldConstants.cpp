@@ -409,6 +409,8 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_NEWTARGET:
       case PNK_POSHOLDER:
       case PNK_SUPERCALL:
+      case PNK_SUPERBASE:
+      case PNK_SETTHIS:
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
                   "some parent node without recurring to test this node");
 
@@ -1700,7 +1702,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_BREAK:
       case PNK_CONTINUE:
       case PNK_TEMPLATE_STRING:
-      case PNK_THIS:
       case PNK_GENERATOR:
       case PNK_EXPORT_BATCH_SPEC:
       case PNK_OBJECT_PROPERTY_NAME:
@@ -1708,6 +1709,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         return true;
 
+      case PNK_SUPERBASE:
       case PNK_TYPEOFNAME:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
@@ -1767,6 +1769,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
 
       case PNK_SEMI:
+      case PNK_THIS:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         if (ParseNode*& expr = pn->pn_kid)
             return Fold(cx, &expr, parser, inGenexpLambda);
@@ -1890,6 +1893,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_CLASSMETHOD:
       case PNK_IMPORT_SPEC:
       case PNK_EXPORT_SPEC:
+      case PNK_SETTHIS:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda);

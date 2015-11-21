@@ -1022,6 +1022,8 @@ class TypeScript
      */
     static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
                                const js::Value& val);
+    static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
+                               TypeSet::Type type);
     static inline void Monitor(JSContext* cx, const js::Value& rval);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */

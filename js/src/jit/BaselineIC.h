@@ -190,32 +190,6 @@ class ICTypeUpdate_ObjectGroup : public ICStub
     };
 };
 
-// This
-//      JSOP_THIS
-
-class ICThis_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    explicit ICThis_Fallback(JitCode* stubCode)
-      : ICFallbackStub(ICStub::This_Fallback, stubCode) {}
-
-  public:
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::This_Fallback, Engine::Baseline) {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICThis_Fallback>(space, getStubCode());
-        }
-    };
-};
-
 class ICNewArray_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;

@@ -513,35 +513,6 @@ static const VMFunction DoCallNativeGetterInfo =
     FunctionInfo<DoCallNativeGetterFn>(DoCallNativeGetter);
 
 //
-// This_Fallback
-//
-
-static bool
-DoThisFallback(JSContext* cx, ICThis_Fallback* stub, HandleValue thisv, MutableHandleValue ret)
-{
-    FallbackICSpew(cx, stub, "This");
-    return BoxNonStrictThis(cx, thisv, ret);
-}
-
-typedef bool (*DoThisFallbackFn)(JSContext*, ICThis_Fallback*, HandleValue, MutableHandleValue);
-static const VMFunction DoThisFallbackInfo = FunctionInfo<DoThisFallbackFn>(DoThisFallback, TailCall);
-
-bool
-ICThis_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-    MOZ_ASSERT(R0 == JSReturnOperand);
-
-    // Restore the tail call register.
-    EmitRestoreTailCallReg(masm);
-
-    masm.pushValue(R0);
-    masm.push(ICStubReg);
-
-    return tailCallVM(DoThisFallbackInfo, masm);
-}
-
-//
 // NewArray_Fallback
 //
 

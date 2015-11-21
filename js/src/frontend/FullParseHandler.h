@@ -187,8 +187,8 @@ class FullParseHandler
         return true;
     }
 
-    ParseNode* newThisLiteral(const TokenPos& pos) {
-        return new_<ThisLiteral>(pos);
+    ParseNode* newThisLiteral(const TokenPos& pos, ParseNode* thisName) {
+        return new_<ThisLiteral>(pos, thisName);
     }
 
     ParseNode* newNullLiteral(const TokenPos& pos) {
@@ -346,14 +346,8 @@ class FullParseHandler
     ParseNode* newPosHolder(const TokenPos& pos) {
         return new_<NullaryNode>(PNK_POSHOLDER, pos);
     }
-    ParseNode* newSuperBase(const TokenPos& pos, ExclusiveContext* cx) {
-        ParseNode* node = newPosHolder(pos);
-#ifdef DEBUG
-        // Set the atom for assertion purposes
-        if (node)
-            node->pn_atom = cx->names().super;
-#endif
-        return node;
+    ParseNode* newSuperBase(ParseNode* thisName, const TokenPos& pos) {
+        return new_<UnaryNode>(PNK_SUPERBASE, JSOP_NOP, pos, thisName);
     }
 
     bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
@@ -492,6 +486,13 @@ class FullParseHandler
 
         stmtList->prepend(initialYield);
         return true;
+    }
+
+    ParseNode* newSetThis(ParseNode* thisName, ParseNode* val) {
+        MOZ_ASSERT(thisName->getOp() == JSOP_GETNAME);
+        thisName->setOp(JSOP_SETNAME);
+        thisName->markAsAssigned();
+        return newBinary(PNK_SETTHIS, thisName, val);
     }
 
     ParseNode* newEmptyStatement(const TokenPos& pos) {
@@ -709,9 +710,8 @@ class FullParseHandler
                (kind == PNK_SEMI && !node->pn_kid);
     }
 
-    bool isSuperBase(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT_IF(node->isKind(PNK_POSHOLDER), node->pn_atom == cx->names().super);
-        return node->isKind(PNK_POSHOLDER);
+    bool isSuperBase(ParseNode* node) {
+        return node->isKind(PNK_SUPERBASE);
     }
 
     inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);

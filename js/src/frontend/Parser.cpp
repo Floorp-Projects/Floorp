@@ -58,6 +58,7 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
     fun_->setFunctionBox(funbox);
     funbox->computeAllowSyntax(fun_);
     funbox->computeInWith(fun_);
+    funbox->computeThisBinding(fun_);
 }
 
 JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
@@ -131,6 +132,44 @@ SharedContext::computeAllowSyntax(JSObject* staticScope)
             break;
         }
     }
+}
+
+void
+SharedContext::computeThisBinding(JSObject* staticScope)
+{
+    for (StaticScopeIter<CanGC> it(context, staticScope); !it.done(); it++) {
+        if (it.type() == StaticScopeIter<CanGC>::Module) {
+            thisBinding_ = ThisBinding::Module;
+            return;
+        }
+
+        if (it.type() == StaticScopeIter<CanGC>::Function) {
+            // Arrow functions and generator expression lambdas don't have
+            // their own `this` binding.
+            if (it.fun().isArrow())
+                continue;
+            bool isDerived;
+            if (it.maybeFunctionBox()) {
+                if (it.maybeFunctionBox()->inGenexpLambda)
+                    continue;
+                isDerived = it.maybeFunctionBox()->isDerivedClassConstructor();
+            } else {
+                if (it.fun().nonLazyScript()->isGeneratorExp())
+                    continue;
+                isDerived = it.fun().isDerivedClassConstructor();
+            }
+
+            // Derived class constructors (including nested arrow functions and
+            // eval) need TDZ checks when accessing |this|.
+            if (isDerived)
+                needsThisTDZChecks_ = true;
+
+            thisBinding_ = ThisBinding::Function;
+            return;
+        }
+    }
+
+    thisBinding_ = ThisBinding::Global;
 }
 
 void
@@ -766,7 +805,9 @@ ModuleBox::ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObjec
     SharedContext(cx, Directives(true), false),
     bindings(),
     exportNames(cx)
-{}
+{
+    computeThisBinding(staticScope());
+}
 
 template <typename ParseHandler>
 ModuleBox*
@@ -1015,6 +1056,59 @@ Parser<FullParseHandler>::globalBody()
         return nullptr;
 
     return body;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::newThisName()
+{
+    Node thisName = newName(context->names().dotThis);
+    if (!thisName)
+        return null();
+    if (!noteNameUse(context->names().dotThis, thisName))
+        return null();
+    return thisName;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::defineFunctionThis()
+{
+    HandlePropertyName dotThis = context->names().dotThis;
+
+    // Create a declaration for '.this' if there are any unbound uses in the
+    // function body.
+    for (AtomDefnRange r = pc->lexdeps->all(); !r.empty(); r.popFront()) {
+        if (r.front().key() == dotThis) {
+            Definition* dn = r.front().value().get<FullParseHandler>();
+            MOZ_ASSERT(dn->isPlaceholder());
+            pc->sc->asFunctionBox()->setHasThisBinding();
+            return pc->define(tokenStream, dotThis, dn, Definition::VAR);
+        }
+    }
+
+    // Also define a this-binding if direct eval is used, in derived class
+    // constructors (JSOP_CHECKRETURN relies on it) or if there's a debugger
+    // statement.
+    if (pc->sc->hasDirectEval() ||
+        pc->sc->asFunctionBox()->isDerivedClassConstructor() ||
+        pc->sc->hasDebuggerStatement())
+    {
+        ParseNode* pn = newName(dotThis);
+        if (!pn)
+            return false;
+        pc->sc->asFunctionBox()->setHasThisBinding();
+        return pc->define(tokenStream, dotThis, pn, Definition::VAR);
+    }
+
+    return true;
+}
+
+template <>
+bool
+Parser<SyntaxParseHandler>::defineFunctionThis()
+{
+    return true;
 }
 
 template <>
@@ -1284,9 +1378,11 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
     }
 
     if (kind != Arrow) {
-        // Define the 'arguments' binding if necessary. Arrow functions
-        // don't have 'arguments'.
+        // Define the 'arguments' and 'this' bindings if necessary. Arrow
+        // functions don't have these bindings.
         if (!checkFunctionArguments())
+            return null();
+        if (!defineFunctionThis())
             return null();
     }
 
@@ -7648,6 +7744,7 @@ LegacyCompExprTransplanter::transplant(ParseNode* pn)
                 if (pc->sc->isDotVariable(atom)) {
                     if (dn->dn_uses == pn)
                         adjustBlockId(dn);
+                    dn->pn_dflags |= PND_CLOSED;
                 } else if (dn->pn_pos < root->pn_pos) {
                     /*
                      * The variable originally appeared to be a use of a
@@ -8071,6 +8168,8 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
     if (!genFunbox)
         return null();
 
+    genFunbox->inGenexpLambda = true;
+
     ParseContext<ParseHandler> genpc(this, outerpc, genfn, genFunbox,
                                      /* newDirectives = */ nullptr);
     if (!genpc.init(*this))
@@ -8087,7 +8186,6 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
         genFunbox->funCxFlags = outerpc->sc->asFunctionBox()->funCxFlags;
 
     MOZ_ASSERT(genFunbox->generatorKind() == comprehensionKind);
-    genFunbox->inGenexpLambda = true;
     handler.setBlockId(genfn, genpc.bodyid);
 
     Node generator = newName(context->names().dotGenerator);
@@ -8561,7 +8659,10 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
             }
         }
     } else if (tt == TOK_SUPER) {
-        lhs = handler.newSuperBase(pos(), context);
+        Node thisName = newThisName();
+        if (!thisName)
+            return null();
+        lhs = handler.newSuperBase(thisName, pos());
         if (!lhs)
             return null();
     } else {
@@ -8570,7 +8671,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
             return null();
     }
 
-    MOZ_ASSERT_IF(handler.isSuperBase(lhs, context), tokenStream.isCurrentTokenType(TOK_SUPER));
+    MOZ_ASSERT_IF(handler.isSuperBase(lhs), tokenStream.isCurrentTokenType(TOK_SUPER));
 
     while (true) {
         if (!tokenStream.getToken(&tt))
@@ -8584,7 +8685,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 return null();
             if (tt == TOK_NAME) {
                 PropertyName* field = tokenStream.currentName();
-                if (handler.isSuperBase(lhs, context) && !checkAndMarkSuperScope()) {
+                if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
                     report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "property");
                     return null();
                 }
@@ -8602,7 +8703,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
-            if (handler.isSuperBase(lhs, context) && !checkAndMarkSuperScope()) {
+            if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
                     report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
                     return null();
             }
@@ -8613,7 +8714,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                    tt == TOK_TEMPLATE_HEAD ||
                    tt == TOK_NO_SUBS_TEMPLATE)
         {
-            if (handler.isSuperBase(lhs, context)) {
+            if (handler.isSuperBase(lhs)) {
                 if (!pc->sc->isFunctionBox() || !pc->sc->asFunctionBox()->isDerivedClassConstructor()) {
                     report(ParseError, false, null(), JSMSG_BAD_SUPERCALL);
                     return null();
@@ -8638,7 +8739,10 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 if (isSpread)
                     handler.setOp(nextMember, JSOP_SPREADSUPERCALL);
 
-                return nextMember;
+                Node thisName = newThisName();
+                if (!thisName)
+                    return null();
+                return handler.newSetThis(thisName, nextMember);
             }
 
             if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
@@ -8705,7 +8809,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
             handler.setOp(nextMember, op);
         } else {
             tokenStream.ungetToken();
-            if (handler.isSuperBase(lhs, context))
+            if (handler.isSuperBase(lhs))
                 break;
             return lhs;
         }
@@ -8713,7 +8817,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
         lhs = nextMember;
     }
 
-    if (handler.isSuperBase(lhs, context)) {
+    if (handler.isSuperBase(lhs)) {
         report(ParseError, false, null(), JSMSG_BAD_SUPER);
         return null();
     }
@@ -9388,10 +9492,17 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         return handler.newBooleanLiteral(true, pos());
       case TOK_FALSE:
         return handler.newBooleanLiteral(false, pos());
-      case TOK_THIS:
+      case TOK_THIS: {
         if (pc->sc->isFunctionBox())
             pc->sc->asFunctionBox()->usesThis = true;
-        return handler.newThisLiteral(pos());
+        Node thisName = null();
+        if (pc->sc->thisBinding() == ThisBinding::Function) {
+            thisName = newThisName();
+            if (!thisName)
+                return null();
+        }
+        return handler.newThisLiteral(pos(), thisName);
+      }
       case TOK_NULL:
         return handler.newNullLiteral(pos());
 

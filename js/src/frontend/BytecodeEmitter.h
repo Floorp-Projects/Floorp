@@ -420,6 +420,18 @@ struct BytecodeEmitter
 
     bool emitNumberOp(double dval);
 
+    bool emitThisLiteral(ParseNode* pn);
+    bool emitCreateFunctionThis();
+    bool emitGetFunctionThis(ParseNode* pn);
+    bool emitGetThisForSuperBase(ParseNode* pn);
+    bool emitSetThis(ParseNode* pn);
+
+    // These functions are used to emit GETLOCAL/GETALIASEDVAR or
+    // SETLOCAL/SETALIASEDVAR for a particular binding. The CallObject must be
+    // on top of the scope chain.
+    bool emitLoadFromTopScope(BindingIter& bi);
+    bool emitStoreToTopScope(BindingIter& bi);
+
     bool emitJump(JSOp op, ptrdiff_t off, ptrdiff_t* jumpOffset = nullptr);
     bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
 
@@ -625,7 +637,7 @@ struct BytecodeEmitter
     bool emitForOf(StmtType type, ParseNode* pn);
 
     bool emitClass(ParseNode* pn);
-    bool emitSuperPropLHS(bool isCall = false);
+    bool emitSuperPropLHS(ParseNode* superBase, bool isCall = false);
     bool emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall = false);
     enum SuperElemOptions { SuperElem_Get, SuperElem_Set, SuperElem_Call, SuperElem_IncDec };
     bool emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts = SuperElem_Get);

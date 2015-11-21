@@ -130,6 +130,10 @@ class FunctionContextFlags
     bool needsHomeObject:1;
     bool isDerivedClassConstructor:1;
 
+    // Whether this function has a .this binding. If true, we need to emit
+    // JSOP_FUNCTIONTHIS in the prologue to initialize it.
+    bool hasThisBinding:1;
+
   public:
     FunctionContextFlags()
      :  mightAliasLocals(false),
@@ -138,7 +142,8 @@ class FunctionContextFlags
         argumentsHasLocalBinding(false),
         definitelyNeedsArgsObj(false),
         needsHomeObject(false),
-        isDerivedClassConstructor(false)
+        isDerivedClassConstructor(false),
+        hasThisBinding(false)
     { }
 };
 
@@ -171,6 +176,12 @@ class Directives
     }
 };
 
+// The kind of this-binding for the current scope. Note that arrow functions
+// (and generator expression lambdas) have a lexical this-binding so their
+// ThisBinding is the same as the ThisBinding of their enclosing scope and can
+// be any value.
+enum class ThisBinding { Global, Function, Module };
+
 /*
  * The struct SharedContext is part of the current parser context (see
  * ParseContext). It stores information that is reused between the parser and
@@ -187,9 +198,12 @@ class SharedContext
     bool extraWarnings;
 
   private:
+    ThisBinding thisBinding_;
+
     bool allowNewTarget_;
     bool allowSuperProperty_;
     bool inWith_;
+    bool needsThisTDZChecks_;
     bool superScopeAlreadyNeedsHomeObject_;
 
   public:
@@ -200,9 +214,11 @@ class SharedContext
         strictScript(directives.strict()),
         localStrict(false),
         extraWarnings(extraWarnings),
+        thisBinding_(ThisBinding::Global),
         allowNewTarget_(false),
         allowSuperProperty_(false),
         inWith_(false),
+        needsThisTDZChecks_(false),
         superScopeAlreadyNeedsHomeObject_(false)
     { }
 
@@ -214,6 +230,7 @@ class SharedContext
     virtual JSObject* staticScope() const = 0;
     void computeAllowSyntax(JSObject* staticScope);
     void computeInWith(JSObject* staticScope);
+    void computeThisBinding(JSObject* staticScope);
 
     virtual ObjectBox* toObjectBox() { return nullptr; }
     bool isObjectBox() { return toObjectBox() != nullptr; }
@@ -223,9 +240,13 @@ class SharedContext
     inline ModuleBox* asModuleBox();
     bool isGlobalContext() { return !toObjectBox(); }
 
+    ThisBinding thisBinding()          const { return thisBinding_; }
+
     bool allowNewTarget()              const { return allowNewTarget_; }
     bool allowSuperProperty()          const { return allowSuperProperty_; }
     bool inWith()                      const { return inWith_; }
+    bool needsThisTDZChecks()          const { return needsThisTDZChecks_; }
+
     void markSuperScopeNeedsHomeObject();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
@@ -255,7 +276,7 @@ class SharedContext
     }
 
     bool isDotVariable(JSAtom* atom) const {
-        return atom == context->names().dotGenerator;
+        return atom == context->names().dotGenerator || atom == context->names().dotThis;
     }
 };
 
@@ -265,12 +286,20 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
 
   public:
     GlobalSharedContext(ExclusiveContext* cx, ScopeObject* staticScope, Directives directives,
-                        bool extraWarnings)
+                        bool extraWarnings, JSFunction* maybeEvalCaller = nullptr)
       : SharedContext(cx, directives, extraWarnings),
         staticScope_(cx, staticScope)
     {
         computeAllowSyntax(staticScope);
         computeInWith(staticScope);
+
+        // If we're executing a Debugger eval-in-frame, staticScope is always a
+        // non-function scope, so we have to compute our ThisBinding based on
+        // the actual callee.
+        if (maybeEvalCaller)
+            computeThisBinding(maybeEvalCaller);
+        else
+            computeThisBinding(staticScope);
     }
 
     JSObject* staticScope() const override { return staticScope_; }
@@ -328,6 +357,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool mightAliasLocals()         const { return funCxFlags.mightAliasLocals; }
     bool hasExtensibleScope()       const { return funCxFlags.hasExtensibleScope; }
     bool needsDeclEnvObject()       const { return funCxFlags.needsDeclEnvObject; }
+    bool hasThisBinding()           const { return funCxFlags.hasThisBinding; }
     bool argumentsHasLocalBinding() const { return funCxFlags.argumentsHasLocalBinding; }
     bool definitelyNeedsArgsObj()   const { return funCxFlags.definitelyNeedsArgsObj; }
     bool needsHomeObject()          const { return funCxFlags.needsHomeObject; }
@@ -336,6 +366,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setMightAliasLocals()             { funCxFlags.mightAliasLocals         = true; }
     void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
     void setNeedsDeclEnvObject()           { funCxFlags.needsDeclEnvObject       = true; }
+    void setHasThisBinding()               { funCxFlags.hasThisBinding           = true; }
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
     void setDefinitelyNeedsArgsObj()       { MOZ_ASSERT(funCxFlags.argumentsHasLocalBinding);
                                              funCxFlags.definitelyNeedsArgsObj   = true; }

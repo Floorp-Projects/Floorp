@@ -461,8 +461,8 @@ MarkObjectStateChange(ExclusiveContext* cx, JSObject* obj)
 }
 
 /* Interface helpers for JSScript*. */
+extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type);
 extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, const Value& rval);
-extern void TypeDynamicResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type);
 
 /////////////////////////////////////////////////////////////////////
 // Script interface functions
@@ -555,6 +555,12 @@ TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc)
 TypeScript::Monitor(JSContext* cx, JSScript* script, jsbytecode* pc, const js::Value& rval)
 {
     TypeMonitorResult(cx, script, pc, rval);
+}
+
+/* static */ inline void
+TypeScript::Monitor(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type)
+{
+    TypeMonitorResult(cx, script, pc, type);
 }
 
 /* static */ inline void

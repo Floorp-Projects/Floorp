@@ -191,7 +191,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitSetArgumentsObjectArg(LSetArgumentsObjectArg* lir);
     void visitReturnFromCtor(LReturnFromCtor* lir);
     void visitComputeThis(LComputeThis* lir);
-    void visitLoadArrowThis(LLoadArrowThis* lir);
     void visitArrayLength(LArrayLength* lir);
     void visitSetArrayLength(LSetArrayLength* lir);
     void visitTypedArrayLength(LTypedArrayLength* lir);

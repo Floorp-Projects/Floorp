@@ -1280,17 +1280,24 @@ static const VMFunction ThrowUninitializedThisInfo =
     FunctionInfo<ThrowUninitializedThisFn>(BaselineThrowUninitializedThis);
 
 bool
-BaselineCompiler::emitCheckThis()
+BaselineCompiler::emit_JSOP_CHECKTHIS()
 {
-    frame.assertSyncedStack();
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
+    return emitCheckThis(R0);
+}
+
+bool
+BaselineCompiler::emitCheckThis(ValueOperand val)
+{
     Label thisOK;
-    masm.branchTestMagic(Assembler::NotEqual, frame.addressOfThis(), &thisOK);
+    masm.branchTestMagic(Assembler::NotEqual, val, &thisOK);
 
     prepareVMCall();
 
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(R0.scratchReg());
+    masm.loadBaselineFramePtr(BaselineFrameReg, val.scratchReg());
+    pushArg(val.scratchReg());
 
     if (!callVM(ThrowUninitializedThisInfo))
         return false;
@@ -1299,56 +1306,101 @@ BaselineCompiler::emitCheckThis()
     return true;
 }
 
+typedef bool (*ThrowBadDerivedReturnFn)(JSContext*, HandleValue);
+static const VMFunction ThrowBadDerivedReturnInfo =
+    FunctionInfo<ThrowBadDerivedReturnFn>(jit::ThrowBadDerivedReturn);
+
 bool
-BaselineCompiler::emit_JSOP_THIS()
+BaselineCompiler::emit_JSOP_CHECKRETURN()
 {
-    // |this| is undefined in modules.
-    if (module()) {
-        frame.push(UndefinedValue());
-        return true;
-    }
+    MOZ_ASSERT(script->isDerivedClassConstructor());
 
-    if (function() && function()->isArrow()) {
-        // Arrow functions store their (lexical) |this| value in an
-        // extended slot.
-        frame.syncStack(0);
-        Register scratch = R0.scratchReg();
-        masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), scratch);
-        masm.loadValue(Address(scratch, FunctionExtended::offsetOfArrowThisSlot()), R0);
-        frame.push(R0);
-        return true;
-    }
+    // Load |this| in R0, return value in R1.
+    frame.popRegsAndSync(1);
+    emitLoadReturnValue(R1);
 
-    if (script->isDerivedClassConstructor()) {
-        frame.syncStack(0);
-        if (!emitCheckThis())
-            return false;
-    }
+    Label done, returnOK;
+    masm.branchTestObject(Assembler::Equal, R1, &done);
+    masm.branchTestUndefined(Assembler::Equal, R1, &returnOK);
 
-    // Keep this value in R0
+    prepareVMCall();
+    pushArg(R1);
+    if (!callVM(ThrowBadDerivedReturnInfo))
+        return false;
+    masm.assumeUnreachable("Should throw on bad derived constructor return");
+
+    masm.bind(&returnOK);
+
+    if (!emitCheckThis(R0))
+        return false;
+
+    // Store |this| in the return value slot.
+    masm.storeValue(R0, frame.addressOfReturnValue());
+    masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
+
+    masm.bind(&done);
+    return true;
+}
+
+typedef bool (*GetFunctionThisFn)(JSContext*, BaselineFrame*, MutableHandleValue);
+static const VMFunction GetFunctionThisInfo =
+    FunctionInfo<GetFunctionThisFn>(jit::BaselineGetFunctionThis);
+
+bool
+BaselineCompiler::emit_JSOP_FUNCTIONTHIS()
+{
+    MOZ_ASSERT(function());
+    MOZ_ASSERT(!function()->isArrow());
+
     frame.pushThis();
 
     // In strict mode code or self-hosted functions, |this| is left alone.
     if (script->strict() || (function() && function()->isSelfHostedBuiltin()))
         return true;
 
-    Label skipIC;
-    // Keep |thisv| in R0
+    // Load |thisv| in R0. Skip the call if it's already an object.
+    Label skipCall;
     frame.popRegsAndSync(1);
-    // If |this| is already an object, skip the IC.
-    masm.branchTestObject(Assembler::Equal, R0, &skipIC);
+    masm.branchTestObject(Assembler::Equal, R0, &skipCall);
 
-    // Call IC
-    ICThis_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+    prepareVMCall();
+    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+
+    pushArg(R1.scratchReg());
+
+    if (!callVM(GetFunctionThisInfo))
         return false;
 
-    masm.storeValue(R0, frame.addressOfThis());
-
-    // R0 is new pushed |this| value.
-    masm.bind(&skipIC);
+    masm.bind(&skipCall);
     frame.push(R0);
+    return true;
+}
 
+typedef bool (*GetNonSyntacticGlobalThisFn)(JSContext*, HandleObject, MutableHandleValue);
+static const VMFunction GetNonSyntacticGlobalThisInfo =
+    FunctionInfo<GetNonSyntacticGlobalThisFn>(js::GetNonSyntacticGlobalThis);
+
+bool
+BaselineCompiler::emit_JSOP_GLOBALTHIS()
+{
+    frame.syncStack(0);
+
+    if (!script->hasNonSyntacticScope()) {
+        ClonedBlockObject* globalLexical = &script->global().lexicalScope();
+        masm.moveValue(globalLexical->thisValue(), R0);
+        frame.push(R0);
+        return true;
+    }
+
+    prepareVMCall();
+
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(GetNonSyntacticGlobalThisInfo))
+        return false;
+
+    frame.push(R0);
     return true;
 }
 
@@ -1522,22 +1574,20 @@ BaselineCompiler::emit_JSOP_LAMBDA()
     return true;
 }
 
-typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject,
-                                   HandleValue, HandleValue);
+typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue);
 static const VMFunction LambdaArrowInfo = FunctionInfo<LambdaArrowFn>(js::LambdaArrow);
 
 bool
 BaselineCompiler::emit_JSOP_LAMBDA_ARROW()
 {
-    // Keep pushed |this| in R0, and newTarget in R1.
-    frame.popRegsAndSync(2);
+    // Keep pushed newTarget in R0.
+    frame.popRegsAndSync(1);
 
     RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
 
     prepareVMCall();
     masm.loadPtr(frame.addressOfScopeChain(), R2.scratchReg());
 
-    pushArg(R1);
     pushArg(R0);
     pushArg(R2.scratchReg());
     pushArg(ImmGCPtr(fun));
@@ -3430,10 +3480,6 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
-typedef bool (*ThrowBadDerivedReturnFn)(JSContext*, HandleValue);
-static const VMFunction ThrowBadDerivedReturnInfo =
-    FunctionInfo<ThrowBadDerivedReturnFn>(jit::ThrowBadDerivedReturn);
-
 typedef bool (*DebugEpilogueFn)(JSContext*, BaselineFrame*, jsbytecode*);
 static const VMFunction DebugEpilogueInfo =
     FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogueOnBaselineReturn);
@@ -3441,29 +3487,6 @@ static const VMFunction DebugEpilogueInfo =
 bool
 BaselineCompiler::emitReturn()
 {
-    if (script->isDerivedClassConstructor()) {
-        frame.syncStack(0);
-
-        Label derivedDone, returnOK;
-        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &derivedDone);
-        masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, &returnOK);
-
-        // This is going to smash JSReturnOperand, but we don't care, because it's
-        // also going to throw unconditionally.
-        prepareVMCall();
-        pushArg(JSReturnOperand);
-        if (!callVM(ThrowBadDerivedReturnInfo))
-            return false;
-        masm.assumeUnreachable("Should throw on bad derived constructor return");
-
-        masm.bind(&returnOK);
-
-        if (!emitCheckThis())
-            return false;
-
-        masm.bind(&derivedDone);
-    }
-
     if (compileDebugInstrumentation_) {
         // Move return value into the frame's rval slot.
         masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());
@@ -3501,6 +3524,21 @@ BaselineCompiler::emit_JSOP_RETURN()
 
     frame.popValue(JSReturnOperand);
     return emitReturn();
+}
+
+void
+BaselineCompiler::emitLoadReturnValue(ValueOperand val)
+{
+    Label done, noRval;
+    masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
+                      Imm32(BaselineFrame::HAS_RVAL), &noRval);
+    masm.loadValue(frame.addressOfReturnValue(), val);
+    masm.jump(&done);
+
+    masm.bind(&noRval);
+    masm.moveValue(UndefinedValue(), val);
+
+    masm.bind(&done);
 }
 
 bool
@@ -3653,21 +3691,9 @@ BaselineCompiler::emit_JSOP_GETRVAL()
 {
     frame.syncStack(0);
 
-    Label norval, done;
-    Address flags = frame.addressOfFlags();
-    masm.branchTest32(Assembler::Zero, flags, Imm32(BaselineFrame::HAS_RVAL), &norval);
-    // Get the value from the return value slot, if any.
-    masm.loadValue(frame.addressOfReturnValue(), R0);
-    masm.jump(&done);
+    emitLoadReturnValue(R0);
 
-    // Push undefined otherwise.  When we throw an exception in the try
-    // block, rval is not yet initialized when entering finally block.
-    masm.bind(&norval);
-    masm.moveValue(UndefinedValue(), R0);
-
-    masm.bind(&done);
     frame.push(R0);
-
     return true;
 }
 
