@@ -321,39 +321,25 @@ InterpreterFrame::epilogue(JSContext* cx)
 }
 
 bool
-InterpreterFrame::checkThis(JSContext* cx)
+InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv)
 {
-    if (script()->isDerivedClassConstructor()) {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
-        MOZ_ASSERT(fun()->isClassConstructor());
+    MOZ_ASSERT(script()->isDerivedClassConstructor());
+    MOZ_ASSERT(isFunctionFrame());
+    MOZ_ASSERT(callee().isClassConstructor());
 
-        if (thisValue().isMagic(JS_UNINITIALIZED_LEXICAL)) {
-            RootedFunction func(cx, fun());
-            return ThrowUninitializedThis(cx, this);
-        }
+    HandleValue retVal = returnValue();
+    if (retVal.isObject())
+        return true;
+
+    if (!retVal.isUndefined()) {
+        ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, retVal, nullptr);
+        return false;
     }
-    return true;
-}
 
-bool
-InterpreterFrame::checkReturn(JSContext* cx)
-{
-    if (script()->isDerivedClassConstructor()) {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
-        MOZ_ASSERT(callee().isClassConstructor());
+    if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL))
+        return ThrowUninitializedThis(cx, this);
 
-        HandleValue retVal = returnValue();
-        if (retVal.isObject())
-            return true;
-
-        if (!retVal.isUndefined()) {
-            ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, retVal, nullptr);
-            return false;
-        }
-
-        if (!checkThis(cx))
-            return false;
-    }
+    setReturnValue(thisv);
     return true;
 }
 
@@ -1306,23 +1292,11 @@ FrameIter::argsObj() const
     return abstractFramePtr().argsObj();
 }
 
-bool
-FrameIter::computeThis(JSContext* cx) const
-{
-    MOZ_ASSERT(!done() && !isAsmJS());
-    assertSameCompartment(cx, scopeChain(cx));
-    return ComputeThis(cx, abstractFramePtr());
-}
-
 Value
-FrameIter::computedThisValue() const
+FrameIter::originalFunctionThis(JSContext* cx) const
 {
-    return abstractFramePtr().thisValue();
-}
+    MOZ_ASSERT(isNonEvalFunctionFrame());
 
-Value
-FrameIter::thisv(JSContext* cx) const
-{
     switch (data_.state_) {
       case DONE:
       case ASMJS:

@@ -193,7 +193,7 @@ class JSFunction : public js::NativeObject
     bool hasScript()                const { return flags() & INTERPRETED; }
     bool isBeingParsed()            const { return flags() & BEING_PARSED; }
 
-    // Arrow functions store their lexical |this| in the first extended slot.
+    // Arrow functions store their lexical new.target in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
     // Every class-constructor is also a method.
     bool isMethod()                 const { return kind() == Method || kind() == ClassConstructor; }
@@ -223,6 +223,10 @@ class JSFunction : public js::NativeObject
 
     bool isNamedLambda() const {
         return isLambda() && displayAtom() && !hasGuessedAtom();
+    }
+
+    bool hasLexicalThis() const {
+        return isArrow() || nonLazyScript()->isGeneratorExp();
     }
 
     bool isBuiltinFunctionConstructor();
@@ -669,18 +673,14 @@ class FunctionExtended : public JSFunction
   public:
     static const unsigned NUM_EXTENDED_SLOTS = 2;
 
-    /* Arrow functions store their lexical |this| in the first extended slot. */
-    static const unsigned ARROW_THIS_SLOT = 0;
-    static const unsigned ARROW_NEWTARGET_SLOT = 1;
+    /* Arrow functions store their lexical new.target in the first extended slot. */
+    static const unsigned ARROW_NEWTARGET_SLOT = 0;
 
     static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
     static inline size_t offsetOfExtendedSlot(unsigned which) {
         MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);
         return offsetof(FunctionExtended, extendedSlots) + which * sizeof(HeapValue);
-    }
-    static inline size_t offsetOfArrowThisSlot() {
-        return offsetOfExtendedSlot(ARROW_THIS_SLOT);
     }
     static inline size_t offsetOfArrowNewTargetSlot() {
         return offsetOfExtendedSlot(ARROW_NEWTARGET_SLOT);

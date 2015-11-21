@@ -1825,14 +1825,13 @@ class OutOfLineLambdaArrow : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue, HandleValue);
+typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue);
 static const VMFunction LambdaArrowInfo = FunctionInfo<LambdaArrowFn>(js::LambdaArrow);
 
 void
 CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
 {
     Register scopeChain = ToRegister(ool->lir->scopeChain());
-    ValueOperand thisv = ToValue(ool->lir, LLambdaArrow::ThisValue);
     ValueOperand newTarget = ToValue(ool->lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(ool->lir->output());
     const LambdaFunctionInfo& info = ool->lir->mir()->info();
@@ -1846,7 +1845,6 @@ CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
     saveLive(ool->lir);
 
     pushArg(newTarget);
-    pushArg(thisv);
     pushArg(scopeChain);
     pushArg(ImmGCPtr(info.fun));
 
@@ -1862,7 +1860,6 @@ void
 CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
-    ValueOperand thisv = ToValue(lir, LLambdaArrow::ThisValue);
     ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(lir->output());
     const LambdaFunctionInfo& info = lir->mir()->info();
@@ -1895,11 +1892,10 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
     // Initialize extended slots. Lexical |this| is stored in the first one.
     MOZ_ASSERT(info.flags & JSFunction::EXTENDED);
     static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
-    static_assert(FunctionExtended::ARROW_THIS_SLOT == 0, "|this| must be stored in first slot");
-    static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 1,
-                  "|new.target| must be stored in second slot");
-    masm.storeValue(thisv, Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-    masm.storeValue(newTarget, Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
+    static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 0,
+                  "|new.target| must be stored in first slot");
+    masm.storeValue(newTarget, Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
+    masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
     masm.bind(ool->rejoin());
 }
@@ -3590,7 +3586,7 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName* lir)
     bailoutFrom(&undefined, lir->snapshot());
 }
 
-typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
+typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue,
                               HandleString, jsbytecode*, MutableHandleValue);
 static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
 
@@ -3603,7 +3599,6 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
     pushArg(ToValue(lir, LCallDirectEval::NewTarget));
-    pushArg(ToValue(lir, LCallDirectEval::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);
 
@@ -5115,14 +5110,6 @@ CodeGenerator::visitComputeThis(LComputeThis* lir)
     masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
     masm.moveValue(value, output);
     masm.bind(ool->rejoin());
-}
-
-void
-CodeGenerator::visitLoadArrowThis(LLoadArrowThis* lir)
-{
-    Register callee = ToRegister(lir->callee());
-    ValueOperand output = ToOutValue(lir);
-    masm.loadValue(Address(callee, FunctionExtended::offsetOfArrowThisSlot()), output);
 }
 
 void

@@ -173,7 +173,9 @@ class PackedScopeCoordinate
     F(CLASSNAMES) \
     F(NEWTARGET) \
     F(POSHOLDER) \
+    F(SUPERBASE) \
     F(SUPERCALL) \
+    F(SETTHIS) \
     \
     /* Unary operators. */ \
     F(TYPEOFNAME) \
@@ -468,8 +470,12 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_NUMBER   dval        pn_dval: double value of numeric literal
  * PNK_TRUE,    nullary     pn_op: JSOp bytecode
  * PNK_FALSE,
- * PNK_NULL,
- * PNK_THIS
+ * PNK_NULL
+ *
+ * PNK_THIS,        unary   pn_kid: '.this' Name if function `this`, else nullptr
+ * PNK_SUPERBASE    unary   pn_kid: '.this' Name
+ *
+ * PNK_SETTHIS      binary  pn_left: '.this' Name, pn_right: SuperCall
  *
  * PNK_LEXICALSCOPE name    pn_objbox: block object in ObjectBox holder
  *                          pn_expr: block body
@@ -1273,10 +1279,12 @@ class ConditionalExpression : public ParseNode
     }
 };
 
-class ThisLiteral : public ParseNode
+class ThisLiteral : public UnaryNode
 {
   public:
-    explicit ThisLiteral(const TokenPos& pos) : ParseNode(PNK_THIS, JSOP_THIS, PN_NULLARY, pos) { }
+    ThisLiteral(const TokenPos& pos, ParseNode* thisName)
+      : UnaryNode(PNK_THIS, JSOP_NOP, pos, thisName)
+    { }
 };
 
 class NullLiteral : public ParseNode
@@ -1339,8 +1347,8 @@ class PropertyAccess : public ParseNode
     }
 
     bool isSuper() const {
-        // PNK_POSHOLDER cannot result from any expression syntax.
-        return expression().isKind(PNK_POSHOLDER);
+        // PNK_SUPERBASE cannot result from any expression syntax.
+        return expression().isKind(PNK_SUPERBASE);
     }
 };
 
@@ -1361,8 +1369,7 @@ class PropertyByValue : public ParseNode
     }
 
     bool isSuper() const {
-        // Like PropertyAccess above, PNK_POSHOLDER is "good enough".
-        return pn_left->isKind(PNK_POSHOLDER);
+        return pn_left->isKind(PNK_SUPERBASE);
     }
 };
 

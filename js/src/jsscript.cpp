@@ -62,14 +62,25 @@ using mozilla::PodCopy;
 using mozilla::PodZero;
 using mozilla::RotateLeft;
 
+static BindingIter
+GetBinding(HandleScript script, HandlePropertyName name)
+{
+    BindingIter bi(script);
+    while (bi->name() != name)
+        bi++;
+    return bi;
+}
+
 /* static */ BindingIter
 Bindings::argumentsBinding(ExclusiveContext* cx, HandleScript script)
 {
-    HandlePropertyName arguments = cx->names().arguments;
-    BindingIter bi(script);
-    while (bi->name() != arguments)
-        bi++;
-    return bi;
+    return GetBinding(script, cx->names().arguments);
+}
+
+/* static */ BindingIter
+Bindings::thisBinding(ExclusiveContext* cx, HandleScript script)
+{
+    return GetBinding(script, cx->names().dotThis);
 }
 
 bool
@@ -599,6 +610,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         ArgumentsHasVarBinding,
         NeedsArgsObj,
         HasMappedArgsObj,
+        FunctionHasThisBinding,
         IsGeneratorExp,
         IsLegacyGenerator,
         IsStarGenerator,
@@ -729,6 +741,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             scriptBits |= (1 << NeedsArgsObj);
         if (script->hasMappedArgsObj())
             scriptBits |= (1 << HasMappedArgsObj);
+        if (script->functionHasThisBinding())
+            scriptBits |= (1 << FunctionHasThisBinding);
         if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
             scriptBits |= (1 << OwnSource);
         if (script->isGeneratorExp())
@@ -875,6 +889,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             script->setNeedsArgsObj(true);
         if (scriptBits & (1 << HasMappedArgsObj))
             script->hasMappedArgsObj_ = true;
+        if (scriptBits & (1 << FunctionHasThisBinding))
+            script->functionHasThisBinding_ = true;
         if (scriptBits & (1 << IsGeneratorExp))
             script->isGeneratorExp_ = true;
         if (scriptBits & (1 << HasSingleton))
@@ -2846,6 +2862,8 @@ JSScript::linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScrip
     }
     script->hasMappedArgsObj_ = funbox->hasMappedArgsObj();
 
+    script->functionHasThisBinding_ = funbox->hasThisBinding();
+
     script->funLength_ = funbox->length;
 
     script->isGeneratorExp_ = funbox->inGenexpLambda;
@@ -2937,6 +2955,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         MOZ_ASSERT(script->isDerivedClassConstructor_ == funbox->isDerivedClassConstructor());
         MOZ_ASSERT(script->argumentsHasVarBinding() == funbox->argumentsHasLocalBinding());
         MOZ_ASSERT(script->hasMappedArgsObj() == funbox->hasMappedArgsObj());
+        MOZ_ASSERT(script->functionHasThisBinding() == funbox->hasThisBinding());
         MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
         MOZ_ASSERT(script->isGeneratorExp_ == funbox->inGenexpLambda);
         MOZ_ASSERT(script->generatorKind() == funbox->generatorKind());
@@ -3496,6 +3515,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
     dst->hasMappedArgsObj_ = src->hasMappedArgsObj();
+    dst->functionHasThisBinding_ = src->functionHasThisBinding();
     dst->cloneHasArray(src);
     dst->strict_ = src->strict();
     dst->explicitUseStrict_ = src->explicitUseStrict();
