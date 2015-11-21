@@ -4279,9 +4279,9 @@ CSSParserImpl::ParseKeyframeRule()
     return nullptr;
   }
 
-  // Takes ownership of declaration, and steals contents of selectorList.
+  // Takes ownership of declaration
   RefPtr<nsCSSKeyframeRule> rule =
-    new nsCSSKeyframeRule(selectorList, declaration, linenum, colnum);
+    new nsCSSKeyframeRule(Move(selectorList), declaration, linenum, colnum);
   return rule.forget();
 }
 

@@ -378,14 +378,14 @@ class nsCSSKeyframeRule final : public mozilla::css::Rule,
                                 public nsIDOMMozCSSKeyframeRule
 {
 public:
-  // WARNING: Steals the contents of aKeys
-  nsCSSKeyframeRule(InfallibleTArray<float>& aKeys,
+  // Steals the contents of aKeys
+  nsCSSKeyframeRule(InfallibleTArray<float>&& aKeys,
                     mozilla::css::Declaration* aDeclaration,
                     uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
+    , mKeys(mozilla::Move(aKeys))
     , mDeclaration(aDeclaration)
   {
-    mKeys.SwapElements(aKeys);
     mDeclaration->SetOwningRule(this);
   }
 private:
