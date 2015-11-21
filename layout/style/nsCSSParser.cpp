@@ -4281,7 +4281,8 @@ CSSParserImpl::ParseKeyframeRule()
 
   // Takes ownership of declaration
   RefPtr<nsCSSKeyframeRule> rule =
-    new nsCSSKeyframeRule(Move(selectorList), declaration, linenum, colnum);
+    new nsCSSKeyframeRule(Move(selectorList), declaration.forget(),
+                          linenum, colnum);
   return rule.forget();
 }
 
