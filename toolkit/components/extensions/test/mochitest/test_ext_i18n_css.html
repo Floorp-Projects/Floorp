@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+add_task(function* test_i18n_css() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "new " + function() {
+      function fetch(url) {
+        return new Promise((resolve, reject) => {
+          let xhr = new XMLHttpRequest;
+          xhr.open("GET", url);
+          xhr.onload = () => { resolve(xhr.responseText) };
+          xhr.onerror = reject;
+          xhr.send();
+        });
+      }
+
+      Promise.all([fetch("foo.css"), fetch("bar.CsS?x#y"), fetch("foo.txt")]).then(results => {
+
+        browser.test.assertEq("body { max-width: 42px; }", results[0], "CSS file localized");
+        browser.test.assertEq("body { max-width: 42px; }", results[1], "CSS file localized");
+
+        browser.test.assertEq("body { __MSG_foo__; }", results[2], "Text file not localized");
+
+        browser.test.notifyPass("i18n-css");
+      });
+
+      browser.test.sendMessage("ready", browser.runtime.getURL("foo.css"));
+    },
+
+    manifest: {
+      "web_accessible_resources": ["foo.css", "foo.txt", "locale.css"],
+
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "css": ["foo.css"],
+      }],
+
+      "default_locale": "en",
+    },
+
+    files: {
+      "_locales/en/messages.json": JSON.stringify({
+        "foo": {
+          "message": "max-width: 42px",
+          "description": "foo",
+        },
+      }),
+
+      "foo.css": "body { __MSG_foo__; }",
+      "bar.CsS": "body { __MSG_foo__; }",
+      "foo.txt": "body { __MSG_foo__; }",
+      "locale.css": '* { content: "__MSG_@@ui_locale__ __MSG_@@bidi_dir__ __MSG_@@bidi_reversed_dir__ __MSG_@@bidi_start_edge__ __MSG_@@bidi_end_edge__" }',
+    },
+  });
+
+  yield extension.startup();
+  let cssURL = yield extension.awaitMessage("ready");
+
+  function fetch(url) {
+    return new Promise((resolve, reject) => {
+      let xhr = new XMLHttpRequest;
+      xhr.open("GET", url);
+      xhr.onload = () => { resolve(xhr.responseText) };
+      xhr.onerror = reject;
+      xhr.send();
+    });
+  }
+
+  let css = yield fetch(cssURL);
+
+  is(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
+
+  let win = window.open("file_sample.html");
+  yield waitForLoad(win);
+
+  let style = win.getComputedStyle(win.document.body);
+  is(style.maxWidth, "42px", "stylesheet correctly applied");
+  win.close();
+
+  cssURL = cssURL.replace(/foo.css$/, "locale.css");
+
+  css = yield fetch(cssURL);
+  is(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
+
+  const LOCALE = "general.useragent.locale";
+  const DIR = "intl.uidirection.en";
+
+  // We don't wind up actually switching the chrome registry locale, since we
+  // don't have a chrome package for Hebrew. So just override it.
+  SpecialPowers.setCharPref(LOCALE, "he");
+  SpecialPowers.setCharPref(DIR, "rtl");
+
+  css = yield fetch(cssURL);
+  is(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
+
+  SpecialPowers.clearUserPref(LOCALE);
+  SpecialPowers.clearUserPref(DIR);
+
+  yield extension.awaitFinish("i18n-css");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
