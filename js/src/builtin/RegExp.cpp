@@ -1023,3 +1023,84 @@ js::regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setBoolean(status == RegExpRunStatus_Success);
     return status != RegExpRunStatus_Error;
 }
+
+bool
+js::RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp)
+{
+    // This can only be called from self-hosted code.
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    uint8_t result = false;
+    if (!RegExpPrototypeOptimizableRaw(cx, &args[0].toObject(), &result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+bool
+js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto, uint8_t* result)
+{
+    JS::AutoCheckCannotGC nogc;
+    if (!proto->isNative()) {
+        *result = false;
+        return true;
+    }
+
+    NativeObject* nproto = static_cast<NativeObject*>(proto);
+
+    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpPrototypeShape();
+    if (shape == nproto->lastProperty()) {
+        *result = true;
+        return true;
+    }
+
+    JSNative globalGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().global), &globalGetter))
+        return false;
+
+    if (globalGetter != regexp_global) {
+        *result = false;
+        return true;
+    }
+
+    JSNative stickyGetter;
+    if (!GetOwnNativeGetterPure(cx, proto, NameToId(cx->names().sticky), &stickyGetter))
+        return false;
+
+    if (stickyGetter != regexp_sticky) {
+        *result = false;
+        return true;
+    }
+
+    // Check if @@match, @@search, and exec are own data properties,
+    // those values should be tested in selfhosted JS.
+    bool has = false;
+    if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().match), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+
+    /*
+    if (!HasOwnDataPropertyPure(cx, proto, SYMBOL_TO_JSID(cx->wellKnownSymbols().search), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+    */
+
+    if (!HasOwnDataPropertyPure(cx, proto, NameToId(cx->names().exec), &has))
+        return false;
+    if (!has) {
+        *result = false;
+        return true;
+    }
+
+    cx->compartment()->regExps.setOptimizableRegExpPrototypeShape(nproto->lastProperty());
+    *result = true;
+    return true;
+}

@@ -2371,6 +2371,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2,0),
+    JS_INLINABLE_FN("RegExpPrototypeOptimizable", RegExpPrototypeOptimizable, 1,0,
+                    RegExpPrototypeOptimizable),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),

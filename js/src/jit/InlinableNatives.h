@@ -68,6 +68,7 @@
     _(RegExpMatcher)                \
     _(RegExpTester)                 \
     _(IsRegExpObject)               \
+    _(RegExpPrototypeOptimizable)   \
                                     \
     _(String)                       \
     _(StringSplit)                  \
