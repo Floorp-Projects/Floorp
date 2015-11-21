@@ -61,6 +61,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
+  LocaleData,
   MessageBroker,
   Messenger,
   injectAPI,
@@ -347,12 +348,7 @@ this.ExtensionData = function(rootURI)
 
   this.manifest = null;
   this.id = null;
-  // Map(locale-name -> Map(message-key -> localized-strings))
-  //
-  // Contains a key for each loaded locale, each of which is a
-  // Map of message keys to their localized strings.
-  this.localeMessages = new Map();
-  this.selectedLocale = null;
+  this.localeData = null;
   this._promiseLocales = null;
 
   this.errors = [];
@@ -373,91 +369,6 @@ ExtensionData.prototype = {
   packagingError(message) {
     this.errors.push(message);
     this.logger.error(`Loading extension '${this.id}': ${message}`);
-  },
-
-  // https://developer.chrome.com/extensions/i18n
-  localizeMessage(message, substitutions = [], locale = this.selectedLocale, defaultValue = "??") {
-    let locales = new Set([locale, this.defaultLocale]
-                          .filter(locale => this.localeMessages.has(locale)));
-
-    // Message names are case-insensitive, so normalize them to lower-case.
-    message = message.toLowerCase();
-    for (let locale of locales) {
-      let messages = this.localeMessages.get(locale);
-      if (messages.has(message)) {
-        let str = messages.get(message)
-
-        if (!Array.isArray(substitutions)) {
-          substitutions = [substitutions];
-        }
-
-        let replacer = (matched, index, dollarSigns) => {
-          if (index) {
-            // This is not quite Chrome-compatible. Chrome consumes any number
-            // of digits following the $, but only accepts 9 substitutions. We
-            // accept any number of substitutions.
-            index = parseInt(index) - 1;
-            return index in substitutions ? substitutions[index] : "";
-          } else {
-            // For any series of contiguous `$`s, the first is dropped, and
-            // the rest remain in the output string.
-            return dollarSigns;
-          }
-        };
-        return str.replace(/\$(?:([1-9]\d*)|(\$+))/g, replacer);
-      }
-    }
-
-    // Check for certain pre-defined messages.
-    if (message == "@@extension_id") {
-      if ("uuid" in this) {
-        // Per Chrome, this isn't available before an ID is guaranteed
-        // to have been assigned, namely, in manifest files.
-        // This should only be present in instances of the |Extension|
-        // subclass.
-        return this.uuid;
-      }
-    } else if (message == "@@ui_locale") {
-      return Locale.getLocale();
-    } else if (message == "@@bidi_dir") {
-      return "ltr"; // FIXME
-    }
-
-    Cu.reportError(`Unknown localization message ${message}`);
-    return defaultValue;
-  },
-
-  // Localize a string, replacing all |__MSG_(.*)__| tokens with the
-  // matching string from the current locale, as determined by
-  // |this.selectedLocale|.
-  //
-  // This may not be called before calling either |initLocale| or
-  // |initAllLocales|.
-  localize(str, locale = this.selectedLocale) {
-    if (!str) {
-      return str;
-    }
-
-    return str.replace(/__MSG_([A-Za-z0-9@_]+?)__/g, (matched, message) => {
-      return this.localizeMessage(message, [], locale, matched);
-    });
-  },
-
-  // If a "default_locale" is specified in that manifest, returns it
-  // as a Gecko-compatible locale string. Otherwise, returns null.
-  get defaultLocale() {
-    if ("default_locale" in this.manifest) {
-      return this.normalizeLocaleCode(this.manifest.default_locale);
-    }
-
-    return null;
-  },
-
-  // Normalizes a Chrome-compatible locale code to the appropriate
-  // Gecko-compatible variant. Currently, this means simply
-  // replacing underscores with hyphens.
-  normalizeLocaleCode(locale) {
-    return String.replace(locale, /_/g, "-");
   },
 
   readDirectory: Task.async(function* (path) {
@@ -564,59 +475,29 @@ ExtensionData.prototype = {
     });
   },
 
-  // Validates the contents of a locale JSON file, normalizes the
-  // messages into a Map of message key -> localized string pairs.
-  processLocale(locale, messages) {
-    let result = new Map();
+  localizeMessage(...args) {
+    return this.localeData.localizeMessage(...args);
+  },
 
-    // Chrome does not document the semantics of its localization
-    // system very well. It handles replacements by pre-processing
-    // messages, replacing |$[a-zA-Z0-9@_]+$| tokens with the value of their
-    // replacements. Later, it processes the resulting string for
-    // |$[0-9]| replacements.
-    //
-    // Again, it does not document this, but it accepts any number
-    // of sequential |$|s, and replaces them with that number minus
-    // 1. It also accepts |$| followed by any number of sequential
-    // digits, but refuses to process a localized string which
-    // provides more than 9 substitutions.
-    if (!instanceOf(messages, "Object")) {
-      this.packagingError(`Invalid locale data for ${locale}`);
-      return result;
+  localize(...args) {
+    return this.localeData.localize(...args);
+  },
+
+  // If a "default_locale" is specified in that manifest, returns it
+  // as a Gecko-compatible locale string. Otherwise, returns null.
+  get defaultLocale() {
+    if ("default_locale" in this.manifest) {
+      return this.normalizeLocaleCode(this.manifest.default_locale);
     }
 
-    for (let key of Object.keys(messages)) {
-      let msg = messages[key];
+    return null;
+  },
 
-      if (!instanceOf(msg, "Object") || typeof(msg.message) != "string") {
-        this.packagingError(`Invalid locale message data for ${locale}, message ${JSON.stringify(key)}`);
-        continue;
-      }
-
-      // Substitutions are case-insensitive, so normalize all of their names
-      // to lower-case.
-      let placeholders = new Map();
-      if (instanceOf(msg.placeholders, "Object")) {
-        for (let key of Object.keys(msg.placeholders)) {
-          placeholders.set(key.toLowerCase(), msg.placeholders[key]);
-        }
-      }
-
-      let replacer = (match, name) => {
-        let replacement = placeholders.get(name.toLowerCase());
-        if (instanceOf(replacement, "Object") && "content" in replacement) {
-          return replacement.content;
-        }
-        return "";
-      };
-
-      let value = msg.message.replace(/\$([A-Za-z0-9@_]+)\$/g, replacer);
-
-      // Message names are also case-insensitive, so normalize them to lower-case.
-      result.set(key.toLowerCase(), value);
-    }
-
-    return result;
+  // Normalizes a Chrome-compatible locale code to the appropriate
+  // Gecko-compatible variant. Currently, this means simply
+  // replacing underscores with hyphens.
+  normalizeLocaleCode(locale) {
+    return String.replace(locale, /_/g, "-");
   },
 
   // Reads the locale file for the given Gecko-compatible locale code, and
@@ -626,16 +507,13 @@ ExtensionData.prototype = {
     let dir = locales.get(locale);
     let file = `_locales/${dir}/messages.json`;
 
-    let messages = new Map();
     try {
-      messages = yield this.readJSON(file);
-      messages = this.processLocale(locale, messages);
+      let messages = yield this.readJSON(file);
+      return this.localeData.addLocale(locale, messages, this);
     } catch (e) {
       this.packagingError(`Loading locale file ${file}: ${e}`);
+      return new Map();
     }
-
-    this.localeMessages.set(locale, messages);
-    return messages;
   }),
 
   // Reads the list of locales available in the extension, and returns a
@@ -670,6 +548,7 @@ ExtensionData.prototype = {
   // as returned by |readLocaleFile|.
   initAllLocales: Task.async(function* () {
     let locales = yield this.promiseLocales();
+    this.localeData = new LocaleData({ defaultLocale: this.defaultLocale, locales });
 
     yield Promise.all(Array.from(locales.keys(),
                                  locale => this.readLocaleFile(locale)));
@@ -681,12 +560,12 @@ ExtensionData.prototype = {
                            'a directory in "_locales/". Not found: ' +
                            JSON.stringify(`_locales/${default_locale}/`));
       }
-    } else if (this.localeMessages.size) {
+    } else if (locales.size) {
       this.manifestError('The "default_locale" property is required when a ' +
                          '"_locales/" directory is present.');
     }
 
-    return this.localeMessages;
+    return this.localeData.messages;
   }),
 
   // Reads the locale file for the given Gecko-compatible locale code, or the
@@ -698,6 +577,8 @@ ExtensionData.prototype = {
   //
   // If no locales are unavailable, resolves to |null|.
   initLocale: Task.async(function* (locale = this.defaultLocale) {
+    this.localeData = new LocaleData({ defaultLocale: this.defaultLocale });
+
     if (locale == null) {
       return null;
     }
@@ -705,12 +586,13 @@ ExtensionData.prototype = {
     let promises = [this.readLocaleFile(locale)];
 
     let { defaultLocale } = this;
-    if (locale != defaultLocale && !this.localeMessages.has(defaultLocale)) {
+    if (locale != defaultLocale && !this.localeData.has(defaultLocale)) {
       promises.push(this.readLocaleFile(defaultLocale));
     }
 
     let results = yield Promise.all(promises);
-    this.selectedLocale = locale;
+
+    this.localeData.selectedLocale = locale;
     return results[0];
   }),
 };
@@ -940,6 +822,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       content_scripts: this.manifest.content_scripts || [],
       webAccessibleResources: this.webAccessibleResources,
       whiteListedHosts: this.whiteListedHosts.serialize(),
+      localeData: this.localeData.serialize(),
     };
   },
 
