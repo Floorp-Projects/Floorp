@@ -205,7 +205,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_TRUE:
       case PNK_FALSE:
       case PNK_NULL:
-      case PNK_THIS:
       case PNK_ELISION:
       case PNK_GENERATOR:
       case PNK_NUMBER:
@@ -242,9 +241,11 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_SPREAD:
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
+      case PNK_SUPERBASE:
         return PushUnaryNodeChild(pn, stack);
 
       // Nodes with a single nullable child.
+      case PNK_THIS:
       case PNK_SEMI: {
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         if (pn->pn_kid)
@@ -280,6 +281,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_LETBLOCK:
       case PNK_CLASSMETHOD:
       case PNK_NEWTARGET:
+      case PNK_SETTHIS:
       case PNK_FOR: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         stack->push(pn->pn_left);

@@ -874,6 +874,8 @@ class StaticBlockObject : public BlockObject
 
 class ClonedBlockObject : public BlockObject
 {
+    static const unsigned THIS_VALUE_SLOT = 1;
+
     static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockObject*> block,
                                      HandleObject enclosing);
 
@@ -929,7 +931,7 @@ class ClonedBlockObject : public BlockObject
      */
     static ClonedBlockObject* clone(JSContext* cx, Handle<ClonedBlockObject*> block);
 
-    Value thisValue();
+    Value thisValue() const;
 };
 
 // Internal scope object used by JSOP_BINDNAME upon encountering an
@@ -1180,6 +1182,10 @@ class DebugScopeObject : public ProxyObject
     // Get a property by 'id', but returns sentinel values instead of throwing
     // on exceptional cases.
     bool getMaybeSentinelValue(JSContext* cx, HandleId id, MutableHandleValue vp);
+
+    // Returns true iff this is a function scope with its own this-binding
+    // (all functions except arrow functions and generator expression lambdas).
+    bool isFunctionScopeWithThis();
 
     // Does this debug scope not have a dynamic counterpart or was never live
     // (and thus does not have a synthesized ScopeObject or a snapshot)?
@@ -1452,6 +1458,9 @@ bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
 uint32_t StaticScopeChainLength(JSObject* staticScope);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
+
+bool GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                                              MutableHandleValue res);
 
 bool CheckVarNameConflict(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
                           HandlePropertyName name);

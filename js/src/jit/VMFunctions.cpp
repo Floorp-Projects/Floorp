@@ -1309,5 +1309,11 @@ BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame)
     return ThrowUninitializedThis(cx, frame);
 }
 
+bool
+BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue res)
+{
+    return GetFunctionThis(cx, frame, res);
+}
+
 } // namespace jit
 } // namespace js

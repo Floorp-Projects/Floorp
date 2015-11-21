@@ -54,7 +54,6 @@ namespace jit {
     _(JSOP_UNDEFINED)          \
     _(JSOP_HOLE)               \
     _(JSOP_NULL)               \
-    _(JSOP_THIS)               \
     _(JSOP_TRUE)               \
     _(JSOP_FALSE)              \
     _(JSOP_ZERO)               \
@@ -205,6 +204,10 @@ namespace jit {
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
     _(JSOP_RETURN)             \
+    _(JSOP_FUNCTIONTHIS)       \
+    _(JSOP_GLOBALTHIS)         \
+    _(JSOP_CHECKTHIS)          \
+    _(JSOP_CHECKRETURN)        \
     _(JSOP_NEWTARGET)          \
     _(JSOP_SUPERCALL)          \
     _(JSOP_SPREADSUPERCALL)    \
@@ -259,6 +262,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
   private:
     MethodStatus emitBody();
+
+    bool emitCheckThis(ValueOperand val);
+    void emitLoadReturnValue(ValueOperand val);
 
     void emitInitializeLocals(size_t n, const Value& v);
     bool emitPrologue();
@@ -319,7 +325,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     bool emitThrowConstAssignment();
     bool emitUninitializedLexicalCheck(const ValueOperand& val);
-    bool emitCheckThis();
 
     bool addPCMappingEntry(bool addIndexEntry);
 

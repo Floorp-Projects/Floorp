@@ -6304,11 +6304,15 @@ DebuggerFrame_getThis(JSContext* cx, unsigned argc, Value* vp)
     THIS_FRAME_ITER(cx, argc, vp, "get this", args, thisobj, _, iter);
     RootedValue thisv(cx);
     {
-        AutoCompartment ac(cx, iter.scopeChain(cx));
-        if (!iter.computeThis(cx))
+        AbstractFramePtr frame = iter.abstractFramePtr();
+        AutoCompartment ac(cx, frame.scopeChain());
+
+        UpdateFrameIterPc(iter);
+
+        if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, iter.pc(), &thisv))
             return false;
-        thisv = iter.computedThisValue();
     }
+
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &thisv))
         return false;
     args.rval().set(thisv);
@@ -6596,12 +6600,11 @@ DebuggerFrame_setOnPop(JSContext* cx, unsigned argc, Value* vp)
  * go. In this case, |frame| must have a computed 'this' value, equal to |thisv|.
  */
 static bool
-EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
+EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
               jsbytecode* pc, mozilla::Range<const char16_t> chars, const char* filename,
               unsigned lineno, MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
-    MOZ_ASSERT_IF(frame, thisv.get() == frame.thisValue());
     MOZ_ASSERT_IF(frame, pc);
 
     /*
@@ -6662,7 +6665,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     }
 
     ExecuteType type = !frame ? EXECUTE_GLOBAL : EXECUTE_DEBUG;
-    return ExecuteKernel(cx, script, *env, thisv, NullValue(), type, frame, rval.address());
+    return ExecuteKernel(cx, script, *env, NullValue(), type, frame, rval.address());
 }
 
 enum EvalBindings { EvalHasExtraBindings = true, EvalWithDefaultBindings = false };
@@ -6755,22 +6758,12 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     else
         ac.emplace(cx, scope);
 
-    RootedValue thisv(cx);
     Rooted<Env*> env(cx);
     if (iter) {
-        /* ExecuteInEnv requires 'fp' to have a computed 'this" value. */
-        if (!iter->computeThis(cx))
-            return false;
-        thisv = iter->computedThisValue();
         env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
         if (!env)
             return false;
     } else {
-        /*
-         * Use the global lexical scope as 'this'. If the global is a Window
-         * object, GetThisValue should return the WindowProxy.
-         */
-        thisv = GetThisValue(scope);
         env = scope;
     }
 
@@ -6810,7 +6803,7 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
         return false;
 
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-    bool ok = EvaluateInEnv(cx, env, thisv, frame, pc, chars, url ? url : "debugger eval code",
+    bool ok = EvaluateInEnv(cx, env, frame, pc, chars, url ? url : "debugger eval code",
                             lineNumber, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }

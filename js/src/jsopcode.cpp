@@ -1186,7 +1186,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
       }
       case JSOP_UNDEFINED:
         return write(js_undefined_str);
-      case JSOP_THIS:
+      case JSOP_GLOBALTHIS:
         // |this| could convert to a very long object initialiser, so cite it by
         // its keyword name.
         return write(js_this_str);
@@ -1244,6 +1244,8 @@ ExpressionDecompiler::write(const char* s)
 bool
 ExpressionDecompiler::write(JSString* str)
 {
+    if (str == cx->names().dotThis)
+        return write("this");
     return sprinter.putString(str) >= 0;
 }
 

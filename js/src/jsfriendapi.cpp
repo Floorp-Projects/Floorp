@@ -720,8 +720,12 @@ FormatFrame(JSContext* cx, const ScriptFrameIter& iter, char* buf, int num,
         funname = fun->displayAtom();
 
     RootedValue thisVal(cx);
-    if (iter.hasUsableAbstractFramePtr() && iter.computeThis(cx)) {
-        thisVal = iter.computedThisValue();
+    if (iter.hasUsableAbstractFramePtr() &&
+        iter.isNonEvalFunctionFrame() &&
+        fun && !fun->isArrow() && !fun->isDerivedClassConstructor())
+    {
+        if (!GetFunctionThis(cx, iter.abstractFramePtr(), &thisVal))
+            return nullptr;
     }
 
     // print the frame number and function name

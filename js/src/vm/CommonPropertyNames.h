@@ -65,6 +65,7 @@
     macro(displayURL, displayURL, "displayURL") \
     macro(done, done, "done") \
     macro(dotGenerator, dotGenerator, ".generator") \
+    macro(dotThis, dotThis, ".this") \
     macro(each, each, "each") \
     macro(elementType, elementType, "elementType") \
     macro(empty, empty, "") \
