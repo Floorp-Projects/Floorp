@@ -244,17 +244,12 @@ enum class StyleBoxSizing : uint8_t {
 #define NS_STYLE_WILL_CHANGE_SCROLL             (1<<2)
 #define NS_STYLE_WILL_CHANGE_OPACITY            (1<<3)
 
-// See nsStyleDisplay
-#define NS_STYLE_ANIMATION_DIRECTION_NORMAL       0
-#define NS_STYLE_ANIMATION_DIRECTION_REVERSE      1
-#define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE    2
-#define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE    3
-
-// See nsStyleDisplay
-#define NS_STYLE_ANIMATION_FILL_MODE_NONE         0
-#define NS_STYLE_ANIMATION_FILL_MODE_FORWARDS     1
-#define NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS    2
-#define NS_STYLE_ANIMATION_FILL_MODE_BOTH         3
+// See AnimationEffectReadOnly.webidl
+// and mozilla/dom/AnimationEffectReadOnlyBinding.h
+namespace dom {
+enum class PlaybackDirection : uint32_t;
+enum class FillMode : uint32_t;
+}
 
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_ITERATION_COUNT_INFINITE 0
