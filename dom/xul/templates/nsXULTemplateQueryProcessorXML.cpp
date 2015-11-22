@@ -73,16 +73,6 @@ nsXULTemplateResultSetXML::GetNext(nsISupports **aResult)
 // nsXULTemplateQueryProcessorXML
 //
 
-static PLDHashOperator
-TraverseRuleToBindingsMap(nsISupports* aKey, nsXMLBindingSet* aMatch, void* aContext)
-{
-    nsCycleCollectionTraversalCallback *cb =
-        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mRuleToBindingsMap key");
-    cb->NoteXPCOMChild(aKey);
-    return PL_DHASH_NEXT;
-}
-  
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorXML)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorXML)
@@ -93,7 +83,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorXML)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mRequest)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorXML)
-    tmp->mRuleToBindingsMap.EnumerateRead(TraverseRuleToBindingsMap, &cb);
+    for (auto it = tmp->mRuleToBindingsMap.Iter(); !it.Done(); it.Next()) {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRuleToBindingsMap key");
+        cb.NoteXPCOMChild(it.Key());
+    }
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvaluator)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateBuilder)
