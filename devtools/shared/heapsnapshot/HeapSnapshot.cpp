@@ -15,6 +15,7 @@
 #include "js/UbiNodeCensus.h"
 #include "js/UbiNodeDominatorTree.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/devtools/AutoMemMap.h"
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/devtools/DeserializedNode.h"

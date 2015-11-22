@@ -71,7 +71,7 @@ include GraphicsMessages;
 // XXX Remove this once bug 1069073 is fixed
 include "mozilla/dom/PContentBridgeParent.h";
 
-include "mozilla/dom/indexedDB/SerializationHelpers.h";
+include "mozilla/dom/quota/SerializationHelpers.h";
 
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 

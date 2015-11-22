@@ -10,6 +10,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsCookieService.h"
+#include "nsIChannel.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsNetCID.h"
