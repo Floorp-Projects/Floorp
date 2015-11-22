@@ -9,6 +9,11 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+var {
+  instanceOf,
+} = ExtensionUtils;
+
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
 /* globals Schemas */
@@ -127,6 +132,8 @@ class ChoiceType extends Type {
         return r;
       }
     }
+
+    return {error: "No valid choice"};
   }
 
   checkBaseType(baseType) {
@@ -209,21 +216,12 @@ class StringType extends Type {
   }
 }
 
-class UnrestrictedObjectType extends Type {
-  normalize(value) {
-    return this.normalizeBase("object", value);
-  }
-
-  checkBaseType(baseType) {
-    return baseType == "object";
-  }
-}
-
 class ObjectType extends Type {
-  constructor(properties, additionalProperties) {
+  constructor(properties, additionalProperties, isInstanceOf) {
     super();
     this.properties = properties;
     this.additionalProperties = additionalProperties;
+    this.isInstanceOf = isInstanceOf;
   }
 
   checkBaseType(baseType) {
@@ -234,6 +232,21 @@ class ObjectType extends Type {
     let v = this.normalizeBase("object", value);
     if (v.error) {
       return v;
+    }
+
+    if (this.isInstanceOf) {
+      if (Object.keys(this.properties).length ||
+          !(this.additionalProperties instanceof AnyType)) {
+        throw new Error("InternalError: isInstanceOf can only be used with objects that are otherwise unrestricted");
+      }
+
+      if (!instanceOf(value, this.isInstanceOf)) {
+        return {error: `Object must be an instance of ${this.isInstanceOf}`};
+      }
+
+      // This is kind of a hack, but we can't normalize things that
+      // aren't JSON, so we just return them.
+      return {value};
     }
 
     let result = {};
@@ -341,10 +354,11 @@ class BooleanType extends Type {
 }
 
 class ArrayType extends Type {
-  constructor(itemType, minItems) {
+  constructor(itemType, minItems, maxItems) {
     super();
     this.itemType = itemType;
     this.minItems = minItems;
+    this.maxItems = maxItems;
   }
 
   normalize(value) {
@@ -364,6 +378,10 @@ class ArrayType extends Type {
 
     if (result.length < this.minItems) {
       return {error: `Array requires at least ${this.minItems} items; you have ${result.length}`};
+    }
+
+    if (result.length > this.maxItems) {
+      return {error: `Array requires at most ${this.maxItems} items; you have ${result.length}`};
     }
 
     return {value: result};
@@ -626,12 +644,8 @@ this.Schemas = {
                             type.minLength || 0,
                             type.maxLength || Infinity);
     } else if (type.type == "object") {
-      if (!type.properties) {
-        checkTypeProperties();
-        return new UnrestrictedObjectType();
-      }
       let properties = {};
-      for (let propName of Object.keys(type.properties)) {
+      for (let propName of Object.keys(type.properties || {})) {
         let propType = this.parseType(namespaceName, type.properties[propName],
                                       ["optional", "unsupported", "deprecated"]);
         properties[propName] = {
@@ -646,11 +660,12 @@ this.Schemas = {
         additionalProperties = this.parseType(namespaceName, type.additionalProperties);
       }
 
-      return new ObjectType(properties, additionalProperties);
+      checkTypeProperties("properties", "additionalProperties", "isInstanceOf");
+      return new ObjectType(properties, additionalProperties, type.isInstanceOf);
     } else if (type.type == "array") {
-      checkTypeProperties("items", "minItems");
+      checkTypeProperties("items", "minItems", "maxItems");
       return new ArrayType(this.parseType(namespaceName, type.items),
-                           type.minItems || 0);
+                           type.minItems || 0, type.maxItems || Infinity);
     } else if (type.type == "number") {
       checkTypeProperties();
       return new NumberType();

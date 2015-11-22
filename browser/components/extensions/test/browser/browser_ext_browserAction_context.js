@@ -29,25 +29,25 @@ add_task(function* testTabSwitchContext() {
           "popup": browser.runtime.getURL("2.html"),
           "title": "Title 2",
           "badge": "2",
-          "badgeBackgroundColor": [0xff, 0, 0],
+          "badgeBackgroundColor": [0xff, 0, 0, 0xff],
           "disabled": true },
         { "icon": browser.runtime.getURL("1.png"),
           "popup": browser.runtime.getURL("default-2.html"),
           "title": "Default Title 2",
           "badge": "d2",
-          "badgeBackgroundColor": [0, 0xff, 0],
+          "badgeBackgroundColor": [0, 0xff, 0, 0xff],
           "disabled": true },
         { "icon": browser.runtime.getURL("1.png"),
           "popup": browser.runtime.getURL("default-2.html"),
           "title": "Default Title 2",
           "badge": "d2",
-          "badgeBackgroundColor": [0, 0xff, 0],
+          "badgeBackgroundColor": [0, 0xff, 0, 0xff],
           "disabled": false },
         { "icon": browser.runtime.getURL("default-2.png"),
           "popup": browser.runtime.getURL("default-2.html"),
           "title": "Default Title 2",
           "badge": "d2",
-          "badgeBackgroundColor": [0, 0xff, 0] },
+          "badgeBackgroundColor": [0, 0xff, 0, 0xff] },
       ];
 
       let tabs = [];
@@ -83,7 +83,7 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setPopup({ tabId, popup: "2.html" });
           browser.browserAction.setTitle({ tabId, title: "Title 2" });
           browser.browserAction.setBadgeText({ tabId, text: "2" });
-          browser.browserAction.setBadgeBackgroundColor({ tabId, color: [0xff, 0, 0] });
+          browser.browserAction.setBadgeBackgroundColor({ tabId, color: [0xff, 0, 0, 0xff] });
           browser.browserAction.disable(tabId);
 
           expectDefaults(details[0]).then(() => {
@@ -116,7 +116,7 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setPopup({ popup: "default-2.html" });
           browser.browserAction.setTitle({ title: "Default Title 2" });
           browser.browserAction.setBadgeText({ text: "d2" });
-          browser.browserAction.setBadgeBackgroundColor({ color: [0, 0xff, 0] });
+          browser.browserAction.setBadgeBackgroundColor({ color: [0, 0xff, 0, 0xff] });
           browser.browserAction.disable();
           expectDefaults(details[3]).then(() => {
             expect(details[3]);
