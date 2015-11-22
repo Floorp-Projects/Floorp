@@ -825,12 +825,13 @@ AsyncFulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
 }
 
 static already_AddRefed<SourceSurface>
-DecodeBlob(Blob& aBlob, ErrorResult& aRv)
+DecodeBlob(Blob& aBlob)
 {
   // Get the internal stream of the blob.
   nsCOMPtr<nsIInputStream> stream;
-  aBlob.Impl()->GetInternalStream(getter_AddRefs(stream), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  ErrorResult error;
+  aBlob.Impl()->GetInternalStream(getter_AddRefs(stream), error);
+  if (NS_WARN_IF(error.Failed())) {
     return nullptr;
   }
 
@@ -842,7 +843,6 @@ DecodeBlob(Blob& aBlob, ErrorResult& aRv)
   // Get the Component object.
   nsCOMPtr<imgITools> imgtool = do_GetService(NS_IMGTOOLS_CID);
   if (NS_WARN_IF(!imgtool)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
@@ -850,8 +850,7 @@ DecodeBlob(Blob& aBlob, ErrorResult& aRv)
   NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeTypeUTF16); // NS_ConvertUTF16toUTF8 ---|> nsAutoCString
   nsCOMPtr<imgIContainer> imgContainer;
   nsresult rv = imgtool->DecodeImage(stream, mimeTypeUTF8, getter_AddRefs(imgContainer));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
@@ -861,7 +860,6 @@ DecodeBlob(Blob& aBlob, ErrorResult& aRv)
   RefPtr<SourceSurface> surface = imgContainer->GetFrame(whichFrame, frameFlags);
 
   if (NS_WARN_IF(!surface)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
@@ -869,12 +867,12 @@ DecodeBlob(Blob& aBlob, ErrorResult& aRv)
 }
 
 static already_AddRefed<layers::Image>
-DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
+DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect)
 {
   // Decode the blob into a SourceSurface.
-  RefPtr<SourceSurface> surface = DecodeBlob(aBlob, aRv);
+  RefPtr<SourceSurface> surface = DecodeBlob(aBlob);
 
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
 
@@ -900,7 +898,6 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
   }
 
   if (NS_WARN_IF(!croppedSurface)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
@@ -908,7 +905,6 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
   RefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface);
 
   if (NS_WARN_IF(!image)) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
@@ -992,11 +988,10 @@ public:
 private:
   already_AddRefed<ImageBitmap> CreateImageBitmap() override
   {
-    ErrorResult rv;
-    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, rv);
+    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect);
 
-    if (NS_WARN_IF(rv.Failed())) {
-      mPromise->MaybeReject(rv);
+    if (NS_WARN_IF(!data)) {
+      mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
       return nullptr;
     }
 
@@ -1016,21 +1011,19 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
     DecodeBlobInMainThreadSyncTask(WorkerPrivate* aWorkerPrivate,
                                    Blob& aBlob,
                                    Maybe<IntRect>& aCropRect,
-                                   ErrorResult& aError,
                                    layers::Image** aImage)
     : WorkerMainThreadRunnable(aWorkerPrivate)
     , mBlob(aBlob)
     , mCropRect(aCropRect)
-    , mError(aError)
     , mImage(aImage)
     {
     }
 
     bool MainThreadRun() override
     {
-      RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect, mError);
+      RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect);
 
-      if (NS_WARN_IF(mError.Failed())) {
+      if (NS_WARN_IF(!image)) {
         return true;
       }
 
@@ -1042,7 +1035,6 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
   private:
     Blob& mBlob;
     Maybe<IntRect>& mCropRect;
-    ErrorResult& mError;
     layers::Image** mImage;
   };
 
@@ -1069,12 +1061,17 @@ private:
     ErrorResult rv;
     RefPtr<DecodeBlobInMainThreadSyncTask> task =
       new DecodeBlobInMainThreadSyncTask(mWorkerPrivate, *mBlob, mCropRect,
-                                         rv, getter_AddRefs(data));
+                                         getter_AddRefs(data));
     task->Dispatch(rv); // This is a synchronous call.
 
     if (NS_WARN_IF(rv.Failed())) {
       // XXXbz does this really make sense if we're shutting down?  Ah, well.
       mPromise->MaybeReject(rv);
+      return nullptr;
+    }
+    
+    if (NS_WARN_IF(!data)) {
+      mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
       return nullptr;
     }
 
