@@ -123,7 +123,7 @@ let json = [
        name: "quosimodo",
        type: "function",
        parameters: [
-         {name: "xyz", type: "object"},
+         {name: "xyz", type: "object", additionalProperties: {type: "any"}},
        ],
      },
    ],
