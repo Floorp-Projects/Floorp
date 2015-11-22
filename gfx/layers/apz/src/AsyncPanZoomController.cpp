@@ -1548,6 +1548,14 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
     UpdateSharedCompositorFrameMetrics();
   }
 
+  // Non-negative focus point would indicate that one finger is still down
+  if (aEvent.mFocusPoint.x != -1 && aEvent.mFocusPoint.y != -1) {
+    mPanDirRestricted = false;
+    mX.StartTouch(aEvent.mFocusPoint.x, aEvent.mTime);
+    mY.StartTouch(aEvent.mFocusPoint.y, aEvent.mTime);
+    SetState(TOUCHING);
+  }
+
   return nsEventStatus_eConsumeNoDefault;
 }
 
