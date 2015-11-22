@@ -200,7 +200,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerAPI((extension, context) => {
+extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
   return {
     browserAction: {
       onClicked: new EventManager(context, "browserAction.onClicked", fire => {
@@ -215,45 +215,45 @@ extensions.registerAPI((extension, context) => {
       }).api(),
 
       enable: function(tabId) {
-        let tab = tabId ? TabManager.getTab(tabId) : null;
+        let tab = tabId !== null ? TabManager.getTab(tabId) : null;
         browserActionOf(extension).setProperty(tab, "enabled", true);
       },
 
       disable: function(tabId) {
-        let tab = tabId ? TabManager.getTab(tabId) : null;
+        let tab = tabId !== null ? TabManager.getTab(tabId) : null;
         browserActionOf(extension).setProperty(tab, "enabled", false);
       },
 
       setTitle: function(details) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         browserActionOf(extension).setProperty(tab, "title", details.title);
       },
 
       getTitle: function(details, callback) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let title = browserActionOf(extension).getProperty(tab, "title");
         runSafe(context, callback, title);
       },
 
       setIcon: function(details, callback) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let icon = IconDetails.normalize(details, extension, context);
         browserActionOf(extension).setProperty(tab, "icon", icon);
       },
 
       setBadgeText: function(details) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         browserActionOf(extension).setProperty(tab, "badgeText", details.text);
       },
 
       getBadgeText: function(details, callback) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let text = browserActionOf(extension).getProperty(tab, "badgeText");
         runSafe(context, callback, text);
       },
 
       setPopup: function(details) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         // Note: Chrome resolves arguments to setIcon relative to the calling
         // context, but resolves arguments to setPopup relative to the extension
         // root.
@@ -264,18 +264,18 @@ extensions.registerAPI((extension, context) => {
       },
 
       getPopup: function(details, callback) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let popup = browserActionOf(extension).getProperty(tab, "popup");
         runSafe(context, callback, popup);
       },
 
       setBadgeBackgroundColor: function(details) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         browserActionOf(extension).setProperty(tab, "badgeBackgroundColor", details.color);
       },
 
       getBadgeBackgroundColor: function(details, callback) {
-        let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
+        let tab = details.tabId !== null ? TabManager.getTab(details.tabId) : null;
         let color = browserActionOf(extension).getProperty(tab, "badgeBackgroundColor");
         runSafe(context, callback, color);
       },
