@@ -393,6 +393,21 @@ public:
     : APZCBasicTester(AsyncPanZoomController::USE_GESTURE_DETECTOR)
   {
   }
+
+protected:
+  FrameMetrics GetPinchableFrameMetrics()
+  {
+    FrameMetrics fm;
+    fm.SetCompositionBounds(ParentLayerRect(200, 200, 100, 200));
+    fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
+    fm.SetScrollOffset(CSSPoint(300, 300));
+    fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
+    // APZC only allows zooming on the root scrollable frame.
+    fm.SetIsRootContent(true);
+    // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
+    return fm;
+  }
+
 };
 
 /* The InputReceiver template parameter used in the helper functions below needs
@@ -920,6 +935,82 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
   EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
   EXPECT_EQ(originalMetrics.GetScrollOffset().y, fm.GetScrollOffset().y);
 
+  apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+
+  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+  apzc->SetFrameMetrics(originalMetrics);
+
+  MakeApzcZoomable();
+
+  // Test parameters
+  float zoomAmount = 1.25;
+  float pinchLength = 100.0;
+  float pinchLengthScaled = pinchLength * zoomAmount;
+  int focusX = 250;
+  int focusY = 300;
+  int panDistance = 20;
+
+  int firstFingerId = 0;
+  int secondFingerId = firstFingerId + 1;
+
+  // Put fingers down
+  MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX, focusY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, focusX, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Spread fingers out to enter the pinch state
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX - pinchLength, focusY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, focusX + pinchLength, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Do the actual pinch of 1.25x
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, focusX + pinchLengthScaled, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Verify that the zoom changed, just to make sure our code above did what it
+  // was supposed to.
+  FrameMetrics zoomedMetrics = apzc->GetFrameMetrics();
+  float newZoom = zoomedMetrics.GetZoom().ToScaleFactor().scale;
+  EXPECT_EQ(originalMetrics.GetZoom().ToScaleFactor().scale * zoomAmount, newZoom);
+
+  // Now we lift one finger...
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, focusX + pinchLengthScaled, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // ... and pan with the remaining finger. This pan just breaks through the
+  // distance threshold.
+  focusY += 40;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // This one does an actual pan of 20 pixels
+  focusY += panDistance;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Lift the remaining finger
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Verify that we scrolled
+  FrameMetrics finalMetrics = apzc->GetFrameMetrics();
+  EXPECT_EQ(zoomedMetrics.GetScrollOffset().y - (panDistance / newZoom), finalMetrics.GetScrollOffset().y);
+
+  // Clear out any remaining fling animation and pending tasks
+  apzc->AdvanceAnimationsUntilEnd();
+  while (mcc->RunThroughDelayedTasks());
   apzc->AssertStateIsReset();
 }
 
