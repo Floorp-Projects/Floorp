@@ -17,6 +17,7 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
+#include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/MessagePortChild.h"
@@ -167,6 +168,23 @@ BackgroundChildImpl::AllocPBackgroundIDBFactoryChild(
 bool
 BackgroundChildImpl::DeallocPBackgroundIDBFactoryChild(
                                              PBackgroundIDBFactoryChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundIndexedDBUtilsChild*
+BackgroundChildImpl::AllocPBackgroundIndexedDBUtilsChild()
+{
+  MOZ_CRASH("PBackgroundIndexedDBUtilsChild actors should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
+                                         PBackgroundIndexedDBUtilsChild* aActor)
 {
   MOZ_ASSERT(aActor);
 

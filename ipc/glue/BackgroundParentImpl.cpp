@@ -195,6 +195,28 @@ BackgroundParentImpl::DeallocPBackgroundIDBFactoryParent(
 }
 
 auto
+BackgroundParentImpl::AllocPBackgroundIndexedDBUtilsParent()
+  -> PBackgroundIndexedDBUtilsParent*
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::indexedDB::AllocPBackgroundIndexedDBUtilsParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundIndexedDBUtilsParent(
+                                        PBackgroundIndexedDBUtilsParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return
+    mozilla::dom::indexedDB::DeallocPBackgroundIndexedDBUtilsParent(aActor);
+}
+
+auto
 BackgroundParentImpl::AllocPBlobParent(const BlobConstructorParams& aParams)
   -> PBlobParent*
 {

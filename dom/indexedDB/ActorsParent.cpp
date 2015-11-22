@@ -43,6 +43,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBRequestParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
+#include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/quota/Client.h"
@@ -8488,6 +8489,86 @@ private:
   SendSuccessResult() override;
 };
 
+class Utils final
+  : public PBackgroundIndexedDBUtilsParent
+{
+#ifdef DEBUG
+  bool mActorDestroyed;
+#endif
+
+public:
+  Utils();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Utils)
+
+private:
+  // Reference counted.
+  ~Utils();
+
+  // IPDL methods are only called by IPDL.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual bool
+  RecvDeleteMe() override;
+
+  virtual bool
+  RecvGetFileReferences(const PersistenceType& aPersistenceType,
+                        const nsCString& aOrigin,
+                        const nsString& aDatabaseName,
+                        const int64_t& aFileId,
+                        int32_t* aRefCnt,
+                        int32_t* aDBRefCnt,
+                        int32_t* aSliceRefCnt,
+                        bool* aResult) override;
+};
+
+class GetFileReferencesHelper final
+  : public nsRunnable
+{
+  PersistenceType mPersistenceType;
+  nsCString mOrigin;
+  nsString mDatabaseName;
+  int64_t mFileId;
+
+  mozilla::Mutex mMutex;
+  mozilla::CondVar mCondVar;
+  int32_t mMemRefCnt;
+  int32_t mDBRefCnt;
+  int32_t mSliceRefCnt;
+  bool mResult;
+  bool mWaiting;
+
+public:
+  GetFileReferencesHelper(PersistenceType aPersistenceType,
+                          const nsACString& aOrigin,
+                          const nsAString& aDatabaseName,
+                          int64_t aFileId)
+    : mPersistenceType(aPersistenceType)
+    , mOrigin(aOrigin)
+    , mDatabaseName(aDatabaseName)
+    , mFileId(aFileId)
+    , mMutex("GetFileReferencesHelper::mMutex")
+    , mCondVar(mMutex, "GetFileReferencesHelper::mCondVar")
+    , mMemRefCnt(-1)
+    , mDBRefCnt(-1)
+    , mSliceRefCnt(-1)
+    , mResult(false)
+    , mWaiting(true)
+  { }
+
+  nsresult
+  DispatchAndReturnFileReferences(int32_t* aMemRefCnt,
+                                  int32_t* aDBRefCnt,
+                                  int32_t* aSliceRefCnt,
+                                  bool* aResult);
+
+private:
+  ~GetFileReferencesHelper() {}
+
+  NS_DECL_NSIRUNNABLE
+};
+
 class PermissionRequestHelper final
   : public PermissionRequestBase
   , public PIndexedDBPermissionRequestParent
@@ -9467,6 +9548,26 @@ DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor)
   MOZ_ASSERT(aActor);
 
   RefPtr<Factory> actor = dont_AddRef(static_cast<Factory*>(aActor));
+  return true;
+}
+
+PBackgroundIndexedDBUtilsParent*
+AllocPBackgroundIndexedDBUtilsParent()
+{
+  AssertIsOnBackgroundThread();
+
+  RefPtr<Utils> actor = new Utils();
+
+  return actor.forget().take();
+}
+
+bool
+DeallocPBackgroundIndexedDBUtilsParent(PBackgroundIndexedDBUtilsParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  RefPtr<Utils> actor = dont_AddRef(static_cast<Utils*>(aActor));
   return true;
 }
 
@@ -26908,6 +27009,172 @@ ContinueOp::SendSuccessResult()
   mCursor->SendResponseInternal(mResponse, mFiles);
 
   mResponseSent = true;
+  return NS_OK;
+}
+
+Utils::Utils()
+#ifdef DEBUG
+  : mActorDestroyed(false)
+#endif
+{
+  AssertIsOnBackgroundThread();
+}
+
+Utils::~Utils()
+{
+  MOZ_ASSERT(mActorDestroyed);
+}
+
+void
+Utils::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+#ifdef DEBUG
+  mActorDestroyed = true;
+#endif
+}
+
+bool
+Utils::RecvDeleteMe()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  return PBackgroundIndexedDBUtilsParent::Send__delete__(this);
+}
+
+bool
+Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
+                             const nsCString& aOrigin,
+                             const nsString& aDatabaseName,
+                             const int64_t& aFileId,
+                             int32_t* aRefCnt,
+                             int32_t* aDBRefCnt,
+                             int32_t* aSliceRefCnt,
+                             bool* aResult)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aRefCnt);
+  MOZ_ASSERT(aDBRefCnt);
+  MOZ_ASSERT(aSliceRefCnt);
+  MOZ_ASSERT(aResult);
+  MOZ_ASSERT(!mActorDestroyed);
+
+  if (NS_WARN_IF(!IndexedDatabaseManager::Get() ||
+                 !QuotaManager::Get())) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(aPersistenceType != quota::PERSISTENCE_TYPE_PERSISTENT &&
+                 aPersistenceType != quota::PERSISTENCE_TYPE_TEMPORARY &&
+                 aPersistenceType != quota::PERSISTENCE_TYPE_DEFAULT)) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(aOrigin.IsEmpty())) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(aDatabaseName.IsEmpty())) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (NS_WARN_IF(aFileId == 0)) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  RefPtr<GetFileReferencesHelper> helper =
+    new GetFileReferencesHelper(aPersistenceType, aOrigin, aDatabaseName,
+                                aFileId);
+
+  nsresult rv =
+    helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
+                                            aSliceRefCnt, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return true;
+}
+
+nsresult
+GetFileReferencesHelper::DispatchAndReturnFileReferences(int32_t* aMemRefCnt,
+                                                         int32_t* aDBRefCnt,
+                                                         int32_t* aSliceRefCnt,
+                                                         bool* aResult)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aMemRefCnt);
+  MOZ_ASSERT(aDBRefCnt);
+  MOZ_ASSERT(aSliceRefCnt);
+  MOZ_ASSERT(aResult);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsresult rv =
+    quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mozilla::MutexAutoLock autolock(mMutex);
+  while (mWaiting) {
+    mCondVar.Wait();
+  }
+
+  *aMemRefCnt = mMemRefCnt;
+  *aDBRefCnt = mDBRefCnt;
+  *aSliceRefCnt = mSliceRefCnt;
+  *aResult = mResult;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GetFileReferencesHelper::Run()
+{
+  AssertIsOnIOThread();
+
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+  MOZ_ASSERT(mgr);
+
+  RefPtr<FileManager> fileManager =
+    mgr->GetFileManager(mPersistenceType, mOrigin, mDatabaseName);
+
+  if (fileManager) {
+    RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(mFileId);
+
+    if (fileInfo) {
+      fileInfo->GetReferences(&mMemRefCnt, &mDBRefCnt, &mSliceRefCnt);
+
+      if (mMemRefCnt != -1) {
+        // We added an extra temp ref, so account for that accordingly.
+        mMemRefCnt--;
+      }
+
+      mResult = true;
+    }
+  }
+
+  mozilla::MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mWaiting);
+
+  mWaiting = false;
+  mCondVar.Notify();
+
   return NS_OK;
 }
 
