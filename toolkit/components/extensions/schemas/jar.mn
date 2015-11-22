@@ -6,5 +6,6 @@ toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/schemas/cookies.json
     content/extensions/schemas/extension_types.json
+    content/extensions/schemas/idle.json
     content/extensions/schemas/web_navigation.json
     content/extensions/schemas/web_request.json
