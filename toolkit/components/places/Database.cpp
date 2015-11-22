@@ -177,7 +177,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   nsAutoCString journalMode;
   switch (aJournalMode) {
     default:
-      MOZ_ASSERT(false, "Trying to set an unknown journal mode.");
+      MOZ_FALLTHROUGH_ASSERT("Trying to set an unknown journal mode.");
       // Fall through to the default DELETE journal.
     case JOURNAL_DELETE:
       journalMode.AssignLiteral("delete");
