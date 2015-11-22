@@ -131,11 +131,11 @@ public:
   static nsresult GetOrCreate(ManagerId* aManagerId, Manager** aManagerOut);
   static already_AddRefed<Manager> Get(ManagerId* aManagerId);
 
-  // Synchronously shutdown from main thread.  This spins the event loop.
-  static void ShutdownAllOnMainThread();
+  // Synchronously shutdown.  This spins the event loop.
+  static void ShutdownAll();
 
   // Cancel actions for given origin or all actions if passed string is null.
-  static void AbortOnMainThread(const nsACString& aOrigin);
+  static void Abort(const nsACString& aOrigin);
 
   // Must be called by Listener objects before they are destroyed.
   void RemoveListener(Listener* aListener);

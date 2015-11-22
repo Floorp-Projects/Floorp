@@ -92,22 +92,11 @@ function resetQuotaManager() {
     var pref = 'dom.quotaManager.testing';
     prefService.getBranch(null).setBoolPref(pref, true);
 
-    qm.reset();
+    var request = qm.reset();
+    request.callback = resolve;
 
     // disable quota manager testing mode
     //prefService.getBranch(null).setBoolPref(pref, false);
-
-    var uri = Cc['@mozilla.org/network/io-service;1']
-              .getService(Ci.nsIIOService)
-              .newURI('http://example.com', null, null);
-    var principal = Cc['@mozilla.org/scriptsecuritymanager;1']
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getSystemPrincipal();
-
-    // use getUsageForPrincipal() to get a callback when the reset() is done
-    qm.getUsageForPrincipal(principal, function(principal, usage, fileUsage) {
-      resolve(usage);
-    });
   });
 }
 
