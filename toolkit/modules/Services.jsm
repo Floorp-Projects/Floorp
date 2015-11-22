@@ -102,6 +102,7 @@ var initTable = [
   ["blocklist", "@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
   ["netUtils", "@mozilla.org/network/util;1", "nsINetUtil"],
   ["loadContextInfo", "@mozilla.org/load-context-info-factory;1", "nsILoadContextInfoFactory"],
+  ["qms", "@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
 ];
 
 initTable.forEach(([name, contract, intf, enabled = true]) => {

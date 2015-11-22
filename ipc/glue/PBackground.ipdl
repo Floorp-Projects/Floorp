@@ -14,6 +14,7 @@ include protocol PFileDescriptorSet;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PNuwa;
+include protocol PQuota;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
@@ -50,6 +51,7 @@ sync protocol PBackground
   manages PMessagePort;
   manages PCameras;
   manages PNuwa;
+  manages PQuota;
   manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
@@ -83,6 +85,8 @@ parent:
   PAsmJSCacheEntry(OpenMode openMode,
                    WriteParams write,
                    PrincipalInfo principalInfo);
+
+  PQuota();
 
 child:
   PCache();

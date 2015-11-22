@@ -4,24 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "QuotaManager.h"
+#include "ActorsParent.h"
 
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIBinaryOutputStream.h"
 #include "nsIFile.h"
-#include "nsIIdleService.h"
+#include "nsIFileStreams.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIQuotaRequest.h"
 #include "nsIRunnable.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
-#include "nsIUsageCallback.h"
 #include "nsPIDOMWindow.h"
 
 #include <algorithm>
@@ -33,12 +30,19 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/quota/PQuotaParent.h"
+#include "mozilla/dom/quota/PQuotaRequestParent.h"
+#include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsAboutProtocolUtils.h"
@@ -52,11 +56,22 @@
 #include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "prio.h"
 #include "xpcpublic.h"
 
 #include "OriginScope.h"
+#include "QuotaManager.h"
+#include "QuotaManagerService.h"
 #include "QuotaObject.h"
 #include "UsageInfo.h"
+
+#define DISABLE_ASSERTS_FOR_FUZZING 0
+
+#if DISABLE_ASSERTS_FOR_FUZZING
+#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
+#else
+#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#endif
 
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
@@ -90,6 +105,16 @@
 namespace mozilla {
 namespace dom {
 namespace quota {
+
+using namespace mozilla::ipc;
+
+const bool QuotaManager::kRunningXPCShellTests =
+#ifdef ENABLE_TESTS
+  !!PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")
+#else
+  false
+#endif
+  ;
 
 // We want profiles to be platform-independent so we always need to replace
 // the same characters on every platform. Windows has the most extensive set
@@ -178,6 +203,14 @@ public:
   MatchOriginScopes(const OriginScope& aOriginScope1,
                     const OriginScope& aOriginScope2);
 
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
   const Nullable<PersistenceType>&
   GetPersistenceType() const
   {
@@ -228,7 +261,7 @@ public:
   void
   AddBlockingLock(DirectoryLockImpl* aLock)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     mBlocking.AppendElement(aLock);
   }
@@ -242,7 +275,7 @@ public:
   void
   AddBlockedOnLock(DirectoryLockImpl* aLock)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     mBlockedOn.AppendElement(aLock);
   }
@@ -250,7 +283,7 @@ public:
   void
   MaybeUnblock(DirectoryLockImpl* aLock)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     mBlockedOn.RemoveElement(aLock);
     if (mBlockedOn.IsEmpty()) {
@@ -264,15 +297,116 @@ public:
   void
   Invalidate()
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     mInvalidated = true;
   }
 
+  NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl)
+
 private:
   ~DirectoryLockImpl();
+};
+
+class QuotaManager::CreateRunnable final
+  : public BackgroundThreadObject
+  , public nsRunnable
+{
+  nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
+  nsString mBaseDirPath;
+  RefPtr<QuotaManager> mManager;
+  nsresult mResultCode;
+
+  enum class State
+  {
+    Initial,
+    CreatingManager,
+    RegisteringObserver,
+    CallingCallbacks,
+    Completed
+  };
+
+  State mState;
+
+public:
+  CreateRunnable()
+    : mResultCode(NS_OK)
+    , mState(State::Initial)
+  {
+    AssertIsOnBackgroundThread();
+  }
+
+  void
+  AddCallback(nsIRunnable* aCallback)
+  {
+    AssertIsOnOwningThread();
+    MOZ_ASSERT(aCallback);
+
+    mCallbacks.AppendElement(aCallback);
+  }
+
+private:
+  ~CreateRunnable()
+  { }
+
+  nsresult
+  Init();
+
+  nsresult
+  CreateManager();
+
+  nsresult
+  RegisterObserver();
+
+  void
+  CallCallbacks();
+
+  State
+  GetNextState(nsCOMPtr<nsIEventTarget>& aThread);
+
+  NS_DECL_NSIRUNNABLE
+};
+
+class QuotaManager::ShutdownRunnable final
+  : public nsRunnable
+{
+  // Only touched on the main thread.
+  bool& mDone;
+
+public:
+  explicit ShutdownRunnable(bool& aDone)
+    : mDone(aDone)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+private:
+  ~ShutdownRunnable()
+  { }
+
+  NS_DECL_NSIRUNNABLE
+};
+
+class QuotaManager::ShutdownObserver final
+  : public nsIObserver
+{
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
+
+public:
+  explicit ShutdownObserver(nsIEventTarget* aBackgroundThread)
+    : mBackgroundThread(aBackgroundThread)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+private:
+  ~ShutdownObserver()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 };
 
 namespace {
@@ -506,38 +640,92 @@ private:
 };
 
 class OriginOperationBase
-  : public nsRunnable
+  : public BackgroundThreadObject
+  , public nsRunnable
 {
 protected:
+  nsresult mResultCode;
+
   enum State {
     // Not yet run.
     State_Initial,
 
-    // Running on the main thread in the listener for OpenDirectory.
+    // Running initialization on the main thread.
+    State_Initializing,
+
+    // Running initialization on the owning thread.
+    State_FinishingInit,
+
+    // Running quota manager initialization on the owning thread.
+    State_CreatingQuotaManager,
+
+    // Running on the owning thread in the listener for OpenDirectory.
     State_DirectoryOpenPending,
 
     // Running on the IO thread.
     State_DirectoryWorkOpen,
 
-    // Running on the main thread after all work is done.
+    // Running on the owning thread after all work is done.
     State_UnblockingOpen,
 
+    // All done.
     State_Complete
   };
 
+private:
   State mState;
-  nsresult mResultCode;
+  bool mActorDestroyed;
 
 protected:
-  OriginOperationBase()
-    : mState(State_Initial)
+  bool mNeedsMainThreadInit;
+  bool mNeedsQuotaManagerInit;
+
+public:
+  void
+  NoteActorDestroyed()
+  {
+    AssertIsOnOwningThread();
+
+    mActorDestroyed = true;
+  }
+
+  bool
+  IsActorDestroyed() const
+  {
+    AssertIsOnOwningThread();
+
+    return mActorDestroyed;
+  }
+
+protected:
+  explicit OriginOperationBase(
+                          nsIEventTarget* aOwningThread = NS_GetCurrentThread())
+    : BackgroundThreadObject(aOwningThread)
     , mResultCode(NS_OK)
+    , mState(State_Initial)
+    , mActorDestroyed(false)
+    , mNeedsMainThreadInit(false)
+    , mNeedsQuotaManagerInit(false)
   { }
 
   // Reference counted.
   virtual ~OriginOperationBase()
   {
     MOZ_ASSERT(mState == State_Complete);
+    MOZ_ASSERT(mActorDestroyed);
+  }
+
+  State
+  GetState() const
+  {
+    return mState;
+  }
+
+  void
+  SetState(State aState)
+  {
+    MOZ_ASSERT(mState == State_Initial);
+    mState = aState;
   }
 
   void
@@ -545,6 +733,15 @@ protected:
   {
     switch (mState) {
       case State_Initial:
+        mState = State_Initializing;
+        return;
+      case State_Initializing:
+        mState = State_FinishingInit;
+        return;
+      case State_FinishingInit:
+        mState = State_CreatingQuotaManager;
+        return;
+      case State_CreatingQuotaManager:
         mState = State_DirectoryOpenPending;
         return;
       case State_DirectoryOpenPending:
@@ -565,6 +762,12 @@ protected:
   Run();
 
   virtual nsresult
+  DoInitOnMainThread()
+  {
+    return NS_OK;
+  }
+
+  virtual void
   Open() = 0;
 
   nsresult
@@ -581,7 +784,54 @@ protected:
 
 private:
   nsresult
+  Init();
+
+  nsresult
+  InitOnMainThread();
+
+  nsresult
+  FinishInit();
+
+  nsresult
+  QuotaManagerOpen();
+
+  nsresult
   DirectoryWork();
+};
+
+class FinalizeOriginEvictionOp
+  : public OriginOperationBase
+{
+  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
+
+public:
+  FinalizeOriginEvictionOp(nsIEventTarget* aBackgroundThread,
+                           nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
+    : OriginOperationBase(aBackgroundThread)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    mLocks.SwapElements(aLocks);
+  }
+
+  void
+  Dispatch();
+
+  void
+  RunOnIOThreadImmediately();
+
+private:
+  ~FinalizeOriginEvictionOp()
+  { }
+
+  virtual void
+  Open() override;
+
+  virtual nsresult
+  DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  virtual void
+  UnblockOpen() override;
 };
 
 class NormalOriginOperationBase
@@ -599,7 +849,7 @@ public:
   void
   RunImmediately()
   {
-    MOZ_ASSERT(mState == State_Initial);
+    MOZ_ASSERT(GetState() == State_Initial);
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(this->Run()));
   }
@@ -612,7 +862,7 @@ protected:
     , mOriginScope(aOriginScope)
     , mExclusive(aExclusive)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
   }
 
   ~NormalOriginOperationBase()
@@ -621,7 +871,7 @@ protected:
 private:
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsresult
+  virtual void
   Open() override;
 
   virtual void
@@ -653,7 +903,7 @@ public:
                                 /* aExclusive */ false)
     , mTimestamp(aTimestamp)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
   }
 
 private:
@@ -664,31 +914,82 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults() override
-  { }
+  SendResults() override;
 };
 
-class GetUsageOp
+/*******************************************************************************
+ * Actor class declarations
+ ******************************************************************************/
+
+class Quota final
+  : public PQuotaParent
+{
+  DebugOnly<bool> mActorDestroyed;
+
+public:
+  Quota();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::quota::Quota)
+
+private:
+  ~Quota();
+
+  void
+  StartIdleMaintenance();
+
+  // IPDL methods.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual PQuotaUsageRequestParent*
+  AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams) override;
+
+  virtual bool
+  RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
+                                    const UsageRequestParams& aParams) override;
+
+  virtual bool
+  DeallocPQuotaUsageRequestParent(PQuotaUsageRequestParent* aActor) override;
+
+  virtual PQuotaRequestParent*
+  AllocPQuotaRequestParent(const RequestParams& aParams) override;
+
+  virtual bool
+  RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
+                               const RequestParams& aParams) override;
+
+  virtual bool
+  DeallocPQuotaRequestParent(PQuotaRequestParent* aActor) override;
+
+  virtual bool
+  RecvStartIdleMaintenance() override;
+
+  virtual bool
+  RecvStopIdleMaintenance() override;
+};
+
+class GetUsageOp final
   : public NormalOriginOperationBase
-  , public nsIQuotaRequest
+  , public PQuotaUsageRequestParent
 {
   UsageInfo mUsageInfo;
 
-  const nsCString mGroup;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsIUsageCallback> mCallback;
-  const bool mIsApp;
+  const UsageParams mParams;
+  nsCString mGroup;
+  bool mIsApp;
 
 public:
-  GetUsageOp(const nsACString& aGroup,
-             const nsACString& aOrigin,
-             bool aIsApp,
-             nsIPrincipal* aPrincipal,
-             nsIUsageCallback* aCallback);
+  explicit GetUsageOp(const UsageRequestParams& aParams);
+
+  bool
+  Init(Quota* aQuota);
 
 private:
   ~GetUsageOp()
   { }
+
+  virtual nsresult
+  DoInitOnMainThread() override;
 
   nsresult
   AddToUsage(QuotaManager* aQuotaManager,
@@ -700,23 +1001,55 @@ private:
   virtual void
   SendResults() override;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIQUOTAREQUEST
+  // IPDL methods.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual bool
+  RecvCancel() override;
 };
 
-class ResetOrClearOp
+class QuotaRequestBase
   : public NormalOriginOperationBase
+  , public PQuotaRequestParent
 {
-  bool mClear;
+public:
+  // May be overridden by subclasses if they need to perform work on the
+  // background thread before being run.
+  virtual bool
+  Init(Quota* aQuota);
+
+protected:
+  explicit QuotaRequestBase(bool aExclusive)
+    : NormalOriginOperationBase(Nullable<PersistenceType>(),
+                                OriginScope::FromNull(),
+                                aExclusive)
+  { }
+
+  // Subclasses use this override to set the IPDL response value.
+  virtual void
+  GetResponse(RequestResponse& aResponse) = 0;
+
+private:
+  virtual void
+  SendResults() override;
+
+  // IPDL methods.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+};
+
+class ResetOrClearOp final
+  : public QuotaRequestBase
+{
+  const bool mClear;
 
 public:
   explicit ResetOrClearOp(bool aClear)
-    : NormalOriginOperationBase(Nullable<PersistenceType>(),
-                                OriginScope::FromNull(),
-                                /* aExclusive */ true)
+    : QuotaRequestBase(/* aExclusive */ true)
     , mClear(aClear)
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
   }
 
 private:
@@ -730,26 +1063,27 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults() override
-  { }
+  GetResponse(RequestResponse& aResponse) override;
 };
 
-class OriginClearOp
-  : public NormalOriginOperationBase
+class OriginClearOp final
+  : public QuotaRequestBase
 {
+  const RequestParams mParams;
+  const bool mApp;
+
 public:
-  OriginClearOp(Nullable<PersistenceType> aPersistenceType,
-                const OriginScope& aOriginScope)
-    : NormalOriginOperationBase(aPersistenceType,
-                                aOriginScope,
-                                /* aExclusive */ true)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
+  explicit OriginClearOp(const RequestParams& aParams);
+
+  virtual bool
+  Init(Quota* aQuota) override;
 
 private:
   ~OriginClearOp()
   { }
+
+  virtual nsresult
+  DoInitOnMainThread() override;
 
   void
   DeleteFiles(QuotaManager* aQuotaManager,
@@ -759,42 +1093,7 @@ private:
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
   virtual void
-  SendResults() override
-  { }
-};
-
-class FinalizeOriginEvictionOp
-  : public OriginOperationBase
-{
-  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
-
-public:
-  explicit FinalizeOriginEvictionOp(
-                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    mLocks.SwapElements(aLocks);
-  }
-
-  void
-  Dispatch();
-
-  void
-  RunOnIOThreadImmediately();
-
-private:
-  ~FinalizeOriginEvictionOp()
-  { }
-
-  virtual nsresult
-  Open() override;
-
-  virtual nsresult
-  DoDirectoryWork(QuotaManager* aQuotaManager) override;
-
-  virtual void
-  UnblockOpen() override;
+  GetResponse(RequestResponse& aResponse) override;
 };
 
 /*******************************************************************************
@@ -850,6 +1149,38 @@ PatternMatchesOrigin(const nsACString& aPatternString,
 
 } // namespace
 
+BackgroundThreadObject::BackgroundThreadObject()
+  : mOwningThread(NS_GetCurrentThread())
+{
+  AssertIsOnOwningThread();
+}
+
+BackgroundThreadObject::BackgroundThreadObject(nsIEventTarget* aOwningThread)
+  : mOwningThread(aOwningThread)
+{
+}
+
+#ifdef DEBUG
+
+void
+BackgroundThreadObject::AssertIsOnOwningThread() const
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mOwningThread);
+  bool current;
+  MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
+  MOZ_ASSERT(current);
+}
+
+#endif // DEBUG
+
+nsIEventTarget*
+BackgroundThreadObject::OwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+  return mOwningThread;
+}
+
 bool
 IsOnIOThread()
 {
@@ -896,7 +1227,9 @@ ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
 
 namespace {
 
-QuotaManager* gInstance = nullptr;
+StaticRefPtr<QuotaManager> gInstance;
+bool gCreateFailed = false;
+StaticRefPtr<QuotaManager::CreateRunnable> gCreateRunnable;
 mozilla::Atomic<bool> gShutdown(false);
 
 // Constants for temporary storage limit computing.
@@ -1610,6 +1943,34 @@ GetTemporaryStorageLimit(nsIFile* aDirectory, uint64_t aCurrentUsage,
 } // namespace
 
 /*******************************************************************************
+ * Exported functions
+ ******************************************************************************/
+
+PQuotaParent*
+AllocPQuotaParent()
+{
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
+    return nullptr;
+  }
+
+  RefPtr<Quota> actor = new Quota();
+
+  return actor.forget().take();
+}
+
+bool
+DeallocPQuotaParent(PQuotaParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  RefPtr<Quota> actor = dont_AddRef(static_cast<Quota*>(aActor));
+  return true;
+}
+
+/*******************************************************************************
  * Directory lock
  ******************************************************************************/
 
@@ -1633,7 +1994,7 @@ DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
   , mInternal(aInternal)
   , mInvalidated(false)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aQuotaManager);
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
   MOZ_ASSERT_IF(!aInternal,
@@ -1650,7 +2011,7 @@ DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
 
 DirectoryLockImpl::~DirectoryLockImpl()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mQuotaManager);
 
   for (DirectoryLockImpl* blockingLock : mBlocking) {
@@ -1667,7 +2028,7 @@ bool
 DirectoryLockImpl::MatchOriginScopes(const OriginScope& aOriginScope1,
                                      const OriginScope& aOriginScope2)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
 
   bool match;
 
@@ -1689,10 +2050,21 @@ DirectoryLockImpl::MatchOriginScopes(const OriginScope& aOriginScope1,
   return match;
 }
 
+#ifdef DEBUG
+
+void
+DirectoryLockImpl::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mQuotaManager);
+  mQuotaManager->AssertIsOnOwningThread();
+}
+
+#endif // DEBUG
+
 bool
 DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aExistingLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   // Waiting is never required if the ops in comparison represent shared locks.
   if (!aExistingLock.mExclusive && !mExclusive) {
@@ -1725,7 +2097,7 @@ DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aExistingLock)
 void
 DirectoryLockImpl::NotifyOpenListener()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mQuotaManager);
   MOZ_ASSERT(mOpenListener);
 
@@ -1740,7 +2112,246 @@ DirectoryLockImpl::NotifyOpenListener()
   mQuotaManager->RemovePendingDirectoryLock(this);
 }
 
-NS_IMPL_ISUPPORTS0(DirectoryLockImpl);
+nsresult
+QuotaManager::
+CreateRunnable::Init()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State::Initial);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> baseDir;
+  rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
+                              getter_AddRefs(baseDir));
+  if (NS_FAILED(rv)) {
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(baseDir));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = baseDir->GetPath(mBaseDirPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+QuotaManager::
+CreateRunnable::CreateManager()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::CreatingManager);
+
+  mManager = new QuotaManager();
+
+  nsresult rv = mManager->Init(mBaseDirPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+QuotaManager::
+CreateRunnable::RegisterObserver()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State::RegisteringObserver);
+
+  if (NS_FAILED(Preferences::AddIntVarCache(&gFixedLimitKB, PREF_FIXED_LIMIT,
+                                            kDefaultFixedLimitKB)) ||
+      NS_FAILED(Preferences::AddUintVarCache(&gChunkSizeKB,
+                                             PREF_CHUNK_SIZE,
+                                             kDefaultChunkSizeKB))) {
+    NS_WARNING("Unable to respond to temp storage pref changes!");
+  }
+
+  if (NS_FAILED(Preferences::AddBoolVarCache(&gTestingEnabled,
+                                             PREF_TESTING_FEATURES, false))) {
+    NS_WARNING("Unable to respond to testing pref changes!");
+  }
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!observerService)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIObserver> observer = new ShutdownObserver(mOwningThread);
+
+  nsresult rv = observerService->AddObserver(observer,
+                                             PROFILE_BEFORE_CHANGE_OBSERVER_ID,
+                                             false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  QuotaManagerService* qms = QuotaManagerService::GetOrCreate();
+  if (NS_WARN_IF(!qms)) {
+    return rv;
+  }
+
+  qms->NoteLiveManager(mManager);
+
+  return NS_OK;
+}
+
+void
+QuotaManager::
+CreateRunnable::CallCallbacks()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::CallingCallbacks);
+
+  gCreateRunnable = nullptr;
+
+  if (NS_FAILED(mResultCode)) {
+    gCreateFailed = true;
+  } else {
+    gInstance = mManager;
+  }
+
+  mManager = nullptr;
+
+  nsTArray<nsCOMPtr<nsIRunnable>> callbacks;
+  mCallbacks.SwapElements(callbacks);
+
+  for (nsCOMPtr<nsIRunnable>& callback : callbacks) {
+    Unused << callback->Run();
+  }
+}
+
+auto
+QuotaManager::
+CreateRunnable::GetNextState(nsCOMPtr<nsIEventTarget>& aThread) -> State
+{
+  switch (mState) {
+    case State::Initial:
+      aThread = mOwningThread;
+      return State::CreatingManager;
+    case State::CreatingManager:
+      aThread = do_GetMainThread();
+      return State::RegisteringObserver;
+    case State::RegisteringObserver:
+      aThread = mOwningThread;
+      return State::CallingCallbacks;
+    case State::CallingCallbacks:
+      aThread = nullptr;
+      return State::Completed;
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+}
+
+NS_IMETHODIMP
+QuotaManager::
+CreateRunnable::Run()
+{
+  nsresult rv;
+
+  switch (mState) {
+    case State::Initial:
+      rv = Init();
+      break;
+
+    case State::CreatingManager:
+      rv = CreateManager();
+      break;
+
+    case State::RegisteringObserver:
+      rv = RegisterObserver();
+      break;
+
+    case State::CallingCallbacks:
+      CallCallbacks();
+      rv = NS_OK;
+      break;
+
+    case State::Completed:
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+
+  nsCOMPtr<nsIEventTarget> thread;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = rv;
+    }
+
+    mState = State::CallingCallbacks;
+    thread = mOwningThread;
+  } else {
+    mState = GetNextState(thread);
+  }
+
+  if (thread) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(thread->Dispatch(this, NS_DISPATCH_NORMAL)));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+QuotaManager::
+ShutdownRunnable::Run()
+{
+  if (NS_IsMainThread()) {
+    QuotaManagerService* qms = QuotaManagerService::Get();
+    MOZ_ASSERT(qms);
+
+    qms->NoteFinishedManager();
+
+    mDone = true;
+
+    return NS_OK;
+  }
+
+  AssertIsOnBackgroundThread();
+
+  RefPtr<QuotaManager> quotaManager = gInstance.get();
+  if (quotaManager) {
+    quotaManager->Shutdown();
+
+    gInstance = nullptr;
+  }
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(QuotaManager::ShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+QuotaManager::
+ShutdownObserver::Observe(nsISupports* aSubject,
+                          const char* aTopic,
+                          const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID));
+
+  bool done = false;
+
+  RefPtr<ShutdownRunnable> shutdownRunnable = new ShutdownRunnable(done);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mBackgroundThread->Dispatch(shutdownRunnable, NS_DISPATCH_NORMAL)));
+
+  nsIThread* currentThread = NS_GetCurrentThread();
+  MOZ_ASSERT(currentThread);
+
+  while (!done) {
+    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
+  }
+
+  return NS_OK;
+}
 
 /*******************************************************************************
  * Quota object
@@ -1990,65 +2601,49 @@ QuotaManager::QuotaManager()
   mTemporaryStorageInitialized(false),
   mStorageAreaInitialized(false)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!gInstance, "More than one instance!");
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!gInstance);
 }
 
 QuotaManager::~QuotaManager()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!gInstance || gInstance == this, "Different instances!");
-  gInstance = nullptr;
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!gInstance || gInstance == this);
 }
 
-// static
-QuotaManager*
-QuotaManager::GetOrCreate()
+void
+QuotaManager::GetOrCreate(nsIRunnable* aCallback)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnBackgroundThread();
 
   if (IsShuttingDown()) {
-    NS_ERROR("Calling GetOrCreate() after shutdown!");
-    return nullptr;
+    MOZ_ASSERT(false, "Calling GetOrCreate() after shutdown!");
+    return;
   }
 
-  if (!gInstance) {
-    RefPtr<QuotaManager> instance(new QuotaManager());
+  if (gInstance || gCreateFailed) {
+    MOZ_ASSERT(!gCreateRunnable);
+    MOZ_ASSERT_IF(gCreateFailed, !gInstance);
 
-    nsresult rv = instance->Init();
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(aCallback)));
+  } else {
+    if (!gCreateRunnable) {
+      gCreateRunnable = new CreateRunnable();
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(gCreateRunnable)));
+    }
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ENSURE_TRUE(obs, nullptr);
-
-    // We need this callback to know when to shut down all our threads.
-    rv = obs->AddObserver(instance, PROFILE_BEFORE_CHANGE_OBSERVER_ID, false);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    // The observer service will hold our last reference, don't AddRef here.
-    gInstance = instance;
+    gCreateRunnable->AddCallback(aCallback);
   }
-
-  return gInstance;
 }
 
 // static
 QuotaManager*
 QuotaManager::Get()
 {
+  MOZ_ASSERT(!NS_IsMainThread());
+
   // Does not return an owning reference.
   return gInstance;
-}
-
-// static
-QuotaManager*
-QuotaManager::FactoryCreate()
-{
-  // Returns a raw pointer that carries an owning reference! Lame, but the
-  // singleton factory macros force this.
-  QuotaManager* quotaManager = GetOrCreate();
-  NS_IF_ADDREF(quotaManager);
-  return quotaManager;
 }
 
 // static
@@ -2069,7 +2664,7 @@ QuotaManager::CreateDirectoryLock(Nullable<PersistenceType> aPersistenceType,
                                   OpenDirectoryListener* aOpenListener)
   -> already_AddRefed<DirectoryLockImpl>
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
   MOZ_ASSERT_IF(!aInternal,
                 aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
@@ -2122,7 +2717,7 @@ QuotaManager::CreateDirectoryLockForEviction(PersistenceType aPersistenceType,
                                              bool aIsApp)
   -> already_AddRefed<DirectoryLockImpl>
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
@@ -2152,7 +2747,7 @@ QuotaManager::CreateDirectoryLockForEviction(PersistenceType aPersistenceType,
 void
 QuotaManager::RegisterDirectoryLock(DirectoryLockImpl* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aLock);
 
   mDirectoryLocks.AppendElement(aLock);
@@ -2188,7 +2783,7 @@ QuotaManager::RegisterDirectoryLock(DirectoryLockImpl* aLock)
 void
 QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   MOZ_ALWAYS_TRUE(mDirectoryLocks.RemoveElement(aLock));
 
@@ -2224,7 +2819,7 @@ QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl* aLock)
 void
 QuotaManager::RemovePendingDirectoryLock(DirectoryLockImpl* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aLock);
 
   MOZ_ALWAYS_TRUE(mPendingDirectoryLocks.RemoveElement(aLock));
@@ -2235,7 +2830,7 @@ QuotaManager::CollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
                                   nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aLocks.IsEmpty());
 
   struct MOZ_STACK_CLASS Helper final
@@ -2363,75 +2958,76 @@ QuotaManager::CollectOriginsForEviction(
 }
 
 nsresult
-QuotaManager::Init()
+QuotaManager::Init(const nsAString& aBaseDirPath)
 {
   nsresult rv;
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIFile> baseDir;
-    rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR,
-                                getter_AddRefs(baseDir));
-    if (NS_FAILED(rv)) {
-      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                  getter_AddRefs(baseDir));
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(INDEXEDDB_DIRECTORY_NAME),
-                          mIndexedDBPath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = baseDir->Append(NS_LITERAL_STRING(STORAGE_DIRECTORY_NAME));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = baseDir->GetPath(mStoragePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(PERMANENT_DIRECTORY_NAME),
-                          mPermanentStoragePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(TEMPORARY_DIRECTORY_NAME),
-                          mTemporaryStoragePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME),
-                          mDefaultStoragePath);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Make a lazy thread for any IO we need (like clearing or enumerating the
-    // contents of storage directories).
-    mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                   NS_LITERAL_CSTRING("Storage I/O"),
-                                   LazyIdleThread::ManualShutdown);
-
-    // Make a timer here to avoid potential failures later. We don't actually
-    // initialize the timer until shutdown.
-    mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    NS_ENSURE_TRUE(mShutdownTimer, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIFile> baseDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  if (NS_FAILED(Preferences::AddIntVarCache(&gFixedLimitKB, PREF_FIXED_LIMIT,
-                                            kDefaultFixedLimitKB)) ||
-      NS_FAILED(Preferences::AddUintVarCache(&gChunkSizeKB,
-                                             PREF_CHUNK_SIZE,
-                                             kDefaultChunkSizeKB))) {
-    NS_WARNING("Unable to respond to temp storage pref changes!");
+  rv = baseDir->InitWithPath(aBaseDirPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  if (NS_FAILED(Preferences::AddBoolVarCache(&gTestingEnabled,
-                                             PREF_TESTING_FEATURES, false))) {
-    NS_WARNING("Unable to respond to testing pref changes!");
+  rv = CloneStoragePath(baseDir,
+                        NS_LITERAL_STRING(INDEXEDDB_DIRECTORY_NAME),
+                        mIndexedDBPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = baseDir->Append(NS_LITERAL_STRING(STORAGE_DIRECTORY_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = baseDir->GetPath(mStoragePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = CloneStoragePath(baseDir,
+                        NS_LITERAL_STRING(PERMANENT_DIRECTORY_NAME),
+                        mPermanentStoragePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = CloneStoragePath(baseDir,
+                        NS_LITERAL_STRING(TEMPORARY_DIRECTORY_NAME),
+                        mTemporaryStoragePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = CloneStoragePath(baseDir,
+                        NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME),
+                        mDefaultStoragePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Make a lazy thread for any IO we need (like clearing or enumerating the
+  // contents of storage directories).
+  mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                 NS_LITERAL_CSTRING("Storage I/O"),
+                                 LazyIdleThread::ManualShutdown);
+
+  // Make a timer here to avoid potential failures later. We don't actually
+  // initialize the timer until shutdown.
+  mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  if (NS_WARN_IF(!mShutdownTimer)) {
+    return NS_ERROR_FAILURE;
   }
 
   static_assert(Client::IDB == 0 && Client::ASMJS == 1 && Client::DOMCACHE == 2 &&
                 Client::TYPE_MAX == 3, "Fix the registration!");
 
-  NS_ASSERTION(mClients.Capacity() == Client::TYPE_MAX,
-               "Should be using an auto array with correct capacity!");
+  MOZ_ASSERT(mClients.Capacity() == Client::TYPE_MAX,
+             "Should be using an auto array with correct capacity!");
 
   // Register clients.
   mClients.AppendElement(indexedDB::CreateQuotaClient());
@@ -2439,6 +3035,58 @@ QuotaManager::Init()
   mClients.AppendElement(cache::CreateQuotaClient());
 
   return NS_OK;
+}
+
+void
+QuotaManager::Shutdown()
+{
+  AssertIsOnOwningThread();
+
+  // Setting this flag prevents the service from being recreated and prevents
+  // further storagess from being created.
+  if (gShutdown.exchange(true)) {
+    NS_ERROR("Shutdown more than once?!");
+  }
+
+  StopIdleMaintenance();
+
+  // Kick off the shutdown timer.
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mShutdownTimer->InitWithFuncCallback(&ShutdownTimerCallback,
+                                         this,
+                                         DEFAULT_SHUTDOWN_TIMER_MS,
+                                         nsITimer::TYPE_ONE_SHOT)));
+
+  // Each client will spin the event loop while we wait on all the threads
+  // to close. Our timer may fire during that loop.
+  for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
+    mClients[index]->ShutdownWorkThreads();
+  }
+
+  // Cancel the timer regardless of whether it actually fired.
+  if (NS_FAILED(mShutdownTimer->Cancel())) {
+    NS_WARNING("Failed to cancel shutdown timer!");
+  }
+
+  // Give clients a chance to cleanup IO thread only objects.
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
+  if (!runnable) {
+    NS_WARNING("Failed to create runnable!");
+  }
+
+  if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to dispatch runnable!");
+  }
+
+  // Make sure to join with our IO thread.
+  if (NS_FAILED(mIOThread->Shutdown())) {
+    NS_WARNING("Failed to shutdown IO thread!");
+  }
+
+  for (RefPtr<DirectoryLockImpl>& lock : mPendingDirectoryLocks) {
+    lock->Invalidate();
+  }
 }
 
 void
@@ -2504,7 +3152,7 @@ QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
                                      const nsACString& aGroup,
                                      const nsACString& aOrigin)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
   MutexAutoLock lock(mQuotaMutex);
@@ -2662,7 +3310,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
 void
 QuotaManager::AbortOperationsForProcess(ContentParentId aContentParentId)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   for (RefPtr<Client>& client : mClients) {
     client->AbortOperationsForProcess(aContentParentId);
@@ -3120,7 +3768,7 @@ QuotaManager::OpenDirectory(PersistenceType aPersistenceType,
                             bool aExclusive,
                             OpenDirectoryListener* aOpenListener)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   RefPtr<DirectoryLockImpl> lock =
     CreateDirectoryLock(Nullable<PersistenceType>(aPersistenceType),
@@ -3140,7 +3788,7 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
                                     bool aExclusive,
                                     OpenDirectoryListener* aOpenListener)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
   RefPtr<DirectoryLockImpl> lock =
     CreateDirectoryLock(aPersistenceType,
@@ -3654,208 +4302,6 @@ QuotaManager::GetDirectoryMetadata(nsIFile* aDirectory,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(QuotaManager, nsIQuotaManager, nsIObserver)
-
-NS_IMETHODIMP
-QuotaManager::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
-                                   nsIUsageCallback* aCallback,
-                                   nsIQuotaRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  // This only works from the main process.
-  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
-
-  // Figure out which origin we're dealing with.
-  nsCString group;
-  nsCString origin;
-  bool isApp;
-  nsresult rv = GetInfoFromPrincipal(aPrincipal, &group, &origin, &isApp);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<GetUsageOp> op =
-    new GetUsageOp(group, origin, isApp, aPrincipal, aCallback);
-
-  op->RunImmediately();
-
-  op.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-QuotaManager::Clear()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!gTestingEnabled) {
-    NS_WARNING("Testing features are not enabled!");
-    return NS_OK;
-  }
-
-  RefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ true);
-
-  op->RunImmediately();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-QuotaManager::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
-                                        const nsACString& aPersistenceType)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  Nullable<PersistenceType> persistenceType;
-  nsresult rv =
-    NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // This only works from the main process.
-  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
-
-  // Figure out which origin we're dealing with.
-  nsCString origin;
-  rv = GetInfoFromPrincipal(aPrincipal, nullptr, &origin, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const mozilla::OriginAttributes& attrs =
-    mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-
-  nsAutoCString pattern;
-  GetOriginPatternString(attrs.mAppId, attrs.mInBrowser, origin, pattern);
-
-  RefPtr<OriginClearOp> op =
-    new OriginClearOp(persistenceType, OriginScope::FromPattern(pattern));
-
-  op->RunImmediately();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-QuotaManager::Reset()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!gTestingEnabled) {
-    NS_WARNING("Testing features are not enabled!");
-    return NS_OK;
-  }
-
-  RefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ false);
-
-  op->RunImmediately();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-QuotaManager::Observe(nsISupports* aSubject,
-                      const char* aTopic,
-                      const char16_t* aData)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID)) {
-    // Setting this flag prevents the service from being recreated and prevents
-    // further storagess from being created.
-    if (gShutdown.exchange(true)) {
-      NS_ERROR("Shutdown more than once?!");
-    }
-
-    if (XRE_IsParentProcess()) {
-      // Kick off the shutdown timer.
-      if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
-                                         nsITimer::TYPE_ONE_SHOT))) {
-        NS_WARNING("Failed to initialize shutdown timer!");
-      }
-
-      // Each client will spin the event loop while we wait on all the threads
-      // to close. Our timer may fire during that loop.
-      for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
-        mClients[index]->ShutdownWorkThreads();
-      }
-
-      // Cancel the timer regardless of whether it actually fired.
-      if (NS_FAILED(mShutdownTimer->Cancel())) {
-        NS_WARNING("Failed to cancel shutdown timer!");
-      }
-
-      // Give clients a chance to cleanup IO thread only objects.
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
-      if (!runnable) {
-        NS_WARNING("Failed to create runnable!");
-      }
-
-      if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
-        NS_WARNING("Failed to dispatch runnable!");
-      }
-
-      // Make sure to join with our IO thread.
-      if (NS_FAILED(mIOThread->Shutdown())) {
-        NS_WARNING("Failed to shutdown IO thread!");
-      }
-
-      for (RefPtr<DirectoryLockImpl>& lock : mPendingDirectoryLocks) {
-        lock->Invalidate();
-      }
-    }
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
-    NS_ASSERTION(XRE_IsParentProcess(), "Should only happen in the main process!");
-
-    NS_WARNING("Some storage operations are taking longer than expected "
-               "during shutdown and will be aborted!");
-
-    // Abort all operations.
-    for (RefPtr<Client>& client : mClients) {
-      client->AbortOperations(NullCString());
-    }
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA)) {
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-      do_QueryInterface(aSubject);
-    NS_ENSURE_TRUE(params, NS_ERROR_UNEXPECTED);
-
-    uint32_t appId;
-    nsresult rv = params->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool browserOnly;
-    rv = params->GetBrowserOnly(&browserOnly);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ClearStoragesForApp(appId, browserOnly);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
-    for (auto& client : mClients) {
-      client->PerformIdleMaintenance();
-    }
-    return NS_OK;
-  }
-
-  NS_NOTREACHED("Unknown topic!");
-  return NS_ERROR_UNEXPECTED;
-}
-
 uint64_t
 QuotaManager::LockedCollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
@@ -3873,7 +4319,8 @@ QuotaManager::LockedCollectOriginsForEviction(
   {
     MutexAutoUnlock autoUnlock(mQuotaMutex);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(helper)));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(helper,
+                                                         NS_DISPATCH_NORMAL)));
   }
 
   return helper->BlockAndReturnOriginsForEviction(aLocks);
@@ -3906,27 +4353,6 @@ QuotaManager::LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
       }
     }
   }
-}
-
-nsresult
-QuotaManager::ClearStoragesForApp(uint32_t aAppId, bool aBrowserOnly)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aAppId != kUnknownAppId, "Bad appId!");
-
-  // This only works from the main process.
-  NS_ENSURE_TRUE(XRE_IsParentProcess(), NS_ERROR_NOT_AVAILABLE);
-
-  nsAutoCString pattern;
-  GetOriginPatternStringMaybeIgnoreBrowser(aAppId, aBrowserOnly, pattern);
-
-  RefPtr<OriginClearOp> op =
-    new OriginClearOp(Nullable<PersistenceType>(),
-                      OriginScope::FromPattern(pattern));
-
-  op->RunImmediately();
-
-  return NS_OK;
 }
 
 void
@@ -4094,7 +4520,7 @@ QuotaManager::FinalizeOriginEviction(
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   RefPtr<FinalizeOriginEvictionOp> op =
-    new FinalizeOriginEvictionOp(aLocks);
+    new FinalizeOriginEvictionOp(mOwningThread, aLocks);
 
   if (IsOnIOThread()) {
     op->RunOnIOThreadImmediately();
@@ -4143,6 +4569,23 @@ QuotaManager::GetOriginPatternString(uint32_t aAppId,
 #endif
 
   _retval = aOrigin;
+}
+
+void
+QuotaManager::ShutdownTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  AssertIsOnBackgroundThread();
+
+  auto quotaManager = static_cast<QuotaManager*>(aClosure);
+  MOZ_ASSERT(quotaManager);
+
+  NS_WARNING("Some storage operations are taking longer than expected "
+             "during shutdown and will be aborted!");
+
+  // Abort all operations.
+  for (RefPtr<Client>& client : quotaManager->mClients) {
+    client->AbortOperations(NullCString());
+  }
 }
 
 auto
@@ -4309,7 +4752,7 @@ CollectOriginsHelper::BlockAndReturnOriginsForEviction(
 NS_IMETHODIMP
 CollectOriginsHelper::Run()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  AssertIsOnBackgroundThread();
 
   QuotaManager* quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "Shouldn't be null!");
@@ -4332,6 +4775,10 @@ CollectOriginsHelper::Run()
   return NS_OK;
 }
 
+/*******************************************************************************
+ * OriginOperationBase
+ ******************************************************************************/
+
 NS_IMETHODIMP
 OriginOperationBase::Run()
 {
@@ -4339,7 +4786,22 @@ OriginOperationBase::Run()
 
   switch (mState) {
     case State_Initial: {
-      rv = Open();
+      rv = Init();
+      break;
+    }
+
+    case State_Initializing: {
+      rv = InitOnMainThread();
+      break;
+    }
+
+    case State_FinishingInit: {
+      rv = FinishInit();
+      break;
+    }
+
+    case State_CreatingQuotaManager: {
+      rv = QuotaManagerOpen();
       break;
     }
 
@@ -4372,7 +4834,7 @@ OriginOperationBase::Run()
 nsresult
 OriginOperationBase::DirectoryOpen()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State_DirectoryOpenPending);
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -4402,7 +4864,81 @@ OriginOperationBase::Finish(nsresult aResult)
   // thread.
   mState = State_UnblockingOpen;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
+}
+
+nsresult
+OriginOperationBase::Init()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State_Initial);
+
+  AdvanceState();
+
+  if (mNeedsMainThreadInit) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  } else {
+    AdvanceState();
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Run()));
+  }
+
+  return NS_OK;
+}
+
+nsresult
+OriginOperationBase::InitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State_Initializing);
+
+  nsresult rv = DoInitOnMainThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  AdvanceState();
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
+
+  return NS_OK;
+}
+
+nsresult
+OriginOperationBase::FinishInit()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State_FinishingInit);
+
+  if (QuotaManager::IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  AdvanceState();
+
+  if (mNeedsQuotaManagerInit && !QuotaManager::Get()) {
+    QuotaManager::GetOrCreate(this);
+  } else {
+    Open();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+OriginOperationBase::QuotaManagerOpen()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State_CreatingQuotaManager);
+
+  if (NS_WARN_IF(!QuotaManager::Get())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Open();
+
+  return NS_OK;
 }
 
 nsresult
@@ -4421,47 +4957,99 @@ OriginOperationBase::DirectoryWork()
     return rv;
   }
 
-  // Must set mState before dispatching otherwise we will race with the main
+  // Must set mState before dispatching otherwise we will race with the owning
   // thread.
   AdvanceState();
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(NormalOriginOperationBase, nsRunnable)
-
-nsresult
-NormalOriginOperationBase::Open()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_Initial);
-
-  if (QuotaManager::IsShuttingDown()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  if (NS_WARN_IF(!quotaManager)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AdvanceState();
-
-  quotaManager->OpenDirectoryInternal(mPersistenceType,
-                                      mOriginScope,
-                                      mExclusive,
-                                      this);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
 
   return NS_OK;
 }
 
 void
+FinalizeOriginEvictionOp::Dispatch()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initial);
+
+  SetState(State_DirectoryOpenPending);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
+}
+
+void
+FinalizeOriginEvictionOp::RunOnIOThreadImmediately()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(GetState() == State_Initial);
+
+  SetState(State_DirectoryWorkOpen);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(this->Run()));
+}
+
+void
+FinalizeOriginEvictionOp::Open()
+{
+  MOZ_CRASH("Shouldn't get here!");
+}
+
+nsresult
+FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+
+  PROFILER_LABEL("Quota", "FinalizeOriginEvictionOp::DoDirectoryWork",
+                 js::ProfileEntry::Category::OTHER);
+
+  for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
+    aQuotaManager->OriginClearCompleted(lock->GetPersistenceType().Value(),
+                                        lock->GetOriginScope(),
+                                        lock->GetIsApp().Value());
+  }
+
+  return NS_OK;
+}
+
+void
+FinalizeOriginEvictionOp::UnblockOpen()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(GetState() == State_UnblockingOpen);
+
+#ifdef DEBUG
+  NoteActorDestroyed();
+#endif
+
+  mLocks.Clear();
+
+  AdvanceState();
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(NormalOriginOperationBase, nsRunnable)
+
+void
+NormalOriginOperationBase::Open()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(GetState() == State_CreatingQuotaManager);
+  MOZ_ASSERT(QuotaManager::Get());
+
+  AdvanceState();
+
+  QuotaManager::Get()->OpenDirectoryInternal(mPersistenceType,
+                                             mOriginScope,
+                                             mExclusive,
+                                             this);
+}
+
+void
 NormalOriginOperationBase::UnblockOpen()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_UnblockingOpen);
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(GetState() == State_UnblockingOpen);
 
   SendResults();
 
@@ -4473,9 +5061,9 @@ NormalOriginOperationBase::UnblockOpen()
 void
 NormalOriginOperationBase::DirectoryLockAcquired(DirectoryLock* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aLock);
-  MOZ_ASSERT(mState == State_DirectoryOpenPending);
+  MOZ_ASSERT(GetState() == State_DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
   mDirectoryLock = aLock;
@@ -4490,8 +5078,8 @@ NormalOriginOperationBase::DirectoryLockAcquired(DirectoryLock* aLock)
 void
 NormalOriginOperationBase::DirectoryLockFailed()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_DirectoryOpenPending);
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(GetState() == State_DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
   Finish(NS_ERROR_FAILURE);
@@ -4534,24 +5122,268 @@ SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   return NS_OK;
 }
 
-GetUsageOp::GetUsageOp(const nsACString& aGroup,
-                       const nsACString& aOrigin,
-                       bool aIsApp,
-                       nsIPrincipal* aPrincipal,
-                       nsIUsageCallback* aCallback)
+void
+SaveOriginAccessTimeOp::SendResults()
+{
+#ifdef DEBUG
+  NoteActorDestroyed();
+#endif
+}
+
+/*******************************************************************************
+ * Quota
+ ******************************************************************************/
+
+Quota::Quota()
+  : mActorDestroyed(false)
+{
+}
+
+Quota::~Quota()
+{
+  MOZ_ASSERT(mActorDestroyed);
+}
+
+void
+Quota::StartIdleMaintenance()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!QuotaManager::IsShuttingDown());
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (NS_WARN_IF(!quotaManager)) {
+    return;
+  }
+
+  quotaManager->StartIdleMaintenance();
+}
+
+void
+Quota::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+}
+
+PQuotaUsageRequestParent*
+Quota::AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams)
+{
+  RefPtr<GetUsageOp> actor = new GetUsageOp(aParams);
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
+}
+
+bool
+Quota::RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
+                                         const UsageRequestParams& aParams)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aParams.type() != UsageRequestParams::T__None);
+
+  auto* op = static_cast<GetUsageOp*>(aActor);
+
+  if (NS_WARN_IF(!op->Init(this))) {
+    return false;
+  }
+
+  op->RunImmediately();
+  return true;
+}
+
+bool
+Quota::DeallocPQuotaUsageRequestParent(PQuotaUsageRequestParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<GetUsageOp> actor =
+    dont_AddRef(static_cast<GetUsageOp*>(aActor));
+  return true;
+}
+
+PQuotaRequestParent*
+Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aParams.type() != RequestParams::T__None);
+
+  if (aParams.type() == RequestParams::TClearAppParams) {
+    PBackgroundParent* actor = Manager();
+    MOZ_ASSERT(actor);
+
+    if (BackgroundParent::IsOtherProcessActor(actor)) {
+      ASSERT_UNLESS_FUZZING();
+      return nullptr;
+    }
+  }
+
+  RefPtr<QuotaRequestBase> actor;
+
+  switch (aParams.type()) {
+    case RequestParams::TClearOriginParams:
+    case RequestParams::TClearAppParams:
+      actor = new OriginClearOp(aParams);
+      break;
+
+    case RequestParams::TClearAllParams:
+      actor = new ResetOrClearOp(/* aClear */ true);
+      break;
+
+    case RequestParams::TResetAllParams:
+      actor = new ResetOrClearOp(/* aClear */ false);
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  MOZ_ASSERT(actor);
+
+  // Transfer ownership to IPDL.
+  return actor.forget().take();
+}
+
+bool
+Quota::RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
+                                    const RequestParams& aParams)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aParams.type() != RequestParams::T__None);
+
+  auto* op = static_cast<QuotaRequestBase*>(aActor);
+  if (NS_WARN_IF(!op->Init(this))) {
+    return false;
+  }
+
+  op->RunImmediately();
+  return true;
+}
+
+bool
+Quota::DeallocPQuotaRequestParent(PQuotaRequestParent* aActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  // Transfer ownership back from IPDL.
+  RefPtr<QuotaRequestBase> actor =
+    dont_AddRef(static_cast<QuotaRequestBase*>(aActor));
+  return true;
+}
+
+bool
+Quota::RecvStartIdleMaintenance()
+{
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* actor = Manager();
+  MOZ_ASSERT(actor);
+
+  if (BackgroundParent::IsOtherProcessActor(actor)) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (QuotaManager::IsShuttingDown()) {
+    return true;
+  }
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (!quotaManager) {
+    nsCOMPtr<nsIRunnable> callback =
+      NS_NewRunnableMethod(this, &Quota::StartIdleMaintenance);
+
+    QuotaManager::GetOrCreate(callback);
+    return true;
+  }
+
+  quotaManager->StartIdleMaintenance();
+
+  return true;
+}
+
+bool
+Quota::RecvStopIdleMaintenance()
+{
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* actor = Manager();
+  MOZ_ASSERT(actor);
+
+  if (BackgroundParent::IsOtherProcessActor(actor)) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (QuotaManager::IsShuttingDown()) {
+    return true;
+  }
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (!quotaManager) {
+    return true;
+  }
+
+  quotaManager->StopIdleMaintenance();
+
+  return true;
+}
+
+GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
   : NormalOriginOperationBase(Nullable<PersistenceType>(),
-                              OriginScope::FromOrigin(aOrigin),
+                              OriginScope::FromNull(),
                               /* aExclusive */ false)
-  , mGroup(aGroup)
-  , mPrincipal(aPrincipal)
-  , mCallback(aCallback)
-  , mIsApp(aIsApp)
+  , mParams(aParams.get_UsageParams())
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == UsageRequestParams::TUsageParams);
+}
+
+bool
+GetUsageOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  mNeedsMainThreadInit = true;
+  mNeedsQuotaManagerInit = true;
+
+  return true;
+}
+
+nsresult
+GetUsageOp::DoInitOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aGroup.IsEmpty());
-  MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Figure out which origin we're dealing with.
+  nsCString origin;
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &mGroup, &origin,
+                                          &mIsApp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mOriginScope.SetFromOrigin(origin);
+
+  return NS_OK;
 }
 
 nsresult
@@ -4676,31 +5508,92 @@ GetUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 void
 GetUsageOp::SendResults()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
 
-  // Call the callback unless we were canceled.
-  if (!mUsageInfo.Canceled()) {
-    // XXX Implement better error reporting here, bug 1170019.
-    if (NS_FAILED(mResultCode)) {
-      mUsageInfo.ResetUsage();
+  if (IsActorDestroyed()) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = NS_ERROR_FAILURE;
+    }
+  } else {
+    if (mUsageInfo.Canceled()) {
+      mResultCode = NS_ERROR_FAILURE;
     }
 
-    mCallback->OnUsageResult(mPrincipal, mUsageInfo.TotalUsage(), mUsageInfo.FileUsage());
-  }
+    UsageRequestResponse response;
 
-  // Clean up.
-  mPrincipal = nullptr;
-  mCallback = nullptr;
+    if (NS_SUCCEEDED(mResultCode)) {
+      UsageResponse usageResponse;
+      usageResponse.usage() = mUsageInfo.TotalUsage();
+      usageResponse.fileUsage() = mUsageInfo.FileUsage();
+      response = usageResponse;
+    } else {
+      response = mResultCode;
+    }
+
+    Unused << PQuotaUsageRequestParent::Send__delete__(this, response);
+  }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(GetUsageOp,
-                            NormalOriginOperationBase,
-                            nsIQuotaRequest)
-
-NS_IMETHODIMP
-GetUsageOp::Cancel()
+void
+GetUsageOp::ActorDestroy(ActorDestroyReason aWhy)
 {
-  return mUsageInfo.Cancel();
+  AssertIsOnOwningThread();
+
+  NoteActorDestroyed();
+}
+
+bool
+GetUsageOp::RecvCancel()
+{
+  AssertIsOnOwningThread();
+
+  nsresult rv = mUsageInfo.Cancel();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
+QuotaRequestBase::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  mNeedsQuotaManagerInit = true;
+
+  return true;
+}
+
+void
+QuotaRequestBase::SendResults()
+{
+  AssertIsOnOwningThread();
+
+  if (IsActorDestroyed()) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = NS_ERROR_FAILURE;
+    }
+  } else {
+    RequestResponse response;
+
+    if (NS_SUCCEEDED(mResultCode)) {
+      GetResponse(response);
+    } else {
+      response = mResultCode;
+    }
+
+    Unused << PQuotaRequestParent::Send__delete__(this, response);
+  }
+}
+
+void
+QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  NoteActorDestroyed();
 }
 
 void
@@ -4742,6 +5635,98 @@ ResetOrClearOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   aQuotaManager->RemoveQuota();
 
   aQuotaManager->ResetOrClearCompleted();
+
+  return NS_OK;
+}
+
+void
+ResetOrClearOp::GetResponse(RequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+  if (mClear) {
+    aResponse = ClearAllResponse();
+  } else {
+    aResponse = ResetAllResponse();
+  }
+}
+
+OriginClearOp::OriginClearOp(const RequestParams& aParams)
+  : QuotaRequestBase(/* aExclusive */ true)
+  , mParams(aParams)
+  , mApp(aParams.type() == RequestParams::TClearAppParams)
+{
+  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams ||
+             aParams.type() == RequestParams::TClearAppParams);
+}
+
+bool
+OriginClearOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  if (NS_WARN_IF(!QuotaRequestBase::Init(aQuota))) {
+    return false;
+  }
+
+  if (mApp) {
+    const ClearAppParams& params = mParams.get_ClearAppParams();
+
+    nsAutoCString pattern;
+    QuotaManager::GetOriginPatternStringMaybeIgnoreBrowser(params.appId(),
+                                                           params.browserOnly(),
+                                                           pattern);
+
+    mOriginScope.SetFromPattern(pattern);
+  } else {
+    const ClearOriginParams& params = mParams.get_ClearOriginParams();
+
+    if (params.persistenceTypeIsExplicit()) {
+      MOZ_ASSERT(params.persistenceType() != PERSISTENCE_TYPE_INVALID);
+
+      mPersistenceType.SetValue(params.persistenceType());
+    }
+
+    mNeedsMainThreadInit = true;
+  }
+
+  return true;
+}
+
+nsresult
+OriginClearOp::DoInitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(!mApp);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  const ClearOriginParams& params = mParams.get_ClearOriginParams();
+
+  const PrincipalInfo& principalInfo = params.principalInfo();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Figure out which origin we're dealing with.
+  nsCString origin;
+  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, &origin, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  const mozilla::OriginAttributes& attrs =
+    mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
+
+  nsAutoCString pattern;
+  QuotaManager::GetOriginPatternString(attrs.mAppId, attrs.mInBrowser, origin,
+                                       pattern);
+
+  mOriginScope.SetFromPattern(pattern);
 
   return NS_OK;
 }
@@ -4872,59 +5857,15 @@ OriginClearOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 }
 
 void
-FinalizeOriginEvictionOp::Dispatch()
+OriginClearOp::GetResponse(RequestResponse& aResponse)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(mState == State_Initial);
+  AssertIsOnOwningThread();
 
-  mState = State_DirectoryOpenPending;
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
-}
-
-void
-FinalizeOriginEvictionOp::RunOnIOThreadImmediately()
-{
-  AssertIsOnIOThread();
-  MOZ_ASSERT(mState == State_Initial);
-
-  mState = State_DirectoryWorkOpen;
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(this->Run()));
-}
-
-nsresult
-FinalizeOriginEvictionOp::Open()
-{
-  MOZ_CRASH("Shouldn't get here!");
-}
-
-nsresult
-FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
-{
-  AssertIsOnIOThread();
-
-  PROFILER_LABEL("Quota", "FinalizeOriginEvictionOp::DoDirectoryWork",
-                 js::ProfileEntry::Category::OTHER);
-
-  for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
-    aQuotaManager->OriginClearCompleted(lock->GetPersistenceType().Value(),
-                                        lock->GetOriginScope(),
-                                        lock->GetIsApp().Value());
+  if (mApp) {
+    aResponse = ClearAppResponse();
+  } else {
+    aResponse = ClearOriginResponse();
   }
-
-  return NS_OK;
-}
-
-void
-FinalizeOriginEvictionOp::UnblockOpen()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_UnblockingOpen);
-
-  mLocks.Clear();
-
-  AdvanceState();
 }
 
 nsresult

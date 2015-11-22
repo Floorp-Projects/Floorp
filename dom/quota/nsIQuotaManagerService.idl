@@ -6,12 +6,13 @@
 
 #include "nsISupports.idl"
 
-interface nsIQuotaRequest;
 interface nsIPrincipal;
-interface nsIUsageCallback;
+interface nsIQuotaRequest;
+interface nsIQuotaUsageCallback;
+interface nsIQuotaUsageRequest;
 
-[scriptable, builtinclass, uuid(101cf53c-e7f3-4723-9f43-a23a85c8eda0)]
-interface nsIQuotaManager : nsISupports
+[scriptable, builtinclass, uuid(1b3d0a38-8151-4cf9-89fa-4f92c2ef0e7e)]
+interface nsIQuotaManagerService : nsISupports
 {
   /**
    * Schedules an asynchronous callback that will return the total amount of
@@ -22,9 +23,9 @@ interface nsIQuotaManager : nsISupports
    * @param aCallback
    *        The callback that will be called when the usage is available.
    */
-  nsIQuotaRequest
+  nsIQuotaUsageRequest
   getUsageForPrincipal(in nsIPrincipal aPrincipal,
-                       in nsIUsageCallback aCallback);
+                       in nsIQuotaUsageCallback aCallback);
 
   /**
    * Removes all storages. The files may not be deleted immediately depending
@@ -34,7 +35,7 @@ interface nsIQuotaManager : nsISupports
    * If the dom.quotaManager.testing preference is not true the call will be
    * a no-op.
    */
-  void
+  nsIQuotaRequest
   clear();
 
   /**
@@ -44,7 +45,7 @@ interface nsIQuotaManager : nsISupports
    * @param aPrincipal
    *        A principal for the origin whose storages are to be cleared.
    */
-  void
+  nsIQuotaRequest
   clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
                             [optional] in ACString aPersistenceType);
 
@@ -57,6 +58,6 @@ interface nsIQuotaManager : nsISupports
    * If the dom.quotaManager.testing preference is not true the call will be
    * a no-op.
    */
-  void
+  nsIQuotaRequest
   reset();
 };
