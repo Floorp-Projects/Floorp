@@ -50,6 +50,14 @@ protected:
   DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor)
                                      override;
 
+  virtual PBackgroundIndexedDBUtilsParent*
+  AllocPBackgroundIndexedDBUtilsParent() override;
+
+  virtual bool
+  DeallocPBackgroundIndexedDBUtilsParent(
+                                        PBackgroundIndexedDBUtilsParent* aActor)
+                                        override;
+
   virtual PBlobParent*
   AllocPBlobParent(const BlobConstructorParams& aParams) override;
 

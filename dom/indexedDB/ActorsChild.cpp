@@ -3046,6 +3046,67 @@ BackgroundCursorChild::CachedResponse::CachedResponse(CachedResponse&& aOther)
   mCloneInfo = Move(aOther.mCloneInfo);
 }
 
+/*******************************************************************************
+ * BackgroundUtilsChild
+ ******************************************************************************/
+
+BackgroundUtilsChild::BackgroundUtilsChild(IndexedDatabaseManager* aManager)
+  : mManager(aManager)
+#ifdef DEBUG
+  , mOwningThread(NS_GetCurrentThread())
+#endif
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aManager);
+
+  MOZ_COUNT_CTOR(indexedDB::BackgroundUtilsChild);
+}
+
+BackgroundUtilsChild::~BackgroundUtilsChild()
+{
+  MOZ_COUNT_DTOR(indexedDB::BackgroundUtilsChild);
+}
+
+#ifdef DEBUG
+
+void
+BackgroundUtilsChild::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+
+  bool current;
+  MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
+  MOZ_ASSERT(current);
+}
+
+#endif // DEBUG
+
+void
+BackgroundUtilsChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mManager) {
+    mManager->ClearBackgroundActor();
+    mManager = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundIndexedDBUtilsChild::SendDeleteMe());
+  }
+}
+
+void
+BackgroundUtilsChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mManager) {
+    mManager->ClearBackgroundActor();
+#ifdef DEBUG
+    mManager = nullptr;
+#endif
+  }
+}
+
 } // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
