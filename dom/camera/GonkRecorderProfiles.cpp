@@ -269,18 +269,6 @@ GonkRecorderProfile::GonkRecorderProfile(uint32_t aCameraId,
   mIsValid = isValid && mAudio.IsValid() && mVideo.IsValid();
 }
 
-/* static */ PLDHashOperator
-GonkRecorderProfile::Enumerate(const nsAString& aProfileName,
-                               GonkRecorderProfile* aProfile,
-                               void* aUserArg)
-{
-  nsTArray<RefPtr<ICameraControl::RecorderProfile>>* profiles =
-    static_cast<nsTArray<RefPtr<ICameraControl::RecorderProfile>>*>(aUserArg);
-  MOZ_ASSERT(profiles);
-  profiles->AppendElement(aProfile);
-  return PL_DHASH_NEXT;
-}
-
 /* static */
 already_AddRefed<GonkRecorderProfile>
 GonkRecorderProfile::CreateProfile(uint32_t aCameraId, int aQuality)
@@ -379,7 +367,9 @@ GonkRecorderProfile::GetAll(uint32_t aCameraId,
   }
 
   aProfiles.Clear();
-  profiles->EnumerateRead(Enumerate, static_cast<void*>(&aProfiles));
+  for (auto iter = profiles->Iter(); !iter.Done(); iter.Next()) {
+    aProfiles.AppendElement(iter.UserData());
+  }
 
   return NS_OK;
 }
