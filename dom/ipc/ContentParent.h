@@ -919,16 +919,6 @@ private:
     DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) override;
 
     virtual bool
-    RecvGetFileReferences(const PersistenceType& aPersistenceType,
-                          const nsCString& aOrigin,
-                          const nsString& aDatabaseName,
-                          const int64_t& aFileId,
-                          int32_t* aRefCnt,
-                          int32_t* aDBRefCnt,
-                          int32_t* aSliceRefCnt,
-                          bool* aResult) override;
-
-    virtual bool
     RecvFlushPendingFileDeletions() override;
 
     virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;

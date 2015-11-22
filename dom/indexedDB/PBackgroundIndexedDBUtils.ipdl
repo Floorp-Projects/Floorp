@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using mozilla::dom::quota::PersistenceType
+  from "mozilla/dom/quota/PersistenceType.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+sync protocol PBackgroundIndexedDBUtils
+{
+  manager PBackground;
+
+parent:
+  DeleteMe();
+
+  // Use only for testing!
+  sync GetFileReferences(PersistenceType persistenceType,
+                         nsCString origin,
+                         nsString databaseName,
+                         int64_t fileId)
+    returns (int32_t refCnt, int32_t dBRefCnt, int32_t sliceRefCnt,
+             bool result);
+
+child:
+  __delete__();
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

@@ -28,6 +28,7 @@ namespace dom {
 
 namespace indexedDB {
 
+class BackgroundUtilsChild;
 class FileManager;
 class FileManagerInfo;
 class IDBFactory;
@@ -121,6 +122,9 @@ public:
   static bool
   IsFileHandleEnabled();
 
+  void
+  ClearBackgroundActor();
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,
@@ -211,6 +215,8 @@ private:
 #ifdef ENABLE_INTL_API
   nsCString mLocale;
 #endif
+
+  BackgroundUtilsChild* mBackgroundActor;
 
   static bool sIsMainProcess;
   static bool sFullSynchronousMode;

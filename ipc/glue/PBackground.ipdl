@@ -4,6 +4,7 @@
 
 include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundTest;
 include protocol PBlob;
 include protocol PBroadcastChannel;
@@ -41,6 +42,7 @@ sync protocol PBackground
 {
   manages PAsmJSCacheEntry;
   manages PBackgroundIDBFactory;
+  manages PBackgroundIndexedDBUtils;
   manages PBackgroundTest;
   manages PBlob;
   manages PBroadcastChannel;
@@ -61,6 +63,8 @@ parent:
   PBackgroundTest(nsCString testArg);
 
   PBackgroundIDBFactory(LoggingInfo loggingInfo);
+
+  PBackgroundIndexedDBUtils();
 
   PVsync();
 
