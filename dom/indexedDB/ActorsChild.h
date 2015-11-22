@@ -218,9 +218,6 @@ class BackgroundRequestChildBase
 protected:
   RefPtr<IDBRequest> mRequest;
 
-private:
-  bool mActorDestroyed;
-
 public:
   void
   AssertIsOnOwningThread() const
@@ -230,28 +227,11 @@ public:
   { }
 #endif
 
-  IDBRequest*
-  GetDOMObject() const
-  {
-    AssertIsOnOwningThread();
-    return mRequest;
-  }
-
-  bool
-  IsActorDestroyed() const
-  {
-    AssertIsOnOwningThread();
-    return mActorDestroyed;
-  }
-
 protected:
   explicit BackgroundRequestChildBase(IDBRequest* aRequest);
 
   virtual
   ~BackgroundRequestChildBase();
-
-  void
-  NoteActorDestroyed();
 };
 
 class BackgroundFactoryRequestChild final
