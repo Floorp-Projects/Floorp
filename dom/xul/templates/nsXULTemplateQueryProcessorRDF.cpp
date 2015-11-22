@@ -51,57 +51,32 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorRDF)
     tmp->Done();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-static PLDHashOperator
-BindingDependenciesTraverser(nsISupports* key,
-                             nsXULTemplateQueryProcessorRDF::ResultArray* array,
-                             void* userArg)
-{
-    nsCycleCollectionTraversalCallback *cb = 
-        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-    int32_t i, count = array->Length();
-    for (i = 0; i < count; ++i) {
-        cb->NoteXPCOMChild(array->ElementAt(i));
-    }
-
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-MemoryElementTraverser(const uint32_t& key,
-                       nsCOMArray<nsXULTemplateResultRDF>* array,
-                       void* userArg)
-{
-    nsCycleCollectionTraversalCallback *cb = 
-        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-    int32_t i, count = array->Count();
-    for (i = 0; i < count; ++i) {
-        cb->NoteXPCOMChild(array->ObjectAt(i));
-    }
-
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-RuleToBindingTraverser(nsISupports* key, RDFBindingSet* binding, void* userArg)
-{
-    nsCycleCollectionTraversalCallback *cb = 
-        static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-    cb->NoteXPCOMChild(key);
-
-    return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorRDF)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDB)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastRef)
-    tmp->mBindingDependencies.EnumerateRead(BindingDependenciesTraverser,
-                                            &cb);
-    tmp->mMemoryElementToResultMap.EnumerateRead(MemoryElementTraverser,
-                                                 &cb);
-    tmp->mRuleToBindingsMap.EnumerateRead(RuleToBindingTraverser, &cb);
+
+    for (auto it = tmp->mBindingDependencies.Iter(); !it.Done(); it.Next()) {
+        nsXULTemplateQueryProcessorRDF::ResultArray* array = it.UserData();
+        int32_t count = array->Length();
+        for (int32_t i = 0; i < count; ++i) {
+            cb.NoteXPCOMChild(array->ElementAt(i));
+        }
+    }
+
+    for (auto it = tmp->mMemoryElementToResultMap.Iter();
+         !it.Done();
+         it.Next()) {
+        nsCOMArray<nsXULTemplateResultRDF>* array = it.UserData();
+        int32_t count = array->Count();
+        for (int32_t i = 0; i < count; ++i) {
+            cb.NoteXPCOMChild(array->ObjectAt(i));
+        }
+    }
+
+    for (auto it = tmp->mRuleToBindingsMap.Iter(); !it.Done(); it.Next()) {
+        cb.NoteXPCOMChild(it.Key());
+    }
+
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
