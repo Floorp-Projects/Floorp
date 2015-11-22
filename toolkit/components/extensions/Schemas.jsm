@@ -341,9 +341,10 @@ class BooleanType extends Type {
 }
 
 class ArrayType extends Type {
-  constructor(itemType) {
+  constructor(itemType, minItems) {
     super();
     this.itemType = itemType;
+    this.minItems = minItems;
   }
 
   normalize(value) {
@@ -359,6 +360,10 @@ class ArrayType extends Type {
         return element;
       }
       result.push(element.value);
+    }
+
+    if (result.length < this.minItems) {
+      return {error: `Array requires at least ${this.minItems} items; you have ${result.length}`};
     }
 
     return {value: result};
@@ -643,8 +648,9 @@ this.Schemas = {
 
       return new ObjectType(properties, additionalProperties);
     } else if (type.type == "array") {
-      checkTypeProperties("items");
-      return new ArrayType(this.parseType(namespaceName, type.items));
+      checkTypeProperties("items", "minItems");
+      return new ArrayType(this.parseType(namespaceName, type.items),
+                           type.minItems || 0);
     } else if (type.type == "number") {
       checkTypeProperties();
       return new NumberType();
