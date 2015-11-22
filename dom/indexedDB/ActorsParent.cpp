@@ -19206,10 +19206,14 @@ FactoryOp::Open()
 
   {
     // These services have to be started on the main thread currently.
-    if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
+
+    IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
+    if (NS_WARN_IF(!mgr)) {
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+
+    mgr->NoteBackgroundThread(mOwningThread);
 
     nsCOMPtr<mozIStorageService> ss;
     if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
