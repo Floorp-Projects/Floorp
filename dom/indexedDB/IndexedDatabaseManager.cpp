@@ -9,6 +9,7 @@
 #include "nsIConsoleService.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsIDOMWindow.h"
+#include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
@@ -182,6 +183,8 @@ class DeleteFilesRunnable final
     State_Completed
   };
 
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
+
   RefPtr<FileManager> mFileManager;
   nsTArray<int64_t> mFileIds;
 
@@ -193,8 +196,12 @@ class DeleteFilesRunnable final
   State mState;
 
 public:
-  DeleteFilesRunnable(FileManager* aFileManager,
+  DeleteFilesRunnable(nsIEventTarget* aBackgroundThread,
+                      FileManager* aFileManager,
                       nsTArray<int64_t>& aFileIds);
+
+  void
+  Dispatch();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
@@ -735,6 +742,16 @@ IndexedDatabaseManager::ClearBackgroundActor()
   mBackgroundActor = nullptr;
 }
 
+void
+IndexedDatabaseManager::NoteBackgroundThread(nsIEventTarget* aBackgroundThread)
+{
+  MOZ_ASSERT(IsMainProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBackgroundThread);
+
+  mBackgroundThread = aBackgroundThread;
+}
+
 already_AddRefed<FileManager>
 IndexedDatabaseManager::GetFileManager(PersistenceType aPersistenceType,
                                        const nsACString& aOrigin,
@@ -1029,11 +1046,11 @@ IndexedDatabaseManager::Notify(nsITimer* aTimer)
     MOZ_ASSERT(!value->IsEmpty());
 
     RefPtr<DeleteFilesRunnable> runnable =
-      new DeleteFilesRunnable(key, *value);
+      new DeleteFilesRunnable(mBackgroundThread, key, *value);
 
     MOZ_ASSERT(value->IsEmpty());
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    runnable->Dispatch();
   }
 
   mPendingDeleteInfos.Clear();
@@ -1145,12 +1162,24 @@ FileManagerInfo::GetArray(PersistenceType aPersistenceType)
   }
 }
 
-DeleteFilesRunnable::DeleteFilesRunnable(FileManager* aFileManager,
+DeleteFilesRunnable::DeleteFilesRunnable(nsIEventTarget* aBackgroundThread,
+                                         FileManager* aFileManager,
                                          nsTArray<int64_t>& aFileIds)
-  : mFileManager(aFileManager)
+  : mBackgroundThread(aBackgroundThread)
+  , mFileManager(aFileManager)
   , mState(State_Initial)
 {
   mFileIds.SwapElements(aFileIds);
+}
+
+void
+DeleteFilesRunnable::Dispatch()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State_Initial);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL)));
 }
 
 NS_IMPL_ISUPPORTS(DeleteFilesRunnable, nsIRunnable)
@@ -1188,7 +1217,7 @@ DeleteFilesRunnable::Run()
 void
 DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
@@ -1210,7 +1239,7 @@ DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock)
 void
 DeleteFilesRunnable::DirectoryLockFailed()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
@@ -1220,7 +1249,7 @@ DeleteFilesRunnable::DirectoryLockFailed()
 nsresult
 DeleteFilesRunnable::Open()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_Initial);
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -1315,18 +1344,17 @@ DeleteFilesRunnable::Finish()
   // thread.
   mState = State_UnblockingOpen;
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL)));
 }
 
 void
 DeleteFilesRunnable::UnblockOpen()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_UnblockingOpen);
 
-  if (mDirectoryLock) {
-    mDirectoryLock = nullptr;
-  }
+  mDirectoryLock = nullptr;
 
   mState = State_Completed;
 }
