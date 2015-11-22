@@ -20,6 +20,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"

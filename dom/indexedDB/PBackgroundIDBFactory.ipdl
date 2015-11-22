@@ -9,6 +9,8 @@ include protocol PBackgroundIDBFactoryRequest;
 include PBackgroundIDBSharedTypes;
 include PBackgroundSharedTypes;
 
+include "mozilla/dom/quota/SerializationHelpers.h";
+
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
 

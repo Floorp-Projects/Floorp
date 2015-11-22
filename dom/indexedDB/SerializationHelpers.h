@@ -13,17 +13,8 @@
 #include "mozilla/dom/indexedDB/KeyPath.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
-#include "mozilla/dom/quota/PersistenceType.h"
 
 namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::dom::quota::PersistenceType> :
-  public ContiguousEnumSerializer<
-                               mozilla::dom::quota::PersistenceType,
-                               mozilla::dom::quota::PERSISTENCE_TYPE_PERSISTENT,
-                               mozilla::dom::quota::PERSISTENCE_TYPE_INVALID>
-{ };
 
 template <>
 struct ParamTraits<mozilla::dom::indexedDB::Key>

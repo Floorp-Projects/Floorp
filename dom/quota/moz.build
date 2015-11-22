@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom.quota += [
     'QuotaCommon.h',
     'QuotaManager.h',
     'QuotaObject.h',
+    'SerializationHelpers.h',
     'UsageInfo.h',
 ]
 
