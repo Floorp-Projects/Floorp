@@ -211,6 +211,7 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
         return NS_OK;
       }
       // Fall through int64_t case otherwise.
+      MOZ_FALLTHROUGH;
     }
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
@@ -223,6 +224,7 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
         return NS_OK;
       }
       // Fall through double case otherwise.
+      MOZ_FALLTHROUGH;
     }
     case nsIDataType::VTYPE_FLOAT:
     case nsIDataType::VTYPE_DOUBLE: {
@@ -293,6 +295,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
         return NS_OK;
       }
       // Fall through int64_t case otherwise.
+      MOZ_FALLTHROUGH;
     }
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
@@ -305,6 +308,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
         return NS_OK;
       }
       // Fall through double case otherwise.
+      MOZ_FALLTHROUGH;
     }
     case nsIDataType::VTYPE_FLOAT:
     case nsIDataType::VTYPE_DOUBLE: {
