@@ -455,6 +455,9 @@ public:
   // point is implementation-specific, but can for example be the midpoint
   // between the very first and very last touch. This is in device pixels and
   // are the coordinates on the screen of this midpoint.
+  // For PINCHGESTURE_END events, this instead will hold the coordinates of
+  // the remaining finger, if there is one. If there isn't one then it will
+  // store -1, -1.
   ScreenPoint mFocusPoint;
 
   // |mFocusPoint| transformed to the local coordinates of the APZC targeted
