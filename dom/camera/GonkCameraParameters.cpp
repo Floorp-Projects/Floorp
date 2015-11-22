@@ -69,27 +69,19 @@ GonkCameraParameters::FindVendorSpecificKey(const char* aPotentialKeys[],
   return nullptr;
 }
 
-/* static */ PLDHashOperator
-GonkCameraParameters::EnumerateFlatten(const nsACString& aKey,
-                                       nsCString* aValue,
-                                       void* aUserArg)
-{
-  nsCString* data = static_cast<nsCString*>(aUserArg);
-  if (!data->IsEmpty()) {
-    data->Append(';');
-  }
-  data->Append(aKey);
-  data->Append('=');
-  data->Append(*aValue);
-  return PL_DHASH_NEXT;
-}
-
 String8
 GonkCameraParameters::Flatten() const
 {
   MutexAutoLock lock(mLock);
   nsCString data;
-  mParams.EnumerateRead(EnumerateFlatten, static_cast<void*>(&data));
+  for (auto iter = mParams.ConstIter(); !iter.Done(); iter.Next()) {
+    if (!data.IsEmpty()) {
+      data.Append(';');
+    }
+    data.Append(iter.Key());
+    data.Append('=');
+    data.Append(*iter.UserData());
+  }
   return String8(data.Data());
 }
 
