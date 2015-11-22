@@ -122,9 +122,6 @@ public:
 #endif
 
   void
-  SetBackgroundActor(BackgroundFactoryChild* aBackgroundActor);
-
-  void
   ClearBackgroundActor()
   {
     AssertIsOnOwningThread();

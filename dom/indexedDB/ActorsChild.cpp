@@ -1097,7 +1097,6 @@ PermissionRequestChildProcessActor::Recv__delete__(
 
 BackgroundRequestChildBase::BackgroundRequestChildBase(IDBRequest* aRequest)
   : mRequest(aRequest)
-  , mActorDestroyed(false)
 {
   MOZ_ASSERT(aRequest);
   aRequest->AssertIsOnOwningThread();
@@ -1122,15 +1121,6 @@ BackgroundRequestChildBase::AssertIsOnOwningThread() const
 }
 
 #endif // DEBUG
-
-void
-BackgroundRequestChildBase::NoteActorDestroyed()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  mActorDestroyed = true;
-}
 
 /*******************************************************************************
  * BackgroundFactoryChild
@@ -1276,8 +1266,7 @@ BackgroundFactoryRequestChild::GetOpenDBRequest() const
 {
   AssertIsOnOwningThread();
 
-  IDBRequest* baseRequest = BackgroundRequestChildBase::GetDOMObject();
-  return static_cast<IDBOpenDBRequest*>(baseRequest);
+  return static_cast<IDBOpenDBRequest*>(mRequest.get());
 }
 
 bool
@@ -1357,8 +1346,6 @@ BackgroundFactoryRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
-
-  NoteActorDestroyed();
 
   if (aWhy != Deletion) {
     IDBOpenDBRequest* openRequest = GetOpenDBRequest();
@@ -2446,8 +2433,6 @@ BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
-
-  NoteActorDestroyed();
 
   if (mTransaction) {
     mTransaction->AssertIsOnOwningThread();
