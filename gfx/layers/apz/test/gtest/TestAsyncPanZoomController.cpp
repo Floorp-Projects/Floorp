@@ -1014,6 +1014,81 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   apzc->AssertStateIsReset();
 }
 
+TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+
+  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+  apzc->SetFrameMetrics(originalMetrics);
+
+  // Making the APZC zoomable isn't really needed for the correct operation of
+  // this test, but it could help catch regressions where we accidentally enter
+  // a pinch state.
+  MakeApzcZoomable();
+
+  // Test parameters
+  int touchX = 250;
+  int touchY = 300;
+  int panDistance = 20;
+
+  int firstFingerId = 0;
+  int secondFingerId = firstFingerId + 1;
+
+  // Put finger down
+  MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Start a pan, break through the threshold
+  touchY += 40;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Do an actual pan for a bit
+  touchY += panDistance;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Put a second finger down
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, touchX + 10, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Lift the second finger
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(secondFingerId, touchX + 10, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Bust through the threshold again
+  touchY += 40;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Do some more actual panning
+  touchY += panDistance;
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Lift the first finger
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti.mTouches.AppendElement(CreateSingleTouchData(firstFingerId, touchX, touchY));
+  apzc->ReceiveInputEvent(mti, nullptr);
+
+  // Verify that we scrolled
+  FrameMetrics finalMetrics = apzc->GetFrameMetrics();
+  float zoom = finalMetrics.GetZoom().ToScaleFactor().scale;
+  EXPECT_EQ(originalMetrics.GetScrollOffset().y - (panDistance * 2 / zoom), finalMetrics.GetScrollOffset().y);
+
+  // Clear out any remaining fling animation and pending tasks
+  apzc->AdvanceAnimationsUntilEnd();
+  while (mcc->RunThroughDelayedTasks());
+  apzc->AssertStateIsReset();
+}
+
 TEST_F(APZCBasicTester, Overzoom) {
   // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
   FrameMetrics fm;
