@@ -16287,7 +16287,7 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
       return rv;
     }
 
-    quota::IncrementUsage(&usage, uint64_t(fileSize));
+    UsageInfo::IncrementUsage(&usage, uint64_t(fileSize));
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
