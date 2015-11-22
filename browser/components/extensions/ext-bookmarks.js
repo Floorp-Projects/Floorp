@@ -82,7 +82,7 @@ function convert(result) {
   return node;
 }
 
-extensions.registerPrivilegedAPI("bookmarks", (extension, context) => {
+extensions.registerSchemaAPI("bookmarks", "bookmarks", (extension, context) => {
   return {
     bookmarks: {
       get: function(idOrIdList, callback) {
@@ -142,18 +142,18 @@ extensions.registerPrivilegedAPI("bookmarks", (extension, context) => {
         };
 
         // If url is NULL or missing, it will be a folder.
-        if ("url" in bookmark && bookmark.url !== null) {
+        if (bookmark.url !== null) {
           info.type = Bookmarks.TYPE_BOOKMARK;
           info.url = bookmark.url || "";
         } else {
           info.type = Bookmarks.TYPE_FOLDER;
         }
 
-        if ("index" in bookmark) {
+        if (bookmark.index !== null) {
           info.index = bookmark.index;
         }
 
-        if ("parentId" in bookmark) {
+        if (bookmark.parentId !== null) {
           info.parentGuid = bookmark.parentId;
         } else {
           info.parentGuid = Bookmarks.unfiledGuid;
@@ -182,10 +182,10 @@ extensions.registerPrivilegedAPI("bookmarks", (extension, context) => {
           guid: id,
         };
 
-        if ("parentId" in destination) {
+        if (destination.parentId !== null) {
           info.parentGuid = destination.parentId;
         }
-        if ("index" in destination) {
+        if (destination.index !== null) {
           info.index = destination.index;
         }
 
@@ -211,10 +211,10 @@ extensions.registerPrivilegedAPI("bookmarks", (extension, context) => {
           guid: id,
         };
 
-        if ("title" in changes) {
+        if (changes.title !== null) {
           info.title = changes.title;
         }
-        if ("url" in changes) {
+        if (changes.url !== null) {
           info.url = changes.url;
         }
 
