@@ -145,6 +145,12 @@ protected:
 
   virtual bool
   DeallocPAsmJSCacheEntryChild(PAsmJSCacheEntryChild* aActor) override;
+
+  virtual PQuotaChild*
+  AllocPQuotaChild() override;
+
+  virtual bool
+  DeallocPQuotaChild(PQuotaChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

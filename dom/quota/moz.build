@@ -5,27 +5,38 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIQuotaManager.idl',
-    'nsIQuotaRequest.idl',
-    'nsIUsageCallback.idl',
+    'nsIQuotaCallbacks.idl',
+    'nsIQuotaManagerService.idl',
+    'nsIQuotaRequests.idl',
 ]
 
 XPIDL_MODULE = 'dom_quota'
 
 EXPORTS.mozilla.dom.quota += [
+    'ActorsParent.h',
     'Client.h',
     'FileStreams.h',
     'PersistenceType.h',
     'QuotaCommon.h',
     'QuotaManager.h',
+    'QuotaManagerService.h',
     'QuotaObject.h',
     'SerializationHelpers.h',
     'UsageInfo.h',
 ]
 
 UNIFIED_SOURCES += [
+    'ActorsChild.cpp',
+    'ActorsParent.cpp',
     'FileStreams.cpp',
-    'QuotaManager.cpp',
+    'QuotaManagerService.cpp',
+    'QuotaRequests.cpp',
+]
+
+IPDL_SOURCES += [
+    'PQuota.ipdl',
+    'PQuotaRequest.ipdl',
+    'PQuotaUsageRequest.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
