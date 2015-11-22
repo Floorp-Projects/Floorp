@@ -18,6 +18,7 @@
 #include "nsHashKeys.h"
 #include "nsITimer.h"
 
+class nsIEventTarget;
 struct PRLogModuleInfo;
 
 namespace mozilla {
@@ -125,6 +126,9 @@ public:
   void
   ClearBackgroundActor();
 
+  void
+  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,
@@ -197,6 +201,8 @@ private:
 
   static void
   LoggingModePrefChangedCallback(const char* aPrefName, void* aClosure);
+
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
   nsCOMPtr<nsITimer> mDeleteTimer;
 
