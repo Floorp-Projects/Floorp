@@ -35,7 +35,11 @@ function runTests(testFile, order) {
   // adapted from dom/indexedDB/test/helpers.js
   function clearStorage() {
     return new Promise(function(resolve, reject) {
-      SpecialPowers.clearStorageForDoc(SpecialPowers.wrap(document), resolve);
+      var qms = SpecialPowers.Services.qms;
+      var principal = SpecialPowers.wrap(document).nodePrincipal;
+      var request = qms.clearStoragesForPrincipal(principal);
+      var cb = SpecialPowers.wrapCallback(resolve);
+      request.callback = cb;
     });
   }
 
