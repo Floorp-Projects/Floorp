@@ -7,16 +7,14 @@
 #ifndef nsBaseHashtable_h__
 #define nsBaseHashtable_h__
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "nsTHashtable.h"
 #include "nsDebug.h"
 
-// These are the codes returned by |EnumReadFunction| and |EnumFunction|, which
-// control the behavior of EnumerateRead() and Enumerate(). The PLD/PL_D prefix
-// is because they originated in PLDHashTable, but that class no longer uses
-// them.
+// These type is returned by |EnumFunction| and controls the behavior of
+// Enumerate(). The PLD/PL_D prefix is because it originated in PLDHashTable,
+// but that class no longer uses it.
 enum PLDHashOperator
 {
   PL_DHASH_NEXT = 0,          // enumerator says continue
@@ -156,36 +154,6 @@ public:
    * @param aKey the key to remove from the hashtable
    */
   void Remove(KeyType aKey) { this->RemoveEntry(aKey); }
-
-  /**
-   * function type provided by the application for enumeration.
-   * @param aKey the key being enumerated
-   * @param aData data being enumerated
-   * @param aUserArg passed unchanged from Enumerate
-   * @return @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink
-   */
-  typedef PLDHashOperator (*EnumReadFunction)(KeyType aKey,
-                                              UserDataType aData,
-                                              void* aUserArg);
-
-  /**
-   * enumerate entries in the hashtable, without allowing changes
-   * WARNING: this function is deprecated. Please use Iterator instead.
-   * @param aEnumFunc enumeration callback
-   * @param aUserArg passed unchanged to the EnumReadFunction
-   */
-  uint32_t EnumerateRead(EnumReadFunction aEnumFunc, void* aUserArg) const
-  {
-    uint32_t n = 0;
-    for (auto iter = this->mTable.ConstIter(); !iter.Done(); iter.Next()) {
-      auto entry = static_cast<EntryType*>(iter.Get());
-      mozilla::DebugOnly<PLDHashOperator> op =
-        aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
-      n++;
-      MOZ_ASSERT(!(op & PL_DHASH_REMOVE));
-    }
-    return n;
-  }
 
   /**
    * function type provided by the application for enumeration.
