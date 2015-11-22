@@ -1,0 +1,153 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_quota_ActorsChild_h
+#define mozilla_dom_quota_ActorsChild_h
+
+#include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/quota/PQuotaRequestChild.h"
+#include "mozilla/dom/quota/PQuotaUsageRequestChild.h"
+
+namespace mozilla {
+namespace ipc {
+
+class BackgroundChildImpl;
+
+} // namespace ipc
+
+namespace dom {
+namespace quota {
+
+class QuotaManagerService;
+class Request;
+class UsageRequest;
+
+class QuotaChild final
+  : public PQuotaChild
+{
+  friend class mozilla::ipc::BackgroundChildImpl;
+  friend class QuotaManagerService;
+
+  QuotaManagerService* mService;
+
+#ifdef DEBUG
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+#endif
+
+public:
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+private:
+  // Only created by QuotaManagerService.
+  explicit QuotaChild(QuotaManagerService* aService);
+
+  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
+  ~QuotaChild();
+
+  // IPDL methods are only called by IPDL.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual PQuotaUsageRequestChild*
+  AllocPQuotaUsageRequestChild(const UsageRequestParams& aParams) override;
+
+  virtual bool
+  DeallocPQuotaUsageRequestChild(PQuotaUsageRequestChild* aActor) override;
+
+  virtual PQuotaRequestChild*
+  AllocPQuotaRequestChild(const RequestParams& aParams) override;
+
+  virtual bool
+  DeallocPQuotaRequestChild(PQuotaRequestChild* aActor) override;
+};
+
+class QuotaUsageRequestChild final
+  : public PQuotaUsageRequestChild
+{
+  friend class QuotaChild;
+  friend class QuotaManagerService;
+
+  RefPtr<UsageRequest> mRequest;
+
+public:
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+private:
+  // Only created by QuotaManagerService.
+  explicit QuotaUsageRequestChild(UsageRequest* aRequest);
+
+  // Only destroyed by QuotaChild.
+  ~QuotaUsageRequestChild();
+
+  void
+  HandleResponse(nsresult aResponse);
+
+  void
+  HandleResponse(const UsageResponse& aResponse);
+
+  // IPDL methods are only called by IPDL.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual bool
+  Recv__delete__(const UsageRequestResponse& aResponse) override;
+};
+
+class QuotaRequestChild final
+  : public PQuotaRequestChild
+{
+  friend class QuotaChild;
+  friend class QuotaManagerService;
+
+  RefPtr<Request> mRequest;
+
+public:
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+private:
+  // Only created by QuotaManagerService.
+  explicit QuotaRequestChild(Request* aRequest);
+
+  // Only destroyed by QuotaChild.
+  ~QuotaRequestChild();
+
+  void
+  HandleResponse(nsresult aResponse);
+
+  void
+  HandleResponse();
+
+  // IPDL methods are only called by IPDL.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  virtual bool
+  Recv__delete__(const RequestResponse& aResponse) override;
+};
+
+} // namespace quota
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_quota_ActorsChild_h

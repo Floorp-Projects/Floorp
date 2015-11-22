@@ -69,7 +69,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/PPresentationParent.h"
-#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/voicemail/VoicemailParent.h"
@@ -1795,10 +1795,10 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
         return;
     }
 
-    using mozilla::dom::quota::QuotaManager;
+    using mozilla::dom::quota::QuotaManagerService;
 
-    if (QuotaManager* quotaManager = QuotaManager::Get()) {
-        quotaManager->AbortOperationsForProcess(mChildID);
+    if (QuotaManagerService* quotaManagerService = QuotaManagerService::Get()) {
+        quotaManagerService->AbortOperationsForProcess(mChildID);
     }
 
     // If Close() fails with an error, we'll end up back in this function, but
