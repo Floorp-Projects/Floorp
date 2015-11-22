@@ -9,6 +9,7 @@ include protocol PBlob;
 include DOMTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
+include "mozilla/dom/quota/SerializationHelpers.h";
 
 using struct mozilla::null_t
   from "ipc/IPCMessageUtils.h";
