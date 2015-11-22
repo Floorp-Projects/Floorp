@@ -121,7 +121,6 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
         Log(token, "found key " + key + " for key id " + idHex);
         outKeys.push({
           "kty":"oct",
-          "alg":"A128KW",
           "kid":id64,
           "k":HexToBase64(key)
         });
