@@ -10,7 +10,7 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 
 #include "mozilla/Atomics.h"
-#include "Utilities.h"
+#include "mozilla/CheckedInt.h"
 
 BEGIN_QUOTA_NAMESPACE
 
@@ -77,6 +77,19 @@ public:
   {
     mDatabaseUsage = 0;
     mFileUsage = 0;
+  }
+
+  static void
+  IncrementUsage(uint64_t* aUsage, uint64_t aDelta)
+  {
+    MOZ_ASSERT(aUsage);
+    CheckedUint64 value = *aUsage;
+    value += aDelta;
+    if (value.isValid()) {
+      *aUsage = value.value();
+    } else {
+      *aUsage = UINT64_MAX;
+    }
   }
 
 protected:
