@@ -231,7 +231,7 @@ pref("devtools.webconsole.filter.info", true);
 pref("devtools.webconsole.filter.log", true);
 pref("devtools.webconsole.filter.secerror", true);
 pref("devtools.webconsole.filter.secwarn", true);
-pref("devtools.webconsole.filter.serviceworkers", false);
+pref("devtools.webconsole.filter.serviceworkers", true);
 pref("devtools.webconsole.filter.sharedworkers", false);
 pref("devtools.webconsole.filter.windowlessworkers", false);
 pref("devtools.webconsole.filter.servererror", false);

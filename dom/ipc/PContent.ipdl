@@ -71,8 +71,6 @@ include GraphicsMessages;
 // XXX Remove this once bug 1069073 is fixed
 include "mozilla/dom/PContentBridgeParent.h";
 
-include "mozilla/dom/indexedDB/SerializationHelpers.h";
-
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
@@ -85,7 +83,6 @@ using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
-using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
@@ -1030,14 +1027,6 @@ parent:
      */
     sync KeygenProvideContent()
         returns (nsString aAttribute, nsString[] aContent);
-
-    // Use only for testing!
-    sync GetFileReferences(PersistenceType persistenceType,
-                           nsCString origin,
-                           nsString databaseName,
-                           int64_t fileId)
-      returns (int32_t refCnt, int32_t dBRefCnt, int32_t sliceRefCnt,
-               bool result);
 
     // Use only for testing!
     FlushPendingFileDeletions();

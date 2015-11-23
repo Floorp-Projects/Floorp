@@ -360,6 +360,10 @@ var gTests = [
       EventUtils.synthesizeKey("a", { accelKey: true });
       EventUtils.synthesizeKey("VK_DELETE", {});
       ok(table.hidden, "Search suggestion table hidden");
+
+      try {
+        Services.search.removeEngine(engine);
+      } catch (ex) { }
     });
   }
 },
@@ -369,6 +373,12 @@ var gTests = [
   run: function()
   {
     return Task.spawn(function* () {
+      // Add a test engine that provides suggestions and switch to it.
+      let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
+      let p = promiseContentSearchChange(engine.name);
+      Services.search.currentEngine = engine;
+      yield p;
+
       // Start composition and type "x"
       let input = gBrowser.contentDocument.getElementById("searchText");
       input.focus();

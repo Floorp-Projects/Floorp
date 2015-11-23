@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that arrows get the open attribute when their item's children are expanded.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://browser/skin/devtools/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+
+    yield setProps(tree, {
+      renderItem: (item, depth, focused, arrow) => {
+        return React.DOM.div(
+          {
+            id: item,
+            style: { marginLeft: depth * 16 + "px" }
+          },
+          arrow,
+          item
+        );
+      }
+    });
+
+    yield setState(tree, {
+      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+    });
+
+    let arrows = document.querySelectorAll(".arrow");
+    for (let a of arrows) {
+      ok(a.classList.contains("open"), "Every arrow should be open.");
+    }
+
+    yield setState(tree, {
+      expanded: new Set()
+    });
+
+    arrows = document.querySelectorAll(".arrow");
+    for (let a of arrows) {
+      ok(!a.classList.contains("open"), "Every arrow should be closed.");
+    }
+
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(linear, ...) expressions,
+    from the an arbitrary spot along each side to the same arbitrary
+    place on opposite side.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  100px;
+      height: 50px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Left to right gradients: -->
+  <div style="background: -webkit-gradient(linear, left 25%, right 25%,
+                                           from(blue), to(yellow))"></div>
+
+  <div style="background: -webkit-gradient(linear, left -123%, right -123%,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <br>
+
+  <!-- Right to left gradients: -->
+  <div style="background: -webkit-gradient(linear, right -10, left -10,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, right 9999, left 9999,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <br>
+
+  <!-- Top to bottom gradients: -->
+  <div style="background: -webkit-gradient(linear, 1.11 top, 1.11 bottom,
+                                           from(blue), to(yellow))"></div>
+
+  <div style="background: -webkit-gradient(linear, -56.78 top, -56.78 bottom,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+  <br>
+
+  <!-- Bottom to top gradients: -->
+  <div style="background: -webkit-gradient(linear, -0 bottom, 0 top,
+                                           from(blue), to(yellow))"></div>
+
+  <div style="background: -webkit-gradient(linear, 0% bottom, -0% top,
+                                           from(blue),
+                                           color-stop(0.3, pink),
+                                           to(yellow))"></div>
+</body>
+</html>

@@ -562,3 +562,4 @@ function popPrefs() {
     SpecialPowers.popPrefEnv(resolve);
   });
 }
+

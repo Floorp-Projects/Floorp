@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = randomFilename(20) + ".png"
 
@@ -31,7 +31,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function onChange(e) {
@@ -51,7 +51,7 @@ function onChange(e) {
   if (filename == gFileName) {
     ok(true, "we saw the file get created");
     storage.removeEventListener("change", onChange);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   }
   else {
     // we may see other file changes during the test, and
@@ -68,6 +68,8 @@ ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;
 request.onerror = addError;
+
+});
 
 </script>
 </pre>

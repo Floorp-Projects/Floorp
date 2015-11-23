@@ -10,7 +10,4 @@ DevToolsModules(
     'snapshot-list-item.js',
     'toolbar.js',
     'tree-item.js',
-    'tree.js',
 )
-
-MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']

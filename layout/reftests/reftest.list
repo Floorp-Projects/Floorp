@@ -240,7 +240,7 @@ include marquee/reftest.list
 
 # native-theme/
 # skipping for B2G since something around radio-nonnative.html makes the whole suite hang
-skip-if(B2G||Mulet) include native-theme/reftest.list # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Android||Mulet) include native-theme/reftest.list # Initial mulet triage: parity with B2G/B2G Desktop
 
 # netwerk/
 include ../../netwerk/test/reftest/reftest.list
@@ -355,17 +355,20 @@ include ../../widget/reftests/reftest.list
 # xml-stylesheet/
 include ../../dom/tests/reftest/xml-stylesheet/reftest.list
 
-# xul-document-load/
-include xul-document-load/reftest.list
+# xul-document-load/ (no XUL theme on Android)
+skip-if(Android) include xul-document-load/reftest.list
 
-# xul/
-include xul/reftest.list
+# xul/ (no XUL theme on Android)
+skip-if(Android) include xul/reftest.list
 
-# xul
-include ../xul/reftest/reftest.list
+# xul (no XUL theme on Android)
+skip-if(Android) include ../xul/reftest/reftest.list
 
-# xul grid
-include ../xul/grid/reftests/reftest.list
+# xul grid (no XUL theme on Android)
+skip-if(Android) include ../xul/grid/reftests/reftest.list
+
+# -webkit-gradient expressions
+include webkit-gradient/reftest.list
 
 # writing-mode
 include writing-mode/reftest.list

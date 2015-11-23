@@ -1,0 +1,298 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test keyboard navigation with the Tree component.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+
+    yield setState(tree, {
+      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+    });
+
+    // UP ----------------------------------------------------------------------
+
+    info("Up to the previous sibling.");
+
+    yield setState(tree, {
+      focused: "L"
+    });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:true",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, K should be focused.");
+
+    info("Up to the parent.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, E should be focused.");
+
+    info("Try and navigate up, past the first item.");
+
+    yield setState(tree, {
+      focused: "A"
+    });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the UP, A should be focused and we shouldn't have overflowed past it.");
+
+    // DOWN --------------------------------------------------------------------
+
+    yield setState(tree, {
+      focused: "K"
+    });
+
+    info("Down to next sibling.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:true",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the DOWN, L should be focused.");
+
+    info("Down to parent's next sibling.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:true",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the DOWN, F should be focused.");
+
+    info("Try and go down past the last item.");
+
+    yield setState(tree, {
+      focused: "O"
+    });
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:true",
+    ], "After the DOWN, O should still be focused and we shouldn't have overflowed past it.");
+
+    // LEFT --------------------------------------------------------------------
+
+    info("Left to go to parent.");
+
+    yield setState(tree, {
+      focused: "L"
+    })
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the LEFT, E should be focused.");
+
+    info("Left to collapse children.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the LEFT, E's children should be collapsed.");
+
+    // RIGHT -------------------------------------------------------------------
+
+    info("Right to expand children.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:true",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the RIGHT, E's children should be expanded again.");
+
+    info("Right to go to next item.");
+
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    // Let the component re-render.
+    yield setState(tree, {});
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:true",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "After the RIGHT, K should be focused.");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

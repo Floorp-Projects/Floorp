@@ -4,7 +4,7 @@
  */
 
 var oldVal = false;
-  
+
 Object.defineProperty(Array.prototype, "remove", {
   enumerable: false,
   configurable: false,
@@ -17,36 +17,18 @@ Object.defineProperty(Array.prototype, "remove", {
   }
 });
 
-function devicestorage_setup() {
-
-  // ensure that the directory we are writing into is empty
-  try {
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-    var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var f = directoryService.get("TmpD", Ci.nsIFile);
-    f.appendRelativePath("device-storage-testing");
-    f.remove(true);
-  } catch(e) {}
-
+function devicestorage_setup(callback) {
   SimpleTest.waitForExplicitFinish();
-  if (SpecialPowers.isMainProcess()) {
-    try {
-      oldVal = SpecialPowers.getBoolPref("device.storage.enabled");
-    } catch(e) {}
-    SpecialPowers.setBoolPref("device.storage.enabled", true);
-    SpecialPowers.setBoolPref("device.storage.testing", true);
-    SpecialPowers.setBoolPref("device.storage.prompt.testing", true);
-  }
-}
 
-function devicestorage_cleanup() {
-  if (SpecialPowers.isMainProcess()) {
-    SpecialPowers.setBoolPref("device.storage.enabled", oldVal);
-    SpecialPowers.setBoolPref("device.storage.testing", false);
-    SpecialPowers.setBoolPref("device.storage.prompt.testing", false);
-  }
-  SimpleTest.finish();
+  let script = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('remove_testing_directory.js'));
+
+  script.addMessageListener('directory-removed', function listener () {
+    script.removeMessageListener('directory-removed', listener);
+    var prefs = [["device.storage.enabled", true],
+                 ["device.storage.testing", true],
+                 ["device.storage.prompt.testing", true]];
+    SpecialPowers.pushPrefEnv({"set": prefs}, callback);
+  });
 }
 
 function getRandomBuffer() {
@@ -75,7 +57,7 @@ function randomFilename(l) {
 
 function reportErrorAndQuit(e) {
   ok(false, "handleError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function createTestFiles(storage, paths) {

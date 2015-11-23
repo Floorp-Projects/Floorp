@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that we only render visible tree items.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+
+    yield setState(tree, {
+      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
+      height: 3,
+      scroll: 1
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+    ], "Tree should show the second, third, and fourth items + buffer of 1 item at the end");
+
+    yield setState(tree, {
+      height: 2,
+      scroll: 3
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+    ], "Tree should show the third and fourth item + buffer of 1 item at each end");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

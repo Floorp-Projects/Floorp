@@ -345,7 +345,7 @@ pref("media.wave.enabled", true);
 #ifdef MOZ_WEBM
 pref("media.webm.enabled", true);
 #if defined(MOZ_FMP4) && defined(MOZ_WMF)
-pref("media.webm.intel_decoder.enabled", true);
+pref("media.webm.intel_decoder.enabled", false);
 #endif
 #endif
 #ifdef MOZ_GSTREAMER
@@ -1992,6 +1992,9 @@ pref("security.mixed_content.block_display_content", false);
 
 // Sub-resource integrity
 pref("security.sri.enable", true);
+
+// OCSP must-staple
+pref("security.ssl.enable_ocsp_must_staple", true);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
@@ -4826,12 +4829,16 @@ pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,tes
 pref("urlclassifier.phishTable", "goog-phish-shavar,test-phish-simple");
 pref("urlclassifier.downloadBlockTable", "");
 pref("urlclassifier.downloadAllowTable", "");
-pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,goog-downloadwhite-digest256,mozstd-track-digest256,mozstd-trackwhite-digest256,mozfull-track-digest256");
+pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-forbid-simple,goog-downloadwhite-digest256,mozstd-track-digest256,mozstd-trackwhite-digest256,mozfull-track-digest256");
 
 // The table and update/gethash URLs for Safebrowsing phishing and malware
 // checks.
 pref("urlclassifier.trackingTable", "test-track-simple,mozstd-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
+
+// The table and global pref for blocking access to sites forbidden by policy
+pref("browser.safebrowsing.forbiddenURIs.enabled", false);
+pref("urlclassifier.forbiddenTable", "test-forbid-simple");
 
 pref("browser.safebrowsing.provider.mozilla.lists", "mozstd-track-digest256,mozstd-trackwhite-digest256,mozfull-track-digest256");
 pref("browser.safebrowsing.provider.mozilla.updateURL", "https://shavar.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");

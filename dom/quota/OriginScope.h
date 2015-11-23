@@ -63,6 +63,27 @@ public:
     return mType;
   }
 
+  void
+  SetFromOrigin(const nsACString& aOrigin)
+  {
+    Assign(aOrigin);
+    mType = eOrigin;
+  }
+
+  void
+  SetFromPattern(const nsACString& aPattern)
+  {
+    Assign(aPattern);
+    mType = ePattern;
+  }
+
+  void
+  SetFromNull()
+  {
+    SetIsVoid(true);
+    mType = eNull;
+  }
+
 private:
   OriginScope(const nsACString& aString, Type aType)
   : nsCString(aString), mType(aType)
@@ -71,7 +92,7 @@ private:
   bool
   operator==(const OriginScope& aOther) = delete;
 
-  const Type mType;
+  Type mType;
 };
 
 END_QUOTA_NAMESPACE
