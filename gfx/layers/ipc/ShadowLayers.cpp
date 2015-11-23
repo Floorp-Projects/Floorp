@@ -169,8 +169,6 @@ ShadowLayerForwarder::ShadowLayerForwarder()
  , mWindowOverlayChanged(false)
  , mPaintSyncId(0)
 {
-  MOZ_COUNT_CTOR(ShadowLayerForwarder);
-
   mTxn = new Transaction();
 }
 
@@ -182,8 +180,6 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
     mShadowManager->SetForwarder(nullptr);
     mShadowManager->Destroy();
   }
-
-  MOZ_COUNT_DTOR(ShadowLayerForwarder);
 }
 
 void

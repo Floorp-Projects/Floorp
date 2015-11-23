@@ -60,8 +60,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   , mSetChildThreadPriority(false)
   , mStopped(false)
 {
-  MOZ_COUNT_CTOR(ImageBridgeParent);
-
   MOZ_ASSERT(NS_IsMainThread());
   sMainLoop = MessageLoop::current();
 
@@ -92,8 +90,6 @@ ImageBridgeParent::~ImageBridgeParent()
   }
 
   sImageBridges.erase(OtherPid());
-
-  MOZ_COUNT_DTOR(ImageBridgeParent);
 }
 
 void
