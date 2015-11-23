@@ -224,7 +224,6 @@ nsHostRecord::CopyExpirationTimesAndFlagsFrom(const nsHostRecord *aFromHostRecor
 nsHostRecord::~nsHostRecord()
 {
     Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
-    delete addr_info;
     delete addr;
 }
 
@@ -1237,19 +1236,16 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
 
         // update record fields.  We might have a rec->addr_info already if a
         // previous lookup result expired and we're reresolving it..
-        AddrInfo  *old_addr_info;
         {
             MutexAutoLock lock(rec->addr_info_lock);
-            old_addr_info = rec->addr_info;
             rec->addr_info = result;
             rec->addr_info_gencnt++;
         }
-        delete old_addr_info;
 
         rec->negative = !rec->addr_info;
         PrepareRecordExpiration(rec);
         rec->resolving = false;
-        
+
         if (rec->usingAnyThread) {
             mActiveAnyThreadCount--;
             rec->usingAnyThread = false;
@@ -1384,9 +1380,9 @@ nsHostResolver::ThreadFunc(void *arg)
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
-    nsHostResolver *resolver = (nsHostResolver *)arg;
+    RefPtr<nsHostResolver> resolver = dont_AddRef(static_cast<nsHostResolver*>(arg));
     nsHostRecord *rec  = nullptr;
-    AddrInfo *ai = nullptr;
+    RefPtr<AddrInfo> ai;
 
     while (rec || resolver->GetHostToLookup(&rec)) {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s%s%s].\n",
@@ -1400,10 +1396,11 @@ nsHostResolver::ThreadFunc(void *arg)
 #endif
 
         nsresult status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface,
-                                      &ai, getTtl);
+                                      getter_AddRefs(ai), getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface, &ai,
+            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface,
+                                 getter_AddRefs(ai),
                                  getTtl);
         }
 #endif
@@ -1448,7 +1445,6 @@ nsHostResolver::ThreadFunc(void *arg)
         }
     }
     resolver->mThreadCount--;
-    NS_RELEASE(resolver);
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }
 
@@ -1458,15 +1454,15 @@ nsHostResolver::Create(uint32_t maxCacheEntries,
                        uint32_t defaultGracePeriod,
                        nsHostResolver **result)
 {
-    nsHostResolver *res = new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
-                                             defaultGracePeriod);
-    NS_ADDREF(res);
+    RefPtr<nsHostResolver> res =
+        new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
+                           defaultGracePeriod);
 
     nsresult rv = res->Init();
-    if (NS_FAILED(rv))
-        NS_RELEASE(res);
+    if (NS_SUCCEEDED(rv)) {
+        res.forget(result);
+    }
 
-    *result = res;
     return rv;
 }
 
