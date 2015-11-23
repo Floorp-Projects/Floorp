@@ -45,7 +45,7 @@ task:
 
   extra:
     chunks:
-      total: 3
+      total: 6
 
     treeherder:
       groupName: Gaia Python Integration Tests
