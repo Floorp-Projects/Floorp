@@ -287,6 +287,23 @@ struct TestAssembler
         uint32_t* hdr = reinterpret_cast<uint32_t*>(start);
         *hdr = 0xffff0000 + p->getPoolSize();
     }
+
+    static void PatchShortRangeBranchToVeneer(AsmBufWithPool* buffer, unsigned rangeIdx,
+                                              js::jit::BufferOffset deadline,
+                                              js::jit::BufferOffset veneer)
+    {
+        size_t branchOff = deadline.getOffset() - BranchRange;
+        size_t veneerOff = veneer.getOffset();
+        uint32_t *branch = buffer->getInst(js::jit::BufferOffset(branchOff));
+
+        MOZ_ASSERT((*branch & 0xffff0000) == 0xb1bb0000,
+                   "Expected short-range branch instruction");
+        // Copy branch offset to veneer. A real instruction set would require
+        // some adjustment of the label linked-list.
+        *buffer->getInst(veneer) = 0xb2bb0000 | (*branch & 0xffff);
+        MOZ_ASSERT(veneerOff > branchOff, "Veneer should follow branch");
+        *branch = 0xb3bb0000 + (veneerOff - branchOff);
+    }
 };
 }
 
@@ -421,3 +438,72 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools)
     return true;
 }
 END_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools)
+
+BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools_ShortBranch)
+{
+    using js::jit::BufferOffset;
+
+    AsmBufWithPool ab(/* guardSize= */ 1,
+                      /* headerSize= */ 1,
+                      /* instBufferAlign(unused)= */ 0,
+                      /* poolMaxOffset= */ 17,
+                      /* pcBias= */ 0,
+                      /* alignFillInst= */ 0x11110000,
+                      /* nopFillInst= */ 0xaaaa0000,
+                      /* nopFill= */ 0);
+
+    // Insert short-range branch.
+    BufferOffset br1 = ab.putInt(0xb1bb00cc);
+    ab.registerBranchDeadline(1, BufferOffset(br1.getOffset() + TestAssembler::BranchRange));
+    ab.putInt(0x22220001);
+    BufferOffset off = ab.putInt(0x22220002);
+    ab.registerBranchDeadline(1, BufferOffset(off.getOffset() + TestAssembler::BranchRange));
+    ab.putInt(0x22220003);
+    ab.putInt(0x22220004);
+
+    // Second short-range branch that will be swiped up by hysteresis.
+    BufferOffset br2 = ab.putInt(0xb1bb0d2d);
+    ab.registerBranchDeadline(1, BufferOffset(br2.getOffset() + TestAssembler::BranchRange));
+
+    // Branch should not have been patched yet here.
+    CHECK_EQUAL(*ab.getInst(br1), 0xb1bb00cc);
+    CHECK_EQUAL(*ab.getInst(br2), 0xb1bb0d2d);
+
+    // Cancel one of the pending branches.
+    // This is what will happen to most branches as they are bound before
+    // expiring by Assembler::bind().
+    ab.unregisterBranchDeadline(1, BufferOffset(off.getOffset() + TestAssembler::BranchRange));
+
+    off = ab.putInt(0x22220006);
+    // Here we may or may not have patched the branch yet, but it is inevitable now:
+    //
+    //  0: br1 pc+36
+    //  4: 0x22220001
+    //  8: 0x22220002 (unpatched)
+    // 12: 0x22220003
+    // 16: 0x22220004
+    // 20: br2 pc+20
+    // 24: 0x22220006
+    CHECK_EQUAL(off.getOffset(), 24);
+    // 28: guard branch pc+16
+    // 32: pool header
+    // 36: veneer1
+    // 40: veneer2
+    // 44: 0x22220007
+
+    off = ab.putInt(0x22220007);
+    CHECK_EQUAL(off.getOffset(), 44);
+
+    // Now the branch must have been patched.
+    CHECK_EQUAL(*ab.getInst(br1), 0xb3bb0000 + 36);         // br1 pc+36 (patched)
+    CHECK_EQUAL(*ab.getInst(BufferOffset(8)), 0x22220002u);  // 0x22220002 (unpatched)
+    CHECK_EQUAL(*ab.getInst(br2), 0xb3bb0000 + 20);         // br2 pc+20 (patched)
+    CHECK_EQUAL(*ab.getInst(BufferOffset(28)), 0xb0bb0010u); // br pc+16 (guard)
+    CHECK_EQUAL(*ab.getInst(BufferOffset(32)), 0xffff0000u); // pool header 0 bytes.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(36)), 0xb2bb00ccu); // veneer1 w/ original 'cc' offset.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(40)), 0xb2bb0d2du); // veneer2 w/ original 'cc' offset.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(44)), 0x22220007u);
+
+    return true;
+}
+END_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools_ShortBranch)
