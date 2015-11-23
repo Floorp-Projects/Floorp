@@ -496,7 +496,7 @@ nsresult nsChildView::Create(nsIWidget* aParent,
     gChildViewMethodsSwizzled = true;
   }
 
-  mBounds = aRect.ToUnknownRect();
+  mBounds = aRect;
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
@@ -522,8 +522,7 @@ nsresult nsChildView::Create(nsIWidget* aParent,
   // create our parallel NSView and hook it up to our parent. Recall
   // that NS_NATIVE_WIDGET is the NSView.
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mParentView);
-  NSRect r = nsCocoaUtils::DevPixelsToCocoaPoints(
-    LayoutDeviceIntRect::FromUnknownRect(mBounds), scaleFactor);
+  NSRect r = nsCocoaUtils::DevPixelsToCocoaPoints(mBounds, scaleFactor);
   mView = [(NSView<mozView>*)CreateCocoaView(r) retain];
   if (!mView) {
     return NS_ERROR_FAILURE;
@@ -929,9 +928,7 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
 // Get this component dimension
 NS_IMETHODIMP nsChildView::GetBounds(LayoutDeviceIntRect& aRect)
 {
-  aRect = !mView
-        ? LayoutDeviceIntRect::FromUnknownRect(mBounds)
-        : CocoaPointsToDevPixels([mView frame]);
+  aRect = !mView ? mBounds : CocoaPointsToDevPixels([mView frame]);
   return NS_OK;
 }
 
@@ -1023,7 +1020,7 @@ NS_IMETHODIMP nsChildView::Move(double aX, double aY)
   mBounds.y = y;
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{
-    [mView setFrame:UntypedDevPixelsToCocoaPoints(mBounds)];
+    [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
   NotifyRollupGeometryChange();
@@ -1048,7 +1045,7 @@ NS_IMETHODIMP nsChildView::Resize(double aWidth, double aHeight, bool aRepaint)
   mBounds.height = height;
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{
-    [mView setFrame:UntypedDevPixelsToCocoaPoints(mBounds)];
+    [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
   if (mVisible && aRepaint)
@@ -1087,7 +1084,7 @@ NS_IMETHODIMP nsChildView::Resize(double aX, double aY,
   }
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{
-    [mView setFrame:UntypedDevPixelsToCocoaPoints(mBounds)];
+    [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
   });
 
   if (mVisible && aRepaint)
@@ -2650,8 +2647,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion)
   }
 
   LayoutDeviceIntRegion dirtyRegion(aInvalidRegion);
-  LayoutDeviceIntSize renderSize =
-    LayoutDeviceIntSize::FromUnknownSize(mBounds.Size());
+  LayoutDeviceIntSize renderSize = mBounds.Size();
 
   if (!mBasicCompositorImage) {
     mBasicCompositorImage = new RectTextureImage(mGLPresenter->gl());
@@ -2662,7 +2658,7 @@ nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion)
 
   if (!drawTarget) {
     // Composite unchanged textures.
-    DoRemoteComposition(LayoutDeviceIntRect::FromUnknownRect(mBounds));
+    DoRemoteComposition(mBounds);
     return nullptr;
   }
 
@@ -2675,7 +2671,7 @@ void
 nsChildView::EndRemoteDrawing()
 {
   mBasicCompositorImage->EndUpdate(true);
-  DoRemoteComposition(LayoutDeviceIntRect::FromUnknownRect(mBounds));
+  DoRemoteComposition(mBounds);
 }
 
 void
