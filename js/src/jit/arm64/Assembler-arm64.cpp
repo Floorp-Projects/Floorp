@@ -225,27 +225,25 @@ Assembler::bind(Label* label, BufferOffset targetOffset)
 
     // Get the most recent instruction that used the label, as stored in the label.
     // This instruction is the head of an implicit linked list of label uses.
-    uint32_t branchOffset = label->offset();
+    BufferOffset branchOffset(label);
 
-    while ((int32_t)branchOffset != LabelBase::INVALID_OFFSET) {
-        Instruction* link = getInstructionAt(BufferOffset(branchOffset));
-
+    while (branchOffset.assigned()) {
         // Before overwriting the offset in this instruction, get the offset of
         // the next link in the implicit branch list.
-        uint32_t nextLinkOffset = uint32_t(link->ImmPCRawOffset());
-        if (nextLinkOffset != uint32_t(LabelBase::INVALID_OFFSET))
-            nextLinkOffset += branchOffset;
+        BufferOffset nextOffset = NextLink(branchOffset);
+
         // Linking against the actual (Instruction*) would be invalid,
         // since that Instruction could be anywhere in memory.
         // Instead, just link against the correct relative offset, assuming
         // no constant pools, which will be taken into consideration
         // during finalization.
-        ptrdiff_t relativeByteOffset = targetOffset.getOffset() - branchOffset;
-        Instruction* target = (Instruction*)(((uint8_t*)link) + relativeByteOffset);
+        ptrdiff_t relativeByteOffset = targetOffset.getOffset() - branchOffset.getOffset();
+        Instruction* link = getInstructionAt(branchOffset);
 
         // Write a new relative offset into the instruction.
-        link->SetImmPCOffsetTarget(target);
-        branchOffset = nextLinkOffset;
+        link->SetImmPCOffsetTarget(link + relativeByteOffset);
+
+        branchOffset = nextOffset;
     }
 
     // Bind the label, so that future uses may encode the offset immediately.
@@ -617,17 +615,18 @@ Assembler::retarget(Label* label, Label* target)
             // The target is not bound but used. Prepend label's branch list
             // onto target's.
             BufferOffset labelBranchOffset(label);
-            BufferOffset next;
 
             // Find the head of the use chain for label.
-            while (nextLink(labelBranchOffset, &next))
+            BufferOffset next = NextLink(labelBranchOffset);
+            while (next.assigned()) {
                 labelBranchOffset = next;
+                next = NextLink(next);
+            }
 
             // Then patch the head of label's use chain to the tail of target's
             // use chain, prepending the entire use chain of target.
-            Instruction* branch = getInstructionAt(labelBranchOffset);
+            SetNextLink(labelBranchOffset, BufferOffset(target));
             target->use(label->offset());
-            branch->SetImmPCOffsetTarget(branch - labelBranchOffset.getOffset());
         } else {
             // The target is unbound and unused. We can just take the head of
             // the list hanging off of label, and dump that into target.
