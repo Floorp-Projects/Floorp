@@ -186,7 +186,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, TempBitmap& aTmpBitmap
     case PatternType::LINEAR_GRADIENT: {
       const LinearGradientPattern& pat = static_cast<const LinearGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
-      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode);
+      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
 
       if (stops->mCount >= 2) {
         SkPoint points[2];
@@ -215,7 +215,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, TempBitmap& aTmpBitmap
     case PatternType::RADIAL_GRADIENT: {
       const RadialGradientPattern& pat = static_cast<const RadialGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
-      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode);
+      SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
 
       if (stops->mCount >= 2) {
         SkPoint points[2];
@@ -257,8 +257,10 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, TempBitmap& aTmpBitmap
         mat.preTranslate(rect.x(), rect.y());
       }
 
-      SkShader::TileMode mode = ExtendModeToTileMode(pat.mExtendMode);
-      SkShader* shader = SkShader::CreateBitmapShader(bitmap, mode, mode);
+      SkShader::TileMode xTileMode = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
+      SkShader::TileMode yTileMode = ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
+
+      SkShader* shader = SkShader::CreateBitmapShader(bitmap, xTileMode, yTileMode);
       SkShader* matrixShader = SkShader::CreateLocalMatrixShader(shader, mat);
       SkSafeUnref(shader);
       SkSafeUnref(aPaint.setShader(matrixShader));

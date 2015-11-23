@@ -291,7 +291,7 @@ SkRectToRect(const SkRect &aRect)
 }
 
 static inline SkShader::TileMode
-ExtendModeToTileMode(ExtendMode aMode)
+ExtendModeToTileMode(ExtendMode aMode, Axis aAxis)
 {
   switch (aMode)
   {
@@ -301,6 +301,18 @@ ExtendModeToTileMode(ExtendMode aMode)
       return SkShader::kRepeat_TileMode;
     case ExtendMode::REFLECT:
       return SkShader::kMirror_TileMode;
+    case ExtendMode::REPEAT_X:
+    {
+      return aAxis == Axis::X_AXIS
+             ? SkShader::kRepeat_TileMode
+             : SkShader::kClamp_TileMode;
+    }
+    case ExtendMode::REPEAT_Y:
+    {
+      return aAxis == Axis::Y_AXIS
+             ? SkShader::kRepeat_TileMode
+             : SkShader::kClamp_TileMode;
+    }
   }
   return SkShader::kClamp_TileMode;
 }
