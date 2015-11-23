@@ -2705,11 +2705,7 @@ nsContentUtils::SubjectPrincipal()
   MOZ_ASSERT(NS_IsMainThread());
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
-#ifndef RELEASE_BUILD
     MOZ_CRASH("Accessing the Subject Principal without an AutoJSAPI on the stack is forbidden");
-#endif
-    Telemetry::Accumulate(Telemetry::SUBJECT_PRINCIPAL_ACCESSED_WITHOUT_SCRIPT_ON_STACK, true);
-    return GetSystemPrincipal();
   }
 
   JSCompartment *compartment = js::GetContextCompartment(cx);
