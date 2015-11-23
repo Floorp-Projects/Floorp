@@ -4764,8 +4764,7 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
   }
 
   // If we are actually playing...
-  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-      !IsPlaybackEnded()) {
+  if (IsCurrentlyPlaying()) {
     return true;
   }
 
@@ -5117,6 +5116,27 @@ bool
 HTMLMediaElement::ComputedMuted() const
 {
   return (mMuted & MUTED_BY_AUDIO_CHANNEL);
+}
+
+bool
+HTMLMediaElement::IsCurrentlyPlaying() const
+{
+  // We have playable data, but we still need to check whether data is "real"
+  // current data.
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
+      !IsPlaybackEnded()) {
+
+    // Restart the video after ended, it needs to seek to the new position.
+    // In b2g, the cache is not large enough to store whole video data, so we
+    // need to download data again. In this case, although the ready state is
+    // "HAVE_CURRENT_DATA", it is the previous old data. Actually we are not
+    // yet have enough currently data.
+    if (mDecoder && mDecoder->IsSeeking() && !mPlayingBeforeSeek) {
+      return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 } // namespace dom
