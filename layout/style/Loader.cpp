@@ -2559,21 +2559,15 @@ Loader::RemoveObserver(nsICSSLoaderObserver* aObserver)
   mObservers.RemoveElement(aObserver);
 }
 
-static PLDHashOperator
-CollectLoadDatas(URIPrincipalReferrerPolicyAndCORSModeHashKey *aKey,
-                 SheetLoadData* &aData,
-                 void* aClosure)
-{
-  static_cast<Loader::LoadDataArray*>(aClosure)->AppendElement(aData);
-  return PL_DHASH_REMOVE;
-}
-
 void
 Loader::StartAlternateLoads()
 {
   NS_PRECONDITION(mSheets, "Don't call me!");
   LoadDataArray arr(mSheets->mPendingDatas.Count());
-  mSheets->mPendingDatas.Enumerate(CollectLoadDatas, &arr);
+  for (auto iter = mSheets->mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
+    arr.AppendElement(iter.Data());
+    iter.Remove();
+  }
 
   mDatasToNotifyOn += arr.Length();
   for (uint32_t i = 0; i < arr.Length(); ++i) {
