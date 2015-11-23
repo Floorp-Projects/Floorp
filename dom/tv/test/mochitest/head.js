@@ -9,8 +9,11 @@ function setupPrefsAndPermissions(callback) {
 }
 
 function setupPrefs(callback) {
-  SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true],
-                                     ["dom.ignore_webidl_scope_checks", true]]}, function() {
+  SpecialPowers.pushPrefEnv({"set": [
+                              ["dom.tv.enabled", true],
+                              ["dom.ignore_webidl_scope_checks", true],
+                              ["dom.testing.tv_mock_path", SimpleTest.getTestFileURL("mock_data.json")]
+                            ]}, function() {
     callback();
   });
 }

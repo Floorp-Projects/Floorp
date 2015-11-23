@@ -561,6 +561,9 @@
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
+@RESPATH@/components/TVSimulatorService.js
+@RESPATH@/components/TVSimulatorService.manifest
+
 #ifndef RELEASE_BUILD
 @RESPATH@/components/InterAppComm.manifest
 @RESPATH@/components/InterAppCommService.js
