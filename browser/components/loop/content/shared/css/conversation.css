@@ -702,22 +702,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   height: calc(100% - 300px);
 }
 
-.desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
-  height: calc(100% - 150px);
-}
-
-/* Temporarily slaved from .media-wrapper until we use it in more places
-   to avoid affecting the conversation window on desktop. */
-.media-wrapper > .text-chat-view > .text-chat-entries {
-  /* 40px is the height of .text-chat-box. */
-  height: calc(100% - 40px);
-}
-
-.media-wrapper > .text-chat-disabled > .text-chat-entries {
-  /* When text chat is disabled, the entries box should be 100% height. */
-  height: 100%;
-}
-
 .media-wrapper.receiving-screen-share > .screen {
   order: 1;
 }
@@ -754,19 +738,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     height: 50%;
   }
 
-  /* Temporarily slaved from .media-wrapper until we use it in more places
-     to avoid affecting the conversation window on desktop. */
-  .text-chat-view > .text-chat-entries {
-    /* 40px is the height of .text-chat-box. */
-    height: calc(100% - 40px);
-    width: 100%;
-  }
-
-  .media-wrapper > .text-chat-disabled > .text-chat-entries {
-    /* When text chat is disabled, the entries box should be 100% height. */
-    height: 100%;
-  }
-
   .media-wrapper > .focus-stream > .local ~ .conversation-toolbar {
     /* 120px is for the local video area. */
     max-width: calc(100% - 120px);
@@ -790,13 +761,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     left: 0;
   }
 
-
-  .standalone-room-wrapper > .media-layout > .media-wrapper > .local {
-    /* Add 10px for the margin on standalone */
-    right: 10px;
-  }
-
-
   html[dir="rtl"] .media-wrapper > .local {
     right: auto;
     left: 0;
@@ -812,7 +776,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   .media-wrapper.showing-local-streams > .text-chat-view,
   .media-wrapper.showing-local-streams.receiving-screen-share > .text-chat-view {
     /* The remaining 30% that the .focus-stream doesn't use. */
-    height: 30%;
+    height: 45%;
   }
 
   .media-wrapper.receiving-screen-share > .remote > .conversation-toolbar,
@@ -820,11 +784,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     bottom: calc(30% + 1.5rem);
   }
 
-
-  .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
-    /* This is temp, to echo the .media-wrapper > .text-chat-view above */
-    height: 45%;
-  }
 
   .media-wrapper.receiving-screen-share > .screen {
     order: 1;
@@ -925,7 +884,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     height: 263px;
   }
 
-  .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
+  .media-wrapper > .text-chat-view {
     height: calc(100% - 263px);
   }
 }
@@ -936,9 +895,17 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background: white;
 }
 
-.text-chat-entries {
+.text-chat-view > .text-chat-entries {
+  width: 100%;
   overflow: auto;
   padding-top: .6rem;
+  /* 40px is the height of .text-chat-box. */
+  height: calc(100% - 40px);
+}
+
+.text-chat-disabled > .text-chat-entries {
+  /* When text chat is disabled, the entries box should be 100% height. */
+  height: 100%;
 }
 
 .text-chat-entry,
@@ -1175,25 +1142,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 /* turn the visible border blue as a visual indicator of focus */
 .text-chat-box > form > input:focus {
   border-top: 1px solid #66c9f2;
-}
-
-@media screen and (max-width:640px) {
-  /* Rooms specific responsive styling */
-  .standalone .room-conversation-wrapper .room-inner-info-area {
-    right: 0;
-    margin: auto;
-    width: 100%;
-    left: 0;
-  }
-  .standalone .room-conversation-wrapper .video-layout-wrapper {
-    height: 100%;
-  }
-  .standalone .room-conversation .video_wrapper.remote_wrapper {
-    width: 100%;
-  }
-  .standalone .room-conversation .video_wrapper.remote_wrapper.not-joined {
-    width: 100%;
-  }
 }
 
 /* e.g. very narrow widths similar to conversation window */
