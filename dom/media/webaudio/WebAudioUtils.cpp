@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+LazyLogModule gWebAudioAPILog("WebAudioAPI");
+
 namespace dom {
 
 void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
