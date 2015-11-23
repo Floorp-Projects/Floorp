@@ -159,7 +159,7 @@ JitOptions::JitOptions()
     SET_DEFAULT(osrPcMismatchesBeforeRecompile, 6000);
 
     // The bytecode length limit for small function.
-    SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
+    SET_DEFAULT(smallFunctionMaxBytecodeLength_, 120);
 
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
