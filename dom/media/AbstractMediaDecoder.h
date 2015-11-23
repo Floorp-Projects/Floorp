@@ -111,10 +111,6 @@ public:
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, MediaDecoderEventVisibility aEventVisibility) = 0;
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
 
-  // May be called by the reader to notify this decoder that the metadata from
-  // the media file has been read. Call on the decode thread only.
-  virtual void OnReadMetadataCompleted() = 0;
-
   // Returns the owner of this media decoder. The owner should only be used
   // on the main thread.
   virtual MediaDecoderOwner* GetOwner() = 0;
