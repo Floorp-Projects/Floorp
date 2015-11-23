@@ -286,6 +286,13 @@ MacroAssembler::enterFakeExitFrame(enum ExitFrameTokenValues token)
 }
 
 void
+MacroAssembler::enterFakeExitFrameForNative(bool isConstructing)
+{
+    enterFakeExitFrame(isConstructing ? ConstructNativeExitFrameLayoutToken
+                                      : CallNativeExitFrameLayoutToken);
+}
+
+void
 MacroAssembler::leaveExitFrame(size_t extraFrame)
 {
     freeStack(ExitFooterFrame::Size() + extraFrame);

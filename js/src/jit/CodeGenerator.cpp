@@ -2895,7 +2895,7 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     // Construct native exit frame.
     uint32_t safepointOffset = masm.buildFakeExitFrame(tempReg);
-    masm.enterFakeExitFrame(NativeExitFrameLayoutToken);
+    masm.enterFakeExitFrameForNative(call->mir()->isConstructing());
 
     markSafepointAt(safepointOffset, call);
 
