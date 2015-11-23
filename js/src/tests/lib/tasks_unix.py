@@ -18,8 +18,15 @@ class Task(object):
         self.out = []
         self.err = []
 
-def spawn_test(test, prefix, passthrough=False):
+def spawn_test(test, prefix, passthrough, run_skipped, show_cmd):
     """Spawn one child, return a task struct."""
+    if not test.enable and not run_skipped:
+        return None
+
+    cmd = test.get_command(prefix)
+    if show_cmd:
+        print(escape_cmdline(cmd))
+
     if not passthrough:
         (rout, wout) = os.pipe()
         (rerr, werr) = os.pipe()
@@ -39,7 +46,6 @@ def spawn_test(test, prefix, passthrough=False):
         os.dup2(wout, 1)
         os.dup2(werr, 2)
 
-    cmd = test.get_command(prefix)
     os.execvp(cmd[0], cmd)
 
 def total_seconds(td):
@@ -194,12 +200,12 @@ def run_all_tests(tests, prefix, pb, options):
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
             test = tests.pop()
-            if not test.enable and not options.run_skipped:
-                yield NullTestOutput(test)
+            task = spawn_test(test, prefix,
+                    options.passthrough, options.run_skipped, options.show_cmd)
+            if task:
+                tasks.append(task)
             else:
-                if options.show_cmd:
-                    print(escape_cmdline(test.get_command(prefix)))
-                tasks.append(spawn_test(test, prefix, options.passthrough))
+                yield NullTestOutput(test)
 
         timeout = get_max_wait(tasks, options.timeout)
         read_input(tasks, timeout)
