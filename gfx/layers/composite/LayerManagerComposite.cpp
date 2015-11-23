@@ -205,7 +205,9 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
 }
 
 void
-LayerManagerComposite::PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegion)
+LayerManagerComposite::PostProcessLayers(Layer* aLayer,
+                                         nsIntRegion& aOpaqueRegion,
+                                         LayerIntRegion& aVisibleRegion)
 {
   nsIntRegion localOpaque;
   Matrix transform2d;
@@ -221,20 +223,46 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegi
     }
   }
 
-  // Subtract any areas that we know to be opaque from our
-  // visible region.
-  LayerComposite* composite = aLayer->AsLayerComposite();
-  if (!localOpaque.IsEmpty()) {
-    nsIntRegion visible = composite->GetShadowVisibleRegion();
-    visible.SubOut(localOpaque);
-    composite->SetShadowVisibleRegion(visible);
+  // Save the value of localOpaque, which currently stores the region obscured
+  // by siblings (and uncles and such), before our descendants contribute to it.
+  nsIntRegion obscured = localOpaque;
+
+  // Recurse on our descendants, in front-to-back order. In this process:
+  //  - Occlusions are computed for them, and they contribute to localOpaque.
+  //  - They recalculate their visible regions, and accumulate them into
+  //    descendantsVisibleRegion.
+  LayerIntRegion descendantsVisibleRegion;
+  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
+    PostProcessLayers(child, localOpaque, descendantsVisibleRegion);
   }
 
-  // Compute occlusions for our descendants (in front-to-back order) and allow them to
-  // contribute to localOpaque.
-  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    PostProcessLayers(child, localOpaque);
+  // Recalculate our visible region.
+  LayerComposite* composite = aLayer->AsLayerComposite();
+  LayerIntRegion visible = LayerIntRegion::FromUnknownRegion(composite->GetShadowVisibleRegion());
+
+  // If we have descendants, throw away the visible region stored on this
+  // layer, and use the region accumulated by our descendants instead.
+  if (aLayer->GetFirstChild()) {
+    visible = descendantsVisibleRegion;
   }
+
+  // Subtract any areas that we know to be opaque.
+  if (!obscured.IsEmpty()) {
+    visible.SubOut(LayerIntRegion::FromUnknownRegion(obscured));
+  }
+
+  composite->SetShadowVisibleRegion(visible.ToUnknownRegion());
+
+  // Transform the newly calculated visible region into our parent's space,
+  // apply our clip to it (if any), and accumulate it into |aVisibleRegion|
+  // for the caller to use.
+  ParentLayerIntRegion visibleParentSpace = TransformTo<ParentLayerPixel>(
+      aLayer->GetLocalTransform(), visible);
+  if (const Maybe<ParentLayerIntRect>& clipRect = composite->GetShadowClipRect()) {
+    visibleParentSpace.AndWith(*clipRect);
+  }
+  aVisibleRegion.OrWith(ViewAs<LayerPixel>(visibleParentSpace,
+      PixelCastJustification::MovingDownToChildren));
 
   // If we have a simple transform, then we can add our opaque area into
   // aOpaqueRegion.
@@ -361,7 +389,8 @@ LayerManagerComposite::UpdateAndRender()
   }
 
   nsIntRegion opaque;
-  PostProcessLayers(mRoot, opaque);
+  LayerIntRegion visible;
+  PostProcessLayers(mRoot, opaque, visible);
 
   Render(invalid);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
@@ -1020,7 +1049,8 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   mRoot->ComputeEffectiveTransforms(matrix);
   nsIntRegion opaque;
-  PostProcessLayers(mRoot, opaque);
+  LayerIntRegion visible;
+  PostProcessLayers(mRoot, opaque, visible);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);

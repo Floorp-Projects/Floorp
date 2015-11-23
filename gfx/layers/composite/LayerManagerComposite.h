@@ -175,8 +175,14 @@ public:
    *     of layers that are covered with opaque content.
    *     |aOpaqueRegion| is the region already known to be covered with opaque
    *     content, in the post-transform coordinate space of aLayer.
+   *
+   *   - Recomputes visible regions to account for async transforms.
+   *     Each layer accumulates into |aVisibleRegion| its post-transform
+   *     (including async transforms) visible region.
    */
-  void PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegion);
+  void PostProcessLayers(Layer* aLayer,
+                         nsIntRegion& aOpaqueRegion,
+                         LayerIntRegion& aVisibleRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
