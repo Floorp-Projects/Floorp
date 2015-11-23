@@ -8446,21 +8446,13 @@ nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell)
 /* static */ float
 nsLayoutUtils::GetResolution(nsIPresShell* aPresShell)
 {
-  nsIScrollableFrame* sf = aPresShell->GetRootScrollFrameAsScrollable();
-  if (sf) {
-    return sf->GetResolution();
-  }
   return aPresShell->GetResolution();
 }
 
 /* static */ void
 nsLayoutUtils::SetResolutionAndScaleTo(nsIPresShell* aPresShell, float aResolution)
 {
-  nsIScrollableFrame* sf = aPresShell->GetRootScrollFrameAsScrollable();
-  if (sf) {
-    sf->SetResolutionAndScaleTo(aResolution);
-    aPresShell->SetResolutionAndScaleTo(aResolution);
-  }
+  aPresShell->SetResolutionAndScaleTo(aResolution);
 }
 
 static void
