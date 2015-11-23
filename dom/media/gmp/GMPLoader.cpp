@@ -25,6 +25,7 @@
 #ifdef XP_MACOSX
 #include <assert.h>
 #ifdef HASH_NODE_ID_WITH_DEVICE_ID
+#include <unistd.h>
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
 #endif
