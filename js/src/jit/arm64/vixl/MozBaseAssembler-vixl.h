@@ -183,6 +183,27 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   static void RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest, Condition cond);
 
  protected:
+  // Functions for managing Labels and linked lists of Label uses.
+
+  // Get the next Label user in the linked list of Label uses.
+  // Return an unassigned BufferOffset when the end of the list is reached.
+  BufferOffset NextLink(BufferOffset cur);
+
+  // Patch the instruction at cur to link to the instruction at next.
+  void SetNextLink(BufferOffset cur, BufferOffset next);
+
+  // Link the current (not-yet-emitted) instruction to the specified label,
+  // then return a raw offset to be encoded in the instruction.
+  ptrdiff_t LinkAndGetByteOffsetTo(BufferOffset branch, js::jit::Label* label);
+  ptrdiff_t LinkAndGetInstructionOffsetTo(BufferOffset branch, js::jit::Label* label);
+  ptrdiff_t LinkAndGetPageOffsetTo(BufferOffset branch, js::jit::Label* label);
+
+  // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
+  template <int element_size>
+  ptrdiff_t LinkAndGetOffsetTo(BufferOffset branch, js::jit::Label* label);
+
+
+ protected:
   // The buffer into which code and relocation info are generated.
   ARMBuffer armbuffer_;
 
