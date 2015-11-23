@@ -292,6 +292,53 @@ bool Instruction::IsValidImmPCOffset(ImmBranchType branch_type,
   return is_intn(ImmBranchRangeBitwidth(branch_type), offset);
 }
 
+ImmBranchRangeType Instruction::ImmBranchTypeToRange(ImmBranchType branch_type)
+{
+  switch (branch_type) {
+    case UncondBranchType:
+      return UncondBranchRangeType;
+    case CondBranchType:
+    case CompareBranchType:
+      return CondBranchRangeType;
+    case TestBranchType:
+      return TestBranchRangeType;
+    default:
+      return UnknownBranchRangeType;
+  }
+}
+
+int32_t Instruction::ImmBranchMaxForwardOffset(ImmBranchRangeType range_type)
+{
+  // Branches encode a pc-relative two's complement number of 32-bit
+  // instructions. Compute the number of bytes corresponding to the largest
+  // positive number of instructions that can be encoded.
+  switch(range_type) {
+    case TestBranchRangeType:
+      return ((1 << ImmTestBranch_width) - 1) / 2 * kInstructionSize;
+    case CondBranchRangeType:
+      return ((1 << ImmCondBranch_width) - 1) / 2 * kInstructionSize;
+    case UncondBranchRangeType:
+      return ((1 << ImmUncondBranch_width) - 1) / 2 * kInstructionSize;
+    default:
+      VIXL_UNREACHABLE();
+      return 0;
+  }
+}
+
+int32_t Instruction::ImmBranchMinBackwardOffset(ImmBranchRangeType range_type)
+{
+  switch(range_type) {
+    case TestBranchRangeType:
+      return -int32_t(1 << ImmTestBranch_width) / 2 * kInstructionSize;
+    case CondBranchRangeType:
+      return -int32_t(1 << ImmCondBranch_width) / 2 * kInstructionSize;
+    case UncondBranchRangeType:
+      return -int32_t(1 << ImmUncondBranch_width) / 2 * kInstructionSize;
+    default:
+      VIXL_UNREACHABLE();
+      return 0;
+  }
+}
 
 const Instruction* Instruction::ImmPCOffsetTarget() const {
   const Instruction * base = this;
