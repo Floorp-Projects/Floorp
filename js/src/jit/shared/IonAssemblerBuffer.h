@@ -58,6 +58,42 @@ class BufferOffset
     }
 };
 
+inline bool
+operator<(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() < b.getOffset();
+}
+
+inline bool
+operator>(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() > b.getOffset();
+}
+
+inline bool
+operator<=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() <= b.getOffset();
+}
+
+inline bool
+operator>=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() >= b.getOffset();
+}
+
+inline bool
+operator==(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() == b.getOffset();
+}
+
+inline bool
+operator!=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() != b.getOffset();
+}
+
 template<int SliceSize>
 class BufferSlice
 {
