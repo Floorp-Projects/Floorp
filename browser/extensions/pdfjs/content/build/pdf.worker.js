@@ -1,5 +1,3 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* Copyright 2012 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.2.109';
-PDFJS.build = '875588d';
+PDFJS.version = '1.3.14';
+PDFJS.build = 'df46b64';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -9664,6 +9662,11 @@ Shadings.RadialAxial = (function RadialAxialClosure() {
       if (matrix) {
         p0 = Util.applyTransform(p0, matrix);
         p1 = Util.applyTransform(p1, matrix);
+        if (shadingType === ShadingType.RADIAL) {
+          var scale = Util.singularValueDecompose2dScale(matrix);
+          r0 *= scale[0];
+          r1 *= scale[1];
+        }
       }
 
       return ['RadialAxial', type, this.colorStops, p0, p1, r0, r1];
@@ -34555,6 +34558,7 @@ var ArithmeticDecoder = (function ArithmeticDecoderClosure() {
 })();
 
 
+
 var JpegImage = (function jpegImage() {
   var dctZigZag = new Uint8Array([
      0,
@@ -39231,6 +39235,7 @@ var bidi = PDFJS.bidi = (function bidiClosure() {
 
   return bidi;
 })();
+
 
 
 var MurmurHash3_64 = (function MurmurHash3_64Closure (seed) {

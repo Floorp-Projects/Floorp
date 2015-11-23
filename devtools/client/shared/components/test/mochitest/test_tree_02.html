@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Test Tree's autoExpandDepth.
+Test that collapsed subtrees aren't rendered.
 -->
 <head>
   <meta charset="utf-8">
@@ -15,24 +15,22 @@ Test Tree's autoExpandDepth.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
-    let React = bRequire("devtools/client/shared/vendor/react");
-    let Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
 
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
-    yield setProps(tree, {
-      autoExpandDepth: 1
+    yield setState(tree, {
+      expanded: new Set("MNO".split(""))
     });
 
     isRenderedTree(document.body.textContent, [
       "A:false",
-      "-B:false",
-      "-C:false",
-      "-D:false",
       "M:false",
       "-N:false",
-    ], "Tree should be auto expanded one level");
+      "--O:false",
+    ], "Collapsed subtrees shouldn't be rendered");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
