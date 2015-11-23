@@ -7,8 +7,17 @@ const constructors = [
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
-];
+    Float64Array ];
+
+if (typeof SharedArrayBuffer != "undefined")
+    constructors.push(sharedConstructor(Int8Array),
+		      sharedConstructor(Uint8Array),
+		      sharedConstructor(Int16Array),
+		      sharedConstructor(Uint16Array),
+		      sharedConstructor(Int32Array),
+		      sharedConstructor(Uint32Array),
+		      sharedConstructor(Float32Array),
+		      sharedConstructor(Float64Array));
 
 // Tests for TypedArray#reduce.
 for (var constructor of constructors) {
@@ -81,7 +90,7 @@ for (var constructor of constructors) {
     });
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var reduce = newGlobal()[constructor.name].prototype.reduce;
         assertEq(reduce.call(arr, (previous, current) => Math.min(previous, current)), 1);
     }
@@ -174,7 +183,7 @@ for (var constructor of constructors) {
     });
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var reduceRight = newGlobal()[constructor.name].prototype.reduceRight;
         assertEq(reduceRight.call(arr, (previous, current) => Math.min(previous, current)), 1);
     }

@@ -13,15 +13,9 @@ const SIZE_64_ARRAY = 8;
 
 const SIZE_BYTES = SIZE_32_ARRAY * 4;
 
-function IsSharedTypedArray(arr) {
-    return arr && arr.buffer && arr.buffer instanceof SharedArrayBuffer;
-}
-
 function MakeComparator(kind, arr, shared) {
     var bpe = arr.BYTES_PER_ELEMENT;
-    var uint8 = (bpe != 1) ? (IsSharedTypedArray(arr) ? new SharedUint8Array(arr.buffer)
-                                                      : new Uint8Array(arr.buffer))
-                           : arr;
+    var uint8 = (bpe != 1) ? new Uint8Array(arr.buffer) : arr;
 
     // Size in bytes of a single element in the SIMD vector.
     var sizeOfLaneElem;
@@ -184,22 +178,19 @@ function testLoad(kind, TA) {
 }
 
 function testSharedArrayBufferCompat() {
-    if (!this.SharedArrayBuffer || !this.SharedFloat32Array || !this.Atomics)
-        return;
-
-    var TA = new SharedFloat32Array(16);
+    var TA = new Float32Array(new SharedArrayBuffer(16*4));
     for (var i = 0; i < 16; i++)
         TA[i] = i + 1;
 
     for (var ta of [
-                    new SharedUint8Array(TA.buffer),
-                    new SharedInt8Array(TA.buffer),
-                    new SharedUint16Array(TA.buffer),
-                    new SharedInt16Array(TA.buffer),
-                    new SharedUint32Array(TA.buffer),
-                    new SharedInt32Array(TA.buffer),
-                    new SharedFloat32Array(TA.buffer),
-                    new SharedFloat64Array(TA.buffer)
+                    new Uint8Array(TA.buffer),
+                    new Int8Array(TA.buffer),
+                    new Uint16Array(TA.buffer),
+                    new Int16Array(TA.buffer),
+                    new Uint32Array(TA.buffer),
+                    new Int32Array(TA.buffer),
+                    new Float32Array(TA.buffer),
+                    new Float64Array(TA.buffer)
                    ])
     {
         for (var kind of ['Int32x4', 'Float32x4', 'Float64x2']) {
@@ -226,6 +217,15 @@ testLoad('Float64x2', new Float64Array(SIZE_64_ARRAY));
 testLoad('Int8x16', new Int8Array(SIZE_8_ARRAY));
 testLoad('Int16x8', new Int16Array(SIZE_16_ARRAY));
 testLoad('Int32x4', new Int32Array(SIZE_32_ARRAY));
+
+if (typeof SharedArrayBuffer != "undefined") {
+  testLoad('Float32x4', new Float32Array(new SharedArrayBuffer(SIZE_8_ARRAY)));
+  testLoad('Float64x2', new Float64Array(new SharedArrayBuffer(SIZE_8_ARRAY)));
+  testLoad('Int8x16', new Int8Array(new SharedArrayBuffer(SIZE_8_ARRAY)));
+  testLoad('Int16x8', new Int16Array(new SharedArrayBuffer(SIZE_8_ARRAY)));
+  testLoad('Int32x4', new Int32Array(new SharedArrayBuffer(SIZE_8_ARRAY)));
+}
+
 testSharedArrayBufferCompat();
 
 if (typeof reportCompare === "function")
