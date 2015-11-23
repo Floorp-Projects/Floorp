@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
 #include "js/TypeDecls.h"
+#include "nsRefPtrHashtable.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
@@ -37,6 +38,7 @@ namespace mozilla {
 namespace dom {
 class AudioContext;
 class Element;
+class ServiceWorkerRegistrationMainThread;
 } // namespace dom
 namespace gfx {
 class VRHMDInfo;
@@ -217,6 +219,10 @@ public:
     MOZ_ASSERT(IsOuterWindow());
     return mServiceWorkersTestingEnabled;
   }
+
+  already_AddRefed<mozilla::dom::ServiceWorkerRegistrationMainThread>
+    GetServiceWorkerRegistration(const nsAString& aScope);
+  void InvalidateServiceWorkerRegistration(const nsAString& aScope);
 
 protected:
   // Lazily instantiate an about:blank document if necessary, and if
@@ -854,6 +860,11 @@ protected:
 
   // mPerformance is only used on inner windows.
   RefPtr<nsPerformance>       mPerformance;
+
+  typedef nsRefPtrHashtable<nsStringHashKey,
+                            mozilla::dom::ServiceWorkerRegistrationMainThread>
+          ServiceWorkerRegistrationTable;
+  ServiceWorkerRegistrationTable mServiceWorkerRegistrationTable;
 
   uint32_t               mModalStateDepth;
 
