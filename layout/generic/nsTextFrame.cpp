@@ -964,11 +964,11 @@ public:
 
   class BreakSink final : public nsILineBreakSink {
   public:
-    BreakSink(gfxTextRun* aTextRun, gfxContext* aContext, uint32_t aOffsetIntoTextRun,
-              bool aExistingTextRun) :
+    BreakSink(gfxTextRun* aTextRun, gfxContext* aContext,
+              uint32_t aOffsetIntoTextRun) :
                 mTextRun(aTextRun), mContext(aContext),
                 mOffsetIntoTextRun(aOffsetIntoTextRun),
-                mChangedBreaks(false), mExistingTextRun(aExistingTextRun) {}
+                mChangedBreaks(false) {}
 
     virtual void SetBreaks(uint32_t aOffset, uint32_t aLength,
                            uint8_t* aBreakBefore) override {
@@ -1012,7 +1012,6 @@ public:
     gfxContext*  mContext;
     uint32_t     mOffsetIntoTextRun;
     bool mChangedBreaks;
-    bool mExistingTextRun;
   };
 
 private:
@@ -1528,10 +1527,8 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
   }
 
   for (uint32_t i = 0; i < mBreakSinks.Length(); ++i) {
-    if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
-      // TODO cause frames associated with the textrun to be reflowed, if they
-      // aren't being reflowed already!
-    }
+    // TODO cause frames associated with the textrun to be reflowed, if they
+    // aren't being reflowed already!
     mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
@@ -2442,8 +2439,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     iterNext.AdvanceOriginal(mappedFlow->GetContentEnd() -
             mappedFlow->mStartFrame->GetContentOffset());
 
-    nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mContext, offset, false));
+    nsAutoPtr<BreakSink>* breakSink =
+      mBreakSinks.AppendElement(new BreakSink(aTextRun, mContext, offset));
     if (!breakSink || !*breakSink)
       return;
 
