@@ -95,6 +95,8 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
   if (strcmp(aMimeStr, kTextMime) == 0 ||
       strcmp(aMimeStr, kUnicodeMime) == 0)
     format = CF_UNICODETEXT;
+  else if (strcmp(aMimeStr, kRTFMime) == 0)
+    format = ::RegisterClipboardFormat(L"Rich Text Format");
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0 ||
            strcmp(aMimeStr, kJPGImageMime) == 0 ||
            strcmp(aMimeStr, kPNGImageMime) == 0)
@@ -669,6 +671,12 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           int32_t signedLen = static_cast<int32_t>(dataLen);
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
           dataLen = signedLen;
+
+          if (strcmp(flavorStr, kRTFMime) == 0) {
+            // RTF on Windows is known to sometimes deliver an extra null byte.
+            if (dataLen > 0 && static_cast<char*>(data)[dataLen - 1] == '\0')
+              dataLen--;
+          }
 
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           free(data);

@@ -45,7 +45,8 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, const void* 
   if ( !aPrimitive )
     return;
 
-  if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
+  if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ||
+       strcmp(aFlavor,kRTFMime) == 0) {
     nsCOMPtr<nsISupportsCString> primitive =
         do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if ( primitive ) {
@@ -170,7 +171,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
 
   nsresult retVal = NS_OK;
 
-  if ( strcmp(inFlavor, "text/plain") == 0 ) {
+  if ( strcmp(inFlavor, kTextMime) == 0 || strcmp(inFlavor, kRTFMime) == 0) {
     char* buffAsChars = reinterpret_cast<char*>(*ioData);
     char* oldBuffer = buffAsChars;
     retVal = nsLinebreakConverter::ConvertLineBreaksInSitu ( &buffAsChars, nsLinebreakConverter::eLinebreakAny,
