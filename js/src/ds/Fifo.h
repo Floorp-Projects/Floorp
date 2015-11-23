@@ -9,6 +9,7 @@
 
 #include "mozilla/Move.h"
 
+#include "js/Utility.h"
 #include "js/Vector.h"
 
 namespace js {
