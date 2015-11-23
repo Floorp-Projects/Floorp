@@ -607,10 +607,6 @@ private:
   // change. Call on the main thread only.
   virtual void ChangeState(PlayState aState);
 
-  // May be called by the reader to notify this decoder that the metadata from
-  // the media file has been read. Call on the decode thread only.
-  void OnReadMetadataCompleted() override { }
-
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,

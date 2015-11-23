@@ -96,12 +96,6 @@ BufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVis
   // ignore
 }
 
-void
-BufferDecoder::OnReadMetadataCompleted()
-{
-  // ignore
-}
-
 MediaDecoderOwner*
 BufferDecoder::GetOwner()
 {
