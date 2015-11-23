@@ -188,31 +188,18 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   }
 
   nsString username;
-  url->GetUsername(username, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->GetUsername(username);
 
   nsString password;
-  url->GetPassword(password, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->GetPassword(password);
 
   if (!username.IsEmpty() || !password.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
     return;
   }
 
-  url->SetHash(EmptyString(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  url->Stringify(aRequestURL, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->SetHash(EmptyString());
+  url->Stringify(aRequestURL);
 }
 
 } // namespace

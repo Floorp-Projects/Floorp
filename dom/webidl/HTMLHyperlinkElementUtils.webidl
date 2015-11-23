@@ -16,30 +16,19 @@ interface HTMLHyperlinkElementUtils {
   //  stringifier attribute USVString href;
 
   // Bug 824857 should remove this.
-  [Throws]
   stringifier;
 
-  [Throws]
+  [SetterThrows]
            attribute USVString href;
 
-  [Throws]
   readonly attribute USVString origin;
-  [Throws]
            attribute USVString protocol;
-  [Throws]
            attribute USVString username;
-  [Throws]
            attribute USVString password;
-  [Throws]
            attribute USVString host;
-  [Throws]
            attribute USVString hostname;
-  [Throws]
            attribute USVString port;
-  [Throws]
            attribute USVString pathname;
-  [Throws]
            attribute USVString search;
-  [Throws]
            attribute USVString hash;
 };

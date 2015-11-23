@@ -205,17 +205,13 @@ HTMLAreaElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   NS_IMETHODIMP                                              \
   HTMLAreaElement::Get##_part(nsAString& a##_part)           \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Get##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Get##_part(a##_part);                              \
     return NS_OK;                                            \
   }                                                          \
   NS_IMETHODIMP                                              \
   HTMLAreaElement::Set##_part(const nsAString& a##_part)     \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Set##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Set##_part(a##_part);                              \
     return NS_OK;                                            \
   }
 
