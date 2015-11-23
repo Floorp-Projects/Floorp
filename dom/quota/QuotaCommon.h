@@ -30,7 +30,32 @@
     NS_WARNING(str.get());                                                     \
   } while (0)
 
+class nsIEventTarget;
+
 BEGIN_QUOTA_NAMESPACE
+
+class BackgroundThreadObject
+{
+protected:
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+
+public:
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+  nsIEventTarget*
+  OwningThread() const;
+
+protected:
+  BackgroundThreadObject();
+
+  explicit BackgroundThreadObject(nsIEventTarget* aOwningThread);
+};
 
 void
 AssertIsOnIOThread();

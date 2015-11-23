@@ -5,6 +5,7 @@
  */
 
 typedef unsigned long long NodeId;
+typedef unsigned long long NodeSize;
 
 /**
  * In a directed graph with a root node `R`, a node `A` is said to "dominate" a
@@ -45,4 +46,11 @@ interface DominatorTree {
    * tree was created from.
    */
   readonly attribute NodeId root;
+
+  /**
+   * Get the retained size of the node with the given id. If given an invalid
+   * id, null is returned. Throws an error on OOM.
+   */
+  [Throws]
+  NodeSize? getRetainedSize(NodeId node);
 };

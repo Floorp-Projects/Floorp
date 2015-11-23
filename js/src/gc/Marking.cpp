@@ -399,6 +399,13 @@ js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 }
 
 template <typename T>
+JS_PUBLIC_API(void)
+JS::TraceEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
+{
+    DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
+}
+
+template <typename T>
 void
 js::TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
 {
@@ -462,6 +469,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template void js::TraceEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
+    template JS_PUBLIC_API(void) JS::TraceEdge<type>(JSTracer*, JS::Heap<type>*, const char*); \
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceWeakEdge<type>(JSTracer*, WeakRef<type>*, const char*); \
     template void js::TraceRoot<type>(JSTracer*, type*, const char*); \
@@ -2436,13 +2444,21 @@ IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
+template <typename T>
+JS_PUBLIC_API(bool)
+EdgeNeedsSweep(JS::Heap<T>* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+}
+
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template bool IsMarkedUnbarriered<type>(type*); \
     template bool IsMarked<type>(WriteBarrieredBase<type>*); \
     template bool IsAboutToBeFinalizedUnbarriered<type>(type*); \
     template bool IsAboutToBeFinalized<type>(WriteBarrieredBase<type>*); \
-    template bool IsAboutToBeFinalized<type>(ReadBarrieredBase<type>*);
+    template bool IsAboutToBeFinalized<type>(ReadBarrieredBase<type>*); \
+    template JS_PUBLIC_API(bool) EdgeNeedsSweep<type>(JS::Heap<type>*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 

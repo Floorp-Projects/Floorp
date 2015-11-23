@@ -267,6 +267,7 @@ HTMLVideoElement::UpdateScreenWakeLock()
   if (mScreenWakeLock && (mPaused || hidden || !mUseScreenWakeLock)) {
     ErrorResult rv;
     mScreenWakeLock->Unlock(rv);
+    rv.SuppressException();
     mScreenWakeLock = nullptr;
     return;
   }

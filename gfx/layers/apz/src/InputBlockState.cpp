@@ -861,5 +861,11 @@ TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput,
   return mInSlop;
 }
 
+uint32_t
+TouchBlockState::GetActiveTouchCount() const
+{
+  return mTouchCounter.GetActiveTouchCount();
+}
+
 } // namespace layers
 } // namespace mozilla

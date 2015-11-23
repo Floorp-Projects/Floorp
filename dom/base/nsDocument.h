@@ -884,8 +884,7 @@ public:
                  mozilla::EventStates aStateMask) override;
 
   virtual void StyleRuleChanged(mozilla::CSSStyleSheet* aStyleSheet,
-                                mozilla::css::Rule* aOldStyleRule,
-                                mozilla::css::Rule* aNewStyleRule) override;
+                                mozilla::css::Rule* aStyleRule) override;
   virtual void StyleRuleAdded(mozilla::CSSStyleSheet* aStyleSheet,
                               mozilla::css::Rule* aStyleRule) override;
   virtual void StyleRuleRemoved(mozilla::CSSStyleSheet* aStyleSheet,

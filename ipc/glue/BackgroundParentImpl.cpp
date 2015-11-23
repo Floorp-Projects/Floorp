@@ -21,6 +21,7 @@
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -191,6 +192,28 @@ BackgroundParentImpl::DeallocPBackgroundIDBFactoryParent(
   MOZ_ASSERT(aActor);
 
   return DeallocPBackgroundIDBFactoryParent(aActor);
+}
+
+auto
+BackgroundParentImpl::AllocPBackgroundIndexedDBUtilsParent()
+  -> PBackgroundIndexedDBUtilsParent*
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::indexedDB::AllocPBackgroundIndexedDBUtilsParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundIndexedDBUtilsParent(
+                                        PBackgroundIndexedDBUtilsParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return
+    mozilla::dom::indexedDB::DeallocPBackgroundIndexedDBUtilsParent(aActor);
 }
 
 auto
@@ -676,6 +699,25 @@ BackgroundParentImpl::DeallocPAsmJSCacheEntryParent(
 
   dom::asmjscache::DeallocEntryParent(aActor);
   return true;
+}
+
+BackgroundParentImpl::PQuotaParent*
+BackgroundParentImpl::AllocPQuotaParent()
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::quota::AllocPQuotaParent();
+}
+
+bool
+BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::quota::DeallocPQuotaParent(aActor);
 }
 
 } // namespace ipc

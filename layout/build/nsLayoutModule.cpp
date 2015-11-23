@@ -87,7 +87,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
-#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/workers/WorkerDebuggerManager.h"
 #include "mozilla/OSFileConstants.h"
@@ -269,7 +269,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::dom::alarm::AlarmHalService;
 using mozilla::dom::power::PowerManagerService;
-using mozilla::dom::quota::QuotaManager;
+using mozilla::dom::quota::QuotaManagerService;
 using mozilla::dom::workers::ServiceWorkerManager;
 using mozilla::dom::workers::WorkerDebuggerManager;
 using mozilla::dom::UDPSocketChild;
@@ -314,8 +314,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(DOMSessionStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMLocalStorageManager)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DOMRequestService,
                                          DOMRequestService::FactoryCreate)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManager,
-                                         QuotaManager::FactoryCreate)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(QuotaManagerService,
+                                         QuotaManagerService::FactoryCreate)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ServiceWorkerManager,
                                          ServiceWorkerManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WorkerDebuggerManager)
@@ -765,7 +765,7 @@ NS_DEFINE_NAMED_CID(NS_DOMLOCALSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
-NS_DEFINE_NAMED_CID(QUOTA_MANAGER_CID);
+NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SERVICEWORKERMANAGER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 #ifdef MOZ_WIDGET_GONK
@@ -1074,7 +1074,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
   { &kNS_TEXTEDITOR_CID, false, nullptr, nsPlaintextEditorConstructor },
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
-  { &kQUOTA_MANAGER_CID, false, nullptr, QuotaManagerConstructor },
+  { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
 #ifdef MOZ_WIDGET_GONK
@@ -1243,7 +1243,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { DOMREQUEST_SERVICE_CONTRACTID, &kDOMREQUEST_SERVICE_CID },
-  { QUOTA_MANAGER_CONTRACTID, &kQUOTA_MANAGER_CID },
+  { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },
   { SERVICEWORKERMANAGER_CONTRACTID, &kSERVICEWORKERMANAGER_CID },
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },
 #ifdef MOZ_WIDGET_GONK
@@ -1346,8 +1346,8 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { "net-channel-event-sinks", "CSPService", CSPSERVICE_CONTRACTID },
   { "net-channel-event-sinks", NS_MIXEDCONTENTBLOCKER_CONTRACTID, NS_MIXEDCONTENTBLOCKER_CONTRACTID },
   { "app-startup", "Script Security Manager", "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID },
-  { TOPIC_WEB_APP_CLEAR_DATA, "QuotaManager", "service," QUOTA_MANAGER_CONTRACTID },
-  { OBSERVER_TOPIC_IDLE_DAILY, "QuotaManager", QUOTA_MANAGER_CONTRACTID },
+  { TOPIC_WEB_APP_CLEAR_DATA, "QuotaManagerService", "service," QUOTAMANAGER_SERVICE_CONTRACTID },
+  { OBSERVER_TOPIC_IDLE_DAILY, "QuotaManagerService", QUOTAMANAGER_SERVICE_CONTRACTID },
 #ifdef MOZ_WIDGET_GONK
   { "app-startup", "Volume Service", "service," NS_VOLUMESERVICE_CONTRACTID },
 #endif

@@ -79,8 +79,8 @@ ZeroCopyNSIOutputStream::Next(void** data, int* size)
 void
 ZeroCopyNSIOutputStream::BackUp(int count)
 {
-  MOZ_ASSERT(count > 0,
-             "Must back up a positive number of bytes.");
+  MOZ_ASSERT(count >= 0,
+             "Cannot back up a negative amount of bytes.");
   MOZ_ASSERT(amountUsed == BUFFER_SIZE,
              "Can only call BackUp directly after calling Next.");
   MOZ_ASSERT(count <= amountUsed,
