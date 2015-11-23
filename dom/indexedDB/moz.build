@@ -82,6 +82,7 @@ IPDL_SOURCES += [
     'PBackgroundIDBSharedTypes.ipdlh',
     'PBackgroundIDBTransaction.ipdl',
     'PBackgroundIDBVersionChangeTransaction.ipdl',
+    'PBackgroundIndexedDBUtils.ipdl',
     'PIndexedDBPermissionRequest.ipdl',
 ]
 

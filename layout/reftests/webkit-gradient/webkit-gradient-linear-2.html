@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(linear, ...) expressions with special cases
+    for color stops.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  30px;
+      height: 50px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- No color stops (transparent): -->
+  <div style="background: -webkit-gradient(linear, left center, right center
+                                           )"></div>
+  <!-- Add another background to be sure we're transparent, not white: -->
+  <div style="background: linear-gradient(to right, pink, purple),
+                           -webkit-gradient(linear, left center, right center)"></div>
+  <br>
+
+  <!-- One color stop, at various positions (renders as solid color): -->
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           from(blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           to(blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(30%, blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(1.5, blue))"></div>
+  <br>
+
+  <!-- Two color stops, both at the same position: -->
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           from(blue), from(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           to(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(30%, blue),
+                                           color-stop(30%, yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(-1.5, blue),
+                                           color-stop(-1.5, yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(4.5, blue),
+                                           color-stop(4.5, yellow))"></div>
+  <br>
+
+  <!-- Color stops out of order & need (stable) sorting: -->
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           to(yellow), from(blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           to(yellow), from(blue),
+                                           from(salmon))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           from(salmon), to(yellow),
+                                           from(blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           from(salmon), to(yellow),
+                                           from(orange), to(gray), from(blue))"></div>
+  <div style="background: -webkit-gradient(linear, left center, right center,
+                                           color-stop(0.8, salmon),
+                                           from(black), from(yellow),
+                                           to(blue), to(gray))"></div>
+</body>
+</html>

@@ -627,6 +627,74 @@ var unbalancedGradientAndElementValues = [
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   // Extend gradient lists with valid/invalid webkit-prefixed expressions:
   validGradientAndElementValues.push(
+    // 2008 GRADIENTS: -webkit-gradient()
+    // ----------------------------------
+    // linear w/ no color stops (valid) and a variety of position values:
+    "-webkit-gradient(linear, 1 2, 3 4)",
+    "-webkit-gradient(linear,1 2,3 4)", // (no extra space)
+    "-webkit-gradient(linear  ,  1   2  ,  3   4  )", // (lots of extra space)
+    "-webkit-gradient(linear, 1 10% , 0% 4)", // percentages
+    "-webkit-gradient(linear, +1.0 -2%, +5.3% -0)", // (+/- & decimals are valid)
+    "-webkit-gradient(linear, left top, right bottom)", // keywords
+    "-webkit-gradient(linear, right center, center top)",
+    "-webkit-gradient(linear, center center, center center)",
+    "-webkit-gradient(linear, center 5%, 30 top)", // keywords mixed w/ nums
+
+    // linear w/ just 1 color stop:
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, to(lime))",
+    // * testing the various allowable stop values (<number> & <percent>):
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-0, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(+9999, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.1, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0%, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(100%, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(9999%, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-.5%, lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(+0%, lime))",
+    // * testing the various color values:
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, transparent))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgb(1,2,3)))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00ff00))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, #00f))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, hsla(240, 30%, 50%, 0.9)))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, rgba(255, 230, 10, 0.5)))",
+
+    // linear w/ multiple color stops:
+    // * using from()/to() -- note that out-of-order is OK:
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime), from(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, to(lime),   to(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, to(lime),   from(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime), to(blue), from(purple))",
+    // * using color-stop():
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0, lime), color-stop(30%, blue), color-stop(100%, purple))",
+    // * using color-stop() intermixed with from()/to() functions:
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime), color-stop(30%, blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, blue), to(lime))",
+    // * overshooting endpoints (0 & 1.0)
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(-30%, lime), color-stop(.4, blue), color-stop(1.5, purple))",
+    // * repeating a stop position (valid)
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(30%, lime), color-stop(30%, blue))",
+    // * stops out of order (valid)
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(70%, lime), color-stop(20%, blue), color-stop(40%, purple))",
+
+    // radial w/ no color stops (valid) and a several different radius values:
+    "-webkit-gradient(radial, 1 2, 8, 3 4, 9)",
+    "-webkit-gradient(radial, 1 2, -1.5, center center, +99999.9999)",
+
+    // radial w/ color stops
+    // (mostly leaning on more-robust 'linear' tests above; just testing a few
+    // examples w/ radial as a sanity-check):
+    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(lime))",
+    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, to(blue))",
+    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, color-stop(0.5, #00f), color-stop(0.8, rgba(100, 200, 0, 0.5)))",
+
+    // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
+    // ---------------------------------------------------------------------
     // Basic linear-gradient syntax (valid when prefixed or unprefixed):
     "-webkit-linear-gradient(red, green, blue)",
 
@@ -677,6 +745,99 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   );
 
   invalidGradientAndElementValues.push(
+    // 2008 GRADIENTS: -webkit-gradient()
+    // https://www.webkit.org/blog/175/introducing-css-gradients/
+    // ----------------------------------
+    // Mostly-empty expressions (missing most required pieces):
+    "-webkit-gradient()",
+    "-webkit-gradient( )",
+    "-webkit-gradient(,)",
+    "-webkit-gradient(bogus)",
+    "-webkit-gradient(linear)",
+    "-webkit-gradient(linear,)",
+    "-webkit-gradient(,linear)",
+    "-webkit-gradient(radial)",
+    "-webkit-gradient(radial,)",
+
+    // linear w/ partial/missing <point> expression(s)
+    "-webkit-gradient(linear, 1)", // Incomplete <point>
+    "-webkit-gradient(linear, left)", // Incomplete <point>
+    "-webkit-gradient(linear, center)", // Incomplete <point>
+    "-webkit-gradient(linear, top)", // Incomplete <point>
+    "-webkit-gradient(linear, 5%)", // Incomplete <point>
+    "-webkit-gradient(linear, 1 2)", // Missing 2nd <point>
+    "-webkit-gradient(linear, 1, 3)", // 2 incomplete <point>s
+    "-webkit-gradient(linear, 1, 3 4)", // Incomplete 1st <point>
+    "-webkit-gradient(linear, 1 2, 3)", // Incomplete 2nd <point>
+    "-webkit-gradient(linear, 1 2, 3, 4)", // Comma inside <point>
+    "-webkit-gradient(linear, 1, 2, 3 4)", // Comma inside <point>
+    "-webkit-gradient(linear, 1, 2, 3, 4)", // Comma inside <point>
+
+    // linear w/ invalid units in <point> expression
+    "-webkit-gradient(linear, 1px 2, 3 4)",
+    "-webkit-gradient(linear, 1 2, 3 4px)",
+    "-webkit-gradient(linear, 1px 2px, 3px 4px)",
+    "-webkit-gradient(linear, calc(1) 2, 3 4)",
+    "-webkit-gradient(linear, 1 2em, 3 4)",
+
+    // linear w/ <radius> (only valid for radial)
+    "-webkit-gradient(linear, 1 2, 8, 3 4, 9)",
+
+    // linear w/ out-of-order position keywords in <point> expression
+    // (horizontal keyword is supposed to come first, for "x" coord)
+    "-webkit-gradient(linear, 0 0, top right)",
+    "-webkit-gradient(linear, bottom center, 0 0)",
+    "-webkit-gradient(linear, top bottom, 0 0)",
+    "-webkit-gradient(linear, bottom top, 0 0)",
+    "-webkit-gradient(linear, bottom top, 0 0)",
+
+    // linear w/ trailing comma (which implies missing color-stops):
+    "-webkit-gradient(linear, 1 2, 3 4,)",
+
+    // linear w/ invalid color values:
+    "-webkit-gradient(linear, 1 2, 3 4, from(invalidcolorname))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(inherit))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(initial))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(currentColor))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(00ff00))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(##00ff00))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(#00fff))", // wrong num hex digits
+    "-webkit-gradient(linear, 1 2, 3 4, from(xyz(0,0,0)))", // bogus color func
+    "-webkit-gradient(linear, 1 2, 3 4, from(rgb(100, 100.5, 30)))", // fraction
+
+    // linear w/ color stops that have comma issues
+    "-webkit-gradient(linear, 1 2, 3 4 from(lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime,))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime),)",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime) to(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(lime),, to(blue))",
+    "-webkit-gradient(linear, 1 2, 3 4, from(rbg(0, 0, 0,)))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0 lime))",
+    "-webkit-gradient(linear, 1 2, 3 4, color-stop(0,, lime))",
+
+    // radial w/ broken <point>/radius expression(s)
+    "-webkit-gradient(radial, 1)", // Incomplete <point>
+    "-webkit-gradient(radial, 1 2)", // Missing radius + 2nd <point>
+    "-webkit-gradient(radial, 1 2, 8)", // Missing 2nd <point>
+    "-webkit-gradient(radial, 1 2, 8, 3)", // Incomplete 2nd <point>
+    "-webkit-gradient(radial, 1 2, 8, 3 4)", // Missing 2nd radius
+    "-webkit-gradient(radial, 1 2, 3 4, 9)", // Missing 1st radius
+
+    // radial w/ incorrect units on radius (invalid; expecting <number>)
+    "-webkit-gradient(radial, 1 2, 8%,      3 4, 9)",
+    "-webkit-gradient(radial, 1 2, 8px,     3 4, 9)",
+    "-webkit-gradient(radial, 1 2, calc(8), 3 4, 9)",
+    "-webkit-gradient(radial, 1 2, 8em,     3 4, 9)",
+    "-webkit-gradient(radial, 1 2, top,     3 4, 9)",
+
+    // radial w/ trailing comma (which implies missing color-stops):
+    "-webkit-gradient(linear, 1 2, 8, 3 4, 9,)",
+
+    // radial w/ invalid color value (mostly leaning on 'linear' test above):
+    "-webkit-gradient(radial, 1 2, 8, 3 4, 9, from(invalidcolorname))",
+
+    // 2011 GRADIENTS: -webkit-linear-gradient(), -webkit-radial -gradient()
+    // ---------------------------------------------------------------------
     // Syntax that's invalid for all types of gradients:
     // * empty gradient expressions:
     "-webkit-linear-gradient()",

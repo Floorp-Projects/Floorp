@@ -1097,7 +1097,6 @@ PermissionRequestChildProcessActor::Recv__delete__(
 
 BackgroundRequestChildBase::BackgroundRequestChildBase(IDBRequest* aRequest)
   : mRequest(aRequest)
-  , mActorDestroyed(false)
 {
   MOZ_ASSERT(aRequest);
   aRequest->AssertIsOnOwningThread();
@@ -1122,15 +1121,6 @@ BackgroundRequestChildBase::AssertIsOnOwningThread() const
 }
 
 #endif // DEBUG
-
-void
-BackgroundRequestChildBase::NoteActorDestroyed()
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  mActorDestroyed = true;
-}
 
 /*******************************************************************************
  * BackgroundFactoryChild
@@ -1276,8 +1266,7 @@ BackgroundFactoryRequestChild::GetOpenDBRequest() const
 {
   AssertIsOnOwningThread();
 
-  IDBRequest* baseRequest = BackgroundRequestChildBase::GetDOMObject();
-  return static_cast<IDBOpenDBRequest*>(baseRequest);
+  return static_cast<IDBOpenDBRequest*>(mRequest.get());
 }
 
 bool
@@ -1357,8 +1346,6 @@ BackgroundFactoryRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
-
-  NoteActorDestroyed();
 
   if (aWhy != Deletion) {
     IDBOpenDBRequest* openRequest = GetOpenDBRequest();
@@ -2447,8 +2434,6 @@ BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 
   MaybeCollectGarbageOnIPCMessage();
 
-  NoteActorDestroyed();
-
   if (mTransaction) {
     mTransaction->AssertIsOnOwningThread();
 
@@ -3059,6 +3044,67 @@ BackgroundCursorChild::CachedResponse::CachedResponse(CachedResponse&& aOther)
   : mKey(Move(aOther.mKey))
 {
   mCloneInfo = Move(aOther.mCloneInfo);
+}
+
+/*******************************************************************************
+ * BackgroundUtilsChild
+ ******************************************************************************/
+
+BackgroundUtilsChild::BackgroundUtilsChild(IndexedDatabaseManager* aManager)
+  : mManager(aManager)
+#ifdef DEBUG
+  , mOwningThread(NS_GetCurrentThread())
+#endif
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aManager);
+
+  MOZ_COUNT_CTOR(indexedDB::BackgroundUtilsChild);
+}
+
+BackgroundUtilsChild::~BackgroundUtilsChild()
+{
+  MOZ_COUNT_DTOR(indexedDB::BackgroundUtilsChild);
+}
+
+#ifdef DEBUG
+
+void
+BackgroundUtilsChild::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+
+  bool current;
+  MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
+  MOZ_ASSERT(current);
+}
+
+#endif // DEBUG
+
+void
+BackgroundUtilsChild::SendDeleteMeInternal()
+{
+  AssertIsOnOwningThread();
+
+  if (mManager) {
+    mManager->ClearBackgroundActor();
+    mManager = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundIndexedDBUtilsChild::SendDeleteMe());
+  }
+}
+
+void
+BackgroundUtilsChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnOwningThread();
+
+  if (mManager) {
+    mManager->ClearBackgroundActor();
+#ifdef DEBUG
+    mManager = nullptr;
+#endif
+  }
 }
 
 } // namespace indexedDB

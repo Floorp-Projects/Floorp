@@ -18,28 +18,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 var filename = "devicestorage/aaaa.png"
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 
 function deleteSuccess(e) {
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function deleteError(e) {
   ok(false, "deleteError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addOverwritingSuccess(e) {
   ok(false, "addOverwritingSuccess was called.");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addOverwritingError(e) {
@@ -85,8 +85,9 @@ function runtest() {
 
 runtest();
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

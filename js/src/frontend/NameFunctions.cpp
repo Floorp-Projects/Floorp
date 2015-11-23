@@ -366,7 +366,6 @@ class NameResolver
           case PNK_TRUE:
           case PNK_FALSE:
           case PNK_NULL:
-          case PNK_THIS:
           case PNK_ELISION:
           case PNK_GENERATOR:
           case PNK_NUMBER:
@@ -380,6 +379,7 @@ class NameResolver
             break;
 
           case PNK_TYPEOFNAME:
+          case PNK_SUPERBASE:
             MOZ_ASSERT(cur->isArity(PN_UNARY));
             MOZ_ASSERT(cur->pn_kid->isKind(PNK_NAME));
             MOZ_ASSERT(!cur->pn_kid->maybeExpr());
@@ -419,6 +419,7 @@ class NameResolver
 
           // Nodes with a single nullable child.
           case PNK_SEMI:
+          case PNK_THIS:
             MOZ_ASSERT(cur->isArity(PN_UNARY));
             if (ParseNode* expr = cur->pn_kid) {
                 if (!resolve(expr, prefix))
@@ -448,6 +449,7 @@ class NameResolver
           case PNK_LETBLOCK:
           case PNK_FOR:
           case PNK_CLASSMETHOD:
+          case PNK_SETTHIS:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
             if (!resolve(cur->pn_left, prefix))
                 return false;

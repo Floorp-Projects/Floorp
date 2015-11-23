@@ -2013,14 +2013,12 @@ void
 MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
 {
   MOZ_ASSERT(OnTaskQueue());
-  nsAutoPtr<MediaInfo> info(new MediaInfo());
-  *info = mInfo;
-  MediaDecoderEventVisibility visibility = mSentLoadedMetadataEvent?
-                                    MediaDecoderEventVisibility::Suppressed :
-                                    MediaDecoderEventVisibility::Observable;
-  nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new MetadataEventRunner(mDecoder, info, mMetadataTags, visibility);
-  AbstractThread::MainThread()->Dispatch(metadataLoadedEvent.forget());
+  MediaDecoderEventVisibility visibility =
+    mSentLoadedMetadataEvent ? MediaDecoderEventVisibility::Suppressed
+                             : MediaDecoderEventVisibility::Observable;
+  mMetadataLoadedEvent.Notify(nsAutoPtr<MediaInfo>(new MediaInfo(mInfo)),
+                              Move(mMetadataTags),
+                              Move(visibility));
   mSentLoadedMetadataEvent = true;
 }
 
@@ -2028,14 +2026,11 @@ void
 MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
 {
   MOZ_ASSERT(OnTaskQueue());
-  nsAutoPtr<MediaInfo> info(new MediaInfo());
-  *info = mInfo;
-  MediaDecoderEventVisibility visibility = mSentFirstFrameLoadedEvent?
-                                    MediaDecoderEventVisibility::Suppressed :
-                                    MediaDecoderEventVisibility::Observable;
-  nsCOMPtr<nsIRunnable> event =
-    new FirstFrameLoadedEventRunner(mDecoder, info, visibility);
-  AbstractThread::MainThread()->Dispatch(event.forget());
+  MediaDecoderEventVisibility visibility =
+    mSentFirstFrameLoadedEvent ? MediaDecoderEventVisibility::Suppressed
+                               : MediaDecoderEventVisibility::Observable;
+  mFirstFrameLoadedEvent.Notify(nsAutoPtr<MediaInfo>(new MediaInfo(mInfo)),
+                                Move(visibility));
   mSentFirstFrameLoadedEvent = true;
 }
 

@@ -1276,8 +1276,6 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   MOZ_ASSERT(NS_IsMainThread());
 
-  ErrorResult ignored;
-
   switch (aState) {
     case CameraControlListener::kHardwareOpen:
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open\n");
@@ -1405,7 +1403,6 @@ nsDOMCameraControl::OnRecorderStateChange(CameraControlListener::RecorderState a
   DOM_CAMERA_LOGT("%s:%d : this=%p, state=%u\n", __func__, __LINE__, this, aState);
   MOZ_ASSERT(NS_IsMainThread());
 
-  ErrorResult ignored;
   nsString state;
 
   switch (aState) {

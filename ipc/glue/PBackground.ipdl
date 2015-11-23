@@ -4,6 +4,7 @@
 
 include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundTest;
 include protocol PBlob;
 include protocol PBroadcastChannel;
@@ -14,6 +15,7 @@ include protocol PFileDescriptorSet;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PNuwa;
+include protocol PQuota;
 include protocol PServiceWorkerManager;
 include protocol PUDPSocket;
 include protocol PVsync;
@@ -40,6 +42,7 @@ sync protocol PBackground
 {
   manages PAsmJSCacheEntry;
   manages PBackgroundIDBFactory;
+  manages PBackgroundIndexedDBUtils;
   manages PBackgroundTest;
   manages PBlob;
   manages PBroadcastChannel;
@@ -50,6 +53,7 @@ sync protocol PBackground
   manages PMessagePort;
   manages PCameras;
   manages PNuwa;
+  manages PQuota;
   manages PServiceWorkerManager;
   manages PUDPSocket;
   manages PVsync;
@@ -59,6 +63,8 @@ parent:
   PBackgroundTest(nsCString testArg);
 
   PBackgroundIDBFactory(LoggingInfo loggingInfo);
+
+  PBackgroundIndexedDBUtils();
 
   PVsync();
 
@@ -83,6 +89,8 @@ parent:
   PAsmJSCacheEntry(OpenMode openMode,
                    WriteParams write,
                    PrincipalInfo principalInfo);
+
+  PQuota();
 
 child:
   PCache();

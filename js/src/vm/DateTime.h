@@ -200,31 +200,15 @@ class DateTimeInfo
     void sanityCheck();
 };
 
-enum class IcuTimeZoneStatus : uint32_t
-{
-    // ICU's current default time zone is accurate.
-    Valid = 0,
-
-    // ICU's current default time zone may not be consistent with
-    // DateTimeInfo::localTZA().
-    NeedsUpdate,
-
-    // We're in the middle of recreating ICU's default time zone.
-    Updating
-};
-
-// The user's current time zone adjustment and time zone are computed in two
-// places: via DateTimeInfo::localTZA(), and via ICU.  The mechanisms are,
-// unfortunately, separate: both must be triggered to respond to a time zone
-// change.
-//
-// Updating ICU's default time zone is a relatively slow operation.  If we
-// perform it exactly when we update DateTimeInfo::localTZA(), we regress perf
-// per bug 1220693.  Instead, we defer updating ICU until we actually need the
-// data.  We record needs-update status in this global (necessarily atomic)
-// variable.
-extern mozilla::Atomic<IcuTimeZoneStatus, mozilla::ReleaseAcquire>
-DefaultTimeZoneStatus;
+/**
+ * ICU's default time zone, used for various date/time formatting operations
+ * that include the local time in the representation, is allowed to go stale
+ * for unfortunate performance reasons.  Call this function when an up-to-date
+ * default time zone is required, to resync ICU's default time zone with
+ * reality.
+ */
+extern void
+ResyncICUDefaultTimeZone();
 
 }  /* namespace js */
 

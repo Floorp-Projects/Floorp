@@ -150,8 +150,8 @@ this.ForgetAboutSite = {
     }
 
     // Offline Storages
-    let qm = Cc["@mozilla.org/dom/quota/manager;1"].
-             getService(Ci.nsIQuotaManager);
+    let qms = Cc["@mozilla.org/dom/quota-manager-service;1"].
+              getService(Ci.nsIQuotaManagerService);
     // delete data from both HTTP and HTTPS sites
     let caUtils = {};
     let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -162,8 +162,8 @@ this.ForgetAboutSite = {
     let httpsURI = caUtils.makeURI("https://" + aDomain);
     let httpPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {});
     let httpsPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpsURI, {});
-    qm.clearStoragesForPrincipal(httpPrincipal);
-    qm.clearStoragesForPrincipal(httpsPrincipal);
+    qms.clearStoragesForPrincipal(httpPrincipal);
+    qms.clearStoragesForPrincipal(httpsPrincipal);
 
     function onContentPrefsRemovalFinished() {
       // Everybody else (including extensions)

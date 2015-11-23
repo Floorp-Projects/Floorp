@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test trees get displayed with the items in correct order and at the correct
+depth.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+
+    ok(React, "Should get React");
+    ok(Tree, "Should get Tree");
+
+    const t = Tree(TEST_TREE_INTERFACE);
+    ok(t, "Should be able to create Tree instances");
+
+    const tree = ReactDOM.render(t, window.document.body);
+    ok(tree, "Should be able to mount Tree instances");
+
+    yield setState(tree, {
+      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
+    });
+
+    isRenderedTree(document.body.textContent, [
+      "A:false",
+      "-B:false",
+      "--E:false",
+      "---K:false",
+      "---L:false",
+      "--F:false",
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "Should get the items rendered and indented as expected");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
