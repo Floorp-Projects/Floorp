@@ -783,7 +783,6 @@ PresShell::PresShell()
   mPresArenaAllocCount = 0;
 #endif
   mRenderFlags = 0;
-  mResolution = 1.0;
 
   mScrollPositionClampingScrollPortSizeSet = false;
 
@@ -5308,11 +5307,12 @@ nsresult PresShell::SetResolutionImpl(float aResolution, bool aScaleToResolution
   if (!(aResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  if (aResolution == mResolution) {
+  if (aResolution == mResolution.valueOr(0.0)) {
+    MOZ_ASSERT(mResolution.isSome());
     return NS_OK;
   }
   RenderingState state(this);
-  state.mResolution = aResolution;
+  state.mResolution = Some(aResolution);
   SetRenderingState(state);
   mScaleToResolution = aScaleToResolution;
   if (mMobileViewportManager) {
