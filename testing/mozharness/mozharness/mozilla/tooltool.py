@@ -49,16 +49,11 @@ class TooltoolMixin(object):
     def tooltool_fetch(self, manifest,
                        output_dir=None, privileged=False, cache=None):
         """docstring for tooltool_fetch"""
-        tooltool = self.query_exe('tooltool.py', return_type='list')
 
         if self.config.get("download_tooltool"):
-            tooltool = [bin for bin in tooltool if os.path.exists(bin)]
-            if tooltool:
-                cmd = [tooltool[0]]
-            else:
-                cmd = [self._fetch_tooltool_py()]
+            cmd = [sys.executable, self._fetch_tooltool_py()]
         else:
-            cmd = tooltool
+            cmd = self.query_exe('tooltool.py', return_type='list')
 
         # get the tooltool servers from configuration
         default_urls = self.config.get('tooltool_servers', TOOLTOOL_SERVERS)
