@@ -182,7 +182,7 @@ CodeGeneratorShared::generateOutOfLineCode()
         outOfLineCode_[i]->generate(this);
     }
 
-    return true;
+    return !masm.oom();
 }
 
 void
