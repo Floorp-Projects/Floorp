@@ -429,9 +429,37 @@ struct Pool
 };
 
 
-// The InstSize is the sizeof(Inst) but is needed here because the buffer is
-// defined before the Instruction.
-template <size_t SliceSize, size_t InstSize, class Inst, class Asm>
+// Template arguments:
+//
+// SliceSize
+//   Number of bytes in each allocated BufferSlice. See
+//   AssemblerBuffer::SliceSize.
+//
+// InstSize
+//   Size in bytes of the fixed-size instructions. This should be equal to
+//   sizeof(Inst). This is only needed here because the buffer is defined before
+//   the Instruction.
+//
+// Inst
+//   The actual type used to represent instructions. This is only really used as
+//   the return type of the getInst() method.
+//
+// Asm
+//   Class defining the needed static callback functions. See documentation of
+//   the Asm::* callbacks above.
+//
+// NumShortBranchRanges
+//   The number of short branch ranges to support. This can be 0 if no support
+//   for tracking short range branches is needed. The
+//   AssemblerBufferWithConstantPools class does not need to know what the range
+//   of branches is - it deals in branch 'deadlines' which is the last buffer
+//   position that a short-range forward branch can reach. It is assumed that
+//   the Asm class is able to find the actual branch instruction given a
+//   (range-index, deadline) pair.
+//
+//
+template <size_t SliceSize, size_t InstSize, class Inst, class Asm,
+          unsigned NumShortBranchRanges = 0>
 struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst>
 {
   private:
@@ -502,8 +530,17 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
     };
 
-    // Info for each pool that has already been dumped. This does not include any entries in pool_.
+    // Info for each pool that has already been dumped. This does not include
+    // any entries in pool_.
     Vector<PoolInfo, 8, LifoAllocPolicy<Fallible>> poolInfo_;
+
+    // Set of short-range forward branches that have not yet been bound.
+    // We may need to insert veneers if the final label turns out to be out of
+    // range.
+    //
+    // This set stores (rangeIdx, deadline) pairs instead of the actual branch
+    // locations.
+    BranchDeadlineSet<NumShortBranchRanges> branchDeadlines_;
 
     // When true dumping pools is inhibited.
     bool canNotPlacePool_;
@@ -560,6 +597,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         pool_(poolMaxOffset, pcBias, this->lifoAlloc_),
         instBufferAlign_(instBufferAlign),
         poolInfo_(this->lifoAlloc_),
+        branchDeadlines_(this->lifoAlloc_),
         canNotPlacePool_(false),
 #ifdef DEBUG
         canNotPlacePoolStartOffset_(0),
@@ -613,18 +651,65 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     static const unsigned OOM_FAIL = unsigned(-1);
     static const unsigned NO_DATA = unsigned(-2);
 
-    unsigned insertEntryForwards(unsigned numInst, unsigned numPoolEntries, uint8_t* inst, uint8_t* data) {
+    // Check if it is possible to add numInst instructions and numPoolEntries
+    // constant pool entries without needing to flush the current pool.
+    bool hasSpaceForInsts(unsigned numInsts, unsigned numPoolEntries) const
+    {
         size_t nextOffset = sizeExcludingCurrentPool();
-        size_t poolOffset = nextOffset + (numInst + guardSize_ + headerSize_) * InstSize;
+        // Earliest starting offset for the current pool after adding numInsts.
+        // This is the beginning of the pool entries proper, after inserting a
+        // guard branch + pool header.
+        size_t poolOffset = nextOffset + (numInsts + guardSize_ + headerSize_) * InstSize;
 
-        // Perform the necessary range checks.
+        // Any constant pool loads that would go out of range?
+        if (pool_.checkFull(poolOffset))
+            return false;
 
+        // Any short-range branch that would go out of range?
+        if (!branchDeadlines_.empty()) {
+            size_t deadline = branchDeadlines_.earliestDeadline().getOffset();
+            size_t poolEnd =
+              poolOffset + pool_.getPoolSize() + numPoolEntries * sizeof(PoolAllocUnit);
+
+            // When NumShortBranchRanges > 1, is is possible for branch deadlines to expire faster
+            // than we can insert veneers. Suppose branches are 4 bytes each, we could have the
+            // following deadline set:
+            //
+            //   Range 0: 40, 44, 48
+            //   Range 1: 44, 48
+            //
+            // It is not good enough to start inserting veneers at the 40 deadline; we would not be
+            // able to create veneers for the second 44 deadline. Instead, we need to start at 32:
+            //
+            //   32: veneer(40)
+            //   36: veneer(44)
+            //   40: veneer(44)
+            //   44: veneer(48)
+            //   48: veneer(48)
+            //
+            // This is a pretty conservative solution to the problem: If we begin at the earliest
+            // deadline, we can always emit all veneers for the range that currently has the most
+            // pending deadlines. That may not leave room for veneers for the remaining ranges, so
+            // reserve space for those secondary range veneers assuming the worst case deadlines.
+
+            // Total pending secondary range veneer size.
+            size_t secondaryVeneers =
+              guardSize_ * (branchDeadlines_.size() - branchDeadlines_.maxRangeSize());
+
+            if (deadline < poolEnd + secondaryVeneers)
+                return false;
+        }
+
+        return true;
+    }
+
+    unsigned insertEntryForwards(unsigned numInst, unsigned numPoolEntries, uint8_t* inst, uint8_t* data) {
         // If inserting pool entries then find a new limiter before we do the
         // range check.
         if (numPoolEntries)
-            pool_.updateLimiter(BufferOffset(nextOffset));
+            pool_.updateLimiter(BufferOffset(sizeExcludingCurrentPool()));
 
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(numInst, numPoolEntries)) {
             if (numPoolEntries)
                 JitSpew(JitSpew_Pools, "[%d] Inserting pool entry caused a spill", id);
             else
@@ -656,14 +741,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     // This may flush the current constant pool before returning nextOffset().
     BufferOffset nextInstrOffset()
     {
-        size_t nextOffset = sizeExcludingCurrentPool();
-        // Is there room for a single instruction more?
-        size_t poolOffset =
-          nextOffset + (1 + guardSize_ + headerSize_) * InstSize;
-        if (pool_.checkFull(poolOffset)) {
-            JitSpew(JitSpew_Pools,
-                    "[%d] nextInstrOffset @ %d caused a constant pool spill",
-                    id, nextOffset);
+        if (!hasSpaceForInsts(/* numInsts= */ 1, /* numPoolEntries= */ 0)) {
+            JitSpew(JitSpew_Pools, "[%d] nextInstrOffset @ %d caused a constant pool spill", id,
+                    this->nextOffset().getOffset());
             finishPool();
         }
         return this->nextOffset();
@@ -719,6 +799,46 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
 
     BufferOffset putInt(uint32_t value, bool markAsBranch = false) {
         return allocEntry(1, 0, (uint8_t*)&value, nullptr, nullptr, markAsBranch);
+    }
+
+    // Register a short-range branch deadline.
+    //
+    // After inserting a short-range forward branch, call this method to
+    // register the branch 'deadline' which is the last buffer offset that the
+    // branch instruction can reach.
+    //
+    // When the branch is bound to a destination label, call
+    // unregisterBranchDeadline() to stop tracking this branch,
+    //
+    // If the assembled code is about to exceed the registered branch deadline,
+    // and unregisterBranchDeadline() has not yet been called, an
+    // instruction-sized constant pool entry is allocated before the branch
+    // deadline.
+    //
+    // rangeIdx
+    //   A number < NumShortBranchRanges identifying the range of the branch.
+    //
+    // deadline
+    //   The highest buffer offset the the short-range branch can reach
+    //   directly.
+    //
+    void registerBranchDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!this->oom() && !branchDeadlines_.addDeadline(rangeIdx, deadline))
+            this->fail_oom();
+    }
+
+    // Un-register a short-range branch deadline.
+    //
+    // When a short-range branch has been successfully bound to its destination
+    // label, call this function to stop traching the branch.
+    //
+    // The (rangeIdx, deadline) pair must be previously registered.
+    //
+    void unregisterBranchDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!this->oom())
+            branchDeadlines_.removeDeadline(rangeIdx, deadline);
     }
 
   private:
@@ -803,9 +923,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         // so then finish the pool before entering the no-pool region. It is
         // assumed that no pool entries are allocated in a no-pool region and
         // this is asserted when allocating entries.
-        size_t poolOffset = sizeExcludingCurrentPool() + (maxInst + guardSize_ + headerSize_) * InstSize;
-
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(maxInst, 0)) {
             JitSpew(JitSpew_Pools, "[%d] No-Pool instruction(%d) caused a spill.", id,
                     sizeExcludingCurrentPool());
             finishPool();
@@ -830,7 +948,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
     void align(unsigned alignment) {
-        MOZ_ASSERT(IsPowerOfTwo(alignment));
+        MOZ_ASSERT(IsPowerOfTwo(alignment) && alignment >= InstSize);
 
         // A pool many need to be dumped at this point, so insert NOP fill here.
         insertNopFill();
@@ -843,9 +961,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
 
         // Add an InstSize because it is probably not useful for a pool to be
         // dumped at the aligned code position.
-        uint32_t poolOffset = sizeExcludingCurrentPool() + requiredFill
-                              + (1 + guardSize_ + headerSize_) * InstSize;
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(requiredFill / InstSize + 1, 0)) {
             // Alignment would cause a pool dump, so dump the pool now.
             JitSpew(JitSpew_Pools, "[%d] Alignment of %d at %d caused a spill.", id, alignment,
                     sizeExcludingCurrentPool());
