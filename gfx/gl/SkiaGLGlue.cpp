@@ -24,16 +24,14 @@ using mozilla::gl::GLFeature;
 using mozilla::gl::SkiaGLGlue;
 using mozilla::gfx::DrawTarget;
 
-static mozilla::ThreadLocal<GLContext*> sGLContext;
+static MOZ_THREAD_LOCAL(GLContext*) sGLContext;
 
 extern "C" {
 
 static void SetStaticGLContext(GLContext* context)
 {
-    if (!sGLContext.initialized()) {
-      mozilla::DebugOnly<bool> success = sGLContext.init();
-      MOZ_ASSERT(success);
-    }
+    mozilla::DebugOnly<bool> success = sGLContext.init();
+    MOZ_ASSERT(success);
 
     sGLContext.set(context);
 }

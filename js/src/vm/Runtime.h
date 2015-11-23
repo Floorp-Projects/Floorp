@@ -63,7 +63,7 @@ class TraceLoggerThread;
 #endif
 
 /* Thread Local Storage slot for storing the runtime for a thread. */
-extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
+extern MOZ_THREAD_LOCAL(PerThreadData*) TlsPerThreadData;
 
 } // namespace js
 

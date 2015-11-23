@@ -40,9 +40,9 @@ namespace mozilla {
 class TimeStamp;
 } // namespace mozilla
 
-extern mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
-extern mozilla::ThreadLocal<GeckoSampler *> tlsTicker;
-extern mozilla::ThreadLocal<void *> tlsStackTop;
+extern MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
+extern MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
+extern MOZ_THREAD_LOCAL(void *) tlsStackTop;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME

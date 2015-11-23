@@ -1409,7 +1409,7 @@ struct CollectorData
   CycleCollectedJSRuntime* mRuntime;
 };
 
-static mozilla::ThreadLocal<CollectorData*> sCollectorData;
+static MOZ_THREAD_LOCAL(CollectorData*) sCollectorData;
 
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
@@ -3999,8 +3999,11 @@ nsCycleCollector_suspectedCount()
 bool
 nsCycleCollector_init()
 {
+  static DebugOnly<bool> sInitialized;
+
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-  MOZ_ASSERT(!sCollectorData.initialized(), "Called twice!?");
+  MOZ_ASSERT(!sInitialized, "Called twice!?");
+  sInitialized = true;
 
   return sCollectorData.init();
 }
@@ -4008,8 +4011,6 @@ nsCycleCollector_init()
 void
 nsCycleCollector_startup()
 {
-  MOZ_ASSERT(sCollectorData.initialized(),
-             "Forgot to call nsCycleCollector_init!");
   if (sCollectorData.get()) {
     MOZ_CRASH();
   }
