@@ -585,24 +585,6 @@ Loader::DropDocumentReference(void)
   }
 }
 
-static PLDHashOperator
-CollectNonAlternates(URIPrincipalReferrerPolicyAndCORSModeHashKey *aKey,
-                     SheetLoadData* &aData,
-                     void* aClosure)
-{
-  NS_PRECONDITION(aData, "Must have a data");
-  NS_PRECONDITION(aClosure, "Must have an array");
-
-  // Note that we don't want to affect what the selected style set is,
-  // so use true for aHasAlternateRel.
-  if (aData->mLoader->IsAlternate(aData->mTitle, true)) {
-    return PL_DHASH_NEXT;
-  }
-
-  static_cast<Loader::LoadDataArray*>(aClosure)->AppendElement(aData);
-  return PL_DHASH_REMOVE;
-}
-
 nsresult
 Loader::SetPreferredSheet(const nsAString& aTitle)
 {
@@ -624,7 +606,17 @@ Loader::SetPreferredSheet(const nsAString& aTitle)
   // start any pending alternates that aren't alternates anymore
   if (mSheets) {
     LoadDataArray arr(mSheets->mPendingDatas.Count());
-    mSheets->mPendingDatas.Enumerate(CollectNonAlternates, &arr);
+    for (auto iter = mSheets->mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
+      SheetLoadData* data = iter.Data();
+      MOZ_ASSERT(data, "Must have a data");
+
+      // Note that we don't want to affect what the selected style set is, so
+      // use true for aHasAlternateRel.
+      if (!data->mLoader->IsAlternate(data->mTitle, true)) {
+        arr.AppendElement(data);
+        iter.Remove();
+      }
+    }
 
     mDatasToNotifyOn += arr.Length();
     for (uint32_t i = 0; i < arr.Length(); ++i) {
@@ -1006,21 +998,6 @@ Loader::IsAlternate(const nsAString& aTitle, bool aHasAlternateRel)
   return !aTitle.Equals(mPreferredSheet);
 }
 
-/* static */ PLDHashOperator
-Loader::RemoveEntriesWithURI(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey,
-                             RefPtr<CSSStyleSheet>& aSheet,
-                             void* aUserData)
-{
-  nsIURI* obsoleteURI = static_cast<nsIURI*>(aUserData);
-  nsIURI* sheetURI = aKey->GetURI();
-  bool areEqual;
-  nsresult rv = sheetURI->Equals(obsoleteURI, &areEqual);
-  if (NS_SUCCEEDED(rv) && areEqual) {
-    return PL_DHASH_REMOVE;
-  }
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 Loader::ObsoleteSheet(nsIURI* aURI)
 {
@@ -1030,7 +1007,14 @@ Loader::ObsoleteSheet(nsIURI* aURI)
   if (!aURI) {
     return NS_ERROR_INVALID_ARG;
   }
-  mSheets->mCompleteSheets.Enumerate(RemoveEntriesWithURI, aURI);
+  for (auto iter = mSheets->mCompleteSheets.Iter(); !iter.Done(); iter.Next()) {
+    nsIURI* sheetURI = iter.Key()->GetURI();
+    bool areEqual;
+    nsresult rv = sheetURI->Equals(aURI, &areEqual);
+    if (NS_SUCCEEDED(rv) && areEqual) {
+      iter.Remove();
+    }
+  }
   return NS_OK;
 }
 
