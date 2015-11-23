@@ -33,8 +33,6 @@ public:
 
   virtual MediaResource* GetResource() const final override;
 
-  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) final override;
-
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped) final override;
 
@@ -43,10 +41,6 @@ public:
   virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   virtual layers::ImageContainer* GetImageContainer() final override;
 
-  virtual bool IsTransportSeekable() final override;
-
-  virtual bool IsMediaSeekable() final override;
-
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                               nsAutoPtr<MetadataTags> aTags,
                               MediaDecoderEventVisibility aEventVisibility) final override;
@@ -54,8 +48,6 @@ public:
                                 MediaDecoderEventVisibility aEventVisibility) final override;
 
   virtual MediaDecoderOwner* GetOwner() final override;
-
-  virtual void NotifyDataArrived() final override {};
 
 private:
   virtual ~BufferDecoder();
