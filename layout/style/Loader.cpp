@@ -2475,36 +2475,36 @@ Loader::HandleLoadEvent(SheetLoadData* aEvent)
   }
 }
 
-static PLDHashOperator
-StopLoadingSheetCallback(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey,
-                         SheetLoadData*& aData,
-                         void* aClosure)
+static void
+StopLoadingSheets(
+  nsDataHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey, SheetLoadData*>& aDatas,
+  Loader::LoadDataArray& aArr)
 {
-  NS_PRECONDITION(aData, "Must have a data!");
-  NS_PRECONDITION(aClosure, "Must have a loader");
+  for (auto iter = aDatas.Iter(); !iter.Done(); iter.Next()) {
+    SheetLoadData* data = iter.Data();
+    MOZ_ASSERT(data, "Must have a data!");
 
-  aData->mIsLoading = false; // we will handle the removal right here
-  aData->mIsCancelled = true;
+    data->mIsLoading = false; // we will handle the removal right here
+    data->mIsCancelled = true;
 
-  static_cast<Loader::LoadDataArray*>(aClosure)->AppendElement(aData);
+    aArr.AppendElement(data);
 
-  return PL_DHASH_REMOVE;
+    iter.Remove();
+  }
 }
 
 nsresult
 Loader::Stop()
 {
-  uint32_t pendingCount =
-    mSheets ? mSheets->mPendingDatas.Count() : 0;
-  uint32_t loadingCount =
-    mSheets ? mSheets->mLoadingDatas.Count() : 0;
+  uint32_t pendingCount = mSheets ? mSheets->mPendingDatas.Count() : 0;
+  uint32_t loadingCount = mSheets ? mSheets->mLoadingDatas.Count() : 0;
   LoadDataArray arr(pendingCount + loadingCount + mPostedEvents.Length());
 
   if (pendingCount) {
-    mSheets->mPendingDatas.Enumerate(StopLoadingSheetCallback, &arr);
+    StopLoadingSheets(mSheets->mPendingDatas, arr);
   }
   if (loadingCount) {
-    mSheets->mLoadingDatas.Enumerate(StopLoadingSheetCallback, &arr);
+    StopLoadingSheets(mSheets->mLoadingDatas, arr);
   }
 
   uint32_t i;
