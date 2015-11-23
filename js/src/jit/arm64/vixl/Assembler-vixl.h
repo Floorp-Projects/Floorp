@@ -4225,17 +4225,6 @@ class Assembler : public MozBaseAssembler {
                             unsigned access_size,
                             LoadStoreScalingOption option);
 
-  // Link the current (not-yet-emitted) instruction to the specified label, then
-  // return an offset to be encoded in the instruction. If the label is not yet
-  // bound, an offset of 0 is returned.
-  ptrdiff_t LinkAndGetByteOffsetTo(BufferOffset branch, Label * label);
-  ptrdiff_t LinkAndGetInstructionOffsetTo(BufferOffset branch, Label * label);
-  ptrdiff_t LinkAndGetPageOffsetTo(BufferOffset branch, Label * label);
-
-  // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
-  template <int element_size>
-  ptrdiff_t LinkAndGetOffsetTo(BufferOffset branch, Label* label);
-
  protected:
   // Prevent generation of a literal pool for the next |maxInst| instructions.
   // Guarantees instruction linearity.

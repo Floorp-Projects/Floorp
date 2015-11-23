@@ -314,6 +314,7 @@ class Instruction {
   bool IsBranchLinkImm() const;
   bool IsTargetReachable(Instruction* target) const;
   ptrdiff_t ImmPCRawOffset() const;
+  void SetImmPCRawOffset(ptrdiff_t offset);
   void SetBits32(int msb, int lsb, unsigned value);
 
   // Is this a stack pointer synchronization instruction as inserted by

@@ -39,6 +39,51 @@ void Assembler::FinalizeCode() {
 #endif
 }
 
+// Unbound Label Representation.
+//
+// We can have multiple branches using the same label before it is bound.
+// Assembler::bind() must then be able to enumerate all the branches and patch
+// them to target the final label location.
+//
+// When a Label is unbound with uses, its offset is pointing to the tip of a
+// linked list of uses. The uses can be branches or adr/adrp instructions. In
+// the case of branches, the next member in the linked list is simply encoded
+// as the branch target. For adr/adrp, the relative pc offset is encoded in the
+// immediate field as a signed instruction offset.
+//
+// In both cases, the end of the list is encoded as a 0 pc offset, i.e. the
+// tail is pointing to itself.
+
+static const ptrdiff_t kEndOfLabelUseList = 0;
+
+BufferOffset
+MozBaseAssembler::NextLink(BufferOffset cur)
+{
+    Instruction* link = getInstructionAt(cur);
+    // Raw encoded offset.
+    ptrdiff_t offset = link->ImmPCRawOffset();
+    // End of the list is encoded as 0.
+    if (offset == kEndOfLabelUseList)
+        return BufferOffset();
+    // The encoded offset is the number of instructions to move.
+    return BufferOffset(cur.getOffset() + offset * kInstructionSize);
+}
+
+static ptrdiff_t
+EncodeOffset(BufferOffset cur, BufferOffset next)
+{
+    MOZ_ASSERT(next.assigned() && cur.assigned());
+    ptrdiff_t offset = next.getOffset() - cur.getOffset();
+    MOZ_ASSERT(offset % kInstructionSize == 0);
+    return offset / kInstructionSize;
+}
+
+void
+MozBaseAssembler::SetNextLink(BufferOffset cur, BufferOffset next)
+{
+    Instruction* link = getInstructionAt(cur);
+    link->SetImmPCRawOffset(EncodeOffset(cur, next));
+}
 
 // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
 //
@@ -50,9 +95,11 @@ void Assembler::FinalizeCode() {
 // multiple of element_size, then calculating the (scaled) offset between them.
 // This matches the semantics of adrp, for example.
 template <int element_size>
-ptrdiff_t Assembler::LinkAndGetOffsetTo(BufferOffset branch, Label* label) {
+ptrdiff_t
+MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch, Label* label)
+{
   if (armbuffer_.oom())
-    return js::jit::LabelBase::INVALID_OFFSET;
+    return kEndOfLabelUseList;
 
   if (label->bound()) {
     // The label is bound: all uses are already linked.
@@ -65,32 +112,28 @@ ptrdiff_t Assembler::LinkAndGetOffsetTo(BufferOffset branch, Label* label) {
     // The label is unbound and unused: store the offset in the label itself
     // for patching by bind().
     label->use(branch.getOffset());
-    return js::jit::LabelBase::INVALID_OFFSET;
+    return kEndOfLabelUseList;
   }
 
   // The label is unbound but used. Create an implicit linked list between
   // the branches, and update the linked list head in the label struct.
-  ptrdiff_t prevHeadOffset = static_cast<ptrdiff_t>(label->offset());
+  ptrdiff_t offset = EncodeOffset(branch, BufferOffset(label));
   label->use(branch.getOffset());
-  VIXL_ASSERT(prevHeadOffset - branch.getOffset() != js::jit::LabelBase::INVALID_OFFSET);
-  return prevHeadOffset - branch.getOffset();
+  MOZ_ASSERT(offset != kEndOfLabelUseList);
+  return offset;
 }
 
-
-ptrdiff_t Assembler::LinkAndGetByteOffsetTo(BufferOffset branch, Label* label) {
+ptrdiff_t MozBaseAssembler::LinkAndGetByteOffsetTo(BufferOffset branch, Label* label) {
   return LinkAndGetOffsetTo<1>(branch, label);
 }
 
-
-ptrdiff_t Assembler::LinkAndGetInstructionOffsetTo(BufferOffset branch, Label* label) {
+ptrdiff_t MozBaseAssembler::LinkAndGetInstructionOffsetTo(BufferOffset branch, Label* label) {
   return LinkAndGetOffsetTo<kInstructionSize>(branch, label);
 }
 
-
-ptrdiff_t Assembler::LinkAndGetPageOffsetTo(BufferOffset branch, Label* label) {
+ptrdiff_t MozBaseAssembler::LinkAndGetPageOffsetTo(BufferOffset branch, Label* label) {
   return LinkAndGetOffsetTo<kPageSize>(branch, label);
 }
-
 
 BufferOffset Assembler::b(int imm26) {
   return EmitBranch(B | ImmUncondBranch(imm26));
