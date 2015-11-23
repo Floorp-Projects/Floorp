@@ -4,25 +4,26 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://url.spec.whatwg.org/#urlutils
- *
- * To the extent possible under law, the editors have waived all copyright
- * and related or neighboring rights to this work. In addition, as of 17
- * February 2013, the editors have made this specification available under
- * the Open Web Foundation Agreement Version 1.0, which is available at
- * http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
+ * https://html.spec.whatwg.org/multipage/semantics.html#htmlhyperlinkelementutils
+ * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
+ * Opera Software ASA. You are granted a license to use, reproduce
+ * and create derivative works of this document.
  */
 
-[NoInterfaceObject,
- Exposed=(Window, Worker)]
-interface URLUtils {
+[NoInterfaceObject]
+interface HTMLHyperlinkElementUtils {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute USVString href;
-  [Throws, CrossOriginWritable=Location]
+
+  // Bug 824857 should remove this.
+  [Throws]
+  stringifier;
+
+  [Throws]
            attribute USVString href;
+
   [Throws]
   readonly attribute USVString origin;
-
   [Throws]
            attribute USVString protocol;
   [Throws]
@@ -39,17 +40,6 @@ interface URLUtils {
            attribute USVString pathname;
   [Throws]
            attribute USVString search;
-
   [Throws]
            attribute USVString hash;
-
-  // Bug 824857 should remove this.
-  [Throws]
-  stringifier;
-};
-
-[NoInterfaceObject,
- Exposed=(Window, Worker)]
-interface URLUtilsSearchParams {
- readonly attribute URLSearchParams searchParams;
 };

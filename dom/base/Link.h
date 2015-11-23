@@ -13,7 +13,6 @@
 
 #include "mozilla/IHistory.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/URLSearchParams.h"
 #include "nsIContent.h" // for nsLinkState
 
 namespace mozilla {
@@ -28,7 +27,7 @@ class Element;
 { 0xb25edee6, 0xdd35, 0x4f8b,                             \
   { 0xab, 0x90, 0x66, 0xd0, 0xbd, 0x3c, 0x22, 0xd5 } }
 
-class Link : public URLSearchParamsObserver
+class Link : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
@@ -74,7 +73,6 @@ public:
   void GetHostname(nsAString &_hostname, ErrorResult& aError);
   void GetPathname(nsAString &_pathname, ErrorResult& aError);
   void GetSearch(nsAString &_search, ErrorResult& aError);
-  URLSearchParams* SearchParams();
   void GetPort(nsAString &_port, ErrorResult& aError);
   void GetHash(nsAString &_hash, ErrorResult& aError);
 
@@ -113,9 +111,6 @@ public:
 
   bool ElementHasHref() const;
 
-  // URLSearchParamsObserver
-  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
-
 protected:
   virtual ~Link();
 
@@ -134,12 +129,6 @@ protected:
   nsIURI* GetCachedURI() const { return mCachedURI; }
   bool HasCachedURI() const { return !!mCachedURI; }
 
-  void UpdateURLSearchParams();
-
-  // CC methods
-  void Unlink();
-  void Traverse(nsCycleCollectionTraversalCallback &cb);
-
 private:
   /**
    * Unregisters from History so this node no longer gets notifications about
@@ -149,10 +138,6 @@ private:
 
   already_AddRefed<nsIURI> GetURIToMutate();
   void SetHrefAttribute(nsIURI *aURI);
-
-  void CreateSearchParamsIfNeeded();
-
-  void SetSearchInternal(const nsAString& aSearch);
 
   mutable nsCOMPtr<nsIURI> mCachedURI;
 
@@ -167,9 +152,6 @@ private:
   bool mNeedsRegistration;
 
   bool mRegistered;
-
-protected:
-  RefPtr<URLSearchParams> mSearchParams;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
