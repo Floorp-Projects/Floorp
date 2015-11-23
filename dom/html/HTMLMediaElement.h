@@ -1070,6 +1070,9 @@ protected:
   // A method to check if we are playing through the AudioChannel.
   bool IsPlayingThroughTheAudioChannel() const;
 
+  // A method to check whether we are currently playing.
+  bool IsCurrentlyPlaying() const;
+
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState();
 
