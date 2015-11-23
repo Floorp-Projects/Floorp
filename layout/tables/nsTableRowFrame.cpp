@@ -659,6 +659,7 @@ nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
         break;
       }
       // Fall through to the coord case
+      MOZ_FALLTHROUGH;
     }
     case eStyleUnit_Coord: {
       nscoord outsideBoxSizing = 0;

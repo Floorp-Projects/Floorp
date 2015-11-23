@@ -125,7 +125,7 @@ CSSLexer::NextToken(Nullable<CSSToken>& aResult)
 
     case eCSSToken_Dimension:
       resultToken.mText.Construct(token.mIdent);
-      /* FALLTHROUGH */
+      MOZ_FALLTHROUGH;
     case eCSSToken_Number:
     case eCSSToken_Percentage:
       resultToken.mNumber.Construct(token.mNumber);
