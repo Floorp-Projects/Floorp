@@ -964,13 +964,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     return NS_OK;
 }
 
-/* static */ PLDHashOperator
-mozJSComponentLoader::ClearModules(const nsACString& key, ModuleEntry*& entry, void* cx)
-{
-    entry->Clear();
-    return PL_DHASH_REMOVE;
-}
-
 void
 mozJSComponentLoader::UnloadModules()
 {
@@ -1000,7 +993,10 @@ mozJSComponentLoader::UnloadModules()
     mInProgressImports.Clear();
     mImports.Clear();
 
-    mModules.Enumerate(ClearModules, nullptr);
+    for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
+        iter.Data()->Clear();
+        iter.Remove();
+    }
 }
 
 NS_IMETHODIMP
