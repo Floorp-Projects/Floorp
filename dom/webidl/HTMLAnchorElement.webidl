@@ -32,8 +32,8 @@ interface HTMLAnchorElement : HTMLElement {
            [SetterThrows]
            attribute DOMString text;
 };
-HTMLAnchorElement implements URLUtils;
-HTMLAnchorElement implements URLUtilsSearchParams;
+
+HTMLAnchorElement implements HTMLHyperlinkElementUtils;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLAnchorElement {
