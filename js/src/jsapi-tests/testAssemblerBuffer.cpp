@@ -501,9 +501,79 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools_ShortBranch)
     CHECK_EQUAL(*ab.getInst(BufferOffset(28)), 0xb0bb0010u); // br pc+16 (guard)
     CHECK_EQUAL(*ab.getInst(BufferOffset(32)), 0xffff0000u); // pool header 0 bytes.
     CHECK_EQUAL(*ab.getInst(BufferOffset(36)), 0xb2bb00ccu); // veneer1 w/ original 'cc' offset.
-    CHECK_EQUAL(*ab.getInst(BufferOffset(40)), 0xb2bb0d2du); // veneer2 w/ original 'cc' offset.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(40)), 0xb2bb0d2du); // veneer2 w/ original 'd2d' offset.
     CHECK_EQUAL(*ab.getInst(BufferOffset(44)), 0x22220007u);
 
     return true;
 }
 END_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools_ShortBranch)
+
+// Test that everything is put together correctly in the ARM64 assembler.
+#if defined(JS_CODEGEN_ARM64)
+
+#include "jit/MacroAssembler-inl.h"
+
+BEGIN_TEST(testAssemblerBuffer_ARM64)
+{
+    using namespace js::jit;
+
+    js::LifoAlloc lifo(4096);
+    TempAllocator alloc(&lifo);
+    JitContext jc(cx, &alloc);
+    rt->getJitRuntime(cx);
+    MacroAssembler masm;
+
+    // Branches to an unbound label.
+    Label lab1;
+    masm.branch(Assembler::Equal, &lab1);
+    masm.branch(Assembler::LessThan, &lab1);
+    masm.bind(&lab1);
+    masm.branch(Assembler::Equal, &lab1);
+
+    CHECK_EQUAL(masm.getInstructionAt(BufferOffset(0))->InstructionBits(),
+                vixl::B_cond | vixl::Assembler::ImmCondBranch(2) | vixl::eq);
+    CHECK_EQUAL(masm.getInstructionAt(BufferOffset(4))->InstructionBits(),
+                vixl::B_cond | vixl::Assembler::ImmCondBranch(1) | vixl::lt);
+    CHECK_EQUAL(masm.getInstructionAt(BufferOffset(8))->InstructionBits(),
+                vixl::B_cond | vixl::Assembler::ImmCondBranch(0) | vixl::eq);
+
+    // Branches can reach the label, but the linked list of uses needs to be
+    // rearranged. The final conditional branch cannot reach the first branch.
+    Label lab2a;
+    Label lab2b;
+    masm.bind(&lab2a);
+    masm.B(&lab2b);
+    // Generate 1,100,000 bytes of NOPs.
+    for (unsigned n = 0; n < 1100000; n += 4)
+        masm.Nop();
+    masm.branch(Assembler::LessThan, &lab2b);
+    masm.bind(&lab2b);
+    CHECK_EQUAL(masm.getInstructionAt(BufferOffset(lab2a.offset()))->InstructionBits(),
+                vixl::B | vixl::Assembler::ImmUncondBranch(1100000 / 4 + 2));
+    CHECK_EQUAL(masm.getInstructionAt(BufferOffset(lab2b.offset() - 4))->InstructionBits(),
+                vixl::B_cond | vixl::Assembler::ImmCondBranch(1) | vixl::lt);
+
+    // Generate a conditional branch that can't reach its label.
+    Label lab3a;
+    Label lab3b;
+    masm.bind(&lab3a);
+    masm.branch(Assembler::LessThan, &lab3b);
+    for (unsigned n = 0; n < 1100000; n += 4)
+        masm.Nop();
+    masm.bind(&lab3b);
+    masm.B(&lab3a);
+    Instruction* bcond3 = masm.getInstructionAt(BufferOffset(lab3a.offset()));
+    CHECK_EQUAL(bcond3->BranchType(), vixl::CondBranchType);
+    ptrdiff_t delta = bcond3->ImmPCRawOffset() * 4;
+    Instruction* veneer = masm.getInstructionAt(BufferOffset(lab3a.offset() + delta));
+    CHECK_EQUAL(veneer->BranchType(), vixl::UncondBranchType);
+    delta += veneer->ImmPCRawOffset() * 4;
+    CHECK_EQUAL(delta, lab3b.offset() - lab3a.offset());
+    Instruction* b3 = masm.getInstructionAt(BufferOffset(lab3b.offset()));
+    CHECK_EQUAL(b3->BranchType(), vixl::UncondBranchType);
+    CHECK_EQUAL(4 * b3->ImmPCRawOffset(), -delta);
+
+    return true;
+}
+END_TEST(testAssemblerBuffer_ARM64)
+#endif /* JS_CODEGEN_ARM64 */
