@@ -118,14 +118,15 @@ exports["test:sample"] = WorkerTest(
         assert.equal(worker.url, window.location.href,
                          "worker.url still works");
         done();
+      },
+      onAttach: function() {
+        assert.equal(worker.url, window.location.href,
+                         "worker.url works");
+        assert.equal(worker.contentURL, window.location.href,
+                         "worker.contentURL works");
+        worker.postMessage("hi!");
       }
     });
-
-    assert.equal(worker.url, window.location.href,
-                     "worker.url works");
-    assert.equal(worker.contentURL, window.location.href,
-                     "worker.contentURL works");
-    worker.postMessage("hi!");
   }
 );
 
@@ -841,10 +842,9 @@ exports["test:worker events"] = WorkerTest(
       contentScript: 'new ' + function WorkerScope() {
         self.postMessage('start');
       },
-      onAttach: win => {
+      onAttach: () => {
         events.push('attach');
         assert.pass('attach event called when attached');
-        assert.equal(window, win, 'attach event passes in attached window');
       },
       onError: err => {
         assert.equal(err.message, 'Custom',
@@ -876,13 +876,16 @@ exports["test:onDetach in contentScript on destroy"] = WorkerTest(
           window.location.hash += '!' + reason;
         })
       },
+
+      onAttach: function() {
+        browser.contentWindow.addEventListener('hashchange', _ => {
+          assert.equal(browser.contentWindow.location.hash, '#detach!',
+                       "location.href is as expected");
+          done();
+        })
+        worker.destroy();
+      }
     });
-    browser.contentWindow.addEventListener('hashchange', _ => {
-      assert.equal(browser.contentWindow.location.hash, '#detach!',
-                   "location.href is as expected");
-      done();
-    })
-    worker.destroy();
   }
 );
 

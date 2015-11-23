@@ -387,3 +387,14 @@ add_task(function* send_data2() {
   gBrowser.removeCurrentTab();
 });
 
+add_task(function* get_ports_for_browser() {
+  let pages = new RemotePages(TEST_URL);
+  let port = yield waitForPage(pages);
+  // waitForPage creates a new tab and selects it by default, so
+  // the selected tab should be the one hosting this port.
+  let browser = gBrowser.selectedBrowser;
+  let foundPorts = pages.portsForBrowser(browser);
+  is(foundPorts.length, 1, "There should only be one port for this simple page");
+  is(foundPorts[0], port, "Should find the port");
+  gBrowser.removeCurrentTab();
+});
