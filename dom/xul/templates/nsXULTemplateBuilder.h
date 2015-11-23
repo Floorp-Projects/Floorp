@@ -26,7 +26,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/Logging.h"
-extern PRLogModuleInfo* gXULTemplateLog;
+extern mozilla::LazyLogModule gXULTemplateLog;
 
 class nsIContent;
 class nsIObserverService;

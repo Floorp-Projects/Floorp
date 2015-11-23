@@ -11,13 +11,10 @@
 #include "mozilla/Logging.h"
 #include "nsICryptoHash.h"
 
-static PRLogModuleInfo*
+static mozilla::LogModule*
 GetSriMetadataLog()
 {
-  static PRLogModuleInfo *gSriMetadataPRLog;
-  if (!gSriMetadataPRLog) {
-    gSriMetadataPRLog = PR_NewLogModule("SRIMetadata");
-  }
+  static mozilla::LazyLogModule gSriMetadataPRLog("SRIMetadata");
   return gSriMetadataPRLog;
 }
 

@@ -173,9 +173,9 @@ static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_s
 #define kPluginRegistryFilename NS_LITERAL_CSTRING("pluginreg.dat")
 
 #ifdef PLUGIN_LOGGING
-PRLogModuleInfo* nsPluginLogging::gNPNLog = nullptr;
-PRLogModuleInfo* nsPluginLogging::gNPPLog = nullptr;
-PRLogModuleInfo* nsPluginLogging::gPluginLog = nullptr;
+LazyLogModule nsPluginLogging::gNPNLog(NPN_LOG_NAME);
+LazyLogModule nsPluginLogging::gNPPLog(NPP_LOG_NAME);
+LazyLogModule nsPluginLogging::gPluginLog(PLUGIN_LOG_NAME);
 #endif
 
 // #defines for plugin cache and prefs
@@ -320,10 +320,6 @@ nsPluginHost::nsPluginHost()
   }
 
 #ifdef PLUGIN_LOGGING
-  nsPluginLogging::gNPNLog = PR_NewLogModule(NPN_LOG_NAME);
-  nsPluginLogging::gNPPLog = PR_NewLogModule(NPP_LOG_NAME);
-  nsPluginLogging::gPluginLog = PR_NewLogModule(PLUGIN_LOG_NAME);
-
   MOZ_LOG(nsPluginLogging::gNPNLog, PLUGIN_LOG_ALWAYS,("NPN Logging Active!\n"));
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,("General Plugin Logging Active! (nsPluginHost::ctor)\n"));
   MOZ_LOG(nsPluginLogging::gNPPLog, PLUGIN_LOG_ALWAYS,("NPP Logging Active!\n"));

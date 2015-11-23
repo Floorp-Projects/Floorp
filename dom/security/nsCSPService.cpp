@@ -27,14 +27,11 @@ using namespace mozilla;
 /* Keeps track of whether or not CSP is enabled */
 bool CSPService::sCSPEnabled = true;
 
-static PRLogModuleInfo* gCspPRLog;
+static LazyLogModule gCspPRLog("CSP");
 
 CSPService::CSPService()
 {
   Preferences::AddBoolVarCache(&sCSPEnabled, "security.csp.enable");
-
-  if (!gCspPRLog)
-    gCspPRLog = PR_NewLogModule("CSP");
 }
 
 CSPService::~CSPService()

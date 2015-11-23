@@ -53,7 +53,7 @@ MungePluginDsoPath(const std::string& path);
 std::string
 UnmungePluginDsoPath(const std::string& munged);
 
-extern PRLogModuleInfo* GetPluginLog();
+extern mozilla::LogModule* GetPluginLog();
 
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
