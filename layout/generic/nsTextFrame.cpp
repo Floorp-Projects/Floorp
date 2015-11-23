@@ -967,14 +967,12 @@ public:
     BreakSink(gfxTextRun* aTextRun, gfxContext* aContext,
               uint32_t aOffsetIntoTextRun) :
                 mTextRun(aTextRun), mContext(aContext),
-                mOffsetIntoTextRun(aOffsetIntoTextRun),
-                mChangedBreaks(false) {}
+                mOffsetIntoTextRun(aOffsetIntoTextRun) {}
 
     virtual void SetBreaks(uint32_t aOffset, uint32_t aLength,
                            uint8_t* aBreakBefore) override {
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
                                            aBreakBefore, mContext)) {
-        mChangedBreaks = true;
         // Be conservative and assume that some breaks have been set
         mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
@@ -1011,7 +1009,6 @@ public:
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
     uint32_t     mOffsetIntoTextRun;
-    bool mChangedBreaks;
   };
 
 private:
