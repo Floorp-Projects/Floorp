@@ -7,7 +7,7 @@ load 474744-1.html
 HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
 load 492286-1.xhtml
 load 493915-1.html
-load 495794-1.html
+skip-if(B2G) load 495794-1.html # in b2g all the media are muted by default
 load 576612-1.html
 load 752784-1.html
 load 789075-1.html

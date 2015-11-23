@@ -214,9 +214,9 @@ public:
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aIsSuspended) final override;
 
-  virtual bool IsActive() final override;
+  virtual bool IsActive() const final override;
 
-  virtual bool IsHidden() final override;
+  virtual bool IsHidden() const final override;
 
   // In order to create overlayImageContainer to support DOMHwMediaStream.
   VideoFrameContainer* GetOverlayImageVideoFrameContainer();
