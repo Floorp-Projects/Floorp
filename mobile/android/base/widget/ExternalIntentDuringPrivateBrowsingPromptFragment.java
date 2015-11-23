@@ -5,6 +5,7 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -62,7 +63,8 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
     public static boolean showDialogOrAndroidChooser(final Context context, final FragmentManager fragmentManager,
             final Intent intent) {
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab == null || !selectedTab.isPrivate()) {
+        // DialogFragment requires the Activity to extend Theme.AppCompat and we don't do that on GB (bug 1215079).
+        if (Versions.preHC || selectedTab == null || !selectedTab.isPrivate()) {
             return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
         }
 
