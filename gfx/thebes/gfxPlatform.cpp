@@ -745,7 +745,8 @@ gfxPlatform::ShutdownLayersIPC()
     }
     sLayersIPCIsUp = false;
 
-    if (XRE_IsParentProcess()) {
+    if (XRE_IsParentProcess())
+    {
         // This must happen after the shutdown of media and widgets, which
         // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
         layers::ImageBridgeChild::ShutDown();
@@ -754,8 +755,6 @@ gfxPlatform::ShutdownLayersIPC()
 #endif
 
         layers::CompositorParent::ShutDown();
-    } else {
-        CompositorChild::ShutdownLayersIPC();
     }
 }
 

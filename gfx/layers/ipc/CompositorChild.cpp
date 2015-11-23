@@ -49,9 +49,14 @@ CompositorChild::~CompositorChild()
   if (mCanSend) {
     gfxCriticalError() << "CompositorChild was not deinitialized";
   }
-  if (sCompositor == this) {
-    sCompositor = nullptr;
-  }
+}
+
+static void DeferredDestroyCompositor(RefPtr<CompositorParent> aCompositorParent,
+                                      RefPtr<CompositorChild> aCompositorChild)
+{
+    // Bug 848949 needs to be fixed before
+    // we can close the channel properly
+    //aCompositorChild->Close();
 }
 
 void
@@ -96,17 +101,11 @@ CompositorChild::Destroy()
   }
 
   SendStop();
-}
 
-/*static*/ void
-CompositorChild::ShutdownLayersIPC()
-{
-  if (sCompositor) {
-    sCompositor->Destroy();
-    do {
-      NS_ProcessNextEvent(nullptr, true);
-    } while (sCompositor);
-  }
+  // The DeferredDestroyCompositor task takes ownership of compositorParent and
+  // will release them when it runs.
+  MessageLoop::current()->PostTask(FROM_HERE,
+             NewRunnableFunction(DeferredDestroyCompositor, mCompositorParent, selfRef));
 }
 
 bool
