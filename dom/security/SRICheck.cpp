@@ -22,13 +22,10 @@
 #include "nsNetUtil.h"
 #include "nsWhitespaceTokenizer.h"
 
-static PRLogModuleInfo*
+static mozilla::LogModule*
 GetSriLog()
 {
-  static PRLogModuleInfo *gSriPRLog;
-  if (!gSriPRLog) {
-    gSriPRLog = PR_NewLogModule("SRI");
-  }
+  static mozilla::LazyLogModule gSriPRLog("SRI");
   return gSriPRLog;
 }
 

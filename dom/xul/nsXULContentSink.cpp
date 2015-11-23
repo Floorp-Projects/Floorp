@@ -57,7 +57,7 @@
 #include "nsIScriptError.h"
 #include "nsContentTypeParser.h"
 
-static PRLogModuleInfo* gContentSinkLog;
+static mozilla::LazyLogModule gContentSinkLog("nsXULContentSink");;
 
 //----------------------------------------------------------------------
 
@@ -162,9 +162,6 @@ XULContentSinkImpl::XULContentSinkImpl()
       mConstrainSize(true),
       mState(eInProlog)
 {
-
-    if (! gContentSinkLog)
-        gContentSinkLog = PR_NewLogModule("nsXULContentSink");
 }
 
 

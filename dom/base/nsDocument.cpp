@@ -257,8 +257,8 @@ using namespace mozilla::dom;
 
 typedef nsTArray<Link*> LinkArray;
 
-static PRLogModuleInfo* gDocumentLeakPRLog;
-static PRLogModuleInfo* gCspPRLog;
+static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
+static LazyLogModule gCspPRLog("CSP");
 
 #define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
@@ -1459,15 +1459,9 @@ nsDocument::nsDocument(const char* aContentType)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
-  if (!gDocumentLeakPRLog)
-    gDocumentLeakPRLog = PR_NewLogModule("DocumentLeak");
-
   if (gDocumentLeakPRLog)
     MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
            ("DOCUMENT %p created", this));
-
-  if (!gCspPRLog)
-    gCspPRLog = PR_NewLogModule("CSP");
 
   // Start out mLastStyleSheetSet as null, per spec
   SetDOMStringToNull(mLastStyleSheetSet);

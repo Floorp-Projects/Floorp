@@ -23,7 +23,7 @@ NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 //
 // NSPR_LOG_MODULES=thirdPartyUtil:5
 //
-static PRLogModuleInfo *gThirdPartyLog;
+static mozilla::LazyLogModule gThirdPartyLog("thirdPartyUtil");
 #undef LOG
 #define LOG(args)     MOZ_LOG(gThirdPartyLog, mozilla::LogLevel::Debug, args)
 
@@ -34,9 +34,6 @@ ThirdPartyUtil::Init()
 
   nsresult rv;
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
-
-    if (!gThirdPartyLog)
-        gThirdPartyLog = PR_NewLogModule("thirdPartyUtil");
 
   return rv;
 }

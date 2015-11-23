@@ -279,7 +279,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
                IndexedDatabaseManager::Logging_Disabled);
   MOZ_ASSERT(aFmt);
 
-  PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
+  mozilla::LogModule* logModule = IndexedDatabaseManager::GetLoggingModule();
   MOZ_ASSERT(logModule);
 
   static const mozilla::LogLevel logLevel = LogLevel::Warning;
