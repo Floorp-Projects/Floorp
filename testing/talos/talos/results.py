@@ -167,7 +167,7 @@ class Results(object):
                     data = f.apply(data)
 
             summary = {
-                'filtered': data, # for backwards compatibility with perfherder
+                'filtered': data,  # backward compatibility with perfherder
                 'value': data
             }
 
