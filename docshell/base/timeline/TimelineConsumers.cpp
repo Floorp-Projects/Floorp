@@ -235,7 +235,8 @@ TimelineConsumers::AddMarkerForDocShell(nsIDocShell* aDocShell,
 
 void
 TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
-                                                    MarkerTracingType aTracingType)
+                                                    MarkerTracingType aTracingType,
+                                                    MarkerStackRequest aStackRequest /* = STACK */)
 {
   bool isMainThread = NS_IsMainThread();
   StaticMutexAutoLock lock(sMutex); // for `mMarkersStores`.
@@ -244,7 +245,7 @@ TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
        storage != nullptr;
        storage = storage->getNext()) {
     UniquePtr<AbstractTimelineMarker> marker =
-      MakeUnique<TimelineMarker>(aName, aTracingType);
+      MakeUnique<TimelineMarker>(aName, aTracingType, aStackRequest);
     if (isMainThread) {
       storage->AddMarker(Move(marker));
     } else {
@@ -256,7 +257,8 @@ TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
 void
 TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
                                                     const TimeStamp& aTime,
-                                                    MarkerTracingType aTracingType)
+                                                    MarkerTracingType aTracingType,
+                                                    MarkerStackRequest aStackRequest /* = STACK */)
 {
   bool isMainThread = NS_IsMainThread();
   StaticMutexAutoLock lock(sMutex); // for `mMarkersStores`.
@@ -265,7 +267,7 @@ TimelineConsumers::AddMarkerForAllObservedDocShells(const char* aName,
        storage != nullptr;
        storage = storage->getNext()) {
     UniquePtr<AbstractTimelineMarker> marker =
-      MakeUnique<TimelineMarker>(aName, aTime, aTracingType);
+      MakeUnique<TimelineMarker>(aName, aTime, aTracingType, aStackRequest);
     if (isMainThread) {
       storage->AddMarker(Move(marker));
     } else {
