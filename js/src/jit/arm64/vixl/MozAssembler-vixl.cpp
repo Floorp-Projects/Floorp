@@ -87,52 +87,113 @@ MozBaseAssembler::SetNextLink(BufferOffset cur, BufferOffset next)
 
 // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
 //
-// If the label is bound, returns the offset as a multiple of element_size.
-// Otherwise, links the instruction to the label and returns the offset to encode
-// as a multiple of kInstructionSize.
+// If the label is bound, returns the offset as a multiple of 1 << elementShift.
+// Otherwise, links the instruction to the label and returns the raw offset to
+// encode. (This will be an instruction count.)
 //
 // The offset is calculated by aligning the PC and label addresses down to a
-// multiple of element_size, then calculating the (scaled) offset between them.
-// This matches the semantics of adrp, for example.
-template <int element_size>
+// multiple of 1 << elementShift, then calculating the (scaled) offset between
+// them. This matches the semantics of adrp, for example. (Assuming that the
+// assembler buffer is page-aligned, which it probably isn't.)
+//
+// For an unbound label, the returned offset will be encodable in the provided
+// branch range. If the label is already bound, the caller is expected to make
+// sure that it is in range, and emit the necessary branch instrutions if it
+// isn't.
+//
 ptrdiff_t
-MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch, Label* label)
+MozBaseAssembler::LinkAndGetOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                                     unsigned elementShift, Label* label)
 {
   if (armbuffer_.oom())
     return kEndOfLabelUseList;
 
   if (label->bound()) {
     // The label is bound: all uses are already linked.
-    ptrdiff_t branch_offset = ptrdiff_t(branch.getOffset() / element_size);
-    ptrdiff_t label_offset = ptrdiff_t(label->offset() / element_size);
+    ptrdiff_t branch_offset = ptrdiff_t(branch.getOffset() >> elementShift);
+    ptrdiff_t label_offset = ptrdiff_t(label->offset() >> elementShift);
     return label_offset - branch_offset;
   }
 
+  // Keep track of short-range branches targeting unbound labels. We may need
+  // to insert veneers in PatchShortRangeBranchToVeneer() below.
+  if (branchRange < NumShortBranchRangeTypes) {
+      // This is the last possible branch target.
+      BufferOffset deadline(branch.getOffset() +
+                            Instruction::ImmBranchMaxForwardOffset(branchRange));
+      armbuffer_.registerBranchDeadline(branchRange, deadline);
+  }
+
+  // The label is unbound and previously unused: Store the offset in the label
+  // itself for patching by bind().
   if (!label->used()) {
-    // The label is unbound and unused: store the offset in the label itself
-    // for patching by bind().
     label->use(branch.getOffset());
     return kEndOfLabelUseList;
   }
 
-  // The label is unbound but used. Create an implicit linked list between
-  // the branches, and update the linked list head in the label struct.
-  ptrdiff_t offset = EncodeOffset(branch, BufferOffset(label));
-  label->use(branch.getOffset());
-  MOZ_ASSERT(offset != kEndOfLabelUseList);
-  return offset;
+  // The label is unbound and has multiple users. Create a linked list between
+  // the branches, and update the linked list head in the label struct. This is
+  // not always trivial since the branches in the linked list have limited
+  // ranges.
+
+  // What is the earliest buffer offset that would be reachable by the branch
+  // we're about to add?
+  ptrdiff_t earliestReachable =
+    branch.getOffset() + Instruction::ImmBranchMinBackwardOffset(branchRange);
+
+  // If the existing instruction at the head of the list is within reach of the
+  // new branch, we can simply insert the new branch at the front of the list.
+  if (label->offset() >= earliestReachable) {
+      ptrdiff_t offset = EncodeOffset(branch, BufferOffset(label));
+      label->use(branch.getOffset());
+      MOZ_ASSERT(offset != kEndOfLabelUseList);
+      return offset;
+  }
+
+  // The label already has a linked list of uses, but we can't reach the head
+  // of the list with the allowed branch range. Insert this branch at a
+  // different position in the list.
+  //
+  // Find an existing branch, exbr, such that:
+  //
+  // 1.  The new branch can be reached by exbr, and either
+  // 2a. The new branch can reach exbr's target, or
+  // 2b. The exbr branch is at the end of the list.
+  //
+  // Then the new branch can be inserted after exbr in the linked list.
+  //
+  // We know that it is always possible to find an exbr branch satisfying these
+  // conditions because of the PatchShortRangeBranchToVeneer() mechanism. All
+  // branches are guaranteed to either be able to reach the end of the
+  // assembler buffer, or they will be pointing to an unconditional branch that
+  // can.
+  //
+  // In particular, the end of the list is always a viable candidate, so we'll
+  // just get that.
+  BufferOffset next(label);
+  BufferOffset exbr;
+  do {
+      exbr = next;
+      next = NextLink(next);
+  } while (next.assigned());
+  SetNextLink(exbr, branch);
+
+  // This branch becomes the new end of the list.
+  return kEndOfLabelUseList;
 }
 
 ptrdiff_t MozBaseAssembler::LinkAndGetByteOffsetTo(BufferOffset branch, Label* label) {
-  return LinkAndGetOffsetTo<1>(branch, label);
+  return LinkAndGetOffsetTo(branch, UncondBranchRangeType, 0, label);
 }
 
-ptrdiff_t MozBaseAssembler::LinkAndGetInstructionOffsetTo(BufferOffset branch, Label* label) {
-  return LinkAndGetOffsetTo<kInstructionSize>(branch, label);
+ptrdiff_t MozBaseAssembler::LinkAndGetInstructionOffsetTo(BufferOffset branch,
+                                                          ImmBranchRangeType branchRange,
+                                                          Label* label) {
+  return LinkAndGetOffsetTo(branch, branchRange, kInstructionSizeLog2, label);
 }
 
 ptrdiff_t MozBaseAssembler::LinkAndGetPageOffsetTo(BufferOffset branch, Label* label) {
-  return LinkAndGetOffsetTo<kPageSize>(branch, label);
+  return LinkAndGetOffsetTo(branch, UncondBranchRangeType, kPageSizeLog2, label);
 }
 
 BufferOffset Assembler::b(int imm26) {
@@ -157,13 +218,13 @@ void Assembler::b(Instruction* at, int imm19, Condition cond) {
 
 BufferOffset Assembler::b(Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label));
 }
 
 
 BufferOffset Assembler::b(Label* label, Condition cond) {
   // Encode the relative offset from the inserted branch to the label.
-  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label), cond);
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label), cond);
 }
 
 
@@ -186,7 +247,7 @@ void Assembler::bl(Instruction* at, int imm26) {
 
 void Assembler::bl(Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(), UncondBranchRangeType, label));
 }
 
 
@@ -202,7 +263,7 @@ void Assembler::cbz(Instruction* at, const Register& rt, int imm19) {
 
 void Assembler::cbz(const Register& rt, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return cbz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return cbz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label));
 }
 
 
@@ -218,7 +279,7 @@ void Assembler::cbnz(Instruction* at, const Register& rt, int imm19) {
 
 void Assembler::cbnz(const Register& rt, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return cbnz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return cbnz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), CondBranchRangeType, label));
 }
 
 
@@ -236,7 +297,7 @@ void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos, int i
 
 void Assembler::tbz(const Register& rt, unsigned bit_pos, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label));
 }
 
 
@@ -254,7 +315,7 @@ void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos, int 
 
 void Assembler::tbnz(const Register& rt, unsigned bit_pos, Label* label) {
   // Encode the relative offset from the inserted branch to the label.
-  return tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
+  return tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), TestBranchRangeType, label));
 }
 
 
@@ -413,10 +474,35 @@ bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr
 }
 
 void
-MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer*, unsigned rangeIdx,
+MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer* buffer, unsigned rangeIdx,
                                                 BufferOffset deadline, BufferOffset veneer)
 {
-    MOZ_CRASH();
+  // Reconstruct the position of the branch from (rangeIdx, deadline).
+  vixl::ImmBranchRangeType branchRange = static_cast<vixl::ImmBranchRangeType>(rangeIdx);
+  BufferOffset branch(deadline.getOffset() - Instruction::ImmBranchMaxForwardOffset(branchRange));
+  Instruction *branchInst = buffer->getInst(branch);
+  Instruction *veneerInst = buffer->getInst(veneer);
+
+  // Verify that the branch range matches what's encoded.
+  MOZ_ASSERT(Instruction::ImmBranchTypeToRange(branchInst->BranchType()) == branchRange);
+
+  // We want to insert veneer after branch in the linked list of instructions
+  // that use the same unbound label.
+  // The veneer should be an unconditional branch.
+  ptrdiff_t nextElemOffset = branchInst->ImmPCRawOffset();
+
+  // If offset is 0, this is the end of the linked list.
+  if (nextElemOffset != kEndOfLabelUseList) {
+      // Make the offset relative to veneer so it targets the same instruction
+      // as branchInst.
+      nextElemOffset *= kInstructionSize;
+      nextElemOffset += branch.getOffset() - veneer.getOffset();
+      nextElemOffset /= kInstructionSize;
+  }
+  Assembler::b(veneerInst, nextElemOffset);
+
+  // Now point branchInst at veneer. See also SetNextLink() above.
+  branchInst->SetImmPCRawOffset(EncodeOffset(branch, veneer));
 }
 
 struct PoolHeader {
