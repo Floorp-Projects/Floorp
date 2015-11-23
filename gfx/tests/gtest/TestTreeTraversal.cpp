@@ -502,3 +502,39 @@ TEST(TreeTraversal, ForEachNodeLeavesIneligible)
         << "Node at index " << i << " was hit out of order.";
   }
 }
+
+TEST(TreeTraversal, ForEachNodeLambdaReturnsVoid)
+{
+  std::vector<RefPtr<ForEachTestNode>> nodeList;
+  int visitCount = 0;
+  for (int i = 0; i < 10; i++)
+  {
+    nodeList.push_back(new ForEachTestNode(ForEachNodeType::Continue,i));
+  }
+
+  RefPtr<ForEachTestNode> root = nodeList[0];
+  nodeList[0]->AddChild(nodeList[1]);
+  nodeList[0]->AddChild(nodeList[4]);
+  nodeList[1]->AddChild(nodeList[2]);
+  nodeList[1]->AddChild(nodeList[3]);
+  nodeList[4]->AddChild(nodeList[5]);
+  nodeList[4]->AddChild(nodeList[6]);
+  nodeList[6]->AddChild(nodeList[7]);
+  nodeList[7]->AddChild(nodeList[8]);
+  nodeList[7]->AddChild(nodeList[9]);
+
+
+  ForEachNode(root.get(),
+      [&visitCount](ForEachTestNode* aNode)
+      {
+        aNode->SetActualTraversalRank(visitCount);
+	visitCount++;
+      });
+
+  for (size_t i = 0; i < nodeList.size(); i++)
+  {
+    ASSERT_EQ(nodeList[i]->GetExpectedTraversalRank(),
+        nodeList[i]->GetActualTraversalRank())
+        << "Node at index " << i << " was hit out of order.";
+  }
+}
