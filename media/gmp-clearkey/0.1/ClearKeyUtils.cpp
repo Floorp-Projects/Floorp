@@ -411,10 +411,6 @@ ParseKeyObject(ParserContext& aCtx, KeyIdPair& aOutKey)
       if (!GetNextLabel(aCtx, value)) return false;
       // By spec, type must be "oct".
       if (value != "oct") return false;
-    } else if (label == "alg") {
-      if (!GetNextLabel(aCtx, value)) return false;
-      // By spec, alg must be "A128KW".
-      if (value != "A128KW") return false;
     } else if (label == "k" && PeekSymbol(aCtx) == '"') {
       // if this isn't a string we will fall through to the SkipToken() path.
       if (!GetNextLabel(aCtx, key)) return false;

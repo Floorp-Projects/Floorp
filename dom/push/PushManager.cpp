@@ -723,10 +723,7 @@ public:
 
     RefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
-      MOZ_ASSERT(uint32_t(mState) < ArrayLength(PushPermissionStateValues::strings));
-      nsAutoCString stringState(PushPermissionStateValues::strings[uint32_t(mState)].value,
-                                PushPermissionStateValues::strings[uint32_t(mState)].length);
-      promise->MaybeResolve(NS_ConvertUTF8toUTF16(stringState));
+      promise->MaybeResolve(mState);
     } else {
       promise->MaybeReject(aCx, JS::UndefinedHandleValue);
     }

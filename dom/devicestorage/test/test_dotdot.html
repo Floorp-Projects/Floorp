@@ -17,12 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 function testingStorage() {
   return navigator.getDeviceStorage("pictures");
@@ -40,20 +40,20 @@ var gFileName = "../owned.png";
 function fail(e) {
   ok(false, "addSuccess was called");
   dump(request);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function next(e) {
 
   if (e != undefined) {
-    ok(true, "addError was called");  
+    ok(true, "addError was called");
     ok(e.target.error.name == "SecurityError", "Error must be SecurityError");
   }
 
   var f = tests.pop();
 
   if (f == undefined) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
@@ -64,10 +64,9 @@ function next(e) {
 
 next();
 
-
+});
 
 </script>
 </pre>
 </body>
 </html>
-

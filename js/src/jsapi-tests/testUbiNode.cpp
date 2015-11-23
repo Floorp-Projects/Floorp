@@ -36,10 +36,14 @@ template<>
 struct Concrete<FakeNode> : public Base
 {
     static const char16_t concreteTypeName[];
-    const char16_t* typeName() const { return concreteTypeName; }
+    const char16_t* typeName() const override { return concreteTypeName; }
 
-    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const {
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override {
         return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
+    }
+
+    Node::Size size(mozilla::MallocSizeOf) const override {
+        return 1;
     }
 
     static void construct(void* storage, FakeNode* ptr) { new (storage) Concrete(ptr); }
@@ -580,6 +584,31 @@ BEGIN_TEST(test_JS_ubi_DominatorTree)
         CHECK(expectedDominatedSet.count() == 0);
 
         fprintf(stderr, "Done checking %c's dominated set.\n\n", node.name);
+    }
+
+    struct {
+        FakeNode& node;
+        JS::ubi::Node::Size retainedSize;
+    } sizes[] = {
+        {r, 13},
+        {a, 1},
+        {b, 1},
+        {c, 4},
+        {d, 2},
+        {e, 1},
+        {f, 1},
+        {g, 2},
+        {h, 1},
+        {i, 1},
+        {j, 1},
+        {k, 1},
+        {l, 1},
+    };
+
+    for (auto& expected : sizes) {
+        JS::ubi::Node::Size actual = 0;
+        CHECK(tree.getRetainedSize(&expected.node, nullptr, actual));
+        CHECK(actual == expected.retainedSize);
     }
 
     return true;

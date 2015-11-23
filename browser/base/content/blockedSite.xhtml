@@ -68,111 +68,76 @@
           return getURL();
         }
       }
-      
+
       function initPage()
       {
-        // Handoff to the appropriate initializer, based on error code
+        var error = "";
         switch (getErrorCode()) {
           case "malwareBlocked" :
-            initPage_malware();
+            error = "malware";
             break;
           case "phishingBlocked" :
-            initPage_phishing();
+            error = "phishing";
             break;
           case "unwantedBlocked" :
-            initPage_unwanted();
+            error = "unwanted";
             break;
+          case "forbiddenBlocked" :
+            error = "forbidden";
+            break;
+          default:
+            return;
         }
-      }        
-      
-      /**
-       * Initialize custom strings and functionality for blocked malware case
-       */
-      function initPage_malware()
-      {
-        // Remove phishing and unwanted strings
-        var el = document.getElementById("errorTitleText_phishing");
-        el.parentNode.removeChild(el);
 
-        el = document.getElementById("errorShortDescText_phishing");
-        el.parentNode.removeChild(el);
+        var el;
 
-        el = document.getElementById("errorLongDescText_phishing");
-        el.parentNode.removeChild(el);
+        if (error !== "malware") {
+          el = document.getElementById("errorTitleText_malware");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorShortDescText_malware");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorLongDescText_malware");
+          el.parentNode.removeChild(el);
+        }
 
-        el = document.getElementById("errorTitleText_unwanted");
-        el.parentNode.removeChild(el);
+        if (error !== "phishing") {
+          el = document.getElementById("errorTitleText_phishing");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorShortDescText_phishing");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorLongDescText_phishing");
+          el.parentNode.removeChild(el);
+        }
 
-        el = document.getElementById("errorShortDescText_unwanted");
-        el.parentNode.removeChild(el);
+        if (error !== "unwanted") {
+          el = document.getElementById("errorTitleText_unwanted");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorShortDescText_unwanted");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorLongDescText_unwanted");
+          el.parentNode.removeChild(el);
+        }
 
-        el = document.getElementById("errorLongDescText_unwanted");
-        el.parentNode.removeChild(el);
-
-        // Set sitename
-        document.getElementById("malware_sitename").textContent = getHostString();
-        document.title = document.getElementById("errorTitleText_malware")
-                                 .innerHTML;
-      }
-      
-      /**
-       * Initialize custom strings and functionality for blocked malware case
-       */
-      function initPage_unwanted()
-      {
-        // Remove phishing and malware strings
-        var el = document.getElementById("errorTitleText_phishing");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorShortDescText_phishing");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorLongDescText_phishing");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorTitleText_malware");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorShortDescText_malware");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorLongDescText_malware");
-        el.parentNode.removeChild(el);
+        if (error !== "forbidden") {
+          el = document.getElementById("errorTitleText_forbidden");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("errorShortDescText_forbidden");
+          el.parentNode.removeChild(el);
+        } else {
+          el = document.getElementById("ignoreWarningButton");
+          el.parentNode.removeChild(el);
+          el = document.getElementById("reportButton");
+          el.parentNode.removeChild(el);
+        }
 
         // Set sitename
-        document.getElementById("unwanted_sitename").textContent = getHostString();
-        document.title = document.getElementById("errorTitleText_unwanted")
+        document.getElementById(error + "_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_" + error)
                                  .innerHTML;
-      }
-      
-      /**
-       * Initialize custom strings and functionality for blocked phishing case
-       */
-      function initPage_phishing()
-      {
-        // Remove malware and unwanted strings
-        var el = document.getElementById("errorTitleText_malware");
-        el.parentNode.removeChild(el);
 
-        el = document.getElementById("errorShortDescText_malware");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorLongDescText_malware");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorTitleText_unwanted");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorShortDescText_unwanted");
-        el.parentNode.removeChild(el);
-
-        el = document.getElementById("errorLongDescText_unwanted");
-        el.parentNode.removeChild(el);
-
-        // Set sitename
-        document.getElementById("phishing_sitename").textContent = getHostString();
-        document.title = document.getElementById("errorTitleText_phishing")
-                                 .innerHTML;
+        // Inform the test harness that we're done loading the page
+        var event = new CustomEvent("AboutBlockedLoaded");
+        document.dispatchEvent(event);
       }
     ]]></script>
     <style type="text/css">
@@ -213,6 +178,7 @@
         <h1 id="errorTitleText_phishing">&safeb.blocked.phishingPage.title;</h1>
         <h1 id="errorTitleText_malware">&safeb.blocked.malwarePage.title;</h1>
         <h1 id="errorTitleText_unwanted">&safeb.blocked.unwantedPage.title;</h1>
+        <h1 id="errorTitleText_forbidden">&safeb.blocked.forbiddenPage.title;</h1>
       </div>
       
       <div id="errorLongContent">
@@ -222,6 +188,7 @@
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
           <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
+          <p id="errorShortDescText_forbidden">&safeb.blocked.forbiddenPage.shortDesc;</p>
         </div>
 
         <!-- Long Description -->

@@ -26,6 +26,7 @@ namespace indexedDB {
 
 class LoggingInfo;
 class PBackgroundIDBFactoryParent;
+class PBackgroundIndexedDBUtilsParent;
 class PIndexedDBPermissionRequestParent;
 
 PBackgroundIDBFactoryParent*
@@ -37,6 +38,12 @@ RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,
 
 bool
 DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);
+
+PBackgroundIndexedDBUtilsParent*
+AllocPBackgroundIndexedDBUtilsParent();
+
+bool
+DeallocPBackgroundIndexedDBUtilsParent(PBackgroundIndexedDBUtilsParent* aActor);
 
 PIndexedDBPermissionRequestParent*
 AllocPIndexedDBPermissionRequestParent(Element* aOwnerElement,

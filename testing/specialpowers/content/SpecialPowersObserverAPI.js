@@ -491,44 +491,6 @@ SpecialPowersObserverAPI.prototype = {
         return undefined;	// See comment at the beginning of this function.
       }
 
-      case 'SPQuotaManager': {
-        let qm = Cc['@mozilla.org/dom/quota/manager;1']
-                   .getService(Ci.nsIQuotaManager);
-        let mm = aMessage.target
-                         .QueryInterface(Ci.nsIFrameLoaderOwner)
-                         .frameLoader
-                         .messageManager;
-        let msg = aMessage.data;
-        let principal = msg.principal;
-        let op = msg.op;
-
-        if (op != 'clear' && op != 'getUsage' && op != 'reset') {
-          throw new SpecialPowersError('Invalid operation for SPQuotaManager');
-        }
-
-        if (op == 'clear') {
-          qm.clearStoragesForPrincipal(principal);
-        } else if (op == 'reset') {
-          qm.reset();
-        }
-
-        // We always use the getUsageForPrincipal callback even if we're clearing
-        // since we know that clear and getUsageForPrincipal are synchronized by the
-        // QuotaManager.
-        let callback = function(principal, usage, fileUsage) {
-          let reply = { id: msg.id };
-          if (op == 'getUsage') {
-            reply.usage = usage;
-            reply.fileUsage = fileUsage;
-          }
-          mm.sendAsyncMessage(aMessage.name, reply);
-        };
-
-        qm.getUsageForPrincipal(principal, callback);
-
-        return undefined;	// See comment at the beginning of this function.
-      }
-
       case "SPCleanUpSTSData": {
         let origin = aMessage.data.origin;
         let flags = aMessage.data.flags;

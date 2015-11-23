@@ -20,6 +20,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionChild.h"
+#include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -44,6 +45,7 @@ class IDBFactory;
 class IDBMutableFile;
 class IDBOpenDBRequest;
 class IDBRequest;
+class IndexedDatabaseManager;
 class Key;
 class PermissionRequestChild;
 class PermissionRequestParent;
@@ -218,9 +220,6 @@ class BackgroundRequestChildBase
 protected:
   RefPtr<IDBRequest> mRequest;
 
-private:
-  bool mActorDestroyed;
-
 public:
   void
   AssertIsOnOwningThread() const
@@ -230,28 +229,11 @@ public:
   { }
 #endif
 
-  IDBRequest*
-  GetDOMObject() const
-  {
-    AssertIsOnOwningThread();
-    return mRequest;
-  }
-
-  bool
-  IsActorDestroyed() const
-  {
-    AssertIsOnOwningThread();
-    return mActorDestroyed;
-  }
-
 protected:
   explicit BackgroundRequestChildBase(IDBRequest* aRequest);
 
   virtual
   ~BackgroundRequestChildBase();
-
-  void
-  NoteActorDestroyed();
 };
 
 class BackgroundFactoryRequestChild final
@@ -824,6 +806,45 @@ private:
   // Force callers to use SendContinueInternal.
   bool
   SendContinue(const CursorRequestParams& aParams, const Key& aKey) = delete;
+
+  bool
+  SendDeleteMe() = delete;
+};
+
+class BackgroundUtilsChild final
+  : public PBackgroundIndexedDBUtilsChild
+{
+  friend class mozilla::ipc::BackgroundChildImpl;
+  friend class IndexedDatabaseManager;
+
+  IndexedDatabaseManager* mManager;
+
+#ifdef DEBUG
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+#endif
+
+public:
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+private:
+  // Only created by IndexedDatabaseManager.
+  explicit BackgroundUtilsChild(IndexedDatabaseManager* aManager);
+
+  // Only destroyed by mozilla::ipc::BackgroundChildImpl.
+  ~BackgroundUtilsChild();
+
+  void
+  SendDeleteMeInternal();
+
+  // IPDL methods are only called by IPDL.
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool
   SendDeleteMe() = delete;

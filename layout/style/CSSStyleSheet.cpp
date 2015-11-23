@@ -704,7 +704,7 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
   }                                                            \
   /* XXXldb Pass something meaningful? */                      \
   if (doc) {                                                   \
-    doc->StyleRuleChanged(sheet, nullptr, nullptr);              \
+    doc->StyleRuleChanged(sheet, nullptr);                     \
   }
 
 

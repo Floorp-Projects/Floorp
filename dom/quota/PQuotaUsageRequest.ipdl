@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PQuota;
+
+namespace mozilla {
+namespace dom {
+namespace quota {
+
+struct UsageResponse
+{
+  uint64_t usage;
+  uint64_t fileUsage;
+};
+
+union UsageRequestResponse
+{
+  nsresult;
+  UsageResponse;
+};
+
+protocol PQuotaUsageRequest
+{
+  manager PQuota;
+
+parent:
+  Cancel();
+
+child:
+  __delete__(UsageRequestResponse response);
+};
+
+} // namespace quota
+} // namespace dom
+} // namespace mozilla

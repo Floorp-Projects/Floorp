@@ -35,7 +35,7 @@ function enumerateSuccess(e) {
 
   if (e.target.result == null) {
     ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
   
@@ -67,7 +67,7 @@ function enumerateSuccess(e) {
 
 function handleError(e) {
   ok(false, "handleError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
@@ -82,7 +82,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");

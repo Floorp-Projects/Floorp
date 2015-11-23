@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = randomFilename(12);
 
@@ -46,12 +46,12 @@ function createDirectorySuccess(d) {
 
 function getSuccess(d) {
   ok(d.name === gFileName, "Should get directory - " + gFileName + ".");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function cbError(e) {
   ok(false,  "Should not arrive here! Error: " + e.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
@@ -63,8 +63,10 @@ var promise = storage.getRoot();
 ok(promise, "Should have a non-null promise");
 
 promise.then(getRootSuccess, cbError);
+
+});
+
 </script>
 </pre>
 </body>
 </html>
-

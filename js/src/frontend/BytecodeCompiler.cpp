@@ -496,11 +496,15 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     if (!createSourceAndParser())
         return nullptr;
 
-    bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
+    RootedFunction savedCallerFun(cx);
+    if (evalCaller)
+        savedCallerFun = evalCaller->functionOrCallerFunction();
+
     if (!createScript(enclosingStaticScope, savedCallerFun))
         return nullptr;
 
-    GlobalSharedContext globalsc(cx, enclosingStaticScope, directives, options.extraWarningsOption);
+    GlobalSharedContext globalsc(cx, enclosingStaticScope, directives, options.extraWarningsOption,
+                                 savedCallerFun);
     if (!createEmitter(&globalsc, evalCaller, isNonGlobalEvalCompilationUnit()))
         return nullptr;
 

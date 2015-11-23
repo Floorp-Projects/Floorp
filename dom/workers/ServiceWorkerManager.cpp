@@ -1154,7 +1154,7 @@ public:
       }
 
       // Throw the type error with a generic error message.
-      aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(&scriptSpec, &scope);
+      aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(scriptSpec, scope);
     }
 
     for (uint32_t i = 1; i < mCallbacks.Length(); ++i) {
@@ -2606,7 +2606,7 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
 
       ErrorResult rv;
       NS_ConvertUTF8toUTF16 scope(aScope);
-      rv.ThrowTypeError<MSG_SW_SCRIPT_THREW>(&aWorkerURL, &scope);
+      rv.ThrowTypeError<MSG_SW_SCRIPT_THREW>(aWorkerURL, scope);
       regJob->Fail(rv);
     }
   }
