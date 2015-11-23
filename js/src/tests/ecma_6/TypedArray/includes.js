@@ -7,8 +7,17 @@ const constructors = [
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
-];
+    Float64Array ];
+
+if (typeof SharedArrayBuffer != "undefined")
+    constructors.push(sharedConstructor(Int8Array),
+		      sharedConstructor(Uint8Array),
+		      sharedConstructor(Int16Array),
+		      sharedConstructor(Uint16Array),
+		      sharedConstructor(Int32Array),
+		      sharedConstructor(Uint32Array),
+		      sharedConstructor(Float32Array),
+		      sharedConstructor(Float64Array));
 
 for (var constructor of constructors) {
     assertEq(constructor.prototype.includes.length, 1);
@@ -26,7 +35,7 @@ for (var constructor of constructors) {
     assertEq(new constructor([1, 2, 3]).includes(2, 100), false);
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var includes = newGlobal()[constructor.name].prototype.includes;
         assertEq(includes.call(new constructor([1, 2, 3]), 2), true);
     }
