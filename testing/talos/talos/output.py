@@ -488,8 +488,10 @@ class PerfherderOutput(Output):
                         if test.test_config.get('unit'):
                             subtest['unit'] = test.test_config['unit']
 
-                suite['value'] = self.construct_results(vals,
-                                                        testname=test.name())
+                # if there is more than one test, calculate a summary result
+                if len(tresults) > 1:
+                    suite['value'] = self.construct_results(
+                        vals, testname=test.name())
                 if test.test_config.get('lower_is_better') is not None:
                     suite['lowerIsBetter'] = test.test_config['lower_is_better']
 
