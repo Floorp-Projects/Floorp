@@ -320,6 +320,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         )
         # install jsonschema for perfherder validation
         self.install_module(module="jsonschema")
+        # install flake8 for static code validation
+        self.install_module(module="flake8")
 
     def _validate_treeherder_data(self, parser):
         # late import is required, because install is done in create_virtualenv
@@ -341,6 +343,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             jsonschema.validate(data, schema)
         except:
             self.exception("Error while validating PERFHERDER_DATA")
+            parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
+
+    def _flake8_check(self, parser):
+        if self.run_command([self.query_python_path('flake8'),
+                             os.path.join(self.talos_path, 'talos')]) != 0:
+            self.critical('flake8 check failed.')
             parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
 
     def run_tests(self, args=None, **kw):
@@ -367,6 +375,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             env['PYTHONPATH'] = self.talos_path + os.pathsep + env['PYTHONPATH']
         else:
             env['PYTHONPATH'] = self.talos_path
+
+        self._flake8_check(parser)
 
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)
