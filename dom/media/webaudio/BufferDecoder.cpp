@@ -40,12 +40,6 @@ BufferDecoder::GetResource() const
 }
 
 void
-BufferDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
-{
-  // ignore
-}
-
-void
 BufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped)
 {
@@ -70,18 +64,6 @@ BufferDecoder::GetImageContainer()
 {
   // no image container
   return nullptr;
-}
-
-bool
-BufferDecoder::IsTransportSeekable()
-{
-  return false;
-}
-
-bool
-BufferDecoder::IsMediaSeekable()
-{
-  return false;
 }
 
 void
