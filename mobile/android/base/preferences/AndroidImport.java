@@ -77,7 +77,7 @@ public class AndroidImport implements Runnable {
                                null,
                                null);
 
-            if (Build.MANUFACTURER.equals(SAMSUNG_MANUFACTURER) && cursor.getCount() == 0) {
+            if (Build.MANUFACTURER.equals(SAMSUNG_MANUFACTURER) && cursor != null && cursor.getCount() == 0) {
                 cursor = mCr.query(SAMSUNG_BOOKMARKS_URI, null, null, null, null);
             }
 
