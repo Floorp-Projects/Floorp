@@ -1750,7 +1750,7 @@ public:
   // FIXME/bug 774388: work out what shutdown protocol we need.
   virtual bool RecvRequestOverfill() override { return true; }
   virtual bool RecvWillStop() override { return true; }
-  virtual bool RecvStop() override;
+  virtual bool RecvStop() override { return true; }
   virtual bool RecvPause() override { return true; }
   virtual bool RecvResume() override { return true; }
   virtual bool RecvNotifyHidden(const uint64_t& id) override;
@@ -1830,7 +1830,6 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CrossProcessCompositorParent();
 
-  void Destroy();
   void DeferredDestroy();
 
   // There can be many CPCPs, and IPDL-generated code doesn't hold a
@@ -1942,27 +1941,14 @@ CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint()
 }
 
 void
-CrossProcessCompositorParent::Destroy()
+CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
   lru->Remove(this);
-}
 
-void
-CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-  Destroy();
-}
-
-bool
-CrossProcessCompositorParent::RecvStop()
-{
-  Destroy();
-  // We must keep this object alive untill the code handling message
-  // reception is finished on this thread.
-  MessageLoop::current()->PostTask(FROM_HERE,
-      NewRunnableMethod(this, &CrossProcessCompositorParent::DeferredDestroy));
-  return true;
+  MessageLoop::current()->PostTask(
+    FROM_HERE,
+    NewRunnableMethod(this, &CrossProcessCompositorParent::DeferredDestroy));
 }
 
 PLayerTransactionParent*
