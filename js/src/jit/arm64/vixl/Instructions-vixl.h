@@ -134,6 +134,19 @@ enum ImmBranchType {
   TestBranchType    = 4
 };
 
+// The classes of immediate branch ranges, in order of increasing range.
+// Note that CondBranchType and CompareBranchType have the same range.
+enum ImmBranchRangeType {
+  TestBranchRangeType,   // tbz/tbnz: imm14 = +/- 32KB.
+  CondBranchRangeType,   // b.cond/cbz/cbnz: imm19 = +/- 1MB.
+  UncondBranchRangeType, // b/bl: imm26 = +/- 128MB.
+  UnknownBranchRangeType,
+
+  // Number of 'short-range' branch range types.
+  // We don't consider unconditional branches 'short-range'.
+  NumShortBranchRangeTypes = UncondBranchRangeType
+};
+
 enum AddrMode {
   Offset,
   PreIndex,
@@ -309,7 +322,34 @@ class Instruction {
 
   static int ImmBranchRangeBitwidth(ImmBranchType branch_type);
   static int32_t ImmBranchForwardRange(ImmBranchType branch_type);
+
+  // Check if offset can be encoded as a RAW offset in a branch_type
+  // instruction. The offset must be encodeable directly as the immediate field
+  // in the instruction, it is not scaled by kInstructionSize first.
   static bool IsValidImmPCOffset(ImmBranchType branch_type, int64_t offset);
+
+  // Get the range type corresponding to a branch type.
+  static ImmBranchRangeType ImmBranchTypeToRange(ImmBranchType);
+
+  // Get the maximum realizable forward PC offset (in bytes) for an immediate
+  // branch of the given range type.
+  // This is the largest positive multiple of kInstructionSize, offset, such
+  // that:
+  //
+  //    IsValidImmPCOffset(xxx, offset / kInstructionSize)
+  //
+  // returns true for the same branch type.
+  static int32_t ImmBranchMaxForwardOffset(ImmBranchRangeType range_type);
+
+  // Get the minimuum realizable backward PC offset (in bytes) for an immediate
+  // branch of the given range type.
+  // This is the smallest (i.e., largest in magnitude) negative multiple of
+  // kInstructionSize, offset, such that:
+  //
+  //    IsValidImmPCOffset(xxx, offset / kInstructionSize)
+  //
+  // returns true for the same branch type.
+  static int32_t ImmBranchMinBackwardOffset(ImmBranchRangeType range_type);
 
   // Indicate whether Rd can be the stack pointer or the zero register. This
   // does not check that the instruction actually has an Rd field.
