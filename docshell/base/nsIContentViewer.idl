@@ -31,7 +31,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 [ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 
-[scriptable, builtinclass, uuid(91b6c1f3-fc5f-43a9-88f4-9286bd19387f)]
+[scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
 interface nsIContentViewer : nsISupports
 {
   [noscript] void init(in nsIWidgetPtr aParentWidget,
@@ -228,6 +228,18 @@ interface nsIContentViewer : nsISupports
    * in depth-first pre-order traversal.
    */
   [noscript] void appendSubtree(in nsIContentViewerTArray array);
+
+  /**
+   * Instruct the refresh driver to discontinue painting until further
+   * notice.
+   */
+  void pausePainting();
+
+  /**
+   * Instruct the refresh driver to resume painting after a previous call to
+   * pausePainting().
+   */
+  void resumePainting();
 
   /*
    * Render the document as if being viewed on a device with the specified
