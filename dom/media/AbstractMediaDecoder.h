@@ -57,10 +57,6 @@ public:
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
   virtual MediaResource* GetResource() const = 0;
 
-  // Called by the decode thread to keep track of the number of bytes read
-  // from the resource.
-  virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) = 0;
-
   // Increments the parsed, decoded and dropped frame counters by the passed in
   // counts.
   // Can be called on any thread.
@@ -102,12 +98,6 @@ public:
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 
-  // Return true if the media layer supports seeking.
-  virtual bool IsTransportSeekable() = 0;
-
-  // Return true if the transport layer supports seeking.
-  virtual bool IsMediaSeekable() = 0;
-
   virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, MediaDecoderEventVisibility aEventVisibility) = 0;
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
 
@@ -115,15 +105,8 @@ public:
   // on the main thread.
   virtual MediaDecoderOwner* GetOwner() = 0;
 
-  // Called by the reader's MediaResource as data arrives over the network.
-  // Must be called on the main thread.
-  virtual void NotifyDataArrived() = 0;
-
   // Set by Reader if the current audio track can be offloaded
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}
-
-  // Called from HTMLMediaElement when owner document activity changes
-  virtual void SetElementVisibility(bool aIsVisible) {}
 
   // Stack based class to assist in notifying the frame statistics of
   // parsed and decoded frames. Use inside video demux & decode functions
