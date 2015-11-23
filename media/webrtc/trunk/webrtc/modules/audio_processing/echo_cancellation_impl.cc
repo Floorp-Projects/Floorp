@@ -67,8 +67,9 @@ EchoCancellationImpl::EchoCancellationImpl(const AudioProcessing* apm,
     was_stream_drift_set_(false),
     stream_has_echo_(false),
     delay_logging_enabled_(false),
-    delay_correction_enabled_(true), // default to long AEC tail in Mozilla
-    reported_delay_enabled_(true) {}
+    extended_filter_enabled_(false),
+    delay_agnostic_enabled_(false) {
+}
 
 EchoCancellationImpl::~EchoCancellationImpl() {}
 
@@ -90,7 +91,7 @@ int EchoCancellationImpl::ProcessRenderAudio(const AudioBuffer* audio) {
       err = WebRtcAec_BufferFarend(
           my_handle,
           audio->split_bands_const_f(j)[kBand0To8kHz],
-          static_cast<int16_t>(audio->num_frames_per_band()));
+          audio->num_frames_per_band());
 
       if (err != apm_->kNoError) {
         return GetHandleError(my_handle);  // TODO(ajm): warning possible?
@@ -132,7 +133,7 @@ int EchoCancellationImpl::ProcessCaptureAudio(AudioBuffer* audio) {
           audio->split_bands_const_f(i),
           audio->num_bands(),
           audio->split_bands_f(i),
-          static_cast<int16_t>(audio->num_frames_per_band()),
+          audio->num_frames_per_band(),
           apm_->stream_delay_ms(),
           stream_drift_samples_);
 
@@ -279,6 +280,14 @@ bool EchoCancellationImpl::is_delay_logging_enabled() const {
   return delay_logging_enabled_;
 }
 
+bool EchoCancellationImpl::is_delay_agnostic_enabled() const {
+  return delay_agnostic_enabled_;
+}
+
+bool EchoCancellationImpl::is_extended_filter_enabled() const {
+  return extended_filter_enabled_;
+}
+
 // TODO(bjornv): How should we handle the multi-channel case?
 int EchoCancellationImpl::GetDelayMetrics(int* median, int* std) {
   float fraction_poor_delays = 0;
@@ -327,22 +336,13 @@ int EchoCancellationImpl::Initialize() {
 }
 
 void EchoCancellationImpl::SetExtraOptions(const Config& config) {
-#if 0
-  delay_correction_enabled_ = config.Get<DelayCorrection>().enabled;
-#endif
-  reported_delay_enabled_ = config.Get<ReportedDelay>().enabled;
+  extended_filter_enabled_ = true; // XXX config.Get<ExtendedFilter>().enabled;
+  delay_agnostic_enabled_ = true; // XXX config.Get<DelayAgnostic>().enabled;
   Configure();
 }
 
 void* EchoCancellationImpl::CreateHandle() const {
-  Handle* handle = NULL;
-  if (WebRtcAec_Create(&handle) != apm_->kNoError) {
-    handle = NULL;
-  } else {
-    assert(handle != NULL);
-  }
-
-  return handle;
+  return WebRtcAec_Create();
 }
 
 void EchoCancellationImpl::DestroyHandle(void* handle) const {
@@ -368,10 +368,12 @@ int EchoCancellationImpl::ConfigureHandle(void* handle) const {
   config.skewMode = drift_compensation_enabled_;
   config.delay_logging = delay_logging_enabled_;
 
-  WebRtcAec_enable_delay_correction(WebRtcAec_aec_core(
-      static_cast<Handle*>(handle)), delay_correction_enabled_ ? 1 : 0);
-  WebRtcAec_enable_reported_delay(WebRtcAec_aec_core(
-      static_cast<Handle*>(handle)), reported_delay_enabled_ ? 1 : 0);
+  WebRtcAec_enable_extended_filter(
+      WebRtcAec_aec_core(static_cast<Handle*>(handle)),
+      extended_filter_enabled_ ? 1 : 0);
+  WebRtcAec_enable_delay_agnostic(
+      WebRtcAec_aec_core(static_cast<Handle*>(handle)),
+      delay_agnostic_enabled_ ? 1 : 0);
   return WebRtcAec_set_config(static_cast<Handle*>(handle), config);
 }
 
@@ -382,6 +384,6 @@ int EchoCancellationImpl::num_handles_required() const {
 
 int EchoCancellationImpl::GetHandleError(void* handle) const {
   assert(handle != NULL);
-  return MapError(WebRtcAec_get_error_code(static_cast<Handle*>(handle)));
+  return AudioProcessing::kUnspecifiedError;
 }
 }  // namespace webrtc

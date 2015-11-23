@@ -32,19 +32,22 @@ class EchoCancellationImpl : public EchoCancellation,
   // EchoCancellation implementation.
   bool is_enabled() const override;
   int stream_drift_samples() const override;
+  SuppressionLevel suppression_level() const override;
+  bool is_drift_compensation_enabled() const override;
 
   // ProcessingComponent implementation.
   int Initialize() override;
   void SetExtraOptions(const Config& config) override;
 
+  bool is_delay_agnostic_enabled() const;
+  bool is_extended_filter_enabled() const;
+
  private:
   // EchoCancellation implementation.
   int Enable(bool enable) override;
   int enable_drift_compensation(bool enable) override;
-  bool is_drift_compensation_enabled() const override;
   void set_stream_drift_samples(int drift) override;
   int set_suppression_level(SuppressionLevel level) override;
-  SuppressionLevel suppression_level() const override;
   int enable_metrics(bool enable) override;
   bool are_metrics_enabled() const override;
   bool stream_has_echo() const override;
@@ -74,8 +77,8 @@ class EchoCancellationImpl : public EchoCancellation,
   bool was_stream_drift_set_;
   bool stream_has_echo_;
   bool delay_logging_enabled_;
-  bool delay_correction_enabled_;
-  bool reported_delay_enabled_;
+  bool extended_filter_enabled_;
+  bool delay_agnostic_enabled_;
 };
 
 }  // namespace webrtc
