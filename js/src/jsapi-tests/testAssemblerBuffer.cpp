@@ -110,3 +110,109 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBuffer)
     return true;
 }
 END_TEST(testAssemblerBuffer_AssemblerBuffer)
+
+BEGIN_TEST(testAssemblerBuffer_BranchDeadlineSet)
+{
+    typedef js::jit::BranchDeadlineSet<3> DLSet;
+    using js::jit::BufferOffset;
+
+    js::LifoAlloc alloc(1024);
+    DLSet dls(alloc);
+
+    CHECK(dls.empty());
+    CHECK(alloc.isEmpty()); // Constructor must be infallible.
+    CHECK_EQUAL(dls.size(), 0u);
+    CHECK_EQUAL(dls.maxRangeSize(), 0u);
+
+    // Removing non-existant deadline is OK.
+    dls.removeDeadline(1, BufferOffset(7));
+
+    // Add deadlines in increasing order as intended. This is optimal.
+    dls.addDeadline(1, BufferOffset(10));
+    CHECK(!dls.empty());
+    CHECK_EQUAL(dls.size(), 1u);
+    CHECK_EQUAL(dls.maxRangeSize(), 1u);
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK_EQUAL(dls.earliestDeadlineRange(), 1u);
+
+    // Removing non-existant deadline is OK.
+    dls.removeDeadline(1, BufferOffset(7));
+    dls.removeDeadline(1, BufferOffset(17));
+    dls.removeDeadline(0, BufferOffset(10));
+    CHECK_EQUAL(dls.size(), 1u);
+    CHECK_EQUAL(dls.maxRangeSize(), 1u);
+
+    // Two identical deadlines for different ranges.
+    dls.addDeadline(2, BufferOffset(10));
+    CHECK(!dls.empty());
+    CHECK_EQUAL(dls.size(), 2u);
+    CHECK_EQUAL(dls.maxRangeSize(), 1u);
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+
+    // It doesn't matter which range earliestDeadlineRange() reports first,
+    // but it must report both.
+    if (dls.earliestDeadlineRange() == 1) {
+        dls.removeDeadline(1, BufferOffset(10));
+        CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+        CHECK_EQUAL(dls.earliestDeadlineRange(), 2u);
+    } else {
+        CHECK_EQUAL(dls.earliestDeadlineRange(), 2u);
+        dls.removeDeadline(2, BufferOffset(10));
+        CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+        CHECK_EQUAL(dls.earliestDeadlineRange(), 1u);
+    }
+
+    // Add deadline which is the front of range 0, but not the global earliest.
+    dls.addDeadline(0, BufferOffset(20));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK(dls.earliestDeadlineRange() > 0);
+
+    // Non-optimal add to front of single-entry range 0.
+    dls.addDeadline(0, BufferOffset(15));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK(dls.earliestDeadlineRange() > 0);
+
+    // Append to 2-entry range 0.
+    dls.addDeadline(0, BufferOffset(30));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK(dls.earliestDeadlineRange() > 0);
+
+    // Add penultimate entry.
+    dls.addDeadline(0, BufferOffset(25));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK(dls.earliestDeadlineRange() > 0);
+
+    // Prepend, stealing earliest from other range.
+    dls.addDeadline(0, BufferOffset(5));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 5);
+    CHECK_EQUAL(dls.earliestDeadlineRange(), 0u);
+
+    // Remove central element.
+    dls.removeDeadline(0, BufferOffset(20));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 5);
+    CHECK_EQUAL(dls.earliestDeadlineRange(), 0u);
+
+    // Remove front, giving back the lead.
+    dls.removeDeadline(0, BufferOffset(5));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 10);
+    CHECK(dls.earliestDeadlineRange() > 0);
+
+    // Remove front, giving back earliest to range 0.
+    dls.removeDeadline(dls.earliestDeadlineRange(), BufferOffset(10));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 15);
+    CHECK_EQUAL(dls.earliestDeadlineRange(), 0u);
+
+    // Remove tail.
+    dls.removeDeadline(0, BufferOffset(30));
+    CHECK_EQUAL(dls.earliestDeadline().getOffset(), 15);
+    CHECK_EQUAL(dls.earliestDeadlineRange(), 0u);
+
+    // Now range 0 = [15, 25].
+    CHECK_EQUAL(dls.size(), 2u);
+    dls.removeDeadline(0, BufferOffset(25));
+    dls.removeDeadline(0, BufferOffset(15));
+    CHECK(dls.empty());
+
+    return true;
+}
+END_TEST(testAssemblerBuffer_BranchDeadlineSet)
