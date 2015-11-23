@@ -369,11 +369,12 @@ bool MozBaseAssembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr
   return false; // Nothing uses the return value.
 }
 
-
-uint32_t MozBaseAssembler::PlaceConstantPoolBarrier(int offset) {
-  MOZ_CRASH("PlaceConstantPoolBarrier");
+void
+MozBaseAssembler::PatchShortRangeBranchToVeneer(ARMBuffer*, unsigned rangeIdx,
+                                                BufferOffset deadline, BufferOffset veneer)
+{
+    MOZ_CRASH();
 }
-
 
 struct PoolHeader {
   uint32_t data;

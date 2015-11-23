@@ -114,6 +114,35 @@
 //   InsertIndexIntoTag(). The constPoolAddr is the final address of the
 //   constant pool in the assembler buffer.
 //
+// void Asm::PatchShortRangeBranchToVeneer(AssemblerBufferWithConstantPools*,
+//                                         unsigned rangeIdx,
+//                                         BufferOffset deadline,
+//                                         BufferOffset veneer)
+//
+//   Patch a short-range branch to jump through a veneer before it goes out of
+//   range.
+//
+//   rangeIdx, deadline
+//     These arguments were previously passed to registerBranchDeadline(). It is
+//     assumed that PatchShortRangeBranchToVeneer() knows how to compute the
+//     offset of the short-range branch from this information.
+//
+//   veneer
+//     Space for a branch veneer, guaranteed to be <= deadline. At this
+//     position, guardSize_ * InstSize bytes are allocated. They should be
+//     initialized to the proper unconditional branch instruction.
+//
+//   Unbound branches to the same unbound label are organized as a linked list:
+//
+//     Label::offset -> Branch1 -> Branch2 -> Branch3 -> nil
+//
+//   This callback should insert a new veneer branch into the list:
+//
+//     Label::offset -> Branch1 -> Branch2 -> Veneer -> Branch3 -> nil
+//
+//   When Assembler::bind() rewrites the branches with the real label offset, it
+//   probably has to bind Branch2 to target the veneer branch instead of jumping
+//   straight to the label.
 
 namespace js {
 namespace jit {
@@ -350,6 +379,13 @@ class BranchDeadlineSet<0u>
 
 // The allocation unit size for pools.
 typedef int32_t PoolAllocUnit;
+
+// Hysteresis given to short-range branches.
+//
+// If any short-range branches will go out of range in the next N bytes,
+// generate a veneer for them in the current pool. The hysteresis prevents the
+// creation of many tiny constant pools for branch veneers.
+const size_t ShortRangeBranchHysteresis = 128;
 
 struct Pool
 {
@@ -885,11 +921,24 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
   private:
+    // Are any short-range branches about to expire?
+    bool hasExpirableShortRangeBranches() const
+    {
+        if (branchDeadlines_.empty())
+            return false;
+
+        // Include branches that would expire in the next N bytes.
+        // The hysteresis avoids the needless creation of many tiny constant
+        // pools.
+        return this->nextOffset().getOffset() + ShortRangeBranchHysteresis >
+               size_t(branchDeadlines_.earliestDeadline().getOffset());
+    }
+
     void finishPool() {
         JitSpew(JitSpew_Pools, "[%d] Attempting to finish pool %d with %d entries.", id,
                 poolInfo_.length(), pool_.numEntries());
 
-        if (pool_.numEntries() == 0) {
+        if (pool_.numEntries() == 0 && !hasExpirableShortRangeBranches()) {
             // If there is no data in the pool being dumped, don't dump anything.
             JitSpew(JitSpew_Pools, "[%d] Aborting because the pool is empty", id);
             return;
@@ -905,6 +954,27 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
           this->putBytesLarge(pool_.getPoolSize(), (const uint8_t*)pool_.poolData());
         if (this->oom())
             return;
+
+        // Now generate branch veneers for any short-range branches that are
+        // about to expire.
+        while (hasExpirableShortRangeBranches()) {
+            unsigned rangeIdx = branchDeadlines_.earliestDeadlineRange();
+            BufferOffset deadline = branchDeadlines_.earliestDeadline();
+
+            // Stop tracking this branch. The Asm callback below may register
+            // new branches to track.
+            branchDeadlines_.removeDeadline(rangeIdx, deadline);
+
+            // Make room for the veneer. Same as a pool guard branch.
+            BufferOffset veneer = this->putBytes(guardSize_ * InstSize, nullptr);
+            if (this->oom())
+                return;
+
+            // Fix the branch so it targets the veneer.
+            // The Asm class knows how to find the original branch given the
+            // (rangeIdx, deadline) pair.
+            Asm::PatchShortRangeBranchToVeneer(this, rangeIdx, deadline, veneer);
+        }
 
         // We only reserved space for the guard branch and pool header.
         // Fill them in.
