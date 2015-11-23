@@ -42,45 +42,31 @@ extern "C" {
 /*
  * Allocates the memory needed by the AECM. The memory needs to be
  * initialized separately using the WebRtcAecm_Init() function.
- *
- * Inputs                           Description
- * -------------------------------------------------------------------
- * void**  aecmInst                 Pointer to the AECM instance to be
- *                                  created and initialized
- *
- * Outputs                          Description
- * -------------------------------------------------------------------
- * int32_t return                   0: OK
- *                                 -1: error
+ * Returns a pointer to the instance and a nullptr at failure.
  */
-int32_t WebRtcAecm_Create(void **aecmInst);
+void* WebRtcAecm_Create();
 
 /*
  * This function releases the memory allocated by WebRtcAecm_Create()
  *
- * Inputs                       Description
+ * Inputs                           Description
  * -------------------------------------------------------------------
  * void*    aecmInst            Pointer to the AECM instance
- *
- * Outputs                      Description
- * -------------------------------------------------------------------
- * int32_t  return              0: OK
- *                             -1: error
  */
-int32_t WebRtcAecm_Free(void *aecmInst);
+void WebRtcAecm_Free(void* aecmInst);
 
 /*
  * Initializes an AECM instance.
  *
  * Inputs                       Description
  * -------------------------------------------------------------------
- * void*          aecmInst      Pointer to the AECM instance
+ * void*    aecmInst            Pointer to the AECM instance
  * int32_t        sampFreq      Sampling frequency of data
  *
  * Outputs                      Description
  * -------------------------------------------------------------------
- * int32_t        return        0: OK
- *                             -1: error
+ * int32_t  return              0: OK
+ *                              1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_Init(void* aecmInst, int32_t sampFreq);
 
@@ -97,11 +83,30 @@ int32_t WebRtcAecm_Init(void* aecmInst, int32_t sampFreq);
  * Outputs                      Description
  * -------------------------------------------------------------------
  * int32_t        return        0: OK
- *                             -1: error
+ *                              1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_BufferFarend(void* aecmInst,
                                 const int16_t* farend,
-                                int16_t nrOfSamples);
+                                size_t nrOfSamples);
+
+/*
+ * Reports any errors that would arise when buffering a farend buffer.
+ *
+ * Inputs                       Description
+ * -------------------------------------------------------------------
+ * void*          aecmInst      Pointer to the AECM instance
+ * int16_t*       farend        In buffer containing one frame of
+ *                              farend signal
+ * int16_t        nrOfSamples   Number of samples in farend buffer
+ *
+ * Outputs                      Description
+ * -------------------------------------------------------------------
+ * int32_t        return        0: OK
+ *                              1200-12004,12100: error/warning
+ */
+int32_t WebRtcAecm_GetBufferFarendError(void* aecmInst,
+                                        const int16_t* farend,
+                                        size_t nrOfSamples);
 
 /*
  * Runs the AECM on an 80 or 160 sample blocks of data.
@@ -126,13 +131,13 @@ int32_t WebRtcAecm_BufferFarend(void* aecmInst,
  * -------------------------------------------------------------------
  * int16_t*       out            Out buffer, one frame of processed nearend
  * int32_t        return         0: OK
- *                              -1: error
+ *                               1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_Process(void* aecmInst,
                            const int16_t* nearendNoisy,
                            const int16_t* nearendClean,
                            int16_t* out,
-                           int16_t nrOfSamples,
+                           size_t nrOfSamples,
                            int16_t msInSndCardBuf);
 
 /*
@@ -147,25 +152,9 @@ int32_t WebRtcAecm_Process(void* aecmInst,
  * Outputs                      Description
  * -------------------------------------------------------------------
  * int32_t        return        0: OK
- *                             -1: error
+ *                              1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_set_config(void* aecmInst, AecmConfig config);
-
-/*
- * This function enables the user to set certain parameters on-the-fly
- *
- * Inputs                       Description
- * -------------------------------------------------------------------
- * void*          aecmInst      Pointer to the AECM instance
- *
- * Outputs                      Description
- * -------------------------------------------------------------------
- * AecmConfig*    config        Pointer to the config instance that
- *                              all properties will be written to
- * int32_t        return        0: OK
- *                             -1: error
- */
-int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config);
 
 /*
  * This function enables the user to set the echo path on-the-fly.
@@ -179,7 +168,7 @@ int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config);
  * Outputs                      Description
  * -------------------------------------------------------------------
  * int32_t      return          0: OK
- *                             -1: error
+ *                              1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
                                 const void* echo_path,
@@ -198,7 +187,7 @@ int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
  * Outputs                      Description
  * -------------------------------------------------------------------
  * int32_t      return          0: OK
- *                             -1: error
+ *                              1200-12004,12100: error/warning
  */
 int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
                                void* echo_path,
@@ -213,18 +202,6 @@ int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
  */
 size_t WebRtcAecm_echo_path_size_bytes();
 
-/*
- * Gets the last error code.
- *
- * Inputs                       Description
- * -------------------------------------------------------------------
- * void*          aecmInst      Pointer to the AECM instance
- *
- * Outputs                      Description
- * -------------------------------------------------------------------
- * int32_t        return        11000-11100: error code
- */
-int32_t WebRtcAecm_get_error_code(void *aecmInst);
 
 #ifdef __cplusplus
 }

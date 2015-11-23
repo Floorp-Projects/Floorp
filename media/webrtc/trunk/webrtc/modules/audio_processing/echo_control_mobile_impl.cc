@@ -40,22 +40,6 @@ int16_t MapSetting(EchoControlMobile::RoutingMode mode) {
   return -1;
 }
 
-AudioProcessing::Error MapError(int err) {
-  switch (err) {
-    case AECM_UNSUPPORTED_FUNCTION_ERROR:
-      return AudioProcessing::kUnsupportedFunctionError;
-    case AECM_NULL_POINTER_ERROR:
-      return AudioProcessing::kNullPointerError;
-    case AECM_BAD_PARAMETER_ERROR:
-      return AudioProcessing::kBadParameterError;
-    case AECM_BAD_PARAMETER_WARNING:
-      return AudioProcessing::kBadStreamParameterWarning;
-    default:
-      // AECM_UNSPECIFIED_ERROR
-      // AECM_UNINITIALIZED_ERROR
-      return AudioProcessing::kUnspecifiedError;
-  }
-}
 }  // namespace
 
 size_t EchoControlMobile::echo_path_size_bytes() {
@@ -96,7 +80,7 @@ int EchoControlMobileImpl::ProcessRenderAudio(const AudioBuffer* audio) {
       err = WebRtcAecm_BufferFarend(
           my_handle,
           audio->split_bands_const(j)[kBand0To8kHz],
-          static_cast<int16_t>(audio->num_frames_per_band()));
+          audio->num_frames_per_band());
 
       if (err != apm_->kNoError) {
         return GetHandleError(my_handle);  // TODO(ajm): warning possible?
@@ -141,7 +125,7 @@ int EchoControlMobileImpl::ProcessCaptureAudio(AudioBuffer* audio) {
           noisy,
           clean,
           audio->split_bands(i)[kBand0To8kHz],
-          static_cast<int16_t>(audio->num_frames_per_band()),
+          audio->num_frames_per_band(),
           apm_->stream_delay_ms());
 
       if (err != apm_->kNoError) {
@@ -250,14 +234,7 @@ int EchoControlMobileImpl::Initialize() {
 }
 
 void* EchoControlMobileImpl::CreateHandle() const {
-  Handle* handle = NULL;
-  if (WebRtcAecm_Create(&handle) != apm_->kNoError) {
-    handle = NULL;
-  } else {
-    assert(handle != NULL);
-  }
-
-  return handle;
+  return WebRtcAecm_Create();
 }
 
 void EchoControlMobileImpl::DestroyHandle(void* handle) const {
@@ -296,6 +273,6 @@ int EchoControlMobileImpl::num_handles_required() const {
 
 int EchoControlMobileImpl::GetHandleError(void* handle) const {
   assert(handle != NULL);
-  return MapError(WebRtcAecm_get_error_code(static_cast<Handle*>(handle)));
+  return AudioProcessing::kUnspecifiedError;
 }
 }  // namespace webrtc
