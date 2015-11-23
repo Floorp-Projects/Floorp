@@ -22,23 +22,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 function usedSpaceSuccess(e) {
   ok(e.target.result > 0, "total bytes should exist and be greater than zero");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function usedSpaceError(e) {
   ok(false, "usedSpaceError was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
@@ -53,6 +53,8 @@ var prefix = "devicestorage/" + randomFilename(12);
 request = storage.addNamed(createRandomBlob('image/png'), prefix + "/a/b.png");
 request.onsuccess = addSuccess;
 request.onerror = addError;
+
+});
 
 </script>
 </pre>

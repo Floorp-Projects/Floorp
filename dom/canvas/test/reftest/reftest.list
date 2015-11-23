@@ -1,5 +1,5 @@
 # WebGL Reftests!
-default-preferences pref(webgl.force-enabled,true)
+default-preferences pref(webgl.force-enabled,true) pref(media.useAudioChannelAPI,true) pref(dom.audiochannel.mutedByDefault,false)
 
 # Check that disabling works:
                            == webgl-disable-test.html?nogl wrapper.html?green.png

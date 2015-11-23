@@ -610,6 +610,8 @@ MediaDecoder::Shutdown()
   if (mDecoderStateMachine) {
     mDecoderStateMachine->DispatchShutdown();
     mTimedMetadataListener.Disconnect();
+    mMetadataLoadedListener.Disconnect();
+    mFirstFrameLoadedListener.Disconnect();
   }
 
   // Force any outstanding seek and byterange requests to complete
@@ -689,6 +691,10 @@ MediaDecoder::SetStateMachineParameters()
   }
   mTimedMetadataListener = mDecoderStateMachine->TimedMetadataEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::OnMetadataUpdate);
+  mMetadataLoadedListener = mDecoderStateMachine->MetadataLoadedEvent().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::MetadataLoaded);
+  mFirstFrameLoadedListener = mDecoderStateMachine->FirstFrameLoadedEvent().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::FirstFrameLoaded);
 }
 
 void
@@ -796,10 +802,7 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
                              MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mShuttingDown) {
-    return;
-  }
+  MOZ_ASSERT(!mShuttingDown);
 
   DECODER_LOG("MetadataLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
@@ -837,10 +840,7 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mShuttingDown) {
-    return;
-  }
+  MOZ_ASSERT(!mShuttingDown);
 
   DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mIsDormant=%d",
               aInfo->mAudio.mChannels, aInfo->mAudio.mRate,

@@ -1989,8 +1989,8 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NOT:
         return jsop_not();
 
-      case JSOP_THIS:
-        return jsop_this();
+      case JSOP_FUNCTIONTHIS:
+        return jsop_functionthis();
 
       case JSOP_CALLEE: {
          MDefinition* callee = getCallee();
@@ -4492,15 +4492,6 @@ IonBuilder::processReturn(JSOp op)
         MOZ_CRASH("unknown return op");
     }
 
-    if (script()->isDerivedClassConstructor() &&
-        def->type() != MIRType_Object)
-    {
-        MOZ_ASSERT(info().funMaybeLazy() && info().funMaybeLazy()->isClassConstructor());
-        MCheckReturn* checkRet = MCheckReturn::New(alloc(), def, current->getSlot(info().thisSlot()));
-        current->add(checkRet);
-        def = checkRet;
-    }
-
     MReturn* ret = MReturn::New(alloc(), def);
     current->end(ret);
 
@@ -6729,14 +6720,6 @@ IonBuilder::jsop_eval(uint32_t argc)
         if (info().funMaybeLazy()->isArrow())
             return abort("Direct eval from arrow function");
 
-        // The 'this' value for the outer and eval scripts must be the
-        // same. This is not guaranteed if a primitive string/number/etc.
-        // is passed through to the eval invoke as the primitive may be
-        // boxed into different objects if accessed via 'this'.
-        MIRType type = thisTypes ? thisTypes->getKnownMIRType() : MIRType_Value;
-        if (type != MIRType_Object && type != MIRType_Null && type != MIRType_Undefined)
-            return abort("Direct eval from script with maybe-primitive 'this'");
-
         CallInfo callInfo(alloc(), /* constructing = */ false);
         if (!callInfo.init(current, argc))
             return false;
@@ -6754,9 +6737,6 @@ IonBuilder::jsop_eval(uint32_t argc)
             TemporaryTypeSet* types = bytecodeTypes(pc);
             return pushTypeBarrier(string, types, BarrierKind::TypeSet);
         }
-
-        current->pushSlot(info().thisSlot());
-        MDefinition* thisValue = current->pop();
 
         if (!jsop_newtarget())
             return false;
@@ -6777,7 +6757,7 @@ IonBuilder::jsop_eval(uint32_t argc)
                 current->add(dynamicName);
 
                 current->push(dynamicName);
-                current->push(thisValue);
+                current->push(constant(UndefinedValue())); // thisv
 
                 CallInfo evalCallInfo(alloc(), /* constructing = */ false);
                 if (!evalCallInfo.init(current, /* argc = */ 0))
@@ -6788,7 +6768,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         }
 
         MInstruction* ins = MCallDirectEval::New(alloc(), scopeChain, string,
-                                                 thisValue, newTargetValue, pc);
+                                                 newTargetValue, pc);
         current->add(ins);
         current->push(ins);
 
@@ -12662,10 +12642,8 @@ IonBuilder::jsop_lambda_arrow(JSFunction* fun)
     MOZ_ASSERT(!fun->isNative());
 
     MDefinition* newTargetDef = current->pop();
-    MDefinition* thisDef = current->pop();
-
     MLambdaArrow* ins = MLambdaArrow::New(alloc(), constraints(), current->scopeChain(),
-                                          thisDef, newTargetDef, fun);
+                                          newTargetDef, fun);
     current->add(ins);
     current->push(ins);
 
@@ -12849,41 +12827,16 @@ IonBuilder::jsop_checkaliasedlet(ScopeCoordinate sc)
 }
 
 bool
-IonBuilder::jsop_this()
+IonBuilder::jsop_functionthis()
 {
-    if (info().module()) {
-        pushConstant(UndefinedValue());
-        return true;
-    }
-
-    if (!info().funMaybeLazy())
-        return abort("JSOP_THIS outside of a JSFunction.");
-
-    if (info().funMaybeLazy()->isArrow()) {
-        // Arrow functions store their lexical |this| in an extended slot.
-        MLoadArrowThis* thisObj = MLoadArrowThis::New(alloc(), getCallee());
-        current->add(thisObj);
-        current->push(thisObj);
-        return true;
-    }
+    MOZ_ASSERT(info().funMaybeLazy());
+    MOZ_ASSERT(!info().funMaybeLazy()->isArrow());
 
     if (script()->strict() || info().funMaybeLazy()->isSelfHostedBuiltin()) {
         // No need to wrap primitive |this| in strict mode or self-hosted code.
-        MDefinition* thisVal = current->getSlot(info().thisSlot());
-        if (script()->isDerivedClassConstructor()) {
-            MOZ_ASSERT(info().funMaybeLazy()->isClassConstructor());
-            MOZ_ASSERT(script()->strict());
-
-            MLexicalCheck* checkThis = MLexicalCheck::New(alloc(), thisVal, Bailout_UninitializedThis);
-            current->add(checkThis);
-            thisVal = checkThis;
-        }
-
-        current->push(thisVal);
+        current->pushSlot(info().thisSlot());
         return true;
     }
-
-    MOZ_ASSERT(!info().funMaybeLazy()->isClassConstructor());
 
     if (thisTypes && (thisTypes->getKnownMIRType() == MIRType_Object ||
         (thisTypes->empty() && baselineFrame_ && baselineFrame_->thisType.isSomeObject())))
@@ -12907,7 +12860,6 @@ IonBuilder::jsop_this()
     MDefinition* def = current->getSlot(info().thisSlot());
 
     if (def->type() == MIRType_Object) {
-        // If we already computed a |this| object, we can reuse it.
         current->push(def);
         return true;
     }
@@ -12915,8 +12867,6 @@ IonBuilder::jsop_this()
     MComputeThis* thisObj = MComputeThis::New(alloc(), def);
     current->add(thisObj);
     current->push(thisObj);
-
-    current->setSlot(info().thisSlot(), thisObj);
 
     return resumeAfter(thisObj);
 }

@@ -53,6 +53,9 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+#include <windows.h> /* ensure DEFINE_ENUM_FLAG_OPERATORS is defined */
+#endif
 
 /* Compile-time custom allocator support. */
 
@@ -117,6 +120,36 @@ extern "C" void  hb_free_impl(void *ptr);
 #define HB_FUNC __FUNCSIG__
 #else
 #define HB_FUNC __func__
+#endif
+
+/*
+ * Borrowed from https://bugzilla.mozilla.org/show_bug.cgi?id=1215411
+ * HB_FALLTHROUGH is an annotation to suppress compiler warnings about switch
+ * cases that fall through without a break or return statement. HB_FALLTHROUGH
+ * is only needed on cases that have code:
+ *
+ * switch (foo) {
+ *   case 1: // These cases have no code. No fallthrough annotations are needed.
+ *   case 2:
+ *   case 3:
+ *     foo = 4; // This case has code, so a fallthrough annotation is needed:
+ *     HB_FALLTHROUGH;
+ *   default:
+ *     return foo;
+ * }
+ */
+#if defined(__clang__) && __cplusplus >= 201103L
+   /* clang's fallthrough annotations are only available starting in C++11. */
+#  define HB_FALLTHROUGH [[clang::fallthrough]]
+#elif defined(_MSC_VER)
+   /*
+    * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):
+    * https://msdn.microsoft.com/en-us/library/ms235402%28VS.80%29.aspx
+    */
+#  include <sal.h>
+#  define HB_FALLTHROUGH __fallthrough
+#else
+#  define HB_FALLTHROUGH /* FALLTHROUGH */
 #endif
 
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -210,9 +243,9 @@ static inline unsigned int ARRAY_LENGTH (const Type (&)[n]) { return n; }
 #define _ASSERT_STATIC0(_line, _cond)	_ASSERT_STATIC1 (_line, (_cond))
 #define ASSERT_STATIC(_cond)		_ASSERT_STATIC0 (__LINE__, (_cond))
 
-/* Note: C++ allows sizeof() of variable-lengh arrays.  So, if _cond is not
- * constant, it still compiles (ouch!), but at least we'll get a -Wvla warning. */
-#define ASSERT_STATIC_EXPR_ZERO(_cond) (0 * sizeof (char[(_cond) ? 1 : -1]))
+template <unsigned int cond> class hb_assert_constant_t {};
+
+#define ASSERT_STATIC_EXPR_ZERO(_cond) (0 * (unsigned int) sizeof (hb_assert_constant_t<_cond>))
 
 #define _PASTE1(a,b) a##b
 #define PASTE(a,b) _PASTE1(a,b)
@@ -859,6 +892,34 @@ hb_in_ranges (T u, T lo1, T hi1, T lo2, T hi2, T lo3, T hi3)
 {
   return hb_in_range (u, lo1, hi1) || hb_in_range (u, lo2, hi2) || hb_in_range (u, lo3, hi3);
 }
+
+
+/* Enable bitwise ops on enums marked as flags_t */
+/* To my surprise, looks like the function resolver is happy to silently cast
+ * one enum to another...  So this doesn't provide the type-checking that I
+ * originally had in mind... :(.
+ *
+ * On MSVC use DEFINE_ENUM_FLAG_OPERATORS.  See:
+ * https://github.com/behdad/harfbuzz/pull/163
+ */
+#ifdef _MSC_VER
+# pragma warning(disable:4200)
+# pragma warning(disable:4800)
+# define HB_MARK_AS_FLAG_T(flags_t)	DEFINE_ENUM_FLAG_OPERATORS (##flags_t##);
+#else
+# define HB_MARK_AS_FLAG_T(flags_t)	template <> class hb_mark_as_flags_t<flags_t> {};
+template <class T> class hb_mark_as_flags_t;
+template <class T> static inline T operator | (T l, T r)
+{ hb_mark_as_flags_t<T> unused HB_UNUSED; return T ((unsigned int) l | (unsigned int) r); }
+template <class T> static inline T operator & (T l, T r)
+{ hb_mark_as_flags_t<T> unused HB_UNUSED; return T ((unsigned int) l & (unsigned int) r); }
+template <class T> static inline T operator ~ (T r)
+{ hb_mark_as_flags_t<T> unused HB_UNUSED; return T (~(unsigned int) r); }
+template <class T> static inline T& operator |= (T &l, T r)
+{ hb_mark_as_flags_t<T> unused HB_UNUSED; l = l | r; return l; }
+template <class T> static inline T& operator &= (T& l, T r)
+{ hb_mark_as_flags_t<T> unused HB_UNUSED; l = l & r; return l; }
+#endif
 
 
 /* Useful for set-operations on small enums.

@@ -1039,7 +1039,10 @@ BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
 
     // .generator lookups should be emitted as JSOP_GETALIASEDVAR instead of
     // JSOP_GETNAME etc, to bypass |with| objects on the scope chain.
-    MOZ_ASSERT_IF(op == JSOP_GETNAME || op == JSOP_GETGNAME, !sc->isDotVariable(atom));
+    // It's safe to emit .this lookups though because |with| objects skip
+    // those.
+    MOZ_ASSERT_IF(op == JSOP_GETNAME || op == JSOP_GETGNAME,
+                  !sc->isDotVariable(atom) || atom == cx->names().dotThis);
 
     if (op == JSOP_GETPROP && atom == cx->names().length) {
         /* Specialize length accesses for the interpreter. */
@@ -1968,10 +1971,11 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = false;
         return true;
 
-      // |this| can throw in derived class constructors.
+      // |this| can throw in derived class constructors, including nested arrow
+      // functions or eval.
       case PNK_THIS:
-        MOZ_ASSERT(pn->isArity(PN_NULLARY));
-        *answer = sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = sc->needsThisTDZChecks();
         return true;
 
       // Trivial binary nodes with more token pos holders.
@@ -2089,6 +2093,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
       case PNK_POWASSIGN:
+      case PNK_SETTHIS:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -2355,6 +2360,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_EXPORT_SPEC:      // by PNK_EXPORT
       case PNK_CALLSITEOBJ:      // by PNK_TAGGED_TEMPLATE
       case PNK_POSHOLDER:        // by PNK_NEWTARGET
+      case PNK_SUPERBASE:        // by PNK_ELEM and others
         MOZ_CRASH("handled by parent nodes");
 
       case PNK_LIMIT: // invalid sentinel value
@@ -2631,9 +2637,9 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitSuperPropLHS(bool isCall)
+BytecodeEmitter::emitSuperPropLHS(ParseNode* superBase, bool isCall)
 {
-    if (!emit1(JSOP_THIS))
+    if (!emitGetThisForSuperBase(superBase))
         return false;
     if (isCall && !emit1(JSOP_DUP))
         return false;
@@ -2665,7 +2671,8 @@ BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 bool
 BytecodeEmitter::emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall)
 {
-    if (!emitSuperPropLHS(isCall))
+    ParseNode* base = &pn->as<PropertyAccess>().expression();
+    if (!emitSuperPropLHS(base, isCall))
         return false;
 
     if (!emitAtomOp(pn, op))
@@ -2687,7 +2694,8 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
     JSOp binop = GetIncDecInfo(pn->getKind(), &post);
 
     if (isSuper) {
-        if (!emitSuperPropLHS())                    // THIS OBJ
+        ParseNode* base = &pn->pn_kid->as<PropertyAccess>().expression();
+        if (!emitSuperPropLHS(base))                // THIS OBJ
             return false;
         if (!emit1(JSOP_DUP2))                      // THIS OBJ THIS OBJ
             return false;
@@ -2807,7 +2815,7 @@ BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts)
     if (opts == SuperElem_IncDec && !emit1(JSOP_TOID))
         return false;
 
-    if (!emit1(JSOP_THIS))
+    if (!emitGetThisForSuperBase(pn->pn_left))
         return false;
 
     if (opts == SuperElem_Call) {
@@ -3398,6 +3406,67 @@ BytecodeEmitter::emitYieldOp(JSOp op)
     return emit1(JSOP_DEBUGAFTERYIELD);
 }
 
+bool
+BytecodeEmitter::emitCreateFunctionThis()
+{
+    // Do nothing if the function doesn't have a this-binding (this happens for
+    // instance if it doesn't use this/eval or if it's an arrow function).
+    if (!sc->asFunctionBox()->hasThisBinding())
+        return true;
+
+    switchToPrologue();
+
+    if (!emit1(JSOP_FUNCTIONTHIS))
+        return false;
+
+    BindingIter bi = Bindings::thisBinding(cx, script);
+    if (!emitStoreToTopScope(bi))
+        return false;
+    if (!emit1(JSOP_POP))
+        return false;
+
+    switchToMain();
+    return true;
+}
+
+bool
+BytecodeEmitter::emitSetThis(ParseNode* pn)
+{
+    // PNK_SETTHIS is used to update |this| after a super() call in a derived
+    // class constructor.
+
+    MOZ_ASSERT(pn->isKind(PNK_SETTHIS));
+
+    ParseNode* name = pn->pn_left;
+    MOZ_ASSERT(name->isKind(PNK_NAME));
+
+    if (!emitTree(pn->pn_right))
+        return false;
+
+    if (!bindNameToSlot(name))
+        return false;
+
+    JSOp setOp = name->getOp();
+
+    JSOp getOp;
+    switch (setOp) {
+      case JSOP_SETLOCAL:      getOp = JSOP_GETLOCAL;      break;
+      case JSOP_SETALIASEDVAR: getOp = JSOP_GETALIASEDVAR; break;
+      default: MOZ_CRASH("Unexpected op");
+    }
+
+    // First, get the original |this| and throw if we already initialized it.
+    if (!emitVarOp(name, getOp))
+        return false;
+    if (!emit1(JSOP_CHECKTHISREINIT))
+        return false;
+    if (!emit1(JSOP_POP))
+        return false;
+
+    // Emit the set.
+    return emitVarOp(name, setOp);
+}
+
 static bool
 IsModuleOnScopeChain(JSObject* obj)
 {
@@ -3436,21 +3505,15 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
         if (!emit1(JSOP_ARGUMENTS))
             return false;
         BindingIter bi = Bindings::argumentsBinding(cx, script);
-        if (script->bindingIsAliased(bi)) {
-            ScopeCoordinate sc;
-            sc.setHops(0);
-            sc.setSlot(0);  // initialize to silence GCC warning
-            MOZ_ALWAYS_TRUE(lookupAliasedNameSlot(cx->names().arguments, &sc));
-            if (!emitAliasedVarOp(JSOP_SETALIASEDVAR, sc, DontCheckLexical))
-                return false;
-        } else {
-            if (!emitUnaliasedVarOp(JSOP_SETLOCAL, bi.localIndex(), DontCheckLexical))
-                return false;
-        }
+        if (!emitStoreToTopScope(bi))
+            return false;
         if (!emit1(JSOP_POP))
             return false;
         switchToMain();
     }
+
+    if (!emitCreateFunctionThis())
+        return false;
 
     /*
      * Emit a prologue for run-once scripts which will deoptimize JIT code if
@@ -3498,14 +3561,22 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
             // Non-generator functions just return |undefined|. The JSOP_RETRVAL
             // emitted below will do that, except if the script has a finally
             // block: there can be a non-undefined value in the return value
-            // slot. We just emit an explicit return in this case.
+            // slot. Make sure the return value is |undefined|.
             if (hasTryFinally) {
                 if (!emit1(JSOP_UNDEFINED))
                     return false;
-                if (!emit1(JSOP_RETURN))
+                if (!emit1(JSOP_SETRVAL))
                     return false;
             }
         }
+    }
+
+    if (sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor()) {
+        BindingIter bi = Bindings::thisBinding(cx, script);
+        if (!emitLoadFromTopScope(bi))
+            return false;
+        if (!emit1(JSOP_CHECKRETURN))
+            return false;
     }
 
     // Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
@@ -3790,7 +3861,7 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, VarEmitOption emitOptio
             // wrong order for JSOP_SETPROP, so we have to add a JSOP_SWAP.
             JSOp setOp;
             if (target->as<PropertyAccess>().isSuper()) {
-                if (!emitSuperPropLHS())
+                if (!emitSuperPropLHS(&target->as<PropertyAccess>().expression()))
                     return false;
                 if (!emit2(JSOP_PICK, 2))
                     return false;
@@ -4433,7 +4504,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         break;
       case PNK_DOT:
         if (lhs->as<PropertyAccess>().isSuper()) {
-            if (!emitSuperPropLHS())
+            if (!emitSuperPropLHS(&lhs->as<PropertyAccess>().expression()))
                 return false;
             offset += 2;
         } else {
@@ -5906,12 +5977,9 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
     /* Non-hoisted functions simply emit their respective op. */
     if (!pn->functionIsHoisted()) {
-        /* JSOP_LAMBDA_ARROW is always preceded by JSOP_THIS and a new.target */
+        /* JSOP_LAMBDA_ARROW is always preceded by a new.target */
         MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
         if (fun->isArrow()) {
-            if (!emit1(JSOP_THIS))
-                return false;
-
             if (sc->allowNewTarget()) {
                 if (!emit1(JSOP_NEWTARGET))
                     return false;
@@ -6148,6 +6216,72 @@ BytecodeEmitter::emitContinue(PropertyName* label)
     return emitGoto(stmt, &stmt->continues, SRC_CONTINUE);
 }
 
+
+bool
+BytecodeEmitter::emitGetFunctionThis(ParseNode* pn)
+{
+    MOZ_ASSERT(sc->thisBinding() == ThisBinding::Function);
+    MOZ_ASSERT(pn->isKind(PNK_NAME));
+    MOZ_ASSERT(pn->name() == cx->names().dotThis);
+
+    if (!emitTree(pn))
+        return false;
+    if (sc->needsThisTDZChecks() && !emit1(JSOP_CHECKTHIS))
+        return false;
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitGetThisForSuperBase(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(PNK_SUPERBASE));
+    return emitGetFunctionThis(pn->pn_kid);
+}
+
+bool
+BytecodeEmitter::emitThisLiteral(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(PNK_THIS));
+
+    if (ParseNode* thisName = pn->pn_kid)
+        return emitGetFunctionThis(thisName);
+
+    if (sc->thisBinding() == ThisBinding::Module)
+        return emit1(JSOP_UNDEFINED);
+
+    MOZ_ASSERT(sc->thisBinding() == ThisBinding::Global);
+    return emit1(JSOP_GLOBALTHIS);
+}
+
+bool
+BytecodeEmitter::emitLoadFromTopScope(BindingIter& bi)
+{
+    if (script->bindingIsAliased(bi)) {
+        ScopeCoordinate sc;
+        sc.setHops(0);
+        sc.setSlot(0);
+        MOZ_ALWAYS_TRUE(lookupAliasedNameSlot(bi->name(), &sc));
+        return emitAliasedVarOp(JSOP_GETALIASEDVAR, sc, DontCheckLexical);
+    }
+
+    return emitUnaliasedVarOp(JSOP_GETLOCAL, bi.localIndex(), DontCheckLexical);
+}
+
+bool
+BytecodeEmitter::emitStoreToTopScope(BindingIter& bi)
+{
+    if (script->bindingIsAliased(bi)) {
+        ScopeCoordinate sc;
+        sc.setHops(0);
+        sc.setSlot(0);  // initialize to silence GCC warning
+        MOZ_ALWAYS_TRUE(lookupAliasedNameSlot(bi->name(), &sc));
+        return emitAliasedVarOp(JSOP_SETALIASEDVAR, sc, DontCheckLexical);
+    }
+
+    return emitUnaliasedVarOp(JSOP_SETLOCAL, bi.localIndex(), DontCheckLexical);
+}
+
 bool
 BytecodeEmitter::emitReturn(ParseNode* pn)
 {
@@ -6188,7 +6322,10 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     ptrdiff_t top = offset();
 
     bool isGenerator = sc->isFunctionBox() && sc->asFunctionBox()->isGenerator();
-    if (!emit1(isGenerator ? JSOP_SETRVAL : JSOP_RETURN))
+    bool isDerivedClassConstructor =
+        sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
+
+    if (!emit1((isGenerator || isDerivedClassConstructor) ? JSOP_SETRVAL : JSOP_RETURN))
         return false;
 
     NonLocalExitScope nle(this);
@@ -6205,6 +6342,15 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
         if (!emitAliasedVarOp(JSOP_GETALIASEDVAR, sc, DontCheckLexical))
             return false;
         if (!emitYieldOp(JSOP_FINALYIELDRVAL))
+            return false;
+    } else if (isDerivedClassConstructor) {
+        MOZ_ASSERT(code()[top] == JSOP_SETRVAL);
+        BindingIter bi = Bindings::thisBinding(cx, script);
+        if (!emitLoadFromTopScope(bi))
+            return false;
+        if (!emit1(JSOP_CHECKRETURN))
+            return false;
+        if (!emit1(JSOP_RETRVAL))
             return false;
     } else if (top + static_cast<ptrdiff_t>(JSOP_RETURN_LENGTH) != offset()) {
         code()[top] = JSOP_SETRVAL;
@@ -6777,9 +6923,9 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
         }
         callop = false;
         break;
-      case PNK_POSHOLDER:
+      case PNK_SUPERBASE:
         MOZ_ASSERT(pn->isKind(PNK_SUPERCALL));
-        MOZ_ASSERT(parser->handler.isSuperBase(pn2, cx));
+        MOZ_ASSERT(parser->handler.isSuperBase(pn2));
         if (!emit1(JSOP_SUPERFUN))
             return false;
         break;
@@ -6790,8 +6936,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
         break;
     }
     if (!callop) {
-        JSOp thisop = pn->isKind(PNK_GENEXP) ? JSOP_THIS : JSOP_UNDEFINED;
-        if (!emit1(thisop))
+        if (!emit1(JSOP_UNDEFINED))
             return false;
     }
 
@@ -6859,8 +7004,6 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             return false;
     }
 
-    if (pn->isKind(PNK_SUPERCALL) && !emit1(JSOP_SETTHIS))
-        return false;
     return true;
 }
 
@@ -8147,9 +8290,13 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
       case PNK_TRUE:
       case PNK_FALSE:
-      case PNK_THIS:
       case PNK_NULL:
         if (!emit1(pn->getOp()))
+            return false;
+        break;
+
+      case PNK_THIS:
+        if (!emitThisLiteral(pn))
             return false;
         break;
 
@@ -8171,6 +8318,11 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
       case PNK_NEWTARGET:
         if (!emit1(JSOP_NEWTARGET))
+            return false;
+        break;
+
+      case PNK_SETTHIS:
+        if (!emitSetThis(pn))
             return false;
         break;
 

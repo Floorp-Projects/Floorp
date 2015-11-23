@@ -225,14 +225,7 @@ WrapperPromiseCallback::Call(JSContext* aCx,
   // PromiseReactionTask step 7
   if (rv.Failed()) {
     JS::Rooted<JS::Value> value(aCx);
-    if (rv.IsJSException()) {
-      rv.StealJSException(aCx, &value);
-
-      if (!JS_WrapValue(aCx, &value)) {
-        NS_WARNING("Failed to wrap value into the right compartment.");
-        return NS_ERROR_FAILURE;
-      }
-    } else {
+    { // Scope for JSAutoCompartment
       // Convert the ErrorResult to a JS exception object that we can reject
       // ourselves with.  This will be exactly the exception that would get
       // thrown from a binding method whose ErrorResult ended up with whatever

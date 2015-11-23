@@ -11,12 +11,15 @@
 
 #include "js/Debug.h"
 #include "js/TypeDecls.h"
-#include "js/UbiNodeCensus.h"
 #include "js/UbiNodeBreadthFirst.h"
+#include "js/UbiNodeCensus.h"
+#include "js/UbiNodeDominatorTree.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/devtools/AutoMemMap.h"
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/devtools/DeserializedNode.h"
+#include "mozilla/devtools/DominatorTree.h"
 #include "mozilla/devtools/FileDescriptorOutputStream.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
@@ -538,7 +541,7 @@ HeapSnapshot::ComputeDominatorTree(ErrorResult& rv)
     return nullptr;
   }
 
-  return MakeAndAddRef<DominatorTree>(Move(*maybeTree), mParent);
+  return MakeAndAddRef<DominatorTree>(Move(*maybeTree), this, mParent);
 }
 
 

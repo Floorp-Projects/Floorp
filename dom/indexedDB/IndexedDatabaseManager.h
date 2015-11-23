@@ -18,6 +18,7 @@
 #include "nsHashKeys.h"
 #include "nsITimer.h"
 
+class nsIEventTarget;
 struct PRLogModuleInfo;
 
 namespace mozilla {
@@ -28,6 +29,7 @@ namespace dom {
 
 namespace indexedDB {
 
+class BackgroundUtilsChild;
 class FileManager;
 class FileManagerInfo;
 class IDBFactory;
@@ -121,6 +123,12 @@ public:
   static bool
   IsFileHandleEnabled();
 
+  void
+  ClearBackgroundActor();
+
+  void
+  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
                  const nsACString& aOrigin,
@@ -194,6 +202,8 @@ private:
   static void
   LoggingModePrefChangedCallback(const char* aPrefName, void* aClosure);
 
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
+
   nsCOMPtr<nsITimer> mDeleteTimer;
 
   // Maintains a list of all file managers per origin. This list isn't
@@ -211,6 +221,8 @@ private:
 #ifdef ENABLE_INTL_API
   nsCString mLocale;
 #endif
+
+  BackgroundUtilsChild* mBackgroundActor;
 
   static bool sIsMainProcess;
   static bool sFullSynchronousMode;

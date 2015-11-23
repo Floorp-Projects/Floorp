@@ -89,6 +89,15 @@
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
+  "CHECKERBOARDED_CSSPIXELS_MS": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1221694],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "3840 * 2160 * 16",
+    "n_buckets": 50,
+    "description": "Magnitude of checkerboarding in CSSPixel-milliseconds per scrollable frame per composite"
+  },
   "COMPOSITE_TIME" : {
     "expires_in_version": "never",
     "description": "Composite times in milliseconds",

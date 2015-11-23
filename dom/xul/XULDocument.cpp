@@ -259,33 +259,6 @@ namespace dom {
 // nsISupports interface
 //
 
-static PLDHashOperator
-TraverseTemplateBuilders(nsISupports* aKey, nsIXULTemplateBuilder* aData,
-                         void* aContext)
-{
-    nsCycleCollectionTraversalCallback *cb =
-        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
-
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mTemplateBuilderTable key");
-    cb->NoteXPCOMChild(aKey);
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mTemplateBuilderTable value");
-    cb->NoteXPCOMChild(aData);
-
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
-{
-    nsCycleCollectionTraversalCallback *cb =
-        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
-
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mOverlayLoadObservers/mPendingOverlayLoadNotifications value");
-    cb->NoteXPCOMChild(aData);
-
-    return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(XULDocument)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
@@ -296,20 +269,38 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XULDocument, XMLDocument)
 
     // An element will only have a template builder as long as it's in the
     // document, so we'll traverse the table here instead of from the element.
-    if (tmp->mTemplateBuilderTable)
-        tmp->mTemplateBuilderTable->EnumerateRead(TraverseTemplateBuilders, &cb);
+    if (tmp->mTemplateBuilderTable) {
+        for (auto iter = tmp->mTemplateBuilderTable->Iter();
+             !iter.Done();
+             iter.Next()) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mTemplateBuilderTable key");
+            cb.NoteXPCOMChild(iter.Key());
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mTemplateBuilderTable value");
+            cb.NoteXPCOMChild(iter.UserData());
+        }
+    }
 
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPrototype)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterPrototype)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes);
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypes)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStore)
 
     if (tmp->mOverlayLoadObservers) {
-        tmp->mOverlayLoadObservers->EnumerateRead(TraverseObservers, &cb);
+        for (auto iter = tmp->mOverlayLoadObservers->Iter();
+             !iter.Done();
+             iter.Next()) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOverlayLoadObservers value");
+            cb.NoteXPCOMChild(iter.Data());
+        }
     }
     if (tmp->mPendingOverlayLoadNotifications) {
-        tmp->mPendingOverlayLoadNotifications->EnumerateRead(TraverseObservers, &cb);
+        for (auto iter = tmp->mPendingOverlayLoadNotifications->Iter();
+             !iter.Done();
+             iter.Next()) {
+            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mPendingOverlayLoadNotifications value");
+            cb.NoteXPCOMChild(iter.Data());
+        }
     }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

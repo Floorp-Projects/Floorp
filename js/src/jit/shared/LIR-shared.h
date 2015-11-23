@@ -1475,20 +1475,6 @@ class LComputeThis : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
     }
 };
 
-class LLoadArrowThis : public LInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    explicit LLoadArrowThis(const LAllocation& callee) {
-        setOperand(0, callee);
-    }
-
-    LIR_HEADER(LoadArrowThis)
-
-    const LAllocation* callee() {
-        return getOperand(0);
-    }
-};
-
 // Writes a typed argument for a function call to the frame's argument vector.
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {
@@ -4033,13 +4019,12 @@ class LLambda : public LInstructionHelper<1, 1, 1>
     }
 };
 
-class LLambdaArrow : public LInstructionHelper<1, 1 + (2 * BOX_PIECES), 0>
+class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(LambdaArrow)
 
-    static const size_t ThisValue = 1;
-    static const size_t NewTargetValue = ThisValue + BOX_PIECES;
+    static const size_t NewTargetValue = 1;
 
     explicit LLambdaArrow(const LAllocation& scopeChain) {
         setOperand(0, scopeChain);

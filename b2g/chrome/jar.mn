@@ -5,7 +5,7 @@
 
 
 chrome.jar:
-% content branding %content/branding/
+% content branding %content/branding/ contentaccessible=yes
 % content b2g %content/
 
   content/arrow.svg                     (content/arrow.svg)

@@ -329,35 +329,6 @@ protected:
   void* mMappedMemory;
 };
 
-class UnlockDirectoryRunnable final
-  : public nsRunnable
-{
-  RefPtr<DirectoryLock> mDirectoryLock;
-
-public:
-  explicit
-  UnlockDirectoryRunnable(already_AddRefed<DirectoryLock> aDirectoryLock)
-    : mDirectoryLock(Move(aDirectoryLock))
-  { }
-
-private:
-  ~UnlockDirectoryRunnable()
-  {
-    MOZ_ASSERT(!mDirectoryLock);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mDirectoryLock);
-
-    mDirectoryLock = nullptr;
-
-    return NS_OK;
-  }
-};
-
 // A runnable that implements a state machine required to open a cache entry.
 // It executes in the parent for a cache access originating in the child.
 // This runnable gets registered as an IPDL subprotocol actor so that it
@@ -503,6 +474,9 @@ private:
   nsresult
   InitOnMainThread();
 
+  void
+  OpenDirectory();
+
   nsresult
   ReadMetadata();
 
@@ -518,7 +492,7 @@ private:
   void
   DispatchToIOThread()
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnOwningThread();
 
     // If shutdown just started, the QuotaManager may have been deleted.
     QuotaManager* qm = QuotaManager::Get();
@@ -593,8 +567,8 @@ private:
     // A cache entry has been selected to open.
 
     mModuleIndex = aModuleIndex;
-    mState = eDispatchToMainThread;
-    NS_DispatchToMainThread(this);
+    mState = eReadyToOpenCacheFileForRead;
+    DispatchToIOThread();
 
     return true;
   }
@@ -630,12 +604,13 @@ private:
 
   enum State {
     eInitial, // Just created, waiting to be dispatched to main thread
+    eWaitingToFinishInit, // Waiting to finish initialization
+    eWaitingToOpenDirectory, // Waiting to open directory
     eWaitingToOpenMetadata, // Waiting to be called back from OpenDirectory
     eReadyToReadMetadata, // Waiting to read the metadata file on the IO thread
     eFailedToReadMetadata, // Waiting to be dispatched to owning thread after fail
     eSendingMetadataForRead, // Waiting to send OnOpenMetadataForRead
     eWaitingToOpenCacheFileForRead, // Waiting to hear back from child
-    eDispatchToMainThread, // IO thread dispatch allowed from main thread only
     eReadyToOpenCacheFileForRead, // Waiting to open cache file for read
     eSendingCacheFile, // Waiting to send OnOpenCacheFile on the owning thread
     eOpened, // Finished calling OnOpenCacheFile, waiting to be closed
@@ -711,9 +686,6 @@ ParentRunnable::InitOnMainThread()
     return rv;
   }
 
-  QuotaManager* qm = QuotaManager::GetOrCreate();
-  NS_ENSURE_STATE(qm);
-
   rv = QuotaManager::GetInfoFromPrincipal(principal, &mGroup, &mOrigin,
                                           &mIsApp);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -724,6 +696,26 @@ ParentRunnable::InitOnMainThread()
     QuotaManager::IsQuotaEnforced(mPersistence, mOrigin, mIsApp);
 
   return NS_OK;
+}
+
+void
+ParentRunnable::OpenDirectory()
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == eWaitingToFinishInit ||
+             mState == eWaitingToOpenDirectory);
+  MOZ_ASSERT(QuotaManager::Get());
+
+  mState = eWaitingToOpenMetadata;
+
+  // XXX The exclusive lock shouldn't be needed for read operations.
+  QuotaManager::Get()->OpenDirectory(mPersistence,
+                                     mGroup,
+                                     mOrigin,
+                                     mIsApp,
+                                     quota::Client::ASMJS,
+                                     /* aExclusive */ true,
+                                     this);
 }
 
 nsresult
@@ -903,12 +895,7 @@ ParentRunnable::FinishOnOwningThread()
   // releasing the directory lock.
   FileDescriptorHolder::Finish();
 
-  if (mDirectoryLock) {
-    RefPtr<UnlockDirectoryRunnable> runnable =
-      new UnlockDirectoryRunnable(mDirectoryLock.forget());
-
-    NS_DispatchToMainThread(runnable);
-  }
+  mDirectoryLock = nullptr;
 }
 
 NS_IMETHODIMP
@@ -928,17 +915,41 @@ ParentRunnable::Run()
         return NS_OK;
       }
 
-      mState = eWaitingToOpenMetadata;
+      mState = eWaitingToFinishInit;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
 
-      // XXX The exclusive lock shouldn't be needed for read operations.
-      QuotaManager::Get()->OpenDirectory(mPersistence,
-                                         mGroup,
-                                         mOrigin,
-                                         mIsApp,
-                                         quota::Client::ASMJS,
-                                         /* aExclusive */ true,
-                                         this);
+      return NS_OK;
+    }
 
+    case eWaitingToFinishInit: {
+      AssertIsOnOwningThread();
+
+      if (QuotaManager::IsShuttingDown()) {
+        Fail();
+        return NS_OK;
+      }
+
+      if (QuotaManager::Get()) {
+        OpenDirectory();
+        return NS_OK;
+      }
+
+      mState = eWaitingToOpenDirectory;
+      QuotaManager::GetOrCreate(this);
+
+      return NS_OK;
+    }
+
+    case eWaitingToOpenDirectory: {
+      AssertIsOnOwningThread();
+
+      if (NS_WARN_IF(!QuotaManager::Get())) {
+        Fail();
+        return NS_OK;
+      }
+
+      OpenDirectory();
       return NS_OK;
     }
 
@@ -999,14 +1010,6 @@ ParentRunnable::Run()
       return NS_OK;
     }
 
-    case eDispatchToMainThread: {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      mState = eReadyToOpenCacheFileForRead;
-      DispatchToIOThread();
-      return NS_OK;
-    }
-
     case eReadyToOpenCacheFileForRead: {
       AssertIsOnIOThread();
       MOZ_ASSERT(mOpenMode == eOpenForRead);
@@ -1064,7 +1067,7 @@ ParentRunnable::Run()
 void
 ParentRunnable::DirectoryLockAcquired(DirectoryLock* aLock)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == eWaitingToOpenMetadata);
   MOZ_ASSERT(!mDirectoryLock);
 
@@ -1077,11 +1080,11 @@ ParentRunnable::DirectoryLockAcquired(DirectoryLock* aLock)
 void
 ParentRunnable::DirectoryLockFailed()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnOwningThread();
   MOZ_ASSERT(mState == eWaitingToOpenMetadata);
   MOZ_ASSERT(!mDirectoryLock);
 
-  FailOnNonOwningThread();
+  Fail();
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ParentRunnable, FileDescriptorHolder)
@@ -1812,7 +1815,11 @@ public:
   { }
 
   virtual void
-  PerformIdleMaintenance() override
+  StartIdleMaintenance() override
+  { }
+
+  virtual void
+  StopIdleMaintenance() override
   { }
 
   virtual void

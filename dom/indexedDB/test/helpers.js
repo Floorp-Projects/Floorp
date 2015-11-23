@@ -34,7 +34,11 @@ function executeSoon(aFun)
 }
 
 function clearAllDatabases(callback) {
-  SpecialPowers.clearStorageForDoc(SpecialPowers.wrap(document), callback);
+  let qms = SpecialPowers.Services.qms;
+  let principal = SpecialPowers.wrap(document).nodePrincipal;
+  let request = qms.clearStoragesForPrincipal(principal);
+  let cb = SpecialPowers.wrapCallback(callback);
+  request.callback = cb;
 }
 
 var testHarnessGenerator = testHarnessSteps();
