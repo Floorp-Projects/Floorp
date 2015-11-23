@@ -186,4 +186,3 @@ def v8_subtest(series, name):
                  }
 
     return reference[name] / geometric_mean(series)
-
