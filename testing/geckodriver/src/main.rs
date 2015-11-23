@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate log;
-extern crate rustc_serialize;
 extern crate argparse;
 extern crate env_logger;
+extern crate hyper;
 extern crate mozprofile;
 extern crate mozrunner;
+extern crate regex;
+extern crate rustc_serialize;
 #[macro_use]
 extern crate webdriver;
 
@@ -17,7 +19,7 @@ use std::path::Path;
 use argparse::{ArgumentParser, StoreTrue, Store};
 use webdriver::server::start;
 
-use marionette::{MarionetteHandler, BrowserLauncher, MarionetteSettings};
+use marionette::{MarionetteHandler, BrowserLauncher, MarionetteSettings, extension_routes};
 
 macro_rules! try_opt {
     ($expr:expr, $err_type:expr, $err_msg:expr) => ({
@@ -100,5 +102,5 @@ fn main() {
                                            launcher);
 
     //TODO: what if binary isn't a valid path?
-    start(addr, MarionetteHandler::new(settings), vec![]);
+    start(addr, MarionetteHandler::new(settings), extension_routes());
 }
