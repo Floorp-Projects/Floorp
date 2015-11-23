@@ -40,10 +40,10 @@ interface Location {
            attribute USVString hash;
 
   [Throws, UnsafeInPrerendering]
-  void assign(DOMString url);
+  void assign(USVString url);
 
   [Throws, CrossOriginCallable, UnsafeInPrerendering]
-  void replace(DOMString url);
+  void replace(USVString url);
 
   // XXXbz there is no forceget argument in the spec!  See bug 1037721.
   [Throws, UnsafeInPrerendering]
