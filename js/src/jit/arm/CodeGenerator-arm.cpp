@@ -121,7 +121,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         masm.branch(handler);
     }
 
-    return true;
+    return !masm.oom();
 }
 
 void
