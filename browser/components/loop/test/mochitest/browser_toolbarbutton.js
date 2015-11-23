@@ -43,18 +43,18 @@ add_task(function* test_LoopUI_getters() {
 
 add_task(function* test_doNotDisturb() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   yield MozLoopService.doNotDisturb = true;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is in disabled state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Do not disturb", "Check button has disabled tooltiptext");
   yield MozLoopService.doNotDisturb = false;
   Assert.notStrictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is not in disabled state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_doNotDisturb_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   yield MozLoopService.doNotDisturb = true;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is in disabled state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Do not disturb", "Check button has disabled tooltiptext");
@@ -62,34 +62,34 @@ add_task(function* test_doNotDisturb_with_login() {
   MozLoopServiceInternal.fxAOAuthProfile = fxASampleProfile;
   yield MozLoopServiceInternal.notifyStatusChanged("login");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Active conversation", "Check button has active tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "You are sharing your tabs", "Check button has active tooltiptext");
   yield loadLoopPanel();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "disabled", "Check button is in disabled state after opening panel");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Do not disturb", "Check button has disabled tooltiptext");
   LoopUI.panel.hidePopup();
   yield MozLoopService.doNotDisturb = false;
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   yield MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_error() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   yield MozLoopServiceInternal.setError("testing", {});
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "error", "Check button is in error state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Error!", "Check button has error tooltiptext");
   yield MozLoopServiceInternal.clearError("testing");
   Assert.notStrictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "error", "Check button is not in error state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_error_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   yield MozLoopServiceInternal.setError("testing", {});
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "error", "Check button is in error state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Error!", "Check button has error tooltiptext");
@@ -99,34 +99,34 @@ add_task(function* test_error_with_login() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Error!", "Check button has error tooltiptext");
   yield MozLoopServiceInternal.clearError("testing");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   MozLoopServiceInternal.fxAOAuthProfile = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_active() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   MozLoopServiceInternal.fxAOAuthTokenData = fxASampleToken;
   MozLoopServiceInternal.fxAOAuthProfile = fxASampleProfile;
   yield MozLoopServiceInternal.notifyStatusChanged("login");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Active conversation", "Check button has active tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "You are sharing your tabs", "Check button has active tooltiptext");
   yield loadLoopPanel();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state after opening panel");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   LoopUI.panel.hidePopup();
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_room_participants() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   let roomsCache = new Map([["test_room", { participants: [{ displayName: "hugh", id: "008", owner: true }] }]]);
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
@@ -136,18 +136,18 @@ add_task(function* test_room_participants() {
   // And that's what the line below does, waits until the next tick
   yield new Promise(resolve => executeSoon(resolve));
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Active conversation", "Check button has active tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "You are sharing your tabs", "Check button has active tooltiptext");
   roomsCache.set("test_room", { participants: [{ displayName: "hugh", id: "008", owner: false }] });
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   yield new Promise(resolve => executeSoon(resolve));
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Someone is waiting for you in a conversation", "Check button has participantswaiting tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Someone is waiting for you", "Check button has participantswaiting tooltiptext");
   roomsCache.set("test_room", { participants: [] });
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   LoopRooms._setRoomsCache();
 });
 
@@ -167,13 +167,13 @@ add_task(function* test_panelToggle_on_click() {
 
 add_task(function* test_screen_share() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
   MozLoopService.setScreenShareState("1", true);
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "action", "Check button is in action state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "You are sharing your screen", "Check button has sharingscreen tooltiptext");
   MozLoopService.setScreenShareState("1", false);
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
-  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Browse this page with a friend", "Check button has default tooltiptext");
 });
 
 add_task(function* test_private_browsing_window() {
