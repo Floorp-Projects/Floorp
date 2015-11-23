@@ -127,7 +127,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
 {
   CSSToLayoutDeviceScale cssToDev =
       mPresShell->GetPresContext()->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
+  LayoutDeviceToLayerScale res(mPresShell->GetResolution());
 
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom = aViewportInfo.GetDefaultZoom();
@@ -152,7 +152,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
 
     LayoutDeviceToLayerScale resolution = zoom / cssToDev * ParentLayerToLayerScale(1);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    nsLayoutUtils::SetResolutionAndScaleTo(mPresShell, resolution.scale);
+    mPresShell->SetResolutionAndScaleTo(resolution.scale);
 
     return defaultZoom;
   }
@@ -189,7 +189,7 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
       / cssViewportChangeRatio);
     MVM_LOG("%p: Old resolution was %f, changed by %f/%f to %f\n", this, res.scale,
       aDisplayWidthChangeRatio.value(), cssViewportChangeRatio, newRes.scale);
-    nsLayoutUtils::SetResolutionAndScaleTo(mPresShell, newRes.scale);
+    mPresShell->SetResolutionAndScaleTo(newRes.scale);
     res = newRes;
   }
 
@@ -247,7 +247,7 @@ MobileViewportManager::RefreshSPCSPS()
 
   CSSToLayoutDeviceScale cssToDev =
       mPresShell->GetPresContext()->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
+  LayoutDeviceToLayerScale res(mPresShell->GetResolution());
   CSSToScreenScale zoom = ViewTargetAs<ScreenPixel>(cssToDev * res / ParentLayerToLayerScale(1),
     PixelCastJustification::ScreenIsParentLayerForRoot);
 

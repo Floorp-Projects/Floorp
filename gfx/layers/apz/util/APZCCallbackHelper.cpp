@@ -210,7 +210,7 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
     // no-op, but setting the SPCSPS is bad because it can cause a stale value
     // to be returned by window.innerWidth/innerHeight (see bug 1187792).
 
-    float presShellResolution = nsLayoutUtils::GetResolution(shell);
+    float presShellResolution = shell->GetResolution();
 
     // If the pres shell resolution has changed on the content side side
     // the time this repaint request was fired, consider this request out of date
@@ -224,7 +224,7 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
     // last paint.
     presShellResolution = aMetrics.GetPresShellResolution()
                         * aMetrics.GetAsyncZoom().scale;
-    nsLayoutUtils::SetResolutionAndScaleTo(shell, presShellResolution);
+    shell->SetResolutionAndScaleTo(presShellResolution);
   }
 
   // Do this as late as possible since scrolling can flush layout. It also
