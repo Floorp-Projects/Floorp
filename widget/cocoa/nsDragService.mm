@@ -493,9 +493,16 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       pString = GetStringForType(item, (const NSString*)kUTTypeURL);
     } else if (flavorStr.EqualsLiteral(kURLDescriptionMime)) {
       pString = GetTitleForURL(item);
+    } else if (flavorStr.EqualsLiteral(kRTFMime)) {
+      pString = GetStringForType(item, (const NSString*)kUTTypeRTF);
     }
     if (pString) {
-      NSData* stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
+      NSData* stringData;
+      if (flavorStr.EqualsLiteral(kRTFMime)) {
+        stringData = [pString dataUsingEncoding:NSASCIIStringEncoding];
+      } else {
+        stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
+      }
       unsigned int dataLength = [stringData length];
       void* clipboardDataPtr = malloc(dataLength);
       if (!clipboardDataPtr)
@@ -601,6 +608,8 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     type = (const NSString*)kUTTypeURL;
   } else if (dataFlavor.EqualsLiteral(kURLDescriptionMime)) {
     type = (const NSString*)kUTTypeURLName;
+  } else if (dataFlavor.EqualsLiteral(kRTFMime)) {
+    type = (const NSString*)kUTTypeRTF;
   }
   NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
   if (availableType && IsValidType(availableType, allowFileURL)) {
