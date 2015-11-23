@@ -1,0 +1,30 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMinYMin meet" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="whiteGradientStops">
+      <stop style="stop-color:#fff;stop-opacity:.95" offset="0"/>
+      <stop style="stop-color:#fff;stop-opacity:.75" offset=".45"/>
+      <stop style="stop-color:#fff;stop-opacity:.72" offset=".55"/>
+      <stop style="stop-color:#fff;stop-opacity:.65" offset="1"/>
+    </linearGradient>
+    <linearGradient x1="32" y1="0" x2="32" y2="62" id="whiteGradient" xlink:href="#whiteGradientStops" gradientUnits="userSpaceOnUse"/>
+    <linearGradient id="arrowGradientStops">
+      <stop style="stop-color:#333;stop-opacity:.5" offset="0"/>
+      <stop style="stop-color:#666;stop-opacity:.5" offset="1"/>
+    </linearGradient>
+    <linearGradient x1="32" y1="16" x2="32" y2="48" id="arrowGradient" xlink:href="#arrowGradientStops" gradientUnits="userSpaceOnUse"/>
+    <filter x="-0.15" y="-0.15" width="1.25" height="1.25" color-interpolation-filters="sRGB" id="dropShadow">
+      <feDropShadow dx="0" dy="1" flood-opacity="0.5"/>
+    </filter>
+    <mask id="dropShadowMask">
+      <path style="fill:#fff;" d="M47.285,30.991L23.75,17.24c-0.357-0.208-0.692-0.278-0.969-0.221 C22.32,17.115,22,17.555,22,18.252v27.499c0,1.112,0.797,1.568,1.75,1.011l23.535-13.748C48.238,32.458,48.238,31.547,47.285,30.991 z M0,0v64h64V0H0z M32,60C16.536,60,4,47.464,4,32S16.536,4,32,4s28,12.536,28,28S47.464,60,32,60z"/>
+    </mask>
+  </defs>
+  <path mask="url(#dropShadowMask)" id="playButtonShadow" style="filter:url(#dropShadow);" d="M32,4C16.536,4,4,16.536,4,32s12.536,28,28,28s28-12.536,28-28S47.464,4,32,4z M47.285,33.014 L23.75,46.762C22.797,47.319,22,46.863,22,45.751v-27.5c0-0.697,0.32-1.137,0.781-1.232c0.277-0.058,0.612,0.012,0.969,0.221 l23.535,13.751C48.238,31.546,48.238,32.458,47.285,33.014z"/>
+  <path id="playButtonArrow" style="fill:url(#arrowGradient);" d="M22.781,17.019C22.32,17.114,22,17.555,22,18.251v27.5c0,1.112,0.797,1.568,1.75,1.011 l23.535-13.748c0.953-0.556,0.953-1.467,0-2.023L23.75,17.24C23.393,17.031,23.058,16.961,22.781,17.019z"/>
+  <path id="playButton" style="fill:url(#whiteGradient);" d="M32,4C16.536,4,4,16.536,4,32s12.536,28,28,28s28-12.536,28-28S47.464,4,32,4z M47.285,33.014 L23.75,46.762C22.797,47.319,22,46.863,22,45.751v-27.5c0-0.697,0.32-1.137,0.781-1.232c0.277-0.058,0.612,0.012,0.969,0.221 l23.535,13.751C48.238,31.546,48.238,32.458,47.285,33.014z"/>
+  <path id="playButtonEdgeHighlights" style="fill:white;fill-opacity:.3;" d="M32,4C16.536,4,4,16.536,4,32s12.536,28,28,28s28-12.536,28-28S47.464,4,32,4z M32,59C17.112,59,5,46.888,5,32S17.112,5,32,5s27,12.112,27,27S46.888,59,32,59z M47.789,30.127l-23.534-13.75 C23.826,16.126,23.396,16,22.976,16c-0.135,0-0.27,0.014-0.398,0.041C21.62,16.238,21,17.106,21,18.251v27.5 C21,47.075,21.812,48,22.977,48c0.423,0,0.854-0.126,1.279-0.375L47.79,33.877c0.769-0.449,1.21-1.132,1.21-1.875 S48.559,30.576,47.789,30.127z M47.285,33.014L23.75,46.762C23.474,46.924,23.211,47,22.977,47C22.402,47,22,46.541,22,45.751v-27.5 c0-0.697,0.32-1.137,0.781-1.232L22.976,17c0.233,0,0.498,0.079,0.775,0.24l23.535,13.751 C48.238,31.546,48.238,32.458,47.285,33.014z"/>
+  <path id="playButtonTopEdgeHighlights" style="fill:white;fill-opacity:.8;" d="M32,4C16.536,4,4,16.536,4,32c0,0.167,0.01,0.333,0.013,0.5 C4.28,17.268,16.704,5,32,5c15.296,0,27.72,12.268,27.987,27.5C59.99,32.333,60,32.167,60,32C60,16.536,47.464,4,32,4z M47.285,33.014L23.75,46.762C22.797,47.319,22,46.863,22,45.751v1c0,1.112,0.797,1.568,1.75,1.011l23.535-13.748 c0.697-0.406,0.879-1.003,0.556-1.512C47.723,32.688,47.541,32.864,47.285,33.014z"/>
+</svg>

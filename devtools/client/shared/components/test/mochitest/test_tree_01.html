@@ -1,7 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Test focusing with the Tree component.
+Test trees get displayed with the items in correct order and at the correct
+depth.
 -->
 <head>
   <meta charset="utf-8">
@@ -13,46 +14,27 @@ Test focusing with the Tree component.
 <pre id="test">
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
-
 window.onload = Task.async(function* () {
   try {
-    const ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
-    const React = bRequire("devtools/client/shared/vendor/react");
-    const { Simulate } = React.addons.TestUtils;
-    const Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+
+    ok(React, "Should get React");
+    ok(Tree, "Should get Tree");
+
+    const t = Tree(TEST_TREE_INTERFACE);
+    ok(t, "Should be able to create Tree instances");
+
+    const tree = ReactDOM.render(t, window.document.body);
+    ok(tree, "Should be able to mount Tree instances");
 
     yield setState(tree, {
-      focused: "G",
       expanded: new Set("ABCDEFGHIJKLMNO".split(""))
     });
 
     isRenderedTree(document.body.textContent, [
       "A:false",
-      "-B:false",
-      "--E:false",
-      "---K:false",
-      "---L:false",
-      "--F:false",
-      "--G:true",
-      "-C:false",
-      "--H:false",
-      "--I:false",
-      "-D:false",
-      "--J:false",
-      "M:false",
-      "-N:false",
-      "--O:false",
-    ], "G should be focused");
-
-    // Click the first tree node
-    Simulate.click(document.querySelector(".tree-node"));
-
-    // Let the next render happen.
-    yield setState(tree, {});
-
-    isRenderedTree(document.body.textContent, [
-      "A:true",
       "-B:false",
       "--E:false",
       "---K:false",
@@ -67,7 +49,7 @@ window.onload = Task.async(function* () {
       "M:false",
       "-N:false",
       "--O:false",
-    ], "A should be focused");
+    ], "Should get the items rendered and indented as expected");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

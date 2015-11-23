@@ -1,4 +1,4 @@
-FROM          taskcluster/base-test:0.0.6
+FROM          taskcluster/base-test:0.1.2
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
@@ -17,9 +17,9 @@ RUN chmod u+x /home/worker/bin/buildbot_step
 RUN chmod u+x /usr/local/bin/linux64-minidump_stackwalk
 RUN apt-get install -y python-pip && pip install virtualenv;
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
-RUN npm install -g npm@^2.0.0
 RUN npm install -g taskcluster-vcs@2.3.12
-RUN npm install -g taskcluster-npm-cache@1.1.14
+RUN npm install -g taskcluster-npm-cache@1.3.1
+RUN npm install -g node-gyp
 RUN rm -Rf .cache && mkdir -p .cache
 ENV PATH $PATH:/home/worker/bin
 

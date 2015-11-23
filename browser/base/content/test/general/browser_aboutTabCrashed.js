@@ -70,7 +70,7 @@ function crashTabTestHelper(fieldValues, expectedExtra) {
     gBrowser,
     url: PAGE,
   }, function*(browser) {
-    let prefs = TabCrashReporter.prefs;
+    let prefs = TabCrashHandler.prefs;
     let originalSendReport = prefs.getBoolPref("sendReport");
     let originalEmailMe = prefs.getBoolPref("emailMe");
     let originalIncludeURL = prefs.getBoolPref("includeURL");

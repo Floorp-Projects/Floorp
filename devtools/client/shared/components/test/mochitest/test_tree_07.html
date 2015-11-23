@@ -16,9 +16,9 @@ Test that arrows get the open attribute when their item's children are expanded.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    const ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
-    const React = bRequire("devtools/client/shared/vendor/react");
-    const Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
     yield setProps(tree, {
