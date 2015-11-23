@@ -708,7 +708,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
       // When the mouse is outside the window we still want to handle dragging
       // but we won't find an APZC. Fallback to root APZC then.
-      if (!apzc) {
+      if (!apzc && mRootNode) {
         apzc = mRootNode->GetApzc();
       }
 
