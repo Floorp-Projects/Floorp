@@ -209,7 +209,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                         try:
                             proc.wait()
                             if proc.proc.returncode == 0:
-                                git_pull_complete = False
+                                git_pull_complete = True
                         except:
                             if proc.poll() is None:
                                 proc.kill(signal.SIGTERM)

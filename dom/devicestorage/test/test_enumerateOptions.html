@@ -18,12 +18,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup()
+devicestorage_setup(function () {
 
 storage = navigator.getDeviceStorage("pictures");
 
@@ -70,12 +70,11 @@ var cursor = storage.enumerate({"path": "a", "since": new Date(0) });
 } catch(e) {throws = true}
 ok(!throws, "enumerate object parameter with path");
 
+SimpleTest.finish()
 
+});
 
-
-devicestorage_cleanup()
 </script>
 </pre>
 </body>
 </html>
-

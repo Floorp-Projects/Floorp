@@ -12,7 +12,9 @@ for var in ('MOZILLA_EXTERNAL_LINKAGE', 'USE_FAKE_MEDIA_STREAMS', 'USE_FAKE_PCOB
     DEFINES[var] = True
 
 LOCAL_INCLUDES += [
-    '!/dom/bindings',
+    '!/dist/include/mozilla/dom', # Binding headers (because binding
+                                  # implementations include them).
+    '!/dom/bindings', # Binding implementations (urk).
     '/dom/media/',
     '/ipc/chromium/src',
     '/media/mtransport',

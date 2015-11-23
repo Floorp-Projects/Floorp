@@ -367,6 +367,9 @@ skip-if(Android) include ../xul/reftest/reftest.list
 # xul grid (no XUL theme on Android)
 skip-if(Android) include ../xul/grid/reftests/reftest.list
 
+# -webkit-gradient expressions
+include webkit-gradient/reftest.list
+
 # writing-mode
 include writing-mode/reftest.list
 

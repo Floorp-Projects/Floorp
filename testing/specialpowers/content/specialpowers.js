@@ -41,7 +41,6 @@ function SpecialPowers(window) {
                             "SpecialPowers.CreateFiles",
                             "SpecialPowers.RemoveFiles",
                             "SPPingService",
-                            "SPQuotaManager",
                             "SPLoadExtension",
                             "SPStartupExtension",
                             "SPUnloadExtension",

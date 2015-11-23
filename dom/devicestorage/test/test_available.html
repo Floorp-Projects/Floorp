@@ -22,16 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=834595
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 function availableSuccess(e) {
   isnot(e.target.result, null, "result should not be null");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function availableError(e) {
   ok(false, "availableError was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 var storage = navigator.getDeviceStorage("pictures");
@@ -41,6 +41,8 @@ ok(request, "Should have a non-null request");
 
 request.onsuccess = availableSuccess;
 request.onerror = availableError;
+
+});
 
 </script>
 </pre>

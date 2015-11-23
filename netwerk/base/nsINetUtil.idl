@@ -15,8 +15,11 @@ interface nsIPrefBranch;
 interface nsINetUtil : nsISupports
 {
   /**
-   * Parse a content-type request header and return the content type
-   * and charset (if any).
+   * Parse a Content-Type header value in strict mode.  This is a more
+   * conservative parser that reject things that violate RFC 7231 section
+   * 3.1.1.1.  This is typically useful for parsing Content-Type header values
+   * that are used for HTTP requests, and those that are used to make security
+   * decisions.
    *
    * @param aTypeHeader the header string to parse
    * @param [out] aCharset the charset parameter specified in the
@@ -29,8 +32,14 @@ interface nsINetUtil : nsISupports
                                       out boolean aHadCharset);
 
   /**
-   * Parse a content-type response header and return the content type
-   * and charset (if any).
+   * Parse a Content-Type header value in relaxed mode.  This is a more
+   * permissive parser that ignores things that go against RFC 7231 section
+   * 3.1.1.1.  This is typically useful for parsing Content-Type header values
+   * received from web servers where we want to make a best effort attempt
+   * at extracting a useful MIME type and charset.
+   *
+   * NOTE: DO NOT USE THIS if you're going to make security decisions
+   * based on the result.
    *
    * @param aTypeHeader the header string to parse
    * @param [out] aCharset the charset parameter specified in the

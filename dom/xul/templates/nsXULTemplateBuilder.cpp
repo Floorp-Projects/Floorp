@@ -225,23 +225,6 @@ nsXULTemplateBuilder::Uninit(bool aIsFinal)
     mQueriesCompiled = false;
 }
 
-static PLDHashOperator
-TraverseMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
-{
-    nsCycleCollectionTraversalCallback *cb =
-        static_cast<nsCycleCollectionTraversalCallback*>(aContext);
-
-    cb->NoteXPCOMChild(aKey);
-    nsTemplateMatch* match = aMatch;
-    while (match) {
-        cb->NoteXPCOMChild(match->GetContainer());
-        cb->NoteXPCOMChild(match->mResult);
-        match = match->mNext;
-    }
-
-    return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateBuilder)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateBuilder)
@@ -272,7 +255,17 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootResult)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mQueryProcessor)
-    tmp->mMatchMap.EnumerateRead(TraverseMatchList, &cb);
+
+    for (auto iter = tmp->mMatchMap.Iter(); !iter.Done(); iter.Next()) {
+        cb.NoteXPCOMChild(iter.Key());
+        nsTemplateMatch* match = iter.UserData();
+        while (match) {
+            cb.NoteXPCOMChild(match->GetContainer());
+            cb.NoteXPCOMChild(match->mResult);
+            match = match->mNext;
+        }
+    }
+
     {
       uint32_t i, count = tmp->mQuerySets.Length();
       for (i = 0; i < count; ++i) {
