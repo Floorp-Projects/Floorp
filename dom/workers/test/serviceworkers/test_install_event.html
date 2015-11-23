@@ -24,7 +24,7 @@
     ok(reg instanceof ServiceWorkerRegistration, "reg should be a ServiceWorkerRegistration");
     var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./install_event" });
     return p.then(function(swr) {
-      ok(reg.scope === swr.scope, "Scope for registrations should match.");
+      ok(reg === swr, "register should resolve to the same registration object");
       var update_found_promise = new Promise(function(resolve, reject) {
         swr.addEventListener('updatefound', function(e) {
           ok(true, "Received onupdatefound");

@@ -19,14 +19,10 @@ async_test(function(t) {
         return navigator.serviceWorker.register(worker_url, { scope: scope });
       })
     .then(function(new_registration) {
-        // FIXME: Bug 1201127 will fix scope vs object comparisons.
-        assert_not_equals(
-          registration, new_registration,
-          'register should resolve to the different registration');
-        assert_equals(new_registration.scope, registration.scope,
-                      'registrations should have the same scope');
-        assert_equals(new_registration.active.scriptURL, registration.active.scriptURL,
-                      'active workers should have same scriptURL');
+        assert_equals(new_registration, registration,
+                      'register should resolve to the same registration');
+        assert_equals(new_registration.active, registration.active,
+                      'register should resolve to the same worker');
         assert_equals(new_registration.active.state, 'activated',
                       'the worker should be in state "activated"');
         return registration.unregister();
@@ -52,10 +48,9 @@ async_test(function(t) {
             worker_url, { scope: scope });
       })
     .then(function(new_registration) {
-        // FIXME: Bug 1201127 will fix scope vs object comparisons.
         assert_not_equals(
           registration, new_registration,
-          'register should resolve to the different registration');
+          'register should resolve to a different registration');
         assert_equals(
           registration.scope, new_registration.scope,
           'registrations should have the same scope');
@@ -108,9 +103,8 @@ async_test(function(t) {
       })
     .then(function(registrations) {
         registrations.forEach(function(registration) {
-            // FIXME: Bug 1201127 will fix scope vs object comparisons.
-            assert_equals(registration.scope, registrations[0].scope,
-                          'register should resolve to registrations with the same scope');
+            assert_equals(registration, registrations[0],
+                          'register should resolve to the same registration');
           });
         return registrations[0].unregister();
       })

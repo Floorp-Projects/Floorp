@@ -680,8 +680,7 @@ public:
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
   {
     RefPtr<ServiceWorkerRegistrationMainThread> swr =
-      new ServiceWorkerRegistrationMainThread(mWindow,
-                                              NS_ConvertUTF8toUTF16(aInfo->mScope));
+      mWindow->GetServiceWorkerRegistration(NS_ConvertUTF8toUTF16(aInfo->mScope));
     mPromise->MaybeResolve(swr);
   }
 
@@ -1860,7 +1859,7 @@ public:
       }
 
       RefPtr<ServiceWorkerRegistrationMainThread> swr =
-        new ServiceWorkerRegistrationMainThread(mWindow, scope);
+        mWindow->GetServiceWorkerRegistration(scope);
 
       array.AppendElement(swr);
     }
@@ -1967,7 +1966,7 @@ public:
 
     NS_ConvertUTF8toUTF16 scope(registration->mScope);
     RefPtr<ServiceWorkerRegistrationMainThread> swr =
-      new ServiceWorkerRegistrationMainThread(mWindow, scope);
+      mWindow->GetServiceWorkerRegistration(scope);
     mPromise->MaybeResolve(swr);
 
     return NS_OK;
@@ -2229,7 +2228,7 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
   if (registration && registration->mActiveWorker) {
     NS_ConvertUTF8toUTF16 scope(registration->mScope);
     RefPtr<ServiceWorkerRegistrationMainThread> swr =
-      new ServiceWorkerRegistrationMainThread(aWindow, scope);
+      aWindow->GetServiceWorkerRegistration(scope);
     aPromise->MaybeResolve(swr);
     return true;
   }
@@ -3031,6 +3030,7 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
+  swm->NotifyServiceWorkerRegistrationRemoved(aRegistration);
 }
 
 void
@@ -3538,6 +3538,25 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
 
     if (utf8Scope.Equals(aRegistration->mScope)) {
       target->InvalidateWorkers(aWhichOnes);
+    }
+  }
+}
+
+void
+ServiceWorkerManager::NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration)
+{
+  AssertIsOnMainThread();
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
+  while (it.HasMore()) {
+    RefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
+    nsAutoString regScope;
+    target->GetScope(regScope);
+    MOZ_ASSERT(!regScope.IsEmpty());
+
+    NS_ConvertUTF16toUTF8 utf8Scope(regScope);
+
+    if (utf8Scope.Equals(aRegistration->mScope)) {
+      target->RegistrationRemoved();
     }
   }
 }
