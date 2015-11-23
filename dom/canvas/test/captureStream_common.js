@@ -28,7 +28,6 @@ CaptureStreamTestHelper.prototype = {
   blackTransparent: { data: [0, 0, 0, 0], name: "blackTransparent" },
   green: { data: [0, 255, 0, 255], name: "green" },
   red: { data: [255, 0, 0, 255], name: "red" },
-  grey: { data: [128, 128, 128, 255], name: "grey" },
 
   /* Default element size for createAndAppendElement() */
   elemWidth: 100,
