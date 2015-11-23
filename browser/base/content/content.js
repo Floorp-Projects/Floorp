@@ -380,7 +380,7 @@ var ClickEventHandler = {
       return;
     }
 
-    let [href, node] = this._hrefAndLinkNodeForClickEvent(event);
+    let [href, node, principal] = this._hrefAndLinkNodeForClickEvent(event);
 
     // get referrer attribute from clicked link and parse it
     // if per element referrer is enabled, the element referrer overrules
@@ -402,7 +402,7 @@ var ClickEventHandler = {
 
     if (href) {
       try {
-        BrowserUtils.urlSecurityCheck(href, node.ownerDocument.nodePrincipal);
+        BrowserUtils.urlSecurityCheck(href, principal);
       } catch (e) {
         return;
       }
@@ -488,10 +488,11 @@ var ClickEventHandler = {
    *
    * @param event
    *        The click event.
-   * @return [href, linkNode].
+   * @return [href, linkNode, linkPrincipal].
    *
    * @note linkNode will be null if the click wasn't on an anchor
-   *       element (or XLink).
+   *       element. This includes SVG links, because callers expect |node|
+   *       to behave like an <a> element, which SVG links (XLink) don't.
    */
   _hrefAndLinkNodeForClickEvent: function(event) {
     function isHTMLLink(aNode) {
@@ -507,7 +508,7 @@ var ClickEventHandler = {
     }
 
     if (node)
-      return [node.href, node];
+      return [node.href, node, node.ownerDocument.nodePrincipal];
 
     // If there is no linkNode, try simple XLink.
     let href, baseURI;
@@ -515,8 +516,10 @@ var ClickEventHandler = {
     while (node && !href) {
       if (node.nodeType == content.Node.ELEMENT_NODE) {
         href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-        if (href)
+        if (href) {
           baseURI = node.ownerDocument.baseURIObject;
+          break;
+        }
       }
       node = node.parentNode;
     }
@@ -524,7 +527,8 @@ var ClickEventHandler = {
     // In case of XLink, we don't return the node we got href from since
     // callers expect <a>-like elements.
     // Note: makeURI() will throw if aUri is not a valid URI.
-    return [href ? BrowserUtils.makeURI(href, null, baseURI).spec : null, null];
+    return [href ? BrowserUtils.makeURI(href, null, baseURI).spec : null, null,
+            node && node.ownerDocument.nodePrincipal];
   }
 };
 ClickEventHandler.init();
