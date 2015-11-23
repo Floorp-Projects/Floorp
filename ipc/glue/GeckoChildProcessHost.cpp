@@ -541,12 +541,15 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
                                           NS_GET_IID(nsIFile),
                                           getter_AddRefs(appDir));
       if (NS_SUCCEEDED(rv)) {
+#if defined(XP_WIN)
+        nsString path;
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(appDir->GetPath(path)));
+        aCmdLine.AppendLooseValue(UTF8ToWide("-appdir"));
+        std::wstring wpath = path.get();
+        aCmdLine.AppendLooseValue(wpath);
+#else
         nsAutoCString path;
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(appDir->GetNativePath(path)));
-#if defined(XP_WIN)
-        aCmdLine.AppendLooseValue(UTF8ToWide("-appdir"));
-        aCmdLine.AppendLooseValue(UTF8ToWide(path.get()));
-#else
         aCmdLine.push_back("-appdir");
         aCmdLine.push_back(path.get());
 #endif
