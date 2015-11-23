@@ -3334,8 +3334,7 @@ nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
 {
   if (!GetPrimaryFrame(Flush_Layout)) {
     nsIPresShell* presShell = nsComputedDOMStyle::GetPresShellForContent(this);
-    if (!presShell || !IsInComposedDoc() ||
-        IsOrHasAncestorWithDisplayNone(this, presShell)) {
+    if (!presShell || IsOrHasAncestorWithDisplayNone(this, presShell)) {
       GetTextContentInternal(aValue, aError);
       return;
     }
