@@ -1358,14 +1358,17 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
     // on them.
     MOZ_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
 
-    // This correspond to the case where we have build a fake exit frame in
-    // CodeGenerator.cpp which handle the case of a native function call. We
-    // need to mark the argument vector of the function call.
+    // This corresponds to the case where we have build a fake exit frame which
+    // handles the case of a native function call. We need to mark the argument
+    // vector of the function call, and also new.target if it was a constructing
+    // call.
     if (frame.isExitFrameLayout<NativeExitFrameLayout>()) {
         NativeExitFrameLayout* native = frame.exitFrame()->as<NativeExitFrameLayout>();
         size_t len = native->argc() + 2;
         Value* vp = native->vp();
         TraceRootRange(trc, len, vp, "ion-native-args");
+        if (frame.isExitFrameLayout<ConstructNativeExitFrameLayout>())
+            TraceRoot(trc, vp + len, "ion-native-new-target");
         return;
     }
 

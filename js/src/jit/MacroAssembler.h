@@ -654,6 +654,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // corresponds to.
     inline void enterFakeExitFrame(enum ExitFrameTokenValues token);
 
+    // Push an exit frame token for a native call.
+    inline void enterFakeExitFrameForNative(bool isConstructing);
+
     // Pop ExitFrame footer in addition to the extra frame.
     inline void leaveExitFrame(size_t extraFrame = 0);
 
