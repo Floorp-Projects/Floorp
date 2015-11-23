@@ -548,7 +548,7 @@ nsWindow::Create(nsIWidget* aParent,
                           nullptr : aParent;
 
   mIsTopWidgetWindow = (nullptr == baseParent);
-  mBounds = aRect.ToUnknownRect();
+  mBounds = aRect;
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
@@ -2030,7 +2030,7 @@ NS_METHOD nsWindow::GetBounds(LayoutDeviceIntRect& aRect)
     aRect.x = r.left;
     aRect.y = r.top;
   } else {
-    aRect = LayoutDeviceIntRect::FromUnknownRect(mBounds);
+    aRect = mBounds;
   }
   return NS_OK;
 }
@@ -2066,7 +2066,7 @@ NS_METHOD nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
     aRect.x = r.left;
     aRect.y = r.top;
   } else {
-    aRect = LayoutDeviceIntRect::FromUnknownRect(mBounds);
+    aRect = mBounds;
   }
   return NS_OK;
 }
