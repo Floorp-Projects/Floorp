@@ -1107,6 +1107,7 @@ class ScriptMixin(PlatformMixin):
                     self.info("Automation Error: mozprocess timed out after %s seconds running %s" % (str(output_timeout), str(command)))
 
                 p = ProcessHandler(command,
+                                   shell=shell,
                                    env=env,
                                    cwd=cwd,
                                    storeOutput=False,
