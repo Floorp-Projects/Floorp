@@ -79,11 +79,13 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.ButtonToast;
-import org.mozilla.gecko.widget.ButtonToast.ToastListener;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -107,6 +109,7 @@ import android.os.StrictMode;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -181,6 +184,7 @@ public class BrowserApp extends GeckoApp
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
+    private static final String HONEYCOMB_EOL_NOTIFIED = "honeycomb_eol_notified";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -730,6 +734,45 @@ public class BrowserApp extends GeckoApp
 
         ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
         mZoomedView = (ZoomedView) stub.inflate();
+    }
+
+    private void conditionallyNotifyHCEOL() {
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+        try {
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
+            if (!prefs.getBoolean(HONEYCOMB_EOL_NOTIFIED, false)) {
+
+                // Launch main App to load SUMO url on EOL notification.
+                final String link = getString(R.string.eol_notification_url,
+                                              AppConstants.MOZ_APP_VERSION,
+                                              AppConstants.OS_TARGET,
+                                              Locale.getDefault());
+
+                final Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+                intent.setData(Uri.parse(link));
+                final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                final Notification notification = new NotificationCompat.Builder(this)
+                        .setContentTitle(getString(R.string.eol_notification_title))
+                        .setContentText(getString(R.string.eol_notification_summary))
+                        .setSmallIcon(R.drawable.ic_status_logo)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent)
+                        .build();
+
+                final NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                final int notificationID = HONEYCOMB_EOL_NOTIFIED.hashCode();
+                notificationManager.notify(notificationID, notification);
+
+                GeckoSharedPrefs.forProfile(this)
+                                .edit()
+                                .putBoolean(HONEYCOMB_EOL_NOTIFIED, true)
+                                .apply();
+            }
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
     }
 
     /**
@@ -2352,6 +2395,10 @@ public class BrowserApp extends GeckoApp
         if (mMenu != null) {
             mMenu.clear();
             onCreateOptionsMenu(mMenu);
+        }
+
+        if (!Versions.preHC && !Versions.feature14Plus) {
+            conditionallyNotifyHCEOL();
         }
     }
 
