@@ -11,14 +11,12 @@ function arrayProtoOutOfRange() {
         a.__proto__ = {15: 1337};
         var b = [1, 2, 3, 4];
 
-        for (var i = 0; i < 1000; i++) {
+        for (var i = 0; i < 200; i++) {
             var r = f(i % 2 ? a : b);
             assertEq(r, i % 2 ? "number" : "undefined");
         }
     }
 
-    test();
-    test();
     test();
 }
 
