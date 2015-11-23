@@ -80,10 +80,6 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mShuttingDown) {
-    return;
-  }
-
   MediaDecoder::FirstFrameLoaded(aInfo, aEventVisibility);
 
   if (!CheckDecoderCanOffloadAudio()) {

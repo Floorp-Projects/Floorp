@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1182546
+-->
+<head>
+  <title>Bug 1182546 - Test block loading DTD from random page</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="testframe" src="bug_1182546.xml"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  // make sure the DTD loader (nsExpatDriver) prevents accessing chrome: from random pages
+  var childNodes = testframe.contentDocument.documentElement.childNodes;
+
+  // make sure '&savedLogins.title;' from bug_1182546.xml does not translate into 'Saved Logins'
+  // the URL 'chrome://passwordmgr/locale/passwordManager.dtd' should not be accessible from content
+  var nodeValue = childNodes[0].nodeValue;
+  isnot(nodeValue, "Saved Logins",
+        "expatDriver should prevent accessing &savedLogins.title;");
+  ok(nodeValue.startsWith("XML Parsing Error: undefined entity"),
+  	 "expatDriver should not allow accessing chrome:");
+});
+
+addLoadEvent(SimpleTest.finish);
+
+</script>
+</body>
+</html>

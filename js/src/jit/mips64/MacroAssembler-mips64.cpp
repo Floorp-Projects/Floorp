@@ -1471,6 +1471,14 @@ MacroAssemblerMIPS64Compat:: branchTestBoolean(Condition cond, Register tag, Lab
 }
 
 void
+MacroAssemblerMIPS64Compat::branchTestBoolean(Condition cond, const Address& address, Label* label)
+{
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_BOOLEAN), label, cond);
+}
+
+void
 MacroAssemblerMIPS64Compat::branchTestBoolean(Condition cond, const BaseIndex& src, Label* label)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);

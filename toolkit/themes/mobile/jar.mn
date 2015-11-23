@@ -1,0 +1,56 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+% skin global classic/1.0 %skin/classic/global/
+# These are the CSS files that must exist
++  skin/classic/global/autocomplete.css                    (global/empty.css)
++  skin/classic/global/button.css                          (global/empty.css)
++  skin/classic/global/checkbox.css                        (global/empty.css)
++  skin/classic/global/dialog.css                          (global/empty.css)
++  skin/classic/global/dropmarker.css                      (global/empty.css)
++  skin/classic/global/global.css                          (global/empty.css)
++  skin/classic/global/groupbox.css                        (global/empty.css)
++  skin/classic/global/listbox.css                         (global/empty.css)
++  skin/classic/global/menu.css                            (global/empty.css)
++  skin/classic/global/menulist.css                        (global/empty.css)
++  skin/classic/global/numberbox.css                       (global/empty.css)
++  skin/classic/global/popup.css                           (global/empty.css)
++  skin/classic/global/preferences.css                     (global/empty.css)
++  skin/classic/global/progressmeter.css                   (global/empty.css)
++  skin/classic/global/radio.css                           (global/empty.css)
++  skin/classic/global/resizer.css                         (global/empty.css)
++  skin/classic/global/richlistbox.css                     (global/empty.css)
++  skin/classic/global/scale.css                           (global/empty.css)
++  skin/classic/global/scrollbox.css                       (global/empty.css)
++  skin/classic/global/spinbuttons.css                     (global/empty.css)
++  skin/classic/global/splitter.css                        (global/empty.css)
++  skin/classic/global/tabbox.css                          (global/empty.css)
++  skin/classic/global/textbox.css                         (global/empty.css)
++  skin/classic/global/toolbar.css                         (global/empty.css)
++  skin/classic/global/toolbarbutton.css                   (global/empty.css)
++  skin/classic/global/tree.css                            (global/empty.css)
++  skin/classic/global/wizard.css                          (global/empty.css)
++  skin/classic/global/scrollbars.css                      (global/empty.css)
+
+   skin/classic/global/media/clicktoplay-bgtexture.png     (global/media/clicktoplay-bgtexture.png)
+   skin/classic/global/media/error.png                     (global/media/error.png)
+   skin/classic/global/media/throbber.png                  (global/media/throbber.png)
+   skin/classic/global/media/videoClickToPlayButton.svg    (global/media/videoClickToPlayButton.svg)
+
+   skin/classic/global/icons/Error.png                     (global/icons/Error.png)
+
+% skin mozapps classic/1.0 %skin/classic/mozapps/
++  skin/classic/mozapps/plugins/pluginProblem.css          (mozapps/plugins/pluginProblem.css)
+
+   skin/classic/mozapps/plugins/contentPluginActivate.png  (mozapps/plugins/contentPluginActivate.png)
+   skin/classic/mozapps/plugins/contentPluginBlocked.png   (mozapps/plugins/contentPluginBlocked.png)
+   skin/classic/mozapps/plugins/contentPluginClose.png     (mozapps/plugins/contentPluginClose.png)
+   skin/classic/mozapps/plugins/contentPluginCrashed.png   (mozapps/plugins/contentPluginCrashed.png)
+   skin/classic/mozapps/plugins/contentPluginDisabled.png  (mozapps/plugins/contentPluginDisabled.png)
+   skin/classic/mozapps/plugins/contentPluginDownload.png  (mozapps/plugins/contentPluginDownload.png)
+   skin/classic/mozapps/plugins/contentPluginMissing.png   (mozapps/plugins/contentPluginMissing.png)
+   skin/classic/mozapps/plugins/contentPluginStripe.png    (mozapps/plugins/contentPluginStripe.png)
+
+   skin/classic/mozapps/passwordmgr/key-16.png             (mozapps/passwordmgr/key-16.png)

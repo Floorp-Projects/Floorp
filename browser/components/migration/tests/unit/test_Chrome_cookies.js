@@ -28,11 +28,6 @@ add_task(function* () {
   // Migrate unencrypted cookies.
   yield promiseMigration(migrator, MigrationUtils.resourceTypes.COOKIES, PROFILE);
 
-  do_register_cleanup(() => {
-    ForgetAboutSite.removeDataFromDomain(COOKIE.host);
-    Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 0,
-                 "There are no cookies after cleanup");
-  });
   Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 1,
                "Migrated the expected number of unencrypted cookies");
   Assert.equal(Services.cookies.countCookiesFromHost("encryptedcookie.invalid"), 0,
@@ -46,4 +41,10 @@ add_task(function* () {
   for (let prop of Object.keys(COOKIE)) {
     Assert.equal(foundCookie[prop], COOKIE[prop], "Check cookie " + prop);
   }
+
+  // Cleanup.
+  ForgetAboutSite.removeDataFromDomain(COOKIE.host);
+  Assert.equal(Services.cookies.countCookiesFromHost(COOKIE.host), 0,
+               "There are no cookies after cleanup");
+
 });

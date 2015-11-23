@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script>
+  var worker = new Worker("https://example.com/tests/dom/workers/test/websocket_https_worker.js");
+
+  worker.onmessage = function(event) {
+    parent.postMessage(event.data, "*");
+  };
+
+  worker.onerror = function(event) {
+    parent.postMessage("error", "*");
+  };
+
+  worker.postMessage("start");
+</script>

@@ -92,6 +92,10 @@
 <p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>
 ">
 
+<!ENTITY forbiddenBlocked.title "Forbidden Site">
+<!ENTITY forbiddenBlocked.longDesc "<p>The browser prevented this page from loading because it is configured to block it.</p>
+">
+
 <!ENTITY securityOverride.linkText "Or you can add an exception…">
 <!ENTITY securityOverride.warningContent "
 <p>You should not add an exception if you are using an internet connection that you do not trust completely or if you are not used to seeing a warning for this server.</p>

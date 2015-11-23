@@ -134,12 +134,12 @@ function exceptions(key, value) {
 // workers for windows in this tab
 var keepAlive = new Map();
 
-process.port.on('sdk/worker/create', (process, options) => {
-  options.window = getByInnerId(options.windowId);
-  if (!options.window)
-    return;
-
+process.port.on('sdk/worker/create', (process, options, cpows) => {
+  options.window = cpows.window;
   let worker = new WorkerChild(options);
+
+  let frame = frames.getFrameForWindow(options.window.top);
+  frame.port.emit('sdk/worker/connect', options.id, options.window.location.href);
 });
 
 when(reason => {
