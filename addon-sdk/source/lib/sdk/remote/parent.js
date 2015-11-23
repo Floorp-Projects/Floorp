@@ -73,11 +73,27 @@ const ns = Namespace();
 
 var processMap = new Map();
 
-function processMessageReceived({ target, data }) {
+function definePort(obj, name) {
+  obj.port.emitCPOW = (event, args, cpows = {}) => {
+    let manager = ns(obj).messageManager;
+    if (!manager)
+      return;
+
+    let method = manager instanceof Ci.nsIMessageBroadcaster ?
+                 "broadcastAsyncMessage" : "sendAsyncMessage";
+
+    manager[method](name, { loaderID, event, args }, cpows);
+  };
+
+  obj.port.emit = (event, ...args) => obj.port.emitCPOW(event, args);
+}
+
+function messageReceived({ target, data }) {
+  // Ignore messages from other loaders
   if (data.loaderID != loaderID)
     return;
-  let [event, ...args] = data.args;
-  emit(this.port, event, this, ...args);
+
+  emit(this.port, data.event, this, ...data.args);
 }
 
 // Process represents a gecko process that can load webpages. Each process
@@ -90,18 +106,13 @@ const Process = Class({
     ns(this).id = id;
     ns(this).isRemote = isRemote;
     ns(this).messageManager = messageManager;
-    ns(this).messageReceived = processMessageReceived.bind(this);
+    ns(this).messageReceived = messageReceived.bind(this);
     this.destroy = this.destroy.bind(this);
     ns(this).messageManager.addMessageListener('sdk/remote/process/message', ns(this).messageReceived);
     ns(this).messageManager.addMessageListener('child-process-shutdown', this.destroy);
 
     this.port = new EventTarget();
-    this.port.emit = (...args) => {
-      ns(this).messageManager.sendAsyncMessage('sdk/remote/process/message', {
-        loaderID,
-        args
-      });
-    };
+    definePort(this, 'sdk/remote/process/message');
 
     // Load any remote modules
     for (let module of remoteModules.values())
@@ -132,14 +143,10 @@ const Processes = Class({
   extends: EventTarget,
   initialize: function() {
     EventParent.prototype.initialize.call(this);
+    ns(this).messageManager = ppmm;
 
     this.port = new EventTarget();
-    this.port.emit = (...args) => {
-      ppmm.broadcastAsyncMessage('sdk/remote/process/message', {
-        loaderID,
-        args
-      });
-    };
+    definePort(this, 'sdk/remote/process/message');
   },
 
   getById: function(id) {
@@ -149,13 +156,6 @@ const Processes = Class({
 var processes = exports.processes = new Processes();
 
 var frameMap = new Map();
-
-function frameMessageReceived({ target, data }) {
-  if (data.loaderID != loaderID)
-    return;
-  let [event, ...args] = data.args;
-  emit(this.port, event, this, ...args);
-}
 
 function setFrameProcess(frame, process) {
   ns(frame).process = process;
@@ -174,19 +174,11 @@ const Frame = Class({
     let frameLoader = node.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     ns(this).messageManager = frameLoader.messageManager;
 
-    ns(this).messageReceived = frameMessageReceived.bind(this);
+    ns(this).messageReceived = messageReceived.bind(this);
     ns(this).messageManager.addMessageListener('sdk/remote/frame/message', ns(this).messageReceived);
 
     this.port = new EventTarget();
-    this.port.emit = (...args) => {
-      let manager = ns(this).messageManager;
-      if (!manager)
-        return;
-      manager.sendAsyncMessage('sdk/remote/frame/message', {
-        loaderID,
-        args
-      });
-    };
+    definePort(this, 'sdk/remote/frame/message');
 
     frameMap.set(ns(this).messageManager, this);
   },
@@ -230,14 +222,10 @@ const FrameList = Class({
   extends: EventTarget,
   initialize: function() {
     EventParent.prototype.initialize.call(this);
+    ns(this).messageManager = gmm;
 
     this.port = new EventTarget();
-    this.port.emit = (...args) => {
-      gmm.broadcastAsyncMessage('sdk/remote/frame/message', {
-        loaderID,
-        args
-      });
-    };
+    definePort(this, 'sdk/remote/frame/message');
   },
 
   // Returns the frame for a browser element

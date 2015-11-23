@@ -8,15 +8,23 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = [ "TabCrashReporter", "PluginCrashReporter" ];
+this.EXPORTED_SYMBOLS = [ "TabCrashHandler", "PluginCrashReporter" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
+  "resource://gre/modules/RemotePageManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm");
 
-this.TabCrashReporter = {
+this.TabCrashHandler = {
+  _crashedTabCount: 0,
+
   get prefs() {
     delete this.prefs;
     return this.prefs = Services.prefs.getBranch("browser.tabs.crashReporting.");
@@ -27,11 +35,23 @@ this.TabCrashReporter = {
       return;
     this.initialized = true;
 
-    Services.obs.addObserver(this, "ipc:content-shutdown", false);
-    Services.obs.addObserver(this, "oop-frameloader-crashed", false);
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      Services.obs.addObserver(this, "ipc:content-shutdown", false);
+      Services.obs.addObserver(this, "oop-frameloader-crashed", false);
 
-    this.childMap = new Map();
-    this.browserMap = new WeakMap();
+      this.childMap = new Map();
+      this.browserMap = new WeakMap();
+    }
+
+    this.pageListener = new RemotePages("about:tabcrashed");
+    // LOAD_BACKGROUND pages don't fire load events, so the about:tabcrashed
+    // content will fire up its own message when its initial scripts have
+    // finished running.
+    this.pageListener.addMessageListener("Load", this.receiveMessage.bind(this));
+    this.pageListener.addMessageListener("RemotePage:Unload", this.receiveMessage.bind(this));
+    this.pageListener.addMessageListener("closeTab", this.receiveMessage.bind(this));
+    this.pageListener.addMessageListener("restoreTab", this.receiveMessage.bind(this));
+    this.pageListener.addMessageListener("restoreAll", this.receiveMessage.bind(this));
   },
 
   observe: function (aSubject, aTopic, aData) {
@@ -57,8 +77,45 @@ this.TabCrashReporter = {
     }
   },
 
+  receiveMessage: function(message) {
+    let browser = message.target.browser;
+    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+    let tab = gBrowser.getTabForBrowser(browser);
+
+    switch(message.name) {
+      case "Load": {
+        this.onAboutTabCrashedLoad(message);
+        break;
+      }
+
+      case "RemotePage:Unload": {
+        this.onAboutTabCrashedUnload(message);
+        break;
+      }
+
+      case "closeTab": {
+        this.maybeSendCrashReport(message);
+        gBrowser.removeTab(tab, { animate: true });
+        break;
+      }
+
+      case "restoreTab": {
+        this.maybeSendCrashReport(message);
+        SessionStore.reviveCrashedTab(tab);
+        break;
+      }
+
+      case "restoreAll": {
+        this.maybeSendCrashReport(message);
+        SessionStore.reviveAllCrashedTabs();
+        break;
+      }
+    }
+  },
+
   /**
-   * Submits a crash report from about:tabcrashed
+   * Submits a crash report from about:tabcrashed, if the crash
+   * reporter is enabled and a crash report can be found.
    *
    * @param aBrowser
    *        The <xul:browser> that the report was sent from.
@@ -82,36 +139,50 @@ this.TabCrashReporter = {
    *        Note that it is expected that all properties are set,
    *        even if they are empty.
    */
-  submitCrashReport: function (aBrowser, aFormData) {
-    let childID = this.browserMap.get(aBrowser.permanentKey);
+  maybeSendCrashReport(message) {
+    if (!AppConstants.MOZ_CRASHREPORTER)
+      return;
+
+    let browser = message.target.browser;
+
+    let childID = this.browserMap.get(browser.permanentKey);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
       return
 
+    if (!message.data.sendReport) {
+      this.prefs.setBoolPref("sendReport", false);
+      return;
+    }
+
+    let {
+      includeURL,
+      comments,
+      email,
+      emailMe,
+      URL,
+    } = message.data;
+
     CrashSubmit.submit(dumpID, {
       recordSubmission: true,
       extraExtraKeyVals: {
-        Comments: aFormData.comments,
-        Email: aFormData.email,
-        URL: aFormData.URL,
+        Comments: comments,
+        Email: email,
+        URL: URL,
       },
     }).then(null, Cu.reportError);
 
     this.prefs.setBoolPref("sendReport", true);
-    this.prefs.setBoolPref("includeURL", aFormData.includeURL);
-    this.prefs.setBoolPref("emailMe", aFormData.emailMe);
-    if (aFormData.emailMe) {
-      this.prefs.setCharPref("email", aFormData.email);
+    this.prefs.setBoolPref("includeURL", includeURL);
+    this.prefs.setBoolPref("emailMe", emailMe);
+    if (emailMe) {
+      this.prefs.setCharPref("email", email);
     } else {
       this.prefs.setCharPref("email", "");
     }
 
     this.childMap.set(childID, null); // Avoid resubmission.
     this.removeSubmitCheckboxesForSameCrash(childID);
-  },
-
-  dontSubmitCrashReport: function() {
-    this.prefs.setBoolPref("sendReport", false);
   },
 
   removeSubmitCheckboxesForSameCrash: function(childID) {
@@ -131,49 +202,81 @@ this.TabCrashReporter = {
 
         if (this.browserMap.get(browser.permanentKey) == childID) {
           this.browserMap.delete(browser.permanentKey);
-          browser.contentDocument.documentElement.classList.remove("crashDumpAvailable");
-          browser.contentDocument.documentElement.classList.add("crashDumpSubmitted");
+          let ports = this.pageListener.portsForBrowser(browser);
+          if (ports.length) {
+            // For about:tabcrashed, we don't expect subframes. We can
+            // assume sending to the first port is sufficient.
+            ports[0].sendAsyncMessage("CrashReportSent");
+          }
         }
       }
     }
   },
 
-  onAboutTabCrashedLoad: function (aBrowser, aParams) {
-    // If there was only one tab open that crashed, do not show the "restore all tabs" button
-    if (aParams.crashedTabCount == 1) {
-      this.hideRestoreAllButton(aBrowser);
+  onAboutTabCrashedLoad: function (message) {
+    this._crashedTabCount++;
+
+    // Broadcast to all about:tabcrashed pages a count of
+    // how many about:tabcrashed pages exist, so that they
+    // can decide whether or not to display the "Restore All
+    // Crashed Tabs" button.
+    this.pageListener.sendAsyncMessage("UpdateCount", {
+      count: this._crashedTabCount,
+    });
+
+    let browser = message.target.browser;
+
+    let dumpID = this.getDumpID(browser);
+    if (!dumpID) {
+      message.target.sendAsyncMessge("SetCrashReportAvailable", {
+        hasReport: false,
+      });
+      return;
     }
-
-    if (!this.childMap)
-      return;
-
-    let dumpID = this.childMap.get(this.browserMap.get(aBrowser.permanentKey));
-    if (!dumpID)
-      return;
-
-    let doc = aBrowser.contentDocument;
-
-    doc.documentElement.classList.add("crashDumpAvailable");
 
     let sendReport = this.prefs.getBoolPref("sendReport");
-    doc.getElementById("sendReport").checked = sendReport;
-
     let includeURL = this.prefs.getBoolPref("includeURL");
-    doc.getElementById("includeURL").checked = includeURL;
-
     let emailMe = this.prefs.getBoolPref("emailMe");
-    doc.getElementById("emailMe").checked = emailMe;
 
+    let data = { hasReport: true, sendReport, includeURL, emailMe };
     if (emailMe) {
-      let email = this.prefs.getCharPref("email", "");
-      doc.getElementById("email").value = email;
+      data.email = this.prefs.getCharPref("email", "");
     }
+
+    message.target.sendAsyncMessage("SetCrashReportAvailable", data);
   },
 
-  hideRestoreAllButton: function (aBrowser) {
-    aBrowser.contentDocument.getElementById("restoreAll").setAttribute("hidden", true);
-    aBrowser.contentDocument.getElementById("restoreTab").setAttribute("class", "primary");
-  }
+  onAboutTabCrashedUnload: function() {
+    if (!this._crashedTabCount) {
+      Cu.reportError("Can not decrement crashed tab count to below 0");
+      return;
+    }
+    this._crashedTabCount--;
+
+    // Broadcast to all about:tabcrashed pages a count of
+    // how many about:tabcrashed pages exist, so that they
+    // can decide whether or not to display the "Restore All
+    // Crashed Tabs" button.
+    this.pageListener.sendAsyncMessage("UpdateCount", {
+      count: this._crashedTabCount,
+    });
+  },
+
+  /**
+   * For some <xul:browser>, return a crash report dump ID for that browser
+   * if we have been informed of one. Otherwise, return null.
+   *
+   * @param browser (<xul:browser)
+   *        The browser to try to get the dump ID for
+   * @returns dumpID (String)
+   */
+  getDumpID(browser) {
+    if (!this.childMap) {
+      return null;
+    }
+
+    return this.childMap.get(this.browserMap.get(browser.permanentKey));
+  },
 }
 
 this.PluginCrashReporter = {

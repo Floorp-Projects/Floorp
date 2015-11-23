@@ -657,9 +657,9 @@ this.BrowserTestUtils = {
     });
 
     let aboutTabCrashedLoadPromise = new Promise((resolve, reject) => {
-      browser.addEventListener("AboutTabCrashedLoad", function onCrash() {
-        browser.removeEventListener("AboutTabCrashedLoad", onCrash, false);
-        dump("\nabout:tabcrashed loaded\n");
+      browser.addEventListener("AboutTabCrashedReady", function onCrash() {
+        browser.removeEventListener("AboutTabCrashedReady", onCrash, false);
+        dump("\nabout:tabcrashed loaded and ready\n");
         resolve();
       }, false, true);
     });

@@ -7,6 +7,7 @@
 const LOCAL_URI = "about:robots";
 const REMOTE_URI = "data:text/html;charset=utf-8,remote";
 
+const { Cu } = require('chrome');
 const { Loader } = require('sdk/test/loader');
 const { getTabs, openTab, closeTab, setTabURL, getBrowserForTab, getURI } = require('sdk/tabs/utils');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
@@ -46,6 +47,7 @@ exports["test process restart"] = function*(assert) {
   let tabs = getTabs(window);
   assert.equal(tabs.length, 1, "Should have just the one tab to start with");
   let tab = tabs[0];
+  let browser = getBrowserForTab(tab);
 
   let loader = new Loader(module);
   let { processes, frames } = yield waitForProcesses(loader);
@@ -59,6 +61,7 @@ exports["test process restart"] = function*(assert) {
   let frameDetach = promiseEventOnItemAndContainer(assert, remoteFrame, frames, 'detach');
   let frameAttach = promiseTabFrameAttach(frames);
   let processDetach = promiseEventOnItemAndContainer(assert, remoteProcess, processes, 'detach');
+  let browserLoad = promiseDOMEvent(browser, "load", true);
   setTabURL(tab, LOCAL_URI);
   // The load should kill the remote frame
   yield frameDetach;
@@ -67,10 +70,12 @@ exports["test process restart"] = function*(assert) {
   assert.equal(newFrame.process, localProcess, "New frame should be in the local process");
   // And kill the process
   yield processDetach;
+  yield browserLoad;
 
   frameDetach = promiseEventOnItemAndContainer(assert, newFrame, frames, 'detach');
   let processAttach = promiseEvent(processes, 'attach');
   frameAttach = promiseTabFrameAttach(frames);
+  browserLoad = promiseDOMEvent(browser, "load", true);
   setTabURL(tab, REMOTE_URI);
   // The load should kill the remote frame
   yield frameDetach;
@@ -80,8 +85,11 @@ exports["test process restart"] = function*(assert) {
   // And create a new frame in the remote process
   [newFrame] = yield frameAttach;
   assert.equal(newFrame.process, remoteProcess, "New frame should be in the remote process");
+  yield browserLoad;
 
+  browserLoad = promiseDOMEvent(browser, "load", true);
   setTabURL(tab, "about:blank");
+  yield browserLoad;
 
   loader.unload();
 };
@@ -534,6 +542,33 @@ exports["test cannot load in wrong loader"] = function*(assert) {
   }
 
   loader.unload();
+};
+
+exports["test send cpow"] = function*(assert) {
+  if (!isE10S) {
+    assert.pass("Skipping test in non-e10s mode");
+    return;
+  }
+
+  let window = getMostRecentBrowserWindow();
+
+  let tabs = getTabs(window);
+  assert.equal(tabs.length, 1, "Should have just the one tab to start with");
+  let tab = tabs[0];
+  let browser = getBrowserForTab(tab);
+
+  assert.ok(Cu.isCrossProcessWrapper(browser.contentWindow),
+            "Should have a CPOW for the browser content window");
+
+  let loader = new Loader(module);
+  let { processes } = yield waitForProcesses(loader);
+
+  processes.port.emitCPOW('sdk/test/cpow', ['foobar'], { window: browser.contentWindow });
+  let [process, arg, id] = yield promiseEvent(processes.port, 'sdk/test/cpow');
+
+  assert.ok(process.isRemote, "Response should come from the remote process");
+  assert.equal(arg, "foobar", "Argument should have passed through");
+  assert.equal(id, browser.outerWindowID, "Should have got the ID from the child");
 };
 
 after(exports, function*(name, assert) {

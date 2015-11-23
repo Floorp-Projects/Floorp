@@ -42,6 +42,7 @@ add_task(function* test_flush() {
 add_task(function* test_crash() {
   // Create new tab.
   let tab = gBrowser.addTab(URL);
+  gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 

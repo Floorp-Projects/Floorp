@@ -9,6 +9,7 @@ const { processID } = require('sdk/system/runtime');
 const system = require('sdk/system/events');
 const { Cu } = require('chrome');
 const { isChildLoader } = require('sdk/remote/core');
+const { getOuterId } = require('sdk/window/utils');
 
 function log(str) {
   console.log("remote[" + loaderID + "][" + processID + "]: " + str);
@@ -121,4 +122,8 @@ frames.port.on('sdk/test/registerframeevent', (frame) => {
 
 frames.port.on('sdk/test/unregisterframeevent', (frame) => {
   frame.removeEventListener("Test:Event", listener, true);
+});
+
+process.port.on('sdk/test/cpow', (process, arg, cpows) => {
+  process.port.emit('sdk/test/cpow', arg, getOuterId(cpows.window));
 });
