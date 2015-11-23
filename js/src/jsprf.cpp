@@ -1010,10 +1010,8 @@ JS_PUBLIC_API(uint32_t)
 JS_vsnprintf(char* out, uint32_t outlen, const char* fmt, va_list ap)
 {
     SprintfState ss;
-    uint32_t n;
 
-    MOZ_ASSERT(int32_t(outlen) > 0);
-    if (int32_t(outlen) <= 0)
+    if (outlen == 0)
         return 0;
 
     ss.stuff = LimitStuff;
@@ -1022,12 +1020,19 @@ JS_vsnprintf(char* out, uint32_t outlen, const char* fmt, va_list ap)
     ss.maxlen = outlen;
     (void) dosprintf(&ss, fmt, ap);
 
-    /* If we added chars, and we didn't append a null, do it now. */
-    if (ss.cur != ss.base && ss.cur[-1] != '\0')
-        ss.cur[-1] = '\0';
+    uint32_t charsWritten = ss.cur - ss.base;
+    MOZ_ASSERT(charsWritten > 0);
 
-    n = ss.cur - ss.base;
-    return n ? n - 1 : n;
+    // If we didn't append a null then we must have hit the buffer limit. Write
+    // a null terminator now and return a value indicating that we failed.
+    if (ss.cur[-1] != '\0') {
+        ss.cur[-1] = '\0';
+        return outlen;
+    }
+
+    // Success: return the number of character written excluding the null
+    // terminator.
+    return charsWritten - 1;
 }
 
 JS_PUBLIC_API(char*)
