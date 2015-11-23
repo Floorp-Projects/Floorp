@@ -487,13 +487,48 @@ class RelocationIterator
 static JitCode*
 CodeFromJump(JitCode* code, uint8_t* jump)
 {
-    Instruction* branch = (Instruction*)jump;
+    const Instruction* inst = (const Instruction*)jump;
     uint8_t* target;
-    // If this is a toggled branch, and is currently off, then we have some 'splainin
-    if (branch->BranchType() == vixl::UnknownBranchType)
-        target = (uint8_t*)branch->Literal64();
-    else
-        target = (uint8_t*)branch->ImmPCOffsetTarget();
+
+    // We're expecting a call created by MacroAssembler::call(JitCode*).
+    // It looks like:
+    //
+    //   ldr scratch, [pc, offset]
+    //   blr scratch
+    //
+    // If the call has been toggled by ToggleCall(), it looks like:
+    //
+    //   adr xzr, [pc, offset]
+    //   nop
+    //
+    // There might be a constant pool at the very first instruction.
+    // See also ToggleCall().
+    inst = inst->skipPool();
+
+    // Skip the stack pointer restore instruction.
+    if (inst->IsStackPtrSync())
+        inst = inst->InstructionAtOffset(vixl::kInstructionSize)->skipPool();
+
+    if (inst->BranchType() != vixl::UnknownBranchType) {
+        // This is an immediate branch.
+        target = (uint8_t*)inst->ImmPCOffsetTarget();
+    } else if (inst->IsLDR()) {
+        // This is an ldr+blr call that is enabled. See ToggleCall().
+        mozilla::DebugOnly<const Instruction*> nextInst =
+          inst->InstructionAtOffset(vixl::kInstructionSize)->skipPool();
+        MOZ_ASSERT(nextInst->IsNOP() || nextInst->IsBLR());
+        target = (uint8_t*)inst->Literal64();
+    } else if (inst->IsADR()) {
+        // This is a disabled call: adr+nop. See ToggleCall().
+        mozilla::DebugOnly<const Instruction*> nextInst =
+          inst->InstructionAtOffset(vixl::kInstructionSize)->skipPool();
+        MOZ_ASSERT(nextInst->IsNOP());
+        ptrdiff_t offset = inst->ImmPCRawOffset() << vixl::kLiteralEntrySizeLog2;
+        // This is what Literal64 would do with the corresponding ldr.
+        memcpy(&target, inst + offset, sizeof(target));
+    } else {
+        MOZ_CRASH("Unrecognized jump instruction.");
+    }
 
     // If the jump is within the code buffer, it uses the extended jump table.
     if (target >= code->raw() && target < code->raw() + code->instructionsSize()) {
