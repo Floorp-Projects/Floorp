@@ -7,6 +7,7 @@
 #ifndef nsBaseHashtable_h__
 #define nsBaseHashtable_h__
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "nsTHashtable.h"
@@ -19,7 +20,6 @@
 enum PLDHashOperator
 {
   PL_DHASH_NEXT = 0,          // enumerator says continue
-  PL_DHASH_STOP = 1,          // enumerator says stop
   PL_DHASH_REMOVE = 2         // enumerator says remove
 };
 
@@ -162,9 +162,7 @@ public:
    * @param aKey the key being enumerated
    * @param aData data being enumerated
    * @param aUserArg passed unchanged from Enumerate
-   * @return either
-   *   @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink or
-   *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
+   * @return @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink
    */
   typedef PLDHashOperator (*EnumReadFunction)(KeyType aKey,
                                               UserDataType aData,
@@ -181,12 +179,10 @@ public:
     uint32_t n = 0;
     for (auto iter = this->mTable.ConstIter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<EntryType*>(iter.Get());
-      PLDHashOperator op = aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
+      mozilla::DebugOnly<PLDHashOperator> op =
+        aEnumFunc(entry->GetKey(), entry->mData, aUserArg);
       n++;
       MOZ_ASSERT(!(op & PL_DHASH_REMOVE));
-      if (op & PL_DHASH_STOP) {
-        break;
-      }
     }
     return n;
   }
@@ -198,9 +194,8 @@ public:
    *        nsInterfaceHashtable this is an nsCOMPtr reference...
    * @parm aUserArg passed unchanged from Enumerate
    * @return bitflag combination of
-   *   @link PLDHashOperator::PL_DHASH_REMOVE @endlink,
-   *   @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink, or
-   *   @link PLDHashOperator::PL_DHASH_STOP PL_DHASH_STOP @endlink
+   *   @link PLDHashOperator::PL_DHASH_REMOVE @endlink or
+   *   @link PLDHashOperator::PL_DHASH_NEXT PL_DHASH_NEXT @endlink
    */
   typedef PLDHashOperator (*EnumFunction)(KeyType aKey,
                                           DataType& aData,
@@ -222,9 +217,6 @@ public:
       n++;
       if (op & PL_DHASH_REMOVE) {
         iter.Remove();
-      }
-      if (op & PL_DHASH_STOP) {
-        break;
       }
     }
     return n;

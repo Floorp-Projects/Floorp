@@ -117,6 +117,8 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 
   if (avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     NS_WARNING("Couldn't initialise ffmpeg decoder");
+    avcodec_close(mCodecContext);
+    av_freep(&mCodecContext);
     return NS_ERROR_FAILURE;
   }
 

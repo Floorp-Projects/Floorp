@@ -26,51 +26,6 @@
 
 namespace js {
 
-inline bool
-ComputeThis(JSContext* cx, AbstractFramePtr frame)
-{
-    MOZ_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
-
-    if (frame.isFunctionFrame() && frame.fun()->isArrow()) {
-        /*
-         * Arrow functions store their (lexical) |this| value in an
-         * extended slot.
-         */
-        frame.thisValue() = frame.fun()->getExtendedSlot(0);
-        return true;
-    }
-
-    if (frame.isModuleFrame()) {
-        MOZ_ASSERT(frame.thisValue().isUndefined());
-        return true;
-    }
-
-    if (frame.thisValue().isObject())
-        return true;
-    RootedValue thisv(cx, frame.thisValue());
-    if (frame.isFunctionFrame()) {
-        if (frame.fun()->strict() || frame.fun()->isSelfHostedBuiltin())
-            return true;
-        /*
-         * Eval function frames have their own |this| slot, which is a copy of the function's
-         * |this| slot. If we lazily wrap a primitive |this| in an eval function frame, the
-         * eval's frame will get the wrapper, but the function's frame will not. To prevent
-         * this, we always wrap a function's |this| before pushing an eval frame, and should
-         * thus never see an unwrapped primitive in a non-strict eval function frame. Null
-         * and undefined |this| values will unwrap to the same object in the function and
-         * eval frames, so are not required to be wrapped.
-         */
-        MOZ_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
-    }
-
-    RootedValue result(cx);
-    if (!BoxNonStrictThis(cx, thisv, &result))
-        return false;
-
-    frame.thisValue() = result;
-    return true;
-}
-
 /*
  * Every possible consumer of MagicValue(JS_OPTIMIZED_ARGUMENTS) (as determined
  * by ScriptAnalysis::needsArgsObj) must check for these magic values and, when

@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=934368
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.7">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 let gStorage = null;
 let gTestCount = 0;
@@ -93,7 +93,7 @@ function runNextTests() {
   function runTests() {
     function cbError(e) {
       ok(false, "Should not arrive at cbError! Error: " + e.name);
-      devicestorage_cleanup();
+      SimpleTest.finish();
     }
 
     function cbSuccess(r) {
@@ -116,7 +116,7 @@ function runNextTests() {
         testNextRemove();
       }, function() {
         ok(false, "Failed to get test files.");
-        devicestorage_cleanup();
+        SimpleTest.finish();
       });
     }, cbError);
   };
@@ -124,7 +124,7 @@ function runNextTests() {
     runTests();
   }, function() {
     ok(false, "Failed to created test files.");
-    devicestorage_cleanup();
+    SimpleTest.finish();
   });
 }
 
@@ -156,7 +156,7 @@ function testNextRemove() {
     return;
   }
 
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
@@ -168,8 +168,9 @@ ok(gStorage, "Should have gotten a storage.");
 gRemoveDeep = true;
 runNextTests();
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

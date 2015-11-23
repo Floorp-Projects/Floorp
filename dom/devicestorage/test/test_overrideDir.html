@@ -17,12 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
 var gData = "My name is Doug Turner.  My IRC nick is DougT.  I like Maple cookies."
@@ -31,12 +31,12 @@ var gFileReader = new FileReader();
 
 function getAfterDeleteSuccess(e) {
   ok(false, "file was deleted not successfully");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function getAfterDeleteError(e) {
   ok(true, "file was deleted successfully");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function deleteSuccess(e) {
@@ -54,7 +54,7 @@ function deleteSuccess(e) {
 
 function deleteError(e) {
   ok(false, "deleteError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function getSuccess(e) {
@@ -92,7 +92,7 @@ function readerCallback(e) {
 
 function getError(e) {
   ok(false, "getError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
@@ -123,7 +123,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function startTest() {
@@ -156,8 +156,9 @@ try {
     });
 } catch(e) {}
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

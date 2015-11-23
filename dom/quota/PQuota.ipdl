@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PQuotaRequest;
+include protocol PQuotaUsageRequest;
+
+include PBackgroundSharedTypes;
+
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using mozilla::dom::quota::PersistenceType
+  from "mozilla/dom/quota/PersistenceType.h";
+
+namespace mozilla {
+namespace dom {
+namespace quota {
+
+struct UsageParams
+{
+  PrincipalInfo principalInfo;
+};
+
+union UsageRequestParams
+{
+  UsageParams;
+};
+
+struct ClearOriginParams
+{
+  PrincipalInfo principalInfo;
+  PersistenceType persistenceType;
+  bool persistenceTypeIsExplicit;
+};
+
+struct ClearAppParams
+{
+  uint32_t appId;
+  bool browserOnly;
+};
+
+struct ClearAllParams
+{
+};
+
+struct ResetAllParams
+{
+};
+
+union RequestParams
+{
+  ClearOriginParams;
+  ClearAppParams;
+  ClearAllParams;
+  ResetAllParams;
+};
+
+protocol PQuota
+{
+  manager PBackground;
+
+  manages PQuotaRequest;
+  manages PQuotaUsageRequest;
+
+parent:
+  __delete__();
+
+  PQuotaUsageRequest(UsageRequestParams params);
+
+  PQuotaRequest(RequestParams params);
+
+  StartIdleMaintenance();
+
+  StopIdleMaintenance();
+};
+
+} // namespace quota
+} // namespace dom
+} // namespace mozilla

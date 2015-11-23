@@ -18,13 +18,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=786922
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=786922">Mozilla Bug 786922</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 function add(storage, mime) {
   dump("adding: " + mime + "\n");
@@ -40,18 +40,18 @@ var tests = [
 
 function fail(e) {
   ok(false, "onerror was called");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function next(e) {
 
   if (e != undefined)
     ok(true, "addError was called");
-  
+
   var f = tests.pop();
 
   if (f == undefined) {
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
@@ -62,8 +62,9 @@ function next(e) {
 
 next();
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

@@ -56,8 +56,8 @@ ToJSValue(JSContext* aCx,
   MOZ_ASSERT(!aArgument.IsUncatchableException(),
              "Doesn't make sense to convert uncatchable exception to a JS value!");
   AutoForceSetExceptionOnContext forceExn(aCx);
-  DebugOnly<bool> throwResult = ThrowMethodFailed(aCx, aArgument);
-  MOZ_ASSERT(!throwResult);
+  DebugOnly<bool> throwResult = aArgument.MaybeSetPendingException(aCx);
+  MOZ_ASSERT(throwResult);
   DebugOnly<bool> getPendingResult = JS_GetPendingException(aCx, aValue);
   MOZ_ASSERT(getPendingResult);
   JS_ClearPendingException(aCx);

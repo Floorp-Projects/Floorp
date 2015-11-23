@@ -5,7 +5,7 @@
 Components.utils.import("resource:///modules/SitePermissions.jsm");
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
-const nsIQuotaManager = Components.interfaces.nsIQuotaManager;
+const nsIQuotaManagerService = Components.interfaces.nsIQuotaManagerService;
 
 var gPermURI;
 var gUsageRequest;
@@ -186,13 +186,15 @@ function initIndexedDBRow()
 
   row.appendChild(extras);
 
-  var quotaManager = Components.classes["@mozilla.org/dom/quota/manager;1"]
-                               .getService(nsIQuotaManager);
+  var quotaManagerService =
+    Components.classes["@mozilla.org/dom/quota-manager-service;1"]
+              .getService(nsIQuotaManagerService);
   let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                             .getService(Components.interfaces.nsIScriptSecurityManager)
                             .createCodebasePrincipal(gPermURI, {});
   gUsageRequest =
-    quotaManager.getUsageForPrincipal(principal, onIndexedDBUsageCallback);
+    quotaManagerService.getUsageForPrincipal(principal,
+                                             onIndexedDBUsageCallback);
 
   var status = document.getElementById("indexedDBStatus");
   var button = document.getElementById("indexedDBClear");
@@ -208,8 +210,8 @@ function onIndexedDBClear()
                             .getService(Components.interfaces.nsIScriptSecurityManager)
                             .createCodebasePrincipal(gPermURI, {});
 
-  Components.classes["@mozilla.org/dom/quota/manager;1"]
-            .getService(nsIQuotaManager)
+  Components.classes["@mozilla.org/dom/quota-manager-service;1"]
+            .getService(nsIQuotaManagerService)
             .clearStoragesForPrincipal(principal);
 
   Components.classes["@mozilla.org/serviceworkers/manager;1"]
@@ -220,14 +222,14 @@ function onIndexedDBClear()
   initIndexedDBRow();
 }
 
-function onIndexedDBUsageCallback(principal, usage, fileUsage)
+function onIndexedDBUsageCallback(request)
 {
-  let uri = principal.URI;
+  let uri = request.principal.URI;
   if (!uri.equals(gPermURI)) {
     throw new Error("Callback received for bad URI: " + uri);
   }
 
-  if (usage) {
+  if (request.usage) {
     if (!("DownloadUtils" in window)) {
       Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
     }
@@ -237,7 +239,7 @@ function onIndexedDBUsageCallback(principal, usage, fileUsage)
 
     status.value =
       gBundle.getFormattedString("indexedDBUsage",
-                                 DownloadUtils.convertByteUnits(usage));
+                                 DownloadUtils.convertByteUnits(request.usage));
     status.removeAttribute("hidden");
     button.removeAttribute("hidden");
   }

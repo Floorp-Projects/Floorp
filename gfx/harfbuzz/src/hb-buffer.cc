@@ -91,6 +91,11 @@ hb_buffer_t::enlarge (unsigned int size)
 {
   if (unlikely (in_error))
     return false;
+  if (unlikely (size > max_len))
+  {
+    in_error = true;
+    return false;
+  }
 
   unsigned int new_allocated = allocated;
   hb_glyph_position_t *new_pos = NULL;
@@ -198,6 +203,7 @@ hb_buffer_t::clear (void)
 
   hb_segment_properties_t default_props = HB_SEGMENT_PROPERTIES_DEFAULT;
   props = default_props;
+  scratch_flags = HB_BUFFER_SCRATCH_FLAG_DEFAULT;
 
   content_type = HB_BUFFER_CONTENT_TYPE_INVALID;
   in_error = false;
@@ -318,7 +324,9 @@ hb_buffer_t::replace_glyphs (unsigned int num_in,
 			     unsigned int num_out,
 			     const uint32_t *glyph_data)
 {
-  if (unlikely (!make_room_for (num_in, num_out))) return;
+  if (unlikely (!make_room_for (num_in, num_out)))
+    goto done;
+  {
 
   merge_clusters (idx, idx + num_in);
 
@@ -331,39 +339,50 @@ hb_buffer_t::replace_glyphs (unsigned int num_in,
     pinfo++;
   }
 
-  idx  += num_in;
   out_len += num_out;
+  }
+done:
+  idx  += num_in;
 }
 
 void
 hb_buffer_t::output_glyph (hb_codepoint_t glyph_index)
 {
-  if (unlikely (!make_room_for (0, 1))) return;
+  if (unlikely (!make_room_for (0, 1)))
+    goto done;
 
   out_info[out_len] = info[idx];
   out_info[out_len].codepoint = glyph_index;
 
   out_len++;
+done:
+  ;
 }
 
 void
 hb_buffer_t::output_info (const hb_glyph_info_t &glyph_info)
 {
-  if (unlikely (!make_room_for (0, 1))) return;
+  if (unlikely (!make_room_for (0, 1)))
+    goto done;
 
   out_info[out_len] = glyph_info;
 
   out_len++;
+done:
+  ;
 }
 
 void
 hb_buffer_t::copy_glyph (void)
 {
-  if (unlikely (!make_room_for (0, 1))) return;
+  if (unlikely (!make_room_for (0, 1)))
+    goto done;
 
   out_info[out_len] = info[idx];
 
   out_len++;
+done:
+  ;
 }
 
 bool
@@ -381,7 +400,7 @@ hb_buffer_t::move_to (unsigned int i)
   if (out_len < i)
   {
     unsigned int count = i - out_len;
-    if (unlikely (!make_room_for (count, count))) return false;
+    if (unlikely (!make_room_for (count, count))) return false; // XXX verify bailout
 
     memmove (out_info + out_len, info + idx, count * sizeof (out_info[0]));
     idx += count;
@@ -408,13 +427,15 @@ void
 hb_buffer_t::replace_glyph (hb_codepoint_t glyph_index)
 {
   if (unlikely (out_info != info || out_len != idx)) {
-    if (unlikely (!make_room_for (1, 1))) return;
+    if (unlikely (!make_room_for (1, 1)))
+      goto out;
     out_info[out_len] = info[idx];
   }
   out_info[out_len].codepoint = glyph_index;
 
-  idx++;
   out_len++;
+out:
+  idx++;
 }
 
 
@@ -714,6 +735,8 @@ hb_buffer_create (void)
   if (!(buffer = hb_object_create<hb_buffer_t> ()))
     return hb_buffer_get_empty ();
 
+  buffer->max_len = HB_BUFFER_MAX_LEN_DEFAULT;
+
   buffer->reset ();
 
   return buffer;
@@ -738,6 +761,8 @@ hb_buffer_get_empty (void)
     HB_BUFFER_FLAG_DEFAULT,
     HB_BUFFER_CLUSTER_LEVEL_DEFAULT,
     HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
+    HB_BUFFER_SCRATCH_FLAG_DEFAULT,
+    HB_BUFFER_MAX_LEN_DEFAULT,
 
     HB_BUFFER_CONTENT_TYPE_INVALID,
     HB_SEGMENT_PROPERTIES_DEFAULT,

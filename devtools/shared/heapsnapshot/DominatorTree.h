@@ -6,6 +6,7 @@
 #ifndef mozilla_devtools_DominatorTree__
 #define mozilla_devtools_DominatorTree__
 
+#include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RefCounted.h"
@@ -25,13 +26,17 @@ protected:
 
 private:
   JS::ubi::DominatorTree mDominatorTree;
+  RefPtr<HeapSnapshot> mHeapSnapshot;
 
 public:
-  explicit DominatorTree(JS::ubi::DominatorTree&& aDominatorTree, nsISupports* aParent)
+  explicit DominatorTree(JS::ubi::DominatorTree&& aDominatorTree, HeapSnapshot* aHeapSnapshot,
+                         nsISupports* aParent)
     : mParent(aParent)
     , mDominatorTree(Move(aDominatorTree))
+    , mHeapSnapshot(aHeapSnapshot)
   {
     MOZ_ASSERT(aParent);
+    MOZ_ASSERT(aHeapSnapshot);
   };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
@@ -42,7 +47,11 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  // readonly attribute NodeId root
   uint64_t Root() const { return mDominatorTree.root().identifier(); }
+
+  // [Throws] NodeSize getRetainedSize(NodeId node)
+  dom::Nullable<uint64_t> GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv);
 };
 
 } // namespace devtools

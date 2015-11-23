@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823965
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
 var gData = "My name is Doug Turner (?!?).  My IRC nick is DougT.  I like Maple cookies."
@@ -43,11 +43,11 @@ function getSuccess(e) {
     var dreq = storage2.delete(mreq.result.name);
     dreq.onerror = function () {
       ok(true, "The bug has been fixed");
-      devicestorage_cleanup();
+      SimpleTest.finish();
     };
     dreq.onsuccess = function () {
       ok(false, "The bug has been fixed");
-      devicestorage_cleanup();
+      SimpleTest.finish();
     };
   };
 
@@ -56,7 +56,7 @@ function getSuccess(e) {
 
 function getError(e) {
   ok(false, "getError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 function addSuccess(e) {
@@ -85,7 +85,7 @@ function addSuccess(e) {
 
 function addError(e) {
   ok(false, "addError was called : " + e.target.error.name);
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
@@ -99,8 +99,9 @@ ok(request, "Should have a non-null request");
 request.onsuccess = addSuccess;
 request.onerror = addError;
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

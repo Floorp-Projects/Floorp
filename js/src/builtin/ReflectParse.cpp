@@ -2985,7 +2985,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 
         RootedValue callee(cx);
         if (pn->isKind(PNK_SUPERCALL)) {
-            MOZ_ASSERT(next->isKind(PNK_POSHOLDER));
+            MOZ_ASSERT(next->isKind(PNK_SUPERBASE));
             if (!builder.super(&next->pn_pos, &callee))
                 return false;
         } else {
@@ -3215,6 +3215,12 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                identifier(targetStr, &pn->pn_right->pn_pos, &targetIdent) &&
                builder.metaProperty(newIdent, targetIdent, &pn->pn_pos, dst);
       }
+
+      case PNK_SETTHIS:
+        // SETTHIS is used to assign the result of a super() call to |this|.
+        // It's not part of the original AST, so just forward to the call.
+        MOZ_ASSERT(pn->pn_left->isKind(PNK_NAME));
+        return expression(pn->pn_right, dst);
 
       default:
         LOCAL_NOT_REACHED("unexpected expression type");

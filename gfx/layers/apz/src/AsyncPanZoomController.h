@@ -243,6 +243,17 @@ public:
   Matrix4x4 GetTransformToLastDispatchedPaint() const;
 
   /**
+   * Returns the number of CSS pixels of checkerboard according to the metrics
+   * in this APZC.
+   */
+  uint32_t GetCheckerboardMagnitude() const;
+
+  /**
+   * Report the number of CSSPixel-milliseconds of checkerboard to telemetry.
+   */
+  void ReportCheckerboard(const TimeStamp& aSampleTime);
+
+  /**
    * Returns whether or not the APZC is currently in a state of checkerboarding.
    * This is a simple computation based on the last-painted content and whether
    * the async transform has pushed it so far that it doesn't fully contain the
@@ -713,6 +724,9 @@ private:
   // The last time the compositor has sampled the content transform for this
   // frame.
   TimeStamp mLastSampleTime;
+
+  // The last sample time at which we submitted a checkerboarding report.
+  TimeStamp mLastCheckerboardReport;
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).

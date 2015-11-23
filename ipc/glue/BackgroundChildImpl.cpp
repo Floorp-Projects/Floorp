@@ -17,7 +17,9 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
+#include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/NuwaChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
@@ -166,6 +168,23 @@ BackgroundChildImpl::AllocPBackgroundIDBFactoryChild(
 bool
 BackgroundChildImpl::DeallocPBackgroundIDBFactoryChild(
                                              PBackgroundIDBFactoryChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
+}
+
+BackgroundChildImpl::PBackgroundIndexedDBUtilsChild*
+BackgroundChildImpl::AllocPBackgroundIndexedDBUtilsChild()
+{
+  MOZ_CRASH("PBackgroundIndexedDBUtilsChild actors should be manually "
+            "constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
+                                         PBackgroundIndexedDBUtilsChild* aActor)
 {
   MOZ_ASSERT(aActor);
 
@@ -412,6 +431,21 @@ BackgroundChildImpl::DeallocPAsmJSCacheEntryChild(PAsmJSCacheEntryChild* aActor)
   MOZ_ASSERT(aActor);
 
   dom::asmjscache::DeallocEntryChild(aActor);
+  return true;
+}
+
+BackgroundChildImpl::PQuotaChild*
+BackgroundChildImpl::AllocPQuotaChild()
+{
+  MOZ_CRASH("PQuotaChild actor should be manually constructed!");
+}
+
+bool
+BackgroundChildImpl::DeallocPQuotaChild(PQuotaChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
   return true;
 }
 

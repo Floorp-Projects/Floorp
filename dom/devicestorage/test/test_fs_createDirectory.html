@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-devicestorage_setup();
+devicestorage_setup(function () {
 
 // The root directory object.
 var gRoot;
@@ -59,7 +59,7 @@ function getSuccess(d) {
       // Create directory with an existing path.
       gRoot.createDirectory(gPath).then(function(what) {
         ok(false, "Should not overwrite an existing directory.");
-        devicestorage_cleanup();
+        SimpleTest.finish();
       }, function(e) {
         ok(true, "Creating directory should fail if it already exists.");
 
@@ -73,10 +73,10 @@ function getSuccess(d) {
       // Create the parent directory.
       d.createDirectory('..').then(function(what) {
         ok(false, "Should not overwrite an existing directory.");
-        devicestorage_cleanup();
+        SimpleTest.finish();
       }, function(e) {
         ok(true, "Accessing parent directory with '..' is not allowed.");
-        devicestorage_cleanup();
+        SimpleTest.finish();
       });
       break;
   }
@@ -85,7 +85,7 @@ function getSuccess(d) {
 
 function cbError(e) {
   ok(false, e.name + " error should not arrive here!");
-  devicestorage_cleanup();
+  SimpleTest.finish();
 }
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
@@ -98,8 +98,10 @@ ok(promise, "Should have a non-null promise for getRoot.");
 
 gName = storage.storageName;
 promise.then(getSuccess, cbError);
+
+});
+
 </script>
 </pre>
 </body>
 </html>
-
