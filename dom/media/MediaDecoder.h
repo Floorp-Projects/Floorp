@@ -610,17 +610,6 @@ private:
   // change. Call on the main thread only.
   virtual void ChangeState(PlayState aState);
 
-  // Called when the metadata from the media file has been loaded by the
-  // state machine. Call on the main thread only.
-  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                              nsAutoPtr<MetadataTags> aTags,
-                              MediaDecoderEventVisibility aEventVisibility) override;
-
-  // Called when the first audio and/or video from the media file has been loaded
-  // by the state machine. Call on the main thread only.
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                MediaDecoderEventVisibility aEventVisibility) override;
-
   // Called from MetadataLoaded(). Creates audio tracks and adds them to its
   // owner's audio track list, and implies to video tracks respectively.
   // Call on the main thread only.
@@ -750,6 +739,12 @@ private:
 
 protected:
   virtual ~MediaDecoder();
+
+  // Called when the first audio and/or video from the media file has been loaded
+  // by the state machine. Call on the main thread only.
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
+                                MediaDecoderEventVisibility aEventVisibility);
+
   void SetStateMachineParameters();
 
   static void DormantTimerExpired(nsITimer *aTimer, void *aClosure);
@@ -815,6 +810,12 @@ protected:
   RefPtr<MediaResource> mResource;
 
 private:
+  // Called when the metadata from the media file has been loaded by the
+  // state machine. Call on the main thread only.
+  void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
+                      nsAutoPtr<MetadataTags> aTags,
+                      MediaDecoderEventVisibility aEventVisibility);
+
   MediaEventSource<void>*
   DataArrivedEvent() override { return &mDataArrivedEvent; }
 
@@ -935,6 +936,9 @@ protected:
 
   // A listener to receive metadata updates from MDSM.
   MediaEventListener mTimedMetadataListener;
+
+  MediaEventListener mMetadataLoadedListener;
+  MediaEventListener mFirstFrameLoadedListener;
 
 protected:
   // Whether the state machine is shut down.

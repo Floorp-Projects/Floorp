@@ -98,9 +98,6 @@ public:
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 
-  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo, nsAutoPtr<MetadataTags> aTags, MediaDecoderEventVisibility aEventVisibility) = 0;
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo, MediaDecoderEventVisibility aEventVisibility) = 0;
-
   // Returns the owner of this media decoder. The owner should only be used
   // on the main thread.
   virtual MediaDecoderOwner* GetOwner() = 0;
@@ -132,58 +129,6 @@ public:
   // Observe and it should never be called directly.
   NS_IMETHOD Observe(nsISupports *aSubject, const char * aTopic, const char16_t * aData) override
   { MOZ_CRASH("Forbidden method"); return NS_OK; }
-};
-
-class MetadataContainer
-{
-protected:
-  MetadataContainer(AbstractMediaDecoder* aDecoder,
-                    nsAutoPtr<MediaInfo> aInfo,
-                    nsAutoPtr<MetadataTags> aTags,
-                    MediaDecoderEventVisibility aEventVisibility)
-    : mDecoder(aDecoder),
-      mInfo(aInfo),
-      mTags(aTags),
-      mEventVisibility(aEventVisibility)
-  {}
-
-  RefPtr<AbstractMediaDecoder> mDecoder;
-  nsAutoPtr<MediaInfo>  mInfo;
-  nsAutoPtr<MetadataTags> mTags;
-  MediaDecoderEventVisibility mEventVisibility;
-};
-
-class MetadataEventRunner : public nsRunnable, private MetadataContainer
-{
-public:
-  MetadataEventRunner(AbstractMediaDecoder* aDecoder,
-                      nsAutoPtr<MediaInfo> aInfo,
-                      nsAutoPtr<MetadataTags> aTags,
-                      MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
-    : MetadataContainer(aDecoder, aInfo, aTags, aEventVisibility)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    mDecoder->MetadataLoaded(mInfo, mTags, mEventVisibility);
-    return NS_OK;
-  }
-};
-
-class FirstFrameLoadedEventRunner : public nsRunnable, private MetadataContainer
-{
-public:
-  FirstFrameLoadedEventRunner(AbstractMediaDecoder* aDecoder,
-                              nsAutoPtr<MediaInfo> aInfo,
-                              MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable)
-    : MetadataContainer(aDecoder, aInfo, nsAutoPtr<MetadataTags>(nullptr), aEventVisibility)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    mDecoder->FirstFrameLoaded(mInfo, mEventVisibility);
-    return NS_OK;
-  }
 };
 
 } // namespace mozilla

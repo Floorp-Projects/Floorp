@@ -41,12 +41,6 @@ public:
   virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   virtual layers::ImageContainer* GetImageContainer() final override;
 
-  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                              nsAutoPtr<MetadataTags> aTags,
-                              MediaDecoderEventVisibility aEventVisibility) final override;
-  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                MediaDecoderEventVisibility aEventVisibility) final override;
-
   virtual MediaDecoderOwner* GetOwner() final override;
 
 private:
