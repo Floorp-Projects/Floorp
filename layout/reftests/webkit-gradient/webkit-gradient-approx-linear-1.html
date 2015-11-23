@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: -webkit-gradient(linear, ...) expressions which we don't render
+    quite correctly because they can't easily be represented with modern syntax.
+  </title>
+  <style>
+    div {
+      border: 1px solid black;
+      width:  50px;
+      height: 30px;
+      margin: 1px;
+      float: left;
+
+      /* We include a fallback background, to easily distinguish failures at
+       * parse time (which fall back to this value) vs. something later on. */
+      background: red;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- Start point and end point are the same: -->
+  <div style="background: -webkit-gradient(linear, left top, left top,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, 40 40, 40 40,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, center center, center center,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Gradient starting and/or ending somewhere in the middle (not an edge): -->
+  <div style="background: -webkit-gradient(linear, center center, right top,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left top, center center,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, 10 15, 5 20,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Gradient starting and/or ending somewhere arbitrary outside: -->
+  <div style="background: -webkit-gradient(linear, -10 -15, left top,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, -100 10, 20 30,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, 10 -100, 100 10,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <!-- Slanted gradient between sides/corners: -->
+  <div style="background: -webkit-gradient(linear, center top, left center,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left center, center top,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, right center, center top,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+  <div style="background: -webkit-gradient(linear, right top, center bottom,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left top, right bottom,
+                                           from(blue), to(yellow))"></div>
+  <div style="background: -webkit-gradient(linear, left bottom, right top,
+                                           from(blue), to(yellow))"></div>
+  <br>
+
+</body>
+</html>

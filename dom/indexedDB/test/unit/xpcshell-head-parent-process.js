@@ -231,8 +231,8 @@ function resetOrClearAllDatabases(callback, clear) {
     throw new Error("clearAllDatabases not implemented for child processes!");
   }
 
-  let quotaManager = Cc["@mozilla.org/dom/quota/manager;1"]
-                       .getService(Ci.nsIQuotaManager);
+  let quotaManagerService = Cc["@mozilla.org/dom/quota-manager-service;1"]
+                              .getService(Ci.nsIQuotaManagerService);
 
   const quotaPref = "dom.quotaManager.testing";
 
@@ -243,11 +243,13 @@ function resetOrClearAllDatabases(callback, clear) {
 
   SpecialPowers.setBoolPref(quotaPref, true);
 
+  let request;
+
   try {
     if (clear) {
-      quotaManager.clear();
+      request = quotaManagerService.clear();
     } else {
-      quotaManager.reset();
+      request = quotaManagerService.reset();
     }
   } catch(e) {
     if (oldPrefValue !== undefined) {
@@ -258,15 +260,7 @@ function resetOrClearAllDatabases(callback, clear) {
     throw e;
   }
 
-  let uri = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService)
-              .newURI("http://foo.com", null, null);
-  let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .createCodebasePrincipal(uri, {});
-  quotaManager.getUsageForPrincipal(principal, function(principal, usage, fileUsage) {
-    callback();
-  });
+  request.callback = callback;
 }
 
 function resetAllDatabases(callback) {

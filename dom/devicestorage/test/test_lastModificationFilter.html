@@ -17,13 +17,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 SimpleTest.requestFlakyTimeout("untriaged");
-devicestorage_setup();
+devicestorage_setup(function () {
+
 // We put the old files in 2 levels deep. When you add a file to a directory
 // it will modify the parents last modification time, but not the parents
 // parents. So we want to make sure that even though x's timestamp is earlier
@@ -44,7 +45,7 @@ function verifyAndDelete(prefix, files, e) {
     ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
     dump("We still have length = " + files.length + "\n");
     dump(files + "\n");
-    devicestorage_cleanup();
+    SimpleTest.finish();
     return;
   }
 
@@ -86,12 +87,12 @@ function addFile(filename, callback) {
     }
     getReq.onerror = function(e) {
       ok(false, "getError was called : " + e.target.error.name);
-      devicestorage_cleanup();
+      SimpleTest.finish();
     };
   }
   addReq.onerror = function(e) {
     ok(false, "addError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   }
 }
 
@@ -115,7 +116,7 @@ function delFile(filename, callback) {
   };
   req.onerror = function(e) {
     ok(false, "delError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   };
 }
 
@@ -129,7 +130,7 @@ function afterNewFiles() {
   };
   cursor.onerror = function (e) {
     ok(false, "handleError was called : " + e.target.error.name);
-    devicestorage_cleanup();
+    SimpleTest.finish();
   };
 }
 
@@ -167,8 +168,9 @@ function addOldFiles() {
 
 addOldFiles();
 
+});
+
 </script>
 </pre>
 </body>
 </html>
-

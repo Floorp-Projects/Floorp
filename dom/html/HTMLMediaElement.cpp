@@ -2409,6 +2409,7 @@ HTMLMediaElement::WakeLockRelease()
   if (mWakeLock) {
     ErrorResult rv;
     mWakeLock->Unlock(rv);
+    rv.SuppressException();
     mWakeLock = nullptr;
   }
 }
@@ -4773,6 +4774,11 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
 
   // If we are seeking, we consider it as playing
   if (mPlayingThroughTheAudioChannelBeforeSeek) {
+    return true;
+  }
+
+  // If we are playing an external stream.
+  if (mSrcAttrStream) {
     return true;
   }
 

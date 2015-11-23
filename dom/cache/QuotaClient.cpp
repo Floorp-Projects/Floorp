@@ -10,6 +10,7 @@
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsThreadUtils.h"
@@ -23,6 +24,7 @@ using mozilla::dom::quota::Client;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::UsageInfo;
+using mozilla::ipc::AssertIsOnBackgroundThread;
 
 static nsresult
 GetBodyUsage(nsIFile* aDir, UsageInfo* aUsageInfo)
@@ -175,9 +177,9 @@ public:
   virtual void
   AbortOperations(const nsACString& aOrigin) override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnBackgroundThread();
 
-    Manager::AbortOnMainThread(aOrigin);
+    Manager::Abort(aOrigin);
   }
 
   virtual void
@@ -195,22 +197,26 @@ public:
   }
 
   virtual void
-  PerformIdleMaintenance() override
+  StartIdleMaintenance() override
+  { }
+
+  virtual void
+  StopIdleMaintenance() override
   { }
 
   virtual void
   ShutdownWorkThreads() override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnBackgroundThread();
 
     // spins the event loop and synchronously shuts down all Managers
-    Manager::ShutdownAllOnMainThread();
+    Manager::ShutdownAll();
   }
 
 private:
   ~CacheQuotaClient()
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnBackgroundThread();
   }
 
   NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, override)
@@ -224,6 +230,8 @@ namespace cache {
 
 already_AddRefed<quota::Client> CreateQuotaClient()
 {
+  AssertIsOnBackgroundThread();
+
   RefPtr<CacheQuotaClient> ref = new CacheQuotaClient();
   return ref.forget();
 }

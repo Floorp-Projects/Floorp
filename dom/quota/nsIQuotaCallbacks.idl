@@ -1,0 +1,22 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIQuotaRequest;
+interface nsIQuotaUsageRequest;
+
+[scriptable, function, uuid(c8a21a2a-17b9-4b63-ad95-e0fbcff5de18)]
+interface nsIQuotaUsageCallback : nsISupports
+{
+  void onUsageResult(in nsIQuotaUsageRequest aRequest);
+};
+
+[scriptable, function, uuid(a08a28e2-5a74-4c84-8070-ed45a07eb013)]
+interface nsIQuotaCallback : nsISupports
+{
+  void onComplete(in nsIQuotaRequest aRequest);
+};

@@ -4,14 +4,45 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/devtools/DominatorTree.h"
+
+#include "js/Debug.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/DominatorTreeBinding.h"
 
 namespace mozilla {
 namespace devtools {
 
+dom::Nullable<uint64_t>
+DominatorTree::GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv)
+{
+  JS::ubi::Node::Id id(aNodeId);
+  auto node = mHeapSnapshot->getNodeById(id);
+  if (node.isNothing())
+    return dom::Nullable<uint64_t>();
+
+  auto ccrt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(ccrt);
+  auto rt = ccrt->Runtime();
+  MOZ_ASSERT(rt);
+  auto mallocSizeOf = JS::dbg::GetDebuggerMallocSizeOf(rt);
+  MOZ_ASSERT(mallocSizeOf);
+
+  JS::ubi::Node::Size size = 0;
+  if (!mDominatorTree.getRetainedSize(*node, mallocSizeOf, size)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return dom::Nullable<uint64_t>();
+  }
+
+  MOZ_ASSERT(size != 0,
+             "The node should not have been unknown since we got it from the heap snapshot.");
+  return dom::Nullable<uint64_t>(size);
+}
+
+
 /*** Cycle Collection Boilerplate *****************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DominatorTree, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DominatorTree, mParent, mHeapSnapshot)
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DominatorTree)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DominatorTree)
 

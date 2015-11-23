@@ -2958,10 +2958,16 @@ var BrowserOnClick = {
   onAboutBlocked: function (elementId, reason, isTopFrame, location) {
     // Depending on what page we are displaying here (malware/phishing/unwanted)
     // use the right strings and links for each.
-    let bucketName = "WARNING_PHISHING_PAGE_";
+    let bucketName = "";
+    let sendTelemetry = false;
     if (reason === 'malware') {
+      sendTelemetry = true;
       bucketName = "WARNING_MALWARE_PAGE_";
+    } else if (reason === 'phishing') {
+      sendTelemetry = true;
+      bucketName = "WARNING_PHISHING_PAGE_";
     } else if (reason === 'unwanted') {
+      sendTelemetry = true;
       bucketName = "WARNING_UNWANTED_PAGE_";
     }
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
@@ -2969,7 +2975,9 @@ var BrowserOnClick = {
     bucketName += isTopFrame ? "TOP_" : "FRAME_";
     switch (elementId) {
       case "getMeOutButton":
-        secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
+        if (sendTelemetry) {
+          secHistogram.add(nsISecTel[bucketName + "GET_ME_OUT_OF_HERE"]);
+        }
         getMeOutOfHere();
         break;
 
@@ -2979,13 +2987,16 @@ var BrowserOnClick = {
 
         // We log even if malware/phishing/unwanted info URL couldn't be found:
         // the measurement is for how many users clicked the WHY BLOCKED button
-        secHistogram.add(nsISecTel[bucketName + "WHY_BLOCKED"]);
-
+        if (sendTelemetry) {
+          secHistogram.add(nsISecTel[bucketName + "WHY_BLOCKED"]);
+        }
         openHelpLink("phishing-malware", false, "current");
         break;
 
       case "ignoreWarningButton":
-        secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+        if (sendTelemetry) {
+          secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+        }
         this.ignoreWarningButton(reason);
         break;
     }
@@ -3054,6 +3065,8 @@ var BrowserOnClick = {
       title = gNavigatorBundle.getString("safebrowsing.reportedUnwantedSite");
       // There is no button for reporting errors since Google doesn't currently
       // provide a URL endpoint for these reports.
+    } else {
+      return; // no notifications for forbidden sites
     }
 
     let notificationBox = gBrowser.getNotificationBox();

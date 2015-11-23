@@ -6,6 +6,17 @@
 
 /**
  * A struct for tracking exceptions that need to be thrown to JS.
+ *
+ * Conceptually, an ErrorResult represents either success or an exception in the
+ * process of being thrown.  This means that a failing ErrorResult _must_ be
+ * handled in one of the following ways before coming off the stack:
+ *
+ * 1) Suppressed via SuppressException().
+ * 2) Converted to a pure nsresult return value via StealNSResult().
+ * 3) Converted to an actual pending exception on a JSContext via
+ *    MaybeSetPendingException.
+ * 4) Converted to an exception JS::Value (probably to then reject a Promise
+ *    with) via dom::ToJSValue.
  */
 
 #ifndef mozilla_ErrorResult_h
@@ -61,14 +72,14 @@ struct StringArrayAppender
   }
 
   template<typename... Ts>
-  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString* aFirst, Ts... aOtherArgs)
+  static void Append(nsTArray<nsString>& aArgs, uint16_t aCount, const nsAString& aFirst, Ts&&... aOtherArgs)
   {
     if (aCount == 0) {
       MOZ_ASSERT(false, "There should not be more string arguments provided than are required by the ErrNum.");
       return;
     }
-    aArgs.AppendElement(*aFirst);
-    Append(aArgs, aCount - 1, aOtherArgs...);
+    aArgs.AppendElement(aFirst);
+    Append(aArgs, aCount - 1, Forward<Ts>(aOtherArgs)...);
   }
 };
 
@@ -87,8 +98,9 @@ public:
 
 #ifdef DEBUG
   ~ErrorResult() {
-    MOZ_ASSERT_IF(IsErrorWithMessage(), !mMessage);
-    MOZ_ASSERT_IF(IsDOMException(), !mDOMExceptionInfo);
+    // Consumers should have called one of MaybeSetPendingException
+    // (possibly via ToJSValue), StealNSResult, and SuppressException
+    MOZ_ASSERT(!Failed());
     MOZ_ASSERT(!mMightHaveUnreportedJSException);
     MOZ_ASSERT(mUnionState == HasNothing);
   }
@@ -134,33 +146,71 @@ public:
     return rv;
   }
 
-  template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowTypeError(Ts... messageArgs)
+  // Use MaybeSetPendingException to convert an ErrorResult to a pending
+  // exception on the given JSContext.  This is the normal "throw an exception"
+  // codepath.
+  //
+  // The return value is false if the ErrorResult represents success, true
+  // otherwise.  This does mean that in JSAPI method implementations you can't
+  // just use this as |return rv.MaybeSetPendingException(cx)| (though you could
+  // |return !rv.MaybeSetPendingException(cx)|), but in practice pretty much any
+  // consumer would want to do some more work on the success codepath.  So
+  // instead the way you use this is:
+  //
+  //   if (rv.MaybeSetPendingException(cx)) {
+  //     bail out here
+  //   }
+  //   go on to do something useful
+  //
+  // The success path is inline, since it should be the common case and we don't
+  // want to pay the price of a function call in some of the consumers of this
+  // method in the common case.
+  //
+  // Note that a true return value does NOT mean there is now a pending
+  // exception on aCx, due to uncatchable exceptions.  It should still be
+  // considered equivalent to a JSAPI failure in terms of what callers should do
+  // after true is returned.
+  //
+  // After this call, the ErrorResult will no longer return true from Failed(),
+  // since the exception will have moved to the JSContext.
+  bool MaybeSetPendingException(JSContext* cx)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR, messageArgs...);
+    WouldReportJSException();
+    if (!Failed()) {
+      return false;
+    }
+
+    SetPendingException(cx);
+    return true;
   }
 
   template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowRangeError(Ts... messageArgs)
+  void ThrowTypeError(Ts&&... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR, messageArgs...);
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR,
+                                       Forward<Ts>(messageArgs)...);
   }
 
-  void ReportErrorWithMessage(JSContext* cx);
+  template<dom::ErrNum errorNumber, typename... Ts>
+  void ThrowRangeError(Ts&&... messageArgs)
+  {
+    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR,
+                                       Forward<Ts>(messageArgs)...);
+  }
+
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
   // Facilities for throwing a preexisting JS exception value via this
   // ErrorResult.  The contract is that any code which might end up calling
   // ThrowJSException() must call MightThrowJSException() even if no exception
-  // is being thrown.  Code that would call ReportJSException or
-  // StealJSException as needed must first call WouldReportJSException even if
+  // is being thrown.  Code that conditionally calls ToJSValue on this
+  // ErrorResult only if Failed() must first call WouldReportJSException even if
   // this ErrorResult has not failed.
   //
   // The exn argument to ThrowJSException can be in any compartment.  It does
   // not have to be in the compartment of cx.  If someone later uses it, they
   // will wrap it into whatever compartment they're working in, as needed.
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
-  void ReportJSException(JSContext* cx);
   bool IsJSException() const { return ErrorCode() == NS_ERROR_DOM_JS_EXCEPTION; }
 
   // Facilities for throwing a DOMException.  If an empty message string is
@@ -169,7 +219,6 @@ public:
   // passed in must be one we create DOMExceptions for; otherwise you may get an
   // XPConnect Exception.
   void ThrowDOMException(nsresult rv, const nsACString& message = EmptyCString());
-  void ReportDOMException(JSContext* cx);
   bool IsDOMException() const { return ErrorCode() == NS_ERROR_DOM_DOMEXCEPTION; }
 
   // Flag on the ErrorResult that whatever needs throwing has been
@@ -183,10 +232,6 @@ public:
     return ErrorCode() == NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT;
   }
 
-  // Report a generic error.  This should only be used if we're not
-  // some more specific exception type.
-  void ReportGenericError(JSContext* cx);
-
   // Support for uncatchable exceptions.
   void ThrowUncatchableException() {
     Throw(NS_ERROR_UNCATCHABLE_EXCEPTION);
@@ -194,11 +239,6 @@ public:
   bool IsUncatchableException() const {
     return ErrorCode() == NS_ERROR_UNCATCHABLE_EXCEPTION;
   }
-
-  // StealJSException steals the JS Exception from the object. This method must
-  // be called only if IsJSException() returns true. This method also resets the
-  // error code to NS_OK.
-  void StealJSException(JSContext* cx, JS::MutableHandle<JS::Value> value);
 
   void MOZ_ALWAYS_INLINE MightThrowJSException()
   {
@@ -264,7 +304,7 @@ private:
   nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
 
   template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowErrorWithMessage(nsresult errorType, Ts... messageArgs)
+  void ThrowErrorWithMessage(nsresult errorType, Ts&&... messageArgs)
   {
 #if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
     static_assert(dom::ErrorFormatNumArgs[errorNumber] == sizeof...(messageArgs),
@@ -275,7 +315,8 @@ private:
 
     nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
-    dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
+    dom::StringArrayAppender::Append(messageArgsArray, argCount,
+                                     Forward<Ts>(messageArgs)...);
 #ifdef DEBUG
     mUnionState = HasMessage;
 #endif // DEBUG
@@ -306,6 +347,17 @@ private:
   // anymore.
   void ClearUnionData();
 
+  // Implementation of MaybeSetPendingException for the case when we're a
+  // failure result.
+  void SetPendingException(JSContext* cx);
+
+  // Methods for setting various specific kinds of pending exceptions.
+  void SetPendingExceptionWithMessage(JSContext* cx);
+  void SetPendingJSException(JSContext* cx);
+  void SetPendingDOMException(JSContext* cx);
+  void SetPendingGenericErrorException(JSContext* cx);
+
+
   // Special values of mResult:
   // NS_ERROR_TYPE_ERR -- ThrowTypeError() called on us.
   // NS_ERROR_RANGE_ERR -- ThrowRangeError() called on us.
@@ -317,11 +369,11 @@ private:
   struct Message;
   struct DOMExceptionInfo;
   // mMessage is set by ThrowErrorWithMessage and reported (and deallocated) by
-  // ReportErrorWithMessage.
+  // SetPendingExceptionWithMessage.
   // mJSException is set (and rooted) by ThrowJSException and reported
-  // (and unrooted) by ReportJSException.
+  // (and unrooted) by SetPendingJSException.
   // mDOMExceptionInfo is set by ThrowDOMException and reported
-  // (and deallocated) by ReportDOMException.
+  // (and deallocated) by SetPendingDOMException.
   union {
     Message* mMessage; // valid when IsErrorWithMessage()
     JS::Value mJSException; // valid when IsJSException()

@@ -289,9 +289,8 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
     ErrorResult rv;
     RefPtr<dom::Promise> response =
         FetchRequest(global, Constify(request), Constify(options), rv);
-    rv.WouldReportJSException();
-    if (rv.Failed()) {
-        return ThrowMethodFailed(cx, rv);
+    if (rv.MaybeSetPendingException(cx)) {
+        return false;
     }
     if (!GetOrCreateDOMReflector(cx, response, args.rval())) {
         return false;

@@ -718,7 +718,7 @@ class IonBuilder
     bool jsop_object(JSObject* obj);
     bool jsop_lambda(JSFunction* fun);
     bool jsop_lambda_arrow(JSFunction* fun);
-    bool jsop_this();
+    bool jsop_functionthis();
     bool jsop_typeof();
     bool jsop_toid();
     bool jsop_iter(uint8_t flags);

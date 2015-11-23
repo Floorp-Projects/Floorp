@@ -473,16 +473,6 @@ IDBFactory::IsChrome() const
 }
 
 void
-IDBFactory::SetBackgroundActor(BackgroundFactoryChild* aBackgroundActor)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(!mBackgroundActor);
-
-  mBackgroundActor = aBackgroundActor;
-}
-
-void
 IDBFactory::IncrementParentLoggingRequestSerialNumber()
 {
   AssertIsOnOwningThread();
