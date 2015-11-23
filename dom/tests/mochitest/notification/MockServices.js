@@ -29,24 +29,32 @@ var MockServices = (function () {
   });
 
   var mockAlertsService = {
-    showAlertNotification: function(imageUrl, title, text, textClickable,
-                                    cookie, alertListener, name) {
+    showAlert: function(alert, alertListener) {
       var listener = SpecialPowers.wrap(alertListener);
-      activeAlertNotifications[name] = {
+      activeAlertNotifications[alert.name] = {
         listener: listener,
-        cookie: cookie,
-        title: title
+        cookie: alert.cookie,
+        title: alert.title
       };
 
       // fake async alert show event
       if (listener) {
         setTimeout(function () {
-          listener.observe(null, "alertshow", cookie);
+          listener.observe(null, "alertshow", alert.cookie);
         }, 100);
         setTimeout(function () {
-          listener.observe(null, "alertclickcallback", cookie);
+          listener.observe(null, "alertclickcallback", alert.cookie);
         }, 100);
       }
+    },
+
+    showAlertNotification: function(imageUrl, title, text, textClickable,
+                                    cookie, alertListener, name) {
+      this.showAlert({
+        name: name,
+        cookie: cookie,
+        title: title
+      }, alertListener);
     },
 
     showAppNotification: function(aImageUrl, aTitle, aText, aAlertListener, aDetails) {
