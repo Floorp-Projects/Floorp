@@ -4852,6 +4852,9 @@ pref("browser.safebrowsing.provider.mozilla.lists.mozstd.description", "mozstdDe
 pref("browser.safebrowsing.provider.mozilla.lists.mozfull.name", "mozfullName");
 pref("browser.safebrowsing.provider.mozilla.lists.mozfull.description", "mozfullDesc");
 
+// Allow users to ignore Safe Browsing warnings.
+pref("browser.safebrowsing.allowOverride", true);
+
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
