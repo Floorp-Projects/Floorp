@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozversion
-import mozfile
 import logging
 import os
 import sys
@@ -195,7 +194,8 @@ def run_tests(config, browser_config):
             mytest = TTest()
             talos_results.add(mytest.runTest(browser_config, test))
 
-            logging.info("Completed test %s (%s)", testname, testtimer.elapsed())
+            logging.info("Completed test %s (%s)", testname,
+                         testtimer.elapsed())
 
     except TalosRegression:
         logging.error("Detected a regression for %s", testname)
