@@ -24,9 +24,9 @@
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
@@ -53,7 +53,8 @@ class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
 class ServiceWorkerUpdateFinishCallback;
 
-class ServiceWorkerRegistrationInfo final : public nsIServiceWorkerRegistrationInfo
+class ServiceWorkerRegistrationInfo final
+  : public nsIServiceWorkerRegistrationInfo
 {
   uint32_t mControlledDocumentsCounter;
 
@@ -115,13 +116,14 @@ public:
   void
   StopControllingADocument()
   {
+    MOZ_ASSERT(mControlledDocumentsCounter);
     --mControlledDocumentsCounter;
   }
 
   bool
   IsControllingDocuments() const
   {
-    return mActiveWorker && mControlledDocumentsCounter > 0;
+    return mActiveWorker && mControlledDocumentsCounter;
   }
 
   void
@@ -159,7 +161,7 @@ class ServiceWorkerUpdateFinishCallback
 {
 protected:
   virtual ~ServiceWorkerUpdateFinishCallback()
-  { }
+  {}
 
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateFinishCallback)
@@ -361,7 +363,7 @@ public:
                     nsIDocument* aDoc,
                     nsIInterceptedChannel* aChannel,
                     bool aIsReload,
-                     bool aIsSubresourceLoad,
+                    bool aIsSubresourceLoad,
                     ErrorResult& aRv);
 
   void
@@ -502,7 +504,8 @@ private:
   Update(ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult
-  GetDocumentRegistration(nsIDocument* aDoc, ServiceWorkerRegistrationInfo** aRegistrationInfo);
+  GetDocumentRegistration(nsIDocument* aDoc,
+                          ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
   NS_IMETHODIMP
   GetServiceWorkerForScope(nsIDOMWindow* aWindow,
@@ -577,7 +580,8 @@ private:
   FireControllerChange(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
-  StorePendingReadyPromise(nsPIDOMWindow* aWindow, nsIURI* aURI, Promise* aPromise);
+  StorePendingReadyPromise(nsPIDOMWindow* aWindow, nsIURI* aURI,
+                           Promise* aPromise);
 
   void
   CheckPendingReadyPromises();
@@ -585,11 +589,11 @@ private:
   bool
   CheckReadyPromise(nsPIDOMWindow* aWindow, nsIURI* aURI, Promise* aPromise);
 
-  struct PendingReadyPromise
+  struct PendingReadyPromise final
   {
     PendingReadyPromise(nsIURI* aURI, Promise* aPromise)
       : mURI(aURI), mPromise(aPromise)
-    { }
+    {}
 
     nsCOMPtr<nsIURI> mURI;
     RefPtr<Promise> mPromise;
