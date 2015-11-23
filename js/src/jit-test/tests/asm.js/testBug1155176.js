@@ -8,7 +8,7 @@ if (!this.SharedArrayBuffer || !isAsmJSCompilationAvailable())
 function m(stdlib, ffi, heap) {
     "use asm";
 
-    var view = new stdlib.SharedUint32Array(heap);
+    var view = new stdlib.Uint32Array(heap);
     var cas = stdlib.Atomics.compareExchange;
     var hi = ffi.hi;
 
@@ -23,7 +23,7 @@ assertEq(isAsmJSModule(m), true);
 
 function nonm(stdlib, ffi, heap) {
 
-    var view = new stdlib.SharedUint32Array(heap);
+    var view = new stdlib.Uint32Array(heap);
     var cas = stdlib.Atomics.compareExchange;
     var hi = ffi.hi;
 
@@ -35,7 +35,7 @@ function nonm(stdlib, ffi, heap) {
 }
 
 var sab = new SharedArrayBuffer(65536);
-var ua = new SharedUint32Array(sab);
+var ua = new Uint32Array(sab);
 var results = [];
 var mrun = m(this, {hi: function (x) { results.push(x) }}, sab);
 var nonmrun = nonm(this, {hi: function (x) { results.push(x) }}, sab);

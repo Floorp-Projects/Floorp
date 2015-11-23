@@ -1,10 +1,6 @@
-// Transitional test cases, useful while Odin accepts both
-// "Int32Array" and "SharedInt32Array" to construct a view onto shared
-// memory but the former only when an atomic operation is referenced,
-// as per spec.  Eventually it will stop accepting "SharedInt32Array",
-// because that name is going away.
+// Test the inference of shared memory in asm.js.
 //
-// These should not run with --no-asmjs.
+// These should not be run with --no-asmjs, the guard below checks this.
 
 if (!this.SharedArrayBuffer || !isAsmJSCompilationAvailable())
     quit(0);
@@ -31,62 +27,6 @@ assertEq(isAsmJSModule(m1), true);
 
 var { f } = m1(this, {}, new SharedArrayBuffer(65536));
 assertEq(f(), 37);
-
-//////////////////////////////////////////////////////////////////////
-//
-// SharedInt8Array can still be used on SharedArrayBuffer.
-// (SharedInt8Array will eventually disappear, and this
-// test case with it.)
-
-function m2(stdlib, ffi, heap) {
-    "use asm";
-
-    var i8 = new stdlib.SharedInt8Array(heap);
-    var add = stdlib.Atomics.add;
-
-    function g() {
-	add(i8, 0, 1);
-	return 42;
-    }
-
-    return { g:g }
-}
-
-assertEq(isAsmJSModule(m2), true);
-
-var { g } = m2(this, {}, new SharedArrayBuffer(65536));
-assertEq(g(), 42);
-
-//////////////////////////////////////////////////////////////////////
-//
-// SharedInt8Array still cannot be used on ArrayBuffer, even without
-// atomics present.
-// (SharedInt8Array will eventually disappear, and this
-// test case with it.)
-
-function m3(stdlib, ffi, heap) {
-    "use asm";
-
-    var i8 = new stdlib.SharedInt8Array(heap);
-
-    function h() {
-	return i8[0]|0;
-    }
-
-    return { h:h }
-}
-
-// Running the shell with -w you should see an error here.
-
-assertEq(isAsmJSModule(m3), true);
-try {
-    var wasThrown = false;
-    m3(this, {}, new ArrayBuffer(65536));
-}
-catch (e) {
-    wasThrown = true;
-}
-assertEq(wasThrown, true);
 
 //////////////////////////////////////////////////////////////////////
 //
