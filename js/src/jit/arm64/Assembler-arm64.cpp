@@ -240,8 +240,24 @@ Assembler::bind(Label* label, BufferOffset targetOffset)
         ptrdiff_t relativeByteOffset = targetOffset.getOffset() - branchOffset.getOffset();
         Instruction* link = getInstructionAt(branchOffset);
 
-        // Write a new relative offset into the instruction.
-        link->SetImmPCOffsetTarget(link + relativeByteOffset);
+        // This branch may still be registered for callbacks. Stop tracking it.
+        vixl::ImmBranchType branchType = link->BranchType();
+        vixl::ImmBranchRangeType branchRange = Instruction::ImmBranchTypeToRange(branchType);
+        if (branchRange < vixl::NumShortBranchRangeTypes) {
+            BufferOffset deadline(branchOffset.getOffset() +
+                                  Instruction::ImmBranchMaxForwardOffset(branchRange));
+            armbuffer_.unregisterBranchDeadline(branchRange, deadline);
+        }
+
+        // Is link able to reach the label?
+        if (link->IsPCRelAddressing() || link->IsTargetReachable(link + relativeByteOffset)) {
+            // Write a new relative offset into the instruction.
+            link->SetImmPCOffsetTarget(link + relativeByteOffset);
+        } else {
+            // This is a short-range branch, and it can't reach the label directly.
+            // Verify that it branches to a veneer: an unconditional branch.
+            MOZ_ASSERT(getInstructionAt(nextOffset)->BranchType() == vixl::UncondBranchType);
+        }
 
         branchOffset = nextOffset;
     }

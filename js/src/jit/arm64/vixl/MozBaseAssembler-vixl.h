@@ -195,13 +195,13 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Link the current (not-yet-emitted) instruction to the specified label,
   // then return a raw offset to be encoded in the instruction.
   ptrdiff_t LinkAndGetByteOffsetTo(BufferOffset branch, js::jit::Label* label);
-  ptrdiff_t LinkAndGetInstructionOffsetTo(BufferOffset branch, js::jit::Label* label);
+  ptrdiff_t LinkAndGetInstructionOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                                          js::jit::Label* label);
   ptrdiff_t LinkAndGetPageOffsetTo(BufferOffset branch, js::jit::Label* label);
 
   // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
-  template <int element_size>
-  ptrdiff_t LinkAndGetOffsetTo(BufferOffset branch, js::jit::Label* label);
-
+  ptrdiff_t LinkAndGetOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                               unsigned elementSizeBits, js::jit::Label* label);
 
  protected:
   // The buffer into which code and relocation info are generated.
