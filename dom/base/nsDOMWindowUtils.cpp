@@ -484,7 +484,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  nsLayoutUtils::SetResolutionAndScaleTo(presShell, aResolution);
+  presShell->SetResolutionAndScaleTo(aResolution);
 
   return NS_OK;
 }
@@ -497,7 +497,7 @@ nsDOMWindowUtils::GetResolution(float* aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  *aResolution = nsLayoutUtils::GetResolution(presShell);
+  *aResolution = presShell->GetResolution();
 
   return NS_OK;
 }
