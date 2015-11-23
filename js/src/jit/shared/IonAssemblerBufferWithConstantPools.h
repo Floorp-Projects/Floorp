@@ -75,6 +75,236 @@
 namespace js {
 namespace jit {
 
+// BranchDeadlineSet - Keep track of pending branch deadlines.
+//
+// Some architectures like arm and arm64 have branch instructions with limited
+// range. When assembling a forward branch, it is not always known if the final
+// target label will be in range of the branch instruction.
+//
+// The BranchDeadlineSet data structure is used to keep track of the set of
+// pending forward branches. It supports the following fast operations:
+//
+// 1. Get the earliest deadline in the set.
+// 2. Add a new branch deadline.
+// 3. Remove a branch deadline.
+//
+// Architectures may have different branch encodings with different ranges. Each
+// supported range is assigned a small integer starting at 0. This data
+// structure does not care about the actual range of branch instructions, just
+// the latest buffer offset that can be reached - the deadline offset.
+//
+// Branched are stored as (rangeIdx, deadline) tuples. The target-specific code
+// can compute the location of the branch itself from this information. This
+// data structure does not need to know.
+//
+template <unsigned NumRanges>
+class BranchDeadlineSet
+{
+    // Maintain a list of pending deadlines for each range separately.
+    //
+    // The offsets in each vector are always kept in ascending order.
+    //
+    // Because we have a separate vector for different ranges, as forward
+    // branches are added to the assembler buffer, their deadlines will
+    // always be appended to the vector corresponding to their range.
+    //
+    // When binding labels, we expect a more-or-less LIFO order of branch
+    // resolutions. This would always hold if we had strictly structured control
+    // flow.
+    //
+    // We allow branch deadlines to be added and removed in any order, but
+    // performance is best in the expected case of near LIFO order.
+    //
+    typedef Vector<BufferOffset, 8, LifoAllocPolicy<Fallible>> RangeVector;
+
+    // We really just want "RangeVector deadline_[NumRanges];", but each vector
+    // needs to be initialized with a LifoAlloc, and C++ doesn't bend that way.
+    //
+    // Use raw aligned storage instead and explicitly construct NumRanges
+    // vectors in our constructor.
+    mozilla::AlignedStorage2<RangeVector[NumRanges]> deadlineStorage_;
+
+    // Always access the range vectors through this method.
+    RangeVector& vectorForRange(unsigned rangeIdx)
+    {
+        MOZ_ASSERT(rangeIdx < NumRanges, "Invalid branch range index");
+        return (*deadlineStorage_.addr())[rangeIdx];
+    }
+
+    const RangeVector& vectorForRange(unsigned rangeIdx) const
+    {
+        MOZ_ASSERT(rangeIdx < NumRanges, "Invalid branch range index");
+        return (*deadlineStorage_.addr())[rangeIdx];
+    }
+
+    // Maintain a precomputed earliest deadline at all times.
+    // This is unassigned only when all deadline vectors are empty.
+    BufferOffset earliest_;
+
+    // The range vector owning earliest_. Uninitialized when empty.
+    unsigned earliestRange_;
+
+    // Recompute the earliest deadline after it's been invalidated.
+    void recomputeEarliest()
+    {
+        earliest_ = BufferOffset();
+        for (unsigned r = 0; r < NumRanges; r++) {
+            auto& vec = vectorForRange(r);
+            if (!vec.empty() && (!earliest_.assigned() || vec[0] < earliest_)) {
+                earliest_ = vec[0];
+                earliestRange_ = r;
+            }
+        }
+    }
+
+    // Update the earliest deadline if needed after inserting (rangeIdx,
+    // deadline). Always return true for convenience:
+    // return insert() && updateEarliest().
+    bool updateEarliest(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!earliest_.assigned() || deadline < earliest_) {
+            earliest_ = deadline;
+            earliestRange_ = rangeIdx;
+        }
+        return true;
+    }
+
+  public:
+    explicit BranchDeadlineSet(LifoAlloc& alloc)
+    {
+        // Manually construct vectors in the uninitialized aligned storage.
+        // This is because C++ arrays can otherwise only be constructed with
+        // the default constructor.
+        for (unsigned r = 0; r < NumRanges; r++)
+            new (&vectorForRange(r)) RangeVector(alloc);
+    }
+
+    ~BranchDeadlineSet()
+    {
+        // Aligned storage doesn't destruct its contents automatically.
+        for (unsigned r = 0; r < NumRanges; r++)
+            vectorForRange(r).~RangeVector();
+    }
+
+    // Is this set completely empty?
+    bool empty() const { return !earliest_.assigned(); }
+
+    // Get the total number of deadlines in the set.
+    size_t size() const
+    {
+        size_t count = 0;
+        for (unsigned r = 0; r < NumRanges; r++)
+            count += vectorForRange(r).length();
+        return count;
+    }
+
+    // Get the number of deadlines for the range with the most elements.
+    size_t maxRangeSize() const
+    {
+        size_t count = 0;
+        for (unsigned r = 0; r < NumRanges; r++)
+            count = std::max(count, vectorForRange(r).length());
+        return count;
+    }
+
+    // Get the first deadline that is still in the set.
+    BufferOffset earliestDeadline() const
+    {
+        MOZ_ASSERT(!empty());
+        return earliest_;
+    }
+
+    // Get the range index corresponding to earliestDeadlineRange().
+    unsigned earliestDeadlineRange() const
+    {
+        MOZ_ASSERT(!empty());
+        return earliestRange_;
+    }
+
+    // Add a (rangeIdx, deadline) tuple to the set.
+    //
+    // It is assumed that this tuple is not already in the set.
+    // This function performs best id the added deadline is later than any
+    // existing deadline for the same range index.
+    //
+    // Return true if the tuple was added, false if the tuple could not be added
+    // because of an OOM error.
+    bool addDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        MOZ_ASSERT(deadline.assigned(), "Can only store assigned buffer offsets");
+        // This is the vector where deadline should be saved.
+        auto& vec = vectorForRange(rangeIdx);
+
+        // Fast case: Simple append to the relevant array. This never affects
+        // the earliest deadline.
+        if (!vec.empty() && vec.back() < deadline)
+            return vec.append(deadline);
+
+        // Fast case: First entry to the vector. We need to update earliest_.
+        if (vec.empty())
+            return vec.append(deadline) && updateEarliest(rangeIdx, deadline);
+
+        return addDeadlineSlow(rangeIdx, deadline);
+    }
+
+  private:
+    // General case of addDeadline. This is split into two functions such that
+    // the common case in addDeadline can be inlined while this part probably
+    // won't inline.
+    bool addDeadlineSlow(unsigned rangeIdx, BufferOffset deadline)
+    {
+        auto& vec = vectorForRange(rangeIdx);
+
+        // Inserting into the middle of the vector. Use a log time binary search
+        // and a linear time insert().
+        // Is it worthwhile special-casing the empty vector?
+        auto at = std::lower_bound(vec.begin(), vec.end(), deadline);
+        MOZ_ASSERT(at == vec.end() || *at != deadline, "Cannot insert duplicate deadlines");
+        return vec.insert(at, deadline) && updateEarliest(rangeIdx, deadline);
+    }
+
+  public:
+    // Remove a deadline from the set.
+    // If (rangeIdx, deadline) is not in the set, nothing happens.
+    void removeDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        auto& vec = vectorForRange(rangeIdx);
+
+        if (vec.empty())
+            return;
+
+        if (deadline == vec.back()) {
+            // Expected fast case: Structured control flow causes forward
+            // branches to be bound in reverse order.
+            vec.popBack();
+        } else {
+            // Slow case: Binary search + linear erase.
+            auto where = std::lower_bound(vec.begin(), vec.end(), deadline);
+            if (where == vec.end() || *where != deadline)
+                return;
+            vec.erase(where);
+        }
+        if (deadline == earliest_)
+            recomputeEarliest();
+    }
+};
+
+// Specialization for architectures that don't need to track short-range
+// branches.
+template <>
+class BranchDeadlineSet<0u>
+{
+  public:
+    explicit BranchDeadlineSet(LifoAlloc& alloc) {}
+    bool empty() const { return true; }
+    size_t size() const { return 0; }
+    size_t maxRangeSize() const { return 0; }
+    BufferOffset earliestDeadline() const { MOZ_CRASH(); }
+    unsigned earliestDeadlineRange() const { MOZ_CRASH(); }
+    bool addDeadline(unsigned rangeIdx, BufferOffset deadline) { MOZ_CRASH(); }
+    void removeDeadline(unsigned rangeIdx, BufferOffset deadline) { MOZ_CRASH(); }
+};
+
 // The allocation unit size for pools.
 typedef int32_t PoolAllocUnit;
 
