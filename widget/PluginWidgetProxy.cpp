@@ -64,7 +64,7 @@ PluginWidgetProxy::Create(nsIWidget* aParent,
 
   BaseCreate(aParent, aInitData);
 
-  mBounds = aRect.ToUnknownRect();
+  mBounds = aRect;
   mEnabled = true;
   mVisible = true;
 
