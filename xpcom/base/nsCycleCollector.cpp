@@ -2832,7 +2832,7 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 
   mozilla::Maybe<mozilla::AutoGlobalTimelineMarker> marker;
   if (NS_IsMainThread()) {
-    marker.emplace("nsCycleCollector::ForgetSkippable");
+    marker.emplace("nsCycleCollector::ForgetSkippable", MarkerStackRequest::NO_STACK);
   }
 
   // If we remove things from the purple buffer during graph building, we may
@@ -3584,7 +3584,7 @@ nsCycleCollector::Collect(ccType aCCType,
 
   mozilla::Maybe<mozilla::AutoGlobalTimelineMarker> marker;
   if (NS_IsMainThread()) {
-    marker.emplace("nsCycleCollector::Collect");
+    marker.emplace("nsCycleCollector::Collect", MarkerStackRequest::NO_STACK);
   }
 
   bool startedIdle = IsIdle();
