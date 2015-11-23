@@ -5,7 +5,6 @@
 """Utility functions for Talos"""
 
 import os
-import sys
 import time
 import urlparse
 import string
