@@ -29,7 +29,7 @@ private:
   static void* SampleNative(void* aAddr, size_t aSize);
   static void RemoveNative(void* aAddr);
 #ifdef MOZ_REPLACE_MALLOC
-  static ThreadLocal<bool> mEnabledTLS;
+  static MOZ_THREAD_LOCAL(bool) mEnabledTLS;
   static NativeProfiler* mNativeProfiler;
   static malloc_hook_table_t mMallocHook;
 #endif

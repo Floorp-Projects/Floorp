@@ -67,9 +67,9 @@ public:
 };
 #endif
 
-mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
-mozilla::ThreadLocal<GeckoSampler *> tlsTicker;
-mozilla::ThreadLocal<void *> tlsStackTop;
+MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
+MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
+MOZ_THREAD_LOCAL(void *) tlsStackTop;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
