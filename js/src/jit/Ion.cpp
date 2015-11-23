@@ -58,17 +58,15 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::ThreadLocal;
-
 // Assert that JitCode is gc::Cell aligned.
 JS_STATIC_ASSERT(sizeof(JitCode) % gc::CellSize == 0);
 
-static ThreadLocal<JitContext*> TlsJitContext;
+static MOZ_THREAD_LOCAL(JitContext*) TlsJitContext;
 
 static JitContext*
 CurrentJitContext()
 {
-    if (!TlsJitContext.initialized())
+    if (!TlsJitContext.init())
         return nullptr;
     return TlsJitContext.get();
 }
@@ -155,7 +153,7 @@ JitContext::~JitContext()
 bool
 jit::InitializeIon()
 {
-    if (!TlsJitContext.initialized() && !TlsJitContext.init())
+    if (!TlsJitContext.init())
         return false;
     CheckLogging();
 #if defined(JS_CODEGEN_ARM)

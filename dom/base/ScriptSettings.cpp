@@ -26,7 +26,8 @@
 namespace mozilla {
 namespace dom {
 
-static mozilla::ThreadLocal<ScriptSettingsStackEntry*> sScriptSettingsTLS;
+static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
+static bool sScriptSettingsTLSInitialized;
 
 class ScriptSettingsStack {
 public:
@@ -94,14 +95,13 @@ UnuseEntryScriptProfiling()
 void
 InitScriptSettings()
 {
-  if (!sScriptSettingsTLS.initialized()) {
-    bool success = sScriptSettingsTLS.init();
-    if (!success) {
-      MOZ_CRASH();
-    }
+  bool success = sScriptSettingsTLS.init();
+  if (!success) {
+    MOZ_CRASH();
   }
 
   sScriptSettingsTLS.set(nullptr);
+  sScriptSettingsTLSInitialized = true;
 }
 
 void
@@ -113,7 +113,7 @@ DestroyScriptSettings()
 bool
 ScriptSettingsInitialized()
 {
-  return sScriptSettingsTLS.initialized();
+  return sScriptSettingsTLSInitialized;
 }
 
 ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,

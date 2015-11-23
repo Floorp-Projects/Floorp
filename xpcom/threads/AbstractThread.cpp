@@ -26,7 +26,7 @@ LazyLogModule gMozPromiseLog("MozPromise");
 LazyLogModule gStateWatchingLog("StateWatching");
 
 StaticRefPtr<AbstractThread> sMainThread;
-ThreadLocal<AbstractThread*> AbstractThread::sCurrentThreadTLS;
+MOZ_THREAD_LOCAL(AbstractThread*) AbstractThread::sCurrentThreadTLS;
 
 class XPCOMThreadWrapper : public AbstractThread
 {
