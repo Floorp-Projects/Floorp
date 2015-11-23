@@ -117,10 +117,10 @@ public:
   };
 
   // Check if the decoder owner is active.
-  virtual bool IsActive() = 0;
+  virtual bool IsActive() const = 0;
 
   // Check if the decoder owner is hidden.
-  virtual bool IsHidden() = 0;
+  virtual bool IsHidden() const = 0;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
