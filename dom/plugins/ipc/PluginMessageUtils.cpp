@@ -120,12 +120,10 @@ UnmungePluginDsoPath(const string& munged)
 }
 
 
-PRLogModuleInfo*
+LogModule*
 GetPluginLog()
 {
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("IPCPlugins");
+  static LazyLogModule sLog("IPCPlugins");
   return sLog;
 }
 

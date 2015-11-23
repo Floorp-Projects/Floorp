@@ -14,12 +14,10 @@
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
 
-static PRLogModuleInfo*
+static mozilla::LogModule*
 GetCspUtilsLog()
 {
-  static PRLogModuleInfo* gCspUtilsPRLog;
-  if (!gCspUtilsPRLog)
-    gCspUtilsPRLog = PR_NewLogModule("CSPUtils");
+  static mozilla::LazyLogModule gCspUtilsPRLog("CSPUtils");
   return gCspUtilsPRLog;
 }
 

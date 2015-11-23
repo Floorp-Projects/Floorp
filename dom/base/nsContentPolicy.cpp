@@ -30,7 +30,7 @@ using mozilla::LogLevel;
 
 NS_IMPL_ISUPPORTS(nsContentPolicy, nsIContentPolicy)
 
-static PRLogModuleInfo* gConPolLog;
+static mozilla::LazyLogModule gConPolLog("nsContentPolicy");
 
 nsresult
 NS_NewContentPolicy(nsIContentPolicy **aResult)
@@ -44,9 +44,6 @@ nsContentPolicy::nsContentPolicy()
     : mPolicies(NS_CONTENTPOLICY_CATEGORY)
     , mSimplePolicies(NS_SIMPLECONTENTPOLICY_CATEGORY)
 {
-    if (! gConPolLog) {
-        gConPolLog = PR_NewLogModule("nsContentPolicy");
-    }
 }
 
 nsContentPolicy::~nsContentPolicy()

@@ -40,7 +40,7 @@ namespace mozilla {
 
 using namespace widget;
 
-PRLogModuleInfo* sIMECOLog = nullptr;
+LazyLogModule sIMECOLog("IMEContentObserver");
 
 static const char*
 ToChar(bool aBool)
@@ -207,9 +207,6 @@ IMEContentObserver::IMEContentObserver()
 #ifdef DEBUG
   mTextChangeData.Test();
 #endif
-  if (!sIMECOLog) {
-    sIMECOLog = PR_NewLogModule("IMEContentObserver");
-  }
 }
 
 void

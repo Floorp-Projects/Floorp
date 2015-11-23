@@ -48,9 +48,9 @@
 class nsPluginLogging
 {
 public:
-  static PRLogModuleInfo* gNPNLog;  // 4.x NP API, calls into navigator
-  static PRLogModuleInfo* gNPPLog;  // 4.x NP API, calls into plugin
-  static PRLogModuleInfo* gPluginLog;  // general plugin log
+  static mozilla::LazyLogModule gNPNLog;  // 4.x NP API, calls into navigator
+  static mozilla::LazyLogModule gNPPLog;  // 4.x NP API, calls into plugin
+  static mozilla::LazyLogModule gPluginLog;  // general plugin log
 };
 
 #endif   // PLUGIN_LOGGING
