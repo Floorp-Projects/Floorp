@@ -216,3 +216,208 @@ BEGIN_TEST(testAssemblerBuffer_BranchDeadlineSet)
     return true;
 }
 END_TEST(testAssemblerBuffer_BranchDeadlineSet)
+
+// Mock Assembler class for testing the AssemblerBufferWithConstantPools
+// callbacks.
+namespace {
+
+struct TestAssembler;
+
+typedef js::jit::AssemblerBufferWithConstantPools<
+  /* SliceSize */ 5 * sizeof(uint32_t),
+  /* InstSize */ 4,
+  /* Inst */ uint32_t,
+  /* Asm */ TestAssembler,
+  /* NumShortBranchRanges */ 3> AsmBufWithPool;
+
+struct TestAssembler
+{
+    // Mock instruction set:
+    //
+    //   0x1111xxxx - align filler instructions.
+    //   0x2222xxxx - manually inserted 'arith' instructions.
+    //   0xaaaaxxxx - noop filler instruction.
+    //   0xb0bbxxxx - branch xxxx bytes forward. (Pool guard).
+    //   0xb1bbxxxx - branch xxxx bytes forward. (Short-range branch).
+    //   0xb2bbxxxx - branch xxxx bytes forward. (Veneer branch).
+    //   0xb3bbxxxx - branch xxxx bytes forward. (Patched short-range branch).
+    //   0xc0ccxxxx - constant pool load (uninitialized).
+    //   0xc1ccxxxx - constant pool load to index xxxx.
+    //   0xc2ccxxxx - constant pool load xxxx bytes ahead.
+    //   0xffffxxxx - pool header with xxxx bytes.
+
+    static const unsigned BranchRange = 36;
+
+    static void InsertIndexIntoTag(uint8_t* load_, uint32_t index)
+    {
+        uint32_t* load = reinterpret_cast<uint32_t*>(load_);
+        MOZ_ASSERT(*load == 0xc0cc0000, "Expected uninitialized constant pool load");
+        MOZ_ASSERT(index < 0x10000);
+        *load = 0xc1cc0000 + index;
+    }
+
+    static void PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+    {
+        uint32_t* load = reinterpret_cast<uint32_t*>(loadAddr);
+        uint32_t index = *load & 0xffff;
+        MOZ_ASSERT(*load == (0xc1cc0000 | index), "Expected constant pool load(index)");
+        ptrdiff_t offset =
+          reinterpret_cast<uint8_t*>(constPoolAddr) - reinterpret_cast<uint8_t*>(loadAddr);
+        offset += index * 4;
+        MOZ_ASSERT(offset % 4 == 0, "Unaligned constant pool");
+        MOZ_ASSERT(offset > 0 && offset < 0x10000, "Pool out of range");
+        *load = 0xc2cc0000 + offset;
+    }
+
+    static void WritePoolGuard(js::jit::BufferOffset branch, uint32_t* dest,
+                               js::jit::BufferOffset afterPool)
+    {
+        MOZ_ASSERT(branch.assigned());
+        MOZ_ASSERT(afterPool.assigned());
+        size_t branchOff = branch.getOffset();
+        size_t afterPoolOff = afterPool.getOffset();
+        MOZ_ASSERT(afterPoolOff > branchOff);
+        uint32_t delta = afterPoolOff - branchOff;
+        *dest = 0xb0bb0000 + delta;
+    }
+
+    static void WritePoolHeader(void* start, js::jit::Pool* p, bool isNatural)
+    {
+        MOZ_ASSERT(!isNatural, "Natural pool guards not implemented.");
+        uint32_t* hdr = reinterpret_cast<uint32_t*>(start);
+        *hdr = 0xffff0000 + p->getPoolSize();
+    }
+};
+}
+
+BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools)
+{
+    using js::jit::BufferOffset;
+
+    AsmBufWithPool ab(/* guardSize= */ 1,
+                      /* headerSize= */ 1,
+                      /* instBufferAlign(unused)= */ 0,
+                      /* poolMaxOffset= */ 17,
+                      /* pcBias= */ 0,
+                      /* alignFillInst= */ 0x11110000,
+                      /* nopFillInst= */ 0xaaaa0000,
+                      /* nopFill= */ 0);
+
+    CHECK(ab.isAligned(16));
+    CHECK_EQUAL(ab.size(), 0u);
+    CHECK_EQUAL(ab.nextOffset().getOffset(), 0);
+    CHECK(!ab.oom());
+    CHECK(!ab.bail());
+
+    // Each slice holds 5 instructions. Trigger a constant pool inside the slice.
+    uint32_t poolLoad[] = { 0xc0cc0000 };
+    uint32_t poolData[] = { 0xdddd0000, 0xdddd0001, 0xdddd0002, 0xdddd0003 };
+    AsmBufWithPool::PoolEntry pe;
+    BufferOffset load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
+    CHECK_EQUAL(pe.index(), 0u);
+    CHECK_EQUAL(load.getOffset(), 0);
+
+    // Pool hasn't been emitted yet. Load has been patched by
+    // InsertIndexIntoTag.
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0000);
+
+    // Expected layout:
+    //
+    //   0: load [pc+16]
+    //   4: 0x22220001
+    //   8: guard branch pc+12
+    //  12: pool header
+    //  16: poolData
+    //  20: 0x22220002
+    //
+    ab.putInt(0x22220001);
+    // One could argue that the pool should be flushed here since there is no
+    // more room. However, the current implementation doesn't dump pool until
+    // asked to add data:
+    ab.putInt(0x22220002);
+
+    CHECK_EQUAL(*ab.getInst(BufferOffset(0)), 0xc2cc0010u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(4)), 0x22220001u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(8)), 0xb0bb000cu);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(12)), 0xffff0004u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(16)), 0xdddd0000u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(20)), 0x22220002u);
+
+    // allocEntry() overwrites the load instruction! Restore the original.
+    poolLoad[0] = 0xc0cc0000;
+
+    // Now try with load and pool data on separate slices.
+    load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
+    CHECK_EQUAL(pe.index(), 1u); // Global pool entry index.
+    CHECK_EQUAL(load.getOffset(), 24);
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0000); // Index into current pool.
+    ab.putInt(0x22220001);
+    ab.putInt(0x22220002);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(24)), 0xc2cc0010u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(28)), 0x22220001u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(32)), 0xb0bb000cu);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(36)), 0xffff0004u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(40)), 0xdddd0000u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(44)), 0x22220002u);
+
+    // Two adjacent loads to the same pool.
+    poolLoad[0] = 0xc0cc0000;
+    load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
+    CHECK_EQUAL(pe.index(), 2u); // Global pool entry index.
+    CHECK_EQUAL(load.getOffset(), 48);
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0000); // Index into current pool.
+
+    poolLoad[0] = 0xc0cc0000;
+    load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)(poolData + 1), &pe);
+    CHECK_EQUAL(pe.index(), 3u); // Global pool entry index.
+    CHECK_EQUAL(load.getOffset(), 52);
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0001); // Index into current pool.
+
+    ab.putInt(0x22220005);
+
+    CHECK_EQUAL(*ab.getInst(BufferOffset(48)), 0xc2cc0010u); // load pc+16.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(52)), 0xc2cc0010u); // load pc+16.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(56)), 0xb0bb0010u); // guard branch pc+16.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(60)), 0xffff0008u); // header 8 bytes.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(64)), 0xdddd0000u); // datum 1.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(68)), 0xdddd0001u); // datum 2.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(72)), 0x22220005u); // putInt(0x22220005)
+
+    // Two loads as above, but the first load has an 8-byte pool entry, and the
+    // second load wouldn't be able to reach its data. This must produce two
+    // pools.
+    poolLoad[0] = 0xc0cc0000;
+    load = ab.allocEntry(1, 2, (uint8_t*)poolLoad, (uint8_t*)(poolData+2), &pe);
+    CHECK_EQUAL(pe.index(), 4u); // Global pool entry index.
+    CHECK_EQUAL(load.getOffset(), 76);
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0000); // Index into current pool.
+
+    poolLoad[0] = 0xc0cc0000;
+    load = ab.allocEntry(1, 1, (uint8_t*)poolLoad, (uint8_t*)poolData, &pe);
+    CHECK_EQUAL(pe.index(), 6u); // Global pool entry index. (Prev one is two indexes).
+    CHECK_EQUAL(load.getOffset(), 96);
+    CHECK_EQUAL(*ab.getInst(load), 0xc1cc0000); // Index into current pool.
+
+    CHECK_EQUAL(*ab.getInst(BufferOffset(76)), 0xc2cc000cu); // load pc+12.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(80)), 0xb0bb0010u); // guard branch pc+16.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(84)), 0xffff0008u); // header 8 bytes.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(88)), 0xdddd0002u); // datum 1.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(92)), 0xdddd0003u); // datum 2.
+
+    // Second pool is not flushed yet, and there is room for one instruction
+    // after the load. Test the keep-together feature.
+    ab.enterNoPool(2);
+    ab.putInt(0x22220006);
+    ab.putInt(0x22220007);
+    ab.leaveNoPool();
+
+    CHECK_EQUAL(*ab.getInst(BufferOffset( 96)), 0xc2cc000cu); // load pc+16.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(100)), 0xb0bb000cu); // guard branch pc+12.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(104)), 0xffff0004u); // header 4 bytes.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(108)), 0xdddd0000u); // datum 1.
+    CHECK_EQUAL(*ab.getInst(BufferOffset(112)), 0x22220006u);
+    CHECK_EQUAL(*ab.getInst(BufferOffset(116)), 0x22220007u);
+
+    return true;
+}
+END_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools)

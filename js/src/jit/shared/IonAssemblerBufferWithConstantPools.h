@@ -72,6 +72,49 @@
 // instructions. The base assembler buffer which supports variable width
 // instruction is used by the x86 and x64 backends.
 
+// The AssemblerBufferWithConstantPools template class uses static callbacks to
+// the provided Asm template argument class:
+//
+// void Asm::InsertIndexIntoTag(uint8_t* load_, uint32_t index)
+//
+//   When allocEntry() is called to add a constant pool load with an associated
+//   constant pool entry, this callback is called to encode the index of the
+//   allocated constant pool entry into the load instruction.
+//
+//   After the constant pool has been placed, PatchConstantPoolLoad() is called
+//   to update the load instruction with the right load offset.
+//
+// void Asm::WritePoolGuard(BufferOffset branch,
+//                          Instruction* dest,
+//                          BufferOffset afterPool)
+//
+//   Write out the constant pool guard branch before emitting the pool.
+//
+//   branch
+//     Offset of the guard branch in the buffer.
+//
+//   dest
+//     Pointer into the buffer where the guard branch should be emitted. (Same
+//     as getInst(branch)). Space for guardSize_ instructions has been reserved.
+//
+//   afterPool
+//     Offset of the first instruction after the constant pool. This includes
+//     both pool entries and branch veneers added after the pool data.
+//
+// void Asm::WritePoolHeader(uint8_t* start, Pool* p, bool isNatural)
+//
+//   Write out the pool header which follows the guard branch.
+//
+// void Asm::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+//
+//   Re-encode a load of a constant pool entry after the location of the
+//   constant pool is known.
+//
+//   The load instruction at loadAddr was previously passed to
+//   InsertIndexIntoTag(). The constPoolAddr is the final address of the
+//   constant pool in the assembler buffer.
+//
+
 namespace js {
 namespace jit {
 
