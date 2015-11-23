@@ -456,7 +456,6 @@ size. -->
 <!ENTITY site_settings_title3       "Site Settings">
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
-<!ENTITY site_settings_no_settings  "There are no settings to clear.">
 
 <!-- Localization note (reading_list_added3) : Used in a toast, please keep as short
      as possible. -->

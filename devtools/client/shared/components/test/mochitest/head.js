@@ -28,9 +28,9 @@ var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
 DevToolsUtils.testing = true;
-var { require: bRequire } = BrowserLoader("resource://devtools/client/memory/", this);
+var { require: browserRequire } = BrowserLoader("resource://devtools/client/shared/", this);
 
-var EXAMPLE_URL = "http://example.com/browser/browser/devtools/memory/test/";
+var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
 // Encoding of the following tree/forest:
 //

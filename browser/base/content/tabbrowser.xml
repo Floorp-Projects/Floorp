@@ -4427,13 +4427,19 @@
           let uri = browser.currentURI;
           let icon = browser.mIconURL;
 
-          this.updateBrowserRemotenessByURL(browser, "about:tabcrashed");
-
-          browser.setAttribute("crashedPageTitle", title);
-          browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);
-          browser.removeAttribute("crashedPageTitle");
           let tab = this.getTabForBrowser(browser);
-          tab.setAttribute("crashed", true);
+
+          if (this.selectedBrowser == browser) {
+            this.updateBrowserRemotenessByURL(browser, "about:tabcrashed");
+            browser.setAttribute("crashedPageTitle", title);
+            browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);
+            browser.removeAttribute("crashedPageTitle");
+            tab.setAttribute("crashed", true);
+          } else {
+            this.updateBrowserRemoteness(browser, false);
+            SessionStore.reviveCrashedTab(tab);
+          }
+
           tab.removeAttribute("soundplaying");
           this.setIcon(tab, icon);
         ]]>

@@ -16,6 +16,7 @@ const FORMAT_VERSION = 1;
 
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
+const TAB_STATE_WILL_RESTORE = 3;
 
 const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 const NOTIFY_BROWSER_STATE_RESTORED = "sessionstore-browser-state-restored";
@@ -201,10 +202,6 @@ this.SessionStore = {
     return SessionStoreInternal.canRestoreLastSession;
   },
 
-  get crashedTabCount() {
-    return SessionStoreInternal._crashedBrowsersCount;
-  },
-
   set canRestoreLastSession(val) {
     SessionStoreInternal.canRestoreLastSession = val;
   },
@@ -388,9 +385,6 @@ var SessionStoreInternal = {
   // they get restored).
   _crashedBrowsers: new WeakSet(),
 
-  // The number of crashed browsers.
-  _crashedBrowsersCount: 0,
-
   // A map (xul:browser -> nsIFrameLoader) that maps a browser to the last
   // associated frameLoader we heard about.
   _lastKnownFrameLoader: new WeakMap(),
@@ -404,6 +398,11 @@ var SessionStoreInternal = {
   // recently closed tab due to a window closure to the tab state information
   // that is being stored in _closedWindows for that tab.
   _closedWindowTabs: new WeakMap(),
+
+  // A map (xul:browser -> object) that maps a browser that is switching
+  // remoteness via navigateAndRestore, to the loadArguments that were
+  // most recently passed when calling navigateAndRestore.
+  _remotenessChangingBrowsers: new WeakMap(),
 
   // whether a setBrowserState call is in progress
   _browserSetState: false,
@@ -828,6 +827,8 @@ var SessionStoreInternal = {
         this._sendTabRestoredNotification(tab);
         break;
       case "SessionStore:crashedTabRevived":
+        // The browser was revived by navigating to a different page
+        // manually, so we remove it from the ignored browser set.
         this._crashedBrowsers.delete(browser.permanentKey);
         break;
       case "SessionStore:error":
@@ -1575,10 +1576,6 @@ var SessionStoreInternal = {
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
-
-    if (this._crashedBrowsers.has(browser.permanentKey)) {
-      this._crashedBrowsersCount++;
-    }
   },
 
   /**
@@ -1607,10 +1604,6 @@ var SessionStoreInternal = {
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
-    }
-
-    if (this._crashedBrowsers.has(browser.permanentKey)) {
-      this._crashedBrowsersCount--;
     }
   },
 
@@ -1791,17 +1784,14 @@ var SessionStoreInternal = {
    *        The <xul:browser> that is now in the crashed state.
    */
   onBrowserCrashed: function(aWindow, aBrowser) {
+    NS_ASSERT(aBrowser.isRemoteBrowser,
+              "Only remote browsers should be able to crash");
     this._crashedBrowsers.add(aBrowser.permanentKey);
-    this._crashedBrowsersCount++;
-    // If we never got around to restoring this tab, clear its state so
-    // that we don't try restoring if the user switches to it before
-    // reviving the crashed browser. This is throwing away the information
-    // that the tab was in a pending state when the browser crashed, which
-    // is an explicit choice. For now, when restoring all crashed tabs, based
-    // on a user preference we'll either restore all of them at once, or only
-    // restore the selected tab and lazily restore the rest. We'll make no
-    // efforts at this time to be smart and restore all of the tabs that had
-    // been in a restored state at the time of the crash.
+
+    // If we hadn't yet restored, or were still in the midst of
+    // restoring this browser at the time of the crash, we need
+    // to reset its state so that we can try to restore it again
+    // when the user revives the tab from the crash.
     if (aBrowser.__SS_restoreState) {
       let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
       this._resetLocalTabRestoringState(tab);
@@ -2346,10 +2336,17 @@ var SessionStoreInternal = {
                       "Somehow a crashed browser is still remote.")
     }
 
-    let data = TabState.collect(aTab);
-    this.restoreTab(aTab, data);
+    // We put the browser at about:blank in case the user is
+    // restoring tabs on demand. This way, the user won't see
+    // a flash of the about:tabcrashed page after selecting
+    // the revived tab.
+    aTab.removeAttribute("crashed");
+    browser.loadURI("about:blank", null, null);
 
-    this._crashedBrowsersCount--;
+    let data = TabState.collect(aTab);
+    this.restoreTab(aTab, data, {
+      forceOnDemand: true,
+    });
   },
 
   /**
@@ -2363,8 +2360,6 @@ var SessionStoreInternal = {
         this.reviveCrashedTab(tab);
       }
     }
-
-    this._crashedBrowsersCount = 0;
   },
 
   /**
@@ -2373,11 +2368,31 @@ var SessionStoreInternal = {
    * or restoring the exact same state again and passing the new URL to load
    * in |loadArguments|. Use this method to seamlessly switch between pages
    * loaded in the parent and pages loaded in the child process.
+   *
+   * This method might be called multiple times before it has finished
+   * flushing the browser tab. If that occurs, the loadArguments from
+   * the most recent call to navigateAndRestore will be used once the
+   * flush has finished.
    */
   navigateAndRestore(tab, loadArguments, historyIndex) {
     let window = tab.ownerDocument.defaultView;
     NS_ASSERT(window.__SSi, "tab's window must be tracked");
     let browser = tab.linkedBrowser;
+
+    // Were we already waiting for a flush from a previous call to
+    // navigateAndRestore on this tab?
+    let alreadyRestoring =
+      this._remotenessChangingBrowsers.has(browser.permanentKey);
+
+    // Stash the most recent loadArguments in this WeakMap so that
+    // we know to use it when the TabStateFlusher.flush resolves.
+    this._remotenessChangingBrowsers.set(browser.permanentKey, loadArguments);
+
+    if (alreadyRestoring) {
+      // This tab was already being restored to run in the
+      // correct process. We're done here.
+      return;
+    }
 
     // Set tab title to "Connecting..." and start the throbber to pretend we're
     // doing something while actually waiting for data from the frame script.
@@ -2386,6 +2401,13 @@ var SessionStoreInternal = {
 
     // Flush to get the latest tab state.
     TabStateFlusher.flush(browser).then(() => {
+      // loadArguments might have been overwritten by multiple calls
+      // to navigateAndRestore while we waited for the tab to flush,
+      // so we use the most recently stored one.
+      let recentLoadArguments =
+        this._remotenessChangingBrowsers.get(browser.permanentKey);
+      this._remotenessChangingBrowsers.delete(browser.permanentKey);
+
       // The tab might have been closed/gone in the meantime.
       if (tab.closing || !tab.linkedBrowser) {
         return;
@@ -2406,7 +2428,7 @@ var SessionStoreInternal = {
         tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
       } else {
         tabState.userTypedValue = null;
-        options.loadArguments = loadArguments;
+        options.loadArguments = recentLoadArguments;
       }
 
       // Need to reset restoring tabs.
@@ -2417,6 +2439,8 @@ var SessionStoreInternal = {
       // Restore the state into the tab.
       this.restoreTab(tab, tabState, options);
     });
+
+    tab.linkedBrowser.__SS_restoreState = TAB_STATE_WILL_RESTORE;
   },
 
   /**
@@ -2805,7 +2829,10 @@ var SessionStoreInternal = {
     for (var t = 0; t < newTabCount; t++) {
       tabs.push(t < openTabCount ?
                 tabbrowser.tabs[t] :
-                tabbrowser.addTab("about:blank", {skipAnimation: true}));
+                tabbrowser.addTab("about:blank", {
+                  skipAnimation: true,
+                  forceNotRemote: true,
+                }));
 
       if (winData.tabs[t].pinned)
         tabbrowser.pinTab(tabs[t]);
@@ -3046,6 +3073,7 @@ var SessionStoreInternal = {
     let browser = tab.linkedBrowser;
     let window = tab.ownerDocument.defaultView;
     let tabbrowser = window.gBrowser;
+    let forceOnDemand = options.forceOnDemand;
 
     // Increase the busy state counter before modifying the tab.
     this._setWindowStateBusy(window);
@@ -3113,21 +3141,6 @@ var SessionStoreInternal = {
     // Save the index in case we updated it above.
     tabData.index = activeIndex + 1;
 
-    // In electrolysis, we may need to change the browser's remote
-    // attribute so that it runs in a content process.
-    let activePageData = tabData.entries[activeIndex] || null;
-    let uri = activePageData ? activePageData.url || null : null;
-    if (loadArguments) {
-      uri = loadArguments.uri;
-    }
-    tabbrowser.updateBrowserRemotenessByURL(browser, uri);
-
-    // If the restored browser wants to show view source content, start up a
-    // view source browser that will load the required frame script.
-    if (uri && ViewSourceBrowser.isViewSource(uri)) {
-      new ViewSourceBrowser(browser);
-    }
-
     // Start a new epoch to discard all frame script messages relating to a
     // previous epoch. All async messages that are still on their way to chrome
     // will be ignored and don't override any tab data set when restoring.
@@ -3138,6 +3151,10 @@ var SessionStoreInternal = {
     browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
     browser.setAttribute("pending", "true");
     tab.setAttribute("pending", "true");
+
+    // If we're restoring this tab, it certainly shouldn't be in
+    // the ignored set anymore.
+    this._crashedBrowsers.delete(browser.permanentKey);
 
     // Update the persistent tab state cache with |tabData| information.
     TabStateCache.update(browser, {
@@ -3168,7 +3185,7 @@ var SessionStoreInternal = {
     // it ensures each window will have its selected tab loaded.
     if (restoreImmediately || tabbrowser.selectedBrowser == browser || loadArguments) {
       this.restoreTabContent(tab, loadArguments);
-    } else {
+    } else if (!forceOnDemand) {
       TabRestoreQueue.add(tab);
       this.restoreNextTab();
     }
@@ -3186,9 +3203,45 @@ var SessionStoreInternal = {
    *        optional load arguments used for loadURI()
    */
   restoreTabContent: function (aTab, aLoadArguments = null) {
+    let browser = aTab.linkedBrowser;
+    let window = aTab.ownerDocument.defaultView;
+    let tabbrowser = window.gBrowser;
+    let tabData = TabState.clone(aTab);
+    let activeIndex = tabData.index - 1;
+    let activePageData = tabData.entries[activeIndex] || null;
+    let uri = activePageData ? activePageData.url || null : null;
+    if (aLoadArguments) {
+      uri = aLoadArguments.uri;
+    }
+
+    // We have to mark this tab as restoring first, otherwise
+    // the "pending" attribute will be applied to the linked
+    // browser, which removes it from the display list. We cannot
+    // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
-    let browser = aTab.linkedBrowser;
+    if (tabbrowser.updateBrowserRemotenessByURL(browser, uri)) {
+      // We updated the remoteness, so we need to send the history down again.
+      //
+      // Start a new epoch to discard all frame script messages relating to a
+      // previous epoch. All async messages that are still on their way to chrome
+      // will be ignored and don't override any tab data set when restoring.
+      let epoch = this.startNextEpoch(browser);
+
+      browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory", {
+        tabData: tabData,
+        epoch: epoch,
+        loadArguments: aLoadArguments
+      });
+
+    }
+
+    // If the restored browser wants to show view source content, start up a
+    // view source browser that will load the required frame script.
+    if (uri && ViewSourceBrowser.isViewSource(uri)) {
+      new ViewSourceBrowser(browser);
+    }
+
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
       {loadArguments: aLoadArguments});
   },
@@ -4123,8 +4176,6 @@ var TabRestoreQueue = {
     if (index > -1) {
       hidden.splice(index, 1);
       visible.push(tab);
-    } else {
-      throw new Error("restore queue: hidden tab not found");
     }
   },
 
@@ -4136,8 +4187,6 @@ var TabRestoreQueue = {
     if (index > -1) {
       visible.splice(index, 1);
       hidden.push(tab);
-    } else {
-      throw new Error("restore queue: visible tab not found");
     }
   }
 };

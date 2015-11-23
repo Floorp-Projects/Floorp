@@ -1,5 +1,3 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* Copyright 2012 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.2.109';
-PDFJS.build = '875588d';
+PDFJS.version = '1.3.14';
+PDFJS.build = 'df46b64';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -1963,6 +1961,8 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
  *                                calling of PDFPage.getViewport method.
  * @property {string} intent - Rendering intent, can be 'display' or 'print'
  *                    (default value is 'display').
+ * @property {Array}  transform - (optional) Additional transform, applied
+ *                    just before viewport transform.
  * @property {Object} imageLayer - (optional) An object that has beginLayout,
  *                    endLayout and appendImage functions.
  * @property {function} continueCallback - (deprecated) A function that will be
@@ -3025,7 +3025,7 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
       this.gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
                                     this.objs, params.imageLayer);
 
-      this.gfx.beginDrawing(params.viewport, transparency);
+      this.gfx.beginDrawing(params.transform, params.viewport, transparency);
       this.operatorListIdx = 0;
       this.graphicsReady = true;
       if (this.graphicsReadyCallback) {
@@ -3322,13 +3322,15 @@ function addContextCurrentTransform(ctx) {
 }
 
 var CachedCanvases = (function CachedCanvasesClosure() {
-  var cache = {};
-  return {
+  function CachedCanvases() {
+    this.cache = Object.create(null);
+  }
+  CachedCanvases.prototype = {
     getCanvas: function CachedCanvases_getCanvas(id, width, height,
                                                  trackTransform) {
       var canvasEntry;
-      if (cache[id] !== undefined) {
-        canvasEntry = cache[id];
+      if (this.cache[id] !== undefined) {
+        canvasEntry = this.cache[id];
         canvasEntry.canvas.width = width;
         canvasEntry.canvas.height = height;
         // reset canvas transform for emulated mozCurrentTransform, if needed
@@ -3339,21 +3341,22 @@ var CachedCanvases = (function CachedCanvasesClosure() {
         if (trackTransform) {
           addContextCurrentTransform(ctx);
         }
-        cache[id] = canvasEntry = {canvas: canvas, context: ctx};
+        this.cache[id] = canvasEntry = {canvas: canvas, context: ctx};
       }
       return canvasEntry;
     },
     clear: function () {
-      for (var id in cache) {
-        var canvasEntry = cache[id];
+      for (var id in this.cache) {
+        var canvasEntry = this.cache[id];
         // Zeroing the width and height causes Firefox to release graphics
         // resources immediately, which can greatly reduce memory consumption.
         canvasEntry.canvas.width = 0;
         canvasEntry.canvas.height = 0;
-        delete cache[id];
+        delete this.cache[id];
       }
     }
   };
+  return CachedCanvases;
 })();
 
 function compileType3Glyph(imgData) {
@@ -3591,6 +3594,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     this.smaskStack = [];
     this.smaskCounter = 0;
     this.tempSMask = null;
+    this.cachedCanvases = new CachedCanvases();
     if (canvasCtx) {
       // NOTE: if mozCurrentTransform is polyfilled, then the current state of
       // the transformation must already be set in canvasCtx._transformMatrix.
@@ -3867,28 +3871,39 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
   CanvasGraphics.prototype = {
 
-    beginDrawing: function CanvasGraphics_beginDrawing(viewport, transparency) {
+    beginDrawing: function CanvasGraphics_beginDrawing(transform, viewport,
+                                                       transparency) {
       // For pdfs that use blend modes we have to clear the canvas else certain
       // blend modes can look wrong since we'd be blending with a white
       // backdrop. The problem with a transparent backdrop though is we then
-      // don't get sub pixel anti aliasing on text, so we fill with white if
-      // we can.
+      // don't get sub pixel anti aliasing on text, creating temporary
+      // transparent canvas when we have blend modes.
       var width = this.ctx.canvas.width;
       var height = this.ctx.canvas.height;
-      if (transparency) {
-        this.ctx.clearRect(0, 0, width, height);
-      } else {
-        this.ctx.mozOpaque = true;
-        this.ctx.save();
-        this.ctx.fillStyle = 'rgb(255, 255, 255)';
-        this.ctx.fillRect(0, 0, width, height);
-        this.ctx.restore();
-      }
-
-      var transform = viewport.transform;
 
       this.ctx.save();
-      this.ctx.transform.apply(this.ctx, transform);
+      this.ctx.fillStyle = 'rgb(255, 255, 255)';
+      this.ctx.fillRect(0, 0, width, height);
+      this.ctx.restore();
+
+      if (transparency) {
+        var transparentCanvas = this.cachedCanvases.getCanvas(
+          'transparent', width, height, true);
+        this.compositeCtx = this.ctx;
+        this.transparentCanvas = transparentCanvas.canvas;
+        this.ctx = transparentCanvas.context;
+        this.ctx.save();
+        // The transform can be applied before rendering, transferring it to
+        // the new canvas.
+        this.ctx.transform.apply(this.ctx,
+                                 this.compositeCtx.mozCurrentTransform);
+      }
+
+      this.ctx.save();
+      if (transform) {
+        this.ctx.transform.apply(this.ctx, transform);
+      }
+      this.ctx.transform.apply(this.ctx, viewport.transform);
 
       this.baseTransform = this.ctx.mozCurrentTransform.slice();
 
@@ -3970,7 +3985,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     endDrawing: function CanvasGraphics_endDrawing() {
       this.ctx.restore();
-      CachedCanvases.clear();
+
+      if (this.transparentCanvas) {
+        this.ctx = this.compositeCtx;
+        this.ctx.drawImage(this.transparentCanvas, 0, 0);
+        this.transparentCanvas = null;
+      }
+
+      this.cachedCanvases.clear();
       WebGLUtils.clear();
 
       if (this.imageLayer) {
@@ -4084,7 +4106,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var drawnWidth = activeSMask.canvas.width;
       var drawnHeight = activeSMask.canvas.height;
       var cacheId = 'smaskGroupAt' + this.groupLevel;
-      var scratchCanvas = CachedCanvases.getCanvas(
+      var scratchCanvas = this.cachedCanvases.getCanvas(
         cacheId, drawnWidth, drawnHeight, true);
 
       var currentCtx = this.ctx;
@@ -4868,7 +4890,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // Using two cache entries is case if masks are used one after another.
         cacheId +=  '_smask_' + ((this.smaskCounter++) % 2);
       }
-      var scratchCanvas = CachedCanvases.getCanvas(
+      var scratchCanvas = this.cachedCanvases.getCanvas(
         cacheId, drawnWidth, drawnHeight, true);
       var groupCtx = scratchCanvas.context;
 
@@ -5009,7 +5031,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         return;
       }
 
-      var maskCanvas = CachedCanvases.getCanvas('maskCanvas', width, height);
+      var maskCanvas = this.cachedCanvases.getCanvas('maskCanvas',
+                                                     width, height);
       var maskCtx = maskCanvas.context;
       maskCtx.save();
 
@@ -5034,7 +5057,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var fillColor = this.current.fillColor;
       var isPatternFill = this.current.patternFill;
 
-      var maskCanvas = CachedCanvases.getCanvas('maskCanvas', width, height);
+      var maskCanvas = this.cachedCanvases.getCanvas('maskCanvas',
+                                                     width, height);
       var maskCtx = maskCanvas.context;
       maskCtx.save();
 
@@ -5069,7 +5093,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var image = images[i];
         var width = image.width, height = image.height;
 
-        var maskCanvas = CachedCanvases.getCanvas('maskCanvas', width, height);
+        var maskCanvas = this.cachedCanvases.getCanvas('maskCanvas',
+                                                       width, height);
         var maskCtx = maskCanvas.context;
         maskCtx.save();
 
@@ -5142,7 +5167,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       if (imgData instanceof HTMLElement || !imgData.data) {
         imgToPaint = imgData;
       } else {
-        tmpCanvas = CachedCanvases.getCanvas('inlineImage', width, height);
+        tmpCanvas = this.cachedCanvases.getCanvas('inlineImage',
+                                                  width, height);
         var tmpCtx = tmpCanvas.context;
         putBinaryImageData(tmpCtx, imgData);
         imgToPaint = tmpCanvas.canvas;
@@ -5164,7 +5190,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           newHeight = Math.ceil(paintHeight / 2);
           heightScale /= paintHeight / newHeight;
         }
-        tmpCanvas = CachedCanvases.getCanvas(tmpCanvasId, newWidth, newHeight);
+        tmpCanvas = this.cachedCanvases.getCanvas(tmpCanvasId,
+                                                  newWidth, newHeight);
         tmpCtx = tmpCanvas.context;
         tmpCtx.clearRect(0, 0, newWidth, newHeight);
         tmpCtx.drawImage(imgToPaint, 0, 0, paintWidth, paintHeight,
@@ -5196,7 +5223,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var w = imgData.width;
       var h = imgData.height;
 
-      var tmpCanvas = CachedCanvases.getCanvas('inlineImage', w, h);
+      var tmpCanvas = this.cachedCanvases.getCanvas('inlineImage', w, h);
       var tmpCtx = tmpCanvas.context;
       putBinaryImageData(tmpCtx, imgData);
 
@@ -5854,7 +5881,7 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
   }
 
   function createMeshCanvas(bounds, combinesScale, coords, colors, figures,
-                            backgroundColor) {
+                            backgroundColor, cachedCanvases) {
     // we will increase scale on some weird factor to let antialiasing take
     // care of "rough" edges
     var EXPECTED_SCALE = 1.1;
@@ -5888,11 +5915,11 @@ var createMeshCanvas = (function createMeshCanvasClosure() {
                                       figures, context);
 
       // https://bugzilla.mozilla.org/show_bug.cgi?id=972126
-      tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
+      tmpCanvas = cachedCanvases.getCanvas('mesh', width, height, false);
       tmpCanvas.context.drawImage(canvas, 0, 0);
       canvas = tmpCanvas.canvas;
     } else {
-      tmpCanvas = CachedCanvases.getCanvas('mesh', width, height, false);
+      tmpCanvas = cachedCanvases.getCanvas('mesh', width, height, false);
       var tmpCtx = tmpCanvas.context;
 
       var data = tmpCtx.createImageData(width, height);
@@ -5948,7 +5975,8 @@ ShadingIRs.Mesh = {
         // Rasterizing on the main thread since sending/queue large canvases
         // might cause OOM.
         var temporaryPatternCanvas = createMeshCanvas(bounds, scale, coords,
-          colors, figures, shadingFill ? null : background);
+          colors, figures, shadingFill ? null : background,
+          owner.cachedCanvases);
 
         if (!shadingFill) {
           ctx.setTransform.apply(ctx, owner.baseTransform);
@@ -6051,7 +6079,8 @@ var TilingPattern = (function TilingPatternClosure() {
       height = Math.min(Math.ceil(Math.abs(height * combinedScale[1])),
         MAX_PATTERN_SIZE);
 
-      var tmpCanvas = CachedCanvases.getCanvas('pattern', width, height, true);
+      var tmpCanvas = owner.cachedCanvases.getCanvas('pattern',
+        width, height, true);
       var tmpCtx = tmpCanvas.context;
       var graphics = new CanvasGraphics(tmpCtx, commonObjs, objs);
       graphics.groupLevel = owner.groupLevel;
@@ -6252,6 +6281,63 @@ var FontFaceObject = (function FontFaceObjectClosure() {
   };
   return FontFaceObject;
 })();
+
+
+/**
+ * Optimised CSS custom property getter/setter.
+ * @class
+ */
+var CustomStyle = (function CustomStyleClosure() {
+
+  // As noted on: http://www.zachstronaut.com/posts/2009/02/17/
+  //              animate-css-transforms-firefox-webkit.html
+  // in some versions of IE9 it is critical that ms appear in this list
+  // before Moz
+  var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
+  var _cache = {};
+
+  function CustomStyle() {}
+
+  CustomStyle.getProp = function get(propName, element) {
+    // check cache only when no element is given
+    if (arguments.length === 1 && typeof _cache[propName] === 'string') {
+      return _cache[propName];
+    }
+
+    element = element || document.documentElement;
+    var style = element.style, prefixed, uPropName;
+
+    // test standard property first
+    if (typeof style[propName] === 'string') {
+      return (_cache[propName] = propName);
+    }
+
+    // capitalize
+    uPropName = propName.charAt(0).toUpperCase() + propName.slice(1);
+
+    // test vendor specific properties
+    for (var i = 0, l = prefixes.length; i < l; i++) {
+      prefixed = prefixes[i] + uPropName;
+      if (typeof style[prefixed] === 'string') {
+        return (_cache[propName] = prefixed);
+      }
+    }
+
+    //if all fails then set to undefined
+    return (_cache[propName] = 'undefined');
+  };
+
+  CustomStyle.setProp = function set(propName, element, str) {
+    var prop = this.getProp(propName);
+    if (prop !== 'undefined') {
+      element.style[prop] = str;
+    }
+  };
+
+  return CustomStyle;
+})();
+
+PDFJS.CustomStyle = CustomStyle;
 
 
 var ANNOT_MIN_SIZE = 10; // px
@@ -6524,6 +6610,225 @@ var AnnotationUtils = (function AnnotationUtilsClosure() {
   };
 })();
 PDFJS.AnnotationUtils = AnnotationUtils;
+
+
+/**
+ * Text layer render parameters.
+ *
+ * @typedef {Object} TextLayerRenderParameters
+ * @property {TextContent} textContent - Text content to render (the object is
+ *   returned by the page's getTextContent() method).
+ * @property {HTMLElement} container - HTML element that will contain text runs.
+ * @property {PDFJS.PageViewport} viewport - The target viewport to properly
+ *   layout the text runs.
+ * @property {Array} textDivs - (optional) HTML elements that are correspond
+ *   the text items of the textContent input. This is output and shall be
+ *   initially be set to empty array.
+ * @property {number} timeout - (optional) Delay in milliseconds before
+ *   rendering of the text  runs occurs.
+ */
+var renderTextLayer = (function renderTextLayerClosure() {
+  var MAX_TEXT_DIVS_TO_RENDER = 100000;
+
+  var NonWhitespaceRegexp = /\S/;
+
+  function isAllWhitespace(str) {
+    return !NonWhitespaceRegexp.test(str);
+  }
+
+  function appendText(textDivs, viewport, geom, styles) {
+    var style = styles[geom.fontName];
+    var textDiv = document.createElement('div');
+    textDivs.push(textDiv);
+    if (isAllWhitespace(geom.str)) {
+      textDiv.dataset.isWhitespace = true;
+      return;
+    }
+    var tx = PDFJS.Util.transform(viewport.transform, geom.transform);
+    var angle = Math.atan2(tx[1], tx[0]);
+    if (style.vertical) {
+      angle += Math.PI / 2;
+    }
+    var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
+    var fontAscent = fontHeight;
+    if (style.ascent) {
+      fontAscent = style.ascent * fontAscent;
+    } else if (style.descent) {
+      fontAscent = (1 + style.descent) * fontAscent;
+    }
+
+    var left;
+    var top;
+    if (angle === 0) {
+      left = tx[4];
+      top = tx[5] - fontAscent;
+    } else {
+      left = tx[4] + (fontAscent * Math.sin(angle));
+      top = tx[5] - (fontAscent * Math.cos(angle));
+    }
+    textDiv.style.left = left + 'px';
+    textDiv.style.top = top + 'px';
+    textDiv.style.fontSize = fontHeight + 'px';
+    textDiv.style.fontFamily = style.fontFamily;
+
+    textDiv.textContent = geom.str;
+    // |fontName| is only used by the Font Inspector. This test will succeed
+    // when e.g. the Font Inspector is off but the Stepper is on, but it's
+    // not worth the effort to do a more accurate test.
+    if (PDFJS.pdfBug) {
+      textDiv.dataset.fontName = geom.fontName;
+    }
+    // Storing into dataset will convert number into string.
+    if (angle !== 0) {
+      textDiv.dataset.angle = angle * (180 / Math.PI);
+    }
+    // We don't bother scaling single-char text divs, because it has very
+    // little effect on text highlighting. This makes scrolling on docs with
+    // lots of such divs a lot faster.
+    if (geom.str.length > 1) {
+      if (style.vertical) {
+        textDiv.dataset.canvasWidth = geom.height * viewport.scale;
+      } else {
+        textDiv.dataset.canvasWidth = geom.width * viewport.scale;
+      }
+    }
+  }
+
+  function render(task) {
+    if (task._canceled) {
+      return;
+    }
+    var textLayerFrag = task._container;
+    var textDivs = task._textDivs;
+    var capability = task._capability;
+    var textDivsLength = textDivs.length;
+
+    // No point in rendering many divs as it would make the browser
+    // unusable even after the divs are rendered.
+    if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
+      capability.resolve();
+      return;
+    }
+
+    var canvas = document.createElement('canvas');
+    canvas.mozOpaque = true;
+    var ctx = canvas.getContext('2d', {alpha: false});
+
+    var lastFontSize;
+    var lastFontFamily;
+    for (var i = 0; i < textDivsLength; i++) {
+      var textDiv = textDivs[i];
+      if (textDiv.dataset.isWhitespace !== undefined) {
+        continue;
+      }
+
+      var fontSize = textDiv.style.fontSize;
+      var fontFamily = textDiv.style.fontFamily;
+
+      // Only build font string and set to context if different from last.
+      if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
+        ctx.font = fontSize + ' ' + fontFamily;
+        lastFontSize = fontSize;
+        lastFontFamily = fontFamily;
+      }
+
+      var width = ctx.measureText(textDiv.textContent).width;
+      if (width > 0) {
+        textLayerFrag.appendChild(textDiv);
+        var transform;
+        if (textDiv.dataset.canvasWidth !== undefined) {
+          // Dataset values come of type string.
+          var textScale = textDiv.dataset.canvasWidth / width;
+          transform = 'scaleX(' + textScale + ')';
+        } else {
+          transform = '';
+        }
+        var rotation = textDiv.dataset.angle;
+        if (rotation) {
+          transform = 'rotate(' + rotation + 'deg) ' + transform;
+        }
+        if (transform) {
+          PDFJS.CustomStyle.setProp('transform' , textDiv, transform);
+        }
+      }
+    }
+    capability.resolve();
+  }
+
+  /**
+   * Text layer rendering task.
+   *
+   * @param {TextContent} textContent
+   * @param {HTMLElement} container
+   * @param {PDFJS.PageViewport} viewport
+   * @param {Array} textDivs
+   * @private
+   */
+  function TextLayerRenderTask(textContent, container, viewport, textDivs) {
+    this._textContent = textContent;
+    this._container = container;
+    this._viewport = viewport;
+    textDivs = textDivs || [];
+    this._textDivs = textDivs;
+    this._canceled = false;
+    this._capability = createPromiseCapability();
+    this._renderTimer = null;
+  }
+  TextLayerRenderTask.prototype = {
+    get promise() {
+      return this._capability.promise;
+    },
+
+    cancel: function TextLayer_cancel() {
+      this._canceled = true;
+      if (this._renderTimer !== null) {
+        clearTimeout(this._renderTimer);
+        this._renderTimer = null;
+      }
+      this._capability.reject('canceled');
+    },
+
+    _render: function TextLayer_render(timeout) {
+      var textItems = this._textContent.items;
+      var styles = this._textContent.styles;
+      var textDivs = this._textDivs;
+      var viewport = this._viewport;
+      for (var i = 0, len = textItems.length; i < len; i++) {
+        appendText(textDivs, viewport, textItems[i], styles);
+      }
+
+      if (!timeout) { // Render right away
+        render(this);
+      } else { // Schedule
+        var self = this;
+        this._renderTimer = setTimeout(function() {
+          render(self);
+          self._renderTimer = null;
+        }, timeout);
+      }
+    }
+  };
+
+
+  /**
+   * Starts rendering of the text layer.
+   *
+   * @param {TextLayerRenderParameters} renderParameters
+   * @returns {TextLayerRenderTask}
+   */
+  function renderTextLayer(renderParameters) {
+    var task = new TextLayerRenderTask(renderParameters.textContent,
+                                       renderParameters.container,
+                                       renderParameters.viewport,
+                                       renderParameters.textDivs);
+    task._render(renderParameters.timeout);
+    return task;
+  }
+
+  return renderTextLayer;
+})();
+
+PDFJS.renderTextLayer = renderTextLayer;
 
 
 

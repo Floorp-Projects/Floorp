@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Test that we only render visible tree items.
+Test focusing with the Tree component.
 -->
 <head>
   <meta charset="utf-8">
@@ -13,17 +13,18 @@ Test that we only render visible tree items.
 <pre id="test">
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
+
 window.onload = Task.async(function* () {
   try {
-    const ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
-    const React = bRequire("devtools/client/shared/vendor/react");
-    const Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
     yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
-      height: 3,
-      scroll: 1
+      focused: "G",
+      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
     });
 
     isRenderedTree(document.body.textContent, [
@@ -32,19 +33,41 @@ window.onload = Task.async(function* () {
       "--E:false",
       "---K:false",
       "---L:false",
-    ], "Tree should show the second, third, and fourth items + buffer of 1 item at the end");
+      "--F:false",
+      "--G:true",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "G should be focused");
 
-    yield setState(tree, {
-      height: 2,
-      scroll: 3
-    });
+    // Click the first tree node
+    Simulate.click(document.querySelector(".tree-node"));
+
+    // Let the next render happen.
+    yield setState(tree, {});
 
     isRenderedTree(document.body.textContent, [
+      "A:true",
+      "-B:false",
       "--E:false",
       "---K:false",
       "---L:false",
       "--F:false",
-    ], "Tree should show the third and fourth item + buffer of 1 item at each end");
+      "--G:false",
+      "-C:false",
+      "--H:false",
+      "--I:false",
+      "-D:false",
+      "--J:false",
+      "M:false",
+      "-N:false",
+      "--O:false",
+    ], "A should be focused");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
