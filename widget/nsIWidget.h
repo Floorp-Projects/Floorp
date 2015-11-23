@@ -344,9 +344,10 @@ class nsIWidget : public nsISupports {
       // nsITheme::ThemeGeometryTypeForWidget.
       nsITheme::ThemeGeometryType mType;
       // The device-pixel rect within the window for the themed widget
-      nsIntRect mRect;
+      LayoutDeviceIntRect mRect;
 
-      ThemeGeometry(nsITheme::ThemeGeometryType aType, const nsIntRect& aRect)
+      ThemeGeometry(nsITheme::ThemeGeometryType aType,
+                    const LayoutDeviceIntRect& aRect)
         : mType(aType)
         , mRect(aRect)
       { }
