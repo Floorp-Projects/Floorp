@@ -138,14 +138,14 @@ public:
                       const nsACString& aReasonString = EmptyCString());
   nsresult CloseConnection(uint16_t reasonCode,
                            const nsACString& aReasonString = EmptyCString());
-  nsresult Disconnect();
+  void Disconnect();
   void DisconnectInternal();
 
   nsresult ConsoleError();
-  nsresult PrintErrorOnConsole(const char* aBundleURI,
-                               const char16_t* aError,
-                               const char16_t** aFormatStrings,
-                               uint32_t aFormatStringsLen);
+  void PrintErrorOnConsole(const char* aBundleURI,
+                           const char16_t* aError,
+                           const char16_t** aFormatStrings,
+                           uint32_t aFormatStringsLen);
 
   nsresult DoOnMessageAvailable(const nsACString& aMsg,
                                 bool isBinary);
@@ -301,19 +301,13 @@ public:
     , mError(aError)
     , mFormatStrings(aFormatStrings)
     , mFormatStringsLen(aFormatStringsLen)
-    , mRv(NS_ERROR_FAILURE)
   { }
 
   bool MainThreadRun() override
   {
-    mRv = mImpl->PrintErrorOnConsole(mBundleURI, mError, mFormatStrings,
-                                     mFormatStringsLen);
+    mImpl->PrintErrorOnConsole(mBundleURI, mError, mFormatStrings,
+                               mFormatStringsLen);
     return true;
-  }
-
-  nsresult ErrorCode() const
-  {
-    return mRv;
   }
 
 private:
@@ -324,12 +318,11 @@ private:
   const char16_t* mError;
   const char16_t** mFormatStrings;
   uint32_t mFormatStringsLen;
-  nsresult mRv;
 };
 
 } // namespace
 
-nsresult
+void
 WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
                                    const char16_t *aError,
                                    const char16_t **aFormatStrings,
@@ -344,25 +337,25 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
       new PrintErrorOnConsoleRunnable(this, aBundleURI, aError, aFormatStrings,
                                       aFormatStringsLen);
     runnable->Dispatch(mWorkerPrivate->GetJSContext());
-    return runnable->ErrorCode();
+    return;
   }
 
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIStringBundle> strBundle;
   rv = bundleService->CreateBundle(aBundleURI, getter_AddRefs(strBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIConsoleService> console(
     do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIScriptError> errorObject(
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Localize the error message
   nsXPIDLString message;
@@ -373,7 +366,7 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
   } else {
     rv = strBundle->GetStringFromName(aError, getter_Copies(message));
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   if (mInnerWindowID) {
     rv = errorObject->InitWithWindowID(message,
@@ -389,13 +382,11 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
                            nsIScriptError::errorFlag, "Web Socket");
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // print the error message directly to the JS console
   rv = console->LogMessage(errorObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 namespace {
@@ -603,11 +594,11 @@ private:
 
 } // namespace
 
-nsresult
+void
 WebSocketImpl::Disconnect()
 {
   if (mDisconnectingOrDisconnected) {
-    return NS_OK;
+    return;
   }
 
   AssertIsOnTargetThread();
@@ -645,8 +636,6 @@ WebSocketImpl::Disconnect()
 
   // We want to release the WebSocket in the correct thread.
   mWebSocket = nullptr;
-
-  return NS_OK;
 }
 
 void
