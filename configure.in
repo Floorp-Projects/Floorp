@@ -4276,8 +4276,8 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
   if test "$MOZ_ENABLE_GTK2"; then
-    TK_CFLAGS=$MOZ_GTK3_CFLAGS
-    TK_LIBS=$MOZ_GTK3_LIBS
+    TK_CFLAGS=$MOZ_GTK2_CFLAGS
+    TK_LIBS=$MOZ_GTK2_LIBS
   fi
 fi # COMPILE_ENVIRONMENT
 
