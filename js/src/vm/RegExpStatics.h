@@ -17,7 +17,7 @@ namespace js {
 class GlobalObject;
 class RegExpStaticsObject;
 
-class RegExpStatics : public JS::Traceable
+class RegExpStatics
 {
     /* The latest RegExp output, set after execution. */
     VectorMatchPairs        matches;
@@ -149,8 +149,7 @@ class RegExpStatics : public JS::Traceable
     RegExpFlag getFlags() const { return flags; }
     bool multiline() const { return flags & MultilineFlag; }
 
-    static void trace(RegExpStatics* self, JSTracer* trc) { self->trace(trc); }
-    void trace(JSTracer* trc) {
+    void mark(JSTracer* trc) {
         /*
          * Changes to this function must also be reflected in
          * RegExpStatics::AutoRooter::trace().
@@ -209,10 +208,42 @@ class RegExpStatics : public JS::Traceable
     }
 };
 
+class MOZ_RAII AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
+{
+  public:
+    explicit AutoRegExpStaticsBuffer(JSContext* cx
+                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : CustomAutoRooter(cx), statics(RegExpStatics::InitBuffer())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    RegExpStatics& getStatics() { return statics; }
+
+  private:
+    virtual void trace(JSTracer* trc) {
+        if (statics.matchesInput) {
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
+                      "AutoRegExpStaticsBuffer matchesInput");
+        }
+        if (statics.lazySource) {
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.lazySource),
+                      "AutoRegExpStaticsBuffer lazySource");
+        }
+        if (statics.pendingInput) {
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
+                      "AutoRegExpStaticsBuffer pendingInput");
+        }
+    }
+
+    RegExpStatics statics;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 class PreserveRegExpStatics
 {
     RegExpStatics * const original;
-    Rooted<RegExpStatics> buffer;
+    AutoRegExpStaticsBuffer buffer;
     size_t beforeId;
 
   public:
@@ -223,7 +254,7 @@ class PreserveRegExpStatics
     {}
 
     bool init(JSContext* cx) {
-        return original->save(cx, &buffer.get());
+        return original->save(cx, &buffer.getStatics());
     }
 
     ~PreserveRegExpStatics() {
