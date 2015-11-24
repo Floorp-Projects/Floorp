@@ -18,6 +18,7 @@
 #include "jsopcode.h"
 #include "jstypes.h"
 
+#include "builtin/ModuleObject.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
@@ -46,7 +47,6 @@ class BreakpointSite;
 class BindingIter;
 class Debugger;
 class LazyScript;
-class ModuleObject;
 class NestedScopeObject;
 class RegExpObject;
 struct SourceCompressionTask;

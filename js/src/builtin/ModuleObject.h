@@ -10,8 +10,6 @@
 #include "jsapi.h"
 #include "jsatom.h"
 
-#include "gc/Zone.h"
-
 #include "js/TraceableVector.h"
 
 #include "vm/NativeObject.h"
@@ -86,7 +84,6 @@ typedef Handle<ExportEntryObject*> HandleExportEntryObject;
 class IndirectBindingMap
 {
   public:
-    IndirectBindingMap(Zone* zone);
     bool init();
 
     void trace(JSTracer* trc);
@@ -118,7 +115,7 @@ class IndirectBindingMap
         RelocatablePtrShape shape;
     };
 
-    typedef HashMap<jsid, Binding, JsidHasher, ZoneAllocPolicy> Map;
+    typedef HashMap<jsid, Binding, JsidHasher, SystemAllocPolicy> Map;
 
     Map map_;
 };
@@ -192,7 +189,7 @@ struct FunctionDeclaration
     RelocatablePtrFunction fun;
 };
 
-using FunctionDeclarationVector = TraceableVector<FunctionDeclaration, 0, ZoneAllocPolicy>;
+using FunctionDeclarationVector = TraceableVector<FunctionDeclaration>;
 
 class ModuleObject : public NativeObject
 {

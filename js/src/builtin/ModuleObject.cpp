@@ -219,11 +219,6 @@ IndirectBindingMap::Binding::Binding(ModuleEnvironmentObject* environment, Shape
   : environment(environment), shape(shape)
 {}
 
-IndirectBindingMap::IndirectBindingMap(Zone* zone)
-  : map_(ZoneAllocPolicy(zone))
-{
-}
-
 bool
 IndirectBindingMap::init()
 {
@@ -588,8 +583,7 @@ ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
 
     self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(enclosingStaticScope));
 
-    Zone* zone = cx->zone();
-    IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
+    IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -597,11 +591,9 @@ ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
 
     self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
 
-    FunctionDeclarationVector* funDecls = zone->new_<FunctionDeclarationVector>(zone);
-    if (!funDecls) {
-        ReportOutOfMemory(cx);
+    FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>(cx);
+    if (!funDecls)
         return nullptr;
-    }
 
     self->initReservedSlot(FunctionDeclarationsSlot, PrivateValue(funDecls));
     return self;
@@ -834,8 +826,7 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleArra
     if (!ns)
         return nullptr;
 
-    Zone* zone = cx->zone();
-    IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
+    IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
     if (!bindings || !bindings->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
