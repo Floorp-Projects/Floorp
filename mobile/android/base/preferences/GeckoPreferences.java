@@ -739,14 +739,6 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 }
-                if (PREFS_CATEGORY_HOMEPAGE.equals(key)) {
-                    // Only enable the home page setting on Nightly.
-                    if (!AppConstants.NIGHTLY_BUILD) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
-                }
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
                 pref.setOnPreferenceChangeListener(this);
