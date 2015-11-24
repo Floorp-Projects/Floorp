@@ -5862,38 +5862,32 @@ BytecodeEmitter::emitFor(ParseNode* pn)
 bool
 BytecodeEmitter::emitComprehensionForInOrOfVariables(ParseNode* pn, bool* letBlockScope)
 {
-    // ES6 specifies that loop variables get a fresh binding in each iteration.
-    // This is currently implemented for C-style for(;;) loops, but not
-    // for-in/of loops, though a similar approach should work. See bug 449811.
-    //
-    // In `for (let x in/of EXPR)`, ES6 specifies that EXPR is evaluated in a
-    // scope containing an uninitialized `x`. If EXPR accesses `x`, we should
-    // get a ReferenceError due to the TDZ violation. This is not yet
-    // implemented. See bug 1069480.
+    // ES6 specifies that lexical for-loop variables get a fresh binding each
+    // iteration, and that evaluation of the expression looped over occurs with
+    // these variables uninitialized.  But these rules only apply to *standard*
+    // for-in/of loops, and we haven't extended these requirements to
+    // comprehension syntax.
 
     *letBlockScope = pn->isKind(PNK_LEXICALSCOPE);
-    MOZ_ASSERT_IF(*letBlockScope, pn->isLexical());
+    if (*letBlockScope) {
+        // This is initially-ES7-tracked syntax, now with considerably
+        // murkier outlook.  The |enterBlockScope()| precipitated by the
+        // outparam-set here initializes the let-binding in
+        // |emitComprehensionFor{In,Of}| with |undefined|, so there's nothing
+        // to do here.
+        MOZ_ASSERT(pn->isLexical());
+    } else {
+        // This is legacy comprehension syntax.  We'll have PNK_LET here, using
+        // a lexical scope provided by/for the entire comprehension.  Name
+        // analysis assumes declarations initialize lets, but as we're handling
+        // this declaration manually, we must also initialize manually to avoid
+        // triggering dead zone checks.
+        MOZ_ASSERT(pn->isKind(PNK_LET));
+        MOZ_ASSERT(pn->pn_count == 1);
 
-    // If the left part is 'var x', emit code to define x if necessary using a
-    // prologue opcode, but do not emit a pop. If it is 'let x', enterBlockScope
-    // will initialize let bindings in emitForOf and emitForIn with
-    // undefineds.
-    //
-    // Due to the horror of legacy comprehensions, there is a third case where
-    // we have PNK_LET without a lexical scope, because those expressions are
-    // parsed with single lexical scope for the entire comprehension. In this
-    // case we must initialize the lets to not trigger dead zone checks via
-    // InitializeVars.
-    if (!*letBlockScope) {
         emittingForInit = true;
-        if (pn->isKind(PNK_VAR)) {
-            if (!emitVariables(pn, DefineVars))
-                return false;
-        } else {
-            MOZ_ASSERT(pn->isKind(PNK_LET));
-            if (!emitVariables(pn, InitializeVars))
-                return false;
-        }
+        if (!emitVariables(pn, InitializeVars))
+            return false;
         emittingForInit = false;
     }
 
