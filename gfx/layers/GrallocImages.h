@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace layers {
 
-class TextureClient;
+class GrallocTextureClientOGL;
 
 already_AddRefed<gfx::DataSourceSurface>
 GetDataSourceSurfaceFrom(android::sp<android::GraphicBuffer>& aGraphicBuffer,
@@ -124,7 +124,7 @@ public:
   }
 
 private:
-  RefPtr<TextureClient> mTextureClient;
+  RefPtr<GrallocTextureClientOGL> mTextureClient;
 };
 
 } // namespace layers

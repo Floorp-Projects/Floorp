@@ -13,8 +13,7 @@
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/layers/BufferTexture.h"
+#include "mozilla/layers/TextureClient.h"  // for BufferTextureClient, etc
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/mozalloc.h"           // for operator delete
@@ -66,9 +65,7 @@ SharedPlanarYCbCrImage::GetTextureClient(CompositableClient* aClient)
 uint8_t*
 SharedPlanarYCbCrImage::GetBuffer()
 {
-  // This should never be used
-  MOZ_ASSERT(false);
-  return nullptr;
+  return mTextureClient ? mTextureClient->GetBuffer() : nullptr;
 }
 
 already_AddRefed<gfx::SourceSurface>
@@ -92,13 +89,15 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
     return false;
   }
 
+  MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
+
   TextureClientAutoLock autoLock(mTextureClient, OpenMode::OPEN_WRITE_ONLY);
   if (!autoLock.Succeeded()) {
     MOZ_ASSERT(false, "Failed to lock the texture.");
     return false;
   }
 
-  if (!UpdateYCbCrTextureClient(mTextureClient, aData)) {
+  if (!mTextureClient->AsTextureClientYCbCr()->UpdateYCbCr(aData)) {
     MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
     return false;
   }
@@ -129,18 +128,8 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   // update buffer size
   mBufferSize = size;
 
-  MappedYCbCrTextureData mapped;
-  if (mTextureClient->BorrowMappedYCbCrData(mapped)) {
-    // The caller expects a pointer to the beginning of the writable part of the
-    // buffer (after the metadata) which is where the y channel starts by default.
-    // The caller might choose to write the y channel at a different offset and
-    // if it does so, it will also update the metadata.
-    // Anyway, we return the y channel here but the intent is to obtain the start of
-    // the writable part of the buffer.
-    return mapped.y.data;
-  } else {
-    MOZ_CRASH();
-  }
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
+  return serializer.GetData();
 }
 
 bool
@@ -158,11 +147,7 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
    * with AllocateAndGetNewBuffer(), that we subtract from the Y, Cb, Cr
    * channels to compute 0-based offsets to pass to InitializeBufferInfo.
    */
-  MappedYCbCrTextureData mapped;
-  if(!mTextureClient->BorrowMappedYCbCrData(mapped)) {
-    MOZ_CRASH();
-  }
-  YCbCrImageDataSerializer serializer(mapped.metadata, mBufferSize);
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
   uint8_t *base = serializer.GetData();
   uint32_t yOffset = aData.mYChannel - base;
   uint32_t cbOffset = aData.mCbChannel - base;
@@ -198,18 +183,15 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
     return false;
   }
 
-  MappedYCbCrTextureData mapped;
-  // The locking here is sort of a lie. The SharedPlanarYCbCrImage just pulls
-  // pointers out of the TextureClient and keeps them around, which works only
-  // because the underlyin BufferTextureData is always mapped in memory even outside
-  // of the lock/unlock interval. That's sad and new code should follow this example.
-  if (!mTextureClient->Lock(OpenMode::OPEN_READ) || !mTextureClient->BorrowMappedYCbCrData(mapped)) {
-    MOZ_CRASH();
-  }
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
+  serializer.InitializeBufferInfo(aData.mYSize,
+                                  aData.mCbCrSize,
+                                  aData.mStereoMode);
+  MOZ_ASSERT(serializer.IsValid());
 
-  aData.mYChannel = mapped.y.data;
-  aData.mCbChannel = mapped.cb.data;
-  aData.mCrChannel = mapped.cr.data;
+  aData.mYChannel = serializer.GetYData();
+  aData.mCbChannel = serializer.GetCbData();
+  aData.mCrChannel = serializer.GetCrData();
 
   // copy some of aData's values in mData (most of them)
   mData.mYChannel = aData.mYChannel;
@@ -235,8 +217,6 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
                                                                mData.mCbCrSize);
   mSize = mData.mPicSize;
-
-  mTextureClient->Unlock();
 
   return mBufferSize > 0;
 }

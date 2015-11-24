@@ -75,7 +75,7 @@ void YCbCrImageDataDeserializerBase::Validate()
                           info->mYStride,
                           IntSize(info->mCbCrWidth, info->mCbCrHeight),
                           info->mCbCrStride);
-  mIsValid = requiredSize <= mDataSize;
+  mIsValid = requiredSize && requiredSize <= mDataSize;
 
 }
 
@@ -147,15 +147,14 @@ YCbCrImageDataDeserializerBase::ComputeMinBufferSize(const gfx::IntSize& aYSize,
                                                      uint32_t aCbCrStride)
 {
   MOZ_ASSERT(aYSize.height >= 0 && aYSize.width >= 0);
-  if (aYSize.height < 0 || aYSize.width < 0 || aCbCrSize.height < 0 || aCbCrSize.width < 0) {
+  if (aYSize.height <= 0 || aYSize.width <= 0 || aCbCrSize.height <= 0 || aCbCrSize.width <= 0) {
     gfxDebug() << "Non-positive YCbCr buffer size request " << aYSize.height << "x" << aYSize.width << ", " << aCbCrSize.height << "x" << aCbCrSize.width;
     return 0;
   }
 
-  if (aYSize != IntSize() &&
-      (!gfx::Factory::AllowedSurfaceSize(aYSize) ||
-       aCbCrSize.width > aYSize.width ||
-       aCbCrSize.height > aYSize.height)) {
+  if (!gfx::Factory::AllowedSurfaceSize(aYSize) ||
+      aCbCrSize.width > aYSize.width ||
+      aCbCrSize.height > aYSize.height) {
     return 0;
   }
 
