@@ -91,13 +91,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
         'convolver.cpp',
+    ]
+    SOURCES += [
         'DrawTargetSkia.cpp',
+        'image_operations.cpp', # Uses _USE_MATH_DEFINES
         'PathSkia.cpp',
         'SourceSurfaceSkia.cpp',
     ]
-    SOURCES += [
-        'image_operations.cpp', # Uses _USE_MATH_DEFINES
-    ]
+    if CONFIG['CLANG_CXX']:
+        # Suppress warnings from Skia header files.
+        SOURCES['DrawTargetSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
+        SOURCES['PathSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
+        SOURCES['SourceSurfaceSkia.cpp'].flags += ['-Wno-implicit-fallthrough']
     EXPORTS.mozilla.gfx += [
         'HelpersSkia.h',
         'RefPtrSkia.h',
@@ -143,7 +148,6 @@ UNIFIED_SOURCES += [
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
     'DrawTargetTiled.cpp',
-    'Factory.cpp',
     'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
@@ -165,6 +169,13 @@ UNIFIED_SOURCES += [
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
 ]
+
+SOURCES += [
+    'Factory.cpp', # Need to suppress warnings in Skia header files.
+]
+
+if CONFIG['CLANG_CXX']:
+    SOURCES['Factory.cpp'].flags += ['-Wno-implicit-fallthrough']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.gfx += [
