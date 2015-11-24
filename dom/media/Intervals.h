@@ -652,6 +652,18 @@ public:
     return mIntervals.end();
   }
 
+  ElemType& LastInterval()
+  {
+    MOZ_ASSERT(!mIntervals.IsEmpty());
+    return mIntervals.LastElement();
+  }
+
+  const ElemType& LastInterval() const
+  {
+    MOZ_ASSERT(!mIntervals.IsEmpty());
+    return mIntervals.LastElement();
+  }
+
 protected:
   ContainerType mIntervals;
 
