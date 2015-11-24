@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -53,6 +54,7 @@ using mozilla::IsInRange;
 using mozilla::Maybe;
 using mozilla::PodMove;
 using mozilla::UniquePtr;
+using mozilla::Maybe;
 
 static void
 selfHosting_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)

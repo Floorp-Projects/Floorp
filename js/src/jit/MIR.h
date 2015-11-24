@@ -3906,6 +3906,49 @@ class MApplyArgs
     }
 };
 
+// fun.apply(fn, array)
+class MApplyArray
+  : public MAryInstruction<3>,
+    public Mix3Policy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2> >::Data
+{
+  protected:
+    // Monomorphic cache of single target from TI, or nullptr.
+    CompilerFunction target_;
+
+    MApplyArray(JSFunction* target, MDefinition* fun, MDefinition* elements, MDefinition* self)
+      : target_(target)
+    {
+        initOperand(0, fun);
+        initOperand(1, elements);
+        initOperand(2, self);
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ApplyArray)
+    static MApplyArray* New(TempAllocator& alloc, JSFunction* target, MDefinition* fun,
+                            MDefinition* elements, MDefinition* self);
+
+    MDefinition* getFunction() const {
+        return getOperand(0);
+    }
+
+    // For TI-informed monomorphic callsites.
+    JSFunction* getSingleTarget() const {
+        return target_;
+    }
+
+    MDefinition* getElements() const {
+        return getOperand(1);
+    }
+    MDefinition* getThis() const {
+        return getOperand(2);
+    }
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 class MBail : public MNullaryInstruction
 {
   protected:

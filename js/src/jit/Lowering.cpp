@@ -526,6 +526,38 @@ LIRGenerator::visitApplyArgs(MApplyArgs* apply)
 }
 
 void
+LIRGenerator::visitApplyArray(MApplyArray* apply)
+{
+    MOZ_ASSERT(apply->getFunction()->type() == MIRType_Object);
+
+    // Assert if we cannot build a rectifier frame.
+    MOZ_ASSERT(CallTempReg0 != ArgumentsRectifierReg);
+    MOZ_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
+
+    // Assert if the return value is already erased.
+    MOZ_ASSERT(CallTempReg2 != JSReturnReg_Type);
+    MOZ_ASSERT(CallTempReg2 != JSReturnReg_Data);
+
+    LApplyArrayGeneric* lir = new(alloc()) LApplyArrayGeneric(
+        useFixed(apply->getFunction(), CallTempReg3),
+        useFixed(apply->getElements(), CallTempReg0),
+        tempFixed(CallTempReg1),  // object register
+        tempFixed(CallTempReg2)); // stack counter register
+
+    MDefinition* self = apply->getThis();
+    useBoxFixed(lir, LApplyArrayGeneric::ThisIndex, self, CallTempReg4, CallTempReg5);
+
+    // Bailout is needed in the case of possible non-JSFunction callee
+    // too many values in the array, or empty space at the end of the
+    // array.  I'm going to use NonJSFunctionCallee for the code even
+    // if that is not an adequate description.
+    assignSnapshot(lir, Bailout_NonJSFunctionCallee);
+
+    defineReturn(lir, apply);
+    assignSafepoint(lir, apply);
+}
+
+void
 LIRGenerator::visitBail(MBail* bail)
 {
     LBail* lir = new(alloc()) LBail();
