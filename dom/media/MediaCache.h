@@ -11,13 +11,14 @@
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
+#include "Intervals.h"
 
 class nsIPrincipal;
 
 namespace mozilla {
 // defined in MediaResource.h
 class ChannelMediaResource;
-class MediaByteRange;
+typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 class MediaResource;
 class ReentrantMonitorAutoEnter;
 
@@ -300,7 +301,7 @@ public:
   // cached. Locks the media cache while running, to prevent any ranges
   // growing. The stream should be pinned while this runs and while its results
   // are used, to ensure no data is evicted.
-  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges);
+  nsresult GetCachedRanges(MediaByteRangeSet& aRanges);
 
   // Reads from buffered data only. Will fail if not all data to be read is
   // in the cache. Will not mark blocks as read. Can be called from the main

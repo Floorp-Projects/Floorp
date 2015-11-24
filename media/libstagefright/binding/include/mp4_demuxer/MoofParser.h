@@ -165,7 +165,7 @@ public:
 class AuxInfo {
 public:
   AuxInfo(int64_t aMoofOffset, Saiz& aSaiz, Saio& aSaio);
-  bool GetByteRanges(nsTArray<MediaByteRange>* aByteRanges);
+  bool GetByteRanges(MediaByteRangeSet* aByteRanges);
 
 private:
   int64_t mMoofOffset;
@@ -212,10 +212,10 @@ public:
     // the composition range for MSE. We need an array of tracks.
   }
   bool RebuildFragmentedIndex(
-    const nsTArray<mozilla::MediaByteRange>& aByteRanges);
+    const mozilla::MediaByteRangeSet& aByteRanges);
   bool RebuildFragmentedIndex(BoxContext& aContext);
   Interval<Microseconds> GetCompositionRange(
-    const nsTArray<mozilla::MediaByteRange>& aByteRanges);
+    const mozilla::MediaByteRangeSet& aByteRanges);
   bool ReachedEnd();
   void ParseMoov(Box& aBox);
   void ParseTrak(Box& aBox);
@@ -250,7 +250,7 @@ private:
   void ScanForMetadata(mozilla::MediaByteRange& aFtyp,
                        mozilla::MediaByteRange& aMoov);
   nsTArray<Moof> mMoofs;
-  nsTArray<MediaByteRange> mMediaRanges;
+  MediaByteRangeSet mMediaRanges;
   bool mIsAudio;
 };
 }

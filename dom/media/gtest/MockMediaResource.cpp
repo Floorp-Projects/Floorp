@@ -77,7 +77,7 @@ MockMediaResource::MockClearBufferedRanges()
 void
 MockMediaResource::MockAddBufferedRange(int64_t aStart, int64_t aEnd)
 {
-  mRanges.AppendElement(MediaByteRange(aStart, aEnd));
+  mRanges += MediaByteRange(aStart, aEnd);
 }
 
 int64_t
@@ -107,10 +107,9 @@ MockMediaResource::GetCachedDataEnd(int64_t aOffset)
 }
 
 nsresult
-MockMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+MockMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
-  aRanges.Clear();
-  aRanges.AppendElements(mRanges);
+  aRanges = mRanges;
   return NS_OK;
 }
 

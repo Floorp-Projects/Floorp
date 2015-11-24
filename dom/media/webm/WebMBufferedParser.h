@@ -266,7 +266,7 @@ public:
 
   void NotifyDataArrived(const unsigned char* aBuffer, uint32_t aLength, int64_t aOffset);
   void Reset();
-  void UpdateIndex(const nsTArray<MediaByteRange>& aRanges, MediaResource* aResource);
+  void UpdateIndex(const MediaByteRangeSet& aRanges, MediaResource* aResource);
   bool CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
                                  uint64_t* aStartTime, uint64_t* aEndTime);
 

@@ -264,7 +264,7 @@ MP4TrackDemuxer::EnsureUpToDateIndex()
     return;
   }
   AutoPinned<MediaResource> resource(mParent->mResource);
-  nsTArray<MediaByteRange> byteRanges;
+  MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
   if (NS_FAILED(rv)) {
     return;
@@ -413,7 +413,7 @@ MP4TrackDemuxer::GetBuffered()
 {
   EnsureUpToDateIndex();
   AutoPinned<MediaResource> resource(mParent->mResource);
-  nsTArray<MediaByteRange> byteRanges;
+  MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
 
   if (NS_FAILED(rv)) {
