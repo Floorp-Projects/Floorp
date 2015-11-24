@@ -236,6 +236,13 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-response-xhr.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-waits-for-activate.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-waits-for-activate.https.html",
+            "timeout": "long",
+            "url": "/_mozilla/service-workers/service-worker/fetch-waits-for-activate.https.html"
+          }
+        ],
         "service-workers/service-worker/getregistration.https.html": [
           {
             "path": "service-workers/service-worker/getregistration.https.html",
