@@ -649,16 +649,6 @@
 
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
-
-                  // If the browser was playing audio, we should remove the playing state.
-                  if (this.mTab.hasAttribute("soundplaying")) {
-                    this.mTab.removeAttribute("soundplaying");
-                    this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
-                  }
-                  // If the browser was previously muted, we should restore the muted state.
-                  if (this.mTab.hasAttribute("muted")) {
-                    this.mTab.linkedBrowser.mute();
-                  }
                 }
 
                 if (this._shouldShowProgress(aRequest)) {
@@ -766,15 +756,28 @@
                 if (this.mBrowser.userTypedClear > 0 ||
                     ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
                      aLocation.spec != "about:blank") ||
-                     aFlags && Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+                     aFlags && Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
                   this.mBrowser.userTypedValue = null;
+                }
+
+                // If the browser was playing audio, we should remove the playing state.
+                if (this.mTab.hasAttribute("soundplaying")) {
+                  this.mTab.removeAttribute("soundplaying");
+                  this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
+                }
+
+                // If the browser was previously muted, we should restore the muted state.
+                if (this.mTab.hasAttribute("muted")) {
+                  this.mTab.linkedBrowser.mute();
+                }
 
                 if (this.mTabBrowser.isFindBarInitialized(this.mTab)) {
                   let findBar = this.mTabBrowser.getFindBar(this.mTab);
 
                   // Close the Find toolbar if we're in old-style TAF mode
-                  if (findBar.findMode != findBar.FIND_NORMAL)
+                  if (findBar.findMode != findBar.FIND_NORMAL) {
                     findBar.close();
+                  }
 
                   // fix bug 253793 - turn off highlight when page changes
                   findBar.getElement("highlight").checked = false;
