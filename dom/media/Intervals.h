@@ -664,6 +664,11 @@ public:
     return mIntervals.LastElement();
   }
 
+  void Clear()
+  {
+    mIntervals.Clear();
+  }
+
 protected:
   ContainerType mIntervals;
 
