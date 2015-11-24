@@ -259,6 +259,8 @@ public:
                                                   CompositableClient* aCompositable,
                                                   TextureClient* aTexture) override;
 
+  virtual void RemoveTexture(TextureClient* aTexture) override;
+
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override
   {

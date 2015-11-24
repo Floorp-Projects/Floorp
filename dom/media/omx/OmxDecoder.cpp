@@ -354,10 +354,10 @@ OmxDecoder::ReleaseMediaResources() {
       for (std::set<TextureClient*>::iterator it=mPendingRecycleTexutreClients.begin();
            it!=mPendingRecycleTexutreClients.end(); it++)
       {
-        GrallocTextureData* client = static_cast<GrallocTextureData*>((*it)->GetInternalData());
-        (*it)->ClearRecycleCallback();
+        GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(*it);
+        client->ClearRecycleCallback();
         if (client->GetMediaBuffer()) {
-          mPendingVideoBuffers.push(BufferItem(client->GetMediaBuffer(), (*it)->GetAndResetReleaseFenceHandle()));
+          mPendingVideoBuffers.push(BufferItem(client->GetMediaBuffer(), client->GetAndResetReleaseFenceHandle()));
         }
       }
       mPendingRecycleTexutreClients.clear();
@@ -653,7 +653,8 @@ OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       // Manually increment reference count to keep MediaBuffer alive
       // during TextureClient is in use.
       mVideoBuffer->add_ref();
-      static_cast<GrallocTextureData*>(textureClient->GetInternalData())->SetMediaBuffer(mVideoBuffer);
+      GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
+      grallocClient->SetMediaBuffer(mVideoBuffer);
       // Set recycle callback for TextureClient
       textureClient->SetRecycleCallback(OmxDecoder::RecycleCallback, this);
       {
@@ -916,9 +917,9 @@ OmxDecoder::RecycleCallbackImp(TextureClient* aClient)
       return;
     }
     mPendingRecycleTexutreClients.erase(aClient);
-    GrallocTextureData* grallocData = static_cast<GrallocTextureData*>(aClient->GetInternalData());
-    if (grallocData->GetMediaBuffer()) {
-      mPendingVideoBuffers.push(BufferItem(grallocData->GetMediaBuffer(), aClient->GetAndResetReleaseFenceHandle()));
+    GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
+    if (client->GetMediaBuffer()) {
+      mPendingVideoBuffers.push(BufferItem(client->GetMediaBuffer(), client->GetAndResetReleaseFenceHandle()));
     }
   }
   sp<AMessage> notify =

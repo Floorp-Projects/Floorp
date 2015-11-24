@@ -198,7 +198,7 @@ CompositableClient::GetAsyncID() const
   return 0; // zero is always an invalid async ID
 }
 
-already_AddRefed<TextureClient>
+already_AddRefed<BufferTextureClient>
 CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                                               gfx::IntSize aSize,
                                               gfx::BackendType aMoz2DBackend,
@@ -225,7 +225,7 @@ CompositableClient::CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
-  if(!aClient) {
+  if(!aClient || !aClient->IsAllocated()) {
     return false;
   }
   aClient->SetAddedToCompositableClient();

@@ -204,15 +204,17 @@ IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
     return nullptr;
   }
 
-  mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aClient->GetForwarder(),
-                                 TextureFlags::DEFAULT,
-                                 textureY, textureCb, textureCr,
-                                 shareHandleY, shareHandleCb, shareHandleCr,
-                                 GetSize(), mData.mYSize, mData.mCbCrSize),
-    TextureFlags::DEFAULT,
-    aClient->GetForwarder()
-  );
+  mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
+                                                  TextureFlags::DEFAULT,
+                                                  textureY,
+                                                  textureCb,
+                                                  textureCr,
+                                                  shareHandleY,
+                                                  shareHandleCb,
+                                                  shareHandleCr,
+                                                  GetSize(),
+                                                  mData.mYSize,
+                                                  mData.mCbCrSize);
 
   return mTextureClient;
 }
@@ -271,14 +273,14 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
                            mData.mCbCrStride, mData.mCbCrStride * mData.mCbCrSize.height);
   }
 
-  mTextureClient = TextureClient::CreateWithData(
-    DXGIYCbCrTextureData::Create(aClient->GetForwarder(),
-                                 TextureFlags::DEFAULT,
-                                 textureY, textureCb, textureCr,
-                                 GetSize(), mData.mYSize, mData.mCbCrSize),
-    TextureFlags::DEFAULT,
-    aClient->GetForwarder()
-  );
+  mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
+                                                  TextureFlags::DEFAULT,
+                                                  textureY,
+                                                  textureCb,
+                                                  textureCr,
+                                                  GetSize(),
+                                                  mData.mYSize,
+                                                  mData.mCbCrSize);
 
   return mTextureClient;
 }

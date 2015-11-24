@@ -26,7 +26,7 @@ public:
     , mDevice(aDevice)
   {}
 
-  already_AddRefed<TextureClient>
+  already_AddRefed<TextureClientD3D11>
   CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                         const gfx::IntSize& aSize);
 
@@ -63,7 +63,7 @@ public:
 private:
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  RefPtr<TextureClient> mTextureClient;
+  RefPtr<TextureClientD3D11> mTextureClient;
 };
 
 } // namepace layers

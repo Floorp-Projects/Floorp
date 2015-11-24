@@ -63,17 +63,17 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     gfxContentType type = hasAlpha ? gfxContentType::COLOR_ALPHA
                                    : gfxContentType::COLOR;
 
-    GrallocTextureData* texData = GrallocTextureData::CreateForGLRendering(
-        size, gfxPlatform::GetPlatform()->Optimal2DFormatForContent(type), allocator
-    );
+    typedef GrallocTextureClientOGL ptrT;
+    RefPtr<ptrT> grallocTC = new ptrT(allocator,
+                                      gfxPlatform::GetPlatform()->Optimal2DFormatForContent(type),
+                                      gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
+                                      flags);
 
-    if (!texData) {
+    if (!grallocTC->AllocateForGLRendering(size)) {
         return Move(ret);
     }
 
-    RefPtr<TextureClient> grallocTC = new TextureClient(texData, flags, allocator);
-
-    sp<GraphicBuffer> buffer = texData->GetGraphicBuffer();
+    sp<GraphicBuffer> buffer = grallocTC->GetGraphicBuffer();
 
     EGLDisplay display = egl->Display();
     EGLClientBuffer clientBuffer = buffer->getNativeBuffer();
@@ -119,7 +119,7 @@ SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
                                              bool hasAlpha,
                                              GLLibraryEGL* egl,
                                              layers::ISurfaceAllocator* allocator,
-                                             layers::TextureClient* textureClient,
+                                             layers::GrallocTextureClientOGL* textureClient,
                                              GLuint prodTex)
     : SharedSurface(SharedSurfaceType::Gralloc,
                     AttachmentType::GLTexture,
@@ -279,6 +279,7 @@ SharedSurface_Gralloc::WaitForBufferOwnership()
 bool
 SharedSurface_Gralloc::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
+    mTextureClient->MarkShared();
     return mTextureClient->ToSurfaceDescriptor(*out_descriptor);
 }
 
@@ -286,9 +287,7 @@ bool
 SharedSurface_Gralloc::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
 {
     MOZ_ASSERT(out_surface);
-    sp<GraphicBuffer> buffer = static_cast<GrallocTextureData*>(
-        mTextureClient->GetInternalData()
-    )->GetGraphicBuffer();
+    sp<GraphicBuffer> buffer = mTextureClient->GetGraphicBuffer();
 
     const uint8_t* grallocData = nullptr;
     auto result = buffer->lock(
