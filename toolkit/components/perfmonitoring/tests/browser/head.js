@@ -111,7 +111,7 @@ CPUBurner.frameScript = function() {
 };
 
 /**
- * Base class for listening to slow group apertsl
+ * Base class for listening to slow group alerts
  */
 function AlertListener(accept, {register, unregister}) {
   this.listener = (...args) => {
