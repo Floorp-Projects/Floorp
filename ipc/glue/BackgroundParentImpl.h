@@ -64,6 +64,10 @@ protected:
   virtual bool
   DeallocPBlobParent(PBlobParent* aActor) override;
 
+  virtual bool
+  RecvPBlobConstructor(PBlobParent* aActor,
+                       const BlobConstructorParams& params) override;
+
   virtual PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const FileDescriptor& aFileDescriptor)
                                 override;

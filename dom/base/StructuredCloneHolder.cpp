@@ -558,13 +558,14 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
                                PBackgroundChild* aManager = nullptr)
 {
   MOZ_ASSERT(aBlobImpl);
+  RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
   if (!aManager) {
     aManager = BackgroundChild::GetForCurrentThread();
-    MOZ_ASSERT(aManager);
+    if (!aManager) {
+      return blobImpl.forget();
+    }
   }
-
-  RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
   const nsTArray<RefPtr<BlobImpl>>* subBlobImpls =
     aBlobImpl->GetSubBlobImpls();
@@ -669,6 +670,8 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
 
   RefPtr<BlobImpl> blobImpl = EnsureBlobForBackgroundManager(aBlob->Impl());
   MOZ_ASSERT(blobImpl);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
 
   // We store the position of the blobImpl in the array as index.
   if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,

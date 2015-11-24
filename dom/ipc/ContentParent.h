@@ -648,6 +648,9 @@ private:
                                           override;
     virtual bool DeallocPBlobParent(PBlobParent* aActor) override;
 
+    virtual bool RecvPBlobConstructor(PBlobParent* aActor,
+                                      const BlobConstructorParams& params) override;
+
     virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) override;
 
     virtual bool RecvGetRandomValues(const uint32_t& length,

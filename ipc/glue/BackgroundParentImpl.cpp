@@ -13,6 +13,7 @@
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/MessagePortParent.h"
@@ -240,6 +241,18 @@ BackgroundParentImpl::DeallocPBlobParent(PBlobParent* aActor)
   MOZ_ASSERT(aActor);
 
   mozilla::dom::BlobParent::Destroy(aActor);
+  return true;
+}
+
+bool
+BackgroundParentImpl::RecvPBlobConstructor(PBlobParent* aActor,
+                                           const BlobConstructorParams& aParams)
+{
+  const ParentBlobConstructorParams& params = aParams;
+  if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
+    return aActor->SendCreatedFromKnownBlob();
+  }
+
   return true;
 }
 
