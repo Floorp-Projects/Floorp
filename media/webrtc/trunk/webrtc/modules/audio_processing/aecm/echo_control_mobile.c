@@ -68,6 +68,8 @@ typedef struct
     // Structures
     RingBuffer *farendBuf;
 
+    int lastError;
+
     AecmCore* aecmCore;
 } AecMobile;
 
@@ -78,15 +80,28 @@ static int WebRtcAecm_EstBufDelay(AecMobile* aecmInst, short msInSndCardBuf);
 // Stuffs the farend buffer if the estimated delay is too large
 static int WebRtcAecm_DelayComp(AecMobile* aecmInst);
 
-void* WebRtcAecm_Create() {
-    AecMobile* aecm = malloc(sizeof(AecMobile));
+int32_t WebRtcAecm_Create(void **aecmInst)
+{
+  AecMobile* aecm;
+    if (aecmInst == NULL)
+    {
+        return -1;
+    }
+
+    aecm = malloc(sizeof(AecMobile));
+    *aecmInst = aecm;
+    if (aecm == NULL)
+    {
+        return -1;
+    }
 
     WebRtcSpl_Init();
 
-    aecm->aecmCore = WebRtcAecm_CreateCore();
-    if (!aecm->aecmCore) {
+    if (WebRtcAecm_CreateCore(&aecm->aecmCore) == -1)
+    {
         WebRtcAecm_Free(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->farendBuf = WebRtc_CreateBuffer(kBufSizeSamp,
@@ -94,10 +109,12 @@ void* WebRtcAecm_Create() {
     if (!aecm->farendBuf)
     {
         WebRtcAecm_Free(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->initFlag = 0;
+    aecm->lastError = 0;
 
 #ifdef AEC_DEBUG
     aecm->aecmCore->farFile = fopen("aecFar.pcm","wb");
@@ -110,14 +127,16 @@ void* WebRtcAecm_Create() {
     aecm->preCompFile = fopen("preComp.pcm", "wb");
     aecm->postCompFile = fopen("postComp.pcm", "wb");
 #endif // AEC_DEBUG
-    return aecm;
+    return 0;
 }
 
-void WebRtcAecm_Free(void* aecmInst) {
+int32_t WebRtcAecm_Free(void *aecmInst)
+{
   AecMobile* aecm = aecmInst;
 
-    if (aecm == NULL) {
-      return;
+    if (aecm == NULL)
+    {
+        return -1;
     }
 
 #ifdef AEC_DEBUG
@@ -134,6 +153,8 @@ void WebRtcAecm_Free(void* aecmInst) {
     WebRtcAecm_FreeCore(aecm->aecmCore);
     WebRtc_FreeBuffer(aecm->farendBuf);
     free(aecm);
+
+    return 0;
 }
 
 int32_t WebRtcAecm_Init(void *aecmInst, int32_t sampFreq)
@@ -148,14 +169,16 @@ int32_t WebRtcAecm_Init(void *aecmInst, int32_t sampFreq)
 
     if (sampFreq != 8000 && sampFreq != 16000)
     {
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
     aecm->sampFreq = sampFreq;
 
     // Initialize AECM core
     if (WebRtcAecm_InitCore(aecm->aecmCore, aecm->sampFreq) == -1)
     {
-        return AECM_UNSPECIFIED_ERROR;
+        aecm->lastError = AECM_UNSPECIFIED_ERROR;
+        return -1;
     }
 
     // Initialize farend buffer
@@ -186,65 +209,63 @@ int32_t WebRtcAecm_Init(void *aecmInst, int32_t sampFreq)
 
     if (WebRtcAecm_set_config(aecm, aecConfig) == -1)
     {
-        return AECM_UNSPECIFIED_ERROR;
+        aecm->lastError = AECM_UNSPECIFIED_ERROR;
+        return -1;
     }
 
     return 0;
 }
 
-// Returns any error that is caused when buffering the
-// farend signal.
-int32_t WebRtcAecm_GetBufferFarendError(void *aecmInst, const int16_t *farend,
-                                size_t nrOfSamples) {
-  AecMobile* aecm = aecmInst;
-
-  if (aecm == NULL)
-    return -1;
-
-  if (farend == NULL)
-    return AECM_NULL_POINTER_ERROR;
-
-  if (aecm->initFlag != kInitCheck)
-    return AECM_UNINITIALIZED_ERROR;
-
-  if (nrOfSamples != 80 && nrOfSamples != 160)
-    return AECM_BAD_PARAMETER_ERROR;
-
-  return 0;
-}
-
-
 int32_t WebRtcAecm_BufferFarend(void *aecmInst, const int16_t *farend,
-                                size_t nrOfSamples) {
+                                int16_t nrOfSamples)
+{
   AecMobile* aecm = aecmInst;
+    int32_t retVal = 0;
 
-  const int32_t err =
-      WebRtcAecm_GetBufferFarendError(aecmInst, farend, nrOfSamples);
+    if (aecm == NULL)
+    {
+        return -1;
+    }
 
-  if (err != 0)
-    return err;
+    if (farend == NULL)
+    {
+        aecm->lastError = AECM_NULL_POINTER_ERROR;
+        return -1;
+    }
 
-  // TODO(unknown): Is this really a good idea?
-  if (!aecm->ECstartup)
-  {
-    WebRtcAecm_DelayComp(aecm);
-  }
+    if (aecm->initFlag != kInitCheck)
+    {
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
+    }
 
-  WebRtc_WriteBuffer(aecm->farendBuf, farend, nrOfSamples);
+    if (nrOfSamples != 80 && nrOfSamples != 160)
+    {
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
+    }
 
-  return 0;
+    // TODO: Is this really a good idea?
+    if (!aecm->ECstartup)
+    {
+        WebRtcAecm_DelayComp(aecm);
+    }
+
+    WebRtc_WriteBuffer(aecm->farendBuf, farend, (size_t) nrOfSamples);
+
+    return retVal;
 }
 
 int32_t WebRtcAecm_Process(void *aecmInst, const int16_t *nearendNoisy,
                            const int16_t *nearendClean, int16_t *out,
-                           size_t nrOfSamples, int16_t msInSndCardBuf)
+                           int16_t nrOfSamples, int16_t msInSndCardBuf)
 {
   AecMobile* aecm = aecmInst;
     int32_t retVal = 0;
-    size_t i;
+    short i;
     short nmbrOfFilledBuffers;
-    size_t nBlocks10ms;
-    size_t nFrames;
+    short nBlocks10ms;
+    short nFrames;
 #ifdef AEC_DEBUG
     short msInAECBuf;
 #endif
@@ -256,32 +277,38 @@ int32_t WebRtcAecm_Process(void *aecmInst, const int16_t *nearendNoisy,
 
     if (nearendNoisy == NULL)
     {
-        return AECM_NULL_POINTER_ERROR;
+        aecm->lastError = AECM_NULL_POINTER_ERROR;
+        return -1;
     }
 
     if (out == NULL)
     {
-        return AECM_NULL_POINTER_ERROR;
+        aecm->lastError = AECM_NULL_POINTER_ERROR;
+        return -1;
     }
 
     if (aecm->initFlag != kInitCheck)
     {
-        return AECM_UNINITIALIZED_ERROR;
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
     }
 
     if (nrOfSamples != 80 && nrOfSamples != 160)
     {
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
 
     if (msInSndCardBuf < 0)
     {
         msInSndCardBuf = 0;
-        retVal = AECM_BAD_PARAMETER_WARNING;
+        aecm->lastError = AECM_BAD_PARAMETER_WARNING;
+        retVal = -1;
     } else if (msInSndCardBuf > 500)
     {
         msInSndCardBuf = 500;
-        retVal = AECM_BAD_PARAMETER_WARNING;
+        aecm->lastError = AECM_BAD_PARAMETER_WARNING;
+        retVal = -1;
     }
     msInSndCardBuf += 10;
     aecm->msInSndCardBuf = msInSndCardBuf;
@@ -444,18 +471,21 @@ int32_t WebRtcAecm_set_config(void *aecmInst, AecmConfig config)
 
     if (aecm->initFlag != kInitCheck)
     {
-        return AECM_UNINITIALIZED_ERROR;
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
     }
 
     if (config.cngMode != AecmFalse && config.cngMode != AecmTrue)
     {
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
     aecm->aecmCore->cngMode = config.cngMode;
 
     if (config.echoMode < 0 || config.echoMode > 4)
     {
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
     aecm->echoMode = config.echoMode;
 
@@ -512,6 +542,33 @@ int32_t WebRtcAecm_set_config(void *aecmInst, AecmConfig config)
     return 0;
 }
 
+int32_t WebRtcAecm_get_config(void *aecmInst, AecmConfig *config)
+{
+  AecMobile* aecm = aecmInst;
+
+    if (aecm == NULL)
+    {
+        return -1;
+    }
+
+    if (config == NULL)
+    {
+        aecm->lastError = AECM_NULL_POINTER_ERROR;
+        return -1;
+    }
+
+    if (aecm->initFlag != kInitCheck)
+    {
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
+    }
+
+    config->cngMode = aecm->aecmCore->cngMode;
+    config->echoMode = aecm->echoMode;
+
+    return 0;
+}
+
 int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
                                 const void* echo_path,
                                 size_t size_bytes)
@@ -523,16 +580,19 @@ int32_t WebRtcAecm_InitEchoPath(void* aecmInst,
       return -1;
     }
     if (echo_path == NULL) {
-      return AECM_NULL_POINTER_ERROR;
+      aecm->lastError = AECM_NULL_POINTER_ERROR;
+      return -1;
     }
     if (size_bytes != WebRtcAecm_echo_path_size_bytes())
     {
         // Input channel size does not match the size of AECM
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
     if (aecm->initFlag != kInitCheck)
     {
-        return AECM_UNINITIALIZED_ERROR;
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
     }
 
     WebRtcAecm_InitEchoPathCore(aecm->aecmCore, echo_path_ptr);
@@ -551,16 +611,19 @@ int32_t WebRtcAecm_GetEchoPath(void* aecmInst,
       return -1;
     }
     if (echo_path == NULL) {
-      return AECM_NULL_POINTER_ERROR;
+      aecm->lastError = AECM_NULL_POINTER_ERROR;
+      return -1;
     }
     if (size_bytes != WebRtcAecm_echo_path_size_bytes())
     {
         // Input channel size does not match the size of AECM
-        return AECM_BAD_PARAMETER_ERROR;
+        aecm->lastError = AECM_BAD_PARAMETER_ERROR;
+        return -1;
     }
     if (aecm->initFlag != kInitCheck)
     {
-        return AECM_UNINITIALIZED_ERROR;
+        aecm->lastError = AECM_UNINITIALIZED_ERROR;
+        return -1;
     }
 
     memcpy(echo_path_ptr, aecm->aecmCore->channelStored, size_bytes);
@@ -572,6 +635,17 @@ size_t WebRtcAecm_echo_path_size_bytes()
     return (PART_LEN1 * sizeof(int16_t));
 }
 
+int32_t WebRtcAecm_get_error_code(void *aecmInst)
+{
+  AecMobile* aecm = aecmInst;
+
+    if (aecm == NULL)
+    {
+        return -1;
+    }
+
+    return aecm->lastError;
+}
 
 static int WebRtcAecm_EstBufDelay(AecMobile* aecm, short msInSndCardBuf) {
     short delayNew, nSampSndCard;

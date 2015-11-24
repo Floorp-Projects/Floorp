@@ -40,8 +40,14 @@ static int EstimateSkew(const int* rawSkew,
                         int absLimit,
                         float* skewEst);
 
-void* WebRtcAec_CreateResampler() {
-  return malloc(sizeof(AecResampler));
+int WebRtcAec_CreateResampler(void** resampInst) {
+  AecResampler* obj = malloc(sizeof(AecResampler));
+  *resampInst = obj;
+  if (obj == NULL) {
+    return -1;
+  }
+
+  return 0;
 }
 
 int WebRtcAec_InitResampler(void* resampInst, int deviceSampleRateHz) {
@@ -57,24 +63,26 @@ int WebRtcAec_InitResampler(void* resampInst, int deviceSampleRateHz) {
   return 0;
 }
 
-void WebRtcAec_FreeResampler(void* resampInst) {
+int WebRtcAec_FreeResampler(void* resampInst) {
   AecResampler* obj = (AecResampler*)resampInst;
   free(obj);
+
+  return 0;
 }
 
 void WebRtcAec_ResampleLinear(void* resampInst,
                               const float* inspeech,
-                              size_t size,
+                              int size,
                               float skew,
                               float* outspeech,
-                              size_t* size_out) {
+                              int* size_out) {
   AecResampler* obj = (AecResampler*)resampInst;
 
   float* y;
   float be, tnew;
-  size_t tn, mm;
+  int tn, mm;
 
-  assert(size <= 2 * FRAME_LEN);
+  assert(!(size < 0 || size > 2 * FRAME_LEN));
   assert(resampInst != NULL);
   assert(inspeech != NULL);
   assert(outspeech != NULL);
@@ -93,7 +101,7 @@ void WebRtcAec_ResampleLinear(void* resampInst,
   y = &obj->buffer[FRAME_LEN];  // Point at current frame
 
   tnew = be * mm + obj->position;
-  tn = (size_t)tnew;
+  tn = (int)tnew;
 
   while (tn < size) {
 
