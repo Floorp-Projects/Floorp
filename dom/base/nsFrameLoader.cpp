@@ -2583,6 +2583,8 @@ nsFrameLoader::EnsureMessageManager()
     if (!parentManager) {
       chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
     }
+  } else {
+    parentManager = do_GetService("@mozilla.org/globalmessagemanager;1");
   }
 
   mMessageManager = new nsFrameMessageManager(nullptr,
