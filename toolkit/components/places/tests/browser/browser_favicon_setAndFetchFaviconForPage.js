@@ -67,8 +67,9 @@ function test() {
 
     addVisits({uri: pageURI, transition: TRANSITION_TYPED}, aWindow,
       function () {
-        aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI,
-          favIconURI, true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+        aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
+          true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+          Services.scriptSecurityManager.getSystemPrincipal());
       }
     );
   }
@@ -86,7 +87,8 @@ function test() {
       aWindow.PlacesUtils.unfiledBookmarksFolderId, pageURI,
       aWindow.PlacesUtils.bookmarks.DEFAULT_INDEX, pageURI.spec);
     aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
-      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+      Services.scriptSecurityManager.getSystemPrincipal());
   }
 
   function testPrivateBrowsingBookmarked(aWindow, aCallback) {
@@ -102,7 +104,8 @@ function test() {
       aWindow.PlacesUtils.unfiledBookmarksFolderId, pageURI,
       aWindow.PlacesUtils.bookmarks.DEFAULT_INDEX, pageURI.spec);
     aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
-      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE);
+      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE, null,
+      Services.scriptSecurityManager.getSystemPrincipal());
   }
 
   function testDisabledHistoryBookmarked(aWindow, aCallback) {
@@ -121,7 +124,8 @@ function test() {
       aWindow.PlacesUtils.unfiledBookmarksFolderId, pageURI,
       aWindow.PlacesUtils.bookmarks.DEFAULT_INDEX, pageURI.spec);
     aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
-      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+      Services.scriptSecurityManager.getSystemPrincipal());
 
     // The setAndFetchFaviconForPage function calls CanAddURI synchronously, thus
     // we can set the preference back to true immediately.  We don't clear the

@@ -63,7 +63,8 @@ function test() {
   function testNullPageURI(aWindow, aCallback) {
     try {
       aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(null, favIcon16URI,
-        true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+        true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+        Services.scriptSecurityManager.getSystemPrincipal());
       throw("Exception expected because aPageURI is null.");
     } catch (ex) {
       // We expected an exception.
@@ -78,8 +79,9 @@ function test() {
   function testNullFavIconURI(aWindow, aCallback) {
     try {
       aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(
-        NetUtil.newURI("http://example.com/null_faviconURI"), null, true,
-          aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+        NetUtil.newURI("http://example.com/null_faviconURI"), null,
+        true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null, Services.scriptSecurityManager.getSystemPrincipal());
       throw("Exception expected because aFaviconURI is null.");
     } catch (ex) {
       // We expected an exception.
@@ -93,8 +95,9 @@ function test() {
 
   function testAboutURI(aWindow, aCallback) {
     aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(
-      NetUtil.newURI("about:testAboutURI"), favIcon16URI, true,
-        aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+      NetUtil.newURI("about:testAboutURI"), favIcon16URI,
+      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      null, Services.scriptSecurityManager.getSystemPrincipal());
 
     if (aCallback) {
       aCallback();
@@ -106,7 +109,9 @@ function test() {
     addVisits({ uri: pageURI, transitionType: TRANSITION_TYPED }, aWindow,
       function () {
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI,
-          favIcon16URI, true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE);
+          favIcon16URI, true,
+          aWindow.PlacesUtils.favicons.FAVICON_LOAD_PRIVATE, null,
+          Services.scriptSecurityManager.getSystemPrincipal());
 
         if (aCallback) {
           aCallback();
@@ -122,7 +127,8 @@ function test() {
 
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI,
           favIcon16URI, true,
-            aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+          aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+          Services.scriptSecurityManager.getSystemPrincipal());
 
         // The setAndFetchFaviconForPage function calls CanAddURI synchronously, thus
         // we can set the preference back to true immediately . We don't clear the
@@ -142,7 +148,8 @@ function test() {
       function () {
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI,
           favIconErrorPageURI, true,
-            aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+          aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+          Services.scriptSecurityManager.getSystemPrincipal());
 
       if (aCallback) {
         aCallback();
@@ -152,8 +159,9 @@ function test() {
 
   function testNonExistingPage(aWindow, aCallback) {
     aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(
-      NetUtil.newURI("http://example.com/nonexistingPage"), favIcon16URI, true,
-        aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+      NetUtil.newURI("http://example.com/nonexistingPage"), favIcon16URI,
+      true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+      Services.scriptSecurityManager.getSystemPrincipal());
 
     if (aCallback) {
       aCallback();
@@ -212,7 +220,8 @@ function test() {
       function () {
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(lastPageURI,
           favIcon32URI, true,
-            aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+          aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+          Services.scriptSecurityManager.getSystemPrincipal());
     });
   }
 

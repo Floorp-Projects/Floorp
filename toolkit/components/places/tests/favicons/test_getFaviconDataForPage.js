@@ -39,7 +39,7 @@ add_test(function test_normal()
             do_check_eq(FAVICON_MIMETYPE, aMimeType);
             run_next_test();
           });
-      });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 });
 
