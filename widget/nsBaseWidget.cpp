@@ -270,12 +270,14 @@ void nsBaseWidget::DestroyCompositor()
     RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
     RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
     mCompositorBridgeChild->Destroy();
+    mCompositorBridgeChild = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
   // which don't have CompositorVsyncDispatchers
   if (mCompositorVsyncDispatcher) {
     mCompositorVsyncDispatcher->Shutdown();
+    mCompositorVsyncDispatcher = nullptr;
   }
 }
 
