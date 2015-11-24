@@ -191,7 +191,6 @@
 <!ENTITY pref_home_suggested_sites_summary "Display shortcuts to sites on your homepage that we think you might find interesting">
 <!ENTITY pref_category_home_homepage "Homepage">
 <!ENTITY home_homepage_title "Set a Homepage">
-<!ENTITY home_homepage_use_current_tab "Use current tab">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_general "General">
