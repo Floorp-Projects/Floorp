@@ -54,7 +54,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mToken(sMediaKeySessionNum++)
   , mIsClosed(false)
   , mUninitialized(true)
-  , mKeyStatusMap(new MediaKeyStatusMap(aCx, aParent, aRv))
+  , mKeyStatusMap(new MediaKeyStatusMap(aParent))
   , mExpiration(JS::GenericNaN())
 {
   EME_LOG("MediaKeySession[%p,''] session Id set", this);
