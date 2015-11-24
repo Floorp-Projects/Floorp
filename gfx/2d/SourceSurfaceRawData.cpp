@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace gfx {
 
-void
+bool
 SourceSurfaceRawData::InitWrappingData(uint8_t *aData,
                                        const IntSize &aSize,
                                        int32_t aStride,
@@ -24,6 +24,8 @@ SourceSurfaceRawData::InitWrappingData(uint8_t *aData,
   mStride = aStride;
   mFormat = aFormat;
   mOwnData = aOwnData;
+
+  return true;
 }
 
 void

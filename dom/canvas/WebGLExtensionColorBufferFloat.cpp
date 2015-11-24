@@ -9,31 +9,32 @@
 #include "WebGLContext.h"
 #include "WebGLFormats.h"
 
-#ifdef FOO
-#error FOO is already defined! We use FOO() macros to keep things succinct in this file.
-#endif
-
 namespace mozilla {
+
+using mozilla::webgl::EffectiveFormat;
 
 WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
     MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 
-    auto& fua = webgl->mFormatUsage;
+    webgl::FormatUsageAuthority* authority = webgl->mFormatUsage.get();
 
-    auto fnUpdateUsage = [&fua](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
-        auto usage = fua->EditUsage(effFormat);
-        usage->isRenderable = true;
-        fua->AllowRBFormat(sizedFormat, usage);
+    auto updateUsage = [authority](EffectiveFormat effectiveFormat) {
+        webgl::FormatUsageInfo* usage = authority->GetUsage(effectiveFormat);
+        MOZ_ASSERT(usage);
+        usage->asRenderbuffer = usage->isRenderable = true;
     };
 
-#define FOO(x) fnUpdateUsage(LOCAL_GL_ ## x, webgl::EffectiveFormat::x)
+    // Ensure require formats are initialized.
+    WebGLExtensionTextureFloat::InitWebGLFormats(authority);
 
-    // The extension doesn't actually add RGB32F; only RGBA32F.
-    FOO(RGBA32F);
-
-#undef FOO
+    // Update usage to allow asRenderbuffer and isRenderable
+    updateUsage(EffectiveFormat::RGBA32F);
+    updateUsage(EffectiveFormat::RGB32F);
+    updateUsage(EffectiveFormat::Luminance32FAlpha32F);
+    updateUsage(EffectiveFormat::Luminance32F);
+    updateUsage(EffectiveFormat::Alpha32F);
 }
 
 WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat()

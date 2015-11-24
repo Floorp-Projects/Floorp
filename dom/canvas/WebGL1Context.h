@@ -18,9 +18,7 @@ public:
 
 private:
     WebGL1Context();
-
-    virtual UniquePtr<webgl::FormatUsageAuthority>
-    CreateFormatUsage(gl::GLContext* gl) const override;
+    virtual UniquePtr<webgl::FormatUsageAuthority> CreateFormatUsage() const override;
 
 public:
     virtual ~WebGL1Context();

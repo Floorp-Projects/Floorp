@@ -7,34 +7,15 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
 
-#ifdef FOO
-#error FOO is already defined! We use FOO() macros to keep things succinct in this file.
-#endif
-
 namespace mozilla {
 
 WebGLExtensionCompressedTextureS3TC::WebGLExtensionCompressedTextureS3TC(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
-    RefPtr<WebGLContext> webgl_ = webgl; // Bug 1201275
-    const auto fnAdd = [&webgl_](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
-        auto& fua = webgl_->mFormatUsage;
-
-        auto usage = fua->EditUsage(effFormat);
-        usage->isFilterable = true;
-        fua->AllowSizedTexFormat(sizedFormat, usage);
-
-        webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
-    };
-
-#define FOO(x) LOCAL_GL_ ## x, webgl::EffectiveFormat::x
-
-    fnAdd(FOO(COMPRESSED_RGB_S3TC_DXT1_EXT));
-    fnAdd(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT));
-    fnAdd(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT));
-    fnAdd(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT));
-
-#undef FOO
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT);
 }
 
 WebGLExtensionCompressedTextureS3TC::~WebGLExtensionCompressedTextureS3TC()

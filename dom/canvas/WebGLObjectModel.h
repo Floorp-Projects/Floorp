@@ -269,8 +269,10 @@ public:
 
     bool IsCompatibleWithContext(WebGLContext* other);
 
-    WebGLContext* const mContext;
+    WebGLContext* Context() const { return mContext; }
+
 protected:
+    WebGLContext* const mContext;
     const uint32_t mContextGeneration;
 };
 

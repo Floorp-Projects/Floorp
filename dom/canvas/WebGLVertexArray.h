@@ -47,7 +47,7 @@ public:
     bool IsVertexArray();
 
     WebGLContext* GetParentObject() const {
-        return mContext;
+        return Context();
     }
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;

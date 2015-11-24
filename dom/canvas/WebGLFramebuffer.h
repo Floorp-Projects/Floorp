@@ -21,9 +21,6 @@ class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLTexture;
 
-template<typename T>
-class PlacementArray;
-
 namespace gl {
     class GLContext;
 } // namespace gl
@@ -32,39 +29,34 @@ class WebGLFBAttachPoint
 {
 public:
     WebGLFramebuffer* const mFB;
-    const GLenum mAttachmentPoint;
 private:
     WebGLRefPtr<WebGLTexture> mTexturePtr;
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
+    FBAttachment mAttachmentPoint;
     TexImageTarget mTexImageTarget;
     GLint mTexImageLayer;
     GLint mTexImageLevel;
 
-    // PlacementArray needs a default constructor.
-    template<typename T>
-    friend class PlacementArray;
-
-    WebGLFBAttachPoint()
-        : mFB(nullptr)
-        , mAttachmentPoint(0)
-    { }
-
-
 public:
-    WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
+    WebGLFBAttachPoint(WebGLFramebuffer* fb, FBAttachment attachmentPoint);
     ~WebGLFBAttachPoint();
 
-    void Unlink();
+    void Unlink() {
+        mRenderbufferPtr = nullptr;
+        mTexturePtr = nullptr;
+    }
 
     bool IsDefined() const;
     bool IsDeleteRequested() const;
 
-    const webgl::FormatUsageInfo* Format() const;
+    TexInternalFormat EffectiveInternalFormat() const;
 
     bool HasAlpha() const;
     bool IsReadableFloat() const;
 
-    void Clear();
+    void Clear() {
+        SetRenderbuffer(nullptr);
+    }
 
     void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level);
     void SetTexImageLayer(WebGLTexture* tex, TexImageTarget target, GLint level,
@@ -96,68 +88,15 @@ public:
     bool HasUninitializedImageData() const;
     void SetImageDataStatus(WebGLImageDataStatus x);
 
-    void Size(uint32_t* const out_width, uint32_t* const out_height) const;
-    //const WebGLRectangleObject& RectangleObject() const;
+    const WebGLRectangleObject& RectangleObject() const;
 
     bool HasImage() const;
-    bool IsComplete(WebGLContext* webgl) const;
+    bool IsComplete() const;
 
-    void FinalizeAttachment(gl::GLContext* gl, GLenum attachmentLoc) const;
+    void FinalizeAttachment(gl::GLContext* gl,
+                            FBAttachment attachmentLoc) const;
 
-    JS::Value GetParameter(const char* funcName, WebGLContext* webgl, JSContext* cx,
-                           GLenum target, GLenum attachment, GLenum pname,
-                           ErrorResult* const out_error);
-
-    void OnBackingStoreRespecified() const;
-};
-
-template<typename T>
-class PlacementArray
-{
-public:
-    const size_t mCapacity;
-protected:
-    size_t mSize;
-    T* const mArray;
-
-public:
-    explicit PlacementArray(size_t capacity)
-        : mCapacity(capacity)
-        , mSize(0)
-        , mArray((T*)moz_xmalloc(sizeof(T) * capacity))
-    { }
-
-    ~PlacementArray() {
-        for (auto& cur : *this) {
-            cur.~T();
-        }
-        free(mArray);
-    }
-
-    T* begin() const {
-        return mArray;
-    }
-
-    T* end() const {
-        return mArray + mSize;
-    }
-
-    T& operator [](size_t offset) const {
-        MOZ_ASSERT(offset < mSize);
-        return mArray[offset];
-    }
-
-    const size_t& Size() const { return mSize; }
-
-    template<typename A, typename B>
-    void AppendNew(A a, B b) {
-        if (mSize == mCapacity)
-            MOZ_CRASH("Bad EmplaceAppend.");
-
-        // Placement `new`:
-        new (&(mArray[mSize])) T(a, b);
-        ++mSize;
-    }
+    JS::Value GetParameter(WebGLContext* context, GLenum pname);
 };
 
 class WebGLFramebuffer final
@@ -175,7 +114,7 @@ public:
     const GLuint mGLName;
 
 private:
-    mutable bool mIsKnownFBComplete;
+    mutable GLenum mStatus;
 
     GLenum mReadBufferMode;
 
@@ -184,17 +123,7 @@ private:
     WebGLFBAttachPoint mDepthAttachment;
     WebGLFBAttachPoint mStencilAttachment;
     WebGLFBAttachPoint mDepthStencilAttachment;
-
-    PlacementArray<WebGLFBAttachPoint> mMoreColorAttachments;
-
-    std::vector<GLenum> mDrawBuffers;
-
-    bool IsDrawBuffer(size_t n) const {
-        if (n < mDrawBuffers.size())
-            return bool(mDrawBuffers[n]);
-
-        return false;
-    }
+    nsTArray<WebGLFBAttachPoint> mMoreColorAttachments;
 
 #ifdef ANDROID
     // Bug 1140459: Some drivers (including our test slaves!) don't
@@ -218,11 +147,14 @@ private:
 public:
     void Delete();
 
-    void FramebufferRenderbuffer(GLenum attachment, RBTarget rbtarget,
+    void FramebufferRenderbuffer(FBAttachment attachment, RBTarget rbtarget,
                                  WebGLRenderbuffer* rb);
-    void FramebufferTexture2D(GLenum attachment, TexImageTarget texImageTarget,
-                              WebGLTexture* tex, GLint level);
-    void FramebufferTextureLayer(GLenum attachment, WebGLTexture* tex, GLint level,
+
+    void FramebufferTexture2D(FBAttachment attachment,
+                              TexImageTarget texImageTarget, WebGLTexture* tex,
+                              GLint level);
+
+    void FramebufferTextureLayer(FBAttachment attachment, WebGLTexture* tex, GLint level,
                                  GLint layer);
 
     bool HasDefinedAttachments() const;
@@ -231,11 +163,20 @@ public:
     FBStatus PrecheckFramebufferStatus() const;
     FBStatus CheckFramebufferStatus() const;
 
-    const webgl::FormatUsageInfo*
+    GLenum
     GetFormatForAttachment(const WebGLFBAttachPoint& attachment) const;
 
+    bool HasDepthStencilConflict() const {
+        return int(mDepthAttachment.IsDefined()) +
+               int(mStencilAttachment.IsDefined()) +
+               int(mDepthStencilAttachment.IsDefined()) >= 2;
+    }
+
+    size_t ColorAttachmentCount() const {
+        return 1 + mMoreColorAttachments.Length();
+    }
     const WebGLFBAttachPoint& ColorAttachment(size_t colorAttachmentId) const {
-        MOZ_ASSERT(colorAttachmentId < 1 + mMoreColorAttachments.Size());
+        MOZ_ASSERT(colorAttachmentId < ColorAttachmentCount());
         return colorAttachmentId ? mMoreColorAttachments[colorAttachmentId - 1]
                                  : mColorAttachment0;
     }
@@ -252,16 +193,16 @@ public:
         return mDepthStencilAttachment;
     }
 
-protected:
-    WebGLFBAttachPoint* GetAttachPoint(GLenum attachment); // Fallible
+    WebGLFBAttachPoint& GetAttachPoint(FBAttachment attachPointEnum);
 
-public:
     void DetachTexture(const WebGLTexture* tex);
 
     void DetachRenderbuffer(const WebGLRenderbuffer* rb);
 
+    const WebGLRectangleObject& RectangleObject() const;
+
     WebGLContext* GetParentObject() const {
-        return mContext;
+        return Context();
     }
 
     void FinalizeAttachments() const;
@@ -276,17 +217,19 @@ public:
 
     bool CheckAndInitializeAttachments();
 
+    bool CheckColorAttachmentNumber(FBAttachment attachment,
+                                    const char* funcName) const;
+
+    void EnsureColorAttachPoints(size_t colorAttachmentId);
+
     void InvalidateFramebufferStatus() const {
-        mIsKnownFBComplete = false;
+        mStatus = 0;
     }
 
-    bool ValidateForRead(const char* info,
-                         const webgl::FormatUsageInfo** const out_format,
-                         uint32_t* const out_width, uint32_t* const out_height);
+    bool ValidateForRead(const char* info, TexInternalFormat* const out_format);
 
-    JS::Value GetAttachmentParameter(const char* funcName, JSContext* cx, GLenum target,
-                                     GLenum attachment, GLenum pname,
-                                     ErrorResult* const out_error);
+    JS::Value GetAttachmentParameter(JSContext* cx, GLenum attachment, GLenum pname,
+                                     ErrorResult& rv);
 };
 
 } // namespace mozilla

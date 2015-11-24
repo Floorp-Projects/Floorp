@@ -11,7 +11,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "prenv.h"
 #include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 #include "WebGLShaderValidator.h"
@@ -168,7 +167,7 @@ WebGLShader::ShaderSource(const nsAString& source)
 
     // We checked that the source stripped of comments is in the
     // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
-    const NS_LossyConvertUTF16toASCII sourceCString(cleanSource);
+    NS_LossyConvertUTF16toASCII sourceCString(cleanSource);
 
     if (mContext->gl->WorkAroundDriverBugs()) {
         const size_t maxSourceLength = 0x3ffff;
@@ -180,24 +179,23 @@ WebGLShader::ShaderSource(const nsAString& source)
         }
     }
 
-    if (PR_GetEnv("MOZ_WEBGL_DUMP_SHADERS")) {
-        printf_stderr("////////////////////////////////////////\n");
-        printf_stderr("// MOZ_WEBGL_DUMP_SHADERS:\n");
-
-        // Wow - Roll Your Own Foreach-Lines because printf_stderr has a hard-coded
-        // internal size, so long strings are truncated.
-
+    // HACK - dump shader source
+    {
+/*
+        printf_stderr("//-*- glsl -*-\n");
+        // Wow - Roll Your Own For Each Lines because printf_stderr has a hard-coded internal size, so long strings are truncated.
+        const nsString& src = shader->Source();
         int32_t start = 0;
-        int32_t end = sourceCString.Find("\n", false, start, -1);
+        int32_t end = src.Find("\n", false, start, -1);
         while (end > -1) {
-            const nsCString line(sourceCString.BeginReading() + start, end - start);
-            printf_stderr("%s\n", line.BeginReading());
+            printf_stderr("%s\n", NS_ConvertUTF16toUTF8(nsDependentSubstring(src, start, end - start)).get());
             start = end + 1;
-            end = sourceCString.Find("\n", false, start, -1);
+            end = src.Find("\n", false, start, -1);
         }
-
-        printf_stderr("////////////////////////////////////////\n");
+        printf_stderr("//\n");
+*/
     }
+    // HACK
 
     mSource = source;
     mCleanSource = sourceCString;

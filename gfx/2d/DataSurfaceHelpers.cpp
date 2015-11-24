@@ -17,7 +17,7 @@ namespace gfx {
 
 uint8_t*
 DataAtOffset(DataSourceSurface* aSurface,
-             const DataSourceSurface::MappedSurface* aMap,
+             DataSourceSurface::MappedSurface* aMap,
              IntPoint aPoint)
 {
   if (!SurfaceContainsPoint(aSurface, aPoint)) {
