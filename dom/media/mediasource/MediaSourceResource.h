@@ -54,10 +54,10 @@ public:
     return RefPtr<nsIPrincipal>(mPrincipal).forget();
   }
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {
     UNIMPLEMENTED();
-    aRanges.AppendElement(MediaByteRange(0, GetLength()));
+    aRanges += MediaByteRange(0, GetLength());
     return NS_OK;
   }
 

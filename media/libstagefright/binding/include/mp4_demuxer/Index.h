@@ -60,11 +60,11 @@ public:
         bool aIsAudio,
         mozilla::Monitor* aMonitor);
 
-  void UpdateMoofIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges);
+  void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges);
   Microseconds GetEndCompositionIfBuffered(
-    const nsTArray<mozilla::MediaByteRange>& aByteRanges);
+    const mozilla::MediaByteRangeSet& aByteRanges);
   void ConvertByteRangesToTimeRanges(
-    const nsTArray<mozilla::MediaByteRange>& aByteRanges,
+    const mozilla::MediaByteRangeSet& aByteRanges,
     nsTArray<Interval<Microseconds>>* aTimeRanges);
   uint64_t GetEvictionOffset(Microseconds aTime);
   bool IsFragmented() { return mMoofParser; }

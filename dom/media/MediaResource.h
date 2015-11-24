@@ -153,6 +153,8 @@ public:
   MediaByteRange() = default;
 };
 
+typedef media::IntervalSet<int64_t> MediaByteRangeSet;
+
 class RtspMediaResource;
 
 /**
@@ -343,7 +345,7 @@ public:
    * in the media cache. Stream should be pinned during call and while
    * aRanges is being used.
    */
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
   // Ensure that the media cache writes any data held in its partial block.
   // Called on the main thread only.
@@ -655,7 +657,7 @@ public:
   };
   friend class Listener;
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override;
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
 protected:
   // These are called on the main thread by Listener.
