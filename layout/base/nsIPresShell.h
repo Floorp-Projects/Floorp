@@ -1137,7 +1137,7 @@ public:
    * edge of the presshell area. The aPoint, aScreenRect and aFlags arguments
    * function in a similar manner as RenderSelection.
    */
-  virtual already_AddRefed<mozilla::gfx::SourceSurface>
+  virtual already_AddRefed<SourceSurface>
   RenderNode(nsIDOMNode* aNode,
              nsIntRegion* aRegion,
              nsIntPoint& aPoint,
@@ -1160,7 +1160,7 @@ public:
    * point isn't used because the position can be determined from the displayed
    * frames.
    */
-  virtual already_AddRefed<mozilla::gfx::SourceSurface>
+  virtual already_AddRefed<SourceSurface>
   RenderSelection(nsISelection* aSelection,
                   nsIntPoint& aPoint,
                   nsIntRect* aScreenRect,
@@ -1279,7 +1279,7 @@ public:
     nsCOMPtr<nsIContent> mOverrideContent;
     bool                 mReleaseContent;
     bool                 mPrimaryState;
-
+    
     explicit PointerCaptureInfo(nsIContent* aPendingContent, bool aPrimaryState) :
       mPendingContent(aPendingContent), mReleaseContent(false), mPrimaryState(aPrimaryState)
     {

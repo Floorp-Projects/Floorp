@@ -355,13 +355,12 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, HTMLElementType& aElement, Error
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = res.GetSourceSurface();
-
-  if (NS_WARN_IF(!surface)) {
+  if (NS_WARN_IF(!res.mSourceSurface)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
+  RefPtr<SourceSurface> surface(res.mSourceSurface);
   return surface.forget();
 }
 

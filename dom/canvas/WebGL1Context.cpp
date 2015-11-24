@@ -27,9 +27,9 @@ WebGL1Context::~WebGL1Context()
 }
 
 UniquePtr<webgl::FormatUsageAuthority>
-WebGL1Context::CreateFormatUsage(gl::GLContext* gl) const
+WebGL1Context::CreateFormatUsage() const
 {
-    return webgl::FormatUsageAuthority::CreateForWebGL1(gl);
+    return webgl::FormatUsageAuthority::CreateForWebGL1();
 }
 
 JSObject*

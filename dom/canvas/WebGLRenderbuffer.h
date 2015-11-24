@@ -14,9 +14,6 @@
 #include "WebGLStrongTypes.h"
 
 namespace mozilla {
-namespace webgl {
-struct FormatUsageInfo;
-}
 
 class WebGLRenderbuffer final
     : public nsWrapperCache
@@ -32,34 +29,40 @@ public:
     void Delete();
 
     bool HasUninitializedImageData() const {
-        MOZ_ASSERT(mImageDataStatus != WebGLImageDataStatus::NoImageData);
         return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData;
     }
-
-    bool IsDefined() const {
-        if (!mFormat) {
-            MOZ_ASSERT(!mWidth && !mHeight);
-            return false;
-        }
-        return true;
+    void SetImageDataStatus(WebGLImageDataStatus x) {
+        // there is no way to go from having image data to not having any
+        MOZ_ASSERT(x != WebGLImageDataStatus::NoImageData ||
+                   mImageDataStatus == WebGLImageDataStatus::NoImageData);
+        mImageDataStatus = x;
     }
 
     GLsizei Samples() const { return mSamples; }
+    void SetSamples(GLsizei samples) { mSamples = samples; }
 
     GLuint PrimaryGLName() const { return mPrimaryRB; }
 
-    const webgl::FormatUsageInfo* Format() const { return mFormat; }
+    GLenum InternalFormat() const { return mInternalFormat; }
+    void SetInternalFormat(GLenum internalFormat) {
+        mInternalFormat = internalFormat;
+    }
+
+    GLenum InternalFormatForGL() const { return mInternalFormatForGL; }
+    void SetInternalFormatForGL(GLenum internalFormatForGL) {
+        mInternalFormatForGL = internalFormatForGL;
+    }
 
     int64_t MemoryUsage() const;
 
     WebGLContext* GetParentObject() const {
-        return mContext;
+        return Context();
     }
 
     void BindRenderbuffer() const;
-    void RenderbufferStorage(GLsizei samples, const webgl::FormatUsageInfo* format,
-                             GLsizei width, GLsizei height);
-    void FramebufferRenderbuffer(GLenum attachment) const;
+    void RenderbufferStorage(GLsizei samples, GLenum internalFormat,
+                             GLsizei width, GLsizei height) const;
+    void FramebufferRenderbuffer(FBAttachment attachment) const;
     // Only handles a subset of `pname`s.
     GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
 
@@ -75,10 +78,10 @@ protected:
 
     GLuint mPrimaryRB;
     GLuint mSecondaryRB;
-    const webgl::FormatUsageInfo* mFormat;
+    GLenum mInternalFormat;
+    GLenum mInternalFormatForGL;
     WebGLImageDataStatus mImageDataStatus;
     GLsizei mSamples;
-    bool mIsUsingSecondary;
 #ifdef ANDROID
     // Bug 1140459: Some drivers (including our test slaves!) don't
     // give reasonable answers for IsRenderbuffer, maybe others.
@@ -90,7 +93,6 @@ protected:
 
     friend class WebGLContext;
     friend class WebGLFramebuffer;
-    friend class WebGLFBAttachPoint;
 };
 
 } // namespace mozilla

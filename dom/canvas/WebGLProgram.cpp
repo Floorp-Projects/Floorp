@@ -167,7 +167,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 #endif
 
         const bool isArray = false;
-        AddActiveInfo(prog->mContext, elemCount, elemType, isArray, userName, mappedName,
+        AddActiveInfo(prog->Context(), elemCount, elemType, isArray, userName, mappedName,
                       &info->activeAttribs, &info->attribMap);
 
         // Collect active locations:
@@ -232,7 +232,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         printf_stderr("    isArray: %d\n", (int)isArray);
 #endif
 
-        AddActiveInfo(prog->mContext, elemCount, elemType, isArray, baseUserName,
+        AddActiveInfo(prog->Context(), elemCount, elemType, isArray, baseUserName,
                       baseMappedName, &info->activeUniforms, &info->uniformMap);
     }
 
@@ -327,9 +327,8 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
                 }
             }
 
-            AddActiveInfo(prog->mContext, size, type, isArray, baseUserName, mappedName,
-                          &info->transformFeedbackVaryings,
-                          &info->transformFeedbackVaryingsMap);
+            AddActiveInfo(prog->Context(), size, type, isArray, baseUserName, mappedName,
+                          &info->transformFeedbackVaryings, &info->transformFeedbackVaryingsMap);
         }
     }
 
@@ -337,6 +336,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog)
