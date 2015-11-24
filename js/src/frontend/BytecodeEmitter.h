@@ -601,6 +601,11 @@ struct BytecodeEmitter
     bool emitSelfHostedResumeGenerator(ParseNode* pn);
     bool emitSelfHostedForceInterpreter(ParseNode* pn);
 
+    bool emitComprehensionFor(ParseNode* compFor);
+    bool emitComprehensionForIn(ParseNode* pn);
+    bool emitComprehensionForInOrOfVariables(ParseNode* pn, bool* letDecl);
+    bool emitComprehensionForOf(ParseNode* pn);
+
     bool emitDo(ParseNode* pn);
     bool emitFor(ParseNode* pn);
     bool emitForIn(ParseNode* pn);
@@ -627,8 +632,7 @@ struct BytecodeEmitter
     bool emitSpread();
 
     // If type is StmtType::FOR_OF_LOOP, emit bytecode for a for-of loop.
-    // pn should be PNK_FOR or PNK_COMPREHENSIONFOR, and pn->pn_left should be
-    // PNK_FOROF.
+    // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
     //
     // If type is StmtType::SPREAD, emit bytecode for spread operator.
     // pn should be nullptr.
