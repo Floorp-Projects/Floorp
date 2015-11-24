@@ -784,7 +784,11 @@ var SessionStoreInternal = {
 
         // Restore the tab icon.
         if ("image" in tabData) {
-          win.gBrowser.setIcon(tab, tabData.image);
+          // Using null as the loadingPrincipal because serializing
+          // the principal would be overkill. Within SetIcon we
+          // default to the systemPrincipal if aLoadingPrincipal is
+          // null which will allow the favicon to load.
+          win.gBrowser.setIcon(tab, tabData.image, null);
           TabStateCache.update(browser, {image: null});
         }
 

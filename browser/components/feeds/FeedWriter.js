@@ -1303,6 +1303,8 @@ FeedWriter.prototype = {
                                          .QueryInterface(Ci.nsIDocShell)
                                          .QueryInterface(Ci.nsILoadContext)
                                          .usePrivateBrowsing;
+    var nullPrincipal = Cc["@mozilla.org/nullprincipal;1"]
+                          .createInstance(Ci.nsIPrincipal);
     this._faviconService.setAndFetchFaviconForPage(readerURI, faviconURI, false,
       usePrivateBrowsing ? this._faviconService.FAVICON_LOAD_PRIVATE
                          : this._faviconService.FAVICON_LOAD_NON_PRIVATE,
@@ -1312,7 +1314,7 @@ FeedWriter.prototype = {
                         btoa(String.fromCharCode.apply(null, aData));
           aMenuItem.setAttribute('image', dataURL);
         }
-      });
+      }, nullPrincipal);
   },
 
   get _mm() {
