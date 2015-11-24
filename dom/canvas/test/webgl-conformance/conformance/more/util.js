@@ -1001,12 +1001,11 @@ function wrapGLContext(gl) {
 // Assert that f generates a specific GL error.
 function assertGLError(gl, err, name, f) {
   if (f == null) { f = name; name = null; }
-  var r = false;
   var glErr = 0;
-  try { f(); } catch(e) { r=true; glErr = e.glError; }
+  try { f(); } catch(e) { glErr = e.glError; }
   if (glErr !== err) {
     if (glErr === undefined) {
-      testFailed("assertGLError: UNEXPCETED EXCEPTION", name, f);
+      testFailed("assertGLError: UNEXPECTED EXCEPTION", name, f);
     } else {
       testFailed("assertGLError: expected: " + getGLErrorAsString(gl, err) +
                  " actual: " + getGLErrorAsString(gl, glErr), name, f);
@@ -1014,6 +1013,40 @@ function assertGLError(gl, err, name, f) {
     return false;
   }
   return true;
+}
+
+// Assert that f generates a specific GL error.
+function assertGLErrorIn(gl, expectedErrorList, name, f) {
+  if (f == null) { f = name; name = null; }
+
+  var actualError = 0;
+  try {
+    f();
+  } catch(e) {
+    if ('glError' in e) {
+      actualError = e.glError;
+    } else {
+      testFailed("assertGLErrorIn: UNEXPECTED EXCEPTION", name, f);
+      return false;
+    }
+  }
+
+  var expectedErrorStrList = [];
+  var expectedErrorSet = {};
+  for (var i in expectedErrorList) {
+    var cur = expectedErrorList[i];
+    expectedErrorSet[cur] = true;
+    expectedErrorStrList.push(getGLErrorAsString(gl, cur));
+  }
+  var expectedErrorListStr = "[" + expectedErrorStrList.join(", ") + "]";
+
+  if (actualError in expectedErrorSet) {
+    return true;
+  }
+
+  testFailed("assertGLErrorIn: expected: " + expectedErrorListStr +
+             " actual: " + getGLErrorAsString(gl, actualError), name, f);
+  return false;
 }
 
 // Assert that f generates some GL error. Used in situations where it's

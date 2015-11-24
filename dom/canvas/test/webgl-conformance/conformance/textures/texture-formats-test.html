@@ -66,9 +66,9 @@ if (!gl) {
       var err = gl.getError();
       if (err == gl.NO_ERROR) {
           testFailed("should NOT be able to create texture of type " + formatName);
-      } else if (err == gl.INVALID_OPERATION) {
-          testFailed("should return gl.INVALID_ENUM for type " + formatName);
-      } else if (err == gl.INVALID_ENUM) {
+      } else if (err == gl.INVALID_ENUM ||
+                 err == gl.INVALID_OPERATION)
+      {
           testPassed("not able to create invalid format: " + formatName);
       }
   }
