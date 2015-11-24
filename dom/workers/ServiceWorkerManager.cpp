@@ -4601,6 +4601,7 @@ private:
 void
 ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 {
+  AssertIsOnMainThread();
 #ifdef DEBUG
   // Any state can directly transition to redundant, but everything else is
   // ordered.
@@ -4613,6 +4614,13 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   // Activated can only go to redundant.
   MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
 #endif
+  // Flush any pending functional events to the worker when it transitions to the
+  // activated state.
+  // TODO: Do we care that these events will race with the propagation of the
+  //       state change?
+  if (aState == ServiceWorkerState::Activated && mState != aState) {
+    mServiceWorkerPrivate->Activated();
+  }
   mState = aState;
   nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, mState);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r.forget())));
