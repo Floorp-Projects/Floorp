@@ -15,6 +15,7 @@
   unicode-bidi: inherit;
   text-overflow: inherit;
   overflow: inherit;
+  overflow-clip-box: inherit;
   padding: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
 }
