@@ -847,6 +847,7 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
     // add font entries for each of the faces
     uint32_t numFonts = mFontPatterns.Length();
     NS_ASSERTION(numFonts, "font family containing no faces!!");
+    uint32_t numRegularFaces = 0;
     for (uint32_t i = 0; i < numFonts; i++) {
         FcPattern* face = mFontPatterns[i];
 
@@ -858,6 +859,12 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
         gfxFontconfigFontEntry *fontEntry =
             new gfxFontconfigFontEntry(faceName, face);
         AddFontEntry(fontEntry);
+
+        if (fontEntry->IsUpright() &&
+            fontEntry->Weight() == NS_FONT_WEIGHT_NORMAL &&
+            fontEntry->Stretch() == NS_FONT_STRETCH_NORMAL) {
+            numRegularFaces++;
+        }
 
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
@@ -871,6 +878,12 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
+    }
+
+    // somewhat arbitrary, but define a family with two or more regular
+    // faces as a family for which intra-family fallback should be used
+    if (numRegularFaces > 1) {
+        mCheckForFallbackFaces = true;
     }
     mFaceNamesInitialized = true;
     mFontPatterns.Clear();
