@@ -1018,12 +1018,17 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       }
     }
 
+    nsIntRegion *regionToUpdate = aDestRegion;
     if (!mTexture) {
       hr = mCompositor->GetDevice()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTexture));
       mIsTiled = false;
       if (FAILED(hr) || !mTexture) {
         Reset();
         return false;
+      }
+
+      if (mFlags & TextureFlags::COMPONENT_ALPHA) {
+        regionToUpdate = nullptr;
       }
     }
 
@@ -1034,8 +1039,8 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       return false;
     }
 
-    if (aDestRegion) {
-      nsIntRegionRectIterator iter(*aDestRegion);
+    if (regionToUpdate) {
+      nsIntRegionRectIterator iter(*regionToUpdate);
       const IntRect *iterRect;
       while ((iterRect = iter.Next())) {
         D3D11_BOX box;
