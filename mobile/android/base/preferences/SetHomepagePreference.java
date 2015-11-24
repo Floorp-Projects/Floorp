@@ -7,7 +7,6 @@ package org.mozilla.gecko.preferences;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tabs;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,13 +16,11 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 
 public class SetHomepagePreference extends DialogPreference {
-    SharedPreferences prefs;
-    EditText homepageTextEdit;
+    private final SharedPreferences prefs;
+    private EditText homepageTextEdit;
 
     public SetHomepagePreference(final Context context, final AttributeSet attrs) {
         super(context, attrs);
