@@ -198,15 +198,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testAction(id, linkAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
-      // Link with label, no name from the subtree (bug 438325).
-      id = "linkWithLabelNoNameFromSubtree";
-      linkAcc = getAccessible(id, [nsIAccessibleHyperLink]);
-      testThis(id, linkAcc, ROLE_LINK, 1, "Link with label and nested image:",
-               true, 450, 451);
-      testStates(linkAcc, STATE_LINKED, 0);
-      testAction(id, linkAcc, "jump");
-
-      //////////////////////////////////////////////////////////////////////////
       // Text accessible shouldn't implement nsIAccessibleHyperLink
       var res = isAccessible(getNode("namedAnchor").firstChild,
                              [nsIAccessibleHyperLink]);
@@ -278,10 +269,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   ><br>Link with title attribute (name from nested image): <a 
       id="linkWithTitleNameFromImg" href="http://www.heise.de/"
       title="Link with title"><img src="" alt="The title for link"/></a
-  ><br><label for="linkWithLabelNoNameFromSubtree">Link with label and nested image: </label><a 
-      id="linkWithLabelNoNameFromSubtree"
-      href="http://www.heise.de/"><img src=""/></a
-  ><br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass), also see the bug 431615:<br
+  ><br><br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass), also see the bug 431615:<br
   ><map id="linksmap" title="Site navigation"><ul
     ><li><a href="http://mozilla.org">About the project</a></li
     ><li><a href="http://mozilla.org">Sites and sounds</a></li
