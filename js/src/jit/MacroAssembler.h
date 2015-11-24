@@ -151,8 +151,8 @@
 # define DEFINED_ON_RESULT_define
 # define DEFINED_ON_RESULT_        = delete
 
-# define DEFINED_ON_DISPATCH_RESULT(Result)     \
-    DEFINED_ON_RESULT_ ## Result
+# define DEFINED_ON_DISPATCH_RESULT(...)        \
+    DEFINED_ON_RESULT_ ## __VA_ARGS__
 
 // We need to let the evaluation of MOZ_FOR_EACH terminates.
 # define DEFINED_ON_EXPAND_ARCH_RESULTS_3(ParenResult)  \
