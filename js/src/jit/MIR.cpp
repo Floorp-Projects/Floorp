@@ -1436,6 +1436,13 @@ MApplyArgs::New(TempAllocator& alloc, JSFunction* target, MDefinition* fun, MDef
     return new(alloc) MApplyArgs(target, fun, argc, self);
 }
 
+MApplyArray*
+MApplyArray::New(TempAllocator& alloc, JSFunction* target, MDefinition* fun, MDefinition* elements,
+                 MDefinition* self)
+{
+    return new(alloc) MApplyArray(target, fun, elements, self);
+}
+
 MDefinition*
 MStringLength::foldsTo(TempAllocator& alloc)
 {

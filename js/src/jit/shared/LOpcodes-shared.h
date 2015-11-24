@@ -74,6 +74,7 @@
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
+    _(ApplyArrayGeneric)            \
     _(Bail)                         \
     _(Unreachable)                  \
     _(EncodeSnapshot)               \
