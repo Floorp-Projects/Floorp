@@ -326,73 +326,73 @@ public:
 } // end anonymous namespace
 
 bool
-WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
-                           const uint8_t* src, uint8_t* dst,
-                           WebGLTexelFormat srcFormat, bool srcPremultiplied,
-                           WebGLTexelFormat dstFormat, bool dstPremultiplied,
-                           size_t dstTexelSize)
+ConvertImage(size_t width, size_t height,
+             const void* srcBegin, size_t srcStride, gl::OriginPos srcOrigin,
+             WebGLTexelFormat srcFormat, bool srcPremultiplied,
+             void* dstBegin, size_t dstStride, gl::OriginPos dstOrigin,
+             WebGLTexelFormat dstFormat, bool dstPremultiplied)
 {
-    if (width <= 0 || height <= 0)
-        return true;
-
-    const bool FormatsRequireNoPremultiplicationOp =
-        !HasAlpha(srcFormat) ||
-        !HasColor(srcFormat) ||
-        !HasColor(dstFormat);
-
-    if (srcFormat == dstFormat &&
-        (FormatsRequireNoPremultiplicationOp || srcPremultiplied == dstPremultiplied))
-    {
-        // fast exit path: we just have to memcpy all the rows.
-        //
-        // The case where absolutely nothing needs to be done is supposed to have
-        // been handled earlier (in TexImage2D_base, etc).
-        //
-        // So the case we're handling here is when even though no format conversion is needed,
-        // we still might have to flip vertically and/or to adjust to a different stride.
-
-        MOZ_ASSERT(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
-
-        size_t row_size = width * dstTexelSize; // doesn't matter, src and dst formats agree
-        const uint8_t* ptr = src;
-        const uint8_t* src_end = src + height * srcStride;
-
-        uint8_t* dst_row = mPixelStoreFlipY
-                           ? dst + (height-1) * dstStride
-                           : dst;
-        ptrdiff_t dstStrideSigned(dstStride);
-        ptrdiff_t dst_delta = mPixelStoreFlipY ? -dstStrideSigned : dstStrideSigned;
-
-        while(ptr != src_end) {
-            memcpy(dst_row, ptr, row_size);
-            ptr += srcStride;
-            dst_row += dst_delta;
-        }
-        return true;
-    }
-
     if (srcFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion ||
         dstFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion)
     {
         return false;
     }
 
-    uint8_t* dstStart = dst;
-    ptrdiff_t signedDstStride = dstStride;
-    if (mPixelStoreFlipY) {
-        dstStart = dst + (height - 1) * dstStride;
-        signedDstStride = -signedDstStride;
+    if (!width || !height)
+        return true;
+
+    const bool shouldYFlip = (srcOrigin != dstOrigin);
+
+    const bool canSkipPremult = (!HasAlpha(srcFormat) ||
+                                 !HasColor(srcFormat) ||
+                                 !HasColor(dstFormat));
+
+    WebGLTexelPremultiplicationOp premultOp;
+    if (canSkipPremult) {
+        premultOp = WebGLTexelPremultiplicationOp::None;
+    } else if (!srcPremultiplied && dstPremultiplied) {
+        premultOp = WebGLTexelPremultiplicationOp::Premultiply;
+    } else if (srcPremultiplied && !dstPremultiplied) {
+        premultOp = WebGLTexelPremultiplicationOp::Unpremultiply;
+    } else {
+        premultOp = WebGLTexelPremultiplicationOp::None;
     }
 
-    WebGLImageConverter converter(width, height, src, dstStart, srcStride, signedDstStride);
+    const uint8_t* srcItr = (const uint8_t*)srcBegin;
+    const uint8_t* const srcEnd = srcItr + srcStride * height;
+    uint8_t* dstItr = (uint8_t*)dstBegin;
+    ptrdiff_t dstItrStride = dstStride;
+    if (shouldYFlip) {
+         dstItr = dstItr + dstStride * (height - 1);
+         dstItrStride = -dstItrStride;
+    }
 
-    const WebGLTexelPremultiplicationOp premultiplicationOp
-        = FormatsRequireNoPremultiplicationOp     ? WebGLTexelPremultiplicationOp::None
-        : (!srcPremultiplied && dstPremultiplied) ? WebGLTexelPremultiplicationOp::Premultiply
-        : (srcPremultiplied && !dstPremultiplied) ? WebGLTexelPremultiplicationOp::Unpremultiply
-                                                  : WebGLTexelPremultiplicationOp::None;
+    if (srcFormat == dstFormat && premultOp == WebGLTexelPremultiplicationOp::None) {
+        // Fast exit path: we just have to memcpy all the rows.
+        //
+        // The case where absolutely nothing needs to be done is supposed to have
+        // been handled earlier (in TexImage2D_base, etc).
+        //
+        // So the case we're handling here is when even though no format conversion is
+        // needed, we still might have to flip vertically and/or to adjust to a different
+        // stride.
 
-    converter.run(srcFormat, dstFormat, premultiplicationOp);
+        MOZ_ASSERT(shouldYFlip || srcStride != dstStride,
+                   "Performance trap -- should handle this case earlier to avoid memcpy");
+
+        const auto bytesPerPixel = TexelBytesForFormat(srcFormat);
+        const size_t bytesPerRow = bytesPerPixel * width;
+
+        while (srcItr != srcEnd) {
+            memcpy(dstItr, srcItr, bytesPerRow);
+            srcItr += srcStride;
+            dstItr += dstItrStride;
+        }
+        return true;
+    }
+
+    WebGLImageConverter converter(width, height, srcItr, dstItr, srcStride, dstItrStride);
+    converter.run(srcFormat, dstFormat, premultOp);
 
     if (!converter.Success()) {
         // the dst image may be left uninitialized, so we better not try to

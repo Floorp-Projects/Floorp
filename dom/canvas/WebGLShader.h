@@ -76,7 +76,7 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
     void Delete();
 
-    WebGLContext* GetParentObject() const { return Context(); }
+    WebGLContext* GetParentObject() const { return mContext; }
 
     virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto) override;
 
