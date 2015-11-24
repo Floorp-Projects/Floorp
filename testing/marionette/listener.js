@@ -1667,7 +1667,15 @@ function switchToShadowRoot(id) {
     // If no host element is passed, attempt to find a parent shadow root or, if
     // none found, unset the current shadow root
     if (curContainer.shadowRoot) {
-      let parent = curContainer.shadowRoot.host;
+      let parent;
+      try {
+        parent = curContainer.shadowRoot.host;
+      } catch (e) {
+        // There is a chance that host element is dead and we are trying to
+        // access a dead object.
+        curContainer.shadowRoot = null;
+        return;
+      }
       while (parent && !(parent instanceof curContainer.frame.ShadowRoot)) {
         parent = parent.parentNode;
       }
