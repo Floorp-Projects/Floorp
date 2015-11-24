@@ -545,6 +545,7 @@ load 885009-1.html
 load 893496-1.html
 load 893523.html
 asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
+asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
 load 915475.xhtml
 load 927558.html
