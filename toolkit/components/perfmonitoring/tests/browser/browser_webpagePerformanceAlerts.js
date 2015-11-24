@@ -53,17 +53,10 @@ add_task(function* test_open_window_then_watch_it() {
   let otherTab = gBrowser.addTab();
   yield BrowserTestUtils.browserLoaded(otherTab.linkedBrowser);
   info(`Check that burning CPU triggers the real listener, but not the fake listener`);
-  let realListener = new WebpageListener(burner.tab.linkedBrowser.outerWindowID, group => {
-    if (group.windowId != burner.windowId) {
-      Assert.equal(group.windowId, burner.windowId, "We should not receive data meant for another group");
-    }
-    return group.windowId == burner.windowId;
-  }); // This listener should be triggered.
   let fakeListener = new WebpageListener(otherTab.linkedBrowser.outerWindowID, group => group.windowId == burner.windowId); // This listener should never be triggered.
-  let universalListener = new WebpageListener(0, alerts => {
-    info(`test: universalListener triggered ${JSON.stringify(alerts)}`);
-    return alerts.find(alert => alert.source.windowId == burner.windowId)
-  });
+  let universalListener = new WebpageListener(0, alerts => 
+    alerts.find(alert => alert.source.windowId == burner.windowId)
+  );
 
   // Waiting a little – listeners are buffered.
   yield new Promise(resolve => setTimeout(resolve, 100));
@@ -100,7 +93,7 @@ add_task(function* test_open_window_then_watch_it() {
   realListener.unregister();
 
   // Waiting a little – listeners are buffered.
-  yield new Promise(resolve => setTimeout(resolve, 300));
+  yield new Promise(resolve => setTimeout(resolve, 100));
   yield burner.run("promiseBurnContentCPU", 3, realListener);
   Assert.ok(!realListener.triggered, `3. After being unregistered, the real listener was not triggered`);
   Assert.ok(universalListener.triggered, `3. The universal listener is still triggered`);
@@ -108,7 +101,7 @@ add_task(function* test_open_window_then_watch_it() {
   universalListener.unregister();
 
   // Waiting a little – listeners are buffered.
-  yield new Promise(resolve => setTimeout(resolve, 300));
+  yield new Promise(resolve => setTimeout(resolve, 100));
   yield burner.run("promiseBurnContentCPU", 3, realListener);
   Assert.ok(!universalListener.triggered, `4. After being unregistered, the universal listener is not triggered`);
 

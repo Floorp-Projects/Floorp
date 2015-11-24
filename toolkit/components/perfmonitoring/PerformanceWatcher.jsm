@@ -54,6 +54,7 @@ this.EXPORTED_SYMBOLS = ["PerformanceWatcher"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+let { PerformanceStats, performanceStatsService } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // `true` if the code is executed in content, `false` otherwise
@@ -73,8 +74,6 @@ if (!isContent) {
 }
 
 // Configure the performance stats service to inform us in case of jank.
-let performanceStatsService = Cc["@mozilla.org/toolkit/performance-stats-service;1"].
-  getService(Ci.nsIPerformanceStatsService);
 performanceStatsService.jankAlertThreshold = 64000 /* us */;
 
 
