@@ -135,13 +135,12 @@ protected:
 
   /**
    * On construction:
-   * - mPrintSettings, mPageSetup and mPaperSize are just new objects with defaults determined by GTK.
+   * - mPrintSettings and mPageSetup are just new objects with defaults determined by GTK.
    * - mGTKPrinter is nullptr!!! Remember to be careful when accessing this property.
    */
   GtkPageSetup* mPageSetup;
   GtkPrintSettings* mPrintSettings;
   GtkPrinter* mGTKPrinter;
-  GtkPaperSize* mPaperSize;
 
   bool mPrintSelectionOnly;
 };
