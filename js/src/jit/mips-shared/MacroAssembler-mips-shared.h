@@ -113,6 +113,7 @@ class MacroAssemblerMIPSShared : public Assembler
 
     // subtract
     void ma_subu(Register rd, Register rs, Imm32 imm);
+    void ma_subu(Register rd, Register rs);
     void ma_subu(Register rd, Imm32 imm);
     void ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 

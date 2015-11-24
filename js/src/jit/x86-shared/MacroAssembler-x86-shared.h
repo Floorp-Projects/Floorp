@@ -220,18 +220,6 @@ class MacroAssemblerX86Shared : public Assembler
     void add32(Imm32 imm, const Address& dest) {
         addl(imm, Operand(dest));
     }
-    void sub32(Imm32 imm, Register dest) {
-        subl(imm, dest);
-    }
-    void sub32(const Operand& src, Register dest) {
-        subl(src, dest);
-    }
-    void sub32(Register src, Register dest) {
-        subl(src, dest);
-    }
-    void sub32(Register src, const Operand& dest) {
-        subl(src, dest);
-    }
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* label) {
         add32(src, dest);
@@ -239,7 +227,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
     template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        sub32(src, dest);
+        subl(src, dest);
         j(cond, label);
     }
     void atomic_inc32(const Operand& addr) {
