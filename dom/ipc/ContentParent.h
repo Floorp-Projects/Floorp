@@ -879,6 +879,7 @@ private:
 
     virtual bool RecvCopyFavicon(const URIParams& aOldURI,
                                  const URIParams& aNewURI,
+                                 const IPC::Principal& aLoadingPrincipal,
                                  const bool& aInPrivateBrowsing) override;
 
     virtual void ProcessingError(Result aCode, const char* aMsgName) override;
