@@ -716,3 +716,49 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   background-color: #5cccee;
   color: #fff;
 }
+
+/* E10s not supported */
+
+.error-content {
+  /* Manual vertical centering */
+  flex: 1;
+  padding: 3.5rem 0 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-title {
+  margin: 0 15px;
+  text-align: center;
+}
+
+.error-title > img {
+  width: 72px;
+}
+
+.error-subheader {
+  text-align: center;
+  font-size: 1.6rem;
+  margin: 2.5rem 0;
+  color: #4a4a4a;
+  line-height: 2.2rem;
+}
+
+.e10s-not-supported-button {
+  border: none;
+  color: #fff;
+  background-color: #00a9dc;
+  line-height: 43px;
+  margin: 0 15px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.e10s-not-supported-button:hover,
+.e10s-not-supported-button:focus,
+.e10s-not-supported-button:active {
+  background-color: #5cccee;
+  color: #fff;
+}
