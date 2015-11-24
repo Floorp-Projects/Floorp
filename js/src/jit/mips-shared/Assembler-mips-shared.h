@@ -797,6 +797,9 @@ class AssemblerMIPSShared : public AssemblerShared
     bool isFinished;
   public:
     void finish();
+    bool asmMergeWith(const AssemblerMIPSShared& other) {
+        MOZ_CRASH("NYI");
+    }
     void executableCopy(void* buffer);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
@@ -1036,9 +1039,12 @@ class AssemblerMIPSShared : public AssemblerShared
         return nextOffset().getOffset();
     }
     void retarget(Label* label, Label* target);
+    void retargetWithOffset(size_t offset, const LabelBase* label, Label* target) {
+        MOZ_CRASH("NYI");
+    }
 
     // See Bind
-    size_t labelOffsetToPatchOffset(size_t offset) { return offset; }
+    size_t labelToPatchOffset(CodeOffsetLabel label) { return label.offset(); }
 
     void call(Label* label);
     void call(void* target);

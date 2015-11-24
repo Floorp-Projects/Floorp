@@ -631,12 +631,6 @@ Assembler::FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader
         cx->runtime()->gc.storeBuffer.putWholeCell(code);
 }
 
-int32_t
-Assembler::ExtractCodeLabelOffset(uint8_t* code)
-{
-    return *(int32_t*)code;
-}
-
 void
 Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
 {

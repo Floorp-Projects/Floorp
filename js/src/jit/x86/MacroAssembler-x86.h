@@ -16,19 +16,12 @@
 namespace js {
 namespace jit {
 
-struct MacroAssemblerX86Shared::PlatformSpecificLabel : public AbsoluteLabel
-{};
-
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
   private:
     // Perform a downcast. Should be removed by Bug 996602.
     MacroAssembler& asMasm();
     const MacroAssembler& asMasm() const;
-
-    typedef MacroAssemblerX86Shared::Double<> Double;
-    typedef MacroAssemblerX86Shared::Float<> Float;
-    typedef MacroAssemblerX86Shared::SimdData<> SimdData;
 
   protected:
     MoveResolver moveResolver_;

@@ -177,6 +177,9 @@ class Assembler : public vixl::Assembler
     typedef vixl::Condition Condition;
 
     void finish();
+    bool asmMergeWith(const Assembler& other) {
+        MOZ_CRASH("NYI");
+    }
     void trace(JSTracer* trc);
 
     // Emit the jump table, returning the BufferOffset to the first entry in the table.
@@ -236,15 +239,18 @@ class Assembler : public vixl::Assembler
     void processCodeLabels(uint8_t* rawCode) {
         for (size_t i = 0; i < codeLabels_.length(); i++) {
             CodeLabel label = codeLabels_[i];
-            Bind(rawCode, label.dest(), rawCode + label.src()->offset());
+            Bind(rawCode, label.patchAt(), rawCode + label.target()->offset());
         }
     }
 
-    void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address) {
+    void Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address) {
         *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
     }
 
     void retarget(Label* cur, Label* next);
+    void retargetWithOffset(size_t baseOffset, const LabelBase* label, LabelBase* target) {
+        MOZ_CRASH("NYI");
+    }
 
     // The buffer is about to be linked. Ensure any constant pools or
     // excess bookkeeping has been flushed to the instruction stream.
@@ -256,7 +262,9 @@ class Assembler : public vixl::Assembler
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
     }
-    size_t labelOffsetToPatchOffset(size_t labelOff) { return labelOff; }
+    size_t labelToPatchOffset(CodeOffsetLabel label) {
+        return label.offset();
+    }
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
         return code->raw() + index;
     }
@@ -325,7 +333,6 @@ class Assembler : public vixl::Assembler
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
-    static int32_t ExtractCodeLabelOffset(uint8_t* code);
     static void PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm);
 
     static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,

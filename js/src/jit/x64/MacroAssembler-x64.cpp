@@ -32,8 +32,7 @@ MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
     // PC-relative addressing. Use "jump" label support code, because we need
     // the same PC-relative address patching that jumps use.
     JmpSrc j = masm.vmovsd_ripr(dest.encoding());
-    JmpSrc prev = JmpSrc(dbl->uses.use(j.offset()));
-    masm.setNextJump(j, prev);
+    dbl->uses.append(CodeOffsetLabel(j.offset()));
 }
 
 void
@@ -46,8 +45,7 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
         return;
     // See comment in loadConstantDouble
     JmpSrc j = masm.vmovss_ripr(dest.encoding());
-    JmpSrc prev = JmpSrc(flt->uses.use(j.offset()));
-    masm.setNextJump(j, prev);
+    flt->uses.append(CodeOffsetLabel(j.offset()));
 }
 
 void
@@ -61,8 +59,7 @@ MacroAssemblerX64::loadConstantInt32x4(const SimdConstant& v, FloatRegister dest
         return;
     MOZ_ASSERT(val->type() == SimdConstant::Int32x4);
     JmpSrc j = masm.vmovdqa_ripr(dest.encoding());
-    JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
-    masm.setNextJump(j, prev);
+    val->uses.append(CodeOffsetLabel(j.offset()));
 }
 
 void
@@ -76,8 +73,19 @@ MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister des
         return;
     MOZ_ASSERT(val->type() == SimdConstant::Float32x4);
     JmpSrc j = masm.vmovaps_ripr(dest.encoding());
-    JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
-    masm.setNextJump(j, prev);
+    val->uses.append(CodeOffsetLabel(j.offset()));
+}
+
+void
+MacroAssemblerX64::bindOffsets(const MacroAssemblerX86Shared::UsesVector& uses)
+{
+    for (CodeOffsetLabel use : uses) {
+        JmpDst dst(currentOffset());
+        JmpSrc src(use.offset());
+        // Using linkJump here is safe, as explaind in the comment in
+        // loadConstantDouble.
+        masm.linkJump(src, dst);
+    }
 }
 
 void
@@ -85,26 +93,23 @@ MacroAssemblerX64::finish()
 {
     if (!doubles_.empty())
         masm.haltingAlign(sizeof(double));
-    for (size_t i = 0; i < doubles_.length(); i++) {
-        Double& dbl = doubles_[i];
-        bind(&dbl.uses);
-        masm.doubleConstant(dbl.value);
+    for (const Double& d : doubles_) {
+        bindOffsets(d.uses);
+        masm.doubleConstant(d.value);
     }
 
     if (!floats_.empty())
         masm.haltingAlign(sizeof(float));
-    for (size_t i = 0; i < floats_.length(); i++) {
-        Float& flt = floats_[i];
-        bind(&flt.uses);
-        masm.floatConstant(flt.value);
+    for (const Float& f : floats_) {
+        bindOffsets(f.uses);
+        masm.floatConstant(f.value);
     }
 
     // SIMD memory values must be suitably aligned.
     if (!simds_.empty())
         masm.haltingAlign(SimdMemoryAlignment);
-    for (size_t i = 0; i < simds_.length(); i++) {
-        SimdData& v = simds_[i];
-        bind(&v.uses);
+    for (const SimdData& v : simds_) {
+        bindOffsets(v.uses);
         switch(v.type()) {
           case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
           case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
