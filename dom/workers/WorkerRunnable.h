@@ -407,8 +407,6 @@ protected:
   virtual bool MainThreadRun() = 0;
 
 public:
-  bool Dispatch(JSContext* aCx);
-
   // Dispatch the runnable to the main thread.  If dispatch to main thread
   // fails, or if the worker is shut down while dispatching, an error will be
   // reported on aRv.  In that case the error MUST be propagated out to script.
