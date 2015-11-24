@@ -2629,7 +2629,8 @@ public class BrowserApp extends GeckoApp
 
         mBrowserSearchContainer.setVisibility(View.VISIBLE);
 
-        // Prevent overdraw by hiding the underlying HomePager View.
+        // Prevent overdraw by hiding the underlying web content and HomePager View
+        hideWebContent();
         mHomePagerContainer.setVisibility(View.INVISIBLE);
 
         final FragmentManager fm = getSupportFragmentManager();
