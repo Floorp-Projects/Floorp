@@ -337,6 +337,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
+    // Asm failure labels
+    NonAssertingLabel asmStackOverflowLabel_;
+    NonAssertingLabel asmSyncInterruptLabel_;
+    NonAssertingLabel asmOnConversionErrorLabel_;
+    NonAssertingLabel asmOnOutOfBoundsLabel_;
+
   public:
     MacroAssembler()
       : framePushed_(0),
@@ -1334,6 +1340,31 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     Label* failureLabel() {
         return &failureLabel_;
+    }
+
+    Label* asmSyncInterruptLabel() {
+        return &asmSyncInterruptLabel_;
+    }
+    const Label* asmSyncInterruptLabel() const {
+        return &asmSyncInterruptLabel_;
+    }
+    Label* asmStackOverflowLabel() {
+        return &asmStackOverflowLabel_;
+    }
+    const Label* asmStackOverflowLabel() const {
+        return &asmStackOverflowLabel_;
+    }
+    Label* asmOnOutOfBoundsLabel() {
+        return &asmOnOutOfBoundsLabel_;
+    }
+    const Label* asmOnOutOfBoundsLabel() const {
+        return &asmOnOutOfBoundsLabel_;
+    }
+    Label* asmOnConversionErrorLabel() {
+        return &asmOnConversionErrorLabel_;
+    }
+    const Label* asmOnConversionErrorLabel() const {
+        return &asmOnConversionErrorLabel_;
     }
 
     bool asmMergeWith(const MacroAssembler& masm);

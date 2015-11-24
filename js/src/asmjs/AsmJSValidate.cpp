@@ -30,7 +30,6 @@
 #include "jsutil.h"
 
 #include "asmjs/AsmJSCompile.h"
-#include "asmjs/AsmJSGlobals.h"
 #include "asmjs/AsmJSLink.h"
 #include "asmjs/AsmJSSignalHandlers.h"
 #include "builtin/SIMD.h"
@@ -618,13 +617,12 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t funcIndex_;
         uint32_t srcBegin_;
         uint32_t srcEnd_;
-        uint32_t compileTime_;
         bool defined_;
 
       public:
         Func(PropertyName* name, uint32_t firstUseOffset, LifoSignature* sig, uint32_t funcIndex)
           : sig_(sig), name_(name), firstUseOffset_(firstUseOffset), funcIndex_(funcIndex),
-            srcBegin_(0), srcEnd_(0), compileTime_(0), defined_(false)
+            srcBegin_(0), srcEnd_(0), defined_(false)
         {}
 
         PropertyName* name() const { return name_; }
@@ -643,8 +641,6 @@ class MOZ_STACK_CLASS ModuleValidator
         uint32_t srcEnd() const { MOZ_ASSERT(defined_); return srcEnd_; }
         LifoSignature& sig() { return *sig_; }
         const LifoSignature& sig() const { return *sig_; }
-        uint32_t compileTime() const { return compileTime_; }
-        void accumulateCompileTime(uint32_t ms) { compileTime_ += ms; }
     };
 
     typedef Vector<const Func*, 0, LifoAllocPolicy<Fallible>> ConstFuncVector;
@@ -944,10 +940,15 @@ class MOZ_STACK_CLASS ModuleValidator
     bool                                    supportsSimd_;
     bool                                    atomicsPresent_;
 
+    MacroAssembler                          masm_;
+    int64_t                                 usecBefore_;
     Vector<uint32_t>                        functionEntryOffsets_;
     SlowFunctionVector                      slowFunctions_;
 
-    ScopedJSDeletePtr<ModuleCompileResults> compileResults_;
+    // Labels not accessible in functions compilations
+    NonAssertingLabel                       asyncInterruptLabel_;
+    NonAssertingLabel                       onDetachedLabel_;
+
     DebugOnly<bool>                         finishedFunctionBodies_;
 
   public:
@@ -972,9 +973,10 @@ class MOZ_STACK_CLASS ModuleValidator
         hasChangeHeap_(false),
         supportsSimd_(cx->jitSupportsSimd()),
         atomicsPresent_(false),
+        masm_(MacroAssembler::AsmJSToken()),
+        usecBefore_(0),
         functionEntryOffsets_(cx),
         slowFunctions_(cx),
-        compileResults_(nullptr),
         finishedFunctionBodies_(false)
     {
         MOZ_ASSERT(moduleFunctionNode_->pn_funbox == parser.pc->sc->asFunctionBox());
@@ -1405,6 +1407,7 @@ class MOZ_STACK_CLASS ModuleValidator
     TokenStream& tokenStream() const         { return parser_.tokenStream; }
     bool supportsSimd() const                { return supportsSimd_; }
     LifoAlloc& lifo()                        { return moduleLifo_; }
+    int64_t usecBefore() const               { return usecBefore_; }
 
     unsigned numArrayViews() const {
         return arrayViews_.length();
@@ -1466,23 +1469,30 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     // End-of-compilation utils
-    MacroAssembler& masm()           { return compileResults_->masm(); }
-    Label& stackOverflowLabel()      { return compileResults_->stackOverflowLabel(); }
-    Label& asyncInterruptLabel()     { return compileResults_->asyncInterruptLabel(); }
-    Label& syncInterruptLabel()      { return compileResults_->syncInterruptLabel(); }
-    Label& onDetachedLabel()         { return compileResults_->onDetachedLabel(); }
-    Label& onOutOfBoundsLabel()      { return compileResults_->onOutOfBoundsLabel(); }
-    Label& onConversionErrorLabel()  { return compileResults_->onConversionErrorLabel(); }
-    ExitMap::Range allExits() const  { return exits_.all(); }
+    MacroAssembler& masm()          { return masm_; }
+    Label& stackOverflowLabel()     { return *masm_.asmStackOverflowLabel(); }
+    Label& syncInterruptLabel()     { return *masm_.asmSyncInterruptLabel(); }
+    Label& onConversionErrorLabel() { return *masm_.asmOnConversionErrorLabel(); }
+    Label& onOutOfBoundsLabel()     { return *masm_.asmOnOutOfBoundsLabel(); }
+    Label& asyncInterruptLabel()    { return asyncInterruptLabel_; }
+    Label& onDetachedLabel()        { return onDetachedLabel_; }
+    ExitMap::Range allExits() const { return exits_.all(); }
 
-    bool finishGeneratingFunction(FunctionCompileResults& results) {
-        const AsmFunction& func = results.func();
+  public:
+    bool finishGeneratingFunction(const AsmFunction& func, const FunctionCompileResults& results) {
         unsigned i = func.funcIndex();
         if (functionEntryOffsets_.length() <= i && !functionEntryOffsets_.resize(i + 1))
             return false;
 
         AsmJSModule::FunctionCodeRange codeRange = results.codeRange();
+        size_t delta = masm().size();
+        codeRange.functionOffsetBy(delta);
         functionEntryOffsets_[i] = codeRange.entry();
+
+        DebugOnly<size_t> sizeNewMasm = results.masm().size();
+        if (!masm().asmMergeWith(results.masm()))
+            return false;
+        MOZ_ASSERT(delta + sizeNewMasm == masm().size());
 
         PropertyName* funcName = func.name();
         unsigned line = func.lineno();
@@ -1494,9 +1504,9 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!module().addFunctionCodeRange(codeRange.name(), codeRange))
             return false;
 
-        unsigned compileTime = func.compileTime();
-        if (compileTime >= 250) {
-            if (!slowFunctions_.append(SlowFunction(funcName, compileTime, line, column)))
+        unsigned totalTime = func.parseTime() + results.compileTime();
+        if (totalTime >= 250) {
+            if (!slowFunctions_.append(SlowFunction(funcName, totalTime, line, column)))
                 return false;
         }
 
@@ -1586,11 +1596,9 @@ class MOZ_STACK_CLASS ModuleValidator
             module_->setViewsAreShared();
         }
         module_->startFunctionBodies();
+        usecBefore_ = PRMJ_Now();
     }
-    bool finishFunctionBodies(ScopedJSDeletePtr<ModuleCompileResults>* compileResults) {
-        // Take ownership of compilation results
-        compileResults_ = compileResults->forget();
-
+    bool finishFunctionBodies() {
         // Patch internal calls to their final positions
         for (auto& cs : masm().callSites()) {
             if (!cs.isInternal())
@@ -1611,7 +1619,7 @@ class MOZ_STACK_CLASS ModuleValidator
 #ifndef JS_MORE_DETERMINISTIC
         ScopedJSFreePtr<char> slowFuns;
         int64_t usecAfter = PRMJ_Now();
-        int msTotal = (usecAfter - compileResults_->usecBefore()) / PRMJ_USEC_PER_MSEC;
+        int msTotal = (usecAfter - usecBefore()) / PRMJ_USEC_PER_MSEC;
         if (!slowFunctions_.empty()) {
             slowFuns.reset(JS_smprintf("; %d functions compiled slowly: ", slowFunctions_.length()));
             if (!slowFuns)
@@ -6499,12 +6507,11 @@ CheckFunction(ModuleValidator& m, LifoAlloc& lifo, AsmFunction** funcOut)
 
     func->define(fn);
 
-    func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
-
     unsigned lineno, column;
+    int64_t parseTime = (PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC;
     m.tokenStream().srcCoords.lineNumAndColumnIndex(func->srcBegin(), &lineno, &column);
     if (!asmFunc->finish(func->sig().args(), func->name(), func->funcIndex(),
-                         func->srcBegin(), lineno, column, func->compileTime()))
+                         func->srcBegin(), lineno, column, parseTime))
     {
         return false;
     }
@@ -6530,17 +6537,12 @@ CheckAllFunctionsDefined(ModuleValidator& m)
 }
 
 static bool
-CheckFunctionsSequential(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* compileResults)
+CheckFunctionsSequential(ModuleValidator& m)
 {
     // Use a single LifoAlloc to allocate all the temporary compiler IR.
     // All allocated LifoAlloc'd memory is released after compiling each
     // function by the LifoAllocScope inside the loop.
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-
-    AsmModuleCompilerScope scope;
-    if (!CreateAsmModuleCompiler(m.compileInputs(), &scope))
-        return false;
-    ModuleCompiler& mc = scope.module();
 
     while (true) {
         TokenKind tk;
@@ -6559,39 +6561,15 @@ CheckFunctionsSequential(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResu
         if (!func)
             continue;
 
-        MIRGenerator* mir;
-        if (!GenerateAsmFunctionMIR(mc, lifo, *func, &mir))
-            return false;
-
-        int64_t before = PRMJ_Now();
-
-        LIRGraph* lir;
-        {
-            JitContext jcx(m.cx(), &mir->alloc());
-            jit::AutoSpewEndFunction spewEndFunction(mir);
-
-            if (!OptimizeMIR(mir))
-                return m.failOffset(func->srcBegin(), "internal compiler failure (probably out of memory)");
-
-            lir = GenerateLIR(mir);
-            if (!lir)
-                return m.failOffset(func->srcBegin(), "internal compiler failure (probably out of memory)");
-
-            func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
-        }
-
         FunctionCompileResults results;
-        if (!GenerateAsmFunctionCode(mc, *func, *mir, *lir, &results))
-            return false;
-        if (!m.finishGeneratingFunction(results))
+        if (!CompileAsmFunction(lifo, m.compileInputs(), *func, &results))
+            return m.failOffset(func->srcBegin(), "internal compiler failure (probably out of memory)");
+
+        if (!m.finishGeneratingFunction(*func, results))
             return false;
     }
 
-    if (!CheckAllFunctionsDefined(m))
-        return false;
-
-    FinishAsmModuleCompilation(mc, compileResults);
-    return true;
+    return CheckAllFunctionsDefined(m);
 }
 
 // Currently, only one asm.js parallel compilation is allowed at a time.
@@ -6648,7 +6626,7 @@ struct ParallelGroupState
 
 // Block until a helper-assigned LifoAlloc becomes finished.
 static AsmJSParallelTask*
-GetFinishedCompilation(ModuleCompiler& m, ParallelGroupState& group)
+GetFinishedCompilation(ParallelGroupState& group)
 {
     AutoLockHelperThreadState lock;
 
@@ -6664,28 +6642,20 @@ GetFinishedCompilation(ModuleCompiler& m, ParallelGroupState& group)
 }
 
 static bool
-GetUsedTask(ModuleValidator& m, ModuleCompiler& mc, ParallelGroupState& group, AsmJSParallelTask** outTask)
+GetUsedTask(ModuleValidator& m, ParallelGroupState& group, AsmJSParallelTask** outTask)
 {
     // Block until a used LifoAlloc becomes available.
-    AsmJSParallelTask* task = GetFinishedCompilation(mc, group);
+    AsmJSParallelTask* task = GetFinishedCompilation(group);
     if (!task)
         return false;
 
-    auto& func = *reinterpret_cast<AsmFunction*>(task->func);
-    func.accumulateCompileTime(task->compileTime);
-
-    // Perform code generation on the main thread.
-    FunctionCompileResults results;
-    if (!GenerateAsmFunctionCode(mc, func, *task->mir, *task->lir, &results))
-        return false;
-    if (!m.finishGeneratingFunction(results))
+    if (!m.finishGeneratingFunction(*task->func, *task->results))
         return false;
 
     group.compiledJobs++;
 
     // Clear the LifoAlloc for use by another helper.
-    TempAllocator& tempAlloc = task->mir->alloc();
-    tempAlloc.TempAllocator::~TempAllocator();
+    task->results.reset();
     task->lifo.releaseAll();
 
     *outTask = task;
@@ -6705,8 +6675,7 @@ GetUnusedTask(ParallelGroupState& group, uint32_t i, AsmJSParallelTask** outTask
 }
 
 static bool
-CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
-                       ScopedJSDeletePtr<ModuleCompileResults>* compileResults)
+CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group)
 {
 #ifdef DEBUG
     {
@@ -6717,11 +6686,6 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
 #endif
     HelperThreadState().resetAsmJSFailureState();
 
-    AsmModuleCompilerScope scope;
-    if (!CreateAsmModuleCompiler(m.compileInputs(), &scope))
-        return false;
-    ModuleCompiler& mc = scope.module();
-
     AsmJSParallelTask* task = nullptr;
     for (unsigned i = 0;; i++) {
         TokenKind tk;
@@ -6730,7 +6694,7 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
         if (tk != TOK_FUNCTION)
             break;
 
-        if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(m, mc, group, &task))
+        if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(m, group, &task))
             return false;
 
         AsmFunction* func;
@@ -6741,13 +6705,8 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
         if (!func)
             continue;
 
-        // Generate MIR into the LifoAlloc on the main thread.
-        MIRGenerator* mir;
-        if (!GenerateAsmFunctionMIR(mc, task->lifo, *func, &mir))
-            return false;
-
         // Perform optimizations and LIR generation on a helper thread.
-        task->init(m.cx()->compartment()->runtimeFromAnyThread(), func, mir);
+        task->init(m.cx()->compartment()->runtimeFromAnyThread(), func);
         if (!StartOffThreadAsmJSCompile(m.cx(), task))
             return false;
 
@@ -6758,7 +6717,7 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
     // Block for all outstanding helpers to complete.
     while (group.outstandingJobs > 0) {
         AsmJSParallelTask* ignored = nullptr;
-        if (!GetUsedTask(m, mc, group, &ignored))
+        if (!GetUsedTask(m, group, &ignored))
             return false;
     }
 
@@ -6775,8 +6734,6 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
     }
 #endif
     MOZ_ASSERT(!HelperThreadState().asmJSFailed());
-
-    FinishAsmModuleCompilation(mc, compileResults);
     return true;
 }
 
@@ -6824,7 +6781,7 @@ CancelOutstandingJobs(ParallelGroupState& group)
 static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
 
 static bool
-CheckFunctions(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* results)
+CheckFunctions(ModuleValidator& m)
 {
     // If parallel compilation isn't enabled (not enough cores, disabled by
     // pref, etc) or another thread is currently compiling asm.js in parallel,
@@ -6833,7 +6790,7 @@ CheckFunctions(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* resu
     // concurrent asm.js parallel compilations don't race.)
     ParallelCompilationGuard g;
     if (!ParallelCompilationEnabled(m.cx()) || !g.claim())
-        return CheckFunctionsSequential(m, results);
+        return CheckFunctionsSequential(m);
 
     JitSpew(JitSpew_IonSyncLogs, "Can't log asm.js script. (Compiled on background thread.)");
 
@@ -6847,21 +6804,19 @@ CheckFunctions(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResults>* resu
         return false;
 
     for (size_t i = 0; i < numParallelJobs; i++)
-        tasks.infallibleAppend(LIFO_ALLOC_PARALLEL_CHUNK_SIZE);
+        tasks.infallibleEmplaceBack(LIFO_ALLOC_PARALLEL_CHUNK_SIZE, m.compileInputs());
 
     // With compilation memory in-scope, dispatch helper threads.
     ParallelGroupState group(tasks);
-    if (!CheckFunctionsParallel(m, group, results)) {
+    if (!CheckFunctionsParallel(m, group)) {
         CancelOutstandingJobs(group);
 
         // If a validation error didn't occur on the main thread, either a
         // syntax error occurred and will be signalled by the regular parser,
         // or an error occurred on an helper thread.
         if (!m.hasAlreadyFailed()) {
-            if (void* maybeFunc = HelperThreadState().maybeAsmJSFailedFunction()) {
-                AsmFunction* func = reinterpret_cast<AsmFunction*>(maybeFunc);
+            if (AsmFunction* func = HelperThreadState().maybeAsmJSFailedFunction())
                 return m.failOffset(func->srcBegin(), "allocation failure during compilation");
-            }
         }
 
         // Otherwise, the error occurred on the main thread and was already reported.
@@ -8207,11 +8162,10 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
                             "shared views not supported by this build");
 #endif
 
-    ScopedJSDeletePtr<ModuleCompileResults> mcd;
-    if (!CheckFunctions(m, &mcd))
+    if (!CheckFunctions(m))
         return false;
 
-    if (!m.finishFunctionBodies(&mcd))
+    if (!m.finishFunctionBodies())
         return false;
 
     if (!CheckFuncPtrTables(m))
