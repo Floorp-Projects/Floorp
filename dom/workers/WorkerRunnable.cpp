@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "js/RootingAPI.h"
@@ -576,6 +577,26 @@ WorkerMainThreadRunnable::Dispatch(JSContext* aCx)
   return syncLoop.Run();
 }
 
+void
+WorkerMainThreadRunnable::Dispatch(ErrorResult& aRv)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  AutoSyncLoopHolder syncLoop(mWorkerPrivate);
+
+  mSyncLoopTarget = syncLoop.EventTarget();
+  RefPtr<WorkerMainThreadRunnable> runnable(this);
+
+  DebugOnly<nsresult> rv =
+    NS_DispatchToMainThread(runnable.forget(), NS_DISPATCH_NORMAL);
+  MOZ_ASSERT(NS_SUCCEEDED(rv),
+             "Should only fail after xpcom-shutdown-threads and we're gone by then");
+
+  if (!syncLoop.Run()) {
+    aRv.ThrowUncatchableException();
+  }
+}
+
 NS_IMETHODIMP
 WorkerMainThreadRunnable::Run()
 {
@@ -591,6 +612,16 @@ WorkerMainThreadRunnable::Run()
   MOZ_ALWAYS_TRUE(response->Dispatch(nullptr));
 
   return NS_OK;
+}
+
+bool
+WorkerCheckAPIExposureOnMainThreadRunnable::Dispatch()
+{
+  ErrorResult rv;
+  WorkerMainThreadRunnable::Dispatch(rv);
+  bool ok = !rv.Failed();
+  rv.SuppressException();
+  return ok;
 }
 
 bool
