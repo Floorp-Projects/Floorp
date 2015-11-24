@@ -679,6 +679,7 @@ html|*#fullscreen-warning {
 }
 html|*#fullscreen-warning:not([hidden]) {
   display: flex;
+  will-change: transform;
 }
 html|*#fullscreen-warning[onscreen] {
   transform: translate(-50%, 50px);
