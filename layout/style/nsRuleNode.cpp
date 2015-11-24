@@ -17,6 +17,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/unused.h"
 
 #include "mozilla/css/Declaration.h"
 
@@ -1280,6 +1281,61 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
   }
 }
 
+struct SetEnumValueHelper
+{
+  template<typename FieldT>
+  static void SetIntegerValue(FieldT&, const nsCSSValue&)
+  {
+    // FIXME Is it possible to turn this assertion into a compilation error?
+    MOZ_ASSERT_UNREACHABLE("inappropriate unit");
+  }
+
+#define DEFINE_ENUM_CLASS_SETTER(type_, min_, max_) \
+  static void SetEnumeratedValue(type_& aField, const nsCSSValue& aValue) \
+  { \
+    auto value = aValue.GetIntValue(); \
+    MOZ_ASSERT(value >= static_cast<decltype(value)>(type_::min_) && \
+               value <= static_cast<decltype(value)>(type_::max_), \
+               "inappropriate value"); \
+    aField = static_cast<type_>(value); \
+  }
+
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
+
+#undef DEF_SET_ENUMERATED_VALUE
+};
+
+template<typename FieldT>
+struct SetIntegerValueHelper
+{
+  static void SetIntegerValue(FieldT& aField, const nsCSSValue& aValue)
+  {
+    aField = aValue.GetIntValue();
+  }
+  static void SetEnumeratedValue(FieldT& aField, const nsCSSValue& aValue)
+  {
+    aField = aValue.GetIntValue();
+  }
+};
+
+template<typename FieldT>
+struct SetValueHelper : Conditional<IsEnum<FieldT>::value,
+                                    SetEnumValueHelper,
+                                    SetIntegerValueHelper<FieldT>>::Type
+{
+  template<typename ValueT>
+  static void SetValue(FieldT& aField, const ValueT& aValue)
+  {
+    aField = aValue;
+  }
+  static void SetValue(FieldT&, unused_t)
+  {
+    // FIXME Is it possible to turn this assertion into a compilation error?
+    MOZ_ASSERT_UNREACHABLE("inappropriate unit");
+  }
+};
+
+
 // flags for SetValue - align values with SETCOORD_* constants
 // where possible
 
@@ -1293,18 +1349,20 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 #define SETVAL_UNSET_INITIAL          0x00800000
 
 // no caller cares whether aField was changed or not
-template <typename FieldT,
-          typename T1, typename T2, typename T3, typename T4, typename T5>
+template<typename FieldT, typename InitialT,
+         typename AutoT, typename NoneT, typename NormalT, typename SysFontT>
 static void
-SetValue(const nsCSSValue& aValue, FieldT & aField,
+SetValue(const nsCSSValue& aValue, FieldT& aField,
          RuleNodeCacheConditions& aConditions, uint32_t aMask,
          FieldT aParentValue,
-         T1 aInitialValue,
-         T2 aAutoValue,
-         T3 aNoneValue,
-         T4 aNormalValue,
-         T5 aSystemFontValue)
+         InitialT aInitialValue,
+         AutoT aAutoValue,
+         NoneT aNoneValue,
+         NormalT aNormalValue,
+         SysFontT aSystemFontValue)
 {
+  typedef SetValueHelper<FieldT> Helper;
+
   switch (aValue.GetUnit()) {
   case eCSSUnit_Null:
     return;
@@ -1317,21 +1375,21 @@ SetValue(const nsCSSValue& aValue, FieldT & aField,
     return;
 
   case eCSSUnit_Initial:
-    aField = aInitialValue;
+    Helper::SetValue(aField, aInitialValue);
     return;
 
     // every caller provides one or other of these alternatives,
     // but they have to say which
   case eCSSUnit_Enumerated:
     if (aMask & SETVAL_ENUMERATED) {
-      aField = FieldT(aValue.GetIntValue());
+      Helper::SetEnumeratedValue(aField, aValue);
       return;
     }
     break;
 
   case eCSSUnit_Integer:
     if (aMask & SETVAL_INTEGER) {
-      aField = FieldT(aValue.GetIntValue());
+      Helper::SetIntegerValue(aField, aValue);
       return;
     }
     break;
@@ -1339,28 +1397,28 @@ SetValue(const nsCSSValue& aValue, FieldT & aField,
     // remaining possibilities in descending order of frequency of use
   case eCSSUnit_Auto:
     if (aMask & SETVAL_AUTO) {
-      aField = aAutoValue;
+      Helper::SetValue(aField, aAutoValue);
       return;
     }
     break;
 
   case eCSSUnit_None:
     if (aMask & SETVAL_NONE) {
-      aField = aNoneValue;
+      Helper::SetValue(aField, aNoneValue);
       return;
     }
     break;
 
   case eCSSUnit_Normal:
     if (aMask & SETVAL_NORMAL) {
-      aField = aNormalValue;
+      Helper::SetValue(aField, aNormalValue);
       return;
     }
     break;
 
   case eCSSUnit_System_Font:
     if (aMask & SETVAL_SYSTEM_FONT) {
-      aField = aSystemFontValue;
+      Helper::SetValue(aField, aSystemFontValue);
       return;
     }
     break;
@@ -1372,7 +1430,7 @@ SetValue(const nsCSSValue& aValue, FieldT & aField,
       return;
     }
     if (aMask & SETVAL_UNSET_INITIAL) {
-      aField = aInitialValue;
+      Helper::SetValue(aField, aInitialValue);
       return;
     }
     break;
@@ -1382,6 +1440,16 @@ SetValue(const nsCSSValue& aValue, FieldT & aField,
   }
 
   NS_NOTREACHED("SetValue: inappropriate unit");
+}
+
+template <typename FieldT, typename T1>
+static void
+SetValue(const nsCSSValue& aValue, FieldT& aField,
+         RuleNodeCacheConditions& aConditions, uint32_t aMask,
+         FieldT aParentValue, T1 aInitialValue)
+{
+  SetValue(aValue, aField, aConditions, aMask, aParentValue,
+           aInitialValue, Unused, Unused, Unused, Unused);
 }
 
 // flags for SetFactor
@@ -8372,11 +8440,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            pos->mBoxSizing, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentPos->mBoxSizing,
-           StyleBoxSizing::Content,
-           StyleBoxSizing::Content /* ignored */,
-           StyleBoxSizing::Content /* ignored */,
-           StyleBoxSizing::Content /* ignored */,
-           StyleBoxSizing::Content /* ignored */);
+           StyleBoxSizing::Content);
 
   // align-content: enum, inherit, initial
   SetValue(*aRuleData->ValueForAlignContent(),
