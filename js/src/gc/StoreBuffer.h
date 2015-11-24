@@ -421,11 +421,6 @@ class StoreBuffer
         put(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
 
-    void assertHasValueEdge(JS::Value* vp) {
-        MOZ_ASSERT(bufferVal.has(this, ValueEdge(vp)) ||
-                   !ValueEdge(vp).maybeInRememberedSet(nursery_));
-    }
-
     void setShouldCancelIonCompilations() {
         cancelIonCompilations_ = true;
     }

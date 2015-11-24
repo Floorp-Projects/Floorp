@@ -507,7 +507,7 @@ Factory::GetMaxSurfaceSize(BackendType aType)
     return DrawTargetCG::GetMaxSurfaceSize();
 #endif
   case BackendType::SKIA:
-    return INT_MAX;
+    return DrawTargetSkia::GetMaxSurfaceSize();
 #ifdef WIN32
   case BackendType::DIRECT2D:
     return DrawTargetD2D::GetMaxSurfaceSize();

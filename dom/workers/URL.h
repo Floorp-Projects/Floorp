@@ -134,7 +134,7 @@ private:
 
   void CreateSearchParamsIfNeeded();
 
-  void SetSearchInternal(const nsAString& aSearch);
+  void SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv);
 
   void UpdateURLSearchParams();
 

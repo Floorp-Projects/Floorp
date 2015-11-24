@@ -7,7 +7,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta
 from progressbar import ProgressBar
-from results import NullTestOutput, TestOutput
+from results import NullTestOutput, TestOutput, escape_cmdline
 from threading import Thread
 from Queue import Queue, Empty
 
@@ -20,7 +20,7 @@ class TaskFinishedMarker:
     pass
 
 
-def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout):
+def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
     while True:
         test = qTasks.get(block=True, timeout=sys.maxint)
         if test is EndMarker:
@@ -34,6 +34,8 @@ def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout):
 
         # Spawn the test task.
         cmd = test.get_command(prefix)
+        if show_cmd:
+            print(escape_cmdline(cmd))
         tStart = datetime.now()
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
@@ -84,7 +86,7 @@ def run_all_tests(tests, prefix, pb, options):
         watchdogs.append(watcher)
         worker = Thread(target=_do_work, args=(qTasks, qResults, qWatch,
                                                prefix, options.run_skipped,
-                                               options.timeout))
+                                               options.timeout, options.show_cmd))
         worker.setDaemon(True)
         worker.start()
         workers.append(worker)

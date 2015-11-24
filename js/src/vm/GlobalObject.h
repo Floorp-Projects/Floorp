@@ -30,6 +30,8 @@ class TypedObjectModuleObject;
 class StaticBlockObject;
 class ClonedBlockObject;
 
+class SimdTypeDescr;
+
 /*
  * Global object slots are reserved as follows:
  *
@@ -110,11 +112,6 @@ class GlobalObject : public NativeObject
         RUNTIME_CODEGEN_ENABLED,
         DEBUGGERS,
         INTRINSICS,
-        FLOAT32X4_TYPE_DESCR,
-        FLOAT64X2_TYPE_DESCR,
-        INT8X16_TYPE_DESCR,
-        INT16X8_TYPE_DESCR,
-        INT32X4_TYPE_DESCR,
         FOR_OF_PIC_CHAIN,
         MODULE_RESOLVE_HOOK,
         WINDOW_PROXY,
@@ -437,54 +434,18 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_TypedObject, initTypedObjectModule);
     }
 
-    void setFloat32x4TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(FLOAT32X4_TYPE_DESCR).isUndefined());
-        setSlot(FLOAT32X4_TYPE_DESCR, ObjectValue(obj));
+    JSObject* getOrCreateSimdGlobalObject(JSContext* cx) {
+        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_SIMD, initSimdObject);
     }
 
-    JSObject& float32x4TypeDescr() {
-        MOZ_ASSERT(getSlotRef(FLOAT32X4_TYPE_DESCR).isObject());
-        return getSlotRef(FLOAT32X4_TYPE_DESCR).toObject();
-    }
-
-    void setFloat64x2TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(FLOAT64X2_TYPE_DESCR).isUndefined());
-        setSlot(FLOAT64X2_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& float64x2TypeDescr() {
-        MOZ_ASSERT(getSlotRef(FLOAT64X2_TYPE_DESCR).isObject());
-        return getSlotRef(FLOAT64X2_TYPE_DESCR).toObject();
-    }
-
-    void setInt8x16TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(INT8X16_TYPE_DESCR).isUndefined());
-        setSlot(INT8X16_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& int8x16TypeDescr() {
-        MOZ_ASSERT(getSlotRef(INT8X16_TYPE_DESCR).isObject());
-        return getSlotRef(INT8X16_TYPE_DESCR).toObject();
-    }
-
-    void setInt16x8TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(INT16X8_TYPE_DESCR).isUndefined());
-        setSlot(INT16X8_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& int16x8TypeDescr() {
-        MOZ_ASSERT(getSlotRef(INT16X8_TYPE_DESCR).isObject());
-        return getSlotRef(INT16X8_TYPE_DESCR).toObject();
-    }
-
-    void setInt32x4TypeDescr(JSObject& obj) {
-        MOZ_ASSERT(getSlotRef(INT32X4_TYPE_DESCR).isUndefined());
-        setSlot(INT32X4_TYPE_DESCR, ObjectValue(obj));
-    }
-
-    JSObject& int32x4TypeDescr() {
-        MOZ_ASSERT(getSlotRef(INT32X4_TYPE_DESCR).isObject());
-        return getSlotRef(INT32X4_TYPE_DESCR).toObject();
+    template<class /* SimdTypeDescriptor (cf SIMD.h) */ T>
+    SimdTypeDescr* getOrCreateSimdTypeDescr(JSContext* cx) {
+        RootedObject globalSimdObject(cx, cx->global()->getOrCreateSimdGlobalObject(cx));
+        if (!globalSimdObject)
+            return nullptr;
+        const Value& slot = globalSimdObject->as<NativeObject>().getReservedSlot(uint32_t(T::type));
+        MOZ_ASSERT(slot.isObject());
+        return &slot.toObject().as<SimdTypeDescr>();
     }
 
     TypedObjectModuleObject& getTypedObjectModule() const;
@@ -721,6 +682,9 @@ class GlobalObject : public NativeObject
 
     // Implemented in builtin/TypedObject.cpp
     static bool initTypedObjectModule(JSContext* cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtim/SIMD.cpp
+    static bool initSimdObject(JSContext* cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
     static bool initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> global,

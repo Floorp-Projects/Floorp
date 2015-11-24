@@ -9,23 +9,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import json
-import which
 import socket
 
-from mozbuild.base import (
-    MozbuildObject,
-    MachCommandBase
-)
-
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mozbuild.base import MozbuildObject, MachCommandBase
+from mach.decorators import CommandProvider, Command
 
 HERE = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(HERE, 'talos'))
-from cmdline import create_parser
 
 
 class TalosRunner(MozbuildObject):
@@ -85,7 +74,7 @@ class TalosRunner(MozbuildObject):
         self.args = {
             'config': {},
             'initial_config_file': self.config_file_path,
-       }
+        }
 
     def write_config(self):
         try:
@@ -103,11 +92,18 @@ class TalosRunner(MozbuildObject):
                          initial_config_file=self.args['initial_config_file'])
         return talos_mh.run()
 
+
+def create_parser():
+    sys.path.insert(0, HERE)  # allow to import the talos package
+    from talos.cmdline import create_parser
+    return create_parser(mach_interface=True)
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('talos-test', category='testing',
              description='Run talos tests (performance testing).',
-             parser=lambda: create_parser(mach_interface=True))
+             parser=create_parser)
     def run_talos_test(self, **kwargs):
         talos = self._spawn(TalosRunner)
 

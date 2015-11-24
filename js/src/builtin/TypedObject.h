@@ -327,13 +327,6 @@ class ComplexTypeDescr : public TypeDescr
     }
 };
 
-#define JS_FOR_EACH_SIMD_TYPE_REPR(macro_)                    \
-    macro_(Int8x16,   JS_SIMDTYPEREPR_INT8X16,   int8_t,  16) \
-    macro_(Int16x8,   JS_SIMDTYPEREPR_INT16X8,   int16_t,  8) \
-    macro_(Int32x4,   JS_SIMDTYPEREPR_INT32X4,   int32_t,  4) \
-    macro_(Float32x4, JS_SIMDTYPEREPR_FLOAT32X4, float,    4) \
-    macro_(Float64x2, JS_SIMDTYPEREPR_FLOAT64X2, double,   2)
-
 /*
  * Type descriptors `int8x16`, `int16x8`, `int32x4`, `float32x4` and `float64x2`
  */
@@ -341,9 +334,11 @@ class SimdTypeDescr : public ComplexTypeDescr
 {
   public:
     enum Type {
-#define DEFINE_TYPE(name_, cst_, type_, size_) name_ = cst_,
-        JS_FOR_EACH_SIMD_TYPE_REPR(DEFINE_TYPE)
-#undef DEFINE_TYPE
+        Int8x16   = JS_SIMDTYPEREPR_INT8X16,
+        Int16x8   = JS_SIMDTYPEREPR_INT16X8,
+        Int32x4   = JS_SIMDTYPEREPR_INT32X4,
+        Float32x4 = JS_SIMDTYPEREPR_FLOAT32X4,
+        Float64x2 = JS_SIMDTYPEREPR_FLOAT64X2,
         LAST_TYPE = Float64x2
     };
 
@@ -352,7 +347,6 @@ class SimdTypeDescr : public ComplexTypeDescr
     static const Class class_;
     static int32_t size(Type t);
     static int32_t alignment(Type t);
-    static int32_t lanes(Type t);
 
     SimdTypeDescr::Type type() const {
         uint32_t t = uint32_t(getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32());

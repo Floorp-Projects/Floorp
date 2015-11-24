@@ -714,7 +714,7 @@ DrawGradient(CGColorSpaceRef aColorSpace,
 
       CGContextDrawLinearGradient(cg, stops->mGradient, startPoint, endPoint,
                                   kCGGradientDrawsBeforeStartLocation | kCGGradientDrawsAfterEndLocation);
-    } else if (stops->mExtend == ExtendMode::REPEAT || stops->mExtend == ExtendMode::REFLECT) {
+    } else {
       DrawLinearRepeatingGradient(aColorSpace, cg, pat, extents, stops->mExtend == ExtendMode::REFLECT);
     }
   } else if (aPattern.GetType() == PatternType::RADIAL_GRADIENT) {
@@ -734,7 +734,7 @@ DrawGradient(CGColorSpaceRef aColorSpace,
       //XXX: are there degenerate radial gradients that we should avoid drawing?
       CGContextDrawRadialGradient(cg, stops->mGradient, startCenter, startRadius, endCenter, endRadius,
                                   kCGGradientDrawsBeforeStartLocation | kCGGradientDrawsAfterEndLocation);
-    } else if (stops->mExtend == ExtendMode::REPEAT || stops->mExtend == ExtendMode::REFLECT) {
+    } else {
       DrawRadialRepeatingGradient(aColorSpace, cg, pat, extents, stops->mExtend == ExtendMode::REFLECT);
     }
   } else {
@@ -775,8 +775,14 @@ isGradient(const Pattern &aPattern)
 static bool
 isNonRepeatingSurface(const Pattern& aPattern)
 {
-  return aPattern.GetType() == PatternType::SURFACE &&
-    static_cast<const SurfacePattern&>(aPattern).mExtendMode != ExtendMode::REPEAT;
+  if (aPattern.GetType() != PatternType::SURFACE) {
+    return false;
+  }
+
+  const SurfacePattern& surfacePattern = static_cast<const SurfacePattern&>(aPattern);
+  return surfacePattern.mExtendMode != ExtendMode::REPEAT &&
+         surfacePattern.mExtendMode != ExtendMode::REPEAT_X &&
+         surfacePattern.mExtendMode != ExtendMode::REPEAT_Y;
 }
 
 /* CoreGraphics patterns ignore the userspace transform so
@@ -815,6 +821,15 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
       //    wkPatternTilingConstantSpacing
       // } wkPatternTiling;
       // extern CGPatternRef (*wkCGPatternCreateWithImageAndTransform)(CGImageRef, CGAffineTransform, int);
+      break;
+    case ExtendMode::REPEAT_X:
+      xStep = static_cast<CGFloat>(CGImageGetWidth(image));
+      yStep = static_cast<CGFloat>(1 << 22);
+      break;
+    case ExtendMode::REPEAT_Y:
+      yStep = static_cast<CGFloat>(CGImageGetHeight(image));
+      xStep = static_cast<CGFloat>(1 << 22);
+      break;
   }
 
   //XXX: We should be using CGContextDrawTiledImage when we can. Even though it

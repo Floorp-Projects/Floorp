@@ -15,6 +15,7 @@
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 #include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
@@ -583,12 +584,12 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     // into their start time, hence the delay is effectively zero.
     timing.mDelay = TimeDuration(0);
     timing.mIterationCount = animation.iterationCount();
-    timing.mDirection = animation.direction();
+    timing.mDirection = static_cast<dom::PlaybackDirection>(animation.direction());
     // Animations typically only run on the compositor during their active
     // interval but if we end up sampling them outside that range (for
     // example, while they are waiting to be removed) we currently just
     // assume that we should fill.
-    timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
+    timing.mFillMode = dom::FillMode::Both;
 
     ComputedTiming computedTiming =
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(

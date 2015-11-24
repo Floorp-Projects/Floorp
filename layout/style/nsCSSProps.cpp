@@ -17,6 +17,7 @@
 #include "nsIWidget.h"
 #include "nsThemeConstants.h"  // For system widget appearance types
 
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/LookAndFeel.h" // for system colors
 
 #include "nsString.h"
@@ -702,18 +703,18 @@ nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
 /***************************************************************************/
 
 const KTableEntry nsCSSProps::kAnimationDirectionKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_ANIMATION_DIRECTION_NORMAL },
-  { eCSSKeyword_reverse, NS_STYLE_ANIMATION_DIRECTION_REVERSE },
-  { eCSSKeyword_alternate, NS_STYLE_ANIMATION_DIRECTION_ALTERNATE },
-  { eCSSKeyword_alternate_reverse, NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE },
+  { eCSSKeyword_normal, static_cast<uint32_t>(dom::PlaybackDirection::Normal) },
+  { eCSSKeyword_reverse, static_cast<uint32_t>(dom::PlaybackDirection::Reverse) },
+  { eCSSKeyword_alternate, static_cast<uint32_t>(dom::PlaybackDirection::Alternate) },
+  { eCSSKeyword_alternate_reverse, static_cast<uint32_t>(dom::PlaybackDirection::Alternate_reverse) },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kAnimationFillModeKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_ANIMATION_FILL_MODE_NONE },
-  { eCSSKeyword_forwards, NS_STYLE_ANIMATION_FILL_MODE_FORWARDS },
-  { eCSSKeyword_backwards, NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS },
-  { eCSSKeyword_both, NS_STYLE_ANIMATION_FILL_MODE_BOTH },
+  { eCSSKeyword_none, static_cast<uint32_t>(dom::FillMode::None) },
+  { eCSSKeyword_forwards, static_cast<uint32_t>(dom::FillMode::Forwards) },
+  { eCSSKeyword_backwards, static_cast<uint32_t>(dom::FillMode::Backwards) },
+  { eCSSKeyword_both, static_cast<uint32_t>(dom::FillMode::Both) },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

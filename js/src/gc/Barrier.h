@@ -280,12 +280,12 @@ struct InternalGCMethods<Value>
         // If the target needs an entry, add it.
         js::gc::StoreBuffer* sb;
         if (next.isObject() && (sb = reinterpret_cast<gc::Cell*>(&next.toObject())->storeBuffer())) {
-            // If we know that the prev has already inserted an entry, we can skip
-            // doing the lookup to add the new entry.
-            if (prev.isObject() && reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer()) {
-                sb->assertHasValueEdge(vp);
+            // If we know that the prev has already inserted an entry, we can
+            // skip doing the lookup to add the new entry. Note that we cannot
+            // safely assert the presence of the entry because it may have been
+            // added via a different store buffer.
+            if (prev.isObject() && reinterpret_cast<gc::Cell*>(&prev.toObject())->storeBuffer())
                 return;
-            }
             sb->putValue(vp);
             return;
         }
