@@ -83,7 +83,6 @@ private:
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
   bool mHasBeenCrossSite;
-  bool mFoundOpaqueRedirect;
 
   DebugOnly<bool> mResponseAvailableCalled;
   DebugOnly<bool> mFetchCalled;
@@ -100,7 +99,8 @@ private:
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>
-  BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI);
+  BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI,
+                              bool aFoundOpaqueRedirect);
   // Utility since not all cases need to do any post processing of the filtered
   // response.
   nsresult FailWithNetworkError();
