@@ -618,9 +618,6 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
 
     if (info.filled())
         Debugger::onIonCompilation(cx, debugScripts, info.graph);
-
-    MOZ_ASSERT(calleeScript->hasBaselineScript());
-    MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
 }
 
 uint8_t*
@@ -635,6 +632,9 @@ jit::LazyLinkTopActivation(JSContext* cx)
     RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
 
     LazyLink(cx, calleeScript);
+
+    MOZ_ASSERT(calleeScript->hasBaselineScript());
+    MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
 
     return calleeScript->baselineOrIonRawPointer();
 }
