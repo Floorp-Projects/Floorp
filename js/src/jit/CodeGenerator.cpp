@@ -7805,6 +7805,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionLabels* labels)
     // is nothing else to do after this point since the LifoAlloc memory
     // holding the MIR graph is about to be popped and reused. In particular,
     // every step in CodeGenerator::link must be a nop, as asserted here:
+    MOZ_ASSERT(!masm.failureLabel()->used());
     MOZ_ASSERT(snapshots_.listSize() == 0);
     MOZ_ASSERT(snapshots_.RVATableSize() == 0);
     MOZ_ASSERT(recovers_.size() == 0);

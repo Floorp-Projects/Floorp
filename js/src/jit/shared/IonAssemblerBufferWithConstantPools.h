@@ -1099,6 +1099,19 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
     }
 
+    bool appendBuffer(const AssemblerBufferWithConstantPools& other) {
+        if (this->oom())
+            return false;
+        // The pools should have all been flushed, check.
+        MOZ_ASSERT(pool_.numEntries() == 0);
+        for (Slice* cur = other.getHead(); cur != nullptr; cur = cur->getNext()) {
+            this->putBytes(cur->length(), &cur->instructions[0]);
+            if (this->oom())
+                return false;
+        }
+        return true;
+    }
+
   public:
     size_t poolEntryOffset(PoolEntry pe) const {
         MOZ_ASSERT(pe.index() < poolEntryCount - pool_.numEntries(),

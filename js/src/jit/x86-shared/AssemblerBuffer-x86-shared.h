@@ -80,6 +80,15 @@ namespace jit {
                 oomDetected();
         }
 
+        bool growByUninitialized(size_t space)
+        {
+            if (MOZ_UNLIKELY(!m_buffer.growByUninitialized(space))) {
+                oomDetected();
+                return false;
+            }
+            return true;
+        }
+
         bool isAligned(size_t alignment) const
         {
             return !(m_buffer.length() & (alignment - 1));

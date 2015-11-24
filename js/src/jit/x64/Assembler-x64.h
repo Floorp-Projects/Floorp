@@ -612,12 +612,9 @@ class Assembler : public AssemblerX86Shared
     void mov(Register src, Register dest) {
         movq(src, dest);
     }
-    void mov(AbsoluteLabel* label, Register dest) {
-        MOZ_ASSERT(!label->bound());
-        // Thread the patch list through the unpatched address word in the
-        // instruction stream.
-        masm.movq_i64r(label->prev(), dest.encoding());
-        label->setPrev(masm.size());
+    void mov(CodeOffsetLabel* label, Register dest) {
+        masm.movq_i64r(/* placeholder */ 0, dest.encoding());
+        label->use(masm.size());
     }
     void xchg(Register src, Register dest) {
         xchgq(src, dest);

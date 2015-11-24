@@ -2002,6 +2002,12 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
     }
 }
 
+bool
+MacroAssembler::asmMergeWith(const MacroAssembler& other)
+{
+    return MacroAssemblerSpecific::asmMergeWith(other);
+}
+
 void
 MacroAssembler::finish()
 {
