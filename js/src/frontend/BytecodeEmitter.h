@@ -627,7 +627,8 @@ struct BytecodeEmitter
     bool emitSpread();
 
     // If type is StmtType::FOR_OF_LOOP, emit bytecode for a for-of loop.
-    // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
+    // pn should be PNK_FOR or PNK_COMPREHENSIONFOR, and pn->pn_left should be
+    // PNK_FOROF.
     //
     // If type is StmtType::SPREAD, emit bytecode for spread operator.
     // pn should be nullptr.

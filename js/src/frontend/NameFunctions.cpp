@@ -448,6 +448,7 @@ class NameResolver
           case PNK_SWITCH:
           case PNK_LETBLOCK:
           case PNK_FOR:
+          case PNK_COMPREHENSIONFOR:
           case PNK_CLASSMETHOD:
           case PNK_SETTHIS:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
@@ -687,13 +688,15 @@ class NameResolver
             }
             break;
 
-          // Array comprehension nodes are lists with a single child -- PNK_FOR for
-          // comprehensions, PNK_LEXICALSCOPE for legacy comprehensions.  Probably
-          // this should be a non-list eventually.
+          // Array comprehension nodes are lists with a single child:
+          // PNK_COMPREHENSIONFOR for comprehensions, PNK_LEXICALSCOPE for
+          // legacy comprehensions.  Probably this should be a non-list
+          // eventually.
           case PNK_ARRAYCOMP:
             MOZ_ASSERT(cur->isArity(PN_LIST));
             MOZ_ASSERT(cur->pn_count == 1);
-            MOZ_ASSERT(cur->pn_head->isKind(PNK_LEXICALSCOPE) || cur->pn_head->isKind(PNK_FOR));
+            MOZ_ASSERT(cur->pn_head->isKind(PNK_LEXICALSCOPE) ||
+                       cur->pn_head->isKind(PNK_COMPREHENSIONFOR));
             if (!resolve(cur->pn_head, prefix))
                 return false;
             break;
