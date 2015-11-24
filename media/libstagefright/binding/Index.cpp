@@ -117,7 +117,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     return nullptr;
   }
 
-  if (!s->mCencRange.IsNull()) {
+  if (!s->mCencRange.IsEmpty()) {
     MoofParser* parser = mIndex->mMoofParser.get();
 
     if (!parser || !parser->mSinf.IsValid()) {
