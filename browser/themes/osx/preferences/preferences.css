@@ -243,24 +243,3 @@ html|a.inline-link:-moz-focusring {
 #noFxaAccount > label:first-child {
   margin-bottom: 0.6em;
 }
-
-/**
- * Sync migration
- */
-#sync-migration {
-  border: 1px solid rgba(0, 0, 0, 0.32);
-  background-color: InfoBackground;
-  color: InfoText;
-  text-shadow: none;
-  margin: 5px 0 0 0;
-  animation: fadein 3000ms;
-}
-
-#sync-migration description {
-  margin: 8px;
-}
-
-@keyframes fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
