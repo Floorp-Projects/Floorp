@@ -128,9 +128,6 @@ private:
   bool         mIsStarted;
 };
 
-// Forward declaration for use in MediaByteRange.
-class TimestampedMediaByteRange;
-
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
 class MediaByteRange {
@@ -142,8 +139,6 @@ public:
   {
     NS_ASSERTION(mStart <= mEnd, "Range should end after start!");
   }
-
-  explicit MediaByteRange(TimestampedMediaByteRange& aByteRange);
 
   bool IsNull() const {
     return mStart == 0 && mEnd == 0;
@@ -177,38 +172,6 @@ public:
 
   int64_t mStart, mEnd;
 };
-
-// Represents a section of contiguous media, with a start and end offset, and
-// a timestamp representing the start time.
-class TimestampedMediaByteRange : public MediaByteRange {
-public:
-  TimestampedMediaByteRange() : MediaByteRange(), mStartTime(-1) {}
-
-  TimestampedMediaByteRange(int64_t aStart, int64_t aEnd, int64_t aStartTime)
-    : MediaByteRange(aStart, aEnd), mStartTime(aStartTime)
-  {
-    NS_ASSERTION(aStartTime >= 0, "Start time should not be negative!");
-  }
-
-  bool IsNull() const {
-    return MediaByteRange::IsNull() && mStartTime == -1;
-  }
-
-  // Clears byte range values.
-  void Clear() {
-    MediaByteRange::Clear();
-    mStartTime = -1;
-  }
-
-  // In usecs.
-  int64_t mStartTime;
-};
-
-inline MediaByteRange::MediaByteRange(TimestampedMediaByteRange& aByteRange)
-  : mStart(aByteRange.mStart), mEnd(aByteRange.mEnd)
-{
-  NS_ASSERTION(mStart < mEnd, "Range should end after start!");
-}
 
 class RtspMediaResource;
 
