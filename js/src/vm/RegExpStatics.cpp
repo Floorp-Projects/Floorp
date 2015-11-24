@@ -32,7 +32,7 @@ resc_trace(JSTracer* trc, JSObject* obj)
     void* pdata = obj->as<RegExpStaticsObject>().getPrivate();
     MOZ_ASSERT(pdata);
     RegExpStatics* res = static_cast<RegExpStatics*>(pdata);
-    res->trace(trc);
+    res->mark(trc);
 }
 
 const Class RegExpStaticsObject::class_ = {
