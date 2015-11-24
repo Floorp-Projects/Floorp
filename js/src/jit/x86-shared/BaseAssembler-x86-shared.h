@@ -3412,6 +3412,15 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
     {
         memcpy(buffer, m_formatter.buffer(), size());
     }
+    bool appendBuffer(const BaseAssembler& other)
+    {
+        size_t otherSize = other.size();
+        size_t formerSize = size();
+        if (!m_formatter.growByUninitialized(otherSize))
+            return false;
+        memcpy((char*)m_formatter.buffer() + formerSize, other.m_formatter.buffer(), otherSize);
+        return true;
+    }
 
   protected:
     static bool CAN_SIGN_EXTEND_8_32(int32_t value) { return value == (int32_t)(int8_t)value; }
@@ -4662,6 +4671,7 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         // Administrative methods:
 
         size_t size() const { return m_buffer.size(); }
+        bool growByUninitialized(size_t size) { return m_buffer.growByUninitialized(size); }
         const unsigned char* buffer() const { return m_buffer.buffer(); }
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }

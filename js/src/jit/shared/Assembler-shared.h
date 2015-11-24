@@ -422,6 +422,37 @@ struct AbsoluteLabel : public LabelBase
     }
 };
 
+class CodeOffsetLabel
+{
+    size_t offset_;
+
+    static const size_t NOT_USED = size_t(-1);
+
+  public:
+    explicit CodeOffsetLabel(size_t offset) : offset_(offset) {}
+    CodeOffsetLabel() : offset_(NOT_USED) {}
+
+    size_t offset() const {
+        MOZ_ASSERT(used());
+        return offset_;
+    }
+
+    void use(size_t offset) {
+        MOZ_ASSERT(!used());
+        offset_ = offset;
+        MOZ_ASSERT(used());
+    }
+    bool used() const {
+        return offset_ != NOT_USED;
+    }
+
+    void offsetBy(size_t delta) {
+        MOZ_ASSERT(used());
+        MOZ_ASSERT(offset_ + delta >= offset_, "no overflow");
+        offset_ += delta;
+    }
+};
+
 // A code label contains an absolute reference to a point in the code. Thus, it
 // cannot be patched until after linking.
 // When the source label is resolved into a memory address, this address is
@@ -430,23 +461,31 @@ class CodeLabel
 {
     // The destination position, where the absolute reference should get
     // patched into.
-    AbsoluteLabel dest_;
+    CodeOffsetLabel patchAt_;
 
     // The source label (relative) in the code to where the destination should
     // get patched to.
-    Label src_;
+    CodeOffsetLabel target_;
 
   public:
     CodeLabel()
     { }
-    explicit CodeLabel(const AbsoluteLabel& dest)
-       : dest_(dest)
+    explicit CodeLabel(const CodeOffsetLabel& patchAt)
+      : patchAt_(patchAt)
     { }
-    AbsoluteLabel* dest() {
-        return &dest_;
+    CodeLabel(const CodeOffsetLabel& patchAt, const CodeOffsetLabel& target)
+      : patchAt_(patchAt),
+        target_(target)
+    { }
+    CodeOffsetLabel* patchAt() {
+        return &patchAt_;
     }
-    Label* src() {
-        return &src_;
+    CodeOffsetLabel* target() {
+        return &target_;
+    }
+    void offsetBy(size_t delta) {
+        patchAt_.offsetBy(delta);
+        target_.offsetBy(delta);
     }
 };
 
@@ -482,19 +521,6 @@ class CodeOffsetJump
         return offset_;
     }
     void fixup(MacroAssembler* masm);
-};
-
-class CodeOffsetLabel
-{
-    size_t offset_;
-
-  public:
-    explicit CodeOffsetLabel(size_t offset) : offset_(offset) {}
-    CodeOffsetLabel() : offset_(0) {}
-
-    size_t offset() const {
-        return offset_;
-    }
 };
 
 // Absolute location of a jump or a label in some generated JitCode block.
@@ -683,6 +709,7 @@ class CallSite : public CallSiteDesc
     { }
 
     void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
+    void offsetReturnAddressBy(int32_t o) { returnAddressOffset_ += o; }
     uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 
     // The stackDepth measures the amount of stack space pushed since the
@@ -809,6 +836,7 @@ class AsmJSHeapAccess
 
     uint32_t insnOffset() const { return insnOffset_; }
     void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
+    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
 #if defined(JS_CODEGEN_X86)
     void* patchHeapPtrImmAt(uint8_t* code) const { return code + (insnOffset_ + opLength_); }
 #endif
@@ -991,7 +1019,7 @@ class AssemblerShared
         CallSite callsite(desc, label.offset(), framePushed + sizeof(AsmJSFrame));
         enoughMemory_ &= callsites_.append(CallSiteAndTarget(callsite, targetIndex));
     }
-    const CallSiteAndTargetVector& callSites() const { return callsites_; }
+    CallSiteAndTargetVector& callSites() { return callsites_; }
 
     void append(AsmJSHeapAccess access) { enoughMemory_ &= asmJSHeapAccesses_.append(access); }
     AsmJSHeapAccessVector&& extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
@@ -1014,6 +1042,37 @@ class AssemblerShared
     }
     CodeLabel codeLabel(size_t i) {
         return codeLabels_[i];
+    }
+
+    // Merge this assembler with the other one, invalidating it, by shifting all
+    // offsets by a delta.
+    bool asmMergeWith(size_t delta, const AssemblerShared& other) {
+        size_t i = callsites_.length();
+        enoughMemory_ &= callsites_.appendAll(other.callsites_);
+        for (; i < callsites_.length(); i++)
+            callsites_[i].offsetReturnAddressBy(delta);
+
+        i = asmJSHeapAccesses_.length();
+        enoughMemory_ &= asmJSHeapAccesses_.appendAll(other.asmJSHeapAccesses_);
+        for (; i < asmJSHeapAccesses_.length(); i++)
+            asmJSHeapAccesses_[i].offsetInsnOffsetBy(delta);
+
+        i = asmJSGlobalAccesses_.length();
+        enoughMemory_ &= asmJSGlobalAccesses_.appendAll(other.asmJSGlobalAccesses_);
+        for (; i < asmJSGlobalAccesses_.length(); i++)
+            asmJSGlobalAccesses_[i].patchAt.offsetBy(delta);
+
+        i = asmJSAbsoluteLinks_.length();
+        enoughMemory_ &= asmJSAbsoluteLinks_.appendAll(other.asmJSAbsoluteLinks_);
+        for (; i < asmJSAbsoluteLinks_.length(); i++)
+            asmJSAbsoluteLinks_[i].patchAt.offsetBy(delta);
+
+        i = codeLabels_.length();
+        enoughMemory_ &= codeLabels_.appendAll(other.codeLabels_);
+        for (; i < codeLabels_.length(); i++)
+            codeLabels_[i].offsetBy(delta);
+
+        return !oom();
     }
 };
 

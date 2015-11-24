@@ -32,9 +32,6 @@ struct ImmTag : public Imm32
     { }
 };
 
-struct MacroAssemblerX86Shared::PlatformSpecificLabel : public NonAssertingLabel
-{};
-
 class MacroAssemblerX64 : public MacroAssemblerX86Shared
 {
   private:
@@ -42,15 +39,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     MacroAssembler& asMasm();
     const MacroAssembler& asMasm() const;
 
+    void bindOffsets(const MacroAssemblerX86Shared::UsesVector&);
+
   public:
     using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
-
-    typedef MacroAssemblerX86Shared::Double<> Double;
-    typedef MacroAssemblerX86Shared::Float<> Float;
-    typedef MacroAssemblerX86Shared::SimdData<> SimdData;
 
     MacroAssemblerX64()
     {

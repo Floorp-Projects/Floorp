@@ -239,12 +239,6 @@ Assembler::trace(JSTracer* trc)
     }
 }
 
-int32_t
-Assembler::ExtractCodeLabelOffset(uint8_t* code) {
-    InstImm* inst = (InstImm*)code;
-    return Assembler::ExtractLuiOriValue(inst, inst->next());
-}
-
 void
 Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
 {

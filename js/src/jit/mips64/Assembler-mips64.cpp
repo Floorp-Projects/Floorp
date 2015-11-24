@@ -233,13 +233,6 @@ Assembler::trace(JSTracer* trc)
     }
 }
 
-int64_t
-Assembler::ExtractCodeLabelOffset(uint8_t* code)
-{
-    Instruction* inst = (Instruction*)code;
-    return Assembler::ExtractLoad64Value(inst);
-}
-
 void
 Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
 {
