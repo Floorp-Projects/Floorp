@@ -283,6 +283,7 @@ public:
   void
   SetActivateStateUncheckedWithoutEvent(ServiceWorkerState aState)
   {
+    AssertIsOnMainThread();
     mState = aState;
   }
 
