@@ -1655,7 +1655,14 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
     RefPtr<GetFeatureStatusRunnable> runnable =
       new GetFeatureStatusRunnable(workerPrivate, gfxInfo, feature, status);
 
-    runnable->Dispatch(workerPrivate->GetJSContext());
+    ErrorResult rv;
+    runnable->Dispatch(rv);
+    if (rv.Failed()) {
+        // XXXbz This is totally broken, since we're supposed to just abort
+        // everything up the callstack but the callers basically eat the
+        // exception.  Ah, well.
+        return rv.StealNSResult();
+    }
 
     return runnable->GetNSResult();
   }
