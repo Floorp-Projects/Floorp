@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EMEUtils.h"
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 
@@ -110,6 +111,34 @@ ConstructKeySystem(const nsAString& aKeySystem,
   aOutKeySystem.Append(aKeySystem);
   aOutKeySystem.AppendLiteral(".");
   aOutKeySystem.Append(aCDMVersion);
+}
+
+ArrayData
+GetArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView)
+{
+  MOZ_ASSERT(aBufferOrView.IsArrayBuffer() || aBufferOrView.IsArrayBufferView());
+  if (aBufferOrView.IsArrayBuffer()) {
+    const dom::ArrayBuffer& buffer = aBufferOrView.GetAsArrayBuffer();
+    buffer.ComputeLengthAndData();
+    return ArrayData(buffer.Data(), buffer.Length());
+  } else if (aBufferOrView.IsArrayBufferView()) {
+    const dom::ArrayBufferView& bufferview = aBufferOrView.GetAsArrayBufferView();
+    bufferview.ComputeLengthAndData();
+    return ArrayData(bufferview.Data(), bufferview.Length());
+  }
+  return ArrayData(nullptr, 0);
+}
+
+void
+CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
+                                     nsTArray<uint8_t>& aOutData)
+{
+  ArrayData data = GetArrayBufferViewOrArrayBufferData(aBufferOrView);
+  aOutData.Clear();
+  if (!data.IsValid()) {
+    return;
+  }
+  aOutData.AppendElements(data.mData, data.mLength);
 }
 
 } // namespace mozilla
