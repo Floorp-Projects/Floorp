@@ -62,7 +62,9 @@
       class="header"
       hidden="true"
       data-category="paneApplications">
-  <label class="header-name">&paneApplications.title;</label>
+  <label class="header-name" flex="1">&paneApplications.title;</label>
+  <button class="help-button"
+          aria-label="&helpButton.label;"/>
 </hbox>
 
 <vbox id="applicationsContent"
