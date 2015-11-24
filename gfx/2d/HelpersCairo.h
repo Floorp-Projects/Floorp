@@ -133,6 +133,10 @@ GfxExtendToCairoExtend(ExtendMode extend)
   {
     case ExtendMode::CLAMP:
       return CAIRO_EXTEND_PAD;
+    // Cairo doesn't support tiling in only 1 direction,
+    // So we have to fallback and tile in both.
+    case ExtendMode::REPEAT_X:
+    case ExtendMode::REPEAT_Y:
     case ExtendMode::REPEAT:
       return CAIRO_EXTEND_REPEAT;
     case ExtendMode::REFLECT:

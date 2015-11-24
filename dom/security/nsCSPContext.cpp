@@ -45,12 +45,10 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo *
+static LogModule*
 GetCspContextLog()
 {
-  static PRLogModuleInfo *gCspContextPRLog;
-  if (!gCspContextPRLog)
-    gCspContextPRLog = PR_NewLogModule("CSPContext");
+  static LazyLogModule gCspContextPRLog("CSPContext");
   return gCspContextPRLog;
 }
 

@@ -552,10 +552,11 @@ def run_tests(tests, prefix, options):
     # taken from the jstests options processing code, which are frequently
     # subtly different from the options jit-tests expects. As such, we wrap
     # them here, as needed.
-    AdaptorOptions = namedtuple("AdaptorOptions", ["worker_count",
-        "passthrough", "timeout", "output_fp", "hide_progress", "run_skipped"])
+    AdaptorOptions = namedtuple("AdaptorOptions", [
+        "worker_count", "passthrough", "timeout", "output_fp",
+        "hide_progress", "run_skipped", "show_cmd"])
     shim_options = AdaptorOptions(options.max_jobs, False, options.timeout,
-                                  sys.stdout, False, True)
+                                  sys.stdout, False, True, options.show_cmd)
 
     # The test runner wants the prefix as a static on the Test class.
     JitTest.js_cmd_prefix = prefix

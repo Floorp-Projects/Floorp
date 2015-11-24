@@ -17,9 +17,37 @@
  Constructor(DOMString url, optional DOMString base),
  Exposed=(Window,Worker)]
 interface URL {
+  // Bug 824857: no support for stringifier attributes yet.
+  //  stringifier attribute USVString href;
+
+  // Bug 824857 should remove this.
+  [Throws=Workers]
+  stringifier;
+
+  [SetterThrows, GetterThrows=Workers]
+  attribute USVString href;
+  [Throws=Workers]
+  readonly attribute USVString origin;
+  [Throws=Workers]
+           attribute USVString protocol;
+  [Throws=Workers]
+           attribute USVString username;
+  [Throws=Workers]
+           attribute USVString password;
+  [Throws=Workers]
+           attribute USVString host;
+  [Throws=Workers]
+           attribute USVString hostname;
+  [Throws=Workers]
+           attribute USVString port;
+  [Throws=Workers]
+           attribute USVString pathname;
+  [Throws=Workers]
+           attribute USVString search;
+  readonly attribute URLSearchParams searchParams;
+  [Throws=Workers]
+           attribute USVString hash;
 };
-URL implements URLUtils;
-URL implements URLUtilsSearchParams;
 
 partial interface URL {
   [Throws]

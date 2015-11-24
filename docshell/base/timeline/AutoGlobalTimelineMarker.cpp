@@ -11,9 +11,11 @@
 
 namespace mozilla {
 
-AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
+AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName,
+                                                   MarkerStackRequest aStackRequest /* = STACK */
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : mName(aName)
+  , mStackRequest(aStackRequest)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
@@ -23,7 +25,7 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START, mStackRequest);
 }
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
@@ -35,7 +37,7 @@ AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
     return;
   }
 
-  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END, mStackRequest);
 }
 
 } // namespace mozilla

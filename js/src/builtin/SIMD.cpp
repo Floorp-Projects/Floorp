@@ -92,12 +92,21 @@ ErrorWrongTypeArg(JSContext* cx, size_t argIndex, Handle<TypeDescr*> typeDescr)
     return false;
 }
 
+template<typename T>
+static SimdTypeDescr*
+GetTypeDescr(JSContext* cx)
+{
+    return cx->global()->getOrCreateSimdTypeDescr<T>(cx);
+}
+
 template<typename V>
 bool
 js::ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out)
 {
     typedef typename V::Elem Elem;
-    Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
+    Rooted<TypeDescr*> typeDescr(cx, GetTypeDescr<V>(cx));
+    if (!typeDescr)
+        return false;
     if (!IsVectorObject<V>(v))
         return ErrorWrongTypeArg(cx, 1, typeDescr);
 
@@ -352,7 +361,7 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
 
 template<typename T>
 static JSObject*
-CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject SIMD,
+CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject globalSimdObject,
                        HandlePropertyName stringRepr)
 {
     const SimdTypeDescr::Type type = T::type;
@@ -373,7 +382,6 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
     typeDescr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(SimdTypeDescr::size(type)));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(false));
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
-    typeDescr->initReservedSlot(JS_DESCR_SLOT_LANES, Int32Value(SimdTypeDescr::lanes(type)));
 
     if (!CreateUserSizeAndAlignmentProperties(cx, typeDescr))
         return nullptr;
@@ -402,11 +410,14 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
     // Bind type descriptor to the global SIMD object
     RootedValue typeValue(cx, ObjectValue(*typeDescr));
     if (!JS_DefineFunctions(cx, typeDescr, T::Methods) ||
-        !DefineProperty(cx, SIMD, stringRepr, typeValue, nullptr, nullptr,
+        !DefineProperty(cx, globalSimdObject, stringRepr, typeValue, nullptr, nullptr,
                         JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
+
+    uint32_t slot = uint32_t(typeDescr->type());
+    globalSimdObject->as<NativeObject>().setReservedSlot(slot, ObjectValue(*typeDescr));
 
     return typeDescr;
 }
@@ -454,71 +465,42 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 ///////////////////////////////////////////////////////////////////////////
 // SIMD class
 
+static const uint32_t SIMD_SLOTS_COUNT = SimdTypeDescr::LAST_TYPE + 1;
+
 const Class SIMDObject::class_ = {
     "SIMD",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SIMD)
+    JSCLASS_HAS_RESERVED_SLOTS(SIMD_SLOTS_COUNT)
 };
 
-JSObject*
-SIMDObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
+bool
+GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
 {
-    // SIMD relies on having the TypedObject module initialized.
+    // SIMD relies on the TypedObject module being initialized.
     // In particular, the self-hosted code for array() wants
     // to be able to call GetTypedObjectModule(). It is NOT necessary
     // to install the TypedObjectModule global, but at the moment
     // those two things are not separable.
     if (!global->getOrCreateTypedObjectModule(cx))
-        return nullptr;
+        return false;
 
-    // Create SIMD Object.
+    RootedObject globalSimdObject(cx);
     RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
     if (!objProto)
-        return nullptr;
-    RootedObject SIMD(cx, NewObjectWithGivenProto(cx, &SIMDObject::class_, objProto,
-                                                  SingletonObject));
-    if (!SIMD)
-        return nullptr;
+        return false;
 
-    RootedObject i8x16(cx);
-    i8x16 = CreateAndBindSimdClass<Int8x16Defn>(cx, global, SIMD, cx->names().int8x16);
-    if (!i8x16)
-        return nullptr;
+    globalSimdObject = NewObjectWithGivenProto(cx, &SIMDObject::class_, objProto, SingletonObject);
+    if (!globalSimdObject)
+        return false;
 
-    RootedObject i16x8(cx);
-    i16x8 = CreateAndBindSimdClass<Int16x8Defn>(cx, global, SIMD, cx->names().int16x8);
-    if (!i16x8)
-        return nullptr;
-
-    RootedObject f32x4(cx);
-    f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, SIMD, cx->names().float32x4);
-    if (!f32x4)
-        return nullptr;
-
-    RootedObject i32x4(cx);
-    i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, SIMD, cx->names().int32x4);
-    if (!i32x4)
-        return nullptr;
-
-    RootedObject f64x2(cx);
-    f64x2 = CreateAndBindSimdClass<Float64x2Defn>(cx, global, SIMD, cx->names().float64x2);
-    if (!f64x2)
-        return nullptr;
-
-    // Everything is set up, install SIMD on the global object.
-    RootedValue SIMDValue(cx, ObjectValue(*SIMD));
-    if (!DefineProperty(cx, global, cx->names().SIMD, SIMDValue, nullptr, nullptr,
+    RootedValue globalSimdValue(cx, ObjectValue(*globalSimdObject));
+    if (!DefineProperty(cx, global, cx->names().SIMD, globalSimdValue, nullptr, nullptr,
                         JSPROP_RESOLVING))
     {
-        return nullptr;
+        return false;
     }
 
-    global->setInt8x16TypeDescr(*i8x16);
-    global->setInt16x8TypeDescr(*i16x8);
-    global->setFloat32x4TypeDescr(*f32x4);
-    global->setInt32x4TypeDescr(*i32x4);
-    global->setFloat64x2TypeDescr(*f64x2);
-    global->setConstructor(JSProto_SIMD, SIMDValue);
-    return SIMD;
+    global->setConstructor(JSProto_SIMD, globalSimdValue);
+    return true;
 }
 
 JSObject*
@@ -526,7 +508,37 @@ js::InitSIMDClass(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    return SIMDObject::initClass(cx, global);
+
+    RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
+    if (!globalSimdObject)
+        return nullptr;
+
+    RootedObject i8x16(cx);
+    i8x16 = CreateAndBindSimdClass<Int8x16Defn>(cx, global, globalSimdObject, cx->names().int8x16);
+    if (!i8x16)
+        return nullptr;
+
+    RootedObject i16x8(cx);
+    i16x8 = CreateAndBindSimdClass<Int16x8Defn>(cx, global, globalSimdObject, cx->names().int16x8);
+    if (!i16x8)
+        return nullptr;
+
+    RootedObject f32x4(cx);
+    f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, globalSimdObject, cx->names().float32x4);
+    if (!f32x4)
+        return nullptr;
+
+    RootedObject i32x4(cx);
+    i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, globalSimdObject, cx->names().int32x4);
+    if (!i32x4)
+        return nullptr;
+
+    RootedObject f64x2(cx);
+    f64x2 = CreateAndBindSimdClass<Float64x2Defn>(cx, global, globalSimdObject, cx->names().float64x2);
+    if (!f64x2)
+        return nullptr;
+
+    return globalSimdObject;
 }
 
 template<typename V>
@@ -534,8 +546,9 @@ JSObject*
 js::CreateSimd(JSContext* cx, const typename V::Elem* data)
 {
     typedef typename V::Elem Elem;
-    Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
-    MOZ_ASSERT(typeDescr);
+    Rooted<TypeDescr*> typeDescr(cx, GetTypeDescr<V>(cx));
+    if (!typeDescr)
+        return nullptr;
 
     Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
@@ -1143,8 +1156,10 @@ Load(JSContext* cx, unsigned argc, Value* vp)
     if (!TypedArrayFromArgs<Elem, NumElem>(cx, args, &typedArray, &byteStart))
         return false;
 
-    Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
-    MOZ_ASSERT(typeDescr);
+    Rooted<TypeDescr*> typeDescr(cx, GetTypeDescr<V>(cx));
+    if (!typeDescr)
+        return false;
+
     Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
         return false;

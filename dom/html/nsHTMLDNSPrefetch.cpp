@@ -182,8 +182,7 @@ nsHTMLDNSPrefetch::CancelPrefetch(Link *aElement,
     return NS_ERROR_NOT_AVAILABLE;
 
   nsAutoString hostname;
-  ErrorResult rv;
-  aElement->GetHostname(hostname, rv);
+  aElement->GetHostname(hostname);
   return CancelPrefetch(hostname, flags, aReason);
 }
 

@@ -97,8 +97,10 @@ BaselineCompiler::compile()
     // When a Debugger set the collectCoverageInfo flag, we recompile baseline
     // scripts without entering the interpreter again. We have to create the
     // ScriptCounts if they do not exist.
-    if (!script->hasScriptCounts() && cx->compartment()->collectCoverage())
-        script->initScriptCounts(cx);
+    if (!script->hasScriptCounts() && cx->compartment()->collectCoverage()) {
+        if (!script->initScriptCounts(cx))
+            return Method_Error;
+    }
 
     // Pin analysis info during compilation.
     AutoEnterAnalysis autoEnterAnalysis(cx);

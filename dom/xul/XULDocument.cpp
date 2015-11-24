@@ -131,7 +131,7 @@ const nsForwardReference::Phase nsForwardReference::kPasses[] = {
 
 int32_t XULDocument::gRefCnt = 0;
 
-PRLogModuleInfo* XULDocument::gXULLog;
+LazyLogModule XULDocument::gXULLog("XULDocument");
 
 //----------------------------------------------------------------------
 
@@ -1877,9 +1877,6 @@ XULDocument::Init()
 
     Preferences::RegisterCallback(XULDocument::DirectionChanged,
                                   "intl.uidirection.", this);
-
-    if (! gXULLog)
-        gXULLog = PR_NewLogModule("XULDocument");
 
     return NS_OK;
 }

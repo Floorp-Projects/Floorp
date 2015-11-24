@@ -805,7 +805,7 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
 
   HRESULT hr =
     mDC->CreateGradientStopCollection(stops, aNumStops,
-                                      D2D1_GAMMA_2_2, D2DExtend(aExtendMode),
+                                      D2D1_GAMMA_2_2, D2DExtend(aExtendMode, Axis::BOTH),
                                       getter_AddRefs(stopCollection));
   delete [] stops;
 
@@ -1468,10 +1468,15 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       RefPtr<ID2D1Bitmap> bitmap;
       image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
       if (bitmap) {
+        /**
+         * Create the brush with the proper repeat modes.
+         */
         RefPtr<ID2D1BitmapBrush> bitmapBrush;
+        D2D1_EXTEND_MODE xRepeat = D2DExtend(pat->mExtendMode, Axis::X_AXIS);
+        D2D1_EXTEND_MODE yRepeat = D2DExtend(pat->mExtendMode, Axis::Y_AXIS);
+
         mDC->CreateBitmapBrush(bitmap,
-                               D2D1::BitmapBrushProperties(D2DExtend(pat->mExtendMode),
-                                                           D2DExtend(pat->mExtendMode),
+                               D2D1::BitmapBrushProperties(xRepeat, yRepeat,
                                                            D2DFilter(pat->mFilter)),
                                D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                                getter_AddRefs(bitmapBrush));
@@ -1495,10 +1500,14 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       // We will do a partial upload of the sampling restricted area from GetImageForSurface.
       samplingBounds = D2D1::RectF(0, 0, pat->mSamplingRect.width, pat->mSamplingRect.height);
     }
+
+    D2D1_EXTEND_MODE xRepeat = D2DExtend(pat->mExtendMode, Axis::X_AXIS);
+    D2D1_EXTEND_MODE yRepeat = D2DExtend(pat->mExtendMode, Axis::Y_AXIS);
+
     mDC->CreateImageBrush(image,
                           D2D1::ImageBrushProperties(samplingBounds,
-                                                     D2DExtend(pat->mExtendMode),
-                                                     D2DExtend(pat->mExtendMode),
+                                                     xRepeat,
+                                                     yRepeat,
                                                      D2DInterpolationMode(pat->mFilter)),
                           D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                           getter_AddRefs(imageBrush));

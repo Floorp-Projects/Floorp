@@ -1178,6 +1178,7 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
   mChannel->GetEncodedBodySize(&timing.encodedBodySize);
   // decodedBodySize can be computed in the child process so it doesn't need
   // to be passed down.
+  mChannel->GetProtocolVersion(timing.protocolVersion);
 
   if (mIPCClosed || !SendOnStopRequest(aStatusCode, timing))
     return NS_ERROR_UNEXPECTED;

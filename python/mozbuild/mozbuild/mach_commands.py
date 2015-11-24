@@ -903,13 +903,13 @@ class GTestCommands(MachCommandBase):
         # Parameters come from the CLI. We need to convert them before
         # their use.
         if debugger_args:
-            import pymake.process
-            argv, badchar = pymake.process.clinetoargv(debugger_args, os.getcwd())
-            if badchar:
+            from mozbuild import shellutil
+            try:
+                debugger_args = shellutil.split(debugger_args)
+            except shellutil.MetaCharacterException as e:
                 print("The --debugger_args you passed require a real shell to parse them.")
-                print("(We can't handle the %r character.)" % (badchar,))
+                print("(We can't handle the %r character.)" % e.char)
                 return 1
-            debugger_args = argv;
 
         # Prepend the debugger args.
         args = [debuggerInfo.path] + debuggerInfo.args + args
@@ -1104,13 +1104,13 @@ class RunProgram(MachCommandBase):
             # Parameters come from the CLI. We need to convert them before
             # their use.
             if debugparams:
-                import pymake.process
-                argv, badchar = pymake.process.clinetoargv(debugparams, os.getcwd())
-                if badchar:
+                from mozbuild import shellutil
+                try:
+                    debugparams = shellutil.split(debugparams)
+                except shellutil.MetaCharacterException as e:
                     print("The --debugparams you passed require a real shell to parse them.")
-                    print("(We can't handle the %r character.)" % (badchar,))
+                    print("(We can't handle the %r character.)" % e.char)
                     return 1
-                debugparams = argv;
 
             if not slowscript:
                 extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'

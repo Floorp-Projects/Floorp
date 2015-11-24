@@ -58,6 +58,42 @@ class BufferOffset
     }
 };
 
+inline bool
+operator<(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() < b.getOffset();
+}
+
+inline bool
+operator>(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() > b.getOffset();
+}
+
+inline bool
+operator<=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() <= b.getOffset();
+}
+
+inline bool
+operator>=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() >= b.getOffset();
+}
+
+inline bool
+operator==(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() == b.getOffset();
+}
+
+inline bool
+operator!=(BufferOffset a, BufferOffset b)
+{
+    return a.getOffset() != b.getOffset();
+}
+
 template<int SliceSize>
 class BufferSlice
 {
@@ -88,7 +124,7 @@ class BufferSlice
         next->prev_ = this;
     }
 
-    void putBytes(size_t numBytes, const uint8_t* source) {
+    void putBytes(size_t numBytes, const void* source) {
         MOZ_ASSERT(bytelength_ + numBytes <= SliceSize);
         if (source)
             memcpy(&instructions[length()], source, numBytes);
@@ -107,7 +143,6 @@ class AssemblerBuffer
     Slice* head;
     Slice* tail;
 
-  public:
     bool m_oom;
     bool m_bail;
 
@@ -139,6 +174,7 @@ class AssemblerBuffer
         return !(size() & (alignment - 1));
     }
 
+  protected:
     virtual Slice* newSlice(LifoAlloc& a) {
         Slice* tmp = static_cast<Slice*>(a.alloc(sizeof(Slice)));
         if (!tmp) {
@@ -148,7 +184,8 @@ class AssemblerBuffer
         return new (tmp) Slice;
     }
 
-    bool ensureSpace(int size) {
+  public:
+    bool ensureSpace(size_t size) {
         // Space can exist in the most recent Slice.
         if (tail && tail->length() + size <= tail->Capacity()) {
             // Simulate allocation failure even when we don't need a new slice.
@@ -181,32 +218,32 @@ class AssemblerBuffer
     }
 
     BufferOffset putByte(uint8_t value) {
-        return putBytes(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), &value);
     }
 
     BufferOffset putShort(uint16_t value) {
-        return putBytes(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), &value);
     }
 
     BufferOffset putInt(uint32_t value) {
-        return putBytes(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), &value);
     }
 
-    // Add instSize bytes to this buffer.
+    // Add numBytes bytes to this buffer.
     // The data must fit in a single slice.
-    BufferOffset putBytes(uint32_t instSize, uint8_t* inst) {
-        if (!ensureSpace(instSize))
+    BufferOffset putBytes(size_t numBytes, const void* inst) {
+        if (!ensureSpace(numBytes))
             return BufferOffset();
 
         BufferOffset ret = nextOffset();
-        tail->putBytes(instSize, inst);
+        tail->putBytes(numBytes, inst);
         return ret;
     }
 
     // Add a potentially large amount of data to this buffer.
     // The data may be distrubuted across multiple slices.
     // Return the buffer offset of the first added byte.
-    BufferOffset putBytesLarge(size_t numBytes, const uint8_t* data)
+    BufferOffset putBytesLarge(size_t numBytes, const void* data)
     {
         BufferOffset ret = nextOffset();
         while (numBytes > 0) {
@@ -216,7 +253,7 @@ class AssemblerBuffer
             size_t xfer = numBytes < avail ? numBytes : avail;
             MOZ_ASSERT(xfer > 0, "ensureSpace should have allocated a slice");
             tail->putBytes(xfer, data);
-            data += xfer;
+            data = (const uint8_t*)data + xfer;
             numBytes -= xfer;
         }
         return ret;
@@ -239,12 +276,13 @@ class AssemblerBuffer
         m_bail = true;
         return false;
     }
+
+  private:
     void update_finger(Slice* finger_, int fingerOffset_) {
         finger = finger_;
         finger_offset = fingerOffset_;
     }
 
-  private:
     static const unsigned SliceDistanceRequiringFingerUpdate = 3;
 
     Inst* getInstForwards(BufferOffset off, Slice* start, int startOffset, bool updateFinger = false) {

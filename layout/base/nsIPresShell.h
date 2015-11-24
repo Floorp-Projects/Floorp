@@ -140,10 +140,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// cf2a1f1f-ed15-42bd-b1ea-59e5d4602118
+// 327d78a0-0680-4709-b209-1cf9578720e6
 #define NS_IPRESSHELL_IID \
-{ 0xcf2a1f1f, 0xed15, 0x42bd, \
-  { 0xb1, 0xea, 0x59, 0xe5, 0xd4, 0x60, 0x21, 0x18 } }
+{ 0x327d78a0, 0x0680, 0x4709, \
+  { 0xb2, 0x09, 0x1c, 0xf9, 0x57, 0x87, 0x20, 0xe6 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1414,8 +1414,13 @@ public:
    * The resolution defaults to 1.0.
    */
   virtual nsresult SetResolution(float aResolution) = 0;
-  float GetResolution() { return mResolution; }
+  float GetResolution() { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
+
+  /**
+   * Was the current resolution set by the user or just default initialized?
+   */
+  bool IsResolutionSet() { return mResolution.isSome(); }
 
   /**
    * Similar to SetResolution() but also increases the scale of the content
@@ -1730,7 +1735,7 @@ protected:
 
   // Used to force allocation and rendering of proportionally more or
   // less pixels in both dimensions.
-  float                     mResolution;
+  mozilla::Maybe<float>     mResolution;
 
   int16_t                   mSelectionFlags;
 
