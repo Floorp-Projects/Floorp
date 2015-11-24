@@ -14,8 +14,6 @@
 #include "MediaInfo.h"
 #include "MediaResource.h"
 
-namespace mozilla { class MediaByteRange; }
-
 namespace stagefright { class MetaData; }
 
 namespace mp4_demuxer

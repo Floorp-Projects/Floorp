@@ -440,7 +440,7 @@ public:
     mResource->AppendData(aData);
     MediaByteRangeSet byteRanges;
     byteRanges +=
-      MediaByteRange(mParser->mOffset, mResource->GetLength());
+      MediaByteRange(int64_t(mParser->mOffset), mResource->GetLength());
     mParser->RebuildFragmentedIndex(byteRanges);
 
     if (initSegment || !HasCompleteInitData()) {
@@ -609,7 +609,7 @@ public:
       return false;
     }
     mHasInitData = true;
-    mCompleteInitSegmentRange = MediaByteRange(0, header.header_length);
+    mCompleteInitSegmentRange = MediaByteRange(0, int64_t(header.header_length));
 
     // Cache raw header in case the caller wants a copy.
     mInitData = new MediaByteBuffer(header.header_length);

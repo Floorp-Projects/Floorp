@@ -132,27 +132,7 @@ private:
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
 
-class MediaByteRange : public media::Interval<int64_t> {
-public:
-  typedef Interval<int64_t> BaseType;
-
-  // We can't use inherited constructors yet. So we have to duplicate the
-  // constructors found in Interval base class.
-  // all this could be later replaced with:
-  // using Interval<int64_t>::Interval;
-
-  MOZ_IMPLICIT MediaByteRange(const BaseType& aOther)
-    : BaseType(aOther)
-  {}
-  MOZ_IMPLICIT MediaByteRange(BaseType&& aOther)
-    : BaseType(Move(aOther))
-  {}
-  MediaByteRange(int64_t aStart, int64_t aEnd)
-    : media::Interval<int64_t>(aStart, aEnd)
-  {}
-  MediaByteRange() = default;
-};
-
+typedef media::Interval<int64_t> MediaByteRange;
 typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 
 class RtspMediaResource;
