@@ -609,7 +609,7 @@ struct BytecodeEmitter
     bool emitDo(ParseNode* pn);
     bool emitFor(ParseNode* pn);
     bool emitForIn(ParseNode* pn);
-    bool emitForInOrOfVariables(ParseNode* pn, bool* letBlockScope);
+    bool emitForInOrOfVariables(ParseNode* pn);
     bool emitCStyleFor(ParseNode* pn);
     bool emitWhile(ParseNode* pn);
 
