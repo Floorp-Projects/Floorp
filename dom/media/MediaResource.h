@@ -140,7 +140,7 @@ public:
     NS_ASSERTION(mStart <= mEnd, "Range should end after start!");
   }
 
-  bool IsNull() const {
+  bool IsEmpty() const {
     return mStart == 0 && mEnd == 0;
   }
 
@@ -158,8 +158,8 @@ public:
     return aByteRange.mStart >= mStart && aByteRange.mEnd <= mEnd;
   }
 
-  MediaByteRange Extents(const MediaByteRange& aByteRange) const {
-    if (IsNull()) {
+  MediaByteRange Span(const MediaByteRange& aByteRange) const {
+    if (IsEmpty()) {
       return aByteRange;
     }
     return MediaByteRange(std::min(mStart, aByteRange.mStart),

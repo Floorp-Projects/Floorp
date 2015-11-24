@@ -236,7 +236,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // Content-Range header tells us otherwise.
     bool boundedSeekLimit = true;
     // Check response code for byte-range requests (seeking, chunk requests).
-    if (!mByteRange.IsNull() && (responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
+    if (!mByteRange.IsEmpty() && (responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       // Parse Content-Range header.
       int64_t rangeStart = 0;
       int64_t rangeEnd = 0;
@@ -273,7 +273,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       mOffset = rangeStart;
       // We received 'Content-Range', so the server accepts range requests.
       acceptsRanges = true;
-    } else if (((mOffset > 0) || !mByteRange.IsNull())
+    } else if (((mOffset > 0) || !mByteRange.IsEmpty())
                && (responseStatus == HTTP_OK_CODE)) {
       // If we get an OK response but we were seeking, or requesting a byte
       // range, then we have to assume that seeking doesn't work. We also need
@@ -534,7 +534,7 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     *aStreamListener = nullptr;
   }
 
-  if (mByteRange.IsNull()) {
+  if (mByteRange.IsEmpty()) {
     // We're not making a byte range request, so set the content length,
     // if it's available as an HTTP header. This ensures that MediaResource
     // wrapping objects for platform libraries that expect to know
@@ -583,14 +583,14 @@ nsresult ChannelMediaResource::SetupChannelHeaders()
     // Use |mByteRange| for a specific chunk, or |mOffset| if seeking in a
     // complete file download.
     nsAutoCString rangeString("bytes=");
-    if (!mByteRange.IsNull()) {
+    if (!mByteRange.IsEmpty()) {
       rangeString.AppendInt(mByteRange.mStart);
       mOffset = mByteRange.mStart;
     } else {
       rangeString.AppendInt(mOffset);
     }
     rangeString.Append('-');
-    if (!mByteRange.IsNull()) {
+    if (!mByteRange.IsEmpty()) {
       rangeString.AppendInt(mByteRange.mEnd);
     }
     nsresult rv = hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);

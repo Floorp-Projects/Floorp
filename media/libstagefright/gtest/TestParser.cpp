@@ -107,14 +107,14 @@ TEST(stagefright_MoofParser, EmptyStream)
   EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
   EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-  EXPECT_TRUE(parser.mInitRange.IsNull());
+  EXPECT_TRUE(parser.mInitRange.IsEmpty());
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
   EXPECT_FALSE(parser.HasMetadata());
   RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
   EXPECT_FALSE(metadataBuffer);
-  EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
-  EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+  EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
+  EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsEmpty());
 }
 
 nsTArray<uint8_t>
@@ -297,14 +297,14 @@ TEST(stagefright_MoofParser, test_case_mp4)
     EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
     EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-    EXPECT_TRUE(parser.mInitRange.IsNull());
+    EXPECT_TRUE(parser.mInitRange.IsEmpty());
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
     EXPECT_TRUE(parser.HasMetadata());
     RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
     EXPECT_TRUE(metadataBuffer);
-    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
-    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
+    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsEmpty());
   }
 }
 

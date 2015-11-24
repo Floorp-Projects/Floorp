@@ -38,7 +38,7 @@ public:
   Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent = nullptr);
   Box();
 
-  bool IsAvailable() const { return !mRange.IsNull(); }
+  bool IsAvailable() const { return !mRange.IsEmpty(); }
   uint64_t Offset() const { return mRange.mStart; }
   uint64_t Length() const { return mRange.mEnd - mRange.mStart; }
   uint64_t NextOffset() const { return mRange.mEnd; }

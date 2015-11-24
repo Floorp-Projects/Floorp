@@ -41,7 +41,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
   bool foundMdat = false;
 
   for (Box box(&aContext, mOffset); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("moov") && mInitRange.IsNull()) {
+    if (box.IsType("moov") && mInitRange.IsEmpty()) {
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
@@ -68,7 +68,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       media::Interval<int64_t> mdat(box.Range().mStart, box.Range().mEnd, 0);
       if (datarange.Intersects(mdat)) {
         mMediaRanges.LastElement() =
-          mMediaRanges.LastElement().Extents(box.Range());
+          mMediaRanges.LastElement().Span(box.Range());
       }
     }
     mOffset = box.NextOffset();
@@ -164,7 +164,7 @@ MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
       break;
     }
   }
-  mInitRange = aFtyp.Extents(aMoov);
+  mInitRange = aFtyp.Span(aMoov);
 }
 
 bool
@@ -559,7 +559,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     // FIXME: Make this infallible after bug 968520 is done.
     MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
 
-    mMdatRange = mMdatRange.Extents(sample.mByteRange);
+    mMdatRange = mMdatRange.Span(sample.mByteRange);
   }
   mMaxRoundingError += aMdhd.ToMicroseconds(sampleCount);
 

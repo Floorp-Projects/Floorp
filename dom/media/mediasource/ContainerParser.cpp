@@ -267,7 +267,7 @@ public:
       return false;
     }
 
-    if (mCompleteMediaHeaderRange.IsNull()) {
+    if (mCompleteMediaHeaderRange.IsEmpty()) {
       mCompleteMediaHeaderRange = MediaByteRange(mapping[0].mSyncOffset,
                                                  mapping[0].mEndOffset);
     }
