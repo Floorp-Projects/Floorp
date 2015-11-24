@@ -94,6 +94,12 @@ var api = context => { return {
 
     inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
   },
+
+  i18n: {
+    getMessage: function(messageName, substitutions) {
+      return context.extension.localizeMessage(messageName, substitutions);
+    },
+  },
 }};
 
 // Represents a content script.
