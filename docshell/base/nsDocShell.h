@@ -294,6 +294,7 @@ public:
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
   static void CopyFavicon(nsIURI* aOldURI,
                           nsIURI* aNewURI,
+                          nsIPrincipal* aLoadingPrincipal,
                           bool aInPrivateBrowsing);
 
   static nsDocShell* Cast(nsIDocShell* aDocShell)
