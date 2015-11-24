@@ -90,6 +90,10 @@ fuzzy(20,999) fails-if(OSX>=1008) != downscale-2e.html?205,53,bottom about:blank
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
 
+# Non-transparent and transparent ICO images
+== downscale-ff.html?ff-0RGB.ico downscale-ff.html?ff-0RGB.png
+fuzzy(1,1) == downscale-ff.html?ff-ARGB.ico downscale-ff.html?ff-ARGB.png
+
 # RUN TESTS WITH DOWNSCALE-DURING-DECODE ENABLED:
 # ===============================================
 default-preferences pref(image.downscale-during-decode.enabled,true)
@@ -154,3 +158,7 @@ fuzzy(20,999) != downscale-2f.html?205,53,bottom about:blank
 
 == downscale-png.html?16,16,interlaced downscale-png.html?16,16,normal
 == downscale-png.html?24,24,interlaced downscale-png.html?24,24,normal
+
+# Non-transparent and transparent ICO images
+fuzzy(1,3) == downscale-ff.html?ff-0RGB.ico downscale-ff.html?ff-0RGB.png
+fuzzy(3,32) == downscale-ff.html?ff-ARGB.ico downscale-ff.html?ff-ARGB.png
