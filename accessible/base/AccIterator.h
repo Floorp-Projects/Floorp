@@ -130,6 +130,8 @@ private:
   HTMLLabelIterator(const HTMLLabelIterator&);
   HTMLLabelIterator& operator = (const HTMLLabelIterator&);
 
+  bool IsLabel(Accessible* aLabel);
+
   RelatedAccIterator mRelIter;
   // XXX: replace it on weak reference (bug 678429), it's safe to use raw
   // pointer now because iterators life cycle is short.
