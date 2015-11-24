@@ -240,6 +240,48 @@ add_test(function test_helpers_login_with_customize_sync() {
   });
 });
 
+add_test(function test_helpers_login_with_customize_sync_and_declined_engines() {
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      setSignedInUser: function(accountData) {
+        // ensure fxAccounts is informed of the new user being signed in.
+        do_check_eq(accountData.email, 'testuser@testuser.com');
+
+        // customizeSync should be stripped in the data.
+        do_check_false('customizeSync' in accountData);
+        do_check_false('declinedSyncEngines' in accountData);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.addons"), false);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.history"), true);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), false);
+        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+
+        // the customizeSync pref should be disabled
+        do_check_false(helpers.getShowCustomizeSyncPref());
+
+        run_next_test();
+      }
+    }
+  });
+
+  // the customize sync pref should be overwritten
+  helpers.setShowCustomizeSyncPref(true);
+
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.addons"), true);
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.history"), true);
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), true);
+  do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+  helpers.login({
+    email: 'testuser@testuser.com',
+    verifiedCanLinkAccount: true,
+    customizeSync: true,
+    declinedSyncEngines: ['addons', 'prefs']
+  });
+});
+
 function run_test() {
   run_next_test();
 }
