@@ -99,9 +99,9 @@ private:
     return NS_ERROR_FAILURE;
   }
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {
-    aRanges.AppendElement(MediaByteRange(0, mLength));
+    aRanges += MediaByteRange(0, mLength);
     return NS_OK;
   }
 

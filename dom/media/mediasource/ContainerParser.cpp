@@ -438,10 +438,9 @@ public:
     }
 
     mResource->AppendData(aData);
-    nsTArray<MediaByteRange> byteRanges;
-    MediaByteRange mbr =
+    MediaByteRangeSet byteRanges;
+    byteRanges +=
       MediaByteRange(mParser->mOffset, mResource->GetLength());
-    byteRanges.AppendElement(mbr);
     mParser->RebuildFragmentedIndex(byteRanges);
 
     if (initSegment || !HasCompleteInitData()) {

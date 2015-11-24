@@ -885,7 +885,7 @@ media::TimeIntervals GStreamerReader::GetBuffered()
   GstFormat format = GST_FORMAT_TIME;
 #endif
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  nsTArray<MediaByteRange> ranges;
+  MediaByteRangeSet ranges;
   resource->GetCachedRanges(ranges);
 
   if (resource->IsDataCachedToEndOfResource(0)) {
@@ -1286,7 +1286,7 @@ void GStreamerReader::NotifyDataArrivedInternal()
   }
 
   AutoPinned<MediaResource> resource(mResource.GetResource());
-  nsTArray<MediaByteRange> byteRanges;
+  MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
 
   if (NS_FAILED(rv)) {

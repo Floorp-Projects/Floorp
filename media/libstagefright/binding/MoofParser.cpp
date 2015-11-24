@@ -28,7 +28,7 @@ using namespace mozilla;
 
 bool
 MoofParser::RebuildFragmentedIndex(
-  const nsTArray<mozilla::MediaByteRange>& aByteRanges)
+  const MediaByteRangeSet& aByteRanges)
 {
   BoxContext context(mSource, aByteRanges);
   return RebuildFragmentedIndex(context);
@@ -59,7 +59,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       }
 
       mMoofs.AppendElement(moof);
-      mMediaRanges.AppendElement(moof.mRange);
+      mMediaRanges += moof.mRange;
       foundValidMoof = true;
     } else if (box.IsType("mdat") && !Moofs().IsEmpty()) {
       // Check if we have all our data from last moof.
@@ -67,8 +67,8 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       media::Interval<int64_t> datarange(moof.mMdatRange.mStart, moof.mMdatRange.mEnd, 0);
       media::Interval<int64_t> mdat(box.Range().mStart, box.Range().mEnd, 0);
       if (datarange.Intersects(mdat)) {
-        mMediaRanges.LastElement() =
-          mMediaRanges.LastElement().Span(box.Range());
+        mMediaRanges.LastInterval() =
+          mMediaRanges.LastInterval().Span(box.Range());
       }
     }
     mOffset = box.NextOffset();
@@ -128,15 +128,15 @@ MoofParser::BlockingReadNextMoof()
 {
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
-  nsTArray<MediaByteRange> byteRanges;
-  byteRanges.AppendElement(MediaByteRange(0, length));
+  MediaByteRangeSet byteRanges;
+  byteRanges += MediaByteRange(0, length);
   RefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moof")) {
       byteRanges.Clear();
-      byteRanges.AppendElement(MediaByteRange(mOffset, box.Range().mEnd));
+      byteRanges += MediaByteRange(mOffset, box.Range().mEnd);
       return RebuildFragmentedIndex(context);
     }
   }
@@ -149,8 +149,8 @@ MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
 {
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
-  nsTArray<MediaByteRange> byteRanges;
-  byteRanges.AppendElement(MediaByteRange(0, length));
+  MediaByteRangeSet byteRanges;
+  byteRanges += MediaByteRange(0, length);
   RefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
@@ -207,7 +207,7 @@ MoofParser::Metadata()
 }
 
 Interval<Microseconds>
-MoofParser::GetCompositionRange(const nsTArray<MediaByteRange>& aByteRanges)
+MoofParser::GetCompositionRange(const MediaByteRangeSet& aByteRanges)
 {
   Interval<Microseconds> compositionRange;
   BoxContext context(mSource, aByteRanges);

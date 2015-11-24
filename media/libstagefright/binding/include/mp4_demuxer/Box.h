@@ -23,13 +23,13 @@ class Stream;
 class BoxContext
 {
 public:
-  BoxContext(Stream* aSource, const nsTArray<MediaByteRange>& aByteRanges)
+  BoxContext(Stream* aSource, const MediaByteRangeSet& aByteRanges)
     : mSource(aSource), mByteRanges(aByteRanges)
   {
   }
 
   RefPtr<Stream> mSource;
-  const nsTArray<MediaByteRange>& mByteRanges;
+  const MediaByteRangeSet& mByteRanges;
 };
 
 class Box

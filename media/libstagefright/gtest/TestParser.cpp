@@ -102,8 +102,7 @@ TEST(stagefright_MoofParser, EmptyStream)
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
 
-  nsTArray<MediaByteRange> byteRanges;
-  byteRanges.AppendElement(MediaByteRange(0, 0));
+  MediaByteRangeSet byteRanges;
   EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
   EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
@@ -292,8 +291,7 @@ TEST(stagefright_MoofParser, test_case_mp4)
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
 
-    nsTArray<MediaByteRange> byteRanges;
-    byteRanges.AppendElement(MediaByteRange(0, 0));
+    MediaByteRangeSet byteRanges;
     EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
     EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
@@ -329,8 +327,7 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
           new TestStream(buffer.Elements() + offset, size);
 
         MoofParser parser(stream, 0, false, &monitor);
-        nsTArray<MediaByteRange> byteRanges;
-        byteRanges.AppendElement(MediaByteRange(0, 0));
+        MediaByteRangeSet byteRanges;
         EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
         parser.GetCompositionRange(byteRanges);
         parser.HasMetadata();

@@ -738,7 +738,7 @@ int64_t ChannelMediaResource::Tell()
   return mCacheStream.Tell();
 }
 
-nsresult ChannelMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+nsresult ChannelMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
   return mCacheStream.GetCachedRanges(aRanges);
 }
@@ -1202,7 +1202,7 @@ public:
   virtual bool    IsSuspended() override { return true; }
   virtual bool    IsTransportSeekable() override { return true; }
 
-  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override;
+  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
   virtual size_t SizeOfExcludingThis(
                         MallocSizeOf aMallocSizeOf) const override
@@ -1274,7 +1274,7 @@ void FileMediaResource::EnsureSizeInitialized()
   }
 }
 
-nsresult FileMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+nsresult FileMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
   MutexAutoLock lock(mLock);
 
@@ -1282,7 +1282,7 @@ nsresult FileMediaResource::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
   if (mSize == -1) {
     return NS_ERROR_FAILURE;
   }
-  aRanges.AppendElement(MediaByteRange(0, mSize));
+  aRanges += MediaByteRange(0, mSize);
   return NS_OK;
 }
 
