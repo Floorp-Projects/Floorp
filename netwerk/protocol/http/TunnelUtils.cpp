@@ -78,7 +78,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
   if (provider && mFD) {
     mFD->secret = reinterpret_cast<PRFilePrivate *>(this);
     provider->AddToSocket(PR_AF_INET, aTLSHost, aTLSPort, nullptr,
-                          0, 0, mFD, getter_AddRefs(mSecInfo));
+                          0, mFD, getter_AddRefs(mSecInfo));
   }
 
   if (mTransaction) {
