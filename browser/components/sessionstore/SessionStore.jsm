@@ -837,6 +837,7 @@ var SessionStoreInternal = {
         break;
       case "SessionStore:error":
         this.reportInternalError(data);
+        TabStateFlusher.resolveAll(browser, false, "Received error from the content process");
         break;
       default:
         throw new Error(`received unknown message '${aMessage.name}'`);
@@ -1210,6 +1211,10 @@ var SessionStoreInternal = {
 
     var tabbrowser = aWindow.gBrowser;
 
+    // The tabbrowser binding will go away once the window is closed,
+    // so we'll hold a reference to the browsers in the closure here.
+    let browsers = tabbrowser.browsers;
+
     TAB_EVENTS.forEach(function(aEvent) {
       tabbrowser.tabContainer.removeEventListener(aEvent, this, true);
     }, this);
@@ -1281,10 +1286,6 @@ var SessionStoreInternal = {
         this.maybeSaveClosedWindow(winData, isLastWindow);
       }
 
-      // The tabbrowser binding will go away once the window is closed,
-      // so we'll hold a reference to the browsers in the closure here.
-      let browsers = tabbrowser.browsers;
-
       TabStateFlusher.flushWindow(aWindow).then(() => {
         // At this point, aWindow is closed! You should probably not try to
         // access any DOM elements from aWindow within this callback unless
@@ -1310,13 +1311,13 @@ var SessionStoreInternal = {
 
         // Update the tabs data now that we've got the most
         // recent information.
-        this.cleanUpWindow(aWindow, winData);
+        this.cleanUpWindow(aWindow, winData, browsers);
 
         // save the state without this window to disk
         this.saveStateDelayed();
       });
     } else {
-      this.cleanUpWindow(aWindow, winData);
+      this.cleanUpWindow(aWindow, winData, browsers);
     }
 
     for (let i = 0; i < tabbrowser.tabs.length; i++) {
@@ -1336,7 +1337,13 @@ var SessionStoreInternal = {
    *        DyingWindowCache in case anybody is still holding a
    *        reference to it.
    */
-  cleanUpWindow(aWindow, winData) {
+  cleanUpWindow(aWindow, winData, browsers) {
+    // Any leftover TabStateFlusher Promises need to be resolved now,
+    // since we're about to remove the message listeners.
+    for (let browser of browsers) {
+      TabStateFlusher.resolveAll(browser);
+    }
+
     // Cache the window state until it is completely gone.
     DyingWindowCache.set(aWindow, winData);
 
