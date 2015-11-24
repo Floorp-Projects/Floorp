@@ -424,7 +424,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
     }
 
     if (!audioproc) {
-      audioproc = AudioProcessing::Create(_shared->channel_manager().config_);
+      audioproc = AudioProcessing::Create();
       if (!audioproc) {
         LOG(LS_ERROR) << "Failed to create AudioProcessing.";
         _shared->SetLastError(VE_NO_MEMORY);

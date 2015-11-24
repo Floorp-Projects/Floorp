@@ -109,7 +109,6 @@ class ChannelManager {
   void DestroyAllChannels();
 
   size_t NumOfChannels() const;
-  const Config& config_;
 
  private:
   // Create a channel given a configuration, |config|.
@@ -121,6 +120,8 @@ class ChannelManager {
 
   rtc::scoped_ptr<CriticalSectionWrapper> lock_;
   std::vector<ChannelOwner> channels_;
+
+  const Config& config_;
 
   DISALLOW_COPY_AND_ASSIGN(ChannelManager);
 };

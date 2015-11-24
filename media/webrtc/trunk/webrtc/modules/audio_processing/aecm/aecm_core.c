@@ -207,15 +207,21 @@ CalcLinearEnergies WebRtcAecm_CalcLinearEnergies;
 StoreAdaptiveChannel WebRtcAecm_StoreAdaptiveChannel;
 ResetAdaptiveChannel WebRtcAecm_ResetAdaptiveChannel;
 
-AecmCore* WebRtcAecm_CreateCore() {
+int WebRtcAecm_CreateCore(AecmCore** aecmInst) {
     AecmCore* aecm = malloc(sizeof(AecmCore));
+    *aecmInst = aecm;
+    if (aecm == NULL)
+    {
+        return -1;
+    }
 
     aecm->farFrameBuf = WebRtc_CreateBuffer(FRAME_LEN + PART_LEN,
                                             sizeof(int16_t));
     if (!aecm->farFrameBuf)
     {
         WebRtcAecm_FreeCore(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->nearNoisyFrameBuf = WebRtc_CreateBuffer(FRAME_LEN + PART_LEN,
@@ -223,7 +229,8 @@ AecmCore* WebRtcAecm_CreateCore() {
     if (!aecm->nearNoisyFrameBuf)
     {
         WebRtcAecm_FreeCore(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->nearCleanFrameBuf = WebRtc_CreateBuffer(FRAME_LEN + PART_LEN,
@@ -231,7 +238,8 @@ AecmCore* WebRtcAecm_CreateCore() {
     if (!aecm->nearCleanFrameBuf)
     {
         WebRtcAecm_FreeCore(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->outFrameBuf = WebRtc_CreateBuffer(FRAME_LEN + PART_LEN,
@@ -239,20 +247,23 @@ AecmCore* WebRtcAecm_CreateCore() {
     if (!aecm->outFrameBuf)
     {
         WebRtcAecm_FreeCore(aecm);
-        return NULL;
+        aecm = NULL;
+        return -1;
     }
 
     aecm->delay_estimator_farend = WebRtc_CreateDelayEstimatorFarend(PART_LEN1,
                                                                      MAX_DELAY);
     if (aecm->delay_estimator_farend == NULL) {
       WebRtcAecm_FreeCore(aecm);
-      return NULL;
+      aecm = NULL;
+      return -1;
     }
     aecm->delay_estimator =
         WebRtc_CreateDelayEstimator(aecm->delay_estimator_farend, 0);
     if (aecm->delay_estimator == NULL) {
       WebRtcAecm_FreeCore(aecm);
-      return NULL;
+      aecm = NULL;
+      return -1;
     }
     // TODO(bjornv): Explicitly disable robust delay validation until no
     // performance regression has been established.  Then remove the line.
@@ -261,7 +272,8 @@ AecmCore* WebRtcAecm_CreateCore() {
     aecm->real_fft = WebRtcSpl_CreateRealFFT(PART_LEN_SHIFT);
     if (aecm->real_fft == NULL) {
       WebRtcAecm_FreeCore(aecm);
-      return NULL;
+      aecm = NULL;
+      return -1;
     }
 
     // Init some aecm pointers. 16 and 32 byte alignment is only necessary
@@ -277,7 +289,7 @@ AecmCore* WebRtcAecm_CreateCore() {
     aecm->channelAdapt32 = (int32_t*) (((uintptr_t)
                                               aecm->channelAdapt32_buf + 31) & ~ 31);
 
-    return aecm;
+    return 0;
 }
 
 void WebRtcAecm_InitEchoPathCore(AecmCore* aecm, const int16_t* echo_path) {
@@ -534,9 +546,10 @@ int WebRtcAecm_Control(AecmCore* aecm, int delay, int nlpFlag) {
     return 0;
 }
 
-void WebRtcAecm_FreeCore(AecmCore* aecm) {
-    if (aecm == NULL) {
-      return;
+int WebRtcAecm_FreeCore(AecmCore* aecm) {
+    if (aecm == NULL)
+    {
+        return -1;
     }
 
     WebRtc_FreeBuffer(aecm->farFrameBuf);
@@ -549,6 +562,8 @@ void WebRtcAecm_FreeCore(AecmCore* aecm) {
     WebRtcSpl_FreeRealFFT(aecm->real_fft);
 
     free(aecm);
+
+    return 0;
 }
 
 int WebRtcAecm_ProcessFrame(AecmCore* aecm,

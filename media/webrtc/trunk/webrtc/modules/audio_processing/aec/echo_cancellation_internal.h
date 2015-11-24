@@ -57,6 +57,8 @@ typedef struct {
 
   RingBuffer* far_pre_buf;  // Time domain far-end pre-buffer.
 
+  int lastError;
+
   int farend_started;
 
   AecCore* aec;
