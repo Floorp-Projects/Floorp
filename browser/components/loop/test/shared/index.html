@@ -14,24 +14,15 @@
   </div>
   <div id="messages"></div>
   <div id="fixtures"></div>
+  <script src="../../content/shared/libs/lodash-3.9.3.js"></script>
+  <script src="../shared/loop_mocha_utils.js"></script>
   <script>
-    var uncaughtError;
-    window.addEventListener("error", function(error) {
-      uncaughtError = error;
-    });
-    var consoleWarn = console.warn;
-    var caughtWarnings = [];
-    console.warn = function() {
-      var args = Array.slice(arguments);
-      caughtWarnings.push(args);
-      consoleWarn.apply(console, args);
-    };
+    LoopMochaUtils.trapErrors();
   </script>
 
   <!-- libs -->
   <script src="../../content/shared/libs/react-0.13.3.js"></script>
   <script src="../../content/shared/libs/classnames-2.2.0.js"></script>
-  <script src="../../content/shared/libs/lodash-3.9.3.js"></script>
   <script src="../../content/shared/libs/backbone-1.2.1.js"></script>
   <script src="../../standalone/content/libs/l10n-gaia-02ca67948fe8.js"></script>
 
@@ -40,7 +31,6 @@
   <script src="vendor/chai-3.0.0.js"></script>
   <script src="vendor/chai-as-promised-5.1.0.js"></script>
   <script src="vendor/sinon-1.16.1.js"></script>
-  <script src="../shared/loop_mocha_utils.js"></script>
   <script>
     /*global chai, mocha */
     chai.config.includeStack = true;
@@ -82,24 +72,8 @@
   <script src="loopapi-client_test.js"></script>
 
   <script>
-    describe("Uncaught Error Check", function() {
-      it("should load the tests without errors", function() {
-        chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
-      });
-    });
-
-    describe("Unexpected Warnings Check", function() {
-      it("should long only the warnings we expect", function() {
-        chai.expect(caughtWarnings.length).to.eql(0);
-      });
-    });
-
-    mocha.run(function () {
-      var completeNode = document.createElement("p");
-      completeNode.setAttribute("id", "complete");
-      completeNode.appendChild(document.createTextNode("Complete"));
-      document.getElementById("mocha").appendChild(completeNode);
-    });
+    LoopMochaUtils.addErrorCheckingTests();
+    LoopMochaUtils.runTests();
   </script>
 </body>
 </html>
