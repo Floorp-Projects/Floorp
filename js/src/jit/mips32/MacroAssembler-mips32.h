@@ -1080,8 +1080,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_sltiu(ScratchRegister, dest.low, imm.value);
         as_addu(dest.high, dest.high, ScratchRegister);
     }
-    void sub32(Imm32 imm, Register dest);
-    void sub32(Register src, Register dest);
 
     void incrementInt32Value(const Address& addr) {
         add32(Imm32(1), ToPayload(addr));
@@ -1105,7 +1103,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
             break;
           case NonZero:
           case Zero:
-            sub32(src, dest);
+            ma_subu(dest, src);
             ma_b(dest, dest, overflow, cond);
             break;
           default:

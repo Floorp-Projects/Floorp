@@ -237,7 +237,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void add32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void addPtr(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void add64(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void sub32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void subPtr(T, S) { MOZ_CRASH(); }
     void neg32(Register) { MOZ_CRASH(); }
     void mulBy3(Register, Register) { MOZ_CRASH(); }
