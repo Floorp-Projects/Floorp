@@ -14,6 +14,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "Intervals.h"
 #include "MediaCache.h"
 #include "MediaData.h"
 #include "MediaResourceCallback.h"
@@ -130,47 +131,26 @@ private:
 
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
-class MediaByteRange {
+
+class MediaByteRange : public media::Interval<int64_t> {
 public:
-  MediaByteRange() : mStart(0), mEnd(0) {}
+  typedef Interval<int64_t> BaseType;
 
+  // We can't use inherited constructors yet. So we have to duplicate the
+  // constructors found in Interval base class.
+  // all this could be later replaced with:
+  // using Interval<int64_t>::Interval;
+
+  MOZ_IMPLICIT MediaByteRange(const BaseType& aOther)
+    : BaseType(aOther)
+  {}
+  MOZ_IMPLICIT MediaByteRange(BaseType&& aOther)
+    : BaseType(Move(aOther))
+  {}
   MediaByteRange(int64_t aStart, int64_t aEnd)
-    : mStart(aStart), mEnd(aEnd)
-  {
-    NS_ASSERTION(mStart <= mEnd, "Range should end after start!");
-  }
-
-  bool IsEmpty() const {
-    return mStart == 0 && mEnd == 0;
-  }
-
-  bool operator==(const MediaByteRange& aRange) const {
-    return mStart == aRange.mStart && mEnd == aRange.mEnd;
-  }
-
-  // Clears byte range values.
-  void Clear() {
-    mStart = 0;
-    mEnd = 0;
-  }
-
-  bool Contains(const MediaByteRange& aByteRange) const {
-    return aByteRange.mStart >= mStart && aByteRange.mEnd <= mEnd;
-  }
-
-  MediaByteRange Span(const MediaByteRange& aByteRange) const {
-    if (IsEmpty()) {
-      return aByteRange;
-    }
-    return MediaByteRange(std::min(mStart, aByteRange.mStart),
-                          std::max(mEnd, aByteRange.mEnd));
-  }
-
-  int64_t Length() const {
-    return mEnd - mStart;
-  }
-
-  int64_t mStart, mEnd;
+    : media::Interval<int64_t>(aStart, aEnd)
+  {}
+  MediaByteRange() = default;
 };
 
 class RtspMediaResource;
