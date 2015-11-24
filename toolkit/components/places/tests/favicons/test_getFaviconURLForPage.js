@@ -32,7 +32,7 @@ add_test(function test_normal()
             do_check_true(aMimeType === "");
             run_next_test();
           });
-      });
+      }, Services.scriptSecurityManager.getSystemPrincipal());
   });
 });
 
