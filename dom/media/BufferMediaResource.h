@@ -101,7 +101,7 @@ private:
 
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {
-    aRanges += MediaByteRange(0, mLength);
+    aRanges += MediaByteRange(0, int64_t(mLength));
     return NS_OK;
   }
 
