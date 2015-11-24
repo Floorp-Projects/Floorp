@@ -140,10 +140,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// e3042b8d-0cc0-4ee6-baca-fec1ba89ee97
+// 327d78a0-0680-4709-b209-1cf9578720e6
 #define NS_IPRESSHELL_IID \
-{ 0xe3042b8d, 0x0cc0, 0x4ee6, \
-  { 0xba, 0xca, 0xfe, 0xc1, 0xba, 0x89, 0xee, 0x97 } }
+{ 0x327d78a0, 0x0680, 0x4709, \
+  { 0xb2, 0x09, 0x1c, 0xf9, 0x57, 0x87, 0x20, 0xe6 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -935,20 +935,6 @@ public:
    * recur into our children.
    */
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
-
-  /**
-   * Pause painting by freezing the refresh driver of this and all parent
-   * presentations. This may not have the desired effect if this pres shell
-   * has its own refresh driver.
-   */
-  virtual void PausePainting() = 0;
-
-  /**
-   * Resume painting by thawing the refresh driver of this and all parent
-   * presentations. This may not have the desired effect if this pres shell
-   * has its own refresh driver.
-   */
-  virtual void ResumePainting() = 0;
 
   /**
    * Unsuppress painting.
@@ -1813,7 +1799,6 @@ protected:
   bool mFontSizeInflationForceEnabled;
   bool mFontSizeInflationDisabledInMasterProcess;
   bool mFontSizeInflationEnabled;
-  bool mPaintingIsFrozen;
 
   // Dirty bit indicating that mFontSizeInflationEnabled needs to be recomputed.
   bool mFontSizeInflationEnabledIsDirty;
