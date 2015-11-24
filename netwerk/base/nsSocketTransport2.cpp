@@ -813,6 +813,7 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
     }
 
     const char *proxyType = nullptr;
+    mProxyInfo = proxyInfo;
     if (proxyInfo) {
         mProxyPort = proxyInfo->Port();
         mProxyHost = proxyInfo->Host();
@@ -1105,8 +1106,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         // on an explicit alternate service host name
         const char *host       = mOriginHost.get();
         int32_t     port       = (int32_t) mOriginPort;
-        const char *proxyHost  = mProxyHost.IsEmpty() ? nullptr : mProxyHost.get();
-        int32_t     proxyPort  = (int32_t) mProxyPort;
+        nsCOMPtr<nsIProxyInfo> proxyInfo = mProxyInfo;
         uint32_t    controlFlags = 0;
 
         uint32_t i;
@@ -1140,9 +1140,9 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // it were the end host (i.e. expect the proxy's cert)
 
                 rv = provider->NewSocket(mNetAddr.raw.family,
-                                         mHttpsProxy ? proxyHost : host,
-                                         mHttpsProxy ? proxyPort : port,
-                                         proxyHost, proxyPort,
+                                         mHttpsProxy ? mProxyHost.get() : host,
+                                         mHttpsProxy ? mProxyPort : port,
+                                         proxyInfo,
                                          controlFlags, &fd,
                                          getter_AddRefs(secinfo));
 
@@ -1156,7 +1156,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // so we just want the service to add itself
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
-                                           host, port, proxyHost, proxyPort,
+                                           host, port, proxyInfo,
                                            controlFlags, fd,
                                            getter_AddRefs(secinfo));
             }
@@ -1186,8 +1186,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                      (strcmp(mTypes[i], "socks4") == 0)) {
                 // since socks is transparent, any layers above
                 // it do not have to worry about proxy stuff
-                proxyHost = nullptr;
-                proxyPort = -1;
+                proxyInfo = nullptr;
                 proxyTransparent = true;
             }
         }

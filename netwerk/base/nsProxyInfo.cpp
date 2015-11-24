@@ -48,6 +48,20 @@ nsProxyInfo::GetResolveFlags(uint32_t *result)
 }
 
 NS_IMETHODIMP
+nsProxyInfo::GetUsername(nsACString &result)
+{
+  result = mUsername;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProxyInfo::GetPassword(nsACString &result)
+{
+  result = mPassword;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProxyInfo::GetFailoverTimeout(uint32_t *result)
 {
   *result = mTimeout;
