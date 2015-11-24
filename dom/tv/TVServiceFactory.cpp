@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/FakeTVService.h"
 #include "mozilla/dom/TVListeners.h"
 #include "mozilla/Preferences.h"
 #include "nsITVService.h"
@@ -14,14 +15,26 @@
 namespace mozilla {
 namespace dom {
 
+/* static */ already_AddRefed<FakeTVService>
+TVServiceFactory::CreateFakeTVService()
+{
+  RefPtr<FakeTVService> service = new FakeTVService();
+  return service.forget();
+}
+
 /* static */ already_AddRefed<nsITVService>
 TVServiceFactory::AutoCreateTVService()
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCOMPtr<nsITVService> service = do_CreateInstance(TV_SERVICE_CONTRACTID);
   if (!service) {
-    // Fallback to the TV Simulator Service
-    service = do_CreateInstance(TV_SIMULATOR_SERVICE_CONTRACTID, &rv);
+    if (Preferences::GetBool("dom.ignore_webidl_scope_checks", false)) {
+      // Fallback to the fake service.
+      service = do_CreateInstance(FAKE_TV_SERVICE_CONTRACTID, &rv);
+    } else {
+      // Fallback to the TV Simulator Service
+      service = do_CreateInstance(TV_SIMULATOR_SERVICE_CONTRACTID, &rv);
+    }
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
