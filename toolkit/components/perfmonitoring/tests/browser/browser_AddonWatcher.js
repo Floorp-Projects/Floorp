@@ -7,7 +7,6 @@
 
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/AddonManager.jsm", this);
-Cu.import("resource://gre/modules/AddonWatcher.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 const ADDON_URL = "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_Addons_sample.xpi";
@@ -119,6 +118,21 @@ add_task(function* test_burn_CPU() {
     },
     histogramName: "MISBEHAVING_ADDONS_JANK_LEVEL",
     topic: "test-addonwatcher-burn-some-cpu",
+    expectedReason: "longestDuration",
+    expectedMinSum: 7,
+  });
+});
+
+// Test that burning content CPU will cause the add-on watcher to notice that
+// the add-on is misbehaving.
+add_task(function* test_burn_CPU() {
+  yield burn_rubber({
+    prefs: {
+      "browser.addon-watch.limits.longestDuration": 2,
+      "browser.addon-watch.limits.totalCPOWTime": -1,
+    },
+    histogramName: "MISBEHAVING_ADDONS_JANK_LEVEL",
+    topic: "test-addonwatcher-burn-some-content-cpu",
     expectedReason: "longestDuration",
     expectedMinSum: 7,
   });
