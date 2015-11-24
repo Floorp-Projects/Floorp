@@ -874,8 +874,11 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
 
   RefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
 
-  newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false);
-  return newSurf.forget();
+  if (newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false)) {
+    return newSurf.forget();
+  }
+
+  return nullptr;
 }
 
 already_AddRefed<DataSourceSurface>

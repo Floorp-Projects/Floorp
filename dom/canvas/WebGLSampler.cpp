@@ -35,7 +35,7 @@ WebGLSampler::Delete()
 WebGLContext*
 WebGLSampler::GetParentObject() const
 {
-    return mContext;
+    return Context();
 }
 
 JSObject*

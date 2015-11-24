@@ -41,7 +41,7 @@ WebGLTransformFeedback::Delete()
 WebGLContext*
 WebGLTransformFeedback::GetParentObject() const
 {
-    return mContext;
+    return Context();
 }
 
 JSObject*

@@ -33,7 +33,7 @@ public:
   virtual IntSize GetSize() const override { return mSize; }
   virtual SurfaceFormat GetFormat() const override { return mFormat; }
 
-  void InitWrappingData(unsigned char *aData,
+  bool InitWrappingData(unsigned char *aData,
                         const IntSize &aSize,
                         int32_t aStride,
                         SurfaceFormat aFormat,
