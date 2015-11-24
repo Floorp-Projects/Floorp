@@ -680,7 +680,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
                                                        aCropRect,
                                                        aRv,
                                                        getter_AddRefs(data));
-    task->Dispatch(GetCurrentThreadWorkerPrivate()->GetJSContext());
+    task->Dispatch(aRv);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1024,7 +1024,7 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
       RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect, mError);
 
       if (NS_WARN_IF(mError.Failed())) {
-        return false;
+        return true;
       }
 
       image.forget(mImage);
@@ -1063,9 +1063,10 @@ private:
     RefPtr<DecodeBlobInMainThreadSyncTask> task =
       new DecodeBlobInMainThreadSyncTask(mWorkerPrivate, *mBlob, mCropRect,
                                          rv, getter_AddRefs(data));
-    task->Dispatch(mWorkerPrivate->GetJSContext()); // This is a synchronous call.
+    task->Dispatch(rv); // This is a synchronous call.
 
     if (NS_WARN_IF(rv.Failed())) {
+      // XXXbz does this really make sense if we're shutting down?  Ah, well.
       mPromise->MaybeReject(rv);
       return nullptr;
     }
