@@ -22,7 +22,7 @@ if CONFIG['MOZ_ENABLE_GIO']:
         'nsPackageKitService.cpp'
     ]
 
-XPCOMBinaryComponent('mozgnome')
+FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/toolkit/components/build/',
@@ -35,11 +35,6 @@ CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_GTK']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
-
-OS_LIBS += CONFIG['MOZ_GCONF_LIBS']
-OS_LIBS += CONFIG['GLIB_LIBS']
-OS_LIBS += CONFIG['MOZ_GIO_LIBS']
-OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
