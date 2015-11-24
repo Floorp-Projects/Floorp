@@ -23,6 +23,9 @@ namespace dom {
 
 class ArrayBufferViewOrArrayBuffer;
 
+// The MediaKeyStatusMap WebIDL interface; maps a keyId to its status.
+// Note that the underlying "map" is stored in an array, since we assume
+// that a MediaKeySession won't have many key statuses to report.
 class MediaKeyStatusMap final : public nsISupports,
                                 public nsWrapperCache
 {
@@ -31,9 +34,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeyStatusMap)
 
 public:
-  explicit MediaKeyStatusMap(JSContext* aCx,
-                             nsPIDOMWindow* aParent,
-                             ErrorResult& aRv);
+  explicit MediaKeyStatusMap(nsPIDOMWindow* aParent);
 
 protected:
   ~MediaKeyStatusMap();
@@ -43,36 +44,48 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  MediaKeyStatus Get(JSContext* aCx,
-                     const ArrayBufferViewOrArrayBuffer& aKey,
-                     ErrorResult& aRv) const;
+  MediaKeyStatus Get(const ArrayBufferViewOrArrayBuffer& aKey) const;
+  bool Has(const ArrayBufferViewOrArrayBuffer& aKey) const;
+  uint32_t Size() const;
 
-  bool Has(JSContext* aCx,
-           const ArrayBufferViewOrArrayBuffer& aKey,
-           ErrorResult& aRv) const;
-
-  void Keys(JSContext* aCx,
-            JS::MutableHandle<JSObject*> aResult,
-            ErrorResult& aRv) const;
-
-  void Values(JSContext* aCx,
-              JS::MutableHandle<JSObject*> aResult,
-              ErrorResult& aRv) const;
-
-  void Entries(JSContext* aCx,
-               JS::MutableHandle<JSObject*> aResult,
-               ErrorResult& aRv) const;
-
-  uint32_t GetSize(JSContext* aCx, ErrorResult& aRv) const;
+  uint32_t GetIterableLength() const;
+  TypedArrayCreator<ArrayBuffer> GetKeyAtIndex(uint32_t aIndex) const;
+  MediaKeyStatus GetValueAtIndex(uint32_t aIndex) const;
 
   void Update(const nsTArray<CDMCaps::KeyStatus>& keys);
 
 private:
-  nsresult UpdateInternal(const nsTArray<CDMCaps::KeyStatus>& keys);
 
   nsCOMPtr<nsPIDOMWindow> mParent;
-  JS::Heap<JSObject*> mMap;
-  nsresult mUpdateError;
+
+  struct KeyStatus {
+    KeyStatus(const nsTArray<uint8_t>& aKeyId,
+              MediaKeyStatus aStatus)
+      : mKeyId(aKeyId)
+      , mStatus(aStatus)
+    {
+    }
+    bool operator== (const KeyStatus& aOther) const {
+      return aOther.mKeyId == mKeyId;
+    }
+    bool operator<(const KeyStatus& aOther) const {
+      // Copy chromium and compare keys' bytes.
+      // Update once https://github.com/w3c/encrypted-media/issues/69
+      // is resolved.
+      const nsTArray<uint8_t>& other = aOther.mKeyId;
+      const nsTArray<uint8_t>& self = mKeyId;
+      size_t length = std::min<size_t>(other.Length(), self.Length());
+      int cmp = memcmp(self.Elements(), other.Elements(), length);
+      if (cmp != 0) {
+        return cmp < 0;
+      }
+      return self.Length() <= other.Length();
+    }
+    nsTArray<uint8_t> mKeyId;
+    MediaKeyStatus mStatus;
+  };
+
+  nsTArray<KeyStatus> mStatuses;
 };
 
 } // namespace dom
