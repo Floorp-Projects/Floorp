@@ -227,6 +227,12 @@ MacroAssemblerMIPSShared::ma_subu(Register rd, Imm32 imm)
 }
 
 void
+MacroAssemblerMIPSShared::ma_subu(Register rd, Register rs)
+{
+    as_subu(rd, rd, rs);
+}
+
+void
 MacroAssemblerMIPSShared::ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow)
 {
     if (imm.value != INT32_MIN) {
