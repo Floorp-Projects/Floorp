@@ -2506,13 +2506,13 @@ Navigator::HasDataStoreSupport(nsIPrincipal* aPrincipal)
 // A WorkerMainThreadRunnable to synchronously dispatch the call of
 // HasDataStoreSupport() from the worker thread to the main thread.
 class HasDataStoreSupportRunnable final
-  : public workers::WorkerMainThreadRunnable
+  : public workers::WorkerCheckAPIExposureOnMainThreadRunnable
 {
 public:
   bool mResult;
 
   explicit HasDataStoreSupportRunnable(workers::WorkerPrivate* aWorkerPrivate)
-    : workers::WorkerMainThreadRunnable(aWorkerPrivate)
+    : workers::WorkerCheckAPIExposureOnMainThreadRunnable(aWorkerPrivate)
     , mResult(false)
   {
     MOZ_ASSERT(aWorkerPrivate);
@@ -2543,9 +2543,7 @@ Navigator::HasDataStoreSupport(JSContext* aCx, JSObject* aGlobal)
 
     RefPtr<HasDataStoreSupportRunnable> runnable =
       new HasDataStoreSupportRunnable(workerPrivate);
-    runnable->Dispatch(aCx);
-
-    return runnable->mResult;
+    return runnable->Dispatch() && runnable->mResult;
   }
 
   workers::AssertIsOnMainThread();
