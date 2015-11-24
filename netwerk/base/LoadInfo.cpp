@@ -278,6 +278,14 @@ LoadInfo::GetAllowChrome(bool* aResult)
 }
 
 NS_IMETHODIMP
+LoadInfo::GetDontFollowRedirects(bool* aResult)
+{
+  *aResult =
+    (mSecurityFlags & nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetExternalContentPolicyType(nsContentPolicyType* aResult)
 {
   *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(mInternalContentPolicyType);

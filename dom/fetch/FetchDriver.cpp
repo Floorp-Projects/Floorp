@@ -29,6 +29,7 @@
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsHttpChannel.h"
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/workers/Workers.h"
@@ -51,7 +52,6 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mHasBeenCrossSite(false)
-  , mFoundOpaqueRedirect(false)
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
 {
@@ -234,6 +234,10 @@ FetchDriver::HttpFetch()
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected request mode!");
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mRequest->GetRedirectMode() != RequestRedirect::Follow) {
+    secFlags |= nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS;
   }
 
   // From here on we create a channel and set its properties with the
@@ -441,7 +445,9 @@ FetchDriver::IsUnsafeRequest()
 }
 
 already_AddRefed<InternalResponse>
-FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI)
+FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse,
+                                         nsIURI* aFinalURI,
+                                         bool aFoundOpaqueRedirect)
 {
   MOZ_ASSERT(aResponse);
   nsAutoCString reqURL;
@@ -454,7 +460,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   RefPtr<InternalResponse> filteredResponse;
-  if (mFoundOpaqueRedirect) {
+  if (aFoundOpaqueRedirect) {
     filteredResponse = aResponse->OpaqueRedirectResponse();
   } else {
     switch (mRequest->GetResponseTainting()) {
@@ -551,9 +557,21 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aRequest);
 
+  bool foundOpaqueRedirect = false;
+
   if (httpChannel) {
     uint32_t responseStatus;
     httpChannel->GetResponseStatus(&responseStatus);
+
+    if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
+      if (mRequest->GetRedirectMode() == RequestRedirect::Error) {
+        FailWithNetworkError();
+        return NS_BINDING_FAILED;
+      }
+      if (mRequest->GetRedirectMode() == RequestRedirect::Manual) {
+        foundOpaqueRedirect = true;
+      }
+    }
 
     nsAutoCString statusText;
     httpChannel->GetResponseStatusText(statusText);
@@ -660,7 +678,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
 
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
-  mResponse = BeginAndGetFilteredResponse(response, channelURI);
+  mResponse = BeginAndGetFilteredResponse(response, channelURI,
+                                          foundOpaqueRedirect);
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -743,6 +762,12 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     return NS_OK;
   }
 
+  // We should only ever get here if we use a "follow" redirect policy,
+  // or if if we set an "error" policy as a result of a CORS policy.
+  MOZ_ASSERT(mRequest->GetRedirectMode() == RequestRedirect::Follow ||
+             (mRequest->GetRedirectMode() == RequestRedirect::Error &&
+              IsUnsafeRequest()));
+
   // HTTP Fetch step 5, "redirect status", step 1
   if (NS_WARN_IF(mRequest->GetRedirectMode() == RequestRedirect::Error)) {
     aOldChannel->Cancel(NS_BINDING_FAILED);
@@ -763,33 +788,10 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // HTTP Fetch step 5, "redirect status", step 10 requires us to halt the
   // redirect, but successfully return an opaqueredirect Response to the
   // initiating Fetch.
-  if (mRequest->GetRedirectMode() == RequestRedirect::Manual) {
-    // Ideally we would simply not cancel the old channel and allow it to
-    // be processed as normal.  Unfortunately this is quite fragile and
-    // other redirect handlers can easily break it for certain use cases.
-    //
-    // For example, nsCORSListenerProxy cancels vetoed redirect channels.
-    // The HTTP cache will also error on vetoed redirects when the
-    // redirect has been previously cached.
-    //
-    // Therefore simulate the completion of the channel to produce the
-    // opaqueredirect Response and then cancel the original channel.  This
-    // will result in OnStartRequest() getting called twice, but the second
-    // time will be with an error response (from the Cancel) which will
-    // be ignored.
-    MOZ_ASSERT(!mFoundOpaqueRedirect);
-    mFoundOpaqueRedirect = true;
-    Unused << OnStartRequest(aOldChannel, nullptr);
-    Unused << OnStopRequest(aOldChannel, nullptr, NS_OK);
-
-    aOldChannel->Cancel(NS_BINDING_FAILED);
-
-    return NS_BINDING_FAILED;
-  }
 
   // The following steps are from HTTP Fetch step 5, "redirect status", step 11
-  // which requires the RequestRedirect to be "follow".
-  MOZ_ASSERT(mRequest->GetRedirectMode() == RequestRedirect::Follow);
+  // which requires the RequestRedirect to be "follow". We asserted that we're
+  // in either "follow" or "error" mode here.
 
   // HTTP Fetch step 5, "redirect status", steps 11.1 and 11.2 block redirecting
   // to a URL with credentials in CORS mode.  This is implemented in
