@@ -540,46 +540,6 @@ public:
   static bool IsScrollbarThumbLayerized(nsIFrame* aThumbFrame);
 
   /**
-   * Finds the nearest ancestor frame to aItem that is considered to have (or
-   * will have) "animated geometry". For example the scrolled frames of
-   * scrollframes which are actively being scrolled fall into this category.
-   * Frames with certain CSS properties that are being animated (e.g.
-   * 'left'/'top' etc) are also placed in this category.
-   * Frames with different active geometry roots are in different PaintedLayers,
-   * so that we can animate the geometry root by changing its transform (either
-   * on the main thread or in the compositor).
-   * The animated geometry root is required to be a descendant (or equal to)
-   * aItem's ReferenceFrame(), which means that we will fall back to
-   * returning aItem->ReferenceFrame() when we can't find another animated
-   * geometry root.
-   */
-  enum {
-    /**
-     * If the AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED flag is set, then we
-     * do not do any special processing for background attachment fixed items,
-     * instead treating them like any other frame.
-     */
-    AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED = 0x01
-  };
-  static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
-                                              nsDisplayListBuilder* aBuilder,
-                                              uint32_t aFlags = 0);
-  /**
-   * Version of GetAnimatedGeometryRootFor that can be called in nsDisplayItem
-   * constructor, and only from there. Not valid for transform items, but they
-   * set their AGR in their constructor.
-   */
-  static nsIFrame* GetAnimatedGeometryRootForInit(nsDisplayItem* aItem,
-                                                  nsDisplayListBuilder* aBuilder);
-
-  /**
-   * Finds the nearest ancestor frame to aFrame that is considered to have (or
-   * will have) "animated geometry". This could be aFrame.
-   */
-  static nsIFrame* GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
-                                                   nsIFrame* aFrame);
-
-  /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
   static nsIScrollableFrame* GetScrollableFrameFor(const nsIFrame *aScrolledFrame);
