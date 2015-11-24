@@ -26,6 +26,7 @@ struct ResourceTimingStruct : TimingStruct {
   TimeStamp redirectEnd;
   uint64_t transferSize;
   uint64_t encodedBodySize;
+  nsCString protocolVersion;
 };
 
 } // namespace net
