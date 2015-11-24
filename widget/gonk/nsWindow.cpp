@@ -750,7 +750,7 @@ nsWindow::GetDefaultScaleInternal()
     if (dpi < 200.0) {
         return 1.0; // mdpi devices.
     }
-    if (dpi < 300.0) {
+    if (dpi < 280.0) {
         return 1.5; // hdpi devices.
     }
     // xhdpi devices and beyond.
