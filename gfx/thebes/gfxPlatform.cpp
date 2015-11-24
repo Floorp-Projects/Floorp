@@ -878,10 +878,13 @@ gfxPlatform::ShutdownLayersIPC()
 
         gfx::VRManagerChild::ShutDown();
         layers::ImageBridgeChild::ShutDown();
+        layers::CompositorBridgeChild::ShutDown();
 
     } else if (XRE_IsParentProcess()) {
+
         gfx::VRManagerChild::ShutDown();
         layers::ImageBridgeChild::ShutDown();
+        layers::CompositorBridgeChild::ShutDown();
 
 #ifdef MOZ_WIDGET_GONK
         layers::SharedBufferManagerChild::ShutDown();
