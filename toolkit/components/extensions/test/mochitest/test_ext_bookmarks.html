@@ -87,6 +87,158 @@ function backgroundScript() {
   }).then(() => {
     browser.test.assertEq(5, failures, "Expected failures");
 
+  // test bookmarks.search
+
+  }).then(() => {
+    return Promise.all([
+        browser.bookmarks.create({title: "MØzillä", url: "http://møzîllä.örg"}),
+        browser.bookmarks.create({title: "Example", url: "http://example.org"}),
+        browser.bookmarks.create({title: "Mozilla Folder"}),
+        browser.bookmarks.create({title: "EFF", url: "http://eff.org"}),
+        browser.bookmarks.create({title: "Menu Item", url: "http://menu.org", parentId: "menu________"}),
+        browser.bookmarks.create({title: "Toolbar Item", url: "http://toolbar.org", parentId: "toolbar_____"}),
+    ]);
+  }).then(results => {
+    return Promise.all([
+        browser.bookmarks.create({title: "Mozilla", url: "http://allizom.org", parentId: results[1].id}),
+        browser.bookmarks.create({title: "Mozilla Corporation", url: "http://allizom.com", parentId: results[1].id}),
+        browser.bookmarks.create({title: "Firefox", url: "http://allizom.org/firefox", parentId: results[1].id}),
+    ]);
+  }).then(() => {
+
+  // returns all items on empty object
+    return browser.bookmarks.search({});
+  }).then(results => {
+    browser.test.assertTrue(results.length >= 9);
+
+  // throws an error for invalid query objects
+    return browser.bookmarks.search();
+  }).catch(error => {
+    browser.test.assertTrue(error.message.includes("Incorrect argument types for bookmarks.search"));
+
+    return browser.bookmarks.search(null);
+  }).catch(error => {
+    browser.test.assertTrue(error.message.includes("Incorrect argument types for bookmarks.search"));
+
+    return browser.bookmarks.search(function(){});
+  }).catch(error => {
+    browser.test.assertTrue(error.message.includes("Incorrect argument types for bookmarks.search"));
+
+    return browser.bookmarks.search({banana: "banana"});
+  }).catch(error => {
+    browser.test.assertTrue(error.message.includes("banana"));
+    browser.test.assertTrue(error.message.includes("bookmarks.search"));
+
+    return browser.bookmarks.search({url: "spider-man vs. batman"});
+  }).catch(error => {
+    browser.test.assertTrue(error.message.includes("spider-man vs. batman"));
+    browser.test.assertTrue(error.message.includes("not a valid URL"));
+    browser.test.assertTrue(error.message.includes("bookmarks.search"));
+
+  // queries the url
+    return browser.bookmarks.search("example.org");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Example", results[0].title);
+    browser.test.assertEq("http://example.org/", results[0].url);
+    browser.test.assertEq(2, results[0].index);
+
+  // queries the title
+    return browser.bookmarks.search("EFF");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("EFF", results[0].title);
+    browser.test.assertEq("http://eff.org/", results[0].url);
+    browser.test.assertEq("unfiled_____", results[0].parentId);
+    browser.test.assertEq(0, results[0].index);
+
+  // finds menu items
+    return browser.bookmarks.search("Menu Item");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Menu Item", results[0].title);
+    browser.test.assertEq("http://menu.org/", results[0].url);
+    browser.test.assertEq("menu________", results[0].parentId);
+
+  // finds toolbar items
+    return browser.bookmarks.search("Toolbar Item");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Toolbar Item", results[0].title);
+    browser.test.assertEq("http://toolbar.org/", results[0].url);
+    browser.test.assertEq("toolbar_____", results[0].parentId);
+
+  // finds folders
+    return browser.bookmarks.search("Mozilla Folder");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Mozilla Folder", results[0].title);
+
+  // is case-insensitive
+    return browser.bookmarks.search("corporation");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Mozilla Corporation", results[0].title);
+
+  // is case-insensitive for non-ascii
+    return browser.bookmarks.search("MøZILLÄ");
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("MØzillä", results[0].title);
+
+  // returns multiple results
+    return browser.bookmarks.search("allizom");
+  }).then(results => {
+    browser.test.assertEq(3, results.length);
+    browser.test.assertEq("Mozilla", results[0].title);
+    browser.test.assertEq("Mozilla Corporation", results[1].title);
+    browser.test.assertEq("Firefox", results[2].title);
+
+  // accepts a url field
+    return browser.bookmarks.search({url: "http://allizom.com/"});
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Mozilla Corporation", results[0].title);
+    browser.test.assertEq("http://allizom.com/", results[0].url);
+
+  // normalizes urls
+    return browser.bookmarks.search({url: "http://allizom.com"});
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    browser.test.assertEq("Mozilla Corporation", results[0].title);
+    browser.test.assertEq("http://allizom.com/", results[0].url);
+
+  // normalizes urls even more
+    return browser.bookmarks.search({url: "http:allizom.com"});
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    browser.test.assertEq("Mozilla Corporation", results[0].title);
+    browser.test.assertEq("http://allizom.com/", results[0].url);
+
+  // accepts a title field
+    return browser.bookmarks.search({title: "Mozilla"});
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    browser.test.assertEq("Mozilla", results[0].title);
+    browser.test.assertEq("http://allizom.org/", results[0].url);
+
+  // can combine title and query
+    return browser.bookmarks.search({title: "Mozilla", query: "allizom"});
+  }).then(results => {
+    browser.test.assertEq(1, results.length);
+    browser.test.assertEq("Mozilla", results[0].title);
+    browser.test.assertEq("http://allizom.org/", results[0].url);
+
+  // uses AND conditions
+    return browser.bookmarks.search({title: "EFF", query: "allizom"});
+  }).then(results => {
+    browser.test.assertEq(0, results.length);
+
+  // returns an empty array on item not found
+    return browser.bookmarks.search("microsoft");
+  }).then(results => {
+    browser.test.assertEq(0, results.length);
+
     browser.test.notifyPass("bookmarks");
   }).catch(error => {
     browser.test.fail(`Error: ${String(error)} :: ${error.stack}`);
