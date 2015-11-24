@@ -19,6 +19,7 @@
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LoadInfo.h"
@@ -9303,9 +9304,11 @@ public:
 
   nsCopyFaviconCallback(mozIAsyncFavicons* aSvc,
                         nsIURI* aNewURI,
+                        nsIPrincipal* aLoadingPrincipal,
                         bool aInPrivateBrowsing)
     : mSvc(aSvc)
     , mNewURI(aNewURI)
+    , mLoadingPrincipal(aLoadingPrincipal)
     , mInPrivateBrowsing(aInPrivateBrowsing)
   {
   }
@@ -9326,7 +9329,7 @@ public:
       mNewURI, aFaviconURI, false,
       mInPrivateBrowsing ? nsIFaviconService::FAVICON_LOAD_PRIVATE :
                            nsIFaviconService::FAVICON_LOAD_NON_PRIVATE,
-      nullptr);
+      nullptr, mLoadingPrincipal);
   }
 
 private:
@@ -9334,6 +9337,7 @@ private:
 
   nsCOMPtr<mozIAsyncFavicons> mSvc;
   nsCOMPtr<nsIURI> mNewURI;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   bool mInPrivateBrowsing;
 };
 
@@ -9345,6 +9349,7 @@ NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
 void
 nsDocShell::CopyFavicon(nsIURI* aOldURI,
                         nsIURI* aNewURI,
+                        nsIPrincipal* aLoadingPrincipal,
                         bool aInPrivateBrowsing)
 {
   if (XRE_IsContentProcess()) {
@@ -9353,7 +9358,9 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
       mozilla::ipc::URIParams oldURI, newURI;
       SerializeURI(aOldURI, oldURI);
       SerializeURI(aNewURI, newURI);
-      contentChild->SendCopyFavicon(oldURI, newURI, aInPrivateBrowsing);
+      contentChild->SendCopyFavicon(oldURI, newURI,
+                                    IPC::Principal(aLoadingPrincipal),
+                                    aInPrivateBrowsing);
     }
     return;
   }
@@ -9363,7 +9370,9 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
     do_GetService("@mozilla.org/browser/favicon-service;1");
   if (favSvc) {
     nsCOMPtr<nsIFaviconDataCallback> callback =
-      new nsCopyFaviconCallback(favSvc, aNewURI, aInPrivateBrowsing);
+      new nsCopyFaviconCallback(favSvc, aNewURI,
+                                aLoadingPrincipal,
+                                aInPrivateBrowsing);
     favSvc->GetFaviconURLForPage(aOldURI, callback);
   }
 #endif
@@ -10068,7 +10077,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
       // Inform the favicon service that the favicon for oldURI also
       // applies to aURI.
-      CopyFavicon(currentURI, aURI, mInPrivateBrowsing);
+      CopyFavicon(currentURI, aURI, doc->NodePrincipal(), mInPrivateBrowsing);
 
       RefPtr<nsGlobalWindow> win = mScriptGlobal ?
         mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
@@ -11683,7 +11692,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
 
     // Inform the favicon service that our old favicon applies to this new
     // URI.
-    CopyFavicon(oldURI, newURI, mInPrivateBrowsing);
+    CopyFavicon(oldURI, newURI, document->NodePrincipal(), mInPrivateBrowsing);
   } else {
     FireDummyOnLocationChange();
   }
