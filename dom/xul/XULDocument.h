@@ -43,8 +43,6 @@ class nsIObjectOutputStream;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 
-struct PRLogModuleInfo;
-
 class nsRefMapEntry : public nsStringHashKey
 {
 public:
@@ -294,7 +292,7 @@ protected:
     static nsIRDFResource* kNC_attribute;
     static nsIRDFResource* kNC_value;
 
-    static PRLogModuleInfo* gXULLog;
+    static LazyLogModule gXULLog;
 
     nsresult
     Persist(nsIContent* aElement, int32_t aNameSpaceID, nsIAtom* aAttribute);

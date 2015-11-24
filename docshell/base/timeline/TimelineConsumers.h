@@ -92,10 +92,12 @@ public:
   // which doesn't have to be relevant to a specific docshell.
   // May be called from any thread.
   void AddMarkerForAllObservedDocShells(const char* aName,
-                                        MarkerTracingType aTracingType);
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
   void AddMarkerForAllObservedDocShells(const char* aName,
                                         const TimeStamp& aTime,
-                                        MarkerTracingType aTracingType);
+                                        MarkerTracingType aTracingType,
+                                        MarkerStackRequest aStackRequest = MarkerStackRequest::STACK);
 
   // This method clones and registers an already instantiated marker,
   // which doesn't have to be relevant to a specific docshell.

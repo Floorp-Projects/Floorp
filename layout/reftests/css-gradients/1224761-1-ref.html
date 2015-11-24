@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+    border: 1px solid black;
+    width: 30px;
+    height: 30px;
+    margin: 1px;
+}
+.grad-5 {
+    background: yellow;
+}
+.grad0 {
+    background: yellow;
+}
+.grad30 {
+    /* not much of a test, but this isn't where the bug was anyway! */
+    background: linear-gradient(to right, blue 30%, yellow 30%);
+}
+.grad100 {
+    background: blue;
+}
+.grad150 {
+    background: blue;
+}
+</style>
+</head>
+<body>
+  You shouldn't see a gradual gradient in any of the divs below.
+  <div class="grad-5"></div>
+  <div class="grad0"></div>
+  <div class="grad30"></div>
+  <div class="grad100"></div>
+  <div class="grad150"></div>
+</body>
+</html>

@@ -36,8 +36,8 @@ public:
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) override {}
 #endif // MOZ_EME
-  virtual bool IsActive() override { return true; }
-  virtual bool IsHidden() override { return false; }
+  virtual bool IsActive() const override { return true; }
+  virtual bool IsHidden() const override { return false; }
   virtual void DownloadSuspended() override {}
   virtual void DownloadResumed(bool aForceNetworkLoading) override {}
   virtual void NotifySuspendedByCache(bool aIsSuspended) override {}

@@ -9,7 +9,7 @@
 
 #include "mozilla/Logging.h"
 
-PRLogModuleInfo* GetLog();
+mozilla::LogModule* GetLog();
 
 #define STUMBLER_DBG(arg, ...)  MOZ_LOG(GetLog(), mozilla::LogLevel::Debug, ("STUMBLER - %s: " arg, __func__, ##__VA_ARGS__))
 #define STUMBLER_LOG(arg, ...)  MOZ_LOG(GetLog(), mozilla::LogLevel::Info, ("STUMBLER - %s: " arg, __func__, ##__VA_ARGS__))

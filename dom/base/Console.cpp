@@ -309,7 +309,9 @@ private:
 
     MOZ_ASSERT(aWindow->IsInnerWindow());
     nsPIDOMWindow* outerWindow = aWindow->GetOuterWindow();
-    MOZ_ASSERT(outerWindow);
+    if (NS_WARN_IF(!outerWindow)) {
+      return;
+    }
 
     RunConsole(jsapi.cx(), outerWindow, aWindow);
   }
@@ -695,9 +697,13 @@ Console::Console(nsPIDOMWindow* aWindow)
     MOZ_ASSERT(mWindow->IsInnerWindow());
     mInnerID = mWindow->WindowID();
 
+    // Without outerwindow any console message coming from this object will not
+    // shown in the devtools webconsole. But this should be fine because
+    // probably we are shutting down, or the window is CCed/GCed.
     nsPIDOMWindow* outerWindow = mWindow->GetOuterWindow();
-    MOZ_ASSERT(outerWindow);
-    mOuterID = outerWindow->WindowID();
+    if (outerWindow) {
+      mOuterID = outerWindow->WindowID();
+    }
   }
 
   if (NS_IsMainThread()) {

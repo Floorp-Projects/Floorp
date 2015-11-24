@@ -93,7 +93,7 @@ public:
     aLanguages = mProperties.mLanguages;
   }
 
-  void GetUserAgent(nsString& aUserAgent) const;
+  void GetUserAgent(nsString& aUserAgent, ErrorResult& aRv) const;
 
   bool OnLine() const
   {

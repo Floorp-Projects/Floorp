@@ -35,12 +35,6 @@ typedef nsRefPtrHashtable<nsUint32HashKey, dom::DetailedPromise> PromiseHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession> PendingKeySessionsHashMap;
 typedef uint32_t PromiseId;
 
-// Helper function to extract data coming in from JS in an
-// (ArrayBuffer or ArrayBufferView) IDL typed function argument.
-bool
-CopyArrayBufferViewOrArrayBufferData(const ArrayBufferViewOrArrayBuffer& aBufferOrView,
-                                     nsTArray<uint8_t>& aOutData);
-
 // This class is used on the main thread only.
 // Note: it's addref/release is not (and can't be) thread safe!
 class MediaKeys final : public nsISupports,

@@ -90,10 +90,7 @@ public:
     SetHTMLAttr(nsGkAtoms::shape, aShape, aError);
   }
 
-  void GetHref(nsAString& aHref, ErrorResult& aError)
-  {
-    aError = GetHref(aHref);
-  }
+  // The XPCOM GetHref is OK for us
   void SetHref(const nsAString& aHref, ErrorResult& aError)
   {
     aError = SetHref(aHref);
@@ -139,8 +136,8 @@ public:
 
   // The Link::GetOrigin is OK for us
 
-  using Link::GetProtocol;
-  using Link::SetProtocol;
+  // Link::Link::GetProtocol is OK for us
+  // Link::Link::SetProtocol is OK for us
 
   // The Link::GetUsername is OK for us
   // The Link::SetUsername is OK for us
@@ -148,23 +145,23 @@ public:
   // The Link::GetPassword is OK for us
   // The Link::SetPassword is OK for us
 
-  using Link::GetHost;
-  using Link::SetHost;
+  // Link::Link::GetHost is OK for us
+  // Link::Link::SetHost is OK for us
 
-  using Link::GetHostname;
-  using Link::SetHostname;
+  // Link::Link::GetHostname is OK for us
+  // Link::Link::SetHostname is OK for us
 
-  using Link::GetPort;
-  using Link::SetPort;
+  // Link::Link::GetPort is OK for us
+  // Link::Link::SetPort is OK for us
 
-  using Link::GetPathname;
-  using Link::SetPathname;
+  // Link::Link::GetPathname is OK for us
+  // Link::Link::SetPathname is OK for us
 
-  using Link::GetSearch;
-  using Link::SetSearch;
+  // Link::Link::GetSearch is OK for us
+  // Link::Link::SetSearch is OK for us
 
-  using Link::GetHash;
-  using Link::SetHash;
+  // Link::Link::GetHash is OK for us
+  // Link::Link::SetHash is OK for us
 
   // The Link::GetSearchParams is OK for us
 
@@ -178,9 +175,9 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::nohref, aValue, aError);
   }
 
-  void Stringify(nsAString& aResult, ErrorResult& aError)
+  void Stringify(nsAString& aResult)
   {
-    GetHref(aResult, aError);
+    GetHref(aResult);
   }
 
 protected:

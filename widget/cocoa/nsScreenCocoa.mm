@@ -44,7 +44,8 @@ nsScreenCocoa::GetRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t 
 {
   NSRect frame = [mScreen frame];
 
-  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
+  LayoutDeviceIntRect r =
+    nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
 
   *outX = r.x;
   *outY = r.y;
@@ -59,7 +60,8 @@ nsScreenCocoa::GetAvailRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int
 {
   NSRect frame = [mScreen visibleFrame];
 
-  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
+  LayoutDeviceIntRect r =
+    nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
 
   *outX = r.x;
   *outY = r.y;

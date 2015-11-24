@@ -82,7 +82,7 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
   mStateStack.SetLength(1);
   CurrentState().drawTarget = mDT;
   CurrentState().deviceOffset = aDeviceOffset;
-  mDT->SetTransform(Matrix());
+  mDT->SetTransform(GetDTTransform());
 }
 
 /* static */ already_AddRefed<gfxContext>
