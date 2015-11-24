@@ -241,6 +241,7 @@ function mustSign(aType) {
   return REQUIRE_SIGNING || Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false);
 }
 
+const INTEGER = /^[1-9]\d*$/;
 
 // Keep track of where we are in startup for telemetry
 // event happened during XPIDatabase.startup()
@@ -912,8 +913,8 @@ var loadManifestFromWebManifest = Task.async(function* loadManifestFromWebManife
   if (icons) {
     // filter out invalid (non-integer) size keys
     Object.keys(icons)
+          .filter((size) => INTEGER.test(size))
           .map((size) => parseInt(size, 10))
-          .filter((size) => !isNaN(size))
           .forEach((size) => addon.icons[size] = icons[size]);
   }
 
