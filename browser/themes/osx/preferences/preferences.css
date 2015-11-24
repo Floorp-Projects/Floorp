@@ -68,13 +68,11 @@ radio[pane=paneAdvanced] {
   -moz-image-region: rect(0px, 224px, 32px, 192px);
 }
 
-%ifdef MOZ_SERVICES_SYNC
 /* ----- SYNC BUTTON ----- */
 
 radio[pane=paneSync] {
   list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
 }
-%endif
 
 /* These lines should be removed as part of fixing bug 1140495 */
 label.small {
@@ -222,7 +220,6 @@ html|a.inline-link:-moz-focusring {
 }
 
 
-%ifdef MOZ_SERVICES_SYNC
 /* ----- SYNC PANE ----- */
 
 #syncDesc {
@@ -267,5 +264,3 @@ html|a.inline-link:-moz-focusring {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-%endif
