@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "imgINotificationObserver.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
