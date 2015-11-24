@@ -159,16 +159,15 @@ public:
       PromiseWorkerProxy::Create(aWorkerPrivate, aWorkerPromise);
   }
 
-  bool Dispatch(JSContext* aCx)
+  void Dispatch(ErrorResult& aRv)
   {
     if (mPromiseWorkerProxy) {
-      return DataStoreRunnable::Dispatch(aCx);
+      DataStoreRunnable::Dispatch(aRv);
     }
 
     // If the creation of mProxyWorkerProxy failed, the worker is terminating.
     // In this case we don't want to dispatch the runnable and we should stop
     // the promise chain here.
-    return true;
   }
 
   bool Failed() const
@@ -488,7 +487,7 @@ WorkerDataStore::GetName(JSContext* aCx, nsAString& aName, ErrorResult& aRv)
                                    mBackingStore,
                                    &DataStore::GetName,
                                    aName);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
 }
 
 void
@@ -503,7 +502,7 @@ WorkerDataStore::GetOwner(JSContext* aCx, nsAString& aOwner, ErrorResult& aRv)
                                    mBackingStore,
                                    &DataStore::GetOwner,
                                    aOwner);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
 }
 
 bool
@@ -515,7 +514,10 @@ WorkerDataStore::GetReadOnly(JSContext* aCx, ErrorResult& aRv)
 
   RefPtr<DataStoreGetReadOnlyRunnable> runnable =
     new DataStoreGetReadOnlyRunnable(workerPrivate, mBackingStore);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return true; // To be safe, I guess.
+  }
 
   return runnable->mReadOnly;
 }
@@ -544,7 +546,10 @@ WorkerDataStore::Get(JSContext* aCx,
     return nullptr;
   }
 
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (runnable->Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -581,7 +586,10 @@ WorkerDataStore::Put(JSContext* aCx,
     return nullptr;
   }
 
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (NS_FAILED(runnable->ErrorCode())) {
     aRv.Throw(runnable->ErrorCode());
@@ -618,7 +626,10 @@ WorkerDataStore::Add(JSContext* aCx,
     return nullptr;
   }
 
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (NS_FAILED(runnable->ErrorCode())) {
     aRv.Throw(runnable->ErrorCode());
@@ -649,7 +660,10 @@ WorkerDataStore::Remove(JSContext* aCx,
                                 promise,
                                 aId,
                                 aRevisionId);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (runnable->Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -678,7 +692,10 @@ WorkerDataStore::Clear(JSContext* aCx,
                                mBackingStore,
                                promise,
                                aRevisionId);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (runnable->Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -702,7 +719,7 @@ WorkerDataStore::GetRevisionId(JSContext* aCx,
                                    mBackingStore,
                                    &DataStore::GetRevisionId,
                                    aRevisionId);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
 }
 
 // A DataStoreRunnable to run DataStore::GetLength(...) on the main thread.
@@ -752,7 +769,10 @@ WorkerDataStore::GetLength(JSContext* aCx, ErrorResult& aRv)
     new DataStoreGetLengthRunnable(workerPrivate,
                                    mBackingStore,
                                    promise);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (runnable->Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -784,7 +804,10 @@ WorkerDataStore::Sync(JSContext* aCx,
                                    mBackingStore,
                                    workerCursor,
                                    aRevisionId);
-  runnable->Dispatch(aCx);
+  runnable->Dispatch(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   if (runnable->Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
