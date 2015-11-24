@@ -323,6 +323,14 @@ ContainerRenderVR(ContainerT* aContainer,
   DUMP("<<< ContainerRenderVR [%p]\n", aContainer);
 }
 
+static bool
+NeedToDrawCheckerboardingForLayer(Layer* aLayer, Color* aOutCheckerboardingColor)
+{
+  return (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+         aLayer->IsOpaqueForVisibility() &&
+         LayerHasCheckerboardingAPZC(aLayer, aOutCheckerboardingColor);
+}
+
 /* all of the prepared data that we need in RenderLayer() */
 struct PreparedData
 {
@@ -368,7 +376,8 @@ ContainerPrepare(ContainerT* aContainer,
     // We don't want to skip container layers because otherwise their mPrepared
     // may be null which is not allowed.
     if (!layerToRender->GetLayer()->AsContainerLayer()) {
-      if (!layerToRender->GetLayer()->IsVisible()) {
+      if (!layerToRender->GetLayer()->IsVisible() &&
+          !NeedToDrawCheckerboardingForLayer(layerToRender->GetLayer(), nullptr)) {
         CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
         continue;
       }
@@ -533,9 +542,7 @@ RenderLayers(ContainerT* aContainer,
     Layer* layer = layerToRender->GetLayer();
 
     Color color;
-    if ((layer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-        layer->IsOpaqueForVisibility() &&
-        LayerHasCheckerboardingAPZC(layer, &color)) {
+    if (NeedToDrawCheckerboardingForLayer(layer, &color)) {
       if (gfxPrefs::APZHighlightCheckerboardedAreas()) {
         color = Color(255 / 255.f, 188 / 255.f, 217 / 255.f, 1.f); // "Cotton Candy"
       }
