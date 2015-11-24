@@ -439,12 +439,6 @@ pref("media.getusermedia.noise_enabled", false);
 pref("media.getusermedia.aec_enabled", true);
 pref("media.getusermedia.noise_enabled", true);
 #endif
-pref("media.getusermedia.aec_extended_filter", true);
-#if defined(ANDROID)
-pref("media.getusermedia.aec_delay_agnostic", true);
-#else
-pref("media.getusermedia.aec_delay_agnostic", false);
-#endif
 pref("media.getusermedia.noise", 1);
 pref("media.getusermedia.agc_enabled", false);
 pref("media.getusermedia.agc", 1);

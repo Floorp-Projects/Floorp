@@ -101,7 +101,7 @@ struct AecCore {
 
   int mult;  // sampling frequency multiple
   int sampFreq;
-  size_t num_bands;
+  int num_bands;
   uint32_t seed;
 
   float normal_mu;               // stepsize
@@ -142,11 +142,10 @@ struct AecCore {
   int delay_correction_count;
   int shift_offset;
   float delay_quality_threshold;
-  int frame_count;
 
-  // 0 = delay agnostic mode (signal based delay correction) disabled.
-  // Otherwise enabled.
-  int delay_agnostic_enabled;
+  // 0 = reported delay mode disabled (signal based delay correction enabled).
+  // otherwise enabled
+  int reported_delay_enabled;
   // 1 = extended filter mode enabled, 0 = disabled.
   int extended_filter_enabled;
   // Runtime selection of number of filter partitions.
@@ -166,7 +165,6 @@ struct AecCore {
   rtc_WavWriter* nearFile;
   rtc_WavWriter* outFile;
   rtc_WavWriter* outLinearFile;
-  rtc_WavWriter* e_fft_file;
   uint32_t debugWritten;
 #endif
 };

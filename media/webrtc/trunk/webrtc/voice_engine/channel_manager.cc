@@ -46,11 +46,10 @@ ChannelOwner::ChannelRef::ChannelRef(class Channel* channel)
     : channel(channel), ref_count(1) {}
 
 ChannelManager::ChannelManager(uint32_t instance_id, const Config& config)
-    : config_(config),
-      instance_id_(instance_id),
+    : instance_id_(instance_id),
       last_channel_id_(-1),
-      lock_(CriticalSectionWrapper::CreateCriticalSection())
-      {}
+      lock_(CriticalSectionWrapper::CreateCriticalSection()),
+      config_(config) {}
 
 ChannelOwner ChannelManager::CreateChannel() {
   return CreateChannelInternal(config_);
