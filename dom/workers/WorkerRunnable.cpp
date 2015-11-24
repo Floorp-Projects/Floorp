@@ -559,24 +559,6 @@ WorkerMainThreadRunnable::WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
-bool
-WorkerMainThreadRunnable::Dispatch(JSContext* aCx)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  AutoSyncLoopHolder syncLoop(mWorkerPrivate);
-
-  mSyncLoopTarget = syncLoop.EventTarget();
-  RefPtr<WorkerMainThreadRunnable> runnable(this);
-
-  if (NS_FAILED(NS_DispatchToMainThread(runnable.forget(), NS_DISPATCH_NORMAL))) {
-    JS_ReportError(aCx, "Failed to dispatch to main thread!");
-    return false;
-  }
-
-  return syncLoop.Run();
-}
-
 void
 WorkerMainThreadRunnable::Dispatch(ErrorResult& aRv)
 {
