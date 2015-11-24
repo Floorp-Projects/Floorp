@@ -33,7 +33,7 @@ public:
 
     // nsWrapperCache
     WebGLContext* GetParentObject() const {
-        return Context();
+        return mContext;
     }
 
     // NS

@@ -141,6 +141,9 @@ GLenum TextureD3D::getBaseLevelInternalFormat() const
 
 bool TextureD3D::shouldUseSetData(const ImageD3D *image) const
 {
+    if (image->isDirty())
+        return false;
+
     if (!mRenderer->getWorkarounds().setDataFasterThanImageUpload)
     {
         return false;
