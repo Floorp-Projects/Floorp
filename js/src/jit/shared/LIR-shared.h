@@ -1814,6 +1814,52 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     }
 };
 
+class LApplyArrayGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES + 2, 2>
+{
+  public:
+    LIR_HEADER(ApplyArrayGeneric)
+
+    LApplyArrayGeneric(const LAllocation& func, const LAllocation& elements,
+                       const LDefinition& tmpobjreg, const LDefinition& tmpcopy)
+    {
+        setOperand(0, func);
+        setOperand(1, elements);
+        setTemp(0, tmpobjreg);
+        setTemp(1, tmpcopy);
+    }
+
+    MApplyArray* mir() const {
+        return mir_->toApplyArray();
+    }
+
+    bool hasSingleTarget() const {
+        return getSingleTarget() != nullptr;
+    }
+    JSFunction* getSingleTarget() const {
+        return mir()->getSingleTarget();
+    }
+
+    const LAllocation* getFunction() {
+        return getOperand(0);
+    }
+    const LAllocation* getElements() {
+        return getOperand(1);
+    }
+    // argc is mapped to the same register as elements: argc becomes
+    // live as elements is dying, all registers are calltemps.
+    const LAllocation* getArgc() {
+        return getOperand(1);
+    }
+    static const size_t ThisIndex = 2;
+
+    const LDefinition* getTempObject() {
+        return getTemp(0);
+    }
+    const LDefinition* getTempStackCounter() {
+        return getTemp(1);
+    }
+};
+
 class LArraySplice : public LCallInstructionHelper<0, 3, 0>
 {
   public:

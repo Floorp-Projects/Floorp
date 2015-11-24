@@ -6335,6 +6335,17 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Fallback to regular call if arg 2 is not definitely |arguments|.
     if (argument->type() != MIRType_MagicOptimizedArguments) {
+        // Optimize fun.apply(self, array) if the length is sane and there are no holes.
+        TemporaryTypeSet* objTypes = argument->resultTypeSet();
+        if (native && native->isNative() && native->native() == fun_apply &&
+            objTypes &&
+            objTypes->getKnownClass(constraints()) == &ArrayObject::class_ &&
+            !objTypes->hasObjectFlags(constraints(), OBJECT_FLAG_LENGTH_OVERFLOW) &&
+            ElementAccessIsPacked(constraints(), argument))
+        {
+            return jsop_funapplyarray(argc);
+        }
+
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
@@ -6350,6 +6361,43 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Use funapply that definitely uses |arguments|
     return jsop_funapplyarguments(argc);
+}
+
+bool
+IonBuilder::jsop_funapplyarray(uint32_t argc)
+{
+    MOZ_ASSERT(argc == 2);
+
+    int funcDepth = -((int)argc + 1);
+
+    // Extract call target.
+    TemporaryTypeSet* funTypes = current->peek(funcDepth)->resultTypeSet();
+    JSFunction* target = getSingleCallTarget(funTypes);
+
+    // Pop the array agument
+    MDefinition* argObj = current->pop();
+
+    MElements* elements = MElements::New(alloc(), argObj);
+    current->add(elements);
+
+    // Pop the |this| argument.
+    MDefinition* argThis = current->pop();
+
+    // Unwrap the (JSFunction *) parameter.
+    MDefinition* argFunc = current->pop();
+
+    // Pop apply function.
+    MDefinition* nativeFunc = current->pop();
+    nativeFunc->setImplicitlyUsedUnchecked();
+
+    MApplyArray* apply = MApplyArray::New(alloc(), target, argFunc, elements, argThis);
+    current->add(apply);
+    current->push(apply);
+    if (!resumeAfter(apply))
+        return false;
+
+    TemporaryTypeSet* types = bytecodeTypes(pc);
+    return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
 }
 
 bool

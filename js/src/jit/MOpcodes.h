@@ -64,6 +64,7 @@ namespace jit {
     _(ComputeThis)                                                          \
     _(Call)                                                                 \
     _(ApplyArgs)                                                            \
+    _(ApplyArray)                                                           \
     _(ArraySplice)                                                          \
     _(Bail)                                                                 \
     _(Unreachable)                                                          \
