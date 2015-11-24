@@ -73,17 +73,41 @@ MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data fo
 # so don't make this to large!  TODO: make this a size (like 500 megs) rather than an artifact count.
 MAX_CACHED_ARTIFACTS = 6
 
-# TODO: handle multiple artifacts with the same filename.
-# TODO: handle installing binaries from different types of artifacts (.tar.bz2, .dmg, etc).
+
+class ArtifactJob(object):
+    def __init__(self, regexp, log=None):
+        self._regexp = re.compile(regexp)
+        self._log = log
+
+    def log(self, *args, **kwargs):
+        if self._log:
+            self._log(*args, **kwargs)
+
+    def find_candidate_artifacts(self, artifacts):
+        # TODO: Handle multiple artifacts, taking the latest one.
+        for artifact in artifacts:
+            name = artifact['name']
+            if self._regexp.match(name):
+                yield artifact
+            else:
+                self.log(logging.DEBUG, 'artifact',
+                    {'name': name},
+                    'Not yielding artifact named {name} as a candidate artifact')
+
+
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
-    # 'android-api-9': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
-    'android-api-11': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
-    'android-x86': {'re': re.compile('public/build/fennec-(.*)\.android-i386\.apk')},
-    # 'linux': {'re': re.compile('public/build/firefox-(.*)\.linux-i686\.tar\.bz2')},
-    # 'linux64': {'re': re.compile('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2')},
-    # 'macosx64': {'re': re.compile('public/build/firefox-(.*)\.mac\.dmg')},
+    # 'android-api-9': (ArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-api-11': (ArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-x86': (ArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
+    # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
+    # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
+    # 'macosx64': (ArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
 }
+
+def get_job_details(job, log=None):
+    cls, re = JOB_DETAILS[job]
+    return cls(re, log=log)
 
 
 def cachedmethod(cachefunc):
@@ -209,7 +233,7 @@ class TaskCache(CacheManager):
     @cachedmethod(operator.attrgetter('_cache'))
     def artifact_url(self, tree, job, rev):
         try:
-            artifact_re = JOB_DETAILS[job]['re']
+            artifact_job = get_job_details(job, log=self._log)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': job},
@@ -226,22 +250,14 @@ class TaskCache(CacheManager):
             raise ValueError('Task for {key} does not exist (yet)!'.format(key=key))
         taskId = task['taskId']
 
-        # TODO: Make this not Android-only by matching a regular expression.
         artifacts = self._queue.listLatestArtifacts(taskId)['artifacts']
 
-        def names():
-            for artifact in artifacts:
-                name = artifact['name']
-                if artifact_re.match(name):
-                    yield name
-
-        # TODO: Handle multiple artifacts, taking the latest one.
-        for name in names():
+        for artifact in artifact_job.find_candidate_artifacts(artifacts):
             # We can easily extract the task ID from the URL.  We can't easily
             # extract the build ID; we use the .ini files embedded in the
             # downloaded artifact for this.  We could also use the uploaded
             # public/build/buildprops.json for this purpose.
-            url = self._queue.buildUrl('getLatestArtifact', taskId, name)
+            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact['name'])
             return url
         raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
 
@@ -270,7 +286,7 @@ class ArtifactCache(CacheManager):
             self.log(logging.INFO, 'artifact',
                 {'filename': value},
                 'Purged artifact {filename}')
-        except IOError:
+        except (OSError, IOError):
             pass
 
     @cachedmethod(operator.attrgetter('_cache'))
