@@ -15,6 +15,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
+                                  "resource://gre/modules/GMPInstallManager.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+                                  "resource://gre/modules/Messaging.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 function getPref(func, preference, defaultValue) {
@@ -30,6 +36,7 @@ function getPref(func, preference, defaultValue) {
 // -----------------------------------------------------------------------
 
 const PREF_ADDON_UPDATE_ENABLED  = "extensions.autoupdate.enabled";
+const PREF_ADDON_UPDATE_INTERVAL = "extensions.autoupdate.interval";
 
 var gNeedsRestart = false;
 
@@ -50,6 +57,17 @@ AddonUpdateService.prototype = {
       return;
 
     AddonManagerPrivate.backgroundUpdateCheck();
+
+    let gmp = new GMPInstallManager();
+    gmp.simpleCheckAndInstall().then(null, () => {});
+
+    let interval = 1000 * getPref("getIntPref", PREF_ADDON_UPDATE_INTERVAL, 86400);
+    Messaging.sendRequest({
+      type: "Gecko:ScheduleRun",
+      action: "update-addons",
+      trigger: interval,
+      interval: interval,
+    });
   }
 };
 
