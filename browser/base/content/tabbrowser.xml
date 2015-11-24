@@ -856,19 +856,28 @@
       <method name="setIcon">
         <parameter name="aTab"/>
         <parameter name="aURI"/>
+        <parameter name="aLoadingPrincipal"/>
         <body>
           <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
+            let browser = this.getBrowserForTab(aTab);
             browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
 
             if (aURI && this.mFaviconService) {
-              if (!(aURI instanceof Ci.nsIURI))
+              if (!(aURI instanceof Ci.nsIURI)) {
                 aURI = makeURI(aURI);
-              this.mFaviconService.setAndFetchFaviconForPage(browser.currentURI,
-                                                             aURI, false,
-                                                             PrivateBrowsingUtils.isWindowPrivate(window) ?
-                                                               this.mFaviconService.FAVICON_LOAD_PRIVATE :
-                                                               this.mFaviconService.FAVICON_LOAD_NON_PRIVATE);
+              }
+              // We do not serialize the principal from within SessionStore.jsm,
+              // hence if aLoadingPrincipal is null we default to the
+              // systemPrincipal which will allow the favicon to load.
+              let loadingPrincipal = aLoadingPrincipal
+                ? aLoadingPrincipal
+                : Services.scriptSecurityManager.getSystemPrincipal();
+              let loadType = PrivateBrowsingUtils.isWindowPrivate(window)
+                ? this.mFaviconService.FAVICON_LOAD_PRIVATE
+                : this.mFaviconService.FAVICON_LOAD_NON_PRIVATE;
+
+              this.mFaviconService.setAndFetchFaviconForPage(
+                browser.currentURI, aURI, false, loadType, null, loadingPrincipal);
             }
 
             let sizedIconUrl = browser.mIconURL || "";
@@ -932,7 +941,7 @@
               if (!this.isFailedIcon(url))
                 icon = url;
             }
-            this.setIcon(aTab, icon);
+            this.setIcon(aTab, icon, browser.contentPrincipal);
           ]]>
         </body>
       </method>
@@ -2522,7 +2531,7 @@
               // Workarounds for bug 458697
               // Icon might have been set on DOMLinkAdded, don't override that.
               if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
-                this.setIcon(aOurTab, otherBrowser.mIconURL);
+                this.setIcon(aOurTab, otherBrowser.mIconURL, otherBrowser.contentPrincipal);
               var isBusy = aOtherTab.hasAttribute("busy");
               if (isBusy) {
                 aOurTab.setAttribute("busy", "true");
@@ -4444,7 +4453,7 @@
           }
 
           tab.removeAttribute("soundplaying");
-          this.setIcon(tab, icon);
+          this.setIcon(tab, icon, browser.contentPrincipal);
         ]]>
       </handler>
       <handler event="DOMAudioPlaybackStarted">
