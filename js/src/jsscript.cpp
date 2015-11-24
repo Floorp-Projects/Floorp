@@ -2820,9 +2820,9 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     }
 
     if (script->bindings.count() != 0) {
-	// Make sure bindings are sufficiently aligned.
-	cursor = reinterpret_cast<uint8_t*>
-	    (JS_ROUNDUP(reinterpret_cast<uintptr_t>(cursor), JS_ALIGNMENT_OF(Binding)));
+        // Make sure bindings are sufficiently aligned.
+        cursor = reinterpret_cast<uint8_t*>
+            (JS_ROUNDUP(reinterpret_cast<uintptr_t>(cursor), JS_ALIGNMENT_OF(Binding)));
     }
     cursor = script->bindings.switchToScriptStorage(reinterpret_cast<Binding*>(cursor));
 
@@ -3400,7 +3400,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     /* Script data */
 
     size_t size = src->dataSize();
-    uint8_t* data = AllocScriptData(cx->zone(), size);
+    ScopedJSFreePtr<uint8_t> data(AllocScriptData(cx->zone(), size));
     if (size && !data) {
         ReportOutOfMemory(cx);
         return false;
@@ -3499,9 +3499,9 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->bindings = bindings;
 
     /* This assignment must occur before all the Rebase calls. */
-    dst->data = data;
+    dst->data = data.forget();
     dst->dataSize_ = size;
-    memcpy(data, src->data, size);
+    memcpy(dst->data, src->data, size);
 
     /* Script filenames, bytecodes and atoms are runtime-wide. */
     dst->setCode(src->code());
