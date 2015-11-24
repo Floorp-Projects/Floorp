@@ -172,7 +172,7 @@ function editableItem(options, callback) {
   };
 }
 
-exports.editableItem = this.editableItem;
+exports.editableItem = editableItem;
 
 /*
  * Various API consumers (especially tests) sometimes want to grab the

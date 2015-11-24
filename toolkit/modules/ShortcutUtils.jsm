@@ -109,3 +109,5 @@ var ShortcutUtils = {
 };
 
 Object.freeze(ShortcutUtils);
+
+this.ShortcutUtils = ShortcutUtils;

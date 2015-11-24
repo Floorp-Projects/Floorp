@@ -50,6 +50,9 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector) {
  * opened
  */
 function* runAddAttributesTest(test, selector, inspector) {
+  if (test.setUp) {
+    test.setUp(inspector);
+  }
   let element = getNode(selector);
 
   info("Starting add-attribute test: " + test.desc);
@@ -68,6 +71,9 @@ function* runAddAttributesTest(test, selector, inspector) {
 
   info("Assert that the attribute(s) has/have been removed correctly");
   yield assertAttributes(selector, {});
+  if (test.tearDown) {
+    test.tearDown(inspector);
+  }
 }
 
 /**

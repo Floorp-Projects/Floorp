@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   runSafeSyncWithoutClone,
+  LocaleData,
   MessageBroker,
   Messenger,
   injectAPI,
@@ -92,6 +93,12 @@ var api = context => { return {
     },
 
     inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
+  },
+
+  i18n: {
+    getMessage: function(messageName, substitutions) {
+      return context.extension.localizeMessage(messageName, substitutions);
+    },
   },
 }};
 
@@ -447,6 +454,8 @@ function BrowserExtensionContent(data)
   this.webAccessibleResources = data.webAccessibleResources;
   this.whiteListedHosts = data.whiteListedHosts;
 
+  this.localeData = new LocaleData(data.localeData);
+
   this.manifest = data.manifest;
   this.baseURI = Services.io.newURI(data.baseURL, null, null);
 
@@ -463,6 +472,14 @@ BrowserExtensionContent.prototype = {
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       ExtensionManagement.shutdownExtension(this.uuid);
     }
+  },
+
+  localizeMessage(...args) {
+    return this.localeData.localizeMessage(...args);
+  },
+
+  localize(...args) {
+    return this.localeData.localize(...args);
   },
 };
 
