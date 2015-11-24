@@ -33,7 +33,6 @@ loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js
 /* XPCOM gunk */
 this.SpecialPowersObserver = function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
-  this._mmIsGlobal = true;
   this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
                          getService(Ci.nsIMessageBroadcaster);
 }
@@ -101,19 +100,14 @@ SpecialPowersObserver.prototype._loadFrameScript = function()
 
 SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg)
 {
-  if (this._mmIsGlobal) {
-    this._messageManager.broadcastAsyncMessage(msgname, msg);
-  }
-  else {
-    this._messageManager.sendAsyncMessage(msgname, msg);
-  }
+  this._messageManager.broadcastAsyncMessage(msgname, msg);
 };
 
 SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
   return this._receiveMessageAPI(aMessage);
 };
 
-SpecialPowersObserver.prototype.init = function(messageManager)
+SpecialPowersObserver.prototype.init = function()
 {
   var obs = Services.obs;
   obs.addObserver(this, "chrome-document-global-created", false);
@@ -132,11 +126,6 @@ SpecialPowersObserver.prototype.init = function(messageManager)
                  autoRegister(manifestFile);
 
   obs.addObserver(this, "http-on-modify-request", false);
-
-  if (messageManager) {
-    this._messageManager = messageManager;
-    this._mmIsGlobal = false;
-  }
 
   this._loadFrameScript();
 };
@@ -178,10 +167,6 @@ SpecialPowersObserver.prototype.uninit = function()
     this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT);
     this._isFrameScriptLoaded = false;
   }
-
-  this._mmIsGlobal = true;
-  this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-    getService(Ci.nsIMessageBroadcaster);
 };
 
 SpecialPowersObserver.prototype._addProcessCrashObservers = function() {
