@@ -4644,7 +4644,7 @@ mozilla::BrowserTabsRemoteAutostart()
   // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and
   // autostart set to true, return enabled.  These tests must be allowed to run
   // remotely. Otherwise remote isn't allowed in non-nightly builds.
-  bool testPref = gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
+  bool testPref = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
   if (testPref && optInPref) {
     gBrowserTabsRemoteAutostart = true;
   }
@@ -4672,8 +4672,8 @@ mozilla::BrowserTabsRemoteAutostart()
   // e10s auto start on mac.
   if (gBrowserTabsRemoteAutostart) {
     // Check prefs
-    bool accelDisabled = gfxPrefs::GetSingleton().LayersAccelerationDisabled() &&
-                         !gfxPrefs::LayersAccelerationForceEnabled();
+    bool accelDisabled = Preferences::GetBool("layers.acceleration.disabled", false) &&
+                         !Preferences::GetBool("layers.acceleration.force-enabled", false);
 
     accelDisabled = accelDisabled || !nsCocoaFeatures::AccelerateByDefault();
 
