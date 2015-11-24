@@ -849,6 +849,10 @@ Channel::Channel(int32_t channelId,
 
     Config audioproc_config;
     audioproc_config.Set<ExperimentalAgc>(new ExperimentalAgc(false));
+    audioproc_config.Set<ExtendedFilter>(
+      new ExtendedFilter(config.Get<ExtendedFilter>().enabled));
+    audioproc_config.Set<DelayAgnostic>(
+      new DelayAgnostic(config.Get<DelayAgnostic>().enabled));
     rx_audioproc_.reset(AudioProcessing::Create(audioproc_config));
 }
 
