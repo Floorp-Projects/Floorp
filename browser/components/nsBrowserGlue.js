@@ -1341,6 +1341,8 @@ BrowserGlue.prototype = {
 
 #ifdef E10S_TESTING_ONLY
     E10SUINotification.checkStatus();
+#else
+    E10SAccessibilityCheck.init();
 #endif
   },
 
@@ -3343,7 +3345,91 @@ var E10SUINotification = {
     win.PopupNotifications.show(browser, "a11y_enabled_with_e10s", promptMessage, null, mainAction, secondaryActions, options);
   },
 };
-#endif
+
+#else // E10S_TESTING_ONLY
+
+var E10SAccessibilityCheck = {
+  init: function() {
+    Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
+    if (Services.appinfo.accessibilityIsBlacklistedForE10S) {
+      this._showE10sAccessibilityWarning();
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  observe: function(subject, topic, data) {
+    if (topic == "a11y-init-or-shutdown"
+        && data == "1" &&
+        Services.appinfo.accessibilityIsBlacklistedForE10S) {
+      this._showE10sAccessibilityWarning();
+    }
+  },
+
+  _warnedAboutAccessibility: false,
+
+  _showE10sAccessibilityWarning: function() {
+    try {
+      if (!Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y")) {
+        // Only return if the pref exists and was set to false, but not
+        // if the pref didn't exist (which will throw).
+        return;
+      }
+    } catch (e) { }
+
+    Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", true);
+
+    if (this._warnedAboutAccessibility ||
+        !Services.appinfo.browserTabsRemoteAutostart) {
+      return;
+    }
+    this._warnedAboutAccessibility = true;
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win) {
+      // Just restart immediately.
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      return;
+    }
+
+    let browser = win.gBrowser.selectedBrowser;
+
+    let promptMessage = win.gNavigatorBundle.getFormattedString(
+                          "e10s.accessibilityNotice.mainMessage",
+                          [gBrandBundle.GetStringFromName("brandShortName")]
+                        );
+    let mainAction = {
+      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.label"),
+      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.accesskey"),
+      callback: function () {
+        // Restart the app
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+        if (cancelQuit.data)
+          return; // somebody canceled our quit request
+        Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      }
+    };
+    let secondaryActions = [
+      {
+        label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.accesskey"),
+        callback: function () {
+          Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", false);
+        }
+      }
+    ];
+    let options = {
+      popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
+      learnMoreURL: "https://wiki.mozilla.org/Electrolysis",
+      persistWhileVisible: true
+    };
+
+    win.PopupNotifications.show(browser, "a11y_enabled_with_e10s", promptMessage, null, mainAction, secondaryActions, options);
+  },
+};
+
+#endif // E10S_TESTING_ONLY
 
 var components = [BrowserGlue, ContentPermissionPrompt, AboutNewTabService];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
