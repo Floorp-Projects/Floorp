@@ -21,11 +21,9 @@
  *       - SystemAllocPolicy: No extra functionality over bare allocators.
  *
  *       - TempAllocPolicy: Adds automatic error reporting to the provided
- *         JSContext when allocations fail.
+ *         Context when allocations fail.
  *
- *       - RuntimeAllocPolicy: Forwards to the JSRuntime MallocProvider.
- *
- *       - ZoneAllocPolicy: Forwards to the Zone MallocProvider.
+ *       - RuntimeAllocPolicy: forwards to the JSRuntime MallocProvider.
  *
  *   - MallocProvider. A mixin base class that handles automatically updating
  *     the GC's state in response to allocations that are tied to a GC lifetime
