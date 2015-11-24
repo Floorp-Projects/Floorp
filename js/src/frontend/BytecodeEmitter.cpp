@@ -2189,6 +2189,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_DOWHILE:
       case PNK_WHILE:
       case PNK_FOR:
+      case PNK_COMPREHENSIONFOR:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -2347,9 +2348,9 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
-      case PNK_FORIN:           // by PNK_FOR
-      case PNK_FOROF:           // by PNK_FOR
-      case PNK_FORHEAD:         // by PNK_FOR
+      case PNK_FORIN:           // by PNK_FOR/PNK_COMPREHENSIONFOR
+      case PNK_FOROF:           // by PNK_FOR/PNK_COMPREHENSIONFOR
+      case PNK_FORHEAD:         // by PNK_FOR/PNK_COMPREHENSIONFOR
       case PNK_CLASSMETHOD:     // by PNK_CLASS
       case PNK_CLASSNAMES:      // by PNK_CLASS
       case PNK_CLASSMETHODLIST: // by PNK_CLASS
@@ -5425,8 +5426,14 @@ bool
 BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn)
 {
     MOZ_ASSERT(type == StmtType::FOR_OF_LOOP || type == StmtType::SPREAD);
-    MOZ_ASSERT_IF(type == StmtType::FOR_OF_LOOP, pn && pn->pn_left->isKind(PNK_FOROF));
-    MOZ_ASSERT_IF(type == StmtType::SPREAD, !pn);
+#ifdef DEBUG
+    if (type == StmtType::FOR_OF_LOOP) {
+        MOZ_ASSERT(pn);
+        MOZ_ASSERT(pn->pn_left->isKind(PNK_FOROF));
+    } else {
+        MOZ_ASSERT(!pn);
+    }
+#endif
 
     ptrdiff_t top = offset();
     ParseNode* forHead = pn ? pn->pn_left : nullptr;
@@ -7974,6 +7981,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_FOR:
+      case PNK_COMPREHENSIONFOR:
         if (!emitFor(pn))
             return false;
         break;
