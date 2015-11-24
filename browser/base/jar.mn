@@ -120,7 +120,6 @@ browser.jar:
         content/browser/pageinfo/feeds.xml            (content/pageinfo/feeds.xml)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
-#ifdef MOZ_SERVICES_SYNC
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
 *       content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
         content/browser/sync/aboutSyncTabs.css        (content/sync/aboutSyncTabs.css)
@@ -136,7 +135,6 @@ browser.jar:
 *       content/browser/sync/customize.xul            (content/sync/customize.xul)
         content/browser/sync/customize.js             (content/sync/customize.js)
         content/browser/sync/customize.css            (content/sync/customize.css)
-#endif
         content/browser/safeMode.css                  (content/safeMode.css)
         content/browser/safeMode.js                   (content/safeMode.js)
         content/browser/safeMode.xul                  (content/safeMode.xul)

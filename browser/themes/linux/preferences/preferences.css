@@ -1,11 +1,9 @@
-%if 0
 /*
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
-%endif
 
 /* Global Styles */
 #BrowserPreferences radio[pane] {
@@ -48,11 +46,9 @@ radio[pane=paneAdvanced] {
   -moz-image-region: rect(0px, 224px, 32px, 192px)
 }
 
-%ifdef MOZ_SERVICES_SYNC
 radio[pane=paneSync] {
   list-style-image: url("chrome://browser/skin/preferences/Options-sync.png") !important;
 }
-%endif
 
 /* These lines should be removed as part of fixing bug 1140495 */
 label.small {
@@ -165,7 +161,6 @@ label.small {
   margin-top: 0;
 }
 
-%ifdef MOZ_SERVICES_SYNC
 /* Sync Pane */
 
 #syncDesc {
@@ -210,5 +205,3 @@ label.small {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-%endif
