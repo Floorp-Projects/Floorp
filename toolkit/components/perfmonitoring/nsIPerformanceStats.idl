@@ -23,7 +23,7 @@
  * performance groups: an add-on, a webpage without its frames, a
  * webpage with all its frames, the entire JS runtime, ...
  */
-[scriptable, builtinclass, uuid(a91215f5-e253-47cb-9ef3-998b99ea0709)]
+[scriptable, builtinclass, uuid(994c56be-939a-4f20-8364-124f6422d86a)]
 interface nsIPerformanceGroupDetails: nsISupports {
   /**
    * An identifier unique to the component.
@@ -61,6 +61,11 @@ interface nsIPerformanceGroupDetails: nsISupports {
    * The process running this group.
    */
   readonly attribute unsigned long long processId;
+
+  /**
+   * `true` if the code is executed in a content process, `false` otherwise.
+   */
+  readonly attribute bool isContentProcess;
 };
 
 /**
@@ -70,7 +75,7 @@ interface nsIPerformanceGroupDetails: nsISupports {
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, builtinclass, uuid(89440555-dd81-4a22-8747-049bcf0ab586)]
+[scriptable, builtinclass, uuid(8a635d4b-aa56-466b-9a7d-9f91ca9405ef)]
 interface nsIPerformanceStats: nsIPerformanceGroupDetails {
   /**
    * Total amount of time spent executing code in this group, in
@@ -100,7 +105,7 @@ interface nsIPerformanceStats: nsIPerformanceGroupDetails {
 /**
  * A snapshot of the performance data of the process.
  */
-[scriptable, builtinclass, uuid(be11e640-66cc-472f-8e74-58be6b70d0ca)]
+[scriptable, builtinclass, uuid(13cc235b-739e-4690-b0e3-d89cbe036a93)]
 interface nsIPerformanceSnapshot: nsISupports {
   /**
    * Data on all individual components.
@@ -118,7 +123,77 @@ interface nsIPerformanceSnapshot: nsISupports {
   nsIPerformanceStats getProcessData();
 };
 
-[scriptable, builtinclass, uuid(aad18f7c-9ff7-4e22-8cd1-60ab0b57c698)]
+/**
+ * A performance alert.
+ */
+[scriptable, function, uuid(463c92d9-2e55-4f57-9b22-7badbbdfb2b7)]
+interface nsIPerformanceAlert: nsISupports {
+  // Alert was caused by jank exceeding the threshold.
+  const unsigned long REASON_JANK = 0;
+
+  /**
+   * The reason for the alert.
+   */
+  readonly attribute unsigned long reason;
+
+  /**
+   * Longest interval spent executing code in this group
+   * since the latest alert, in microseconds.
+   */
+  readonly attribute unsigned long long highestJank;
+
+  /**
+   * Longest interval spent executing CPOW in this group
+   * since the latest alert, in microseconds.
+   */
+  readonly attribute unsigned long long highestCPOW;
+};
+
+
+/**
+ * An observer for slow performance alerts.
+ */
+[scriptable, function, uuid(b746a929-3fec-420b-8ed8-c35d71995e05)]
+interface nsIPerformanceObserver: nsISupports {
+  /**
+   * @param target The performance group that caused the jank.
+   * @param alert The performance cost that triggered the alert.
+   */
+  void observe(in nsIPerformanceGroupDetails target, in nsIPerformanceAlert alert);
+};
+
+
+/**
+ * A part of the system that may be observed for slow performance.
+ */
+[scriptable, builtinclass, uuid(b85720d0-e328-4342-9e46-8ca1acf8c70e)]
+interface nsIPerformanceObservable: nsISupports {
+  /**
+   * If a single group is being observed, information on this group.
+   */
+  readonly attribute nsIPerformanceGroupDetails target;
+
+  /**
+   * Add an observer that will be informed in case of jank.
+   *
+   * Set `jankAlertThreshold` to determine how much jank is needed
+   * to trigger alerts.
+   *
+   * If the same observer is added more than once, it will be
+   * triggered as many times as it has been added.
+   */
+  void addJankObserver(in nsIPerformanceObserver observer);
+
+  /**
+   * Remove an observer previously added with `addJankObserver`.
+   *
+   * Noop if the observer hasn't been added.
+   */
+  void removeJankObserver(in nsIPerformanceObserver observer);
+};
+
+
+[scriptable, uuid(5675d1d9-638e-4af0-9392-b04aacfad79a)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
    * `true` if we should monitor CPOW, `false` otherwise.
@@ -141,7 +216,51 @@ interface nsIPerformanceStatsService : nsISupports {
    * Capture a snapshot of the performance data.
    */
   [implicit_jscontext] nsIPerformanceSnapshot getSnapshot();
+
+  /**
+   * The threshold, in microseconds, above which a performance group is
+   * considered "slow" and should raise performance alerts.
+   */
+  attribute unsigned long long jankAlertThreshold;
+
+  /**
+   * A buffering delay, in milliseconds, used by the service to
+   * regroup performance alerts, before observers are actually
+   * noticed. Higher delays let the system avoid redundant
+   * notifications for the same group, and are generally better for
+   * performance.
+   */
+  attribute unsigned long jankAlertBufferingDelay;
+
+  /**
+   * Get a nsIPerformanceObservable representing an add-on. This
+   * observable may then be used to (un)register for watching
+   * performance alerts for this add-on.
+   *
+   * Note that this method has no way of finding out whether an add-on with this
+   * id is installed on the system. Also note that this covers only the current
+   * process.
+   *
+   * Use special add-on name "*" to get an observable that may be used
+   * to (un)register for watching performance alerts of all add-ons at
+   * once.
+   */
+  nsIPerformanceObservable getObservableAddon(in AString addonId);
+
+  /**
+   * Get a nsIPerformanceObservable representing a DOM window. This
+   * observable may then be used to (un)register for watching
+   * performance alerts for this window.
+   *
+   * Note that this covers only the current process.
+   *
+   * Use special window id 0 to get an observable that may be used to
+   * (un)register for watching performance alerts of all windows at
+   * once.
+   */
+  nsIPerformanceObservable getObservableWindow(in unsigned long long windowId);
 };
+
 
 %{C++
 #define NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID {0xfd7435d4, 0x9ec4, 0x4699, \
