@@ -24,7 +24,7 @@ static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = { FloatRegisters::inva
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = { FloatRegisters::invalid_reg };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::invalid_reg };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = { FloatRegisters::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = { FloatRegisters::invalid_reg };
 static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_reg };
 
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = { Registers::invalid_reg };

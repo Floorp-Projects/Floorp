@@ -63,10 +63,8 @@ uint32_t
 js::jit::FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 {
     SetType all = s.bits();
-    SetType float32x4Set =
-        (all >> (uint32_t(Codes::Float32x4) * Codes::TotalPhys)) & Codes::AllPhysMask;
-    SetType int32x4Set =
-        (all >> (uint32_t(Codes::Int32x4) * Codes::TotalPhys)) & Codes::AllPhysMask;
+    SetType set128b =
+        (all >> (uint32_t(Codes::Simd128) * Codes::TotalPhys)) & Codes::AllPhysMask;
     SetType doubleSet =
         (all >> (uint32_t(Codes::Double) * Codes::TotalPhys)) & Codes::AllPhysMask;
     SetType singleSet =
@@ -75,7 +73,6 @@ js::jit::FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
     // PushRegsInMask pushes the largest register first, and thus avoids pushing
     // aliased registers. So we have to filter out the physical registers which
     // are already pushed as part of larger registers.
-    SetType set128b = int32x4Set | float32x4Set;
     SetType set64b = doubleSet & ~set128b;
     SetType set32b = singleSet & ~set64b  & ~set128b;
 
