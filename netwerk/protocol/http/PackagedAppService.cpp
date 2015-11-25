@@ -1129,7 +1129,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
 
   nsCOMPtr<nsIURI> uri;
-  rv = principal->GetURI(getter_AddRefs(uri));
+  rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("[%p]    > Error calling GetURI rv=%X\n", this, rv));
     return rv;
