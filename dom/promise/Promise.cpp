@@ -798,17 +798,22 @@ Promise::CallInitFunction(const GlobalObject& aGlobal,
   aRv.WouldReportJSException();
 
   if (aRv.Failed()) {
-    // We want the same behavior as this JS implementation:
+    // There are two possibilities here.  Either we've got a rethrown exception,
+    // or we reported that already and synthesized a generic NS_ERROR_FAILURE on
+    // the ErrorResult.  In the former case, it doesn't much matter how we get
+    // the exception JS::Value from the ErrorResult to us, since we'll just end
+    // up wrapping it into the right compartment as needed if we hand it to
+    // someone.  But in the latter case we have to ensure that the new exception
+    // object we create is created in our reflector compartment, not in our
+    // current compartment, because in the case when we're a Promise constructor
+    // called over Xrays creating it in the current compartment would mean
+    // rejecting with a value that can't be accessed by code that can call
+    // then() on this Promise.
     //
-    // function Promise(arg) { try { arg(a, b); } catch (e) { this.reject(e); }}
-    //
-    // In particular, that means not using MaybeReject(aRv) here, since that
-    // would create the exception object in our reflector compartment, while we
-    // want to create it in whatever the current compartment on cx is.
-    JS::Rooted<JS::Value> value(cx);
-    DebugOnly<bool> conversionResult = ToJSValue(cx, aRv, &value);
-    MOZ_ASSERT(conversionResult);
-    MaybeRejectInternal(cx, value);
+    // Luckily, MaybeReject(aRv) does exactly what we want here: it enters our
+    // reflector compartment before trying to produce a JS::Value from the
+    // ErrorResult.
+    MaybeReject(aRv);
   }
 }
 
