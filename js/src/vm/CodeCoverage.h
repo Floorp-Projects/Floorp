@@ -37,16 +37,12 @@ class LCovSource
 
     // Whether the current source is complete and if it can be flushed.
     bool isComplete() const {
-        return hasFilename_ && hasScripts_;
+        return hasFilename_ && hasTopLevelScript_;
     }
 
-    // Visit all JSScript in pre-order, and collect the lcov output based on
-    // the ScriptCounts counters.
-    //
-    // In case of the where this function is called during the finalization,
-    // this assumes that all of the children scripts are still alive, and
-    // not finalized yet.
-    bool writeTopLevelScript(JSScript* script);
+    // Iterate over the bytecode and collect the lcov output based on the
+    // ScriptCounts counters.
+    bool writeScript(JSScript* script);
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.
@@ -58,10 +54,6 @@ class LCovSource
   private:
     // Write the script name in out.
     bool writeScriptName(LSprinter& out, JSScript* script);
-
-    // Iterate over the bytecode and collect the lcov output based on the
-    // ScriptCounts counters.
-    bool writeScript(JSScript* script);
 
   private:
     // Weak pointer of the Script Source Object used by the current source.
@@ -89,7 +81,7 @@ class LCovSource
 
     // Status flags.
     bool hasFilename_ : 1;
-    bool hasScripts_ : 1;
+    bool hasTopLevelScript_ : 1;
 };
 
 class LCovCompartment

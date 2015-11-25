@@ -3097,7 +3097,7 @@ JSScript::finalize(FreeOp* fop)
 
     // Collect code coverage information for this script and all its inner
     // scripts, and store the aggregated information on the compartment.
-    if (isTopLevel() && fop->runtime()->lcovOutput.isEnabled())
+    if (fop->runtime()->lcovOutput.isEnabled())
         compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), sourceObject(), this);
 
     fop->runtime()->spsProfiler.onScriptFinalized(this);
