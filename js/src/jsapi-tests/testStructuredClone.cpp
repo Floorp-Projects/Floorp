@@ -214,10 +214,10 @@ BEGIN_TEST(testStructuredClone_SavedFrame)
                 CHECK(f.getPrincipals() == pp->principals);
             }
 
-            CHECK(js::EqualStrings(f.getSource(), srcFrame->getSource()));
+            CHECK(EqualStrings(f.getSource(), srcFrame->getSource()));
             CHECK(f.getLine() == srcFrame->getLine());
             CHECK(f.getColumn() == srcFrame->getColumn());
-            CHECK(js::EqualStrings(f.getFunctionDisplayName(), srcFrame->getFunctionDisplayName()));
+            CHECK(EqualStrings(f.getFunctionDisplayName(), srcFrame->getFunctionDisplayName()));
 
             srcFrame = srcFrame->getParent();
         }

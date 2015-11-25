@@ -21,7 +21,7 @@ bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
 
 /* Get the compile options used when compiling self hosted code. */
 void
-FillSelfHostingCompileOptions(JS::CompileOptions& options, const char* filename);
+FillSelfHostingCompileOptions(JS::CompileOptions& options);
 
 } /* namespace js */
 

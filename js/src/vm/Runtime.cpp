@@ -355,21 +355,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     return true;
 }
 
-bool
-JSRuntime::completeInitialization(JSContext* cx)
-{
-    MOZ_ASSERT(!hasContentGlobals);
-    hasContentGlobals = true;
-    if (parentRuntime)
-        return true;
-
-    MOZ_ASSERT(!parentRuntime);
-    MOZ_ASSERT(!permanentAtoms);
-    MOZ_ASSERT(selfHostingGlobal_);
-    JSAutoRequest ar(cx);
-    return transformToPermanentAtoms(cx);
-}
-
 JSRuntime::~JSRuntime()
 {
     MOZ_ASSERT(!isHeapBusy());
