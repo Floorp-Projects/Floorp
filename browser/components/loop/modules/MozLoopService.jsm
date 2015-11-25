@@ -875,10 +875,11 @@ var MozLoopServiceInternal = {
    */
   hangupAllChatWindows() {
     let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
-    [...Chat.chatboxes].filter(isLoopURL).forEach(chatbox => {
+    let loopChatWindows = [...Chat.chatboxes].filter(isLoopURL);
+    for (let chatbox of loopChatWindows) {
       let window = chatbox.content.contentWindow;
       window.dispatchEvent(new window.CustomEvent("LoopHangupNow"));
-    });
+    }
   },
 
   /**
