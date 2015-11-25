@@ -161,8 +161,8 @@ def WebIDLTest(parser, harness):
                  "MozMap<object>", "MozMap<Dict>", "MozMap<long>",
                  "long[]", "short[]", "Date", "Date?", "any",
                  "Promise<any>", "Promise<any>?",
-                 "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer", "SharedArrayBufferView",
-                 "Uint8Array", "SharedUint8Array", "Uint16Array", "SharedUint16Array" ]
+                 "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer",
+                 "Uint8Array", "Uint16Array" ]
     # When we can parse Date and RegExp, we need to add them here.
 
     # Try to categorize things a bit to keep list lengths down
@@ -179,7 +179,7 @@ def WebIDLTest(parser, harness):
     nonObjects = primitives + strings
     objects = allBut(argTypes, nonObjects )
     bufferSourceTypes = ["ArrayBuffer", "ArrayBufferView", "Uint8Array", "Uint16Array"]
-    sharedBufferSourceTypes = ["SharedArrayBuffer", "SharedArrayBufferView", "SharedUint8Array", "SharedUint16Array"]
+    sharedBufferSourceTypes = ["SharedArrayBuffer"]
     interfaces = [ "Interface", "Interface?", "AncestorInterface",
                    "UnrelatedInterface", "ImplementedInterface" ] + bufferSourceTypes + sharedBufferSourceTypes
     nullables = ["long?", "short?", "boolean?", "Interface?",
@@ -247,9 +247,6 @@ def WebIDLTest(parser, harness):
     setDistinguishable("Uint8Array", allBut(argTypes, ["ArrayBufferView", "Uint8Array", "object"]))
     setDistinguishable("Uint16Array", allBut(argTypes, ["ArrayBufferView", "Uint16Array", "object"]))
     setDistinguishable("SharedArrayBuffer", allBut(argTypes, ["SharedArrayBuffer", "object"]))
-    setDistinguishable("SharedArrayBufferView", allBut(argTypes, ["SharedArrayBufferView", "SharedUint8Array", "SharedUint16Array", "object"]))
-    setDistinguishable("SharedUint8Array", allBut(argTypes, ["SharedArrayBufferView", "SharedUint8Array", "object"]))
-    setDistinguishable("SharedUint16Array", allBut(argTypes, ["SharedArrayBufferView", "SharedUint16Array", "object"]))
 
     def areDistinguishable(type1, type2):
         return data[type1].get(type2, False)
