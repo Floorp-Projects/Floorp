@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    function vendGetter(name) {
+      return function() { throw "Getting " + String(name) };
+    }
+    function vendSetter(name) {
+      return function() { throw "Setting " + String(name) };
+    }
+    var setupThrew = false;
+    try {
+      // Neuter everything we can think of on Promise.
+      for (var obj of [Promise, Promise.prototype]) {
+        propNames = Object.getOwnPropertyNames(obj);
+        propNames = propNames.concat(Object.getOwnPropertySymbols(obj));
+        for (var propName of propNames) {
+          if (propName == "prototype" && obj == Promise) {
+            // It's not configurable
+            continue;
+          }
+          Object.defineProperty(obj, propName,
+            { get: vendGetter(propName), set: vendSetter(propName) });
+        }
+      }
+    } catch (e) {
+      // Something went wrong.  Save that info so the test can check for it.
+      setupThrew = e;
+    }
+  </script>
+</html>
