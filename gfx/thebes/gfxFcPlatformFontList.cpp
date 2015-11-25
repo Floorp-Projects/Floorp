@@ -1318,6 +1318,8 @@ bool
 gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
                                              nsAString& aFamilyName)
 {
+    aFamilyName.Truncate();
+
     // The fontconfig list of fonts includes generic family names in the
     // font list. For these, just use the generic name.
     if (aFontName.EqualsLiteral("serif") ||
@@ -1327,13 +1329,87 @@ gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
         return true;
     }
 
-    gfxFontFamily *family = FindFamily(aFontName);
-    if (family) {
-        family->LocalizedName(aFamilyName);
+    nsAutoRef<FcPattern> pat(FcPatternCreate());
+    if (!pat) {
         return true;
     }
 
-    return false;
+    nsAutoRef<FcObjectSet> os(FcObjectSetBuild(FC_FAMILY, nullptr));
+    if (!os) {
+        return true;
+    }
+
+    // ignore size-specific fonts
+    FcPatternAddBool(pat, FC_SCALABLE, FcTrue);
+
+    // add the family name to the pattern
+    NS_ConvertUTF16toUTF8 familyName(aFontName);
+    FcPatternAddString(pat, FC_FAMILY, ToFcChar8Ptr(familyName.get()));
+
+    nsAutoRef<FcFontSet> givenFS(FcFontList(nullptr, pat, os));
+    if (!givenFS) {
+        return true;
+    }
+
+    // See if there is a font face with first family equal to the given family
+    // (needs to be in sync with names coming from GetFontList())
+    nsTArray<nsCString> candidates;
+    for (int i = 0; i < givenFS->nfont; i++) {
+        char* firstFamily;
+
+        if (FcPatternGetString(givenFS->fonts[i], FC_FAMILY, 0,
+                               (FcChar8 **) &firstFamily) != FcResultMatch)
+        {
+            continue;
+        }
+
+        nsDependentCString first(firstFamily);
+        if (!candidates.Contains(first)) {
+            candidates.AppendElement(first);
+
+            if (familyName.Equals(first)) {
+                aFamilyName.Assign(aFontName);
+                return true;
+            }
+        }
+    }
+
+    // Because fontconfig conflates different family name types, need to
+    // double check that the candidate name is not simply a different
+    // name type. For example, if a font with nameID=16 "Minion Pro" and
+    // nameID=21 "Minion Pro Caption" exists, calling FcFontList with
+    // family="Minion Pro" will return a set of patterns some of which
+    // will have a first family of "Minion Pro Caption". Ignore these
+    // patterns and use the first candidate that maps to a font set with
+    // the same number of faces and an identical set of patterns.
+    for (uint32_t j = 0; j < candidates.Length(); ++j) {
+        FcPatternDel(pat, FC_FAMILY);
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)candidates[j].get());
+
+        nsAutoRef<FcFontSet> candidateFS(FcFontList(nullptr, pat, os));
+        if (!candidateFS) {
+            return true;
+        }
+
+        if (candidateFS->nfont != givenFS->nfont) {
+            continue;
+        }
+
+        bool equal = true;
+        for (int i = 0; i < givenFS->nfont; ++i) {
+            if (!FcPatternEqual(candidateFS->fonts[i], givenFS->fonts[i])) {
+                equal = false;
+                break;
+            }
+        }
+        if (equal) {
+            AppendUTF8toUTF16(candidates[j], aFamilyName);
+            return true;
+        }
+    }
+
+    // didn't find localized name, leave family name blank
+    return true;
 }
 
 /* static */ FT_Library
