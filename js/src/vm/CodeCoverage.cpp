@@ -76,7 +76,7 @@ LCovSource::LCovSource(LifoAlloc* alloc, JSObject* sso)
     numLinesInstrumented_(0),
     numLinesHit_(0),
     hasFilename_(false),
-    hasScripts_(false)
+    hasTopLevelScript_(false)
 {
 }
 
@@ -84,7 +84,7 @@ void
 LCovSource::exportInto(GenericPrinter& out) const
 {
     // Only write if everything got recorded.
-    if (!hasFilename_ || !hasScripts_)
+    if (!hasFilename_ || !hasTopLevelScript_)
         return;
 
     outSF_.exportInto(out);
@@ -103,75 +103,6 @@ LCovSource::exportInto(GenericPrinter& out) const
     out.printf("LH:%d\n", numLinesHit_);
 
     out.put("end_of_record\n");
-}
-
-bool
-LCovSource::writeTopLevelScript(JSScript* script)
-{
-    MOZ_ASSERT(script->isTopLevel());
-
-    Vector<JSScript*, 8, SystemAllocPolicy> queue;
-    if (!queue.append(script))
-        return false;
-
-    do {
-        script = queue.popCopy();
-
-        // Save the lcov output of the current script.
-        if (!writeScript(script))
-            return false;
-
-        // Iterate from the last to the first object in order to have the
-        // functions visited in the opposite order when popping elements from
-        // the queue of remaining scripts, such that the functions are listed
-        // with increasing line numbers.
-        if (!script->hasObjects())
-            continue;
-
-        size_t idx = script->objects()->length;
-        while (idx--) {
-            JSObject* obj = script->getObject(idx);
-
-            // Only continue on JSFunction objects.
-            if (!obj->is<JSFunction>())
-                continue;
-            JSFunction& fun = obj->as<JSFunction>();
-
-            // Let's skip asm.js for now.
-            if (!fun.isInterpreted())
-                continue;
-            MOZ_ASSERT(!fun.isInterpretedLazy());
-
-            // Eval scripts can refer to their parent script in order to extend
-            // their scope.  We only care about the inner functions, which are
-            // in the same source, and which are assumed to be visited in the
-            // same order as the source content.
-            //
-            // Note: It is possible that the JSScript visited here has already
-            // been finalized, in which case the sourceObject() will be a
-            // poisoned pointer.  This is safe because all scripts are currently
-            // finalized in the foreground.
-            JSScript* child = fun.nonLazyScript();
-            if (child->sourceObject() != source_)
-                continue;
-
-            // Queue the script in the list of script associated to the
-            // current source.
-            if (!queue.append(fun.nonLazyScript()))
-                return false;
-        }
-    } while (!queue.empty());
-
-    if (outFN_.hadOutOfMemory() ||
-        outFNDA_.hadOutOfMemory() ||
-        outBRDA_.hadOutOfMemory() ||
-        outDA_.hadOutOfMemory())
-    {
-        return false;
-    }
-
-    hasScripts_ = true;
-    return true;
 }
 
 bool
@@ -408,6 +339,21 @@ LCovSource::writeScript(JSScript* script)
         }
     }
 
+    // Report any new OOM.
+    if (outFN_.hadOutOfMemory() ||
+        outFNDA_.hadOutOfMemory() ||
+        outBRDA_.hadOutOfMemory() ||
+        outDA_.hadOutOfMemory())
+    {
+        return false;
+    }
+
+    // If this script is the top-level script, then record it such that we can
+    // assume that the code coverage report is complete, as this script has
+    // references on all inner scripts.
+    if (script->isTopLevel())
+        hasTopLevelScript_ = true;
+
     return true;
 }
 
@@ -421,10 +367,13 @@ LCovCompartment::LCovCompartment()
 
 void
 LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
-                                         JSScript* topLevel)
+                                         JSScript* script)
 {
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
+        return;
+
+    if (!script->code())
         return;
 
     // Get the existing source LCov summary, or create a new one.
@@ -433,7 +382,7 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
         return;
 
     // Write code coverage data into the LCovSource.
-    if (!source->writeTopLevelScript(topLevel)) {
+    if (!source->writeScript(script)) {
         outTN_.reportOutOfMemory();
         return;
     }

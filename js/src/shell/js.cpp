@@ -3973,6 +3973,11 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
         if (v.isBoolean())
             options.setCloneSingletons(v.toBoolean());
 
+        if (!JS_GetProperty(cx, opts, "disableLazyParsing", &v))
+            return false;
+        if (v.isBoolean())
+            options.setDisableLazyParsing(v.toBoolean());
+
         if (!JS_GetProperty(cx, opts, "principal", &v))
             return false;
         if (!v.isUndefined()) {
