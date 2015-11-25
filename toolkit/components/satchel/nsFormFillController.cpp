@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -75,15 +77,6 @@ nsFormFillController::nsFormFillController() :
   MOZ_ASSERT(mController);
 }
 
-struct PwmgrInputsEnumData
-{
-  PwmgrInputsEnumData(nsFormFillController* aFFC, nsIDocument* aDoc)
-  : mFFC(aFFC), mDoc(aDoc) {}
-
-  nsFormFillController* mFFC;
-  nsCOMPtr<nsIDocument> mDoc;
-};
-
 nsFormFillController::~nsFormFillController()
 {
   if (mListNode) {
@@ -95,8 +88,7 @@ nsFormFillController::~nsFormFillController()
     mFocusedInputNode = nullptr;
     mFocusedInput = nullptr;
   }
-  PwmgrInputsEnumData ed(this, nullptr);
-  mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
+  RemoveForDocument(nullptr);
 
   // Remove ourselves as a focus listener from all cached docShells
   uint32_t count = mDocShells.Length();
@@ -860,28 +852,26 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
         StopControllingInput();
     }
 
-    PwmgrInputsEnumData ed(this, doc);
-    mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
+    RemoveForDocument(doc);
   }
 
   return NS_OK;
 }
 
-
-/* static */ PLDHashOperator
-nsFormFillController::RemoveForDocumentEnumerator(const nsINode* aKey,
-                                                  bool& aEntry,
-                                                  void* aUserData)
+void
+nsFormFillController::RemoveForDocument(nsIDocument* aDoc)
 {
-  PwmgrInputsEnumData* ed = static_cast<PwmgrInputsEnumData*>(aUserData);
-  if (aKey && (!ed->mDoc || aKey->OwnerDoc() == ed->mDoc)) {
-    // mFocusedInputNode's observer is tracked separately, don't remove it here.
-    if (aKey != ed->mFFC->mFocusedInputNode) {
-      const_cast<nsINode*>(aKey)->RemoveMutationObserver(ed->mFFC);
+  for (auto iter = mPwmgrInputs.Iter(); !iter.Done(); iter.Next()) {
+    const nsINode* key = iter.Key();
+    if (key && (!aDoc || key->OwnerDoc() == aDoc)) {
+      // mFocusedInputNode's observer is tracked separately, so don't remove it
+      // here.
+      if (key != mFocusedInputNode) {
+        const_cast<nsINode*>(key)->RemoveMutationObserver(this);
+      }
+      iter.Remove();
     }
-    return PL_DHASH_REMOVE;
   }
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -1122,8 +1112,7 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindow *aWindow)
   StopControllingInput();
 
   nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
-  PwmgrInputsEnumData ed(this, doc);
-  mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
+  RemoveForDocument(doc);
 
   EventTarget* target = aWindow->GetChromeEventHandler();
 
