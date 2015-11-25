@@ -66,6 +66,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/extension_types.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/i18n.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/idle.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
