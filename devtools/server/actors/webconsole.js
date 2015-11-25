@@ -157,8 +157,12 @@ WebConsoleActor.prototype =
   },
 
   /**
-   * The window we work with.
-   * @type nsIDOMWindow
+   * The window or sandbox we work with.
+   * Note that even if it is named `window` it refers to the current
+   * global we are debugging, which can be a Sandbox for addons
+   * or browser content toolbox.
+   *
+   * @type nsIDOMWindow or Sandbox
    */
   get window() {
     if (this.parentActor.isRootActor) {
@@ -733,7 +737,8 @@ WebConsoleActor.prototype =
             break;
           }
 
-          let requestStartTime = this.window ?
+          // See `window` definition. It isn't always a DOM Window.
+          let requestStartTime = this.window && this.window.performance ?
             this.window.performance.timing.requestStart : 0;
 
           let cache = this.consoleAPIListener
