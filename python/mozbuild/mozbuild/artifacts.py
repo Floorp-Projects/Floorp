@@ -20,6 +20,10 @@ This module performs the following steps:
 * fetch fresh Task Cluster artifacts and purge old artifacts, using a simple
   Least Recently Used cache.
 
+* post-process fresh artifacts, to speed future installation.  In particular,
+  extract relevant files from Mac OS X DMG files into a friendly archive format
+  so we don't have to mount DMG files frequently.
+
 The bulk of the complexity is in managing and persisting several caches.  If
 we found a Python LRU cache that pickled cleanly, we could remove a lot of
 this code!  Sadly, I found no such candidate implementations, so we pickle
@@ -55,6 +59,10 @@ from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
 )
+from mozpack.mozjar import (
+    JarReader,
+    JarWriter,
+)
 import mozpack.path as mozpath
 from mozregression.download_manager import (
     DownloadManager,
@@ -72,6 +80,11 @@ MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data fo
 # so don't make this to large!  TODO: make this a size (like 500 megs) rather than an artifact count.
 MAX_CACHED_ARTIFACTS = 6
 
+# Downloaded artifacts are cached, and a subset of their contents extracted for
+# easy installation.  This is most noticeable on Mac OS X: since mounting and
+# copying from DMG files is very slow, we extract the desired binaries to a
+# separate archive for fast re-installation.
+PROCESSED_SUFFIX = '.processed.jar'
 
 class ArtifactJob(object):
     def __init__(self, regexp, log=None):
@@ -93,12 +106,32 @@ class ArtifactJob(object):
                     {'name': name},
                     'Not yielding artifact named {name} as a candidate artifact')
 
+    def process_artifact(self, filename, processed_filename):
+        raise NotImplementedError("Subclasses must specialize process_artifact!")
+
+
+class AndroidArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        # Extract all .so files into the root, which will get copied into dist/bin.
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            for f in JarReader(filename):
+                if not f.filename.endswith('.so') and \
+                   not f.filename in ('platform.ini', 'application.ini'):
+                    continue
+
+                basename = os.path.basename(f.filename)
+                self.log(logging.INFO, 'artifact',
+                    {'basename': basename},
+                    'Adding {basename} to processed archive')
+
+                writer.add(basename.encode('utf-8'), f)
+
 
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
-    # 'android-api-9': (ArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-api-11': (ArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-x86': (ArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
+    # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-api-11': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-x86': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
     # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
     # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
     # 'macosx64': (ArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
@@ -288,6 +321,14 @@ class ArtifactCache(CacheManager):
         except (OSError, IOError):
             pass
 
+        try:
+            os.remove(value + PROCESSED_SUFFIX)
+            self.log(logging.INFO, 'artifact',
+                {'filename': value + PROCESSED_SUFFIX},
+                'Purged processed artifact {filename}')
+        except (OSError, IOError):
+            pass
+
     @cachedmethod(operator.attrgetter('_cache'))
     def fetch(self, url, force=False):
         # We download to a temporary name like HASH[:16]-basename to
@@ -320,6 +361,9 @@ class ArtifactCache(CacheManager):
         self.log(logging.INFO, 'artifact',
             {'filename': result},
             'Last installed binaries from local file {filename}')
+        self.log(logging.INFO, 'artifact',
+            {'filename': result + PROCESSED_SUFFIX},
+            'Last installed binaries from local processed file {filename}')
 
 
 class Artifacts(object):
@@ -331,6 +375,14 @@ class Artifacts(object):
         self._log = log
         self._hg = hg
         self._cache_dir = cache_dir
+
+        try:
+            self._artifact_job = get_job_details(self._job, log=self._log)
+        except KeyError:
+            self.log(logging.INFO, 'artifact',
+                {'job': self._job},
+                'Unknown job {job}')
+            raise KeyError("Unknown job")
 
         self._pushhead_cache = PushHeadCache(self._hg, self._cache_dir, log=self._log)
         self._task_cache = TaskCache(self._cache_dir, log=self._log)
@@ -345,22 +397,41 @@ class Artifacts(object):
             {'filename': filename},
             'Installing from {filename}')
 
+        # Do we need to post-process?
+        processed_filename = filename + PROCESSED_SUFFIX
+        if not os.path.exists(processed_filename):
+            self.log(logging.INFO, 'artifact',
+                {'filename': filename},
+                'Processing contents of {filename}')
+            self.log(logging.INFO, 'artifact',
+                {'processed_filename': processed_filename},
+                'Writing processed {processed_filename}')
+            self._artifact_job.process_artifact(filename, processed_filename)
+
+        self.log(logging.INFO, 'artifact',
+            {'processed_filename': processed_filename},
+            'Installing from processed {processed_filename}')
+
         # Copy all .so files, avoiding modification where possible.
         ensureParentDir(mozpath.join(bindir, '.dummy'))
 
-        with zipfile.ZipFile(filename) as zf:
+        with zipfile.ZipFile(processed_filename) as zf:
             for info in zf.infolist():
-                if not info.filename.endswith('.so'):
+                if info.filename.endswith('.ini'):
                     continue
-                n = mozpath.join(bindir, os.path.basename(info.filename))
+                n = mozpath.join(bindir, info.filename)
                 fh = FileAvoidWrite(n, mode='r')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
                     {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
                     '{updating} {filename}')
+                if not file_existed or file_updated:
+                    # Libraries and binaries may need to be marked executable,
+                    # depending on platform.
+                    os.chmod(n, info.external_attr >> 16) # See http://stackoverflow.com/a/434689.
                 if install_callback:
-                    install_callback(os.path.basename(info.filename), file_existed, file_updated)
+                    install_callback(info.filename, file_existed, file_updated)
         return 0
 
     def install_from_url(self, url, bindir, install_callback=None):
