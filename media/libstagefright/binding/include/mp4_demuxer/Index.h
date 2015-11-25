@@ -7,7 +7,6 @@
 
 #include "MediaData.h"
 #include "MediaResource.h"
-#include "mozilla/Monitor.h"
 #include "mp4_demuxer/Interval.h"
 #include "mp4_demuxer/Stream.h"
 #include "nsISupportsImpl.h"
@@ -57,8 +56,7 @@ public:
   Index(const nsTArray<Indice>& aIndex,
         Stream* aSource,
         uint32_t aTrackId,
-        bool aIsAudio,
-        mozilla::Monitor* aMonitor);
+        bool aIsAudio);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges);
   Microseconds GetEndCompositionIfBuffered(
@@ -77,7 +75,6 @@ private:
   Stream* mSource;
   FallibleTArray<Sample> mIndex;
   nsAutoPtr<MoofParser> mMoofParser;
-  mozilla::Monitor* mMonitor;
 };
 }
 

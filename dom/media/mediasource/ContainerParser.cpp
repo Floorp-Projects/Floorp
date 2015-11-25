@@ -334,7 +334,6 @@ class MP4ContainerParser : public ContainerParser {
 public:
   explicit MP4ContainerParser(const nsACString& aType)
     : ContainerParser(aType)
-    , mMonitor("MP4ContainerParser Index Monitor")
   {}
 
   bool IsInitSegmentPresent(MediaByteBuffer* aData) override
@@ -421,8 +420,6 @@ public:
   bool ParseStartAndEndTimestamps(MediaByteBuffer* aData,
                                   int64_t& aStart, int64_t& aEnd) override
   {
-    MonitorAutoLock mon(mMonitor); // We're not actually racing against anything,
-                                   // but mParser requires us to hold a monitor.
     bool initSegment = IsInitSegmentPresent(aData);
     if (initSegment) {
       mResource = new SourceBufferResource(NS_LITERAL_CSTRING("video/mp4"));
@@ -431,7 +428,7 @@ public:
       // consumers of ParseStartAndEndTimestamps to add their timestamp offset
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
-      mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false, &mMonitor);
+      mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false);
       mInitData = new MediaByteBuffer();
     } else if (!mStream || !mParser) {
       return false;
@@ -495,7 +492,6 @@ public:
 private:
   RefPtr<MP4Stream> mStream;
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
-  Monitor mMonitor;
 };
 #endif // MOZ_FMP4
 
