@@ -954,6 +954,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool initSelfHosting(JSContext* cx);
     bool evaluateSelfHosted(const char16_t* chars, size_t length, const char* filename);
+    bool addSelfHostingIntrinsics(const JSFunctionSpec* intrinsicFunctions);
     void finishSelfHosting();
     /*
      * Completes the runtime's initialization by freezing the initial set of
