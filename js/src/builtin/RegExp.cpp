@@ -158,8 +158,7 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
  */
 static bool
 RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
-                                  HandleValue patternValue, HandleValue flagsValue,
-                                  RegExpStaticsUse staticsUse)
+                                  HandleValue patternValue, HandleValue flagsValue)
 {
     RootedAtom pattern(cx);
     if (patternValue.isUndefined()) {
@@ -192,13 +191,6 @@ RegExpInitializeIgnoringLastIndex(JSContext* cx, Handle<RegExpObject*> obj,
                                       flags & UnicodeFlag))
     {
         return false;
-    }
-
-    if (staticsUse == UseRegExpStatics) {
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-        if (!res)
-            return false;
-        flags = RegExpFlag(flags | res->getFlags());
     }
 
     /* Steps 11-13. */
@@ -289,7 +281,7 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
         RootedValue F(cx, args.get(1));
 
         // Step 5, minus lastIndex zeroing.
-        if (!RegExpInitializeIgnoringLastIndex(cx, regexp, P, F, UseRegExpStatics))
+        if (!RegExpInitializeIgnoringLastIndex(cx, regexp, P, F))
             return false;
     }
 
@@ -434,7 +426,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 10.
-    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, P, F, UseRegExpStatics))
+    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, P, F))
         return false;
     regexp->zeroLastIndex(cx);
 
@@ -459,7 +451,7 @@ js::regexp_construct_no_statics(JSContext* cx, unsigned argc, Value* vp)
     if (!regexp)
         return false;
 
-    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, args[0], args.get(1), DontUseRegExpStatics))
+    if (!RegExpInitializeIgnoringLastIndex(cx, regexp, args[0], args.get(1)))
         return false;
     regexp->zeroLastIndex(cx);
 
