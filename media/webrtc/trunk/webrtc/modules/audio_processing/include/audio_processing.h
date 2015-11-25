@@ -37,6 +37,18 @@ class LevelEstimator;
 class NoiseSuppression;
 class VoiceDetection;
 
+struct ExtendedFilter {
+  ExtendedFilter() : enabled(false) {}
+  explicit ExtendedFilter(bool enabled) : enabled(enabled) {}
+  bool enabled;
+};
+
+struct DelayAgnostic {
+  DelayAgnostic() : enabled(false) {}
+  explicit DelayAgnostic(bool enabled) : enabled(enabled) {}
+  bool enabled;
+};
+
 // Use to enable the delay correction feature. This now engages an extended
 // filter mode in the AEC, along with robustness measures around the reported
 // system delays. It comes with a significant increase in AEC complexity, but is

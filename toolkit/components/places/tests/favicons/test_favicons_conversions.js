@@ -56,7 +56,7 @@ function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
           }
 
           aCallback();
-        });
+        }, Services.scriptSecurityManager.getSystemPrincipal());
     });
 }
 

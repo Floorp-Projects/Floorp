@@ -2095,10 +2095,13 @@ struct StyleTransition {
   void SetDuration(float aDuration) { mDuration = aDuration; }
   void SetProperty(nsCSSProperty aProperty)
     {
-      NS_ASSERTION(aProperty != eCSSProperty_UNKNOWN, "invalid property");
+      NS_ASSERTION(aProperty != eCSSProperty_UNKNOWN &&
+                   aProperty != eCSSPropertyExtra_variable,
+                   "invalid property");
       mProperty = aProperty;
     }
-  void SetUnknownProperty(const nsAString& aUnknownProperty);
+  void SetUnknownProperty(nsCSSProperty aProperty,
+                          const nsAString& aPropertyString);
   void CopyPropertyFrom(const StyleTransition& aOther)
     {
       mProperty = aOther.mProperty;
@@ -2117,7 +2120,8 @@ private:
   float mDelay;
   nsCSSProperty mProperty;
   nsCOMPtr<nsIAtom> mUnknownProperty; // used when mProperty is
-                                      // eCSSProperty_UNKNOWN
+                                      // eCSSProperty_UNKNOWN or
+                                      // eCSSPropertyExtra_variable
 };
 
 struct StyleAnimation {

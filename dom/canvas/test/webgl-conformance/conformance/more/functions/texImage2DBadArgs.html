@@ -58,53 +58,53 @@ function teardown(gl, tex) {
     gl.deleteTexture(tex);
 }
 
-function testrunner(gl, expected, desc, fn) {
+function testrunner(gl, expectedList, desc, fn) {
    var tex = setup(gl);
    fn();
-   glErrorShouldBe(gl, expected, desc);
+   wtu.glErrorShouldBeIn(gl, expectedList, desc);
    teardown(gl, tex);
 }
 
  var data = new Uint8Array(4);
- testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+ testrunner(gl, [gl.INVALID_OPERATION], "not enough data", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2,1,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
  });
- testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+ testrunner(gl, [gl.INVALID_OPERATION], "not enough data", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,2,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
  });
- testrunner(gl, gl.INVALID_ENUM, "bad target", function(){
+ testrunner(gl, [gl.INVALID_ENUM], "bad target", function(){
      gl.texImage2D(gl.FLOAT, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_ENUM, "bad internal format/format", function(){
+ testrunner(gl, [gl.INVALID_ENUM, gl.INVALID_VALUE], "bad internal format/format", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.FLOAT, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_VALUE, "border > 0", function(){
+ testrunner(gl, [gl.INVALID_VALUE], "border > 0", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,48,gl.RGBA,gl.UNSIGNED_BYTE, null);
  });
  // The spec says zero size is OK. If you disagree please list the section
  // in the spec that details this issue.
- testrunner(gl, gl.NO_ERROR, "zero size", function(){
+ testrunner(gl, [gl.NO_ERROR], "zero size", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0,0,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_VALUE, "negative width", function(){
+ testrunner(gl, [gl.INVALID_VALUE], "negative width", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, -1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_VALUE, "negative height", function(){
+ testrunner(gl, [gl.INVALID_VALUE], "negative height", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,-1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_ENUM, "bad format", function(){
+ testrunner(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION], "bad format", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
  });
- testrunner(gl, gl.INVALID_ENUM, "bad type", function(){
+ testrunner(gl, [gl.INVALID_ENUM], "bad type", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.TEXTURE_2D, null);
  });
- testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+ testrunner(gl, [gl.INVALID_OPERATION], "not enough data", function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array(3));
  });
- testrunner(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
+ testrunner(gl, [gl.INVALID_OPERATION], "format and type incompatible",function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_SHORT_5_6_5, null);
  });
- testrunner(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
+ testrunner(gl, [gl.INVALID_OPERATION], "format and type incompatible",function(){
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1,1,0,gl.RGB,gl.UNSIGNED_SHORT_4_4_4_4, null);
  });
 

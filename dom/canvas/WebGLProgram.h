@@ -196,7 +196,7 @@ public:
     }
 
     WebGLContext* GetParentObject() const {
-        return Context();
+        return mContext;
     }
 
     virtual JSObject* WrapObject(JSContext* js, JS::Handle<JSObject*> givenProto) override;

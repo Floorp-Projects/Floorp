@@ -23,9 +23,6 @@
       // aria-labelledby
       testName("aria_labelledby", "text");
 
-      // html:label
-      testName("label", "label");
-
       // name from content
       testName("namefromcontent", "1");
 
@@ -69,11 +66,6 @@
   <label for="aria_labelledby">label</label>
   <a id="aria_labelledby" href="mozilla.org"
      aria-labelledby="text">1</a>
-  <br/>
-
-  <!-- label, preferred to name from content -->
-  <label for="label">label</label>
-  <a id="label" href="mozilla.org">1</a>
   <br/>
 
   <!-- name from content, preferred to @title -->
