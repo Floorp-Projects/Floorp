@@ -484,10 +484,8 @@ class LDefinition
                 return r.fpu().isSingle();
             if (type() == DOUBLE)
                 return r.fpu().isDouble();
-            if (type() == INT32X4)
-                return r.fpu().isInt32x4();
-            if (type() == FLOAT32X4)
-                return r.fpu().isFloat32x4();
+            if (isSimdType())
+                return r.fpu().isSimd128();
             MOZ_CRASH("Unexpected MDefinition type");
         }
         return !isFloatReg() && !r.isFloat();

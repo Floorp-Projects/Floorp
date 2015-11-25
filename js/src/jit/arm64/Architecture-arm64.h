@@ -411,10 +411,7 @@ struct FloatRegister
     bool isDouble() const {
         return k_ == FloatRegisters::Double;
     }
-    bool isInt32x4() const {
-        return false;
-    }
-    bool isFloat32x4() const {
+    bool isSimd128() const {
         return false;
     }
 

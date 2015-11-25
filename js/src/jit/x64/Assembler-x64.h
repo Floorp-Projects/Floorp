@@ -85,11 +85,10 @@ static MOZ_CONSTEXPR_VAR Register ReturnReg = rax;
 static MOZ_CONSTEXPR_VAR Register HeapReg = r15;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Int32x4);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Float32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimd128Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Simd128);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm15, FloatRegisters::Single);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm15, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm15;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = xmm15;
 
 // Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;
