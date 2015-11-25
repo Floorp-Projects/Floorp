@@ -206,4 +206,15 @@ promise_test(function testPromiseResolve() {
   });
 }, "Promise.resolve behavior");
 
+promise_test(function testPromiseReject() {
+  clearLog();
+  var p = LoggingPromise.reject(5);
+  var log = takeLog();
+  assert_array_equals(log, ["Reject 1", "Constructor 1"]);
+
+  return p.catch(function(arg) {
+    assert_equals(arg, 5);
+  });
+}, "Promise.reject behavior");
+
 </script>

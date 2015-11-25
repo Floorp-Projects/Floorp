@@ -1092,22 +1092,56 @@ Promise::Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
   return promise.forget();
 }
 
-/* static */ already_AddRefed<Promise>
+/* static */ void
 Promise::Reject(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+                JS::Handle<JS::Value> aValue,
+                JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv)
 {
+  // Implementation of
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-promise.reject
+
+  JSContext* cx = aGlobal.Context();
+
   nsCOMPtr<nsIGlobalObject> global =
     do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
+    return;
   }
 
-  RefPtr<Promise> p = Reject(global, aGlobal.Context(), aValue, aRv);
-  if (p) {
-    p->mRejectionStack = p->mAllocationStack;
+  // Steps 1 and 2.
+  if (!aThisv.isObject()) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_PROMISE_CONSTRUCTOR>();
+    return;
   }
-  return p.forget();
+
+  // Step 3.
+  PromiseCapability capability(cx);
+  NewPromiseCapability(cx, global, aThisv, false, capability, aRv);
+  // Step 4.
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 5.
+  Promise* p = capability.mNativePromise;
+  if (p) {
+    p->MaybeRejectInternal(cx, aValue);
+    p->mRejectionStack = p->mAllocationStack;
+  } else {
+    JS::Rooted<JS::Value> value(cx, aValue);
+    JS::Rooted<JS::Value> ignored(cx);
+    if (!JS::Call(cx, JS::UndefinedHandleValue /* thisVal */,
+                  capability.mReject, JS::HandleValueArray(value),
+                  &ignored)) {
+      // Step 6.
+      aRv.NoteJSContextException();
+      return;
+    }
+  }
+
+  // Step 7.
+  aRetval.set(capability.PromiseValue());
 }
 
 /* static */ already_AddRefed<Promise>
