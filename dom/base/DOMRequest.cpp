@@ -13,6 +13,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "jsfriendapi.h"
 
 using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMError;
@@ -206,14 +207,16 @@ DOMRequest::RootResultVal()
   mozilla::HoldJSObjects(this);
 }
 
-already_AddRefed<Promise>
+void
 DOMRequest::Then(JSContext* aCx, AnyCallback* aResolveCallback,
-                 AnyCallback* aRejectCallback, mozilla::ErrorResult& aRv)
+                 AnyCallback* aRejectCallback,
+                 JS::MutableHandle<JS::Value> aRetval,
+                 mozilla::ErrorResult& aRv)
 {
   if (!mPromise) {
     mPromise = Promise::Create(DOMEventTargetHelper::GetParentObject(), aRv);
     if (aRv.Failed()) {
-      return nullptr;
+      return;
     }
     if (mDone) {
       // Since we create mPromise lazily, it's possible that the DOMRequest object
@@ -228,7 +231,10 @@ DOMRequest::Then(JSContext* aCx, AnyCallback* aResolveCallback,
     }
   }
 
-  return mPromise->Then(aCx, aResolveCallback, aRejectCallback, aRv);
+  // Just use the global of the Promise itself as the callee global.
+  JS::Rooted<JSObject*> global(aCx, mPromise->GetWrapper());
+  global = js::GetGlobalForObjectCrossCompartment(global);
+  mPromise->Then(aCx, global, aResolveCallback, aRejectCallback, aRetval, aRv);
 }
 
 NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
