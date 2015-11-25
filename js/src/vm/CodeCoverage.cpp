@@ -427,10 +427,6 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
     if (outTN_.hadOutOfMemory())
         return;
 
-    // We expect to visit the source before visiting any of its scripts.
-    if (!sources_)
-        return;
-
     // Get the existing source LCov summary, or create a new one.
     LCovSource* source = lookupOrAdd(comp, sso);
     if (!source)
@@ -500,14 +496,29 @@ LCovCompartment::lookupOrAdd(JSCompartment* comp, JSObject* sso)
 }
 
 void
-LCovCompartment::exportInto(GenericPrinter& out) const
+LCovCompartment::exportInto(GenericPrinter& out, bool* isEmpty) const
 {
     if (!sources_ || outTN_.hadOutOfMemory())
         return;
 
+    // If we only have cloned function, then do not serialize anything.
+    bool someComplete = false;
+    for (const LCovSource& sc : *sources_) {
+        if (sc.isComplete()) {
+            someComplete = true;
+            break;
+        };
+    }
+
+    if (!someComplete)
+        return;
+
+    *isEmpty = false;
     outTN_.exportInto(out);
-    for (const LCovSource& sc : *sources_)
-        sc.exportInto(out);
+    for (const LCovSource& sc : *sources_) {
+        if (sc.isComplete())
+            sc.exportInto(out);
+    }
 }
 
 bool
@@ -550,41 +561,66 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
 LCovRuntime::LCovRuntime()
   : out_(),
 #if defined(XP_WIN)
-    pid_(GetCurrentProcessId())
+    pid_(GetCurrentProcessId()),
 #else
-    pid_(getpid())
+    pid_(getpid()),
 #endif
+    isEmpty_(false)
 {
 }
 
 LCovRuntime::~LCovRuntime()
 {
     if (out_.isInitialized())
-        out_.finish();
+        finishFile();
 }
 
-void
-LCovRuntime::init()
+bool
+LCovRuntime::fillWithFilename(char *name, size_t length)
 {
     const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
     if (!outDir || *outDir == 0)
-        return;
+        return false;
 
     int64_t timestamp = static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_SEC;
     static mozilla::Atomic<size_t> globalRuntimeId(0);
     size_t rid = globalRuntimeId++;
 
-    char name[1024];
-    size_t len = JS_snprintf(name, sizeof(name), "%s/%" PRId64 "-%d-%d.info",
+    size_t len = JS_snprintf(name, length, "%s/%" PRId64 "-%d-%d.info",
                              outDir, timestamp, size_t(pid_), rid);
-    if (sizeof(name) < len) {
+    if (length <= len) {
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
-        return;
+        return false;
     }
+
+    return true;
+}
+
+void
+LCovRuntime::init()
+{
+    char name[1024];
+    if (!fillWithFilename(name, sizeof(name)))
+        return;
 
     // If we cannot open the file, report a warning.
     if (!out_.init(name))
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot open file named '%s'.", name);
+    isEmpty_ = true;
+}
+
+void
+LCovRuntime::finishFile()
+{
+    MOZ_ASSERT(out_.isInitialized());
+    out_.finish();
+
+    if (isEmpty_) {
+        char name[1024];
+        if (!fillWithFilename(name, sizeof(name)))
+            return;
+        remove(name);
+    }
 }
 
 void
@@ -600,13 +636,13 @@ LCovRuntime::writeLCovResult(LCovCompartment& comp)
 #endif
     if (pid_ != p) {
         pid_ = p;
-        out_.finish();
+        finishFile();
         init();
         if (!out_.isInitialized())
             return;
     }
 
-    comp.exportInto(out_);
+    comp.exportInto(out_, &isEmpty_);
     out_.flush();
 }
 
