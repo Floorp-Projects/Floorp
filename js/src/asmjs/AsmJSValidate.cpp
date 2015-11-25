@@ -1022,7 +1022,7 @@ class MOZ_STACK_CLASS ModuleValidator
         union {
             struct {
                 Type::Which type_;
-                uint32_t index_;
+                uint32_t globalDataOffset_;
                 NumLit literalValue_;
             } varOrConst;
             uint32_t funcIndex_;
@@ -1058,9 +1058,9 @@ class MOZ_STACK_CLASS ModuleValidator
             MOZ_ASSERT(which_ == Variable || which_ == ConstantLiteral || which_ == ConstantImport);
             return u.varOrConst.type_;
         }
-        uint32_t varOrConstIndex() const {
+        uint32_t varOrConstGlobalDataOffset() const {
             MOZ_ASSERT(which_ == Variable || which_ == ConstantImport);
-            return u.varOrConst.index_;
+            return u.varOrConst.globalDataOffset_;
         }
         bool isConst() const {
             return which_ == ConstantLiteral || which_ == ConstantImport;
@@ -1258,8 +1258,6 @@ class MOZ_STACK_CLASS ModuleValidator
     NonAssertingLabel                       asyncInterruptLabel_;
     NonAssertingLabel                       onDetachedLabel_;
 
-    DebugOnly<bool>                         finishedFunctionBodies_;
-
   public:
     ModuleValidator(ExclusiveContext* cx, AsmJSParser& parser)
       : cx_(cx),
@@ -1285,8 +1283,7 @@ class MOZ_STACK_CLASS ModuleValidator
         masm_(MacroAssembler::AsmJSToken()),
         usecBefore_(PRMJ_Now()),
         functionEntryOffsets_(cx),
-        slowFunctions_(cx),
-        finishedFunctionBodies_(false)
+        slowFunctions_(cx)
     {
         MOZ_ASSERT(moduleFunctionNode_->pn_funbox == parser.pc->sc->asFunctionBox());
     }
@@ -1416,14 +1413,14 @@ class MOZ_STACK_CLASS ModuleValidator
         // The type of a const is the exact type of the literal (since its value
         // cannot change) which is more precise than the corresponding vartype.
         Type type = isConst ? Type::lit(lit) : Type::var(lit.type());
-        uint32_t globalIndex;
-        if (!module_->addGlobalVarInit(lit.value(), &globalIndex))
+        uint32_t globalDataOffset;
+        if (!module_->addGlobalVarInit(lit.value(), &globalDataOffset))
             return false;
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
         Global* global = moduleLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.index_ = globalIndex;
+        global->u.varOrConst.globalDataOffset_ = globalDataOffset;
         global->u.varOrConst.type_ = type.which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
@@ -1432,14 +1429,14 @@ class MOZ_STACK_CLASS ModuleValidator
     bool addGlobalVarImport(PropertyName* varName, PropertyName* fieldName, ValType importType,
                             bool isConst)
     {
-        uint32_t globalIndex;
-        if (!module_->addGlobalVarImport(fieldName, importType, &globalIndex))
+        uint32_t globalDataOffset;
+        if (!module_->addGlobalVarImport(fieldName, importType, &globalDataOffset))
             return false;
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
         Global* global = moduleLifo_.new_<Global>(which);
         if (!global)
             return false;
-        global->u.varOrConst.index_ = globalIndex;
+        global->u.varOrConst.globalDataOffset_ = globalDataOffset;
         global->u.varOrConst.type_ = Type::var(importType).which();
         return globals_.putNew(varName, global);
     }
@@ -1830,34 +1827,38 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     bool finishGeneratingEntry(unsigned exportIndex, AsmJSOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         module_->exportedFunction(exportIndex).initCodeOffset(offsets.begin);
         return module_->addCodeRange(AsmJSModule::CodeRange::Entry, offsets);
     }
     bool finishGeneratingInlineStub(AsmJSOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         return module_->addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
     }
     bool finishGeneratingInterpExit(unsigned exitIndex, AsmJSProfilingOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         module_->exit(exitIndex).initInterpOffset(offsets.begin);
         return module_->addCodeRange(AsmJSModule::CodeRange::SlowFFI, offsets);
     }
     bool finishGeneratingJitExit(unsigned exitIndex, AsmJSProfilingOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         module_->exit(exitIndex).initJitOffset(offsets.begin);
         return module_->addCodeRange(AsmJSModule::CodeRange::JitFFI, offsets);
     }
     bool finishGeneratingInterrupt(AsmJSProfilingOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         return module_->addCodeRange(AsmJSModule::CodeRange::Interrupt, offsets);
     }
     bool finishGeneratingBuiltinThunk(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets) {
-        MOZ_ASSERT(finishedFunctionBodies_);
         return module_->addBuiltinThunkCodeRange(builtin, offsets);
     }
 
     bool finish(ScopedJSDeletePtr<AsmJSModule>* module) {
+        // Patch internal calls to their final positions
+        for (auto& cs : masm().callSites()) {
+            if (!cs.isInternal())
+                continue;
+            MOZ_ASSERT(cs.kind() == CallSiteDesc::Relative);
+            uint32_t callerOffset = cs.returnAddressOffset();
+            uint32_t calleeOffset = functionEntryOffset(cs.targetIndex());
+            masm().patchCall(callerOffset, calleeOffset);
+        }
+
         masm().finish();
         if (masm().oom())
             return false;
@@ -1892,22 +1893,9 @@ class MOZ_STACK_CLASS ModuleValidator
             }
             module_->setViewsAreShared();
         }
-        module_->startFunctionBodies();
     }
     bool finishFunctionBodies() {
-        // Patch internal calls to their final positions
-        for (auto& cs : masm().callSites()) {
-            if (!cs.isInternal())
-                continue;
-            MOZ_ASSERT(cs.kind() == CallSiteDesc::Relative);
-            uint32_t callerOffset = cs.returnAddressOffset();
-            uint32_t calleeOffset = functionEntryOffset(cs.targetIndex());
-            masm().patchCall(callerOffset, calleeOffset);
-        }
-
-        MOZ_ASSERT(!finishedFunctionBodies_);
-        module_->finishFunctionBodies(masm().currentOffset());
-        finishedFunctionBodies_ = true;
+        module_->setFunctionBytes(masm().currentOffset());
         return true;
     }
 
@@ -3245,12 +3233,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
               default: MOZ_CRASH("unexpected global type");
             }
 
-            uint32_t globalIndex = global->varOrConstIndex();
-            // Write the global data offset
-            if (global->varOrConstType().isSimd())
-                f.writeU32(f.module().globalSimdVarIndexToGlobalDataOffset(globalIndex));
-            else
-                f.writeU32(f.module().globalScalarVarIndexToGlobalDataOffset(globalIndex));
+            f.writeU32(global->varOrConstGlobalDataOffset());
             f.writeU8(uint8_t(global->isConst()));
             *type = global->varOrConstType();
             break;
@@ -3636,12 +3619,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
           default: MOZ_CRASH("unexpected global type");
         }
 
-        unsigned globalIndex = global->varOrConstIndex();
-        // Global data offset
-        if (global->varOrConstType().isSimd())
-            f.patch32(indexAt, f.module().globalSimdVarIndexToGlobalDataOffset(globalIndex));
-        else
-            f.patch32(indexAt, f.module().globalScalarVarIndexToGlobalDataOffset(globalIndex));
+        f.patch32(indexAt, global->varOrConstGlobalDataOffset());
         *type = rhsType;
         return true;
     }
@@ -4365,7 +4343,7 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprT
         return false;
 
     JS_STATIC_ASSERT(offsetof(AsmJSModule::ExitDatum, exit) == 0);
-    f.patch32(offsetAt, f.module().exitIndexToGlobalDataOffset(exitIndex));
+    f.patch32(offsetAt, f.module().exit(exitIndex).globalDataOffset());
     f.patchSig(sigAt, lifoSig);
     *type = Type::ret(ret);
     return true;
@@ -7725,7 +7703,7 @@ GenerateFFIIonExit(ModuleValidator& m, const LifoSig& sig, unsigned exitIndex, L
     Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
-    unsigned globalDataOffset = m.module().exitIndexToGlobalDataOffset(exitIndex);
+    unsigned globalDataOffset = m.module().exit(exitIndex).globalDataOffset();
 #if defined(JS_CODEGEN_X64)
     m.masm().append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
