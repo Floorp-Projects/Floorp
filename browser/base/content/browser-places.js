@@ -726,8 +726,6 @@ HistoryMenu.prototype = {
   },
 
   toggleTabsFromOtherComputers: function PHM_toggleTabsFromOtherComputers() {
-    // This is a no-op if MOZ_SERVICES_SYNC isn't defined
-#ifdef MOZ_SERVICES_SYNC
     // Enable/disable the Tabs From Other Computers menu. Some of the menus handled
     // by HistoryMenu do not have this menuitem.
     let menuitem = this._rootElt.getElementsByClassName("syncTabsMenuItem")[0];
@@ -742,7 +740,6 @@ HistoryMenu.prototype = {
     let enabled = PlacesUIUtils.shouldEnableTabsFromOtherComputersMenuitem();
     menuitem.setAttribute("disabled", !enabled);
     menuitem.setAttribute("hidden", false);
-#endif
   },
 
   _onPopupShowing: function HM__onPopupShowing(aEvent) {
