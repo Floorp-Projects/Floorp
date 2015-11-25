@@ -74,9 +74,11 @@ public:
   IMPL_EVENT_HANDLER(success)
   IMPL_EVENT_HANDLER(error)
 
-  already_AddRefed<mozilla::dom::Promise>
+  void
   Then(JSContext* aCx, AnyCallback* aResolveCallback,
-       AnyCallback* aRejectCallback, mozilla::ErrorResult& aRv);
+       AnyCallback* aRejectCallback,
+       JS::MutableHandle<JS::Value> aRetval,
+       mozilla::ErrorResult& aRv);
 
   void FireSuccess(JS::Handle<JS::Value> aResult);
   void FireError(const nsAString& aError);

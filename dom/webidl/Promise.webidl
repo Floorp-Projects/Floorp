@@ -30,12 +30,15 @@ interface _Promise {
 
   // The [TreatNonCallableAsNull] annotation is required since then() should do
   // nothing instead of throwing errors when non-callable arguments are passed.
-  [NewObject]
-  Promise<any> then([TreatNonCallableAsNull] optional AnyCallback? fulfillCallback = null,
-                    [TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
+  // Have to use "any" (or "object", but "any" is simpler) as the type to
+  // support the subclassing behavior, since nothing actually requires the
+  // return value of PromiseSubclass.then/catch to be a Promise object.
+  [NewObject, Throws]
+  any then([TreatNonCallableAsNull] optional AnyCallback? fulfillCallback = null,
+           [TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
-  [NewObject]
-  Promise<any> catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
+  [NewObject, Throws]
+  any catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
   // Have to use "any" (or "object", but "any" is simpler) as the type to
   // support the subclassing behavior, since nothing actually requires the
