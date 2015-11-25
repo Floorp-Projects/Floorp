@@ -12,6 +12,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsILoadInfo.h"
 
 static mozilla::LazyLogModule gRedirectLog("nsRedirect");
 #undef LOG
@@ -64,6 +65,15 @@ nsAsyncRedirectVerifyHelper::Init(nsIChannel* oldChan, nsIChannel* newChan,
     mNewChan           = newChan;
     mFlags             = flags;
     mCallbackThread    = do_GetCurrentThread();
+
+    if (!(flags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                   nsIChannelEventSink::REDIRECT_STS_UPGRADE))) {
+      nsCOMPtr<nsILoadInfo> loadInfo = oldChan->GetLoadInfo();
+      if (loadInfo && loadInfo->GetDontFollowRedirects()) {
+        ExplicitCallback(NS_BINDING_ABORTED);
+        return NS_OK;
+      }
+    }
 
     if (synchronize)
       mWaitingForRedirectCallback = true;

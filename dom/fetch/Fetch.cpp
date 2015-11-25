@@ -976,8 +976,14 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         // FetchBody on the main thread.
         RefPtr<CancelPumpRunnable<Derived>> r =
           new CancelPumpRunnable<Derived>(this);
-        if (!r->Dispatch(mWorkerPrivate->GetJSContext())) {
+        ErrorResult rv;
+        r->Dispatch(rv);
+        if (rv.Failed()) {
           NS_WARNING("Could not dispatch CancelPumpRunnable. Nothing we can do here");
+          // None of our callers are callled directly from JS, so there is no
+          // point in trying to propagate this failure out of here.  And
+          // localPromise is already rejected.  Just suppress the failure.
+          rv.SuppressException();
         }
       }
     }

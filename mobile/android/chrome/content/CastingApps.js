@@ -745,8 +745,16 @@ var CastingApps = {
     }
 
     let status = aRemoteMedia.status;
-    if (status == "completed") {
-      this.closeExternal();
+    switch (status) {
+      case "started":
+        Messaging.sendRequest({ type: "Casting:Playing" });
+        break;
+      case "paused":
+        Messaging.sendRequest({ type: "Casting:Paused" });
+        break;
+      case "completed":
+        this.closeExternal();
+        break;
     }
   }
 };

@@ -1339,15 +1339,15 @@ Http2Stream::OnReadSegment(const char *buf,
       dataLength = static_cast<uint32_t>(mServerReceiveWindow);
 
     LOG3(("Http2Stream this=%p id 0x%X send calculation "
-          "avail=%d chunksize=%d stream window=%d session window=%d "
-          "max frame=%d USING=%d\n", this, mStreamID,
+          "avail=%d chunksize=%d stream window=%" PRId64 " session window=%" PRId64 " "
+          "max frame=%d USING=%u\n", this, mStreamID,
           count, mChunkSize, mServerReceiveWindow, mSession->ServerSessionWindow(),
           Http2Session::kMaxFrameData, dataLength));
 
     mSession->DecrementServerSessionWindow(dataLength);
     mServerReceiveWindow -= dataLength;
 
-    LOG3(("Http2Stream %p id %x request len remaining %u, "
+    LOG3(("Http2Stream %p id 0x%x request len remaining %" PRId64 ", "
           "count avail %u, chunk used %u",
           this, mStreamID, mRequestBodyLenRemaining, count, dataLength));
     if (!dataLength && mRequestBodyLenRemaining) {

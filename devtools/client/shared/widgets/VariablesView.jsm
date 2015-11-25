@@ -1278,11 +1278,13 @@ Scope.prototype = {
    *        The name of the new Property.
    * @param object aDescriptor
    *        The variable's descriptor.
+   * @param object aOptions
+   *        Options of the form accepted by addItem.
    * @return Variable
    *         The newly created child Variable.
    */
-  _createChild: function(aName, aDescriptor) {
-    return new Variable(this, aName, aDescriptor);
+  _createChild: function(aName, aDescriptor, aOptions) {
+    return new Variable(this, aName, aDescriptor, aOptions);
   },
 
   /**
@@ -1303,18 +1305,27 @@ Scope.prototype = {
    *             - { value: { type: "object", class: "Object" } }
    *             - { get: { type: "object", class: "Function" },
    *                 set: { type: "undefined" } }
-   * @param boolean aRelaxed [optional]
-   *        Pass true if name duplicates should be allowed.
-   *        You probably shouldn't do it. Use this with caution.
+   * @param object aOptions
+   *        Specifies some options affecting the new variable.
+   *        Recognized properties are
+   *        * boolean relaxed  true if name duplicates should be allowed.
+   *                           You probably shouldn't do it. Use this
+   *                           with caution.
+   *        * boolean internalItem  true if the item is internally generated.
+   *                           This is used for special variables
+   *                           like <return> or <exception> and distinguishes
+   *                           them from ordinary properties that happen
+   *                           to have the same name
    * @return Variable
    *         The newly created Variable instance, null if it already exists.
    */
-  addItem: function(aName = "", aDescriptor = {}, aRelaxed = false) {
-    if (this._store.has(aName) && !aRelaxed) {
+  addItem: function(aName = "", aDescriptor = {}, aOptions = {}) {
+    let {relaxed} = aOptions;
+    if (this._store.has(aName) && !relaxed) {
       return this._store.get(aName);
     }
 
-    let child = this._createChild(aName, aDescriptor);
+    let child = this._createChild(aName, aDescriptor, aOptions);
     this._store.set(aName, child);
     this._variablesView._itemsByElement.set(child._target, child);
     this._variablesView._currHierarchy.set(child.absoluteName, child);
@@ -2146,14 +2157,17 @@ XPCOMUtils.defineLazyGetter(Scope, "ellipsis", () =>
  *        The variable's name.
  * @param object aDescriptor
  *        The variable's descriptor.
+ * @param object aOptions
+ *        Options of the form accepted by Scope.addItem
  */
-function Variable(aScope, aName, aDescriptor) {
+function Variable(aScope, aName, aDescriptor, aOptions) {
   this._setTooltips = this._setTooltips.bind(this);
   this._activateNameInput = this._activateNameInput.bind(this);
   this._activateValueInput = this._activateValueInput.bind(this);
   this.openNodeInInspector = this.openNodeInInspector.bind(this);
   this.highlightDomNode = this.highlightDomNode.bind(this);
   this.unhighlightDomNode = this.unhighlightDomNode.bind(this);
+  this._internalItem = aOptions.internalItem;
 
   // Treat safe getter descriptors as descriptors with a value.
   if ("getterValue" in aDescriptor) {
@@ -2193,11 +2207,13 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    *        The name of the new Property.
    * @param object aDescriptor
    *        The property's descriptor.
+   * @param object aOptions
+   *        Options of the form accepted by Scope.addItem
    * @return Property
    *         The newly created child Property.
    */
-  _createChild: function(aName, aDescriptor) {
-    return new Property(this, aName, aDescriptor);
+  _createChild: function(aName, aDescriptor, aOptions) {
+    return new Property(this, aName, aDescriptor, aOptions);
   },
 
   /**
@@ -2521,8 +2537,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     if (this._initialDescriptor.enumerable ||
         this._nameString == "this" ||
-        this._nameString == "<return>" ||
-        this._nameString == "<exception>") {
+        (this._internalItem &&
+         (this._nameString == "<return>" ||
+          this._nameString == "<exception>"))) {
       this.ownerView._enum.appendChild(this._target);
       this.ownerView._enumItems.push(this);
     } else {
@@ -2869,11 +2886,11 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     if (name == "this") {
       target.setAttribute("self", "");
     }
-    else if (name == "<exception>") {
+    else if (this._internalItem && name == "<exception>") {
       target.setAttribute("exception", "");
       target.setAttribute("pseudo-item", "");
     }
-    else if (name == "<return>") {
+    else if (this._internalItem && name == "<return>") {
       target.setAttribute("return", "");
       target.setAttribute("pseudo-item", "");
     }
@@ -3008,7 +3025,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       configurable: true,
       enumerable: true,
       writable: true
-    }, true);
+    }, {relaxed: true});
 
     // Force showing the separator.
     item._separatorLabel.hidden = false;
@@ -3051,9 +3068,11 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
  *        The property's name.
  * @param object aDescriptor
  *        The property's descriptor.
+ * @param object aOptions
+ *        Options of the form accepted by Scope.addItem
  */
-function Property(aVar, aName, aDescriptor) {
-  Variable.call(this, aVar, aName, aDescriptor);
+function Property(aVar, aName, aDescriptor, aOptions) {
+  Variable.call(this, aVar, aName, aDescriptor, aOptions);
 }
 
 Property.prototype = Heritage.extend(Variable.prototype, {

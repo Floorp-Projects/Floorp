@@ -86,7 +86,7 @@ nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
 nsIObserverService*       nsXULTemplateBuilder::gObserverService;
 
-PRLogModuleInfo* gXULTemplateLog;
+LazyLogModule gXULTemplateLog("nsXULTemplateBuilder");
 
 #define NS_QUERY_PROCESSOR_CONTRACTID_PREFIX "@mozilla.org/xul/xul-query-processor;1?name="
 
@@ -164,9 +164,6 @@ nsXULTemplateBuilder::InitGlobals()
         if (NS_FAILED(rv))
             return rv;
     }
-
-    if (! gXULTemplateLog)
-        gXULTemplateLog = PR_NewLogModule("nsXULTemplateBuilder");
 
     return NS_OK;
 }

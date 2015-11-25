@@ -8,6 +8,8 @@
 #include "gc/Barrier.h"
 #include "js/RootingAPI.h"
 
+#include "jsapi-tests/tests.h"
+
 struct MyHeap : JS::Traceable
 {
     explicit MyHeap(JSObject* obj) : weak(obj) {}
@@ -27,7 +29,7 @@ BEGIN_TEST(testGCWeakRef)
     CHECK(JS_DefineProperty(cx, obj, "x", 42, 0));
 
     // Store the object behind a weak pointer and remove other references.
-    Rooted<MyHeap> heap(cx, MyHeap(obj));
+    JS::Rooted<MyHeap> heap(cx, MyHeap(obj));
     obj = nullptr;
 
     rt->gc.minorGC(JS::gcreason::API);
@@ -37,7 +39,7 @@ BEGIN_TEST(testGCWeakRef)
     // references.
     CHECK(heap.get().weak.unbarrieredGet() != nullptr);
     obj = heap.get().weak;
-    RootedValue v(cx);
+    JS::RootedValue v(cx);
     CHECK(JS_GetProperty(cx, obj, "x", &v));
     CHECK(v.isInt32());
     CHECK(v.toInt32() == 42);
@@ -46,7 +48,7 @@ BEGIN_TEST(testGCWeakRef)
     CHECK(obj == heap.get().weak);
     JS_GC(rt);
     CHECK(obj == heap.get().weak);
-    v = UndefinedValue();
+    v = JS::UndefinedValue();
     CHECK(JS_GetProperty(cx, obj, "x", &v));
     CHECK(v.isInt32());
     CHECK(v.toInt32() == 42);

@@ -21,7 +21,6 @@
 #include "plhash.h"
 
 #include "mozilla/Logging.h"
-extern PRLogModuleInfo* gXULTemplateLog;
 
 #include "nsString.h"
 #include "nsUnicharUtils.h"
@@ -33,6 +32,7 @@ extern PRLogModuleInfo* gXULTemplateLog;
 #include "nsRDFPropertyTestNode.h"
 
 using namespace mozilla;
+extern LazyLogModule gXULTemplateLog;
 
 //----------------------------------------------------------------------
 //

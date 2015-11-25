@@ -3,8 +3,6 @@
 // Send these sites a custom user-agent. Bugs should be included with an entry.
 // NOTE: trailing commas are not valid JSON and will prevent the CDN from syncing.
 {
-  // bug 1174784, youtube.com
-  "youtube.com": "Android\\s\\d.+?;#Android;",
   // bug 1184320, gmail.com
   "mail.google.com": "Android\\s\\d.+?;#Android;",
   // bug 117898, yahoo.co.jp properties

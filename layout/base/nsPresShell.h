@@ -480,7 +480,7 @@ protected:
       : mResolution(aPresShell->mResolution)
       , mRenderFlags(aPresShell->mRenderFlags)
     { }
-    float mResolution;
+    mozilla::Maybe<float> mResolution;
     RenderFlags mRenderFlags;
   };
 

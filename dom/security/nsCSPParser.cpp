@@ -19,12 +19,10 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
+static LogModule*
 GetCspParserLog()
 {
-  static PRLogModuleInfo* gCspParserPRLog;
-  if (!gCspParserPRLog)
-    gCspParserPRLog = PR_NewLogModule("CSPParser");
+  static LazyLogModule gCspParserPRLog("CSPParser");
   return gCspParserPRLog;
 }
 

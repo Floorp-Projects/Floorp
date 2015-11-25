@@ -1,12 +1,17 @@
-/* globals ok, equal, RemoteNewTabLocation, NewTabPrefsProvider, Services, Preferences */
+/* globals ok, equal, RemoteNewTabLocation, NewTabPrefsProvider, Services, Preferences, XPCOMUtils, UpdateUtils */
 /* jscs:disable requireCamelCaseOrUpperCaseIdentifiers */
 "use strict";
 
-Components.utils.import("resource:///modules/RemoteNewTabLocation.jsm");
-Components.utils.import("resource:///modules/NewTabPrefsProvider.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Preferences.jsm");
-Components.utils.importGlobalProperties(["URL"]);
+const {utils: Cu} = Components;
+Cu.import("resource:///modules/RemoteNewTabLocation.jsm");
+Cu.import("resource:///modules/NewTabPrefsProvider.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["URL"]);
+
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+  "resource://gre/modules/UpdateUtils.jsm");
 
 RemoteNewTabLocation.init();
 const DEFAULT_HREF = RemoteNewTabLocation.href;
@@ -52,9 +57,11 @@ add_task(function* test_overrides() {
 add_task(function* test_updates() {
   RemoteNewTabLocation.init();
   let notificationPromise;
+  let release = RemoteNewTabLocation._releaseFromUpdateChannel(
+    UpdateUtils.UpdateChannel);
   let expectedHref = "https://newtab.cdn.mozilla.net" +
                      `/v${RemoteNewTabLocation.version}` +
-                     "/nightly" +
+                     `/${release}` +
                      "/en-GB" +
                      "/index.html";
   Preferences.set("intl.locale.matchOS", true);

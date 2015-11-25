@@ -925,14 +925,7 @@ public:
   bool SetupLineBreakerContext(gfxTextRun *aTextRun);
   void AssignTextRun(gfxTextRun* aTextRun, float aInflation);
   nsTextFrame* GetNextBreakBeforeFrame(uint32_t* aIndex);
-  enum SetupBreakSinksFlags {
-    SBS_DOUBLE_BYTE =      (1 << 0),
-    SBS_EXISTING_TEXTRUN = (1 << 1),
-    SBS_SUPPRESS_SINK    = (1 << 2)
-  };
-  void SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
-                                 const void* aTextPtr,
-                                 uint32_t    aFlags);
+  void SetupBreakSinksForTextRun(gfxTextRun* aTextRun, const void* aTextPtr);
   struct FindBoundaryState {
     nsIFrame*    mStopAtFrame;
     nsTextFrame* mFirstTextFrame;
@@ -971,17 +964,15 @@ public:
 
   class BreakSink final : public nsILineBreakSink {
   public:
-    BreakSink(gfxTextRun* aTextRun, gfxContext* aContext, uint32_t aOffsetIntoTextRun,
-              bool aExistingTextRun) :
+    BreakSink(gfxTextRun* aTextRun, gfxContext* aContext,
+              uint32_t aOffsetIntoTextRun) :
                 mTextRun(aTextRun), mContext(aContext),
-                mOffsetIntoTextRun(aOffsetIntoTextRun),
-                mChangedBreaks(false), mExistingTextRun(aExistingTextRun) {}
+                mOffsetIntoTextRun(aOffsetIntoTextRun) {}
 
     virtual void SetBreaks(uint32_t aOffset, uint32_t aLength,
                            uint8_t* aBreakBefore) override {
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
                                            aBreakBefore, mContext)) {
-        mChangedBreaks = true;
         // Be conservative and assume that some breaks have been set
         mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
@@ -1018,8 +1009,6 @@ public:
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
     uint32_t     mOffsetIntoTextRun;
-    bool mChangedBreaks;
-    bool mExistingTextRun;
   };
 
 private:
@@ -1535,10 +1524,8 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
   }
 
   for (uint32_t i = 0; i < mBreakSinks.Length(); ++i) {
-    if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
-      // TODO cause frames associated with the textrun to be reflowed, if they
-      // aren't being reflowed already!
-    }
+    // TODO cause frames associated with the textrun to be reflowed, if they
+    // aren't being reflowed already!
     mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
@@ -2267,14 +2254,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // the breaks may be stored in the textrun during this very call.
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
-  uint32_t flags = 0;
-  if (mDoubleByteText) {
-    flags |= SBS_DOUBLE_BYTE;
-  }
-  if (mSkipIncompleteTextRuns) {
-    flags |= SBS_SUPPRESS_SINK;
-  }
-  SetupBreakSinksForTextRun(textRun, textPtr, flags);
+  SetupBreakSinksForTextRun(textRun, textPtr);
 
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
@@ -2407,14 +2387,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
   // the breaks may be stored in the textrun during this very call.
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
-  uint32_t flags = 0;
-  if (mDoubleByteText) {
-    flags |= SBS_DOUBLE_BYTE;
-  }
-  if (mSkipIncompleteTextRuns) {
-    flags |= SBS_SUPPRESS_SINK;
-  }
-  SetupBreakSinksForTextRun(aTextRun, buffer.Elements(), flags);
+  SetupBreakSinksForTextRun(aTextRun, buffer.Elements());
 
   DestroyUserData(userDataToDestroy);
 
@@ -2443,8 +2416,7 @@ HasCompressedLeadingWhitespace(nsTextFrame* aFrame, const nsStyleText* aStyleTex
 
 void
 BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
-                                                const void* aTextPtr,
-                                                uint32_t    aFlags)
+                                                const void* aTextPtr)
 {
   // textruns have uniform language
   const nsStyleFont *styleFont = mMappedFlows[0].mStartFrame->StyleFont();
@@ -2464,9 +2436,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     iterNext.AdvanceOriginal(mappedFlow->GetContentEnd() -
             mappedFlow->mStartFrame->GetContentOffset());
 
-    nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mContext, offset,
-                    (aFlags & SBS_EXISTING_TEXTRUN) != 0));
+    nsAutoPtr<BreakSink>* breakSink =
+      mBreakSinks.AppendElement(new BreakSink(aTextRun, mContext, offset));
     if (!breakSink || !*breakSink)
       return;
 
@@ -2502,8 +2473,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
 
     if (length > 0) {
       BreakSink* sink =
-        (aFlags & SBS_SUPPRESS_SINK) ? nullptr : (*breakSink).get();
-      if (aFlags & SBS_DOUBLE_BYTE) {
+        mSkipIncompleteTextRuns ? nullptr : (*breakSink).get();
+      if (mDoubleByteText) {
         const char16_t* text = reinterpret_cast<const char16_t*>(aTextPtr);
         mLineBreaker.AppendText(hyphenationLanguage, text + offset,
                                 length, flags, sink);

@@ -6,8 +6,8 @@
 
 #include "StumblerLogging.h"
 
-PRLogModuleInfo* GetLog()
+mozilla::LogModule* GetLog()
 {
-  static PRLogModuleInfo* log = PR_NewLogModule("mozstumbler");
+  static mozilla::LazyLogModule log("mozstumbler");
   return log;
 }

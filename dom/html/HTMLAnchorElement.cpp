@@ -63,13 +63,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAnchorElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAnchorElement,
                                                   nsGenericHTMLElement)
-  tmp->Link::Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAnchorElement,
                                                 nsGenericHTMLElement)
-  tmp->Link::Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -324,17 +322,13 @@ HTMLAnchorElement::RelList()
   NS_IMETHODIMP                                              \
   HTMLAnchorElement::Get##_part(nsAString& a##_part)         \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Get##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Get##_part(a##_part);                              \
     return NS_OK;                                            \
   }                                                          \
   NS_IMETHODIMP                                              \
   HTMLAnchorElement::Set##_part(const nsAString& a##_part)   \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Set##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Set##_part(a##_part);                              \
     return NS_OK;                                            \
   }
 

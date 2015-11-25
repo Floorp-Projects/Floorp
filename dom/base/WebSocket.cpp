@@ -138,14 +138,14 @@ public:
                       const nsACString& aReasonString = EmptyCString());
   nsresult CloseConnection(uint16_t reasonCode,
                            const nsACString& aReasonString = EmptyCString());
-  nsresult Disconnect();
+  void Disconnect();
   void DisconnectInternal();
 
   nsresult ConsoleError();
-  nsresult PrintErrorOnConsole(const char* aBundleURI,
-                               const char16_t* aError,
-                               const char16_t** aFormatStrings,
-                               uint32_t aFormatStringsLen);
+  void PrintErrorOnConsole(const char* aBundleURI,
+                           const char16_t* aError,
+                           const char16_t** aFormatStrings,
+                           uint32_t aFormatStringsLen);
 
   nsresult DoOnMessageAvailable(const nsACString& aMsg,
                                 bool isBinary);
@@ -301,19 +301,13 @@ public:
     , mError(aError)
     , mFormatStrings(aFormatStrings)
     , mFormatStringsLen(aFormatStringsLen)
-    , mRv(NS_ERROR_FAILURE)
   { }
 
   bool MainThreadRun() override
   {
-    mRv = mImpl->PrintErrorOnConsole(mBundleURI, mError, mFormatStrings,
-                                     mFormatStringsLen);
+    mImpl->PrintErrorOnConsole(mBundleURI, mError, mFormatStrings,
+                               mFormatStringsLen);
     return true;
-  }
-
-  nsresult ErrorCode() const
-  {
-    return mRv;
   }
 
 private:
@@ -324,12 +318,11 @@ private:
   const char16_t* mError;
   const char16_t** mFormatStrings;
   uint32_t mFormatStringsLen;
-  nsresult mRv;
 };
 
 } // namespace
 
-nsresult
+void
 WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
                                    const char16_t *aError,
                                    const char16_t **aFormatStrings,
@@ -343,26 +336,32 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
     RefPtr<PrintErrorOnConsoleRunnable> runnable =
       new PrintErrorOnConsoleRunnable(this, aBundleURI, aError, aFormatStrings,
                                       aFormatStringsLen);
-    runnable->Dispatch(mWorkerPrivate->GetJSContext());
-    return runnable->ErrorCode();
+    ErrorResult rv;
+    runnable->Dispatch(rv);
+    // XXXbz this seems totally broken.  We should be propagating this out, but
+    // none of our callers really propagate anything usefully.  Come to think of
+    // it, why is this a syncrunnable anyway?  Can't this be a fire-and-forget
+    // runnable??
+    rv.SuppressException();
+    return;
   }
 
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIStringBundle> strBundle;
   rv = bundleService->CreateBundle(aBundleURI, getter_AddRefs(strBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIConsoleService> console(
     do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   nsCOMPtr<nsIScriptError> errorObject(
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // Localize the error message
   nsXPIDLString message;
@@ -373,7 +372,7 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
   } else {
     rv = strBundle->GetStringFromName(aError, getter_Copies(message));
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   if (mInnerWindowID) {
     rv = errorObject->InitWithWindowID(message,
@@ -389,13 +388,11 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
                            nsIScriptError::errorFlag, "Web Socket");
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // print the error message directly to the JS console
   rv = console->LogMessage(errorObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 namespace {
@@ -603,11 +600,11 @@ private:
 
 } // namespace
 
-nsresult
+void
 WebSocketImpl::Disconnect()
 {
   if (mDisconnectingOrDisconnected) {
-    return NS_OK;
+    return;
   }
 
   AssertIsOnTargetThread();
@@ -626,7 +623,11 @@ WebSocketImpl::Disconnect()
   } else {
     RefPtr<DisconnectInternalRunnable> runnable =
       new DisconnectInternalRunnable(this);
-    runnable->Dispatch(mWorkerPrivate->GetJSContext());
+    ErrorResult rv;
+    runnable->Dispatch(rv);
+    // XXXbz this seems totally broken.  We should be propagating this out, but
+    // where to, exactly?
+    rv.SuppressException();
   }
 
   // DontKeepAliveAnyMore() can release the object. So hold a reference to this
@@ -645,8 +646,6 @@ WebSocketImpl::Disconnect()
 
   // We want to release the WebSocket in the correct thread.
   mWebSocket = nullptr;
-
-  return NS_OK;
 }
 
 void
@@ -1270,7 +1269,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
       new InitRunnable(webSocket->mImpl, aUrl, protocolArray,
                        nsAutoCString(file.get()), lineno, column, aRv,
                        &connectionFailed);
-    runnable->Dispatch(aGlobal.Context());
+    runnable->Dispatch(aRv);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {
@@ -1350,7 +1349,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   } else {
     RefPtr<AsyncOpenRunnable> runnable =
       new AsyncOpenRunnable(webSocket->mImpl, aRv);
-    runnable->Dispatch(aGlobal.Context());
+    runnable->Dispatch(aRv);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {

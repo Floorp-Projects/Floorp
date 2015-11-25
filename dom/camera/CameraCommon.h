@@ -9,7 +9,7 @@
 
 #include "mozilla/Logging.h"
 
-extern PRLogModuleInfo* GetCameraLog();
+extern mozilla::LogModule* GetCameraLog();
 #define DOM_CAMERA_LOG( type, ... ) MOZ_LOG(GetCameraLog(), (mozilla::LogLevel)type, ( __VA_ARGS__ ))
 
 #define DOM_CAMERA_LOGA( ... )      DOM_CAMERA_LOG( mozilla::LogLevel::Error, __VA_ARGS__ )

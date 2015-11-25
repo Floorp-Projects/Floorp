@@ -77,8 +77,9 @@ function init_all() {
   });
   document.dispatchEvent(initFinished);
 
-  let helpCmd = document.getElementById("help-button");
-  helpCmd.addEventListener("command", helpButtonCommand);
+  let helpCmds = document.querySelectorAll(".help-button");
+  for (let helpCmd of helpCmds)
+    helpCmd.addEventListener("command", helpButtonCommand);
 
   // Wait until initialization of all preferences are complete before
   // notifying observers that the UI is now ready.

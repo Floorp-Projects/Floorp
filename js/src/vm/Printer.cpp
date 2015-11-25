@@ -19,22 +19,22 @@
 namespace js {
 
 GenericPrinter::GenericPrinter()
-  : reportedOOM_(false)
+  : hadOOM_(false)
 {
 }
 
 void
 GenericPrinter::reportOutOfMemory()
 {
-    if (reportedOOM_)
+    if (hadOOM_)
         return;
-    reportedOOM_ = true;
+    hadOOM_ = true;
 }
 
 bool
 GenericPrinter::hadOutOfMemory() const
 {
-    return reportedOOM_;
+    return hadOOM_;
 }
 
 int
@@ -88,11 +88,12 @@ Sprinter::realloc_(size_t newSize)
     return true;
 }
 
-Sprinter::Sprinter(ExclusiveContext* cx)
+Sprinter::Sprinter(ExclusiveContext* cx, bool shouldReportOOM)
   : context(cx),
 #ifdef DEBUG
     initialized(false),
 #endif
+    shouldReportOOM(shouldReportOOM),
     base(nullptr), size(0), offset(0)
 { }
 
@@ -207,7 +208,7 @@ Sprinter::vprintf(const char* fmt, va_list ap)
     do {
         va_list aq;
         va_copy(aq, ap);
-        int i = vsnprintf(base + offset, size - offset, fmt, aq);
+        int i = JS_vsnprintf(base + offset, size - offset, fmt, aq);
         va_end(aq);
         if (i > -1 && (size_t) i < size - offset) {
             offset += i;
@@ -254,11 +255,11 @@ Sprinter::getOffset() const
 void
 Sprinter::reportOutOfMemory()
 {
-    if (reportedOOM_)
+    if (hadOOM_)
         return;
-    if (context)
+    if (context && shouldReportOOM)
         ReportOutOfMemory(context);
-    reportedOOM_ = true;
+    hadOOM_ = true;
 }
 
 ptrdiff_t
@@ -509,7 +510,7 @@ LSprinter::clear()
     head_ = nullptr;
     tail_ = nullptr;
     unused_ = 0;
-    reportedOOM_ = false;
+    hadOOM_ = false;
 }
 
 int
@@ -597,15 +598,15 @@ LSprinter::vprintf(const char* fmt, va_list ap)
 void
 LSprinter::reportOutOfMemory()
 {
-    if (reportedOOM_)
+    if (hadOOM_)
         return;
-    reportedOOM_ = true;
+    hadOOM_ = true;
 }
 
 bool
 LSprinter::hadOutOfMemory() const
 {
-    return reportedOOM_;
+    return hadOOM_;
 }
 
 } // namespace js

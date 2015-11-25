@@ -10,7 +10,6 @@ const {Cc, Cu, Ci} = require("chrome");
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
 const DEFAULT_MAX_CHILDREN = 100;
-const COLLAPSE_ATTRIBUTE_LENGTH = 120;
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
 const NEW_SELECTION_HIGHLIGHTER_TIMER = 1000;
@@ -79,6 +78,9 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   } catch (ex) {
     this.maxChildren = DEFAULT_MAX_CHILDREN;
   }
+
+  this.collapseAttributeLength =
+    Services.prefs.getIntPref("devtools.markup.collapseAttributeLength");
 
   // Creating the popup to be used to show CSS suggestions.
   let options = {
@@ -2806,7 +2808,9 @@ ElementEditor.prototype = {
       if (value && value.match(COLLAPSE_DATA_URL_REGEX)) {
         return truncateString(value, COLLAPSE_DATA_URL_LENGTH);
       }
-      return truncateString(value, COLLAPSE_ATTRIBUTE_LENGTH);
+      return this.markup.collapseAttributeLength < 0
+        ? value :
+        truncateString(value, this.markup.collapseAttributeLength);
     };
 
     val.innerHTML = "";

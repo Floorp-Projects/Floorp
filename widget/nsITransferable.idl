@@ -15,6 +15,7 @@ interface nsIDOMNode;
 // these probably shouldn't live here, but in some central repository shared
 // by the entire app.
 #define kTextMime                   "text/plain"
+#define kRTFMime                    "text/rtf"
 #define kUnicodeMime                "text/unicode"
 #define kMozTextInternal          "text/x-moz-text-internal"  // text data which isn't suppoed to be parsed by other apps.
 #define kHTMLMime                   "text/html"

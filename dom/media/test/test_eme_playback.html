@@ -12,6 +12,19 @@
 <script class="testbody" type="text/javascript">
 var manager = new MediaTestManager;
 
+function ArrayBuffersEqual(a, b) {
+  if (a.byteLength != b.byteLength) {
+    return false;
+  }
+  var ua = new Uint8Array(a);
+  var ub = new Uint8Array(b);
+  for (var i = 0; i < ua.length; i++) {
+    if (ua[i] != ub[i]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function KeysChangeFunc(session, keys, token) {
   session.keyIdsReceived = [];
@@ -23,12 +36,31 @@ function KeysChangeFunc(session, keys, token) {
     var session = ev.target;
     session.gotKeysChanged = true;
 
+    var keyList = [];
+    var valueList = [];
+
     var map = session.keyStatuses;
     for (var [key, val] of map.entries()) {
+      is(key.constructor, ArrayBuffer, "keyId should be ArrayBuffer");
+      ok(map.has(key), "MediaKeyStatusMap.has() should work.");
+      is(map.get(key), val, "MediaKeyStatusMap.get() should work.");
+      keyList.push(key);
+      valueList.push(val);
       is(val, "usable", token + ": key status should be usable");
       var kid = Base64ToHex(window.btoa(ArrayBufferToString(key)));
       ok(kid in session.keyIdsReceived, TimeStamp(token) + " session[" + session.sessionId + "].keyIdsReceived contained " + kid + " as expected.");
       session.keyIdsReceived[kid] = true;
+    }
+
+    var index = 0;
+    for (var keyId of map.keys()) {
+      ok(ArrayBuffersEqual(keyId, keyList[index]), "MediaKeyStatusMap.keys() should correspond to entries");
+      index++;
+    }
+    index = 0;
+    for (var val of map.values()) {
+      is(val, valueList[index], "MediaKeyStatusMap.values() should correspond to entries");
+      index++;
     }
   }
 }

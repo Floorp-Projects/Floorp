@@ -67,6 +67,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
     transferable.getTransferData(mime, data, {}) ;
     return SpecialPowers.wrap(data);
   }
+  function testHtmlClipboardValue(mime, expected, test) {
+    var expectedValue = expected;
+    // For Windows, navigator.platform returns "Win32".
+    if (navigator.platform.indexOf("Win") >= 0) {
+      expectedValue = "<html><body>\n<!--StartFragment-->" + expected + "<!--EndFragment-->\n</body>\n</html>";
+    }
+    testClipboardValue(mime, expectedValue, test);
+  }
   function testClipboardValue(mime, expected, test) {
     var data = getClipboardData(mime);
     is (data.value == null ? data.value :
@@ -140,7 +148,7 @@ for (var i = 0; i < originalStrings.length; i++) {
   var id = 'test' + i;
   copyChildrenToClipboard(id);
   is(window.getSelection().toString(), originalStrings[i], id + ' Selection.toString()');
-  testClipboardValue("text/html", clipboardHTML[i], id);
+  testHtmlClipboardValue("text/html", clipboardHTML[i], id);
   testClipboardValue("text/unicode", clipboardUnicode[i], id);
   testInnerHTML(id, innerHTMLStrings[i]);
   testPasteText(textareaStrings[i], id + '.innerHTML');

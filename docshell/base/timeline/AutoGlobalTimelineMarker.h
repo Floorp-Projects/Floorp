@@ -8,6 +8,7 @@
 #define mozilla_AutoGlobalTimelineMarker_h_
 
 #include "mozilla/GuardObjects.h"
+#include "TimelineMarkerEnums.h"
 
 namespace mozilla {
 
@@ -32,9 +33,12 @@ class MOZ_RAII AutoGlobalTimelineMarker
 
   // The name of the marker we are adding.
   const char* mName;
+  // Whether to capture the JS stack or not.
+  MarkerStackRequest mStackRequest;
 
 public:
-  explicit AutoGlobalTimelineMarker(const char* aName
+  explicit AutoGlobalTimelineMarker(const char* aName,
+                                    MarkerStackRequest aStackRequest = MarkerStackRequest::STACK
                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~AutoGlobalTimelineMarker();
 

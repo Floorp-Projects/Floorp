@@ -220,6 +220,8 @@ tests:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_mochitests.yml
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
   mochitest-oop:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:

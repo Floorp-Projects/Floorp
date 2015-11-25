@@ -1318,7 +1318,7 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
 
   HRESULT hr =
     mRT->CreateGradientStopCollection(stops, aNumStops,
-                                      D2D1_GAMMA_2_2, D2DExtend(aExtendMode),
+                                      D2D1_GAMMA_2_2, D2DExtend(aExtendMode, Axis::BOTH),
                                       getter_AddRefs(stopCollection));
   delete [] stops;
 
@@ -2445,9 +2445,11 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       break;
     }
 
+    D2D1_EXTEND_MODE xRepeat = D2DExtend(pat->mExtendMode, Axis::X_AXIS);
+    D2D1_EXTEND_MODE yRepeat = D2DExtend(pat->mExtendMode, Axis::Y_AXIS);
     HRESULT hr = mRT->CreateBitmapBrush(bitmap,
-                           D2D1::BitmapBrushProperties(D2DExtend(pat->mExtendMode),
-                                                       D2DExtend(pat->mExtendMode),
+                           D2D1::BitmapBrushProperties(xRepeat,
+                                                       yRepeat,
                                                        D2DFilter(pat->mFilter)),
                            D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                            getter_AddRefs(bmBrush));

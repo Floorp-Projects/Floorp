@@ -114,11 +114,6 @@ SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     // If there is a frame then it should deal with loading as the image
     // url may be animated.
     if (!GetPrimaryFrame()) {
-
-      // Prevent setting image.src by exiting early
-      if (nsContentUtils::IsImageSrcSetDisabled()) {
-        return NS_OK;
-      }
       if (aValue) {
         LoadSVGImage(true, aNotify);
       } else {

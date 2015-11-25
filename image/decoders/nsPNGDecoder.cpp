@@ -679,13 +679,89 @@ nsPNGDecoder::PostFullInvalidation()
   }
 }
 
+static void
+InterpolateInterlacedPNG(const int aPass, const bool aHasAlpha,
+                         const uint32_t aWidth, const uint32_t aHeight,
+                         uint8_t* aImageData)
+{
+  // At this point we have a completed pass of an interlaced image in
+  // imageData as an array of uint8_t ARGB or XRGB pixels, optionally
+  // premultiplied, 4 bytes per pixel. If there are leftover partial
+  // blocks at the right edge or bottom of the image, we just use the
+  // uninterpolated pixels that libpng gave us.
+  //
+  // See Bug #75077, Interpolation of interlaced PNG
+  // See https://en.wikipedia.org/wiki/Bilinear_interpolation
+  //
+  // Note: this doesn't work when downscaling so we simply show
+  // the uninterpolated blocks that libpng gives us.
+  //
+  // Don't try to interpolate images that are less than 8 columns wide
+  // or 8 rows high; do only square passes (0, 2, 4)
+  if ((aPass != 0 && aPass != 2 && aPass != 4) || aWidth < 8 || aHeight < 8) {
+    return;
+  }
+
+  /* Block dimensions are defined by the PNG specification */
+  uint32_t block_width[]  = { 8, 4, 4, 2, 2 };
+  uint32_t bw = block_width[aPass];
+  uint32_t bh = bw;
+
+  bool first_component = aHasAlpha ? 0: 1;
+
+  // Reduced version of the PNG_PASS_ROW_SHIFT(pass) macro in libpng/png.h
+  // Only works with square passes 0, 2, and 4
+  uint32_t divisor_shift = 3 - (aPass >> 1);
+
+  // Loop over blocks
+  for (uint32_t y = 0; y < aHeight - bh; y += bh) {
+    for (uint32_t x = 0; x < aWidth - bw; x += bw) {
+      // (x,y) is the top left corner of the block
+      // topleft is the first component of the top left pixel of the block
+      uint8_t* topleft = aImageData + 4 * (x + aWidth * y);
+
+      // Loop over component=[A,]R,G,B
+      for (uint32_t component = first_component; component < 4; component++) {
+        if (x == 0) {
+          // Interpolate ARGB along the left side of the block
+          uint32_t top = *(topleft + component);
+          uint32_t bottom = *(topleft + component + (bh * 4 * aWidth));
+          for (uint32_t j = 1; j < bh; j++) {
+            *(topleft + component + j * 4 * aWidth) =
+              ((top * (bh - j) + bottom * j) >> divisor_shift) & 0xff;
+          }
+        }
+
+        // Interpolate ARGB along the right side of the block
+        uint32_t top = *(topleft + component + 4 * bw);
+        uint32_t bottom = *(topleft + component + 4 * (bw + (bh * aWidth)));
+        for (uint32_t j = 1; j < bh; j++) {
+          *(topleft + component + 4 * (bw + j * aWidth)) =
+          ((top * (bh - j) + bottom * j) >> divisor_shift) & 0xff;
+        }
+
+        // Interpolate ARGB in the X-direction along the top edge
+        // and within the block
+        for (uint32_t j = 0; j < bh; j++) {
+          uint32_t left = *(topleft + component + 4 * j * aWidth);
+          uint32_t right = *(topleft + component + 4 * (bw + j * aWidth));
+          for (uint32_t i = 1; i < bw; i++) {
+            *(topleft + component + 4 * (i + j * aWidth)) =
+            ((left * (bw - i) + right * i) >> divisor_shift) & 0xff;
+          } // i
+        } // j
+      } // component
+    } // x
+  } // y
+}
+
 void
 nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
                            png_uint_32 row_num, int pass)
 {
   /* libpng comments:
    *
-   * this function is called for every row in the image.  If the
+   * This function is called for every row in the image.  If the
    * image is interlacing, and you turned on the interlace handler,
    * this function will be called for every row in every pass.
    * Some of these rows will not be changed from the previous pass.
@@ -722,98 +798,113 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;
   }
 
-  // If |new_row| is null, that indicates that this is an interlaced image and
-  // |row_callback| is being called for a row that hasn't changed.  Ordinarily
-  // we don't need to do anything in this case, but if we're downscaling, the
-  // downscaler doesn't store the rows from previous passes, so we still need to
-  // process the row.
-  if (new_row || decoder->mDownscaler) {
-    int32_t width = decoder->mFrameRect.width;
-    uint32_t iwidth = decoder->mFrameRect.width;
+  bool lastRow =
+    row_num == static_cast<png_uint_32>(decoder->mFrameRect.height) - 1;
 
-    png_bytep line = new_row;
-    if (decoder->interlacebuf) {
-      line = decoder->interlacebuf + (row_num * decoder->mChannels * width);
-      png_progressive_combine_row(png_ptr, line, new_row);
+  if (!new_row && !decoder->mDownscaler && !lastRow) {
+    // If |new_row| is null, that indicates that this is an interlaced image
+    // and |row_callback| is being called for a row that hasn't changed.
+    // Ordinarily we don't need to do anything in this case, but if we're
+    // downscaling, the downscaler doesn't store the rows from previous passes,
+    // so we still need to process the row.  If |lastRow| is true we need
+    // to finish the interlace pass.
+    return;
+  }
+
+  int32_t width = decoder->mFrameRect.width;
+  uint32_t iwidth = decoder->mFrameRect.width;
+
+  png_bytep line = new_row;
+  if (decoder->interlacebuf) {
+    line = decoder->interlacebuf + (row_num * decoder->mChannels * width);
+    png_progressive_combine_row(png_ptr, line, new_row);
+  }
+
+  uint32_t bpr = width * sizeof(uint32_t);
+  uint32_t* cptr32 = decoder->mDownscaler
+    ? reinterpret_cast<uint32_t*>(decoder->mDownscaler->RowBuffer())
+    : reinterpret_cast<uint32_t*>(decoder->mImageData + (row_num*bpr));
+
+  if (decoder->mTransform) {
+    if (decoder->mCMSLine) {
+      qcms_transform_data(decoder->mTransform, line, decoder->mCMSLine,
+                          iwidth);
+      // copy alpha over
+      uint32_t channels = decoder->mChannels;
+      if (channels == 2 || channels == 4) {
+        for (uint32_t i = 0; i < iwidth; i++)
+          decoder->mCMSLine[4 * i + 3] = line[channels * i + channels - 1];
+      }
+      line = decoder->mCMSLine;
+    } else {
+      qcms_transform_data(decoder->mTransform, line, line, iwidth);
     }
+  }
 
-    uint32_t bpr = width * sizeof(uint32_t);
-    uint32_t* cptr32 = decoder->mDownscaler
-      ? reinterpret_cast<uint32_t*>(decoder->mDownscaler->RowBuffer())
-      : reinterpret_cast<uint32_t*>(decoder->mImageData + (row_num*bpr));
+  switch (decoder->format) {
+    case gfx::SurfaceFormat::B8G8R8X8: {
+      // counter for while() loops below
+      uint32_t idx = iwidth;
 
-    if (decoder->mTransform) {
-      if (decoder->mCMSLine) {
-        qcms_transform_data(decoder->mTransform, line, decoder->mCMSLine,
-                            iwidth);
-        // copy alpha over
-        uint32_t channels = decoder->mChannels;
-        if (channels == 2 || channels == 4) {
-          for (uint32_t i = 0; i < iwidth; i++)
-            decoder->mCMSLine[4 * i + 3] = line[channels * i + channels - 1];
+      // copy as bytes until source pointer is 32-bit-aligned
+      for (; (NS_PTR_TO_UINT32(line) & 0x3) && idx; --idx) {
+        *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
+        line += 3;
+      }
+
+      // copy pixels in blocks of 4
+      while (idx >= 4) {
+        GFX_BLOCK_RGB_TO_FRGB(line, cptr32);
+        idx    -=  4;
+        line   += 12;
+        cptr32 +=  4;
+      }
+
+      // copy remaining pixel(s)
+      while (idx--) {
+        // 32-bit read of final pixel will exceed buffer, so read bytes
+        *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
+        line += 3;
+      }
+    }
+    break;
+    case gfx::SurfaceFormat::B8G8R8A8: {
+      if (!decoder->mDisablePremultipliedAlpha) {
+        for (uint32_t x=width; x>0; --x) {
+          *cptr32++ = gfxPackedPixel(line[3], line[0], line[1], line[2]);
+          line += 4;
         }
-        line = decoder->mCMSLine;
       } else {
-        qcms_transform_data(decoder->mTransform, line, line, iwidth);
+        for (uint32_t x=width; x>0; --x) {
+          *cptr32++ = gfxPackedPixelNoPreMultiply(line[3], line[0], line[1],
+                                                  line[2]);
+          line += 4;
+        }
       }
     }
+    break;
+    default:
+      png_longjmp(decoder->mPNG, 1);
+  }
 
-    switch (decoder->format) {
-      case gfx::SurfaceFormat::B8G8R8X8: {
-        // counter for while() loops below
-        uint32_t idx = iwidth;
+  if (decoder->mDownscaler) {
+    decoder->mDownscaler->CommitRow();
+  }
 
-        // copy as bytes until source pointer is 32-bit-aligned
-        for (; (NS_PTR_TO_UINT32(line) & 0x3) && idx; --idx) {
-          *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
-          line += 3;
-        }
-
-        // copy pixels in blocks of 4
-        while (idx >= 4) {
-          GFX_BLOCK_RGB_TO_FRGB(line, cptr32);
-          idx    -=  4;
-          line   += 12;
-          cptr32 +=  4;
-        }
-
-        // copy remaining pixel(s)
-        while (idx--) {
-          // 32-bit read of final pixel will exceed buffer, so read bytes
-          *cptr32++ = gfxPackedPixel(0xFF, line[0], line[1], line[2]);
-          line += 3;
-        }
-      }
-      break;
-      case gfx::SurfaceFormat::B8G8R8A8: {
-        if (!decoder->mDisablePremultipliedAlpha) {
-          for (uint32_t x=width; x>0; --x) {
-            *cptr32++ = gfxPackedPixel(line[3], line[0], line[1], line[2]);
-            line += 4;
-          }
-        } else {
-          for (uint32_t x=width; x>0; --x) {
-            *cptr32++ = gfxPackedPixelNoPreMultiply(line[3], line[0], line[1],
-                                                    line[2]);
-            line += 4;
-          }
-        }
-      }
-      break;
-      default:
-        png_longjmp(decoder->mPNG, 1);
-    }
-
+  if (!decoder->interlacebuf) {
+    // Do line-by-line partial invalidations for non-interlaced images.
+    decoder->PostPartialInvalidation(IntRect(0, row_num, width, 1));
+  } else if (lastRow) {
+    // Do only one full image invalidation for each even pass. (Bug 1187569)
     if (decoder->mDownscaler) {
-      decoder->mDownscaler->CommitRow();
-    }
+      decoder->PostFullInvalidation();
+    } else if (pass % 2 == 0) {
 
-    if (!decoder->interlacebuf) {
-      // Do line-by-line partial invalidations for non-interlaced images.
-      decoder->PostPartialInvalidation(IntRect(0, row_num, width, 1));
-    } else if (row_num ==
-               static_cast<png_uint_32>(decoder->mFrameRect.height - 1)) {
-      // Do only one full image invalidation for each pass. (Bug 1187569)
+      const bool hasAlpha = decoder->format != SurfaceFormat::B8G8R8X8;
+      InterpolateInterlacedPNG(pass, hasAlpha,
+                               static_cast<uint32_t>(width),
+                               decoder->mFrameRect.height,
+                               decoder->mImageData);
       decoder->PostFullInvalidation();
     }
   }

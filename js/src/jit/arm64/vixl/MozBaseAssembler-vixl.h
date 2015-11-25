@@ -40,8 +40,8 @@ using js::jit::BufferOffset;
 
 
 class MozBaseAssembler;
-typedef js::jit::AssemblerBufferWithConstantPools<1024, 4, Instruction, MozBaseAssembler> ARMBuffer;
-
+typedef js::jit::AssemblerBufferWithConstantPools<1024, 4, Instruction, MozBaseAssembler,
+                                                  NumShortBranchRangeTypes> ARMBuffer;
 
 // Base class for vixl::Assembler, for isolating Moz-specific changes to VIXL.
 class MozBaseAssembler : public js::jit::AssemblerShared {
@@ -169,6 +169,8 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Static interface used by IonAssemblerBufferWithConstantPools.
   static void InsertIndexIntoTag(uint8_t* load, uint32_t index);
   static bool PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
+  static void PatchShortRangeBranchToVeneer(ARMBuffer*, unsigned rangeIdx, BufferOffset deadline,
+                                            BufferOffset veneer);
   static uint32_t PlaceConstantPoolBarrier(int offset);
 
   static void WritePoolHeader(uint8_t* start, js::jit::Pool* p, bool isNatural);
@@ -179,6 +181,27 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   static void RetargetNearBranch(Instruction* i, int offset, Condition cond, bool final = true);
   static void RetargetNearBranch(Instruction* i, int offset, bool final = true);
   static void RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest, Condition cond);
+
+ protected:
+  // Functions for managing Labels and linked lists of Label uses.
+
+  // Get the next Label user in the linked list of Label uses.
+  // Return an unassigned BufferOffset when the end of the list is reached.
+  BufferOffset NextLink(BufferOffset cur);
+
+  // Patch the instruction at cur to link to the instruction at next.
+  void SetNextLink(BufferOffset cur, BufferOffset next);
+
+  // Link the current (not-yet-emitted) instruction to the specified label,
+  // then return a raw offset to be encoded in the instruction.
+  ptrdiff_t LinkAndGetByteOffsetTo(BufferOffset branch, js::jit::Label* label);
+  ptrdiff_t LinkAndGetInstructionOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                                          js::jit::Label* label);
+  ptrdiff_t LinkAndGetPageOffsetTo(BufferOffset branch, js::jit::Label* label);
+
+  // A common implementation for the LinkAndGet<Type>OffsetTo helpers.
+  ptrdiff_t LinkAndGetOffsetTo(BufferOffset branch, ImmBranchRangeType branchRange,
+                               unsigned elementSizeBits, js::jit::Label* label);
 
  protected:
   // The buffer into which code and relocation info are generated.
