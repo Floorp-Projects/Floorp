@@ -115,11 +115,6 @@ private:
   NS_DECL_OWNINGTHREAD;
 };
 
-enum {
-  SLOT_PROMISE = 0,
-  SLOT_DATA
-};
-
 /*
  * Utilities for thenable callbacks.
  *
@@ -134,9 +129,9 @@ void
 LinkThenableCallables(JSContext* aCx, JS::Handle<JSObject*> aResolveFunc,
                       JS::Handle<JSObject*> aRejectFunc)
 {
-  js::SetFunctionNativeReserved(aResolveFunc, SLOT_DATA,
+  js::SetFunctionNativeReserved(aResolveFunc, Promise::SLOT_DATA,
                                 JS::ObjectValue(*aRejectFunc));
-  js::SetFunctionNativeReserved(aRejectFunc, SLOT_DATA,
+  js::SetFunctionNativeReserved(aRejectFunc, Promise::SLOT_DATA,
                                 JS::ObjectValue(*aResolveFunc));
 }
 
@@ -147,18 +142,22 @@ LinkThenableCallables(JSContext* aCx, JS::Handle<JSObject*> aResolveFunc,
 bool
 MarkAsCalledIfNotCalledBefore(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 {
-  JS::Value otherFuncVal = js::GetFunctionNativeReserved(aFunc, SLOT_DATA);
+  JS::Value otherFuncVal =
+    js::GetFunctionNativeReserved(aFunc, Promise::SLOT_DATA);
 
   if (!otherFuncVal.isObject()) {
     return false;
   }
 
   JSObject* otherFuncObj = &otherFuncVal.toObject();
-  MOZ_ASSERT(js::GetFunctionNativeReserved(otherFuncObj, SLOT_DATA).isObject());
+  MOZ_ASSERT(js::GetFunctionNativeReserved(otherFuncObj,
+                                           Promise::SLOT_DATA).isObject());
 
   // Break both references.
-  js::SetFunctionNativeReserved(aFunc, SLOT_DATA, JS::UndefinedValue());
-  js::SetFunctionNativeReserved(otherFuncObj, SLOT_DATA, JS::UndefinedValue());
+  js::SetFunctionNativeReserved(aFunc, Promise::SLOT_DATA,
+                                JS::UndefinedValue());
+  js::SetFunctionNativeReserved(otherFuncObj, Promise::SLOT_DATA,
+                                JS::UndefinedValue());
 
   return true;
 }
@@ -166,7 +165,8 @@ MarkAsCalledIfNotCalledBefore(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 Promise*
 GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 {
-  JS::Value promiseVal = js::GetFunctionNativeReserved(aFunc, SLOT_PROMISE);
+  JS::Value promiseVal = js::GetFunctionNativeReserved(aFunc,
+                                                       Promise::SLOT_PROMISE);
 
   MOZ_ASSERT(promiseVal.isObject());
 
@@ -700,6 +700,8 @@ Promise::JSCallbackThenableRejecter(JSContext* aCx,
 /* static */ JSObject*
 Promise::CreateFunction(JSContext* aCx, Promise* aPromise, int32_t aTask)
 {
+  // If this function ever changes, make sure to update
+  // WrapperPromiseCallback::GetDependentPromise.
   JSFunction* func = js::NewFunctionWithReserved(aCx, JSCallback,
                                                  1 /* nargs */, 0 /* flags */,
                                                  nullptr);

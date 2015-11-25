@@ -9,6 +9,8 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
+#include "jswrapper.h"
 
 namespace mozilla {
 namespace dom {
@@ -307,6 +309,32 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   mNextPromise->ResolveInternal(aCx, retValue);
   return NS_OK;
+}
+
+Promise*
+WrapperPromiseCallback::GetDependentPromise()
+{
+  // Per spec, various algorithms like all() and race() are actually implemented
+  // in terms of calling then() but passing it the resolve/reject functions that
+  // are passed as arguments to function passed to the Promise constructor.
+  // That will cause the promise in question to hold on to a
+  // WrapperPromiseCallback, but the dependent promise should really be the one
+  // whose constructor those functions came from, not the about-to-be-ignored
+  // return value of "then".  So try to determine whether we're in that case and
+  // if so go ahead and dig the dependent promise out of the function we have.
+  JSObject* callable = mCallback->Callable();
+  // Unwrap it, in case it's a cross-compartment wrapper.  Our caller here is
+  // system, so it's really ok to just go and unwrap.
+  callable = js::UncheckedUnwrap(callable);
+  if (JS_IsNativeFunction(callable, Promise::JSCallback)) {
+    JS::Value promiseVal =
+      js::GetFunctionNativeReserved(callable, Promise::SLOT_PROMISE);
+    Promise* promise;
+    UNWRAP_OBJECT(Promise, &promiseVal.toObject(), promise);
+    return promise;
+  }
+
+  return mNextPromise;
 }
 
 // NativePromiseCallback
