@@ -573,6 +573,8 @@ WebappsApplication.prototype = {
 
   launch: function(aStartPoint) {
     let request = this.createRequest();
+    this.addMessageListeners(["Webapps:Launch:Return:OK",
+                              "Webapps:Launch:Return:KO"]);
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this.origin,
                                               manifestURL: this.manifestURL,
                                               startPoint: aStartPoint || "",
@@ -580,9 +582,6 @@ WebappsApplication.prototype = {
                                               topId: this._topId,
                                               timestamp: Date.now(),
                                               requestID: this.getRequestId(request) });
-    Services.obs.notifyObservers(null, "will-launch-app", null);
-    this.addMessageListeners(["Webapps:Launch:Return:OK",
-                              "Webapps:Launch:Return:KO"]);
     return request;
   },
 
