@@ -1,6 +1,6 @@
 "use strict";
 
-extensions.registerAPI((extension, context) => {
+extensions.registerSchemaAPI("i18n", null, (extension, context) => {
   return {
     i18n: {
       getMessage: function(messageName, substitutions) {
