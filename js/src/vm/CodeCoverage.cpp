@@ -227,11 +227,11 @@ LCovSource::writeScript(JSScript* script)
 
     size_t lineno = script->lineno();
     jsbytecode* end = script->codeEnd();
-    size_t blockId = 0;
+    size_t branchId = 0;
     for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
         JSOp op = JSOp(*pc);
         bool jump = IsJumpOpcode(op);
-        bool fallsthrough = BytecodeFallsThrough(op);
+        bool fallsthrough = BytecodeFallsThrough(op) && op != JSOP_GOSUB;
 
         // If the current script & pc has a hit-count report, then update the
         // current number of hits.
@@ -277,7 +277,6 @@ LCovSource::writeScript(JSScript* script)
         // If the current pc corresponds to a conditional jump instruction, then reports
         // branch hits.
         if (jump && fallsthrough) {
-            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
             jsbytecode* fallthroughTarget = GetNextPc(pc);
             uint64_t fallthroughHits = 0;
             if (sc) {
@@ -286,21 +285,24 @@ LCovSource::writeScript(JSScript* script)
                     fallthroughHits = counts->numExec();
             }
 
-            size_t targetId = script->pcToOffset(target);
             uint64_t taken = hits - fallthroughHits;
-            outBRDA_.printf("BRDA:%d,%d,%d,", lineno, blockId, targetId);
-            if (hits)
+            outBRDA_.printf("BRDA:%d,%d,0,", lineno, branchId);
+            if (taken)
                 outBRDA_.printf("%d\n", taken);
             else
                 outBRDA_.put("-\n", 2);
 
-            // Count the number of branches, and the number of branches hit.
-            numBranchesFound_++;
-            if (hits)
-                numBranchesHit_++;
+            outBRDA_.printf("BRDA:%d,%d,1,", lineno, branchId);
+            if (fallthroughHits)
+                outBRDA_.printf("%d\n", fallthroughHits);
+            else
+                outBRDA_.put("-\n", 2);
 
-            // Update the blockId when there is a discontinuity.
-            blockId = script->pcToOffset(fallthroughTarget);
+            // Count the number of branches, and the number of branches hit.
+            numBranchesFound_ += 2;
+            if (hits)
+                numBranchesHit_ += !!taken + !!fallthroughHits;
+            branchId++;
         }
     }
 
