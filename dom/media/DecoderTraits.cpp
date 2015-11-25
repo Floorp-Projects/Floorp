@@ -39,16 +39,8 @@
 #include "MediaOmxReader.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#if ANDROID_VERSION >= 18
-#include "MediaCodecDecoder.h"
-#include "MediaCodecReader.h"
-#endif
 #endif
 #ifdef NECKO_PROTOCOL_rtsp
-#if ANDROID_VERSION >= 18
-#include "RtspMediaCodecDecoder.h"
-#include "RtspMediaCodecReader.h"
-#endif
 #include "RtspOmxDecoder.h"
 #include "RtspOmxReader.h"
 #endif
@@ -592,25 +584,13 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
         return nullptr;
       }
     }
-#if ANDROID_VERSION >= 18
-    decoder = MediaDecoder::IsOmxAsyncEnabled()
-      ? static_cast<MediaDecoder*>(new MediaCodecDecoder(aOwner))
-      : static_cast<MediaDecoder*>(new MediaOmxDecoder(aOwner));
-#else
     decoder = new MediaOmxDecoder(aOwner);
-#endif
     return decoder.forget();
   }
 #endif
 #ifdef NECKO_PROTOCOL_rtsp
   if (IsRtspSupportedType(aType)) {
-#if ANDROID_VERSION >= 18
-    decoder = MediaDecoder::IsOmxAsyncEnabled()
-      ? static_cast<MediaDecoder*>(new RtspMediaCodecDecoder(aOwner))
-      : static_cast<MediaDecoder*>(new RtspOmxDecoder(aOwner));
-#else
     decoder = new RtspOmxDecoder(aOwner);
-#endif
     return decoder.forget();
   }
 #endif
@@ -682,13 +662,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 #endif
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(aType)) {
-#if ANDROID_VERSION >= 18
-    decoderReader = MediaDecoder::IsOmxAsyncEnabled()
-      ? static_cast<MediaDecoderReader*>(new MediaCodecReader(aDecoder))
-      : static_cast<MediaDecoderReader*>(new MediaOmxReader(aDecoder));
-#else
     decoderReader = new MediaOmxReader(aDecoder);
-#endif
   } else
 #endif
 #ifdef MOZ_ANDROID_OMX
