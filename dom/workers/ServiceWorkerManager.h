@@ -522,7 +522,8 @@ private:
 
   void
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
-                            nsIDocument* aDoc);
+                            nsIDocument* aDoc,
+                            const nsAString& aDocumentId);
 
   void
   StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
