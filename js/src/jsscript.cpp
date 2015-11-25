@@ -3615,7 +3615,7 @@ CreateEmptyScriptForClone(JSContext* cx, HandleObject enclosingScope, HandleScri
     if (cx->runtime()->isSelfHostingCompartment(src->compartment())) {
         if (!cx->compartment()->selfHostingScriptSource) {
             CompileOptions options(cx);
-            FillSelfHostingCompileOptions(options);
+            FillSelfHostingCompileOptions(options, "self-hosted");
 
             ScriptSourceObject* obj = frontend::CreateScriptSourceObject(cx, options);
             if (!obj)

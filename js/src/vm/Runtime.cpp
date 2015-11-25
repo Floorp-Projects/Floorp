@@ -190,6 +190,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     hadOutOfMemory(false),
     handlingInitFailure(false),
     haveCreatedContext(false),
+    hasContentGlobals(false),
     allowRelazificationForTesting(false),
     data(nullptr),
     signalHandlersInstalled_(false),
@@ -353,6 +354,21 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 
     return true;
+}
+
+bool
+JSRuntime::completeInitialization(JSContext* cx)
+{
+    MOZ_ASSERT(!hasContentGlobals);
+    hasContentGlobals = true;
+    if (parentRuntime)
+        return true;
+
+    MOZ_ASSERT(!parentRuntime);
+    MOZ_ASSERT(!permanentAtoms);
+    MOZ_ASSERT(selfHostingGlobal_);
+    JSAutoRequest ar(cx);
+    return transformToPermanentAtoms(cx);
 }
 
 JSRuntime::~JSRuntime()
