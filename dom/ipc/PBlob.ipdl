@@ -45,6 +45,11 @@ parent:
   // Use only for testing!
   sync GetFilePath()
     returns (nsString filePath);
+
+child:
+  // This method must be called by the parent when the PBlobParent is fully
+  // created in order to release the known blob.
+  CreatedFromKnownBlob();
 };
 
 } // namespace dom
