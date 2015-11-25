@@ -104,6 +104,7 @@ apt_packages+=('ttf-oriya-fonts')
 apt_packages+=('ttf-paktype')
 apt_packages+=('ttf-punjabi-fonts')
 apt_packages+=('ttf-sazanami-mincho')
+apt_packages+=('ubuntu-desktop')
 apt_packages+=('unzip')
 apt_packages+=('uuid')
 apt_packages+=('vim')
@@ -123,6 +124,8 @@ apt_packages+=('python-dev')
 apt_packages+=('python-pip')
 
 apt-get update
+# This allows ubuntu-desktop to be installed without human interaction
+export DEBIAN_FRONTEND=noninteractive
 apt-get install -y --force-yes ${apt_packages[@]}
 
 dpkg-reconfigure locales

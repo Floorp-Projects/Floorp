@@ -15,6 +15,8 @@ task:
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}
     env:
+        NEED_WINDOW_MANAGER: true
+        NEED_PULSEAUDIO: true
         GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
         GECKO_HEAD_REV: '{{{head_rev}}}'
         MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
