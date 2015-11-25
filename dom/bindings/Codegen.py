@@ -5085,12 +5085,19 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                   // Might as well use CurrentGlobalOrNull here; that will at
                   // least give us the same behavior as if the caller just called
                   // Promise.resolve() themselves.
-                  GlobalObject promiseGlobal(cx, JS::CurrentGlobalOrNull(cx));
+                  JS::Rooted<JSObject*> globalObj(cx, JS::CurrentGlobalOrNull(cx));
+                  GlobalObject promiseGlobal(cx, globalObj);
                   if (promiseGlobal.Failed()) {
                     $*{exceptionCode}
                   }
                   ErrorResult promiseRv;
-                  $${declName} = Promise::Resolve(promiseGlobal, $${val}, promiseRv);
+                  JS::Handle<JSObject*> promiseCtor =
+                    PromiseBinding::GetConstructorObjectHandle(cx, globalObj);
+                  if (!promiseCtor) {
+                    $*{exceptionCode}
+                  }
+                  JS::Rooted<JS::Value> resolveThisv(cx, JS::ObjectValue(*promiseCtor));
+                  $${declName} = Promise::Resolve(promiseGlobal, resolveThisv, $${val}, promiseRv);
                   if (promiseRv.MaybeSetPendingException(cx)) {
                     $*{exceptionCode}
                   }
@@ -7053,6 +7060,11 @@ class CGPerSignatureCall(CGThing):
             needsUnwrap = True
             needsUnwrappedVar = True
             argsPre.append("unwrappedObj ? *unwrappedObj : obj")
+
+        if static and not isConstructor and descriptor.name == "Promise":
+            # Hack for Promise for now: pass in the "this" value to
+            # Promise static methods.
+            argsPre.append("args.thisv()")
 
         if needsUnwrap and needsUnwrappedVar:
             # We cannot assign into obj because it's a Handle, not a
