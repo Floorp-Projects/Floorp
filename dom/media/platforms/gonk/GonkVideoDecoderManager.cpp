@@ -270,7 +270,7 @@ Align(int aX, int aAlign)
 }
 
 static void
-CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination, gfx::IntRect& aPicture)
+CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination)
 {
   void* srcPtr = nullptr;
   aSource->lock(GraphicBuffer::USAGE_SW_READ_OFTEN, &srcPtr);
@@ -359,7 +359,7 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
       return nullptr;
     }
 
-    gfx::IntSize size(Align(srcBuffer->getWidth(), 2) , Align(srcBuffer->getHeight(), 2));
+    gfx::IntSize size(Align(aPicture.width, 2) , Align(aPicture.height, 2));
     textureClient =
       mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV, size,
                                       BackendSelector::Content,
@@ -376,7 +376,7 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
     sp<GraphicBuffer> destBuffer =
       static_cast<GrallocTextureClientOGL*>(textureClient.get())->GetGraphicBuffer();
 
-    CopyGraphicBuffer(srcBuffer, destBuffer, aPicture);
+    CopyGraphicBuffer(srcBuffer, destBuffer);
   } else {
     textureClient = mNativeWindow->getTextureClientFromBuffer(srcBuffer.get());
     textureClient->SetRecycleCallback(GonkVideoDecoderManager::RecycleCallback, this);
