@@ -864,6 +864,33 @@ loop.panel = (function(_, mozL10n) {
   });
 
   /**
+   * E10s not supported view
+   */
+  var E10sNotSupported = React.createClass({
+    propTypes: {
+      onClick: React.PropTypes.func.isRequired
+    },
+
+    render: function() {
+      return (
+        <div className="error-content">
+          <header className="error-title">
+            <img src="loop/shared/img/sad_hello_icon_64x64.svg" />
+            <p className="error-subheader">
+              {mozL10n.get("e10s_not_supported_subheading", {
+                brandShortname: mozL10n.get("clientShortname2")
+              })}
+            </p>
+          </header>
+          <Button additionalClass="e10s-not-supported-button"
+                  caption={mozL10n.get("e10s_not_supported_button_label")}
+                  onClick={this.props.onClick} />
+        </div>
+      );
+    }
+  });
+
+  /**
    * Panel view.
    */
   var PanelView = React.createClass({
@@ -889,7 +916,8 @@ loop.panel = (function(_, mozL10n) {
         fxAEnabled: true,
         hasEncryptionKey: false,
         userProfile: null,
-        gettingStartedSeen: true
+        gettingStartedSeen: true,
+        multiProcessEnabled: false
       };
     },
 
@@ -961,13 +989,15 @@ loop.panel = (function(_, mozL10n) {
         ["GetFxAEnabled"],
         ["GetHasEncryptionKey"],
         ["GetUserProfile"],
-        ["GetLoopPref", "gettingStarted.seen"]
+        ["GetLoopPref", "gettingStarted.seen"],
+        ["IsMultiProcessEnabled"]
       ).then(function(results) {
         this.setState({
           fxAEnabled: results[0],
           hasEncryptionKey: results[1],
           userProfile: results[2],
-          gettingStartedSeen: results[3]
+          gettingStartedSeen: results[3],
+          multiProcessEnabled: results[4]
         });
       }.bind(this));
     },
@@ -986,8 +1016,20 @@ loop.panel = (function(_, mozL10n) {
       e.preventDefault();
     },
 
+    launchNonE10sWindow: function(e) {
+      loop.request("GetSelectedTabMetadata").then(function(metadata) {
+        loop.request("OpenNonE10sWindow", metadata.url);
+      });
+    },
+
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
+
+      if (this.state.multiProcessEnabled) {
+        return (
+          <E10sNotSupported onClick={this.launchNonE10sWindow} />
+        );
+      }
 
       if (!this.props.gettingStartedSeen || !this.state.gettingStartedSeen) {
         return (
@@ -1084,6 +1126,7 @@ loop.panel = (function(_, mozL10n) {
   return {
     AccountLink: AccountLink,
     ConversationDropdown: ConversationDropdown,
+    E10sNotSupported: E10sNotSupported,
     GettingStartedView: GettingStartedView,
     init: init,
     NewRoomView: NewRoomView,

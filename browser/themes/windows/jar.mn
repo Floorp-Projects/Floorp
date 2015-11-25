@@ -300,6 +300,8 @@ browser.jar:
 % override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
 
 % override chrome://browser/skin/actionicon-tab.png                   chrome://browser/skin/actionicon-tab-XPVista7.png                 os=WINNT osversion<=6.1
+% override chrome://browser/skin/privatebrowsing-mask-tabstrip.png    chrome://browser/skin/privatebrowsing-mask-tabstrip-XPVista7.png  os=WINNT osversion<=6.1
+% override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-XPVista7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-XPVista7@2x.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1

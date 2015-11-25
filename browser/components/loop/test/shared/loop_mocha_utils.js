@@ -8,6 +8,9 @@ var LoopMochaUtils = (function(global, _) {
   var gListenerCallbacks = [];
   var gPushListenerCallbacks = [];
   var gOldAddMessageListener, gOldSendAsyncMessage;
+  var gUncaughtError;
+  var gCaughtIssues = [];
+
 
   /**
    * The messaging between chrome and content (pubsub.js) is using Promises which
@@ -231,10 +234,75 @@ var LoopMochaUtils = (function(global, _) {
     loop.subscribe.reset();
   }
 
+  /**
+   * Used to initiate trapping of errors and warnings when running tests.
+   * addErrorCheckingTests() should be called to add the actual processing of
+   * results.
+   */
+  function trapErrors() {
+    window.addEventListener("error", function(error) {
+      gUncaughtError = error;
+    });
+    var consoleWarn = console.warn;
+    var consoleError = console.error;
+    console.warn = function() {
+      var args = Array.slice(arguments);
+      try {
+        throw new Error();
+      } catch (e) {
+        gCaughtIssues.push([args, e.stack]);
+      }
+      consoleWarn.apply(console, args);
+    };
+    console.error = function() {
+      var args = Array.slice(arguments);
+      gCaughtIssues.push(args);
+      consoleError.apply(console, args);
+    };
+  }
+
+  /**
+   * Adds tests to check no warnings nor errors have occurred since trapErrors
+   * was called.
+   */
+  function addErrorCheckingTests() {
+    describe("Uncaught Error Check", function() {
+      it("should load the tests without errors", function() {
+        chai.expect(gUncaughtError && gUncaughtError.message).to.be.undefined;
+      });
+    });
+
+    describe("Unexpected Logged Warnings and Errors Check", function() {
+      it("should not log any warnings nor errors", function() {
+        if (gCaughtIssues.length) {
+          throw new Error(gCaughtIssues);
+        } else {
+          chai.expect(gCaughtIssues.length).to.eql(0);
+        }
+      });
+    });
+  }
+
+  /**
+   * Utility function for starting the mocha test run. Adds a marker for when
+   * the tests have completed.
+   */
+  function runTests() {
+    mocha.run(function() {
+      var completeNode = document.createElement("p");
+      completeNode.setAttribute("id", "complete");
+      completeNode.appendChild(document.createTextNode("Complete"));
+      document.getElementById("mocha").appendChild(completeNode);
+    });
+  }
+
   return {
+    addErrorCheckingTests: addErrorCheckingTests,
     createSandbox: createSandbox,
-    stubLoopRequest: stubLoopRequest,
+    publish: publish,
     restore: restore,
-    publish: publish
+    runTests: runTests,
+    stubLoopRequest: stubLoopRequest,
+    trapErrors: trapErrors
   };
 })(this, _);

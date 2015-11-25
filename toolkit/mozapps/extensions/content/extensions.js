@@ -202,6 +202,9 @@ function loadView(aViewId) {
 }
 
 function isCorrectlySigned(aAddon) {
+  // temporary add-ons do not require signing
+  if (aAddon.scope == AddonManager.SCOPE_TEMPORARY)
+      return true;
   if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
     return false;
   if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)

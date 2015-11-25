@@ -6,8 +6,8 @@
  */
 "use strict";
 
-var escope = require("eslint/node_modules/escope");
-var espree = require("eslint/node_modules/espree");
+var escope = require("escope");
+var espree = require("espree");
 
 var regexes = [
   /^(?:Cu|Components\.utils)\.import\(".*\/(.*?)\.jsm?"\);?$/,
@@ -166,27 +166,27 @@ module.exports = {
       tolerant: true,
       ecmaFeatures: {
         arrowFunctions: true,
-        blockBindings: true,
-        destructuring: true,
-        regexYFlag: true,
-        regexUFlag: true,
-        templateStrings: true,
         binaryLiterals: true,
-        octalLiterals: true,
-        unicodeCodePointEscapes: true,
+        blockBindings: true,
+        classes: true,
         defaultParams: true,
-        restParams: true,
+        destructuring: true,
         forOf: true,
+        generators: true,
+        globalReturn: true,
+        modules: true,
         objectLiteralComputedProperties: true,
+        objectLiteralDuplicateProperties: true,
         objectLiteralShorthandMethods: true,
         objectLiteralShorthandProperties: true,
-        objectLiteralDuplicateProperties: true,
-        generators: true,
+        octalLiterals: true,
+        regexUFlag: true,
+        regexYFlag: true,
+        restParams: true,
         spread: true,
         superInFunctions: true,
-        classes: true,
-        modules: true,
-        globalReturn: true
+        templateStrings: true,
+        unicodeCodePointEscapes: true,
       }
     };
   },

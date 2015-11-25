@@ -171,11 +171,14 @@ var LoopUI;
           this.LoopAPI.initialize();
 
           let anchor = event ? event.target : this.toolbarButton.anchor;
-
+          let setHeight = 410;
+          if (gBrowser.selectedBrowser.getAttribute("remote") === "true") {
+            setHeight = 262;
+          }
           this.PanelFrame.showPopup(window, anchor,
             "loop", null, "about:looppanel",
             // Loop wants a fixed size for the panel. This also stops it dynamically resizing.
-            { width: 330, height: 410 },
+            { width: 330, height: setHeight },
             callback);
         });
       });
@@ -290,6 +293,7 @@ var LoopUI;
       } else if (aReason == "login" && this.MozLoopService.userProfile) {
         state = "active";
         mozL10nId += "-active";
+        suffix += "2";
       } else if (this.MozLoopService.doNotDisturb) {
         state = "disabled";
         mozL10nId += "-donotdisturb";
@@ -302,11 +306,15 @@ var LoopUI;
             mozL10nId += "-active";
           }
 
+          suffix += "2";
           this.updateTooltiptext(mozL10nId + suffix);
           this.toolbarButton.node.setAttribute("state", state);
         });
         return;
+      } else {
+        suffix += "2";
       }
+
       this.toolbarButton.node.setAttribute("state", state);
       this.updateTooltiptext(mozL10nId + suffix);
     },

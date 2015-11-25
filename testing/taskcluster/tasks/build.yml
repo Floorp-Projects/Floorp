@@ -25,7 +25,6 @@ task:
     # the board.
     - 'docker-worker:cache:tc-vcs'
 
-
   payload:
     image: '{{#docker_image}}builder{{/docker_image}}'
 

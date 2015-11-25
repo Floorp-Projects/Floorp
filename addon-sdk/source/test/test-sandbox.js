@@ -117,6 +117,8 @@ exports['test load script with data: URL and complex char'] = function(assert) {
 };
 
 exports['test metadata']  = function(assert) {
+  let self = require('sdk/self');
+
   let dbg = new Debugger();
   dbg.onNewGlobalObject = function(global) {
     let metadata = Cu.getSandboxMetadata(global.unsafeDereference());
@@ -127,7 +129,7 @@ exports['test metadata']  = function(assert) {
   }
 
   let fixture = sandbox();
-  let self = require('sdk/self');
+  assert.equal(dbg.onNewGlobalObject, undefined, 'Should have reset the handler');
 }
 
 exports['test nuke sandbox'] = function(assert) {

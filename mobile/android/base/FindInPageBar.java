@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -148,6 +149,9 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
     @Override
     public void onClick(View v) {
         final int viewId = v.getId();
+
+        String extras = getResources().getResourceEntryName(viewId);
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, extras);
 
         if (viewId == R.id.find_matchcase) {
             // Toggle matchcase state (color).

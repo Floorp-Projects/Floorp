@@ -748,6 +748,9 @@
 ; DevTools
 @RESPATH@/chrome/devtools@JAREXT@
 @RESPATH@/chrome/devtools.manifest
+#ifdef MOZ_GRAPHENE
+@RESPATH@/@PREF_DIR@/devtools.js
+#endif
 
 ; shell icons
 #ifdef XP_UNIX

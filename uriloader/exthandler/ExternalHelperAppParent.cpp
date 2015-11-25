@@ -32,6 +32,7 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent,
                             nsIRequest,
                             nsIChannel,
                             nsIMultiPartChannel,
+                            nsIPrivateBrowsingChannel,
                             nsIResumableChannel,
                             nsIStreamListener)
 
@@ -84,6 +85,11 @@ ExternalHelperAppParent::Init(ContentParent *parent,
     TabParent* tabParent = TabParent::GetFrom(aBrowser);
     if (tabParent->GetOwnerElement())
       window = do_QueryInterface(tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+
+    bool isPrivate = false;
+    nsCOMPtr<nsILoadContext> loadContext = tabParent->GetLoadContext();
+    loadContext->GetUsePrivateBrowsing(&isPrivate);
+    SetPrivate(isPrivate);
   }
 
   helperAppService->DoContent(aMimeContentType, this, window,

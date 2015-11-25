@@ -63,3 +63,6 @@ MOZ_JSDOWNLOADS=1
 MOZ_BUNDLED_FONTS=1
 
 export JS_GC_SMALL_CHUNK_SIZE=1
+
+# Include the DevTools client, not just the server (which is the default)
+MOZ_DEVTOOLS=all

@@ -8,7 +8,9 @@ category update-timer nsBlocklistService @mozilla.org/extensions/blocklist;1,get
 #ifndef MOZ_WIDGET_GONK
 component {4399533d-08d1-458c-a87a-235f74451cfa} addonManager.js
 contract @mozilla.org/addons/integration;1 {4399533d-08d1-458c-a87a-235f74451cfa}
+#ifndef MOZ_WIDGET_ANDROID
 category update-timer addonManager @mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400
+#endif
 component {7beb3ba8-6ec3-41b4-b67c-da89b8518922} amContentHandler.js
 contract @mozilla.org/uriloader/content-handler;1?type=application/x-xpinstall {7beb3ba8-6ec3-41b4-b67c-da89b8518922}
 component {0f38e086-89a3-40a5-8ffc-9b694de1d04a} amWebInstallListener.js

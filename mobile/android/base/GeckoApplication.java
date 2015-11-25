@@ -152,6 +152,8 @@ public class GeckoApplication extends Application
             }
         });
 
+        GeckoService.register();
+
         super.onCreate();
     }
 

@@ -333,3 +333,8 @@ devtools.jar:
     skin/tooltip/arrow-vertical-light.png (themes/tooltip/arrow-vertical-light.png)
     skin/tooltip/arrow-vertical-light@2x.png (themes/tooltip/arrow-vertical-light@2x.png)
     skin/images/reload.svg (themes/images/reload.svg)
+    skin/images/security-state-broken.svg (themes/images/security-state-broken.svg)
+    skin/images/security-state-insecure.svg (themes/images/security-state-insecure.svg)
+    skin/images/security-state-local.svg (themes/images/security-state-local.svg)
+    skin/images/security-state-secure.svg (themes/images/security-state-secure.svg)
+    skin/images/security-state-weak.svg (themes/images/security-state-weak.svg)
