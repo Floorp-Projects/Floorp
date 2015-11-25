@@ -34,6 +34,7 @@
 #include "PromiseWorkerProxy.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "WrapperFactory.h"
 #include "xpcpublic.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -815,6 +816,192 @@ Promise::CallInitFunction(const GlobalObject& aGlobal,
     // ErrorResult.
     MaybeReject(aRv);
   }
+}
+
+#define GET_CAPABILITIES_EXECUTOR_RESOLVE_SLOT 0
+#define GET_CAPABILITIES_EXECUTOR_REJECT_SLOT 1
+
+namespace {
+bool
+GetCapabilitiesExecutor(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+{
+  // Implements
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-getcapabilitiesexecutor-functions
+  // except we store the [[Resolve]] and [[Reject]] in our own internal slots,
+  // not in a PromiseCapability.  The PromiseCapability will then read them from
+  // us.
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  // Step 1 is an assert.
+
+  // Step 2 doesn't need to be done, because it's just giving a name to the
+  // PromiseCapability record which is supposed to be stored in an internal
+  // slot.  But we don't store that at all, per the comment above; we just
+  // directly store its [[Resolve]] and [[Reject]] members.
+
+  // Steps 3 and 4.
+  if (!js::GetFunctionNativeReserved(&args.callee(),
+                                     GET_CAPABILITIES_EXECUTOR_RESOLVE_SLOT).isUndefined() ||
+      !js::GetFunctionNativeReserved(&args.callee(),
+                                     GET_CAPABILITIES_EXECUTOR_REJECT_SLOT).isUndefined()) {
+    ErrorResult rv;
+    rv.ThrowTypeError<MSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY>();
+    return !rv.MaybeSetPendingException(aCx);
+  }
+
+  // Step 5.
+  js::SetFunctionNativeReserved(&args.callee(),
+                                GET_CAPABILITIES_EXECUTOR_RESOLVE_SLOT,
+                                args.get(0));
+
+  // Step 6.
+  js::SetFunctionNativeReserved(&args.callee(),
+                                GET_CAPABILITIES_EXECUTOR_REJECT_SLOT,
+                                args.get(1));
+
+  // Step 7.
+  args.rval().setUndefined();
+  return true;
+}
+} // anonymous namespace
+
+/* static */ void
+Promise::NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
+                              JS::Handle<JS::Value> aConstructor,
+                              bool aForceCallbackCreation,
+                              PromiseCapability& aCapability,
+                              ErrorResult& aRv)
+{
+  // Implements
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-newpromisecapability
+
+  if (!aConstructor.isObject() ||
+      !JS::IsConstructor(&aConstructor.toObject())) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_PROMISE_CONSTRUCTOR>();
+    return;
+  }
+
+  // Step 2 is a note.
+  // Step 3 is already done because we got the PromiseCapability passed in.
+
+  // Optimization: Check whether constructor is in fact the canonical
+  // Promise constructor for aGlobal.
+  JS::Rooted<JSObject*> global(aCx, aGlobal->GetGlobalJSObject());
+  {
+    // Scope for the JSAutoCompartment, since we need to enter the compartment
+    // of global to get constructors from it.  Save the compartment we used to
+    // be in, though; we'll need it later.
+    JS::Rooted<JSObject*> callerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
+    JSAutoCompartment ac(aCx, global);
+
+    // Now wrap aConstructor into the compartment of aGlobal, so comparing it to
+    // the canonical Promise for that compartment actually makes sense.
+    JS::Rooted<JS::Value> constructorValue(aCx, aConstructor);
+    if (!MaybeWrapObjectValue(aCx, &constructorValue)) {
+      aRv.NoteJSContextException();
+      return;
+    }
+
+    JSObject* defaultCtor = PromiseBinding::GetConstructorObject(aCx, global);
+    if (!defaultCtor) {
+      aRv.NoteJSContextException();
+      return;
+    }
+    if (defaultCtor == &constructorValue.toObject()) {
+      // This is the canonical Promise constructor.
+      aCapability.mNativePromise = Promise::Create(aGlobal, aRv);
+      if (aForceCallbackCreation) {
+        // We have to be a bit careful here.  We want to create these functions
+        // in the compartment in which they would be created if we actually
+        // invoked the constructor via JS::Construct below.  That means our
+        // callerGlobal compartment if aConstructor is an Xray and the reflector
+        // compartment of the promise we're creating otherwise.  But note that
+        // our callerGlobal compartment is precisely the reflector compartment
+        // unless the call was done over Xrays, because the reflector
+        // compartment comes from xpc::XrayAwareCalleeGlobal.  So we really just
+        // want to create these functions in the callerGlobal compartment.
+        MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(&aConstructor.toObject()) ||
+                   callerGlobal == global);
+        JSAutoCompartment ac2(aCx, callerGlobal);
+
+        JSObject* resolveFuncObj =
+          CreateFunction(aCx, aCapability.mNativePromise,
+                         PromiseCallback::Resolve);
+        if (!resolveFuncObj) {
+          aRv.NoteJSContextException();
+          return;
+        }
+        aCapability.mResolve.setObject(*resolveFuncObj);
+
+        JSObject* rejectFuncObj =
+          CreateFunction(aCx, aCapability.mNativePromise,
+                         PromiseCallback::Reject);
+        if (!rejectFuncObj) {
+          aRv.NoteJSContextException();
+          return;
+        }
+        aCapability.mReject.setObject(*rejectFuncObj);
+      }
+      return;
+    }
+  }
+
+  // Step 4.
+  // We can create our get-capabilities function in the calling compartment.  It
+  // will work just as if we did |new promiseConstructor(function(a,b){}).
+  // Notably, if we're called over Xrays that's all fine, because we will end up
+  // creating the callbacks in the caller compartment in that case.
+  JSFunction* getCapabilitiesFunc =
+    js::NewFunctionWithReserved(aCx, GetCapabilitiesExecutor,
+                                2 /* nargs */,
+                                0 /* flags */,
+                                nullptr);
+  if (!getCapabilitiesFunc) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  JS::Rooted<JSObject*> getCapabilitiesObj(aCx);
+  getCapabilitiesObj = JS_GetFunctionObject(getCapabilitiesFunc);
+
+  // Step 5 doesn't need to be done, since we're not actually storing a
+  // PromiseCapability in the executor; see the comments in
+  // GetCapabilitiesExecutor above.
+
+  // Step 6 and step 7.
+  JS::Rooted<JS::Value> getCapabilities(aCx,
+                                        JS::ObjectValue(*getCapabilitiesObj));
+  JS::Rooted<JS::Value> promiseVal(aCx);
+  if (!JS::Construct(aCx, aConstructor,
+                     JS::HandleValueArray(getCapabilities),
+                     &promiseVal)) {
+    aRv.NoteJSContextException();
+    return;
+  }
+
+  // Step 8 plus copying over the value to the PromiseCapability.
+  JS::Rooted<JS::Value> v(aCx);
+  v = js::GetFunctionNativeReserved(getCapabilitiesObj,
+                                    GET_CAPABILITIES_EXECUTOR_RESOLVE_SLOT);
+  if (!v.isObject() || !JS::IsCallable(&v.toObject())) {
+    aRv.ThrowTypeError<MSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE>();
+    return;
+  }
+  aCapability.mResolve = v;
+
+  // Step 9 plus copying over the value to the PromiseCapability.
+  v = js::GetFunctionNativeReserved(getCapabilitiesObj,
+                                    GET_CAPABILITIES_EXECUTOR_REJECT_SLOT);
+  if (!v.isObject() || !JS::IsCallable(&v.toObject())) {
+    aRv.ThrowTypeError<MSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE>();
+    return;
+  }
+  aCapability.mReject = v;
+
+  // Step 10.
+  aCapability.mPromise = promiseVal;
+
+  // Step 11 doesn't need anything, since the PromiseCapability was passed in.
 }
 
 /* static */ already_AddRefed<Promise>
