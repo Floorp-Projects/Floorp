@@ -163,7 +163,6 @@ public:
 class AuxInfo {
 public:
   AuxInfo(int64_t aMoofOffset, Saiz& aSaiz, Saio& aSaio);
-  bool GetByteRanges(MediaByteRangeSet* aByteRanges);
 
 private:
   int64_t mMoofOffset;
