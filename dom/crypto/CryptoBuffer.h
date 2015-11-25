@@ -30,8 +30,9 @@ public:
 
   template<typename T,
            JSObject* UnwrapArray(JSObject*),
-           void GetLengthAndData(JSObject*, uint32_t*, T**)>
-  uint8_t* Assign(const TypedArray_base<T, UnwrapArray, GetLengthAndData>& aArray)
+           void GetLengthAndDataAndSharedness(JSObject*, uint32_t*, bool*, T**)>
+  uint8_t* Assign(const TypedArray_base<T, UnwrapArray,
+                                        GetLengthAndDataAndSharedness>& aArray)
   {
     aArray.ComputeLengthAndData();
     return Assign(aArray.Data(), aArray.Length());
