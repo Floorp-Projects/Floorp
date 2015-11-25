@@ -100,6 +100,79 @@ function testRace4() {
   ).then(nextTest);
 }
 
+function testAll1() {
+  var p = win.Promise.all(new win.Array(1, 2));
+  p.then(
+    function(arg) {
+      ok(arg instanceof win.Array, "Should get an Array from Promise.all (1)");
+      is(arg[0], 1, "First entry of Promise.all return value should be correct (1)");
+      is(arg[1], 2, "Second entry of Promise.all return value should be correct (1)");
+    },
+    function(e) {
+      ok(false, "testAll1 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testAll2() {
+  var p = win.Promise.all(
+    new Array(win.Promise.resolve(1), win.Promise.resolve(2)));
+  p.then(
+    function(arg) {
+      ok(arg instanceof win.Array, "Should get an Array from Promise.all (2)");
+      is(arg[0], 1, "First entry of Promise.all return value should be correct (2)");
+      is(arg[1], 2, "Second entry of Promise.all return value should be correct (2)");
+    },
+    function(e) {
+      ok(false, "testAll2 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testAll3() {
+  // This works with a chrome-side array because we do the iteration
+  // while still in the Xray compartment.
+  var p = win.Promise.all([1, 2]);
+  p.then(
+    function(arg) {
+      ok(arg instanceof win.Array, "Should get an Array from Promise.all (3)");
+      is(arg[0], 1, "First entry of Promise.all return value should be correct (3)");
+      is(arg[1], 2, "Second entry of Promise.all return value should be correct (3)");
+    },
+    function(e) {
+      ok(false, "testAll3 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testAll4() {
+  // This works with both content-side and chrome-side Promises because we want
+  // it to and go to some lengths to make it work.
+  var p = win.Promise.all([Promise.resolve(1), win.Promise.resolve(2)]);
+  p.then(
+    function(arg) {
+      ok(arg instanceof win.Array, "Should get an Array from Promise.all (4)");
+      is(arg[0], 1, "First entry of Promise.all return value should be correct (4)");
+      is(arg[1], 2, "Second entry of Promise.all return value should be correct (4)");
+    },
+    function(e) {
+      ok(false, "testAll4 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testAll5() {
+  var p = win.Promise.all(new win.Array());
+  p.then(
+    function(arg) {
+      ok(arg instanceof win.Array, "Should get an Array from Promise.all (5)");
+    },
+    function(e) {
+      ok(false, "testAll5 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
 var tests = [
   testLoadComplete,
   testHaveXray,
@@ -107,6 +180,11 @@ var tests = [
   testRace2,
   testRace3,
   testRace4,
+  testAll1,
+  testAll2,
+  testAll3,
+  testAll4,
+  testAll5,
 ];
 
 function nextTest() {

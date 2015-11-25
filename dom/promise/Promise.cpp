@@ -1250,24 +1250,319 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(AllResolveElementFunction, mCountdownHolder)
 
-/* static */ already_AddRefed<Promise>
-Promise::All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-             const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
+static const JSClass PromiseAllDataHolderClass = {
+  "PromiseAllDataHolder", JSCLASS_HAS_RESERVED_SLOTS(3)
+};
+
+// Slot indices for objects of class PromiseAllDataHolderClass.
+#define DATA_HOLDER_REMAINING_ELEMENTS_SLOT 0
+#define DATA_HOLDER_VALUES_ARRAY_SLOT 1
+#define DATA_HOLDER_RESOLVE_FUNCTION_SLOT 2
+
+// Slot indices for PromiseAllResolveElement.
+// The RESOLVE_ELEMENT_INDEX_SLOT stores our index unless we've already been
+// called.  Then it stores INT32_MIN (which is never a valid index value).
+#define RESOLVE_ELEMENT_INDEX_SLOT 0
+// The RESOLVE_ELEMENT_DATA_HOLDER_SLOT slot stores an object of class
+// PromiseAllDataHolderClass.
+#define RESOLVE_ELEMENT_DATA_HOLDER_SLOT 1
+
+static bool
+PromiseAllResolveElement(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
-  JSContext* cx = aGlobal.Context();
+  // Implements
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-promise.all-resolve-element-functions
+  //
+  // See the big comment about compartments in Promise::All "Substep 4" that
+  // explains what compartments the various stuff here lives in.
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  nsTArray<RefPtr<Promise>> promiseList;
-
-  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
-    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
-    RefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, aThisv, value, aRv);
-
-    MOZ_ASSERT(!aRv.Failed());
-
-    promiseList.AppendElement(Move(nextPromise));
+  // Step 1.
+  int32_t index =
+    js::GetFunctionNativeReserved(&args.callee(),
+                                  RESOLVE_ELEMENT_INDEX_SLOT).toInt32();
+  // Step 2.
+  if (index == INT32_MIN) {
+    args.rval().setUndefined();
+    return true;
   }
 
-  return Promise::All(aGlobal, promiseList, aRv);
+  // Step 3.
+  js::SetFunctionNativeReserved(&args.callee(),
+                                RESOLVE_ELEMENT_INDEX_SLOT,
+                                JS::Int32Value(INT32_MIN));
+
+  // Step 4 already done.
+
+  // Step 5.
+  JS::Rooted<JSObject*> dataHolder(aCx,
+    &js::GetFunctionNativeReserved(&args.callee(),
+                                   RESOLVE_ELEMENT_DATA_HOLDER_SLOT).toObject());
+
+  JS::Rooted<JS::Value> values(aCx,
+    js::GetReservedSlot(dataHolder, DATA_HOLDER_VALUES_ARRAY_SLOT));
+
+  // Step 6, effectively.
+  JS::Rooted<JS::Value> resolveFunc(aCx,
+    js::GetReservedSlot(dataHolder, DATA_HOLDER_RESOLVE_FUNCTION_SLOT));
+
+  // Step 7.
+  int32_t remainingElements =
+    js::GetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT).toInt32();
+
+  // Step 8.
+  JS::Rooted<JSObject*> valuesObj(aCx, &values.toObject());
+  if (!JS_DefineElement(aCx, valuesObj, index, args.get(0), JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  // Step 9.
+  remainingElements -= 1;
+  js::SetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT,
+                      JS::Int32Value(remainingElements));
+
+  // Step 10.
+  if (remainingElements == 0) {
+    return JS::Call(aCx, JS::UndefinedHandleValue, resolveFunc,
+                    JS::HandleValueArray(values), args.rval());
+  }
+
+  // Step 11.
+  args.rval().setUndefined();
+  return true;
+}
+
+
+/* static */ void
+Promise::All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
+             JS::Handle<JS::Value> aIterable,
+             JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv)
+{
+  // Implements http://www.ecma-international.org/ecma-262/6.0/#sec-promise.all
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  JSContext* cx = aGlobal.Context();
+
+  // Steps 1-5: nothing to do.  Note that the @@species bits got removed in
+  // https://github.com/tc39/ecma262/pull/211
+
+  // Step 6.
+  PromiseCapability capability(cx);
+  NewPromiseCapability(cx, global, aThisv, true, capability, aRv);
+  // Step 7.
+  if (aRv.Failed()) {
+    return;
+  }
+
+  MOZ_ASSERT(aThisv.isObject(), "How did NewPromiseCapability succeed?");
+  JS::Rooted<JSObject*> constructorObj(cx, &aThisv.toObject());
+
+  // After this point we have a useful promise value in "capability", so just go
+  // ahead and put it in our retval now.  Every single return path below would
+  // want to do that anyway.
+  aRetval.set(capability.PromiseValue());
+  if (!MaybeWrapValue(cx, aRetval)) {
+    aRv.NoteJSContextException();
+    return;
+  }
+
+  // The arguments we're going to be passing to "then" on each loop iteration.
+  // The second one we know already; the first one will be created on each
+  // iteration of the loop.
+  JS::AutoValueArray<2> callbackFunctions(cx);
+  callbackFunctions[1].set(capability.mReject);
+
+  // Steps 8 and 9.
+  JS::ForOfIterator iter(cx);
+  if (!iter.init(aIterable, JS::ForOfIterator::AllowNonIterable)) {
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  if (!iter.valueIsIterable()) {
+    ThrowErrorMessage(cx, MSG_PROMISE_ARG_NOT_ITERABLE,
+                      "Argument of Promise.all");
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  // Step 10 doesn't need to be done, because ForOfIterator handles it
+  // for us.
+
+  // Now we jump over to
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-performpromiseall
+  // and do its steps.
+
+  // Substep 4. Create our data holder that holds all the things shared across
+  // every step of the iterator.  In particular, this holds the
+  // remainingElementsCount (as an integer reserved slot), the array of values,
+  // and the resolve function from our PromiseCapability.
+  //
+  // We have to be very careful about which compartments we create things in
+  // here.  In particular, we have to maintain the invariant that anything
+  // stored in a reserved slot is same-compartment with the object whose
+  // reserved slot it's in.  But we want to create the values array in the
+  // Promise reflector compartment, because that array can get exposed to code
+  // that has access to the Promise reflector (in particular code from that
+  // compartment), and that should work, even if the Promise reflector
+  // compartment is less-privileged than our caller compartment.
+  //
+  // So the plan is as follows: Create the values array in the promise reflector
+  // compartment.  Create the PromiseAllResolveElement function and the data
+  // holder in our current compartment.  Store a cross-compartment wrapper to
+  // the values array in the holder.  This should be OK because the only things
+  // we hand the PromiseAllResolveElement function to are the "then" calls we do
+  // and in the case when the reflector compartment is not the current
+  // compartment those are happening over Xrays anyway, which means they get the
+  // canonical "then" function and content can't see our
+  // PromiseAllResolveElement.
+  JS::Rooted<JSObject*> dataHolder(cx);
+  dataHolder = JS_NewObjectWithGivenProto(cx, &PromiseAllDataHolderClass,
+                                          nullptr);
+  if (!dataHolder) {
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  JS::Rooted<JSObject*> reflectorGlobal(cx, global->GetGlobalJSObject());
+  JS::Rooted<JSObject*> valuesArray(cx);
+  { // Scope for JSAutoCompartment.
+    JSAutoCompartment ac(cx, reflectorGlobal);
+    valuesArray = JS_NewArrayObject(cx, 0);
+  }
+  if (!valuesArray) {
+    // It's important that we've exited the JSAutoCompartment by now, before
+    // calling RejectWithException and possibly invoking capability.mReject.
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  // The values array as a value we can pass to a function in our current
+  // compartment, or store in the holder's reserved slot.
+  JS::Rooted<JS::Value> valuesArrayVal(cx, JS::ObjectValue(*valuesArray));
+  if (!MaybeWrapObjectValue(cx, &valuesArrayVal)) {
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  js::SetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT,
+                      JS::Int32Value(1));
+  js::SetReservedSlot(dataHolder, DATA_HOLDER_VALUES_ARRAY_SLOT,
+                      valuesArrayVal);
+  js::SetReservedSlot(dataHolder, DATA_HOLDER_RESOLVE_FUNCTION_SLOT,
+                      capability.mResolve);
+
+  // Substep 5.
+  CheckedInt32 index = 0;
+
+  // Substep 6.
+  JS::Rooted<JS::Value> nextValue(cx);
+  while (true) {
+    bool done;
+    // Steps a, b, c, e, f, g.
+    if (!iter.next(&nextValue, &done)) {
+      capability.RejectWithException(cx, aRv);
+      return;
+    }
+
+    // Step d.
+    if (done) {
+      int32_t remainingCount =
+        js::GetReservedSlot(dataHolder,
+                            DATA_HOLDER_REMAINING_ELEMENTS_SLOT).toInt32();
+      remainingCount -= 1;
+      if (remainingCount == 0) {
+        JS::Rooted<JS::Value> ignored(cx);
+        if (!JS::Call(cx, JS::UndefinedHandleValue, capability.mResolve,
+                      JS::HandleValueArray(valuesArrayVal), &ignored)) {
+          capability.RejectWithException(cx, aRv);
+        }
+        return;
+      }
+      js::SetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT,
+                          JS::Int32Value(remainingCount));
+      // We're all set for now!
+      return;
+    }
+
+    // Step h.
+    { // Scope for the JSAutoCompartment we need to work with valuesArray.  We
+      // mostly do this for performance; we could go ahead and do the define via
+      // a cross-compartment proxy instead...
+      JSAutoCompartment ac(cx, valuesArray);
+      if (!JS_DefineElement(cx, valuesArray, index.value(),
+                            JS::UndefinedHandleValue, JSPROP_ENUMERATE)) {
+        // Have to go back into the caller compartment before we try to touch
+        // capability.mReject.  Luckily, capability.mReject is guaranteed to be
+        // an object in the right compartment here.
+        JSAutoCompartment ac2(cx, &capability.mReject.toObject());
+        capability.RejectWithException(cx, aRv);
+        return;
+      }
+    }
+
+    // Step i.  Sadly, we can't take a shortcut here even if
+    // capability.mNativePromise exists, because someone could have overridden
+    // "resolve" on the canonical Promise constructor.
+    JS::Rooted<JS::Value> nextPromise(cx);
+    if (!JS_CallFunctionName(cx, constructorObj, "resolve",
+                             JS::HandleValueArray(nextValue),
+                             &nextPromise)) {
+      // Step j.
+      capability.RejectWithException(cx, aRv);
+      return;
+    }
+
+    // Step k.
+    JS::Rooted<JSObject*> resolveElement(cx);
+    JSFunction* resolveFunc =
+      js::NewFunctionWithReserved(cx, PromiseAllResolveElement,
+                                  1 /* nargs */, 0 /* flags */, nullptr);
+    if (!resolveFunc) {
+      capability.RejectWithException(cx, aRv);
+      return;
+    }
+
+    resolveElement = JS_GetFunctionObject(resolveFunc);
+    // Steps l-p.
+    js::SetFunctionNativeReserved(resolveElement,
+                                  RESOLVE_ELEMENT_INDEX_SLOT,
+                                  JS::Int32Value(index.value()));
+    js::SetFunctionNativeReserved(resolveElement,
+                                  RESOLVE_ELEMENT_DATA_HOLDER_SLOT,
+                                  JS::ObjectValue(*dataHolder));
+
+    // Step q.
+    int32_t remainingElements =
+      js::GetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT).toInt32();
+    js::SetReservedSlot(dataHolder, DATA_HOLDER_REMAINING_ELEMENTS_SLOT,
+                        JS::Int32Value(remainingElements + 1));
+
+    // Step r.  And now we don't know whether nextPromise has an overridden
+    // "then" method, so no shortcuts here either.
+    callbackFunctions[0].setObject(*resolveElement);
+    JS::Rooted<JSObject*> nextPromiseObj(cx);
+    JS::Rooted<JS::Value> ignored(cx);
+    if (!JS_ValueToObject(cx, nextPromise, &nextPromiseObj) ||
+        !JS_CallFunctionName(cx, nextPromiseObj, "then", callbackFunctions,
+                             &ignored)) {
+      // Step s.
+      capability.RejectWithException(cx, aRv);
+    }
+
+    // Step t.
+    index += 1;
+    if (!index.isValid()) {
+      // Let's just claim OOM.
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      capability.RejectWithException(cx, aRv);
+    }
+  }
 }
 
 /* static */ already_AddRefed<Promise>
