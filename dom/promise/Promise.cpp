@@ -1325,47 +1325,106 @@ Promise::All(const GlobalObject& aGlobal,
   return promise.forget();
 }
 
-/* static */ already_AddRefed<Promise>
+/* static */ void
 Promise::Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-              const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
+              JS::Handle<JS::Value> aIterable, JS::MutableHandle<JS::Value> aRetval,
+              ErrorResult& aRv)
 {
+  // Implements http://www.ecma-international.org/ecma-262/6.0/#sec-promise.race
   nsCOMPtr<nsIGlobalObject> global =
     do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
+    return;
   }
 
   JSContext* cx = aGlobal.Context();
 
-  JS::Rooted<JSObject*> obj(cx, JS::CurrentGlobalOrNull(cx));
-  if (!obj) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
+  // Steps 1-5: nothing to do.  Note that the @@species bits got removed in
+  // https://github.com/tc39/ecma262/pull/211
+  PromiseCapability capability(cx);
 
-  RefPtr<Promise> promise = Create(global, aRv);
+  // Step 6.
+  NewPromiseCapability(cx, global, aThisv, true, capability, aRv);
+  // Step 7.
   if (aRv.Failed()) {
-    return nullptr;
+    return;
   }
 
-  RefPtr<PromiseCallback> resolveCb =
-    new ResolvePromiseCallback(promise, obj);
+  MOZ_ASSERT(aThisv.isObject(), "How did NewPromiseCapability succeed?");
+  JS::Rooted<JSObject*> constructorObj(cx, &aThisv.toObject());
 
-  RefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
-
-  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
-    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
-    RefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, aThisv, value, aRv);
-    // According to spec, Resolve can throw, but our implementation never does.
-    // Well it does when window isn't passed on the main thread, but that is an
-    // implementation detail which should never be reached since we are checking
-    // for window above. Remove this when subclassing is supported.
-    MOZ_ASSERT(!aRv.Failed());
-    nextPromise->AppendCallbacks(resolveCb, rejectCb);
+  // After this point we have a useful promise value in "capability", so just go
+  // ahead and put it in our retval now.  Every single return path below would
+  // want to do that anyway.
+  aRetval.set(capability.PromiseValue());
+  if (!MaybeWrapValue(cx, aRetval)) {
+    aRv.NoteJSContextException();
+    return;
   }
 
-  return promise.forget();
+  // The arguments we're going to be passing to "then" on each loop iteration.
+  JS::AutoValueArray<2> callbackFunctions(cx);
+  callbackFunctions[0].set(capability.mResolve);
+  callbackFunctions[1].set(capability.mReject);
+
+  // Steps 8 and 9.
+  JS::ForOfIterator iter(cx);
+  if (!iter.init(aIterable, JS::ForOfIterator::AllowNonIterable)) {
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  if (!iter.valueIsIterable()) {
+    ThrowErrorMessage(cx, MSG_PROMISE_ARG_NOT_ITERABLE,
+                      "Argument of Promise.race");
+    capability.RejectWithException(cx, aRv);
+    return;
+  }
+
+  // Step 10 doesn't need to be done, because ForOfIterator handles it
+  // for us.
+
+  // Now we jump over to
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-performpromiserace
+  // and do its steps.
+  JS::Rooted<JS::Value> nextValue(cx);
+  while (true) {
+    bool done;
+    // Steps a, b, c, e, f, g.
+    if (!iter.next(&nextValue, &done)) {
+      capability.RejectWithException(cx, aRv);
+      return;
+    }
+
+    // Step d.
+    if (done) {
+      // We're all set!
+      return;
+    }
+
+    // Step h.  Sadly, we can't take a shortcut here even if
+    // capability.mNativePromise exists, because someone could have overridden
+    // "resolve" on the canonical Promise constructor.
+    JS::Rooted<JS::Value> nextPromise(cx);
+    if (!JS_CallFunctionName(cx, constructorObj, "resolve",
+                             JS::HandleValueArray(nextValue), &nextPromise)) {
+      // Step i.
+      capability.RejectWithException(cx, aRv);
+      return;
+    }
+
+    // Step j.  And now we don't know whether nextPromise has an overridden
+    // "then" method, so no shortcuts here either.
+    JS::Rooted<JSObject*> nextPromiseObj(cx);
+    JS::Rooted<JS::Value> ignored(cx);
+    if (!JS_ValueToObject(cx, nextPromise, &nextPromiseObj) ||
+        !JS_CallFunctionName(cx, nextPromiseObj, "then", callbackFunctions,
+                             &ignored)) {
+      // Step k.
+      capability.RejectWithException(cx, aRv);
+    }
+  }
 }
 
 /* static */

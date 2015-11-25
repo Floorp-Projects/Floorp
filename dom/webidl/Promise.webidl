@@ -42,6 +42,11 @@ interface _Promise {
   [NewObject]
   static Promise<any> all(sequence<any> iterable);
 
-  [NewObject]
-  static Promise<any> race(sequence<any> iterable);
+  // Have to use "any" (or "object", but "any" is simpler) as the type to
+  // support the subclassing behavior, since nothing actually requires the
+  // return value of PromiseSubclass.race to be a Promise object.  As a result,
+  // we also have to do our argument conversion manually, because we want to
+  // convert its exceptions into rejections.
+  [NewObject, Throws]
+  static any race(optional any iterable);
 };
