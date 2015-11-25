@@ -57,10 +57,7 @@ public:
   nsresult Call(JSContext* aCx,
                 JS::Handle<JS::Value> aValue) override;
 
-  Promise* GetDependentPromise() override
-  {
-    return mNextPromise;
-  }
+  Promise* GetDependentPromise() override;
 
   WrapperPromiseCallback(Promise* aNextPromise, JS::Handle<JSObject*> aGlobal,
                          AnyCallback* aCallback);
