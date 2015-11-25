@@ -103,6 +103,32 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
     l.push('');           //DA:$,0
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:4
+  //LH:3
+  //BRF:2
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+    l.push('');           //DA:$,1
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:4
+  //LH:4
+  //BRF:2
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
+    l.push('');           //DA:$,0
   else
     l.pop();              //DA:$,1
   //FNF:1
