@@ -295,14 +295,15 @@ AtomIsPinned(JSContext* cx, JSAtom* atom)
     AtomHasher::Lookup lookup(atom);
 
     /* Likewise, permanent strings are considered to be interned. */
-    MOZ_ASSERT(cx->isPermanentAtomsInitialized());
-    AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
-    if (p)
-        return true;
+    if (cx->isPermanentAtomsInitialized()) {
+        AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+        if (p)
+            return true;
+    }
 
     AutoLockForExclusiveAccess lock(cx);
 
-    p = cx->runtime()->atoms().lookup(lookup);
+    AtomSet::Ptr p = cx->runtime()->atoms().lookup(lookup);
     if (!p)
         return false;
 
@@ -384,14 +385,15 @@ js::AtomizeString(ExclusiveContext* cx, JSString* str,
         AtomHasher::Lookup lookup(&atom);
 
         /* Likewise, permanent atoms are always interned. */
-        MOZ_ASSERT(cx->isPermanentAtomsInitialized());
-        AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
-        if (p)
-            return &atom;
+        if (cx->isPermanentAtomsInitialized()) {
+            AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+            if (p)
+                return &atom;
+        }
 
         AutoLockForExclusiveAccess lock(cx);
 
-        p = cx->atoms().lookup(lookup);
+        AtomSet::Ptr p = cx->atoms().lookup(lookup);
         MOZ_ASSERT(p); /* Non-static atom must exist in atom state set. */
         MOZ_ASSERT(p->asPtr() == &atom);
         MOZ_ASSERT(pin == PinAtom);

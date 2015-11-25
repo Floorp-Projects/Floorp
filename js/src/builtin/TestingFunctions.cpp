@@ -3077,6 +3077,22 @@ GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
     return GetProperty(cx, env, env, id, args.rval());
 }
 
+static bool
+GetSelfHostedValue(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportError(cx, "First and only argument should be a string");
+        return false;
+    }
+    RootedAtom srcAtom(cx, ToAtom<CanGC>(cx, args[0]));
+    if (!srcAtom)
+        return false;
+    RootedPropertyName srcName(cx, srcAtom->asPropertyName());
+    return cx->runtime()->cloneSelfHostedValue(cx, srcName, args.rval());
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment' [, 'shrinking'])",
@@ -3559,6 +3575,12 @@ gc::ZealModeHelpText),
     JS_FN_HELP("getModuleEnvironmentValue", GetModuleEnvironmentValue, 2, 0,
 "getModuleEnvironmentValue(module, name)",
 "  Get the value of a bound name in a module environment.\n"),
+
+JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
+"getSelfHostedValue()",
+"  Get a self-hosted value by its name. Note that these values don't get \n"
+"  cached, so repeatedly getting the same value creates multiple distinct clones."),
+
 
     JS_FS_HELP_END
 };
