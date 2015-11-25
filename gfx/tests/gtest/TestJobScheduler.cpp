@@ -48,7 +48,7 @@ struct SanityChecker {
   {
     MaybeYieldThread();
     CriticalSectionAutoEnter lock(&mSection);
-    ASSERT_EQ(mAdvancements[aJobId], aCmdId-1);
+    MOZ_RELEASE_ASSERT(mAdvancements[aJobId] == aCmdId-1);
     mAdvancements[aJobId] = aCmdId;
   }
 };
@@ -66,12 +66,12 @@ struct JoinTestSanityCheck : public SanityChecker {
   {
     // Job 0 is the special task executed when everything is joined after task 1
     if (aCmdId == 0) {
-      ASSERT_FALSE(mSpecialJobHasRun);
+      MOZ_RELEASE_ASSERT(!mSpecialJobHasRun);
       mSpecialJobHasRun = true;
       for (auto advancement : mAdvancements) {
         // Because of the synchronization point (beforeFilter), all
         // task buffers should have run task 1 when task 0 is run.
-        ASSERT_EQ(advancement, (uint32_t)1);
+        MOZ_RELEASE_ASSERT(advancement == 1);
       }
     } else {
       // This check does not apply to task 0.
@@ -79,7 +79,7 @@ struct JoinTestSanityCheck : public SanityChecker {
     }
 
     if (aCmdId == 2) {
-      ASSERT_TRUE(mSpecialJobHasRun);
+      MOZ_RELEASE_ASSERT(mSpecialJobHasRun);
     }
   }
 };
@@ -156,7 +156,7 @@ void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   MaybeYieldThread();
 
   for (auto advancement : check.mAdvancements) {
-    ASSERT_TRUE(advancement == 2);
+    EXPECT_TRUE(advancement == 2);
   }
 }
 
@@ -214,7 +214,7 @@ void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   waitForCompletion->Wait();
 
   for (auto advancement : check.mAdvancements) {
-    ASSERT_TRUE(advancement == numJobs);
+    EXPECT_TRUE(advancement == numJobs);
   }
 }
 
