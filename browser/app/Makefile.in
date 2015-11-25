@@ -15,6 +15,16 @@ DEFINES += \
   -DPBMODE_ICO='"$(DIST)/branding/pbmode.ico"' \
   $(NULL)
 
+# Build a binary bootstrapping with XRE_main
+
+ifndef MOZ_WINCONSOLE
+ifneq (,$(MOZ_DEBUG)$(MOZ_ASAN))
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
 # This switches $(INSTALL) to copy mode, like $(SYSINSTALL), so things that
 # shouldn't get 755 perms need $(IFLAGS1) for either way of calling nsinstall.
 NSDISTMODE = copy

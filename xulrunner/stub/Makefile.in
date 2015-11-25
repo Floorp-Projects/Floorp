@@ -9,5 +9,3 @@ else
 MOZ_WINCONSOLE = 0
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk

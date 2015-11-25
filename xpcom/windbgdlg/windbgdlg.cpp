@@ -119,8 +119,3 @@ wWinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
                        MB_ICONSTOP | MB_SYSTEMMODAL |
                        MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);
 }
-
-int wmain(int argc, wchar_t** argv) {
-    return wWinMain(nullptr, nullptr,
-                    GetCommandLineW(), 0);
-}
