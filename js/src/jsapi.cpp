@@ -4651,6 +4651,12 @@ JS::EvaluateSelfHosted(JSRuntime* rt, const char* filename)
     return EvaluateSelfHosted(rt, bytes, length, filename);
 }
 
+JS_PUBLIC_API(bool)
+JS::AddSelfHostingIntrinsics(JSRuntime* rt, const JSFunctionSpec* intrinsicFunctions)
+{
+    return rt->addSelfHostingIntrinsics(intrinsicFunctions);
+}
+
 static JSObject*
 JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
 {
