@@ -471,10 +471,12 @@ void MediaOmxReader::NotifyDataArrivedInternal()
     return;
   }
 
-  IntervalSet<int64_t> intervals;
-  for (auto& range : byteRanges) {
-    intervals += mFilter.NotifyDataArrived(range.Length(), range.mStart);
+  if (byteRanges == mLastCachedRanges) {
+    return;
   }
+  MediaByteRangeSet intervals = byteRanges - mLastCachedRanges;
+  mLastCachedRanges = byteRanges;
+
   for (const auto& interval : intervals) {
     RefPtr<MediaByteBuffer> bytes =
       resource->MediaReadAt(interval.mStart, interval.Length());
