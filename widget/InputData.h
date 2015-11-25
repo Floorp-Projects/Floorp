@@ -582,7 +582,6 @@ public:
      mDeltaY(aDeltaY),
      mLineOrPageDeltaX(0),
      mLineOrPageDeltaY(0),
-     mScrollSeriesNumber(0),
      mIsMomentum(false)
   {}
 
@@ -615,10 +614,6 @@ public:
   // See lineOrPageDeltaX/Y on WidgetWheelEvent.
   int32_t mLineOrPageDeltaX;
   int32_t mLineOrPageDeltaY;
-
-  // Indicates the order in which this event was added to a transaction. The
-  // first event is 1; if not a member of a transaction, this is 0.
-  uint32_t mScrollSeriesNumber;
 
   bool mIsMomentum;
 };

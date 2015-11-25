@@ -21,7 +21,6 @@
 #include "nsPresContext.h"
 #include "prtime.h"
 #include "Units.h"
-#include "AsyncScrollBase.h"
 
 namespace mozilla {
 
@@ -138,7 +137,7 @@ WheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
 
   SetTimeout();
 
-  if (sScrollSeriesCounter != 0 && OutOfTime(sTime, kScrollSeriesTimeoutMs)) {
+  if (sScrollSeriesCounter != 0 && OutOfTime(sTime, kScrollSeriesTimeout)) {
     sScrollSeriesCounter = 0;
   }
   sScrollSeriesCounter++;
@@ -384,9 +383,14 @@ WheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent,
 }
 
 /* static */ double
-WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor)
+WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
+                                               int32_t aFactor)
 {
-  return mozilla::ComputeAcceleratedWheelDelta(aDelta, sScrollSeriesCounter, aFactor);
+  if (aDelta == 0.0) {
+    return 0;
+  }
+
+  return (aDelta * sScrollSeriesCounter * (double)aFactor / 10);
 }
 
 /* static */ int32_t
