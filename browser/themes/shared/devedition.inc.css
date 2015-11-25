@@ -197,7 +197,7 @@ toolbar[brighttext] #downloads-indicator-counter {
 #navigator-toolbox .searchbar-textbox {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
-  color: inherit;
+  color: inherit !important;
   border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
   box-shadow: none !important;
 }
