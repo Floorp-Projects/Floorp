@@ -6,16 +6,30 @@
 
 #include "jsapi-tests/tests.h"
 
-static bool contentGlobalFunctionCalled = false;
+static int32_t contentGlobalFunctionCallResult = 0;
+
+static bool
+IntrinsicFunction(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    args.rval().setInt32(42);
+    return true;
+}
 
 static bool
 ContentGlobalFunction(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    contentGlobalFunctionCalled = true;
+    MOZ_ASSERT(args.length() == 1);
+    contentGlobalFunctionCallResult = args[0].toInt32();
     args.rval().setUndefined();
     return true;
 }
+
+static const JSFunctionSpec intrinsic_functions[] = {
+    JS_FN("intrinsicFunction", IntrinsicFunction, 0,0),
+    JS_FS_END
+};
 
 BEGIN_TEST(testEvaluateSelfHosted)
 {
@@ -25,7 +39,7 @@ BEGIN_TEST(testEvaluateSelfHosted)
     JS::RootedValue v(cx);
     EVAL("getSelfHostedValue('customSelfHostedFunction')();", &v);
     CHECK(!JS_IsExceptionPending(cx));
-    CHECK(contentGlobalFunctionCalled == true);
+    CHECK(contentGlobalFunctionCallResult == 42);
 
     return true;
 }
@@ -34,9 +48,13 @@ virtual JSContext* createContext() override {
     JSContext* cx = JS_NewContext(rt, 8192);
     if (!cx)
         return nullptr;
-    const char *selfHostedCode = "function customSelfHostedFunction()"
-                                 "{callFunction(global.contentGlobalFunction, global);}";
-    if (!JS::EvaluateSelfHosted(rt, selfHostedCode, strlen(selfHostedCode), "testing-sh"))
+    const char *selfHostedCode = "function customSelfHostedFunction() {"
+                                 "let intrinsicResult = intrinsicFunction();"
+                                 "callFunction(global.contentGlobalFunction, global,"
+                                 "             intrinsicResult);"
+                                 "}";
+    if (!JS::AddSelfHostingIntrinsics(rt, intrinsic_functions) ||
+        !JS::EvaluateSelfHosted(rt, selfHostedCode, strlen(selfHostedCode), "testing-sh"))
     {
         return nullptr;
     }

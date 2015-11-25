@@ -4149,6 +4149,16 @@ EvaluateSelfHosted(JSRuntime* rt, const char* bytes, size_t length, const char* 
 extern JS_PUBLIC_API(bool)
 EvaluateSelfHosted(JSRuntime* rt, const char* filename);
 
+/**
+ * Add functions available to self-hosted code.
+ *
+ * Must be called before the self-hosted code using it is run with
+ * EvaluateSelfHosted, and thus has the same restrictions regarding when it
+ * can be used.
+ */
+extern JS_PUBLIC_API(bool)
+AddSelfHostingIntrinsics(JSRuntime* rt, const JSFunctionSpec* intrinsicFunctions);
+
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
