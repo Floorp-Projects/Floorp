@@ -188,6 +188,9 @@ public:
 
   SelfType Span(const SelfType& aOther) const
   {
+    if (IsEmpty()) {
+      return aOther;
+    }
     SelfType result(*this);
     if (aOther.mStart < mStart) {
       result.mStart = aOther.mStart;
