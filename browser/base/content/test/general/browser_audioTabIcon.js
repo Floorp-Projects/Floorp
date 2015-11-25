@@ -192,7 +192,7 @@ function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
   });
   let AudioPlaybackPromise = new Promise(resolve => {
     let observer = (subject, topic, data) => {
-      ok(false, "Should not see an audio-playback notification");
+      ok(true, "Should see an audio-playback notification");
     };
     Services.obs.addObserver(observer, "audio-playback", false);
     setTimeout(() => {
@@ -207,7 +207,7 @@ function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the new tab");
 
-  // Wait to see if an audio-playback event is dispatched.  This should not happen!
+  // Wait to see if an audio-playback event is dispatched.
   yield AudioPlaybackPromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");

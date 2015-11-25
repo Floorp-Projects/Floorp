@@ -89,10 +89,6 @@ leak:MessageLoop::MessageLoop
 leak:base::WaitableEvent::TimedWait
 leak:MessageLoop::PostTask_Helper
 
-# Bug 1189430 - DNS leaks in mochitest-chrome.
-leak:nsDNSService::AsyncResolveExtended
-leak:_GetAddrInfo_Portable
-
 # Bug 1189568 - Indirect leaks of IMContextWrapper and nsIntRect.
 leak:nsWindow::Create
 leak:nsBaseWidget::StoreWindowClipRegion

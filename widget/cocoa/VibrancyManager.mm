@@ -32,7 +32,7 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType, const nsIntRegion& aReg
   for (size_t i = 0; (iterRect = iter.Next()) || i < viewsToRecycle.Length(); ++i) {
     if (iterRect) {
       NSView* view = nil;
-      NSRect rect = mCoordinateConverter.DevPixelsToCocoaPoints(*iterRect);
+      NSRect rect = mCoordinateConverter.UntypedDevPixelsToCocoaPoints(*iterRect);
       if (i < viewsToRecycle.Length()) {
         view = viewsToRecycle[i];
         [view setFrame:rect];
@@ -72,7 +72,7 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
 
   nsIntRegionRectIterator iter(aVibrantRegion.region);
   while (const nsIntRect* rect = iter.Next()) {
-    NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(*rect));
+    NSRectFill(mCoordinateConverter.UntypedDevPixelsToCocoaPoints(*rect));
   }
 }
 

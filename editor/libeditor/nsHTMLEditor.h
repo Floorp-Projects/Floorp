@@ -552,11 +552,12 @@ protected:
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable) override;
-  nsresult PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
+  nsresult PrepareHTMLTransferable(nsITransferable **transferable);
   nsresult InsertFromTransferable(nsITransferable *transferable,
                                     nsIDOMDocument *aSourceDoc,
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
+                                    bool havePrivateHTMLFlavor,
                                     nsIDOMNode *aDestinationNode,
                                     int32_t aDestinationOffset,
                                     bool aDoDeleteSelection);

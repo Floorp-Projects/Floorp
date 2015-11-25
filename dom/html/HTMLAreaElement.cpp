@@ -40,13 +40,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAreaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAreaElement,
                                                   nsGenericHTMLElement)
-  tmp->Link::Traverse(cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAreaElement,
                                                 nsGenericHTMLElement)
-  tmp->Link::Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -207,17 +205,13 @@ HTMLAreaElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   NS_IMETHODIMP                                              \
   HTMLAreaElement::Get##_part(nsAString& a##_part)           \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Get##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Get##_part(a##_part);                              \
     return NS_OK;                                            \
   }                                                          \
   NS_IMETHODIMP                                              \
   HTMLAreaElement::Set##_part(const nsAString& a##_part)     \
   {                                                          \
-    ErrorResult rv;                                          \
-    Link::Set##_part(a##_part, rv);                          \
-    MOZ_ASSERT(!rv.Failed());                                \
+    Link::Set##_part(a##_part);                              \
     return NS_OK;                                            \
   }
 

@@ -2983,10 +2983,12 @@ var BrowserOnClick = {
         break;
 
       case "ignoreWarningButton":
-        if (sendTelemetry) {
-          secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+        if (gPrefService.getBoolPref("browser.safebrowsing.allowOverride")) {
+          if (sendTelemetry) {
+            secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
+          }
+          this.ignoreWarningButton(reason);
         }
-        this.ignoreWarningButton(reason);
         break;
     }
   },

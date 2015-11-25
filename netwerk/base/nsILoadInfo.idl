@@ -26,7 +26,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(542b38c6-1c7b-4630-bd6b-9fee0d1b474d)]
+[scriptable, builtinclass, uuid(c21803eb-ad4f-46bd-b0a5-8081381253f2)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -130,6 +130,19 @@ interface nsILoadInfo : nsISupports
    * Allow access to chrome: packages that are content accessible.
    */
   const unsigned long SEC_ALLOW_CHROME = (1<<9);
+
+  /**
+   * Don't follow redirects. Instead the redirect response is returned
+   * as a successful response for the channel.
+   *
+   * Redirects not initiated by a server response, i.e. REDIRECT_INTERNAL and
+   * REDIRECT_STS_UPGRADE, are still followed.
+   *
+   * Note: If this flag is set and the channel response is a redirect, then
+   * the response body might not be available.
+   * This can happen if the redirect was cached.
+   */
+  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<10);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -251,6 +264,11 @@ interface nsILoadInfo : nsISupports
    * when calling CheckLoadURIWithPrincipal().
    */
   [infallible] readonly attribute boolean allowChrome;
+
+  /**
+   * Returns true if SEC_DONT_FOLLOW_REDIRECTS is set.
+   */
+  [infallible] readonly attribute boolean dontFollowRedirects;
 
   /**
    * The external contentPolicyType of the channel, used for security checks

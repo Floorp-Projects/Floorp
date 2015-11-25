@@ -1036,7 +1036,6 @@ pref("editor.positioning.offset",            0);
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
-pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
 pref("dom.disable_window_status_change",    false);
@@ -4851,6 +4850,9 @@ pref("browser.safebrowsing.provider.mozilla.lists.mozstd.name", "mozstdName");
 pref("browser.safebrowsing.provider.mozilla.lists.mozstd.description", "mozstdDesc");
 pref("browser.safebrowsing.provider.mozilla.lists.mozfull.name", "mozfullName");
 pref("browser.safebrowsing.provider.mozilla.lists.mozfull.description", "mozfullDesc");
+
+// Allow users to ignore Safe Browsing warnings.
+pref("browser.safebrowsing.allowOverride", true);
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);

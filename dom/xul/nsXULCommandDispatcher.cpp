@@ -37,16 +37,13 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo* gCommandLog;
+static LazyLogModule gCommandLog("nsXULCommandDispatcher");
 
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
     : mDocument(aDocument), mUpdaters(nullptr)
 {
-
-  if (! gCommandLog)
-    gCommandLog = PR_NewLogModule("nsXULCommandDispatcher");
 }
 
 nsXULCommandDispatcher::~nsXULCommandDispatcher()

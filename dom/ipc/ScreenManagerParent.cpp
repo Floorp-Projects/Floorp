@@ -142,11 +142,9 @@ ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
   nsCOMPtr<nsIWidget> widget = tabParent->GetWidget();
 
   nsCOMPtr<nsIScreen> screen;
-  if (widget) {
-    if (widget->GetNativeData(NS_NATIVE_WINDOW)) {
-      mScreenMgr->ScreenForNativeWidget(widget->GetNativeData(NS_NATIVE_WINDOW),
-                                        getter_AddRefs(screen));
-    }
+  if (widget && widget->GetNativeData(NS_NATIVE_WINDOW)) {
+    mScreenMgr->ScreenForNativeWidget(widget->GetNativeData(NS_NATIVE_WINDOW),
+                                      getter_AddRefs(screen));
   } else {
     nsresult rv = mScreenMgr->GetPrimaryScreen(getter_AddRefs(screen));
     if (NS_WARN_IF(NS_FAILED(rv))) {

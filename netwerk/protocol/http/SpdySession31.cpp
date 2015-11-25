@@ -549,6 +549,7 @@ SpdySession31::ResetDownstreamState()
       DecrementConcurrent(mInputFrameDataStream);
     }
   }
+  mInputFrameDataLast = false;
   mInputFrameBufferUsed = 0;
   mInputFrameDataStream = nullptr;
 }
