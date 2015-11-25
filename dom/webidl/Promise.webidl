@@ -25,8 +25,8 @@ interface _Promise {
   // return value of PromiseSubclass.resolve/reject to be a Promise object.
   [NewObject, Throws]
   static any resolve(optional any value);
-  [NewObject]
-  static Promise<void> reject(optional any value);
+  [NewObject, Throws]
+  static any reject(optional any value);
 
   // The [TreatNonCallableAsNull] annotation is required since then() should do
   // nothing instead of throwing errors when non-callable arguments are passed.
