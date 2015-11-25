@@ -2761,8 +2761,17 @@ ConvertExceptionToPromise(JSContext* cx,
   }
 
   JS_ClearPendingException(cx);
+
+  nsCOMPtr<nsIGlobalObject> globalObj =
+    do_QueryInterface(global.GetAsSupports());
+  if (!globalObj) {
+    ErrorResult rv;
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return !rv.MaybeSetPendingException(cx);
+  }
+
   ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Reject(global, exn, rv);
+  RefPtr<Promise> promise = Promise::Reject(globalObj, cx, exn, rv);
   if (rv.MaybeSetPendingException(cx)) {
     // We just give up.  We put the exception from the ErrorResult on
     // the JSContext just to make sure to not leak memory on the
