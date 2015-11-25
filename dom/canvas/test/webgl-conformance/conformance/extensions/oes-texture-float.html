@@ -131,7 +131,8 @@ function runTextureCreationTest(testProgram, extensionEnabled)
     }
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, data);
     if (expectFailure) {
-        glErrorShouldBe(gl, gl.INVALID_ENUM, "floating-point texture allocation must be disallowed if OES_texture_float isn't enabled");
+        wtu.glErrorShouldBeIn(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION],
+                              "floating-point texture allocation must be disallowed if OES_texture_float isn't enabled");
         return;
     } else {
         glErrorShouldBe(gl, gl.NO_ERROR, "floating-point texture allocation should succeed if OES_texture_float is enabled");

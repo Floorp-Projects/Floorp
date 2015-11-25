@@ -3407,7 +3407,7 @@ const DOMLinkHandler = {
         break;
 
       case "Link:SetIcon":
-        return this.setIcon(aMsg.target, aMsg.data.url);
+        return this.setIcon(aMsg.target, aMsg.data.url, aMsg.data.loadingPrincipal);
         break;
 
       case "Link:AddSearch":
@@ -3416,7 +3416,7 @@ const DOMLinkHandler = {
     }
   },
 
-  setIcon: function(aBrowser, aURL) {
+  setIcon: function(aBrowser, aURL, aLoadingPrincipal) {
     if (gBrowser.isFailedIcon(aURL))
       return false;
 
@@ -3424,7 +3424,7 @@ const DOMLinkHandler = {
     if (!tab)
       return false;
 
-    gBrowser.setIcon(tab, aURL);
+    gBrowser.setIcon(tab, aURL, aLoadingPrincipal);
     return true;
   },
 

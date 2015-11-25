@@ -120,6 +120,10 @@
       // Multiple label elements for single button
       testName("btn_label_multi", "label1label2");
 
+      // Multiple controls inside a label element
+      testName("ctrl_in_label_1", "Enable a button control");
+      testName("ctrl_in_label_2", "button");
+
 
       //////////////////////////////////////////////////////////////////////////
       // name from children
@@ -446,6 +450,12 @@
   <label for="btn_label_multi">label1</label>
   <label for="btn_label_multi">label2</label>
   <button id="btn_label_multi">button</button>
+
+  <!-- a label containing more than one controls -->
+  <label>
+    Enable <input id="ctrl_in_label_1" type="checkbox"> a
+    <input id="ctrl_in_label_2" type="button" value="button"> control
+  </label>
 
   <!-- name from children -->
   <span id="btn_children" role="button">14</span>

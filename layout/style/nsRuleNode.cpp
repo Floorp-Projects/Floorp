@@ -5086,8 +5086,9 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
         nsCSSProperty prop =
           nsCSSProps::LookupProperty(propertyStr,
                                      nsCSSProps::eEnabledForAllContent);
-        if (prop == eCSSProperty_UNKNOWN) {
-          transition->SetUnknownProperty(propertyStr);
+        if (prop == eCSSProperty_UNKNOWN ||
+            prop == eCSSPropertyExtra_variable) {
+          transition->SetUnknownProperty(prop, propertyStr);
         } else {
           transition->SetProperty(prop);
         }
@@ -5945,6 +5946,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
           nsCSSProps::LookupProperty(buffer,
                                      nsCSSProps::eEnabledForAllContent);
         if (prop != eCSSProperty_UNKNOWN &&
+            prop != eCSSPropertyExtra_variable &&
             nsCSSProps::PropHasFlags(prop,
                                      CSS_PROPERTY_CREATES_STACKING_CONTEXT))
         {

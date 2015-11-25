@@ -4813,6 +4813,7 @@ ContentParent::RecvNotifyKeywordSearchLoading(const nsString &aProvider,
 bool
 ContentParent::RecvCopyFavicon(const URIParams& aOldURI,
                                const URIParams& aNewURI,
+                               const IPC::Principal& aLoadingPrincipal,
                                const bool& aInPrivateBrowsing)
 {
     nsCOMPtr<nsIURI> oldURI = DeserializeURI(aOldURI);
@@ -4824,7 +4825,7 @@ ContentParent::RecvCopyFavicon(const URIParams& aOldURI,
         return true;
     }
 
-    nsDocShell::CopyFavicon(oldURI, newURI, aInPrivateBrowsing);
+    nsDocShell::CopyFavicon(oldURI, newURI, aLoadingPrincipal, aInPrivateBrowsing);
     return true;
 }
 
