@@ -1174,6 +1174,15 @@ Promise::Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
   return promise.forget();
 }
 
+/* static */
+bool
+Promise::PromiseSpecies(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+{
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+  args.rval().set(args.thisv());
+  return true;
+}
+
 void
 Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
 {
