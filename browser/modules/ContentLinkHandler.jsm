@@ -108,7 +108,9 @@ this.ContentLinkHandler = {
             }
             sizeHistogramTypes.add(sizesType);
 
-            [iconAdded] = chromeGlobal.sendSyncMessage("Link:SetIcon", {url: uri.spec});
+            [iconAdded] = chromeGlobal.sendSyncMessage(
+                            "Link:SetIcon",
+                            {url: uri.spec, loadingPrincipal: link.ownerDocument.nodePrincipal});
           }
           break;
         case "search":

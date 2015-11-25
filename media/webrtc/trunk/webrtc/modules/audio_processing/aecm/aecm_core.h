@@ -134,27 +134,18 @@ typedef struct {
 } AecmCore;
 
 ////////////////////////////////////////////////////////////////////////////////
-// WebRtcAecm_CreateCore(...)
+// WebRtcAecm_CreateCore()
 //
 // Allocates the memory needed by the AECM. The memory needs to be
 // initialized separately using the WebRtcAecm_InitCore() function.
-//
-// Input:
-//      - aecm          : Instance that should be created
-//
-// Output:
-//      - aecm          : Created instance
-//
-// Return value         :  0 - Ok
-//                        -1 - Error
-//
-int WebRtcAecm_CreateCore(AecmCore** aecm);
+// Returns a pointer to the instance and a nullptr at failure.
+AecmCore* WebRtcAecm_CreateCore();
 
 ////////////////////////////////////////////////////////////////////////////////
 // WebRtcAecm_InitCore(...)
 //
 // This function initializes the AECM instant created with
-// WebRtcAecm_CreateCore(...)
+// WebRtcAecm_CreateCore()
 // Input:
 //      - aecm          : Pointer to the AECM instance
 //      - samplingFreq  : Sampling Frequency
@@ -174,11 +165,7 @@ int WebRtcAecm_InitCore(AecmCore* const aecm, int samplingFreq);
 // Input:
 //      - aecm          : Pointer to the AECM instance
 //
-// Return value         :  0 - Ok
-//                        -1 - Error
-//           11001-11016: Error
-//
-int WebRtcAecm_FreeCore(AecmCore* aecm);
+void WebRtcAecm_FreeCore(AecmCore* aecm);
 
 int WebRtcAecm_Control(AecmCore* aecm, int delay, int nlpFlag);
 

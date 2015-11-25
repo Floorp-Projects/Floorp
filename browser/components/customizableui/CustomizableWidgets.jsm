@@ -242,7 +242,6 @@ const CustomizableWidgets = [
         recentlyClosedWindows.removeChild(recentlyClosedWindows.firstChild);
       }
 
-#ifdef MOZ_SERVICES_SYNC
       let tabsFromOtherComputers = doc.getElementById("sync-tabs-menuitem2");
       if (PlacesUIUtils.shouldShowTabsFromOtherComputersMenuitem()) {
         tabsFromOtherComputers.removeAttribute("hidden");
@@ -255,7 +254,6 @@ const CustomizableWidgets = [
       } else {
         tabsFromOtherComputers.setAttribute("disabled", true);
       }
-#endif
 
       let utils = RecentlyClosedTabsAndWindowsMenuUtils;
       let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,

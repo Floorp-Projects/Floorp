@@ -161,6 +161,7 @@ add_task(function* test_onPageChanged() {
   PlacesUtils.favicons.setAndFetchFaviconForPage(testuri, SMALLPNG_DATA_URI,
                                                  false,
                                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-                                                 null);
+                                                 null,
+                                                 Services.scriptSecurityManager.getSystemPrincipal());
   yield promiseNotify;
 });

@@ -35,10 +35,10 @@ function IsFormatValidForTex(gl, format, type) {
     gl.texImage2D(gl.TEXTURE_2D, 0, format, 4, 4, 0, format, type, null);
 
     var error = gl.getError();
-    if (error == gl.INVALID_ENUM)
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
         return false;
 
-    ok(error == gl.NO_ERROR, 'Error should be INVALID_ENUM or NO_ERROR.');
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
     return error == gl.NO_ERROR;
 }
 
@@ -50,10 +50,10 @@ function IsFormatValidForTexFB(gl, format, type) {
     gl.texImage2D(gl.TEXTURE_2D, 0, format, 4, 4, 0, format, type, null);
 
     var error = gl.getError();
-    if (error == gl.INVALID_ENUM)
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
         return false;
 
-    ok(error == gl.NO_ERROR, 'Error should be INVALID_ENUM or NO_ERROR.');
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
 
     var fb = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
@@ -75,10 +75,10 @@ function IsFormatValidForTexFBRead(gl, texFormat, texType, readType) {
                   null);
 
     var error = gl.getError();
-    if (error == gl.INVALID_ENUM)
+    if (error == gl.INVALID_ENUM || error == gl.INVALID_OPERATION)
         return false;
 
-    ok(error == gl.NO_ERROR, 'Error should be INVALID_ENUM or NO_ERROR.');
+    ok(error == gl.NO_ERROR, 'Error should be INVALID_{ENUM,OPERATION} or NO_ERROR.');
 
     var fb = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);

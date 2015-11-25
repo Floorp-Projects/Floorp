@@ -21,9 +21,7 @@ loop.feedbackViews = (function(_, mozL10n) {
      */
     onFeedbackButtonClick: function() {
       loop.request("GetLoopPref", "feedback.formURL").then(function(url) {
-        loop.request("OpenURL", url);
-
-        this.props.onAfterFeedbackReceived();
+        loop.request("OpenURL", url).then(this.props.onAfterFeedbackReceived);
       }.bind(this));
     },
 

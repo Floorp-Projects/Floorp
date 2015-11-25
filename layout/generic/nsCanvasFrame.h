@@ -241,7 +241,7 @@ public:
     : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aBg)
   {
     if (ShouldFixToViewport(aBuilder)) {
-      mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder);
+      mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
     }
   }
 

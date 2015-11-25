@@ -34,7 +34,7 @@ WebGLSync::Delete()
 WebGLContext*
 WebGLSync::GetParentObject() const
 {
-    return Context();
+    return mContext;
 }
 
 // -------------------------------------------------------------------------

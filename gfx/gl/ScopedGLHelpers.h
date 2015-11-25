@@ -45,6 +45,7 @@ protected:
 public:
     void Unwrap() {
         MOZ_ASSERT(!mIsUnwrapped);
+        MOZ_ASSERT(IsContextCurrent(mGL));
 
         Derived* derived = static_cast<Derived*>(this);
         derived->UnwrapImpl();
@@ -168,11 +169,8 @@ struct ScopedBindTexture
     friend struct ScopedGLWrapper<ScopedBindTexture>;
 
 protected:
-    GLuint mOldTex;
-    GLenum mTarget;
-
-private:
-    void Init(GLenum aTarget);
+    const GLenum mTarget;
+    const GLuint mOldTex;
 
 public:
     ScopedBindTexture(GLContext* aGL, GLuint aNewTex,
@@ -358,6 +356,23 @@ public:
 protected:
     void UnwrapImpl();
 };
+
+
+struct ScopedUnpackAlignment
+    : public ScopedGLWrapper<ScopedUnpackAlignment>
+{
+    friend struct ScopedGLWrapper<ScopedUnpackAlignment>;
+
+protected:
+    GLint mOldVal;
+
+public:
+    ScopedUnpackAlignment(GLContext* gl, GLint scopedVal);
+
+protected:
+    void UnwrapImpl();
+};
+
 } /* namespace gl */
 } /* namespace mozilla */
 

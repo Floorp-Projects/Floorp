@@ -118,15 +118,3 @@ RegExpStatics::executeLazy(JSContext* cx)
 
     return true;
 }
-
-bool
-RegExpStatics::checkRestoredFromModifiedMatch(JSContext* cx)
-{
-    if (isRestoredFromModifiedMatch) {
-        if (JSScript* script = cx->currentScript()) {
-            const char* filename = script->filename();
-            cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedRestoredRegExpStatics);
-        }
-    }
-    return true;
-}

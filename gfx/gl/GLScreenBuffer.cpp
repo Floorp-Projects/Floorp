@@ -19,7 +19,8 @@
 #include "mozilla/layers/TextureClientSharedSurface.h"
 
 #ifdef XP_WIN
-#include "SharedSurfaceANGLE.h"       // for SurfaceFactory_ANGLEShareHandle
+#include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
+#include "SharedSurfaceD3D11Interop.h"  // for SurfaceFactory_D3D11Interop
 #include "gfxWindowsPlatform.h"
 #endif
 
@@ -102,6 +103,10 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
                     gfxWindowsPlatform::GetPlatform()->CompositorD3D11TextureSharingWorks())
                 {
                     factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, forwarder, flags);
+                }
+
+                if (!factory && gfxPrefs::WebGLDXGLEnabled()) {
+                  factory = SurfaceFactory_D3D11Interop::Create(gl, caps, forwarder, flags);
                 }
 #endif
               break;
@@ -527,16 +532,18 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
     if (!newBack)
         return false;
 
+    // In the case of DXGL interop, the new surface needs to be acquired before 
+    // it is attached so that the interop surface is locked, which populates
+    // the GL renderbuffer. This results in the renderbuffer being ready and
+    // attachment to framebuffer succeeds in Attach() call.
+    newBack->Surf()->ProducerAcquire();
+
     if (!Attach(newBack->Surf(), size))
         return false;
     // Attach was successful.
 
     mFront = mBack;
     mBack = newBack;
-
-    if (mBack) {
-        mBack->Surf()->ProducerAcquire();
-    }
 
     if (ShouldPreserveBuffer() &&
         mFront &&

@@ -16,11 +16,16 @@ devtoolsCommandlineHandler.prototype = {
   handle: function(cmdLine) {
     let consoleFlag = cmdLine.handleFlag("jsconsole", false);
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
+    let devtoolsFlag = cmdLine.handleFlag("devtools", false);
+
     if (consoleFlag) {
       this.handleConsoleFlag(cmdLine);
     }
     if (debuggerFlag) {
       this.handleDebuggerFlag(cmdLine);
+    }
+    if (devtoolsFlag) {
+      this.handleDevToolsFlag();
     }
     let debuggerServerFlag;
     try {
@@ -52,6 +57,17 @@ devtoolsCommandlineHandler.prototype = {
     if (cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_AUTO) {
       cmdLine.preventDefault = true;
     }
+  },
+
+  // Open the toolbox on the selected tab once the browser starts up.
+  handleDevToolsFlag: function() {
+    Services.obs.addObserver(function onStartup(window) {
+      Services.obs.removeObserver(onStartup, "browser-delayed-startup-finished");
+      const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+      const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      let target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
+      gDevTools.showToolbox(target);
+    }, "browser-delayed-startup-finished", false);
   },
 
   _isRemoteDebuggingEnabled() {
@@ -126,6 +142,7 @@ devtoolsCommandlineHandler.prototype = {
 
   helpInfo : "  --jsconsole        Open the Browser Console.\n" +
              "  --jsdebugger       Open the Browser Toolbox.\n" +
+             "  --devtools         Open DevTools on initial load.\n" +
              "  --start-debugger-server [port|path] " +
              "Start the debugger server on a TCP port or " +
              "Unix domain socket path.  Defaults to TCP port 6000.\n",

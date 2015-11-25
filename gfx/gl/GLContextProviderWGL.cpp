@@ -150,7 +150,6 @@ WGLLibrary::EnsureInitialized()
 
     // Now we can grab all the other symbols that we couldn't without having
     // a context current.
-
     GLLibraryLoader::SymLoadStruct pbufferSymbols[] = {
         { (PRFuncPtr*) &fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", nullptr } },
         { (PRFuncPtr*) &fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", nullptr } },
@@ -186,42 +185,51 @@ WGLLibrary::EnsureInitialized()
         { nullptr, { nullptr } }
     };
 
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0], lookupFunc)) {
-        const char *wglExts = fGetExtensionsString(mWindowDC);
-        if (wglExts && HasExtension(wglExts, "WGL_ARB_create_context")) {
-            GLLibraryLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0], lookupFunc);
-            if (HasExtension(wglExts, "WGL_ARB_create_context_robustness")) {
-                mHasRobustness = true;
-            }
-        }
-    }
-
     GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
-        { (PRFuncPtr *) &fDXSetResourceShareHandle, { "wglDXSetResourceShareHandleNV", nullptr } },
-        { (PRFuncPtr *) &fDXOpenDevice,             { "wglDXOpenDeviceNV" , nullptr } },
-        { (PRFuncPtr *) &fDXCloseDevice,            { "wglDXCloseDeviceNV" , nullptr } },
-        { (PRFuncPtr *) &fDXRegisterObject,         { "wglDXRegisterObjectNV" , nullptr } },
-        { (PRFuncPtr *) &fDXUnregisterObject,       { "wglDXUnregisterObjectNV" , nullptr } },
-        { (PRFuncPtr *) &fDXObjectAccess,           { "wglDXObjectAccessNV" , nullptr } },
-        { (PRFuncPtr *) &fDXLockObjects,            { "wglDXLockObjectsNV" , nullptr } },
-        { (PRFuncPtr *) &fDXUnlockObjects,          { "wglDXUnlockObjectsNV" , nullptr } },
+        { (PRFuncPtr *)&fDXSetResourceShareHandle,{ "wglDXSetResourceShareHandleNV", nullptr } },
+        { (PRFuncPtr *)&fDXOpenDevice,            { "wglDXOpenDeviceNV",             nullptr } },
+        { (PRFuncPtr *)&fDXCloseDevice,           { "wglDXCloseDeviceNV",            nullptr } },
+        { (PRFuncPtr *)&fDXRegisterObject,        { "wglDXRegisterObjectNV",         nullptr } },
+        { (PRFuncPtr *)&fDXUnregisterObject,      { "wglDXUnregisterObjectNV",       nullptr } },
+        { (PRFuncPtr *)&fDXObjectAccess,          { "wglDXObjectAccessNV",           nullptr } },
+        { (PRFuncPtr *)&fDXLockObjects,           { "wglDXLockObjectsNV",            nullptr } },
+        { (PRFuncPtr *)&fDXUnlockObjects,         { "wglDXUnlockObjectsNV",          nullptr } },
         { nullptr, { nullptr } }
     };
 
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &dxInteropSymbols[0], lookupFunc)) {
-        mHasDXInterop = true;
-        const char *wglExts = fGetExtensionsString(mWindowDC);
-        mHasDXInterop2 = HasExtension(wglExts, "WGL_NV_DX_interop2");
-    } else {
-        NS_ERROR("WGL supports NV_DX_interop without supplying its functions.");
-        fDXSetResourceShareHandle = nullptr;
-        fDXOpenDevice = nullptr;
-        fDXCloseDevice = nullptr;
-        fDXRegisterObject = nullptr;
-        fDXUnregisterObject = nullptr;
-        fDXObjectAccess = nullptr;
-        fDXLockObjects = nullptr;
-        fDXUnlockObjects = nullptr;
+    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0], lookupFunc))
+    {
+        const char* extString = fGetExtensionsString(mWindowDC);
+        MOZ_ASSERT(extString);
+        MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
+
+        if (HasExtension(extString, "WGL_ARB_context_create")) {
+            if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0], lookupFunc)) {
+                if (HasExtension(extString, "WGL_ARB_create_context_robustness")) {
+                    mHasRobustness = true;
+                }
+            } else {
+                NS_ERROR("WGL supports ARB_create_context without supplying its functions.");
+                fCreateContextAttribs = nullptr;
+            }
+        }
+
+        if (HasExtension(extString, "WGL_NV_DX_interop")) {
+            if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &dxInteropSymbols[0], lookupFunc)) {
+                mHasDXInterop = true;
+                mHasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
+            } else {
+                NS_ERROR("WGL supports NV_DX_interop without supplying its functions.");
+                fDXSetResourceShareHandle = nullptr;
+                fDXOpenDevice = nullptr;
+                fDXCloseDevice = nullptr;
+                fDXRegisterObject = nullptr;
+                fDXUnregisterObject = nullptr;
+                fDXObjectAccess = nullptr;
+                fDXLockObjects = nullptr;
+                fDXUnlockObjects = nullptr;
+            }
+        }
     }
 
     // reset back to the previous context, just in case

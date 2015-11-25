@@ -5833,7 +5833,8 @@ nsComputedDOMStyle::DoGetTransitionProperty()
       property->SetIdent(eCSSKeyword_all);
     else if (cssprop == eCSSPropertyExtra_no_properties)
       property->SetIdent(eCSSKeyword_none);
-    else if (cssprop == eCSSProperty_UNKNOWN)
+    else if (cssprop == eCSSProperty_UNKNOWN ||
+             cssprop == eCSSPropertyExtra_variable)
     {
       nsAutoString escaped;
       nsStyleUtil::AppendEscapedCSSIdent(

@@ -114,6 +114,7 @@ GLContextCGL::MakeCurrentImpl(bool aForce)
 
     if (mContext) {
         [mContext makeCurrentContext];
+        MOZ_ASSERT(IsCurrent());
         // Use non-blocking swap in "ASAP mode".
         // ASAP mode means that rendering is iterated as fast as possible.
         // ASAP mode is entered when layout.frame_rate=0 (requires restart).
