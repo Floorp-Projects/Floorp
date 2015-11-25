@@ -38,6 +38,14 @@
 
 namespace mozilla {
 
+bool ConvertImage(size_t width, size_t height,
+                  const void* srcBegin, size_t srcStride, gl::OriginPos srcOrigin,
+                  WebGLTexelFormat srcFormat, bool srcPremultiplied,
+                  void* dstBegin, size_t dstStride, gl::OriginPos dstOrigin,
+                  WebGLTexelFormat dstFormat, bool dstPremultiplied);
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
 // single precision float
 // seeeeeeeemmmmmmmmmmmmmmmmmmmmmmm
 

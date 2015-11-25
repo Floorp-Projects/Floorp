@@ -137,71 +137,80 @@ WebGLContext::DepthMask(WebGLboolean b)
 void
 WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 {
+    const char funcName[] = "drawBuffers";
     if (IsContextLost())
         return;
 
-    const size_t buffersLength = buffers.Length();
-
-    if (!buffersLength) {
-        return ErrorInvalidValue("drawBuffers: invalid <buffers> (buffers must not be empty)");
-    }
-
     if (!mBoundDrawFramebuffer) {
-        // OK: we are rendering in the default framebuffer
-
-        /* EXT_draw_buffers :
-         If the GL is bound to the default framebuffer, then <buffersLength> must be 1
-         and the constant must be BACK or NONE. When draw buffer zero is
-         BACK, color values are written into the sole buffer for single-
-         buffered contexts, or into the back buffer for double-buffered
-         contexts. If DrawBuffersEXT is supplied with a constant other than
-         BACK and NONE, the error INVALID_OPERATION is generated.
-         */
-        if (buffersLength != 1) {
-            return ErrorInvalidValue("drawBuffers: invalid <buffers> (main framebuffer: buffers.length must be 1)");
-        }
-
-        if (buffers[0] == LOCAL_GL_NONE || buffers[0] == LOCAL_GL_BACK) {
-            gl->Screen()->SetDrawBuffer(buffers[0]);
+        // GLES 3.0.4 p186:
+        // "If the GL is bound to the default framebuffer, then `n` must be 1 and the
+        //  constant must be BACK or NONE. [...] If DrawBuffers is supplied with a
+        //  constant other than BACK and NONE, or with a value of `n` other than 1, the
+        //  error INVALID_OPERATION is generated."
+        if (buffers.Length() != 1) {
+            ErrorInvalidOperation("%s: For the default framebuffer, `buffers` must have a"
+                                  " length of 1.",
+                                  funcName);
             return;
         }
-        return ErrorInvalidOperation("drawBuffers: invalid operation (main framebuffer: buffers[0] must be GL_NONE or GL_BACK)");
+
+        switch (buffers[0]) {
+        case LOCAL_GL_NONE:
+        case LOCAL_GL_BACK:
+            break;
+
+        default:
+            ErrorInvalidOperation("%s: For the default framebuffer, `buffers[0]` must be"
+                                  " BACK or NONE.",
+                                  funcName);
+            return;
+        }
+
+        mDefaultFB_DrawBuffer0 = buffers[0];
+        gl->Screen()->SetDrawBuffer(buffers[0]);
+        return;
     }
 
-    // OK: we are rendering in a framebuffer object
+    // Framebuffer object (not default framebuffer)
 
-    if (buffersLength > size_t(mGLMaxDrawBuffers)) {
-        /* EXT_draw_buffers :
-         The maximum number of draw buffers is implementation-dependent. The
-         number of draw buffers supported can be queried by calling
-         GetIntegerv with the symbolic constant MAX_DRAW_BUFFERS_EXT. An
-         INVALID_VALUE error is generated if <buffersLength> is greater than
-         MAX_DRAW_BUFFERS_EXT.
-         */
-        return ErrorInvalidValue("drawBuffers: invalid <buffers> (buffers.length > GL_MAX_DRAW_BUFFERS)");
+    if (buffers.Length() > mImplMaxDrawBuffers) {
+        // "An INVALID_VALUE error is generated if `n` is greater than MAX_DRAW_BUFFERS."
+        ErrorInvalidValue("%s: `buffers` must have a length <= MAX_DRAW_BUFFERS.",
+                          funcName);
+        return;
     }
 
-    for (uint32_t i = 0; i < buffersLength; i++)
-    {
-        /* EXT_draw_buffers :
-         If the GL is bound to a draw framebuffer object, the <i>th buffer listed
-         in <bufs> must be COLOR_ATTACHMENT<i>_EXT or NONE. Specifying a
-         buffer out of order, BACK, or COLOR_ATTACHMENT<m>_EXT where <m> is
-         greater than or equal to the value of MAX_COLOR_ATTACHMENTS_EXT,
-         will generate the error INVALID_OPERATION.
-         */
-        /* WEBGL_draw_buffers :
-         The value of the MAX_COLOR_ATTACHMENTS_WEBGL parameter must be greater than or equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter.
-         */
+    for (size_t i = 0; i < buffers.Length(); i++) {
+        // "If the GL is bound to a draw framebuffer object, the `i`th buffer listed in
+        //  bufs must be COLOR_ATTACHMENTi or NONE. Specifying a buffer out of order,
+        //  BACK, or COLOR_ATTACHMENTm where `m` is greater than or equal to the value of
+        // MAX_COLOR_ATTACHMENTS, will generate the error INVALID_OPERATION.
+
+        // WEBGL_draw_buffers:
+        // "The value of the MAX_COLOR_ATTACHMENTS_WEBGL parameter must be greater than or
+        //  equal to that of the MAX_DRAW_BUFFERS_WEBGL parameter."
+        // This means that if buffers.Length() isn't larger than MaxDrawBuffers, it won't
+        // be larger than MaxColorAttachments.
         if (buffers[i] != LOCAL_GL_NONE &&
-            buffers[i] != GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + i)) {
-            return ErrorInvalidOperation("drawBuffers: invalid operation (buffers[i] must be GL_NONE or GL_COLOR_ATTACHMENTi)");
+            buffers[i] != LOCAL_GL_COLOR_ATTACHMENT0 + i)
+        {
+            ErrorInvalidOperation("%s: `buffers[i]` must be NONE or COLOR_ATTACHMENTi.",
+                                  funcName);
+            return;
         }
     }
 
     MakeContextCurrent();
 
-    gl->fDrawBuffers(buffersLength, buffers.Elements());
+    const GLenum* ptr = nullptr;
+    if (buffers.Length()) {
+        ptr = buffers.Elements();
+    }
+
+    gl->fDrawBuffers(buffers.Length(), ptr);
+
+    const auto end = ptr + buffers.Length();
+    mBoundDrawFramebuffer->mDrawBuffers.assign(ptr, end);
 }
 
 void

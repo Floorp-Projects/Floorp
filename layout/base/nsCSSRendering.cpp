@@ -4788,7 +4788,7 @@ nsImageRenderer::PrepareImage()
       // prefer SurfaceFromElement as it's more reliable.
       mImageElementSurface =
         nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
-      if (!mImageElementSurface.mSourceSurface) {
+      if (!mImageElementSurface.GetSourceSurface()) {
         mPaintServerFrame = property->GetReferencedFrame();
         if (!mPaintServerFrame) {
           mPrepareResult = DrawResult::BAD_IMAGE;
@@ -4873,7 +4873,8 @@ nsImageRenderer::ComputeIntrinsicSize()
               appUnitsPerDevPixel));
         }
       } else {
-        NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
+        NS_ASSERTION(mImageElementSurface.GetSourceSurface(),
+                     "Surface should be ready.");
         IntSize surfaceSize = mImageElementSurface.mSize;
         result.SetSize(
           nsSize(nsPresContext::CSSPixelsToAppUnits(surfaceSize.width),
@@ -5114,9 +5115,9 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
 
     return drawable.forget();
   }
-  NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
+  NS_ASSERTION(mImageElementSurface.GetSourceSurface(), "Surface should be ready.");
   RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
-                                mImageElementSurface.mSourceSurface,
+                                mImageElementSurface.GetSourceSurface().get(),
                                 mImageElementSurface.mSize);
   return drawable.forget();
 }
