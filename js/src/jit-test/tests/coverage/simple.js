@@ -249,5 +249,130 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //BRH:0
 });
 
+// Test TableSwitch opcode
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+    case 0:
+      l.push('0');        //DA:$,0
+      break;
+    case 1:
+      l.push('1');        //DA:$,0
+      break;
+    case 2:
+      l.push('2');        //DA:$,1
+      break;
+    case 3:
+      l.push('3');        //DA:$,0
+      break;
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:4
+  //BRF:5
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:5
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+                          // Branches are ordered, and starting at 0
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,- //BRDA:$,0,2,- //BRDA:$,0,3,- //BRDA:$,0,4,-
+    case 5:
+      l.push('5');        //DA:$,0
+    case 4:
+      l.push('4');        //DA:$,0
+    case 3:
+      l.push('3');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:4
+  //BRF:5
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+    case 2:
+      l.push('2');        //DA:$,1
+    case 5:
+      l.push('5');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:5
+  //LH:5
+  //BRF:3
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,2,- //BRDA:$,0,3,1
+    case 3:
+      l.push('1');        //DA:$,0
+    case 5:
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:5
+  //LH:3
+  //BRF:3
+  //BRH:1
+});
+
+// Unfortunately the differences between switch implementations leaks in the
+// code coverage reports.
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  function f(a) {         //FN:$,f //FNDA:2,%
+    return a;             //DA:$,2
+  }
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case f(-42):          //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
+      l.push('1');        //DA:$,0
+    case f(51):           //DA:$,1 //BRDA:$,1,0,- //BRDA:$,1,1,1
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
+  //FNF:2
+  //FNH:2
+  //LF:8
+  //LH:6
+  //BRF:4
+  //BRH:2
+});
+
 // If you add a test case here, do the same in
 // jit-test/tests/debug/Script-getOffsetsCoverage-01.js
