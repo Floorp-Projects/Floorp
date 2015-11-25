@@ -58,8 +58,6 @@ class RegExpStatics
     bool makeMatch(JSContext* cx, size_t pairNum, MutableHandleValue out);
     bool createDependent(JSContext* cx, size_t start, size_t end, MutableHandleValue out);
 
-    void markFlagsSet(JSContext* cx);
-
     struct InitBuffer {};
     explicit RegExpStatics(InitBuffer) {}
 
