@@ -2715,14 +2715,18 @@ mozilla::StyleTransition::SetInitialValues()
 }
 
 void
-mozilla::StyleTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
+mozilla::StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
+                                             const nsAString& aPropertyString)
 {
-  NS_ASSERTION(nsCSSProps::LookupProperty(aUnknownProperty,
-                                          nsCSSProps::eEnabledForAllContent) ==
-                 eCSSProperty_UNKNOWN,
-               "should be unknown property");
-  mProperty = eCSSProperty_UNKNOWN;
-  mUnknownProperty = do_GetAtom(aUnknownProperty);
+  MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
+                                        nsCSSProps::eEnabledForAllContent) ==
+               aProperty,
+             "property and property string should match");
+  MOZ_ASSERT(aProperty == eCSSProperty_UNKNOWN ||
+             aProperty == eCSSPropertyExtra_variable,
+             "should be either unknown or custom property");
+  mProperty = aProperty;
+  mUnknownProperty = do_GetAtom(aPropertyString);
 }
 
 bool
