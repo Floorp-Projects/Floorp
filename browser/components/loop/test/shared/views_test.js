@@ -306,6 +306,8 @@ describe("loop.shared.views", function() {
           }
         }
       });
+
+      sandbox.stub(console, "error");
     });
 
     function mountTestComponent(props) {
@@ -326,7 +328,7 @@ describe("loop.shared.views", function() {
       expect(comp.getDOMNode()).to.eql(null);
     });
 
-    it("should not show an indefined menu option", function() {
+    it("should not show an undefined menu option", function() {
       var settingsMenuItems = [
         { id: "not Defined" },
         { id: "help" }
@@ -336,7 +338,19 @@ describe("loop.shared.views", function() {
       expect(menuItems).to.have.length.of(1);
     });
 
-    it("should not render anythin if not exists any valid item to show", function() {
+    it("should log an error for an undefined menu option", function() {
+      var settingsMenuItems = [
+        { id: "not Defined" },
+        { id: "help" }
+      ];
+
+      mountTestComponent({ menuItems: settingsMenuItems });
+
+      sinon.assert.calledOnce(console.error);
+      sinon.assert.calledWithMatch(console.error, "Invalid");
+    });
+
+    it("should not render anything if not exists any valid item to show", function() {
       var settingsMenuItems = [
         { id: "not Defined" },
         { id: "another wrong menu item" }

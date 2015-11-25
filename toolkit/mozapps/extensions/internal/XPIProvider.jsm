@@ -146,6 +146,7 @@ const KEY_APP_GLOBAL                  = "app-global";
 const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_SYSTEM_USER             = "app-system-user";
+const KEY_APP_TEMPORARY               = "app-temporary";
 
 const NOTIFICATION_FLUSH_PERMISSIONS  = "flush-pending-permissions";
 const XPI_PERMISSION                  = "install";
@@ -646,6 +647,12 @@ function canRunInSafeMode(aAddon) {
   // Even though the updated system add-ons aren't generally run in safe mode we
   // include them here so their uninstall functions get called when switching
   // back to the default set.
+
+  // TODO product should make the call about temporary add-ons running
+  // in safe mode. assuming for now that they are.
+  if (aAddon._installLocation.name == KEY_APP_TEMPORARY)
+    return true;
+
   return aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
          aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS;
 }
@@ -666,8 +673,10 @@ function isUsableAddon(aAddon) {
       aAddon.signedState != AddonManager.SIGNEDSTATE_SYSTEM) {
     return false;
   }
-
-  if (aAddon._installLocation.name != KEY_APP_SYSTEM_DEFAULTS && mustSign(aAddon.type)) {
+  // temporary and system add-ons do not require signing
+  if ((aAddon._installLocation.name != KEY_APP_SYSTEM_DEFAULTS &&
+       aAddon._installLocation.name != KEY_APP_TEMPORARY) &&
+       mustSign(aAddon.type)) {
     if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
       return false;
     if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
@@ -2544,6 +2553,11 @@ this.XPIProvider = {
 
       // These must be in order of priority, highest to lowest,
       // for processFileChanges etc. to work
+
+      XPIProvider.installLocations.push(TemporaryInstallLocation);
+      XPIProvider.installLocationsByName[TemporaryInstallLocation.name] =
+        TemporaryInstallLocation;
+
       // The profile location is always enabled
       addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
                                   [DIR_EXTENSIONS],
@@ -3783,6 +3797,95 @@ this.XPIProvider = {
         aCallback(null);
     }, aFile);
   },
+
+  /**
+   * Temporarily installs add-on from local directory.
+   * As this is intended for development, the signature is not checked and
+   * the add-on does not persist on application restart.
+   *
+   * @param aDirectory
+   *        The directory containing the unpacked add-on directory or XPI file
+   *
+   * @return a Promise that rejects if the add-on is not restartless
+   *         or an add-on with the same ID is already temporarily installed
+   */
+  installTemporaryAddon: Task.async(function*
+                                    XPI_installTemporaryAddon(aDirectory) {
+    let addon = yield loadManifestFromFile(aDirectory, TemporaryInstallLocation);
+
+    if (!addon.bootstrap) {
+      throw new Error("Only restartless (bootstrap) add-ons"
+                    + " can be temporarily installed:", addon.id);
+    }
+    let oldAddon = yield new Promise(
+                   resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
+    if (oldAddon) {
+      if (oldAddon.location == KEY_APP_TEMPORARY) {
+        logger.warn("temporary add-on already installed:", addon.id);
+        throw new Error("Add-on with ID " + oldAddon.id + " is already"
+                        + " temporarily installed");
+      }
+      else if (!oldAddon.bootstrap) {
+        logger.warn("Non-restartless Add-on is already installed", addon.id);
+        throw new Error("Non-restartless add-on with ID "
+                        + oldAddon.id + " is already installed");
+      }
+      else {
+        logger.warn("Addon with ID " + oldAddon.id + " already installed,"
+                    + " older version will be disabled");
+
+        let existingAddonID = oldAddon.id;
+        let existingAddon = oldAddon._sourceBundle;
+
+        // We'll be replacing a currently active bootstrapped add-on so
+        // call its uninstall method
+        let newVersion = addon.version;
+        let oldVersion = oldAddon.version;
+        let uninstallReason = Services.vc.compare(oldVersion, newVersion) < 0 ?
+                              BOOTSTRAP_REASONS.ADDON_UPGRADE :
+                              BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+        if (oldAddon.active) {
+          XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
+                                          "shutdown", uninstallReason,
+                                          { newVersion });
+        }
+        this.callBootstrapMethod(oldAddon, existingAddon,
+                                 "uninstall", uninstallReason, { newVersion });
+        this.unloadBootstrapScope(existingAddonID);
+        flushStartupCache();
+      }
+    }
+
+    let file = addon._sourceBundle;
+
+    let wrapper = createWrapper(addon);
+    let oldWrapper = createWrapper(oldAddon);
+    XPIProvider.callBootstrapMethod(addon, file, "install",
+                                    BOOTSTRAP_REASONS.ADDON_INSTALL);
+    addon.state = AddonManager.STATE_INSTALLED;
+    logger.debug("Install of temporary addon in " + aDirectory.path + " completed.");
+    addon.visible = true;
+    addon.enabled = true;
+    addon.active = true;
+
+    addon = XPIDatabase.addAddonMetadata(addon, file.persistentDescriptor);
+
+    XPIStates.addAddon(addon);
+    XPIDatabase.saveChanges();
+
+    // addon was modified above, create new wrapper
+    wrapper = createWrapper(addon);
+
+    AddonManagerPrivate.callAddonListeners("onInstalling", wrapper,
+                                           false);
+    XPIProvider.callBootstrapMethod(addon, file, "startup",
+                                    BOOTSTRAP_REASONS.ADDON_ENABLE);
+    AddonManagerPrivate.callInstallListeners("onExternalInstall",
+                                             null, wrapper, oldWrapper,
+                                             false);
+    AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
+  }),
 
   /**
    * Removes an AddonInstall from the list of active installs.
@@ -6988,6 +7091,9 @@ function AddonWrapper(aAddon) {
   });
 
   this.__defineGetter__("hidden", function AddonWrapper_hidden() {
+    if (aAddon._installLocation.name == KEY_APP_TEMPORARY)
+      return false;
+
     return (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
             aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS);
   });
@@ -7817,6 +7923,21 @@ Object.assign(SystemAddonInstallLocation.prototype, {
     this._nextDir = newDir;
   }),
 });
+
+/**
+ * An object which identifies a directory install location for temporary
+ * add-ons.
+ */
+const TemporaryInstallLocation = {
+  locked: false,
+  name: KEY_APP_TEMPORARY,
+  scope: AddonManager.SCOPE_TEMPORARY,
+  getAddonLocations: () => [],
+  isLinkedAddon: () => false,
+  installAddon: () => {},
+  uninstallAddon: (aAddon) => {},
+  getStagingDir: () => {},
+}
 
 #ifdef XP_WIN
 /**
