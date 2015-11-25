@@ -5,7 +5,6 @@
 #ifndef MOOF_PARSER_H_
 #define MOOF_PARSER_H_
 
-#include "mozilla/Monitor.h"
 #include "mp4_demuxer/Atom.h"
 #include "mp4_demuxer/AtomType.h"
 #include "mp4_demuxer/SinfParser.h"
@@ -14,7 +13,6 @@
 #include "MediaResource.h"
 
 namespace mp4_demuxer {
-using mozilla::Monitor;
 typedef int64_t Microseconds;
 
 class Box;
@@ -201,11 +199,10 @@ private:
 class MoofParser
 {
 public:
-  MoofParser(Stream* aSource, uint32_t aTrackId, bool aIsAudio, Monitor* aMonitor)
+  MoofParser(Stream* aSource, uint32_t aTrackId, bool aIsAudio)
     : mSource(aSource)
     , mOffset(0)
     , mTrex(aTrackId)
-    , mMonitor(aMonitor)
     , mIsAudio(aIsAudio)
   {
     // Setting the mTrex.mTrackId to 0 is a nasty work around for calculating
@@ -244,8 +241,7 @@ public:
   Tfdt mTfdt;
   Edts mEdts;
   Sinf mSinf;
-  Monitor* mMonitor;
-  nsTArray<Moof>& Moofs() { mMonitor->AssertCurrentThreadOwns(); return mMoofs; }
+  nsTArray<Moof>& Moofs() { return mMoofs; }
 private:
   void ScanForMetadata(mozilla::MediaByteRange& aFtyp,
                        mozilla::MediaByteRange& aMoov);

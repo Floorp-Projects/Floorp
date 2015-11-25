@@ -236,13 +236,11 @@ SampleIterator::GetNextKeyframeTime()
 Index::Index(const nsTArray<Indice>& aIndex,
              Stream* aSource,
              uint32_t aTrackId,
-             bool aIsAudio,
-             Monitor* aMonitor)
+             bool aIsAudio)
   : mSource(aSource)
-  , mMonitor(aMonitor)
 {
   if (aIndex.IsEmpty()) {
-    mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio, aMonitor);
+    mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio);
   } else {
     if (!mIndex.SetCapacity(aIndex.Length(), fallible)) {
       // OOM.
