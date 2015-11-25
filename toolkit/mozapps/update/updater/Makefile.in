@@ -5,6 +5,14 @@
 
 # For changes here, also consider ./updater-xpcshell/Makefile.in
 
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
