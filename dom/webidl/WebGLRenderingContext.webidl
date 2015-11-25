@@ -694,11 +694,12 @@ interface WebGLRenderingContext {
     void stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
 
-    [Throws]
+    // Overloads must share [Throws].
+    [Throws] // Can't actually throw.
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
                     GLsizei width, GLsizei height, GLint border, GLenum format,
                     GLenum type, (ArrayBufferView or SharedArrayBufferView)? pixels);
-    [Throws]
+    [Throws] // Can't actually throw.
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
                     GLenum format, GLenum type, ImageData? pixels);
     [Throws]
@@ -714,11 +715,11 @@ interface WebGLRenderingContext {
     void texParameterf(GLenum target, GLenum pname, GLfloat param);
     void texParameteri(GLenum target, GLenum pname, GLint param);
 
-    [Throws]
+    [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLsizei width, GLsizei height,
-                       GLenum format, GLenum type, (ArrayBufferView or SharedArrayBufferView)? pixels);
-    [Throws]
+                       GLsizei width, GLsizei height, GLenum format, GLenum type,
+                       (ArrayBufferView or SharedArrayBufferView)? pixels);
+    [Throws] // Can't actually throw.
     void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, ImageData? pixels);
     [Throws]

@@ -29,6 +29,7 @@
 #include "Units.h"
 #include "mozilla/ToString.h"
 #include "nsHTMLReflowMetrics.h"
+#include "ImageContainer.h"
 
 #include <limits>
 #include <algorithm>
@@ -67,6 +68,7 @@ struct IntrinsicSize;
 struct ContainerLayerParameters;
 class WritingMode;
 namespace dom {
+class CanvasRenderingContext2D;
 class DOMRectList;
 class Element;
 class HTMLImageElement;
@@ -78,6 +80,7 @@ namespace gfx {
 struct RectCornerRadii;
 } // namespace gfx
 namespace layers {
+class Image;
 class Layer;
 } // namespace layers
 } // namespace mozilla
@@ -2058,10 +2061,25 @@ public:
   };
 
   struct SurfaceFromElementResult {
-    SurfaceFromElementResult();
+    friend class mozilla::dom::CanvasRenderingContext2D;
+    friend class nsLayoutUtils;
 
-    /* mSourceSurface will contain the resulting surface, or will be nullptr on error */
-    RefPtr<SourceSurface> mSourceSurface;
+    /* If SFEResult contains a valid surface, it either mLayersImage or mSourceSurface
+     * will be non-null, and GetSourceSurface() will not be null.
+     *
+     * For valid surfaces, mSourceSurface may be null if mLayersImage is non-null, but
+     * GetSourceSurface() will create mSourceSurface from mLayersImage when called.
+     */
+
+    /* Video elements (at least) often are already decoded as layers::Images. */
+    RefPtr<mozilla::layers::Image> mLayersImage;
+
+protected:
+    /* GetSourceSurface() fills this and returns its non-null value if this SFEResult
+     * was successful. */
+    RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
+
+public:
     /* Contains info for drawing when there is no mSourceSurface. */
     DirectDrawInfo mDrawInfo;
 
@@ -2083,6 +2101,13 @@ public:
     bool mCORSUsed;
     /* Whether the returned image contains premultiplied pixel data */
     bool mIsPremultiplied;
+
+    // Methods:
+
+    SurfaceFromElementResult();
+
+    // Gets mSourceSurface, or makes a SourceSurface from mLayersImage.
+    const RefPtr<mozilla::gfx::SourceSurface>& GetSourceSurface();
   };
 
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::Element *aElement,
@@ -2607,7 +2632,7 @@ public:
 
   /**
    * Log a key/value pair for APZ testing during a paint.
-   * @param aManager   The data will be written to the APZTestData associated 
+   * @param aManager   The data will be written to the APZTestData associated
    *                   with this layer manager.
    * @param aScrollId Identifies the scroll frame to which the data pertains.
    * @param aKey The key under which to log the data.
