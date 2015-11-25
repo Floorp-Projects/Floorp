@@ -24,7 +24,6 @@ import android.widget.EditText;
 public class SetHomepagePreference extends DialogPreference {
     SharedPreferences prefs;
     EditText homepageTextEdit;
-    CheckBox useCurrentTabCheck;
 
     public SetHomepagePreference(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -61,27 +60,6 @@ public class SetHomepagePreference extends DialogPreference {
         if (!AboutPages.HOME.equals(url)) {
             homepageTextEdit.setText(url);
         }
-
-        useCurrentTabCheck = (CheckBox) view.findViewById(R.id.use_current_checkbox);
-
-        view.findViewById(R.id.use_current_title).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                useCurrentTabCheck.toggle();
-            }
-        });
-
-        useCurrentTabCheck.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
-                homepageTextEdit.setEnabled(!isChecked);
-                if (isChecked) {
-                    homepageTextEdit.setText(Tabs.getInstance().getSelectedTab().getURL());
-                } else {
-                    homepageTextEdit.selectAll();
-                }
-            }
-        });
     }
 
     @Override

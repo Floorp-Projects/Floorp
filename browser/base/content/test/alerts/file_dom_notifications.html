@@ -15,8 +15,6 @@ function showNotification1() {
   var n = new Notification("Test title", options);
   n.addEventListener("click", function(event) {
     event.preventDefault();
-    dump("Should focus new window.");
-    newWindow.focus();
   });
   return n;
 }

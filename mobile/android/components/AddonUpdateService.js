@@ -9,11 +9,17 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
+                                  "resource://gre/modules/GMPInstallManager.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+                                  "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
@@ -30,6 +36,7 @@ function getPref(func, preference, defaultValue) {
 // -----------------------------------------------------------------------
 
 const PREF_ADDON_UPDATE_ENABLED  = "extensions.autoupdate.enabled";
+const PREF_ADDON_UPDATE_INTERVAL = "extensions.autoupdate.interval";
 
 var gNeedsRestart = false;
 
@@ -49,65 +56,18 @@ AddonUpdateService.prototype = {
     if (gNeedsRestart)
       return;
 
-    Services.io.offline = false;
+    AddonManagerPrivate.backgroundUpdateCheck();
 
-    // Assume we are doing a periodic update check
-    let reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE;
-    if (!aTimer)
-      reason = AddonManager.UPDATE_WHEN_USER_REQUESTED;
+    let gmp = new GMPInstallManager();
+    gmp.simpleCheckAndInstall().then(null, () => {});
 
-    AddonManager.getAddonsByTypes(null, function(aAddonList) {
-      aAddonList.forEach(function(aAddon) {
-        if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) {
-          let data = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-          data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name });
-          Services.obs.notifyObservers(data, "addon-update-started", null);
-
-          let listener = new UpdateCheckListener();
-          aAddon.findUpdates(listener, reason);
-        }
-      });
+    let interval = 1000 * getPref("getIntPref", PREF_ADDON_UPDATE_INTERVAL, 86400);
+    Messaging.sendRequest({
+      type: "Gecko:ScheduleRun",
+      action: "update-addons",
+      trigger: interval,
+      interval: interval,
     });
-  }
-};
-
-// -----------------------------------------------------------------------
-// Add-on update listener. Starts a download for any add-on with a viable
-// update waiting
-// -----------------------------------------------------------------------
-
-function UpdateCheckListener() {
-  this._status = null;
-  this._version = null;
-}
-
-UpdateCheckListener.prototype = {
-  onCompatibilityUpdateAvailable: function(aAddon) {
-    this._status = "compatibility";
-  },
-
-  onUpdateAvailable: function(aAddon, aInstall) {
-    this._status = "update";
-    this._version = aInstall.version;
-    aInstall.install();
-  },
-
-  onNoUpdateAvailable: function(aAddon) {
-    if (!this._status)
-      this._status = "no-update";
-  },
-
-  onUpdateFinished: function(aAddon, aError) {
-    let data = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    if (this._version)
-      data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name, version: this._version });
-    else
-      data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name });
-
-    if (aError)
-      this._status = "error";
-
-    Services.obs.notifyObservers(data, "addon-update-ended", this._status);
   }
 };
 

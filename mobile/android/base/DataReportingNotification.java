@@ -71,7 +71,7 @@ public class DataReportingNotification {
     /**
      * Launch a notification of the data policy, and record notification time and version.
      */
-    private static void notifyDataPolicy(Context context, SharedPreferences sharedPrefs) {
+    public static void notifyDataPolicy(Context context, SharedPreferences sharedPrefs) {
         boolean result = false;
         try {
             // Launch main App to launch Data choices when notification is clicked.

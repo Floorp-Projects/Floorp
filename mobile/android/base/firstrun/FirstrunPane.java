@@ -54,7 +54,6 @@ public class FirstrunPane extends LinearLayout {
 
     public void hide() {
         visible = false;
-        pager.hide();
         if (onFinishListener != null) {
             onFinishListener.onFinish();
         }
@@ -78,6 +77,13 @@ public class FirstrunPane extends LinearLayout {
         TransitionsTracker.track(alphaAnimator);
 
         alphaAnimator.start();
+    }
+
+    public boolean showBrowserHint() {
+        final int currentPage = pager.getCurrentItem();
+        FirstrunPanel currentPanel = (FirstrunPanel) ((FirstrunPager.ViewPagerAdapter) pager.getAdapter()).getItem(currentPage);
+        pager.cleanup();
+        return currentPanel.shouldShowBrowserHint();
     }
 
     public void registerOnFinishListener(OnFinishListener listener) {

@@ -65,6 +65,7 @@ function VariablesViewController(aView, aOptions = {}) {
   this.view = aView;
   this.view.controller = this;
 }
+this.VariablesViewController = VariablesViewController;
 
 VariablesViewController.prototype = {
   /**
@@ -430,7 +431,7 @@ VariablesViewController.prototype = {
       let label = StackFrameUtils.getScopeLabel(environment);
 
       // Block scopes may have the same label, so make addItem allow duplicates.
-      let closure = funcScope.addItem(label, undefined, true);
+      let closure = funcScope.addItem(label, undefined, {relaxed: true});
       closure.target.setAttribute("scope", "");
       closure.showArrow();
 
@@ -734,7 +735,7 @@ VariablesViewController.attach = function(aView, aOptions) {
 /**
  * Utility functions for handling stackframes.
  */
-var StackFrameUtils = {
+var StackFrameUtils = this.StackFrameUtils = {
   /**
    * Create a textual representation for the specified stack frame
    * to display in the stackframes container.

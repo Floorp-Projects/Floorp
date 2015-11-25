@@ -1,6 +1,7 @@
 FROM          quay.io/mozilla/b2g-build:0.2.9
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
+ENV VERSION 1.2
 ENV PYTHONPATH /tools/tools/lib/python:$PYTHONPATH
 ENV TOOLTOOL_CACHE  /home/worker/tools/tooltool-cache
 

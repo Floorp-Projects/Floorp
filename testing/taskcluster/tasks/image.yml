@@ -1,0 +1,52 @@
+# This is the "base" task which contains the common values all builds must
+# provide.
+---
+taskId: '{{image_slugid}}'
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    name: 'Docker Artifact Image Builder'
+    description: 'Builder for docker images as artifacts'
+    source: http://todo.com/soon
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: taskcluster-images
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+  payload:
+    env:
+      HASH: '{{context_hash}}'
+      PROJECT: '{{project}}'
+      CONTEXT_URL: '{{context_url}}'
+      CONTEXT_PATH: '{{context_path}}'
+      BASE_REPOSITORY: '{{base_repository}}'
+      HEAD_REPOSITORY: '{{head_repository}}'
+      HEAD_REV: '{{head_rev}}'
+      HEAD_REF: '{{head_ref}}'
+    features:
+      dind: true
+    image: '{{#docker_image}}image_builder{{/docker_image}}'
+    command:
+      - /bin/bash
+      - -c
+      - /home/worker/bin/build_image.sh
+    maxRunTime: 3600
+    artifacts:
+      '{{artifact_path}}':
+        type: 'file'
+        path: '/artifacts/image.tar'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+  extra:
+    treeherderEnv:
+      - staging
+      - production
+    treeherder:
+      build:
+        platform: 'taskcluster-images'
+      symbol: 'I'
+

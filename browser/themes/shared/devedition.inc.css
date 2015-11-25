@@ -49,7 +49,6 @@
 
   /* Url and search bars */
   --url-and-searchbar-background-color: #171B1F;
-  --url-and-searchbar-color: #fff;
   --urlbar-separator-color: #5F6670;
   --urlbar-dropmarker-url: url("chrome://browser/skin/devedition/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
@@ -169,11 +168,6 @@
   color: var(--chrome-color);
 }
 
-.browserContainer > .findbar-textbox {
-  background-color: var(--url-and-searchbar-background-color) !important;
-  color: var(--url-and-searchbar-color);
-}
-
 /* Default findbar text color doesn't look good - Bug 1125677 */
 .browserContainer > findbar .findbar-find-status,
 .browserContainer > findbar .found-matches {
@@ -203,7 +197,7 @@ toolbar[brighttext] #downloads-indicator-counter {
 #navigator-toolbox .searchbar-textbox {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
-  color: var(--url-and-searchbar-color) !important;
+  color: inherit;
   border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
   box-shadow: none !important;
 }

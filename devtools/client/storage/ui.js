@@ -379,7 +379,7 @@ StorageUI.prototype = {
     mainScope.expanded = true;
 
     if (item.name && item.valueActor) {
-      let itemVar = mainScope.addItem(item.name + "", {}, true);
+      let itemVar = mainScope.addItem(item.name + "", {}, {relaxed: true});
 
       item.valueActor.string().then(value => {
         // The main area where the value will be displayed
@@ -461,7 +461,7 @@ StorageUI.prototype = {
     let valueScope = view.getScopeAtIndex(1) ||
                      view.addScope(L10N.getStr("storage.parsedValue.label"));
     valueScope.expanded = true;
-    let jsonVar = valueScope.addItem("", Object.create(null), true);
+    let jsonVar = valueScope.addItem("", Object.create(null), {relaxed: true});
     jsonVar.expanded = true;
     jsonVar.twisty = true;
     jsonVar.populate(jsonObject, {expanded: true});

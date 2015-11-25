@@ -146,23 +146,23 @@
 }
 
 .security-state-insecure {
-  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+  list-style-image: url(chrome://devtools/skin/images/security-state-insecure.svg);
 }
 
 .security-state-secure {
-  list-style-image: url(chrome://browser/skin/identity-secure.svg);
+  list-style-image: url(chrome://devtools/skin/images/security-state-secure.svg);
 }
 
 .security-state-weak {
-  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+  list-style-image: url(chrome://devtools/skin/images/security-state-weak.svg);
 }
 
 .security-state-broken {
-  list-style-image: url(chrome://browser/skin/controlcenter/warning-gray.svg);
+  list-style-image: url(chrome://devtools/skin/images/security-state-broken.svg);
 }
 
 .security-state-local {
-  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
+  list-style-image: url(chrome://devtools/skin/images/security-state-local.svg);
 }
 
 .requests-menu-type {

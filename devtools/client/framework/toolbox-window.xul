@@ -7,8 +7,6 @@
  %toolboxDTD;
 ]>
 
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="devtools-toolbox-window"
         macanimationtype="document"

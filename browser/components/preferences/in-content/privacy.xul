@@ -80,7 +80,9 @@
       class="header"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name">&panePrivacy.title;</label>
+  <label class="header-name" flex="1">&panePrivacy.title;</label>
+  <button class="help-button"
+          aria-label="&helpButton.label;"/>
 </hbox>
 
 <!-- Tracking -->

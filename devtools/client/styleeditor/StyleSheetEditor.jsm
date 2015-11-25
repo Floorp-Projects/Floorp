@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["StyleSheetEditor", "prettifyCSS"];
+this.EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -130,6 +130,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.savedFile = file;
   this.linkCSSFile();
 }
+this.StyleSheetEditor = StyleSheetEditor;
 
 StyleSheetEditor.prototype = {
   /**

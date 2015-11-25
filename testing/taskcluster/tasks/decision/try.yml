@@ -35,6 +35,7 @@ tasks:
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
+        - "docker-worker:cache:gecko-decision"
         - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
         - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
 
@@ -70,6 +71,7 @@ tasks:
           - /bin/bash
           - -cx
           - >
+            mkdir -p /home/worker/artifacts &&
             checkout-gecko workspace &&
             cd workspace/gecko &&
             ./mach taskcluster-graph
@@ -78,9 +80,19 @@ tasks:
             --message='{{comment}}'
             --owner='{{owner}}'
             --revision-hash='{{revision_hash}}'
-            --extend-graph > /home/worker/graph.json
+            --extend-graph > /home/worker/artifacts/graph.json
+
         graphs:
-          - /home/worker/graph.json
+          - /home/worker/artifacts/graph.json
+
+        artifacts:
+          'public':
+            type: 'directory'
+            path: '/home/worker/artifacts'
+            # Arbitrary value for keeping these artifacts around.  They are just the
+            # graph.json and context directories for now, so nothing that needs
+            # to stay around for long.
+            expires: '{{#from_now}}7 days{{/from_now}}'
 
       extra:
         treeherder:
