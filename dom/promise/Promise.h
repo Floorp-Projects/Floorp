@@ -163,9 +163,10 @@ public:
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv, JS::Handle<JSObject*> aDesiredProto);
 
-  static already_AddRefed<Promise>
+  static void
   Resolve(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+          JS::Handle<JS::Value> aValue,
+          JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,

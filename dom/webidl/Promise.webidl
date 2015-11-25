@@ -20,13 +20,11 @@ callback AnyCallback = any (any value);
  Exposed=(Window,Worker,System)]
 // Need to escape "Promise" so it's treated as an identifier.
 interface _Promise {
-  // Disable the static methods when the interface object is supposed to be
-  // disabled, just in case some code decides to walk over to .constructor from
-  // the proto of a promise object or someone screws up and manages to create a
-  // Promise object in this scope without having resolved the interface object
-  // first.
-  [NewObject]
-  static Promise<any> resolve(optional any value);
+  // Have to use "any" (or "object", but "any" is simpler) as the type to
+  // support the subclassing behavior, since nothing actually requires the
+  // return value of PromiseSubclass.resolve/reject to be a Promise object.
+  [NewObject, Throws]
+  static any resolve(optional any value);
   [NewObject]
   static Promise<void> reject(optional any value);
 

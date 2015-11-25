@@ -173,6 +173,38 @@ function testAll5() {
   ).then(nextTest);
 }
 
+function testResolve1() {
+  var p = win.Promise.resolve(5);
+  ok(p instanceof win.Promise, "Promise.resolve should return a promise");
+  p.then(
+    function(arg) {
+      is(arg, 5, "Should get correct Promise.resolve value");
+    },
+    function(e) {
+      ok(false, "testAll5 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testResolve2() {
+  var p = win.Promise.resolve(5);
+  var q = win.Promise.resolve(p);
+  is(q, p, "Promise.resolve should just pass through Promise values");
+  nextTest();
+}
+
+function testResolve3() {
+  var p = win.Promise.resolve(Promise.resolve(5));
+  p.then(
+    function(arg) {
+      is(arg, 5, "Promise.resolve with chrome Promise should work");
+    },
+    function(e) {
+      ok(false, "Promise.resolve with chrome Promise should not fail");
+    }
+  ).then(nextTest);
+}
+
 var tests = [
   testLoadComplete,
   testHaveXray,
@@ -185,6 +217,9 @@ var tests = [
   testAll3,
   testAll4,
   testAll5,
+  testResolve1,
+  testResolve2,
+  testResolve3,
 ];
 
 function nextTest() {
