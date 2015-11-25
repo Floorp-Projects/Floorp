@@ -319,6 +319,108 @@ private:
   RefPtr<Promise> mNextPromise;
 };
 
+// A struct implementing
+// <http://www.ecma-international.org/ecma-262/6.0/#sec-promisecapability-records>.
+// While the spec holds on to these in some places, in practice those places
+// don't actually need everything from this struct, so we explicitly grab
+// members from it as needed in those situations.  That allows us to make this a
+// stack-only struct and keep the rooting simple.
+//
+// We also add an optimization for the (common) case when we discover that the
+// Promise constructor we're supposed to use is in fact the canonical Promise
+// constructor.  In that case we will just set mNativePromise in our
+// PromiseCapability and not set mPromise/mResolve/mReject; the correct
+// callbacks will be the standard Promise ones, and we don't really want to
+// synthesize JSFunctions for them in that situation.
+struct MOZ_STACK_CLASS Promise::PromiseCapability
+{
+  explicit PromiseCapability(JSContext* aCx)
+    : mPromise(aCx)
+    , mResolve(aCx)
+    , mReject(aCx)
+  {}
+
+  // Take an exception on aCx and try to convert it into a promise rejection.
+  // Note that this can result in a new exception being thrown on aCx, or an
+  // exception getting thrown on aRv.  On entry to this method, aRv is assumed
+  // to not be a failure.  This should only be called if NewPromiseCapability
+  // succeeded on this PromiseCapability.
+  void RejectWithException(JSContext* aCx, ErrorResult& aRv);
+
+  // Return a JS::Value representing the promise.  This should only be called if
+  // NewPromiseCapability succeeded on this PromiseCapability.  It makes no
+  // guarantees about compartments (e.g. in the mNativePromise case it's in the
+  // compartment of the reflector, but in the mPromise case it might be in the
+  // compartment of some cross-compartment wrapper for a reflector).
+  JS::Value PromiseValue() const;
+
+  // All the JS::Value fields of this struct are actually objects, but for our
+  // purposes it's simpler to store them as JS::Value.
+
+  // [[Promise]].
+  JS::Rooted<JS::Value> mPromise;
+  // [[Resolve]].  Value in the context compartment.
+  JS::Rooted<JS::Value> mResolve;
+  // [[Reject]].  Value in the context compartment.
+  JS::Rooted<JS::Value> mReject;
+  // If mNativePromise is non-null, we should use it, not mPromise.
+  RefPtr<Promise> mNativePromise;
+
+private:
+  // We don't want to allow creation of temporaries of this type, ever.
+  PromiseCapability(const PromiseCapability&) = delete;
+  PromiseCapability(PromiseCapability&&) = delete;
+};
+
+void
+Promise::PromiseCapability::RejectWithException(JSContext* aCx,
+                                                ErrorResult& aRv)
+{
+  // This method basically implements
+  // http://www.ecma-international.org/ecma-262/6.0/#sec-ifabruptrejectpromise
+  // or at least the parts of it that happen if we have an abrupt completion.
+
+  MOZ_ASSERT(!aRv.Failed());
+  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+             "NewPromiseCapability didn't succeed");
+
+  JS::Rooted<JS::Value> exn(aCx);
+  if (!JS_GetPendingException(aCx, &exn)) {
+    // This is an uncatchable exception, so can't be converted into a rejection.
+    // Just rethrow that on aRv.
+    aRv.ThrowUncatchableException();
+    return;
+  }
+
+  JS_ClearPendingException(aCx);
+
+  // If we have a native promise, just reject it without trying to call out into
+  // JS.
+  if (mNativePromise) {
+    mNativePromise->MaybeRejectInternal(aCx, exn);
+    return;
+  }
+
+  JS::Rooted<JS::Value> ignored(aCx);
+  if (!JS::Call(aCx, JS::UndefinedHandleValue, mReject, JS::HandleValueArray(exn),
+                &ignored)) {
+    aRv.NoteJSContextException();
+  }
+}
+
+JS::Value
+Promise::PromiseCapability::PromiseValue() const
+{
+  MOZ_ASSERT(mNativePromise || !mPromise.isUndefined(),
+             "NewPromiseCapability didn't succeed");
+
+  if (mNativePromise) {
+    return JS::ObjectValue(*mNativePromise->GetWrapper());
+  }
+
+  return mPromise;
+}
+
 // Promise
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Promise)

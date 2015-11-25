@@ -212,6 +212,8 @@ public:
   DispatchToMicroTask(nsIRunnable* aRunnable);
 
 protected:
+  struct PromiseCapability;
+
   // Do NOT call this unless you're Promise::Create.  I wish we could enforce
   // that from inside this class too, somehow.
   explicit Promise(nsIGlobalObject* aGlobal);
