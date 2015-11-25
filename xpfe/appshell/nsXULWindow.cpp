@@ -557,6 +557,12 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULWindow::GetDevicePixelsPerDesktopPixel(double *aScale)
+{
+  *aScale = mWindow ? mWindow->GetDesktopToDeviceScale().scale : 1.0;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::GetUnscaledDevicePixelsPerCSSPixel(double *aScale)
 {
   *aScale = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
