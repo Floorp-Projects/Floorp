@@ -13,28 +13,7 @@ var {
   runSafe,
 } = ExtensionUtils;
 
-function processRuntimeConnectParams(win, ...args) {
-  let extensionId, connectInfo;
-
-  // connect("...") and connect("...", { ... })
-  if (typeof args[0] == "string") {
-    extensionId = args.shift();
-  }
-
-  // connect({ ... }) and connect("...", { ... })
-  if (!!args[0] && typeof args[0] == "object") {
-    connectInfo = args.shift();
-  }
-
-  // raise errors on unexpected connect params (but connect() is ok)
-  if (args.length > 0) {
-    throw win.Error("invalid arguments to runtime.connect");
-  }
-
-  return { extensionId, connectInfo };
-}
-
-extensions.registerAPI((extension, context) => {
+extensions.registerSchemaAPI("runtime", null, (extension, context) => {
   return {
     runtime: {
       onStartup: new EventManager(context, "runtime.onStartup", fire => {
@@ -50,11 +29,9 @@ extensions.registerAPI((extension, context) => {
 
       onConnect: context.messenger.onConnect("runtime.onConnect"),
 
-      connect: function(...args) {
-        let { extensionId, connectInfo } = processRuntimeConnectParams(context.contentWindow, ...args);
-
-        let name = connectInfo && connectInfo.name || "";
-        let recipient = extensionId ? {extensionId} : {extensionId: extension.id};
+      connect: function(extensionId, connectInfo) {
+        let name = connectInfo !== null && connectInfo.name || "";
+        let recipient = extensionId !== null ? {extensionId} : {extensionId: extension.id};
 
         return context.messenger.connect(Services.cpmm, name, recipient);
       },
