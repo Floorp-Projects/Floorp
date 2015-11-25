@@ -208,7 +208,7 @@ struct BidiParagraphData {
   nsresult SetPara()
   {
     return mBidiEngine->SetPara(mBuffer.get(), BufferLength(),
-                                mParaLevel, nullptr);
+                                mParaLevel);
   }
 
   /**
@@ -2012,7 +2012,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
 
   nsAutoString textBuffer(aText, aLength);
 
-  nsresult rv = aBidiEngine->SetPara(aText, aLength, aBaseLevel, nullptr);
+  nsresult rv = aBidiEngine->SetPara(aText, aLength, aBaseLevel);
   if (NS_FAILED(rv))
     return rv;
 
