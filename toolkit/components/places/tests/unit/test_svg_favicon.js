@@ -19,7 +19,8 @@ add_task(function* () {
     PlacesUtils.favicons.setAndFetchFaviconForPage(PAGEURI, SMALLSVG_DATA_URI,
                                                    false,
                                                    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-                                                   onSetComplete);
+                                                   onSetComplete,
+                                                   Services.scriptSecurityManager.getSystemPrincipal());
   });
 
   let data = yield PlacesUtils.promiseFaviconData(PAGEURI.spec);

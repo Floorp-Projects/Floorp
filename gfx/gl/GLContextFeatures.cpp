@@ -836,6 +836,15 @@ GLContext::InitFeatures()
         }
     }
 
+    if (ShouldDumpExts()) {
+        for (size_t featureId = 0; featureId < size_t(GLFeature::EnumMax); featureId++) {
+            GLFeature feature = GLFeature(featureId);
+            printf_stderr("[%s] Feature::%s\n",
+                          IsSupported(feature) ? "enabled" : "disabled",
+                          GetFeatureName(feature));
+        }
+    }
+
     if (WorkAroundDriverBugs()) {
 #ifdef XP_MACOSX
         // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and EXT_texture_sRGB but

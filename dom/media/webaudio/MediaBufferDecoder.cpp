@@ -23,8 +23,12 @@
 #include "VideoUtils.h"
 #include "WebAudioUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Telemetry.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
+
+extern LazyLogModule gMediaDecoderLog;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WebAudioDecodeJob)
 
@@ -266,6 +270,23 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
     ReportFailureOnMainThread(WebAudioDecodeJob::NoAudio);
     return;
   }
+
+  nsCString codec;
+  if (!mMediaInfo.mAudio.GetAsAudioInfo()->mMimeType.IsEmpty()) {
+    codec = nsPrintfCString("webaudio; %s", mMediaInfo.mAudio.GetAsAudioInfo()->mMimeType.get());
+  } else {
+    codec = nsPrintfCString("webaudio;resource; %s", mContentType.get());
+  }
+
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([codec]() -> void {
+    MOZ_ASSERT(!codec.IsEmpty());
+    MOZ_LOG(gMediaDecoderLog,
+            LogLevel::Debug,
+            ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
+    Telemetry::Accumulate(Telemetry::ID::MEDIA_CODEC_USED, codec);
+  });
+  AbstractThread::MainThread()->Dispatch(task.forget());
+
   RequestSample();
 }
 

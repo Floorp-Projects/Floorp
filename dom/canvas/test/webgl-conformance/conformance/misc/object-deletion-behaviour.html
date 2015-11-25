@@ -76,7 +76,7 @@ shouldGenerateGLError(gl, gl.NO_ERROR, "gl.deleteTexture(tex)");
 // Deleting a texture bound to the currently-bound fbo is the same as
 // detaching the textue from fbo first, then delete the texture.
 shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)", "gl.NONE");
-shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)", "null");
 shouldBeFalse("gl.isTexture(tex)");
 shouldBeNull("gl.getParameter(gl.TEXTURE_BINDING_2D)");
 shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindTexture(gl.TEXTURE_2D, tex)");
@@ -128,7 +128,7 @@ shouldGenerateGLError(gl, gl.NO_ERROR, "gl.deleteRenderbuffer(rbo)");
 // Deleting a renderbuffer bound to the currently-bound fbo is the same as
 // detaching the renderbuffer from fbo first, then delete the renderbuffer.
 shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)", "gl.NONE");
-shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)", "null");
 shouldBeFalse("gl.isRenderbuffer(rbo)");
 shouldBeNull("gl.getParameter(gl.RENDERBUFFER_BINDING)");
 shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindRenderbuffer(gl.RENDERBUFFER, rbo)");
@@ -263,7 +263,7 @@ if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
 
   shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)");
   shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
-  shouldGenerateGLError(gl, gl.NONE, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)");
+  shouldGenerateGLError(gl, gl.NO_ERROR, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)");
   shouldNotBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
   // Bind backbuffer.
   shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindFramebuffer(gl.FRAMEBUFFER, null)");

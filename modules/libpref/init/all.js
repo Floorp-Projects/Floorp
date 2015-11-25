@@ -439,6 +439,12 @@ pref("media.getusermedia.noise_enabled", false);
 pref("media.getusermedia.aec_enabled", true);
 pref("media.getusermedia.noise_enabled", true);
 #endif
+pref("media.getusermedia.aec_extended_filter", true);
+#if defined(ANDROID)
+pref("media.getusermedia.aec_delay_agnostic", true);
+#else
+pref("media.getusermedia.aec_delay_agnostic", false);
+#endif
 pref("media.getusermedia.noise", 1);
 pref("media.getusermedia.agc_enabled", false);
 pref("media.getusermedia.agc", 1);
@@ -4202,6 +4208,8 @@ pref("webgl.enable-privileged-extensions", false);
 pref("webgl.bypass-shader-validation", false);
 pref("webgl.enable-prototype-webgl2", false);
 pref("webgl.disable-fail-if-major-performance-caveat", false);
+pref("webgl.disable-DOM-blit-uploads", false);
+pref("webgl.webgl2-compat-mode", false);
 
 #ifdef RELEASE_BUILD
 // Keep this disabled on Release and Beta for now. (see bug 1171228)
@@ -4217,6 +4225,7 @@ pref("webgl.vendor-string-override", "");
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
+pref("webgl.dxgl.enabled", false);
 #endif
 
 pref("gfx.offscreencanvas.enabled", false);

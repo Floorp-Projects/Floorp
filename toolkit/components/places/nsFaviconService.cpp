@@ -210,7 +210,8 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
                                             nsIURI* aFaviconURI,
                                             bool aForceReload,
                                             uint32_t aFaviconLoadType,
-                                            nsIFaviconDataCallback* aCallback)
+                                            nsIFaviconDataCallback* aCallback,
+                                            nsIPrincipal* aLoadingPrincipal)
 {
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
@@ -226,11 +227,20 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
       return NS_OK;
   }
 
+  // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
+  // so addons not providing a loadingPrincipal do not break in release builds.
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingPrincipal;
+  MOZ_ASSERT(loadingPrincipal, "please provide aLoadingPrincipal for this favicon");
+  if (!loadingPrincipal) {
+    loadingPrincipal = nsContentUtils::GetSystemPrincipal();
+  }
+  NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
+
   // Check if the icon already exists and fetch it from the network, if needed.
   // Finally associate the icon to the requested page if not yet associated.
   rv = AsyncFetchAndSetIconForPage::start(
     aFaviconURI, aPageURI, aForceReload ? FETCH_ALWAYS : FETCH_IF_MISSING,
-    aFaviconLoadType, aCallback
+    aFaviconLoadType, aCallback, loadingPrincipal
   );
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -306,7 +316,8 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
 NS_IMETHODIMP
 nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
                                                const nsAString& aDataURL,
-                                               PRTime aExpiration)
+                                               PRTime aExpiration,
+                                               nsIPrincipal* aLoadingPrincipal)
 {
   NS_ENSURE_ARG(aFaviconURI);
   NS_ENSURE_TRUE(aDataURL.Length() > 0, NS_ERROR_INVALID_ARG);
@@ -325,8 +336,17 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
   rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Bug 1227289 : Let's default to the systemPrincipal if no loadingPrincipal is provided
+  // so addons not providing a loadingPrincipal do not break in release builds.
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadingPrincipal;
+  MOZ_ASSERT(loadingPrincipal, "please provide aLoadingPrincipal for this favicon");
+  if (!loadingPrincipal) {
+    loadingPrincipal = nsContentUtils::GetSystemPrincipal();
+  }
+  NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsILoadInfo> loadInfo =
-    new mozilla::LoadInfo(nsContentUtils::GetSystemPrincipal(),
+    new mozilla::LoadInfo(loadingPrincipal,
                           nullptr, // aTriggeringPrincipal
                           nullptr, // aLoadingNode
                           nsILoadInfo::SEC_NORMAL,

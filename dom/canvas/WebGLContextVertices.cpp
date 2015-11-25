@@ -358,8 +358,11 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         return JS::NumberValue(uint32_t(mBoundVertexArray->mAttribs[index].type));
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
-        if (IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays))
+        if (IsWebGL2() ||
+            IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays))
+        {
             return JS::Int32Value(mBoundVertexArray->mAttribs[index].divisor);
+        }
         break;
 
     case LOCAL_GL_CURRENT_VERTEX_ATTRIB:

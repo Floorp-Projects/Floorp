@@ -39,8 +39,8 @@ function testTexImage2D(testCase)
       " border: " + testCase.border;
 
     gl.texImage2D(testCase.target, level, testCase.internalFormat, width, height, testCase.border, testCase.format, testCase.type, null);
-    error = testCase.expectedError;
-    glErrorShouldBe(gl, error, msg);
+    errors = testCase.expectedErrors;
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testTexSubImage2D(testCase)
@@ -55,26 +55,26 @@ function testTexSubImage2D(testCase)
         " type: " + enumToString(testCase.type);
     var array = new Uint8Array(width * height * 4);
     gl.texSubImage2D(testCase.target, level, xoffset, yoffset, width, height, testCase.format, testCase.type, array);
-    error = testCase.expectedError;
-    glErrorShouldBe(gl, error, msg);
+    errors = testCase.expectedErrors;
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testTexParameter(testCase)
 {
     var msg = "paramName: " + enumToString(testCase.pname);
-    error = testCase.expectedError;
+    errors = testCase.expectedErrors;
     gl.texParameteri(testCase.target, testCase.pname, testCase.param);
-    glErrorShouldBe(gl, error, msg);
+    wtu.glErrorShouldBeIn(gl, errors, msg);
     gl.texParameterf(testCase.target, testCase.pname, testCase.param);
-    glErrorShouldBe(gl, error, msg);
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testGetTexParameter(testCase)
 {
     var msg = "paramName: " + enumToString(testCase.pname);
-    error = testCase.expectedError;
+    errors = testCase.expectedErrors;
     gl.getTexParameter(testCase.target, testCase.pname);
-    glErrorShouldBe(gl, error, msg);
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testCopyTexImage2D(testCase)
@@ -96,8 +96,8 @@ function testCopyTexImage2D(testCase)
     shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
 
     gl.copyTexImage2D(testCase.target, level, testCase.internalFormat, x, y, width, height, testCase.border);
-    error = testCase.expectedError;
-    glErrorShouldBe(gl, error, msg);
+    errors = testCase.expectedErrors;
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testCopyTexSubImage2D(testCase)
@@ -124,8 +124,8 @@ function testCopyTexSubImage2D(testCase)
     glErrorShouldBe(gl, gl.NO_ERROR);
 
     gl.copyTexSubImage2D(testCase.target, level, xoffset, yoffset, x, y, width, height);
-    error = testCase.expectedError;
-    glErrorShouldBe(gl, error, msg);
+    errors = testCase.expectedErrors;
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 function testCopyFromInternalFBO(testCase)
@@ -159,8 +159,8 @@ function testCopyFromInternalFBO(testCase)
         glErrorShouldBe(gl, gl.NO_ERROR);
         gl.copyTexImage2D(target, level, testCase.internalFormat, x, y, width, height, border);
     }
-    error = testCase.expectedError;
-    glErrorShouldBe(gl, error, msg);
+    errors = testCase.expectedErrors;
+    wtu.glErrorShouldBeIn(gl, errors, msg);
 }
 
 description("Validate tex functions input parameters");
@@ -179,37 +179,37 @@ var testCases =
      border: 0,
      format: gl.RGBA,
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      internalFormat: 0x1903, // GL_RED
      border: 0,
      format: 0x1903, // GL_RED
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM, gl.INVALID_VALUE]},
     {target: gl.TEXTURE_2D,
      internalFormat: gl.RGBA,
      border: 1,
      format: gl.RGBA,
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.INVALID_VALUE},
+     expectedErrors: [gl.INVALID_VALUE]},
     {target: gl.TEXTURE_2D,
      internalFormat: gl.RGBA,
      border: 0,
      format: gl.RGB,
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.INVALID_OPERATION},
+     expectedErrors: [gl.INVALID_OPERATION]},
     {target: gl.TEXTURE_2D,
      internalFormat: gl.RGBA,
      border: 0,
      format: gl.RGBA,
      type: gl.BYTE,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      internalFormat: gl.RGBA,
      border: 0,
      format: gl.RGBA,
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.NO_ERROR} ];
+     expectedErrors: [gl.NO_ERROR]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testTexImage2D(testCases[ii]);
@@ -221,15 +221,15 @@ testCases =
   [ {target: gl.TEXTURE_2D,
      format: 0x1903, // GL_RED
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM, gl.INVALID_OPERATION]},
     {target: gl.TEXTURE_2D,
      format: gl.RGBA,
      type: gl.BYTE,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM, gl.INVALID_OPERATION]},
     {target: gl.TEXTURE_2D,
      format: gl.RGBA,
      type: gl.UNSIGNED_BYTE,
-     expectedError: gl.NO_ERROR} ];
+     expectedErrors: [gl.NO_ERROR]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testTexSubImage2D(testCases[ii]);
@@ -241,19 +241,19 @@ testCases =
   [ {target: 0x0DE0, // GL_TEXTURE_1D
      pname: gl.TEXTURE_WRAP_T,
      param: gl.REPEAT,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      pname: 0x813A, // GL_TEXTURE_MIN_LOD
      param: 0,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      pname: gl.TEXTURE_WRAP_T,
      param: 0x2900, // GL_CLAMP
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      pname: gl.TEXTURE_WRAP_T,
      param: gl.REPEAT,
-     expectedError: gl.NO_ERROR} ];
+     expectedErrors: [gl.NO_ERROR]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testTexParameter(testCases[ii]);
@@ -264,13 +264,13 @@ debug("Checking GetTexParameter: a set of inputs that are valid in GL but invali
 testCases =
   [ {target: 0x0DE0, // GL_TEXTURE_1D
      pname: gl.TEXTURE_WRAP_T,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      pname: 0x813A, // GL_TEXTURE_MIN_LOD
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      pname: gl.TEXTURE_WRAP_T,
-     expectedError: gl.NO_ERROR} ];
+     expectedErrors: [gl.NO_ERROR]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testGetTexParameter(testCases[ii]);
@@ -293,22 +293,22 @@ testCases =
      colorBufferFormat: gl.RGB565,
      internalFormat: 0x8054, // GL_RGB16
      border: 0,
-     expectedError: gl.INVALID_ENUM},
+     expectedErrors: [gl.INVALID_ENUM]},
     {target: gl.TEXTURE_2D,
      colorBufferFormat: gl.RGB565,
      internalFormat: gl.RGBA,
      border: 1,
-     expectedError: gl.INVALID_VALUE},
+     expectedErrors: [gl.INVALID_VALUE]},
     {target: gl.TEXTURE_2D,
      colorBufferFormat: gl.RGB565,
      internalFormat: gl.RGBA,
      border: 0,
-     expectedError: gl.INVALID_OPERATION},
+     expectedErrors: [gl.INVALID_OPERATION]},
     {target: gl.TEXTURE_2D,
      colorBufferFormat: gl.RGB565,
      internalFormat: gl.RGB,
      border: 0,
-     expectedError: gl.NO_ERROR} ];
+     expectedErrors: [gl.NO_ERROR]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testCopyTexImage2D(testCases[ii]);
@@ -320,11 +320,11 @@ testCases =
   [ {target: gl.TEXTURE_2D,
      colorBufferFormat: gl.RGB5_A1,
      internalFormat: gl.RGBA,
-     expectedError: gl.NO_ERROR},
+     expectedErrors: [gl.NO_ERROR]},
     {target: gl.TEXTURE_2D,
      colorBufferFormat: gl.RGB565,
      internalFormat: gl.RGBA,
-     expectedError: gl.INVALID_OPERATION} ];
+     expectedErrors: [gl.INVALID_OPERATION]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testCopyTexSubImage2D(testCases[ii]);
@@ -336,19 +336,19 @@ testCases =
   [ {contextAlpha: true,
      internalFormat: gl.RGBA,
      subImage: false,
-     expectedError: gl.NO_ERROR},
+     expectedErrors: [gl.NO_ERROR]},
     {contextAlpha: false,
      internalFormat: gl.RGBA,
      subImage: false,
-     expectedError: gl.INVALID_OPERATION},
+     expectedErrors: [gl.INVALID_OPERATION]},
     {contextAlpha: true,
      internalFormat: gl.RGBA,
      subImage: true,
-     expectedError: gl.NO_ERROR},
+     expectedErrors: [gl.NO_ERROR]},
     {contextAlpha: false,
      internalFormat: gl.RGBA,
      subImage: true,
-     expectedError: gl.INVALID_OPERATION} ];
+     expectedErrors: [gl.INVALID_OPERATION]} ];
 
 for (var ii = 0; ii < testCases.length; ++ii)
     testCopyFromInternalFBO(testCases[ii]);
