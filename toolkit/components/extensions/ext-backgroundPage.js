@@ -113,5 +113,11 @@ extensions.registerSchemaAPI("extension", null, (extension, context) => {
         return backgroundPagesMap.get(extension).contentWindow;
       },
     },
+
+    runtime: {
+      getBackgroundPage: function(callback) {
+        runSafe(context, callback, backgroundPagesMap.get(extension).contentWindow);
+      },
+    },
   };
 });
