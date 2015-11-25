@@ -384,14 +384,15 @@ js::AtomizeString(ExclusiveContext* cx, JSString* str,
         AtomHasher::Lookup lookup(&atom);
 
         /* Likewise, permanent atoms are always interned. */
-        MOZ_ASSERT(cx->isPermanentAtomsInitialized());
-        AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
-        if (p)
-            return &atom;
+        if (cx->isPermanentAtomsInitialized()) {
+            AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+            if (p)
+                return &atom;
+        }
 
         AutoLockForExclusiveAccess lock(cx);
 
-        p = cx->atoms().lookup(lookup);
+        AtomSet::Ptr p = cx->atoms().lookup(lookup);
         MOZ_ASSERT(p); /* Non-static atom must exist in atom state set. */
         MOZ_ASSERT(p->asPtr() == &atom);
         MOZ_ASSERT(pin == PinAtom);
