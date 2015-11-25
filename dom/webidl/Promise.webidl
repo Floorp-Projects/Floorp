@@ -39,8 +39,13 @@ interface _Promise {
   [NewObject]
   Promise<any> catch([TreatNonCallableAsNull] optional AnyCallback? rejectCallback = null);
 
-  [NewObject]
-  static Promise<any> all(sequence<any> iterable);
+  // Have to use "any" (or "object", but "any" is simpler) as the type to
+  // support the subclassing behavior, since nothing actually requires the
+  // return value of PromiseSubclass.all to be a Promise object.  As a result,
+  // we also have to do our argument conversion manually, because we want to
+  // convert its exceptions into rejections.
+  [NewObject, Throws]
+  static any all(optional any iterable);
 
   // Have to use "any" (or "object", but "any" is simpler) as the type to
   // support the subclassing behavior, since nothing actually requires the

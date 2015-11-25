@@ -186,9 +186,10 @@ public:
   already_AddRefed<Promise>
   Catch(JSContext* aCx, AnyCallback* aRejectCallback, ErrorResult& aRv);
 
-  static already_AddRefed<Promise>
+  static void
   All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-      const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
+      JS::Handle<JS::Value> aIterable, JS::MutableHandle<JS::Value> aRetval,
+      ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   All(const GlobalObject& aGlobal,
