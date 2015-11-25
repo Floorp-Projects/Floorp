@@ -160,11 +160,12 @@ AC_SUBST(JS_SHARED_LIBRARY)
 if test "$JS_STANDALONE" = no; then
   autoconfmk=autoconf-js.mk
   JS_STANDALONE=
+  #DIST is exported from top-level configure
 else
   JS_STANDALONE=1
   AC_DEFINE(JS_STANDALONE)
+  DIST="$MOZ_BUILD_ROOT/dist"
 fi
-DIST="$MOZ_BUILD_ROOT/dist"
 AC_SUBST(JS_STANDALONE)
 BUILDING_JS=1
 AC_SUBST(autoconfmk)
