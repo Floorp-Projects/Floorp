@@ -647,7 +647,11 @@ public:
             MOZ_ASSERT(!mHasBeenChecked);
             mHasBeenChecked = true;
 
-            return mGL.fGetError();
+            const GLenum ret = mGL.fGetError();
+
+            while (mGL.fGetError()) {}
+
+            return ret;
         }
 
         ~LocalErrorScope() {
@@ -2309,6 +2313,7 @@ public:
 public:
     void fDrawBuffers(GLsizei n, const GLenum* bufs) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDrawBuffers);
         mSymbols.fDrawBuffers(n, bufs);
         AFTER_GL_CALL;
     }

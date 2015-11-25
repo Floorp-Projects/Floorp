@@ -52,7 +52,8 @@ function runIconDiscoveryTest() {
 function iconDiscovery() {
   if (iconDiscoveryTests.length) {
     setHandlerFunc(runIconDiscoveryTest);
-    gBrowser.setIcon(gBrowser.selectedTab, null);
+    gBrowser.setIcon(gBrowser.selectedTab, null,
+                     Services.scriptSecurityManager.getSystemPrincipal());
 
     var test = iconDiscoveryTests[0];
     var head = doc().getElementById("linkparent");

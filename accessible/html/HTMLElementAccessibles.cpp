@@ -68,7 +68,7 @@ HTMLLabelAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR) {
-    RefPtr<dom::HTMLLabelElement> label = dom::HTMLLabelElement::FromContent(mContent);
+    dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromContent(mContent);
     rel.AppendTarget(mDoc, label->GetControl());
   }
 

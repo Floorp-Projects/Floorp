@@ -77,7 +77,9 @@ WebGLContext::GetStencilBits(GLint* out_stencilBits)
 {
     *out_stencilBits = 0;
     if (mBoundDrawFramebuffer) {
-        if (mBoundDrawFramebuffer->HasDepthStencilConflict()) {
+        if (mBoundDrawFramebuffer->StencilAttachment().IsDefined() &&
+            mBoundDrawFramebuffer->DepthStencilAttachment().IsDefined())
+        {
             // Error, we don't know which stencil buffer's bits to use
             ErrorInvalidFramebufferOperation("getParameter: framebuffer has two stencil buffers bound");
             return false;
@@ -142,15 +144,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
         if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
-            return JS::Int32Value(mGLMaxColorAttachments);
+            return JS::Int32Value(mImplMaxColorAttachments);
 
         } else if (pname == LOCAL_GL_MAX_DRAW_BUFFERS) {
-            return JS::Int32Value(mGLMaxDrawBuffers);
+            return JS::Int32Value(mImplMaxDrawBuffers);
 
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
-                   pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers))
+                   pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mImplMaxDrawBuffers))
         {
             GLint iv = 0;
             gl->fGetIntegerv(pname, &iv);
@@ -166,7 +168,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         if (pname == LOCAL_GL_VERTEX_ARRAY_BINDING) {
             WebGLVertexArray* vao =
                 (mBoundVertexArray != mDefaultVertexArray) ? mBoundVertexArray.get() : nullptr;
@@ -174,7 +176,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query)) {
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query)) {
         if (pname == LOCAL_GL_TIMESTAMP_EXT) {
             GLuint64 iv = 0;
             gl->fGetInteger64v(pname, (GLint64*) &iv);
@@ -235,7 +237,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives)) {
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives)) {
         if (pname == LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT) {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
@@ -380,13 +382,13 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::Int32Value(i);
         }
         case LOCAL_GL_MAX_TEXTURE_SIZE:
-            return JS::Int32Value(mGLMaxTextureSize);
+            return JS::Int32Value(mImplMaxTextureSize);
 
         case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-            return JS::Int32Value(mGLMaxCubeMapTextureSize);
+            return JS::Int32Value(mImplMaxCubeMapTextureSize);
 
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
-            return JS::Int32Value(mGLMaxRenderbufferSize);
+            return JS::Int32Value(mImplMaxRenderbufferSize);
 
         case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
             return JS::Int32Value(mGLMaxVertexUniformVectors);
@@ -449,13 +451,13 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // bool, WebGL-specific
         case UNPACK_FLIP_Y_WEBGL:
-            return JS::BooleanValue(mPixelStoreFlipY);
+            return JS::BooleanValue(mPixelStore_FlipY);
         case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-            return JS::BooleanValue(mPixelStorePremultiplyAlpha);
+            return JS::BooleanValue(mPixelStore_PremultiplyAlpha);
 
         // uint, WebGL-specific
         case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-            return JS::NumberValue(uint32_t(mPixelStoreColorspaceConversion));
+            return JS::NumberValue(uint32_t(mPixelStore_ColorspaceConversion));
 
         ////////////////////////////////
         // Complex values

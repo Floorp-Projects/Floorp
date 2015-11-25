@@ -185,10 +185,6 @@ var gSyncPane = {
     document.getElementById("syncStatusMessage").removeAttribute("message-type");
     document.getElementById("syncStatusMessageTitle").textContent = "";
     document.getElementById("syncStatusMessageDescription").textContent = "";
-    let learnMoreLink = document.getElementById("learnMoreLink");
-    if (learnMoreLink) {
-      learnMoreLink.parentNode.removeChild(learnMoreLink);
-    }
   },
 
   _setupEventListeners: function() {

@@ -445,6 +445,7 @@ load 619021.html
 load 621424-1.html
 load 621841-1.html
 load 622596.html
+load 641724.html
 load 645072-1.html
 load 645072-2.html
 load 646561-1.html
@@ -545,6 +546,7 @@ load 885009-1.html
 load 893496-1.html
 load 893523.html
 asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
+asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
 load 915475.xhtml
 load 927558.html
@@ -553,6 +555,7 @@ asserts(3-8) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
+asserts-if(Android,0-1) load 964078.html # bug 989718
 load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml
@@ -576,6 +579,7 @@ load 1134531.html
 load 1134667.html
 load 1137723-1.html
 load 1137723-2.html
+load 1145768.html
 load 1146103.html
 load 1146107.html
 load 1146114.html

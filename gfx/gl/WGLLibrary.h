@@ -15,15 +15,15 @@ class WGLLibrary
 {
 public:
     WGLLibrary()
-      : mInitialized(false),
-        mOGLLibrary(nullptr),
-        mHasRobustness(false),
-        mHasDXInterop(false),
-        mHasDXInterop2(false),
-        mWindow (0),
-        mWindowDC(0),
-        mWindowGLContext(0),
-        mWindowPixelFormat (0)
+      : mInitialized(false)
+      , mOGLLibrary(nullptr)
+      , mHasRobustness(false)
+      , mHasDXInterop(false)
+      , mHasDXInterop2(false)
+      , mWindow (0)
+      , mWindowDC(0)
+      , mWindowGLContext(0)
+      , mWindowPixelFormat(0)
     {}
 
     typedef HGLRC (GLAPIENTRY * PFNWGLCREATECONTEXTPROC) (HDC);
@@ -125,8 +125,7 @@ private:
 };
 
 // a global WGLLibrary instance
-extern WGLLibrary sWGLLibrary;
+extern WGLLibrary sWGLLib;
 
 } /* namespace gl */
 } /* namespace mozilla */
-

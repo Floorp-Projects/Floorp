@@ -162,7 +162,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect layerRect = rect - aItem->AnimatedGeometryRoot()->GetOffsetToCrossDoc(aItem->ReferenceFrame());
+  nsRect layerRect = rect - (*aItem->GetAnimatedGeometryRoot())->GetOffsetToCrossDoc(aItem->ReferenceFrame());
   nscolor color;
   nsRect vis = aItem->GetVisibleRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
@@ -186,7 +186,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           component.x, component.y, component.width, component.height,
           clip.ToString().get(),
           aItem->IsUniform(aBuilder, &color) ? " uniform" : "",
-          aItem->ReferenceFrame(), aItem->AnimatedGeometryRoot());
+          aItem->ReferenceFrame(), *aItem->GetAnimatedGeometryRoot());
 
   nsRegionRectIterator iter(opaque);
   for (const nsRect* r = iter.Next(); r; r = iter.Next()) {

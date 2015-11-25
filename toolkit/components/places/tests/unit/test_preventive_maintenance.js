@@ -1225,7 +1225,9 @@ tests.push({
     do_check_true(this._separatorId > 0);
     ts.tagURI(this._uri1, ["testtag"]);
     fs.setAndFetchFaviconForPage(this._uri2, SMALLPNG_DATA_URI, false,
-                                 PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+                                 PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+                                 null,
+                                 Services.scriptSecurityManager.getSystemPrincipal());
     yield PlacesUtils.keywords.insert({ url: this._uri1.spec, keyword: "testkeyword" });
     as.setPageAnnotation(this._uri2, "anno", "anno", 0, as.EXPIRE_NEVER);
     as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);

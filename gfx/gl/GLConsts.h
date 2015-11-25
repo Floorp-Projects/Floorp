@@ -5668,7 +5668,6 @@
 #define LOCAL_GLX_X_VISUAL_TYPE_EXT                          0x22
 #define LOCAL_GLX_Y_INVERTED_EXT                             0x20D4
 
-
 // WGL
 #define LOCAL_WGL_ACCELERATION_ARB                           0x2003
 #define LOCAL_WGL_ACCELERATION_EXT                           0x2003

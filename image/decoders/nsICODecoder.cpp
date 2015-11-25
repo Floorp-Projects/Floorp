@@ -27,14 +27,6 @@ static const uint32_t BITMAPINFOSIZE = bmp::InfoHeaderLength::WIN_ICO;
 // Actual Data Processing
 // ----------------------------------------
 
-uint32_t
-nsICODecoder::CalcAlphaRowSize()
-{
-  // Calculate rowsize in DWORD's and then return in # of bytes
-  uint32_t rowSize = (GetRealWidth() + 31) / 32; // + 31 to round up
-  return rowSize * 4; // Return rowSize in bytes
-}
-
 // Obtains the number of colors from the bits per pixel
 uint16_t
 nsICODecoder::GetNumColors()
