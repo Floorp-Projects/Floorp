@@ -5093,14 +5093,94 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
 
         if isPromise:
+            # Per spec, what we're supposed to do is take the original
+            # Promise.resolve and call it with the original Promise as this
+            # value to make a Promise out of whatever value we actually have
+            # here.  The question is which global we should use.  There are
+            # several cases to consider:
+            #
+            # 1) Normal call to API with a Promise argument.  This is a case the
+            #    spec covers, and we should be using the current Realm's
+            #    Promise.  That means the current compartment.
+            # 2) Call to API with a Promise argument over Xrays.  In practice,
+            #    this sort of thing seems to be used for giving an API
+            #    implementation a way to wait for conclusion of an asyc
+            #    operation, _not_ to expose the Promise to content code.  So we
+            #    probably want to allow callers to use such an API in a
+            #    "natural" way, by passing chrome-side promises; indeed, that
+            #    may be all that the caller has to represent their async
+            #    operation.  That means we really need to do the
+            #    Promise.resolve() in the caller (chrome) compartment: if we do
+            #    it in the content compartment, we will try to call .then() on
+            #    the chrome promise while in the content compartment, which will
+            #    throw and we'll just get a rejected Promise.  Note that this is
+            #    also the reason why a caller who has a chrome Promise
+            #    representing an async operation can't itself convert it to a
+            #    content-side Promise (at least not without some serious
+            #    gyrations).
+            # 3) Promise return value from a callback or callback interface.
+            #    This is in theory a case the spec covers but in practice it
+            #    really doesn't define behavior here because it doesn't define
+            #    what Realm we're in after the callback returns, which is when
+            #    the argument conversion happens.  We will use the current
+            #    compartment, which is the compartment of the callable (which
+            #    may itself be a cross-compartment wrapper itself), which makes
+            #    as much sense as anything else. In practice, such an API would
+            #    once again be providing a Promise to signal completion of an
+            #    operation, which would then not be exposed to anyone other than
+            #    our own implementation code.
+            # 4) Return value from a JS-implemented interface.  In this case we
+            #    have a problem.  Our current compartment is the compartment of
+            #    the JS implementation.  But if the JS implementation returned
+            #    a page-side Promise (which is a totally sane thing to do, and
+            #    in fact the right thing to do given that this return value is
+            #    going right to content script) then we don't want to
+            #    Promise.resolve with our current compartment Promise, because
+            #    that will wrap it up in a chrome-side Promise, which is
+            #    decidedly _not_ what's desired here.  So in that case we
+            #    should really unwrap the return value and use the global of
+            #    the result.  CheckedUnwrap should be good enough for that; if
+            #    it fails, then we're failing unwrap while in a
+            #    system-privileged compartment, so presumably we have a dead
+            #    object wrapper.  Just error out.  Do NOT fall back to using
+            #    the current compartment instead: that will return a
+            #    system-privileged rejected (because getting .then inside
+            #    resolve() failed) Promise to the caller, which they won't be
+            #    able to touch.  That's not helpful.  If we error out, on the
+            #    other hand, they will get a content-side rejected promise.
+            #    Same thing if the value returned is not even an object.
+            if isCallbackReturnValue == "JSImpl":
+                # Case 4 above.  Note that globalObj defaults to the current
+                # compartment global.  Note that we don't use $*{exceptionCode}
+                # here because that will try to aRv.Throw(NS_ERROR_UNEXPECTED)
+                # which we don't really want here.
+                assert exceptionCode == "aRv.Throw(NS_ERROR_UNEXPECTED);\nreturn nullptr;\n"
+                getPromiseGlobal = fill(
+                    """
+                    if (!$${val}.isObject()) {
+                      aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("${sourceDescription}"));
+                      return nullptr;
+                    }
+                    JSObject* unwrappedVal = js::CheckedUnwrap(&$${val}.toObject());
+                    if (!unwrappedVal) {
+                      // A slight lie, but not much of one, for a dead object wrapper.
+                      aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("${sourceDescription}"));
+                      return nullptr;
+                    }
+                    globalObj = js::GetGlobalForObjectCrossCompartment(unwrappedVal);
+                    """,
+                    sourceDescription=sourceDescription)
+            else:
+                getPromiseGlobal = ""
+
             templateBody = fill(
                 """
-                { // Scope for our GlobalObject and ErrorResult
+                { // Scope for our GlobalObject, ErrorResult, JSAutoCompartment,
+                  // etc.
 
-                  // Might as well use CurrentGlobalOrNull here; that will at
-                  // least give us the same behavior as if the caller just called
-                  // Promise.resolve() themselves.
                   JS::Rooted<JSObject*> globalObj(cx, JS::CurrentGlobalOrNull(cx));
+                  $*{getPromiseGlobal}
+                  JSAutoCompartment ac(cx, globalObj);
                   GlobalObject promiseGlobal(cx, globalObj);
                   if (promiseGlobal.Failed()) {
                     $*{exceptionCode}
@@ -5112,12 +5192,25 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     $*{exceptionCode}
                   }
                   JS::Rooted<JS::Value> resolveThisv(cx, JS::ObjectValue(*promiseCtor));
-                  $${declName} = Promise::Resolve(promiseGlobal, resolveThisv, $${val}, promiseRv);
+                  JS::Rooted<JS::Value> resolveResult(cx);
+                  JS::Rooted<JS::Value> valueToResolve(cx, $${val});
+                  if (!JS_WrapValue(cx, &valueToResolve)) {
+                    $*{exceptionCode}
+                  }
+                  Promise::Resolve(promiseGlobal, resolveThisv, valueToResolve,
+                                   &resolveResult, promiseRv);
                   if (promiseRv.MaybeSetPendingException(cx)) {
+                    $*{exceptionCode}
+                  }
+                  nsresult unwrapRv = UNWRAP_OBJECT(Promise, &resolveResult.toObject(), $${declName});
+                  if (NS_FAILED(unwrapRv)) { // Quite odd
+                    promiseRv.Throw(unwrapRv);
+                    promiseRv.MaybeSetPendingException(cx);
                     $*{exceptionCode}
                   }
                 }
                 """,
+                getPromiseGlobal=getPromiseGlobal,
                 exceptionCode=exceptionCode)
         elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
