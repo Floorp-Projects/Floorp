@@ -497,7 +497,7 @@ BaselineScript::clearDependentAsmJSModules()
     if (dependentAsmJSModules_) {
         for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
             DependentAsmJSModuleExit exit = (*dependentAsmJSModules_)[i];
-            exit.module->detachJitCompilation(exit.exitIndex);
+            exit.module->exit(exit.exitIndex).deoptimize(*exit.module);
         }
 
         dependentAsmJSModules_->clear();
@@ -509,12 +509,8 @@ BaselineScript::unlinkDependentAsmJSModules(FreeOp* fop)
 {
     // Remove any links from AsmJSModules that contain optimized FFI calls into
     // this BaselineScript.
+    clearDependentAsmJSModules();
     if (dependentAsmJSModules_) {
-        for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
-            DependentAsmJSModuleExit exit = (*dependentAsmJSModules_)[i];
-            exit.module->detachJitCompilation(exit.exitIndex);
-        }
-
         fop->delete_(dependentAsmJSModules_);
         dependentAsmJSModules_ = nullptr;
     }

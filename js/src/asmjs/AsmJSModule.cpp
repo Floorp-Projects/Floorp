@@ -88,8 +88,7 @@ AsmJSModule::AsmJSModule(ScriptSource* scriptSource, uint32_t srcStart, uint32_t
     interrupted_(false)
 {
     mozilla::PodZero(&pod);
-    pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
-    pod.functionBytes_ = UINT32_MAX;
+    pod.globalBytes_ = sInitialGlobalDataBytes;
     pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
     pod.maxHeapLength_ = 0x80000000;
     pod.strict_ = strict;
@@ -110,7 +109,7 @@ AsmJSModule::~AsmJSModule()
 
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
-            AsmJSModule::ExitDatum& exitDatum = exitIndexToGlobalDatum(i);
+            AsmJSModule::ExitDatum& exitDatum = exit(i).datum(*this);
             if (!exitDatum.baselineScript)
                 continue;
 
@@ -130,19 +129,19 @@ AsmJSModule::~AsmJSModule()
 void
 AsmJSModule::trace(JSTracer* trc)
 {
-    for (unsigned i = 0; i < globals_.length(); i++)
-        globals_[i].trace(trc);
-    for (unsigned i = 0; i < exits_.length(); i++) {
-        if (exitIndexToGlobalDatum(i).fun)
-            TraceEdge(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
+    for (Global& global : globals_)
+        global.trace(trc);
+    for (Exit& exit : exits_) {
+        if (exit.datum(*this).fun)
+            TraceEdge(trc, &exit.datum(*this).fun, "asm.js imported function");
     }
-    for (unsigned i = 0; i < exports_.length(); i++)
-        exports_[i].trace(trc);
-    for (unsigned i = 0; i < names_.length(); i++)
-        TraceManuallyBarrieredEdge(trc, &names_[i].name(), "asm.js module function name");
+    for (ExportedFunction& exp : exports_)
+        exp.trace(trc);
+    for (Name& name : names_)
+        TraceManuallyBarrieredEdge(trc, &name.name(), "asm.js module function name");
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    for (unsigned i = 0; i < profiledFunctions_.length(); i++)
-        profiledFunctions_[i].trace(trc);
+    for (ProfiledFunction& profiledFunction : profiledFunctions_)
+        profiledFunction.trace(trc);
 #endif
     if (globalArgumentName_)
         TraceManuallyBarrieredEdge(trc, &globalArgumentName_, "asm.js global argument name");
@@ -269,7 +268,7 @@ bool
 AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembler& masm,
                     const Label& interruptLabel, const Label& outOfBoundsLabel)
 {
-    MOZ_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
+    MOZ_ASSERT(!isFinished());
 
     uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
     TokenPos pos;
@@ -284,10 +283,11 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     // Start global data on a new page so JIT code may be given independent
     // protection flags.
     pod.codeBytes_ = AlignBytes(masm.bytesNeeded(), AsmJSPageSize);
+    MOZ_ASSERT(pod.functionBytes_ <= pod.codeBytes_);
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
-    pod.totalBytes_ = AlignBytes(pod.codeBytes_ + globalDataBytes(), AsmJSPageSize);
+    pod.totalBytes_ = AlignBytes(pod.codeBytes_ + pod.globalBytes_, AsmJSPageSize);
 
     MOZ_ASSERT(!code_);
     code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
@@ -506,14 +506,15 @@ TryEnablingJit(JSContext* cx, AsmJSModule& module, HandleFunction fun, uint32_t 
     }
 
     // The exit may have become optimized while executing the FFI.
-    if (module.exitIsOptimized(exitIndex))
+    AsmJSModule::Exit& exit = module.exit(exitIndex);
+    if (exit.isOptimized(module))
         return true;
 
     BaselineScript* baselineScript = script->baselineScript();
     if (!baselineScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    module.optimizeExit(exitIndex, baselineScript);
+    exit.optimize(module, baselineScript);
     return true;
 }
 
@@ -524,7 +525,7 @@ InvokeFromAsmJS(AsmJSActivation* activation, int32_t exitIndex, int32_t argc, Va
     JSContext* cx = activation->cx();
     AsmJSModule& module = activation->module();
 
-    RootedFunction fun(cx, module.exitIndexToGlobalDatum(exitIndex).fun);
+    RootedFunction fun(cx, module.exit(exitIndex).datum(module).fun);
     RootedValue fval(cx, ObjectValue(*fun));
     if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval))
         return false;
@@ -710,7 +711,6 @@ void
 AsmJSModule::staticallyLink(ExclusiveContext* cx)
 {
     MOZ_ASSERT(isFinished());
-    MOZ_ASSERT(!isStaticallyLinked());
 
     // Process staticLinkData_
 
@@ -762,14 +762,11 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
 
     // Initialize global data segment
 
-    for (size_t i = 0; i < exits_.length(); i++) {
-        ExitDatum& exitDatum = exitIndexToGlobalDatum(i);
-        exitDatum.exit = interpExitTrampoline(exits_[i]);
-        exitDatum.fun = nullptr;
-        exitDatum.baselineScript = nullptr;
-    }
+    *(double*)(globalData() + AsmJSNaN64GlobalDataOffset) = GenericNaN();
+    *(float*)(globalData() + AsmJSNaN32GlobalDataOffset) = GenericNaN();
 
-    MOZ_ASSERT(isStaticallyLinked());
+    for (AsmJSModule::Exit& exit : exits_)
+        exit.initDatum(*this);
 }
 
 void
@@ -1801,7 +1798,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
     // profiling prologues:
     for (size_t i = 0; i < funcPtrTables_.length(); i++) {
         FuncPtrTable& funcPtrTable = funcPtrTables_[i];
-        uint8_t** array = globalDataOffsetToFuncPtrTable(funcPtrTable.globalDataOffset());
+        auto array = reinterpret_cast<uint8_t**>(globalData() + funcPtrTable.globalDataOffset());
         for (size_t j = 0; j < funcPtrTable.numElems(); j++) {
             void* callee = array[j];
             const CodeRange* codeRange = lookupCodeRange(callee);
