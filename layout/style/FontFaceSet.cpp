@@ -333,6 +333,10 @@ FontFaceSet::Load(JSContext* aCx,
   }
 
   nsIGlobalObject* globalObject = GetParentObject();
+  if (!globalObject) {
+    return nullptr;
+  }
+
   JS::Rooted<JSObject*> jsGlobal(aCx, globalObject->GetGlobalJSObject());
   GlobalObject global(aCx, jsGlobal);
 
