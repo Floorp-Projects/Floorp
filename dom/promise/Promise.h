@@ -233,6 +233,17 @@ protected:
   void CallInitFunction(const GlobalObject& aGlobal, PromiseInit& aInit,
                         ErrorResult& aRv);
 
+  // The NewPromiseCapability function from
+  // <http://www.ecma-international.org/ecma-262/6.0/#sec-newpromisecapability>.
+  // Errors are communicated via aRv.  If aForceCallbackCreation is
+  // true, then this function will ensure that aCapability has a
+  // useful mResolve/mReject even if mNativePromise is non-null.
+  static void NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
+                                   JS::Handle<JS::Value> aConstructor,
+                                   bool aForceCallbackCreation,
+                                   PromiseCapability& aCapability,
+                                   ErrorResult& aRv);
+
   bool IsPending()
   {
     return mResolvePending;
