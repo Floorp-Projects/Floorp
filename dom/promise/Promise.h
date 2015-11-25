@@ -194,9 +194,10 @@ public:
   All(const GlobalObject& aGlobal,
       const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
 
-  static already_AddRefed<Promise>
+  static void
   Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
+       JS::Handle<JS::Value> aIterable, JS::MutableHandle<JS::Value> aRetval,
+       ErrorResult& aRv);
 
   static bool
   PromiseSpecies(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
