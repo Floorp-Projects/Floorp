@@ -1637,21 +1637,6 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
     }
   }
 
-  // If this is a line scroll, and this event was part of a scroll series, then
-  // it might need extra acceleration. See WheelHandlingHelper.cpp.
-  if (aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
-      aEvent.mScrollSeriesNumber > 0)
-  {
-    int32_t start = gfxPrefs::MouseWheelAccelerationStart();
-    if (start >= 0 && aEvent.mScrollSeriesNumber >= uint32_t(start)) {
-      int32_t factor = gfxPrefs::MouseWheelAccelerationFactor();
-      if (factor > 0) {
-        delta.x = ComputeAcceleratedWheelDelta(delta.x, aEvent.mScrollSeriesNumber, factor);
-        delta.y = ComputeAcceleratedWheelDelta(delta.y, aEvent.mScrollSeriesNumber, factor);
-      }
-    }
-  }
-
   if (Abs(delta.x) > pageScrollSize.width) {
     delta.x = (delta.x >= 0)
               ? pageScrollSize.width
