@@ -70,15 +70,6 @@ class RegExpStatics
                              RegExpShared* shared, size_t lastIndex, bool sticky);
     inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input, MatchPairs& newPairs);
 
-    void setMultiline(JSContext* cx, bool enabled) {
-        if (enabled) {
-            flags = RegExpFlag(flags | MultilineFlag);
-            markFlagsSet(cx);
-        } else {
-            flags = RegExpFlag(flags & ~MultilineFlag);
-        }
-    }
-
     inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
@@ -101,7 +92,6 @@ class RegExpStatics
     JSString* getPendingInput() const { return pendingInput; }
 
     RegExpFlag getFlags() const { return flags; }
-    bool multiline() const { return flags & MultilineFlag; }
 
     void mark(JSTracer* trc) {
         /*
