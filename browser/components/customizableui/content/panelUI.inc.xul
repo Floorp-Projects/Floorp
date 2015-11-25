@@ -81,13 +81,11 @@
                        label="&appMenuHistory.clearRecent.label;"
                        class="subviewbutton"
                        command="Tools:Sanitize"/>
-#ifdef MOZ_SERVICES_SYNC
         <toolbarbutton id="sync-tabs-menuitem2"
                        class="syncTabsMenuItem subviewbutton"
                        label="&syncTabsMenu2.label;"
                        oncommand="BrowserOpenSyncTabs();"
                        disabled="true"/>
-#endif
         <toolbarbutton id="appMenuRestoreLastSession"
                        label="&appMenuHistory.restoreSession.label;"
                        class="subviewbutton"

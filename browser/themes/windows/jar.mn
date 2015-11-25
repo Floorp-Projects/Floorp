@@ -7,9 +7,7 @@ browser.jar:
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
-#ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
-#endif
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
   skin/classic/browser/actionicon-tab-XPVista7.png
@@ -167,12 +165,10 @@ browser.jar:
   skin/classic/browser/preferences/mail-XP.png                 (preferences/mail-XP.png)
   skin/classic/browser/preferences/Options.png                 (preferences/Options.png)
   skin/classic/browser/preferences/Options-XP.png              (preferences/Options-XP.png)
-#ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/preferences/Options-sync.png            (preferences/Options-sync.png)
-#endif
   skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
   skin/classic/browser/preferences/saveFile-XP.png             (preferences/saveFile-XP.png)
-* skin/classic/browser/preferences/preferences.css             (preferences/preferences.css)
+  skin/classic/browser/preferences/preferences.css             (preferences/preferences.css)
 * skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
 * skin/classic/browser/preferences/in-content/dialog.css       (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css            (preferences/applications.css)
@@ -230,7 +226,6 @@ browser.jar:
   skin/classic/browser/usercontext/work.svg                   (../shared/usercontext/work.svg)
   skin/classic/browser/usercontext/banking.svg                (../shared/usercontext/banking.svg)
   skin/classic/browser/usercontext/shopping.svg               (../shared/usercontext/shopping.svg)
-#ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-128.png
@@ -257,7 +252,6 @@ browser.jar:
   skin/classic/browser/syncProgress-toolbar-inverted@2x.png
   skin/classic/browser/syncProgress-toolbar-XPVista7.png
   skin/classic/browser/syncProgress-toolbar-XPVista7@2x.png
-#endif
 #ifdef E10S_TESTING_ONLY
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif
