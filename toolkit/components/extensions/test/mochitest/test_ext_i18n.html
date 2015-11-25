@@ -13,10 +13,48 @@
 <script type="application/javascript;version=1.8">
 
 add_task(function* test_i18n() {
+  function runTests(assertEq) {
+    let _ = browser.i18n.getMessage.bind(browser.i18n);
+
+    assertEq("Foo.", _("Foo"), "Simple message in selected locale.");
+
+    assertEq("(bar)", _("bar"), "Simple message fallback in default locale.");
+
+    let substitutions = [];
+    substitutions[4] = "5";
+    substitutions[13] = "14";
+
+    assertEq("'$0' '14' '' '5' '$$$$' '$'.", _("basic_substitutions", substitutions),
+             "Basic numeric substitutions");
+
+    assertEq("'$0' '' 'just a string' '' '$$$$' '$'.", _("basic_substitutions", "just a string"),
+             "Basic numeric substitutions, with non-array value");
+
+    let values = _("named_placeholder_substitutions", ["(subst $1 $2)", "(2 $1 $2)"]).split("\n");
+
+    assertEq("_foo_ (subst $1 $2) _bar_", values[0], "Named and numeric substitution");
+
+    assertEq("(2 $1 $2)", values[1], "Numeric substitution amid named placeholders");
+
+    assertEq("$bad name$", values[2], "Named placeholder with invalid key");
+
+    assertEq("", values[3], "Named placeholder with an invalid value");
+
+    assertEq("Accepted, but shouldn't break.", values[4], "Named placeholder with a strange content value");
+
+    assertEq("$foo", values[5], "Non-placeholder token that should be ignored");
+  };
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "default_locale": "jp",
+
+      content_scripts: [
+        { "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content.js"] },
+      ],
     },
+
 
     files: {
       "_locales/en_US/messages.json": {
@@ -71,46 +109,37 @@ add_task(function* test_i18n() {
           "description": "bar",
         },
       },
+
+      "content.js": "new " + function(runTests) {
+        runTests((...args) => {
+          browser.runtime.sendMessage(["assertEq", ...args]);
+        });
+
+        browser.runtime.sendMessage(["content-script-finished"]);
+      } + `(${runTests})`,
     },
 
-    background: "new " + function() {
-      let _ = browser.i18n.getMessage.bind(browser.i18n);
+    background: "new " + function(runTests) {
+      browser.runtime.onMessage.addListener(([msg, ...args]) => {
+        if (msg == "assertEq") {
+          browser.test.assertEq(...args);
+        } else {
+          browser.test.sendMessage(msg, ...args);
+        }
+      });
 
-      browser.test.assertEq("Foo.", _("Foo"), "Simple message in selected locale.");
-
-      browser.test.assertEq("(bar)", _("bar"), "Simple message fallback in default locale.");
-
-      let substitutions = [];
-      substitutions[4] = "5";
-      substitutions[13] = "14";
-
-      browser.test.assertEq("'$0' '14' '' '5' '$$$$' '$'.",
-                            _("basic_substitutions", substitutions),
-                            "Basic numeric substitutions");
-
-      browser.test.assertEq("'$0' '' 'just a string' '' '$$$$' '$'.",
-                            _("basic_substitutions", "just a string"),
-                            "Basic numeric substitutions, with non-array value");
-
-      let values = _("named_placeholder_substitutions", ["(subst $1 $2)", "(2 $1 $2)"]).split("\n");
-
-      browser.test.assertEq("_foo_ (subst $1 $2) _bar_", values[0], "Named and numeric substitution");
-
-      browser.test.assertEq("(2 $1 $2)", values[1], "Numeric substitution amid named placeholders");
-
-      browser.test.assertEq("$bad name$", values[2], "Named placeholder with invalid key");
-
-      browser.test.assertEq("", values[3], "Named placeholder with an invalid value");
-
-      browser.test.assertEq("Accepted, but shouldn't break.", values[4], "Named placeholder with a strange content value");
-
-      browser.test.assertEq("$foo", values[5], "Non-placeholder token that should be ignored");
+      runTests(browser.test.assertEq.bind(browser.test));
 
       browser.test.notifyPass("l10n");
-    },
+    } + `(${runTests})`,
   });
 
   yield extension.startup();
+
+  let win = window.open("file_sample.html");
+  yield extension.awaitMessage("content-script-finished");
+  win.close();
+
   yield extension.awaitFinish("l10n");
   yield extension.unload();
 });

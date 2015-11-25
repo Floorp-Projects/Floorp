@@ -23,41 +23,16 @@ from mach.decorators import (
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 GECKO = os.path.realpath(os.path.join(ROOT, '..', '..'))
-DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
 
 # XXX: If/when we have the taskcluster queue use construct url instead
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
-REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 
 DEFINE_TASK = 'queue:define-task:aws-provisioner-v1/{}'
-
-TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
-TREEHERDER_ROUTES = {
-    'staging': 'tc-treeherder-stage',
-    'production': 'tc-treeherder'
-}
 
 DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
-
-def docker_image(name):
-    ''' Determine the docker tag/revision from an in tree docker file '''
-    repository_path = os.path.join(DOCKER_ROOT, name, 'REGISTRY')
-    repository = REGISTRY
-
-    version = open(os.path.join(DOCKER_ROOT, name, 'VERSION')).read().strip()
-
-    if os.path.isfile(repository_path):
-        repository = open(repository_path).read().strip()
-
-    return '{}/{}:{}'.format(repository, name, version)
-
-def get_task(task_id):
-    import urllib2
-    return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
-
 
 def gaia_info():
     '''
@@ -87,42 +62,6 @@ def gaia_info():
             'gaia_rev': gaia['git']['git_revision'],
             'gaia_ref': gaia['git']['branch'],
         }
-
-def decorate_task_treeherder_routes(task, suffix):
-    """
-    Decorate the given task with treeherder routes.
-
-    Uses task.extra.treeherderEnv if available otherwise defaults to only
-    staging.
-
-    :param dict task: task definition.
-    :param str suffix: The project/revision_hash portion of the route.
-    """
-
-    if 'extra' not in task:
-        return
-
-    if 'routes' not in task:
-        task['routes'] = []
-
-    treeheder_env = task['extra'].get('treeherderEnv', ['staging'])
-
-    for env in treeheder_env:
-        task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
-
-def decorate_task_json_routes(task, json_routes, parameters):
-    """
-    Decorate the given task with routes.json routes.
-
-    :param dict task: task definition.
-    :param json_routes: the list of routes to use from routes.json
-    :param parameters: dictionary of parameters to use in route templates
-    """
-    routes = task.get('routes', [])
-    for route in json_routes:
-        routes.append(route.format(**parameters))
-
-    task['routes'] = routes
 
 def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
     """
@@ -330,8 +269,17 @@ class Graph(object):
         action='store_true', default=False,
         help="Stub out taskIds and date fields from the task definitions.")
     def create_graph(self, **params):
-        from taskcluster_graph.commit_parser import parse_commit
+        from functools import partial
+
         from slugid import nice as slugid
+
+        import taskcluster_graph.transform.routes as routes_transform
+        from taskcluster_graph.commit_parser import parse_commit
+        from taskcluster_graph.image_builder import (
+            docker_image,
+            normalize_image_details,
+            task_id_for_image
+        )
         from taskcluster_graph.from_now import (
             json_time_from_now,
             current_json_time,
@@ -374,17 +322,20 @@ class Graph(object):
             pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
         # Template parameters used when expanding the graph
+        seen_images = {}
         parameters = dict(gaia_info().items() + {
             'index': 'index',
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,
+            'task_id_for_image': partial(task_id_for_image, seen_images, project),
             'base_repository': params['base_repository'] or \
                 params['head_repository'],
             'head_repository': params['head_repository'],
             'head_ref': params['head_ref'] or params['head_rev'],
             'head_rev': params['head_rev'],
             'pushdate': pushdate,
+            'pushtime': pushdate[8:],
             'year': pushdate[0:4],
             'month': pushdate[4:6],
             'day': pushdate[6:8],
@@ -412,8 +363,11 @@ class Graph(object):
         }
 
         if params['revision_hash']:
-            for env in TREEHERDER_ROUTES:
-                graph['scopes'].append('queue:route:{}.{}'.format(TREEHERDER_ROUTES[env], treeherder_route))
+            for env in routes_transform.TREEHERDER_ROUTES:
+                route = 'queue:route:{}.{}'.format(
+                            routes_transform.TREEHERDER_ROUTES[env],
+                            treeherder_route)
+                graph['scopes'].append(route)
 
         graph['metadata'] = {
             'source': 'http://todo.com/what/goes/here',
@@ -438,6 +392,11 @@ class Graph(object):
             build_parameters['build_type'] = task_extra['build_type']
             build_parameters['build_product'] = task_extra['build_product']
 
+            normalize_image_details(graph,
+                                    build_task,
+                                    seen_images,
+                                    build_parameters,
+                                    os.environ.get('TASK_ID', None))
             set_interactive_task(build_task, interactive)
 
             # try builds don't use cache
@@ -445,11 +404,11 @@ class Graph(object):
                 remove_caches_from_task(build_task)
 
             if params['revision_hash']:
-                decorate_task_treeherder_routes(build_task['task'],
-                                                treeherder_route)
-                decorate_task_json_routes(build_task['task'],
-                                          json_routes,
-                                          build_parameters)
+                routes_transform.decorate_task_treeherder_routes(build_task['task'],
+                                                                 treeherder_route)
+                routes_transform.decorate_task_json_routes(build_task['task'],
+                                                           json_routes,
+                                                           build_parameters)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
@@ -531,6 +490,11 @@ class Graph(object):
                                                      slugid(),
                                                      templates,
                                                      build_treeherder_config)
+                normalize_image_details(graph,
+                                        post_task,
+                                        seen_images,
+                                        build_parameters,
+                                        os.environ.get('TASK_ID', None))
                 set_interactive_task(post_task, interactive)
                 graph['tasks'].append(post_task)
 
@@ -571,11 +535,18 @@ class Graph(object):
                                                          slugid(),
                                                          templates,
                                                          build_treeherder_config)
+                    normalize_image_details(graph,
+                                            test_task,
+                                            seen_images,
+                                            build_parameters,
+                                            os.environ.get('TASK_ID', None))
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
-                        decorate_task_treeherder_routes(
-                                test_task['task'], treeherder_route)
+                        routes_transform.decorate_task_treeherder_routes(
+                            test_task['task'],
+                            treeherder_route
+                        )
 
                     graph['tasks'].append(test_task)
 

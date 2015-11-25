@@ -10,6 +10,8 @@ import android.support.v4.app.Fragment;
 public class FirstrunPanel extends Fragment {
 
     public static final int TITLE_RES = -1;
+    protected boolean showBrowserHint = true;
+
     public interface PagerNavigation {
         void next();
         void finish();
@@ -30,5 +32,9 @@ public class FirstrunPanel extends Fragment {
         if (pagerNavigation != null) {
             pagerNavigation.finish();
         }
+    }
+
+    protected boolean shouldShowBrowserHint() {
+        return showBrowserHint;
     }
 }

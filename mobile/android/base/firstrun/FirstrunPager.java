@@ -106,7 +106,7 @@ public class FirstrunPager extends ViewPager {
         animateLoad();
     }
 
-    public void hide() {
+    public void cleanup() {
         setAdapter(null);
     }
 
@@ -129,7 +129,7 @@ public class FirstrunPager extends ViewPager {
         set.start();
     }
 
-    private class ViewPagerAdapter extends FragmentPagerAdapter {
+    protected class ViewPagerAdapter extends FragmentPagerAdapter {
         private final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
         private final Fragment[] fragments;
 

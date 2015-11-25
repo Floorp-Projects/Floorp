@@ -61,4 +61,6 @@ function BrowserLoader(baseURI, window) {
   };
 }
 
-EXPORTED_SYMBOLS = ["BrowserLoader"];
+this.BrowserLoader = BrowserLoader;
+
+this.EXPORTED_SYMBOLS = ["BrowserLoader"];

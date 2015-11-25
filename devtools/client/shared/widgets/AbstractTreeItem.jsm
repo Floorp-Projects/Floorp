@@ -128,6 +128,7 @@ function AbstractTreeItem({ parent, level }) {
     EventEmitter.decorate(this);
   }
 }
+this.AbstractTreeItem = AbstractTreeItem;
 
 AbstractTreeItem.prototype = {
   _containerNode: null,
