@@ -2979,6 +2979,21 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             unforgeableHolderSetup = None
 
+        if self.descriptor.name == "Promise":
+            speciesSetup = CGGeneric(fill(
+                """
+                JS::Rooted<JSObject*> promiseConstructor(aCx, *interfaceCache);
+                JS::Rooted<jsid> species(aCx,
+                  SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::species)));
+                if (!JS_DefinePropertyById(aCx, promiseConstructor, species, JS::UndefinedHandleValue,
+                                           JSPROP_SHARED, Promise::PromiseSpecies, nullptr)) {
+                  $*{failureCode}
+                }
+                """,
+                failureCode=failureCode))
+        else:
+            speciesSetup = None
+
         if (self.descriptor.interface.isOnGlobalProtoChain() and
             needInterfacePrototypeObject):
             makeProtoPrototypeImmutable = CGGeneric(fill(
@@ -3004,7 +3019,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         return CGList(
             [getParentProto, CGGeneric(getConstructorProto), initIds,
              prefCache, CGGeneric(call), defineAliases, unforgeableHolderSetup,
-             makeProtoPrototypeImmutable],
+             speciesSetup, makeProtoPrototypeImmutable],
             "\n").define()
 
 
