@@ -34,8 +34,13 @@
         <div class="header">
           <h1 class="header-name">&aboutDebugging.addons;</h1>
         </div>
-        <input id="enable-addon-debugging" type="checkbox" data-pref="devtools.chrome.enabled"/>
-        <label for="enable-addon-debugging" title="&aboutDebugging.addonDebugging.tooltip;">&aboutDebugging.addonDebugging.label;</label>
+        <div class="addon-controls">
+          <div class="addon-options">
+            <input id="enable-addon-debugging" type="checkbox" data-pref="devtools.chrome.enabled"/>
+            <label for="enable-addon-debugging" title="&aboutDebugging.addonDebugging.tooltip;">&aboutDebugging.addonDebugging.label;</label>
+          </div>
+          <button id="load-addon-from-file">&aboutDebugging.loadTemporaryAddon;</button>
+        </div>
         <div id="addons"></div>
       </div>
       <div id="tab-workers" class="tab">
