@@ -323,7 +323,7 @@ function DBAddonInternal(aLoaded) {
 
   if (aLoaded._installLocation) {
     this._installLocation = aLoaded._installLocation;
-    this.location = aLoaded._installLocation._name;
+    this.location = aLoaded._installLocation.name;
   }
   else if (aLoaded.location) {
     this._installLocation = XPIProvider.installLocationsByName[this.location];

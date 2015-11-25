@@ -21,11 +21,14 @@
             android:layout_height="wrap_content"
             android:padding="4dip"
             android:background="@drawable/tab_thumbnail"
-            android:duplicateParentState="true">
+            android:duplicateParentState="true"
+            android:clipToPadding="false">
 
         <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
                                                        android:layout_width="@dimen/tab_thumbnail_width"
-                                                       android:layout_height="@dimen/tab_thumbnail_height"/>
+                                                       android:layout_height="@dimen/tab_thumbnail_height"
+                                                       android:elevation="2dp"
+                                                       android:outlineProvider="bounds"/>
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>
 

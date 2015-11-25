@@ -6,6 +6,7 @@ describe("loop.shared.views.TextChatView", function() {
 
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
@@ -15,7 +16,7 @@ describe("loop.shared.views.TextChatView", function() {
   var dispatcher, fakeSdkDriver, sandbox, store, fakeClock;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
     fakeClock = sandbox.useFakeTimers();
 
     dispatcher = new loop.Dispatcher();

@@ -185,11 +185,6 @@
 #include sync.xul
 #endif
       </prefpane>
-      <hbox pack="end">
-        <button id="help-button"
-                class="help-button"
-                aria-label="&helpButton.label;"/>
-      </hbox>
     </vbox>
 
   </hbox>

@@ -129,6 +129,7 @@ var gPageListeners = null;
 var gOriginalPageListeners = null;
 var gSocialProviders = null;
 var gStringBundle = null;
+var gStubbedMessageHandlers = null;
 const kBatchMessage = "Batch";
 const kMaxLoopCount = 10;
 const kMessageName = "Loop:Message";
@@ -690,6 +691,22 @@ const kMessageHandlers = {
   },
 
   /**
+   * Check if the current browser has e10s enabled or not
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           []
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  IsMultiProcessEnabled: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let browser = win && win.gBrowser.selectedBrowser;
+    reply(!!(browser && browser.getAttribute("remote") == "true"));
+  },
+
+  /**
    * Start the FxA login flow using the OAuth client and params from the Loop
    * server.
    *
@@ -781,6 +798,22 @@ const kMessageHandlers = {
   OpenFxASettings: function(message, reply) {
     MozLoopService.openFxASettings();
     reply();
+  },
+
+  /**
+   * Opens a non e10s window
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [url]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  OpenNonE10sWindow: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let url = message.data[0] ? message.data[0] : "about:home";
+    win.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no,non-remote", url);
   },
 
   /**
@@ -1059,9 +1092,20 @@ const LoopAPIInternal = {
     // `kMessageHandlers` dictionary.
     let wildcardName = handlerName + ":*";
     if (kMessageHandlers[wildcardName]) {
-      // Alright, pass the message forward.
-      kMessageHandlers[wildcardName](action, message, reply);
+      // A unit test might've stubbed the handler.
+      if (gStubbedMessageHandlers && gStubbedMessageHandlers[wildcardName]) {
+        gStubbedMessageHandlers[wildcardName](action, message, reply);
+      } else {
+        // Alright, pass the message forward.
+        kMessageHandlers[wildcardName](action, message, reply);
+      }
       // Aaaaand we're done.
+      return;
+    }
+
+    // A unit test might've stubbed the handler.
+    if (gStubbedMessageHandlers && gStubbedMessageHandlers[handlerName]) {
+      gStubbedMessageHandlers[handlerName](message, reply);
       return;
     }
 
@@ -1252,9 +1296,13 @@ this.LoopAPI = Object.freeze({
     }
     gPageListeners = pageListeners;
   },
+  stubMessageHandlers: function(handlers) {
+    gStubbedMessageHandlers = handlers;
+  },
   restore: function() {
     if (gOriginalPageListeners) {
       gPageListeners = gOriginalPageListeners;
     }
+    gStubbedMessageHandlers = null;
   }
 });
