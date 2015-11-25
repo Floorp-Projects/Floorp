@@ -5308,8 +5308,7 @@ extern JS_PUBLIC_API(JSObject*)
 JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
-JS_SetRegExpInput(JSContext* cx, JS::HandleObject obj, JS::HandleString input,
-                  bool multiline);
+JS_SetRegExpInput(JSContext* cx, JS::HandleObject obj, JS::HandleString input);
 
 extern JS_PUBLIC_API(bool)
 JS_ClearRegExpStatics(JSContext* cx, JS::HandleObject obj);

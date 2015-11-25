@@ -5693,7 +5693,7 @@ JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsign
 }
 
 JS_PUBLIC_API(bool)
-JS_SetRegExpInput(JSContext* cx, HandleObject obj, HandleString input, bool multiline)
+JS_SetRegExpInput(JSContext* cx, HandleObject obj, HandleString input)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
