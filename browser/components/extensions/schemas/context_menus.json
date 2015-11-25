@@ -1,0 +1,338 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "contextMenus",
+    "description": "Use the <code>browser.contextMenus</code> API to add items to the browser's context menu. You can choose what types of objects your context menu additions apply to, such as images, hyperlinks, and pages.",
+    "properties": {
+      "ACTION_MENU_TOP_LEVEL_LIMIT": {
+        "value": 6,
+        "description": "The maximum number of top level extension items that can be added to an extension action context menu. Any items beyond this limit will be ignored."
+      }
+    },
+    "types": [
+      {
+        "id": "ContextType",
+        "type": "string",
+        "enum": ["all", "page", "frame", "selection", "link", "editable", "image", "video", "audio", "launcher", "browser_action", "page_action"],
+        "description": "The different contexts a menu can appear in. Specifying 'all' is equivalent to the combination of all other contexts except for 'launcher'. The 'launcher' context is only supported by apps and is used to add menu items to the context menu that appears when clicking on the app icon in the launcher/taskbar/dock/etc. Different platforms might put limitations on what is actually supported in a launcher context menu."
+      },
+      {
+        "id": "ItemType",
+        "type": "string",
+        "enum": ["normal", "checkbox", "radio", "separator"],
+        "description": "The type of menu item."
+      },
+      {
+        "id": "OnClickData",
+        "type": "object",
+        "description": "Information sent when a context menu item is clicked.",
+        "properties": {
+          "menuItemId": {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "description": "The ID of the menu item that was clicked."
+          },
+          "parentMenuItemId": {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "optional": true,
+            "description": "The parent ID, if any, for the item clicked."
+          },
+          "mediaType": {
+            "type": "string",
+            "optional": true,
+            "description": "One of 'image', 'video', or 'audio' if the context menu was activated on one of these types of elements."
+          },
+          "linkUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "If the element is a link, the URL it points to."
+          },
+          "srcUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "Will be present for elements with a 'src' URL."
+          },
+          "pageUrl": {
+            "type": "string",
+            "optional": true,
+            "description": "The URL of the page where the menu item was clicked. This property is not set if the click occured in a context where there is no current page, such as in a launcher context menu."
+          },
+          "frameUrl": {
+            "type": "string",
+            "optional": true,
+            "description": " The URL of the frame of the element where the context menu was clicked, if it was in a frame."
+          },
+          "selectionText": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the context selection, if any."
+          },
+          "editable": {
+            "type": "boolean",
+            "description": "A flag indicating whether the element is editable (text input, textarea, etc.)."
+          },
+          "wasChecked": {
+            "type": "boolean",
+            "optional": true,
+            "description": "A flag indicating the state of a checkbox or radio item before it was clicked."
+          },
+          "checked": {
+            "type": "boolean",
+            "optional": true,
+            "description": "A flag indicating the state of a checkbox or radio item after it is clicked."
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "create",
+        "type": "function",
+        "description": "Creates a new context menu item. Note that if an error occurs during creation, you may not find out until the creation callback fires (the details will be in $(ref:runtime.lastError)).",
+        "returns": {
+          "choices": [
+            { "type": "integer" },
+            { "type": "string" }
+          ],
+          "description": "The ID of the newly created item."
+        },
+        "parameters": [
+          {
+            "type": "object",
+            "name": "createProperties",
+            "properties": {
+              "type": {
+                "$ref": "ItemType",
+                "optional": true,
+                "description": "The type of menu item. Defaults to 'normal' if not specified."
+              },
+              "id": {
+                "type": "string",
+                "optional": true,
+                "description": "The unique ID to assign to this item. Mandatory for event pages. Cannot be the same as another ID for this extension."
+              },
+              "title": {
+                "type": "string",
+                "optional": true,
+                "description": "The text to be displayed in the item; this is <em>required</em> unless <code>type</code> is 'separator'. When the context is 'selection', you can use <code>%s</code> within the string to show the selected text. For example, if this parameter's value is \"Translate '%s' to Pig Latin\" and the user selects the word \"cool\", the context menu item for the selection is \"Translate 'cool' to Pig Latin\"."
+              },
+              "checked": {
+                "type": "boolean",
+                "optional": true,
+                "description": "The initial state of a checkbox or radio item: true for selected and false for unselected. Only one radio item can be selected at a time in a given group of radio items."
+              },
+              "contexts": {
+                "type": "array",
+                "items": {
+                  "$ref": "ContextType"
+                },
+                "minItems": 1,
+                "optional": true,
+                "description": "List of contexts this menu item will appear in. Defaults to ['page'] if not specified."
+              },
+              "onclick": {
+                "type": "function",
+                "optional": true,
+                "description": "A function that will be called back when the menu item is clicked. Event pages cannot use this; instead, they should register a listener for $(ref:contextMenus.onClicked).",
+                "parameters": [
+                  {
+                    "name": "info",
+                    "$ref": "contextMenusInternal.OnClickData",
+                    "description": "Information about the item clicked and the context where the click happened."
+                  },
+                  {
+                    "name": "tab",
+                    "$ref": "tabs.Tab",
+                    "description": "The details of the tab where the click took place. Note: this parameter only present for extensions."
+                  }
+                ]
+              },
+              "parentId": {
+                "choices": [
+                  { "type": "integer" },
+                  { "type": "string" }
+                ],
+                "optional": true,
+                "description": "The ID of a parent menu item; this makes the item a child of a previously added item."
+              },
+              "documentUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true,
+                "description": "Lets you restrict the item to apply only to documents whose URL matches one of the given patterns. (This applies to frames as well.) For details on the format of a pattern, see $(topic:match_patterns)[Match Patterns]."
+              },
+              "targetUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true,
+                "description": "Similar to documentUrlPatterns, but lets you filter based on the src attribute of img/audio/video tags and the href of anchor tags."
+              },
+              "enabled": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether this context menu item is enabled or disabled. Defaults to true."
+              }
+            }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "description": "Called when the item has been created in the browser. If there were any problems creating the item, details will be available in $(ref:runtime.lastError).",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "update",
+        "type": "function",
+        "description": "Updates a previously created context menu item.",
+        "parameters": [
+          {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "name": "id",
+            "description": "The ID of the item to update."
+          },
+          {
+            "type": "object",
+            "name": "updateProperties",
+            "description": "The properties to update. Accepts the same values as the create function.",
+            "properties": {
+              "type": {
+                "$ref": "ItemType",
+                "optional": true
+              },
+              "title": {
+                "type": "string",
+                "optional": true
+              },
+              "checked": {
+                "type": "boolean",
+                "optional": true
+              },
+              "contexts": {
+                "type": "array",
+                "items": {
+                  "$ref": "ContextType"
+                },
+                "minItems": 1,
+                "optional": true
+              },
+              "onclick": {
+                "type": "function",
+                "optional": true,
+                "parameters": [
+                  {
+                    "name": "info",
+                    "$ref": "contextMenusInternal.OnClickData"
+                  },
+                  {
+                    "name": "tab",
+                    "$ref": "tabs.Tab",
+                    "description": "The details of the tab where the click took place. Note: this parameter only present for extensions."
+                  }
+                ]
+              },
+              "parentId": {
+                "choices": [
+                  { "type": "integer" },
+                  { "type": "string" }
+                ],
+                "optional": true,
+                "description": "Note: You cannot change an item to be a child of one of its own descendants."
+              },
+              "documentUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true
+              },
+              "targetUrlPatterns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "optional": true
+              },
+              "enabled": {
+                "type": "boolean",
+                "optional": true
+              }
+            }
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when the context menu has been updated."
+          }
+        ]
+      },
+      {
+        "name": "remove",
+        "type": "function",
+        "description": "Removes a context menu item.",
+        "parameters": [
+          {
+            "choices": [
+              { "type": "integer" },
+              { "type": "string" }
+            ],
+            "name": "menuItemId",
+            "description": "The ID of the context menu item to remove."
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when the context menu has been removed."
+          }
+        ]
+      },
+      {
+        "name": "removeAll",
+        "type": "function",
+        "description": "Removes all context menu items added by this extension.",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": [],
+            "description": "Called when removal is complete."
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onClicked",
+        "type": "function",
+        "description": "Fired when a context menu item is clicked.",
+        "parameters": [
+          {
+            "name": "info",
+            "$ref": "OnClickData",
+            "description": "Information about the item clicked and the context where the click happened."
+          },
+          {
+            "name": "tab",
+            "$ref": "tabs.Tab",
+            "description": "The details of the tab where the click took place. If the click did not take place in a tab, this parameter will be missing.",
+            "optional": true
+          }
+        ]
+      }
+    ]
+  }
+]

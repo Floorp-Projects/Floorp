@@ -249,18 +249,49 @@ class ObjectType extends Type {
       return {value};
     }
 
+    // |value| should be a JS Xray wrapping an object in the
+    // extension compartment. This works well except when we need to
+    // access callable properties on |value| since JS Xrays don't
+    // support those. To work around the problem, we verify that
+    // |value| is a plain JS object (i.e., not anything scary like a
+    // Proxy). Then we copy the properties out of it into a normal
+    // object using a waiver wrapper.
+
+    let klass = Cu.getClassName(value, true);
+    if (klass != "Object") {
+      return {error: `Expected a plain JavaScript object, got a ${klass}`};
+    }
+
+    let properties = Object.create(null);
+    {
+      // |waived| is scoped locally to avoid accessing it when we
+      // don't mean to.
+      let waived = Cu.waiveXrays(value);
+      for (let prop of Object.getOwnPropertyNames(waived)) {
+        let desc = Object.getOwnPropertyDescriptor(waived, prop);
+        if (desc.get || desc.set) {
+          return {error: "Objects cannot have getters or setters on properties"};
+        }
+        if (!desc.enumerable) {
+          // Chrome ignores non-enumerable properties.
+          continue;
+        }
+        properties[prop] = Cu.unwaiveXrays(desc.value);
+      }
+    }
+
     let result = {};
     for (let prop of Object.keys(this.properties)) {
       let {type, optional, unsupported} = this.properties[prop];
       if (unsupported) {
-        if (prop in value) {
+        if (prop in properties) {
           return {error: `Property "${prop}" is unsupported by Firefox`};
         }
-      } else if (prop in value) {
-        if (optional && (value[prop] === null || value[prop] === undefined)) {
+      } else if (prop in properties) {
+        if (optional && (properties[prop] === null || properties[prop] === undefined)) {
           result[prop] = null;
         } else {
-          let r = type.normalize(value[prop]);
+          let r = type.normalize(properties[prop]);
           if (r.error) {
             return r;
           }
@@ -273,10 +304,10 @@ class ObjectType extends Type {
       }
     }
 
-    for (let prop of Object.keys(value)) {
+    for (let prop of Object.keys(properties)) {
       if (!(prop in this.properties)) {
         if (this.additionalProperties) {
-          let r = this.additionalProperties.normalize(value[prop]);
+          let r = this.additionalProperties.normalize(properties[prop]);
           if (r.error) {
             return r;
           }
@@ -661,7 +692,7 @@ this.Schemas = {
       }
 
       checkTypeProperties("properties", "additionalProperties", "isInstanceOf");
-      return new ObjectType(properties, additionalProperties, type.isInstanceOf);
+      return new ObjectType(properties, additionalProperties, type.isInstanceOf || null);
     } else if (type.type == "array") {
       checkTypeProperties("items", "minItems", "maxItems");
       return new ArrayType(this.parseType(namespaceName, type.items),
