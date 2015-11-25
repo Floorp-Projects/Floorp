@@ -1654,7 +1654,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
 };
 
 void
-js::FillSelfHostingCompileOptions(CompileOptions& options)
+js::FillSelfHostingCompileOptions(CompileOptions& options, const char* filename)
 {
     /*
      * In self-hosting mode, scripts use JSOP_GETINTRINSIC instead of
@@ -1671,7 +1671,7 @@ js::FillSelfHostingCompileOptions(CompileOptions& options)
      * |receiver| as the this-object and ...args as the arguments.
      */
     options.setIntroductionType("self-hosted");
-    options.setFileAndLine("self-hosted", 1);
+    options.setFileAndLine(filename, 1);
     options.setSelfHostingMode(true);
     options.setCanLazilyParse(false);
     options.setVersion(JSVERSION_LATEST);
@@ -1726,6 +1726,7 @@ bool
 JSRuntime::initSelfHosting(JSContext* cx)
 {
     MOZ_ASSERT(!selfHostingGlobal_);
+    MOZ_ASSERT(!hasContentGlobals);
 
     if (cx->runtime()->parentRuntime) {
         selfHostingGlobal_ = cx->runtime()->parentRuntime->selfHostingGlobal_;
@@ -1742,40 +1743,48 @@ JSRuntime::initSelfHosting(JSContext* cx)
     if (!shg)
         return false;
 
-    JSAutoCompartment ac(cx, shg);
+    char* filename = getenv("MOZ_SELFHOSTEDJS");
+    if (filename)
+        return JS::EvaluateSelfHosted(this, filename);
+
+    uint32_t srcLen = GetRawScriptsSize();
+    const unsigned char* compressed = compressedSources;
+    uint32_t compressedLen = GetCompressedSize();
+    ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
+    if (!src || !DecompressString(compressed, compressedLen,
+                                  reinterpret_cast<unsigned char*>(src.get()), srcLen))
+    {
+        return false;
+    }
+    return JS::EvaluateSelfHosted(this, src, srcLen, "self-hosted");
+}
+
+bool
+JSRuntime::evaluateSelfHosted(const char16_t* chars, size_t length, const char* filename)
+{
+    MOZ_ASSERT(hasContexts());
+    MOZ_ASSERT(selfHostingGlobal_);
+    MOZ_ASSERT(!parentRuntime);
+    MOZ_ASSERT(!hasContentGlobals);
+
+    JSContext* cx = this->contextList.getFirst();
+    JSAutoRequest ar(cx);
+    JSAutoCompartment ac(cx, selfHostingGlobal_);
 
     CompileOptions options(cx);
-    FillSelfHostingCompileOptions(options);
+    FillSelfHostingCompileOptions(options, filename);
 
     /*
      * Set a temporary error reporter printing to stderr because it is too
      * early in the startup process for any other reporter to be registered
      * and we don't want errors in self-hosted code to be silently swallowed.
      */
-    JSErrorReporter oldReporter = JS_SetErrorReporter(cx->runtime(), selfHosting_ErrorReporter);
+    JSErrorReporter oldReporter = JS_SetErrorReporter(this, selfHosting_ErrorReporter);
+
     RootedValue rv(cx);
-    bool ok = true;
+    bool ok = Evaluate(cx, options, chars, length, &rv);
 
-    char* filename = getenv("MOZ_SELFHOSTEDJS");
-    if (filename) {
-        RootedScript script(cx);
-        if (Compile(cx, options, filename, &script))
-            ok = Execute(cx, script, *shg.get(), rv.address());
-    } else {
-        uint32_t srcLen = GetRawScriptsSize();
-
-        const unsigned char* compressed = compressedSources;
-        uint32_t compressedLen = GetCompressedSize();
-        ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
-        if (!src || !DecompressString(compressed, compressedLen,
-                                      reinterpret_cast<unsigned char*>(src.get()), srcLen))
-        {
-            ok = false;
-        }
-
-        ok = ok && Evaluate(cx, options, src, srcLen, &rv);
-    }
-    JS_SetErrorReporter(cx->runtime(), oldReporter);
+    JS_SetErrorReporter(this, oldReporter);
     return ok;
 }
 
