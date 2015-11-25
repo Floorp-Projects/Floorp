@@ -277,15 +277,17 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
     *aOutInputBlockId = block->GetBlockId();
   }
 
-  block->Update(aEvent);
+  // Copy the event, since WheelBlockState needs to affix a counter.
+  ScrollWheelInput event(aEvent);
+  block->Update(event);
 
   // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
   // target set on the block. In this case the confirmed target (which may be
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
   // MaybeHandleCurrentBlock() does.
-  if (!MaybeHandleCurrentBlock(block, aEvent)) {
-    block->AddEvent(aEvent.AsScrollWheelInput());
+  if (!MaybeHandleCurrentBlock(block, event)) {
+    block->AddEvent(event);
   }
 
   return nsEventStatus_eConsumeDoDefault;
