@@ -5704,7 +5704,7 @@ JS_SetRegExpInput(JSContext* cx, HandleObject obj, HandleString input, bool mult
     if (!res)
         return false;
 
-    res->reset(cx, input, !!multiline);
+    res->reset(cx, input);
     return true;
 }
 

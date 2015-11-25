@@ -82,10 +82,9 @@ class RegExpStatics
     inline void clear();
 
     /* Corresponds to JSAPI functionality to set the pending RegExp input. */
-    void reset(JSContext* cx, JSString* newInput, bool newMultiline) {
+    void reset(JSContext* cx, JSString* newInput) {
         clear();
         pendingInput = newInput;
-        setMultiline(cx, newMultiline);
         checkInvariants();
     }
 
