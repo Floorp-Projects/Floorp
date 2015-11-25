@@ -181,12 +181,20 @@ public:
   Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Then(JSContext* aCx, AnyCallback* aResolveCallback,
-       AnyCallback* aRejectCallback, ErrorResult& aRv);
+  void
+  Then(JSContext* aCx,
+       // aCalleeGlobal may not be in the compartment of aCx, when called over
+       // Xrays.
+       JS::Handle<JSObject*> aCalleeGlobal,
+       AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
+       JS::MutableHandle<JS::Value> aRetval,
+       ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  Catch(JSContext* aCx, AnyCallback* aRejectCallback, ErrorResult& aRv);
+  void
+  Catch(JSContext* aCx,
+        AnyCallback* aRejectCallback,
+        JS::MutableHandle<JS::Value> aRetval,
+        ErrorResult& aRv);
 
   static void
   All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,

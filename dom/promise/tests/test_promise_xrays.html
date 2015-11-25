@@ -218,6 +218,52 @@ function testReject1() {
   ).then(nextTest);
 }
 
+function testThen1() {
+  var p = win.Promise.resolve(5);
+  var q = p.then((x) => x*x);
+  ok(q instanceof win.Promise,
+     "Promise.then should return a promise from the right global");
+  q.then(
+    function(arg) {
+      is(arg, 25, "Promise.then should work");
+    },
+    function(e) {
+      ok(false, "Promise.then should not fail");
+    }
+  ).then(nextTest);
+}
+
+function testThen2() {
+  var p = win.Promise.resolve(5);
+  var q = p.then((x) => Promise.resolve(x*x));
+  ok(q instanceof win.Promise,
+     "Promise.then should return a promise from the right global");
+  q.then(
+    function(arg) {
+      is(arg, 25, "Promise.then resolved with chrome promise should work");
+    },
+    function(e) {
+      ok(false, "Promise.then resolved with chrome promise should not fail");
+    }
+  ).then(nextTest);
+}
+
+function testCatch1() {
+  var p = win.Promise.reject(5);
+  ok(p instanceof win.Promise, "Promise.resolve should return a promise");
+  var q = p.catch((x) => x*x);
+  ok(q instanceof win.Promise,
+     "Promise.catch should return a promise from the right global");
+  q.then(
+    function(arg) {
+      is(arg, 25, "Promise.catch should work");
+    },
+    function(e) {
+      ok(false, "Promise.catch should not fail");
+    }
+  ).then(nextTest);
+}
+
 var tests = [
   testLoadComplete,
   testHaveXray,
@@ -234,6 +280,9 @@ var tests = [
   testResolve2,
   testResolve3,
   testReject1,
+  testThen1,
+  testThen2,
+  testCatch1,
 ];
 
 function nextTest() {

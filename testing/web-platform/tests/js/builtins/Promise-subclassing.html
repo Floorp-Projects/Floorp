@@ -9,6 +9,7 @@ var theLog = [];
 var speciesGets = 0;
 var speciesCalls = 0;
 var constructorCalls = 0;
+var constructorGets = 0;
 var resolveCalls = 0;
 var rejectCalls = 0;
 var thenCalls = 0;
@@ -22,7 +23,7 @@ function takeLog() {
   theLog = [];
   speciesGets = speciesCalls = constructorCalls = resolveCalls =
     rejectCalls = thenCalls = catchCalls = allCalls = raceCalls =
-    nextCalls = 0;
+    nextCalls = constructorGets = 0;
   return oldLog;
 }
 
@@ -37,6 +38,14 @@ function log(str) {
 class LoggingPromise extends Promise {
   constructor(func) {
     super(func);
+    Object.defineProperty(this, "constructor",
+                          {
+                            get: function() {
+                              ++constructorGets;
+                              log(`Constructor get ${constructorGets}`);
+                              return Object.getPrototypeOf(this).constructor;
+                            }
+                          });
     ++constructorCalls;
     log(`Constructor ${constructorCalls}`);
   }
@@ -128,9 +137,9 @@ promise_test(function testPromiseRace() {
   var log = takeLog();
   assert_array_equals(log, ["Race 1", "Constructor 1",
                             "Next 1", "Resolve 1", "Constructor 2",
-                            "Then 1",
-                            "Next 2", "Resolve 2", "Constructor 3",
-                            "Then 2",
+                            "Then 1", "Constructor get 1", "Species get 1", "Species call 1", "Constructor 3",
+                            "Next 2", "Resolve 2", "Constructor 4",
+                            "Then 2", "Constructor get 2", "Species get 2", "Species call 2", "Constructor 5",
                             "Next 3"]);
   assert_true(p instanceof LoggingPromise);
   return p.then(function(arg) {
@@ -144,9 +153,9 @@ promise_test(function testPromiseRaceNoSpecies() {
   var log = takeLog();
   assert_array_equals(log, ["Race 1", "Constructor 1",
                             "Next 1", "Resolve 1", "Constructor 2",
-                            "Then 1",
+                            "Then 1", "Constructor get 1",
                             "Next 2", "Resolve 2", "Constructor 3",
-                            "Then 2",
+                            "Then 2", "Constructor get 2",
                             "Next 3"]);
   assert_true(p instanceof SpeciesLessPromise);
   return p.then(function(arg) {
@@ -160,9 +169,9 @@ promise_test(function testPromiseAll() {
   var log = takeLog();
   assert_array_equals(log, ["All 1", "Constructor 1",
                             "Next 1", "Resolve 1", "Constructor 2",
-                            "Then 1",
-                            "Next 2", "Resolve 2", "Constructor 3",
-                            "Then 2",
+                            "Then 1", "Constructor get 1", "Species get 1", "Species call 1", "Constructor 3",
+                            "Next 2", "Resolve 2", "Constructor 4",
+                            "Then 2", "Constructor get 2", "Species get 2", "Species call 2", "Constructor 5",
                             "Next 3"]);
   assert_true(p instanceof LoggingPromise);
   return p.then(function(arg) {
@@ -179,9 +188,11 @@ promise_test(function testPromiseResolve() {
   assert_equals(p, q,
                 "Promise.resolve with same constructor should preserve identity");
   log = takeLog();
-  assert_array_equals(log, ["Resolve 1"]);
+  assert_array_equals(log, ["Resolve 1", "Constructor get 1"]);
 
   var r = Promise.resolve(p);
+  log = takeLog();
+  assert_array_equals(log, ["Constructor get 1"]);
   assert_not_equals(p, r,
                     "Promise.resolve with different constructor should " +
                     "create a new Promise instance (1)")
@@ -216,5 +227,39 @@ promise_test(function testPromiseReject() {
     assert_equals(arg, 5);
   });
 }, "Promise.reject behavior");
+
+promise_test(function testPromiseThen() {
+  clearLog();
+  var p = LoggingPromise.resolve(5);
+  var log = takeLog();
+  assert_array_equals(log, ["Resolve 1", "Constructor 1"]);
+
+  var q = p.then((x) => x*x);
+  log = takeLog();
+  assert_array_equals(log, ["Then 1", "Constructor get 1", "Species get 1",
+                            "Species call 1", "Constructor 1"]);
+  assert_true(q instanceof LoggingPromise);
+
+  return q.then(function(arg) {
+    assert_equals(arg, 25);
+  });
+}, "Promise.then behavior");
+
+promise_test(function testPromiseCatch() {
+  clearLog();
+  var p = LoggingPromise.reject(5);
+  var log = takeLog();
+  assert_array_equals(log, ["Reject 1", "Constructor 1"]);
+
+  var q = p.catch((x) => x*x);
+  log = takeLog();
+  assert_array_equals(log, ["Catch 1", "Then 1", "Constructor get 1",
+                            "Species get 1", "Species call 1", "Constructor 1"]);
+  assert_true(q instanceof LoggingPromise);
+
+  return q.then(function(arg) {
+    assert_equals(arg, 25);
+  });
+}, "Promise.catch behavior");
 
 </script>
