@@ -204,7 +204,7 @@ FindTargetScreenForRect(const LayoutDeviceIntRect& aRect)
 
 // fits the rect to the screen that contains the largest area of it,
 // or to aScreen if a screen is passed in
-// NB: this operates with aRect in global display pixels
+// NB: this operates with aRect in desktop pixels
 static void
 FitRectToVisibleAreaForScreen(LayoutDeviceIntRect& aRect, NSScreen* aScreen)
 {
@@ -249,7 +249,7 @@ static bool UseNativePopupWindows()
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
 
-// aRect here is specified in global display pixels
+// aRect here is specified in desktop pixels
 nsresult nsCocoaWindow::Create(nsIWidget* aParent,
                                nsNativeWidget aNativeParent,
                                const LayoutDeviceIntRect& aRect,
@@ -1183,7 +1183,7 @@ void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Coordinates are global display pixels
+// Coordinates are desktop pixels
 NS_IMETHODIMP nsCocoaWindow::Move(double aX, double aY)
 {
   if (!mWindow) {
@@ -1517,7 +1517,7 @@ nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-// Coordinates are global display pixels
+// Coordinates are desktop pixels
 nsresult nsCocoaWindow::DoResize(double aX, double aY,
                                  double aWidth, double aHeight,
                                  bool aRepaint,
@@ -1571,7 +1571,7 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-// Coordinates are global display pixels
+// Coordinates are desktop pixels
 NS_IMETHODIMP nsCocoaWindow::Resize(double aX, double aY,
                                     double aWidth, double aHeight,
                                     bool aRepaint)
@@ -1579,7 +1579,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(double aX, double aY,
   return DoResize(aX, aY, aWidth, aHeight, aRepaint, false);
 }
 
-// Coordinates are global display pixels
+// Coordinates are desktop pixels
 NS_IMETHODIMP nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint)
 {
   double invScale = 1.0 / GetDefaultScale().scale;
