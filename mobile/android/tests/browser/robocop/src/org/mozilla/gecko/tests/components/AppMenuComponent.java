@@ -11,13 +11,13 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import java.util.List;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.menu.MenuItemDefault;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
-import org.mozilla.gecko.util.HardwareUtils;
 
 import android.text.TextUtils;
 import android.view.View;
@@ -243,9 +243,9 @@ public class AppMenuComponent extends BaseComponent {
     private void openAppMenu() {
         assertMenuIsNotOpen();
 
-        // This is a hack needed for tablets where the OverflowMenuButton is always in the GONE state,
+        // This is a hack needed for tablets & GB where the OverflowMenuButton is always in the GONE state,
         // so we press the menu key instead.
-        if (DeviceHelper.isTablet()) {
+        if (DeviceHelper.isTablet() || AppConstants.Versions.preHC) {
             mSolo.sendKey(Solo.MENU);
         } else {
             pressOverflowMenuButton();
@@ -283,12 +283,14 @@ public class AppMenuComponent extends BaseComponent {
     }
 
     /**
-    * Determines whether the app menu is open by searching for the text "New tab".
+    * Determines whether the app menu is open by searching for items in the menu.
     *
     * @return true if app menu is open.
     */
     private boolean isMenuOpen() {
-        return isMenuOpen(MenuItem.NEW_TAB.getString(mSolo));
+        // We choose these options because New Tab is near the top of the menu and Page is near the middle/bottom.
+        // Intermittently, the menu doesn't scroll to top so we can't just use the first item in the list.
+        return isMenuOpen(MenuItem.NEW_TAB.getString(mSolo)) || isMenuOpen(MenuItem.PAGE.getString(mSolo));
     }
 
     private boolean isLegacyMoreMenuOpen() {
