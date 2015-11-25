@@ -251,5 +251,94 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level
   }
 });
 
+
+// Test TableSwitch opcode
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 0:
+      l.push('0');        //DA:$,0
+      break;
+    case 1:
+      l.push('1');        //DA:$,0
+      break;
+    case 2:
+      l.push('2');        //DA:$,1
+      break;
+    case 3:
+      l.push('3');        //DA:$,0
+      break;
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 5:
+      l.push('5');        //DA:$,0
+    case 4:
+      l.push('4');        //DA:$,0
+    case 3:
+      l.push('3');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 2:
+      l.push('2');        //DA:$,1
+    case 5:
+      l.push('5');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 3:
+      l.push('1');        //DA:$,0
+    case 5:
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
+});
+
+// Unfortunately the differences between switch implementations leaks in the
+// code coverage reports.
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  function f(a) {         //FN:$,f
+    return a;             //DA:$,2
+  }
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case f(-42):          //DA:$,1
+      l.push('1');        //DA:$,0
+    case f(51):           //DA:$,1
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
+});
+
 // If you add a test case here, do the same in
 // jit-test/tests/coverage/simple.js
