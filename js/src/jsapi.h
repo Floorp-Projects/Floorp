@@ -5302,12 +5302,10 @@ JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj, bool* isDate);
 #define JSREG_UNICODE   0x10u   /* unicode */
 
 extern JS_PUBLIC_API(JSObject*)
-JS_NewRegExpObject(JSContext* cx, JS::HandleObject obj, const char* bytes, size_t length,
-                   unsigned flags);
+JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(JSObject*)
-JS_NewUCRegExpObject(JSContext* cx, JS::HandleObject obj, const char16_t* chars, size_t length,
-                     unsigned flags);
+JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
 JS_SetRegExpInput(JSContext* cx, JS::HandleObject obj, JS::HandleString input,
