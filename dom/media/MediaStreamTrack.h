@@ -132,7 +132,7 @@ public:
    */
   virtual already_AddRefed<PledgeVoid>
   ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints) = 0;
+                   const dom::MediaTrackConstraints& aConstraints);
 
   /**
    * Called by the source interface when all registered sinks have unregistered.
@@ -213,13 +213,6 @@ public:
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
 
-  already_AddRefed<PledgeVoid>
-  ApplyConstraints(nsPIDOMWindowInner* aWindow,
-                   const dom::MediaTrackConstraints& aConstraints) override
-  {
-    return nullptr;
-  }
-
   void Stop() override {}
 
 protected:
@@ -252,8 +245,9 @@ public:
    * MediaStream owned by aStream.
    */
   MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                   TrackID aInputTrackID,
-                   MediaStreamTrackSource* aSource);
+      TrackID aInputTrackID,
+      MediaStreamTrackSource* aSource,
+      const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
