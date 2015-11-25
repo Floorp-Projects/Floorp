@@ -5678,11 +5678,7 @@ JS_NewRegExpObject(JSContext* cx, HandleObject obj, const char* bytes, size_t le
     if (!chars)
         return nullptr;
 
-    RegExpStatics* res = obj->as<GlobalObject>().getRegExpStatics(cx);
-    if (!res)
-        return nullptr;
-
-    RegExpObject* reobj = RegExpObject::create(cx, res, chars, length,
+    RegExpObject* reobj = RegExpObject::create(cx, chars, length,
                                                RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
     return reobj;
 }
@@ -5693,11 +5689,7 @@ JS_NewUCRegExpObject(JSContext* cx, HandleObject obj, const char16_t* chars, siz
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    RegExpStatics* res = obj->as<GlobalObject>().getRegExpStatics(cx);
-    if (!res)
-        return nullptr;
-
-    return RegExpObject::create(cx, res, chars, length,
+    return RegExpObject::create(cx, chars, length,
                                 RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
 }
 
