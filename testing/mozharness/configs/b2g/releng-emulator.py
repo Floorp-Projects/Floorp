@@ -11,8 +11,9 @@ config = {
         'make-updates',
         'prep-upload',
         'upload',
-        'make-socorro-json',
-        'upload-source-manifest',
+        # bug 1222227 - temporarily disable for S3 migration
+        # 'make-socorro-json',
+        # 'upload-source-manifest',
     ],
     "upload": {
         "default": {
@@ -28,7 +29,7 @@ config = {
         "public": {
             "ssh_key": os.path.expanduser("~/.ssh/ffxbld_rsa"),
             "ssh_user": "ffxbld",
-            "upload_remote_host": "stage.mozilla.org",
+            "upload_remote_host": "upload.ffxbld.productdelivery.prod.mozaws.net",
             "post_upload_cmd": "post_upload.py --tinderbox-builds-dir %(branch)s-%(target)s -p b2g -i %(buildid)s --revision %(revision)s --release-to-tinderbox-dated-builds",
             "post_upload_nightly_cmd": "post_upload.py --tinderbox-builds-dir %(branch)s-%(target)s -b %(branch)s-%(target)s -p b2g -i %(buildid)s --revision %(revision)s --release-to-tinderbox-dated-builds --release-to-latest --release-to-dated",
         },
