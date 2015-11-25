@@ -333,6 +333,7 @@ PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
     if (callback) {
       ErrorResult err;
       callback->Call(*this, err);
+      err.SuppressException();
     }
   } else {
     nsIDOMGeoPositionErrorCallback* callback = aCallback.GetXPCOMCallback();
@@ -661,6 +662,7 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
 
     MOZ_ASSERT(callback);
     callback->Call(*wrapped, err);
+    err.SuppressException();
   } else {
     nsIDOMGeoPositionCallback* callback = mCallback.GetXPCOMCallback();
 
