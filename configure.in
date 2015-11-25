@@ -4276,8 +4276,8 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
   if test "$MOZ_ENABLE_GTK2"; then
-    TK_CFLAGS=$MOZ_GTK3_CFLAGS
-    TK_LIBS=$MOZ_GTK3_LIBS
+    TK_CFLAGS=$MOZ_GTK2_CFLAGS
+    TK_LIBS=$MOZ_GTK2_LIBS
   fi
 fi # COMPILE_ENVIRONMENT
 
@@ -7336,24 +7336,6 @@ fi
 
 AC_SUBST_LIST(MOZ_GLUE_WRAP_LDFLAGS)
 export MOZ_GLUE_WRAP_LDFLAGS
-
-dnl ========================================================
-dnl = Enable static checking using gcc-dehydra
-dnl ========================================================
-
-MOZ_ARG_WITH_STRING(static-checking,
-[  --with-static-checking=path/to/gcc_dehydra.so
-                          Enable static checking of code using GCC-dehydra],
-    DEHYDRA_PATH=$withval,
-    DEHYDRA_PATH= )
-
-if test -n "$DEHYDRA_PATH"; then
-    if test ! -f "$DEHYDRA_PATH"; then
-        AC_MSG_ERROR([The dehydra plugin is not at the specified path.])
-    fi
-    AC_DEFINE(NS_STATIC_CHECKING)
-fi
-AC_SUBST(DEHYDRA_PATH)
 
 dnl ========================================================
 dnl = Enable using the clang plugin to build

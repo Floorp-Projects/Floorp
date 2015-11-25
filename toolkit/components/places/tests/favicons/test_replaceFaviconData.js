@@ -7,6 +7,7 @@
 
 var iconsvc = PlacesUtils.favicons;
 var histsvc = PlacesUtils.history;
+var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 var originalFavicon = {
   file: do_get_file("favicon-normal16.png"),
@@ -80,7 +81,7 @@ add_task(function* test_replaceFaviconData_validHistoryURI() {
           favicon.file.remove(false);
           deferSetAndFetchFavicon.resolve();
         });
-    });
+    }, systemPrincipal);
   yield deferSetAndFetchFavicon.promise;
 
   yield PlacesTestUtils.clearHistory();
@@ -112,7 +113,7 @@ add_task(function* test_replaceFaviconData_overrideDefaultFavicon() {
           secondFavicon.file.remove(false);
           deferSetAndFetchFavicon.resolve();
         });
-    });
+    }, systemPrincipal);
   yield deferSetAndFetchFavicon.promise;
 
   yield PlacesTestUtils.clearHistory();
@@ -146,10 +147,10 @@ add_task(function* test_replaceFaviconData_replaceExisting() {
                 firstFavicon.file.remove(false);
                 secondFavicon.file.remove(false);
                 deferSetAndFetchFavicon.resolve();
-              });
+              }, systemPrincipal);
           });
         });
-    });
+    }, systemPrincipal);
   yield deferSetAndFetchFavicon.promise;
 
   yield PlacesTestUtils.clearHistory();
@@ -181,7 +182,7 @@ add_task(function* test_replaceFaviconData_unrelatedReplace() {
           unrelatedFavicon.file.remove(false);
           deferSetAndFetchFavicon.resolve();
         });
-    });
+    }, systemPrincipal);
   yield deferSetAndFetchFavicon.promise;
 
   yield PlacesTestUtils.clearHistory();
@@ -255,8 +256,8 @@ add_task(function* test_replaceFaviconData_twiceReplace() {
           firstFavicon.file.remove(false);
           secondFavicon.file.remove(false);
           deferSetAndFetchFavicon.resolve();
-        });
-    });
+        }, systemPrincipal);
+    }, systemPrincipal);
   yield deferSetAndFetchFavicon.promise;
 
   yield PlacesTestUtils.clearHistory();

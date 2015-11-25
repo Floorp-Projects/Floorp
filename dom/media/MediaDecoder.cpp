@@ -27,6 +27,8 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
+#include "nsPrintfCString.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -555,6 +557,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                      "MediaDecoder::mDecoderPosition (Canonical)")
   , mMediaSeekable(AbstractThread::MainThread(), true,
                    "MediaDecoder::mMediaSeekable (Canonical)")
+  , mTelemetryReported(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
@@ -818,6 +821,42 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
     mFiredMetadataLoaded = true;
     mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
   }
+
+  EnsureTelemetryReported();
+}
+
+void
+MediaDecoder::EnsureTelemetryReported()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTelemetryReported || !mInfo) {
+    // Note: sometimes we get multiple MetadataLoaded calls (for example
+    // for chained ogg). So we ensure we don't report duplicate results for
+    // these resources.
+    return;
+  }
+
+  nsTArray<nsCString> codecs;
+  if (mInfo->HasAudio() && !mInfo->mAudio.GetAsAudioInfo()->mMimeType.IsEmpty()) {
+    codecs.AppendElement(mInfo->mAudio.GetAsAudioInfo()->mMimeType);
+  }
+  if (mInfo->HasVideo() && !mInfo->mVideo.GetAsVideoInfo()->mMimeType.IsEmpty()) {
+    codecs.AppendElement(mInfo->mVideo.GetAsVideoInfo()->mMimeType);
+  }
+  if (codecs.IsEmpty()) {
+    if (mResource->GetContentType().IsEmpty()) {
+      NS_WARNING("Somehow the resource's content type is empty");
+      return;
+    }
+    codecs.AppendElement(nsPrintfCString("resource; %s", mResource->GetContentType().get()));
+  }
+  for (const nsCString& codec : codecs) {
+    DECODER_LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
+    Telemetry::Accumulate(Telemetry::ID::MEDIA_CODEC_USED, codec);
+  }
+
+  mTelemetryReported = true;
 }
 
 const char*
