@@ -33,7 +33,7 @@ function backgroundScript() {
       browser.runtime.connect(...params);
     } catch(e) {
       detected_invalid_connect_params++;
-      browser.test.assertTrue(e.toString().indexOf("invalid arguments to runtime.connect") >= 0, "exception message is correct");
+      browser.test.assertTrue(e.toString().indexOf("Incorrect argument types for runtime.connect.") >= 0, "exception message is correct");
     }
   }
 
