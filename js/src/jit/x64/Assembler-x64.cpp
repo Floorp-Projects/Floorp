@@ -101,10 +101,7 @@ ABIArgGenerator::next(MIRType type)
             stackOffset_ += Simd128DataSize;
             break;
         }
-        if (type == MIRType_Int32x4)
-            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asInt32x4());
-        else
-            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asFloat32x4());
+        current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asSimd128());
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
