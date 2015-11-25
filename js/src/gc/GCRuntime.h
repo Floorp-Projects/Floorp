@@ -920,6 +920,7 @@ class GCRuntime
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason);
     void bufferGrayRoots();
+    void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::Phase phase);
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
