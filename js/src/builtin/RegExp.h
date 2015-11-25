@@ -23,9 +23,6 @@ InitRegExpClass(JSContext* cx, HandleObject obj);
 // regular expression execution.
 enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
 
-// Whether RegExp statics should be used to create a RegExp instance.
-enum RegExpStaticsUse { UseRegExpStatics, DontUseRegExpStatics };
-
 /*
  * Legacy behavior of ExecuteRegExp(), which is baked into the JSAPI.
  *
