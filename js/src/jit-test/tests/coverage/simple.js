@@ -101,7 +101,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 3)      //DA:$,1
+  if (l.length == 3)      //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,-
     l.push('');           //DA:$,0
   else
     l.pop();              //DA:$,1
@@ -109,13 +109,13 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //FNH:1
   //LF:4
   //LH:3
-  //BRF:1
+  //BRF:2
   //BRH:1
 });
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 2)      //DA:$,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
     l.push('');           //DA:$,1
   else
     l.pop();              //DA:$,0
@@ -123,23 +123,23 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //FNH:1
   //LF:4
   //LH:3
-  //BRF:1
+  //BRF:2
   //BRH:1
 });
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  if (l.length == 2)      //DA:$,1
+  if (l.length == 2)      //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
     l.push('');           //DA:$,1
   else {
-    if (l.length == 1)    //DA:$,0
+    if (l.length == 1)    //DA:$,0 //BRDA:$,1,0,- //BRDA:$,1,1,-
       l.pop();            //DA:$,0
   }
   //FNF:1
   //FNH:1
   //LF:5
   //LH:3
-  //BRF:2
+  //BRF:4
   //BRH:1
 });
 
@@ -152,8 +152,8 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
       x = x / 2;  //DA:$,10
     }
     return x;     //DA:$,2
-    //BRF:1
-    //BRH:1
+    //BRF:2
+    //BRH:2
   }
 
   f(5);           //DA:$,1
@@ -165,7 +165,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   try {                     //DA:$,1
     var l = ",".split(','); //DA:$,1
-    if (l.length == 2) {    //DA:$,1 // BRDA:$,0
+    if (l.length == 2) {    //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
       l.push('');           //DA:$,1
       throw l;              //DA:$,1
     }
@@ -178,7 +178,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LF:9 // Expected LF:8 , Apparently if the first statement is a try, the
          // statement following the "try{" statement is visited twice.
   //LH:8 // Expected LH:7
-  //BRF:1
+  //BRF:2
   //BRH:1
 });
 
@@ -186,11 +186,11 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(',');   //DA:$,1
   try {                     //DA:$,1
     try {                   //DA:$,1
-      if (l.length == 2) {  //DA:$,1 // BRDA:$,0
+      if (l.length == 2) {  //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1
         l.push('');         //DA:$,1
         throw l;            //DA:$,1
       }
-      l.pop();              //DA:$,0 // BRDA:$,-
+      l.pop();              //DA:$,0
     } finally {             //DA:$,1
       l.pop();              //DA:$,1
     }
