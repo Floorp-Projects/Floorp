@@ -56,7 +56,6 @@ from mozbuild.util import (
     FileAvoidWrite,
 )
 import mozpack.path as mozpath
-from mozversion import mozversion
 from mozregression.download_manager import (
     DownloadManager,
 )
@@ -292,9 +291,10 @@ class ArtifactCache(CacheManager):
     @cachedmethod(operator.attrgetter('_cache'))
     def fetch(self, url, force=False):
         # We download to a temporary name like HASH[:16]-basename to
-        # differentiate among URLs with the same basenames.  We then extract the
-        # build ID from the downloaded artifact and use it to make a human
-        # readable unique name.
+        # differentiate among URLs with the same basenames.  We used to then
+        # extract the build ID from the downloaded artifact and use it to make a
+        # human readable unique name, but extracting build IDs is time consuming
+        # (especially on Mac OS X, where we must mount a large DMG file).
         hash = hashlib.sha256(url).hexdigest()[:16]
         fname = hash + '-' + os.path.basename(url)
         self.log(logging.INFO, 'artifact',
@@ -304,18 +304,10 @@ class ArtifactCache(CacheManager):
             dl = self._download_manager.download(url, fname)
             if dl:
                 dl.wait()
-            # Version information is extracted from {application,platform}.ini
-            # in the package itself.
-            info = mozversion.get_version(mozpath.join(self._cache_dir, fname))
-            buildid = info['platform_buildid'] or info['application_buildid']
-            if not buildid:
-                raise ValueError('Artifact for {url} existed, but no build ID could be extracted!'.format(url=url))
-            newname = buildid + '-' + os.path.basename(url)
-            os.rename(mozpath.join(self._cache_dir, fname), mozpath.join(self._cache_dir, newname))
             self.log(logging.INFO, 'artifact',
-                {'path': os.path.abspath(mozpath.join(self._cache_dir, newname))},
+                {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
                 'Downloaded artifact to {path}')
-            return os.path.abspath(mozpath.join(self._cache_dir, newname))
+            return os.path.abspath(mozpath.join(self._cache_dir, fname))
         finally:
             # Cancel any background downloads in progress.
             self._download_manager.cancel()
