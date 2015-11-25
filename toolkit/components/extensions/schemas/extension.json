@@ -1,0 +1,171 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "extension",
+    "description": "The <code>browser.extension</code> API has utilities that can be used by any extension page. It includes support for exchanging messages between an extension and its content scripts or between extensions, as described in detail in $(topic:messaging)[Message Passing].",
+    "properties": {
+      "lastError": {
+        "type": "object",
+        "optional": true,
+        "description": "Set for the lifetime of a callback if an ansychronous extension api has resulted in an error. If no error has occured lastError will be <var>undefined</var>.",
+        "properties": {
+          "message": { "type": "string", "description": "Description of the error that has taken place." }
+        }
+      },
+      "inIncognitoContext": {
+        "type": "boolean",
+        "optional": true,
+        "description": "True for content scripts running inside incognito tabs, and for extension pages running inside an incognito process. The latter only applies to extensions with 'split' incognito_behavior."
+      }
+    },
+    "types": [
+      {
+        "id": "ViewType",
+        "type": "string",
+        "enum": ["tab", "notification", "popup"],
+        "description": "The type of extension view."
+      }
+    ],
+    "functions": [
+      {
+        "name": "getURL",
+        "type": "function",
+        "description": "Converts a relative path within an extension install directory to a fully-qualified URL.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "path",
+            "description": "A path to a resource within an extension expressed relative to its install directory."
+          }
+        ],
+        "returns": {
+          "type": "string",
+          "description": "The fully-qualified URL to the resource."
+        }
+      },
+      {
+        "name": "getViews",
+        "type": "function",
+        "description": "Returns an array of the JavaScript 'window' objects for each of the pages running inside the current extension.",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "fetchProperties",
+            "optional": true,
+            "properties": {
+              "type": {
+                "$ref": "ViewType",
+                "optional": true,
+                "description": "The type of view to get. If omitted, returns all views (including background pages and tabs). Valid values: 'tab', 'notification', 'popup'."
+              },
+              "windowId": {
+                "type": "integer",
+                "optional": true,
+                "description": "The window to restrict the search to. If omitted, returns all views."
+              }
+            }
+          }
+        ],
+        "returns": {
+          "type": "array",
+          "description": "Array of global objects",
+          "items": {
+            "name": "viewGlobals",
+            "type": "object",
+            "isInstanceOf": "Window",
+            "additionalProperties": { "type": "any" }
+          }
+        }
+      },
+      {
+        "name": "getBackgroundPage",
+        "type": "function",
+        "description": "Returns the JavaScript 'window' object for the background page running inside the current extension. Returns null if the extension has no background page.",
+        "parameters": [],
+        "returns": {
+            "type": "object",
+            "optional": true,
+            "name": "backgroundPageGlobal",
+            "isInstanceOf": "Window",
+            "additionalProperties": { "type": "any" }
+         }
+      },
+      {
+        "name": "isAllowedIncognitoAccess",
+        "unsupported": true,
+        "type": "function",
+        "description": "Retrieves the state of the extension's access to Incognito-mode (as determined by the user-controlled 'Allowed in Incognito' checkbox.",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "isAllowedAccess",
+                "type": "boolean",
+                "description": "True if the extension has access to Incognito mode, false otherwise."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "isAllowedFileSchemeAccess",
+        "unsupported": true,
+        "type": "function",
+        "description": "Retrieves the state of the extension's access to the 'file://' scheme (as determined by the user-controlled 'Allow access to File URLs' checkbox.",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "isAllowedAccess",
+                "type": "boolean",
+                "description": "True if the extension can access the 'file://' scheme, false otherwise."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "setUpdateUrlData",
+        "unsupported": true,
+        "type": "function",
+        "description": "Sets the value of the ap CGI parameter used in the extension's update URL.  This value is ignored for extensions that are hosted in the browser vendor's store.",
+        "parameters": [
+          {"type": "string", "name": "data", "maxLength": 1024}
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onRequest",
+        "unsupported": true,
+        "deprecated": "Please use $(ref:runtime.onMessage).",
+        "type": "function",
+        "description": "Fired when a request is sent from either an extension process or a content script.",
+        "parameters": [
+          {"name": "request", "type": "any", "optional": true, "description": "The request sent by the calling script."},
+          {"name": "sender", "$ref": "runtime.MessageSender" },
+          {"name": "sendResponse", "type": "function", "description": "Function to call (at most once) when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response. If you have more than one <code>onRequest</code> listener in the same document, then only one may send a response." }
+        ]
+      },
+      {
+        "name": "onRequestExternal",
+        "unsupported": true,
+        "deprecated": "Please use $(ref:runtime.onMessageExternal).",
+        "type": "function",
+        "description": "Fired when a request is sent from another extension.",
+        "parameters": [
+          {"name": "request", "type": "any", "optional": true, "description": "The request sent by the calling script."},
+          {"name": "sender", "$ref": "runtime.MessageSender" },
+          {"name": "sendResponse", "type": "function", "description": "Function to call when you have a response. The argument should be any JSON-ifiable object, or undefined if there is no response." }
+        ]
+      }
+    ]
+  }
+]
