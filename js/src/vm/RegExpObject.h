@@ -368,14 +368,9 @@ class RegExpObject : public NativeObject
     // allocate a bigger MatchResult.
     static const size_t MaxPairCount = 14;
 
-    /*
-     * Note: The regexp statics flags are OR'd into the provided flags,
-     * so this function is really meant for object creation during code
-     * execution, as opposed to during something like XDR.
-     */
     static RegExpObject*
-    create(ExclusiveContext* cx, RegExpStatics* res, const char16_t* chars, size_t length,
-           RegExpFlag flags, frontend::TokenStream* ts, LifoAlloc& alloc);
+    create(ExclusiveContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
+           frontend::TokenStream* ts, LifoAlloc& alloc);
 
     static RegExpObject*
     createNoStatics(ExclusiveContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
