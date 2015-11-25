@@ -114,17 +114,6 @@ if test "$_conflict_files"; then
 fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
 
-dnl Choose where to put the 'dist' directory.
-dnl ==============================================================
-
-MOZ_ARG_WITH_STRING(dist-dir,
-[  --with-dist-dir=DIR     Use DIR as 'dist' staging area.  DIR may be
-                          relative to the top of SpiderMonkey build tree,
-                          or absolute.],
-    TOP_DIST=$withval,
-    TOP_DIST=dist)
-AC_SUBST(TOP_DIST)
-
 MOZ_BUILD_BACKEND
 
 MOZ_DEFAULT_COMPILER
