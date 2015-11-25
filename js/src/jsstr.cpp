@@ -2591,7 +2591,7 @@ ReplaceRegExp(JSContext* cx, RegExpStatics* res, ReplaceData& rdata);
 
 static bool
 DoMatchForReplaceLocal(JSContext* cx, RegExpStatics* res, HandleLinearString linearStr,
-                       RegExpShared& re, ReplaceData& rdata)
+                       RegExpShared& re, ReplaceData& rdata, size_t* rightContextOffset)
 {
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
     RegExpRunStatus status = re.execute(cx, linearStr, 0, &matches);
@@ -2601,6 +2601,9 @@ DoMatchForReplaceLocal(JSContext* cx, RegExpStatics* res, HandleLinearString lin
     if (status == RegExpRunStatus_Success_NotFound)
         return true;
 
+    MatchPair& match = matches[0];
+    *rightContextOffset = match.limit;
+
     if (!res->updateFromMatchPairs(cx, linearStr, matches))
         return false;
 
@@ -2609,7 +2612,7 @@ DoMatchForReplaceLocal(JSContext* cx, RegExpStatics* res, HandleLinearString lin
 
 static bool
 DoMatchForReplaceGlobal(JSContext* cx, RegExpStatics* res, HandleLinearString linearStr,
-                        RegExpShared& re, ReplaceData& rdata)
+                        RegExpShared& re, ReplaceData& rdata, size_t* rightContextOffset)
 {
     size_t charsLen = linearStr->length();
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
@@ -2626,6 +2629,7 @@ DoMatchForReplaceGlobal(JSContext* cx, RegExpStatics* res, HandleLinearString li
 
         MatchPair& match = matches[0];
         searchIndex = match.isEmpty() ? match.limit + 1 : match.limit;
+        *rightContextOffset = match.limit;
 
         if (!res->updateFromMatchPairs(cx, linearStr, matches))
             return false;
@@ -2778,9 +2782,6 @@ FindReplaceLength(JSContext* cx, RegExpStatics* res, ReplaceData& rdata, size_t*
 
     if (rdata.lambda) {
         RootedObject lambda(cx, rdata.lambda);
-        PreserveRegExpStatics staticsGuard(cx, res);
-        if (!staticsGuard.init(cx))
-            return false;
 
         /*
          * In the lambda case, not only do we find the replacement string's
@@ -3319,11 +3320,12 @@ StrReplaceRegExp(JSContext* cx, ReplaceData& rdata)
     if (!linearStr)
         return nullptr;
 
+    size_t rightContextOffset = 0;
     if (re.global()) {
-        if (!DoMatchForReplaceGlobal(cx, res, linearStr, re, rdata))
+        if (!DoMatchForReplaceGlobal(cx, res, linearStr, re, rdata, &rightContextOffset))
             return nullptr;
     } else {
-        if (!DoMatchForReplaceLocal(cx, res, linearStr, re, rdata))
+        if (!DoMatchForReplaceLocal(cx, res, linearStr, re, rdata, &rightContextOffset))
             return nullptr;
     }
 
@@ -3332,9 +3334,9 @@ StrReplaceRegExp(JSContext* cx, ReplaceData& rdata)
         return rdata.str;
     }
 
-    JSSubString sub;
-    res->getRightContext(&sub);
-    if (!rdata.sb.appendSubstring(sub.base, sub.offset, sub.length))
+    MOZ_ASSERT(rightContextOffset <= rdata.str->length());
+    size_t length = rdata.str->length() - rightContextOffset;
+    if (!rdata.sb.appendSubstring(rdata.str, rightContextOffset, length))
         return nullptr;
 
     return rdata.sb.finishString();

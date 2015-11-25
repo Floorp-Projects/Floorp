@@ -10,32 +10,16 @@
 
 namespace mozilla {
 
-using mozilla::webgl::EffectiveFormat;
-
 WebGLExtensionTextureFloatLinear::WebGLExtensionTextureFloatLinear(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
-    // This update requires that the authority already be populated by
-    // WebGLExtensionTextureFloat.  Enabling extensions to control
-    // features is a mess in WebGL
+    auto& fua = webgl->mFormatUsage;
 
-    webgl::FormatUsageAuthority* authority = webgl->mFormatUsage.get();
-
-    auto updateUsage = [authority](EffectiveFormat effectiveFormat) {
-        webgl::FormatUsageInfo* usage = authority->GetUsage(effectiveFormat);
-        MOZ_ASSERT(usage);
-        usage->isFilterable = true;
-    };
-
-    // Ensure require formats are initialized.
-    WebGLExtensionTextureFloat::InitWebGLFormats(authority);
-
-    // Update usage to allow isFilterable
-    updateUsage(EffectiveFormat::RGBA32F);
-    updateUsage(EffectiveFormat::RGB32F);
-    updateUsage(EffectiveFormat::Luminance32FAlpha32F);
-    updateUsage(EffectiveFormat::Luminance32F);
-    updateUsage(EffectiveFormat::Alpha32F);
+    fua->EditUsage(webgl::EffectiveFormat::RGBA32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::RGB32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::Luminance32FAlpha32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::Luminance32F)->isFilterable = true;
+    fua->EditUsage(webgl::EffectiveFormat::Alpha32F)->isFilterable = true;
 }
 
 WebGLExtensionTextureFloatLinear::~WebGLExtensionTextureFloatLinear()

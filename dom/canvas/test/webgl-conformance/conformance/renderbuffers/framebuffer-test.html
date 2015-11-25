@@ -132,15 +132,16 @@ if (!gl) {
   glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling framebufferRenderbuffer with attachment = COLOR_ATTACHMENT1 should generate INVALID_ENUM.");
 
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 0);
+  glErrorShouldBe(gl, gl.NO_ERROR,
+            "attaching a texture to a framebuffer should succeed.");
+
+  // Must have a valid attachment, otherwise may also generate INVALID_OPERATION.
   gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,
                                        gl.COLOR_ATTACHMENT0,
                                        desktopGL.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING);
   glErrorShouldBe(gl, gl.INVALID_ENUM,
             "calling getFramebufferAttachmentParameter with pname = GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING should generate INVALID_ENUM.");
-
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbtex, 0);
-  glErrorShouldBe(gl, gl.NO_ERROR,
-            "attaching a texture to a framebuffer should succeed.");
 
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
   glErrorShouldBe(gl, gl.NO_ERROR,

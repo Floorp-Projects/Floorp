@@ -136,10 +136,16 @@ function test()
         // unless it is associated with a page.  Thus, we must associate the
         // icon with a page explicitly in order for it to be visible through
         // the protocol.
+        var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
+                                .createInstance(Ci.nsIPrincipal);
+
         fs.replaceFaviconDataFromDataURL(uri(testURIs[1]), expectedURIs[1],
-                                         (Date.now() + 60 * 60 * 24 * 1000) * 1000);
+                                         (Date.now() + 60 * 60 * 24 * 1000) * 1000,
+                                         systemPrincipal);
+
         fs.setAndFetchFaviconForPage(pageURI, uri(testURIs[1]), true,
-                                     fs.FAVICON_LOAD_NON_PRIVATE);
+                                     fs.FAVICON_LOAD_NON_PRIVATE,
+                                     null, systemPrincipal);
 
         // And start our test process.
         loadNextTest();

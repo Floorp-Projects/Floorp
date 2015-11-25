@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1226278</title>
+    <style type="text/css">
+
+fieldset {
+  overflow: hidden;
+  padding: 20px;
+  background: url(data:image/gif;base64,R0lGODlhAQABAIABAAD/AP///ywAAAAAAQABAAACAkQBADs=) content-box;
+  height: 20px;
+}
+
+div { margin-top:20px; height:40px; background:red; }
+    </style>
+</head>
+<body>
+
+<pre>There should be no red areas.</pre>
+
+<fieldset><legend>LEGEND</legend></fieldset>
+<fieldset></fieldset>
+
+</body>
+</html>

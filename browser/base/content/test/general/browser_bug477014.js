@@ -10,7 +10,8 @@ add_task(function*() {
   let tabToDetach = gBrowser.addTab(testPage);
   yield waitForDocLoadComplete(tabToDetach.linkedBrowser);
 
-  gBrowser.setIcon(tabToDetach, iconURLSpec);
+  gBrowser.setIcon(tabToDetach, iconURLSpec,
+                   Services.scriptSecurityManager.getSystemPrincipal());
   tabToDetach.setAttribute("busy", "true");
 
   // detach and set the listener on the new window

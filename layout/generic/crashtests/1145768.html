@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!--
+
+user_pref("layout.css.vertical-text.enabled", true);
+
+-->
+<script>
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  var emptyTail = q.firstChild.splitText(2);
+  document.documentElement.offsetHeight;
+  emptyTail.splitText(0);
+}
+
+</script>
+</head>
+
+<body onload="boom();"><div style="width: 1px; height: 1px;"><div id="q" style="writing-mode: vertical-rl;">&#x07;R</div></div></body>
+
+</html>
