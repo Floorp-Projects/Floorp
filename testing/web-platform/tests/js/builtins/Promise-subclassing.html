@@ -150,4 +150,18 @@ promise_test(function testPromiseRaceNoSpecies() {
   });
 }, "Promise.race without species behavior");
 
+promise_test(function testPromiseAll() {
+  clearLog();
+  var p = LoggingPromise.all(new LoggingIterable([1, 2]));
+  var log = takeLog();
+  assert_array_equals(log, ["All 1", "Constructor 1",
+                            "Next 1", "Resolve 1",
+                            "Next 2", "Resolve 2",
+                            "Next 3"]);
+  assert_true(p instanceof LoggingPromise);
+  return p.then(function(arg) {
+    assert_array_equals(arg, [1, 2]);
+  });
+}, "Promise.all behavior");
+
 </script>
