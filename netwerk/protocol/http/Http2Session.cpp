@@ -594,6 +594,7 @@ Http2Session::ResetDownstreamState()
     mInputFrameDataStream->SetRecvdFin(true);
     MaybeDecrementConcurrent(mInputFrameDataStream);
   }
+  mInputFrameFinal = false;
   mInputFrameBufferUsed = 0;
   mInputFrameDataStream = nullptr;
 }

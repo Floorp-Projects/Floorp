@@ -92,7 +92,8 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
 
         rv = aTransferable->SetTransferData(flavor.get(), stream, sizeof(nsISupports*));
         NS_ENSURE_SUCCESS(rv, rv);
-      } else if (flavor.EqualsLiteral(kNativeHTMLMime)) {
+      } else if (flavor.EqualsLiteral(kNativeHTMLMime) ||
+                 flavor.EqualsLiteral(kRTFMime)) {
         nsCOMPtr<nsISupportsCString> dataWrapper =
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);

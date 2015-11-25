@@ -236,8 +236,6 @@ public:
     return SubjectPrincipal();
   }
 
-  static bool     IsImageSrcSetDisabled();
-
   static bool LookupBindingMember(JSContext* aCx, nsIContent *aContent,
                                   JS::Handle<jsid> aId,
                                   JS::MutableHandle<JSPropertyDescriptor> aDesc);

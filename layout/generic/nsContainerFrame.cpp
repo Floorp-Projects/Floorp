@@ -32,12 +32,6 @@
 #include "nsPrintfCString.h"
 #include <algorithm>
 
-#ifdef DEBUG
-#undef NOISY
-#else
-#undef NOISY
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;

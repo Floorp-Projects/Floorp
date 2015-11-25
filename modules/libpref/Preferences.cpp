@@ -261,59 +261,9 @@ public:
 
 protected:
   static const uint32_t kSuspectReferentCount = 1000;
-  static PLDHashOperator CountReferents(PrefCallback* aKey,
-                                        nsAutoPtr<PrefCallback>& aCallback,
-                                        void* aClosure);
 };
 
 NS_IMPL_ISUPPORTS(PreferenceServiceReporter, nsIMemoryReporter)
-
-struct PreferencesReferentCount {
-  PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
-  size_t numStrong;
-  size_t numWeakAlive;
-  size_t numWeakDead;
-  nsTArray<nsCString> suspectPreferences;
-  // Count of the number of referents for each preference.
-  nsDataHashtable<nsCStringHashKey, uint32_t> prefCounter;
-};
-
-PLDHashOperator
-PreferenceServiceReporter::CountReferents(PrefCallback* aKey,
-                                          nsAutoPtr<PrefCallback>& aCallback,
-                                          void* aClosure)
-{
-  PreferencesReferentCount* referentCount =
-    static_cast<PreferencesReferentCount*>(aClosure);
-
-  nsPrefBranch* prefBranch = aCallback->GetPrefBranch();
-  const char* pref = prefBranch->getPrefName(aCallback->GetDomain().get());
-
-  if (aCallback->IsWeak()) {
-    nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(aCallback->mWeakRef);
-    if (callbackRef) {
-      referentCount->numWeakAlive++;
-    } else {
-      referentCount->numWeakDead++;
-    }
-  } else {
-    referentCount->numStrong++;
-  }
-
-  nsDependentCString prefString(pref);
-  uint32_t oldCount = 0;
-  referentCount->prefCounter.Get(prefString, &oldCount);
-  uint32_t currentCount = oldCount + 1;
-  referentCount->prefCounter.Put(prefString, currentCount);
-
-  // Keep track of preferences that have a suspiciously large
-  // number of referents (symptom of leak).
-  if (currentCount == kSuspectReferentCount) {
-    referentCount->suspectPreferences.AppendElement(prefString);
-  }
-
-  return PL_DHASH_NEXT;
-}
 
 MOZ_DEFINE_MALLOC_SIZE_OF(PreferenceServiceMallocSizeOf)
 
@@ -342,13 +292,46 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     return NS_OK;
   }
 
-  PreferencesReferentCount referentCount;
-  rootBranch->mObservers.Enumerate(&CountReferents, &referentCount);
+  size_t numStrong = 0;
+  size_t numWeakAlive = 0;
+  size_t numWeakDead = 0;
+  nsTArray<nsCString> suspectPreferences;
+  // Count of the number of referents for each preference.
+  nsDataHashtable<nsCStringHashKey, uint32_t> prefCounter;
 
-  for (uint32_t i = 0; i < referentCount.suspectPreferences.Length(); i++) {
-    nsCString& suspect = referentCount.suspectPreferences[i];
+  for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<PrefCallback>& callback = iter.Data();
+    nsPrefBranch* prefBranch = callback->GetPrefBranch();
+    const char* pref = prefBranch->getPrefName(callback->GetDomain().get());
+
+    if (callback->IsWeak()) {
+      nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
+      if (callbackRef) {
+        numWeakAlive++;
+      } else {
+        numWeakDead++;
+      }
+    } else {
+      numStrong++;
+    }
+
+    nsDependentCString prefString(pref);
+    uint32_t oldCount = 0;
+    prefCounter.Get(prefString, &oldCount);
+    uint32_t currentCount = oldCount + 1;
+    prefCounter.Put(prefString, currentCount);
+
+    // Keep track of preferences that have a suspiciously large number of
+    // referents (a symptom of a leak).
+    if (currentCount == kSuspectReferentCount) {
+      suspectPreferences.AppendElement(prefString);
+    }
+  }
+
+  for (uint32_t i = 0; i < suspectPreferences.Length(); i++) {
+    nsCString& suspect = suspectPreferences[i];
     uint32_t totalReferentCount = 0;
-    referentCount.prefCounter.Get(suspect, &totalReferentCount);
+    prefCounter.Get(suspect, &totalReferentCount);
 
     nsPrintfCString suspectPath("preference-service-suspect/"
                                 "referent(pref=%s)", suspect.get());
@@ -360,16 +343,16 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
   }
 
   REPORT(NS_LITERAL_CSTRING("preference-service/referent/strong"),
-         KIND_OTHER, UNITS_COUNT, referentCount.numStrong,
+         KIND_OTHER, UNITS_COUNT, numStrong,
          "The number of strong referents held by the preference service.");
 
   REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/alive"),
-         KIND_OTHER, UNITS_COUNT, referentCount.numWeakAlive,
+         KIND_OTHER, UNITS_COUNT, numWeakAlive,
          "The number of weak referents held by the preference service "
          "that are still alive.");
 
   REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/dead"),
-         KIND_OTHER, UNITS_COUNT, referentCount.numWeakDead,
+         KIND_OTHER, UNITS_COUNT, numWeakDead,
          "The number of weak referents held by the preference service "
          "that are dead.");
 

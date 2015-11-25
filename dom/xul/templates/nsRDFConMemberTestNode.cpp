@@ -16,7 +16,7 @@
 
 using mozilla::LogLevel;
 
-extern PRLogModuleInfo* gXULTemplateLog;
+extern mozilla::LazyLogModule gXULTemplateLog;
 
 nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
                                                nsXULTemplateQueryProcessorRDF* aProcessor,

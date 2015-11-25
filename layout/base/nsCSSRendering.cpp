@@ -2681,6 +2681,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // to the right edge of a tile, then we can repeat by just repeating the
     // gradient.
     if (!cellContainsFill &&
+        stopDelta != 0.0 && // if 0.0, gradientStopEnd is bogus (see above)
         ((gradientStopStart.y == gradientStopEnd.y && gradientStopStart.x == 0 &&
           gradientStopEnd.x == srcSize.width) ||
           (gradientStopStart.x == gradientStopEnd.x && gradientStopStart.y == 0 &&
@@ -3335,14 +3336,30 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   state.mFillArea = state.mDestArea;
   int repeatX = aLayer.mRepeat.mXRepeat;
   int repeatY = aLayer.mRepeat.mYRepeat;
+
+  ExtendMode repeatMode = ExtendMode::CLAMP;
   if (repeatX == NS_STYLE_BG_REPEAT_REPEAT) {
     state.mFillArea.x = bgClipRect.x;
     state.mFillArea.width = bgClipRect.width;
+    repeatMode = ExtendMode::REPEAT_X;
   }
   if (repeatY == NS_STYLE_BG_REPEAT_REPEAT) {
     state.mFillArea.y = bgClipRect.y;
     state.mFillArea.height = bgClipRect.height;
+
+    /***
+     * We're repeating on the X axis already,
+     * so if we have to repeat in the Y axis,
+     * we really need to repeat in both directions.
+     */
+    if (repeatMode == ExtendMode::REPEAT_X) {
+      repeatMode = ExtendMode::REPEAT;
+    } else {
+      repeatMode = ExtendMode::REPEAT_Y;
+    }
   }
+  state.mImageRenderer.SetExtendMode(repeatMode);
+
   state.mFillArea.IntersectRect(state.mFillArea, bgClipRect);
 
   state.mCompositionOp = GetGFXBlendMode(aLayer.mBlendMode);
@@ -4648,6 +4665,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame,
   , mPrepareResult(DrawResult::NOT_READY)
   , mSize(0, 0)
   , mFlags(aFlags)
+  , mExtendMode(ExtendMode::CLAMP)
 {
 }
 
@@ -5036,7 +5054,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                            aPresContext,
                                            mImageContainer, imageSize, filter,
                                            aDest, aFill, aAnchor, aDirtyRect,
-                                           ConvertImageRendererToDrawFlags(mFlags));
+                                           ConvertImageRendererToDrawFlags(mFlags),
+                                           mExtendMode);
     }
     case eStyleImageType_Gradient:
     {

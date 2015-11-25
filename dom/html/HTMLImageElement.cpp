@@ -535,12 +535,6 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::src) {
 
-    // This is for dom.disable_image_src_set, which predates "srcset"
-    // as an attribute. See Bug 773429
-    if (nsContentUtils::IsImageSrcSetDisabled()) {
-      return NS_OK;
-    }
-
     if (InResponsiveMode()) {
       if (mResponsiveSelector &&
           mResponsiveSelector->Content() == this) {

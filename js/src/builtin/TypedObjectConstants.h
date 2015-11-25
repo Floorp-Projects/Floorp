@@ -55,7 +55,6 @@
 
 // Slots on scalars, references, and SIMD objects
 #define JS_DESCR_SLOT_TYPE               8  // Type code
-#define JS_DESCR_SLOT_LANES              9
 
 // Slots on array descriptors
 #define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    8

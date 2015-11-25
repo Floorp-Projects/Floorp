@@ -92,18 +92,15 @@ Node* DepthFirstSearch(Node* aRoot, const Condition& aCondition)
 
 /*
  * Do a depth-first traversal of the tree rooted at |aRoot|, performing
- * |aAction| for each node, returning a TraversalFlag to determine behavior for
- * that node's children. If a node is determined to be ineligible (by |aAction|
- * returning TraversalFlag::Skip), its children are skipped by the function.
+ * |aAction| for each node.  |aAction| can return a TraversalFlag to determine
+ * whether or not to omit the children of a particular node.
  *
- * |Node| should have methods GetLastChild() and GetPrevSibling().
- * |aAction| must return a TraversalFlag. Bear in mind that the TraversalFlag
- * only dictates the behavior for children of a node, not the node itself. To
- * skip the node itself, the logic returning TraversalFlag::Skip should be
- * performed before the node is manipulated in any way.
+ * If |aAction| does not return a TraversalFlag, it must return nothing.  There
+ * is no ForEachNode instance handling types other than void or TraversalFlag.
  */
 template <typename Node, typename Action>
-void ForEachNode(Node* aRoot, const Action& aAction)
+auto ForEachNode(Node* aRoot, const Action& aAction) ->
+typename EnableIf<IsSame<decltype(aAction(aRoot)), TraversalFlag>::value, void>::Type
 {
   if (!aRoot) {
     return;
@@ -124,6 +121,31 @@ void ForEachNode(Node* aRoot, const Action& aAction)
            child = child->GetPrevSibling()) {
         stack.push(child);
       }
+    }
+  }
+}
+
+template <typename Node, typename Action>
+auto ForEachNode(Node* aRoot, const Action& aAction) ->
+typename EnableIf<IsSame<decltype(aAction(aRoot)), void>::value, void>::Type
+{
+  if (!aRoot) {
+    return;
+  }
+
+  std::stack<Node*> stack;
+  stack.push(aRoot);
+
+  while (!stack.empty()) {
+    Node* node = stack.top();
+    stack.pop();
+
+    aAction(node);
+
+    for (Node* child = node->GetLastChild();
+         child;
+         child = child->GetPrevSibling()) {
+      stack.push(child);
     }
   }
 }

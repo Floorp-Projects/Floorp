@@ -11,7 +11,7 @@
 
 using mozilla::LogLevel;
 
-extern PRLogModuleInfo* gXULTemplateLog;
+extern mozilla::LazyLogModule gXULTemplateLog;
 #include "nsIRDFLiteral.h"
 
 nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,

@@ -19,8 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 </div>
 <pre id="test">
 </pre>
-<a href="http://www.example.net?a=b&c=d" id="anchor">foobar</a>
-<area href="http://www.example.net?a=b&c=d" id="area">foobar</area>
 <script type="application/javascript">
 
   /** Test for Bug 887836 **/
@@ -123,20 +121,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 
     url.searchParams.set('e', 'f');
     ok(url.href.indexOf('e=f') != 1, 'URL right');
-
-    runTest();
-  }
-
-  function testElement(e) {
-    ok(e, 'element exists');
-    ok(e.searchParams, "e.searchParams exists!");
-    ok(e.searchParams.has('a'), "e.searchParams.has('a')");
-    is(e.searchParams.get('a'), 'b', "e.searchParams.get('a')");
-    ok(e.searchParams.has('c'), "e.searchParams.has('c')");
-    is(e.searchParams.get('c'), 'd', "e.searchParams.get('c')");
-
-    e.searchParams.set('e', 'f');
-    ok(e.href.indexOf('e=f') != 1, 'e is right');
 
     runTest();
   }
@@ -319,8 +303,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testCopyURLSearchParams,
     testParserURLSearchParams,
     testURL,
-    function() { testElement(document.getElementById('anchor')) },
-    function() { testElement(document.getElementById('area')) },
     testEncoding,
     testOrdering,
     testDelete,

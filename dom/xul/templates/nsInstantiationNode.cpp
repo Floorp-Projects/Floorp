@@ -8,7 +8,7 @@
 #include "nsXULTemplateQueryProcessorRDF.h"
 
 #include "mozilla/Logging.h"
-extern PRLogModuleInfo* gXULTemplateLog;
+extern mozilla::LazyLogModule gXULTemplateLog;
 
 nsInstantiationNode::nsInstantiationNode(nsXULTemplateQueryProcessorRDF* aProcessor,
                                          nsRDFQuery* aQuery)

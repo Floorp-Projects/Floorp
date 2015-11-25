@@ -1237,7 +1237,7 @@ DataTransfer::CacheExternalDragFormats()
   // there isn't a way to get a list of the formats that might be available on
   // all platforms, so just check for the types that can actually be imported
   // XXXndeakin there are some other formats but those are platform specific.
-  const char* formats[] = { kFileMime, kHTMLMime, kURLMime, kURLDataMime, kUnicodeMime };
+  const char* formats[] = { kFileMime, kHTMLMime, kRTFMime, kURLMime, kURLDataMime, kUnicodeMime };
 
   uint32_t count;
   dragSession->GetNumDropItems(&count);
@@ -1279,7 +1279,7 @@ DataTransfer::CacheExternalClipboardFormats()
 
   // there isn't a way to get a list of the formats that might be available on
   // all platforms, so just check for the types that can actually be imported
-  const char* formats[] = { kFileMime, kHTMLMime, kURLMime, kURLDataMime, kUnicodeMime };
+  const char* formats[] = { kFileMime, kHTMLMime, kRTFMime, kURLMime, kURLDataMime, kUnicodeMime };
 
   for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
     // check each format one at a time
@@ -1361,7 +1361,14 @@ DataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
       variant->SetAsAString(str);
     }
     else {
-      variant->SetAsISupports(data);
+      nsCOMPtr<nsISupportsCString> supportscstr = do_QueryInterface(data);
+      if (supportscstr) {
+        nsAutoCString str;
+        supportscstr->GetData(str);
+        variant->SetAsACString(str);
+      } else {
+        variant->SetAsISupports(data);
+      }
     }
 
     aItem.mData = variant;

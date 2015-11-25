@@ -10,7 +10,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'nsDNSServiceDiscovery.manifest',
     ]
 
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16':
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
+        (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16'):
     UNIFIED_SOURCES += [
         'MDNSResponderOperator.cpp',
         'MDNSResponderReply.cpp',
@@ -18,14 +19,15 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16
     ]
 
     LOCAL_INCLUDES += [
-        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-            'external/mdnsresponder/mDNSShared',
-        ]
-    ]
-
-    LOCAL_INCLUDES += [
       '/netwerk/base',
     ]
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        LOCAL_INCLUDES += [
+            '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+                'external/mdnsresponder/mDNSShared',
+            ]
+        ]
 
 UNIFIED_SOURCES += [
     'nsDNSServiceInfo.cpp',

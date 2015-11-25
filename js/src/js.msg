@@ -514,8 +514,9 @@ MSG_DEF(JSMSG_REINIT_THIS,       0, JSEXN_REFERENCEERR, "super() called twice in
 
 // Modules
 MSG_DEF(JSMSG_BAD_DEFAULT_EXPORT,        0, JSEXN_SYNTAXERR, "default export cannot be provided by export *")
-MSG_DEF(JSMSG_MISSING_INDIRECT_EXPORT,   0, JSEXN_SYNTAXERR, "indirect export not found")
-MSG_DEF(JSMSG_AMBIGUOUS_INDIRECT_EXPORT, 0, JSEXN_SYNTAXERR, "ambiguous indirect export")
-MSG_DEF(JSMSG_MISSING_IMPORT,            0, JSEXN_SYNTAXERR, "import not found")
-MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,          0, JSEXN_SYNTAXERR, "ambiguous import")
+MSG_DEF(JSMSG_MISSING_INDIRECT_EXPORT,   1, JSEXN_SYNTAXERR, "indirect export '{0}' not found")
+MSG_DEF(JSMSG_AMBIGUOUS_INDIRECT_EXPORT, 1, JSEXN_SYNTAXERR, "ambiguous indirect export '{0}'")
+MSG_DEF(JSMSG_MISSING_IMPORT,            1, JSEXN_SYNTAXERR, "import '{0}' not found")
+MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,          1, JSEXN_SYNTAXERR, "ambiguous import '{0}'")
 MSG_DEF(JSMSG_MISSING_NAMESPACE_EXPORT,  0, JSEXN_SYNTAXERR, "export not found for namespace")
+MSG_DEF(JSMSG_MISSING_EXPORT,            1, JSEXN_SYNTAXERR, "local binding for export '{0}' not found")

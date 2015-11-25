@@ -708,6 +708,7 @@
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
 @RESPATH@/browser/defaults/profile/prefs.js
+@RESPATH@/browser/defaults/permissions
 
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 ; Technically this is an app pref file, but we are keeping it in the original

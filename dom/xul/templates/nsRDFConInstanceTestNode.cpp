@@ -16,7 +16,7 @@
 
 using mozilla::LogLevel;
 
-extern PRLogModuleInfo* gXULTemplateLog;
+extern mozilla::LazyLogModule gXULTemplateLog;
 
 static const char*
 TestToString(nsRDFConInstanceTestNode::Test aTest) {

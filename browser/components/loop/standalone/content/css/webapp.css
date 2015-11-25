@@ -239,6 +239,7 @@ html[dir="rtl"] .standalone-overlay-wrapper > .standalone-moz-logo {
   color: #4a4a4a;
   margin: auto;
   padding: 0 5px;
+  width: 100%;
 }
 
 .room-inner-info-area > button {

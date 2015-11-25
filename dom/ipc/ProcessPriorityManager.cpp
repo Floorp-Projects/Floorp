@@ -28,6 +28,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+using namespace mozilla::hal;
+
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
@@ -69,12 +73,10 @@
        NameWithComma().get(), \
        static_cast<uint64_t>(ChildID()), Pid(), ##__VA_ARGS__)
 #else
-  static PRLogModuleInfo*
+  static LogModule*
   GetPPMLog()
   {
-    static PRLogModuleInfo *sLog;
-    if (!sLog)
-      sLog = PR_NewLogModule("ProcessPriorityManager");
+    static LazyLogModule sLog("ProcessPriorityManager");
     return sLog;
   }
 #  define LOG(fmt, ...) \
@@ -86,10 +88,6 @@
             NameWithComma().get(), \
             static_cast<uint64_t>(ChildID()), Pid(), ##__VA_ARGS__))
 #endif
-
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::hal;
 
 namespace {
 

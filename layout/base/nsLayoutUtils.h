@@ -119,6 +119,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::ExtendMode ExtendMode;
   typedef mozilla::gfx::Filter Filter;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Point Point;
@@ -1769,7 +1770,8 @@ public:
    *   @param aAnchor           A point in aFill which we will ensure is
    *                            pixel-aligned in the output.
    *   @param aDirty            Pixels outside this area may be skipped.
-   *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
+   *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety.
+   *   @param aExtendMode       How to extend the image over the dest rect.
    */
   static DrawResult DrawBackgroundImage(gfxContext&         aContext,
                                         nsPresContext*      aPresContext,
@@ -1780,7 +1782,8 @@ public:
                                         const nsRect&       aFill,
                                         const nsPoint&      aAnchor,
                                         const nsRect&       aDirty,
-                                        uint32_t            aImageFlags);
+                                        uint32_t            aImageFlags,
+                                        ExtendMode          aExtendMode);
 
   /**
    * Draw an image.
@@ -2735,19 +2738,6 @@ public:
                                       mozilla::WritingMode aFrameWM);
 
   static bool HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell);
-
-  /**
-   * Get the resolution at which rescalable web content is drawn
-   * (see nsIDOMWindowUtils.getResolution).
-   */
-  static float GetResolution(nsIPresShell* aPresShell);
-
-  /**
-   * Set the resolution at which rescalable web content is drawn,
-   * and scales the content by the amount of the resolution
-   * (see nsIDOMWindowUtils.setResolutionAndScaleTo).
-   */
-  static void SetResolutionAndScaleTo(nsIPresShell* aPresShell, float aResolution);
 
   /**
    * Set the scroll port size for the purpose of clamping the scroll position

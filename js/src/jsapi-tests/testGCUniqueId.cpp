@@ -8,6 +8,8 @@
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
 
+#include "jsapi-tests/tests.h"
+
 static void
 MinimizeHeap(JSRuntime* rt)
 {

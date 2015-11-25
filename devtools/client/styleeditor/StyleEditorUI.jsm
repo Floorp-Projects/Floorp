@@ -82,6 +82,7 @@ function StyleEditorUI(debuggee, target, panelDoc) {
   this._prefObserver.on(PREF_ORIG_SOURCES, this._onNewDocument);
   this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
 }
+this.StyleEditorUI = StyleEditorUI;
 
 StyleEditorUI.prototype = {
   /**

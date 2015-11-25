@@ -861,6 +861,7 @@ private:
                                bool dispatchedToContentProcess);
 
   int32_t     mLockCursor;
+  bool mLastFrameConsumedSetCursor;
 
   // Last mouse event refPoint (the offset from the widget's origin in
   // device pixels) when mouse was locked, used to restore mouse position

@@ -1051,6 +1051,15 @@ nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP)
                                 true); // delivered through the meta tag
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  // Record "speculated" referrer policy for preloads
+  bool hasReferrerPolicy = false;
+  uint32_t referrerPolicy = mozilla::net::RP_Default;
+  rv = preloadCsp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (hasReferrerPolicy) {
+    SetSpeculationReferrerPolicy(static_cast<ReferrerPolicy>(referrerPolicy));
+  }
+
   mDocument->ApplySettingsFromCSP(true);
 }
 

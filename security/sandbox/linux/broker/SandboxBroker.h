@@ -112,6 +112,7 @@ class SandboxBroker final
   SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
                 int& aClientFd);
   void ThreadMain(void) override;
+  void AuditDenial(int aOp, int aFlags, const char* aPath);
 
   // Holding a UniquePtr should disallow copying, but to make that explicit:
   SandboxBroker(const SandboxBroker&) = delete;

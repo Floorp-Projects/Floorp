@@ -20,17 +20,8 @@ enum MediaKeyStatus {
 
 [Pref="media.eme.apiVisible"]
 interface MediaKeyStatusMap {
-  [Throws]
+  iterable<ArrayBuffer,MediaKeyStatus>;
   readonly attribute unsigned long size;
-
-  [Throws]
-  object keys();
-
-  [Throws]
-  object values();
-
-  [Throws]
-  object entries();
-
-  // XXX: forEach, @@iterator
+  boolean has (BufferSource keyId);
+  MediaKeyStatus get (BufferSource keyId);
 };
