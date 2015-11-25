@@ -4,60 +4,117 @@
 
 #include "WebGLExtensions.h"
 
+#include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
 #include "WebGLFormats.h"
 
 namespace mozilla {
 
-using mozilla::webgl::EffectiveFormat;
-
-void
-WebGLExtensionTextureHalfFloat::InitWebGLFormats(webgl::FormatUsageAuthority* authority)
-{
-    MOZ_ASSERT(authority);
-
-    auto addFormatIfMissing = [authority](EffectiveFormat effectiveFormat)
-        {
-            if (!authority->GetUsage(effectiveFormat)) {
-                authority->AddFormat(effectiveFormat, false, false, false, false);
-            }
-        };
-
-    // Populate authority with any missing effective formats.
-    addFormatIfMissing(EffectiveFormat::RGBA16F);
-    addFormatIfMissing(EffectiveFormat::RGB16F);
-    addFormatIfMissing(EffectiveFormat::Luminance16FAlpha16F);
-    addFormatIfMissing(EffectiveFormat::Luminance16F);
-    addFormatIfMissing(EffectiveFormat::Alpha16F);
-}
-
 WebGLExtensionTextureHalfFloat::WebGLExtensionTextureHalfFloat(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
-    webgl::FormatUsageAuthority* authority = webgl->mFormatUsage.get();
+    auto& fua = webgl->mFormatUsage;
+    gl::GLContext* gl = webgl->GL();
 
-    auto updateUsage = [authority](EffectiveFormat effectiveFormat,
-                                   GLenum unpackFormat, GLenum unpackType)
-        {
-            webgl::FormatUsageInfo* usage = authority->GetUsage(effectiveFormat);
-            MOZ_ASSERT(usage);
-            usage->asTexture = true;
-            authority->AddUnpackOption(unpackFormat, unpackType, effectiveFormat);
-        };
+    webgl::PackingInfo pi;
+    webgl::DriverUnpackInfo dui;
+    const GLint* swizzle = nullptr;
 
-    InitWebGLFormats(authority);
+    const auto fnAdd = [&fua, &pi, &dui, &swizzle](webgl::EffectiveFormat effFormat)
+    {
+        auto usage = fua->EditUsage(effFormat);
+        usage->textureSwizzleRGBA = swizzle;
+        fua->AddTexUnpack(usage, pi, dui);
 
-    // Update usage to allow asTexture and add unpack
-    updateUsage(EffectiveFormat::RGBA16F             , LOCAL_GL_RGBA           , LOCAL_GL_HALF_FLOAT_OES);
-    updateUsage(EffectiveFormat::RGB16F              , LOCAL_GL_RGB            , LOCAL_GL_HALF_FLOAT_OES);
-    updateUsage(EffectiveFormat::Luminance16FAlpha16F, LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_HALF_FLOAT_OES);
-    updateUsage(EffectiveFormat::Luminance16F        , LOCAL_GL_LUMINANCE      , LOCAL_GL_HALF_FLOAT_OES);
-    updateUsage(EffectiveFormat::Alpha16F            , LOCAL_GL_ALPHA          , LOCAL_GL_HALF_FLOAT_OES);
+        fua->AllowUnsizedTexFormat(pi, usage);
+    };
+
+    const bool needSizedInternal = !gl->IsGLES();
+    MOZ_ASSERT_IF(needSizedInternal, gl->IsSupported(gl::GLFeature::texture_swizzle));
+
+    GLenum driverUnpackType = LOCAL_GL_HALF_FLOAT;
+    if (!gl->IsSupported(gl::GLFeature::texture_half_float)) {
+        MOZ_ASSERT(gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float));
+        driverUnpackType = LOCAL_GL_HALF_FLOAT_OES;
+    }
+
+    ////////////////
+
+    pi = {LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT_OES};
+    dui = {pi.format, pi.format, driverUnpackType};
+    swizzle = nullptr;
+    if (needSizedInternal) {
+        dui.internalFormat = LOCAL_GL_RGBA16F;
+    }
+    fnAdd(webgl::EffectiveFormat::RGBA16F);
+
+    //////
+
+    pi = {LOCAL_GL_RGB, LOCAL_GL_HALF_FLOAT_OES};
+    dui = {pi.format, pi.format, driverUnpackType};
+    swizzle = nullptr;
+    if (needSizedInternal) {
+        dui.internalFormat = LOCAL_GL_RGB16F;
+    }
+    fnAdd(webgl::EffectiveFormat::RGB16F);
+
+    //////
+
+    pi = {LOCAL_GL_LUMINANCE, LOCAL_GL_HALF_FLOAT_OES};
+    dui = {pi.format, pi.format, driverUnpackType};
+    swizzle = nullptr;
+    if (needSizedInternal) {
+        dui = {LOCAL_GL_R16F, LOCAL_GL_RED, driverUnpackType};
+        swizzle = webgl::FormatUsageInfo::kLuminanceSwizzleRGBA;
+    }
+    fnAdd(webgl::EffectiveFormat::Luminance16F);
+
+    //////
+
+    pi = {LOCAL_GL_ALPHA, LOCAL_GL_HALF_FLOAT_OES};
+    dui = {pi.format, pi.format, driverUnpackType};
+    swizzle = nullptr;
+    if (needSizedInternal) {
+        dui = {LOCAL_GL_R16F, LOCAL_GL_RED, driverUnpackType};
+        swizzle = webgl::FormatUsageInfo::kAlphaSwizzleRGBA;
+    }
+    fnAdd(webgl::EffectiveFormat::Alpha16F);
+
+    //////
+
+    pi = {LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_HALF_FLOAT_OES};
+    dui = {pi.format, pi.format, driverUnpackType};
+    swizzle = nullptr;
+    if (needSizedInternal) {
+        dui = {LOCAL_GL_RG16F, LOCAL_GL_RG, driverUnpackType};
+        swizzle = webgl::FormatUsageInfo::kLumAlphaSwizzleRGBA;
+    }
+    fnAdd(webgl::EffectiveFormat::Luminance16FAlpha16F);
 }
 
 WebGLExtensionTextureHalfFloat::~WebGLExtensionTextureHalfFloat()
 {
+}
+
+bool
+WebGLExtensionTextureHalfFloat::IsSupported(const WebGLContext* webgl)
+{
+    gl::GLContext* gl = webgl->GL();
+
+    if (!gl->IsSupported(gl::GLFeature::texture_half_float) &&
+        !gl->IsExtensionSupported(gl::GLContext::OES_texture_half_float))
+    {
+        return false;
+    }
+
+    const bool needSizedInternal = !gl->IsGLES();
+    const bool hasSwizzle = gl->IsSupported(gl::GLFeature::texture_swizzle);
+
+    if (needSizedInternal && !hasSwizzle)
+        return false;
+
+    return true;
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureHalfFloat, OES_texture_half_float)

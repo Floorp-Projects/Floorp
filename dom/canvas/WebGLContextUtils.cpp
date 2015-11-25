@@ -27,38 +27,10 @@
 
 namespace mozilla {
 
-bool
-IsGLDepthFormat(TexInternalFormat internalformat)
-{
-    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
-    return unsizedformat == LOCAL_GL_DEPTH_COMPONENT;
-}
-
-bool
-IsGLDepthStencilFormat(TexInternalFormat internalformat)
-{
-    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
-    return unsizedformat == LOCAL_GL_DEPTH_STENCIL;
-}
-
-bool
-FormatHasAlpha(TexInternalFormat internalformat)
-{
-    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
-    return unsizedformat == LOCAL_GL_RGBA ||
-           unsizedformat == LOCAL_GL_LUMINANCE_ALPHA ||
-           unsizedformat == LOCAL_GL_ALPHA ||
-           unsizedformat == LOCAL_GL_SRGB_ALPHA ||
-           unsizedformat == LOCAL_GL_RGBA_INTEGER;
-}
-
 TexTarget
 TexImageTargetToTexTarget(TexImageTarget texImageTarget)
 {
     switch (texImageTarget.get()) {
-    case LOCAL_GL_TEXTURE_2D:
-    case LOCAL_GL_TEXTURE_3D:
-        return texImageTarget.get();
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
@@ -66,10 +38,9 @@ TexImageTargetToTexTarget(TexImageTarget texImageTarget)
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         return LOCAL_GL_TEXTURE_CUBE_MAP;
+
     default:
-        MOZ_ASSERT(false, "Bad texture target");
-        // Should be caught by the constructor for TexTarget
-        return LOCAL_GL_NONE;
+        return texImageTarget.get();
     }
 }
 
@@ -83,387 +54,6 @@ StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
     }
 
     return JS::StringValue(str);
-}
-
-GLComponents::GLComponents(TexInternalFormat internalformat)
-{
-    TexInternalFormat unsizedformat = UnsizedInternalFormatFromInternalFormat(internalformat);
-    mComponents = 0;
-
-    switch (unsizedformat.get()) {
-    case LOCAL_GL_RGBA:
-    case LOCAL_GL_RGBA4:
-    case LOCAL_GL_RGBA8:
-    case LOCAL_GL_RGB5_A1:
-    // Luminance + Alpha can be converted
-    // to and from RGBA
-    case LOCAL_GL_LUMINANCE_ALPHA:
-        mComponents |= Components::Alpha;
-    // Drops through
-    case LOCAL_GL_RGB:
-    case LOCAL_GL_RGB565:
-    // Luminance can be converted to and from RGB
-    case LOCAL_GL_LUMINANCE:
-        mComponents |= Components::Red | Components::Green | Components::Blue;
-        break;
-    case LOCAL_GL_ALPHA:
-        mComponents |= Components::Alpha;
-        break;
-    case LOCAL_GL_DEPTH_COMPONENT:
-        mComponents |= Components::Depth;
-        break;
-    case LOCAL_GL_DEPTH_STENCIL:
-        mComponents |= Components::Stencil;
-        break;
-    default:
-        MOZ_ASSERT(false, "Unhandled case - GLComponents");
-        break;
-    }
-}
-
-bool
-GLComponents::IsSubsetOf(const GLComponents& other) const
-{
-    return (mComponents | other.mComponents) == other.mComponents;
-}
-
-TexType
-TypeFromInternalFormat(TexInternalFormat internalformat)
-{
-#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
-    if (internalformat == table_effectiveinternalformat) { \
-        return table_type; \
-    }
-
-#include "WebGLInternalFormatsTable.h"
-
-    // if we're here, then internalformat is not an effective internalformat i.e. is an unsized internalformat.
-    return LOCAL_GL_NONE; // no size, no type
-}
-
-TexInternalFormat
-UnsizedInternalFormatFromInternalFormat(TexInternalFormat internalformat)
-{
-#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
-    if (internalformat == table_effectiveinternalformat) { \
-        return table_internalformat; \
-    }
-
-#include "WebGLInternalFormatsTable.h"
-
-    // if we're here, then internalformat is not an effective internalformat i.e. is an unsized internalformat.
-    // so we can just return it.
-    return internalformat;
-}
-
-/*
- * Note that the following two functions are inverse of each other:
- * EffectiveInternalFormatFromInternalFormatAndType and
- * InternalFormatAndTypeFromEffectiveInternalFormat both implement OpenGL ES 3.0.3 Table 3.2
- * but in opposite directions.
- */
-TexInternalFormat
-EffectiveInternalFormatFromUnsizedInternalFormatAndType(TexInternalFormat internalformat,
-                                                        TexType type)
-{
-    MOZ_ASSERT(TypeFromInternalFormat(internalformat) == LOCAL_GL_NONE);
-
-#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
-    if (internalformat == table_internalformat && type == table_type) { \
-        return table_effectiveinternalformat; \
-    }
-
-#include "WebGLInternalFormatsTable.h"
-
-    // If we're here, that means that type was incompatible with the given internalformat.
-    return LOCAL_GL_NONE;
-}
-
-void
-UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(TexInternalFormat effectiveinternalformat,
-                                                        TexInternalFormat* const out_internalformat,
-                                                        TexType* const out_type)
-{
-    MOZ_ASSERT(TypeFromInternalFormat(effectiveinternalformat) != LOCAL_GL_NONE);
-
-    MOZ_ASSERT(out_internalformat);
-    MOZ_ASSERT(out_type);
-
-    GLenum internalformat = LOCAL_GL_NONE;
-    GLenum type = LOCAL_GL_NONE;
-
-    switch (effectiveinternalformat.get()) {
-
-#define HANDLE_WEBGL_INTERNAL_FORMAT(table_effectiveinternalformat, table_internalformat, table_type) \
-    case table_effectiveinternalformat: \
-        internalformat = table_internalformat; \
-        type = table_type; \
-        break;
-
-#include "WebGLInternalFormatsTable.h"
-
-        default:
-            MOZ_CRASH(); // impossible to get here
-    }
-
-    *out_internalformat = internalformat;
-    *out_type = type;
-}
-
-TexInternalFormat
-EffectiveInternalFormatFromInternalFormatAndType(TexInternalFormat internalformat,
-                                                 TexType type)
-{
-    TexType typeOfInternalFormat = TypeFromInternalFormat(internalformat);
-    if (typeOfInternalFormat == LOCAL_GL_NONE)
-        return EffectiveInternalFormatFromUnsizedInternalFormatAndType(internalformat, type);
-
-    if (typeOfInternalFormat == type)
-        return internalformat;
-
-    return LOCAL_GL_NONE;
-}
-
-/**
- * Convert effective internalformat into GL function parameters
- * valid for underlying driver.
- */
-void
-DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
-                                         TexInternalFormat effectiveinternalformat,
-                                         GLenum* const out_driverInternalFormat,
-                                         GLenum* const out_driverFormat,
-                                         GLenum* const out_driverType)
-{
-    MOZ_ASSERT(out_driverInternalFormat);
-    MOZ_ASSERT(out_driverFormat);
-    MOZ_ASSERT(out_driverType);
-
-    TexInternalFormat unsizedinternalformat = LOCAL_GL_NONE;
-    TexType type = LOCAL_GL_NONE;
-
-    UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(effectiveinternalformat,
-                                                            &unsizedinternalformat,
-                                                            &type);
-
-    // driverType: almost always the generic type that we just got, except on ES
-    // we must replace HALF_FLOAT by HALF_FLOAT_OES
-    GLenum driverType = type.get();
-    if (gl->IsGLES() && type == LOCAL_GL_HALF_FLOAT)
-        driverType = LOCAL_GL_HALF_FLOAT_OES;
-
-    // driverFormat: always just the unsized internalformat that we just got
-    GLenum driverFormat = unsizedinternalformat.get();
-
-    // driverInternalFormat: almost always the same as driverFormat, but on desktop GL,
-    // in some cases we must pass a different value. On ES, they are equal by definition
-    // as it is an error to pass internalformat!=format.
-    GLenum driverInternalFormat = driverFormat;
-    if (gl->IsCompatibilityProfile()) {
-        // Cases where desktop OpenGL requires a tweak to 'format'
-        if (driverFormat == LOCAL_GL_SRGB)
-            driverFormat = LOCAL_GL_RGB;
-        else if (driverFormat == LOCAL_GL_SRGB_ALPHA)
-            driverFormat = LOCAL_GL_RGBA;
-
-        // WebGL2's new formats are not legal values for internalformat,
-        // as using unsized internalformat is deprecated.
-        if (driverFormat == LOCAL_GL_RED ||
-            driverFormat == LOCAL_GL_RG ||
-            driverFormat == LOCAL_GL_RED_INTEGER ||
-            driverFormat == LOCAL_GL_RG_INTEGER ||
-            driverFormat == LOCAL_GL_RGB_INTEGER ||
-            driverFormat == LOCAL_GL_RGBA_INTEGER)
-        {
-            driverInternalFormat = effectiveinternalformat.get();
-        }
-
-        // Cases where desktop OpenGL requires a sized internalformat,
-        // as opposed to the unsized internalformat that had the same
-        // GLenum value as 'format', in order to get the precise
-        // semantics that we want. For example, for floating-point formats,
-        // we seem to need a sized internalformat to get non-clamped floating
-        // point texture sampling. Can't find the spec reference for that,
-        // but that's at least the case on my NVIDIA driver version 331.
-        if (unsizedinternalformat == LOCAL_GL_DEPTH_COMPONENT ||
-            unsizedinternalformat == LOCAL_GL_DEPTH_STENCIL ||
-            type == LOCAL_GL_FLOAT ||
-            type == LOCAL_GL_HALF_FLOAT)
-        {
-            driverInternalFormat = effectiveinternalformat.get();
-        }
-    }
-
-    // OpenGL core profile removed texture formats ALPHA, LUMINANCE and LUMINANCE_ALPHA
-    if (gl->IsCoreProfile()) {
-        switch (driverFormat) {
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
-            driverInternalFormat = driverFormat = LOCAL_GL_RED;
-            break;
-
-        case LOCAL_GL_LUMINANCE_ALPHA:
-            driverInternalFormat = driverFormat = LOCAL_GL_RG;
-            break;
-        }
-    }
-
-    *out_driverInternalFormat = driverInternalFormat;
-    *out_driverFormat = driverFormat;
-    *out_driverType = driverType;
-}
-
-// Map R to A
-static const GLenum kLegacyAlphaSwizzle[4] = {
-    LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_RED
-};
-// Map R to RGB
-static const GLenum kLegacyLuminanceSwizzle[4] = {
-    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_ONE
-};
-// Map R to RGB, G to A
-static const GLenum kLegacyLuminanceAlphaSwizzle[4] = {
-    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_GREEN
-};
-
-void
-SetLegacyTextureSwizzle(gl::GLContext* gl, GLenum target, GLenum internalformat)
-{
-    if (!gl->IsCoreProfile())
-        return;
-
-    /* Only support swizzling on core profiles. */
-    // Bug 1159117: Fix this.
-    // MOZ_RELEASE_ASSERT(gl->IsSupported(gl::GLFeature::texture_swizzle));
-
-    switch (internalformat) {
-    case LOCAL_GL_ALPHA:
-        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
-                            (GLint*) kLegacyAlphaSwizzle);
-        break;
-
-    case LOCAL_GL_LUMINANCE:
-        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
-                            (GLint*) kLegacyLuminanceSwizzle);
-        break;
-
-    case LOCAL_GL_LUMINANCE_ALPHA:
-        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
-                            (GLint*) kLegacyLuminanceAlphaSwizzle);
-        break;
-    }
-}
-
-/**
- * Return the bits per texel for format & type combination.
- * Assumes that format & type are a valid combination as checked with
- * ValidateTexImageFormatAndType().
- */
-size_t
-GetBitsPerTexel(TexInternalFormat effectiveinternalformat)
-{
-    switch (effectiveinternalformat.get()) {
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
-        return 2;
-
-    case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-    case LOCAL_GL_ATC_RGB:
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
-    case LOCAL_GL_ETC1_RGB8_OES:
-        return 4;
-
-    case LOCAL_GL_ALPHA8:
-    case LOCAL_GL_LUMINANCE8:
-    case LOCAL_GL_R8:
-    case LOCAL_GL_R8I:
-    case LOCAL_GL_R8UI:
-    case LOCAL_GL_R8_SNORM:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-    case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
-    case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
-        return 8;
-
-    case LOCAL_GL_LUMINANCE8_ALPHA8:
-    case LOCAL_GL_RGBA4:
-    case LOCAL_GL_RGB5_A1:
-    case LOCAL_GL_DEPTH_COMPONENT16:
-    case LOCAL_GL_RG8:
-    case LOCAL_GL_R16I:
-    case LOCAL_GL_R16UI:
-    case LOCAL_GL_RGB565:
-    case LOCAL_GL_R16F:
-    case LOCAL_GL_RG8I:
-    case LOCAL_GL_RG8UI:
-    case LOCAL_GL_RG8_SNORM:
-    case LOCAL_GL_ALPHA16F_EXT:
-    case LOCAL_GL_LUMINANCE16F_EXT:
-        return 16;
-
-    case LOCAL_GL_RGB8:
-    case LOCAL_GL_DEPTH_COMPONENT24:
-    case LOCAL_GL_SRGB8:
-    case LOCAL_GL_RGB8UI:
-    case LOCAL_GL_RGB8I:
-    case LOCAL_GL_RGB8_SNORM:
-        return 24;
-
-    case LOCAL_GL_RGBA8:
-    case LOCAL_GL_RGB10_A2:
-    case LOCAL_GL_R32F:
-    case LOCAL_GL_RG16F:
-    case LOCAL_GL_R32I:
-    case LOCAL_GL_R32UI:
-    case LOCAL_GL_RG16I:
-    case LOCAL_GL_RG16UI:
-    case LOCAL_GL_DEPTH24_STENCIL8:
-    case LOCAL_GL_R11F_G11F_B10F:
-    case LOCAL_GL_RGB9_E5:
-    case LOCAL_GL_SRGB8_ALPHA8:
-    case LOCAL_GL_DEPTH_COMPONENT32F:
-    case LOCAL_GL_RGBA8UI:
-    case LOCAL_GL_RGBA8I:
-    case LOCAL_GL_RGBA8_SNORM:
-    case LOCAL_GL_RGB10_A2UI:
-    case LOCAL_GL_LUMINANCE_ALPHA16F_EXT:
-    case LOCAL_GL_ALPHA32F_EXT:
-    case LOCAL_GL_LUMINANCE32F_EXT:
-        return 32;
-
-    case LOCAL_GL_DEPTH32F_STENCIL8:
-        return 40;
-
-    case LOCAL_GL_RGB16F:
-    case LOCAL_GL_RGB16UI:
-    case LOCAL_GL_RGB16I:
-        return 48;
-
-    case LOCAL_GL_RG32F:
-    case LOCAL_GL_RG32I:
-    case LOCAL_GL_RG32UI:
-    case LOCAL_GL_RGBA16F:
-    case LOCAL_GL_RGBA16UI:
-    case LOCAL_GL_RGBA16I:
-    case LOCAL_GL_LUMINANCE_ALPHA32F_EXT:
-        return 64;
-
-    case LOCAL_GL_RGB32F:
-    case LOCAL_GL_RGB32UI:
-    case LOCAL_GL_RGB32I:
-        return 96;
-
-    case LOCAL_GL_RGBA32F:
-    case LOCAL_GL_RGBA32UI:
-    case LOCAL_GL_RGBA32I:
-        return 128;
-
-    default:
-        MOZ_ASSERT(false, "Unhandled format");
-        return 0;
-    }
 }
 
 void
@@ -518,27 +108,6 @@ WebGLContext::ShouldGenerateWarnings() const
         return true;
 
     return mAlreadyGeneratedWarnings < mMaxWarnings;
-}
-
-CheckedUint32
-WebGLContext::GetImageSize(GLsizei height, GLsizei width, GLsizei depth,
-                           uint32_t pixelSize, uint32_t packOrUnpackAlignment)
-{
-    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * pixelSize;
-
-    // alignedRowSize = row size rounded up to next multiple of packAlignment
-    CheckedUint32 checked_alignedRowSize = RoundedToNextMultipleOf(checked_plainRowSize, packOrUnpackAlignment);
-
-    // if height is 0, we don't need any memory to store this; without this check, we'll get an overflow
-    CheckedUint32 checked_2dImageSize = 0;
-    if (height >= 1) {
-        checked_2dImageSize = (height-1) * checked_alignedRowSize +
-                              checked_plainRowSize;
-    }
-
-    // FIXME - we should honor UNPACK_IMAGE_HEIGHT
-    CheckedUint32 checked_imageSize = checked_2dImageSize * depth;
-    return checked_imageSize;
 }
 
 void
@@ -1112,7 +681,7 @@ WebGLContext::AssertCachedBindings()
 
     GetAndFlushUnderlyingGLErrors();
 
-    if (IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         GLuint bound = mBoundVertexArray ? mBoundVertexArray->GLName() : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING, bound);
     }
@@ -1168,10 +737,20 @@ WebGLContext::AssertCachedState()
 
     GetAndFlushUnderlyingGLErrors();
 
-    // extensions
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
-        AssertUintParamCorrect(gl, LOCAL_GL_MAX_COLOR_ATTACHMENTS, mGLMaxColorAttachments);
-        AssertUintParamCorrect(gl, LOCAL_GL_MAX_DRAW_BUFFERS, mGLMaxDrawBuffers);
+    ////////////////
+
+    AssertUintParamCorrect(gl, LOCAL_GL_MAX_COLOR_ATTACHMENTS, mGLMaxColorAttachments);
+    AssertUintParamCorrect(gl, LOCAL_GL_MAX_DRAW_BUFFERS, mGLMaxDrawBuffers);
+
+    if (IsWebGL2() ||
+        IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
+    {
+        MOZ_ASSERT(mImplMaxColorAttachments == std::min(mGLMaxColorAttachments,
+                                                        mGLMaxDrawBuffers));
+        MOZ_ASSERT(mImplMaxDrawBuffers == mGLMaxDrawBuffers);
+    } else {
+        MOZ_ASSERT(mImplMaxColorAttachments == 1);
+        MOZ_ASSERT(mImplMaxDrawBuffers == 1);
     }
 
     // Draw state
@@ -1234,8 +813,19 @@ WebGLContext::AssertCachedState()
                int4[2] == mViewportWidth &&
                int4[3] == mViewportHeight);
 
-    AssertUintParamCorrect(gl, LOCAL_GL_PACK_ALIGNMENT, mPixelStorePackAlignment);
-    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ALIGNMENT, mPixelStoreUnpackAlignment);
+    AssertUintParamCorrect(gl, LOCAL_GL_PACK_ALIGNMENT, mPixelStore_PackAlignment);
+    AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ALIGNMENT, mPixelStore_UnpackAlignment);
+
+    if (IsWebGL2()) {
+        AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_IMAGE_HEIGHT, mPixelStore_UnpackImageHeight);
+        AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_IMAGES , mPixelStore_UnpackSkipImages);
+        AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ROW_LENGTH  , mPixelStore_UnpackRowLength);
+        AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_ROWS   , mPixelStore_UnpackSkipRows);
+        AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_PIXELS , mPixelStore_UnpackSkipPixels);
+        AssertUintParamCorrect(gl, LOCAL_GL_PACK_ROW_LENGTH    , mPixelStore_PackRowLength);
+        AssertUintParamCorrect(gl, LOCAL_GL_PACK_SKIP_ROWS     , mPixelStore_PackSkipRows);
+        AssertUintParamCorrect(gl, LOCAL_GL_PACK_SKIP_PIXELS   , mPixelStore_PackSkipPixels);
+    }
 
     MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
 #endif

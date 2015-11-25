@@ -118,16 +118,16 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
     resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
     resources.MaxDrawBuffers = mGLMaxDrawBuffers;
 
-    if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
         resources.EXT_frag_depth = 1;
 
-    if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
         resources.OES_standard_derivatives = 1;
 
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
         resources.EXT_draw_buffers = 1;
 
-    if (IsExtensionEnabled(WebGLExtensionID::EXT_shader_texture_lod))
+    if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::EXT_shader_texture_lod))
         resources.EXT_shader_texture_lod = 1;
 
     // Tell ANGLE to allow highp in frag shaders. (unless disabled)

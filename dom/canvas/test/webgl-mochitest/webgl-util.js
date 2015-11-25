@@ -59,14 +59,7 @@ WebGLUtil = (function() {
   }
 
   function withWebGL2(canvasId, callback, onFinished) {
-    var prefArrArr = [
-      ['webgl.force-enabled', true],
-      ['webgl.disable-angle', true],
-      ['webgl.bypass-shader-validation', true],
-      ['webgl.enable-prototype-webgl2', true],
-    ];
-    var prefEnv = {'set': prefArrArr};
-    SpecialPowers.pushPrefEnv(prefEnv, function() {
+    var run = function() {
       var canvas = document.getElementById(canvasId);
 
       var gl = null;
@@ -88,7 +81,21 @@ WebGLUtil = (function() {
 
       callback(gl);
       onFinished();
-    });
+    };
+
+    try {
+      var prefArrArr = [
+        ['webgl.force-enabled', true],
+        ['webgl.disable-angle', true],
+        ['webgl.bypass-shader-validation', true],
+        ['webgl.enable-prototype-webgl2', true],
+      ];
+      var prefEnv = {'set': prefArrArr};
+      SpecialPowers.pushPrefEnv(prefEnv, run);
+    } catch (e) {
+      warning('No SpecialPowers, but trying WebGL2 anyway...');
+      run();
+    }
   }
 
   function getContentFromElem(elem) {

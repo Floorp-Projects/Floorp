@@ -7,6 +7,7 @@
 <script src="webgl-util.js"></script>
 <script id="vs" type="x-shader/x-vertex">
 #version 300 es
+
 in vec2 aTexCoord;
 out vec2 vTexCoord;
 
@@ -16,80 +17,16 @@ void main() {
   vTexCoord = aTexCoord;
 }
 </script>
-<script id="fs-alpha" type="x-shader/x-fragment">
+<script id="fs" type="x-shader/x-fragment">
 #version 300 es
 precision mediump float;
-in vec2 vTexCoord;
 
+in vec2 vTexCoord;
+uniform sampler2D uTex;
 out vec4 oFragColor;
 
-uniform sampler2D uTex;
-
-bool compare(in vec4 test, in float ref) {
-  float lo = (ref - 0.1) / 255.0;
-  float hi = (ref + 0.1) / 255.0;
-
-  return (test.rgb == vec3(0) &&
-          lo < test.a && test.a < hi);
-}
-
 void main() {
-  vec4 tex = texture(uTex, vTexCoord);
-
-  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
-                                 : vec4(1.0, 0.0, 0.0, 1.0);
-}
-</script>
-<script id="fs-lum" type="x-shader/x-fragment">
-#version 300 es
-precision mediump float;
-in vec2 vTexCoord;
-
-out vec4 oFragColor;
-
-uniform sampler2D uTex;
-
-bool compare(vec4 test, float ref) {
-  float lo = (ref - 0.1) / 255.0;
-  float hi = (ref + 0.1) / 255.0;
-
-  return (lo < test.r && test.r < hi &&
-          lo < test.g && test.g < hi &&
-          lo < test.b && test.b < hi &&
-          test.a == 1);
-}
-
-void main() {
-  vec4 tex = texture(uTex, vTexCoord);
-
-  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
-                                 : vec4(1.0, 0.0, 0.0, 1.0);
-}
-</script>
-<script id="fs-lumalpha" type="x-shader/x-fragment">
-#version 300 es
-precision mediump float;
-in vec2 vTexCoord;
-
-out vec4 oFragColor;
-
-uniform sampler2D uTex;
-
-bool compare(in vec4 test, in float ref) {
-  float lo = (ref - 0.1) / 255.0;
-  float hi = (ref + 0.1) / 255.0;
-
-  return (lo < test.r && test.r < hi &&
-          lo < test.g && test.g < hi &&
-          lo < test.b && test.b < hi &&
-          lo < test.a && test.a < hi);
-}
-
-void main() {
-  vec4 tex = texture(uTex, vTexCoord);
-
-  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
-                                 : vec4(1.0, 0.0, 0.0, 1.0);
+  oFragColor = texture(uTex, vTexCoord);
 }
 </script>
 <body>
@@ -97,7 +34,7 @@ void main() {
 <script>
   WebGLUtil.withWebGL2('c', function(gl) {
 
-    function testPixel(x, y, refData, func, infoString) {
+    function testPixel(x, y, refData, infoPrefix) {
       var pixel = new Uint8Array(4);
       gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 
@@ -105,23 +42,24 @@ void main() {
                           pixel[1] == refData[1] &&
                           pixel[2] == refData[2] &&
                           pixel[3] == refData[3]);
-      func(pixelMatches, infoString);
+      var expectedStr = '[' + refData.join(', ') + ']';
+      var actualStr   = '[' +   pixel.join(', ') + ']';
+
+      if (pixelMatches) {
+        ok(true, infoPrefix + 'Expected ' + expectedStr + '.');
+      } else {
+        ok(false, infoPrefix + 'Expected ' + expectedStr + ', was ' + actualStr + '.');
+      }
     }
 
-    function testTexture(details) {
-      var prog = WebGLUtil.createProgramByIds(gl, 'vs', details.frag);
-      if (!prog) {
-        ok(false, 'Program linking should succeed.');
-        return false;
-      }
-
+    function testTexture(details, prog) {
       prog.aTexCoord = gl.getAttribLocation(prog, "aTexCoord");
       ok(prog.aTexCoord >= 0, '`aTexCoord` should be valid.');
 
       var tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, details.format, 2, 2, 0,
-                    details.format, gl.UNSIGNED_BYTE, details.pixels);
+      gl.texImage2D(gl.TEXTURE_2D, 0, details.format, 1, 1, 0,
+                    details.format, gl.UNSIGNED_BYTE, details.texData);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -134,8 +72,14 @@ void main() {
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      testPixel(0, 0, [0, 255, 0, 255], ok, 'Should be green after drawing.');
+      testPixel(0, 0, details.result, details.info + ': ');
       return true;
+    }
+
+    var prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+    if (!prog) {
+      ok(false, 'Program linking should succeed.');
+      return false;
     }
 
     gl.disable(gl.DEPTH_TEST);
@@ -148,13 +92,16 @@ void main() {
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
     var details = [
-      { frag: 'fs-alpha', format: gl.ALPHA, pixels: new Uint8Array([ 128, 128, 128, 128 ]) },
-      { frag: 'fs-lum', format: gl.LUMINANCE, pixels: new Uint8Array([ 128, 128, 128, 128 ]) },
-      { frag: 'fs-lumalpha', format: gl.LUMINANCE_ALPHA, pixels: new Uint8Array([ 128, 128, 128, 128, 128, 128, 128, 128 ]) }
+      { info: 'Luminance8', format: gl.LUMINANCE, texData: new Uint8Array([ 128 ]),
+        result: [128, 128, 128, 255] },
+      { info: 'Alpha8', format: gl.ALPHA, texData: new Uint8Array([ 128 ]),
+        result: [0, 0, 0, 128] },
+      { info: 'Luminance8Alpha8', format: gl.LUMINANCE_ALPHA, texData: new Uint8Array([ 128, 128 ]),
+        result: [128, 128, 128, 128] },
     ];
 
     for (var i = 0; i < details.length; i++) {
-      if (!testTexture(details[i])) {
+      if (!testTexture(details[i], prog)) {
         return;
       }
     }

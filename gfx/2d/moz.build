@@ -42,6 +42,7 @@ EXPORTS.mozilla.gfx += [
     'ScaleFactor.h',
     'ScaleFactors2D.h',
     'SourceSurfaceCairo.h',
+    'SourceSurfaceRawData.h',
     'StackArray.h',
     'Tools.h',
     'Types.h',

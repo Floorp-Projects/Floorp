@@ -12,9 +12,6 @@
 
 namespace mozilla {
 
-using mozilla::webgl::EffectiveFormat;
-
-
 WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
@@ -28,20 +25,32 @@ WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
         gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
     }
 
-    webgl::FormatUsageAuthority* authority = webgl->mFormatUsage.get();
+    auto& fua = webgl->mFormatUsage;
 
-    auto addFormatIfMissing = [authority](EffectiveFormat effectiveFormat,
-                                          GLenum unpackFormat, GLenum unpackType,
-                                          bool asRenderbuffer)
-        {
-            if (!authority->GetUsage(effectiveFormat)) {
-                authority->AddFormat(effectiveFormat, asRenderbuffer, asRenderbuffer, true, true);
-                authority->AddUnpackOption(unpackFormat, unpackType, effectiveFormat);
-            }
-        };
+    RefPtr<gl::GLContext> gl_ = gl; // Bug 1201275
+    const auto fnAdd = [&fua, &gl_](webgl::EffectiveFormat effFormat, GLenum format,
+                                    GLenum desktopUnpackFormat)
+    {
+        auto usage = fua->EditUsage(effFormat);
+        usage->isFilterable = true;
 
-    addFormatIfMissing(EffectiveFormat::SRGB8       , LOCAL_GL_SRGB      , LOCAL_GL_UNSIGNED_BYTE, false);
-    addFormatIfMissing(EffectiveFormat::SRGB8_ALPHA8, LOCAL_GL_SRGB_ALPHA, LOCAL_GL_UNSIGNED_BYTE, true);
+        webgl::DriverUnpackInfo dui = {format, format, LOCAL_GL_UNSIGNED_BYTE};
+        const auto pi = dui.ToPacking();
+
+        if (!gl_->IsGLES())
+            dui.unpackFormat = desktopUnpackFormat;
+
+        fua->AddTexUnpack(usage, pi, dui);
+
+        fua->AllowUnsizedTexFormat(pi, usage);
+    };
+
+    fnAdd(webgl::EffectiveFormat::SRGB8, LOCAL_GL_SRGB, LOCAL_GL_RGB);
+    fnAdd(webgl::EffectiveFormat::SRGB8_ALPHA8, LOCAL_GL_SRGB_ALPHA, LOCAL_GL_RGBA);
+
+    auto usage = fua->EditUsage(webgl::EffectiveFormat::SRGB8_ALPHA8);
+    usage->isRenderable = true;
+    fua->AllowRBFormat(LOCAL_GL_SRGB8_ALPHA8, usage);
 }
 
 WebGLExtensionSRGB::~WebGLExtensionSRGB()

@@ -60,37 +60,6 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
-static const WebGLRectangleObject*
-CurValidFBRectObject(const WebGLContext* webgl,
-                     const WebGLFramebuffer* boundFB)
-{
-    const WebGLRectangleObject* rect = nullptr;
-
-    if (boundFB) {
-        // We don't really need to ask the driver.
-        // Use 'precheck' to just check that our internal state looks good.
-        FBStatus precheckStatus = boundFB->PrecheckFramebufferStatus();
-        if (precheckStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
-            rect = &boundFB->RectangleObject();
-    } else {
-        rect = static_cast<const WebGLRectangleObject*>(webgl);
-    }
-
-    return rect;
-}
-
-const WebGLRectangleObject*
-WebGLContext::CurValidDrawFBRectObject() const
-{
-    return CurValidFBRectObject(this, mBoundDrawFramebuffer);
-}
-
-const WebGLRectangleObject*
-WebGLContext::CurValidReadFBRectObject() const
-{
-    return CurValidFBRectObject(this, mBoundReadFramebuffer);
-}
-
 //
 //  WebGL API
 //
@@ -424,16 +393,15 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
     if (mBoundReadFramebuffer)
         mBoundReadFramebuffer->DetachTexture(tex);
 
-    tex->InvalidateStatusOfAttachedFBs();
-
     GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
-        if ((mBound2DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_2D) ||
-            (mBoundCubeMapTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) ||
-            (mBound3DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_3D))
+        if (mBound2DTextures[i] == tex ||
+            mBoundCubeMapTextures[i] == tex ||
+            mBound3DTextures[i] == tex ||
+            mBound2DArrayTextures[i] == tex)
         {
             ActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            BindTexture(tex->Target(), nullptr);
+            BindTexture(tex->Target().get(), nullptr);
         }
     }
     ActiveTexture(LOCAL_GL_TEXTURE0 + activeTexture);
@@ -726,10 +694,12 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                                                 GLenum pname,
                                                 ErrorResult& rv)
 {
+    const char funcName[] = "getFramebufferAttachmentParameter";
+
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateFramebufferTarget(target, "getFramebufferAttachmentParameter"))
+    if (!ValidateFramebufferTarget(target, funcName))
         return JS::NullValue();
 
     WebGLFramebuffer* fb;
@@ -747,189 +717,73 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         MOZ_CRASH("Bad target.");
     }
 
-    if (!fb) {
-        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query"
-                              " framebuffer 0.");
+    if (fb)
+        return fb->GetAttachmentParameter(funcName, cx, target, attachment, pname, &rv);
+
+    ////////////////////////////////////
+
+    if (!IsWebGL2()) {
+        ErrorInvalidOperation("%s: Querying against the default framebuffer is not"
+                              " allowed in WebGL 1.",
+                              funcName);
         return JS::NullValue();
     }
 
-    if (!ValidateFramebufferAttachment(fb, attachment,
-                                       "getFramebufferAttachmentParameter"))
-    {
+    switch (attachment) {
+    case LOCAL_GL_COLOR:
+    case LOCAL_GL_DEPTH:
+    case LOCAL_GL_STENCIL:
+        break;
+
+    default:
+        ErrorInvalidEnum("%s: For the default framebuffer, can only query COLOR, DEPTH,"
+                         " or STENCIL.",
+                         funcName);
         return JS::NullValue();
     }
 
-    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers) &&
-        attachment >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        attachment <= LOCAL_GL_COLOR_ATTACHMENT15)
-    {
-        fb->EnsureColorAttachPoints(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
+    switch (pname) {
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        return JS::Int32Value(LOCAL_GL_FRAMEBUFFER_DEFAULT);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+        return JS::NullValue();
+
+    ////////////////
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+        if (attachment == LOCAL_GL_COLOR)
+            return JS::NumberValue(8);
+        return JS::NumberValue(0);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+        if (attachment == LOCAL_GL_COLOR)
+            return JS::NumberValue(mOptions.alpha ? 8 : 0);
+        return JS::NumberValue(0);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+        if (attachment == LOCAL_GL_DEPTH)
+            return JS::NumberValue(mOptions.depth ? 24 : 0);
+        return JS::NumberValue(0);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+        if (attachment == LOCAL_GL_STENCIL)
+            return JS::NumberValue(mOptions.stencil ? 8 : 0);
+        return JS::NumberValue(0);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+        if (attachment == LOCAL_GL_STENCIL)
+            return JS::NumberValue(LOCAL_GL_UNSIGNED_INT);
+        else
+            return JS::NumberValue(LOCAL_GL_UNSIGNED_NORMALIZED);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+        return JS::NumberValue(LOCAL_GL_LINEAR);
     }
 
-    MakeContextCurrent();
-
-    const WebGLFBAttachPoint& fba = fb->GetAttachPoint(attachment);
-
-    if (fba.Renderbuffer()) {
-        switch (pname) {
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
-                if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
-                    const GLenum internalFormat = fba.Renderbuffer()->InternalFormat();
-                    return (internalFormat == LOCAL_GL_SRGB_EXT ||
-                            internalFormat == LOCAL_GL_SRGB_ALPHA_EXT ||
-                            internalFormat == LOCAL_GL_SRGB8_ALPHA8_EXT) ?
-                        JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
-                        JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
-                }
-                break;
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::NumberValue(uint32_t(LOCAL_GL_RENDERBUFFER));
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-                return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE: {
-                if (!IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) &&
-                    !IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float))
-                {
-                    break;
-                }
-
-                if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                    ErrorInvalidOperation("getFramebufferAttachmentParameter: Cannot get component"
-                                          " type of a depth-stencil attachment.");
-                    return JS::NullValue();
-                }
-
-                if (!fba.IsComplete())
-                    return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
-
-                uint32_t ret = LOCAL_GL_NONE;
-                switch (fba.Renderbuffer()->InternalFormat()) {
-                case LOCAL_GL_RGBA4:
-                case LOCAL_GL_RGB5_A1:
-                case LOCAL_GL_RGB565:
-                case LOCAL_GL_SRGB8_ALPHA8:
-                    ret = LOCAL_GL_UNSIGNED_NORMALIZED;
-                    break;
-                case LOCAL_GL_RGB16F:
-                case LOCAL_GL_RGBA16F:
-                case LOCAL_GL_RGB32F:
-                case LOCAL_GL_RGBA32F:
-                    ret = LOCAL_GL_FLOAT;
-                    break;
-                case LOCAL_GL_DEPTH_COMPONENT16:
-                case LOCAL_GL_STENCIL_INDEX8:
-                    ret = LOCAL_GL_UNSIGNED_INT;
-                    break;
-                default:
-                    MOZ_ASSERT(false, "Unhandled RB component type.");
-                    break;
-                }
-                return JS::NumberValue(uint32_t(ret));
-            }
-        }
-
-        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-        return JS::NullValue();
-    } else if (fba.Texture()) {
-        switch (pname) {
-             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
-                if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
-                    const TexInternalFormat effectiveInternalFormat =
-                        fba.Texture()->ImageInfoBase().EffectiveInternalFormat();
-
-                    if (effectiveInternalFormat == LOCAL_GL_NONE) {
-                        ErrorInvalidOperation("getFramebufferAttachmentParameter: "
-                                              "texture contains no data");
-                        return JS::NullValue();
-                    }
-
-                    TexInternalFormat unsizedinternalformat = LOCAL_GL_NONE;
-                    TexType type = LOCAL_GL_NONE;
-                    UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(
-                        effectiveInternalFormat, &unsizedinternalformat, &type);
-                    MOZ_ASSERT(unsizedinternalformat != LOCAL_GL_NONE);
-                    const bool srgb = unsizedinternalformat == LOCAL_GL_SRGB ||
-                                      unsizedinternalformat == LOCAL_GL_SRGB_ALPHA;
-                    return srgb ? JS::NumberValue(uint32_t(LOCAL_GL_SRGB))
-                                : JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
-                }
-                break;
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::NumberValue(uint32_t(LOCAL_GL_TEXTURE));
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-                return WebGLObjectAsJSValue(cx, fba.Texture(), rv);
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-                return JS::Int32Value(fba.MipLevel());
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: {
-                GLenum face = fba.ImageTarget().get();
-                if (face == LOCAL_GL_TEXTURE_2D)
-                    face = 0;
-                return JS::Int32Value(face);
-            }
-
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE: {
-                if (!IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float) &&
-                    !IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float))
-                {
-                    break;
-                }
-
-                if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-                    ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot component"
-                                          " type of depth-stencil attachments.");
-                    return JS::NullValue();
-                }
-
-                if (!fba.IsComplete())
-                    return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
-
-                TexInternalFormat effectiveInternalFormat =
-                    fba.Texture()->ImageInfoAt(fba.ImageTarget(), fba.MipLevel()).EffectiveInternalFormat();
-                TexType type = TypeFromInternalFormat(effectiveInternalFormat);
-                GLenum ret = LOCAL_GL_NONE;
-                switch (type.get()) {
-                case LOCAL_GL_UNSIGNED_BYTE:
-                case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-                case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-                case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-                    ret = LOCAL_GL_UNSIGNED_NORMALIZED;
-                    break;
-                case LOCAL_GL_FLOAT:
-                case LOCAL_GL_HALF_FLOAT:
-                    ret = LOCAL_GL_FLOAT;
-                    break;
-                case LOCAL_GL_UNSIGNED_SHORT:
-                case LOCAL_GL_UNSIGNED_INT:
-                    ret = LOCAL_GL_UNSIGNED_INT;
-                    break;
-                default:
-                    MOZ_ASSERT(false, "Unhandled RB component type.");
-                    break;
-                }
-                return JS::NumberValue(uint32_t(ret));
-            }
-        }
-
-        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-        return JS::NullValue();
-    } else {
-        switch (pname) {
-            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-                return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
-
-            default:
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-                return JS::NullValue();
-        }
-    }
-
+    ErrorInvalidEnum("%s: Invalid pname: 0x%04x", funcName, pname);
     return JS::NullValue();
 }
 
@@ -960,14 +814,11 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
         case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
         case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
         case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
+        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
         {
             // RB emulation means we have to ask the RB itself.
             GLint i = mBoundRenderbuffer->GetRenderbufferParameter(target, pname);
             return JS::Int32Value(i);
-        }
-        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
-        {
-            return JS::NumberValue(mBoundRenderbuffer->InternalFormat());
         }
         default:
             ErrorInvalidEnumInfo("getRenderbufferParameter: parameter", pname);
@@ -1108,13 +959,17 @@ WebGLContext::Hint(GLenum target, GLenum mode)
     bool isValid = false;
 
     switch (target) {
-        case LOCAL_GL_GENERATE_MIPMAP_HINT:
+    case LOCAL_GL_GENERATE_MIPMAP_HINT:
+        isValid = true;
+        break;
+
+    case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+        if (IsWebGL2() ||
+            IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
+        {
             isValid = true;
-            break;
-        case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-            if (IsExtensionEnabled(WebGLExtensionID::OES_standard_derivatives))
-                isValid = true;
-            break;
+        }
+        break;
     }
 
     if (!isValid)
@@ -1220,43 +1075,112 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
     if (IsContextLost())
         return;
 
-    switch (pname) {
-        case UNPACK_FLIP_Y_WEBGL:
-            mPixelStoreFlipY = (param != 0);
+    if (IsWebGL2()) {
+        uint32_t* pValueSlot = nullptr;
+        switch (pname) {
+        case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
+            pValueSlot = &mPixelStore_UnpackImageHeight;
             break;
-        case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-            mPixelStorePremultiplyAlpha = (param != 0);
+
+        case LOCAL_GL_UNPACK_SKIP_IMAGES:
+            pValueSlot = &mPixelStore_UnpackSkipImages;
             break;
-        case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-            if (param == LOCAL_GL_NONE || param == BROWSER_DEFAULT_WEBGL)
-                mPixelStoreColorspaceConversion = param;
-            else
-                return ErrorInvalidEnumInfo("pixelStorei: colorspace conversion parameter", param);
+
+        case LOCAL_GL_UNPACK_ROW_LENGTH:
+            pValueSlot = &mPixelStore_UnpackRowLength;
             break;
-        case LOCAL_GL_PACK_ALIGNMENT:
-        case LOCAL_GL_UNPACK_ALIGNMENT:
-            if (param != 1 &&
-                param != 2 &&
-                param != 4 &&
-                param != 8)
-                return ErrorInvalidValue("pixelStorei: invalid pack/unpack alignment value");
-            if (pname == LOCAL_GL_PACK_ALIGNMENT)
-                mPixelStorePackAlignment = param;
-            else if (pname == LOCAL_GL_UNPACK_ALIGNMENT)
-                mPixelStoreUnpackAlignment = param;
+
+        case LOCAL_GL_UNPACK_SKIP_ROWS:
+            pValueSlot = &mPixelStore_UnpackSkipRows;
+            break;
+
+        case LOCAL_GL_UNPACK_SKIP_PIXELS:
+            pValueSlot = &mPixelStore_UnpackSkipPixels;
+            break;
+
+        case LOCAL_GL_PACK_ROW_LENGTH:
+            pValueSlot = &mPixelStore_PackRowLength;
+            break;
+
+        case LOCAL_GL_PACK_SKIP_ROWS:
+            pValueSlot = &mPixelStore_PackSkipRows;
+            break;
+
+        case LOCAL_GL_PACK_SKIP_PIXELS:
+            pValueSlot = &mPixelStore_PackSkipPixels;
+            break;
+        }
+
+        if (pValueSlot) {
+            if (param < 0) {
+                ErrorInvalidValue("pixelStorei: param must be >= 0.");
+                return;
+            }
+
             MakeContextCurrent();
             gl->fPixelStorei(pname, param);
-            break;
-        default:
-            return ErrorInvalidEnumInfo("pixelStorei: parameter", pname);
+            *pValueSlot = param;
+            return;
+        }
     }
+
+    switch (pname) {
+    case UNPACK_FLIP_Y_WEBGL:
+        mPixelStore_FlipY = bool(param);
+        return;
+
+    case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
+        mPixelStore_PremultiplyAlpha = bool(param);
+        return;
+
+    case UNPACK_COLORSPACE_CONVERSION_WEBGL:
+        switch (param) {
+        case LOCAL_GL_NONE:
+        case BROWSER_DEFAULT_WEBGL:
+            mPixelStore_ColorspaceConversion = param;
+            return;
+
+        default:
+            ErrorInvalidEnumInfo("pixelStorei: colorspace conversion parameter",
+                                 param);
+            return;
+        }
+
+    case LOCAL_GL_PACK_ALIGNMENT:
+    case LOCAL_GL_UNPACK_ALIGNMENT:
+        switch (param) {
+        case 1:
+        case 2:
+        case 4:
+        case 8:
+            if (pname == LOCAL_GL_PACK_ALIGNMENT)
+                mPixelStore_PackAlignment = param;
+            else if (pname == LOCAL_GL_UNPACK_ALIGNMENT)
+                mPixelStore_UnpackAlignment = param;
+
+            MakeContextCurrent();
+            gl->fPixelStorei(pname, param);
+            return;
+
+        default:
+            ErrorInvalidValue("pixelStorei: invalid pack/unpack alignment value");
+            return;
+        }
+
+
+
+    default:
+        break;
+    }
+
+    ErrorInvalidEnumInfo("pixelStorei: parameter", pname);
 }
 
 // `width` in pixels.
 // `stride` in bytes.
-static bool
-SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
-             size_t height, size_t stride)
+static void
+SetFullAlpha(void* data, GLenum format, GLenum type, size_t width, size_t height,
+             size_t stride)
 {
     if (format == LOCAL_GL_ALPHA && type == LOCAL_GL_UNSIGNED_BYTE) {
         // Just memset the rows.
@@ -1266,7 +1190,7 @@ SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
             row += stride;
         }
 
-        return true;
+        return;
     }
 
     if (format == LOCAL_GL_RGBA && type == LOCAL_GL_UNSIGNED_BYTE) {
@@ -1281,7 +1205,7 @@ SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
             }
         }
 
-        return true;
+        return;
     }
 
     if (format == LOCAL_GL_RGBA && type == LOCAL_GL_FLOAT) {
@@ -1297,60 +1221,92 @@ SetFullAlpha(void* data, GLenum format, GLenum type, size_t width,
             }
         }
 
-        return true;
-    }
-
-    MOZ_ASSERT(false, "Unhandled case, how'd we get here?");
-    return false;
-}
-
-static void
-ReadPixelsAndConvert(gl::GLContext* gl, GLint x, GLint y, GLsizei width, GLsizei height,
-                     GLenum readFormat, GLenum readType, size_t pixelStorePackAlignment,
-                     GLenum destFormat, GLenum destType, void* destBytes)
-{
-    if (readFormat == destFormat && readType == destType) {
-        gl->fReadPixels(x, y, width, height, destFormat, destType, destBytes);
         return;
     }
 
-    if (readFormat == LOCAL_GL_RGBA &&
-        readType == LOCAL_GL_HALF_FLOAT &&
-        destFormat == LOCAL_GL_RGBA &&
-        destType == LOCAL_GL_FLOAT)
+    MOZ_CRASH("Unhandled case, how'd we get here?");
+}
+
+bool
+WebGLContext::DoReadPixelsAndConvert(GLint x, GLint y, GLsizei width, GLsizei height,
+                                     GLenum destFormat, GLenum destType, void* destBytes,
+                                     GLenum auxReadFormat, GLenum auxReadType)
+{
+    GLenum readFormat = destFormat;
+    GLenum readType = destType;
+
+    if (gl->WorkAroundDriverBugs() &&
+        gl->IsANGLE() &&
+        readType == LOCAL_GL_FLOAT &&
+        auxReadFormat == destFormat &&
+        auxReadType == LOCAL_GL_HALF_FLOAT)
     {
-        size_t readBytesPerPixel = sizeof(uint16_t) * 4;
-        size_t destBytesPerPixel = sizeof(float) * 4;
+        readType = auxReadType;
 
-        size_t readBytesPerRow = readBytesPerPixel * width;
+        const auto readBytesPerPixel = webgl::BytesPerPixel({readFormat, readType});
+        const auto destBytesPerPixel = webgl::BytesPerPixel({destFormat, destType});
 
-        size_t readStride = RoundUpToMultipleOf(readBytesPerRow, pixelStorePackAlignment);
-        size_t destStride = RoundUpToMultipleOf(destBytesPerPixel * width,
-                                                pixelStorePackAlignment);
+        CheckedUint32 readOffset;
+        CheckedUint32 readStride;
+        const CheckedUint32 readSize = GetPackSize(width, height, readBytesPerPixel,
+                                                   &readOffset, &readStride);
 
-        size_t bytesNeeded = ((height - 1) * readStride) + readBytesPerRow;
-        UniquePtr<uint8_t[]> readBuffer(new uint8_t[bytesNeeded]);
+        CheckedUint32 destOffset;
+        CheckedUint32 destStride;
+        const CheckedUint32 destSize = GetPackSize(width, height, destBytesPerPixel,
+                                                   &destOffset, &destStride);
+        if (!readSize.isValid() || !destSize.isValid()) {
+            ErrorOutOfMemory("readPixels: Overflow calculating sizes for conversion.");
+            return false;
+        }
+
+        UniqueBuffer readBuffer = malloc(readSize.value());
+        if (!readBuffer) {
+            ErrorOutOfMemory("readPixels: Failed to alloc temp buffer for conversion.");
+            return false;
+        }
+
+        gl::GLContext::LocalErrorScope errorScope(*gl);
 
         gl->fReadPixels(x, y, width, height, readFormat, readType, readBuffer.get());
 
-        size_t channelsPerRow = width * 4;
-        for (size_t j = 0; j < (size_t)height; j++) {
-            uint16_t* src = (uint16_t*)(readBuffer.get()) + j*readStride;
-            float* dst = (float*)(destBytes) + j*destStride;
+        const GLenum error = errorScope.GetError();
+        if (error == LOCAL_GL_OUT_OF_MEMORY) {
+            ErrorOutOfMemory("readPixels: Driver ran out of memory.");
+            return false;
+        }
 
-            uint16_t* srcEnd = src + channelsPerRow;
+        if (error) {
+            MOZ_RELEASE_ASSERT(false, "Unexpected driver error.");
+            return false;
+        }
+
+        size_t channelsPerRow = std::min(readStride.value() / sizeof(uint16_t),
+                                         destStride.value() / sizeof(float));
+
+        const uint8_t* srcRow = (uint8_t*)(readBuffer.get()) + readOffset.value();
+        uint8_t* dstRow = (uint8_t*)(destBytes) + destOffset.value();
+
+        for (size_t j = 0; j < (size_t)height; j++) {
+            auto src = (const uint16_t*)srcRow;
+            auto dst = (float*)dstRow;
+
+            const auto srcEnd = src + channelsPerRow;
             while (src != srcEnd) {
                 *dst = unpackFromFloat16(*src);
-
                 ++src;
                 ++dst;
             }
+
+            srcRow += readStride.value();
+            dstRow += destStride.value();
         }
 
-        return;
+        return true;
     }
 
-    MOZ_CRASH("bad format/type");
+    gl->fReadPixels(x, y, width, height, destFormat, destType, destBytes);
+    return true;
 }
 
 static bool
@@ -1382,6 +1338,37 @@ IsFormatAndTypeUnpackable(GLenum format, GLenum type)
     }
 }
 
+CheckedUint32
+WebGLContext::GetPackSize(uint32_t width, uint32_t height, uint8_t bytesPerPixel,
+                          CheckedUint32* const out_startOffset,
+                          CheckedUint32* const out_rowStride)
+{
+    if (!width || !height) {
+        *out_startOffset = 0;
+        *out_rowStride = 0;
+        return 0;
+    }
+
+    const CheckedUint32 pixelsPerRow = (mPixelStore_PackRowLength ? mPixelStore_PackRowLength
+                                                                  : width);
+    const CheckedUint32 skipPixels = mPixelStore_PackSkipPixels;
+    const CheckedUint32 skipRows = mPixelStore_PackSkipRows;
+    const CheckedUint32 alignment = mPixelStore_PackAlignment;
+
+    // GLES 3.0.4, p116 (PACK_ functions like UNPACK_)
+    const auto totalBytesPerRow = bytesPerPixel * pixelsPerRow;
+    const auto rowStride = RoundUpToMultipleOf(totalBytesPerRow, alignment);
+
+    const auto startOffset = rowStride * skipRows + bytesPerPixel * skipPixels;
+    const auto usedBytesPerRow = bytesPerPixel * width;
+
+    const auto bytesNeeded = startOffset + rowStride * (height - 1) + usedBytesPerRow;
+
+    *out_startOffset = startOffset;
+    *out_rowStride = rowStride;
+    return bytesNeeded;
+}
+
 // This function is temporary, and will be removed once https://bugzilla.mozilla.org/show_bug.cgi?id=1176214 lands, which will
 // collapse the SharedArrayBufferView and ArrayBufferView into one.
 void
@@ -1390,25 +1377,26 @@ ComputeLengthAndData(const dom::ArrayBufferViewOrSharedArrayBufferView& view,
                      js::Scalar::Type* const out_type)
 {
     if (view.IsArrayBufferView()) {
-        const dom::ArrayBufferView& pixbuf = view.GetAsArrayBufferView();
-        pixbuf.ComputeLengthAndData();
-        *out_length = pixbuf.Length();
-        *out_data = pixbuf.Data();
-        *out_type = JS_GetArrayBufferViewType(pixbuf.Obj());
+        const auto& view2 = view.GetAsArrayBufferView();
+        view2.ComputeLengthAndData();
+
+        *out_length = view2.Length();
+        *out_data = view2.Data();
+        *out_type = JS_GetArrayBufferViewType(view2.Obj());
     } else {
-        const dom::SharedArrayBufferView& pixbuf = view.GetAsSharedArrayBufferView();
-        pixbuf.ComputeLengthAndData();
-        *out_length = pixbuf.Length();
-        *out_data = pixbuf.Data();
-        *out_type = JS_GetSharedArrayBufferViewType(pixbuf.Obj());
+        const auto& view2 = view.GetAsSharedArrayBufferView();
+        view2.ComputeLengthAndData();
+        *out_length = view2.Length();
+        *out_data = view2.Data();
+        *out_type = JS_GetSharedArrayBufferViewType(view2.Obj());
     }
 }
 
 void
-WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
-                         GLsizei height, GLenum format,
-                         GLenum type, const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& pixels,
-                         ErrorResult& rv)
+WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                         GLenum type,
+                         const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& pixels,
+                         ErrorResult& out_error)
 {
     if (IsContextLost())
         return;
@@ -1418,7 +1406,8 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         !nsContentUtils::IsCallerChrome())
     {
         GenerateWarning("readPixels: Not allowed");
-        return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        out_error.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
     }
 
     if (width < 0 || height < 0)
@@ -1429,10 +1418,6 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
     if (!IsFormatAndTypeUnpackable(format, type))
         return ErrorInvalidEnum("readPixels: Bad format or type.");
-
-    const WebGLRectangleObject* framebufferRect = CurValidReadFBRectObject();
-    GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
-    GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
     int channels = 0;
 
@@ -1483,61 +1468,55 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         MOZ_CRASH("bad `type`");
     }
 
-    const dom::ArrayBufferViewOrSharedArrayBufferView &view = pixels.Value();
+    const auto& view = pixels.Value();
     // Compute length and data.  Don't reenter after this point, lest the
     // precomputed go out of sync with the instant length/data.
-    size_t dataByteLen;
     void* data;
+    size_t bytesAvailable;
     js::Scalar::Type dataType;
-    ComputeLengthAndData(view, &data, &dataByteLen, &dataType);
+    ComputeLengthAndData(view, &data, &bytesAvailable, &dataType);
 
     // Check the pixels param type
     if (dataType != requiredDataType)
         return ErrorInvalidOperation("readPixels: Mismatched type/pixels types");
 
-    // Check the pixels param size
-    CheckedUint32 checked_neededByteLength =
-        GetImageSize(height, width, 1, bytesPerPixel, mPixelStorePackAlignment);
+    CheckedUint32 startOffset;
+    CheckedUint32 rowStride;
+    const auto bytesNeeded = GetPackSize(width, height, bytesPerPixel, &startOffset,
+                                         &rowStride);
+    if (!bytesNeeded.isValid()) {
+        ErrorInvalidOperation("readPixels: Integer overflow computing the needed buffer"
+                              " size.");
+        return;
+    }
 
-    CheckedUint32 checked_plainRowSize = CheckedUint32(width) * bytesPerPixel;
-
-    CheckedUint32 checked_alignedRowSize =
-        RoundedToNextMultipleOf(checked_plainRowSize, mPixelStorePackAlignment);
-
-    if (!checked_neededByteLength.isValid())
-        return ErrorInvalidOperation("readPixels: integer overflow computing the needed buffer size");
-
-    if (checked_neededByteLength.value() > dataByteLen)
-        return ErrorInvalidOperation("readPixels: buffer too small");
+    if (bytesNeeded.value() > bytesAvailable) {
+        ErrorInvalidOperation("readPixels: buffer too small");
+        return;
+    }
 
     if (!data) {
         ErrorOutOfMemory("readPixels: buffer storage is null. Did we run out of memory?");
-        return rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        out_error.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
     }
 
     MakeContextCurrent();
 
-    bool isSourceTypeFloat;
-    if (mBoundReadFramebuffer) {
-        TexInternalFormat srcFormat;
-        if (!mBoundReadFramebuffer->ValidateForRead("readPixels", &srcFormat))
-            return;
+    const webgl::FormatUsageInfo* srcFormat;
+    uint32_t srcWidth;
+    uint32_t srcHeight;
+    if (!ValidateCurFBForRead("readPixels", &srcFormat, &srcWidth, &srcHeight))
+        return;
 
-        MOZ_ASSERT(srcFormat != LOCAL_GL_NONE);
-        TexType texType = TypeFromInternalFormat(srcFormat);
-        isSourceTypeFloat = (texType == LOCAL_GL_FLOAT ||
-                             texType == LOCAL_GL_HALF_FLOAT);
-    } else {
-        ClearBackbufferIfNeeded();
-
-        isSourceTypeFloat = false;
-    }
+    auto srcType = srcFormat->format->componentType;
+    const bool isSrcTypeFloat = (srcType == webgl::ComponentType::Float);
 
     // Check the format and type params to assure they are an acceptable pair (as per spec)
 
     const GLenum mainReadFormat = LOCAL_GL_RGBA;
-    const GLenum mainReadType = isSourceTypeFloat ? LOCAL_GL_FLOAT
-                                                  : LOCAL_GL_UNSIGNED_BYTE;
+    const GLenum mainReadType = isSrcTypeFloat ? LOCAL_GL_FLOAT
+                                               : LOCAL_GL_UNSIGNED_BYTE;
 
     GLenum auxReadFormat = mainReadFormat;
     GLenum auxReadType = mainReadType;
@@ -1557,91 +1536,89 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (!isValid)
         return ErrorInvalidOperation("readPixels: Invalid format/type pair");
 
-    GLenum readType = type;
-    if (gl->WorkAroundDriverBugs() && gl->IsANGLE()) {
-        if (type == LOCAL_GL_FLOAT &&
-            auxReadFormat == format &&
-            auxReadType == LOCAL_GL_HALF_FLOAT)
-        {
-            readType = auxReadType;
-        }
+    // Now that the errors are out of the way, on to actually reading!
+
+    uint32_t readX, readY;
+    uint32_t writeX, writeY;
+    uint32_t rwWidth, rwHeight;
+    Intersect(srcWidth, x, width, &readX, &writeX, &rwWidth);
+    Intersect(srcHeight, y, height, &readY, &writeY, &rwHeight);
+
+    if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height)) {
+        DoReadPixelsAndConvert(x, y, width, height, format, type, data, auxReadFormat,
+                               auxReadType);
+        return;
     }
 
-    // Now that the errors are out of the way, on to actually reading
+    // Read request contains out-of-bounds pixels. Unfortunately:
+    // GLES 3.0.4 p194 "Obtaining Pixels from the Framebuffer":
+    // "If any of these pixels lies outside of the window allocated to the current GL
+    //  context, or outside of the image attached to the currently bound framebuffer
+    //  object, then the values obtained for those pixels are undefined."
 
-    // If we won't be reading any pixels anyways, just skip the actual reading
-    if (width == 0 || height == 0)
-        return DummyFramebufferOperation("readPixels");
+    // This is a slow-path, so warn people away!
+    GenerateWarning("readPixels: Out-of-bounds reads with readPixels are deprecated, and"
+                    " may be slow.");
 
-    if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
-        // the easy case: we're not reading out-of-range pixels
+    // Currently, the spec dictates that we need to zero the out-of-bounds pixels.
 
-        // Effectively: gl->fReadPixels(x, y, width, height, format, type, dest);
-        ReadPixelsAndConvert(gl, x, y, width, height, format, readType,
-                             mPixelStorePackAlignment, format, type, data);
-    } else {
-        // the rectangle doesn't fit entirely in the bound buffer. We then have to set to zero the part
-        // of the buffer that correspond to out-of-range pixels. We don't want to rely on system OpenGL
-        // to do that for us, because passing out of range parameters to a buggy OpenGL implementation
-        // could conceivably allow to read memory we shouldn't be allowed to read. So we manually initialize
-        // the buffer to zero and compute the parameters to pass to OpenGL. We have to use an intermediate buffer
-        // to accomodate the potentially different strides (widths).
+    // Ideally we could just ReadPixels into the buffer, then zero the undefined parts.
+    // However, we can't do this for *shared* ArrayBuffers, as they can have racey
+    // accesses from Workers.
 
-        // Zero the whole pixel dest area in the destination buffer.
-        memset(data, 0, checked_neededByteLength.value());
+    // We can use a couple tricks to do this faster, but we shouldn't encourage this
+    // anyway. Why not just do it the really safe, dead-simple way, even if it is
+    // hilariously slow?
 
-        if (   x >= framebufferWidth
-            || x+width <= 0
-            || y >= framebufferHeight
-            || y+height <= 0)
-        {
-            // we are completely outside of range, can exit now with buffer filled with zeros
-            return DummyFramebufferOperation("readPixels");
+    ////////////////////////////////////
+    // Clear the targetted pixels to zero.
+
+    if (mPixelStore_PackRowLength ||
+        mPixelStore_PackSkipPixels ||
+        mPixelStore_PackSkipRows)
+    {
+        // Targetted bytes might not be contiguous, so do it row-by-row.
+        uint8_t* row = (uint8_t*)data + startOffset.value();
+        const auto bytesPerRow = bytesPerPixel * width;
+        for (uint32_t j = 0; j < uint32_t(height); j++) {
+            std::memset(row, 0, bytesPerRow);
+            row += rowStride.value();
         }
+    } else {
+        std::memset(data, 0, bytesNeeded.value());
+    }
 
-        // compute the parameters of the subrect we're actually going to call glReadPixels on
-        GLint   subrect_x      = std::max(x, 0);
-        GLint   subrect_end_x  = std::min(x+width, framebufferWidth);
-        GLsizei subrect_width  = subrect_end_x - subrect_x;
+    ////////////////////////////////////
+    // Read only the in-bounds pixels.
 
-        GLint   subrect_y      = std::max(y, 0);
-        GLint   subrect_end_y  = std::min(y+height, framebufferHeight);
-        GLsizei subrect_height = subrect_end_y - subrect_y;
+    if (!rwWidth || !rwHeight) {
+        // There aren't any, so we're 'done'.
+        DummyFramebufferOperation("readPixels");
+        return;
+    }
 
-        if (subrect_width < 0 || subrect_height < 0 ||
-            subrect_width > width || subrect_height > height)
-            return ErrorInvalidOperation("readPixels: integer overflow computing clipped rect size");
+    if (IsWebGL2()) {
+        if (!mPixelStore_PackRowLength) {
+            gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, width);
+        }
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mPixelStore_PackSkipPixels + writeX);
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows + writeY);
 
-        // now we know that subrect_width is in the [0..width] interval, and same for heights.
+        DoReadPixelsAndConvert(readX, readY, rwWidth, rwHeight, format, type, data,
+                               auxReadFormat, auxReadType);
 
-        // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
-        // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
-        uint32_t subrect_plainRowSize = subrect_width * bytesPerPixel;
-    // There are checks above to ensure that this doesn't overflow.
-        uint32_t subrect_alignedRowSize =
-            RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
-        uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
+        gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore_PackRowLength);
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mPixelStore_PackSkipPixels);
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows);
+    } else {
+        // I *did* say "hilariously slow".
 
-        // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
-        auto subrect_data = MakeUniqueFallible<GLubyte[]>(subrect_byteLength);
-        if (!subrect_data)
-            return ErrorOutOfMemory("readPixels: subrect_data");
-
-        // Effectively: gl->fReadPixels(subrect_x, subrect_y, subrect_width,
-        //                              subrect_height, format, type, subrect_data.get());
-        ReadPixelsAndConvert(gl, subrect_x, subrect_y, subrect_width, subrect_height,
-                             format, readType, mPixelStorePackAlignment, format, type,
-                             subrect_data.get());
-
-        // notice that this for loop terminates because we already checked that subrect_height is at most height
-        for (GLint y_inside_subrect = 0; y_inside_subrect < subrect_height; ++y_inside_subrect) {
-            GLint subrect_x_in_dest_buffer = subrect_x - x;
-            GLint subrect_y_in_dest_buffer = subrect_y - y;
-            memcpy(static_cast<GLubyte*>(data)
-                     + checked_alignedRowSize.value() * (subrect_y_in_dest_buffer + y_inside_subrect)
-                     + bytesPerPixel * subrect_x_in_dest_buffer, // destination
-                   subrect_data.get() + subrect_alignedRowSize * y_inside_subrect, // source
-                   subrect_plainRowSize); // size
+        uint8_t* row = (uint8_t*)data + startOffset.value() + writeX * bytesPerPixel;
+        row += writeY * rowStride.value();
+        for (uint32_t j = 0; j < rwHeight; j++) {
+            DoReadPixelsAndConvert(readX, readY+j, rwWidth, 1, format, type, row,
+                                   auxReadFormat, auxReadType);
+            row += rowStride.value();
         }
     }
 
@@ -1662,10 +1639,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     if (!needAlphaFilled)
         return;
 
-    size_t stride = checked_alignedRowSize.value(); // In bytes!
-    if (!SetFullAlpha(data, format, type, width, height, stride)) {
-        return rv.Throw(NS_ERROR_FAILURE);
-    }
+    SetFullAlpha(data, format, type, width, height, rowStride.value());
 }
 
 void
@@ -1697,91 +1671,32 @@ WebGLContext::RenderbufferStorage_base(const char* funcName, GLenum target,
         return;
     }
 
-    if (width > mGLMaxRenderbufferSize || height > mGLMaxRenderbufferSize) {
+    if (uint32_t(width) > mImplMaxRenderbufferSize ||
+        uint32_t(height) > mImplMaxRenderbufferSize)
+    {
         ErrorInvalidValue("%s: Width or height exceeds maximum renderbuffer"
                           " size.", funcName);
         return;
     }
 
-    // Convert DEPTH_STENCIL to sized type for testing
-    GLenum sizedInternalFormat = internalFormat;
-    if (sizedInternalFormat == LOCAL_GL_DEPTH_STENCIL)
-        sizedInternalFormat = LOCAL_GL_DEPTH24_STENCIL8;
-
-    bool isFormatValid = false;
-    const webgl::FormatInfo* info = webgl::GetInfoBySizedFormat(sizedInternalFormat);
-    if (info) {
-        const webgl::FormatUsageInfo* usage = mFormatUsage->GetUsage(info);
-        isFormatValid = usage && usage->asRenderbuffer;
-    }
-
-    if (!isFormatValid) {
+    const auto usage = mFormatUsage->GetRBUsage(internalFormat);
+    if (!usage) {
         ErrorInvalidEnumInfo("`internalFormat`", funcName, internalFormat);
         return;
-    }
-
-    // certain OpenGL ES renderbuffer formats may not exist on desktop OpenGL
-    GLenum internalFormatForGL = internalFormat;
-
-    switch (internalFormat) {
-    case LOCAL_GL_RGBA4:
-    case LOCAL_GL_RGB5_A1:
-        // 16-bit RGBA formats are not supported on desktop GL
-        if (!gl->IsGLES())
-            internalFormatForGL = LOCAL_GL_RGBA8;
-        break;
-
-    case LOCAL_GL_RGB565:
-        // the RGB565 format is not supported on desktop GL
-        if (!gl->IsGLES())
-            internalFormatForGL = LOCAL_GL_RGB8;
-        break;
-
-    case LOCAL_GL_DEPTH_COMPONENT16:
-        if (!gl->IsGLES() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
-            internalFormatForGL = LOCAL_GL_DEPTH_COMPONENT24;
-        else if (gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil))
-            internalFormatForGL = LOCAL_GL_DEPTH24_STENCIL8;
-        break;
-
-    case LOCAL_GL_DEPTH_STENCIL:
-        // We emulate this in WebGLRenderbuffer if we don't have the requisite extension.
-        internalFormatForGL = LOCAL_GL_DEPTH24_STENCIL8;
-        break;
-
-    default:
-        break;
     }
 
     // Validation complete.
 
     MakeContextCurrent();
 
-    bool willRealloc = samples != mBoundRenderbuffer->Samples() ||
-                       internalFormat != mBoundRenderbuffer->InternalFormat() ||
-                       width != mBoundRenderbuffer->Width() ||
-                       height != mBoundRenderbuffer->Height();
-
-    if (willRealloc) {
-        GetAndFlushUnderlyingGLErrors();
-        mBoundRenderbuffer->RenderbufferStorage(samples, internalFormatForGL,
-                                                width, height);
-        GLenum error = GetAndFlushUnderlyingGLErrors();
-        if (error) {
-            GenerateWarning("%s generated error %s", funcName,
-                            ErrorName(error));
-            return;
-        }
-    } else {
-        mBoundRenderbuffer->RenderbufferStorage(samples, internalFormatForGL,
-                                                width, height);
+    GetAndFlushUnderlyingGLErrors();
+    mBoundRenderbuffer->RenderbufferStorage(samples, usage, width, height);
+    GLenum error = GetAndFlushUnderlyingGLErrors();
+    if (error) {
+        GenerateWarning("%s generated error %s", funcName,
+                        ErrorName(error));
+        return;
     }
-
-    mBoundRenderbuffer->SetSamples(samples);
-    mBoundRenderbuffer->SetInternalFormat(internalFormat);
-    mBoundRenderbuffer->SetInternalFormatForGL(internalFormatForGL);
-    mBoundRenderbuffer->setDimensions(width, height);
-    mBoundRenderbuffer->SetImageDataStatus(WebGLImageDataStatus::UninitializedImageData);
 }
 
 void
@@ -1882,79 +1797,6 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
 
     MakeContextCurrent();
     gl->fStencilOpSeparate(face, sfail, dpfail, dppass);
-}
-
-nsresult
-WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                                     RefPtr<DataSourceSurface>& imageOut,
-                                                     WebGLTexelFormat* format)
-{
-   *format = WebGLTexelFormat::None;
-
-    if (!res.mSourceSurface)
-        return NS_OK;
-    RefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
-    if (!data) {
-        // SurfaceFromElement lied!
-        return NS_OK;
-    }
-
-    // We disallow loading cross-domain images and videos that have not been validated
-    // with CORS as WebGL textures. The reason for doing that is that timing
-    // attacks on WebGL shaders are able to retrieve approximations of the
-    // pixel values in WebGL textures; see bug 655987.
-    //
-    // To prevent a loophole where a Canvas2D would be used as a proxy to load
-    // cross-domain textures, we also disallow loading textures from write-only
-    // Canvas2D's.
-
-    // part 1: check that the DOM element is same-origin, or has otherwise been
-    // validated for cross-domain use.
-    if (!res.mCORSUsed) {
-        bool subsumes;
-        nsresult rv = mCanvasElement->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
-        if (NS_FAILED(rv) || !subsumes) {
-            GenerateWarning("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
-                                "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-            return NS_ERROR_DOM_SECURITY_ERR;
-        }
-    }
-
-    // part 2: if the DOM element is write-only, it might contain
-    // cross-domain image data.
-    if (res.mIsWriteOnly) {
-        GenerateWarning("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
-                        "to load a WebGL texture from a tainted canvas. A Canvas becomes tainted for example "
-                        "when a cross-domain image is drawn on it. "
-                        "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    // End of security checks, now we should be safe regarding cross-domain images
-    // Notice that there is never a need to mark the WebGL canvas as write-only, since we reject write-only/cross-domain
-    // texture sources in the first place.
-
-    switch (data->GetFormat()) {
-        case SurfaceFormat::B8G8R8A8:
-            *format = WebGLTexelFormat::BGRA8; // careful, our ARGB means BGRA
-            break;
-        case SurfaceFormat::B8G8R8X8:
-            *format = WebGLTexelFormat::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
-            break;
-        case SurfaceFormat::A8:
-            *format = WebGLTexelFormat::A8;
-            break;
-        case SurfaceFormat::R5G6B5_UINT16:
-            *format = WebGLTexelFormat::RGB565;
-            break;
-        default:
-            NS_ASSERTION(false, "Unsupported image format. Unimplemented.");
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    imageOut = data;
-
-    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

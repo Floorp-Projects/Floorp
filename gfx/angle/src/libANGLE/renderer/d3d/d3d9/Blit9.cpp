@@ -505,6 +505,13 @@ gl::Error Blit9::setFormatConvertShaders(GLenum destFormat)
     return gl::Error(GL_NO_ERROR);
 }
 
+static bool
+IsEmpty(const RECT& rect)
+{
+    return rect.left == rect.right ||
+           rect.top == rect.bottom;
+}
+
 gl::Error Blit9::copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &sourceRect, IDirect3DTexture9 **outTexture)
 {
     ASSERT(surface);
@@ -516,7 +523,10 @@ gl::Error Blit9::copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &so
 
     // Copy the render target into a texture
     IDirect3DTexture9 *texture;
-    HRESULT result = device->CreateTexture(sourceRect.right - sourceRect.left, sourceRect.bottom - sourceRect.top, 1, D3DUSAGE_RENDERTARGET, sourceDesc.Format, D3DPOOL_DEFAULT, &texture, NULL);
+    HRESULT result = device->CreateTexture(sourceRect.right - sourceRect.left,
+                                           sourceRect.bottom - sourceRect.top, 1,
+                                           D3DUSAGE_RENDERTARGET, sourceDesc.Format,
+                                           D3DPOOL_DEFAULT, &texture, NULL);
 
     if (FAILED(result))
     {
@@ -534,13 +544,82 @@ gl::Error Blit9::copySurfaceToTexture(IDirect3DSurface9 *surface, const RECT &so
         return gl::Error(GL_OUT_OF_MEMORY, "Failed to query surface of internal blit texture, result: 0x%X.", result);
     }
 
+    D3DSURFACE_DESC destDesc;
+    textureSurface->GetDesc(&destDesc);
+
+    RECT subsetSourceRect = sourceRect;
+    RECT subsetDestRect = { 0, 0, destDesc.Width, destDesc.Height };
+    if (sourceRect.left < 0) {
+        LONG diff = 0 - sourceRect.left;
+        ASSERT(diff > 0);
+        subsetSourceRect.left += diff;
+        subsetDestRect.left += diff;
+    }
+
+    if (sourceRect.top < 0) {
+        LONG diff = 0 - sourceRect.top;
+        ASSERT(diff > 0);
+        subsetSourceRect.top += diff;
+        subsetDestRect.top += diff;
+    }
+
+    if (sourceRect.right > LONG(sourceDesc.Width)) {
+        LONG diff = sourceRect.right - sourceDesc.Width;
+        ASSERT(diff > 0);
+        subsetSourceRect.right -= diff;
+        subsetDestRect.right -= diff;
+    }
+
+    if (sourceRect.bottom > LONG(sourceDesc.Height)) {
+        LONG diff = sourceRect.bottom - sourceDesc.Height;
+        ASSERT(diff > 0);
+        subsetSourceRect.bottom -= diff;
+        subsetDestRect.bottom -= diff;
+    }
+
+    ASSERT(subsetSourceRect.left <= subsetSourceRect.right);
+    ASSERT(subsetSourceRect.top <= subsetSourceRect.bottom);
+    ASSERT(subsetDestRect.left <= subsetDestRect.right);
+    ASSERT(subsetDestRect.top <= subsetDestRect.bottom);
+
+    ASSERT(subsetSourceRect.right - subsetSourceRect.left == subsetDestRect.right - subsetDestRect.left);
+    ASSERT(subsetSourceRect.bottom - subsetSourceRect.top == subsetDestRect.bottom - subsetDestRect.top);
+
     mRenderer->endScene();
-    result = device->StretchRect(surface, &sourceRect, textureSurface, NULL, D3DTEXF_NONE);
+
+    if (!IsEmpty(subsetSourceRect)) {
+        result = device->StretchRect(surface, &subsetSourceRect, textureSurface, &subsetDestRect, D3DTEXF_NONE);
+    }
 
     SafeRelease(textureSurface);
 
     if (FAILED(result))
     {
+        if (!(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY)) {
+            std::printf("Bad result: 0x%x\n", result);
+
+            std::printf("sourceRect: %i,%i - %i,%i\n", sourceRect.left, sourceRect.top,
+                        sourceRect.right, sourceRect.bottom);
+
+            std::printf("sourceDesc: Format: %u, Type: %u, Usage: %u, Pool: %u,"
+                        " MSType: %u, MSQuality: %u, Width: %u, Height: %u\n",
+                        sourceDesc.Format, sourceDesc.Type, sourceDesc.Usage,
+                        sourceDesc.Pool, sourceDesc.MultiSampleType,
+                        sourceDesc.MultiSampleQuality, sourceDesc.Width,
+                        sourceDesc.Height);
+
+            std::printf("subsetSourceRect: %i,%i - %i,%i\n", subsetSourceRect.left, subsetSourceRect.top,
+                        subsetSourceRect.right, subsetSourceRect.bottom);
+
+            std::printf("destDesc: Format: %u, Type: %u, Usage: %u, Pool: %u, MSType: %u,"
+                        " MSQuality: %u, Width: %u, Height: %u\n",
+                        destDesc.Format, destDesc.Type, destDesc.Usage, destDesc.Pool,
+                        destDesc.MultiSampleType, destDesc.MultiSampleQuality,
+                        destDesc.Width, destDesc.Height);
+
+            std::printf("subsetDestRect: %i,%i - %i,%i\n", subsetDestRect.left, subsetDestRect.top,
+                        subsetDestRect.right, subsetDestRect.bottom);
+        }
         ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
         SafeRelease(texture);
         return gl::Error(GL_OUT_OF_MEMORY, "Failed to copy between internal blit textures, result: 0x%X.", result);

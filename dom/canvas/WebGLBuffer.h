@@ -55,7 +55,7 @@ public:
     bool IsElementArrayUsedWithMultipleTypes() const;
 
     WebGLContext* GetParentObject() const {
-        return Context();
+        return mContext;
     }
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
