@@ -317,4 +317,19 @@ add_task(function* () {
   Assert.throws(() => root.testing.onBar.addListener(f, "hi"),
                 /Incorrect argument types/,
                 "addListener with wrong extra parameter should throw");
+
+  let target = {prop1: 12, prop2: ["value1", "value3"]};
+  let proxy = new Proxy(target, {});
+  Assert.throws(() => root.testing.quack(proxy),
+                /Expected a plain JavaScript object, got a Proxy/,
+                "should throw when passing a Proxy");
+
+  if (Symbol.toStringTag) {
+    let target = {prop1: 12, prop2: ["value1", "value3"]};
+    target[Symbol.toStringTag] = () => "[object Object]";
+    let proxy = new Proxy(target, {});
+    Assert.throws(() => root.testing.quack(proxy),
+                  /Expected a plain JavaScript object, got a Proxy/,
+                  "should throw when passing a Proxy");
+  }
 });

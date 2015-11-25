@@ -181,7 +181,7 @@ MenuItem.prototype = {
     let item = this;
     // return true if the prop was set on |this|
     function parseProp(propName, defaultValue = null) {
-      if (propName in createProperties) {
+      if (createProperties[propName] !== null) {
         item[propName] = createProperties[propName];
         return true;
       } else if (!update && defaultValue !== null) {
@@ -191,9 +191,7 @@ MenuItem.prototype = {
       return false;
     }
 
-    if (update && "id" in createProperties) {
-      throw new Error("Id of a MenuItem cannot be changed");
-    } else if (!update) {
+    if (!update) {
       let isIdUsed = contextMenuMap.get(this.extension).has(createProperties.id);
       if (createProperties.id && isIdUsed) {
         throw new Error("Id already exists");
@@ -206,10 +204,8 @@ MenuItem.prototype = {
     parseProp("checked", false);
     parseProp("contexts", ["all"]);
 
-    // It's a bit wacky... but we shouldn't be too scared to use wrappedJSObject here.
-    // Later on we will do proper argument validation anyway.
-    if ("onclick" in createProperties.wrappedJSObject) {
-      this.onclick = createProperties.wrappedJSObject.onclick;
+    if (createProperties.onclick !== null) {
+      this.onclick = createProperties.onclick;
     }
 
     if (parseProp("parentId")) {
@@ -363,7 +359,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerPrivilegedAPI("contextMenus", (extension, context) => {
+extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context) => {
   return {
     contextMenus: {
       create: function(createProperties, callback) {
