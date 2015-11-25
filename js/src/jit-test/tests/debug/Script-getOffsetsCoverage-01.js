@@ -154,6 +154,20 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level
   f();              //DA:$,1
 });
 
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 3)      //DA:$,1
+    l.push('');           //DA:$,0
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 2)      //DA:$,1
+    l.push('');           //DA:$,1
+  l.pop();                //DA:$,1
+});
+
 checkGetOffsetsCoverage(function () { //FN:$,top-level
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1
