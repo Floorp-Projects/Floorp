@@ -75,6 +75,8 @@ typedef struct gif_struct {
     // Parameters for image frame currently being decoded
     unsigned x_offset, y_offset; // With respect to "screen" origin
     unsigned height, width;
+    unsigned clamped_height;    // Size of the frame rectangle clamped to the
+    unsigned clamped_width;     //  global logical size after x_ and y_offset.
     int tpixel;                 // Index of transparent pixel
     int32_t disposal_method;    // Restore to background, leave in place, etc.
     uint32_t* local_colormap;   // Per-image colormap
