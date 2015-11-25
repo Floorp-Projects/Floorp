@@ -435,7 +435,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-js::regexp_construct_no_statics(JSContext* cx, unsigned argc, Value* vp)
+js::regexp_construct_self_hosting(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
