@@ -14,6 +14,7 @@ echo "running as" $(id)
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
 : NEED_XVFB                     ${NEED_XVFB:=true}
+: NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 : mozharness args               "${@}"
@@ -73,6 +74,30 @@ if $NEED_XVFB; then
             sleep 2
         fi done
     if [ $xvfb_test == 255 ]; then exit 255; fi
+fi
+
+if $NEED_WINDOW_MANAGER; then
+    # start up the gnome session, using a semaphore file to know when the session has fully started
+    # (at least to the point where apps are automatically started)
+    semaphore=/tmp/gnome-session-started
+    rm -f $semaphore
+    mkdir -p ~/.config/autostart
+    cat <<EOF > ~/.config/autostart/gnome-started.desktop
+[Desktop Entry]
+Type=Application
+Exec=touch $semaphore
+Hidden=false
+X-GNOME-Autostart-enabled=true
+Name=Startup Complete
+Comment=Notify test-linux.sh that GNOME session startup is complete
+StartupNotify=false
+Terminal=false
+Type=Application
+EOF
+    gnome-session &
+    while [ ! -f $semaphore ]; do
+        sleep 1
+    done
 fi
 
 # support multiple, space delimited, config files
