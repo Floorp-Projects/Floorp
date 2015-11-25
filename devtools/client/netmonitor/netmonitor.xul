@@ -100,24 +100,18 @@
                    class="devtools-toolbar"
                    align="center">
             <hbox id="toolbar-labels" flex="1">
-              <hbox id="requests-menu-status-header-box"
-                    class="requests-menu-header requests-menu-status"
+              <hbox id="requests-menu-status-and-method-header-box"
+                    class="requests-menu-header requests-menu-status-and-method"
                     align="center">
                 <button id="requests-menu-status-button"
                         class="requests-menu-header-button requests-menu-status"
                         data-key="status"
-                        label="&netmonitorUI.toolbar.status2;"
-                        flex="1">
+                        label="&netmonitorUI.toolbar.status2;">
                 </button>
-              </hbox>
-              <hbox id="requests-menu-method-header-box"
-                    class="requests-menu-header requests-menu-method"
-                    align="center">
                 <button id="requests-menu-method-button"
                         class="requests-menu-header-button requests-menu-method"
                         data-key="method"
                         label="&netmonitorUI.toolbar.method;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -128,7 +122,6 @@
                         class="requests-menu-header-button requests-menu-file"
                         data-key="file"
                         label="&netmonitorUI.toolbar.file;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -139,7 +132,6 @@
                         class="requests-menu-header-button requests-menu-security-and-domain"
                         data-key="domain"
                         label="&netmonitorUI.toolbar.domain;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -150,7 +142,6 @@
                         class="requests-menu-header-button requests-menu-type"
                         data-key="type"
                         label="&netmonitorUI.toolbar.type;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -161,7 +152,6 @@
                         class="requests-menu-header-button requests-menu-transferred"
                         data-key="transferred"
                         label="&netmonitorUI.toolbar.transferred;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -172,7 +162,6 @@
                         class="requests-menu-header-button requests-menu-size"
                         data-key="size"
                         label="&netmonitorUI.toolbar.size;"
-                        crop="end"
                         flex="1">
                 </button>
               </hbox>
@@ -185,12 +174,9 @@
                         data-key="waterfall"
                         pack="start"
                         flex="1">
-                  <image id="requests-menu-waterfall-image"/>
-                  <box id="requests-menu-waterfall-label-wrapper">
-                    <label id="requests-menu-waterfall-label"
-                           class="plain requests-menu-waterfall"
-                           value="&netmonitorUI.toolbar.waterfall;"/>
-                  </box>
+                  <label id="requests-menu-waterfall-label"
+                         class="plain requests-menu-waterfall"
+                         value="&netmonitorUI.toolbar.waterfall;"/>
                 </button>
               </hbox>
             </hbox>
@@ -222,14 +208,11 @@
 
           <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
             <hbox id="requests-menu-item-template" hidden="true">
-              <hbox class="requests-menu-subitem requests-menu-status"
+              <hbox class="requests-menu-subitem requests-menu-status-and-method"
                     align="center">
-                <box class="requests-menu-status-icon"/>
+                <box class="requests-menu-status"/>
                 <label class="plain requests-menu-status-code"
                        crop="end"/>
-              </hbox>
-              <hbox class="requests-menu-subitem requests-menu-method-box"
-                    align="center">
                 <label class="plain requests-menu-method"
                        crop="end"
                        flex="1"/>
@@ -396,7 +379,7 @@
                     <label class="plain tabpanel-summary-label"
                            value="&netmonitorUI.summary.status;"/>
                     <box id="headers-summary-status-circle"
-                         class="requests-menu-status-icon"/>
+                         class="requests-menu-status"/>
                     <label id="headers-summary-status-value"
                            class="plain tabpanel-summary-value devtools-monospace"
                            crop="end"
