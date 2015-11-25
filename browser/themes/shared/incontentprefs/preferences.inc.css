@@ -373,28 +373,6 @@ description > html|a {
 }
 
 /**
- * Sync migration
- */
-#sync-migrate-upgrade-description {
-  /* description elts need a min-width to wrap correctly - bug 630864? */
-  min-width: 100px
-}
-
-#sync-migration {
-  border: 1px solid rgba(0, 0, 0, 0.32);
-  background-color: InfoBackground;
-  color: InfoText;
-  text-shadow: none;
-  margin: 5px 0 0 0;
-  animation: fadein 3000ms;
-}
-
-@keyframes fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/**
  * Sync
  */
 
@@ -465,46 +443,6 @@ description > html|a {
 
 #syncStatusMessage[message-type="migration"] {
   background-color: #FF9500;
-}
-
-#sync-migration-buttons-deck {
-  visibility: collapse;
-}
-
-#learnMoreLink {
-  margin: 0;
-  color: #FBFBFB;
-  text-decoration: underline;
-}
-
-#syncStatusMessage[message-type="migration"] #sync-migration-buttons-deck {
-  visibility: visible;
-}
-
-#sync-migration-buttons-deck {
-  margin-top: 20px;
-}
-
-#sync-migration-buttons-deck button {
-  margin: 0 10px 0 0;
-  border: 0;
-  border-radius: 2px;
-}
-
-#sync-migrate-upgrade,
-#sync-migrate-resend {
-  background-color: #0095DD;
-  color: #FBFBFB;
-}
-
-#sync-migrate-upgrade:hover,
-#sync-migrate-resend:hover {
-  background-color: #008ACB;
-}
-
-#sync-migrate-upgrade:hover:active,
-#sync-migrate-resend:hover:active {
-  background-color: #006B9D;
 }
 
 #syncStatusMessageWrapper {
