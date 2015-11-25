@@ -41,8 +41,7 @@
             style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:contentDescription="@string/menu"
-            android:background="@drawable/shaped_button"
-            android:visibility="gone">
+            android:background="@drawable/shaped_button">
 
         <org.mozilla.gecko.widget.themed.ThemedImageView
                 android:id="@+id/menu_icon"
