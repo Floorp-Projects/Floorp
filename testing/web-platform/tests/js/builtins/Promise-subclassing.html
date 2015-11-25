@@ -127,8 +127,10 @@ promise_test(function testPromiseRace() {
   var p = LoggingPromise.race(new LoggingIterable([1, 2]));
   var log = takeLog();
   assert_array_equals(log, ["Race 1", "Constructor 1",
-                            "Next 1", "Resolve 1",
-                            "Next 2", "Resolve 2",
+                            "Next 1", "Resolve 1", "Constructor 2",
+                            "Then 1",
+                            "Next 2", "Resolve 2", "Constructor 3",
+                            "Then 2",
                             "Next 3"]);
   assert_true(p instanceof LoggingPromise);
   return p.then(function(arg) {
@@ -141,8 +143,10 @@ promise_test(function testPromiseRaceNoSpecies() {
   var p = SpeciesLessPromise.race(new LoggingIterable([1, 2]));
   var log = takeLog();
   assert_array_equals(log, ["Race 1", "Constructor 1",
-                            "Next 1", "Resolve 1",
-                            "Next 2", "Resolve 2",
+                            "Next 1", "Resolve 1", "Constructor 2",
+                            "Then 1",
+                            "Next 2", "Resolve 2", "Constructor 3",
+                            "Then 2",
                             "Next 3"]);
   assert_true(p instanceof SpeciesLessPromise);
   return p.then(function(arg) {
@@ -155,13 +159,51 @@ promise_test(function testPromiseAll() {
   var p = LoggingPromise.all(new LoggingIterable([1, 2]));
   var log = takeLog();
   assert_array_equals(log, ["All 1", "Constructor 1",
-                            "Next 1", "Resolve 1",
-                            "Next 2", "Resolve 2",
+                            "Next 1", "Resolve 1", "Constructor 2",
+                            "Then 1",
+                            "Next 2", "Resolve 2", "Constructor 3",
+                            "Then 2",
                             "Next 3"]);
   assert_true(p instanceof LoggingPromise);
   return p.then(function(arg) {
     assert_array_equals(arg, [1, 2]);
   });
 }, "Promise.all behavior");
+
+promise_test(function testPromiseResolve() {
+  clearLog();
+  var p = LoggingPromise.resolve(5);
+  var log = takeLog();
+  assert_array_equals(log, ["Resolve 1", "Constructor 1"]);
+  var q = LoggingPromise.resolve(p);
+  assert_equals(p, q,
+                "Promise.resolve with same constructor should preserve identity");
+  log = takeLog();
+  assert_array_equals(log, ["Resolve 1"]);
+
+  var r = Promise.resolve(p);
+  assert_not_equals(p, r,
+                    "Promise.resolve with different constructor should " +
+                    "create a new Promise instance (1)")
+  var s = Promise.resolve(6);
+  var u = LoggingPromise.resolve(s);
+  log = takeLog();
+  assert_array_equals(log, ["Resolve 1", "Constructor 1"]);
+  assert_not_equals(s, u,
+                    "Promise.resolve with different constructor should " +
+                    "create a new Promise instance (2)")
+
+  Object.defineProperty(s, "constructor", { value: LoggingPromise });
+  var v = LoggingPromise.resolve(s);
+  log = takeLog();
+  assert_array_equals(log, ["Resolve 1"]);
+  assert_equals(v, s, "Faking the .constructor should work");
+  assert_false(v instanceof LoggingPromise);
+
+  var results = Promise.all([p, q, r, s, u, v]);
+  return results.then(function(arg) {
+    assert_array_equals(arg, [5, 5, 5, 6, 6, 6]);
+  });
+}, "Promise.resolve behavior");
 
 </script>
