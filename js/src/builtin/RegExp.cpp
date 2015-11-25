@@ -629,7 +629,6 @@ const JSFunctionSpec js::regexp_methods[] = {
  * RegExp class static properties and their Perl counterparts:
  *
  *  RegExp.input                $_
- *  RegExp.multiline            $*
  *  RegExp.lastMatch            $&
  *  RegExp.lastParen            $+
  *  RegExp.leftContext          $`
@@ -648,8 +647,6 @@ const JSFunctionSpec js::regexp_methods[] = {
     }
 
 DEFINE_STATIC_GETTER(static_input_getter,        return res->createPendingInput(cx, args.rval()))
-DEFINE_STATIC_GETTER(static_multiline_getter,    args.rval().setBoolean(res->multiline());
-                                                 return true)
 DEFINE_STATIC_GETTER(static_lastMatch_getter,    return res->createLastMatch(cx, args.rval()))
 DEFINE_STATIC_GETTER(static_lastParen_getter,    return res->createLastParen(cx, args.rval()))
 DEFINE_STATIC_GETTER(static_leftContext_getter,  return res->createLeftContext(cx, args.rval()))
@@ -693,24 +690,8 @@ static_input_setter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-static_multiline_setter(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-    if (!res)
-        return false;
-
-    bool b = ToBoolean(args.get(0));
-    res->setMultiline(cx, b);
-    args.rval().setBoolean(b);
-    return true;
-}
-
 const JSPropertySpec js::regexp_static_props[] = {
     JS_PSGS("input", static_input_getter, static_input_setter,
-            JSPROP_PERMANENT | JSPROP_ENUMERATE),
-    JS_PSGS("multiline", static_multiline_getter, static_multiline_setter,
             JSPROP_PERMANENT | JSPROP_ENUMERATE),
     JS_PSG("lastMatch", static_lastMatch_getter, JSPROP_PERMANENT | JSPROP_ENUMERATE),
     JS_PSG("lastParen", static_lastParen_getter, JSPROP_PERMANENT | JSPROP_ENUMERATE),
@@ -726,7 +707,6 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_PSG("$8", static_paren8_getter, JSPROP_PERMANENT | JSPROP_ENUMERATE),
     JS_PSG("$9", static_paren9_getter, JSPROP_PERMANENT | JSPROP_ENUMERATE),
     JS_PSGS("$_", static_input_getter, static_input_setter, JSPROP_PERMANENT),
-    JS_PSGS("$*", static_multiline_getter, static_multiline_setter, JSPROP_PERMANENT),
     JS_PSG("$&", static_lastMatch_getter, JSPROP_PERMANENT),
     JS_PSG("$+", static_lastParen_getter, JSPROP_PERMANENT),
     JS_PSG("$`", static_leftContext_getter, JSPROP_PERMANENT),
