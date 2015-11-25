@@ -5670,7 +5670,7 @@ JS_ObjectIsDate(JSContext* cx, HandleObject obj, bool* isDate)
  * Regular Expressions.
  */
 JS_PUBLIC_API(JSObject*)
-JS_NewRegExpObject(JSContext* cx, HandleObject obj, const char* bytes, size_t length, unsigned flags)
+JS_NewRegExpObject(JSContext* cx, const char* bytes, size_t length, unsigned flags)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -5684,8 +5684,7 @@ JS_NewRegExpObject(JSContext* cx, HandleObject obj, const char* bytes, size_t le
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_NewUCRegExpObject(JSContext* cx, HandleObject obj, const char16_t* chars, size_t length,
-                     unsigned flags)
+JS_NewUCRegExpObject(JSContext* cx, const char16_t* chars, size_t length, unsigned flags)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
