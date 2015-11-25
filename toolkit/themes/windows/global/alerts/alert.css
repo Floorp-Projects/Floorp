@@ -23,6 +23,13 @@
   border: none !important;
 }
 
+#alertSettings {
+  /* The close button is larger on Windows, so the
+     gear button is moved over to accomodate it and
+     keep the two buttons horizontally aligned together. */
+  margin-inline-end: 3px;
+}
+
 @media (-moz-windows-default-theme) {
   #alertBox[hasBodyText] > #alertTextBox,
   #alertBox[hasOrigin] > #alertTitleBox {
