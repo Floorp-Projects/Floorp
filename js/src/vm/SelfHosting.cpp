@@ -1788,6 +1788,21 @@ JSRuntime::evaluateSelfHosted(const char16_t* chars, size_t length, const char* 
     return ok;
 }
 
+bool
+JSRuntime::addSelfHostingIntrinsics(const JSFunctionSpec* intrinsicFunctions)
+{
+    MOZ_ASSERT(hasContexts());
+    MOZ_ASSERT(selfHostingGlobal_);
+    MOZ_ASSERT(!parentRuntime);
+    MOZ_ASSERT(!hasContentGlobals);
+
+    JSContext* cx = this->contextList.getFirst();
+    JSAutoRequest ar(cx);
+    JSAutoCompartment ac(cx, selfHostingGlobal_);
+    RootedObject global(cx, selfHostingGlobal_);
+    return JS_DefineFunctions(cx, global, intrinsicFunctions);
+}
+
 void
 JSRuntime::finishSelfHosting()
 {
