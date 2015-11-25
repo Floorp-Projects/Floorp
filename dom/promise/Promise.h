@@ -198,6 +198,9 @@ public:
   Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
        const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
+  static bool
+  PromiseSpecies(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
+
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
   JSObject* GlobalJSObject() const;
