@@ -278,48 +278,6 @@ private:
   NS_DECL_OWNINGTHREAD;
 };
 
-// Fast version of PromiseResolveThenableJob for use in the cases when we know we're
-// calling the canonical Promise.prototype.then on an actual DOM Promise.  In
-// that case we can just bypass the jumping into and out of JS and call
-// AppendCallbacks on that promise directly.
-class FastPromiseResolveThenableJob final : public nsRunnable
-{
-public:
-  FastPromiseResolveThenableJob(PromiseCallback* aResolveCallback,
-                                PromiseCallback* aRejectCallback,
-                                Promise* aNextPromise)
-    : mResolveCallback(aResolveCallback)
-    , mRejectCallback(aRejectCallback)
-    , mNextPromise(aNextPromise)
-  {
-    MOZ_ASSERT(aResolveCallback);
-    MOZ_ASSERT(aRejectCallback);
-    MOZ_ASSERT(aNextPromise);
-    MOZ_COUNT_CTOR(FastPromiseResolveThenableJob);
-  }
-
-  virtual
-  ~FastPromiseResolveThenableJob()
-  {
-    NS_ASSERT_OWNINGTHREAD(FastPromiseResolveThenableJob);
-    MOZ_COUNT_DTOR(FastPromiseResolveThenableJob);
-  }
-
-protected:
-  NS_IMETHOD
-  Run() override
-  {
-    NS_ASSERT_OWNINGTHREAD(FastPromiseResolveThenableJob);
-    mNextPromise->AppendCallbacks(mResolveCallback, mRejectCallback);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<PromiseCallback> mResolveCallback;
-  RefPtr<PromiseCallback> mRejectCallback;
-  RefPtr<Promise> mNextPromise;
-};
-
 // A struct implementing
 // <http://www.ecma-international.org/ecma-262/6.0/#sec-promisecapability-records>.
 // While the spec holds on to these in some places, in practice those places
@@ -2018,35 +1976,25 @@ Promise::ResolveInternal(JSContext* aCx,
       // This is the then() function of the thenable aValueObj.
       JS::Rooted<JSObject*> thenObj(aCx, &then.toObject());
 
-      // Add a fast path for the case when we're resolved with an actual
-      // Promise.  This has two requirements:
+      // We used to have a fast path here for the case when the following
+      // requirements held:
       //
       // 1) valueObj is a Promise.
       // 2) thenObj is a JSFunction backed by our actual Promise::Then
       //    implementation.
       //
-      // If those requirements are satisfied, then we know exactly what
-      // thenObj.call(valueObj) will do, so we can optimize a bit and avoid ever
-      // entering JS for this stuff.
-      Promise* nextPromise;
-      if (PromiseBinding::IsThenMethod(thenObj) &&
-          NS_SUCCEEDED(UNWRAP_OBJECT(Promise, valueObj, nextPromise))) {
-        // If we were taking the codepath that involves PromiseResolveThenableJob and
-        // PromiseInit below, then eventually, in PromiseResolveThenableJob::Run, we
-        // would create some JSFunctions in the compartment of
-        // this->GetWrapper() and pass them to the PromiseInit. So by the time
-        // we'd see the resolution value it would be wrapped into the
-        // compartment of this->GetWrapper().  The global of that compartment is
-        // this->GetGlobalJSObject(), so use that as the global for
-        // ResolvePromiseCallback/RejectPromiseCallback.
-        JS::Rooted<JSObject*> glob(aCx, GlobalJSObject());
-        RefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this, glob);
-        RefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this, glob);
-        RefPtr<FastPromiseResolveThenableJob> task =
-          new FastPromiseResolveThenableJob(resolveCb, rejectCb, nextPromise);
-        DispatchToMicroTask(task);
-        return;
-      }
+      // But now that we're doing subclassing in Promise.prototype.then we would
+      // also need the following requirements:
+      //
+      // 3) Getting valueObj.constructor has no side-effects.
+      // 4) Getting valueObj.constructor[@@species] has no side-effects.
+      // 5) valueObj.constructor[@@species] is a function and calling it has no
+      //    side-effects (e.g. it's the canonical Promise constructor) and it
+      //    provides some callback functions to call as arguments to its
+      //    argument.
+      //
+      // Ensuring that stuff while not inside SpiderMonkey is painful, so let's
+      // drop the fast path for now.
 
       RefPtr<PromiseInit> thenCallback =
         new PromiseInit(nullptr, thenObj, mozilla::dom::GetIncumbentGlobal());
