@@ -373,12 +373,8 @@ class RegExpObject : public NativeObject
            frontend::TokenStream* ts, LifoAlloc& alloc);
 
     static RegExpObject*
-    createNoStatics(ExclusiveContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
-                    frontend::TokenStream* ts, LifoAlloc& alloc);
-
-    static RegExpObject*
-    createNoStatics(ExclusiveContext* cx, HandleAtom atom, RegExpFlag flags,
-                    frontend::TokenStream* ts, LifoAlloc& alloc);
+    create(ExclusiveContext* cx, HandleAtom atom, RegExpFlag flags,
+           frontend::TokenStream* ts, LifoAlloc& alloc);
 
     /*
      * Compute the initial shape to associate with fresh RegExp objects,
