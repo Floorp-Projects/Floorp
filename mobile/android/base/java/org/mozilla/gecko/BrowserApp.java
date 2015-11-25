@@ -3194,7 +3194,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private int resolveBookmarkIconID(final boolean isBookmark) {
-        Assert.isTrue(Versions.feature11Plus, "We don't use menu icons on v11+ so don't set them to conserve resources.");
         if (isBookmark) {
             return R.drawable.ic_menu_bookmark_remove;
         } else {
@@ -3207,7 +3206,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private int resolveReadingListIconID(final boolean isInReadingList) {
-        Assert.isTrue(Versions.feature11Plus, "We don't use menu icons on v11+ so don't set them to conserve resources.");
         return (isInReadingList ? R.drawable.ic_menu_reader_remove : R.drawable.ic_menu_reader_add);
     }
 
