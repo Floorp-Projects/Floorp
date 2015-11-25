@@ -20,11 +20,13 @@ from mozunit import (
 )
 
 from mozbuild.util import (
+    expand_variables,
     FileAvoidWrite,
     group_unified_files,
     hash_file,
     memoize,
     memoized_property,
+    pair,
     resolve_target_to_make,
     MozbuildDeletionError,
     HierarchicalStringList,
@@ -719,6 +721,44 @@ class TestGroupUnifiedFiles(unittest.TestCase):
         self.assertEqual(mapping[0][1], sorted_files[0:5])
         self.assertEqual(mapping[1][1], sorted_files[5:10])
         self.assertEqual(mapping[2][1], sorted_files[10:])
+
+
+class TestMisc(unittest.TestCase):
+    def test_pair(self):
+        self.assertEqual(
+            list(pair([1, 2, 3, 4, 5, 6])),
+            [(1, 2), (3, 4), (5, 6)]
+        )
+
+        self.assertEqual(
+            list(pair([1, 2, 3, 4, 5, 6, 7])),
+            [(1, 2), (3, 4), (5, 6), (7, None)]
+        )
+
+    def test_expand_variables(self):
+        self.assertEqual(
+            expand_variables('$(var)', {'var': 'value'}),
+            'value'
+        )
+
+        self.assertEqual(
+            expand_variables('$(a) and $(b)', {'a': '1', 'b': '2'}),
+            '1 and 2'
+        )
+
+        self.assertEqual(
+            expand_variables('$(a) and $(undefined)', {'a': '1', 'b': '2'}),
+            '1 and '
+        )
+
+        self.assertEqual(
+            expand_variables('before $(string) between $(list) after', {
+                'string': 'abc',
+                'list': ['a', 'b', 'c']
+            }),
+            'before abc between a b c after'
+        )
+
 
 if __name__ == '__main__':
     main()
