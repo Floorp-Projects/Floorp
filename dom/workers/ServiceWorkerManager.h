@@ -360,6 +360,7 @@ public:
   already_AddRefed<nsIRunnable>
   PrepareFetchEvent(const PrincipalOriginAttributes& aOriginAttributes,
                     nsIDocument* aDoc,
+                    const nsAString& aDocumentIdForTopLevelNavigation,
                     nsIInterceptedChannel* aChannel,
                     bool aIsReload,
                     bool aIsSubresourceLoad,

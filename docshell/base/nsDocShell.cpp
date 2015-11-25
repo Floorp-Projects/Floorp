@@ -14181,7 +14181,8 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel,
 
   ErrorResult error;
   nsCOMPtr<nsIRunnable> runnable =
-    swm->PrepareFetchEvent(attrs, doc, aChannel, isReload, isSubresourceLoad, error);
+    swm->PrepareFetchEvent(attrs, doc, mInterceptedDocumentId, aChannel,
+                           isReload, isSubresourceLoad, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
