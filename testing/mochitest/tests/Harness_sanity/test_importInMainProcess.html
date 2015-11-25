@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers.importInMainProcess</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" class="testbody">
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var failed = false;
+    try {
+      SpecialPowers.importInMainProcess("invalid file for import");
+    } catch (e) {
+      ok(e.toString().indexOf("NS_ERROR_MALFORMED_URI") > -1, "Exception should be for a malformed URI");
+      failed = true;
+    }
+    ok(failed, "An invalid import should throw");
+
+    const testingResource = "resource://testing-common/ImportTesting.jsm";
+    var script = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('importtesting_chromescript.js'));
+
+    script.addMessageListener("ImportTesting:IsModuleLoadedReply", handleFirstReply);
+    script.sendAsyncMessage("ImportTesting:IsModuleLoaded", testingResource);
+
+    function handleFirstReply(aMsg) {
+      ok(!aMsg, "ImportTesting.jsm shouldn't be loaded before we import it");
+
+      try {
+        SpecialPowers.importInMainProcess(testingResource);
+      } catch (e) {
+        ok(false, "Unexpected exception when importing a valid resource: " + e.toString());
+      }
+
+      script.removeMessageListener("ImportTesting:IsModuleLoadedReply", handleFirstReply);
+      script.addMessageListener("ImportTesting:IsModuleLoadedReply", handleSecondReply);
+      script.sendAsyncMessage("ImportTesting:IsModuleLoaded", testingResource);
+    }
+
+    function handleSecondReply(aMsg) {
+      script.removeMessageListener("ImportTesting:IsModuleLoadedReply", handleSecondReply);
+
+      ok(aMsg, "ImportTesting.jsm should be loaded after we import it");
+
+      SimpleTest.finish();
+    }
+
+  </script>
+</div>
+</body>
+</html>
