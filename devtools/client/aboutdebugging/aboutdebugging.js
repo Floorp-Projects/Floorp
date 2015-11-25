@@ -8,6 +8,7 @@
 
 "use strict";
 
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { loader } = Components.utils.import(
   "resource://devtools/shared/Loader.jsm", {});
 
@@ -22,6 +23,12 @@ loader.lazyRequireGetter(this, "Telemetry",
 loader.lazyRequireGetter(this, "WorkersComponent",
   "devtools/client/aboutdebugging/components/workers", true);
 loader.lazyRequireGetter(this, "Services");
+
+loader.lazyImporter(this, "AddonManager",
+  "resource://gre/modules/AddonManager.jsm");
+
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/aboutdebugging.properties");
 
 var AboutDebugging = {
   _prefListeners: [],
@@ -83,6 +90,10 @@ var AboutDebugging = {
       updateCheckbox();
     });
 
+    // Link buttons to their associated actions.
+    let loadAddonButton = document.getElementById("load-addon-from-file");
+    loadAddonButton.addEventListener("click", this.loadAddonFromFile);
+
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
@@ -96,6 +107,29 @@ var AboutDebugging = {
       React.render(React.createElement(WorkersComponent, { client }),
         document.querySelector("#workers"));
     });
+  },
+
+  loadAddonFromFile() {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window,
+      Strings.GetStringFromName("selectAddonFromFile"),
+      Ci.nsIFilePicker.modeOpen);
+    let res = fp.show();
+    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
+      return;
+    }
+    let file = fp.file;
+    // AddonManager.installTemporaryAddon accepts either
+    // addon directory or final xpi file.
+    if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
+      file = file.parent;
+    }
+    try {
+      AddonManager.installTemporaryAddon(file);
+    } catch(e) {
+      alert("Error while installing the addon:\n" + e.message + "\n");
+      throw e;
+    }
   },
 
   destroy() {
