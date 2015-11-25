@@ -367,7 +367,6 @@ public class TabsPanel extends LinearLayout
 
         mAddTab.setVisibility(View.VISIBLE);
 
-        mMenuButton.setVisibility(View.VISIBLE);
         mMenuButton.setEnabled(true);
         mPopupMenu.setAnchor(mMenuButton);
     }

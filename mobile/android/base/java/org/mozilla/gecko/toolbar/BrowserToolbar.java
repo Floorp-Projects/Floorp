@@ -319,7 +319,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         });
         tabsButton.setImageLevel(0);
 
-        menuButton.setVisibility(View.VISIBLE);
         menuButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
