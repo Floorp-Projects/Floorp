@@ -1246,9 +1246,6 @@ var SessionStoreInternal = {
       // we don't want to save the busy state
       delete winData.busy;
 
-      // clear this window from the list, since it has definitely been closed.
-      delete this._windows[aWindow.__SSi];
-
       // Now we have to figure out if this window is worth saving in the _closedWindows
       // Object.
       //
@@ -1294,6 +1291,8 @@ var SessionStoreInternal = {
           this.maybeSaveClosedWindow(winData);
         }
 
+        // clear this window from the list
+        delete this._windows[aWindow.__SSi];
         // Update the tabs data now that we've got the most
         // recent information.
         this.cleanUpWindow(aWindow, winData);
