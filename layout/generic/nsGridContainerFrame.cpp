@@ -2998,6 +2998,21 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                       LogicalSize(wm, computedISize, computedBSize),
                       nsLayoutUtils::PREF_ISIZE);
 
+  // FIXME bug 1229180: Instead of doing this on every reflow, we should only
+  // set these properties if they are needed.
+  nsTArray<nscoord> colTrackSizes(gridReflowState.mCols.mSizes.Length());
+  for (const TrackSize& sz : gridReflowState.mCols.mSizes) {
+    colTrackSizes.AppendElement(sz.mBase);
+  }
+  Properties().Set(GridColTrackSizes(),
+                   new nsTArray<nscoord>(mozilla::Move(colTrackSizes)));
+  nsTArray<nscoord> rowTrackSizes(gridReflowState.mRows.mSizes.Length());
+  for (const TrackSize& sz : gridReflowState.mRows.mSizes) {
+    rowTrackSizes.AppendElement(sz.mBase);
+  }
+  Properties().Set(GridRowTrackSizes(),
+                   new nsTArray<nscoord>(mozilla::Move(rowTrackSizes)));
+  
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {
     for (uint32_t i = 0; i < mGridRowEnd; ++i) {
