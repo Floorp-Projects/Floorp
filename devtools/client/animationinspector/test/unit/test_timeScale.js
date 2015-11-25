@@ -58,58 +58,46 @@ const TEST_ANIMATIONS = [{
 
 const TEST_STARTTIME_TO_DISTANCE = [{
   time: 50,
-  width: 100,
   expectedDistance: 0
 }, {
   time: 50,
-  width: 0,
   expectedDistance: 0
 }, {
   time: 3050,
-  width: 200,
-  expectedDistance: 200
+  expectedDistance: 100
 }, {
   time: 1550,
-  width: 200,
-  expectedDistance: 100
+  expectedDistance: 50
 }];
 
 const TEST_DURATION_TO_DISTANCE = [{
   time: 3000,
-  width: 100,
   expectedDistance: 100
 }, {
   time: 0,
-  width: 100,
   expectedDistance: 0
 }];
 
 const TEST_DISTANCE_TO_TIME = [{
   distance: 100,
-  width: 100,
   expectedTime: 3050
 }, {
   distance: 0,
-  width: 100,
   expectedTime: 50
 }, {
   distance: 25,
-  width: 200,
-  expectedTime: 425
+  expectedTime: 800
 }];
 
 const TEST_DISTANCE_TO_RELATIVE_TIME = [{
   distance: 100,
-  width: 100,
   expectedTime: 3000
 }, {
   distance: 0,
-  width: 100,
   expectedTime: 0
 }, {
   distance: 25,
-  width: 200,
-  expectedTime: 375
+  expectedTime: 750
 }];
 
 const TEST_FORMAT_TIME_MS = [{
@@ -174,26 +162,26 @@ function run_test() {
   }
 
   do_print("Test converting start times to distances");
-  for (let {time, width, expectedDistance} of TEST_STARTTIME_TO_DISTANCE) {
-    let distance = TimeScale.startTimeToDistance(time, width);
+  for (let {time, expectedDistance} of TEST_STARTTIME_TO_DISTANCE) {
+    let distance = TimeScale.startTimeToDistance(time);
     equal(distance, expectedDistance);
   }
 
   do_print("Test converting durations to distances");
-  for (let {time, width, expectedDistance} of TEST_DURATION_TO_DISTANCE) {
-    let distance = TimeScale.durationToDistance(time, width);
+  for (let {time, expectedDistance} of TEST_DURATION_TO_DISTANCE) {
+    let distance = TimeScale.durationToDistance(time);
     equal(distance, expectedDistance);
   }
 
   do_print("Test converting distances to times");
-  for (let {distance, width, expectedTime} of TEST_DISTANCE_TO_TIME) {
-    let time = TimeScale.distanceToTime(distance, width);
+  for (let {distance, expectedTime} of TEST_DISTANCE_TO_TIME) {
+    let time = TimeScale.distanceToTime(distance);
     equal(time, expectedTime);
   }
 
   do_print("Test converting distances to relative times");
-  for (let {distance, width, expectedTime} of TEST_DISTANCE_TO_RELATIVE_TIME) {
-    let time = TimeScale.distanceToRelativeTime(distance, width);
+  for (let {distance, expectedTime} of TEST_DISTANCE_TO_RELATIVE_TIME) {
+    let time = TimeScale.distanceToRelativeTime(distance);
     equal(time, expectedTime);
   }
 
