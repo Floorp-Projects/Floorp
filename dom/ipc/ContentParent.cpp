@@ -3515,18 +3515,6 @@ ContentParent::DeallocPBlobParent(PBlobParent* aActor)
     return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
-bool
-ContentParent::RecvPBlobConstructor(PBlobParent* aActor,
-                                    const BlobConstructorParams& aParams)
-{
-  const ParentBlobConstructorParams& params = aParams.get_ParentBlobConstructorParams();
-  if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
-    return aActor->SendCreatedFromKnownBlob();
-  }
-
-  return true;
-}
-
 mozilla::PRemoteSpellcheckEngineParent *
 ContentParent::AllocPRemoteSpellcheckEngineParent()
 {
