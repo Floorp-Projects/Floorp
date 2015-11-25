@@ -5740,28 +5740,6 @@ JS_ExecuteRegExp(JSContext* cx, HandleObject obj, HandleObject reobj, char16_t* 
     return ExecuteRegExpLegacy(cx, res, reobj->as<RegExpObject>(), input, indexp, test, rval);
 }
 
-JS_PUBLIC_API(JSObject*)
-JS_NewRegExpObjectNoStatics(JSContext* cx, char* bytes, size_t length, unsigned flags)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    char16_t* chars = InflateString(cx, bytes, &length);
-    if (!chars)
-        return nullptr;
-    RegExpObject* reobj = RegExpObject::create(cx, chars, length, RegExpFlag(flags), nullptr,
-                                               cx->tempLifoAlloc());
-    js_free(chars);
-    return reobj;
-}
-
-JS_PUBLIC_API(JSObject*)
-JS_NewUCRegExpObjectNoStatics(JSContext* cx, char16_t* chars, size_t length, unsigned flags)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    return RegExpObject::create(cx, chars, length, RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
-}
-
 JS_PUBLIC_API(bool)
 JS_ExecuteRegExpNoStatics(JSContext* cx, HandleObject obj, char16_t* chars, size_t length,
                           size_t* indexp, bool test, MutableHandleValue rval)

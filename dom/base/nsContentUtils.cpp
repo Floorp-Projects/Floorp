@@ -6503,9 +6503,9 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   aPattern.AppendLiteral(")$");
 
   JS::Rooted<JSObject*> re(cx,
-    JS_NewUCRegExpObjectNoStatics(cx,
-                                  static_cast<char16_t*>(aPattern.BeginWriting()),
-                                  aPattern.Length(), JSREG_UNICODE));
+    JS_NewUCRegExpObject(cx,
+                         static_cast<char16_t*>(aPattern.BeginWriting()),
+                         aPattern.Length(), JSREG_UNICODE));
   if (!re) {
     // Remove extra patterns added above to report with the original pattern.
     aPattern.Cut(0, 4);
