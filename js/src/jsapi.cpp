@@ -5749,8 +5749,8 @@ JS_NewRegExpObjectNoStatics(JSContext* cx, char* bytes, size_t length, unsigned 
     char16_t* chars = InflateString(cx, bytes, &length);
     if (!chars)
         return nullptr;
-    RegExpObject* reobj = RegExpObject::createNoStatics(cx, chars, length,
-                                                        RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
+    RegExpObject* reobj = RegExpObject::create(cx, chars, length, RegExpFlag(flags), nullptr,
+                                               cx->tempLifoAlloc());
     js_free(chars);
     return reobj;
 }
@@ -5760,8 +5760,7 @@ JS_NewUCRegExpObjectNoStatics(JSContext* cx, char16_t* chars, size_t length, uns
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return RegExpObject::createNoStatics(cx, chars, length,
-                                         RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
+    return RegExpObject::create(cx, chars, length, RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
 }
 
 JS_PUBLIC_API(bool)
