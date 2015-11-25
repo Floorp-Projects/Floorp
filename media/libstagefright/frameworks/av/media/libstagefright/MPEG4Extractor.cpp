@@ -402,7 +402,7 @@ MPEG4Extractor::~MPEG4Extractor() {
     SINF *sinf = mFirstSINF;
     while (sinf) {
         SINF *next = sinf->next;
-        delete sinf->IPMPData;
+        delete[] sinf->IPMPData;
         delete sinf;
         sinf = next;
     }

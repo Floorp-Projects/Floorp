@@ -36,7 +36,7 @@ using mozilla::dom::NodeInfo;
 
 #include "mozilla/Logging.h"
 
-static PRLogModuleInfo* gNodeInfoManagerLeakPRLog;
+static LazyLogModule gNodeInfoManagerLeakPRLog("NodeInfoManagerLeak");
 
 PLHashNumber
 nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
@@ -114,9 +114,6 @@ nsNodeInfoManager::nsNodeInfoManager()
     mDocumentNodeInfo(nullptr)
 {
   nsLayoutStatics::AddRef();
-
-  if (!gNodeInfoManagerLeakPRLog)
-    gNodeInfoManagerLeakPRLog = PR_NewLogModule("NodeInfoManagerLeak");
 
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,

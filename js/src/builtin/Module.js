@@ -14,7 +14,7 @@ function ModuleGetExportedNames(exportStarSet = [])
     let module = this;
 
     // Step 2
-    if (module in exportStarSet)
+    if (callFunction(ArrayIncludes, exportStarSet, module))
         return [];
 
     // Step 3
@@ -47,7 +47,7 @@ function ModuleGetExportedNames(exportStarSet = [])
                                      exportStarSet);
         for (let j = 0; j < starNames.length; j++) {
             let n = starNames[j];
-            if (n !== "default" && !(n in exportedNames))
+            if (n !== "default" && !callFunction(ArrayIncludes, exportedNames, n))
                 _DefineDataProperty(exportedNames, namesCount++, n);
         }
     }
@@ -104,7 +104,7 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
     }
 
     // Step 7
-    if (module in exportStarSet)
+    if (callFunction(ArrayIncludes, exportStarSet, module))
         return null;
 
     // Step 8
@@ -214,9 +214,9 @@ function ModuleDeclarationInstantiation()
         let e = indirectExportEntries[i];
         let resolution = callFunction(module.resolveExport, module, e.exportName);
         if (resolution === null)
-            ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT);
+            ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT, e.exportName);
         if (resolution === "ambiguous")
-            ThrowSyntaxError(JSMSG_AMBIGUOUS_INDIRECT_EXPORT);
+            ThrowSyntaxError(JSMSG_AMBIGUOUS_INDIRECT_EXPORT, e.exportName);
     }
 
     // Step 12
@@ -231,9 +231,9 @@ function ModuleDeclarationInstantiation()
             let resolution = callFunction(importedModule.resolveExport, importedModule,
                                           imp.importName);
             if (resolution === null)
-                ThrowSyntaxError(JSMSG_MISSING_IMPORT);
+                ThrowSyntaxError(JSMSG_MISSING_IMPORT, imp.importName);
             if (resolution === "ambiguous")
-                ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT);
+                ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT, imp.importName);
             CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
         }
     }

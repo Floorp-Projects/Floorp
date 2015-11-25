@@ -1,4 +1,4 @@
-// Copyright 2013, ARM Limited
+// Copyright 2015, ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,8 @@
 
 #include "jit/arm64/vixl/Simulator-vixl.h"
 
-#include "mozilla/FloatingPoint.h"
-
-#include <math.h>
+#include <cmath>
 #include <string.h>
-
-using mozilla::IsInfinite;
-using mozilla::IsNaN;
 
 namespace vixl {
 
@@ -67,25 +62,11 @@ SimSystemRegister SimSystemRegister::DefaultValueFor(SystemRegister id) {
 }
 
 
-Simulator::~Simulator() {
-  js_free(stack_);
-  // The decoder may outlive the simulator.
-  if (print_disasm_) {
-    decoder_->RemoveVisitor(print_disasm_);
-    js_delete(print_disasm_);
-  }
-
-  if (instrumentation_) {
-    decoder_->RemoveVisitor(instrumentation_);
-    js_delete(instrumentation_);
-  }
-}
-
-
 void Simulator::Run() {
   pc_modified_ = false;
   while (pc_ != kEndOfSimAddress) {
     ExecuteInstruction();
+    LogAllWrittenRegisters();
   }
 }
 
@@ -101,7 +82,6 @@ const char* Simulator::xreg_names[] = {
 "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
 "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23",
 "x24", "x25", "x26", "x27", "x28", "x29", "lr",  "xzr", "sp"};
-
 
 const char* Simulator::wreg_names[] = {
 "w0",  "w1",  "w2",  "w3",  "w4",  "w5",  "w6",  "w7",
@@ -162,7 +142,7 @@ const char* Simulator::DRegNameForCode(unsigned code) {
 
 
 const char* Simulator::VRegNameForCode(unsigned code) {
-  VIXL_ASSERT(code < kNumberOfFPRegisters);
+  VIXL_ASSERT(code < kNumberOfVRegisters);
   return vreg_names[code];
 }
 
@@ -186,24 +166,13 @@ void Simulator::set_coloured_trace(bool value) {
   clr_flag_value      = value ? COLOUR(NORMAL)        : "";
   clr_reg_name        = value ? COLOUR_BOLD(CYAN)     : "";
   clr_reg_value       = value ? COLOUR(CYAN)          : "";
-  clr_fpreg_name      = value ? COLOUR_BOLD(MAGENTA)  : "";
-  clr_fpreg_value     = value ? COLOUR(MAGENTA)       : "";
+  clr_vreg_name       = value ? COLOUR_BOLD(MAGENTA)  : "";
+  clr_vreg_value      = value ? COLOUR(MAGENTA)       : "";
   clr_memory_address  = value ? COLOUR_BOLD(BLUE)     : "";
   clr_warning         = value ? COLOUR_BOLD(YELLOW)   : "";
   clr_warning_message = value ? COLOUR(YELLOW)        : "";
   clr_printf          = value ? COLOUR(GREEN)         : "";
 }
-#undef COLOUR
-#undef COLOUR_BOLD
-#undef NORMAL
-#undef GREY
-#undef RED
-#undef GREEN
-#undef YELLOW
-#undef BLUE
-#undef MAGENTA
-#undef CYAN
-#undef WHITE
 
 
 void Simulator::set_trace_parameters(int parameters) {
@@ -358,23 +327,18 @@ int64_t Simulator::ExtendValue(unsigned reg_size,
 }
 
 
-template<> double Simulator::FPDefaultNaN<double>() const {
-  return kFP64DefaultNaN;
-}
-
-
-template<> float Simulator::FPDefaultNaN<float>() const {
-  return kFP32DefaultNaN;
-}
-
-
-void Simulator::FPCompare(double val0, double val1) {
+void Simulator::FPCompare(double val0, double val1, FPTrapFlags trap) {
   AssertSupportedFPCR();
 
   // TODO: This assumes that the C++ implementation handles comparisons in the
   // way that we expect (as per AssertSupportedFPCR()).
-  if (IsNaN(val0) || IsNaN(val1)) {
+  bool process_exception = false;
+  if ((std::isnan(val0) != 0) || (std::isnan(val1) != 0)) {
     nzcv().SetRawValue(FPUnorderedFlag);
+    if (IsSignallingNaN(val0) || IsSignallingNaN(val1) ||
+        (trap == EnableTrap)) {
+      process_exception = true;
+    }
   } else if (val0 < val1) {
     nzcv().SetRawValue(FPLessThanFlag);
   } else if (val0 > val1) {
@@ -385,6 +349,69 @@ void Simulator::FPCompare(double val0, double val1) {
     VIXL_UNREACHABLE();
   }
   LogSystemRegister(NZCV);
+  if (process_exception) FPProcessException();
+}
+
+
+Simulator::PrintRegisterFormat Simulator::GetPrintRegisterFormatForSize(
+    unsigned reg_size, unsigned lane_size) {
+  VIXL_ASSERT(reg_size >= lane_size);
+
+  uint32_t format = 0;
+  if (reg_size != lane_size) {
+    switch (reg_size) {
+      default: VIXL_UNREACHABLE(); break;
+      case kQRegSizeInBytes: format = kPrintRegAsQVector; break;
+      case kDRegSizeInBytes: format = kPrintRegAsDVector; break;
+    }
+  }
+
+  switch (lane_size) {
+    default: VIXL_UNREACHABLE(); break;
+    case kQRegSizeInBytes: format |= kPrintReg1Q; break;
+    case kDRegSizeInBytes: format |= kPrintReg1D; break;
+    case kSRegSizeInBytes: format |= kPrintReg1S; break;
+    case kHRegSizeInBytes: format |= kPrintReg1H; break;
+    case kBRegSizeInBytes: format |= kPrintReg1B; break;
+  }
+  // These sizes would be duplicate case labels.
+  VIXL_STATIC_ASSERT(kXRegSizeInBytes == kDRegSizeInBytes);
+  VIXL_STATIC_ASSERT(kWRegSizeInBytes == kSRegSizeInBytes);
+  VIXL_STATIC_ASSERT(kPrintXReg == kPrintReg1D);
+  VIXL_STATIC_ASSERT(kPrintWReg == kPrintReg1S);
+
+  return static_cast<PrintRegisterFormat>(format);
+}
+
+
+Simulator::PrintRegisterFormat Simulator::GetPrintRegisterFormat(
+    VectorFormat vform) {
+  switch (vform) {
+    default: VIXL_UNREACHABLE(); return kPrintReg16B;
+    case kFormat16B: return kPrintReg16B;
+    case kFormat8B: return kPrintReg8B;
+    case kFormat8H: return kPrintReg8H;
+    case kFormat4H: return kPrintReg4H;
+    case kFormat4S: return kPrintReg4S;
+    case kFormat2S: return kPrintReg2S;
+    case kFormat2D: return kPrintReg2D;
+    case kFormat1D: return kPrintReg1D;
+  }
+}
+
+
+void Simulator::PrintWrittenRegisters() {
+  for (unsigned i = 0; i < kNumberOfRegisters; i++) {
+    if (registers_[i].WrittenSinceLastLog()) PrintRegister(i);
+  }
+}
+
+
+void Simulator::PrintWrittenVRegisters() {
+  for (unsigned i = 0; i < kNumberOfVRegisters; i++) {
+    // At this point there is no type information, so print as a raw 1Q.
+    if (vregisters_[i].WrittenSinceLastLog()) PrintVRegister(i, kPrintReg1Q);
+  }
 }
 
 
@@ -401,57 +428,217 @@ void Simulator::PrintRegisters() {
 }
 
 
-void Simulator::PrintFPRegisters() {
-  for (unsigned i = 0; i < kNumberOfFPRegisters; i++) {
-    PrintFPRegister(i);
+void Simulator::PrintVRegisters() {
+  for (unsigned i = 0; i < kNumberOfVRegisters; i++) {
+    // At this point there is no type information, so print as a raw 1Q.
+    PrintVRegister(i, kPrintReg1Q);
   }
 }
 
 
+// Print a register's name and raw value.
+//
+// Only the least-significant `size_in_bytes` bytes of the register are printed,
+// but the value is aligned as if the whole register had been printed.
+//
+// For typical register updates, size_in_bytes should be set to kXRegSizeInBytes
+// -- the default -- so that the whole register is printed. Other values of
+// size_in_bytes are intended for use when the register hasn't actually been
+// updated (such as in PrintWrite).
+//
+// No newline is printed. This allows the caller to print more details (such as
+// a memory access annotation).
+void Simulator::PrintRegisterRawHelper(unsigned code, Reg31Mode r31mode,
+                                       int size_in_bytes) {
+  // The template for all supported sizes.
+  //   "# x{code}: 0xffeeddccbbaa9988"
+  //   "# w{code}:         0xbbaa9988"
+  //   "# w{code}<15:0>:       0x9988"
+  //   "# w{code}<7:0>:          0x88"
+  unsigned padding_chars = (kXRegSizeInBytes - size_in_bytes) * 2;
+
+  const char * name = "";
+  const char * suffix = "";
+  switch (size_in_bytes) {
+    case kXRegSizeInBytes: name = XRegNameForCode(code, r31mode); break;
+    case kWRegSizeInBytes: name = WRegNameForCode(code, r31mode); break;
+    case 2:
+      name = WRegNameForCode(code, r31mode);
+      suffix = "<15:0>";
+      padding_chars -= strlen(suffix);
+      break;
+    case 1:
+      name = WRegNameForCode(code, r31mode);
+      suffix = "<7:0>";
+      padding_chars -= strlen(suffix);
+      break;
+    default:
+      VIXL_UNREACHABLE();
+  }
+  fprintf(stream_, "# %s%5s%s: ", clr_reg_name, name, suffix);
+
+  // Print leading padding spaces.
+  VIXL_ASSERT(padding_chars < (kXRegSizeInBytes * 2));
+  for (unsigned i = 0; i < padding_chars; i++) {
+    putc(' ', stream_);
+  }
+
+  // Print the specified bits in hexadecimal format.
+  uint64_t bits = reg<uint64_t>(code, r31mode);
+  bits &= kXRegMask >> ((kXRegSizeInBytes - size_in_bytes) * 8);
+  VIXL_STATIC_ASSERT(sizeof(bits) == kXRegSizeInBytes);
+
+  int chars = size_in_bytes * 2;
+  fprintf(stream_, "%s0x%0*" PRIx64 "%s",
+          clr_reg_value, chars, bits, clr_normal);
+}
+
+
 void Simulator::PrintRegister(unsigned code, Reg31Mode r31mode) {
+  registers_[code].NotifyRegisterLogged();
+
   // Don't print writes into xzr.
   if ((code == kZeroRegCode) && (r31mode == Reg31IsZeroRegister)) {
     return;
   }
 
-  // The template is "# x<code>:value".
-  fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s\n",
-          clr_reg_name, XRegNameForCode(code, r31mode),
-          clr_reg_value, reg<uint64_t>(code, r31mode), clr_normal);
+  // The template for all x and w registers:
+  //   "# x{code}: 0x{value}"
+  //   "# w{code}: 0x{value}"
+
+  PrintRegisterRawHelper(code, r31mode);
+  fprintf(stream_, "\n");
 }
 
 
-void Simulator::PrintFPRegister(unsigned code, PrintFPRegisterSizes sizes) {
-  // The template is "# v<code>:bits (d<code>:value, ...)".
+// Print a register's name and raw value.
+//
+// The `bytes` and `lsb` arguments can be used to limit the bytes that are
+// printed. These arguments are intended for use in cases where register hasn't
+// actually been updated (such as in PrintVWrite).
+//
+// No newline is printed. This allows the caller to print more details (such as
+// a floating-point interpretation or a memory access annotation).
+void Simulator::PrintVRegisterRawHelper(unsigned code, int bytes, int lsb) {
+  // The template for vector types:
+  //   "# v{code}: 0xffeeddccbbaa99887766554433221100".
+  // An example with bytes=4 and lsb=8:
+  //   "# v{code}:         0xbbaa9988                ".
+  fprintf(stream_, "# %s%5s: %s",
+          clr_vreg_name, VRegNameForCode(code), clr_vreg_value);
 
-  VIXL_ASSERT(sizes != 0);
-  VIXL_ASSERT((sizes & kPrintAllFPRegValues) == sizes);
+  int msb = lsb + bytes - 1;
+  int byte = kQRegSizeInBytes - 1;
 
-  // Print the raw bits.
-  fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s (",
-          clr_fpreg_name, VRegNameForCode(code),
-          clr_fpreg_value, fpreg<uint64_t>(code), clr_normal);
-
-  // Print all requested value interpretations.
-  bool need_separator = false;
-  if (sizes & kPrintDRegValue) {
-    fprintf(stream_, "%s%s%s: %s%g%s",
-            need_separator ? ", " : "",
-            clr_fpreg_name, DRegNameForCode(code),
-            clr_fpreg_value, fpreg<double>(code), clr_normal);
-    need_separator = true;
+  // Print leading padding spaces. (Two spaces per byte.)
+  while (byte > msb) {
+    fprintf(stream_, "  ");
+    byte--;
   }
 
-  if (sizes & kPrintSRegValue) {
-    fprintf(stream_, "%s%s%s: %s%g%s",
-            need_separator ? ", " : "",
-            clr_fpreg_name, SRegNameForCode(code),
-            clr_fpreg_value, fpreg<float>(code), clr_normal);
-    need_separator = true;
+  // Print the specified part of the value, byte by byte.
+  qreg_t rawbits = qreg(code);
+  fprintf(stream_, "0x");
+  while (byte >= lsb) {
+    fprintf(stream_, "%02x", rawbits.val[byte]);
+    byte--;
   }
 
-  // End the value list.
-  fprintf(stream_, ")\n");
+  // Print trailing padding spaces.
+  while (byte >= 0) {
+    fprintf(stream_, "  ");
+    byte--;
+  }
+  fprintf(stream_, "%s", clr_normal);
+}
+
+
+// Print each of the specified lanes of a register as a float or double value.
+//
+// The `lane_count` and `lslane` arguments can be used to limit the lanes that
+// are printed. These arguments are intended for use in cases where register
+// hasn't actually been updated (such as in PrintVWrite).
+//
+// No newline is printed. This allows the caller to print more details (such as
+// a memory access annotation).
+void Simulator::PrintVRegisterFPHelper(unsigned code,
+                                       unsigned lane_size_in_bytes,
+                                       int lane_count,
+                                       int rightmost_lane) {
+  VIXL_ASSERT((lane_size_in_bytes == kSRegSizeInBytes) ||
+              (lane_size_in_bytes == kDRegSizeInBytes));
+
+  unsigned msb = ((lane_count + rightmost_lane) * lane_size_in_bytes);
+  VIXL_ASSERT(msb <= kQRegSizeInBytes);
+
+  // For scalar types ((lane_count == 1) && (rightmost_lane == 0)), a register
+  // name is used:
+  //   " (s{code}: {value})"
+  //   " (d{code}: {value})"
+  // For vector types, "..." is used to represent one or more omitted lanes.
+  //   " (..., {value}, {value}, ...)"
+  if ((lane_count == 1) && (rightmost_lane == 0)) {
+    const char * name =
+        (lane_size_in_bytes == kSRegSizeInBytes) ? SRegNameForCode(code)
+                                                 : DRegNameForCode(code);
+    fprintf(stream_, " (%s%s: ", clr_vreg_name, name);
+  } else {
+    if (msb < (kQRegSizeInBytes - 1)) {
+      fprintf(stream_, " (..., ");
+    } else {
+      fprintf(stream_, " (");
+    }
+  }
+
+  // Print the list of values.
+  const char * separator = "";
+  int leftmost_lane = rightmost_lane + lane_count - 1;
+  for (int lane = leftmost_lane; lane >= rightmost_lane; lane--) {
+    double value =
+        (lane_size_in_bytes == kSRegSizeInBytes) ? vreg(code).Get<float>(lane)
+                                                 : vreg(code).Get<double>(lane);
+    fprintf(stream_, "%s%s%#g%s", separator, clr_vreg_value, value, clr_normal);
+    separator = ", ";
+  }
+
+  if (rightmost_lane > 0) {
+    fprintf(stream_, ", ...");
+  }
+  fprintf(stream_, ")");
+}
+
+
+void Simulator::PrintVRegister(unsigned code, PrintRegisterFormat format) {
+  vregisters_[code].NotifyRegisterLogged();
+
+  int lane_size_log2 = format & kPrintRegLaneSizeMask;
+
+  int reg_size_log2;
+  if (format & kPrintRegAsQVector) {
+    reg_size_log2 = kQRegSizeInBytesLog2;
+  } else if (format & kPrintRegAsDVector) {
+    reg_size_log2 = kDRegSizeInBytesLog2;
+  } else {
+    // Scalar types.
+    reg_size_log2 = lane_size_log2;
+  }
+
+  int lane_count = 1 << (reg_size_log2 - lane_size_log2);
+  int lane_size = 1 << lane_size_log2;
+
+  // The template for vector types:
+  //   "# v{code}: 0x{rawbits} (..., {value}, ...)".
+  // The template for scalar types:
+  //   "# v{code}: 0x{rawbits} ({reg}:{value})".
+  // The values in parentheses after the bit representations are floating-point
+  // interpretations. They are displayed only if the kPrintVRegAsFP bit is set.
+
+  PrintVRegisterRawHelper(code);
+  if (format & kPrintRegAsFP) {
+    PrintVRegisterFPHelper(code, lane_size, lane_count);
+  }
+
+  fprintf(stream_, "\n");
 }
 
 
@@ -485,113 +672,69 @@ void Simulator::PrintSystemRegister(SystemRegister id) {
 
 
 void Simulator::PrintRead(uintptr_t address,
-                          size_t size,
-                          unsigned reg_code) {
-  USE(size);  // Size is unused here.
+                          unsigned reg_code,
+                          PrintRegisterFormat format) {
+  registers_[reg_code].NotifyRegisterLogged();
 
-  // The template is "# x<code>:value <- address".
-  fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s",
-          clr_reg_name, XRegNameForCode(reg_code),
-          clr_reg_value, reg<uint64_t>(reg_code), clr_normal);
+  USE(format);
 
+  // The template is "# {reg}: 0x{value} <- {address}".
+  PrintRegisterRawHelper(reg_code, Reg31IsZeroRegister);
   fprintf(stream_, " <- %s0x%016" PRIxPTR "%s\n",
           clr_memory_address, address, clr_normal);
 }
 
 
-void Simulator::PrintReadFP(uintptr_t address,
-                            size_t size,
-                            unsigned reg_code) {
-  // The template is "# reg:bits (reg:value) <- address".
-  switch (size) {
-    case kSRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kSRegSizeInBytes == 4);
-      fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s (%s%s: %s%gf%s)",
-              clr_fpreg_name, VRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<uint64_t>(reg_code), clr_normal,
-              clr_fpreg_name, SRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<float>(reg_code), clr_normal);
-      break;
-    case kDRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kDRegSizeInBytes == 8);
-      fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s (%s%s: %s%g%s)",
-              clr_fpreg_name, VRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<uint64_t>(reg_code), clr_normal,
-              clr_fpreg_name, DRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<double>(reg_code), clr_normal);
-      break;
-    default:
-      VIXL_UNREACHABLE();
-  }
+void Simulator::PrintVRead(uintptr_t address,
+                           unsigned reg_code,
+                           PrintRegisterFormat format,
+                           unsigned lane) {
+  vregisters_[reg_code].NotifyRegisterLogged();
 
+  // The template is "# v{code}: 0x{rawbits} <- address".
+  PrintVRegisterRawHelper(reg_code);
+  if (format & kPrintRegAsFP) {
+    PrintVRegisterFPHelper(reg_code, GetPrintRegLaneSizeInBytes(format),
+                           GetPrintRegLaneCount(format), lane);
+  }
   fprintf(stream_, " <- %s0x%016" PRIxPTR "%s\n",
           clr_memory_address, address, clr_normal);
 }
 
 
 void Simulator::PrintWrite(uintptr_t address,
-                           size_t size,
-                           unsigned reg_code) {
-  // The template is "# reg:value -> address". To keep the trace tidy and
-  // readable, the value is aligned with the values in the register trace.
-  switch (size) {
-    case 1:
-      fprintf(stream_, "# %s%5s<7:0>:          %s0x%02" PRIx8 "%s",
-              clr_reg_name, WRegNameForCode(reg_code),
-              clr_reg_value, reg<uint8_t>(reg_code), clr_normal);
-      break;
-    case 2:
-      fprintf(stream_, "# %s%5s<15:0>:       %s0x%04" PRIx16 "%s",
-              clr_reg_name, WRegNameForCode(reg_code),
-              clr_reg_value, reg<uint16_t>(reg_code), clr_normal);
-      break;
-    case kWRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kWRegSizeInBytes == 4);
-      fprintf(stream_, "# %s%5s:         %s0x%08" PRIx32 "%s",
-              clr_reg_name, WRegNameForCode(reg_code),
-              clr_reg_value, reg<uint32_t>(reg_code), clr_normal);
-      break;
-    case kXRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kXRegSizeInBytes == 8);
-      fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s",
-              clr_reg_name, XRegNameForCode(reg_code),
-              clr_reg_value, reg<uint64_t>(reg_code), clr_normal);
-      break;
-    default:
-      VIXL_UNREACHABLE();
-  }
+                           unsigned reg_code,
+                           PrintRegisterFormat format) {
+  VIXL_ASSERT(GetPrintRegLaneCount(format) == 1);
 
+  // The template is "# v{code}: 0x{value} -> {address}". To keep the trace tidy
+  // and readable, the value is aligned with the values in the register trace.
+  PrintRegisterRawHelper(reg_code, Reg31IsZeroRegister,
+                         GetPrintRegSizeInBytes(format));
   fprintf(stream_, " -> %s0x%016" PRIxPTR "%s\n",
           clr_memory_address, address, clr_normal);
 }
 
 
-void Simulator::PrintWriteFP(uintptr_t address,
-                             size_t size,
-                             unsigned reg_code) {
-  // The template is "# reg:bits (reg:value) -> address". To keep the trace tidy
-  // and readable, the value is aligned with the values in the register trace.
-  switch (size) {
-    case kSRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kSRegSize == 32);
-      fprintf(stream_, "# %s%5s<31:0>:   %s0x%08" PRIx32 "%s (%s%s: %s%gf%s)",
-              clr_fpreg_name, VRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<uint32_t>(reg_code), clr_normal,
-              clr_fpreg_name, SRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<float>(reg_code), clr_normal);
-      break;
-    case kDRegSizeInBytes:
-      VIXL_STATIC_ASSERT(kDRegSize == 64);
-      fprintf(stream_, "# %s%5s: %s0x%016" PRIx64 "%s (%s%s: %s%g%s)",
-              clr_fpreg_name, VRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<uint64_t>(reg_code), clr_normal,
-              clr_fpreg_name, DRegNameForCode(reg_code),
-              clr_fpreg_value, fpreg<double>(reg_code), clr_normal);
-      break;
-    default:
-      VIXL_UNREACHABLE();
+void Simulator::PrintVWrite(uintptr_t address,
+                            unsigned reg_code,
+                            PrintRegisterFormat format,
+                            unsigned lane) {
+  // The templates:
+  //   "# v{code}: 0x{rawbits} -> {address}"
+  //   "# v{code}: 0x{rawbits} (..., {value}, ...) -> {address}".
+  //   "# v{code}: 0x{rawbits} ({reg}:{value}) -> {address}"
+  // Because this trace doesn't represent a change to the source register's
+  // value, only the relevant part of the value is printed. To keep the trace
+  // tidy and readable, the raw value is aligned with the other values in the
+  // register trace.
+  int lane_count = GetPrintRegLaneCount(format);
+  int lane_size = GetPrintRegLaneSizeInBytes(format);
+  int reg_size = GetPrintRegSizeInBytes(format);
+  PrintVRegisterRawHelper(reg_code, reg_size, lane_size * lane);
+  if (format & kPrintRegAsFP) {
+    PrintVRegisterFPHelper(reg_code, lane_size, lane_count, lane);
   }
-
   fprintf(stream_, " -> %s0x%016" PRIxPTR "%s\n",
           clr_memory_address, address, clr_normal);
 }
@@ -625,7 +768,7 @@ void Simulator::VisitUnconditionalBranch(const Instruction* instr) {
   switch (instr->Mask(UnconditionalBranchMask)) {
     case BL:
       set_lr(instr->NextInstruction());
-      // Fall through.
+      VIXL_FALLTHROUGH();
     case B:
       set_pc(instr->ImmPCOffsetTarget());
       break;
@@ -648,7 +791,7 @@ void Simulator::VisitUnconditionalBranchToRegister(const Instruction* instr) {
   switch (instr->Mask(UnconditionalBranchToRegisterMask)) {
     case BLR:
       set_lr(instr->NextInstruction());
-      // Fall through.
+      VIXL_FALLTHROUGH();
     case BR:
     case RET: set_pc(target); break;
     default: VIXL_UNREACHABLE();
@@ -791,7 +934,7 @@ void Simulator::LogicalHelper(const Instruction* instr, int64_t op2) {
   // Switch on the logical operation, stripping out the NOT bit, as it has a
   // different meaning for logical immediate instructions.
   switch (instr->Mask(LogicalOpMask & ~NOT)) {
-    case ANDS: update_flags = true;  // Fall through.
+    case ANDS: update_flags = true; VIXL_FALLTHROUGH();
     case AND: result = op1 & op2; break;
     case ORR: result = op1 | op2; break;
     case EOR: result = op1 ^ op2; break;
@@ -876,56 +1019,53 @@ void Simulator::VisitLoadStoreRegisterOffset(const Instruction* instr) {
 }
 
 
+
 void Simulator::LoadStoreHelper(const Instruction* instr,
                                 int64_t offset,
                                 AddrMode addrmode) {
   unsigned srcdst = instr->Rt();
   uintptr_t address = AddressModeHelper(instr->Rn(), offset, addrmode);
 
-  LoadStoreOp op = static_cast<LoadStoreOp>(instr->Mask(LoadStoreOpMask));
+  LoadStoreOp op = static_cast<LoadStoreOp>(instr->Mask(LoadStoreMask));
   switch (op) {
-    // Use NoRegLog to suppress the register trace (LOG_REGS, LOG_FP_REGS). We
-    // will print a more detailed log.
     case LDRB_w:
-      set_wreg(srcdst, MemoryRead<uint8_t>(address), NoRegLog);
-      break;
+      set_wreg(srcdst, Memory::Read<uint8_t>(address), NoRegLog); break;
     case LDRH_w:
-      set_wreg(srcdst, MemoryRead<uint16_t>(address), NoRegLog);
-      break;
+      set_wreg(srcdst, Memory::Read<uint16_t>(address), NoRegLog); break;
     case LDR_w:
-      set_wreg(srcdst, MemoryRead<uint32_t>(address), NoRegLog);
-      break;
+      set_wreg(srcdst, Memory::Read<uint32_t>(address), NoRegLog); break;
     case LDR_x:
-      set_xreg(srcdst, MemoryRead<uint64_t>(address), NoRegLog);
-      break;
+      set_xreg(srcdst, Memory::Read<uint64_t>(address), NoRegLog); break;
     case LDRSB_w:
-      set_wreg(srcdst, MemoryRead<int8_t>(address), NoRegLog);
-      break;
+      set_wreg(srcdst, Memory::Read<int8_t>(address), NoRegLog); break;
     case LDRSH_w:
-      set_wreg(srcdst, MemoryRead<int16_t>(address), NoRegLog);
-      break;
+      set_wreg(srcdst, Memory::Read<int16_t>(address), NoRegLog); break;
     case LDRSB_x:
-      set_xreg(srcdst, MemoryRead<int8_t>(address), NoRegLog);
-      break;
+      set_xreg(srcdst, Memory::Read<int8_t>(address), NoRegLog); break;
     case LDRSH_x:
-      set_xreg(srcdst, MemoryRead<int16_t>(address), NoRegLog);
-      break;
+      set_xreg(srcdst, Memory::Read<int16_t>(address), NoRegLog); break;
     case LDRSW_x:
-      set_xreg(srcdst, MemoryRead<int32_t>(address), NoRegLog);
-      break;
+      set_xreg(srcdst, Memory::Read<int32_t>(address), NoRegLog); break;
+    case LDR_b:
+      set_breg(srcdst, Memory::Read<uint8_t>(address), NoRegLog); break;
+    case LDR_h:
+      set_hreg(srcdst, Memory::Read<uint16_t>(address), NoRegLog); break;
     case LDR_s:
-      set_sreg(srcdst, MemoryRead<float>(address), NoRegLog);
-      break;
+      set_sreg(srcdst, Memory::Read<float>(address), NoRegLog); break;
     case LDR_d:
-      set_dreg(srcdst, MemoryRead<double>(address), NoRegLog);
-      break;
+      set_dreg(srcdst, Memory::Read<double>(address), NoRegLog); break;
+    case LDR_q:
+      set_qreg(srcdst, Memory::Read<qreg_t>(address), NoRegLog); break;
 
-    case STRB_w:  MemoryWrite<uint8_t>(address, wreg(srcdst)); break;
-    case STRH_w:  MemoryWrite<uint16_t>(address, wreg(srcdst)); break;
-    case STR_w:   MemoryWrite<uint32_t>(address, wreg(srcdst)); break;
-    case STR_x:   MemoryWrite<uint64_t>(address, xreg(srcdst)); break;
-    case STR_s:   MemoryWrite<float>(address, sreg(srcdst)); break;
-    case STR_d:   MemoryWrite<double>(address, dreg(srcdst)); break;
+    case STRB_w:  Memory::Write<uint8_t>(address, wreg(srcdst)); break;
+    case STRH_w:  Memory::Write<uint16_t>(address, wreg(srcdst)); break;
+    case STR_w:   Memory::Write<uint32_t>(address, wreg(srcdst)); break;
+    case STR_x:   Memory::Write<uint64_t>(address, xreg(srcdst)); break;
+    case STR_b:   Memory::Write<uint8_t>(address, breg(srcdst)); break;
+    case STR_h:   Memory::Write<uint16_t>(address, hreg(srcdst)); break;
+    case STR_s:   Memory::Write<float>(address, sreg(srcdst)); break;
+    case STR_d:   Memory::Write<double>(address, dreg(srcdst)); break;
+    case STR_q:   Memory::Write<qreg_t>(address, qreg(srcdst)); break;
 
     // Ignore prfm hint instructions.
     case PRFM: break;
@@ -933,18 +1073,22 @@ void Simulator::LoadStoreHelper(const Instruction* instr,
     default: VIXL_UNIMPLEMENTED();
   }
 
-  size_t access_size = 1 << instr->SizeLS();
+  unsigned access_size = 1 << instr->SizeLS();
   if (instr->IsLoad()) {
     if ((op == LDR_s) || (op == LDR_d)) {
-      LogReadFP(address, access_size, srcdst);
+      LogVRead(address, srcdst, GetPrintRegisterFormatForSizeFP(access_size));
+    } else if ((op == LDR_b) || (op == LDR_h) || (op == LDR_q)) {
+      LogVRead(address, srcdst, GetPrintRegisterFormatForSize(access_size));
     } else {
-      LogRead(address, access_size, srcdst);
+      LogRead(address, srcdst, GetPrintRegisterFormatForSize(access_size));
     }
   } else {
     if ((op == STR_s) || (op == STR_d)) {
-      LogWriteFP(address, access_size, srcdst);
+      LogVWrite(address, srcdst, GetPrintRegisterFormatForSizeFP(access_size));
+    } else if ((op == STR_b) || (op == STR_h) || (op == STR_q)) {
+      LogVWrite(address, srcdst, GetPrintRegisterFormatForSize(access_size));
     } else {
-      LogWrite(address, access_size, srcdst);
+      LogWrite(address, srcdst, GetPrintRegisterFormatForSize(access_size));
     }
   }
 
@@ -976,10 +1120,10 @@ void Simulator::LoadStorePairHelper(const Instruction* instr,
                                     AddrMode addrmode) {
   unsigned rt = instr->Rt();
   unsigned rt2 = instr->Rt2();
-  size_t access_size = 1 << instr->SizeLSPair();
-  int64_t offset = instr->ImmLSPair() * access_size;
+  int element_size = 1 << instr->SizeLSPair();
+  int64_t offset = instr->ImmLSPair() * element_size;
   uintptr_t address = AddressModeHelper(instr->Rn(), offset, addrmode);
-  uintptr_t address2 = address + access_size;
+  uintptr_t address2 = address + element_size;
 
   LoadStorePairOp op =
     static_cast<LoadStorePairOp>(instr->Mask(LoadStorePairMask));
@@ -991,57 +1135,58 @@ void Simulator::LoadStorePairHelper(const Instruction* instr,
     // Use NoRegLog to suppress the register trace (LOG_REGS, LOG_FP_REGS). We
     // will print a more detailed log.
     case LDP_w: {
-      VIXL_ASSERT(access_size == kWRegSizeInBytes);
-      set_wreg(rt, MemoryRead<uint32_t>(address), NoRegLog);
-      set_wreg(rt2, MemoryRead<uint32_t>(address2), NoRegLog);
+      set_wreg(rt, Memory::Read<uint32_t>(address), NoRegLog);
+      set_wreg(rt2, Memory::Read<uint32_t>(address2), NoRegLog);
       break;
     }
     case LDP_s: {
-      VIXL_ASSERT(access_size == kSRegSizeInBytes);
-      set_sreg(rt, MemoryRead<float>(address), NoRegLog);
-      set_sreg(rt2, MemoryRead<float>(address2), NoRegLog);
+      set_sreg(rt, Memory::Read<float>(address), NoRegLog);
+      set_sreg(rt2, Memory::Read<float>(address2), NoRegLog);
       break;
     }
     case LDP_x: {
-      VIXL_ASSERT(access_size == kXRegSizeInBytes);
-      set_xreg(rt, MemoryRead<uint64_t>(address), NoRegLog);
-      set_xreg(rt2, MemoryRead<uint64_t>(address2), NoRegLog);
+      set_xreg(rt, Memory::Read<uint64_t>(address), NoRegLog);
+      set_xreg(rt2, Memory::Read<uint64_t>(address2), NoRegLog);
       break;
     }
     case LDP_d: {
-      VIXL_ASSERT(access_size == kDRegSizeInBytes);
-      set_dreg(rt, MemoryRead<double>(address), NoRegLog);
-      set_dreg(rt2, MemoryRead<double>(address2), NoRegLog);
+      set_dreg(rt, Memory::Read<double>(address), NoRegLog);
+      set_dreg(rt2, Memory::Read<double>(address2), NoRegLog);
+      break;
+    }
+    case LDP_q: {
+      set_qreg(rt, Memory::Read<qreg_t>(address), NoRegLog);
+      set_qreg(rt2, Memory::Read<qreg_t>(address2), NoRegLog);
       break;
     }
     case LDPSW_x: {
-      VIXL_ASSERT(access_size == kWRegSizeInBytes);
-      set_xreg(rt, MemoryRead<int32_t>(address), NoRegLog);
-      set_xreg(rt2, MemoryRead<int32_t>(address2), NoRegLog);
+      set_xreg(rt, Memory::Read<int32_t>(address), NoRegLog);
+      set_xreg(rt2, Memory::Read<int32_t>(address2), NoRegLog);
       break;
     }
     case STP_w: {
-      VIXL_ASSERT(access_size == kWRegSizeInBytes);
-      MemoryWrite<uint32_t>(address, wreg(rt));
-      MemoryWrite<uint32_t>(address2, wreg(rt2));
+      Memory::Write<uint32_t>(address, wreg(rt));
+      Memory::Write<uint32_t>(address2, wreg(rt2));
       break;
     }
     case STP_s: {
-      VIXL_ASSERT(access_size == kSRegSizeInBytes);
-      MemoryWrite<float>(address, sreg(rt));
-      MemoryWrite<float>(address2, sreg(rt2));
+      Memory::Write<float>(address, sreg(rt));
+      Memory::Write<float>(address2, sreg(rt2));
       break;
     }
     case STP_x: {
-      VIXL_ASSERT(access_size == kXRegSizeInBytes);
-      MemoryWrite<uint64_t>(address, xreg(rt));
-      MemoryWrite<uint64_t>(address2, xreg(rt2));
+      Memory::Write<uint64_t>(address, xreg(rt));
+      Memory::Write<uint64_t>(address2, xreg(rt2));
       break;
     }
     case STP_d: {
-      VIXL_ASSERT(access_size == kDRegSizeInBytes);
-      MemoryWrite<double>(address, dreg(rt));
-      MemoryWrite<double>(address2, dreg(rt2));
+      Memory::Write<double>(address, dreg(rt));
+      Memory::Write<double>(address2, dreg(rt2));
+      break;
+    }
+    case STP_q: {
+      Memory::Write<qreg_t>(address, qreg(rt));
+      Memory::Write<qreg_t>(address2, qreg(rt2));
       break;
     }
     default: VIXL_UNREACHABLE();
@@ -1051,19 +1196,25 @@ void Simulator::LoadStorePairHelper(const Instruction* instr,
   // register:value trace generated by set_*reg().
   if (instr->IsLoad()) {
     if ((op == LDP_s) || (op == LDP_d)) {
-      LogReadFP(address, access_size, rt);
-      LogReadFP(address2, access_size, rt2);
+      LogVRead(address, rt, GetPrintRegisterFormatForSizeFP(element_size));
+      LogVRead(address2, rt2, GetPrintRegisterFormatForSizeFP(element_size));
+    } else if (op == LDP_q) {
+      LogVRead(address, rt, GetPrintRegisterFormatForSize(element_size));
+      LogVRead(address2, rt2, GetPrintRegisterFormatForSize(element_size));
     } else {
-      LogRead(address, access_size, rt);
-      LogRead(address2, access_size, rt2);
+      LogRead(address, rt, GetPrintRegisterFormatForSize(element_size));
+      LogRead(address2, rt2, GetPrintRegisterFormatForSize(element_size));
     }
   } else {
     if ((op == STP_s) || (op == STP_d)) {
-      LogWriteFP(address, access_size, rt);
-      LogWriteFP(address2, access_size, rt2);
+      LogVWrite(address, rt, GetPrintRegisterFormatForSizeFP(element_size));
+      LogVWrite(address2, rt2, GetPrintRegisterFormatForSizeFP(element_size));
+    } else if (op == STP_q) {
+      LogVWrite(address, rt, GetPrintRegisterFormatForSize(element_size));
+      LogVWrite(address2, rt2, GetPrintRegisterFormatForSize(element_size));
     } else {
-      LogWrite(address, access_size, rt);
-      LogWrite(address2, access_size, rt2);
+      LogWrite(address, rt, GetPrintRegisterFormatForSize(element_size));
+      LogWrite(address2, rt2, GetPrintRegisterFormatForSize(element_size));
     }
   }
 
@@ -1099,8 +1250,8 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
   bool is_load = instr->LdStXLoad();
   bool is_pair = instr->LdStXPair();
 
-  size_t element_size = 1 << instr->LdStXSizeLog2();
-  size_t access_size = is_pair ? element_size * 2 : element_size;
+  unsigned element_size = 1 << instr->LdStXSizeLog2();
+  unsigned access_size = is_pair ? element_size * 2 : element_size;
   uint64_t address = reg<uint64_t>(rn, Reg31IsStackPointer);
 
   // Verify that the address is available to the host.
@@ -1131,32 +1282,32 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
       case LDXRB_w:
       case LDAXRB_w:
       case LDARB_w:
-        set_wreg(rt, MemoryRead<uint8_t>(address), NoRegLog);
+        set_wreg(rt, Memory::Read<uint8_t>(address), NoRegLog);
         break;
       case LDXRH_w:
       case LDAXRH_w:
       case LDARH_w:
-        set_wreg(rt, MemoryRead<uint16_t>(address), NoRegLog);
+        set_wreg(rt, Memory::Read<uint16_t>(address), NoRegLog);
         break;
       case LDXR_w:
       case LDAXR_w:
       case LDAR_w:
-        set_wreg(rt, MemoryRead<uint32_t>(address), NoRegLog);
+        set_wreg(rt, Memory::Read<uint32_t>(address), NoRegLog);
         break;
       case LDXR_x:
       case LDAXR_x:
       case LDAR_x:
-        set_xreg(rt, MemoryRead<uint64_t>(address), NoRegLog);
+        set_xreg(rt, Memory::Read<uint64_t>(address), NoRegLog);
         break;
       case LDXP_w:
       case LDAXP_w:
-        set_wreg(rt, MemoryRead<uint32_t>(address), NoRegLog);
-        set_wreg(rt2, MemoryRead<uint32_t>(address + element_size), NoRegLog);
+        set_wreg(rt, Memory::Read<uint32_t>(address), NoRegLog);
+        set_wreg(rt2, Memory::Read<uint32_t>(address + element_size), NoRegLog);
         break;
       case LDXP_x:
       case LDAXP_x:
-        set_xreg(rt, MemoryRead<uint64_t>(address), NoRegLog);
-        set_xreg(rt2, MemoryRead<uint64_t>(address + element_size), NoRegLog);
+        set_xreg(rt, Memory::Read<uint64_t>(address), NoRegLog);
+        set_xreg(rt2, Memory::Read<uint64_t>(address + element_size), NoRegLog);
         break;
       default:
         VIXL_UNREACHABLE();
@@ -1167,9 +1318,10 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
       __sync_synchronize();
     }
 
-    LogRead(address, access_size, rt);
+    LogRead(address, rt, GetPrintRegisterFormatForSize(element_size));
     if (is_pair) {
-      LogRead(address + element_size, access_size, rt2);
+      LogRead(address + element_size, rt2,
+              GetPrintRegisterFormatForSize(element_size));
     }
   } else {
     if (is_acquire_release) {
@@ -1195,40 +1347,41 @@ void Simulator::VisitLoadStoreExclusive(const Instruction* instr) {
         case STXRB_w:
         case STLXRB_w:
         case STLRB_w:
-          MemoryWrite<uint8_t>(address, wreg(rt));
+          Memory::Write<uint8_t>(address, wreg(rt));
           break;
         case STXRH_w:
         case STLXRH_w:
         case STLRH_w:
-          MemoryWrite<uint16_t>(address, wreg(rt));
+          Memory::Write<uint16_t>(address, wreg(rt));
           break;
         case STXR_w:
         case STLXR_w:
         case STLR_w:
-          MemoryWrite<uint32_t>(address, wreg(rt));
+          Memory::Write<uint32_t>(address, wreg(rt));
           break;
         case STXR_x:
         case STLXR_x:
         case STLR_x:
-          MemoryWrite<uint64_t>(address, xreg(rt));
+          Memory::Write<uint64_t>(address, xreg(rt));
           break;
         case STXP_w:
         case STLXP_w:
-          MemoryWrite<uint32_t>(address, wreg(rt));
-          MemoryWrite<uint32_t>(address + element_size, wreg(rt2));
+          Memory::Write<uint32_t>(address, wreg(rt));
+          Memory::Write<uint32_t>(address + element_size, wreg(rt2));
           break;
         case STXP_x:
         case STLXP_x:
-          MemoryWrite<uint64_t>(address, xreg(rt));
-          MemoryWrite<uint64_t>(address + element_size, xreg(rt2));
+          Memory::Write<uint64_t>(address, xreg(rt));
+          Memory::Write<uint64_t>(address + element_size, xreg(rt2));
           break;
         default:
           VIXL_UNREACHABLE();
       }
 
-      LogWrite(address, element_size, rt);
+      LogWrite(address, rt, GetPrintRegisterFormatForSize(element_size));
       if (is_pair) {
-        LogWrite(address + element_size, element_size, rt2);
+        LogWrite(address + element_size, rt2,
+                 GetPrintRegisterFormatForSize(element_size));
       }
     }
   }
@@ -1243,27 +1396,31 @@ void Simulator::VisitLoadLiteral(const Instruction* instr) {
   VIXL_ASSERT(address == static_cast<uintptr_t>(address));
 
   switch (instr->Mask(LoadLiteralMask)) {
-    // Use NoRegLog to suppress the register trace (LOG_REGS, LOG_FP_REGS), then
+    // Use NoRegLog to suppress the register trace (LOG_REGS, LOG_VREGS), then
     // print a more detailed log.
     case LDR_w_lit:
-      set_wreg(rt, MemoryRead<uint32_t>(address), NoRegLog);
-      LogRead(address, kWRegSizeInBytes, rt);
+      set_wreg(rt, Memory::Read<uint32_t>(address), NoRegLog);
+      LogRead(address, rt, kPrintWReg);
       break;
     case LDR_x_lit:
-      set_xreg(rt, MemoryRead<uint64_t>(address), NoRegLog);
-      LogRead(address, kXRegSizeInBytes, rt);
+      set_xreg(rt, Memory::Read<uint64_t>(address), NoRegLog);
+      LogRead(address, rt, kPrintXReg);
       break;
     case LDR_s_lit:
-      set_sreg(rt, MemoryRead<float>(address), NoRegLog);
-      LogReadFP(address, kSRegSizeInBytes, rt);
+      set_sreg(rt, Memory::Read<float>(address), NoRegLog);
+      LogVRead(address, rt, kPrintSReg);
       break;
     case LDR_d_lit:
-      set_dreg(rt, MemoryRead<double>(address), NoRegLog);
-      LogReadFP(address, kDRegSizeInBytes, rt);
+      set_dreg(rt, Memory::Read<double>(address), NoRegLog);
+      LogVRead(address, rt, kPrintDReg);
+      break;
+    case LDR_q_lit:
+      set_qreg(rt, Memory::Read<qreg_t>(address), NoRegLog);
+      LogVRead(address, rt, kPrintReg1Q);
       break;
     case LDRSW_x_lit:
-      set_xreg(rt, MemoryRead<int32_t>(address), NoRegLog);
-      LogRead(address, kWRegSizeInBytes, rt);
+      set_xreg(rt, Memory::Read<int32_t>(address), NoRegLog);
+      LogRead(address, rt, kPrintWReg);
       break;
 
     // Ignore prfm hint instructions.
@@ -1290,7 +1447,11 @@ uintptr_t Simulator::AddressModeHelper(unsigned addr_reg,
 
   if ((addrmode == PreIndex) || (addrmode == PostIndex)) {
     VIXL_ASSERT(offset != 0);
-    set_xreg(addr_reg, address + offset, LogRegWrites, Reg31IsStackPointer);
+    // Only preindex should log the register update here. For Postindex, the
+    // update will be printed automatically by LogWrittenRegisters _after_ the
+    // memory access itself is logged.
+    RegLogMode log_mode = (addrmode == PreIndex) ? LogRegWrites : NoRegLog;
+    set_xreg(addr_reg, address + offset, log_mode, Reg31IsStackPointer);
   }
 
   if ((addrmode == Offset) || (addrmode == PreIndex)) {
@@ -1315,7 +1476,7 @@ void Simulator::VisitMoveWideImmediate(const Instruction* instr) {
 
   // Get the shifted immediate.
   int64_t shift = instr->ShiftMoveWide() * 16;
-  int64_t shifted_imm16 = instr->ImmMoveWide() << shift;
+  int64_t shifted_imm16 = static_cast<int64_t>(instr->ImmMoveWide()) << shift;
 
   // Compute the new value.
   switch (mov_op) {
@@ -1375,21 +1536,21 @@ void Simulator::VisitDataProcessing1Source(const Instruction* instr) {
   unsigned src = instr->Rn();
 
   switch (instr->Mask(DataProcessing1SourceMask)) {
-    case RBIT_w: set_wreg(dst, ReverseBits(wreg(src), kWRegSize)); break;
-    case RBIT_x: set_xreg(dst, ReverseBits(xreg(src), kXRegSize)); break;
-    case REV16_w: set_wreg(dst, ReverseBytes(wreg(src), Reverse16)); break;
-    case REV16_x: set_xreg(dst, ReverseBytes(xreg(src), Reverse16)); break;
-    case REV_w: set_wreg(dst, ReverseBytes(wreg(src), Reverse32)); break;
-    case REV32_x: set_xreg(dst, ReverseBytes(xreg(src), Reverse32)); break;
-    case REV_x: set_xreg(dst, ReverseBytes(xreg(src), Reverse64)); break;
-    case CLZ_w: set_wreg(dst, CountLeadingZeros(wreg(src), kWRegSize)); break;
-    case CLZ_x: set_xreg(dst, CountLeadingZeros(xreg(src), kXRegSize)); break;
+    case RBIT_w: set_wreg(dst, ReverseBits(wreg(src))); break;
+    case RBIT_x: set_xreg(dst, ReverseBits(xreg(src))); break;
+    case REV16_w: set_wreg(dst, ReverseBytes(wreg(src), 1)); break;
+    case REV16_x: set_xreg(dst, ReverseBytes(xreg(src), 1)); break;
+    case REV_w: set_wreg(dst, ReverseBytes(wreg(src), 2)); break;
+    case REV32_x: set_xreg(dst, ReverseBytes(xreg(src), 2)); break;
+    case REV_x: set_xreg(dst, ReverseBytes(xreg(src), 3)); break;
+    case CLZ_w: set_wreg(dst, CountLeadingZeros(wreg(src))); break;
+    case CLZ_x: set_xreg(dst, CountLeadingZeros(xreg(src))); break;
     case CLS_w: {
-      set_wreg(dst, CountLeadingSignBits(wreg(src), kWRegSize));
+      set_wreg(dst, CountLeadingSignBits(wreg(src)));
       break;
     }
     case CLS_x: {
-      set_xreg(dst, CountLeadingSignBits(xreg(src), kXRegSize));
+      set_xreg(dst, CountLeadingSignBits(xreg(src)));
       break;
     }
     default: VIXL_UNIMPLEMENTED();
@@ -1397,47 +1558,42 @@ void Simulator::VisitDataProcessing1Source(const Instruction* instr) {
 }
 
 
-uint64_t Simulator::ReverseBits(uint64_t value, unsigned num_bits) {
-  VIXL_ASSERT((num_bits == kWRegSize) || (num_bits == kXRegSize));
-  uint64_t result = 0;
-  for (unsigned i = 0; i < num_bits; i++) {
-    result = (result << 1) | (value & 1);
-    value >>= 1;
+uint32_t Simulator::Poly32Mod2(unsigned n, uint64_t data, uint32_t poly) {
+  VIXL_ASSERT((n > 32) && (n <= 64));
+  for (unsigned i = (n - 1); i >= 32; i--) {
+    if (((data >> i) & 1) != 0) {
+      uint64_t polysh32 = (uint64_t)poly << (i - 32);
+      uint64_t mask = (UINT64_C(1) << i) - 1;
+      data = ((data & mask) ^ polysh32);
+    }
   }
-  return result;
+  return data & 0xffffffff;
 }
 
 
-uint64_t Simulator::ReverseBytes(uint64_t value, ReverseByteMode mode) {
-  // Split the 64-bit value into an 8-bit array, where b[0] is the least
-  // significant byte, and b[7] is the most significant.
-  uint8_t bytes[8];
-  uint64_t mask = 0xff00000000000000;
-  for (int i = 7; i >= 0; i--) {
-    bytes[i] = (value & mask) >> (i * 8);
-    mask >>= 8;
-  }
+template <typename T>
+uint32_t Simulator::Crc32Checksum(uint32_t acc, T val, uint32_t poly) {
+  unsigned size = sizeof(val) * 8;  // Number of bits in type T.
+  VIXL_ASSERT((size == 8) || (size == 16) || (size == 32));
+  uint64_t tempacc = static_cast<uint64_t>(ReverseBits(acc)) << size;
+  uint64_t tempval = static_cast<uint64_t>(ReverseBits(val)) << 32;
+  return ReverseBits(Poly32Mod2(32 + size, tempacc ^ tempval, poly));
+}
 
-  // Permutation tables for REV instructions.
-  //  permute_table[Reverse16] is used by REV16_x, REV16_w
-  //  permute_table[Reverse32] is used by REV32_x, REV_w
-  //  permute_table[Reverse64] is used by REV_x
-  VIXL_STATIC_ASSERT((Reverse16 == 0) && (Reverse32 == 1) && (Reverse64 == 2));
-  static const uint8_t permute_table[3][8] = { {6, 7, 4, 5, 2, 3, 0, 1},
-                                               {4, 5, 6, 7, 0, 1, 2, 3},
-                                               {0, 1, 2, 3, 4, 5, 6, 7} };
-  uint64_t result = 0;
-  for (int i = 0; i < 8; i++) {
-    result <<= 8;
-    result |= bytes[permute_table[mode][i]];
-  }
-  return result;
+
+uint32_t Simulator::Crc32Checksum(uint32_t acc, uint64_t val, uint32_t poly) {
+  // Poly32Mod2 cannot handle inputs with more than 32 bits, so compute
+  // the CRC of each 32-bit word sequentially.
+  acc = Crc32Checksum(acc, (uint32_t)(val & 0xffffffff), poly);
+  return Crc32Checksum(acc, (uint32_t)(val >> 32), poly);
 }
 
 
 void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
   Shift shift_op = NO_SHIFT;
   int64_t result = 0;
+  unsigned reg_size = instr->SixtyFourBits() ? kXRegSize : kWRegSize;
+
   switch (instr->Mask(DataProcessing2SourceMask)) {
     case SDIV_w: {
       int32_t rn = wreg(instr->Rn());
@@ -1495,10 +1651,59 @@ void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
     case ASRV_x: shift_op = ASR; break;
     case RORV_w:
     case RORV_x: shift_op = ROR; break;
+    case CRC32B: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint8_t  val = reg<uint8_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32_POLY);
+      break;
+    }
+    case CRC32H: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint16_t val = reg<uint16_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32_POLY);
+      break;
+    }
+    case CRC32W: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint32_t val = reg<uint32_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32_POLY);
+      break;
+    }
+    case CRC32X: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint64_t val = reg<uint64_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32_POLY);
+      reg_size = kWRegSize;
+      break;
+    }
+    case CRC32CB: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint8_t  val = reg<uint8_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32C_POLY);
+      break;
+    }
+    case CRC32CH: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint16_t val = reg<uint16_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32C_POLY);
+      break;
+    }
+    case CRC32CW: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint32_t val = reg<uint32_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32C_POLY);
+      break;
+    }
+    case CRC32CX: {
+      uint32_t acc = reg<uint32_t>(instr->Rn());
+      uint64_t val = reg<uint64_t>(instr->Rm());
+      result = Crc32Checksum(acc, val, CRC32C_POLY);
+      reg_size = kWRegSize;
+      break;
+    }
     default: VIXL_UNIMPLEMENTED();
   }
 
-  unsigned reg_size = instr->SixtyFourBits() ? kXRegSize : kWRegSize;
   if (shift_op != NO_SHIFT) {
     // Shift distance encoded in the least-significant five/six bits of the
     // register.
@@ -1514,9 +1719,13 @@ void Simulator::VisitDataProcessing2Source(const Instruction* instr) {
 // The algorithm used is adapted from the one described in section 8.2 of
 //   Hacker's Delight, by Henry S. Warren, Jr.
 // It assumes that a right shift on a signed integer is an arithmetic shift.
-static int64_t MultiplyHighSigned(int64_t u, int64_t v) {
+// Type T must be either uint64_t or int64_t.
+template <typename T>
+static T MultiplyHigh(T u, T v) {
   uint64_t u0, v0, w0;
-  int64_t u1, v1, w1, w2, t;
+  T u1, v1, w1, w2, t;
+
+  VIXL_ASSERT(sizeof(u) == sizeof(u0));
 
   u0 = u & 0xffffffff;
   u1 = u >> 32;
@@ -1555,8 +1764,12 @@ void Simulator::VisitDataProcessing3Source(const Instruction* instr) {
     case SMSUBL_x: result = xreg(instr->Ra()) - (rn_s32 * rm_s32); break;
     case UMADDL_x: result = xreg(instr->Ra()) + (rn_u32 * rm_u32); break;
     case UMSUBL_x: result = xreg(instr->Ra()) - (rn_u32 * rm_u32); break;
+    case UMULH_x:
+      result = MultiplyHigh(reg<uint64_t>(instr->Rn()),
+                            reg<uint64_t>(instr->Rm()));
+      break;
     case SMULH_x:
-      result = MultiplyHighSigned(xreg(instr->Rn()), xreg(instr->Rm()));
+      result = MultiplyHigh(xreg(instr->Rn()), xreg(instr->Rm()));
       break;
     default: VIXL_UNIMPLEMENTED();
   }
@@ -1681,6 +1894,30 @@ void Simulator::VisitFPIntegerConvert(const Instruction* instr) {
     case FCVTMU_xd:
       set_xreg(dst, FPToUInt64(dreg(src), FPNegativeInfinity));
       break;
+    case FCVTPS_ws:
+      set_wreg(dst, FPToInt32(sreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPS_xs:
+      set_xreg(dst, FPToInt64(sreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPS_wd:
+      set_wreg(dst, FPToInt32(dreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPS_xd:
+      set_xreg(dst, FPToInt64(dreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPU_ws:
+      set_wreg(dst, FPToUInt32(sreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPU_xs:
+      set_xreg(dst, FPToUInt64(sreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPU_wd:
+      set_wreg(dst, FPToUInt32(dreg(src), FPPositiveInfinity));
+      break;
+    case FCVTPU_xd:
+      set_xreg(dst, FPToUInt64(dreg(src), FPPositiveInfinity));
+      break;
     case FCVTNS_ws: set_wreg(dst, FPToInt32(sreg(src), FPTieEven)); break;
     case FCVTNS_xs: set_xreg(dst, FPToInt64(sreg(src), FPTieEven)); break;
     case FCVTNS_wd: set_wreg(dst, FPToInt32(dreg(src), FPTieEven)); break;
@@ -1701,6 +1938,12 @@ void Simulator::VisitFPIntegerConvert(const Instruction* instr) {
     case FMOV_xd: set_xreg(dst, dreg_bits(src)); break;
     case FMOV_sw: set_sreg_bits(dst, wreg(src)); break;
     case FMOV_dx: set_dreg_bits(dst, xreg(src)); break;
+    case FMOV_d1_x:
+      LogicVRegister(vreg(dst)).SetUint(kFormatD, 1, xreg(src));
+      break;
+    case FMOV_x_d1:
+      set_xreg(dst, LogicVRegister(vreg(src)).Uint(kFormatD, 1));
+      break;
 
     // A 32-bit input can be handled in the same way as a 64-bit input, since
     // the sign- or zero-extension will not affect the conversion.
@@ -1764,63 +2007,48 @@ void Simulator::VisitFPFixedPointConvert(const Instruction* instr) {
                UFixedToFloat(static_cast<uint32_t>(wreg(src)), fbits, round));
       break;
     }
+    case FCVTZS_xd_fixed:
+      set_xreg(dst, FPToInt64(dreg(src) * std::pow(2.0, fbits), FPZero));
+      break;
+    case FCVTZS_wd_fixed:
+      set_wreg(dst, FPToInt32(dreg(src) * std::pow(2.0, fbits), FPZero));
+      break;
+    case FCVTZU_xd_fixed:
+      set_xreg(dst, FPToUInt64(dreg(src) * std::pow(2.0, fbits), FPZero));
+      break;
+    case FCVTZU_wd_fixed:
+      set_wreg(dst, FPToUInt32(dreg(src) * std::pow(2.0, fbits), FPZero));
+      break;
+    case FCVTZS_xs_fixed:
+      set_xreg(dst, FPToInt64(sreg(src) * std::pow(2.0f, fbits), FPZero));
+      break;
+    case FCVTZS_ws_fixed:
+      set_wreg(dst, FPToInt32(sreg(src) * std::pow(2.0f, fbits), FPZero));
+      break;
+    case FCVTZU_xs_fixed:
+      set_xreg(dst, FPToUInt64(sreg(src) * std::pow(2.0f, fbits), FPZero));
+      break;
+    case FCVTZU_ws_fixed:
+      set_wreg(dst, FPToUInt32(sreg(src) * std::pow(2.0f, fbits), FPZero));
+      break;
     default: VIXL_UNREACHABLE();
   }
-}
-
-
-int32_t Simulator::FPToInt32(double value, FPRounding rmode) {
-  value = FPRoundInt(value, rmode);
-  if (value >= kWMaxInt) {
-    return kWMaxInt;
-  } else if (value < kWMinInt) {
-    return kWMinInt;
-  }
-  return IsNaN(value) ? 0 : static_cast<int32_t>(value);
-}
-
-
-int64_t Simulator::FPToInt64(double value, FPRounding rmode) {
-  value = FPRoundInt(value, rmode);
-  if (value >= kXMaxInt) {
-    return kXMaxInt;
-  } else if (value < kXMinInt) {
-    return kXMinInt;
-  }
-  return IsNaN(value) ? 0 : static_cast<int64_t>(value);
-}
-
-
-uint32_t Simulator::FPToUInt32(double value, FPRounding rmode) {
-  value = FPRoundInt(value, rmode);
-  if (value >= kWMaxUInt) {
-    return kWMaxUInt;
-  } else if (value < 0.0) {
-    return 0;
-  }
-  return IsNaN(value) ? 0 : static_cast<uint32_t>(value);
-}
-
-
-uint64_t Simulator::FPToUInt64(double value, FPRounding rmode) {
-  value = FPRoundInt(value, rmode);
-  if (value >= kXMaxUInt) {
-    return kXMaxUInt;
-  } else if (value < 0.0) {
-    return 0;
-  }
-  return IsNaN(value) ? 0 : static_cast<uint64_t>(value);
 }
 
 
 void Simulator::VisitFPCompare(const Instruction* instr) {
   AssertSupportedFPCR();
 
+  FPTrapFlags trap = DisableTrap;
   switch (instr->Mask(FPCompareMask)) {
-    case FCMP_s: FPCompare(sreg(instr->Rn()), sreg(instr->Rm())); break;
-    case FCMP_d: FPCompare(dreg(instr->Rn()), dreg(instr->Rm())); break;
-    case FCMP_s_zero: FPCompare(sreg(instr->Rn()), 0.0f); break;
-    case FCMP_d_zero: FPCompare(dreg(instr->Rn()), 0.0); break;
+    case FCMPE_s: trap = EnableTrap; VIXL_FALLTHROUGH();
+    case FCMP_s: FPCompare(sreg(instr->Rn()), sreg(instr->Rm()), trap); break;
+    case FCMPE_d: trap = EnableTrap; VIXL_FALLTHROUGH();
+    case FCMP_d: FPCompare(dreg(instr->Rn()), dreg(instr->Rm()), trap); break;
+    case FCMPE_s_zero: trap = EnableTrap; VIXL_FALLTHROUGH();
+    case FCMP_s_zero: FPCompare(sreg(instr->Rn()), 0.0f, trap); break;
+    case FCMPE_d_zero: trap = EnableTrap; VIXL_FALLTHROUGH();
+    case FCMP_d_zero: FPCompare(dreg(instr->Rn()), 0.0, trap); break;
     default: VIXL_UNIMPLEMENTED();
   }
 }
@@ -1829,18 +2057,23 @@ void Simulator::VisitFPCompare(const Instruction* instr) {
 void Simulator::VisitFPConditionalCompare(const Instruction* instr) {
   AssertSupportedFPCR();
 
+  FPTrapFlags trap = DisableTrap;
   switch (instr->Mask(FPConditionalCompareMask)) {
+    case FCCMPE_s: trap = EnableTrap;
+      VIXL_FALLTHROUGH();
     case FCCMP_s:
       if (ConditionPassed(instr->Condition())) {
-        FPCompare(sreg(instr->Rn()), sreg(instr->Rm()));
+        FPCompare(sreg(instr->Rn()), sreg(instr->Rm()), trap);
       } else {
         nzcv().SetFlags(instr->Nzcv());
         LogSystemRegister(NZCV);
       }
       break;
+    case FCCMPE_d: trap = EnableTrap;
+      VIXL_FALLTHROUGH();
     case FCCMP_d:
       if (ConditionPassed(instr->Condition())) {
-        FPCompare(dreg(instr->Rn()), dreg(instr->Rm()));
+        FPCompare(dreg(instr->Rn()), dreg(instr->Rm()), trap);
       } else {
         nzcv().SetFlags(instr->Nzcv());
         LogSystemRegister(NZCV);
@@ -1871,497 +2104,82 @@ void Simulator::VisitFPConditionalSelect(const Instruction* instr) {
 
 void Simulator::VisitFPDataProcessing1Source(const Instruction* instr) {
   AssertSupportedFPCR();
-  const FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+
+  FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+  VectorFormat vform = (instr->Mask(FP64) == FP64) ? kFormatD : kFormatS;
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  bool inexact_exception = false;
 
   unsigned fd = instr->Rd();
   unsigned fn = instr->Rn();
 
   switch (instr->Mask(FPDataProcessing1SourceMask)) {
-    case FMOV_s: set_sreg(fd, sreg(fn)); break;
-    case FMOV_d: set_dreg(fd, dreg(fn)); break;
-    case FABS_s: set_sreg(fd, fabsf(sreg(fn))); break;
-    case FABS_d: set_dreg(fd, fabs(dreg(fn))); break;
-    case FNEG_s: set_sreg(fd, -sreg(fn)); break;
-    case FNEG_d: set_dreg(fd, -dreg(fn)); break;
-    case FSQRT_s: set_sreg(fd, FPSqrt(sreg(fn))); break;
-    case FSQRT_d: set_dreg(fd, FPSqrt(dreg(fn))); break;
-    case FRINTA_s: set_sreg(fd, FPRoundInt(sreg(fn), FPTieAway)); break;
-    case FRINTA_d: set_dreg(fd, FPRoundInt(dreg(fn), FPTieAway)); break;
-    case FRINTI_s: set_sreg(fd, FPRoundInt(sreg(fn), fpcr_rounding)); break;
-    case FRINTI_d: set_dreg(fd, FPRoundInt(dreg(fn), fpcr_rounding)); break;
+    case FMOV_s: set_sreg(fd, sreg(fn)); return;
+    case FMOV_d: set_dreg(fd, dreg(fn)); return;
+    case FABS_s: fabs_(kFormatS, vreg(fd), vreg(fn)); return;
+    case FABS_d: fabs_(kFormatD, vreg(fd), vreg(fn)); return;
+    case FNEG_s: fneg(kFormatS, vreg(fd), vreg(fn)); return;
+    case FNEG_d: fneg(kFormatD, vreg(fd), vreg(fn)); return;
+    case FCVT_ds: set_dreg(fd, FPToDouble(sreg(fn))); return;
+    case FCVT_sd: set_sreg(fd, FPToFloat(dreg(fn), FPTieEven)); return;
+    case FCVT_hs: set_hreg(fd, FPToFloat16(sreg(fn), FPTieEven)); return;
+    case FCVT_sh: set_sreg(fd, FPToFloat(hreg(fn))); return;
+    case FCVT_dh: set_dreg(fd, FPToDouble(FPToFloat(hreg(fn)))); return;
+    case FCVT_hd: set_hreg(fd, FPToFloat16(dreg(fn), FPTieEven)); return;
+    case FSQRT_s:
+    case FSQRT_d: fsqrt(vform, rd, rn); return;
+    case FRINTI_s:
+    case FRINTI_d: break;  // Use FPCR rounding mode.
+    case FRINTX_s:
+    case FRINTX_d: inexact_exception = true; break;
+    case FRINTA_s:
+    case FRINTA_d: fpcr_rounding = FPTieAway; break;
     case FRINTM_s:
-        set_sreg(fd, FPRoundInt(sreg(fn), FPNegativeInfinity)); break;
-    case FRINTM_d:
-        set_dreg(fd, FPRoundInt(dreg(fn), FPNegativeInfinity)); break;
-    case FRINTN_s: set_sreg(fd, FPRoundInt(sreg(fn), FPTieEven)); break;
-    case FRINTN_d: set_dreg(fd, FPRoundInt(dreg(fn), FPTieEven)); break;
+    case FRINTM_d: fpcr_rounding = FPNegativeInfinity; break;
+    case FRINTN_s:
+    case FRINTN_d: fpcr_rounding = FPTieEven; break;
     case FRINTP_s:
-        set_sreg(fd, FPRoundInt(sreg(fn), FPPositiveInfinity)); break;
-    case FRINTP_d:
-        set_dreg(fd, FPRoundInt(dreg(fn), FPPositiveInfinity)); break;
-    case FRINTX_s: {
-      float input = sreg(fn);
-      float rounded = FPRoundInt(input, fpcr_rounding);
-      set_sreg(fd, rounded);
-      if (!IsNaN(input) && (input != rounded)) FPProcessException();
-      break;
-    }
-    case FRINTX_d: {
-      double input = dreg(fn);
-      double rounded = FPRoundInt(input, fpcr_rounding);
-      set_dreg(fd, rounded);
-      if (!IsNaN(input) && (input != rounded)) FPProcessException();
-      break;
-    }
-    case FRINTZ_s: set_sreg(fd, FPRoundInt(sreg(fn), FPZero)); break;
-    case FRINTZ_d: set_dreg(fd, FPRoundInt(dreg(fn), FPZero)); break;
-    case FCVT_ds: set_dreg(fd, FPToDouble(sreg(fn))); break;
-    case FCVT_sd: set_sreg(fd, FPToFloat(dreg(fn), FPTieEven)); break;
+    case FRINTP_d: fpcr_rounding = FPPositiveInfinity; break;
+    case FRINTZ_s:
+    case FRINTZ_d: fpcr_rounding = FPZero; break;
     default: VIXL_UNIMPLEMENTED();
   }
-}
 
-
-// Assemble the specified IEEE-754 components into the target type and apply
-// appropriate rounding.
-//  sign:     0 = positive, 1 = negative
-//  exponent: Unbiased IEEE-754 exponent.
-//  mantissa: The mantissa of the input. The top bit (which is not encoded for
-//            normal IEEE-754 values) must not be omitted. This bit has the
-//            value 'pow(2, exponent)'.
-//
-// The input value is assumed to be a normalized value. That is, the input may
-// not be infinity or NaN. If the source value is subnormal, it must be
-// normalized before calling this function such that the highest set bit in the
-// mantissa has the value 'pow(2, exponent)'.
-//
-// Callers should use FPRoundToFloat or FPRoundToDouble directly, rather than
-// calling a templated FPRound.
-template <class T, int ebits, int mbits>
-static T FPRound(int64_t sign, int64_t exponent, uint64_t mantissa,
-                 FPRounding round_mode) {
-  VIXL_ASSERT((sign == 0) || (sign == 1));
-
-  // Only the FPTieEven rounding mode is implemented.
-  VIXL_ASSERT(round_mode == FPTieEven);
-  USE(round_mode);
-
-  // Rounding can promote subnormals to normals, and normals to infinities. For
-  // example, a double with exponent 127 (FLT_MAX_EXP) would appear to be
-  // encodable as a float, but rounding based on the low-order mantissa bits
-  // could make it overflow. With ties-to-even rounding, this value would become
-  // an infinity.
-
-  // ---- Rounding Method ----
-  //
-  // The exponent is irrelevant in the rounding operation, so we treat the
-  // lowest-order bit that will fit into the result ('onebit') as having
-  // the value '1'. Similarly, the highest-order bit that won't fit into
-  // the result ('halfbit') has the value '0.5'. The 'point' sits between
-  // 'onebit' and 'halfbit':
-  //
-  //            These bits fit into the result.
-  //               |---------------------|
-  //  mantissa = 0bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-  //                                     ||
-  //                                    / |
-  //                                   /  halfbit
-  //                               onebit
-  //
-  // For subnormal outputs, the range of representable bits is smaller and
-  // the position of onebit and halfbit depends on the exponent of the
-  // input, but the method is otherwise similar.
-  //
-  //   onebit(frac)
-  //     |
-  //     | halfbit(frac)          halfbit(adjusted)
-  //     | /                      /
-  //     | |                      |
-  //  0b00.0 (exact)      -> 0b00.0 (exact)                    -> 0b00
-  //  0b00.0...           -> 0b00.0...                         -> 0b00
-  //  0b00.1 (exact)      -> 0b00.0111..111                    -> 0b00
-  //  0b00.1...           -> 0b00.1...                         -> 0b01
-  //  0b01.0 (exact)      -> 0b01.0 (exact)                    -> 0b01
-  //  0b01.0...           -> 0b01.0...                         -> 0b01
-  //  0b01.1 (exact)      -> 0b01.1 (exact)                    -> 0b10
-  //  0b01.1...           -> 0b01.1...                         -> 0b10
-  //  0b10.0 (exact)      -> 0b10.0 (exact)                    -> 0b10
-  //  0b10.0...           -> 0b10.0...                         -> 0b10
-  //  0b10.1 (exact)      -> 0b10.0111..111                    -> 0b10
-  //  0b10.1...           -> 0b10.1...                         -> 0b11
-  //  0b11.0 (exact)      -> 0b11.0 (exact)                    -> 0b11
-  //  ...                   /             |                      /   |
-  //                       /              |                     /    |
-  //                                                           /     |
-  // adjusted = frac - (halfbit(mantissa) & ~onebit(frac));   /      |
-  //
-  //                   mantissa = (mantissa >> shift) + halfbit(adjusted);
-
-  static const int mantissa_offset = 0;
-  static const int exponent_offset = mantissa_offset + mbits;
-  static const int sign_offset = exponent_offset + ebits;
-  VIXL_ASSERT(sign_offset == (sizeof(T) * 8 - 1));
-
-  // Bail out early for zero inputs.
-  if (mantissa == 0) {
-    return sign << sign_offset;
-  }
-
-  // If all bits in the exponent are set, the value is infinite or NaN.
-  // This is true for all binary IEEE-754 formats.
-  static const int infinite_exponent = (1 << ebits) - 1;
-  static const int max_normal_exponent = infinite_exponent - 1;
-
-  // Apply the exponent bias to encode it for the result. Doing this early makes
-  // it easy to detect values that will be infinite or subnormal.
-  exponent += max_normal_exponent >> 1;
-
-  if (exponent > max_normal_exponent) {
-    // Overflow: The input is too large for the result type to represent. The
-    // FPTieEven rounding mode handles overflows using infinities.
-    exponent = infinite_exponent;
-    mantissa = 0;
-    return (sign << sign_offset) |
-           (exponent << exponent_offset) |
-           (mantissa << mantissa_offset);
-  }
-
-  // Calculate the shift required to move the top mantissa bit to the proper
-  // place in the destination type.
-  const int highest_significant_bit = 63 - CountLeadingZeros(mantissa, 64);
-  int shift = highest_significant_bit - mbits;
-
-  if (exponent <= 0) {
-    // The output will be subnormal (before rounding).
-
-    // For subnormal outputs, the shift must be adjusted by the exponent. The +1
-    // is necessary because the exponent of a subnormal value (encoded as 0) is
-    // the same as the exponent of the smallest normal value (encoded as 1).
-    shift += -exponent + 1;
-
-    // Handle inputs that would produce a zero output.
-    //
-    // Shifts higher than highest_significant_bit+1 will always produce a zero
-    // result. A shift of exactly highest_significant_bit+1 might produce a
-    // non-zero result after rounding.
-    if (shift > (highest_significant_bit + 1)) {
-      // The result will always be +/-0.0.
-      return sign << sign_offset;
-    }
-
-    // Properly encode the exponent for a subnormal output.
-    exponent = 0;
-  } else {
-    // Clear the topmost mantissa bit, since this is not encoded in IEEE-754
-    // normal values.
-    mantissa &= ~(UINT64_C(1) << highest_significant_bit);
-  }
-
-  if (shift > 0) {
-    // We have to shift the mantissa to the right. Some precision is lost, so we
-    // need to apply rounding.
-    uint64_t onebit_mantissa = (mantissa >> (shift)) & 1;
-    uint64_t halfbit_mantissa = (mantissa >> (shift-1)) & 1;
-    uint64_t adjusted = mantissa - (halfbit_mantissa & ~onebit_mantissa);
-    T halfbit_adjusted = (adjusted >> (shift-1)) & 1;
-
-    T result = (sign << sign_offset) |
-               (exponent << exponent_offset) |
-               ((mantissa >> shift) << mantissa_offset);
-
-    // A very large mantissa can overflow during rounding. If this happens, the
-    // exponent should be incremented and the mantissa set to 1.0 (encoded as
-    // 0). Applying halfbit_adjusted after assembling the float has the nice
-    // side-effect that this case is handled for free.
-    //
-    // This also handles cases where a very large finite value overflows to
-    // infinity, or where a very large subnormal value overflows to become
-    // normal.
-    return result + halfbit_adjusted;
-  } else {
-    // We have to shift the mantissa to the left (or not at all). The input
-    // mantissa is exactly representable in the output mantissa, so apply no
-    // rounding correction.
-    return (sign << sign_offset) |
-           (exponent << exponent_offset) |
-           ((mantissa << -shift) << mantissa_offset);
-  }
-}
-
-
-// See FPRound for a description of this function.
-static inline double FPRoundToDouble(int64_t sign, int64_t exponent,
-                                     uint64_t mantissa, FPRounding round_mode) {
-  int64_t bits =
-      FPRound<int64_t, kDoubleExponentBits, kDoubleMantissaBits>(sign,
-                                                                 exponent,
-                                                                 mantissa,
-                                                                 round_mode);
-  return rawbits_to_double(bits);
-}
-
-
-// See FPRound for a description of this function.
-static inline float FPRoundToFloat(int64_t sign, int64_t exponent,
-                                   uint64_t mantissa, FPRounding round_mode) {
-  int32_t bits =
-      FPRound<int32_t, kFloatExponentBits, kFloatMantissaBits>(sign,
-                                                               exponent,
-                                                               mantissa,
-                                                               round_mode);
-  return rawbits_to_float(bits);
-}
-
-
-double Simulator::FixedToDouble(int64_t src, int fbits, FPRounding round) {
-  if (src >= 0) {
-    return UFixedToDouble(src, fbits, round);
-  } else {
-    // This works for all negative values, including INT64_MIN.
-    return -UFixedToDouble(-src, fbits, round);
-  }
-}
-
-
-double Simulator::UFixedToDouble(uint64_t src, int fbits, FPRounding round) {
-  // An input of 0 is a special case because the result is effectively
-  // subnormal: The exponent is encoded as 0 and there is no implicit 1 bit.
-  if (src == 0) {
-    return 0.0;
-  }
-
-  // Calculate the exponent. The highest significant bit will have the value
-  // 2^exponent.
-  const int highest_significant_bit = 63 - CountLeadingZeros(src, 64);
-  const int64_t exponent = highest_significant_bit - fbits;
-
-  return FPRoundToDouble(0, exponent, src, round);
-}
-
-
-float Simulator::FixedToFloat(int64_t src, int fbits, FPRounding round) {
-  if (src >= 0) {
-    return UFixedToFloat(src, fbits, round);
-  } else {
-    // This works for all negative values, including INT64_MIN.
-    return -UFixedToFloat(-src, fbits, round);
-  }
-}
-
-
-float Simulator::UFixedToFloat(uint64_t src, int fbits, FPRounding round) {
-  // An input of 0 is a special case because the result is effectively
-  // subnormal: The exponent is encoded as 0 and there is no implicit 1 bit.
-  if (src == 0) {
-    return 0.0f;
-  }
-
-  // Calculate the exponent. The highest significant bit will have the value
-  // 2^exponent.
-  const int highest_significant_bit = 63 - CountLeadingZeros(src, 64);
-  const int32_t exponent = highest_significant_bit - fbits;
-
-  return FPRoundToFloat(0, exponent, src, round);
-}
-
-
-double Simulator::FPRoundInt(double value, FPRounding round_mode) {
-  if ((value == 0.0) || (value == kFP64PositiveInfinity) ||
-      (value == kFP64NegativeInfinity)) {
-    return value;
-  } else if (IsNaN(value)) {
-    return FPProcessNaN(value);
-  }
-
-  double int_result = floor(value);
-  double error = value - int_result;
-  switch (round_mode) {
-    case FPTieAway: {
-      // Take care of correctly handling the range ]-0.5, -0.0], which must
-      // yield -0.0.
-      if ((-0.5 < value) && (value < 0.0)) {
-        int_result = -0.0;
-
-      } else if ((error > 0.5) || ((error == 0.5) && (int_result >= 0.0))) {
-        // If the error is greater than 0.5, or is equal to 0.5 and the integer
-        // result is positive, round up.
-        int_result++;
-      }
-      break;
-    }
-    case FPTieEven: {
-      // Take care of correctly handling the range [-0.5, -0.0], which must
-      // yield -0.0.
-      if ((-0.5 <= value) && (value < 0.0)) {
-        int_result = -0.0;
-
-      // If the error is greater than 0.5, or is equal to 0.5 and the integer
-      // result is odd, round up.
-      } else if ((error > 0.5) ||
-          ((error == 0.5) && (fmod(int_result, 2) != 0))) {
-        int_result++;
-      }
-      break;
-    }
-    case FPZero: {
-      // If value>0 then we take floor(value)
-      // otherwise, ceil(value).
-      if (value < 0) {
-         int_result = ceil(value);
-      }
-      break;
-    }
-    case FPNegativeInfinity: {
-      // We always use floor(value).
-      break;
-    }
-    case FPPositiveInfinity: {
-      // Take care of correctly handling the range ]-1.0, -0.0], which must
-      // yield -0.0.
-      if ((-1.0 < value) && (value < 0.0)) {
-        int_result = -0.0;
-
-      // If the error is non-zero, round up.
-      } else if (error > 0.0) {
-        int_result++;
-      }
-      break;
-    }
-    default: VIXL_UNIMPLEMENTED();
-  }
-  return int_result;
-}
-
-
-double Simulator::FPToDouble(float value) {
-  switch (std::fpclassify(value)) {
-    case FP_NAN: {
-      if (DN()) return kFP64DefaultNaN;
-
-      // Convert NaNs as the processor would:
-      //  - The sign is propagated.
-      //  - The payload (mantissa) is transferred entirely, except that the top
-      //    bit is forced to '1', making the result a quiet NaN. The unused
-      //    (low-order) payload bits are set to 0.
-      uint32_t raw = float_to_rawbits(value);
-
-      uint64_t sign = raw >> 31;
-      uint64_t exponent = (1 << 11) - 1;
-      uint64_t payload = unsigned_bitextract_64(21, 0, raw);
-      payload <<= (52 - 23);  // The unused low-order bits should be 0.
-      payload |= (UINT64_C(1) << 51);  // Force a quiet NaN.
-
-      return rawbits_to_double((sign << 63) | (exponent << 52) | payload);
-    }
-
-    case FP_ZERO:
-    case FP_NORMAL:
-    case FP_SUBNORMAL:
-    case FP_INFINITE: {
-      // All other inputs are preserved in a standard cast, because every value
-      // representable using an IEEE-754 float is also representable using an
-      // IEEE-754 double.
-      return static_cast<double>(value);
-    }
-  }
-
-  VIXL_UNREACHABLE();
-  return static_cast<double>(value);
-}
-
-
-float Simulator::FPToFloat(double value, FPRounding round_mode) {
-  // Only the FPTieEven rounding mode is implemented.
-  VIXL_ASSERT(round_mode == FPTieEven);
-  USE(round_mode);
-
-  switch (std::fpclassify(value)) {
-    case FP_NAN: {
-      if (DN()) return kFP32DefaultNaN;
-
-      // Convert NaNs as the processor would:
-      //  - The sign is propagated.
-      //  - The payload (mantissa) is transferred as much as possible, except
-      //    that the top bit is forced to '1', making the result a quiet NaN.
-      uint64_t raw = double_to_rawbits(value);
-
-      uint32_t sign = raw >> 63;
-      uint32_t exponent = (1 << 8) - 1;
-      uint32_t payload = unsigned_bitextract_64(50, 52 - 23, raw);
-      payload |= (1 << 22);   // Force a quiet NaN.
-
-      return rawbits_to_float((sign << 31) | (exponent << 23) | payload);
-    }
-
-    case FP_ZERO:
-    case FP_INFINITE: {
-      // In a C++ cast, any value representable in the target type will be
-      // unchanged. This is always the case for +/-0.0 and infinities.
-      return static_cast<float>(value);
-    }
-
-    case FP_NORMAL:
-    case FP_SUBNORMAL: {
-      // Convert double-to-float as the processor would, assuming that FPCR.FZ
-      // (flush-to-zero) is not set.
-      uint64_t raw = double_to_rawbits(value);
-      // Extract the IEEE-754 double components.
-      uint32_t sign = raw >> 63;
-      // Extract the exponent and remove the IEEE-754 encoding bias.
-      int32_t exponent = unsigned_bitextract_64(62, 52, raw) - 1023;
-      // Extract the mantissa and add the implicit '1' bit.
-      uint64_t mantissa = unsigned_bitextract_64(51, 0, raw);
-      if (std::fpclassify(value) == FP_NORMAL) {
-        mantissa |= (UINT64_C(1) << 52);
-      }
-      return FPRoundToFloat(sign, exponent, mantissa, round_mode);
-    }
-  }
-
-  VIXL_UNREACHABLE();
-  return value;
+  // Only FRINT* instructions fall through the switch above.
+  frint(vform, rd, rn, fpcr_rounding, inexact_exception);
 }
 
 
 void Simulator::VisitFPDataProcessing2Source(const Instruction* instr) {
   AssertSupportedFPCR();
 
-  unsigned fd = instr->Rd();
-  unsigned fn = instr->Rn();
-  unsigned fm = instr->Rm();
-
-  // Fmaxnm and Fminnm have special NaN handling.
-  switch (instr->Mask(FPDataProcessing2SourceMask)) {
-    case FMAXNM_s: set_sreg(fd, FPMaxNM(sreg(fn), sreg(fm))); return;
-    case FMAXNM_d: set_dreg(fd, FPMaxNM(dreg(fn), dreg(fm))); return;
-    case FMINNM_s: set_sreg(fd, FPMinNM(sreg(fn), sreg(fm))); return;
-    case FMINNM_d: set_dreg(fd, FPMinNM(dreg(fn), dreg(fm))); return;
-    default:
-      break;    // Fall through.
-  }
-
-  if (FPProcessNaNs(instr)) return;
+  VectorFormat vform = (instr->Mask(FP64) == FP64) ? kFormatD : kFormatS;
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
 
   switch (instr->Mask(FPDataProcessing2SourceMask)) {
-    case FADD_s: set_sreg(fd, FPAdd(sreg(fn), sreg(fm))); break;
-    case FADD_d: set_dreg(fd, FPAdd(dreg(fn), dreg(fm))); break;
-    case FSUB_s: set_sreg(fd, FPSub(sreg(fn), sreg(fm))); break;
-    case FSUB_d: set_dreg(fd, FPSub(dreg(fn), dreg(fm))); break;
-    case FMUL_s: set_sreg(fd, FPMul(sreg(fn), sreg(fm))); break;
-    case FMUL_d: set_dreg(fd, FPMul(dreg(fn), dreg(fm))); break;
-    case FDIV_s: set_sreg(fd, FPDiv(sreg(fn), sreg(fm))); break;
-    case FDIV_d: set_dreg(fd, FPDiv(dreg(fn), dreg(fm))); break;
-    case FMAX_s: set_sreg(fd, FPMax(sreg(fn), sreg(fm))); break;
-    case FMAX_d: set_dreg(fd, FPMax(dreg(fn), dreg(fm))); break;
-    case FMIN_s: set_sreg(fd, FPMin(sreg(fn), sreg(fm))); break;
-    case FMIN_d: set_dreg(fd, FPMin(dreg(fn), dreg(fm))); break;
+    case FADD_s:
+    case FADD_d: fadd(vform, rd, rn, rm); break;
+    case FSUB_s:
+    case FSUB_d: fsub(vform, rd, rn, rm); break;
+    case FMUL_s:
+    case FMUL_d: fmul(vform, rd, rn, rm); break;
+    case FNMUL_s:
+    case FNMUL_d: fnmul(vform, rd, rn, rm); break;
+    case FDIV_s:
+    case FDIV_d: fdiv(vform, rd, rn, rm); break;
+    case FMAX_s:
+    case FMAX_d: fmax(vform, rd, rn, rm); break;
+    case FMIN_s:
+    case FMIN_d: fmin(vform, rd, rn, rm); break;
     case FMAXNM_s:
-    case FMAXNM_d:
+    case FMAXNM_d: fmaxnm(vform, rd, rn, rm); break;
     case FMINNM_s:
-    case FMINNM_d:
-      // These were handled before the standard FPProcessNaNs() stage.
+    case FMINNM_d: fminnm(vform, rd, rn, rm); break;
+    default:
       VIXL_UNREACHABLE();
-    default: VIXL_UNIMPLEMENTED();
   }
 }
 
@@ -2398,239 +2216,6 @@ void Simulator::VisitFPDataProcessing3Source(const Instruction* instr) {
 }
 
 
-template <typename T>
-T Simulator::FPAdd(T op1, T op2) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
-
-  if (IsInfinite(op1) && IsInfinite(op2) && (op1 != op2)) {
-    // inf + -inf returns the default NaN.
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  } else {
-    // Other cases should be handled by standard arithmetic.
-    return op1 + op2;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPDiv(T op1, T op2) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
-
-  if ((IsInfinite(op1) && IsInfinite(op2)) || ((op1 == 0.0) && (op2 == 0.0))) {
-    // inf / inf and 0.0 / 0.0 return the default NaN.
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  } else {
-    if (op2 == 0.0) FPProcessException();
-
-    // Other cases should be handled by standard arithmetic.
-    return op1 / op2;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPMax(T a, T b) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(a) && !IsNaN(b));
-
-  if ((a == 0.0) && (b == 0.0) &&
-      (copysign(1.0, a) != copysign(1.0, b))) {
-    // a and b are zero, and the sign differs: return +0.0.
-    return 0.0;
-  } else {
-    return (a > b) ? a : b;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPMaxNM(T a, T b) {
-  if (IsQuietNaN(a) && !IsQuietNaN(b)) {
-    a = kFP64NegativeInfinity;
-  } else if (!IsQuietNaN(a) && IsQuietNaN(b)) {
-    b = kFP64NegativeInfinity;
-  }
-
-  T result = FPProcessNaNs(a, b);
-  return IsNaN(result) ? result : FPMax(a, b);
-}
-
-
-template <typename T>
-T Simulator::FPMin(T a, T b) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(a) && !IsNaN(b));
-
-  if ((a == 0.0) && (b == 0.0) &&
-      (copysign(1.0, a) != copysign(1.0, b))) {
-    // a and b are zero, and the sign differs: return -0.0.
-    return -0.0;
-  } else {
-    return (a < b) ? a : b;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPMinNM(T a, T b) {
-  if (IsQuietNaN(a) && !IsQuietNaN(b)) {
-    a = kFP64PositiveInfinity;
-  } else if (!IsQuietNaN(a) && IsQuietNaN(b)) {
-    b = kFP64PositiveInfinity;
-  }
-
-  T result = FPProcessNaNs(a, b);
-  return IsNaN(result) ? result : FPMin(a, b);
-}
-
-
-template <typename T>
-T Simulator::FPMul(T op1, T op2) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
-
-  if ((IsInfinite(op1) && (op2 == 0.0)) || (IsInfinite(op2) && (op1 == 0.0))) {
-    // inf * 0.0 returns the default NaN.
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  } else {
-    // Other cases should be handled by standard arithmetic.
-    return op1 * op2;
-  }
-}
-
-
-template<typename T>
-T Simulator::FPMulAdd(T a, T op1, T op2) {
-  T result = FPProcessNaNs3(a, op1, op2);
-
-  T sign_a = copysign(1.0, a);
-  T sign_prod = copysign(1.0, op1) * copysign(1.0, op2);
-  bool isinf_prod = IsInfinite(op1) || IsInfinite(op2);
-  bool operation_generates_nan =
-      (IsInfinite(op1) && (op2 == 0.0)) ||                     // inf * 0.0
-      (IsInfinite(op2) && (op1 == 0.0)) ||                     // 0.0 * inf
-      (IsInfinite(a) && isinf_prod && (sign_a != sign_prod));  // inf - inf
-
-  if (IsNaN(result)) {
-    // Generated NaNs override quiet NaNs propagated from a.
-    if (operation_generates_nan && IsQuietNaN(a)) {
-      FPProcessException();
-      return FPDefaultNaN<T>();
-    } else {
-      return result;
-    }
-  }
-
-  // If the operation would produce a NaN, return the default NaN.
-  if (operation_generates_nan) {
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  }
-
-  // Work around broken fma implementations for exact zero results: The sign of
-  // exact 0.0 results is positive unless both a and op1 * op2 are negative.
-  if (((op1 == 0.0) || (op2 == 0.0)) && (a == 0.0)) {
-    return ((sign_a < 0) && (sign_prod < 0)) ? -0.0 : 0.0;
-  }
-
-  result = FusedMultiplyAdd(op1, op2, a);
-  VIXL_ASSERT(!IsNaN(result));
-
-  // Work around broken fma implementations for rounded zero results: If a is
-  // 0.0, the sign of the result is the sign of op1 * op2 before rounding.
-  if ((a == 0.0) && (result == 0.0)) {
-    return copysign(0.0, sign_prod);
-  }
-
-  return result;
-}
-
-
-template <typename T>
-T Simulator::FPSub(T op1, T op2) {
-  // NaNs should be handled elsewhere.
-  VIXL_ASSERT(!IsNaN(op1) && !IsNaN(op2));
-
-  if (IsInfinite(op1) && IsInfinite(op2) && (op1 == op2)) {
-    // inf - inf returns the default NaN.
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  } else {
-    // Other cases should be handled by standard arithmetic.
-    return op1 - op2;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPSqrt(T op) {
-  if (IsNaN(op)) {
-    return FPProcessNaN(op);
-  } else if (op < 0.0) {
-    FPProcessException();
-    return FPDefaultNaN<T>();
-  } else {
-    return sqrt(op);
-  }
-}
-
-
-template <typename T>
-T Simulator::FPProcessNaN(T op) {
-  VIXL_ASSERT(IsNaN(op));
-  if (IsSignallingNaN(op)) {
-    FPProcessException();
-  }
-  return DN() ? FPDefaultNaN<T>() : ToQuietNaN(op);
-}
-
-
-template <typename T>
-T Simulator::FPProcessNaNs(T op1, T op2) {
-  if (IsSignallingNaN(op1)) {
-    return FPProcessNaN(op1);
-  } else if (IsSignallingNaN(op2)) {
-    return FPProcessNaN(op2);
-  } else if (IsNaN(op1)) {
-    VIXL_ASSERT(IsQuietNaN(op1));
-    return FPProcessNaN(op1);
-  } else if (IsNaN(op2)) {
-    VIXL_ASSERT(IsQuietNaN(op2));
-    return FPProcessNaN(op2);
-  } else {
-    return 0.0;
-  }
-}
-
-
-template <typename T>
-T Simulator::FPProcessNaNs3(T op1, T op2, T op3) {
-  if (IsSignallingNaN(op1)) {
-    return FPProcessNaN(op1);
-  } else if (IsSignallingNaN(op2)) {
-    return FPProcessNaN(op2);
-  } else if (IsSignallingNaN(op3)) {
-    return FPProcessNaN(op3);
-  } else if (IsNaN(op1)) {
-    VIXL_ASSERT(IsQuietNaN(op1));
-    return FPProcessNaN(op1);
-  } else if (IsNaN(op2)) {
-    VIXL_ASSERT(IsQuietNaN(op2));
-    return FPProcessNaN(op2);
-  } else if (IsNaN(op3)) {
-    VIXL_ASSERT(IsQuietNaN(op3));
-    return FPProcessNaN(op3);
-  } else {
-    return 0.0;
-  }
-}
-
-
 bool Simulator::FPProcessNaNs(const Instruction* instr) {
   unsigned fd = instr->Rd();
   unsigned fn = instr->Rn();
@@ -2639,19 +2224,38 @@ bool Simulator::FPProcessNaNs(const Instruction* instr) {
 
   if (instr->Mask(FP64) == FP64) {
     double result = FPProcessNaNs(dreg(fn), dreg(fm));
-    if (IsNaN(result)) {
+    if (std::isnan(result)) {
       set_dreg(fd, result);
       done = true;
     }
   } else {
     float result = FPProcessNaNs(sreg(fn), sreg(fm));
-    if (IsNaN(result)) {
+    if (std::isnan(result)) {
       set_sreg(fd, result);
       done = true;
     }
   }
 
   return done;
+}
+
+
+void Simulator::SysOp_W(int op, int64_t val) {
+  switch (op) {
+    case IVAU:
+    case CVAC:
+    case CVAU:
+    case CIVAC: {
+      // Perform a dummy memory access to ensure that we have read access
+      // to the specified address.
+      volatile uint8_t y = Memory::Read<uint8_t>(val);
+      USE(y);
+      // TODO: Implement "case ZVA:".
+      break;
+    }
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
 }
 
 
@@ -2681,11 +2285,11 @@ void Simulator::VisitSystem(const Instruction* instr) {
       case MSR: {
         switch (instr->ImmSystemRegister()) {
           case NZCV:
-            nzcv().SetRawValue(xreg(instr->Rt()));
+            nzcv().SetRawValue(wreg(instr->Rt()));
             LogSystemRegister(NZCV);
             break;
           case FPCR:
-            fpcr().SetRawValue(xreg(instr->Rt()));
+            fpcr().SetRawValue(wreg(instr->Rt()));
             LogSystemRegister(FPCR);
             break;
           default: VIXL_UNIMPLEMENTED();
@@ -2701,8 +2305,1480 @@ void Simulator::VisitSystem(const Instruction* instr) {
     }
   } else if (instr->Mask(MemBarrierFMask) == MemBarrierFixed) {
     __sync_synchronize();
+  } else if ((instr->Mask(SystemSysFMask) == SystemSysFixed)) {
+    switch (instr->Mask(SystemSysMask)) {
+      case SYS: SysOp_W(instr->SysOp(), xreg(instr->Rt())); break;
+      default: VIXL_UNIMPLEMENTED();
+    }
   } else {
     VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitCrypto2RegSHA(const Instruction* instr) {
+  VisitUnimplemented(instr);
+}
+
+
+void Simulator::VisitCrypto3RegSHA(const Instruction* instr) {
+  VisitUnimplemented(instr);
+}
+
+
+void Simulator::VisitCryptoAES(const Instruction* instr) {
+  VisitUnimplemented(instr);
+}
+
+
+void Simulator::VisitNEON2RegMisc(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  static const NEONFormatMap map_lp = {
+    {23, 22, 30}, {NF_4H, NF_8H, NF_2S, NF_4S, NF_1D, NF_2D}
+  };
+  VectorFormat vf_lp = nfd.GetVectorFormat(&map_lp);
+
+  static const NEONFormatMap map_fcvtl = {
+    {22}, {NF_4S, NF_2D}
+  };
+  VectorFormat vf_fcvtl = nfd.GetVectorFormat(&map_fcvtl);
+
+  static const NEONFormatMap map_fcvtn = {
+    {22, 30}, {NF_4H, NF_8H, NF_2S, NF_4S}
+  };
+  VectorFormat vf_fcvtn = nfd.GetVectorFormat(&map_fcvtn);
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+
+  if (instr->Mask(NEON2RegMiscOpcode) <= NEON_NEG_opcode) {
+    // These instructions all use a two bit size field, except NOT and RBIT,
+    // which use the field to encode the operation.
+    switch (instr->Mask(NEON2RegMiscMask)) {
+      case NEON_REV64:     rev64(vf, rd, rn); break;
+      case NEON_REV32:     rev32(vf, rd, rn); break;
+      case NEON_REV16:     rev16(vf, rd, rn); break;
+      case NEON_SUQADD:    suqadd(vf, rd, rn); break;
+      case NEON_USQADD:    usqadd(vf, rd, rn); break;
+      case NEON_CLS:       cls(vf, rd, rn); break;
+      case NEON_CLZ:       clz(vf, rd, rn); break;
+      case NEON_CNT:       cnt(vf, rd, rn); break;
+      case NEON_SQABS:     abs(vf, rd, rn).SignedSaturate(vf); break;
+      case NEON_SQNEG:     neg(vf, rd, rn).SignedSaturate(vf); break;
+      case NEON_CMGT_zero: cmp(vf, rd, rn, 0, gt); break;
+      case NEON_CMGE_zero: cmp(vf, rd, rn, 0, ge); break;
+      case NEON_CMEQ_zero: cmp(vf, rd, rn, 0, eq); break;
+      case NEON_CMLE_zero: cmp(vf, rd, rn, 0, le); break;
+      case NEON_CMLT_zero: cmp(vf, rd, rn, 0, lt); break;
+      case NEON_ABS:       abs(vf, rd, rn); break;
+      case NEON_NEG:       neg(vf, rd, rn); break;
+      case NEON_SADDLP:    saddlp(vf_lp, rd, rn); break;
+      case NEON_UADDLP:    uaddlp(vf_lp, rd, rn); break;
+      case NEON_SADALP:    sadalp(vf_lp, rd, rn); break;
+      case NEON_UADALP:    uadalp(vf_lp, rd, rn); break;
+      case NEON_RBIT_NOT:
+        vf = nfd.GetVectorFormat(nfd.LogicalFormatMap());
+        switch (instr->FPType()) {
+          case 0: not_(vf, rd, rn); break;
+          case 1: rbit(vf, rd, rn);; break;
+          default:
+            VIXL_UNIMPLEMENTED();
+        }
+        break;
+    }
+  } else {
+    VectorFormat fpf = nfd.GetVectorFormat(nfd.FPFormatMap());
+    FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+    bool inexact_exception = false;
+
+    // These instructions all use a one bit size field, except XTN, SQXTUN,
+    // SHLL, SQXTN and UQXTN, which use a two bit size field.
+    switch (instr->Mask(NEON2RegMiscFPMask)) {
+      case NEON_FABS:   fabs_(fpf, rd, rn); return;
+      case NEON_FNEG:   fneg(fpf, rd, rn); return;
+      case NEON_FSQRT:  fsqrt(fpf, rd, rn); return;
+      case NEON_FCVTL:
+        if (instr->Mask(NEON_Q)) {
+          fcvtl2(vf_fcvtl, rd, rn);
+        } else {
+          fcvtl(vf_fcvtl, rd, rn);
+        }
+        return;
+      case NEON_FCVTN:
+        if (instr->Mask(NEON_Q)) {
+          fcvtn2(vf_fcvtn, rd, rn);
+        } else {
+          fcvtn(vf_fcvtn, rd, rn);
+        }
+        return;
+      case NEON_FCVTXN:
+        if (instr->Mask(NEON_Q)) {
+          fcvtxn2(vf_fcvtn, rd, rn);
+        } else {
+          fcvtxn(vf_fcvtn, rd, rn);
+        }
+        return;
+
+      // The following instructions break from the switch statement, rather
+      // than return.
+      case NEON_FRINTI:     break;  // Use FPCR rounding mode.
+      case NEON_FRINTX:     inexact_exception = true; break;
+      case NEON_FRINTA:     fpcr_rounding = FPTieAway; break;
+      case NEON_FRINTM:     fpcr_rounding = FPNegativeInfinity; break;
+      case NEON_FRINTN:     fpcr_rounding = FPTieEven; break;
+      case NEON_FRINTP:     fpcr_rounding = FPPositiveInfinity; break;
+      case NEON_FRINTZ:     fpcr_rounding = FPZero; break;
+
+      case NEON_FCVTNS:     fcvts(fpf, rd, rn, FPTieEven); return;
+      case NEON_FCVTNU:     fcvtu(fpf, rd, rn, FPTieEven); return;
+      case NEON_FCVTPS:     fcvts(fpf, rd, rn, FPPositiveInfinity); return;
+      case NEON_FCVTPU:     fcvtu(fpf, rd, rn, FPPositiveInfinity); return;
+      case NEON_FCVTMS:     fcvts(fpf, rd, rn, FPNegativeInfinity); return;
+      case NEON_FCVTMU:     fcvtu(fpf, rd, rn, FPNegativeInfinity); return;
+      case NEON_FCVTZS:     fcvts(fpf, rd, rn, FPZero); return;
+      case NEON_FCVTZU:     fcvtu(fpf, rd, rn, FPZero); return;
+      case NEON_FCVTAS:     fcvts(fpf, rd, rn, FPTieAway); return;
+      case NEON_FCVTAU:     fcvtu(fpf, rd, rn, FPTieAway); return;
+      case NEON_SCVTF:      scvtf(fpf, rd, rn, 0, fpcr_rounding); return;
+      case NEON_UCVTF:      ucvtf(fpf, rd, rn, 0, fpcr_rounding); return;
+      case NEON_URSQRTE:    ursqrte(fpf, rd, rn); return;
+      case NEON_URECPE:     urecpe(fpf, rd, rn); return;
+      case NEON_FRSQRTE:    frsqrte(fpf, rd, rn); return;
+      case NEON_FRECPE:     frecpe(fpf, rd, rn, fpcr_rounding); return;
+      case NEON_FCMGT_zero: fcmp_zero(fpf, rd, rn, gt); return;
+      case NEON_FCMGE_zero: fcmp_zero(fpf, rd, rn, ge); return;
+      case NEON_FCMEQ_zero: fcmp_zero(fpf, rd, rn, eq); return;
+      case NEON_FCMLE_zero: fcmp_zero(fpf, rd, rn, le); return;
+      case NEON_FCMLT_zero: fcmp_zero(fpf, rd, rn, lt); return;
+      default:
+        if ((NEON_XTN_opcode <= instr->Mask(NEON2RegMiscOpcode)) &&
+            (instr->Mask(NEON2RegMiscOpcode) <= NEON_UQXTN_opcode)) {
+          switch (instr->Mask(NEON2RegMiscMask)) {
+            case NEON_XTN: xtn(vf, rd, rn); return;
+            case NEON_SQXTN: sqxtn(vf, rd, rn); return;
+            case NEON_UQXTN: uqxtn(vf, rd, rn); return;
+            case NEON_SQXTUN: sqxtun(vf, rd, rn); return;
+            case NEON_SHLL:
+              vf = nfd.GetVectorFormat(nfd.LongIntegerFormatMap());
+              if (instr->Mask(NEON_Q)) {
+                shll2(vf, rd, rn);
+              } else {
+                shll(vf, rd, rn);
+              }
+              return;
+            default:
+              VIXL_UNIMPLEMENTED();
+          }
+        } else {
+          VIXL_UNIMPLEMENTED();
+        }
+    }
+
+    // Only FRINT* instructions fall through the switch above.
+    frint(fpf, rd, rn, fpcr_rounding, inexact_exception);
+  }
+}
+
+
+void Simulator::VisitNEON3Same(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+
+  if (instr->Mask(NEON3SameLogicalFMask) == NEON3SameLogicalFixed) {
+    VectorFormat vf = nfd.GetVectorFormat(nfd.LogicalFormatMap());
+    switch (instr->Mask(NEON3SameLogicalMask)) {
+      case NEON_AND: and_(vf, rd, rn, rm); break;
+      case NEON_ORR: orr(vf, rd, rn, rm); break;
+      case NEON_ORN: orn(vf, rd, rn, rm); break;
+      case NEON_EOR: eor(vf, rd, rn, rm); break;
+      case NEON_BIC: bic(vf, rd, rn, rm); break;
+      case NEON_BIF: bif(vf, rd, rn, rm); break;
+      case NEON_BIT: bit(vf, rd, rn, rm); break;
+      case NEON_BSL: bsl(vf, rd, rn, rm); break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  } else if (instr->Mask(NEON3SameFPFMask) == NEON3SameFPFixed) {
+    VectorFormat vf = nfd.GetVectorFormat(nfd.FPFormatMap());
+    switch (instr->Mask(NEON3SameFPMask)) {
+      case NEON_FADD:    fadd(vf, rd, rn, rm); break;
+      case NEON_FSUB:    fsub(vf, rd, rn, rm); break;
+      case NEON_FMUL:    fmul(vf, rd, rn, rm); break;
+      case NEON_FDIV:    fdiv(vf, rd, rn, rm); break;
+      case NEON_FMAX:    fmax(vf, rd, rn, rm); break;
+      case NEON_FMIN:    fmin(vf, rd, rn, rm); break;
+      case NEON_FMAXNM:  fmaxnm(vf, rd, rn, rm); break;
+      case NEON_FMINNM:  fminnm(vf, rd, rn, rm); break;
+      case NEON_FMLA:    fmla(vf, rd, rn, rm); break;
+      case NEON_FMLS:    fmls(vf, rd, rn, rm); break;
+      case NEON_FMULX:   fmulx(vf, rd, rn, rm); break;
+      case NEON_FACGE:   fabscmp(vf, rd, rn, rm, ge); break;
+      case NEON_FACGT:   fabscmp(vf, rd, rn, rm, gt); break;
+      case NEON_FCMEQ:   fcmp(vf, rd, rn, rm, eq); break;
+      case NEON_FCMGE:   fcmp(vf, rd, rn, rm, ge); break;
+      case NEON_FCMGT:   fcmp(vf, rd, rn, rm, gt); break;
+      case NEON_FRECPS:  frecps(vf, rd, rn, rm); break;
+      case NEON_FRSQRTS: frsqrts(vf, rd, rn, rm); break;
+      case NEON_FABD:    fabd(vf, rd, rn, rm); break;
+      case NEON_FADDP:   faddp(vf, rd, rn, rm); break;
+      case NEON_FMAXP:   fmaxp(vf, rd, rn, rm); break;
+      case NEON_FMAXNMP: fmaxnmp(vf, rd, rn, rm); break;
+      case NEON_FMINP:   fminp(vf, rd, rn, rm); break;
+      case NEON_FMINNMP: fminnmp(vf, rd, rn, rm); break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  } else {
+    VectorFormat vf = nfd.GetVectorFormat();
+    switch (instr->Mask(NEON3SameMask)) {
+      case NEON_ADD:   add(vf, rd, rn, rm);  break;
+      case NEON_ADDP:  addp(vf, rd, rn, rm); break;
+      case NEON_CMEQ:  cmp(vf, rd, rn, rm, eq); break;
+      case NEON_CMGE:  cmp(vf, rd, rn, rm, ge); break;
+      case NEON_CMGT:  cmp(vf, rd, rn, rm, gt); break;
+      case NEON_CMHI:  cmp(vf, rd, rn, rm, hi); break;
+      case NEON_CMHS:  cmp(vf, rd, rn, rm, hs); break;
+      case NEON_CMTST: cmptst(vf, rd, rn, rm); break;
+      case NEON_MLS:   mls(vf, rd, rn, rm); break;
+      case NEON_MLA:   mla(vf, rd, rn, rm); break;
+      case NEON_MUL:   mul(vf, rd, rn, rm); break;
+      case NEON_PMUL:  pmul(vf, rd, rn, rm); break;
+      case NEON_SMAX:  smax(vf, rd, rn, rm); break;
+      case NEON_SMAXP: smaxp(vf, rd, rn, rm); break;
+      case NEON_SMIN:  smin(vf, rd, rn, rm); break;
+      case NEON_SMINP: sminp(vf, rd, rn, rm); break;
+      case NEON_SUB:   sub(vf, rd, rn, rm);  break;
+      case NEON_UMAX:  umax(vf, rd, rn, rm); break;
+      case NEON_UMAXP: umaxp(vf, rd, rn, rm); break;
+      case NEON_UMIN:  umin(vf, rd, rn, rm); break;
+      case NEON_UMINP: uminp(vf, rd, rn, rm); break;
+      case NEON_SSHL:  sshl(vf, rd, rn, rm); break;
+      case NEON_USHL:  ushl(vf, rd, rn, rm); break;
+      case NEON_SABD:  absdiff(vf, rd, rn, rm, true); break;
+      case NEON_UABD:  absdiff(vf, rd, rn, rm, false); break;
+      case NEON_SABA:  saba(vf, rd, rn, rm); break;
+      case NEON_UABA:  uaba(vf, rd, rn, rm); break;
+      case NEON_UQADD: add(vf, rd, rn, rm).UnsignedSaturate(vf); break;
+      case NEON_SQADD: add(vf, rd, rn, rm).SignedSaturate(vf); break;
+      case NEON_UQSUB: sub(vf, rd, rn, rm).UnsignedSaturate(vf); break;
+      case NEON_SQSUB: sub(vf, rd, rn, rm).SignedSaturate(vf); break;
+      case NEON_SQDMULH:  sqdmulh(vf, rd, rn, rm); break;
+      case NEON_SQRDMULH: sqrdmulh(vf, rd, rn, rm); break;
+      case NEON_UQSHL: ushl(vf, rd, rn, rm).UnsignedSaturate(vf); break;
+      case NEON_SQSHL: sshl(vf, rd, rn, rm).SignedSaturate(vf); break;
+      case NEON_URSHL: ushl(vf, rd, rn, rm).Round(vf); break;
+      case NEON_SRSHL: sshl(vf, rd, rn, rm).Round(vf); break;
+      case NEON_UQRSHL:
+        ushl(vf, rd, rn, rm).Round(vf).UnsignedSaturate(vf);
+        break;
+      case NEON_SQRSHL:
+        sshl(vf, rd, rn, rm).Round(vf).SignedSaturate(vf);
+        break;
+      case NEON_UHADD:
+        add(vf, rd, rn, rm).Uhalve(vf);
+        break;
+      case NEON_URHADD:
+        add(vf, rd, rn, rm).Uhalve(vf).Round(vf);
+        break;
+      case NEON_SHADD:
+        add(vf, rd, rn, rm).Halve(vf);
+        break;
+      case NEON_SRHADD:
+        add(vf, rd, rn, rm).Halve(vf).Round(vf);
+        break;
+      case NEON_UHSUB:
+        sub(vf, rd, rn, rm).Uhalve(vf);
+        break;
+      case NEON_SHSUB:
+        sub(vf, rd, rn, rm).Halve(vf);
+        break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  }
+}
+
+
+void Simulator::VisitNEON3Different(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+  VectorFormat vf = nfd.GetVectorFormat();
+  VectorFormat vf_l = nfd.GetVectorFormat(nfd.LongIntegerFormatMap());
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+
+  switch (instr->Mask(NEON3DifferentMask)) {
+    case NEON_PMULL:    pmull(vf_l, rd, rn, rm); break;
+    case NEON_PMULL2:   pmull2(vf_l, rd, rn, rm); break;
+    case NEON_UADDL:    uaddl(vf_l, rd, rn, rm); break;
+    case NEON_UADDL2:   uaddl2(vf_l, rd, rn, rm); break;
+    case NEON_SADDL:    saddl(vf_l, rd, rn, rm); break;
+    case NEON_SADDL2:   saddl2(vf_l, rd, rn, rm); break;
+    case NEON_USUBL:    usubl(vf_l, rd, rn, rm); break;
+    case NEON_USUBL2:   usubl2(vf_l, rd, rn, rm); break;
+    case NEON_SSUBL:    ssubl(vf_l, rd, rn, rm); break;
+    case NEON_SSUBL2:   ssubl2(vf_l, rd, rn, rm); break;
+    case NEON_SABAL:    sabal(vf_l, rd, rn, rm); break;
+    case NEON_SABAL2:   sabal2(vf_l, rd, rn, rm); break;
+    case NEON_UABAL:    uabal(vf_l, rd, rn, rm); break;
+    case NEON_UABAL2:   uabal2(vf_l, rd, rn, rm); break;
+    case NEON_SABDL:    sabdl(vf_l, rd, rn, rm); break;
+    case NEON_SABDL2:   sabdl2(vf_l, rd, rn, rm); break;
+    case NEON_UABDL:    uabdl(vf_l, rd, rn, rm); break;
+    case NEON_UABDL2:   uabdl2(vf_l, rd, rn, rm); break;
+    case NEON_SMLAL:    smlal(vf_l, rd, rn, rm); break;
+    case NEON_SMLAL2:   smlal2(vf_l, rd, rn, rm); break;
+    case NEON_UMLAL:    umlal(vf_l, rd, rn, rm); break;
+    case NEON_UMLAL2:   umlal2(vf_l, rd, rn, rm); break;
+    case NEON_SMLSL:    smlsl(vf_l, rd, rn, rm); break;
+    case NEON_SMLSL2:   smlsl2(vf_l, rd, rn, rm); break;
+    case NEON_UMLSL:    umlsl(vf_l, rd, rn, rm); break;
+    case NEON_UMLSL2:   umlsl2(vf_l, rd, rn, rm); break;
+    case NEON_SMULL:    smull(vf_l, rd, rn, rm); break;
+    case NEON_SMULL2:   smull2(vf_l, rd, rn, rm); break;
+    case NEON_UMULL:    umull(vf_l, rd, rn, rm); break;
+    case NEON_UMULL2:   umull2(vf_l, rd, rn, rm); break;
+    case NEON_SQDMLAL:  sqdmlal(vf_l, rd, rn, rm); break;
+    case NEON_SQDMLAL2: sqdmlal2(vf_l, rd, rn, rm); break;
+    case NEON_SQDMLSL:  sqdmlsl(vf_l, rd, rn, rm); break;
+    case NEON_SQDMLSL2: sqdmlsl2(vf_l, rd, rn, rm); break;
+    case NEON_SQDMULL:  sqdmull(vf_l, rd, rn, rm); break;
+    case NEON_SQDMULL2: sqdmull2(vf_l, rd, rn, rm); break;
+    case NEON_UADDW:    uaddw(vf_l, rd, rn, rm); break;
+    case NEON_UADDW2:   uaddw2(vf_l, rd, rn, rm); break;
+    case NEON_SADDW:    saddw(vf_l, rd, rn, rm); break;
+    case NEON_SADDW2:   saddw2(vf_l, rd, rn, rm); break;
+    case NEON_USUBW:    usubw(vf_l, rd, rn, rm); break;
+    case NEON_USUBW2:   usubw2(vf_l, rd, rn, rm); break;
+    case NEON_SSUBW:    ssubw(vf_l, rd, rn, rm); break;
+    case NEON_SSUBW2:   ssubw2(vf_l, rd, rn, rm); break;
+    case NEON_ADDHN:    addhn(vf, rd, rn, rm); break;
+    case NEON_ADDHN2:   addhn2(vf, rd, rn, rm); break;
+    case NEON_RADDHN:   raddhn(vf, rd, rn, rm); break;
+    case NEON_RADDHN2:  raddhn2(vf, rd, rn, rm); break;
+    case NEON_SUBHN:    subhn(vf, rd, rn, rm); break;
+    case NEON_SUBHN2:   subhn2(vf, rd, rn, rm); break;
+    case NEON_RSUBHN:   rsubhn(vf, rd, rn, rm); break;
+    case NEON_RSUBHN2:  rsubhn2(vf, rd, rn, rm); break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONAcrossLanes(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+
+  // The input operand's VectorFormat is passed for these instructions.
+  if (instr->Mask(NEONAcrossLanesFPFMask) == NEONAcrossLanesFPFixed) {
+    VectorFormat vf = nfd.GetVectorFormat(nfd.FPFormatMap());
+
+    switch (instr->Mask(NEONAcrossLanesFPMask)) {
+      case NEON_FMAXV: fmaxv(vf, rd, rn); break;
+      case NEON_FMINV: fminv(vf, rd, rn); break;
+      case NEON_FMAXNMV: fmaxnmv(vf, rd, rn); break;
+      case NEON_FMINNMV: fminnmv(vf, rd, rn); break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  } else {
+    VectorFormat vf = nfd.GetVectorFormat();
+
+    switch (instr->Mask(NEONAcrossLanesMask)) {
+      case NEON_ADDV:   addv(vf, rd, rn); break;
+      case NEON_SMAXV:  smaxv(vf, rd, rn); break;
+      case NEON_SMINV:  sminv(vf, rd, rn); break;
+      case NEON_UMAXV:  umaxv(vf, rd, rn); break;
+      case NEON_UMINV:  uminv(vf, rd, rn); break;
+      case NEON_SADDLV: saddlv(vf, rd, rn); break;
+      case NEON_UADDLV: uaddlv(vf, rd, rn); break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  }
+}
+
+
+void Simulator::VisitNEONByIndexedElement(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+  VectorFormat vf_r = nfd.GetVectorFormat();
+  VectorFormat vf = nfd.GetVectorFormat(nfd.LongIntegerFormatMap());
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+
+  ByElementOp Op = NULL;
+
+  int rm_reg = instr->Rm();
+  int index = (instr->NEONH() << 1) | instr->NEONL();
+  if (instr->NEONSize() == 1) {
+    rm_reg &= 0xf;
+    index = (index << 1) | instr->NEONM();
+  }
+
+  switch (instr->Mask(NEONByIndexedElementMask)) {
+    case NEON_MUL_byelement: Op = &Simulator::mul; vf = vf_r; break;
+    case NEON_MLA_byelement: Op = &Simulator::mla; vf = vf_r; break;
+    case NEON_MLS_byelement: Op = &Simulator::mls; vf = vf_r; break;
+    case NEON_SQDMULH_byelement: Op = &Simulator::sqdmulh; vf = vf_r; break;
+    case NEON_SQRDMULH_byelement: Op = &Simulator::sqrdmulh; vf = vf_r; break;
+    case NEON_SMULL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::smull2;
+      } else {
+        Op = &Simulator::smull;
+      }
+      break;
+    case NEON_UMULL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::umull2;
+      } else {
+        Op = &Simulator::umull;
+      }
+      break;
+    case NEON_SMLAL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::smlal2;
+      } else {
+        Op = &Simulator::smlal;
+      }
+      break;
+    case NEON_UMLAL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::umlal2;
+      } else {
+        Op = &Simulator::umlal;
+      }
+      break;
+    case NEON_SMLSL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::smlsl2;
+      } else {
+        Op = &Simulator::smlsl;
+      }
+      break;
+    case NEON_UMLSL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::umlsl2;
+      } else {
+        Op = &Simulator::umlsl;
+      }
+      break;
+    case NEON_SQDMULL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::sqdmull2;
+      } else {
+        Op = &Simulator::sqdmull;
+      }
+      break;
+    case NEON_SQDMLAL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::sqdmlal2;
+      } else {
+        Op = &Simulator::sqdmlal;
+      }
+      break;
+    case NEON_SQDMLSL_byelement:
+      if (instr->Mask(NEON_Q)) {
+        Op = &Simulator::sqdmlsl2;
+      } else {
+        Op = &Simulator::sqdmlsl;
+      }
+      break;
+    default:
+      index = instr->NEONH();
+      if ((instr->FPType() & 1) == 0) {
+        index = (index << 1) | instr->NEONL();
+      }
+
+      vf = nfd.GetVectorFormat(nfd.FPFormatMap());
+
+      switch (instr->Mask(NEONByIndexedElementFPMask)) {
+        case NEON_FMUL_byelement: Op = &Simulator::fmul; break;
+        case NEON_FMLA_byelement: Op = &Simulator::fmla; break;
+        case NEON_FMLS_byelement: Op = &Simulator::fmls; break;
+        case NEON_FMULX_byelement: Op = &Simulator::fmulx; break;
+        default: VIXL_UNIMPLEMENTED();
+      }
+  }
+
+  (this->*Op)(vf, rd, rn, vreg(rm_reg), index);
+}
+
+
+void Simulator::VisitNEONCopy(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::TriangularFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  int imm5 = instr->ImmNEON5();
+  int tz = CountTrailingZeros(imm5, 32);
+  int reg_index = imm5 >> (tz + 1);
+
+  if (instr->Mask(NEONCopyInsElementMask) == NEON_INS_ELEMENT) {
+    int imm4 = instr->ImmNEON4();
+    int rn_index = imm4 >> tz;
+    ins_element(vf, rd, reg_index, rn, rn_index);
+  } else if (instr->Mask(NEONCopyInsGeneralMask) == NEON_INS_GENERAL) {
+    ins_immediate(vf, rd, reg_index, xreg(instr->Rn()));
+  } else if (instr->Mask(NEONCopyUmovMask) == NEON_UMOV) {
+    uint64_t value = LogicVRegister(rn).Uint(vf, reg_index);
+    value &= MaxUintFromFormat(vf);
+    set_xreg(instr->Rd(), value);
+  } else if (instr->Mask(NEONCopyUmovMask) == NEON_SMOV) {
+    int64_t value = LogicVRegister(rn).Int(vf, reg_index);
+    if (instr->NEONQ()) {
+      set_xreg(instr->Rd(), value);
+    } else {
+      set_wreg(instr->Rd(), (int32_t)value);
+    }
+  } else if (instr->Mask(NEONCopyDupElementMask) == NEON_DUP_ELEMENT) {
+    dup_element(vf, rd, rn, reg_index);
+  } else if (instr->Mask(NEONCopyDupGeneralMask) == NEON_DUP_GENERAL) {
+    dup_immediate(vf, rd, xreg(instr->Rn()));
+  } else {
+    VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONExtract(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LogicalFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+  if (instr->Mask(NEONExtractMask) == NEON_EXT) {
+    int index = instr->ImmNEONExt();
+    ext(vf, rd, rn, rm, index);
+  } else {
+    VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::NEONLoadStoreMultiStructHelper(const Instruction* instr,
+                                               AddrMode addr_mode) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LoadStoreFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  uint64_t addr_base = xreg(instr->Rn(), Reg31IsStackPointer);
+  int reg_size = RegisterSizeInBytesFromFormat(vf);
+
+  int reg[4];
+  uint64_t addr[4];
+  for (int i = 0; i < 4; i++) {
+    reg[i] = (instr->Rt() + i) % kNumberOfVRegisters;
+    addr[i] = addr_base + (i * reg_size);
+  }
+  int count = 1;
+  bool log_read = true;
+
+  Instr itype = instr->Mask(NEONLoadStoreMultiStructMask);
+  if (((itype == NEON_LD1_1v) || (itype == NEON_LD1_2v) ||
+       (itype == NEON_LD1_3v) || (itype == NEON_LD1_4v) ||
+       (itype == NEON_ST1_1v) || (itype == NEON_ST1_2v) ||
+       (itype == NEON_ST1_3v) || (itype == NEON_ST1_4v)) &&
+      (instr->Bits(20, 16) != 0)) {
+    VIXL_UNREACHABLE();
+  }
+
+  // We use the PostIndex mask here, as it works in this case for both Offset
+  // and PostIndex addressing.
+  switch (instr->Mask(NEONLoadStoreMultiStructPostIndexMask)) {
+    case NEON_LD1_4v:
+    case NEON_LD1_4v_post: ld1(vf, vreg(reg[3]), addr[3]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_LD1_3v:
+    case NEON_LD1_3v_post: ld1(vf, vreg(reg[2]), addr[2]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_LD1_2v:
+    case NEON_LD1_2v_post: ld1(vf, vreg(reg[1]), addr[1]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_LD1_1v:
+    case NEON_LD1_1v_post:
+      ld1(vf, vreg(reg[0]), addr[0]);
+      log_read = true;
+      break;
+    case NEON_ST1_4v:
+    case NEON_ST1_4v_post: st1(vf, vreg(reg[3]), addr[3]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_3v:
+    case NEON_ST1_3v_post: st1(vf, vreg(reg[2]), addr[2]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_2v:
+    case NEON_ST1_2v_post: st1(vf, vreg(reg[1]), addr[1]); count++;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_1v:
+    case NEON_ST1_1v_post:
+      st1(vf, vreg(reg[0]), addr[0]);
+      log_read = false;
+      break;
+    case NEON_LD2_post:
+    case NEON_LD2:
+      ld2(vf, vreg(reg[0]), vreg(reg[1]), addr[0]);
+      count = 2;
+      break;
+    case NEON_ST2:
+    case NEON_ST2_post:
+      st2(vf, vreg(reg[0]), vreg(reg[1]), addr[0]);
+      count = 2;
+      break;
+    case NEON_LD3_post:
+    case NEON_LD3:
+      ld3(vf, vreg(reg[0]), vreg(reg[1]), vreg(reg[2]), addr[0]);
+      count = 3;
+      break;
+    case NEON_ST3:
+    case NEON_ST3_post:
+      st3(vf, vreg(reg[0]), vreg(reg[1]), vreg(reg[2]), addr[0]);
+      count = 3;
+      break;
+    case NEON_ST4:
+    case NEON_ST4_post:
+      st4(vf, vreg(reg[0]), vreg(reg[1]), vreg(reg[2]), vreg(reg[3]),
+          addr[0]);
+      count = 4;
+      break;
+    case NEON_LD4_post:
+    case NEON_LD4:
+      ld4(vf, vreg(reg[0]), vreg(reg[1]), vreg(reg[2]), vreg(reg[3]),
+          addr[0]);
+      count = 4;
+      break;
+    default: VIXL_UNIMPLEMENTED();
+  }
+
+  // Explicitly log the register update whilst we have type information.
+  for (int i = 0; i < count; i++) {
+    // For de-interleaving loads, only print the base address.
+    int lane_size = LaneSizeInBytesFromFormat(vf);
+    PrintRegisterFormat format = GetPrintRegisterFormatTryFP(
+        GetPrintRegisterFormatForSize(reg_size, lane_size));
+    if (log_read) {
+      LogVRead(addr_base, reg[i], format);
+    } else {
+      LogVWrite(addr_base, reg[i], format);
+    }
+  }
+
+  if (addr_mode == PostIndex) {
+    int rm = instr->Rm();
+    // The immediate post index addressing mode is indicated by rm = 31.
+    // The immediate is implied by the number of vector registers used.
+    addr_base += (rm == 31) ? RegisterSizeInBytesFromFormat(vf) * count
+                            : xreg(rm);
+    set_xreg(instr->Rn(), addr_base);
+  } else {
+    VIXL_ASSERT(addr_mode == Offset);
+  }
+}
+
+
+void Simulator::VisitNEONLoadStoreMultiStruct(const Instruction* instr) {
+  NEONLoadStoreMultiStructHelper(instr, Offset);
+}
+
+
+void Simulator::VisitNEONLoadStoreMultiStructPostIndex(
+    const Instruction* instr) {
+  NEONLoadStoreMultiStructHelper(instr, PostIndex);
+}
+
+
+void Simulator::NEONLoadStoreSingleStructHelper(const Instruction* instr,
+                                                AddrMode addr_mode) {
+  uint64_t addr = xreg(instr->Rn(), Reg31IsStackPointer);
+  int rt = instr->Rt();
+
+  Instr itype = instr->Mask(NEONLoadStoreSingleStructMask);
+  if (((itype == NEON_LD1_b) || (itype == NEON_LD1_h) ||
+       (itype == NEON_LD1_s) || (itype == NEON_LD1_d)) &&
+      (instr->Bits(20, 16) != 0)) {
+    VIXL_UNREACHABLE();
+  }
+
+  // We use the PostIndex mask here, as it works in this case for both Offset
+  // and PostIndex addressing.
+  bool do_load = false;
+
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LoadStoreFormatMap());
+  VectorFormat vf_t = nfd.GetVectorFormat();
+
+  VectorFormat vf = kFormat16B;
+  switch (instr->Mask(NEONLoadStoreSingleStructPostIndexMask)) {
+    case NEON_LD1_b:
+    case NEON_LD1_b_post:
+    case NEON_LD2_b:
+    case NEON_LD2_b_post:
+    case NEON_LD3_b:
+    case NEON_LD3_b_post:
+    case NEON_LD4_b:
+    case NEON_LD4_b_post: do_load = true;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_b:
+    case NEON_ST1_b_post:
+    case NEON_ST2_b:
+    case NEON_ST2_b_post:
+    case NEON_ST3_b:
+    case NEON_ST3_b_post:
+    case NEON_ST4_b:
+    case NEON_ST4_b_post: break;
+
+    case NEON_LD1_h:
+    case NEON_LD1_h_post:
+    case NEON_LD2_h:
+    case NEON_LD2_h_post:
+    case NEON_LD3_h:
+    case NEON_LD3_h_post:
+    case NEON_LD4_h:
+    case NEON_LD4_h_post: do_load = true;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_h:
+    case NEON_ST1_h_post:
+    case NEON_ST2_h:
+    case NEON_ST2_h_post:
+    case NEON_ST3_h:
+    case NEON_ST3_h_post:
+    case NEON_ST4_h:
+    case NEON_ST4_h_post: vf = kFormat8H; break;
+    case NEON_LD1_s:
+    case NEON_LD1_s_post:
+    case NEON_LD2_s:
+    case NEON_LD2_s_post:
+    case NEON_LD3_s:
+    case NEON_LD3_s_post:
+    case NEON_LD4_s:
+    case NEON_LD4_s_post: do_load = true;
+      VIXL_FALLTHROUGH();
+    case NEON_ST1_s:
+    case NEON_ST1_s_post:
+    case NEON_ST2_s:
+    case NEON_ST2_s_post:
+    case NEON_ST3_s:
+    case NEON_ST3_s_post:
+    case NEON_ST4_s:
+    case NEON_ST4_s_post: {
+      VIXL_STATIC_ASSERT((NEON_LD1_s | (1 << NEONLSSize_offset)) == NEON_LD1_d);
+      VIXL_STATIC_ASSERT(
+          (NEON_LD1_s_post | (1 << NEONLSSize_offset)) == NEON_LD1_d_post);
+      VIXL_STATIC_ASSERT((NEON_ST1_s | (1 << NEONLSSize_offset)) == NEON_ST1_d);
+      VIXL_STATIC_ASSERT(
+          (NEON_ST1_s_post | (1 << NEONLSSize_offset)) == NEON_ST1_d_post);
+      vf = ((instr->NEONLSSize() & 1) == 0) ? kFormat4S : kFormat2D;
+      break;
+    }
+
+    case NEON_LD1R:
+    case NEON_LD1R_post: {
+      vf = vf_t;
+      ld1r(vf, vreg(rt), addr);
+      do_load = true;
+      break;
+    }
+
+    case NEON_LD2R:
+    case NEON_LD2R_post: {
+      vf = vf_t;
+      int rt2 = (rt + 1) % kNumberOfVRegisters;
+      ld2r(vf, vreg(rt), vreg(rt2), addr);
+      do_load = true;
+      break;
+    }
+
+    case NEON_LD3R:
+    case NEON_LD3R_post: {
+      vf = vf_t;
+      int rt2 = (rt + 1) % kNumberOfVRegisters;
+      int rt3 = (rt2 + 1) % kNumberOfVRegisters;
+      ld3r(vf, vreg(rt), vreg(rt2), vreg(rt3), addr);
+      do_load = true;
+      break;
+    }
+
+    case NEON_LD4R:
+    case NEON_LD4R_post: {
+      vf = vf_t;
+      int rt2 = (rt + 1) % kNumberOfVRegisters;
+      int rt3 = (rt2 + 1) % kNumberOfVRegisters;
+      int rt4 = (rt3 + 1) % kNumberOfVRegisters;
+      ld4r(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), addr);
+      do_load = true;
+      break;
+    }
+    default: VIXL_UNIMPLEMENTED();
+  }
+
+  PrintRegisterFormat print_format =
+      GetPrintRegisterFormatTryFP(GetPrintRegisterFormat(vf));
+  // Make sure that the print_format only includes a single lane.
+  print_format =
+      static_cast<PrintRegisterFormat>(print_format & ~kPrintRegAsVectorMask);
+
+  int esize = LaneSizeInBytesFromFormat(vf);
+  int index_shift = LaneSizeInBytesLog2FromFormat(vf);
+  int lane = instr->NEONLSIndex(index_shift);
+  int scale = 0;
+  int rt2 = (rt + 1) % kNumberOfVRegisters;
+  int rt3 = (rt2 + 1) % kNumberOfVRegisters;
+  int rt4 = (rt3 + 1) % kNumberOfVRegisters;
+  switch (instr->Mask(NEONLoadStoreSingleLenMask)) {
+    case NEONLoadStoreSingle1:
+      scale = 1;
+      if (do_load) {
+        ld1(vf, vreg(rt), lane, addr);
+        LogVRead(addr, rt, print_format, lane);
+      } else {
+        st1(vf, vreg(rt), lane, addr);
+        LogVWrite(addr, rt, print_format, lane);
+      }
+      break;
+    case NEONLoadStoreSingle2:
+      scale = 2;
+      if (do_load) {
+        ld2(vf, vreg(rt), vreg(rt2), lane, addr);
+        LogVRead(addr, rt, print_format, lane);
+        LogVRead(addr + esize, rt2, print_format, lane);
+      } else {
+        st2(vf, vreg(rt), vreg(rt2), lane, addr);
+        LogVWrite(addr, rt, print_format, lane);
+        LogVWrite(addr + esize, rt2, print_format, lane);
+      }
+      break;
+    case NEONLoadStoreSingle3:
+      scale = 3;
+      if (do_load) {
+        ld3(vf, vreg(rt), vreg(rt2), vreg(rt3), lane, addr);
+        LogVRead(addr, rt, print_format, lane);
+        LogVRead(addr + esize, rt2, print_format, lane);
+        LogVRead(addr + (2 * esize), rt3, print_format, lane);
+      } else {
+        st3(vf, vreg(rt), vreg(rt2), vreg(rt3), lane, addr);
+        LogVWrite(addr, rt, print_format, lane);
+        LogVWrite(addr + esize, rt2, print_format, lane);
+        LogVWrite(addr + (2 * esize), rt3, print_format, lane);
+      }
+      break;
+    case NEONLoadStoreSingle4:
+      scale = 4;
+      if (do_load) {
+        ld4(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), lane, addr);
+        LogVRead(addr, rt, print_format, lane);
+        LogVRead(addr + esize, rt2, print_format, lane);
+        LogVRead(addr + (2 * esize), rt3, print_format, lane);
+        LogVRead(addr + (3 * esize), rt4, print_format, lane);
+      } else {
+        st4(vf, vreg(rt), vreg(rt2), vreg(rt3), vreg(rt4), lane, addr);
+        LogVWrite(addr, rt, print_format, lane);
+        LogVWrite(addr + esize, rt2, print_format, lane);
+        LogVWrite(addr + (2 * esize), rt3, print_format, lane);
+        LogVWrite(addr + (3 * esize), rt4, print_format, lane);
+      }
+      break;
+    default: VIXL_UNIMPLEMENTED();
+  }
+
+  if (addr_mode == PostIndex) {
+    int rm = instr->Rm();
+    int lane_size = LaneSizeInBytesFromFormat(vf);
+    set_xreg(instr->Rn(), addr + ((rm == 31) ? (scale * lane_size) : xreg(rm)));
+  }
+}
+
+
+void Simulator::VisitNEONLoadStoreSingleStruct(const Instruction* instr) {
+  NEONLoadStoreSingleStructHelper(instr, Offset);
+}
+
+
+void Simulator::VisitNEONLoadStoreSingleStructPostIndex(
+    const Instruction* instr) {
+  NEONLoadStoreSingleStructHelper(instr, PostIndex);
+}
+
+
+void Simulator::VisitNEONModifiedImmediate(const Instruction* instr) {
+  SimVRegister& rd = vreg(instr->Rd());
+  int cmode = instr->NEONCmode();
+  int cmode_3_1 = (cmode >> 1) & 7;
+  int cmode_3 = (cmode >> 3) & 1;
+  int cmode_2 = (cmode >> 2) & 1;
+  int cmode_1 = (cmode >> 1) & 1;
+  int cmode_0 = cmode & 1;
+  int q = instr->NEONQ();
+  int op_bit = instr->NEONModImmOp();
+  uint64_t imm8  = instr->ImmNEONabcdefgh();
+
+  // Find the format and immediate value
+  uint64_t imm = 0;
+  VectorFormat vform = kFormatUndefined;
+  switch (cmode_3_1) {
+    case 0x0:
+    case 0x1:
+    case 0x2:
+    case 0x3:
+      vform = (q == 1) ? kFormat4S : kFormat2S;
+      imm = imm8 << (8 * cmode_3_1);
+      break;
+    case 0x4:
+    case 0x5:
+      vform = (q == 1) ? kFormat8H : kFormat4H;
+      imm = imm8 << (8 * cmode_1);
+      break;
+    case 0x6:
+      vform = (q == 1) ? kFormat4S : kFormat2S;
+      if (cmode_0 == 0) {
+        imm = imm8 << 8  | 0x000000ff;
+      } else {
+        imm = imm8 << 16 | 0x0000ffff;
+      }
+      break;
+    case 0x7:
+      if (cmode_0 == 0 && op_bit == 0) {
+        vform = q ? kFormat16B : kFormat8B;
+        imm = imm8;
+      } else if (cmode_0 == 0 && op_bit == 1) {
+        vform = q ? kFormat2D : kFormat1D;
+        imm = 0;
+        for (int i = 0; i < 8; ++i) {
+          if (imm8 & (1 << i)) {
+            imm |= (UINT64_C(0xff) << (8 * i));
+          }
+        }
+      } else {  // cmode_0 == 1, cmode == 0xf.
+        if (op_bit == 0) {
+          vform = q ? kFormat4S : kFormat2S;
+          imm = float_to_rawbits(instr->ImmNEONFP32());
+        } else if (q == 1) {
+          vform = kFormat2D;
+          imm = double_to_rawbits(instr->ImmNEONFP64());
+        } else {
+          VIXL_ASSERT((q == 0) && (op_bit == 1) && (cmode == 0xf));
+          VisitUnallocated(instr);
+        }
+      }
+      break;
+    default: VIXL_UNREACHABLE(); break;
+  }
+
+  // Find the operation
+  NEONModifiedImmediateOp op;
+  if (cmode_3 == 0) {
+    if (cmode_0 == 0) {
+      op = op_bit ? NEONModifiedImmediate_MVNI : NEONModifiedImmediate_MOVI;
+    } else {  // cmode<0> == '1'
+      op = op_bit ? NEONModifiedImmediate_BIC : NEONModifiedImmediate_ORR;
+    }
+  } else {  // cmode<3> == '1'
+    if (cmode_2 == 0) {
+      if (cmode_0 == 0) {
+        op = op_bit ? NEONModifiedImmediate_MVNI : NEONModifiedImmediate_MOVI;
+      } else {  // cmode<0> == '1'
+        op = op_bit ? NEONModifiedImmediate_BIC : NEONModifiedImmediate_ORR;
+      }
+    } else {  // cmode<2> == '1'
+       if (cmode_1 == 0) {
+         op = op_bit ? NEONModifiedImmediate_MVNI : NEONModifiedImmediate_MOVI;
+       } else {  // cmode<1> == '1'
+         if (cmode_0 == 0) {
+           op = NEONModifiedImmediate_MOVI;
+         } else {  // cmode<0> == '1'
+           op = NEONModifiedImmediate_MOVI;
+         }
+       }
+    }
+  }
+
+  // Call the logic function
+  if (op == NEONModifiedImmediate_ORR) {
+    orr(vform, rd, rd, imm);
+  } else if (op == NEONModifiedImmediate_BIC) {
+    bic(vform, rd, rd, imm);
+  } else  if (op == NEONModifiedImmediate_MOVI) {
+    movi(vform, rd, imm);
+  } else if (op == NEONModifiedImmediate_MVNI) {
+    mvni(vform, rd, imm);
+  } else {
+    VisitUnimplemented(instr);
+  }
+}
+
+
+void Simulator::VisitNEONScalar2RegMisc(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::ScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+
+  if (instr->Mask(NEON2RegMiscOpcode) <= NEON_NEG_scalar_opcode) {
+    // These instructions all use a two bit size field, except NOT and RBIT,
+    // which use the field to encode the operation.
+    switch (instr->Mask(NEONScalar2RegMiscMask)) {
+      case NEON_CMEQ_zero_scalar: cmp(vf, rd, rn, 0, eq); break;
+      case NEON_CMGE_zero_scalar: cmp(vf, rd, rn, 0, ge); break;
+      case NEON_CMGT_zero_scalar: cmp(vf, rd, rn, 0, gt); break;
+      case NEON_CMLT_zero_scalar: cmp(vf, rd, rn, 0, lt); break;
+      case NEON_CMLE_zero_scalar: cmp(vf, rd, rn, 0, le); break;
+      case NEON_ABS_scalar:       abs(vf, rd, rn); break;
+      case NEON_SQABS_scalar:     abs(vf, rd, rn).SignedSaturate(vf); break;
+      case NEON_NEG_scalar:       neg(vf, rd, rn); break;
+      case NEON_SQNEG_scalar:     neg(vf, rd, rn).SignedSaturate(vf); break;
+      case NEON_SUQADD_scalar:    suqadd(vf, rd, rn); break;
+      case NEON_USQADD_scalar:    usqadd(vf, rd, rn); break;
+      default: VIXL_UNIMPLEMENTED(); break;
+    }
+  } else {
+    VectorFormat fpf = nfd.GetVectorFormat(nfd.FPScalarFormatMap());
+    FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+
+    // These instructions all use a one bit size field, except SQXTUN, SQXTN
+    // and UQXTN, which use a two bit size field.
+    switch (instr->Mask(NEONScalar2RegMiscFPMask)) {
+      case NEON_FRECPE_scalar:     frecpe(fpf, rd, rn, fpcr_rounding); break;
+      case NEON_FRECPX_scalar:     frecpx(fpf, rd, rn); break;
+      case NEON_FRSQRTE_scalar:    frsqrte(fpf, rd, rn); break;
+      case NEON_FCMGT_zero_scalar: fcmp_zero(fpf, rd, rn, gt); break;
+      case NEON_FCMGE_zero_scalar: fcmp_zero(fpf, rd, rn, ge); break;
+      case NEON_FCMEQ_zero_scalar: fcmp_zero(fpf, rd, rn, eq); break;
+      case NEON_FCMLE_zero_scalar: fcmp_zero(fpf, rd, rn, le); break;
+      case NEON_FCMLT_zero_scalar: fcmp_zero(fpf, rd, rn, lt); break;
+      case NEON_SCVTF_scalar:      scvtf(fpf, rd, rn, 0, fpcr_rounding); break;
+      case NEON_UCVTF_scalar:      ucvtf(fpf, rd, rn, 0, fpcr_rounding); break;
+      case NEON_FCVTNS_scalar: fcvts(fpf, rd, rn, FPTieEven); break;
+      case NEON_FCVTNU_scalar: fcvtu(fpf, rd, rn, FPTieEven); break;
+      case NEON_FCVTPS_scalar: fcvts(fpf, rd, rn, FPPositiveInfinity); break;
+      case NEON_FCVTPU_scalar: fcvtu(fpf, rd, rn, FPPositiveInfinity); break;
+      case NEON_FCVTMS_scalar: fcvts(fpf, rd, rn, FPNegativeInfinity); break;
+      case NEON_FCVTMU_scalar: fcvtu(fpf, rd, rn, FPNegativeInfinity); break;
+      case NEON_FCVTZS_scalar: fcvts(fpf, rd, rn, FPZero); break;
+      case NEON_FCVTZU_scalar: fcvtu(fpf, rd, rn, FPZero); break;
+      case NEON_FCVTAS_scalar: fcvts(fpf, rd, rn, FPTieAway); break;
+      case NEON_FCVTAU_scalar: fcvtu(fpf, rd, rn, FPTieAway); break;
+      case NEON_FCVTXN_scalar:
+        // Unlike all of the other FP instructions above, fcvtxn encodes dest
+        // size S as size<0>=1. There's only one case, so we ignore the form.
+        VIXL_ASSERT(instr->Bit(22) == 1);
+        fcvtxn(kFormatS, rd, rn);
+        break;
+      default:
+        switch (instr->Mask(NEONScalar2RegMiscMask)) {
+          case NEON_SQXTN_scalar:  sqxtn(vf, rd, rn); break;
+          case NEON_UQXTN_scalar:  uqxtn(vf, rd, rn); break;
+          case NEON_SQXTUN_scalar: sqxtun(vf, rd, rn); break;
+          default:
+            VIXL_UNIMPLEMENTED();
+        }
+    }
+  }
+}
+
+
+void Simulator::VisitNEONScalar3Diff(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LongScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+  switch (instr->Mask(NEONScalar3DiffMask)) {
+    case NEON_SQDMLAL_scalar: sqdmlal(vf, rd, rn, rm); break;
+    case NEON_SQDMLSL_scalar: sqdmlsl(vf, rd, rn, rm); break;
+    case NEON_SQDMULL_scalar: sqdmull(vf, rd, rn, rm); break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONScalar3Same(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::ScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+
+  if (instr->Mask(NEONScalar3SameFPFMask) == NEONScalar3SameFPFixed) {
+    vf = nfd.GetVectorFormat(nfd.FPScalarFormatMap());
+    switch (instr->Mask(NEONScalar3SameFPMask)) {
+      case NEON_FMULX_scalar:   fmulx(vf, rd, rn, rm); break;
+      case NEON_FACGE_scalar:   fabscmp(vf, rd, rn, rm, ge); break;
+      case NEON_FACGT_scalar:   fabscmp(vf, rd, rn, rm, gt); break;
+      case NEON_FCMEQ_scalar:   fcmp(vf, rd, rn, rm, eq); break;
+      case NEON_FCMGE_scalar:   fcmp(vf, rd, rn, rm, ge); break;
+      case NEON_FCMGT_scalar:   fcmp(vf, rd, rn, rm, gt); break;
+      case NEON_FRECPS_scalar:  frecps(vf, rd, rn, rm); break;
+      case NEON_FRSQRTS_scalar: frsqrts(vf, rd, rn, rm); break;
+      case NEON_FABD_scalar:    fabd(vf, rd, rn, rm); break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  } else {
+    switch (instr->Mask(NEONScalar3SameMask)) {
+      case NEON_ADD_scalar:      add(vf, rd, rn, rm); break;
+      case NEON_SUB_scalar:      sub(vf, rd, rn, rm); break;
+      case NEON_CMEQ_scalar:     cmp(vf, rd, rn, rm, eq); break;
+      case NEON_CMGE_scalar:     cmp(vf, rd, rn, rm, ge); break;
+      case NEON_CMGT_scalar:     cmp(vf, rd, rn, rm, gt); break;
+      case NEON_CMHI_scalar:     cmp(vf, rd, rn, rm, hi); break;
+      case NEON_CMHS_scalar:     cmp(vf, rd, rn, rm, hs); break;
+      case NEON_CMTST_scalar:    cmptst(vf, rd, rn, rm); break;
+      case NEON_USHL_scalar:     ushl(vf, rd, rn, rm); break;
+      case NEON_SSHL_scalar:     sshl(vf, rd, rn, rm); break;
+      case NEON_SQDMULH_scalar:  sqdmulh(vf, rd, rn, rm); break;
+      case NEON_SQRDMULH_scalar: sqrdmulh(vf, rd, rn, rm); break;
+      case NEON_UQADD_scalar:
+        add(vf, rd, rn, rm).UnsignedSaturate(vf);
+        break;
+      case NEON_SQADD_scalar:
+        add(vf, rd, rn, rm).SignedSaturate(vf);
+        break;
+      case NEON_UQSUB_scalar:
+        sub(vf, rd, rn, rm).UnsignedSaturate(vf);
+        break;
+      case NEON_SQSUB_scalar:
+        sub(vf, rd, rn, rm).SignedSaturate(vf);
+        break;
+      case NEON_UQSHL_scalar:
+        ushl(vf, rd, rn, rm).UnsignedSaturate(vf);
+        break;
+      case NEON_SQSHL_scalar:
+        sshl(vf, rd, rn, rm).SignedSaturate(vf);
+        break;
+      case NEON_URSHL_scalar:
+        ushl(vf, rd, rn, rm).Round(vf);
+        break;
+      case NEON_SRSHL_scalar:
+        sshl(vf, rd, rn, rm).Round(vf);
+        break;
+      case NEON_UQRSHL_scalar:
+        ushl(vf, rd, rn, rm).Round(vf).UnsignedSaturate(vf);
+        break;
+      case NEON_SQRSHL_scalar:
+        sshl(vf, rd, rn, rm).Round(vf).SignedSaturate(vf);
+        break;
+      default:
+        VIXL_UNIMPLEMENTED();
+    }
+  }
+}
+
+
+void Simulator::VisitNEONScalarByIndexedElement(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LongScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+  VectorFormat vf_r = nfd.GetVectorFormat(nfd.ScalarFormatMap());
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  ByElementOp Op = NULL;
+
+  int rm_reg = instr->Rm();
+  int index = (instr->NEONH() << 1) | instr->NEONL();
+  if (instr->NEONSize() == 1) {
+    rm_reg &= 0xf;
+    index = (index << 1) | instr->NEONM();
+  }
+
+  switch (instr->Mask(NEONScalarByIndexedElementMask)) {
+    case NEON_SQDMULL_byelement_scalar: Op = &Simulator::sqdmull; break;
+    case NEON_SQDMLAL_byelement_scalar: Op = &Simulator::sqdmlal; break;
+    case NEON_SQDMLSL_byelement_scalar: Op = &Simulator::sqdmlsl; break;
+    case NEON_SQDMULH_byelement_scalar:
+      Op = &Simulator::sqdmulh;
+      vf = vf_r;
+      break;
+    case NEON_SQRDMULH_byelement_scalar:
+      Op = &Simulator::sqrdmulh;
+      vf = vf_r;
+      break;
+    default:
+      vf = nfd.GetVectorFormat(nfd.FPScalarFormatMap());
+      index = instr->NEONH();
+      if ((instr->FPType() & 1) == 0) {
+        index = (index << 1) | instr->NEONL();
+      }
+      switch (instr->Mask(NEONScalarByIndexedElementFPMask)) {
+        case NEON_FMUL_byelement_scalar: Op = &Simulator::fmul; break;
+        case NEON_FMLA_byelement_scalar: Op = &Simulator::fmla; break;
+        case NEON_FMLS_byelement_scalar: Op = &Simulator::fmls; break;
+        case NEON_FMULX_byelement_scalar: Op = &Simulator::fmulx; break;
+        default: VIXL_UNIMPLEMENTED();
+      }
+  }
+
+  (this->*Op)(vf, rd, rn, vreg(rm_reg), index);
+}
+
+
+void Simulator::VisitNEONScalarCopy(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::TriangularScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+
+  if (instr->Mask(NEONScalarCopyMask) == NEON_DUP_ELEMENT_scalar) {
+    int imm5 = instr->ImmNEON5();
+    int tz = CountTrailingZeros(imm5, 32);
+    int rn_index = imm5 >> (tz + 1);
+    dup_element(vf, rd, rn, rn_index);
+  } else {
+    VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONScalarPairwise(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::FPScalarFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  switch (instr->Mask(NEONScalarPairwiseMask)) {
+    case NEON_ADDP_scalar:    addp(vf, rd, rn); break;
+    case NEON_FADDP_scalar:   faddp(vf, rd, rn); break;
+    case NEON_FMAXP_scalar:   fmaxp(vf, rd, rn); break;
+    case NEON_FMAXNMP_scalar: fmaxnmp(vf, rd, rn); break;
+    case NEON_FMINP_scalar:   fminp(vf, rd, rn); break;
+    case NEON_FMINNMP_scalar: fminnmp(vf, rd, rn); break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONScalarShiftImmediate(const Instruction* instr) {
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+
+  static const NEONFormatMap map = {
+    {22, 21, 20, 19},
+    {NF_UNDEF, NF_B, NF_H, NF_H, NF_S, NF_S, NF_S, NF_S,
+     NF_D,     NF_D, NF_D, NF_D, NF_D, NF_D, NF_D, NF_D}
+  };
+  NEONFormatDecoder nfd(instr, &map);
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  int highestSetBit = HighestSetBitPosition(instr->ImmNEONImmh());
+  int immhimmb = instr->ImmNEONImmhImmb();
+  int right_shift = (16 << highestSetBit) - immhimmb;
+  int left_shift = immhimmb - (8 << highestSetBit);
+  switch (instr->Mask(NEONScalarShiftImmediateMask)) {
+    case NEON_SHL_scalar:       shl(vf, rd, rn, left_shift); break;
+    case NEON_SLI_scalar:       sli(vf, rd, rn, left_shift); break;
+    case NEON_SQSHL_imm_scalar: sqshl(vf, rd, rn, left_shift); break;
+    case NEON_UQSHL_imm_scalar: uqshl(vf, rd, rn, left_shift); break;
+    case NEON_SQSHLU_scalar:    sqshlu(vf, rd, rn, left_shift); break;
+    case NEON_SRI_scalar:       sri(vf, rd, rn, right_shift); break;
+    case NEON_SSHR_scalar:      sshr(vf, rd, rn, right_shift); break;
+    case NEON_USHR_scalar:      ushr(vf, rd, rn, right_shift); break;
+    case NEON_SRSHR_scalar:     sshr(vf, rd, rn, right_shift).Round(vf); break;
+    case NEON_URSHR_scalar:     ushr(vf, rd, rn, right_shift).Round(vf); break;
+    case NEON_SSRA_scalar:      ssra(vf, rd, rn, right_shift); break;
+    case NEON_USRA_scalar:      usra(vf, rd, rn, right_shift); break;
+    case NEON_SRSRA_scalar:     srsra(vf, rd, rn, right_shift); break;
+    case NEON_URSRA_scalar:     ursra(vf, rd, rn, right_shift); break;
+    case NEON_UQSHRN_scalar:    uqshrn(vf, rd, rn, right_shift); break;
+    case NEON_UQRSHRN_scalar:   uqrshrn(vf, rd, rn, right_shift); break;
+    case NEON_SQSHRN_scalar:    sqshrn(vf, rd, rn, right_shift); break;
+    case NEON_SQRSHRN_scalar:   sqrshrn(vf, rd, rn, right_shift); break;
+    case NEON_SQSHRUN_scalar:   sqshrun(vf, rd, rn, right_shift); break;
+    case NEON_SQRSHRUN_scalar:  sqrshrun(vf, rd, rn, right_shift); break;
+    case NEON_FCVTZS_imm_scalar: fcvts(vf, rd, rn, FPZero, right_shift); break;
+    case NEON_FCVTZU_imm_scalar: fcvtu(vf, rd, rn, FPZero, right_shift); break;
+    case NEON_SCVTF_imm_scalar:
+      scvtf(vf, rd, rn, right_shift, fpcr_rounding);
+      break;
+    case NEON_UCVTF_imm_scalar:
+      ucvtf(vf, rd, rn, right_shift, fpcr_rounding);
+      break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONShiftImmediate(const Instruction* instr) {
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  FPRounding fpcr_rounding = static_cast<FPRounding>(fpcr().RMode());
+
+  // 00010->8B, 00011->16B, 001x0->4H, 001x1->8H,
+  // 01xx0->2S, 01xx1->4S, 1xxx1->2D, all others undefined.
+  static const NEONFormatMap map = {
+    {22, 21, 20, 19, 30},
+    {NF_UNDEF, NF_UNDEF, NF_8B,    NF_16B, NF_4H,    NF_8H, NF_4H,    NF_8H,
+     NF_2S,    NF_4S,    NF_2S,    NF_4S,  NF_2S,    NF_4S, NF_2S,    NF_4S,
+     NF_UNDEF, NF_2D,    NF_UNDEF, NF_2D,  NF_UNDEF, NF_2D, NF_UNDEF, NF_2D,
+     NF_UNDEF, NF_2D,    NF_UNDEF, NF_2D,  NF_UNDEF, NF_2D, NF_UNDEF, NF_2D}
+  };
+  NEONFormatDecoder nfd(instr, &map);
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  // 0001->8H, 001x->4S, 01xx->2D, all others undefined.
+  static const NEONFormatMap map_l = {
+    {22, 21, 20, 19},
+    {NF_UNDEF, NF_8H, NF_4S, NF_4S, NF_2D, NF_2D, NF_2D, NF_2D}
+  };
+  VectorFormat vf_l = nfd.GetVectorFormat(&map_l);
+
+  int highestSetBit = HighestSetBitPosition(instr->ImmNEONImmh());
+  int immhimmb = instr->ImmNEONImmhImmb();
+  int right_shift = (16 << highestSetBit) - immhimmb;
+  int left_shift = immhimmb - (8 << highestSetBit);
+
+  switch (instr->Mask(NEONShiftImmediateMask)) {
+    case NEON_SHL:    shl(vf, rd, rn, left_shift); break;
+    case NEON_SLI:    sli(vf, rd, rn, left_shift); break;
+    case NEON_SQSHLU: sqshlu(vf, rd, rn, left_shift); break;
+    case NEON_SRI:    sri(vf, rd, rn, right_shift); break;
+    case NEON_SSHR:   sshr(vf, rd, rn, right_shift); break;
+    case NEON_USHR:   ushr(vf, rd, rn, right_shift); break;
+    case NEON_SRSHR:  sshr(vf, rd, rn, right_shift).Round(vf); break;
+    case NEON_URSHR:  ushr(vf, rd, rn, right_shift).Round(vf); break;
+    case NEON_SSRA:   ssra(vf, rd, rn, right_shift); break;
+    case NEON_USRA:   usra(vf, rd, rn, right_shift); break;
+    case NEON_SRSRA:  srsra(vf, rd, rn, right_shift); break;
+    case NEON_URSRA:  ursra(vf, rd, rn, right_shift); break;
+    case NEON_SQSHL_imm: sqshl(vf, rd, rn, left_shift); break;
+    case NEON_UQSHL_imm: uqshl(vf, rd, rn, left_shift); break;
+    case NEON_SCVTF_imm: scvtf(vf, rd, rn, right_shift, fpcr_rounding); break;
+    case NEON_UCVTF_imm: ucvtf(vf, rd, rn, right_shift, fpcr_rounding); break;
+    case NEON_FCVTZS_imm: fcvts(vf, rd, rn, FPZero, right_shift); break;
+    case NEON_FCVTZU_imm: fcvtu(vf, rd, rn, FPZero, right_shift); break;
+    case NEON_SSHLL:
+      vf = vf_l;
+      if (instr->Mask(NEON_Q)) {
+        sshll2(vf, rd, rn, left_shift);
+      } else {
+        sshll(vf, rd, rn, left_shift);
+      }
+      break;
+    case NEON_USHLL:
+      vf = vf_l;
+      if (instr->Mask(NEON_Q)) {
+        ushll2(vf, rd, rn, left_shift);
+      } else {
+        ushll(vf, rd, rn, left_shift);
+      }
+      break;
+    case NEON_SHRN:
+      if (instr->Mask(NEON_Q)) {
+        shrn2(vf, rd, rn, right_shift);
+      } else {
+        shrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_RSHRN:
+      if (instr->Mask(NEON_Q)) {
+        rshrn2(vf, rd, rn, right_shift);
+      } else {
+        rshrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_UQSHRN:
+      if (instr->Mask(NEON_Q)) {
+        uqshrn2(vf, rd, rn, right_shift);
+      } else {
+        uqshrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_UQRSHRN:
+      if (instr->Mask(NEON_Q)) {
+        uqrshrn2(vf, rd, rn, right_shift);
+      } else {
+        uqrshrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_SQSHRN:
+      if (instr->Mask(NEON_Q)) {
+        sqshrn2(vf, rd, rn, right_shift);
+      } else {
+        sqshrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_SQRSHRN:
+      if (instr->Mask(NEON_Q)) {
+        sqrshrn2(vf, rd, rn, right_shift);
+      } else {
+        sqrshrn(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_SQSHRUN:
+      if (instr->Mask(NEON_Q)) {
+        sqshrun2(vf, rd, rn, right_shift);
+      } else {
+        sqshrun(vf, rd, rn, right_shift);
+      }
+      break;
+    case NEON_SQRSHRUN:
+      if (instr->Mask(NEON_Q)) {
+        sqrshrun2(vf, rd, rn, right_shift);
+      } else {
+        sqrshrun(vf, rd, rn, right_shift);
+      }
+      break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONTable(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr, NEONFormatDecoder::LogicalFormatMap());
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rn2 = vreg((instr->Rn() + 1) % kNumberOfVRegisters);
+  SimVRegister& rn3 = vreg((instr->Rn() + 2) % kNumberOfVRegisters);
+  SimVRegister& rn4 = vreg((instr->Rn() + 3) % kNumberOfVRegisters);
+  SimVRegister& rm = vreg(instr->Rm());
+
+  switch (instr->Mask(NEONTableMask)) {
+    case NEON_TBL_1v: tbl(vf, rd, rn, rm); break;
+    case NEON_TBL_2v: tbl(vf, rd, rn, rn2, rm); break;
+    case NEON_TBL_3v: tbl(vf, rd, rn, rn2, rn3, rm); break;
+    case NEON_TBL_4v: tbl(vf, rd, rn, rn2, rn3, rn4, rm); break;
+    case NEON_TBX_1v: tbx(vf, rd, rn, rm); break;
+    case NEON_TBX_2v: tbx(vf, rd, rn, rn2, rm); break;
+    case NEON_TBX_3v: tbx(vf, rd, rn, rn2, rn3, rm); break;
+    case NEON_TBX_4v: tbx(vf, rd, rn, rn2, rn3, rn4, rm); break;
+    default:
+      VIXL_UNIMPLEMENTED();
+  }
+}
+
+
+void Simulator::VisitNEONPerm(const Instruction* instr) {
+  NEONFormatDecoder nfd(instr);
+  VectorFormat vf = nfd.GetVectorFormat();
+
+  SimVRegister& rd = vreg(instr->Rd());
+  SimVRegister& rn = vreg(instr->Rn());
+  SimVRegister& rm = vreg(instr->Rm());
+
+  switch (instr->Mask(NEONPermMask)) {
+    case NEON_TRN1: trn1(vf, rd, rn, rm); break;
+    case NEON_TRN2: trn2(vf, rd, rn, rm); break;
+    case NEON_UZP1: uzp1(vf, rd, rn, rm); break;
+    case NEON_UZP2: uzp2(vf, rd, rn, rm); break;
+    case NEON_ZIP1: zip1(vf, rd, rn, rm); break;
+    case NEON_ZIP2: zip2(vf, rd, rn, rm); break;
+    default:
+      VIXL_UNIMPLEMENTED();
   }
 }
 
@@ -2757,9 +3833,9 @@ void Simulator::DoLog(const Instruction* instr) {
   // We don't support a one-shot LOG_DISASM.
   VIXL_ASSERT((parameters & LOG_DISASM) == 0);
   // Print the requested information.
-  if (parameters & LOG_SYS_REGS) PrintSystemRegisters();
+  if (parameters & LOG_SYSREGS) PrintSystemRegisters();
   if (parameters & LOG_REGS) PrintRegisters();
-  if (parameters & LOG_FP_REGS) PrintFPRegisters();
+  if (parameters & LOG_VREGS) PrintVRegisters();
 
   set_pc(instr->InstructionAtOffset(kLogLength));
 }
@@ -2795,7 +3871,7 @@ void Simulator::DoPrintf(const Instruction* instr) {
   const char * format_base = reg<const char *>(0);
   VIXL_ASSERT(format_base != NULL);
   size_t length = strlen(format_base) + 1;
-  char * const format = (char*)js_malloc(length + arg_count);
+  char * const format = (char *)js_calloc(length + arg_count);
 
   // A list of chunks, each with exactly one format placeholder.
   const char * chunks[kPrintfMaxArgCount];

@@ -243,14 +243,7 @@ class Assembler : public vixl::Assembler
     void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address) {
         *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
     }
-    bool nextLink(BufferOffset cur, BufferOffset* next) {
-        Instruction* link = getInstructionAt(cur);
-        uint32_t nextLinkOffset = uint32_t(link->ImmPCRawOffset());
-        if (nextLinkOffset == uint32_t(LabelBase::INVALID_OFFSET))
-            return false;
-        *next = BufferOffset(nextLinkOffset + cur.getOffset());
-        return true;
-    }
+
     void retarget(Label* cur, Label* next);
 
     // The buffer is about to be linked. Ensure any constant pools or

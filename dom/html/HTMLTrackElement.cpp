@@ -40,7 +40,7 @@
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"
 
-static PRLogModuleInfo* gTrackElementLog;
+static mozilla::LazyLogModule gTrackElementLog("nsTrackElement");
 #define LOG(type, msg) MOZ_LOG(gTrackElementLog, type, msg)
 
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
@@ -76,9 +76,6 @@ static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable[0].tag;
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  if (!gTrackElementLog) {
-    gTrackElementLog = PR_NewLogModule("nsTrackElement");
-  }
 }
 
 HTMLTrackElement::~HTMLTrackElement()

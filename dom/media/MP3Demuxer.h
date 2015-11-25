@@ -411,10 +411,13 @@ private:
   // Updates post-read meta data.
   void UpdateState(const MediaByteRange& aRange);
 
-  // Returns the frame index for the given offset.
+  // Returns the estimated offset for the given frame index.
+  int64_t OffsetFromFrameIndex(int64_t aFrameIndex) const;
+
+  // Returns the estimated frame index for the given offset.
   int64_t FrameIndexFromOffset(int64_t aOffset) const;
 
-  // Returns the frame index for the given time.
+  // Returns the estimated frame index for the given time.
   int64_t FrameIndexFromTime(const media::TimeUnit& aTime) const;
 
   // Reads aSize bytes into aBuffer from the source starting at aOffset.

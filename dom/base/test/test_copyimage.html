@@ -71,7 +71,11 @@ function testCopyImage () {
   // Is the text/uncodie data correct ?
   testClipboardValue('text/unicode', 'about:logo');
   // Is the text/html data correct ?
-  testClipboardValue('text/html', '<img id="logo" src="about:logo">');
+  var expected = '<img id="logo" src="about:logo">';
+  if (navigator.platform.indexOf("Win") >= 0) {
+    expected = "<html><body>\n<!--StartFragment-->" + expected + "<!--EndFragment-->\n</body>\n</html>";
+  }
+  testClipboardValue('text/html', expected);
 
   SimpleTest.finish();
 }

@@ -1103,8 +1103,12 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   } else if (aReason == WorkerIsGoingAway) {
     RefPtr<SyncStopListeningRunnable> r =
       new SyncStopListeningRunnable(mWorkerPrivate, mListener);
-    if (!r->Dispatch(nullptr)) {
+    ErrorResult rv;
+    r->Dispatch(rv);
+    if (rv.Failed()) {
       NS_ERROR("Failed to dispatch stop listening runnable!");
+      // And now what?
+      rv.SuppressException();
     }
   } else {
     MOZ_CRASH("Bad reason");
