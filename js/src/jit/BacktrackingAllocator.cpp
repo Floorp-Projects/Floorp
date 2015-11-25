@@ -1723,6 +1723,9 @@ BacktrackingAllocator::resolveControlFlow()
         if (mir->shouldCancel("Backtracking Resolve Control Flow (vreg loop)"))
             return false;
 
+        if (!alloc().ensureBallast())
+            return false;
+
         for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter; ) {
             LiveRange* range = LiveRange::get(*iter);
 
