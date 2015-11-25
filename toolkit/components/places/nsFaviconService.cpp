@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -435,18 +436,6 @@ nsFaviconService::GetFaviconLinkForIcon(nsIURI* aFaviconURI,
 }
 
 
-static PLDHashOperator
-ExpireFailedFaviconsCallback(nsCStringHashKey::KeyType aKey,
-                             uint32_t& aData,
-                             void* userArg)
-{
-  uint32_t* threshold = reinterpret_cast<uint32_t*>(userArg);
-  if (aData < *threshold)
-    return PL_DHASH_REMOVE;
-  return PL_DHASH_NEXT;
-}
-
-
 NS_IMETHODIMP
 nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
 {
@@ -464,7 +453,11 @@ nsFaviconService::AddFailedFavicon(nsIURI* aFaviconURI)
     // of items that are the oldest
     uint32_t threshold = mFailedFaviconSerial -
                          MAX_FAILED_FAVICONS + FAVICON_CACHE_REDUCE_COUNT;
-    mFailedFavicons.Enumerate(ExpireFailedFaviconsCallback, &threshold);
+    for (auto iter = mFailedFavicons.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Data() < threshold) {
+        iter.Remove();
+      }
+    }
   }
   return NS_OK;
 }
