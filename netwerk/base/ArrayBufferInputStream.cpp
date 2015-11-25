@@ -105,7 +105,9 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
     // holding area before passing it to writer().
     {
       JS::AutoCheckCannotGC nogc;
-      char* src = (char*) JS_GetArrayBufferData(mArrayBuffer->get(), nogc) + mOffset + mPos;
+      bool isShared;
+      char* src = (char*) JS_GetArrayBufferData(mArrayBuffer->get(), &isShared, nogc) + mOffset + mPos;
+      MOZ_ASSERT(!isShared);    // Because ArrayBuffer
       memcpy(buffer, src, count);
     }
     uint32_t written;
