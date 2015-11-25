@@ -1006,7 +1006,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       if (header != target) {
         header.removeAttribute("sorted");
         header.removeAttribute("tooltiptext");
-        header.parentNode.removeAttribute("active");
       }
     }
 
@@ -1019,8 +1018,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         target.setAttribute("sorted", direction = "ascending");
         target.setAttribute("tooltiptext", L10N.getStr("networkMenu.sortedAsc"));
       }
-      // Used to style the next column.
-      target.parentNode.setAttribute("active", "true");
     }
 
     // Sort by whatever was requested.
@@ -1679,14 +1676,14 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         break;
       }
       case "status": {
-        let node = $(".requests-menu-status-icon", target);
+        let node = $(".requests-menu-status", target);
         node.setAttribute("code", aValue.cached ? "cached" : aValue.status);
         let codeNode = $(".requests-menu-status-code", target);
         codeNode.setAttribute("value", aValue.status);
         break;
       }
       case "statusText": {
-        let node = $(".requests-menu-status-code", target);
+        let node = $(".requests-menu-status-and-method", target);
         node.setAttribute("tooltiptext", aValue);
         break;
       }
@@ -1853,7 +1850,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        The current waterfall scale.
    */
   _showWaterfallDivisionLabels: function(aScale) {
-    let container = $("#requests-menu-waterfall-label-wrapper");
+    let container = $("#requests-menu-waterfall-button");
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
 
     // Nuke all existing labels.
@@ -1913,8 +1910,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         fragment.appendChild(node);
       }
       container.appendChild(fragment);
-
-      container.className = 'requests-menu-waterfall-visible';
     }
   },
 
