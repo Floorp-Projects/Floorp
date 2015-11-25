@@ -88,5 +88,6 @@ MSG_DEF(MSG_PROMISE_CAPABILITY_HAS_SOMETHING_ALREADY, 0, JSEXN_TYPEERR, "GetCapa
 MSG_DEF(MSG_PROMISE_RESOLVE_FUNCTION_NOT_CALLABLE, 0, JSEXN_TYPEERR, "A Promise subclass passed a non-callable value as the resolve function.")
 MSG_DEF(MSG_PROMISE_REJECT_FUNCTION_NOT_CALLABLE, 0, JSEXN_TYPEERR, "A Promise subclass passed a non-callable value as the reject function.")
 MSG_DEF(MSG_PROMISE_ARG_NOT_ITERABLE, 1, JSEXN_TYPEERR, "{0} is not iterable")
+MSG_DEF(MSG_IS_NOT_PROMISE, 1, JSEXN_TYPEERR, "{0} is not a Promise")
 MSG_DEF(MSG_SW_INSTALL_ERROR, 2, JSEXN_TYPEERR, "ServiceWorker script at {0} for scope {1} encountered an error during installation.")
 MSG_DEF(MSG_SW_SCRIPT_THREW, 2, JSEXN_TYPEERR, "ServiceWorker script at {0} for scope {1} threw an exception during script evaluation.")
