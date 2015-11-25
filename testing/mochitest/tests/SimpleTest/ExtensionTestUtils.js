@@ -6,40 +6,6 @@ ExtensionTestUtils.loadExtension = function(ext)
   var testDone = new Promise(resolve => { testResolve = resolve; });
 
   var messageHandler = new Map();
-  var messageAwaiter = new Map();
-
-  var messageQueue = [];
-
-  SimpleTest.registerCleanupFunction(() => {
-    if (messageQueue.length) {
-      SimpleTest.is(messageQueue.length, 0, "message queue is empty");
-    }
-    if (messageAwaiter.size) {
-      SimpleTest.is(messageAwaiter.size, 0, "no tasks awaiting on messages");
-    }
-  });
-
-  function checkMessages() {
-    while (messageQueue.length) {
-      let [msg, ...args] = messageQueue[0];
-
-      let listener = messageAwaiter.get(msg);
-      if (!listener) {
-        break;
-      }
-
-      messageQueue.shift();
-      messageAwaiter.delete(msg);
-
-      listener.resolve(...args);
-    }
-  }
-
-  function checkDuplicateListeners(msg) {
-    if (messageHandler.has(msg) || messageAwaiter.has(msg)) {
-      throw new Error("only one message handler allowed");
-    }
-  }
 
   function testHandler(kind, pass, msg, ...args) {
     if (kind == "test-eq") {
@@ -63,13 +29,11 @@ ExtensionTestUtils.loadExtension = function(ext)
 
     testMessage(msg, ...args) {
       var handler = messageHandler.get(msg);
-      if (handler) {
-        handler(...args);
-      } else {
-        messageQueue.push([msg, ...args]);
-        checkMessages();
+      if (!handler) {
+        return;
       }
 
+      handler(...args);
     },
   };
 
@@ -77,15 +41,21 @@ ExtensionTestUtils.loadExtension = function(ext)
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {
-      checkDuplicateListeners(msg);
+      if (messageHandler.has(msg)) {
+        throw new Error("only one message handler allowed");
+      }
 
-      messageAwaiter.set(msg, {resolve});
-      checkMessages();
+      messageHandler.set(msg, (...args) => {
+        messageHandler.delete(msg);
+        resolve(...args);
+      });
     });
   };
 
   extension.onMessage = (msg, callback) => {
-    checkDuplicateListeners(msg);
+    if (messageHandler.has(msg)) {
+      throw new Error("only one message handler allowed");
+    }
     messageHandler.set(msg, callback);
   };
 
