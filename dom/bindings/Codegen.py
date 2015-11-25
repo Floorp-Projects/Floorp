@@ -7147,6 +7147,18 @@ class CGPerSignatureCall(CGThing):
         if needsCx:
             argsPre.append("cx")
 
+        # Hack for making Promise.prototype.then work well over Xrays.
+        if (not static and
+            (descriptor.name == "Promise" or
+             descriptor.name == "MozAbortablePromise") and
+            idlNode.isMethod() and
+            idlNode.identifier.name == "then"):
+            cgThings.append(CGGeneric(dedent(
+                """
+                JS::Rooted<JSObject*> calleeGlobal(cx, xpc::XrayAwareCalleeGlobal(&args.callee()));
+                """)))
+            argsPre.append("calleeGlobal")
+
         needsUnwrap = False
         argsPost = []
         if isConstructor:
