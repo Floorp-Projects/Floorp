@@ -172,9 +172,10 @@ public:
   Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  static already_AddRefed<Promise>
+  static void
   Reject(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
+         JS::Handle<JS::Value> aValue,
+         JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
