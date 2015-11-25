@@ -130,9 +130,7 @@ static bool
 ValidateGlobalVariable(JSContext* cx, const AsmJSModule& module, AsmJSModule::Global& global,
                        HandleValue importVal)
 {
-    MOZ_ASSERT(global.which() == AsmJSModule::Global::Variable);
-
-    void* datum = module.globalVarToGlobalDatum(global);
+    void* datum = module.globalData() + global.varGlobalDataOffset();
 
     switch (global.varInitKind()) {
       case AsmJSModule::Global::InitConstant: {
@@ -588,10 +586,10 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
         }
     }
 
-    for (unsigned i = 0; i < module.numExits(); i++)
-        module.exitIndexToGlobalDatum(i).fun = &ffis[module.exit(i).ffiIndex()]->as<JSFunction>();
-
-    module.initGlobalNaN();
+    for (unsigned i = 0; i < module.numExits(); i++) {
+        const AsmJSModule::Exit& exit = module.exit(i);
+        exit.datum(module).fun = &ffis[exit.ffiIndex()]->as<JSFunction>();
+    }
 
     // See the comment in AllocateExecutableMemory.
     ExecutableAllocator::makeExecutable(module.codeBase(), module.codeBytes());
@@ -957,12 +955,7 @@ SendModuleToAttachedProfiler(JSContext* cx, AsmJSModule& module)
     if (IsVTuneProfilingActive() && !SendFunctionsToVTune(cx, module))
         return false;
 #endif
-
 #if defined(JS_ION_PERF)
-    if (module.numExportedFunctions() > 0) {
-        size_t firstEntryCode = size_t(module.codeBase() + module.functionBytes());
-        writePerfSpewerAsmJSEntriesAndExits(firstEntryCode, module.codeBytes() - module.functionBytes());
-    }
     if (!SendFunctionsToPerf(cx, module))
         return false;
 #endif

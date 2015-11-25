@@ -336,19 +336,4 @@ js::jit::writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size,
     unlockPerfMap();
 }
 
-void
-js::jit::writePerfSpewerAsmJSEntriesAndExits(uintptr_t base, size_t size)
-{
-    if (size == 0)
-        return;
-
-    if (!lockPerfMap())
-        return;
-
-    fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxSIZE " AsmJS Entries and Exits (0x%" PRIxPTR " 0x%" PRIxSIZE ")\n",
-            base, size, base, size);
-
-    unlockPerfMap();
-}
-
 #endif // defined (JS_ION_PERF)
