@@ -91,6 +91,20 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
 
+  NS_DECLARE_FRAME_PROPERTY(GridColTrackSizes, DeleteValue<nsTArray<nscoord>>)
+
+  const nsTArray<nscoord>* GetComputedTemplateColumns()
+  {
+    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridColTrackSizes()));
+  }
+
+  NS_DECLARE_FRAME_PROPERTY(GridRowTrackSizes, DeleteValue<nsTArray<nscoord>>)
+
+  const nsTArray<nscoord>* GetComputedTemplateRows()
+  {
+    return static_cast<nsTArray<nscoord>*>(Properties().Get(GridRowTrackSizes()));
+  }
+
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
