@@ -70,11 +70,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
         'GLContextWGL.h',
         'SharedSurfaceANGLE.h', # Needs <windows.h> for `HANDLE`.
+        'SharedSurfaceD3D11Interop.h',
         'WGLLibrary.h',
     ]
     UNIFIED_SOURCES += [
         'GLContextProviderWGL.cpp',
         'SharedSurfaceANGLE.cpp',
+        'SharedSurfaceD3D11Interop.cpp',
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     EXPORTS += ['SkiaGLGlue.h']

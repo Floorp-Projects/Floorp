@@ -92,50 +92,55 @@
       <rule attr="aria-label" type="string"/>
     </ruleset>
 
-    <ruleset id="HTMLElm:Head">
+    <ruleset id="HTMLControl:Head">
       <ruleset ref="ARIA"/>
       <rule elm="label" elmattr="for"/>
     </ruleset>
 
     <!-- general -->
     <ruleset id="HTMLControl">
-      <ruleset ref="ARIA"/>
-      <rule elm="label" elmattr="for"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule fromsubtree="true"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <ruleset id="HTMLElm">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="ARIA"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <!-- specific -->
+    <ruleset id="HTMLARIAGridCell">
+      <ruleset ref="ARIA"/>
+      <rule fromsubtree="true"/>
+      <rule attr="title" type="string"/>
+    </ruleset>
+
     <ruleset id="HTMLInputButton">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule attr="value" type="string" explict-name="false" reordered="true"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <ruleset id="HTMLInputSubmit" defaultName="Submit Query">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule attr="value" type="string" explict-name="false" textchanged="true"/>
     </ruleset>
 
     <ruleset id="HTMLInputReset" defaultName="Reset">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule attr="value" type="string" explict-name="false" textchanged="true"/>
     </ruleset>
 
     <ruleset id="HTMLInputImage">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule attr="alt" type="string" recreated="true"/>
       <rule attr="value" type="string" recreated="true"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <ruleset id="HTMLInputImageNoValidSrc" defaultName="Submit Query">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="HTMLControl:Head"/>
       <rule attr="alt" type="string" explict-name="false" recreated="true"/>
       <rule attr="value" type="string" explict-name="false" recreated="true"/>
     </ruleset>
@@ -160,7 +165,7 @@
     </ruleset>
 
     <ruleset id="HTMLTable">
-      <ruleset ref="HTMLElm:Head"/>
+      <ruleset ref="ARIA"/>
       <rule elm="caption"/>
       <rule attr="summary" type="string"/>
       <rule attr="title" type="string"/>
@@ -321,7 +326,7 @@
     </markup>
 
     <markup id="HTMLTdARIAGridCellTest"
-            ref="html:table/html:tr/html:td" ruleset="HTMLControl">
+            ref="html:table/html:tr/html:td" ruleset="HTMLARIAGridCell">
       <html:span id="l1" textequiv="test2">test2</html:span>
       <html:span id="l2" textequiv="test3">test3</html:span>
       <html:label for="gc" textequiv="test4">test4</html:label>

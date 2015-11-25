@@ -795,22 +795,50 @@ nsBMPDecoder::ReadPixelRow(const char* aData)
       if (mH.mCompression == Compression::RGB && mIsWithinICO &&
           mH.mBpp == 32) {
         // This is a special case only used for 32bpp WinBMPv3-ICO files, which
-        // could be in either 0RGB or ARGB format.
+        // could be in either 0RGB or ARGB format. We start by assuming it's
+        // an 0RGB image. If we hit a non-zero alpha value, then we know it's
+        // actually an ARGB image, and change tack accordingly.
+        // (Note: a fully-transparent ARGB image is indistinguishable from a
+        // 0RGB image, and we will render such an image as a 0RGB image, i.e.
+        // opaquely. This is unlikely to be a problem in practice.)
         while (lpos > 0) {
-          // If src[3] is zero, we can't tell at this point if the image is
-          // 0RGB or ARGB. So we just use 0 value as-is. If the image is 0RGB
-          // then mDoesHaveTransparency will be false at the end, we'll treat
-          // the image as opaque, and the 0 alpha values will be ignored. If
-          // the image is ARGB then mDoesHaveTransparency will be true at the
-          // end and we'll treat the image as non-opaque. (Note: a
-          // fully-transparent ARGB image is indistinguishable from a 0RGB
-          // image, and we will render such an image as a 0RGB image, i.e.
-          // opaquely. This is unlikely to be a problem in practice.)
-          if (src[3] != 0) {
+          if (!mDoesHaveTransparency && src[3] != 0) {
+            // Up until now this looked like an 0RGB image, but we now know
+            // it's actually an ARGB image. Which means every pixel we've seen
+            // so far has been fully transparent. So we go back and redo them.
+
+            // Tell the Downscaler to go back to the start.
+            if (mDownscaler) {
+              mDownscaler->ResetForNextProgressivePass();
+            }
+
+            // Redo the complete rows we've already done.
+            MOZ_ASSERT(mCurrentPos == 0);
+            int32_t currentRow = mCurrentRow;
+            mCurrentRow = AbsoluteHeight();
+            while (mCurrentRow > currentRow) {
+              dst = RowBuffer();
+              for (int32_t i = 0; i < mH.mWidth; i++) {
+                SetPixel(dst, 0, 0, 0, 0);
+              }
+              FinishRow();
+            }
+
+            // Redo the part of this row we've already done.
+            dst = RowBuffer();
+            int32_t n = mH.mWidth - lpos;
+            for (int32_t i = 0; i < n; i++) {
+              SetPixel(dst, 0, 0, 0, 0);
+            }
+
             MOZ_ASSERT(mMayHaveTransparency);
             mDoesHaveTransparency = true;
           }
-          SetPixel(dst, src[2], src[1], src[0], src[3]);
+
+          // If mDoesHaveTransparency is false, treat this as an 0RGB image.
+          // Otherwise, treat this as an ARGB image.
+          SetPixel(dst, src[2], src[1], src[0],
+                   mDoesHaveTransparency ? src[3] : 0xff);
           src += 4;
           --lpos;
         }

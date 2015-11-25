@@ -12,6 +12,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsThreadUtils.h"
+#include "nsProxyRelease.h"
+
+class nsIPrincipal;
 
 #include "Database.h"
 #include "mozilla/storage.h"
@@ -127,12 +130,15 @@ public:
    *        in the database.
    * @param aCallback
    *        Function to be called when the fetch-and-associate process finishes.
+   * @param aLoadingPrincipal
+   *        LoadingPrincipal of the icon to be fetched.
    */
   static nsresult start(nsIURI* aFaviconURI,
                         nsIURI* aPageURI,
                         enum AsyncFaviconFetchMode aFetchMode,
                         uint32_t aFaviconLoadType,
-                        nsIFaviconDataCallback* aCallback);
+                        nsIFaviconDataCallback* aCallback,
+                        nsIPrincipal* aLoadingPrincipal);
 
   /**
    * Constructor.
@@ -143,11 +149,14 @@ public:
    *        Page to which associate the icon.
    * @param aCallback
    *        Function to be called when the fetch-and-associate process finishes.
+   * @param aLoadingPrincipal
+   *        LoadingPrincipal of the icon to be fetched.
    */
   AsyncFetchAndSetIconForPage(IconData& aIcon,
                               PageData& aPage,
                               uint32_t aFaviconLoadType,
-                              nsCOMPtr<nsIFaviconDataCallback>& aCallback);
+                              nsCOMPtr<nsIFaviconDataCallback>& aCallback,
+                              nsIPrincipal* aLoadingPrincipal);
 
   virtual ~AsyncFetchAndSetIconForPage();
 
@@ -155,6 +164,7 @@ protected:
   IconData mIcon;
   PageData mPage;
   const bool mFaviconLoadPrivate;
+  nsMainThreadPtrHandle<nsIPrincipal> mLoadingPrincipal;
 };
 
 /**
@@ -184,11 +194,14 @@ public:
    *        Page to which associate the icon.
    * @param aCallback
    *        Function to be called when the fetch-and-associate process finishes.
+   * @param aLoadingPrincipal
+   *        LoadingPrincipal of the icon to be fetched.
    */
   AsyncFetchAndSetIconFromNetwork(IconData& aIcon,
                                   PageData& aPage,
                                   bool aFaviconLoadPrivate,
-                                  nsCOMPtr<nsIFaviconDataCallback>& aCallback);
+                                  nsCOMPtr<nsIFaviconDataCallback>& aCallback,
+                                  const nsMainThreadPtrHandle<nsIPrincipal>& aLoadingPrincipal);
 
 protected:
   virtual ~AsyncFetchAndSetIconFromNetwork();
@@ -196,6 +209,7 @@ protected:
   IconData mIcon;
   PageData mPage;
   const bool mFaviconLoadPrivate;
+  nsMainThreadPtrHandle<nsIPrincipal> mLoadingPrincipal;
 };
 
 /**

@@ -304,7 +304,8 @@ OpusDataDecoder::Flush()
 bool
 OpusDataDecoder::IsOpus(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("audio/ogg; codecs=opus");
+  return aMimeType.EqualsLiteral("audio/webm; codecs=opus") ||
+         aMimeType.EqualsLiteral("audio/ogg; codecs=opus");
 }
 
 } // namespace mozilla

@@ -78,26 +78,27 @@ function expectResult(target, successMessage, failureMessage) {
   }
 }
 
-function createGreysRGBTexture(gl, color) {
+function createGreySRGBATexture(gl, color) {
   var numPixels = gl.drawingBufferWidth * gl.drawingBufferHeight;
-  var size = numPixels * 3;
+  var size = numPixels * 4;
   var buf = new Uint8Array(size);
   for (var ii = 0; ii < numPixels; ++ii) {
     var off = ii * 3;
     buf[off + 0] = color;
     buf[off + 1] = color;
     buf[off + 2] = color;
+    buf[off + 3] = 0xff;
   }
 
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D,
                 0,
-                ext.SRGB_EXT,
+                ext.SRGB_ALPHA_EXT,
                 gl.drawingBufferWidth,
                 gl.drawingBufferHeight,
                 0,
-                ext.SRGB_EXT,
+                ext.SRGB_ALPHA_EXT,
                 gl.UNSIGNED_BYTE,
                 buf);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -266,11 +267,11 @@ function runTextureReadConversionTest() {
   gl.uniform1i(gl.getUniformLocation(program, "tex2d"), 0);
 
   for (var ii = 0; ii < conversions.length; ii++) {
-    var tex = createGreysRGBTexture(gl, conversions[ii][0]);
+    var tex = createGreySRGBATexture(gl, conversions[ii][0]);
     wtu.drawQuad(gl);
     expectResult(conversions[ii][1],
-                 "sRGB texture read returned correct data",
-                 "sRGB texture read returned incorrect data");
+                 "sRGBA texture read returned correct data",
+                 "sRGBA texture read returned incorrect data");
   }
 }
 
@@ -279,13 +280,14 @@ function runFramebufferTextureConversionTest() {
   debug("Test the conversion of colors from linear to sRGB on framebuffer (texture) write");
 
   var program = wtu.setupProgram(gl, ['vertexShader', 'fragmentShader'], ['aPosition'], [0]);
-  var tex = createGreysRGBTexture(gl, 0);
+  var tex = createGreySRGBATexture(gl, 0);
   var fbo = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
   glErrorShouldBe(gl, gl.NO_ERROR);
 
   shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT)', 'ext.SRGB_EXT');
+  glErrorShouldBe(gl, gl.NO_ERROR);
   shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
 
   // Draw
@@ -307,6 +309,7 @@ function runFramebufferTextureConversionTest() {
                  "framebuffer (texture) read returned incorrect data");
   }
 
+  glErrorShouldBe(gl, gl.NO_ERROR);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
@@ -327,6 +330,7 @@ function runFramebufferRenderbufferConversionTest() {
     glErrorShouldBe(gl, gl.NO_ERROR);
 
     shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT)', 'ext.SRGB_EXT');
+    glErrorShouldBe(gl, gl.NO_ERROR);
     shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
 
     return fbo;
@@ -352,6 +356,8 @@ function runFramebufferRenderbufferConversionTest() {
                  "framebuffer (renderbuffer) read returned the correct data",
                  "framebuffer (renderbuffer) read returned incorrect data");
   }
+
+  glErrorShouldBe(gl, gl.NO_ERROR);
 }
 
 debug("");

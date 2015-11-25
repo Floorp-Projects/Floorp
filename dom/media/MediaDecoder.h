@@ -675,6 +675,8 @@ private:
   void SetCDMProxy(CDMProxy* aProxy);
 #endif
 
+  void EnsureTelemetryReported();
+
 #ifdef MOZ_RAW
   static bool IsRawEnabled();
 #endif
@@ -1094,6 +1096,8 @@ private:
   // download has ended. Called on the main thread only. aStatus is
   // the result from OnStopRequest.
   void NotifyDownloadEnded(nsresult aStatus);
+  
+  bool mTelemetryReported;
 };
 
 } // namespace mozilla
