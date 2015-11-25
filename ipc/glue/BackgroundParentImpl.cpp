@@ -556,9 +556,7 @@ BackgroundParentImpl::AllocPServiceWorkerManagerParent()
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> agent =
-    new dom::workers::ServiceWorkerManagerParent();
-  return agent.forget().take();
+  return new ServiceWorkerManagerParent();
 }
 
 bool
@@ -569,9 +567,7 @@ BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> parent =
-    dont_AddRef(static_cast<dom::workers::ServiceWorkerManagerParent*>(aActor));
-  MOZ_ASSERT(parent);
+  delete static_cast<ServiceWorkerManagerParent*>(aActor);
   return true;
 }
 
