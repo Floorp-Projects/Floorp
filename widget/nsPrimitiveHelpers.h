@@ -23,6 +23,10 @@ public:
   static void CreatePrimitiveForData ( const char* aFlavor, const void* aDataBuff,
                                          uint32_t aDataLen, nsISupports** aPrimitive ) ;
 
+    // A specific case of CreatePrimitive for windows CF_HTML handling in DataTransfer
+  static void CreatePrimitiveForCFHTML ( const void* aDataBuff,
+                                         uint32_t* aDataLen, nsISupports** aPrimitive ) ;
+
     // Given a nsISupports* primitive and the flavor it represents, creates a new data
     // buffer with the data in it. This data will be null terminated, but the length
     // parameter does not reflect that.

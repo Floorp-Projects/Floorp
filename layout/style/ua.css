@@ -301,6 +301,7 @@ parsererror|parsererror {
   border-color: red;
   font-size: 14pt;
   background-color: lightyellow;
+  color: black;
 }
 
 parsererror|sourcetext {

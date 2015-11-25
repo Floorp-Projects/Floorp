@@ -6,15 +6,15 @@ Index: LICENSE
  If you modify libpng you may insert additional notices immediately following
  this sentence.
  
-+This modified version of libpng code adds animated PNG support. This code is
++This modified version of libpng code adds animated PNG support and is
 +released under the libpng license described below. The modifications are
 +Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2015 Max Stepin,
-+and can be identified by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
++and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
 +surrounding them in the modified libpng source files.
 +
  This code is released under the libpng license.
  
- libpng versions 1.0.7, July 1, 2000, through 1.6.18, July 23, 2015, are
+ libpng versions 1.0.7, July 1, 2000, through 1.6.19, November 12, 2015, are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -291,24 +291,65 @@ Index: pngget.c
 +}
 +#endif /* APNG */
  #endif /* READ || WRITE */
+Index: png.c
+===================================================================
+--- png.c
++++ png.c
+@@ -775,16 +775,20 @@
+ #else
+ #  ifdef __STDC__
+    return PNG_STRING_NEWLINE \
+-      "libpng version 1.6.19 - November 12, 2015" PNG_STRING_NEWLINE \
++      "libpng version 1.6.19+apng - November 12, 2015" PNG_STRING_NEWLINE \
+       "Copyright (c) 1998-2015 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
+       "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
+-      PNG_STRING_NEWLINE;
++      PNG_STRING_NEWLINE \
++      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
++      "Portions Copyright (c) 2008-2015 Max Stepin" PNG_STRING_NEWLINE ;
+ #  else
+-   return "libpng version 1.6.19 - November 12, 2015\
++   return "libpng version 1.6.19+apng - November 12, 2015\
+       Copyright (c) 1998-2015 Glenn Randers-Pehrson\
+       Copyright (c) 1996-1997 Andreas Dilger\
+-      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
++      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
++      Portions Copyright (c) 2006-2007 Andrew Smith\
++      Portions Copyright (c) 2008-2015 Max Stepin";
+ #  endif
+ #endif
+ }
 Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -248,6 +248,12 @@
+@@ -22,6 +22,12 @@
   * If you modify libpng you may insert additional notices immediately following
   * this sentence.
   *
-+ * This modified version of libpng code adds animated PNG support. This code is
++ * This modified version of libpng code adds animated PNG support and is
 + * released under the libpng license described below. The modifications are
 + * Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2015 Max Stepin,
-+ * and can be identified by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
++ * and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
 + * surrounding them in the modified libpng source files.
 + *
   * This code is released under the libpng license.
   *
-  * libpng versions 1.0.7, July 1, 2000, through 1.6.18, July 23, 2015, are
-@@ -480,6 +486,10 @@
+  * libpng versions 1.0.7, July 1, 2000, through 1.6.19, November 12, 2015, are
+@@ -281,9 +287,9 @@
+  */
+ 
+ /* Version information for png.h - this should match the version in png.c */
+-#define PNG_LIBPNG_VER_STRING "1.6.19"
++#define PNG_LIBPNG_VER_STRING "1.6.19+apng"
+ #define PNG_HEADER_VERSION_STRING \
+-     " libpng version 1.6.19 - November 12, 2015\n"
++     " libpng version 1.6.19+apng - November 12, 2015\n"
+ 
+ #define PNG_LIBPNG_VER_SONUM   16
+ #define PNG_LIBPNG_VER_DLLNUM  16
+@@ -334,6 +340,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -319,7 +360,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -570,6 +580,17 @@
+@@ -429,6 +439,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -337,10 +378,10 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -890,6 +911,10 @@
- #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
- #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
+@@ -751,6 +772,10 @@
+ #if INT_MAX >= 0x8000 /* else this might break */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
+ #endif
 +#ifdef PNG_APNG_SUPPORTED
 +#define PNG_INFO_acTL 0x10000
 +#define PNG_INFO_fcTL 0x20000
@@ -348,7 +389,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -927,6 +952,10 @@
+@@ -788,6 +813,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -359,7 +400,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3245,6 +3274,75 @@
+@@ -3109,6 +3138,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -435,7 +476,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3253,7 +3351,11 @@
+@@ -3117,7 +3215,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -462,7 +503,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -758,6 +762,16 @@
+@@ -754,6 +758,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -479,7 +520,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1437,6 +1451,49 @@
+@@ -1433,6 +1447,49 @@
  
  #endif /* PROGRESSIVE_READ */
  
@@ -904,7 +945,7 @@ Index: pngset.c
  }
  
  #ifdef PNG_oFFs_SUPPORTED
-@@ -1089,6 +1094,146 @@
+@@ -1094,6 +1099,146 @@
  }
  #endif /* sPLT */
  
@@ -1055,7 +1096,7 @@ Index: pngrutil.c
 ===================================================================
 --- pngrutil.c
 +++ pngrutil.c
-@@ -818,6 +818,11 @@
+@@ -824,6 +824,11 @@
     filter_type = buf[11];
     interlace_type = buf[12];
  
@@ -1067,7 +1108,7 @@ Index: pngrutil.c
     /* Set internal variables */
     png_ptr->width = width;
     png_ptr->height = height;
-@@ -2704,6 +2709,180 @@
+@@ -2724,6 +2729,180 @@
  }
  #endif
  
@@ -1248,7 +1289,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -3963,6 +4142,38 @@
+@@ -3983,6 +4162,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1287,7 +1328,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -3974,6 +4185,7 @@
+@@ -3994,6 +4205,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1295,7 +1336,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4037,6 +4249,9 @@
+@@ -4057,6 +4269,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1305,7 +1346,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4475,4 +4690,80 @@
+@@ -4495,4 +4710,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1402,7 +1443,7 @@ Index: pngwutil.c
     if ((png_ptr->do_filter) == PNG_NO_FILTERS)
     {
        if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-@@ -1079,7 +1084,15 @@
+@@ -1082,7 +1087,15 @@
                 optimize_cmf(data, png_image_size(png_ptr));
  #endif
  
@@ -1418,7 +1459,7 @@ Index: pngwutil.c
           png_ptr->mode |= PNG_HAVE_IDAT;
  
           png_ptr->zstream.next_out = data;
-@@ -1125,7 +1138,15 @@
+@@ -1128,7 +1141,15 @@
              optimize_cmf(data, png_image_size(png_ptr));
  #endif
  
@@ -1434,7 +1475,7 @@ Index: pngwutil.c
           png_ptr->zstream.avail_out = 0;
           png_ptr->zstream.next_out = NULL;
           png_ptr->mode |= PNG_HAVE_IDAT | PNG_AFTER_IDAT;
-@@ -1938,6 +1959,82 @@
+@@ -1941,6 +1962,82 @@
  }
  #endif
  
@@ -1517,7 +1558,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -2704,4 +2801,39 @@
+@@ -2706,4 +2803,39 @@
     }
  #endif /* WRITE_FLUSH */
  }

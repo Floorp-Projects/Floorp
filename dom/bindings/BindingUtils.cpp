@@ -1549,7 +1549,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
     // For non-global instance Xrays there are no other properties, so return
     // here for them.
-    if (type != eGlobalInstance || !GlobalPropertiesAreOwn()) {
+    if (type != eGlobalInstance) {
       return true;
     }
   } else if (type == eInterface) {
@@ -1572,7 +1572,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
     // The properties for globals live on the instance, so return here as there
     // are no properties on their interface prototype object.
-    if (type == eGlobalInterfacePrototype && GlobalPropertiesAreOwn()) {
+    if (type == eGlobalInterfacePrototype) {
       return true;
     }
   }
@@ -1659,14 +1659,14 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
   if (IsInstance(type)) {
     ADD_KEYS_IF_DEFINED(unforgeableMethod);
     ADD_KEYS_IF_DEFINED(unforgeableAttribute);
-    if (type == eGlobalInstance && GlobalPropertiesAreOwn()) {
+    if (type == eGlobalInstance) {
       ADD_KEYS_IF_DEFINED(method);
       ADD_KEYS_IF_DEFINED(attribute);
     }
   } else if (type == eInterface) {
     ADD_KEYS_IF_DEFINED(staticMethod);
     ADD_KEYS_IF_DEFINED(staticAttribute);
-  } else if (type != eGlobalInterfacePrototype || !GlobalPropertiesAreOwn()) {
+  } else if (type != eGlobalInterfacePrototype) {
     MOZ_ASSERT(IsInterfacePrototype(type));
     ADD_KEYS_IF_DEFINED(method);
     ADD_KEYS_IF_DEFINED(attribute);
@@ -1757,7 +1757,7 @@ XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   }
 
-  return (type == eGlobalInterfacePrototype && GlobalPropertiesAreOwn()) ||
+  return type == eGlobalInterfacePrototype ||
          XrayOwnNativePropertyKeys(cx, wrapper, nativePropertyHooks, type,
                                    obj, flags, props);
 }

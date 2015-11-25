@@ -45,13 +45,27 @@ static inline D2D1_RECT_F D2DRect(const T &aRect)
   return D2D1::RectF(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
 }
 
-static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
+static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode, Axis aAxis)
 {
   D2D1_EXTEND_MODE extend;
   switch (aExtendMode) {
   case ExtendMode::REPEAT:
     extend = D2D1_EXTEND_MODE_WRAP;
     break;
+  case ExtendMode::REPEAT_X:
+  {
+    extend = aAxis == Axis::X_AXIS
+             ? D2D1_EXTEND_MODE_WRAP
+             : D2D1_EXTEND_MODE_CLAMP;
+    break;
+  }
+  case ExtendMode::REPEAT_Y:
+  {
+    extend = aAxis == Axis::Y_AXIS
+             ? D2D1_EXTEND_MODE_WRAP
+             : D2D1_EXTEND_MODE_CLAMP;
+    break;
+  }
   case ExtendMode::REFLECT:
     extend = D2D1_EXTEND_MODE_MIRROR;
     break;

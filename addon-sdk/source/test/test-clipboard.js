@@ -20,6 +20,10 @@ const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYA" +
 
 const { base64jpeg } = require("./fixtures");
 
+const { platform } = require("sdk/system");
+// For Windows, Mac and Linux, platform returns the following: winnt, darwin and linux.
+var isWindows = platform.toLowerCase().indexOf("win") == 0;
+
 const canvasHTML = "data:text/html," + encodeURIComponent(
   "<html>\
     <body>\
@@ -99,6 +103,13 @@ exports["test With No Flavor"] = function(assert) {
 exports["test With Flavor"] = function(assert) {
   var contents = "<b>hello there</b>";
   var contentsText = "hello there";
+
+  // On windows, HTML clipboard includes extra data.
+  // The values are from widget/windows/nsDataObj.cpp.
+  var contentsWindowsHtml = "<html><body>\n<!--StartFragment-->" +
+                            contents +
+                            "<!--EndFragment-->\n</body>\n</html>";
+
   var flavor = "html";
   var fullFlavor = "text/html";
   var unicodeFlavor = "text";
@@ -110,8 +121,8 @@ exports["test With Flavor"] = function(assert) {
   assert.equal(clip.currentFlavors[0], unicodeFlavor);
   assert.equal(clip.currentFlavors[1], flavor);
   assert.equal(clip.get(), contentsText);
-  assert.equal(clip.get(flavor), contents);
-  assert.equal(clip.get(fullFlavor), contents);
+  assert.equal(clip.get(flavor), isWindows ? contentsWindowsHtml : contents);
+  assert.equal(clip.get(fullFlavor), isWindows ? contentsWindowsHtml : contents);
   assert.equal(clip.get(unicodeFlavor), contentsText);
   assert.equal(clip.get(unicodeFullFlavor), contentsText);
 };

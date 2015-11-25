@@ -54,7 +54,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mToken(sMediaKeySessionNum++)
   , mIsClosed(false)
   , mUninitialized(true)
-  , mKeyStatusMap(new MediaKeyStatusMap(aCx, aParent, aRv))
+  , mKeyStatusMap(new MediaKeyStatusMap(aParent))
   , mExpiration(JS::GenericNaN())
 {
   EME_LOG("MediaKeySession[%p,''] session Id set", this);
@@ -124,7 +124,6 @@ MediaKeySession::Closed() const
   return mClosed;
 }
 
-
 void
 MediaKeySession::UpdateKeyStatusMap()
 {
@@ -175,19 +174,26 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
     EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, uninitialized",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                         NS_LITERAL_CSTRING("Session is already initialized in MediaKeySession.generateRequest()"));
+      NS_LITERAL_CSTRING("Session is already initialized in MediaKeySession.generateRequest()"));
     return promise.forget();
   }
 
   mUninitialized = false;
 
+  if (aInitDataType.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+      NS_LITERAL_CSTRING("Empty initDataType passed to MediaKeySession.generateRequest()"));
+    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, empty initDataType",
+      this, NS_ConvertUTF16toUTF8(mSessionId).get());
+    return promise.forget();
+  }
+
   nsTArray<uint8_t> data;
-  if (aInitDataType.IsEmpty() ||
-      !CopyArrayBufferViewOrArrayBufferData(aInitData, data)) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                         NS_LITERAL_CSTRING("Bad arguments to MediaKeySession.generateRequest()"));
-    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, "
-            "invalid initData or initDataType",
+  CopyArrayBufferViewOrArrayBufferData(aInitData, data);
+  if (data.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+      NS_LITERAL_CSTRING("Empty initData passed to MediaKeySession.generateRequest()"));
+    EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() failed, empty initData",
       this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();
   }
@@ -282,10 +288,11 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();
   }
-  if (!CopyArrayBufferViewOrArrayBufferData(aResponse, data)) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
-                         NS_LITERAL_CSTRING("Invalid response buffer"));
-    EME_LOG("MediaKeySession[%p,'%s'] Update() failed, invalid response buffer",
+  CopyArrayBufferViewOrArrayBufferData(aResponse, data);
+  if (data.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR,
+      NS_LITERAL_CSTRING("Empty response buffer passed to MediaKeySession.update()"));
+    EME_LOG("MediaKeySession[%p,'%s'] Update() failed, empty response buffer",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
     return promise.forget();
   }

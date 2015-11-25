@@ -19,7 +19,6 @@
 #include "nsITimer.h"
 
 class nsIEventTarget;
-struct PRLogModuleInfo;
 
 namespace mozilla {
 
@@ -101,7 +100,7 @@ public:
   }
 #endif
 
-  static PRLogModuleInfo*
+  static mozilla::LogModule*
   GetLoggingModule()
 #ifdef DEBUG
   ;
@@ -226,7 +225,7 @@ private:
 
   static bool sIsMainProcess;
   static bool sFullSynchronousMode;
-  static PRLogModuleInfo* sLoggingModule;
+  static LazyLogModule sLoggingModule;
   static Atomic<LoggingMode> sLoggingMode;
   static mozilla::Atomic<bool> sLowDiskSpaceMode;
 };

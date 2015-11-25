@@ -12,6 +12,8 @@
 
 #include "jsapi-tests/tests.h"
 
+using namespace js;
+
 BEGIN_TEST(testGCExactRooting)
 {
     JS::RootedObject rootCx(cx, JS_NewPlainObject(cx));

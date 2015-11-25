@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -15,8 +15,9 @@
   "homepage": "https://bugzilla.mozilla.org/show_bug.cgi?id=1203520",
   "author": "Mike Ratcliffe",
   "main": "lib/index.js",
-  "devDependencies": {
-    "eslint": "~1.2.0"
+  "dependencies": {
+    "escope": "^3.2.0",
+    "espree": "^2.2.4"
   },
   "engines": {
     "node": ">=0.10.0"

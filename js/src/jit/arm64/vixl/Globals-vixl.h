@@ -1,4 +1,4 @@
-// Copyright 2013, ARM Limited
+// Copyright 2015, ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -57,15 +57,21 @@
 
 typedef uint8_t byte;
 
+// Type for half-precision (16 bit) floating point numbers.
+typedef uint16_t float16;
+
 const int KBytes = 1024;
 const int MBytes = 1024 * KBytes;
 
-#define VIXL_ABORT() printf("in %s, line %i", __FILE__, __LINE__); abort()
+#define VIXL_ABORT() \
+    do { printf("in %s, line %i", __FILE__, __LINE__); abort(); } while (false)
 #ifdef DEBUG
   #define VIXL_ASSERT(condition) MOZ_ASSERT(condition)
   #define VIXL_CHECK(condition) VIXL_ASSERT(condition)
-  #define VIXL_UNIMPLEMENTED() printf("UNIMPLEMENTED\t"); VIXL_ABORT()
-  #define VIXL_UNREACHABLE() printf("UNREACHABLE\t"); VIXL_ABORT()
+  #define VIXL_UNIMPLEMENTED() \
+    do { fprintf(stderr, "UNIMPLEMENTED\t"); VIXL_ABORT(); } while (false)
+  #define VIXL_UNREACHABLE() \
+    do { fprintf(stderr, "UNREACHABLE\t"); VIXL_ABORT(); } while (false)
 #else
   #define VIXL_ASSERT(condition) ((void) 0)
   #define VIXL_CHECK(condition) ((void) 0)
@@ -79,10 +85,38 @@ const int MBytes = 1024 * KBytes;
 #define VIXL_STATIC_ASSERT_LINE(line, condition) \
   typedef char VIXL_CONCAT(STATIC_ASSERT_LINE_, line)[(condition) ? 1 : -1] \
   __attribute__((unused))
-#define VIXL_STATIC_ASSERT(condition) VIXL_STATIC_ASSERT_LINE(__LINE__, condition) //NOLINT
+#define VIXL_STATIC_ASSERT(condition) \
+    VIXL_STATIC_ASSERT_LINE(__LINE__, condition)
 
-template <typename T> inline void USE(T) {}
+template <typename T1>
+inline void USE(T1) {}
 
-#define VIXL_ALIGNMENT_EXCEPTION() printf("ALIGNMENT EXCEPTION\t"); VIXL_ABORT()
+template <typename T1, typename T2>
+inline void USE(T1, T2) {}
+
+template <typename T1, typename T2, typename T3>
+inline void USE(T1, T2, T3) {}
+
+template <typename T1, typename T2, typename T3, typename T4>
+inline void USE(T1, T2, T3, T4) {}
+
+#define VIXL_ALIGNMENT_EXCEPTION() \
+    do { fprintf(stderr, "ALIGNMENT EXCEPTION\t"); VIXL_ABORT(); } while (0)
+
+// The clang::fallthrough attribute is used along with the Wimplicit-fallthrough
+// argument to annotate intentional fall-through between switch labels.
+// For more information please refer to:
+// http://clang.llvm.org/docs/AttributeReference.html#fallthrough-clang-fallthrough
+#ifndef __has_warning
+  #define __has_warning(x)  0
+#endif
+
+// Note: This option is only available for Clang. And will only be enabled for
+// C++11(201103L).
+#if __has_warning("-Wimplicit-fallthrough") && __cplusplus >= 201103L
+  #define VIXL_FALLTHROUGH() [[clang::fallthrough]] //NOLINT
+#else
+  #define VIXL_FALLTHROUGH() do {} while (0)
+#endif
 
 #endif  // VIXL_GLOBALS_H

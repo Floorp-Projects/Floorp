@@ -601,8 +601,8 @@ ModuleObject* BytecodeCompiler::compileModule()
         return nullptr;
     }
 
-    ModuleBuilder builder(cx->asJSContext());
-    if (!builder.buildAndInit(pn, module))
+    ModuleBuilder builder(cx->asJSContext(), module);
+    if (!builder.buildAndInit(pn))
         return nullptr;
 
     parser->handler.freeTree(pn);

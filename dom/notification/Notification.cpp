@@ -1617,8 +1617,8 @@ Notification::GetPermission(nsIGlobalObject* aGlobal, ErrorResult& aRv)
     MOZ_ASSERT(worker);
     RefPtr<GetPermissionRunnable> r =
       new GetPermissionRunnable(worker);
-    if (!r->Dispatch(worker->GetJSContext())) {
-      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    r->Dispatch(aRv);
+    if (aRv.Failed()) {
       return NotificationPermission::Denied;
     }
 
@@ -2223,7 +2223,12 @@ NotificationFeature::Notify(JSContext* aCx, Status aStatus)
     // Dispatched to main thread, blocks on closing the Notification.
     RefPtr<CloseNotificationRunnable> r =
       new CloseNotificationRunnable(mNotification);
-    r->Dispatch(aCx);
+    ErrorResult rv;
+    r->Dispatch(rv);
+    // XXXbz I'm told throwing and returning false from here is pointless (and
+    // also that doing sync stuff from here is really weird), so I guess we just
+    // suppress the exception on rv, if any.
+    rv.SuppressException();
 
     // Only call ReleaseObject() to match the observer's NotificationRef
     // ownership (since CloseNotificationRunnable asked the observer to drop the
@@ -2358,8 +2363,8 @@ Notification::ShowPersistentNotification(nsIGlobalObject *aGlobal,
     worker->AssertIsOnWorkerThread();
     RefPtr<CheckLoadRunnable> loadChecker =
       new CheckLoadRunnable(worker, NS_ConvertUTF16toUTF8(aScope));
-    if (!loadChecker->Dispatch(worker->GetJSContext())) {
-      aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    loadChecker->Dispatch(aRv);
+    if (aRv.Failed()) {
       return nullptr;
     }
 

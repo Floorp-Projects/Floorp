@@ -37,6 +37,9 @@ class AnimValuesStyleRule;
 
 namespace dom {
 struct ComputedTimingProperties;
+class UnrestrictedDoubleOrKeyframeEffectOptions;
+enum class IterationCompositeOperation : uint32_t;
+enum class CompositeOperation : uint32_t;
 }
 
 /**
@@ -51,17 +54,11 @@ struct AnimationTiming
   TimeDuration mIterationDuration;
   TimeDuration mDelay;
   float mIterationCount; // mozilla::PositiveInfinity<float>() means infinite
-  uint8_t mDirection;
-  uint8_t mFillMode;
+  dom::PlaybackDirection mDirection;
+  dom::FillMode mFillMode;
 
-  bool FillsForwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
-  }
-  bool FillsBackwards() const {
-    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
-           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
-  }
+  bool FillsForwards() const;
+  bool FillsBackwards() const;
   bool operator==(const AnimationTiming& aOther) const {
     return mIterationDuration == aOther.mIterationDuration &&
            mDelay == aOther.mDelay &&
@@ -190,7 +187,7 @@ public:
   Constructor(const GlobalObject& aGlobal,
               Element* aTarget,
               const Optional<JS::Handle<JSObject*>>& aFrames,
-              const Optional<double>& aOptions,
+              const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions,
               ErrorResult& aRv);
   Element* GetTarget() const {
     // Currently we never return animations from the API whose effect
@@ -213,12 +210,14 @@ public:
     aPseudoType = mPseudoType;
   }
 
-  const AnimationTiming& Timing() const {
-    return mTiming;
+  IterationCompositeOperation IterationComposite() const;
+  CompositeOperation Composite() const;
+  void GetSpacing(nsString& aRetVal) const {
+    aRetVal.AssignLiteral("distribute");
   }
-  AnimationTiming& Timing() {
-    return mTiming;
-  }
+
+  const AnimationTiming& Timing() const { return mTiming; }
+  AnimationTiming& Timing() { return mTiming; }
   void SetTiming(const AnimationTiming& aTiming);
 
   Nullable<TimeDuration> GetLocalTime() const;
@@ -299,13 +298,14 @@ protected:
   void ResetIsRunningOnCompositor();
 
   static AnimationTiming ConvertKeyframeEffectOptions(
-      const Optional<double>& aOptions);
+    const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
+
   static void BuildAnimationPropertyList(
-      JSContext* aCx,
-      Element* aTarget,
-      const Optional<JS::Handle<JSObject*>>& aFrames,
-      InfallibleTArray<AnimationProperty>& aResult,
-      ErrorResult& aRv);
+    JSContext* aCx,
+    Element* aTarget,
+    const Optional<JS::Handle<JSObject*>>& aFrames,
+    InfallibleTArray<AnimationProperty>& aResult,
+    ErrorResult& aRv);
 
   nsCOMPtr<Element> mTarget;
   RefPtr<Animation> mAnimation;

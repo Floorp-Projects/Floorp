@@ -61,6 +61,10 @@ var burn_rubber = Task.async(function*({histogramName, topic, expectedReason, pr
     for (let i = 0; i < 5; ++i) {
       info(`Preparing add-on watcher for attempt ${i}`);
       let wait = new Promise(resolve => AddonWatcher.init((id, reason) => {
+        // Ensure we're only looking for this add-on.
+        if (id != ADDON_ID) {
+          return;
+        }
         Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
         info(`Reason: ${reason}, expected ${expectedReason}`);
         if (reason == expectedReason) {

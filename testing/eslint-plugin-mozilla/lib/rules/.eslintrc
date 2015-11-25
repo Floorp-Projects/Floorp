@@ -1,0 +1,49 @@
+/**
+ * Based on npm coding standards at https://docs.npmjs.com/misc/coding-style.
+ *
+ * The places we differ from the npm coding style:
+ *   - Commas should be at the end of a line.
+ *   - Always use semicolons.
+ *   - Functions should not have whitespace before params.
+ */
+
+{
+  "env": {
+    "node": true
+  },
+
+  "rules": {
+    "brace-style": [2, "1tbs"],
+    "camelcase": 2,
+    "comma-dangle": [2, "never"],
+    "comma-spacing": 2,
+    "comma-style": [2, "last"],
+    "curly": [2, "multi-line"],
+    "handle-callback-err": [2, "er"],
+    "indent": [2, 2, {"SwitchCase": 1}],
+    "max-len": [2, 80, 2],
+    "no-multiple-empty-lines": [2, {"max": 1}],
+    "no-undef": 2,
+    "no-undef-init": 2,
+    "no-unexpected-multiline": 2,
+    "object-curly-spacing": 0,
+    "one-var": [2, "never"],
+    "operator-linebreak": [2, "after"],
+    "semi": [2, "always"],
+    "space-before-blocks": 2,
+    "space-before-function-paren": [2, "never"],
+    "space-before-keywords": 2,
+    "strict": [2, "global"],
+  },
+
+  // Globals accessible within node modules.
+  "globals": {
+    "DTRACE_HTTP_CLIENT_REQUEST": true,
+    "DTRACE_HTTP_CLIENT_RESPONSE": true,
+    "DTRACE_HTTP_SERVER_REQUEST": true,
+    "DTRACE_HTTP_SERVER_RESPONSE": true,
+    "DTRACE_NET_SERVER_CONNECTION": true,
+    "DTRACE_NET_STREAM_END": true,
+    "Intl": true,
+  },
+}

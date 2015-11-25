@@ -92,6 +92,17 @@ function testCopyPaste (isXHTML) {
     transferable.getTransferData(mime, data, {}) ;
     return data;
   }
+  function testHtmlClipboardValue(mime, expected) {
+    // For Windows, navigator.platform returns "Win32".
+    var expectedValue = expected;
+    if (navigator.platform.indexOf("Win") >= 0) {
+      // Windows has extra content.
+      var expectedValue = "<html><body>\n<!--StartFragment-->" +
+                          expected.replace(/\n/g, '\n') +
+                          "<!--EndFragment-->\n</body>\n</html>";
+    }
+    testClipboardValue(mime, expectedValue);
+  }
   function testClipboardValue(mime, expected) {
     if (suppressHTMLCheck && mime == "text/html")
       return null;
@@ -133,37 +144,37 @@ function testCopyPaste (isXHTML) {
   testSelectionToString("This is a draggable bit of text.");
   testClipboardValue("text/unicode",
                      "This is a draggable bit of text.");
-  testClipboardValue("text/html",
+  testHtmlClipboardValue("text/html",
                      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em> bit of text.</div>");
   testPasteText("This is a draggable bit of text.");
 
   copyChildrenToClipboard("alist");
   testSelectionToString(" bla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/unicode", " bla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/html", "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
+  testHtmlClipboardValue("text/html", "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
   testPasteText(" bla\n\n    foo\n    bar\n\n");
 
   copyChildrenToClipboard("blist");
   testSelectionToString(" mozilla\n\n    foo\n    bar\n\n");
   testClipboardValue("text/unicode", " mozilla\n\n    foo\n    bar\n\n");
-  testClipboardValue("text/html", "<div id=\"blist\">\n    mozilla\n    <ol>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ol>\n  </div>");
+  testHtmlClipboardValue("text/html", "<div id=\"blist\">\n    mozilla\n    <ol>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ol>\n  </div>");
   testPasteText(" mozilla\n\n    foo\n    bar\n\n");
 
   copyChildrenToClipboard("clist");
   testSelectionToString(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
   testClipboardValue("text/unicode", " mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
-  testClipboardValue("text/html", "<div id=\"clist\">\n    mzla\n    <ul>\n      <li>foo<ul>\n        <li>bazzinga!</li>\n      </ul></li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
+  testHtmlClipboardValue("text/html", "<div id=\"clist\">\n    mzla\n    <ul>\n      <li>foo<ul>\n        <li>bazzinga!</li>\n      </ul></li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
   testPasteText(" mzla\n\n    foo\n        bazzinga!\n    bar\n\n");
 
   copyChildrenToClipboard("div4");
   testSelectionToString(" Tt t t ");
   testClipboardValue("text/unicode", " Tt t t ");
   if (isXHTML) {
-    testClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">t t t</textarea>\n</div>");
+    testHtmlClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">t t t</textarea>\n</div>");
     testInnerHTML("div4", "\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">t t t</textarea>\n");
   }
   else {
-    testClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea>t t t</textarea>\n</div>");
+    testHtmlClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea>t t t</textarea>\n</div>");
     testInnerHTML("div4", "\n  T<textarea>t t t</textarea>\n");
   }
   testPasteText(" Tt t t ");
@@ -172,11 +183,11 @@ function testCopyPaste (isXHTML) {
   testSelectionToString(" T     ");
   testClipboardValue("text/unicode", " T     ");
   if (isXHTML) {
-    testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">     </textarea>\n</div>");
+    testHtmlClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">     </textarea>\n</div>");
     testInnerHTML("div5", "\n  T<textarea xmlns=\"http://www.w3.org/1999/xhtml\">     </textarea>\n");
   }
   else {
-    testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea>     </textarea>\n</div>");
+    testHtmlClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea>     </textarea>\n</div>");
     testInnerHTML("div5", "\n  T<textarea>     </textarea>\n");
   }
   testPasteText(" T     ");
@@ -214,7 +225,7 @@ if (false) {
   copyRangeToClipboard($("div9").childNodes[0],0, $("div9").childNodes[0],4,suppressUnicodeCheckIfHidden);
   testSelectionToString("div9");
   testClipboardValue("text/unicode", "div9");
-  testClipboardValue("text/html", "div9");
+  testHtmlClipboardValue("text/html", "div9");
   testInnerHTML("div9", "div9");
 
   copyToClipboard($("div10"), suppressUnicodeCheckIfHidden);
@@ -357,7 +368,7 @@ if (false) {
   copyChildrenToClipboard("div13");
   testSelectionToString("__");
   testClipboardValue("text/unicode", "__");
-  testClipboardValue("text/html", "<div id=\"div13\">__</div>");
+  testHtmlClipboardValue("text/html", "<div id=\"div13\">__</div>");
   testPasteText("__");
 
   // ============ converting cell boundaries to tabs in tables
@@ -370,7 +381,7 @@ if (false) {
 
     copyRangeToClipboard($("tr2"),0,$("tr3"),0);
     testClipboardValue("text/unicode", "1\t2\n3\t4\n");
-    testClipboardValue("text/html", '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>');
+    testHtmlClipboardValue("text/html", '<table><tbody><tr id="tr2"><tr id="tr2"><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr><tr id="tr3"></tr></tr></tbody></table>');
 
     // ============ spanning multiple rows in multi-range selection
 
@@ -379,20 +390,20 @@ if (false) {
     addRange($("tr3"),0,$("tr3"),2);
     copySelectionToClipboard();
     testClipboardValue("text/unicode", "1\t2\n5\t6");
-    testClipboardValue("text/html", '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>');
+    testHtmlClipboardValue("text/html", '<table><tbody><tr id="tr2"><td>1</td><td>2</td></tr><tr id="tr3"><td>5</td><td>6</td></tr></tbody></table>');
   }
 
   // ============ manipulating Selection in oncopy
 
   copyRangeToClipboard($("div11").childNodes[0],0, $("div11").childNodes[1],2);
   testClipboardValue("text/unicode", "Xdiv11");
-  testClipboardValue("text/html", "<div><p>X<span>div</span>11</p></div>");
+  testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>11</p></div>");
   setTimeout(function(){testSelectionToString("div11")},0);
 
   setTimeout(function(){
     copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
     testClipboardValue("text/unicode", "Xdiv12");
-    testClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
+    testHtmlClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
     setTimeout(function(){ 
       testSelectionToString("div12"); 
       setTimeout(SimpleTest.finish,0);

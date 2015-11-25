@@ -28,6 +28,7 @@
 #include "imgIContainer.h"
 #include "CounterStyleManager.h"
 
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
@@ -202,7 +203,7 @@ nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
-  return NSCoordSaturatingMultiply(aSize, aPresContext->TextZoom());
+  return NSToCoordTruncClamped(float(aSize) * aPresContext->TextZoom());
 }
 
 /* static */ nscoord
@@ -210,7 +211,7 @@ nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   // aSize can be negative (e.g.: calc(-1px)) so we can't assert that here.
   // The caller is expected deal with that.
-  return NSCoordSaturatingMultiply(aSize, 1.0 / aPresContext->TextZoom());
+  return NSToCoordTruncClamped(float(aSize) / aPresContext->TextZoom());
 }
 
 /* static */ already_AddRefed<nsIAtom>
@@ -2754,8 +2755,8 @@ mozilla::StyleAnimation::SetInitialValues()
   mDuration = 0.0;
   mDelay = 0.0;
   mName = EmptyString();
-  mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
-  mFillMode = NS_STYLE_ANIMATION_FILL_MODE_NONE;
+  mDirection = dom::PlaybackDirection::Normal;
+  mFillMode = dom::FillMode::None;
   mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
   mIterationCount = 1.0f;
 }

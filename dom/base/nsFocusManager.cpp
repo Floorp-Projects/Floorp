@@ -77,8 +77,8 @@ using namespace mozilla::widget;
 // Two types of focus pr logging are available:
 //   'Focus' for normal focus manager calls
 //   'FocusNavigation' for tab and document navigation
-PRLogModuleInfo* gFocusLog;
-PRLogModuleInfo* gFocusNavigationLog;
+LazyLogModule gFocusLog("Focus");
+LazyLogModule gFocusNavigationLog("FocusNavigation");
 
 #define LOGFOCUS(args) MOZ_LOG(gFocusLog, mozilla::LogLevel::Debug, args)
 #define LOGFOCUSNAVIGATION(args) MOZ_LOG(gFocusNavigationLog, mozilla::LogLevel::Debug, args)
@@ -192,9 +192,6 @@ nsFocusManager::Init()
   nsFocusManager* fm = new nsFocusManager();
   NS_ADDREF(fm);
   sInstance = fm;
-
-  gFocusLog = PR_NewLogModule("Focus");
-  gFocusNavigationLog = PR_NewLogModule("FocusNavigation");
 
   nsIContent::sTabFocusModelAppliesToXUL =
     Preferences::GetBool("accessibility.tabfocus_applies_to_xul",

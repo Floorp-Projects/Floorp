@@ -14,6 +14,7 @@ import os
 import sys
 import urlparse
 
+from mozharness.base.log import FATAL
 from mozharness.base.python import PostScriptRun, PreScriptAction
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
@@ -161,6 +162,14 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             vcs='gittool'
         )
 
+    def clobber(self):
+        """Delete the working directory"""
+        super(FirefoxUITests, self).clobber()
+
+        # Also ensure to delete the reports directory to get rid of old files
+        dirs = self.query_abs_dirs()
+        self.rmtree(dirs['abs_reports_dir'], error_level=FATAL)
+
     def copy_reports_to_upload_dir(self):
         self.info("Copying reports to upload dir...")
 
@@ -178,7 +187,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         abs_dirs = VCSToolsScript.query_abs_dirs(self)
         abs_dirs.update({
-            'abs_reports_dir': os.path.join(abs_dirs['abs_work_dir'], 'reports'),
+            'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
             'fx_ui_dir': os.path.join(abs_dirs['abs_work_dir'], 'firefox_ui_tests'),
         })
         self.abs_dirs = abs_dirs

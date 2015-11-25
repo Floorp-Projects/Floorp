@@ -758,9 +758,7 @@ bool gSafeMode = false;
  * singleton.
  */
 class nsXULAppInfo : public nsIXULAppInfo,
-#ifdef E10S_TESTING_ONLY
                      public nsIObserver,
-#endif
 #ifdef XP_WIN
                      public nsIWinAppHelper,
 #endif
@@ -776,9 +774,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
-#ifdef E10S_TESTING_ONLY
   NS_DECL_NSIOBSERVER
-#endif
 #ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
   NS_DECL_NSIFINISHDUMPINGCALLBACK
@@ -791,9 +787,7 @@ public:
 NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULRuntime)
   NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
-#ifdef E10S_TESTING_ONLY
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-#endif
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
 #endif
@@ -997,7 +991,6 @@ static bool gBrowserTabsRemoteAutostart = false;
 static nsString gBrowserTabsRemoteDisabledReason;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
 
-#ifdef E10S_TESTING_ONLY
 NS_IMETHODIMP
 nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) {
   if (!nsCRT::strcmp(aTopic, "getE10SBlocked")) {
@@ -1011,7 +1004,6 @@ nsXULAppInfo::Observe(nsISupports *aSubject, const char *aTopic, const char16_t 
   }
   return NS_ERROR_FAILURE;
 }
-#endif
 
 NS_IMETHODIMP
 nsXULAppInfo::GetBrowserTabsRemoteAutostart(bool* aResult)
@@ -4598,7 +4590,6 @@ XRE_IsContentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Content;
 }
 
-#ifdef E10S_TESTING_ONLY
 static void
 LogE10sBlockedReason(const char *reason) {
   gBrowserTabsRemoteDisabledReason.Assign(NS_ConvertASCIItoUTF16(reason));
@@ -4611,7 +4602,6 @@ LogE10sBlockedReason(const char *reason) {
     console->LogStringMessage(msg.get());
   }
 }
-#endif
 
 enum {
   kE10sEnabledByUser = 0,
@@ -4640,22 +4630,23 @@ mozilla::BrowserTabsRemoteAutostart()
   } else {
     status = kE10sDisabledByUser;
   }
-#if !defined(E10S_TESTING_ONLY)
-  // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and
-  // autostart set to true, return enabled.  These tests must be allowed to run
-  // remotely. Otherwise remote isn't allowed in non-nightly builds.
-  bool testPref = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
-  if (testPref && optInPref) {
-    gBrowserTabsRemoteAutostart = true;
-  }
+
+#ifdef E10S_TESTING_ONLY
+  bool e10sAllowed = true;
 #else
-  // Nightly builds, update gBrowserTabsRemoteAutostart based on all the
-  // e10s remote relayed prefs we watch.
+  // When running tests with 'layers.offmainthreadcomposition.testing.enabled', e10s must be
+  // allowed because these tests must be allowed to run remotely.
+  // We are also allowing e10s to be enabled on Beta (which doesn't have E10S_TESTING_ONLY defined.
+  bool e10sAllowed = Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("beta") ||
+                     Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
+#endif
+
+  // Check for some conditions that might disable e10s.
   bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.disabled-for-a11y", false);
   // Disable for VR
   bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
 
-  if (prefEnabled) {
+  if (e10sAllowed && prefEnabled) {
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1115956.");
@@ -4665,7 +4656,6 @@ mozilla::BrowserTabsRemoteAutostart()
       gBrowserTabsRemoteAutostart = true;
     }
   }
-#endif
 
 #if defined(XP_MACOSX)
   // If for any reason we suspect acceleration will be disabled, disabled
@@ -4701,9 +4691,7 @@ mozilla::BrowserTabsRemoteAutostart()
       gBrowserTabsRemoteAutostart = false;
 
       status = kE10sDisabledForMacGfx;
-#ifdef E10S_TESTING_ONLY
       LogE10sBlockedReason("Hardware acceleration is disabled");
-#endif
     }
   }
 #endif // defined(XP_MACOSX)

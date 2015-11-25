@@ -522,7 +522,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
                        DrawOptions(1.0f, CompositionOp::OP_SOURCE));
     } else {
       SurfacePattern pattern(aSurface,
-                             ExtendMode::REPEAT,
+                             aRegion.GetExtendMode(),
                              Matrix::Translation(mDecoded.x, mDecoded.y));
       target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
     }
@@ -586,6 +586,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
   bool doTile = !imageRect.Contains(aRegion.Rect()) &&
                 !(aImageFlags & imgIContainer::FLAG_CLAMP);
+
   ImageRegion region(aRegion);
   // SurfaceForDrawing changes the current transform, and we need it to still
   // be changed when we call gfxUtils::DrawPixelSnapped. We still need to

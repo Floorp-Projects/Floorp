@@ -31,6 +31,9 @@ function testNormalReturn() {
         "Should have the right property name for the returned value.");
       is(returnVar.value, 10,
         "Should have the right property value for the returned value.");
+      ok(returnVar._internalItem, "Should be an internal item");
+      ok(returnVar._target.hasAttribute("pseudo-item"),
+         "Element should be marked as a pseudo-item")
 
       resumeDebuggee().then(() => testReturnWithException());
     });
@@ -53,6 +56,9 @@ function testReturnWithException() {
         "Should have the right property name for the returned value.");
       is(exceptionVar.value, "boom",
         "Should have the right property value for the returned value.");
+      ok(exceptionVar._internalItem, "Should be an internal item");
+      ok(exceptionVar._target.hasAttribute("pseudo-item"),
+         "Element should be marked as a pseudo-item")
 
       resumeDebuggee().then(() => closeDebuggerAndFinish(gPanel));
     });

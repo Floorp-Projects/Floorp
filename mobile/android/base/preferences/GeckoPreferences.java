@@ -677,13 +677,6 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-                } else if (PREFS_CATEGORY_HOMEPAGE.equals(key)) {
-                    // Only enable the home page setting on Nightly.
-                    if (!AppConstants.NIGHTLY_BUILD) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
                 } else if (PREFS_SCREEN_ADVANCED.equals(key) &&
                         !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_ADVANCED_SETTINGS)) {
                     preferences.removePreference(pref);
@@ -858,13 +851,7 @@ OnSharedPreferenceChangeListener
                 } else if (PREFS_HOMEPAGE.equals(key)) {
                         String setUrl = GeckoSharedPrefs.forProfile(getBaseContext()).getString(PREFS_HOMEPAGE, AboutPages.HOME);
                         setHomePageSummary(pref, setUrl);
-                        pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-                            @Override
-                            public boolean onPreferenceChange(final Preference preference, final Object newValue) {
-                                setHomePageSummary(pref, String.valueOf(newValue));
-                                return true;
-                            }
-                        });
+                        pref.setOnPreferenceChangeListener(this);
                 } else if (PREFS_FAQ_LINK.equals(key)) {
                     // Format the FAQ link
                     final String VERSION = AppConstants.MOZ_APP_VERSION;
@@ -1182,6 +1169,10 @@ OnSharedPreferenceChangeListener
             // We don't want the "use master password" pref to change until the
             // user has gone through the dialog.
             return false;
+        }
+
+        if (PREFS_HOMEPAGE.equals(prefName)) {
+            setHomePageSummary(preference, String.valueOf(newValue));
         }
 
         if (PREFS_BROWSER_LOCALE.equals(prefName)) {

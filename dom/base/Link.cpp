@@ -130,7 +130,7 @@ Link::GetURI() const
 }
 
 void
-Link::SetProtocol(const nsAString &aProtocol, ErrorResult& aError)
+Link::SetProtocol(const nsAString &aProtocol)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -149,7 +149,7 @@ Link::SetProtocol(const nsAString &aProtocol, ErrorResult& aError)
 }
 
 void
-Link::SetPassword(const nsAString &aPassword, ErrorResult& aError)
+Link::SetPassword(const nsAString &aPassword)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -162,7 +162,7 @@ Link::SetPassword(const nsAString &aPassword, ErrorResult& aError)
 }
 
 void
-Link::SetUsername(const nsAString &aUsername, ErrorResult& aError)
+Link::SetUsername(const nsAString &aUsername)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -175,7 +175,7 @@ Link::SetUsername(const nsAString &aUsername, ErrorResult& aError)
 }
 
 void
-Link::SetHost(const nsAString &aHost, ErrorResult& aError)
+Link::SetHost(const nsAString &aHost)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -188,7 +188,7 @@ Link::SetHost(const nsAString &aHost, ErrorResult& aError)
 }
 
 void
-Link::SetHostname(const nsAString &aHostname, ErrorResult& aError)
+Link::SetHostname(const nsAString &aHostname)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -201,7 +201,7 @@ Link::SetHostname(const nsAString &aHostname, ErrorResult& aError)
 }
 
 void
-Link::SetPathname(const nsAString &aPathname, ErrorResult& aError)
+Link::SetPathname(const nsAString &aPathname)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
@@ -215,14 +215,7 @@ Link::SetPathname(const nsAString &aPathname, ErrorResult& aError)
 }
 
 void
-Link::SetSearch(const nsAString& aSearch, ErrorResult& aError)
-{
-  SetSearchInternal(aSearch);
-  UpdateURLSearchParams();
-}
-
-void
-Link::SetSearchInternal(const nsAString& aSearch)
+Link::SetSearch(const nsAString& aSearch)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
@@ -236,7 +229,7 @@ Link::SetSearchInternal(const nsAString& aSearch)
 }
 
 void
-Link::SetPort(const nsAString &aPort, ErrorResult& aError)
+Link::SetPort(const nsAString &aPort)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -261,7 +254,7 @@ Link::SetPort(const nsAString &aPort, ErrorResult& aError)
 }
 
 void
-Link::SetHash(const nsAString &aHash, ErrorResult& aError)
+Link::SetHash(const nsAString &aHash)
 {
   nsCOMPtr<nsIURI> uri(GetURIToMutate());
   if (!uri) {
@@ -274,7 +267,7 @@ Link::SetHash(const nsAString &aHash, ErrorResult& aError)
 }
 
 void
-Link::GetOrigin(nsAString &aOrigin, ErrorResult& aError)
+Link::GetOrigin(nsAString &aOrigin)
 {
   aOrigin.Truncate();
 
@@ -289,7 +282,7 @@ Link::GetOrigin(nsAString &aOrigin, ErrorResult& aError)
 }
 
 void
-Link::GetProtocol(nsAString &_protocol, ErrorResult& aError)
+Link::GetProtocol(nsAString &_protocol)
 {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
@@ -301,11 +294,10 @@ Link::GetProtocol(nsAString &_protocol, ErrorResult& aError)
     CopyASCIItoUTF16(scheme, _protocol);
   }
   _protocol.Append(char16_t(':'));
-  return;
 }
 
 void
-Link::GetUsername(nsAString& aUsername, ErrorResult& aError)
+Link::GetUsername(nsAString& aUsername)
 {
   aUsername.Truncate();
 
@@ -320,7 +312,7 @@ Link::GetUsername(nsAString& aUsername, ErrorResult& aError)
 }
 
 void
-Link::GetPassword(nsAString &aPassword, ErrorResult& aError)
+Link::GetPassword(nsAString &aPassword)
 {
   aPassword.Truncate();
 
@@ -335,7 +327,7 @@ Link::GetPassword(nsAString &aPassword, ErrorResult& aError)
 }
 
 void
-Link::GetHost(nsAString &_host, ErrorResult& aError)
+Link::GetHost(nsAString &_host)
 {
   _host.Truncate();
 
@@ -353,7 +345,7 @@ Link::GetHost(nsAString &_host, ErrorResult& aError)
 }
 
 void
-Link::GetHostname(nsAString &_hostname, ErrorResult& aError)
+Link::GetHostname(nsAString &_hostname)
 {
   _hostname.Truncate();
 
@@ -367,7 +359,7 @@ Link::GetHostname(nsAString &_hostname, ErrorResult& aError)
 }
 
 void
-Link::GetPathname(nsAString &_pathname, ErrorResult& aError)
+Link::GetPathname(nsAString &_pathname)
 {
   _pathname.Truncate();
 
@@ -387,7 +379,7 @@ Link::GetPathname(nsAString &_pathname, ErrorResult& aError)
 }
 
 void
-Link::GetSearch(nsAString &_search, ErrorResult& aError)
+Link::GetSearch(nsAString &_search)
 {
   _search.Truncate();
 
@@ -407,7 +399,7 @@ Link::GetSearch(nsAString &_search, ErrorResult& aError)
 }
 
 void
-Link::GetPort(nsAString &_port, ErrorResult& aError)
+Link::GetPort(nsAString &_port)
 {
   _port.Truncate();
 
@@ -429,7 +421,7 @@ Link::GetPort(nsAString &_port, ErrorResult& aError)
 }
 
 void
-Link::GetHash(nsAString &_hash, ErrorResult& aError)
+Link::GetHash(nsAString &_hash)
 {
   _hash.Truncate();
 
@@ -482,7 +474,6 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
 
   // If we've cached the URI, reset always invalidates it.
   mCachedURI = nullptr;
-  UpdateURLSearchParams();
 
   // Update our state back to the default.
   mLinkState = defaultState;
@@ -569,68 +560,6 @@ Link::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mHistory, because it is non-owning
 
   return n;
-}
-
-URLSearchParams*
-Link::SearchParams()
-{
-  CreateSearchParamsIfNeeded();
-  return mSearchParams;
-}
-
-void
-Link::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
-{
-  MOZ_ASSERT(mSearchParams);
-  MOZ_ASSERT(mSearchParams == aSearchParams);
-
-  nsString search;
-  mSearchParams->Serialize(search);
-  SetSearchInternal(search);
-}
-
-void
-Link::UpdateURLSearchParams()
-{
-  if (!mSearchParams) {
-    return;
-  }
-
-  nsAutoCString search;
-  nsCOMPtr<nsIURI> uri(GetURI());
-  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-  if (url) {
-    nsresult rv = url->GetQuery(search);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get the query from a nsIURL.");
-    }
-  }
-
-  mSearchParams->ParseInput(search);
-}
-
-void
-Link::CreateSearchParamsIfNeeded()
-{
-  if (!mSearchParams) {
-    mSearchParams = new URLSearchParams(this, this);
-    UpdateURLSearchParams();
-  }
-}
-
-void
-Link::Unlink()
-{
-  if (mSearchParams) {
-    mSearchParams = nullptr;
-  }
-}
-
-void
-Link::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
-  Link* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSearchParams);
 }
 
 } // namespace dom

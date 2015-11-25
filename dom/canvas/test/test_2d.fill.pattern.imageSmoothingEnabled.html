@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.fill.pattern.imageSmoothingEnabled</title>
+<!-- Testing: That imageSmoothingEnabled is taken into account when doing pattern fills-->
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="128" height="128"><p class="fallback">FAIL (fallback content)</p></canvas>
+<img id="img">
+<script>
+function isPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+function isNotPixel(ctx, x,y, r,g,b,a, pos, colour, d) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(!(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d),
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; did not expect "+colour+" +/- "+d);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var img = document.getElementById("img");
+img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+
+img.onload = function () {
+  ctx.mozImageSmoothingEnabled = false;
+  ctx.save();
+  ctx.fillStyle = "rgb(127, 127, 127);";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(16, 16);
+  ctx.fillStyle = ctx.createPattern(img, 'no-repeat');
+  ctx.fillRect(0, 0, 8, 8);
+  ctx.restore();
+
+  // Check for nearest filtering.
+  isPixel(ctx, 0,0, 0,0,0,255, "0,0", "0,0,0,255", 0);
+  isPixel(ctx, 14,14, 0,0,0,255, "14,14", "0,0,0,255", 0);
+  isPixel(ctx, 15,15, 0,0,0,255, "15,15", "0,0,0,255", 0);
+  isPixel(ctx, 16,16, 255,0,0,255, "16,16", "255,0,0,255", 0);
+
+  ctx.mozImageSmoothingEnabled = true;
+  ctx.save();
+  ctx.fillStyle = "rgb(127, 127, 127);";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(16, 16);
+  ctx.fillStyle = ctx.createPattern(img, 'no-repeat');
+  ctx.fillRect(0, 0, 8, 8);
+  ctx.restore();
+
+  // Check that nearest filtering is not happening.
+  isPixel(ctx, 0,0, 0,0,0,255, "0,0", "0,0,0,255", 0);
+  isNotPixel(ctx, 14,14, 0,0,0,255, "14,14", "0,0,0,255", 0);
+  isNotPixel(ctx, 15,15, 0,0,0,255, "15,15", "0,0,0,255", 0);
+  isNotPixel(ctx, 16,16, 255,0,0,255, "16,16", "255,0,0,255", 0);
+  isPixel(ctx, 32,32, 255,0,0,255, "32,32", "255,0,0,255", 0);
+  SimpleTest.finish();
+}
+
+});
+</script>
+

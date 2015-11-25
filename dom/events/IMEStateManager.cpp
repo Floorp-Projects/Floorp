@@ -57,7 +57,7 @@ using namespace widget;
  * for debug, log the information with LogLevel::Debug.  In this case, the log
  * should start with "ISM:   <method name>(),".
  */
-PRLogModuleInfo* sISMLog = nullptr;
+LazyLogModule sISMLog("IMEStateManager");
 
 static const char*
 GetBoolName(bool aBool)
@@ -175,10 +175,6 @@ bool IMEStateManager::sRemoteHasFocus = false;
 void
 IMEStateManager::Init()
 {
-  if (!sISMLog) {
-    sISMLog = PR_NewLogModule("IMEStateManager");
-  }
-
   Preferences::AddBoolVarCache(
     &sCheckForIMEUnawareWebApps,
     "intl.ime.hack.on_ime_unaware_apps.fire_key_events_for_composition",

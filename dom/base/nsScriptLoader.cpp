@@ -57,20 +57,17 @@
 #include "mozilla/dom/SRICheck.h"
 #include "nsIScriptError.h"
 
-static PRLogModuleInfo* gCspPRLog;
-
-static PRLogModuleInfo*
-GetSriLog()
-{
-  static PRLogModuleInfo *gSriPRLog;
-  if (!gSriPRLog) {
-    gSriPRLog = PR_NewLogModule("SRI");
-  }
-  return gSriPRLog;
-}
-
 using namespace mozilla;
 using namespace mozilla::dom;
+
+static LazyLogModule gCspPRLog("CSP");
+
+static LogModule*
+GetSriLog()
+{
+  static LazyLogModule gSriPRLog("SRI");
+  return gSriPRLog;
+}
 
 // The nsScriptLoadRequest is passed as the context to necko, and thus
 // it needs to be threadsafe. Necko won't do anything with this
@@ -120,9 +117,6 @@ nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
     mDocumentParsingDone(false),
     mBlockingDOMContentLoaded(false)
 {
-  // enable logging for CSP
-  if (!gCspPRLog)
-    gCspPRLog = PR_NewLogModule("CSP");
 }
 
 nsScriptLoader::~nsScriptLoader()

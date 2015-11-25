@@ -83,6 +83,7 @@ public:
                               bool aMerge) override;
   NS_IMETHOD SetEmptyRequestHeader(const nsACString& aHeader) override;
   NS_IMETHOD RedirectTo(nsIURI *newURI) override;
+  NS_IMETHOD GetProtocolVersion(nsACString& aProtocolVersion) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
   NS_IMETHOD GetLocalAddress(nsACString& addr) override;
@@ -193,6 +194,8 @@ private:
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
   nsCOMPtr<nsISupports> mCacheKey;
+
+  nsCString mProtocolVersion;
 
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
   bool mSendResumeAt;
