@@ -120,7 +120,7 @@ private:
 
   already_AddRefed<AbstractMediaDecoder> SafeGetDecoder();
 
-  NotifyDataArrivedFilter mFilter;
+  MediaByteRangeSet mLastCachedRanges;
 };
 
 } // namespace mozilla

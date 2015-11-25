@@ -214,24 +214,6 @@ private:
 
 };
 
-class NotifyDataArrivedFilter {
-public:
-  media::IntervalSet<int64_t> NotifyDataArrived(uint32_t aLength, int64_t aOffset) {
-    media::Interval<int64_t> interval(aOffset, aOffset + aLength);
-    media::IntervalSet<int64_t> newIntervals(interval);
-    newIntervals -= mIntervals;
-    mIntervals += interval;
-    return newIntervals;
-  }
-
-  const media::IntervalSet<int64_t>& GetIntervals() {
-    return mIntervals;
-  }
-
-private:
-  media::IntervalSet<int64_t> mIntervals;
-};
-
 } // namespace mozilla
 
 #endif
