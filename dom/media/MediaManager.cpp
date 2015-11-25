@@ -927,6 +927,18 @@ MediaOperationTask::ReturnCallbackError(nsresult rv, const char* errorLog)
                                                                  mWindowID)));
 }
 
+static bool
+IsOn(const OwningBooleanOrMediaTrackConstraints &aUnion) {
+  return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
+}
+
+static const MediaTrackConstraints&
+GetInvariant(const OwningBooleanOrMediaTrackConstraints &aUnion) {
+  static const MediaTrackConstraints empty;
+  return aUnion.IsMediaTrackConstraints() ?
+      aUnion.GetAsMediaTrackConstraints() : empty;
+}
+
 /**
  * This class is only needed since fake tracks are added dynamically.
  * Instead of refactoring to add them explicitly we let the DOMMediaStream
@@ -991,10 +1003,12 @@ public:
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
     const nsCString& aOrigin,
+    const MediaStreamConstraints& aConstraints,
     AudioDevice* aAudioDevice,
     VideoDevice* aVideoDevice,
     PeerIdentity* aPeerIdentity)
-    : mAudioDevice(aAudioDevice)
+    : mConstraints(aConstraints)
+    , mAudioDevice(aAudioDevice)
     , mVideoDevice(aVideoDevice)
     , mWindowID(aWindowID)
     , mListener(aListener)
@@ -1164,7 +1178,9 @@ public:
         RefPtr<MediaStreamTrackSource> audioSource =
           new LocalTrackSource(principal, audioDeviceName, mListener, source,
                                kAudioTrack, mPeerIdentity);
-        domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioSource);
+        MOZ_ASSERT(IsOn(mConstraints.mAudio));
+        domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioSource,
+                                  GetInvariant(mConstraints.mAudio));
       }
       if (mVideoDevice) {
         nsString videoDeviceName;
@@ -1174,7 +1190,9 @@ public:
         RefPtr<MediaStreamTrackSource> videoSource =
           new LocalTrackSource(principal, videoDeviceName, mListener, source,
                                kVideoTrack, mPeerIdentity);
-        domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoSource);
+        MOZ_ASSERT(IsOn(mConstraints.mVideo));
+        domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoSource,
+                                  GetInvariant(mConstraints.mVideo));
       }
       stream = domStream->GetInputStream()->AsSourceStream();
     }
@@ -1228,6 +1246,7 @@ public:
 private:
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
+  MediaStreamConstraints mConstraints;
   RefPtr<AudioDevice> mAudioDevice;
   RefPtr<VideoDevice> mVideoDevice;
   uint64_t mWindowID;
@@ -1236,18 +1255,6 @@ private:
   RefPtr<PeerIdentity> mPeerIdentity;
   RefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
-
-static bool
-IsOn(const OwningBooleanOrMediaTrackConstraints &aUnion) {
-  return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
-}
-
-static const MediaTrackConstraints&
-GetInvariant(const OwningBooleanOrMediaTrackConstraints &aUnion) {
-  static const MediaTrackConstraints empty;
-  return aUnion.IsMediaTrackConstraints() ?
-      aUnion.GetAsMediaTrackConstraints() : empty;
-}
 
 // Source getter returning full list
 
@@ -1451,8 +1458,9 @@ public:
 
     NS_DispatchToMainThread(do_AddRef(
         new GetUserMediaStreamRunnable(mOnSuccess, mOnFailure, mWindowID,
-                                       mListener, mOrigin, mAudioDevice,
-                                       mVideoDevice, peerIdentity)));
+                                       mListener, mOrigin, mConstraints,
+                                       mAudioDevice, mVideoDevice,
+                                       peerIdentity)));
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
     return NS_OK;
