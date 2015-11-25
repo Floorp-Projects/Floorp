@@ -183,6 +183,9 @@ SandboxInfo::SandboxInfo() {
   if (!getenv("MOZ_DISABLE_CONTENT_SANDBOX")) {
     flags |= kEnabledForContent;
   }
+  if (getenv("MOZ_PERMISSIVE_CONTENT_SANDBOX")) {
+    flags |= kPermissive;
+  }
 #endif
 #ifdef MOZ_GMP_SANDBOX
   if (!getenv("MOZ_DISABLE_GMP_SANDBOX")) {

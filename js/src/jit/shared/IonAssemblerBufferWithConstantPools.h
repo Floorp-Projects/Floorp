@@ -72,11 +72,320 @@
 // instructions. The base assembler buffer which supports variable width
 // instruction is used by the x86 and x64 backends.
 
+// The AssemblerBufferWithConstantPools template class uses static callbacks to
+// the provided Asm template argument class:
+//
+// void Asm::InsertIndexIntoTag(uint8_t* load_, uint32_t index)
+//
+//   When allocEntry() is called to add a constant pool load with an associated
+//   constant pool entry, this callback is called to encode the index of the
+//   allocated constant pool entry into the load instruction.
+//
+//   After the constant pool has been placed, PatchConstantPoolLoad() is called
+//   to update the load instruction with the right load offset.
+//
+// void Asm::WritePoolGuard(BufferOffset branch,
+//                          Instruction* dest,
+//                          BufferOffset afterPool)
+//
+//   Write out the constant pool guard branch before emitting the pool.
+//
+//   branch
+//     Offset of the guard branch in the buffer.
+//
+//   dest
+//     Pointer into the buffer where the guard branch should be emitted. (Same
+//     as getInst(branch)). Space for guardSize_ instructions has been reserved.
+//
+//   afterPool
+//     Offset of the first instruction after the constant pool. This includes
+//     both pool entries and branch veneers added after the pool data.
+//
+// void Asm::WritePoolHeader(uint8_t* start, Pool* p, bool isNatural)
+//
+//   Write out the pool header which follows the guard branch.
+//
+// void Asm::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
+//
+//   Re-encode a load of a constant pool entry after the location of the
+//   constant pool is known.
+//
+//   The load instruction at loadAddr was previously passed to
+//   InsertIndexIntoTag(). The constPoolAddr is the final address of the
+//   constant pool in the assembler buffer.
+//
+// void Asm::PatchShortRangeBranchToVeneer(AssemblerBufferWithConstantPools*,
+//                                         unsigned rangeIdx,
+//                                         BufferOffset deadline,
+//                                         BufferOffset veneer)
+//
+//   Patch a short-range branch to jump through a veneer before it goes out of
+//   range.
+//
+//   rangeIdx, deadline
+//     These arguments were previously passed to registerBranchDeadline(). It is
+//     assumed that PatchShortRangeBranchToVeneer() knows how to compute the
+//     offset of the short-range branch from this information.
+//
+//   veneer
+//     Space for a branch veneer, guaranteed to be <= deadline. At this
+//     position, guardSize_ * InstSize bytes are allocated. They should be
+//     initialized to the proper unconditional branch instruction.
+//
+//   Unbound branches to the same unbound label are organized as a linked list:
+//
+//     Label::offset -> Branch1 -> Branch2 -> Branch3 -> nil
+//
+//   This callback should insert a new veneer branch into the list:
+//
+//     Label::offset -> Branch1 -> Branch2 -> Veneer -> Branch3 -> nil
+//
+//   When Assembler::bind() rewrites the branches with the real label offset, it
+//   probably has to bind Branch2 to target the veneer branch instead of jumping
+//   straight to the label.
+
 namespace js {
 namespace jit {
 
+// BranchDeadlineSet - Keep track of pending branch deadlines.
+//
+// Some architectures like arm and arm64 have branch instructions with limited
+// range. When assembling a forward branch, it is not always known if the final
+// target label will be in range of the branch instruction.
+//
+// The BranchDeadlineSet data structure is used to keep track of the set of
+// pending forward branches. It supports the following fast operations:
+//
+// 1. Get the earliest deadline in the set.
+// 2. Add a new branch deadline.
+// 3. Remove a branch deadline.
+//
+// Architectures may have different branch encodings with different ranges. Each
+// supported range is assigned a small integer starting at 0. This data
+// structure does not care about the actual range of branch instructions, just
+// the latest buffer offset that can be reached - the deadline offset.
+//
+// Branched are stored as (rangeIdx, deadline) tuples. The target-specific code
+// can compute the location of the branch itself from this information. This
+// data structure does not need to know.
+//
+template <unsigned NumRanges>
+class BranchDeadlineSet
+{
+    // Maintain a list of pending deadlines for each range separately.
+    //
+    // The offsets in each vector are always kept in ascending order.
+    //
+    // Because we have a separate vector for different ranges, as forward
+    // branches are added to the assembler buffer, their deadlines will
+    // always be appended to the vector corresponding to their range.
+    //
+    // When binding labels, we expect a more-or-less LIFO order of branch
+    // resolutions. This would always hold if we had strictly structured control
+    // flow.
+    //
+    // We allow branch deadlines to be added and removed in any order, but
+    // performance is best in the expected case of near LIFO order.
+    //
+    typedef Vector<BufferOffset, 8, LifoAllocPolicy<Fallible>> RangeVector;
+
+    // We really just want "RangeVector deadline_[NumRanges];", but each vector
+    // needs to be initialized with a LifoAlloc, and C++ doesn't bend that way.
+    //
+    // Use raw aligned storage instead and explicitly construct NumRanges
+    // vectors in our constructor.
+    mozilla::AlignedStorage2<RangeVector[NumRanges]> deadlineStorage_;
+
+    // Always access the range vectors through this method.
+    RangeVector& vectorForRange(unsigned rangeIdx)
+    {
+        MOZ_ASSERT(rangeIdx < NumRanges, "Invalid branch range index");
+        return (*deadlineStorage_.addr())[rangeIdx];
+    }
+
+    const RangeVector& vectorForRange(unsigned rangeIdx) const
+    {
+        MOZ_ASSERT(rangeIdx < NumRanges, "Invalid branch range index");
+        return (*deadlineStorage_.addr())[rangeIdx];
+    }
+
+    // Maintain a precomputed earliest deadline at all times.
+    // This is unassigned only when all deadline vectors are empty.
+    BufferOffset earliest_;
+
+    // The range vector owning earliest_. Uninitialized when empty.
+    unsigned earliestRange_;
+
+    // Recompute the earliest deadline after it's been invalidated.
+    void recomputeEarliest()
+    {
+        earliest_ = BufferOffset();
+        for (unsigned r = 0; r < NumRanges; r++) {
+            auto& vec = vectorForRange(r);
+            if (!vec.empty() && (!earliest_.assigned() || vec[0] < earliest_)) {
+                earliest_ = vec[0];
+                earliestRange_ = r;
+            }
+        }
+    }
+
+    // Update the earliest deadline if needed after inserting (rangeIdx,
+    // deadline). Always return true for convenience:
+    // return insert() && updateEarliest().
+    bool updateEarliest(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!earliest_.assigned() || deadline < earliest_) {
+            earliest_ = deadline;
+            earliestRange_ = rangeIdx;
+        }
+        return true;
+    }
+
+  public:
+    explicit BranchDeadlineSet(LifoAlloc& alloc)
+    {
+        // Manually construct vectors in the uninitialized aligned storage.
+        // This is because C++ arrays can otherwise only be constructed with
+        // the default constructor.
+        for (unsigned r = 0; r < NumRanges; r++)
+            new (&vectorForRange(r)) RangeVector(alloc);
+    }
+
+    ~BranchDeadlineSet()
+    {
+        // Aligned storage doesn't destruct its contents automatically.
+        for (unsigned r = 0; r < NumRanges; r++)
+            vectorForRange(r).~RangeVector();
+    }
+
+    // Is this set completely empty?
+    bool empty() const { return !earliest_.assigned(); }
+
+    // Get the total number of deadlines in the set.
+    size_t size() const
+    {
+        size_t count = 0;
+        for (unsigned r = 0; r < NumRanges; r++)
+            count += vectorForRange(r).length();
+        return count;
+    }
+
+    // Get the number of deadlines for the range with the most elements.
+    size_t maxRangeSize() const
+    {
+        size_t count = 0;
+        for (unsigned r = 0; r < NumRanges; r++)
+            count = std::max(count, vectorForRange(r).length());
+        return count;
+    }
+
+    // Get the first deadline that is still in the set.
+    BufferOffset earliestDeadline() const
+    {
+        MOZ_ASSERT(!empty());
+        return earliest_;
+    }
+
+    // Get the range index corresponding to earliestDeadlineRange().
+    unsigned earliestDeadlineRange() const
+    {
+        MOZ_ASSERT(!empty());
+        return earliestRange_;
+    }
+
+    // Add a (rangeIdx, deadline) tuple to the set.
+    //
+    // It is assumed that this tuple is not already in the set.
+    // This function performs best id the added deadline is later than any
+    // existing deadline for the same range index.
+    //
+    // Return true if the tuple was added, false if the tuple could not be added
+    // because of an OOM error.
+    bool addDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        MOZ_ASSERT(deadline.assigned(), "Can only store assigned buffer offsets");
+        // This is the vector where deadline should be saved.
+        auto& vec = vectorForRange(rangeIdx);
+
+        // Fast case: Simple append to the relevant array. This never affects
+        // the earliest deadline.
+        if (!vec.empty() && vec.back() < deadline)
+            return vec.append(deadline);
+
+        // Fast case: First entry to the vector. We need to update earliest_.
+        if (vec.empty())
+            return vec.append(deadline) && updateEarliest(rangeIdx, deadline);
+
+        return addDeadlineSlow(rangeIdx, deadline);
+    }
+
+  private:
+    // General case of addDeadline. This is split into two functions such that
+    // the common case in addDeadline can be inlined while this part probably
+    // won't inline.
+    bool addDeadlineSlow(unsigned rangeIdx, BufferOffset deadline)
+    {
+        auto& vec = vectorForRange(rangeIdx);
+
+        // Inserting into the middle of the vector. Use a log time binary search
+        // and a linear time insert().
+        // Is it worthwhile special-casing the empty vector?
+        auto at = std::lower_bound(vec.begin(), vec.end(), deadline);
+        MOZ_ASSERT(at == vec.end() || *at != deadline, "Cannot insert duplicate deadlines");
+        return vec.insert(at, deadline) && updateEarliest(rangeIdx, deadline);
+    }
+
+  public:
+    // Remove a deadline from the set.
+    // If (rangeIdx, deadline) is not in the set, nothing happens.
+    void removeDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        auto& vec = vectorForRange(rangeIdx);
+
+        if (vec.empty())
+            return;
+
+        if (deadline == vec.back()) {
+            // Expected fast case: Structured control flow causes forward
+            // branches to be bound in reverse order.
+            vec.popBack();
+        } else {
+            // Slow case: Binary search + linear erase.
+            auto where = std::lower_bound(vec.begin(), vec.end(), deadline);
+            if (where == vec.end() || *where != deadline)
+                return;
+            vec.erase(where);
+        }
+        if (deadline == earliest_)
+            recomputeEarliest();
+    }
+};
+
+// Specialization for architectures that don't need to track short-range
+// branches.
+template <>
+class BranchDeadlineSet<0u>
+{
+  public:
+    explicit BranchDeadlineSet(LifoAlloc& alloc) {}
+    bool empty() const { return true; }
+    size_t size() const { return 0; }
+    size_t maxRangeSize() const { return 0; }
+    BufferOffset earliestDeadline() const { MOZ_CRASH(); }
+    unsigned earliestDeadlineRange() const { MOZ_CRASH(); }
+    bool addDeadline(unsigned rangeIdx, BufferOffset deadline) { MOZ_CRASH(); }
+    void removeDeadline(unsigned rangeIdx, BufferOffset deadline) { MOZ_CRASH(); }
+};
+
 // The allocation unit size for pools.
 typedef int32_t PoolAllocUnit;
+
+// Hysteresis given to short-range branches.
+//
+// If any short-range branches will go out of range in the next N bytes,
+// generate a veneer for them in the current pool. The hysteresis prevents the
+// creation of many tiny constant pools for branch veneers.
+const size_t ShortRangeBranchHysteresis = 128;
 
 struct Pool
 {
@@ -199,9 +508,37 @@ struct Pool
 };
 
 
-// The InstSize is the sizeof(Inst) but is needed here because the buffer is
-// defined before the Instruction.
-template <size_t SliceSize, size_t InstSize, class Inst, class Asm>
+// Template arguments:
+//
+// SliceSize
+//   Number of bytes in each allocated BufferSlice. See
+//   AssemblerBuffer::SliceSize.
+//
+// InstSize
+//   Size in bytes of the fixed-size instructions. This should be equal to
+//   sizeof(Inst). This is only needed here because the buffer is defined before
+//   the Instruction.
+//
+// Inst
+//   The actual type used to represent instructions. This is only really used as
+//   the return type of the getInst() method.
+//
+// Asm
+//   Class defining the needed static callback functions. See documentation of
+//   the Asm::* callbacks above.
+//
+// NumShortBranchRanges
+//   The number of short branch ranges to support. This can be 0 if no support
+//   for tracking short range branches is needed. The
+//   AssemblerBufferWithConstantPools class does not need to know what the range
+//   of branches is - it deals in branch 'deadlines' which is the last buffer
+//   position that a short-range forward branch can reach. It is assumed that
+//   the Asm class is able to find the actual branch instruction given a
+//   (range-index, deadline) pair.
+//
+//
+template <size_t SliceSize, size_t InstSize, class Inst, class Asm,
+          unsigned NumShortBranchRanges = 0>
 struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst>
 {
   private:
@@ -272,8 +609,17 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
     };
 
-    // Info for each pool that has already been dumped. This does not include any entries in pool_.
+    // Info for each pool that has already been dumped. This does not include
+    // any entries in pool_.
     Vector<PoolInfo, 8, LifoAllocPolicy<Fallible>> poolInfo_;
+
+    // Set of short-range forward branches that have not yet been bound.
+    // We may need to insert veneers if the final label turns out to be out of
+    // range.
+    //
+    // This set stores (rangeIdx, deadline) pairs instead of the actual branch
+    // locations.
+    BranchDeadlineSet<NumShortBranchRanges> branchDeadlines_;
 
     // When true dumping pools is inhibited.
     bool canNotPlacePool_;
@@ -330,6 +676,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         pool_(poolMaxOffset, pcBias, this->lifoAlloc_),
         instBufferAlign_(instBufferAlign),
         poolInfo_(this->lifoAlloc_),
+        branchDeadlines_(this->lifoAlloc_),
         canNotPlacePool_(false),
 #ifdef DEBUG
         canNotPlacePoolStartOffset_(0),
@@ -383,18 +730,65 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     static const unsigned OOM_FAIL = unsigned(-1);
     static const unsigned NO_DATA = unsigned(-2);
 
-    unsigned insertEntryForwards(unsigned numInst, unsigned numPoolEntries, uint8_t* inst, uint8_t* data) {
+    // Check if it is possible to add numInst instructions and numPoolEntries
+    // constant pool entries without needing to flush the current pool.
+    bool hasSpaceForInsts(unsigned numInsts, unsigned numPoolEntries) const
+    {
         size_t nextOffset = sizeExcludingCurrentPool();
-        size_t poolOffset = nextOffset + (numInst + guardSize_ + headerSize_) * InstSize;
+        // Earliest starting offset for the current pool after adding numInsts.
+        // This is the beginning of the pool entries proper, after inserting a
+        // guard branch + pool header.
+        size_t poolOffset = nextOffset + (numInsts + guardSize_ + headerSize_) * InstSize;
 
-        // Perform the necessary range checks.
+        // Any constant pool loads that would go out of range?
+        if (pool_.checkFull(poolOffset))
+            return false;
 
+        // Any short-range branch that would go out of range?
+        if (!branchDeadlines_.empty()) {
+            size_t deadline = branchDeadlines_.earliestDeadline().getOffset();
+            size_t poolEnd =
+              poolOffset + pool_.getPoolSize() + numPoolEntries * sizeof(PoolAllocUnit);
+
+            // When NumShortBranchRanges > 1, is is possible for branch deadlines to expire faster
+            // than we can insert veneers. Suppose branches are 4 bytes each, we could have the
+            // following deadline set:
+            //
+            //   Range 0: 40, 44, 48
+            //   Range 1: 44, 48
+            //
+            // It is not good enough to start inserting veneers at the 40 deadline; we would not be
+            // able to create veneers for the second 44 deadline. Instead, we need to start at 32:
+            //
+            //   32: veneer(40)
+            //   36: veneer(44)
+            //   40: veneer(44)
+            //   44: veneer(48)
+            //   48: veneer(48)
+            //
+            // This is a pretty conservative solution to the problem: If we begin at the earliest
+            // deadline, we can always emit all veneers for the range that currently has the most
+            // pending deadlines. That may not leave room for veneers for the remaining ranges, so
+            // reserve space for those secondary range veneers assuming the worst case deadlines.
+
+            // Total pending secondary range veneer size.
+            size_t secondaryVeneers =
+              guardSize_ * (branchDeadlines_.size() - branchDeadlines_.maxRangeSize());
+
+            if (deadline < poolEnd + secondaryVeneers)
+                return false;
+        }
+
+        return true;
+    }
+
+    unsigned insertEntryForwards(unsigned numInst, unsigned numPoolEntries, uint8_t* inst, uint8_t* data) {
         // If inserting pool entries then find a new limiter before we do the
         // range check.
         if (numPoolEntries)
-            pool_.updateLimiter(BufferOffset(nextOffset));
+            pool_.updateLimiter(BufferOffset(sizeExcludingCurrentPool()));
 
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(numInst, numPoolEntries)) {
             if (numPoolEntries)
                 JitSpew(JitSpew_Pools, "[%d] Inserting pool entry caused a spill", id);
             else
@@ -426,14 +820,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     // This may flush the current constant pool before returning nextOffset().
     BufferOffset nextInstrOffset()
     {
-        size_t nextOffset = sizeExcludingCurrentPool();
-        // Is there room for a single instruction more?
-        size_t poolOffset =
-          nextOffset + (1 + guardSize_ + headerSize_) * InstSize;
-        if (pool_.checkFull(poolOffset)) {
-            JitSpew(JitSpew_Pools,
-                    "[%d] nextInstrOffset @ %d caused a constant pool spill",
-                    id, nextOffset);
+        if (!hasSpaceForInsts(/* numInsts= */ 1, /* numPoolEntries= */ 0)) {
+            JitSpew(JitSpew_Pools, "[%d] nextInstrOffset @ %d caused a constant pool spill", id,
+                    this->nextOffset().getOffset());
             finishPool();
         }
         return this->nextOffset();
@@ -491,12 +880,65 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         return allocEntry(1, 0, (uint8_t*)&value, nullptr, nullptr, markAsBranch);
     }
 
+    // Register a short-range branch deadline.
+    //
+    // After inserting a short-range forward branch, call this method to
+    // register the branch 'deadline' which is the last buffer offset that the
+    // branch instruction can reach.
+    //
+    // When the branch is bound to a destination label, call
+    // unregisterBranchDeadline() to stop tracking this branch,
+    //
+    // If the assembled code is about to exceed the registered branch deadline,
+    // and unregisterBranchDeadline() has not yet been called, an
+    // instruction-sized constant pool entry is allocated before the branch
+    // deadline.
+    //
+    // rangeIdx
+    //   A number < NumShortBranchRanges identifying the range of the branch.
+    //
+    // deadline
+    //   The highest buffer offset the the short-range branch can reach
+    //   directly.
+    //
+    void registerBranchDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!this->oom() && !branchDeadlines_.addDeadline(rangeIdx, deadline))
+            this->fail_oom();
+    }
+
+    // Un-register a short-range branch deadline.
+    //
+    // When a short-range branch has been successfully bound to its destination
+    // label, call this function to stop traching the branch.
+    //
+    // The (rangeIdx, deadline) pair must be previously registered.
+    //
+    void unregisterBranchDeadline(unsigned rangeIdx, BufferOffset deadline)
+    {
+        if (!this->oom())
+            branchDeadlines_.removeDeadline(rangeIdx, deadline);
+    }
+
   private:
+    // Are any short-range branches about to expire?
+    bool hasExpirableShortRangeBranches() const
+    {
+        if (branchDeadlines_.empty())
+            return false;
+
+        // Include branches that would expire in the next N bytes.
+        // The hysteresis avoids the needless creation of many tiny constant
+        // pools.
+        return this->nextOffset().getOffset() + ShortRangeBranchHysteresis >
+               size_t(branchDeadlines_.earliestDeadline().getOffset());
+    }
+
     void finishPool() {
         JitSpew(JitSpew_Pools, "[%d] Attempting to finish pool %d with %d entries.", id,
                 poolInfo_.length(), pool_.numEntries());
 
-        if (pool_.numEntries() == 0) {
+        if (pool_.numEntries() == 0 && !hasExpirableShortRangeBranches()) {
             // If there is no data in the pool being dumped, don't dump anything.
             JitSpew(JitSpew_Pools, "[%d] Aborting because the pool is empty", id);
             return;
@@ -512,6 +954,27 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
           this->putBytesLarge(pool_.getPoolSize(), (const uint8_t*)pool_.poolData());
         if (this->oom())
             return;
+
+        // Now generate branch veneers for any short-range branches that are
+        // about to expire.
+        while (hasExpirableShortRangeBranches()) {
+            unsigned rangeIdx = branchDeadlines_.earliestDeadlineRange();
+            BufferOffset deadline = branchDeadlines_.earliestDeadline();
+
+            // Stop tracking this branch. The Asm callback below may register
+            // new branches to track.
+            branchDeadlines_.removeDeadline(rangeIdx, deadline);
+
+            // Make room for the veneer. Same as a pool guard branch.
+            BufferOffset veneer = this->putBytes(guardSize_ * InstSize, nullptr);
+            if (this->oom())
+                return;
+
+            // Fix the branch so it targets the veneer.
+            // The Asm class knows how to find the original branch given the
+            // (rangeIdx, deadline) pair.
+            Asm::PatchShortRangeBranchToVeneer(this, rangeIdx, deadline, veneer);
+        }
 
         // We only reserved space for the guard branch and pool header.
         // Fill them in.
@@ -573,9 +1036,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         // so then finish the pool before entering the no-pool region. It is
         // assumed that no pool entries are allocated in a no-pool region and
         // this is asserted when allocating entries.
-        size_t poolOffset = sizeExcludingCurrentPool() + (maxInst + guardSize_ + headerSize_) * InstSize;
-
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(maxInst, 0)) {
             JitSpew(JitSpew_Pools, "[%d] No-Pool instruction(%d) caused a spill.", id,
                     sizeExcludingCurrentPool());
             finishPool();
@@ -600,7 +1061,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
     void align(unsigned alignment) {
-        MOZ_ASSERT(IsPowerOfTwo(alignment));
+        MOZ_ASSERT(IsPowerOfTwo(alignment) && alignment >= InstSize);
 
         // A pool many need to be dumped at this point, so insert NOP fill here.
         insertNopFill();
@@ -613,9 +1074,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
 
         // Add an InstSize because it is probably not useful for a pool to be
         // dumped at the aligned code position.
-        uint32_t poolOffset = sizeExcludingCurrentPool() + requiredFill
-                              + (1 + guardSize_ + headerSize_) * InstSize;
-        if (pool_.checkFull(poolOffset)) {
+        if (!hasSpaceForInsts(requiredFill / InstSize + 1, 0)) {
             // Alignment would cause a pool dump, so dump the pool now.
             JitSpew(JitSpew_Pools, "[%d] Alignment of %d at %d caused a spill.", id, alignment,
                     sizeExcludingCurrentPool());

@@ -63,7 +63,8 @@ protected:
   static bool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, uint32_t* outDataLen ) ;
   static bool FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, uint32_t* outDataLen ) ;
   static bool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, uint32_t* outDataLen ) ;
-  static bool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, uint32_t* outDataLen );
+  static bool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData,
+                                 uint32_t* outStartOfData, uint32_t* outDataLen );
   static void ResolveShortcut ( nsIFile* inFileName, nsACString& outURL ) ;
 
   nsIWidget         * mWindow;

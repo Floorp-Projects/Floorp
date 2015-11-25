@@ -18,6 +18,10 @@
 struct JSContext;
 class nsIEventTarget;
 
+namespace mozilla {
+class ErrorResult;
+} // namespace mozilla
+
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
@@ -403,10 +407,33 @@ protected:
   virtual bool MainThreadRun() = 0;
 
 public:
-  bool Dispatch(JSContext* aCx);
+  // Dispatch the runnable to the main thread.  If dispatch to main thread
+  // fails, or if the worker is shut down while dispatching, an error will be
+  // reported on aRv.  In that case the error MUST be propagated out to script.
+  void Dispatch(ErrorResult& aRv);
 
 private:
   NS_IMETHOD Run() override;
+};
+
+// Class for checking API exposure.  This totally violates the "MUST" in the
+// comments on WorkerMainThreadRunnable::Dispatch, because API exposure checks
+// can't throw.  Maybe we should change it so they _could_ throw.  But for now
+// we are bad people and should be ashamed of ourselves.  Let's hope none of
+// them happen while a worker is shutting down.
+//
+// Do NOT copy what this class is doing elsewhere.  Just don't.
+class WorkerCheckAPIExposureOnMainThreadRunnable : public WorkerMainThreadRunnable
+{
+public:
+  explicit WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate):
+    WorkerMainThreadRunnable(aWorkerPrivate)
+  {}
+  ~WorkerCheckAPIExposureOnMainThreadRunnable() {}
+
+  // Returns whether the dispatch succeeded.  If this returns false, the API
+  // should not be exposed.
+  bool Dispatch();
 };
 
 END_WORKERS_NAMESPACE

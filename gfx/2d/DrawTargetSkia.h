@@ -117,6 +117,11 @@ public:
                          SurfaceFormat aFormat) override;
 #endif
 
+  // Skia assumes that texture sizes fit in 16-bit signed integers.
+  static size_t GetMaxSurfaceSize() {
+    return 32767;
+  }
+
   operator std::string() const {
     std::stringstream stream;
     stream << "DrawTargetSkia(" << this << ")";

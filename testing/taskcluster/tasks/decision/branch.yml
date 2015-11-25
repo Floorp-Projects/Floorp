@@ -66,16 +66,24 @@ tasks:
           - -cx
           - >
             source ./bin/decision.sh &&
+            mkdir -p /home/worker/artifacts &&
             ./mach taskcluster-graph
             --pushlog-id='{{pushlog_id}}'
             --message='{{comment}}'
             --project='{{project}}'
             --owner='{{owner}}'
             --revision-hash='{{revision_hash}}'
-            --extend-graph > /home/worker/graph.json
+            --extend-graph > /home/worker/artifacts/graph.json
         graphs:
-          - /home/worker/graph.json
-
+          - /home/worker/artifacts/graph.json
+        artifacts:
+          'public':
+            type: 'directory'
+            path: '/home/worker/artifacts'
+            # Arbitrary value for keeping these artifacts around.  They are just the
+            # graph.json and context directories for now, so nothing that needs
+            # to stay around for long.
+            expires: '{{#from_now}}7 days{{/from_now}}'
       extra:
         treeherder:
           symbol: D

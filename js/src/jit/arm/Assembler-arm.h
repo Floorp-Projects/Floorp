@@ -1855,6 +1855,13 @@ class Assembler : public AssemblerShared
     // load using the index we'd computed previously as well as the address of
     // the pool start.
     static void PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
+
+    // We're not tracking short-range branches for ARM for now.
+    static void PatchShortRangeBranchToVeneer(ARMBuffer*, unsigned rangeIdx, BufferOffset deadline,
+                                              BufferOffset veneer)
+    {
+        MOZ_CRASH();
+    }
     // END API
 
     // Move our entire pool into the instruction stream. This is to force an

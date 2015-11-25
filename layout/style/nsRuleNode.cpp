@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 
@@ -5276,12 +5277,13 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       animation->SetDirection(parentDisplay->mAnimations[i].GetDirection());
     } else if (animDirection.unit == eCSSUnit_Initial ||
                animDirection.unit == eCSSUnit_Unset) {
-      animation->SetDirection(NS_STYLE_ANIMATION_DIRECTION_NORMAL);
+      animation->SetDirection(dom::PlaybackDirection::Normal);
     } else if (animDirection.list) {
       MOZ_ASSERT(animDirection.list->mValue.GetUnit() == eCSSUnit_Enumerated,
                  "Invalid animation-direction unit");
 
-      animation->SetDirection(animDirection.list->mValue.GetIntValue());
+      animation->SetDirection(
+          static_cast<dom::PlaybackDirection>(animDirection.list->mValue.GetIntValue()));
     }
 
     if (i >= animFillMode.num) {
@@ -5294,12 +5296,13 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       animation->SetFillMode(parentDisplay->mAnimations[i].GetFillMode());
     } else if (animFillMode.unit == eCSSUnit_Initial ||
                animFillMode.unit == eCSSUnit_Unset) {
-      animation->SetFillMode(NS_STYLE_ANIMATION_FILL_MODE_NONE);
+      animation->SetFillMode(dom::FillMode::None);
     } else if (animFillMode.list) {
       MOZ_ASSERT(animFillMode.list->mValue.GetUnit() == eCSSUnit_Enumerated,
                  "Invalid animation-fill-mode unit");
 
-      animation->SetFillMode(animFillMode.list->mValue.GetIntValue());
+      animation->SetFillMode(
+          static_cast<dom::FillMode>(animFillMode.list->mValue.GetIntValue()));
     }
 
     if (i >= animPlayState.num) {

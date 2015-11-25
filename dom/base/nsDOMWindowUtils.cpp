@@ -471,11 +471,7 @@ nsDOMWindowUtils::SetResolution(float aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-  if (sf) {
-    sf->SetResolution(aResolution);
-    presShell->SetResolution(aResolution);
-  }
+  presShell->SetResolution(aResolution);
 
   return NS_OK;
 }
@@ -488,7 +484,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  nsLayoutUtils::SetResolutionAndScaleTo(presShell, aResolution);
+  presShell->SetResolutionAndScaleTo(aResolution);
 
   return NS_OK;
 }
@@ -501,7 +497,7 @@ nsDOMWindowUtils::GetResolution(float* aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  *aResolution = nsLayoutUtils::GetResolution(presShell);
+  *aResolution = presShell->GetResolution();
 
   return NS_OK;
 }
@@ -513,8 +509,7 @@ nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
     return NS_ERROR_FAILURE;
   }
 
-  const nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-  *aIsResolutionSet = sf && sf->IsResolutionSet();
+  *aIsResolutionSet = presShell->IsResolutionSet();
 
   return NS_OK;
 }

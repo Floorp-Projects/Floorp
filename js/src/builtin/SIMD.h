@@ -346,19 +346,30 @@ class SIMDObject : public JSObject
 {
   public:
     static const Class class_;
-    static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
     static bool toString(JSContext* cx, unsigned int argc, Value* vp);
 };
 
-// These classes exist for use with templates below.
+// These classes implement the concept containing the following constraints:
+// - requires typename Elem: this is the scalar lane type, stored in each lane
+// of the SIMD vector.
+// - requires static const unsigned lanes: this is the number of lanes (length)
+// of the SIMD vector.
+// - requires static const SimdTypeDescr::Type type: this is the SimdTypeDescr
+// enum value corresponding to the SIMD type.
+// - requires static bool Cast(JSContext*, JS::HandleValue, Elem*): casts a
+// given Value to the current scalar lane type and saves it in the Elem
+// out-param.
+// - requires static Value ToValue(Elem): returns a Value of the right type
+// containing the given value.
+//
+// This concept is used in the templates above to define the functions
+// associated to a given type and in their implementations, to avoid code
+// redundancy.
 
 struct Float32x4 {
     typedef float Elem;
     static const unsigned lanes = 4;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
-    static TypeDescr& GetTypeDescr(GlobalObject& global) {
-        return global.float32x4TypeDescr().as<TypeDescr>();
-    }
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         double d;
         if (!ToNumber(cx, v, &d))
@@ -375,9 +386,6 @@ struct Float64x2 {
     typedef double Elem;
     static const unsigned lanes = 2;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
-    static TypeDescr& GetTypeDescr(GlobalObject& global) {
-        return global.float64x2TypeDescr().as<TypeDescr>();
-    }
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToNumber(cx, v, out);
     }
@@ -390,10 +398,6 @@ struct Int8x16 {
     typedef int8_t Elem;
     static const unsigned lanes = 16;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int8x16;
-
-    static TypeDescr& GetTypeDescr(GlobalObject& global) {
-        return global.int8x16TypeDescr().as<TypeDescr>();
-    }
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt8(cx, v, out);
     }
@@ -406,10 +410,6 @@ struct Int16x8 {
     typedef int16_t Elem;
     static const unsigned lanes = 8;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int16x8;
-
-    static TypeDescr& GetTypeDescr(GlobalObject& global) {
-        return global.int16x8TypeDescr().as<TypeDescr>();
-    }
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt16(cx, v, out);
     }
@@ -422,10 +422,6 @@ struct Int32x4 {
     typedef int32_t Elem;
     static const unsigned lanes = 4;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
-
-    static TypeDescr& GetTypeDescr(GlobalObject& global) {
-        return global.int32x4TypeDescr().as<TypeDescr>();
-    }
     static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt32(cx, v, out);
     }
