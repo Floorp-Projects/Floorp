@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1170760
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1170760</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1170760">Mozilla Bug 1170760</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t" src="http://example.org/tests/dom/promise/tests/file_promise_xrays.html"></iframe>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+var win = $("t").contentWindow;
+
+/** Test for Bug 1170760 **/
+SimpleTest.waitForExplicitFinish();
+
+function testLoadComplete() {
+  is(win.location.href, $("t").src, "Should have loaded the right thing");
+  nextTest();
+}
+
+function testHaveXray() {
+  is(typeof win.Promise.race, "function", "Should see a race() function");
+  var exception;
+  try {
+    win.Promise.wrappedJSObject.race;
+  } catch (e) {
+    exception = e;
+  }
+  is(exception, "Getting race", "Should have thrown the right exception");
+  is(win.wrappedJSObject.setupThrew, false, "Setup should not have thrown");
+  nextTest();
+}
+
+function testRace1() {
+  var p = win.Promise.race(new win.Array(1, 2));
+  p.then(
+    function(arg) {
+      ok(arg == 1 || arg == 2,
+         "Should get the right value when racing content-side array");
+    },
+    function(e) {
+      ok(false, "testRace1 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testRace2() {
+  var p = win.Promise.race(
+    new Array(win.Promise.resolve(1), win.Promise.resolve(2)));
+  p.then(
+    function(arg) {
+      ok(arg == 1 || arg == 2,
+         "Should get the right value when racing content-side array of explicit Promises");
+    },
+    function(e) {
+      ok(false, "testRace2 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testRace3() {
+  // This works with a chrome-side array because we do the iteration
+  // while still in the Xray compartment.
+  var p = win.Promise.race([1, 2]);
+  p.then(
+    function(arg) {
+      ok(arg == 1 || arg == 2,
+         "Should get the right value when racing chrome-side array");
+    },
+    function(e) {
+      ok(false, "testRace3 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+function testRace4() {
+  // This works with both content-side and chrome-side Promises because we want
+  // it to and go to some lengths to make it work.
+  var p = win.Promise.race([Promise.resolve(1), win.Promise.resolve(2)]);
+  p.then(
+    function(arg) {
+      ok(arg == 1 || arg == 2,
+         "Should get the right value when racing chrome-side promises");
+    },
+    function(e) {
+      ok(false, "testRace4 threw exception: " + e);
+    }
+  ).then(nextTest);
+}
+
+var tests = [
+  testLoadComplete,
+  testHaveXray,
+  testRace1,
+  testRace2,
+  testRace3,
+  testRace4,
+];
+
+function nextTest() {
+  if (tests.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+  tests.shift()();
+}
+
+addLoadEvent(nextTest);
+
+</script>
+</pre>
+</body>
+</html>
