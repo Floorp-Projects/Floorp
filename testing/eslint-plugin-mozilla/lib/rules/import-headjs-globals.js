@@ -6,22 +6,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 "use strict";
 
-//------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Rule Definition
-//------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
+var importRx = /^(?:Services\.scriptloader\.|loader)?loadSubScript\((.+)[",]/;
 
 module.exports = function(context) {
-  //--------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Helpers
-  //--------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-  function checkFile(fileArray, context) {
+  function checkFile(fileArray) {
     var filePath = fileArray.pop();
 
     while (filePath) {
@@ -29,7 +31,7 @@ module.exports = function(context) {
 
       try {
         headText = fs.readFileSync(filePath, "utf8");
-      } catch(e) {
+      } catch (e) {
         // Couldn't find file, continue.
         filePath = fileArray.pop();
         continue;
@@ -39,8 +41,8 @@ module.exports = function(context) {
       var globalVars = helpers.getGlobals(ast);
 
       for (var i = 0; i < globalVars.length; i++) {
-        var name = globalVars[i];
-        helpers.addVarToScope(name, context);
+        var varName = globalVars[i];
+        helpers.addVarToScope(varName, context);
       }
 
       for (var index in ast.body) {
@@ -54,16 +56,18 @@ module.exports = function(context) {
         }
 
         // Scripts loaded using loadSubScript or loadHelperScript
-        var matches =
-          source.match(/^(?:Services\.scriptloader\.|loader)?loadSubScript\((.+)[",]/);
+        var matches = source.match(importRx);
+
         if (!matches) {
           matches = source.match(/^loadHelperScript\((.+)[",]/);
         }
+
         if (matches) {
           var cwd = process.cwd();
 
           filePath = matches[1];
-          filePath = filePath.replace("chrome://mochitests/content/browser", cwd + "/../../../..");
+          filePath = filePath.replace("chrome://mochitests/content/browser",
+                                      cwd + "/../../../..");
           filePath = filePath.replace(/testdir\s*\+\s*["']/gi, cwd + "/");
           filePath = filePath.replace(/test_dir\s*\+\s*["']/gi, cwd);
           filePath = filePath.replace(/["']/gi, "");
@@ -77,22 +81,22 @@ module.exports = function(context) {
     }
   }
 
-  //--------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Public
-  //--------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   return {
-    Program: function(node) {
+    Program: function() {
       if (!helpers.getIsBrowserMochitest(this)) {
         return;
       }
 
-      var pathAndFilename = this.getFilename();
-      var processPath = process.cwd();
-      var testFilename = path.basename(pathAndFilename);
-      var testPath = path.join(processPath, testFilename);
-      var headjs = path.join(processPath, "head.js");
-      checkFile([testPath, headjs], context);
+      var testPath = this.getFilename();
+      var testFilename = path.basename(testPath);
+      var fullTestPath = path.resolve(testFilename);
+      var fullHeadjsPath = path.resolve("head.js");
+
+      checkFile([fullTestPath, fullHeadjsPath]);
     }
   };
 };

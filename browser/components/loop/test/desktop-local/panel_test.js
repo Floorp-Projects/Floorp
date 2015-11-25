@@ -68,6 +68,7 @@ describe("loop.panel", function() {
       Confirm: sinon.stub(),
       GetHasEncryptionKey: function() { return true; },
       HangupAllChatWindows: function() {},
+      IsMultiProcessEnabled: sinon.stub(),
       LoginToFxA: sinon.stub(),
       LogoutFromFxA: sinon.stub(),
       NotifyUITour: sinon.stub(),
@@ -591,6 +592,17 @@ describe("loop.panel", function() {
           // Do nothing
         }
       });
+
+      it("should render a E10sNotSupported when multiprocess is enabled", function() {
+        LoopMochaUtils.stubLoopRequest({
+          IsMultiProcessEnabled: function() { return true; }
+        });
+
+        var view = createTestPanelView();
+
+        TestUtils.findRenderedComponentWithType(view, loop.panel.E10sNotSupported);
+      });
+
     });
   });
 

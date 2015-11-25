@@ -2752,7 +2752,7 @@ NetworkDetailsView.prototype = {
     headersScope.expanded = true;
 
     for (let header of aResponse.headers) {
-      let headerVar = headersScope.addItem(header.name, {}, true);
+      let headerVar = headersScope.addItem(header.name, {}, {relaxed: true});
       let headerValue = yield gNetwork.getString(header.value);
       headerVar.setGrip(headerValue);
     }
@@ -2802,7 +2802,7 @@ NetworkDetailsView.prototype = {
     cookiesScope.expanded = true;
 
     for (let cookie of aResponse.cookies) {
-      let cookieVar = cookiesScope.addItem(cookie.name, {}, true);
+      let cookieVar = cookiesScope.addItem(cookie.name, {}, {relaxed: true});
       let cookieValue = yield gNetwork.getString(cookie.value);
       cookieVar.setGrip(cookieValue);
 
@@ -2916,7 +2916,7 @@ NetworkDetailsView.prototype = {
     paramsScope.expanded = true;
 
     for (let param of paramsArray) {
-      let paramVar = paramsScope.addItem(param.name, {}, true);
+      let paramVar = paramsScope.addItem(param.name, {}, {relaxed: true});
       paramVar.setGrip(param.value);
     }
   },
