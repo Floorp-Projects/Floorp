@@ -10076,6 +10076,76 @@
     "kind": "flag",
     "description": "Flag activated whenever a youtube flash embed is seen during a session."
   },
+  "WEBFONT_DOWNLOAD_TIME": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time to download a webfont (ms)"
+  },
+  "WEBFONT_DOWNLOAD_TIME_AFTER_START": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time after navigationStart webfont download completed (ms)"
+  },
+  "WEBFONT_FONTTYPE": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Font format type (woff/woff2/ttf/...)"
+  },
+  "WEBFONT_SRCTYPE": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "Font src type loaded (1 = local, 2 = url, 3 = data)"
+  },
+  "WEBFONT_PER_PAGE": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of fonts loaded at page load"
+  },
+  "WEBFONT_SIZE_PER_PAGE": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Size of all fonts loaded at page load (kb)"
+  },
+  "WEBFONT_SIZE": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Size of font loaded (kb)"
+  },
+  "WEBFONT_COMPRESSION_WOFF": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Compression ratio of WOFF data (%)"
+  },
+  "WEBFONT_COMPRESSION_WOFF2": {
+    "alert_emails": ["jdaggett@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Compression ratio of WOFF2 data (%)"
+  },
   "WEBRTC_ICE_CHECKING_RATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
     "expires_in_version": "53",

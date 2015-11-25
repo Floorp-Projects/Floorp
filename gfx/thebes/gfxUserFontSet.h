@@ -468,6 +468,15 @@ public:
 
     static mozilla::LogModule* GetUserFontsLog();
 
+    // record statistics about font completion
+    virtual void RecordFontLoadDone(uint32_t aFontSize,
+                                    mozilla::TimeStamp aDoneTime) {}
+
+    void GetLoadStatistics(uint32_t& aLoadCount, uint64_t& aLoadSize) const {
+        aLoadCount = mDownloadCount;
+        aLoadSize = mDownloadSize;
+    }
+
 protected:
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~gfxUserFontSet();
@@ -513,6 +522,10 @@ protected:
 
     // true when local names have been looked up, false otherwise
     bool mLocalRulesUsed;
+
+    // performance stats
+    uint32_t mDownloadCount;
+    uint64_t mDownloadSize;
 };
 
 // acts a placeholder until the real font is downloaded
