@@ -115,13 +115,10 @@ add_task(function* testPageActionPopup() {
     },
   });
 
-  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
   let panelId = makeWidgetId(extension.id) + "-panel";
 
   extension.onMessage("send-click", () => {
-    let button = document.getElementById(browserActionId);
-
-    EventUtils.synthesizeMouseAtCenter(button, {}, window);
+    clickBrowserAction(extension);
   });
 
   extension.onMessage("next-test", Task.async(function* () {
