@@ -66,9 +66,9 @@ if test "$COMPILER_WRAPPER" != "no"; then
         _SUBDIR_CXX="$CXX"
         ac_cv_prog_CC="$CC"
         ac_cv_prog_CXX="$CXX"
-        MOZ_USING_COMPILER_WRAPPER=1
         ;;
     esac
+    MOZ_USING_COMPILER_WRAPPER=1
 fi
 
 AC_SUBST(MOZ_USING_COMPILER_WRAPPER)
