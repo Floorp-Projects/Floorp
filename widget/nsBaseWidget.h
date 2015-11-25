@@ -177,13 +177,13 @@ public:
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType) override;
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects, bool aIntersectWithExisting) override;
   // Return whether this widget interprets parameters to Move and Resize APIs
-  // as "global display pixels" rather than "device pixels", and therefore
+  // as "desktop pixels" rather than "device pixels", and therefore
   // applies its GetDefaultScale() value to them before using them as mBounds
   // etc (which are always stored in device pixels).
   // Note that APIs that -get- the widget's position/size/bounds, rather than
   // -setting- them (i.e. moving or resizing the widget) will always return
   // values in the widget's device pixels.
-  bool                    BoundsUseDisplayPixels() const {
+  bool                    BoundsUseDesktopPixels() const {
     return mWindowType <= eWindowType_popup;
   }
   NS_IMETHOD              MoveClient(double aX, double aY) override;
