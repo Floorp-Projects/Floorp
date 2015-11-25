@@ -46,7 +46,7 @@ public:
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     nsDeque::Push(aItem);
-    mPushEvent.Notify();
+    mPushEvent.Notify(RefPtr<T>(aItem));
   }
 
   inline void PushFront(T* aItem) {
@@ -54,7 +54,7 @@ public:
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     nsDeque::PushFront(aItem);
-    mPushEvent.Notify();
+    mPushEvent.Notify(RefPtr<T>(aItem));
   }
 
   inline already_AddRefed<T> PopFront() {
@@ -161,7 +161,7 @@ public:
     return mPopEvent;
   }
 
-  MediaEventSource<void>& PushEvent() {
+  MediaEventSource<RefPtr<T>>& PushEvent() {
     return mPushEvent;
   }
 
@@ -172,7 +172,7 @@ public:
 private:
   mutable ReentrantMonitor mReentrantMonitor;
   MediaEventProducer<RefPtr<T>> mPopEvent;
-  MediaEventProducer<void> mPushEvent;
+  MediaEventProducer<RefPtr<T>> mPushEvent;
   MediaEventProducer<void> mFinishEvent;
   // True when we've decoded the last frame of data in the
   // bitstream for which we're queueing frame data.
