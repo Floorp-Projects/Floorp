@@ -934,6 +934,18 @@ GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
         return;
     }
 
+    DrawBlitTextureToFramebuffer(srcTex, destFB, srcSize, destSize, srcTarget,
+                                 internalFBs);
+}
+
+
+void
+GLBlitHelper::DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
+                                           const gfx::IntSize& srcSize,
+                                           const gfx::IntSize& destSize,
+                                           GLenum srcTarget,
+                                           bool internalFBs)
+{
     BlitType type;
     switch (srcTarget) {
     case LOCAL_GL_TEXTURE_2D:

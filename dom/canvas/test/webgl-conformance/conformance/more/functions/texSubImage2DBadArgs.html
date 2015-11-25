@@ -31,6 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 <link rel="stylesheet" type="text/css" href="../unit.css" />
 <script type="application/x-javascript" src="../unit.js"></script>
 <script type="application/x-javascript" src="../util.js"></script>
+<script src="../../resources/webgl-test-utils.js"></script>
 <script type="application/x-javascript">
 
 Tests.startUnit = function () {
@@ -51,7 +52,7 @@ Tests.teardown = function(gl,tex) {
 }
 
 Tests.testTexImage2D = function(gl) {
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2,2,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]));
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2,2,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]));
     assertGLError(gl, gl.INVALID_OPERATION, "not enough data", function(){
         gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, 2,1,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
     });
@@ -70,10 +71,10 @@ Tests.testTexImage2D = function(gl) {
     assertOk("zero size", function(){
         gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, 0,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
     });
-    assertSomeGLError(gl, "negative width", function(){
+    assertGLError(gl, gl.INVALID_VALUE, "negative width", function(){
         gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, -1,1,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
     });
-    assertSomeGLError(gl, "negative height", function(){
+    assertGLError(gl, gl.INVALID_VALUE, "negative height", function(){
         gl.texSubImage2D(gl.TEXTURE_2D, 0,0, 0, 1,-1,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
     });
     assertGLError(gl, gl.INVALID_VALUE, "negative x", function(){

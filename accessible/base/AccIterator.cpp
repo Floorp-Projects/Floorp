@@ -9,7 +9,7 @@
 #include "XULTreeAccessible.h"
 #endif
 
-#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLLabelElement.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -134,6 +134,14 @@ HTMLLabelIterator::
 {
 }
 
+bool
+HTMLLabelIterator::IsLabel(Accessible* aLabel)
+{
+  dom::HTMLLabelElement* labelEl =
+    dom::HTMLLabelElement::FromContent(aLabel->GetContent());
+  return labelEl && labelEl->GetControl() == mAcc->GetContent();
+}
+
 Accessible*
 HTMLLabelIterator::Next()
 {
@@ -141,8 +149,9 @@ HTMLLabelIterator::Next()
   // element, or <label> ancestor which implicitly point to it.
   Accessible* label = nullptr;
   while ((label = mRelIter.Next())) {
-    if (label->GetContent()->IsHTMLElement(nsGkAtoms::label))
+    if (IsLabel(label)) {
       return label;
+    }
   }
 
   // Ignore ancestor label on not widget accessible.
@@ -154,14 +163,14 @@ HTMLLabelIterator::Next()
   // document.
   Accessible* walkUp = mAcc->Parent();
   while (walkUp && !walkUp->IsDoc()) {
-    nsIContent* walkUpElm = walkUp->GetContent();
-    if (walkUpElm->IsHTMLElement(nsGkAtoms::label) &&
-        !walkUpElm->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
+    nsIContent* walkUpEl = walkUp->GetContent();
+    if (IsLabel(walkUp) &&
+        !walkUpEl->HasAttr(kNameSpaceID_None, nsGkAtoms::_for)) {
       mLabelFilter = eSkipAncestorLabel; // prevent infinite loop
       return walkUp;
     }
 
-    if (walkUpElm->IsHTMLElement(nsGkAtoms::form))
+    if (walkUpEl->IsHTMLElement(nsGkAtoms::form))
       break;
 
     walkUp = walkUp->Parent();

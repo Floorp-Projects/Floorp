@@ -649,16 +649,6 @@
 
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
-
-                  // If the browser was playing audio, we should remove the playing state.
-                  if (this.mTab.hasAttribute("soundplaying")) {
-                    this.mTab.removeAttribute("soundplaying");
-                    this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
-                  }
-                  // If the browser was previously muted, we should restore the muted state.
-                  if (this.mTab.hasAttribute("muted")) {
-                    this.mTab.linkedBrowser.mute();
-                  }
                 }
 
                 if (this._shouldShowProgress(aRequest)) {
@@ -766,15 +756,28 @@
                 if (this.mBrowser.userTypedClear > 0 ||
                     ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
                      aLocation.spec != "about:blank") ||
-                     aFlags && Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+                     aFlags && Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
                   this.mBrowser.userTypedValue = null;
+                }
+
+                // If the browser was playing audio, we should remove the playing state.
+                if (this.mTab.hasAttribute("soundplaying")) {
+                  this.mTab.removeAttribute("soundplaying");
+                  this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
+                }
+
+                // If the browser was previously muted, we should restore the muted state.
+                if (this.mTab.hasAttribute("muted")) {
+                  this.mTab.linkedBrowser.mute();
+                }
 
                 if (this.mTabBrowser.isFindBarInitialized(this.mTab)) {
                   let findBar = this.mTabBrowser.getFindBar(this.mTab);
 
                   // Close the Find toolbar if we're in old-style TAF mode
-                  if (findBar.findMode != findBar.FIND_NORMAL)
+                  if (findBar.findMode != findBar.FIND_NORMAL) {
                     findBar.close();
+                  }
 
                   // fix bug 253793 - turn off highlight when page changes
                   findBar.getElement("highlight").checked = false;
@@ -853,19 +856,28 @@
       <method name="setIcon">
         <parameter name="aTab"/>
         <parameter name="aURI"/>
+        <parameter name="aLoadingPrincipal"/>
         <body>
           <![CDATA[
-            var browser = this.getBrowserForTab(aTab);
+            let browser = this.getBrowserForTab(aTab);
             browser.mIconURL = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
 
             if (aURI && this.mFaviconService) {
-              if (!(aURI instanceof Ci.nsIURI))
+              if (!(aURI instanceof Ci.nsIURI)) {
                 aURI = makeURI(aURI);
-              this.mFaviconService.setAndFetchFaviconForPage(browser.currentURI,
-                                                             aURI, false,
-                                                             PrivateBrowsingUtils.isWindowPrivate(window) ?
-                                                               this.mFaviconService.FAVICON_LOAD_PRIVATE :
-                                                               this.mFaviconService.FAVICON_LOAD_NON_PRIVATE);
+              }
+              // We do not serialize the principal from within SessionStore.jsm,
+              // hence if aLoadingPrincipal is null we default to the
+              // systemPrincipal which will allow the favicon to load.
+              let loadingPrincipal = aLoadingPrincipal
+                ? aLoadingPrincipal
+                : Services.scriptSecurityManager.getSystemPrincipal();
+              let loadType = PrivateBrowsingUtils.isWindowPrivate(window)
+                ? this.mFaviconService.FAVICON_LOAD_PRIVATE
+                : this.mFaviconService.FAVICON_LOAD_NON_PRIVATE;
+
+              this.mFaviconService.setAndFetchFaviconForPage(
+                browser.currentURI, aURI, false, loadType, null, loadingPrincipal);
             }
 
             let sizedIconUrl = browser.mIconURL || "";
@@ -929,7 +941,7 @@
               if (!this.isFailedIcon(url))
                 icon = url;
             }
-            this.setIcon(aTab, icon);
+            this.setIcon(aTab, icon, browser.contentPrincipal);
           ]]>
         </body>
       </method>
@@ -2519,7 +2531,7 @@
               // Workarounds for bug 458697
               // Icon might have been set on DOMLinkAdded, don't override that.
               if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
-                this.setIcon(aOurTab, otherBrowser.mIconURL);
+                this.setIcon(aOurTab, otherBrowser.mIconURL, otherBrowser.contentPrincipal);
               var isBusy = aOtherTab.hasAttribute("busy");
               if (isBusy) {
                 aOurTab.setAttribute("busy", "true");
@@ -4441,7 +4453,7 @@
           }
 
           tab.removeAttribute("soundplaying");
-          this.setIcon(tab, icon);
+          this.setIcon(tab, icon, browser.contentPrincipal);
         ]]>
       </handler>
       <handler event="DOMAudioPlaybackStarted">

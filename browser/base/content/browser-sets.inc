@@ -179,11 +179,9 @@
     <broadcaster id="singleFeedMenuitemState" disabled="true"/>
     <broadcaster id="multipleFeedsMenuState" hidden="true"/>
     <broadcaster id="tabviewGroupsNumber" groups="1"/>
-#ifdef MOZ_SERVICES_SYNC
     <broadcaster id="sync-setup-state"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>
-#endif
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
 

@@ -485,10 +485,12 @@ BookmarkImporter.prototype = {
             // Create a fake faviconURI to use (FIXME: bug 523932)
             let faviconURI = NetUtil.newURI("fake-favicon-uri:" + aData.uri);
             PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-              faviconURI, aData.icon, 0);
+              faviconURI, aData.icon, 0,
+              Services.scriptSecurityManager.getSystemPrincipal());
             PlacesUtils.favicons.setAndFetchFaviconForPage(
               NetUtil.newURI(aData.uri), faviconURI, false,
-              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+              Services.scriptSecurityManager.getSystemPrincipal());
           } catch (ex) {
             Components.utils.reportError("Failed to import favicon data:" + ex);
           }
@@ -497,7 +499,8 @@ BookmarkImporter.prototype = {
           try {
             PlacesUtils.favicons.setAndFetchFaviconForPage(
               NetUtil.newURI(aData.uri), NetUtil.newURI(aData.iconUri), false,
-              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
+              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+              Services.scriptSecurityManager.getSystemPrincipal());
           } catch (ex) {
             Components.utils.reportError("Failed to import favicon URI:" + ex);
           }

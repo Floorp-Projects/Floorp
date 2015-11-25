@@ -598,8 +598,6 @@ const JSFunctionSpec js::regexp_methods[] = {
         RegExpStatics* res = cx->global()->getRegExpStatics(cx);                \
         if (!res)                                                               \
             return false;                                                       \
-        if (!res->checkRestoredFromModifiedMatch(cx))                           \
-            return false;                                                       \
         code;                                                                   \
     }
 

@@ -240,7 +240,7 @@ load 420651-1.xhtml
 load 421203-1.xul
 load 421432.html
 load 422276.html
-load 423107-1.xhtml
+asserts(0-1) load 423107-1.xhtml # bug 866955
 load 425981-1.html
 load 428113.xhtml
 load 428138-1.html
@@ -475,3 +475,4 @@ load 1116104.html
 load 1127198-1.html
 load 1140198.html
 pref(layout.css.grid.enabled,true) load 1156588.html
+load 1163583.html

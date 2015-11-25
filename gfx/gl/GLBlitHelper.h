@@ -143,6 +143,11 @@ public:
                                   const gfx::IntSize& destSize,
                                   GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                                   bool internalFBs = false);
+    void DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
+                                      const gfx::IntSize& srcSize,
+                                      const gfx::IntSize& destSize,
+                                      GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
+                                      bool internalFBs = false);
     void BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
                                   const gfx::IntSize& srcSize,
                                   const gfx::IntSize& destSize,

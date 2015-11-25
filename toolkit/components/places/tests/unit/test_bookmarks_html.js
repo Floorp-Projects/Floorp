@@ -199,7 +199,7 @@ add_task(function* test_import_chromefavicon()
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI, CHROME_FAVICON_URI, true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      resolve);
+      resolve, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
   let data = yield new Promise(resolve => {
@@ -223,7 +223,7 @@ add_task(function* test_import_chromefavicon()
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI, CHROME_FAVICON_URI_2, true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      resolve);
+      resolve, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
   do_print("import from html");

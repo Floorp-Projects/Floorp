@@ -139,6 +139,8 @@ public final class GeckoLoader {
             }
         }
 
+        putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
+
         setupPluginEnvironment(context, pluginDirs);
         setupDownloadEnvironment(context);
 

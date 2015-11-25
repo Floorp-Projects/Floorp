@@ -173,15 +173,6 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     NS_ERROR_UNEXPECTED : NS_OK;
 }
 
-// static
-PLDHashOperator
-nsWindowBase::CancelTouchPoints(const unsigned int& aPointerId, nsAutoPtr<PointerInfo>& aInfo, void* aUserArg)
-{
-  nsWindowBase* self = static_cast<nsWindowBase*>(aUserArg);
-  self->InjectTouchPoint(aInfo.get()->mPointerId, aInfo.get()->mPosition, POINTER_FLAG_CANCELED);
-  return (PLDHashOperator)(PL_DHASH_NEXT|PL_DHASH_REMOVE);
-}
-
 nsresult
 nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver)
 {
@@ -191,7 +182,12 @@ nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver)
   }
 
   // cancel all input points
-  mActivePointers.Enumerate(CancelTouchPoints, (void*)this);
+  for (auto iter = mActivePointers.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<PointerInfo>& info = iter.Data();
+    InjectTouchPoint(info.get()->mPointerId, info.get()->mPosition,
+                     POINTER_FLAG_CANCELED);
+    iter.Remove();
+  }
 
   nsBaseWidget::ClearNativeTouchSequence(nullptr);
 

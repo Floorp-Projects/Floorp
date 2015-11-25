@@ -1,0 +1,315 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<style type="text/css" rel="stylesheet" media="all">
+.form-item { padding:30px; }
+.views-exposed-widget {float:left; clear:left;}
+.views-exposed-widgets {-moz-column-width:250px;}
+.clearfix:after
+,.clear-block:after{content:".";display:block;}
+</style>
+<script type="text/javascript">
+//<!-- DDBEGIN -->
+(function ()
+{
+    var D = window.jQuery = window.$ = function (a, b)
+    {
+        return new D.fn.init(a, b)
+    };
+    var u = /^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/;
+    D.fn = D.prototype =
+    {
+        init: function (d, b)
+        {
+            d = d || document;
+            if (d.nodeType)
+            {
+                this[0] = d;
+                this.length = 1;
+            }
+            if (typeof d == "string")
+            {
+                var c = u.exec(d);
+                if (c)
+                {
+                    if (c[1]) d = D.clean([c[1]], b);
+                }
+                else
+                return D(b).find(d)
+            }
+            return this.setArray(D.makeArray(d))
+        },
+        pushStack: function (b)
+        {
+            return D(b);
+        },
+        setArray: function (a)
+        {
+            Array.prototype.push.apply(this, a);
+        },
+        each: function (a, b)
+        {
+            return D.each(this, a, b)
+        },
+        after: function ()
+        {
+            return this.domManip(arguments, false, true, function (a)
+            {
+                this.parentNode.insertBefore(a, this.nextSibling)
+            })
+        },
+        find: function (b)
+        {
+            var c = D.map(this, function (a)
+            {
+                return D.find(b, a)
+            });
+            return this.pushStack(/[^+>] [^+>]/.test(b) ? D.unique(c) : c)
+        },
+        domManip: function (g, f, h, d)
+        {
+            return this.each(function ()
+            {
+                elems = D.clean(g, this.ownerDocument);
+                var b = this;
+                D.each(elems, function ()
+                {
+                    d.call(b, this)
+                });
+            })
+        }
+    };
+    D.fn.init.prototype = D.fn;
+    D.extend = D.fn.extend = function ()
+    {
+        var b = arguments[0];
+        var i = 1;
+        var length = arguments.length;
+        if (length == 1)
+        {
+            b = this;
+            --i
+        }
+        if ((options = arguments[i]) != null) for (var c in options)
+        {
+            copy = options[c];
+            if (copy !== undefined) b[c] = copy
+        }
+        return b
+    };
+    D.extend(
+    {
+        each: function (d, a, c)
+        {
+            for (e in d)
+                if (a.call(d[e], e, d[e]) === false)
+            for (var b = d[0]; i < length; b = d[++i]) { }
+            return d
+        },
+        curCSS: function (f, l, k)
+        {
+            l = l.replace(/([A-Z])/g, "-$1").toLowerCase();
+            var c = document.defaultView.getComputedStyle(f, null);
+            c.getPropertyValue(l);
+        },
+        clean: function (l, h)
+        {
+            var k = [];
+            D.each(l, function (i, d)
+            {
+                var div = document.createElement("div");
+                div.innerHTML = "" + d
+                d = D.makeArray(div.childNodes)
+                if (d[0] == undefined) k.push(d);
+                else k = D.merge(k, d)
+            });
+            return k
+        },
+        makeArray: function (b)
+        {
+            var a = [];
+            var i = b.length;
+            while (i) a[--i] = b[i]
+            return a
+        },
+        merge: function (a, b)
+        {
+            var i = 0;
+            var pos = a.length;
+            while (elem = b[i++]) a[pos++] = elem;
+            return a
+        },
+        map: function (d, a)
+        {
+            var c = [];
+            for (var i = 0, length = d.length; i < length; i++)
+            {
+                var b = a(d[i], i);
+                if (b != null) c[c.length] = b
+            }
+            return c.concat.apply([], c)
+        }
+    });
+    D.each(
+    {
+        insertAfter: "after",
+    }, function (c, b)
+    {
+        D.fn[c] = function ()
+        {
+            var a = arguments;
+            return this.each(function ()
+            {
+                for (var i = 0, length = a.length; i < length; i++) D(a[i])[b](this)
+            })
+        }
+    });
+    function num(a, b)
+    {
+        return a[0] && parseInt(D.curCSS(a[0], b, true), 10)
+    }
+    var quickClass = new RegExp("^([#.]?)(" + "(?:[\\w\u0128-\uFFFF*_-]|\\\\.)" + "*)");
+    D.extend(
+    {
+        find: function (t, o)
+        {
+            var d = [o];
+            var done = [];
+            while (t)
+            {
+                m = quickClass.exec(t)
+                var f = d[d.length - 1];
+                if (m[1] == "#")
+                {
+                    var p = f.getElementById(m[2]);
+                    d = p && !m[3] ? [p] : []
+                }
+                t = t.replace(quickClass, "")
+            }
+            return D.merge(done, d);
+        },
+    });
+    D.fn.extend(
+    {
+        bind: function (c, a, b)
+        {
+            return this.each(function ()            {            })
+        },
+        ready: function (a)
+        {
+            bindReady();
+            D.readyList.push(function ()
+            {
+                return a.call(this, D)
+            });
+        }
+    });
+    D.extend(
+    {
+        readyList: [],
+        ready: function ()
+        {
+            D.each(D.readyList, function ()
+            {
+                this.call(document)
+            });
+        }
+    });
+    function bindReady()
+    {
+        document.addEventListener("DOMContentLoaded", D.ready, false);
+    }
+    D.each(["Height", "Width"], function (i, b)
+    {
+        D.fn["outer" + b] = function (a)
+        {
+            num(this, "borderRightWidth")
+        }
+    })
+})();
+var Drupal = {
+    'settings': {
+    },
+    'behaviors': {
+    },
+};
+Drupal.attachBehaviors = function (context)
+{
+    jQuery.each(Drupal.behaviors, function ()
+    {
+        this(context);
+    });
+}
+$(document).ready(function ()
+{
+    Drupal.attachBehaviors(this);
+});
+(function (C)
+{
+    C.ui =    {    }
+    C.widget = function (K, J)
+    {
+        var L = K.split(".")[0];
+        K = K.split(".")[1];
+        C.fn[K] = function (P)
+        {
+            return this.each(function ()
+            {
+                C.data(this, K, new C[L][K](this, P));
+            })
+        };
+        C[L][K] = function (O, N)
+        {
+            this.element = C(O).bind();
+            this._init()
+        };
+        C[L][K].prototype = C.extend( {  }, J);
+    };
+})(jQuery);
+(function (a)
+{
+    a.widget("ui.dropdownchecklist", {
+        _appendDropContainer: function ()
+        {
+            return a("<div/>");
+        },
+        _appendControl: function ()
+        {
+            f.insertAfter(this.sourceSelect);
+        },
+        _appendItems: function ()
+        {
+            f = this.dropWrapper;
+            var e = f.find(".ui-dropdownchecklist-dropcontainer").outerHeight();
+        },
+        _init: function ()
+        {
+            this.sourceSelect = this.element;
+            this.dropWrapper = this._appendDropContainer();
+            this._appendItems();
+            this._appendControl();
+        }
+    });
+})(jQuery);;
+Drupal.behaviors.sexyExposed = function (context)
+{
+    var settings = Drupal.settings.sexyExposed;
+    $.each(settings, function (key, element)
+    {
+        $(key).dropdownchecklist();
+    });
+};
+jQuery.extend(Drupal.settings, {
+    "sexyExposed": {
+        "select#edit-field-spec-otg-value-many-to-one": "0",
+    }
+});
+</script>
+<div class="views-exposed-widgets clear-block">
+  <div class="views-exposed-widget">
+    <div>
+      <div class="form-item"></div>
+    </div>
+  </div>
+  <div class="views-exposed-widget">
+ <select multiple="multiple" id="edit-field-spec-otg-value-many-to-one"> </select>
+</div>
+</html>

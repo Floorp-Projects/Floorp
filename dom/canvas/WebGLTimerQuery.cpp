@@ -50,7 +50,7 @@ WebGLTimerQuery::Delete()
 WebGLContext*
 WebGLTimerQuery::GetParentObject() const
 {
-  return Context();
+  return mContext;
 }
 
 

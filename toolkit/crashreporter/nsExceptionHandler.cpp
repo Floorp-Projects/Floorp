@@ -1123,10 +1123,18 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     exePath->GetNativePath(crashReporterPath_temp);
     crashReporterPath = ToNewCString(crashReporterPath_temp);
 #else
-    // On Android, we launch using the application package name
-    // instead of a filename, so use ANDROID_PACKAGE_NAME to do that here.
-    nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporter");
-    crashReporterPath = ToNewCString(package);
+    // On Android, we launch using the application package name instead of a
+    // filename, so use the dynamically set MOZ_ANDROID_PACKAGE_NAME, or fall
+    // back to the static ANDROID_PACKAGE_NAME.
+    const char* androidPackageName = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
+    if (androidPackageName != nullptr) {
+      nsCString package(androidPackageName);
+      package.Append("/org.mozilla.gecko.CrashReporter");
+      crashReporterPath = ToNewCString(package);
+    } else {
+      nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporter");
+      crashReporterPath = ToNewCString(package);
+    }
 #endif
   }
 
