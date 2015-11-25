@@ -34,7 +34,7 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   : mWindowId(0)
 {
   MOZ_ASSERT(aDoc);
-  nsresult rv = aDoc->GetId(mClientId);
+  nsresult rv = aDoc->GetOrCreateId(mClientId);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to get the UUID of the document.");
   }

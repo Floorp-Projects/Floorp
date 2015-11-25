@@ -4619,7 +4619,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
     nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
     if (swm) {
-      swm->MaybeStartControlling(this);
+      nsAutoString documentId;
+      static_cast<nsDocShell*>(docShell.get())->GetInterceptedDocumentId(documentId);
+
+      swm->MaybeStartControlling(this, documentId);
       mMaybeServiceWorkerControlled = true;
     }
   }
@@ -13053,33 +13056,51 @@ nsIDocument::CreateHTMLElement(nsIAtom* aTag)
   return element.forget();
 }
 
+/* static */
 nsresult
-nsIDocument::GetId(nsAString& aId)
+nsIDocument::GenerateDocumentId(nsAString& aId)
+{
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsID id;
+  rv = uuidgen->GenerateUUIDInPlace(&id);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
+  char buffer[NSID_LENGTH];
+  id.ToProvidedString(buffer);
+  NS_ConvertASCIItoUTF16 uuid(buffer);
+
+  // Remove {} and the null terminator
+  aId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
+  return NS_OK;
+}
+
+nsresult
+nsIDocument::GetOrCreateId(nsAString& aId)
 {
   if (mId.IsEmpty()) {
-    nsresult rv;
-    nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    nsresult rv = GenerateDocumentId(mId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    nsID id;
-    rv = uuidgen->GenerateUUIDInPlace(&id);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
-    char buffer[NSID_LENGTH];
-    id.ToProvidedString(buffer);
-    NS_ConvertASCIItoUTF16 uuid(buffer);
-
-    // Remove {} and the null terminator
-    mId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
   }
 
   aId = mId;
   return NS_OK;
+}
+
+void
+nsIDocument::SetId(const nsAString& aId)
+{
+  MOZ_ASSERT(mId.IsEmpty(), "Cannot set the document ID after we have one");
+  mId = aId;
 }
 
 bool
