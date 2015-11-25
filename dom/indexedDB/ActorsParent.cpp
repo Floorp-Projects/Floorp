@@ -14955,46 +14955,6 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
   MOZ_ASSERT(!!mActorWasAlive == !!mOpenDatabaseOp->mDatabase);
   MOZ_ASSERT_IF(mActorWasAlive, !mOpenDatabaseOp->mDatabaseId.IsEmpty());
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey,
-              RefPtr<FullObjectStoreMetadata>& aValue,
-              void* /* aClosure */)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-
-      if (aValue->mDeleted) {
-        return PL_DHASH_REMOVE;
-      }
-
-      aValue->mIndexes.Enumerate(Enumerate, nullptr);
-#ifdef DEBUG
-      aValue->mIndexes.MarkImmutable();
-#endif
-
-      return PL_DHASH_NEXT;
-    }
-
-  private:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey,
-              RefPtr<FullIndexMetadata>& aValue,
-              void* /* aClosure */)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-
-      if (aValue->mDeleted) {
-        return PL_DHASH_REMOVE;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   if (IsActorDestroyed() || !mActorWasAlive) {
     return;
   }
@@ -15011,7 +14971,33 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
 
   if (NS_SUCCEEDED(aResult)) {
     // Remove all deleted objectStores and indexes, then mark immutable.
-    info->mMetadata->mObjectStores.Enumerate(Helper::Enumerate, nullptr);
+    for (auto objectStoreIter = info->mMetadata->mObjectStores.Iter();
+         !objectStoreIter.Done();
+         objectStoreIter.Next()) {
+      MOZ_ASSERT(objectStoreIter.Key());
+      RefPtr<FullObjectStoreMetadata>& metadata = objectStoreIter.Data();
+      MOZ_ASSERT(metadata);
+
+      if (metadata->mDeleted) {
+        objectStoreIter.Remove();
+        continue;
+      }
+
+      for (auto indexIter = metadata->mIndexes.Iter();
+           !indexIter.Done();
+           indexIter.Next()) {
+        MOZ_ASSERT(indexIter.Key());
+        RefPtr<FullIndexMetadata>& index = indexIter.Data();
+        MOZ_ASSERT(index);
+
+        if (index->mDeleted) {
+          indexIter.Remove();
+        }
+      }
+#ifdef DEBUG
+      metadata->mIndexes.MarkImmutable();
+#endif
+    }
 #ifdef DEBUG
     info->mMetadata->mObjectStores.MarkImmutable();
 #endif
