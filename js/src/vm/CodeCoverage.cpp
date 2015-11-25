@@ -228,9 +228,10 @@ LCovSource::writeScript(JSScript* script)
     size_t lineno = script->lineno();
     jsbytecode* end = script->codeEnd();
     size_t branchId = 0;
+    size_t tableswitchExitOffset = 0;
     for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
         JSOp op = JSOp(*pc);
-        bool jump = IsJumpOpcode(op);
+        bool jump = IsJumpOpcode(op) || op == JSOP_TABLESWITCH;
         bool fallsthrough = BytecodeFallsThrough(op) && op != JSOP_GOSUB;
 
         // If the current script & pc has a hit-count report, then update the
@@ -251,6 +252,8 @@ LCovSource::writeScript(JSScript* script)
                     lineno = size_t(GetSrcNoteOffset(sn, 0));
                 else if (type == SRC_NEWLINE)
                     lineno++;
+                else if (type == SRC_TABLESWITCH)
+                    tableswitchExitOffset = GetSrcNoteOffset(sn, 0);
 
                 sn = SN_NEXT(sn);
                 snpc += SN_DELTA(sn);
@@ -303,6 +306,105 @@ LCovSource::writeScript(JSScript* script)
             if (hits)
                 numBranchesHit_ += !!taken + !!fallthroughHits;
             branchId++;
+        }
+
+        // If the current pc corresponds to a pre-computed switch case, then
+        // reports branch hits for each case statement.
+        if (jump && op == JSOP_TABLESWITCH) {
+            MOZ_ASSERT(tableswitchExitOffset != 0);
+
+            // Get the default and exit pc
+            jsbytecode* exitpc = pc + tableswitchExitOffset;
+            jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
+            MOZ_ASSERT(defaultpc > pc && defaultpc <= exitpc);
+
+            // Get the low and high from the tableswitch
+            int32_t low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 1);
+            int32_t high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 2);
+            int32_t numCases = high - low + 1;
+            jsbytecode* jumpTable = pc + JUMP_OFFSET_LEN * 3;
+
+            jsbytecode* firstcasepc = exitpc;
+            for (int j = 0; j < numCases; j++) {
+                jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                if (testpc < firstcasepc)
+                    firstcasepc = testpc;
+            }
+
+            jsbytecode* lastcasepc = firstcasepc;
+            uint64_t allCaseHits = 0;
+            for (int i = 0; i < numCases; i++) {
+                jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
+                // The case is not present, and jumps to the default pc if used.
+                if (casepc == pc)
+                    continue;
+
+                // PCs might not be in increasing order of case indexes.
+                lastcasepc = firstcasepc - 1;
+                for (int j = 0; j < numCases; j++) {
+                    jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                    if (lastcasepc < testpc && testpc < casepc)
+                        lastcasepc = testpc;
+                }
+
+                if (casepc != lastcasepc) {
+                    // Case (i + low)
+                    uint64_t caseHits = 0;
+                    if (sc) {
+                        const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(casepc));
+                        if (counts)
+                            caseHits = counts->numExec();
+
+                        // Remove fallthrough.
+                        if (casepc != firstcasepc) {
+                            jsbytecode* endpc = lastcasepc;
+                            while (GetNextPc(endpc) < casepc)
+                                endpc = GetNextPc(endpc);
+
+                            if (BytecodeFallsThrough(JSOp(*endpc)))
+                                caseHits -= script->getHitCount(endpc);
+                        }
+
+                        allCaseHits += caseHits;
+                    }
+
+                    outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, i);
+                    if (caseHits)
+                        outBRDA_.printf("%d\n", caseHits);
+                    else
+                        outBRDA_.put("-\n", 2);
+
+                    numBranchesFound_++;
+                    numBranchesHit_ += !!caseHits;
+                    lastcasepc = casepc;
+                }
+            }
+
+            // Add one branch entry for the default statement.
+            uint64_t defaultHits = 0;
+
+            if (sc) {
+                const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(defaultpc));
+                if (counts)
+                    defaultHits = counts->numExec();
+
+                // Note: currently we do not track edges, so we might have
+                // false-positive if we have any throw / return inside some
+                // of the case statements.
+                defaultHits -= allCaseHits;
+            }
+
+            outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, numCases);
+            if (defaultHits)
+                outBRDA_.printf("%d\n", defaultHits);
+            else
+                outBRDA_.put("-\n", 2);
+            numBranchesFound_++;
+            numBranchesHit_ += !!defaultHits;
+
+            // Increment the branch identifier, and go to the next instruction.
+            branchId++;
+            tableswitchExitOffset = 0;
         }
     }
 
