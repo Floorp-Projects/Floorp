@@ -1177,19 +1177,25 @@ gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
     }
 }
 
+nsILanguageAtomService*
+gfxPlatformFontList::GetLangService()
+{
+    if (!mLangService) {
+        mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+    }
+    NS_ASSERTION(mLangService, "no language service!");
+    return mLangService;
+}
+
 nsIAtom*
 gfxPlatformFontList::GetLangGroup(nsIAtom* aLanguage)
 {
     // map lang ==> langGroup
     nsIAtom *langGroup = nullptr;
     if (aLanguage) {
-        if (!mLangService) {
-            mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
-        }
-        if (mLangService) {
-            nsresult rv;
-            langGroup = mLangService->GetLanguageGroup(aLanguage, &rv);
-        }
+        nsresult rv;
+        nsILanguageAtomService* langService = GetLangService();
+        langGroup = langService->GetLanguageGroup(aLanguage, &rv);
     }
     if (!langGroup) {
         langGroup = nsGkAtoms::Unicode;
