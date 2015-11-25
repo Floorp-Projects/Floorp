@@ -345,8 +345,8 @@ TEST(PLDHashTableTest, GrowToMaxCapacity)
     numInserted++;
   }
 
-  // We stop when the element count is 96.875% of PL_DHASH_MAX_SIZE (see
-  // MaxLoadOnGrowthFailure()).
+  // We stop when the element count is 96.875% of PLDHashTable::kMaxCapacity
+  // (see MaxLoadOnGrowthFailure()).
   if (numInserted !=
       PLDHashTable::kMaxCapacity - (PLDHashTable::kMaxCapacity >> 5)) {
     delete t;
