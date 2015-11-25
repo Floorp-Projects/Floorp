@@ -6,17 +6,10 @@ includedir := $(includedir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 idldir = $(datadir)/idl/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 installdir = $(libdir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 sdkdir = $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
-ifndef TOP_DIST
-TOP_DIST = dist
-endif
-ifneq (,$(filter /%,$(TOP_DIST)))
-DIST = $(TOP_DIST)
-else
 ifeq (.,$(DEPTH))
-DIST = $(TOP_DIST)
+DIST = dist
 else
-DIST = $(DEPTH)/$(TOP_DIST)
-endif
+DIST = $(DEPTH)/dist
 endif
 
 # We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
