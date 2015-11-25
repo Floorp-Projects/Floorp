@@ -17,7 +17,7 @@ var NUM_CYCLES = 5;
 var numPageCycles = 1;
 
 var numRetries = 0;
-var maxRetries = 20;
+var maxRetries = 3;
 
 var pageFilterRegexp = null;
 var useBrowser = true;
