@@ -205,6 +205,19 @@ function testResolve3() {
   ).then(nextTest);
 }
 
+function testReject1() {
+  var p = win.Promise.reject(5);
+  ok(p instanceof win.Promise, "Promise.reject should return a promise");
+  p.then(
+    function(arg) {
+      ok(false, "Promise should be rejected");
+    },
+    function(e) {
+      is(e, 5, "Should get correct Promise.reject value");
+    }
+  ).then(nextTest);
+}
+
 var tests = [
   testLoadComplete,
   testHaveXray,
@@ -220,6 +233,7 @@ var tests = [
   testResolve1,
   testResolve2,
   testResolve3,
+  testReject1,
 ];
 
 function nextTest() {
