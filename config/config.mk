@@ -448,8 +448,14 @@ endif
 
 # Set link flags according to whether we want a console.
 ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_WINCONSOLE
 ifeq ($(MOZ_WINCONSOLE),1)
-# If not specified, let the linker choose the right subsystem.
+WIN32_EXE_LDFLAGS	+= $(WIN32_CONSOLE_EXE_LDFLAGS)
+else # MOZ_WINCONSOLE
+WIN32_EXE_LDFLAGS	+= $(WIN32_GUI_EXE_LDFLAGS)
+endif
+else
+# For setting subsystem version
 WIN32_EXE_LDFLAGS	+= $(WIN32_CONSOLE_EXE_LDFLAGS)
 endif
 endif # WINNT
