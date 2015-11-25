@@ -1685,10 +1685,13 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   // If this is the content process, we ship plugin geometry updates over with layer
   // updates, so calculate that now before we call EndTransaction.
-  if (rootPresContext &&
-      aBuilder->WillComputePluginGeometry() &&
-      XRE_IsContentProcess()) {
-    rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+  if (rootPresContext && XRE_IsContentProcess()) {
+    if (aBuilder->WillComputePluginGeometry()) {
+      rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+    }
+    // The layer system caches plugin configuration information for forwarding
+    // with layer updates which needs to get set during reflow. This must be
+    // called even if there are no windowed plugins in the page.
     rootPresContext->CollectPluginGeometryUpdates(layerManager);
   }
 
