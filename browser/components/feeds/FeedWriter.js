@@ -646,8 +646,8 @@ FeedWriter.prototype = {
   _initMenuItemWithFile: function(aMenuItem, aFile) {
     var label = this._getFileDisplayName(aFile);
     var image = this._getFileIconURL(aFile);
-    aMenuitem.setAttribute('label', label);
-    aMenuitem.setAttribute('image', image);
+    aMenuItem.setAttribute('label', label);
+    aMenuItem.setAttribute('image', image);
   },
 
   /**
