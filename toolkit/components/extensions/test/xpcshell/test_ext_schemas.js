@@ -9,6 +9,13 @@ let json = [
    properties: {
      PROP1: {value: 20},
      prop2: {type: "string"},
+     prop3: {
+       $ref: "submodule",
+     },
+     prop4: {
+       $ref: "submodule",
+       unsupported: true,
+     },
    },
 
    types: [
@@ -53,6 +60,18 @@ let json = [
        $extend: "basetype2",
        choices: [
          {type: "string"},
+       ],
+     },
+
+     {
+       id: "submodule",
+       type: "object",
+       functions: [
+         {
+           name: "sub_foo",
+           type: "function",
+           parameters: []
+         },
        ],
      },
    ],
@@ -298,25 +317,31 @@ let wrapper = {
     talliedErrors.push(message);
   },
 
-  callFunction(ns, name, args) {
+  callFunction(path, name, args) {
+    let ns = path.join(".");
     tally("call", ns, name, args);
   },
 
-  getProperty(ns, name) {
+  getProperty(path, name) {
+    let ns = path.join(".");
     tally("get", ns, name);
   },
 
-  setProperty(ns, name, value) {
+  setProperty(path, name, value) {
+    let ns = path.join(".");
     tally("set", ns, name, value);
   },
 
-  addListener(ns, name, listener, args) {
+  addListener(path, name, listener, args) {
+    let ns = path.join(".");
     tally("addListener", ns, name, [listener, args]);
   },
-  removeListener(ns, name, listener) {
+  removeListener(path, name, listener) {
+    let ns = path.join(".");
     tally("removeListener", ns, name, [listener]);
   },
-  hasListener(ns, name, listener) {
+  hasListener(path, name, listener) {
+    let ns = path.join(".");
     tally("hasListener", ns, name, [listener]);
   },
 };
@@ -588,6 +613,14 @@ add_task(function* () {
   Assert.throws(() => root.testing.extended2(true),
                 /Incorrect argument types/,
                 "should throw for wrong argument type");
+
+  root.testing.prop3.sub_foo();
+  verify("call", "testing.prop3", "sub_foo", []);
+  tallied = null;
+
+  Assert.throws(() => root.testing.prop4.sub_foo(),
+                /root.testing.prop4 is undefined/,
+                "should throw for unsupported submodule");
 });
 
 let deprecatedJson = [
