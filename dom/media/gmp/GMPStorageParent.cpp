@@ -32,10 +32,12 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
-// We store the records in files in the profile dir.
-// $profileDir/gmp/storage/$nodeId/
+// We store the records for a given GMP as files in the profile dir.
+// $profileDir/gmp/$platform/$gmpName/storage/$nodeId/
 static nsresult
-GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
+GetGMPStorageDir(nsIFile** aTempDir,
+                 const nsString& aGMPName,
+                 const nsCString& aNodeId)
 {
   if (NS_WARN_IF(!aTempDir)) {
     return NS_ERROR_INVALID_ARG;
@@ -50,6 +52,16 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
   nsCOMPtr<nsIFile> tmpFile;
   nsresult rv = mps->GetStorageDir(getter_AddRefs(tmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = tmpFile->Append(aGMPName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = tmpFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -87,8 +99,10 @@ GetGMPStorageDir(nsIFile** aTempDir, const nsCString& aNodeId)
 //   record bytes (entire remainder of file)
 class GMPDiskStorage : public GMPStorage {
 public:
-  explicit GMPDiskStorage(const nsCString& aNodeId)
+  explicit GMPDiskStorage(const nsCString& aNodeId,
+                          const nsString& aGMPName)
     : mNodeId(aNodeId)
+    , mGMPName(aGMPName)
   {
   }
 
@@ -106,7 +120,7 @@ public:
   nsresult Init() {
     // Build our index of records on disk.
     nsCOMPtr<nsIFile> storageDir;
-    nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mNodeId);
+    nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mGMPName, mNodeId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_FAILURE;
     }
@@ -318,7 +332,7 @@ private:
                              nsString& aOutFilename)
   {
     nsCOMPtr<nsIFile> storageDir;
-    nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mNodeId);
+    nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mGMPName, mNodeId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -363,7 +377,7 @@ private:
     MOZ_ASSERT(aOutFD);
 
     nsCOMPtr<nsIFile> f;
-    nsresult rv = GetGMPStorageDir(getter_AddRefs(f), mNodeId);
+    nsresult rv = GetGMPStorageDir(getter_AddRefs(f), mGMPName, mNodeId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -440,7 +454,7 @@ private:
   nsresult RemoveStorageFile(const nsString& aFilename)
   {
     nsCOMPtr<nsIFile> f;
-    nsresult rv = GetGMPStorageDir(getter_AddRefs(f), mNodeId);
+    nsresult rv = GetGMPStorageDir(getter_AddRefs(f), mGMPName, mNodeId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -469,6 +483,7 @@ private:
   // Hash record name to record data.
   nsClassHashtable<nsCStringHashKey, Record> mRecords;
   const nsAutoCString mNodeId;
+  const nsString mGMPName;
 };
 
 class GMPMemoryStorage : public GMPStorage {
@@ -576,7 +591,8 @@ GMPStorageParent::Init()
     return NS_ERROR_FAILURE;
   }
   if (persistent) {
-    UniquePtr<GMPDiskStorage> storage = MakeUnique<GMPDiskStorage>(mNodeId);
+    UniquePtr<GMPDiskStorage> storage =
+      MakeUnique<GMPDiskStorage>(mNodeId, mPlugin->GetPluginBaseName());
     if (NS_FAILED(storage->Init())) {
       NS_WARNING("Failed to initialize on disk GMP storage");
       return NS_ERROR_FAILURE;
