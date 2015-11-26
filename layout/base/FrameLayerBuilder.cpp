@@ -2966,7 +2966,7 @@ ContainerState::FindFixedPosFrameForLayerData(AnimatedGeometryRoot* aAnimatedGeo
     return viewport;
   }
   // Viewports with no fixed-pos frames are not relevant.
-  if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
+  if (!viewport->GetChildList(nsIFrame::kFixedList).FirstChild()) {
     return nullptr;
   }
   for (const nsIFrame* f = *aAnimatedGeometryRoot; f; f = f->GetParent()) {
