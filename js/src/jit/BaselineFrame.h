@@ -211,7 +211,8 @@ class BaselineFrame
     unsigned numFormalArgs() const {
         return script()->functionNonDelazifying()->nargs();
     }
-    Value& thisValue() const {
+    Value& thisArgument() const {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                          BaselineFrame::Size() +
                          offsetOfThis());

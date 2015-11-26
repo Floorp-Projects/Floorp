@@ -3111,8 +3111,8 @@ js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr fra
 
             // If we're still inside `frame`, we can use the this-value passed
             // to it, if it does not require boxing.
-            if (si.withinInitialFrame() && (frame.thisValue().isObject() || script->strict()))
-                res.set(frame.thisValue());
+            if (si.withinInitialFrame() && (frame.thisArgument().isObject() || script->strict()))
+                res.set(frame.thisArgument());
             else
                 res.setMagic(JS_OPTIMIZED_OUT);
             return true;

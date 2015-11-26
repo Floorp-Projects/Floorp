@@ -141,15 +141,15 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
     MOZ_ASSERT(frame.isNonEvalFunctionFrame());
     MOZ_ASSERT(!frame.fun()->isArrow());
 
-    if (frame.thisValue().isObject() ||
+    if (frame.thisArgument().isObject() ||
         frame.fun()->strict() ||
         frame.fun()->isSelfHostedBuiltin())
     {
-        res.set(frame.thisValue());
+        res.set(frame.thisArgument());
         return true;
     }
 
-    RootedValue thisv(cx, frame.thisValue());
+    RootedValue thisv(cx, frame.thisArgument());
     return BoxNonStrictThis(cx, thisv, res);
 }
 
