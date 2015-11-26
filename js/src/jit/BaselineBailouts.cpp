@@ -1720,7 +1720,9 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
     MOZ_ASSERT(rematFrame->numActualArgs() == frame->numActualArgs());
 
     frame->setScopeChain(rematFrame->scopeChain());
-    frame->thisValue() = rematFrame->thisValue();
+
+    if (frame->isNonEvalFunctionFrame())
+        frame->thisArgument() = rematFrame->thisArgument();
 
     for (unsigned i = 0; i < frame->numActualArgs(); i++)
         frame->argv()[i] = rematFrame->argv()[i];

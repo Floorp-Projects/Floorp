@@ -198,7 +198,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
         data.scopeChain = nullptr;
         data.calleeToken = CalleeToToken(&fp->callee(), data.constructing);
     } else {
-        thisv = fp->thisValue();
+        thisv.setUndefined();
         data.constructing = false;
         data.numActualArgs = 0;
         data.maxArgc = 1;

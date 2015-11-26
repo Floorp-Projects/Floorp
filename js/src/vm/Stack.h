@@ -216,7 +216,7 @@ class AbstractFramePtr
     inline JSFunction* maybeFun() const;
     inline JSFunction* callee() const;
     inline Value calleev() const;
-    inline Value& thisValue() const;
+    inline Value& thisArgument() const;
 
     inline Value newTarget() const;
 
@@ -711,33 +711,13 @@ class InterpreterFrame
     }
 
     /*
-     * This value
-     *
-     * Every frame has a this value although, until 'this' is computed, the
-     * value may not be the semantically-correct 'this' value.
-     *
-     * The 'this' value is stored before the formal arguments for function
-     * frames and directly before the frame for global frames. The *Args
-     * members assert !isEvalFrame(), so we implement specialized inline
-     * methods for accessing 'this'. When the caller has static knowledge that
-     * a frame is a function, 'functionThis' allows more efficient access.
+     * Return the 'this' argument passed to a non-eval function frame. This is
+     * not necessarily the frame's this-binding, for instance non-strict
+     * functions will box primitive 'this' values and thisArgument() will
+     * return the original, unboxed Value.
      */
-
-    Value& functionThis() const {
-        MOZ_ASSERT(isFunctionFrame());
-        if (isEvalFrame())
-            return ((Value*)this)[-1];
-        return argv()[-1];
-    }
-
-    JSObject& constructorThis() const {
-        MOZ_ASSERT(hasArgs());
-        return argv()[-1].toObject();
-    }
-
-    Value& thisValue() const {
-        if (flags_ & (EVAL | GLOBAL | MODULE))
-            return ((Value*)this)[-1];
+    Value& thisArgument() const {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return argv()[-1];
     }
 
@@ -2006,7 +1986,7 @@ class FrameIter
     // actual this-binding (for instance, derived class constructors will
     // change their this-value later and non-strict functions will box
     // primitives).
-    Value       originalFunctionThis(JSContext* cx) const;
+    Value       thisArgument(JSContext* cx) const;
 
     Value       newTarget() const;
 
