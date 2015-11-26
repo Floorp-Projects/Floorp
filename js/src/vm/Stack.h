@@ -427,8 +427,7 @@ class InterpreterFrame
 
     /* Used for global and eval frames. */
     void initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr prev,
-                          const Value& thisv, const Value& newTargetValue,
-                          HandleObject scopeChain, ExecuteType type);
+                          const Value& newTargetValue, HandleObject scopeChain, ExecuteType type);
 
   public:
     /*
@@ -742,7 +741,7 @@ class InterpreterFrame
 
     const Value& maybeCalleev() const {
         Value& calleev = flags_ & (EVAL | GLOBAL)
-                         ? ((Value*)this)[-2]
+                         ? ((Value*)this)[-1]
                          : argv()[-2];
         MOZ_ASSERT(calleev.isObjectOrNull());
         return calleev;
@@ -751,12 +750,8 @@ class InterpreterFrame
     Value& mutableCalleev() const {
         MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((Value*)this)[-2];
+            return ((Value*)this)[-1];
         return argv()[-2];
-    }
-
-    CallReceiver callReceiver() const {
-        return CallReceiverFromArgv(argv());
     }
 
     /*
@@ -769,7 +764,7 @@ class InterpreterFrame
     Value newTarget() const {
         MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((Value*)this)[-3];
+            return ((Value*)this)[-2];
 
         if (callee().isArrow())
             return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
@@ -1055,9 +1050,9 @@ class InterpreterStack
     }
 
     // For execution of eval or global code.
-    InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script, const Value& thisv,
-                                 const Value& newTargetValue, HandleObject scopeChain,
-                                 ExecuteType type, AbstractFramePtr evalInFrame);
+    InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script,
+                                       const Value& newTargetValue, HandleObject scopeChain,
+                                       ExecuteType type, AbstractFramePtr evalInFrame);
 
     // Called to invoke a function.
     InterpreterFrame* pushInvokeFrame(JSContext* cx, const CallArgs& args,

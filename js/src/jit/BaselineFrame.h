@@ -436,7 +436,7 @@ class BaselineFrame
         return FramePointerOffset + js::jit::JitFrameLayout::offsetOfThis();
     }
     static size_t offsetOfEvalNewTarget() {
-        return offsetOfArg(0);
+        return FramePointerOffset + js::jit::JitFrameLayout::offsetOfEvalNewTarget();
     }
     static size_t offsetOfArg(size_t index) {
         return FramePointerOffset + js::jit::JitFrameLayout::offsetOfActualArg(index);
