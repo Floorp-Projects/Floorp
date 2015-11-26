@@ -11,6 +11,9 @@
 #endif
 #include "testing/TestHarness.h"
 #include "prenv.h"
+#ifdef XP_WIN
+#include "mozilla/ipc/WindowsMessageLoop.h"
+#endif
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
@@ -86,6 +89,9 @@ int RunGTestFunc()
 
   ScopedXPCOM xpcom("GTest");
 
+#ifdef XP_WIN
+  mozilla::ipc::windows::InitUIThread();
+#endif
 #ifdef MOZ_CRASHREPORTER
   nsCOMPtr<nsICrashReporter> crashreporter;
   char *crashreporterStr = PR_GetEnv("MOZ_CRASHREPORTER");
