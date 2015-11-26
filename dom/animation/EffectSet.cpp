@@ -80,4 +80,16 @@ EffectSet::GetEffectSetPropertyAtom(nsCSSPseudoElements::Type aPseudoType)
   }
 }
 
+void
+EffectSet::AddEffect(dom::KeyframeEffectReadOnly& aEffect)
+{
+  mEffects.PutEntry(&aEffect);
+}
+
+void
+EffectSet::RemoveEffect(dom::KeyframeEffectReadOnly& aEffect)
+{
+  mEffects.RemoveEntry(&aEffect);
+}
+
 } // namespace mozilla
