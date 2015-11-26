@@ -1296,12 +1296,12 @@ class nsIWidget : public nsISupports {
      *
      * @param aOpaqueRegion the region of the window that is opaque.
      */
-    virtual void UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion) {}
+    virtual void UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {}
 
     /**
      * Informs the widget about the region of the window that is draggable.
      */
-    virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) {}
+    virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) {}
 
     /**
      * Tells the widget whether the given input block results in a swipe.

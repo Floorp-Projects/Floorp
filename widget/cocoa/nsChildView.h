@@ -492,7 +492,7 @@ public:
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
 
-  virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) override;
+  virtual void UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
   const LayoutDeviceIntRegion& GetDraggableRegion() { return mDraggableRegion; }
 
   virtual void ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) override;

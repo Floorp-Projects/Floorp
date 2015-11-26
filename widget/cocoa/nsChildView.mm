@@ -2713,12 +2713,10 @@ nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect)
 }
 
 void
-nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
+nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion)
 {
-  LayoutDeviceIntRegion region =
-    LayoutDeviceIntRegion::FromUnknownRegion(aRegion);
-  if (mDraggableRegion != region) {
-    mDraggableRegion = region;
+  if (mDraggableRegion != aRegion) {
+    mDraggableRegion = aRegion;
     [(ChildView*)mView updateWindowDraggableState];
   }
 }
