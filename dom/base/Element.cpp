@@ -54,6 +54,7 @@
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -3305,24 +3306,22 @@ Element::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations)
     doc->FlushPendingNotifications(Flush_Style);
   }
 
-  nsIAtom* properties[] = { nsGkAtoms::transitionsProperty,
-                            nsGkAtoms::animationsProperty };
-  for (size_t propIdx = 0; propIdx < MOZ_ARRAY_LENGTH(properties);
-       propIdx++) {
-    AnimationCollection* collection =
-      static_cast<AnimationCollection*>(
-        GetProperty(properties[propIdx]));
-    if (!collection) {
-      continue;
-    }
-    for (size_t animIdx = 0;
-         animIdx < collection->mAnimations.Length();
-         animIdx++) {
-      Animation* anim = collection->mAnimations[animIdx];
-      if (anim->IsRelevant()) {
-        aAnimations.AppendElement(anim);
-      }
-    }
+  EffectSet* effects = EffectSet::GetEffectSet(this,
+                         nsCSSPseudoElements::ePseudo_NotPseudoElement);
+  if (!effects) {
+    return;
+  }
+
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    MOZ_ASSERT(effect && effect->GetAnimation(),
+               "Only effects associated with an animation should be "
+               "added to an element's effect set");
+    Animation* animation = effect->GetAnimation();
+
+    MOZ_ASSERT(animation->IsRelevant(),
+               "Only relevant animations should be added to an element's "
+               "effect set");
+    aAnimations.AppendElement(animation);
   }
 
   aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
