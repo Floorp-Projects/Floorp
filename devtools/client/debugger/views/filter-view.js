@@ -682,8 +682,9 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      let actor = this.DebuggerView.Sources.getActorForLocation({ url: locationItem.attachment.url });
-      this.DebuggerView.setEditorLocation(actor, undefined, {
+      let source = queries.getSourceByURL(DebuggerController.getState(),
+                                          locationItem.attachment.url);
+      this.DebuggerView.setEditorLocation(source.actor, undefined, {
         noCaret: true,
         noDebug: true
       });
@@ -745,7 +746,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     setNamedTimeout("function-search", delay, () => {
       // Start fetching as many sources as possible, then perform the search.
       let actors = this.DebuggerView.Sources.values;
-      let sourcesFetched = this.SourceScripts.getTextForSources(actors);
+      let sourcesFetched = DebuggerController.dispatch(actions.getTextForSources(actors));
       sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
     });
   },
@@ -895,7 +896,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
   _onSelect: function({ detail: functionItem }) {
     if (functionItem) {
       let sourceUrl = functionItem.attachment.sourceUrl;
-      let actor = this.DebuggerView.Sources.getActorForLocation({ url: sourceUrl });
+      let actor = queries.getSourceByURL(DebuggerController.getState(), sourceUrl).actor;
       let scriptOffset = functionItem.attachment.scriptOffset;
       let actualLocation = functionItem.attachment.actualLocation;
 
