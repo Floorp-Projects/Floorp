@@ -5027,7 +5027,8 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     Matrix4x4 result = nsDisplayTransform::GetResultingTransformMatrix(this,
-                         nsPoint(0, 0), scaleFactor, nullptr, aOutAncestor);
+                         nsPoint(0, 0), scaleFactor, 0,
+                         nullptr, aOutAncestor);
     // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
