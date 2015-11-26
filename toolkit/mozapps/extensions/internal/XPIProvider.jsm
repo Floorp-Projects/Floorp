@@ -219,7 +219,6 @@ const TYPE_ALIASES = {
 const CHROME_TYPES = new Set([
   "extension",
   "locale",
-  "experiment",
 ]);
 
 const RESTARTLESS_TYPES = new Set([
