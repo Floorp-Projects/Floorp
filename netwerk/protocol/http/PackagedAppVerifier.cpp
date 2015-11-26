@@ -81,7 +81,7 @@ NS_IMETHODIMP PackagedAppVerifier::Init(nsIPackagedAppVerifierListener* aListene
   mIsFirstResource = true;
   mManifest = EmptyCString();
 
-  OriginAttributes().PopulateFromOrigin(aPackageOrigin, mPackageOrigin);
+  NeckoOriginAttributes().PopulateFromOrigin(aPackageOrigin, mPackageOrigin);
   mBypassVerification = (mPackageOrigin ==
       Preferences::GetCString("network.http.signed-packages.trusted-origin"));
 

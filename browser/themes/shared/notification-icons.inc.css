@@ -445,3 +445,83 @@
   }
 %endif
 }
+
+/* Loop notification */
+notification[value="loop-sharing-notification"] {
+  -moz-appearance: none;
+  height: 40px;
+  background-color: #00a9dc;
+  box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+}
+
+notification[value="loop-sharing-notification"].paused {
+  background-color: #ebebeb;
+}
+
+notification[value="loop-sharing-notification"] .notification-inner {
+  color: #fff;
+  padding: 0;
+}
+
+notification[value="loop-sharing-notification"].paused .notification-inner {
+  color: #00a9dc;
+}
+
+notification[value="loop-sharing-notification"] .notification-button {
+  -moz-appearance: none;
+  background-color: #fff;
+  border: 0;
+  border-right: solid 1px #ebebeb;
+  width: 100px;
+  height: 40px;
+  margin: 0;
+  list-style-image: url(chrome://browser/content/loop/shared/img/pause-12x12.svg);
+  box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+  text-shadow: none;
+}
+
+notification[value="loop-sharing-notification"] .notification-button:-moz-locale-dir(rtl) {
+  border-right: 0;
+  border-left: solid 1px #ebebeb;
+}
+
+notification[value="loop-sharing-notification"].paused .notification-button {
+  background-color: #57bd35;
+  color: #fff;
+  list-style-image: url(chrome://browser/content/loop/shared/img/play-12x12.svg);
+}
+
+notification[value="loop-sharing-notification"].paused .notification-button:hover {
+  background-color: #39a017;
+}
+
+notification[value="loop-sharing-notification"] .notification-button:hover,
+notification[value="loop-sharing-notification"].paused .notification-button-default:hover {
+  background-color: #ebebeb;
+}
+
+notification[value="loop-sharing-notification"] .notification-button-default,
+notification[value="loop-sharing-notification"].paused .notification-button-default {
+  color: #d92215;
+  background-color: #fff;
+  border-right: 0;
+  list-style-image: url(chrome://browser/content/loop/shared/img/stop-12x12.svg);
+}
+
+notification[value="loop-sharing-notification"] .notification-button .button-icon {
+  display: block;
+  -moz-margin-end: 6px;
+}
+
+notification[value="loop-sharing-notification"] .button-menubutton-button {
+  min-width: 0;
+}
+
+notification[value="loop-sharing-notification"] .messageImage {
+  list-style-image: url(chrome://browser/content/loop/shared/img/icons-16x16.svg#loop-icon-white);
+  margin-inline-start: 14px;
+}
+
+notification[value="loop-sharing-notification"].paused .messageImage {
+  list-style-image: url(chrome://browser/content/loop/shared/img/icons-16x16.svg#loop-icon-still);
+}

@@ -87,7 +87,7 @@ protected:
     nsCString                           mCharset;
     int64_t                             mContentLength;
     uint32_t                            mLoadFlags;
-    mozilla::OriginAttributes           mOriginAttributes;
+    mozilla::NeckoOriginAttributes      mOriginAttributes;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsISupports>               mOwner;

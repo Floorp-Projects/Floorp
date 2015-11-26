@@ -12,7 +12,8 @@ h2, h3, h4 {
 }
 
 button {
-  width: 100px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 #body {
@@ -78,5 +79,14 @@ label {
 }
 
 .target-details {
+  flex: 1;
+}
+
+.addon-controls {
+  display: flex;
+  flex-direction: row;
+}
+
+.addon-options {
   flex: 1;
 }

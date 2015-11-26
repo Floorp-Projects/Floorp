@@ -8,6 +8,7 @@
 
 "use strict";
 
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { loader } = Components.utils.import(
   "resource://devtools/shared/Loader.jsm", {});
 
@@ -23,7 +24,15 @@ loader.lazyRequireGetter(this, "WorkersComponent",
   "devtools/client/aboutdebugging/components/workers", true);
 loader.lazyRequireGetter(this, "Services");
 
+loader.lazyImporter(this, "AddonManager",
+  "resource://gre/modules/AddonManager.jsm");
+
+const Strings = Services.strings.createBundle(
+  "chrome://devtools/locale/aboutdebugging.properties");
+
 var AboutDebugging = {
+  _prefListeners: [],
+
   _categories: null,
   get categories() {
     // If needed, initialize the list of available categories.
@@ -72,13 +81,18 @@ var AboutDebugging = {
       let updatePref = () => {
         Services.prefs.setBoolPref(pref, element.checked);
       };
+      element.addEventListener("change", updatePref, false);
       let updateCheckbox = () => {
         element.checked = Services.prefs.getBoolPref(pref);
       };
-      element.addEventListener("change", updatePref, false);
       Services.prefs.addObserver(pref, updateCheckbox, false);
+      this._prefListeners.push([pref, updateCheckbox]);
       updateCheckbox();
     });
+
+    // Link buttons to their associated actions.
+    let loadAddonButton = document.getElementById("load-addon-from-file");
+    loadAddonButton.addEventListener("click", this.loadAddonFromFile);
 
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
@@ -95,10 +109,41 @@ var AboutDebugging = {
     });
   },
 
+  loadAddonFromFile() {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(window,
+      Strings.GetStringFromName("selectAddonFromFile"),
+      Ci.nsIFilePicker.modeOpen);
+    let res = fp.show();
+    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
+      return;
+    }
+    let file = fp.file;
+    // AddonManager.installTemporaryAddon accepts either
+    // addon directory or final xpi file.
+    if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
+      file = file.parent;
+    }
+    try {
+      AddonManager.installTemporaryAddon(file);
+    } catch(e) {
+      alert("Error while installing the addon:\n" + e.message + "\n");
+      throw e;
+    }
+  },
+
   destroy() {
     let telemetry = this._telemetry;
     telemetry.toolClosed("aboutdebugging");
     telemetry.destroy();
+
+    this._prefListeners.forEach(([pref, listener]) => {
+      Services.prefs.removeObserver(pref, listener);
+    });
+    this._prefListeners = [];
+
+    React.unmountComponentAtNode(document.querySelector("#addons"));
+    React.unmountComponentAtNode(document.querySelector("#workers"));
   },
 };
 

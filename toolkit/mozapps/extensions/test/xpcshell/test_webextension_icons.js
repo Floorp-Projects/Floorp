@@ -87,6 +87,9 @@ add_task(function*() {
     icons: {
       32: "icon32.png",
       banana: "bananana.png",
+      "20.5": "icon20.5.png",
+      "20.0": "also invalid",
+      "123banana": "123banana.png",
       64: "icon64.png"
     }
   }, profileDir);

@@ -355,7 +355,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-macosx.zip'
         is_64bits = sys.maxsize > 2**32
         if is_64bits:
-            self.ndk_url = android_ndk_url('darwin')
+            self.ndk_url = android.android_ndk_url('darwin')
         else:
             raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
 
@@ -368,7 +368,7 @@ class OSXBootstrapper(BaseBootstrapper):
         android_tool = os.path.join(self.sdk_path, 'tools', 'android')
         android.ensure_android_packages(android_tool=android_tool)
 
-    def suggest_mobile_android_mozconfig(self):
+    def suggest_homebrew_mobile_android_mozconfig(self):
         import android
         android.suggest_mozconfig(sdk_path=self.sdk_path,
                                   ndk_path=self.ndk_path)

@@ -307,7 +307,7 @@ function getItemWorkerForWindow(item, window) {
 var RemoteItem = Class({
   initialize: function(options, manager) {
     this.id = options.id;
-    this.contexts = [instantiateContext(c) for (c of options.contexts)];
+    this.contexts = options.contexts.map(instantiateContext);
     this.contentScript = options.contentScript;
     this.contentScriptFile = options.contentScriptFile;
 

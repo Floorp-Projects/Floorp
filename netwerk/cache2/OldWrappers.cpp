@@ -528,7 +528,7 @@ GetCacheSessionNameForStoragePolicy(
         nsCSubstring const &scheme,
         nsCacheStoragePolicy storagePolicy,
         bool isPrivate,
-        OriginAttributes const *originAttribs,
+        NeckoOriginAttributes const *originAttribs,
         nsACString& sessionName)
 {
   MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);

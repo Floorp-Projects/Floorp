@@ -111,7 +111,7 @@ ServiceWorkerManagerService::PropagateRegistration(
 void
 ServiceWorkerManagerService::PropagateSoftUpdate(
                                       uint64_t aParentID,
-                                      const OriginAttributes& aOriginAttributes,
+                                      const PrincipalOriginAttributes& aOriginAttributes,
                                       const nsAString& aScope)
 {
   AssertIsOnBackgroundThread();

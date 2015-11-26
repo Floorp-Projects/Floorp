@@ -241,6 +241,7 @@ function mustSign(aType) {
   return REQUIRE_SIGNING || Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false);
 }
 
+const INTEGER = /^[1-9]\d*$/;
 
 // Keep track of where we are in startup for telemetry
 // event happened during XPIDatabase.startup()
@@ -867,20 +868,24 @@ var loadManifestFromWebManifest = Task.async(function* loadManifestFromWebManife
     return findProp(obj[field], current, properties.slice(1));
   }
 
-  function getProp(path) {
-    return findProp(manifest, "", path.split("."));
+  function getProp(path, type = "String") {
+    let val = findProp(manifest, "", path.split("."));
+
+    if ({}.toString.call(val) != `[object ${type}]`)
+      throw new SyntaxError(`Expected property ${path} to be of type ${type}`);
+    return val;
   }
 
-  function getOptionalProp(path, defValue = null) {
+  function getOptionalProp(path, defValue = null, type = "String") {
     try {
-      return findProp(manifest, "", path.split("."));
+      return getProp(path, type);
     }
-    catch (e) {
+    catch (e if !(e instanceof SyntaxError)) {
       return defValue;
     }
   }
 
-  let mVersion = getProp("manifest_version");
+  let mVersion = getProp("manifest_version", "Number");
   if (mVersion != 2) {
     throw new Error("Expected manifest_version to be 2 but was " + mVersion);
   }
@@ -897,23 +902,32 @@ var loadManifestFromWebManifest = Task.async(function* loadManifestFromWebManife
   addon.hasBinaryComponents = false;
   addon.multiprocessCompatible = true;
   addon.internalName = null;
-  addon.updateURL = null;
+  addon.updateURL = getOptionalProp("applications.gecko.update_url");
   addon.updateKey = null;
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
+
+  if (addon.updateURL != null) {
+    // Make sure that the URL is a valid absolute URL, and that anyone is
+    // allowed to load it.
+    let ssm = Services.scriptSecurityManager;
+    ssm.checkLoadURIStrWithPrincipal(ssm.createNullPrincipal({}),
+                                     addon.updateURL,
+                                     ssm.DISALLOW_INHERIT_PRINCIPAL);
+  }
 
   // WebExtensions don't use iconURLs
   addon.iconURL = null;
   addon.icon64URL = null;
   addon.icons = {};
 
-  let icons = getOptionalProp('icons');
+  let icons = getOptionalProp("icons", null, "Object");
   if (icons) {
     // filter out invalid (non-integer) size keys
     Object.keys(icons)
+          .filter((size) => INTEGER.test(size))
           .map((size) => parseInt(size, 10))
-          .filter((size) => !isNaN(size))
           .forEach((size) => addon.icons[size] = icons[size]);
   }
 
@@ -949,8 +963,9 @@ var loadManifestFromWebManifest = Task.async(function* loadManifestFromWebManife
 
   addon.targetApplications = [{
     id: TOOLKIT_ID,
-    minVersion: AddonManagerPrivate.webExtensionsMinPlatformVersion,
-    maxVersion: "*",
+    minVersion: getOptionalProp("application.gecko.strict_min_version",
+                                AddonManagerPrivate.webExtensionsMinPlatformVersion),
+    maxVersion: getOptionalProp("application.gecko.strict_max_version", "*"),
   }];
 
   addon.targetPlatforms = [];
@@ -5420,6 +5435,13 @@ AddonInstall.prototype = {
                                  "XPI is incorrectly signed"]);
         }
       }
+    }
+
+    if (this.existingAddon && this.existingAddon.type == "webextension" &&
+        this.addon.type != "webextension") {
+      zipreader.close();
+      return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
+                             "WebExtensions may not be upated to other extension types"]);
     }
 
     if (this.addon.type == "multipackage")

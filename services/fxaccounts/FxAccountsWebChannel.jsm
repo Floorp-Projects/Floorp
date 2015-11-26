@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
                                   "resource://gre/modules/WebChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Weave",
+                                  "resource://services-sync/main.js");
 
 const COMMAND_PROFILE_CHANGE       = "profile:change";
 const COMMAND_CAN_LINK_ACCOUNT     = "fxaccounts:can_link_account";
@@ -206,7 +208,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     Services.prefs.setBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION, showCustomizeSyncPref);
   },
 
-  getShowCustomizeSyncPref(showCustomizeSyncPref) {
+  getShowCustomizeSyncPref() {
     return Services.prefs.getBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION);
   },
 
@@ -219,6 +221,19 @@ this.FxAccountsWebChannelHelpers.prototype = {
     if (accountData.customizeSync) {
       this.setShowCustomizeSyncPref(true);
       delete accountData.customizeSync;
+    }
+
+    if (accountData.declinedSyncEngines) {
+      let declinedSyncEngines = accountData.declinedSyncEngines;
+      log.debug("Received declined engines", declinedSyncEngines);
+      Weave.Service.engineManager.setDeclined(declinedSyncEngines);
+      declinedSyncEngines.forEach(engine => {
+        Services.prefs.setBoolPref("services.sync.engine." + engine, false);
+      });
+
+      // if we got declinedSyncEngines that means we do not need to show the customize screen.
+      this.setShowCustomizeSyncPref(false);
+      delete accountData.declinedSyncEngines;
     }
 
     // the user has already been shown the "can link account"
@@ -239,7 +254,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
   },
 
   /**
-   * logoust the fxaccounts service
+   * logout the fxaccounts service
    *
    * @param the uid of the account which have been logged out
    */

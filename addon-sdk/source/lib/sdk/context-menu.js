@@ -355,7 +355,7 @@ function itemActivated(item, clickedNode) {
 function serializeItem(item) {
   return {
     id: internal(item).id,
-    contexts: [c.serialize() for (c of item.context)],
+    contexts: item.context.map(c => c.serialize()),
     contentScript: item.contentScript,
     contentScriptFile: item.contentScriptFile,
   };

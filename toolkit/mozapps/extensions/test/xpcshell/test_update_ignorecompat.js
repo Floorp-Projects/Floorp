@@ -11,7 +11,6 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
-Components.utils.import("resource://testing-common/httpd.js");
 var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 mapFile("/data/test_update.rdf", testserver);

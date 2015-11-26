@@ -472,18 +472,8 @@ var LoopUI;
         return;
       }
 
-      // Create the menu that is shown when the menu-button' dropmarker is clicked
-      // inside the notification bar.
-      let menuPopup = document.createElementNS(kNSXUL, "menupopup");
-      let menuItem = menuPopup.appendChild(document.createElementNS(kNSXUL, "menuitem"));
-      menuItem.setAttribute("label", this._getString("infobar_menuitem_dontshowagain_label"));
-      menuItem.setAttribute("accesskey", this._getString("infobar_menuitem_dontshowagain_accesskey"));
-      menuItem.addEventListener("command", () => {
-        // We're being told to hide the bar permanently.
-        this._hideBrowserSharingInfoBar(true);
-      });
-
       let box = gBrowser.getNotificationBox();
+      let paused = false;
       let bar = box.appendNotification(
         this._getString("infobar_screenshare_browser_message"),
         kBrowserSharingNotificationId,
@@ -491,13 +481,28 @@ var LoopUI;
         null,
         box.PRIORITY_WARNING_LOW,
         [{
-          label: this._getString("infobar_button_gotit_label"),
-          accessKey: this._getString("infobar_button_gotit_accesskey"),
-          type: "menu-button",
-          popup: menuPopup,
-          anchor: "dropmarker",
+          label: this._getString("infobar_button_pause_label"),
+          accessKey: this._getString("infobar_button_pause_accesskey"),
+          isDefault: false,
+          callback: (event, buttonInfo, buttonNode) => {
+            paused = !paused;
+            bar.label = paused ? this._getString("infobar_screenshare_paused_browser_message") :
+              this._getString("infobar_screenshare_browser_message");
+            bar.classList.toggle("paused", paused);
+            buttonNode.label = paused ? this._getString("infobar_button_resume_label") :
+              this._getString("infobar_button_pause_label");
+            buttonNode.accessKey = paused ? this._getString("infobar_button_resume_accesskey") :
+              this._getString("infobar_button_pause_accesskey");
+            return true;
+          }
+        },
+        {
+          label: this._getString("infobar_button_stop_label"),
+          accessKey: this._getString("infobar_button_stop_accesskey"),
+          isDefault: true,
           callback: () => {
             this._hideBrowserSharingInfoBar();
+            LoopUI.MozLoopService.hangupAllChatWindows();
           }
         }]
       );
