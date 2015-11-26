@@ -4028,8 +4028,8 @@ BaselineCompiler::emit_JSOP_RESUME()
     }
     masm.bind(&loopDone);
 
-    // Push |this|.
-    masm.pushValue(Address(genObj, GeneratorObject::offsetOfThisSlot()));
+    // Push |undefined| for |this|.
+    masm.pushValue(UndefinedValue());
 
     // Update BaselineFrame frameSize field and create the frame descriptor.
     masm.computeEffectiveAddress(Address(BaselineFrameReg, BaselineFrame::FramePointerOffset),
