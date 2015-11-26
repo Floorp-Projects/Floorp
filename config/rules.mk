@@ -1270,9 +1270,6 @@ endif
 
 ifneq ($(DIST_FILES),)
 DIST_FILES_PATH := $(FINAL_TARGET)
-# We preprocess these, but they don't necessarily have preprocessor directives,
-# so tell them preprocessor to not complain about that.
-DIST_FILES_FLAGS := --silence-missing-directive-warnings
 PP_TARGETS += DIST_FILES
 endif
 

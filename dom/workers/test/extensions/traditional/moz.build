@@ -19,5 +19,8 @@ XPI_NAME = 'worker'
 
 DIST_FILES += [
     'install.rdf',
+]
+
+FINAL_TARGET_FILES += [
     'worker.js',
 ]

@@ -12,6 +12,9 @@ USE_EXTENSION_MANIFEST = True
 NO_JS_MANIFEST = True
 
 DIST_FILES += [
-    'bootstrap.js',
     'install.rdf',
+]
+
+FINAL_TARGET_FILES += [
+    'bootstrap.js',
 ]
