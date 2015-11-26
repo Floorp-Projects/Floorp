@@ -104,46 +104,64 @@ namespace {
 class CheckScriptEvaluationWithCallback final : public WorkerRunnable
 {
   nsMainThreadPtrHandle<KeepAliveToken> mKeepAliveToken;
-  RefPtr<nsRunnable> mCallback;
+  RefPtr<LifeCycleEventCallback> mCallback;
+  DebugOnly<bool> mDone;
 
 public:
   CheckScriptEvaluationWithCallback(WorkerPrivate* aWorkerPrivate,
                                     KeepAliveToken* aKeepAliveToken,
-                                    nsRunnable* aCallback)
+                                    LifeCycleEventCallback* aCallback)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
     , mKeepAliveToken(new nsMainThreadPtrHolder<KeepAliveToken>(aKeepAliveToken))
     , mCallback(aCallback)
+    , mDone(false)
   {
     AssertIsOnMainThread();
+  }
+
+  ~CheckScriptEvaluationWithCallback()
+  {
+    MOZ_ASSERT(mDone);
   }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
-    if (aWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
-      nsresult rv = NS_DispatchToMainThread(mCallback);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to dispatch CheckScriptEvaluation callback.");
-      }
-    }
+    Done(aWorkerPrivate->WorkerScriptExecutedSuccessfully());
 
     return true;
+  }
+
+  NS_IMETHOD
+  Cancel() override
+  {
+    Done(false);
+    return WorkerRunnable::Cancel();
+  }
+
+private:
+  void
+  Done(bool aResult)
+  {
+    mDone = true;
+    mCallback->SetResult(aResult);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(mCallback)));
   }
 };
 
 } // anonymous namespace
 
 nsresult
-ServiceWorkerPrivate::ContinueOnSuccessfulScriptEvaluation(nsRunnable* aCallback)
+ServiceWorkerPrivate::CheckScriptEvaluation(LifeCycleEventCallback* aCallback)
 {
   nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(mKeepAliveToken);
   RefPtr<WorkerRunnable> r = new CheckScriptEvaluationWithCallback(mWorkerPrivate,
-                                                                     mKeepAliveToken,
-                                                                     aCallback);
+                                                                   mKeepAliveToken,
+                                                                   aCallback);
   AutoJSAPI jsapi;
   jsapi.Init();
   if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {

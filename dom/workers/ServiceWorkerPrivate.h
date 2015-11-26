@@ -72,11 +72,9 @@ public:
                    UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
 
   // This is used to validate the worker script and continue the installation
-  // process. Note that the callback is dispatched to the main thread
-  // ONLY if the evaluation was successful. Failure is handled by the JS
-  // exception handler which will call ServiceWorkerManager::HandleError.
+  // process.
   nsresult
-  ContinueOnSuccessfulScriptEvaluation(nsRunnable* aCallback);
+  CheckScriptEvaluation(LifeCycleEventCallback* aCallback);
 
   nsresult
   SendLifeCycleEvent(const nsAString& aEventType,
