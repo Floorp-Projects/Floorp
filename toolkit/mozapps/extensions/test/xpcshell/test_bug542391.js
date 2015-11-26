@@ -14,7 +14,6 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 var testserver;
 
