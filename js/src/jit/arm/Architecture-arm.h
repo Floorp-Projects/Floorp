@@ -391,7 +391,8 @@ class VFPRegister
 
     bool isSingle() const { return kind == Single; }
     bool isDouble() const { return kind == Double; }
-    bool isSimd128() const { return false; }
+    bool isInt32x4() const { return false; }
+    bool isFloat32x4() const { return false; }
     bool isFloat() const { return (kind == Double) || (kind == Single); }
     bool isInt() const { return (kind == UInt) || (kind == Int); }
     bool isSInt() const { return kind == Int; }
@@ -408,7 +409,8 @@ class VFPRegister
 
     VFPRegister asSingle() const { return singleOverlay(); }
     VFPRegister asDouble() const { return doubleOverlay(); }
-    VFPRegister asSimd128() const { MOZ_CRASH("NYI"); }
+    VFPRegister asInt32x4() const { MOZ_CRASH("NYI"); }
+    VFPRegister asFloat32x4() const { MOZ_CRASH("NYI"); }
 
     struct VFPRegIndexSplit;
     VFPRegIndexSplit encode();

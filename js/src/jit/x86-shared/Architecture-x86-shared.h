@@ -193,9 +193,10 @@ class FloatRegisters {
     typedef X86Encoding::XMMRegisterID Encoding;
 
     enum ContentType {
-        Single,     // 32-bit float.
-        Double,     // 64-bit double.
-        Simd128,    // 128-bit SIMD type (int32x4, bool16x8, etc).
+        Single,
+        Double,
+        Int32x4,
+        Float32x4,
         NumTypes
     };
 
@@ -243,9 +244,10 @@ class FloatRegisters {
     // the bits of the physical register mask.
     static const SetType SpreadSingle = SetType(1) << (uint32_t(Single) * TotalPhys);
     static const SetType SpreadDouble = SetType(1) << (uint32_t(Double) * TotalPhys);
-    static const SetType SpreadSimd128 = SetType(1) << (uint32_t(Simd128) * TotalPhys);
+    static const SetType SpreadInt32x4 = SetType(1) << (uint32_t(Int32x4) * TotalPhys);
+    static const SetType SpreadFloat32x4 = SetType(1) << (uint32_t(Float32x4) * TotalPhys);
     static const SetType SpreadScalar = SpreadSingle | SpreadDouble;
-    static const SetType SpreadVector = SpreadSimd128;
+    static const SetType SpreadVector = SpreadInt32x4 | SpreadFloat32x4;
     static const SetType Spread = SpreadScalar | SpreadVector;
 
     static const SetType AllPhysMask = ((1 << TotalPhys) - 1);
@@ -356,12 +358,14 @@ struct FloatRegister {
 
     bool isSingle() const { MOZ_ASSERT(!isInvalid()); return type_ == Codes::Single; }
     bool isDouble() const { MOZ_ASSERT(!isInvalid()); return type_ == Codes::Double; }
-    bool isSimd128() const { MOZ_ASSERT(!isInvalid()); return type_ == Codes::Simd128; }
+    bool isInt32x4() const { MOZ_ASSERT(!isInvalid()); return type_ == Codes::Int32x4; }
+    bool isFloat32x4() const { MOZ_ASSERT(!isInvalid()); return type_ == Codes::Float32x4; }
     bool isInvalid() const { return isInvalid_; }
 
     FloatRegister asSingle() const { MOZ_ASSERT(!isInvalid()); return FloatRegister(reg_, Codes::Single); }
     FloatRegister asDouble() const { MOZ_ASSERT(!isInvalid()); return FloatRegister(reg_, Codes::Double); }
-    FloatRegister asSimd128() const { MOZ_ASSERT(!isInvalid()); return FloatRegister(reg_, Codes::Simd128); }
+    FloatRegister asInt32x4() const { MOZ_ASSERT(!isInvalid()); return FloatRegister(reg_, Codes::Int32x4); }
+    FloatRegister asFloat32x4() const { MOZ_ASSERT(!isInvalid()); return FloatRegister(reg_, Codes::Float32x4); }
 
     uint32_t size() const {
         MOZ_ASSERT(!isInvalid());
@@ -369,7 +373,7 @@ struct FloatRegister {
             return sizeof(float);
         if (isDouble())
             return sizeof(double);
-        MOZ_ASSERT(isSimd128());
+        MOZ_ASSERT(isInt32x4() || isFloat32x4());
         return 4 * sizeof(int32_t);
     }
 
