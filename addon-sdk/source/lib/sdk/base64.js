@@ -38,6 +38,6 @@ exports.encode = function (data, charset) {
   if (isUTF8(charset))
     return btoa(unescape(encodeURIComponent(data)))
 
-  data = String.fromCharCode(...[(c.charCodeAt(0) & 0xff) for (c of data)]);
+  data = String.fromCharCode(...Array.from(data, c => (c.charCodeAt(0) & 0xff)));
   return btoa(data);
 }
