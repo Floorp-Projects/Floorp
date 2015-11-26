@@ -44,7 +44,7 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes)
+nsNullPrincipal::Create(const PrincipalOriginAttributes& aOriginAttributes)
 {
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(aOriginAttributes);
@@ -54,7 +54,7 @@ nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes)
 }
 
 nsresult
-nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes)
+nsNullPrincipal::Init(const PrincipalOriginAttributes& aOriginAttributes)
 {
   mOriginAttributes = aOriginAttributes;
 

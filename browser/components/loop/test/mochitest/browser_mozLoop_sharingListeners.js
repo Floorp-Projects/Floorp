@@ -156,11 +156,6 @@ add_task(function* test_infoBar() {
 
     let button = bar.querySelector(".notification-button");
     Assert.ok(button, "There should be a button present");
-    Assert.strictEqual(button.type, "menu-button", "We're expecting a menu-button");
-    Assert.strictEqual(button.getAttribute("anchor"), "dropmarker",
-      "The popup should be opening anchored to the dropmarker");
-    Assert.strictEqual(button.getElementsByTagNameNS(kNSXUL, "menupopup").length, 1,
-      "There should be a popup attached to the button");
   };
 
   testBarProps();
@@ -175,11 +170,8 @@ add_task(function* test_infoBar() {
   testBarProps();
 
   // Test hiding the infoBar.
-  getInfoBar().querySelector(".notification-button")
-              .getElementsByTagNameNS(kNSXUL, "menuitem")[0].click();
+  getInfoBar().querySelector(".notification-button-default").click();
   Assert.equal(getInfoBar(), null, "The notification should be hidden now");
-  Assert.strictEqual(Services.prefs.getBoolPref(kPrefBrowserSharingInfoBar), false,
-    "The pref should be set to false when the menu item is clicked");
 
   gBrowser.selectedIndex = Array.indexOf(gBrowser.tabs, createdTabs[1]);
 

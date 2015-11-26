@@ -35,7 +35,7 @@ class mozIApplicationClearPrivateDataParams;
 
 namespace mozilla {
 
-class OriginAttributes;
+class PrincipalOriginAttributes;
 
 namespace dom {
 
@@ -354,13 +354,13 @@ public:
   nsClassHashtable<nsCStringHashKey, InterceptionList> mNavigationInterceptions;
 
   bool
-  IsAvailable(const OriginAttributes& aOriginAttributes, nsIURI* aURI);
+  IsAvailable(const PrincipalOriginAttributes& aOriginAttributes, nsIURI* aURI);
 
   bool
   IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
 
   already_AddRefed<nsIRunnable>
-  PrepareFetchEvent(const OriginAttributes& aOriginAttributes,
+  PrepareFetchEvent(const PrincipalOriginAttributes& aOriginAttributes,
                     nsIDocument* aDoc,
                     nsIInterceptedChannel* aChannel,
                     bool aIsReload,
@@ -378,12 +378,12 @@ public:
              ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
 
   void
-  SoftUpdate(const OriginAttributes& aOriginAttributes,
+  SoftUpdate(const PrincipalOriginAttributes& aOriginAttributes,
              const nsACString& aScope,
              ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
 
   void
-  PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,
+  PropagateSoftUpdate(const PrincipalOriginAttributes& aOriginAttributes,
                       const nsAString& aScope);
 
   void
@@ -515,7 +515,7 @@ private:
                            nsISupports** aServiceWorker);
 
   ServiceWorkerInfo*
-  GetActiveWorkerInfoForScope(const OriginAttributes& aOriginAttributes,
+  GetActiveWorkerInfoForScope(const PrincipalOriginAttributes& aOriginAttributes,
                               const nsACString& aScope);
 
   ServiceWorkerInfo*
@@ -542,7 +542,7 @@ private:
   GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(const OriginAttributes& aOriginAttributes,
+  GetServiceWorkerRegistrationInfo(const PrincipalOriginAttributes& aOriginAttributes,
                                    nsIURI* aURI);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
@@ -625,7 +625,7 @@ private:
   // Removes all service worker registrations that matches the given
   // mozIApplicationClearPrivateDataParams.
   void
-  RemoveAllRegistrations(OriginAttributes* aParams);
+  RemoveAllRegistrations(PrincipalOriginAttributes* aParams);
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 

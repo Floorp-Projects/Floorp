@@ -90,7 +90,7 @@ function makeChildOptions(options) {
   function makeStringArray(arrayOrValue) {
     if (!arrayOrValue)
       return [];
-    return [String(v) for (v of [].concat(arrayOrValue))];
+    return [].concat(arrayOrValue).map(String);
   }
 
   return {

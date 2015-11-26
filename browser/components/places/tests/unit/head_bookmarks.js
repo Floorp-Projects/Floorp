@@ -119,3 +119,34 @@ function rebuildSmartBookmarks() {
     Services.console.unregisterListener(consoleListener);
   });
 }
+
+const SINGLE_TRY_TIMEOUT = 100;
+const NUMBER_OF_TRIES = 30;
+
+/**
+ * Similar to waitForConditionPromise, but poll for an asynchronous value
+ * every SINGLE_TRY_TIMEOUT ms, for no more than tryCount times.
+ *
+ * @param promiseFn
+ *        A function to generate a promise, which resolves to the expected
+ *        asynchronous value.
+ * @param timeoutMsg
+ *        The reason to reject the returned promise with.
+ * @param [optional] tryCount
+ *        Maximum times to try before rejecting the returned promise with
+ *        timeoutMsg, defaults to NUMBER_OF_TRIES.
+ * @return {Promise}
+ * @resolves to the asynchronous value being polled.
+ * @rejects if the asynchronous value is not available after tryCount attempts.
+ */
+var waitForResolvedPromise = Task.async(function* (promiseFn, timeoutMsg, tryCount=NUMBER_OF_TRIES) {
+  let tries = 0;
+  do {
+    try {
+      let value = yield promiseFn();
+      return value;
+    } catch (ex) {}
+    yield new Promise(resolve => do_timeout(SINGLE_TRY_TIMEOUT, resolve));
+  } while (++tries <= tryCount);
+  throw(timeoutMsg);
+});

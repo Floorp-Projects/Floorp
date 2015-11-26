@@ -89,6 +89,9 @@ browser.jar:
   content/browser/loop/shared/img/animated-spinner.svg          (content/shared/img/animated-spinner.svg)
   content/browser/loop/shared/img/avatars.svg                   (content/shared/img/avatars.svg)
   content/browser/loop/shared/img/firefox-avatar.svg            (content/shared/img/firefox-avatar.svg)
+  content/browser/loop/shared/img/pause-12x12.svg               (content/shared/img/pause-12x12.svg)
+  content/browser/loop/shared/img/play-12x12.svg                (content/shared/img/play-12x12.svg)
+  content/browser/loop/shared/img/stop-12x12.svg                (content/shared/img/stop-12x12.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/actions.js             (content/shared/js/actions.js)

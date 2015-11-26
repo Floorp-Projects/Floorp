@@ -102,7 +102,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  loadInfo->SetOriginAttributes(mozilla::OriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
+  loadInfo->SetOriginAttributes(mozilla::NeckoOriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
 
   mBeganStream = false;
 

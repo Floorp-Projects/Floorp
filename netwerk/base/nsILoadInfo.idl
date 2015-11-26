@@ -18,8 +18,8 @@ interface nsIPrincipal;
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
-native OriginAttributes(mozilla::OriginAttributes);
-[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
+native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
 
 typedef unsigned long nsSecurityFlags;
 
@@ -335,22 +335,22 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute unsigned long long parentOuterWindowID;
 
   /**
-   * Customized OriginAttributes within LoadInfo to allow overwriting of the
+   * Customized NeckoOriginAttributes within LoadInfo to allow overwriting of the
    * default originAttributes from the loadingPrincipal.
    */
   [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
   attribute jsval originAttributes;
 
   [noscript, nostdcall, binaryname(GetOriginAttributes)]
-  OriginAttributes binaryGetOriginAttributes();
+  NeckoOriginAttributes binaryGetOriginAttributes();
 
   [noscript, nostdcall, binaryname(SetOriginAttributes)]
   void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
 
 %{ C++
-  inline mozilla::OriginAttributes GetOriginAttributes()
+  inline mozilla::NeckoOriginAttributes GetOriginAttributes()
   {
-    mozilla::OriginAttributes result;
+    mozilla::NeckoOriginAttributes result;
     mozilla::DebugOnly<nsresult> rv = GetOriginAttributes(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;

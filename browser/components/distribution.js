@@ -202,6 +202,31 @@ DistributionCustomizer.prototype = {
                                                     PlacesUtils.annotations.EXPIRE_NEVER);
         }
 
+        if (item.icon && item.iconData) {
+          try {
+            let faviconURI = this._makeURI(item.icon);
+            PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+              faviconURI, item.iconData, 0,
+              Services.scriptSecurityManager.getSystemPrincipal());
+
+            PlacesUtils.favicons.setAndFetchFaviconForPage(
+              this._makeURI(item.link), faviconURI, false,
+              PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+              Services.scriptSecurityManager.getSystemPrincipal());
+          } catch(e) {
+            Cu.reportError(e);
+          }
+        }
+
+        if (item.keyword) {
+          try {
+            yield PlacesUtils.keywords.insert({ keyword: item.keyword,
+                                                url: item.link });
+          } catch(e) {
+            Cu.reportError(e);
+          }
+        }
+
         break;
       }
     }

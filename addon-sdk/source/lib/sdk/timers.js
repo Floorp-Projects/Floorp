@@ -62,7 +62,7 @@ var dispatcher = _ => {
   // starting a dispatch loop, in order to ignore timers registered
   // in side effect to dispatch while also skipping immediates that
   // were removed in side effect.
-  let ids = [id for ([id] of immediates)];
+  let ids = [...immediates.keys()];
   for (let id of ids) {
     let immediate = immediates.get(id);
     if (immediate) {

@@ -347,7 +347,8 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     rv = NS_NewURI(getter_AddRefs(uri), mSVGGlyphsDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    OriginAttributes attrs;
+    // TODO: Bug 1225053 - gfxSVGGlyphs.cpp should use correct principal
+    PrincipalOriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
