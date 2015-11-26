@@ -188,12 +188,14 @@ function run_test() {
   });
 
   add_test(function () {
-    // test that setting "security.onecrl.via.amo" to false will prevent
-    // OCSP skipping
+    // test that setting "security.onecrl.via.amo" results in the correct
+    // OCSP behavior when services.kinto.onecrl.checked is in the distant past
+    // and blacklist-background-update-timer is recent
     Services.prefs.setBoolPref("security.onecrl.via.amo", false);
     // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
     Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
     // set the blocklist-background-update-timer value to the recent past
+    // (services.kinto.onecrl.checked defaults to 0)
     Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
                               Math.floor(Date.now() / 1000) - 1);
     clearOCSPCache();
@@ -202,7 +204,29 @@ function run_test() {
                           gEVExpected ? ["int-ev-valid", "ev-valid"]
                                       : ["ev-valid"]);
     check_ee_for_ev("ev-valid", gEVExpected);
-    Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
+    ocspResponder.stop(run_next_test);
+  });
+
+  add_test(function () {
+    // test that setting "security.onecrl.via.amo" results in the correct
+    // OCSP behavior when services.kinto.onecrl.checked is recent
+    Services.prefs.setBoolPref("security.onecrl.via.amo", false);
+
+    // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 108000);
+
+    // now set services.kinto.onecrl.checked to a recent value
+    Services.prefs.setIntPref("services.kinto.onecrl.checked",
+                              Math.floor(Date.now() / 1000) - 1);
+
+    clearOCSPCache();
+    // the intermediate should not have an associated OCSP request
+    let ocspResponder = start_ocsp_responder(["ev-valid"]);
+    check_ee_for_ev("ev-valid", gEVExpected);
+    // The tests following this assume no OCSP bypass
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 0);
+    Services.prefs.clearUserPref("security.onecrl.via.amo");
+    Services.prefs.clearUserPref("services.kinto.onecrl.checked");
     ocspResponder.stop(run_next_test);
   });
 
