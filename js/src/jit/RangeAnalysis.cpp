@@ -1756,9 +1756,9 @@ MArgumentsLength::computeRange(TempAllocator& alloc)
 {
     // This is is a conservative upper bound on what |TooManyActualArguments|
     // checks.  If exceeded, Ion will not be entered in the first place.
-    MOZ_ASSERT(js_JitOptions.maxStackArgs <= UINT32_MAX,
+    MOZ_ASSERT(JitOptions.maxStackArgs <= UINT32_MAX,
                "NewUInt32Range requires a uint32 value");
-    setRange(Range::NewUInt32Range(alloc, 0, js_JitOptions.maxStackArgs));
+    setRange(Range::NewUInt32Range(alloc, 0, JitOptions.maxStackArgs));
 }
 
 void
@@ -2258,7 +2258,7 @@ RangeAnalysis::analyze()
 bool
 RangeAnalysis::addRangeAssertions()
 {
-    if (!js_JitOptions.checkRangeAnalysis)
+    if (!JitOptions.checkRangeAnalysis)
         return true;
 
     // Check the computed range for this instruction, if the option is set. Note

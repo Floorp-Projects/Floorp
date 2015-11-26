@@ -82,8 +82,8 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
         pc = nullptr;
 
     uint32_t warmUpThreshold = compilerWarmUpThreshold_;
-    if (js_JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
-        warmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold.ref();
+    if (JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
+        warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.ref();
 
     // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the warm-up counter
@@ -97,7 +97,7 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
     if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
         warmUpThreshold *= (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
 
-    if (!pc || js_JitOptions.eagerCompilation)
+    if (!pc || JitOptions.eagerCompilation)
         return warmUpThreshold;
 
     // It's more efficient to enter outer loops, rather than inner loops, via OSR.

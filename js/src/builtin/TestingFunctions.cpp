@@ -1488,7 +1488,7 @@ EnableOsiPointRegisterChecks(JSContext*, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef CHECK_OSIPOINT_REGISTERS
-    jit::js_JitOptions.checkOsiPointRegisters = true;
+    jit::JitOptions.checkOsiPointRegisters = true;
 #endif
     args.rval().setUndefined();
     return true;
@@ -1782,7 +1782,7 @@ static bool
 SetIonCheckGraphCoherency(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    jit::js_JitOptions.checkGraphConsistency = ToBoolean(args.get(0));
+    jit::JitOptions.checkGraphConsistency = ToBoolean(args.get(0));
     args.rval().setUndefined();
     return true;
 }

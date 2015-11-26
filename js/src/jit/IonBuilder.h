@@ -1264,7 +1264,7 @@ class IonBuilder
     }
 
     bool forceInlineCaches() {
-        return MOZ_UNLIKELY(js_JitOptions.forceInlineCaches);
+        return MOZ_UNLIKELY(JitOptions.forceInlineCaches);
     }
 
     // Out-of-line variants that don't check if optimization tracking is
