@@ -26,6 +26,10 @@ config = {
         "platform_frameworks_av",
         "platform_frameworks_base",
         "android-development",
+        "device-hammerhead",
+        "device_lge_hammerhead-kernel",
+        "platform_bionic",
+        "platform_build",
     ],
     "extra_branch_manifest_repos": [
         "gecko",
