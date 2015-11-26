@@ -11,6 +11,7 @@
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()
 
+#include "asmjs/AsmJSCompile.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
@@ -81,8 +82,7 @@ bool
 js::StartOffThreadAsmJSCompile(ExclusiveContext* cx, AsmJSParallelTask* asmData)
 {
     // Threads already initialized by the AsmJS compiler.
-    MOZ_ASSERT(asmData->mir);
-    MOZ_ASSERT(asmData->lir == nullptr);
+    MOZ_ASSERT(asmData->results);
 
     AutoLockHelperThreadState lock;
 
@@ -1203,29 +1203,12 @@ HelperThread::handleAsmJSWorkload()
     bool success = false;
 
     AsmJSParallelTask* asmData = asmJSTask();
-    do {
+    {
         AutoUnlockHelperThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(), asmData->runtime);
-
-        jit::JitContext jcx(asmData->mir->compartment->runtime(),
-                            asmData->mir->compartment,
-                            &asmData->mir->alloc());
-
-        int64_t before = PRMJ_Now();
-        jit::AutoSpewEndFunction spewEndFunction(asmData->mir);
-
-        if (!OptimizeMIR(asmData->mir))
-            break;
-
-        asmData->lir = GenerateLIR(asmData->mir);
-        if (!asmData->lir)
-            break;
-
-        int64_t after = PRMJ_Now();
-        asmData->compileTime = (after - before) / PRMJ_USEC_PER_MSEC;
-
-        success = true;
-    } while(0);
+        success = CompileAsmFunction(asmData->lifo, asmData->inputs, *asmData->func,
+                                     asmData->results.ptr());
+    }
 
     // On success, try to move work to the finished list.
     if (success)

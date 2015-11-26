@@ -310,7 +310,7 @@ MacroAssembler::leaveExitFrame(size_t extraFrame)
 bool
 MacroAssembler::hasSelfReference() const
 {
-    return selfReferencePatch_.offset() != 0;
+    return selfReferencePatch_.used();
 }
 
 //}}} check_macroassembler_style

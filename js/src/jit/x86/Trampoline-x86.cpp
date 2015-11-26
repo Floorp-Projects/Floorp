@@ -156,6 +156,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     masm.push(esi);
 
     CodeLabel returnLabel;
+    CodeLabel oomReturnLabel;
     if (type == EnterJitBaseline) {
         // Handle OSR.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
@@ -176,7 +177,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.loadPtr(Address(ebp, ARG_JITCODE), jitcode);
 
         // Push return address.
-        masm.mov(returnLabel.dest(), scratch);
+        masm.mov(returnLabel.patchAt(), scratch);
         masm.push(scratch);
 
         // Push previous frame pointer.
@@ -261,7 +262,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.mov(framePtr, esp);
         masm.addPtr(Imm32(2 * sizeof(uintptr_t)), esp);
         masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-        masm.mov(returnLabel.dest(), scratch);
+        masm.mov(oomReturnLabel.patchAt(), scratch);
         masm.jump(scratch);
 
         masm.bind(&notOsr);
@@ -280,8 +281,10 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.
-        masm.bind(returnLabel.src());
+        masm.use(returnLabel.target());
         masm.addCodeLabel(returnLabel);
+        masm.use(oomReturnLabel.target());
+        masm.addCodeLabel(oomReturnLabel);
     }
 
     // Pop arguments off the stack.

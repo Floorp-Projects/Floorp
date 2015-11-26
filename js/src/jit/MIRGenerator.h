@@ -37,7 +37,7 @@ class MIRGenerator
   public:
     MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
                  TempAllocator* alloc, MIRGraph* graph,
-                 CompileInfo* info, const OptimizationInfo* optimizationInfo,
+                 const CompileInfo* info, const OptimizationInfo* optimizationInfo,
                  Label* outOfBoundsLabel = nullptr,
                  Label* conversionErrorLabel = nullptr,
                  bool usesSignalHandlersForAsmJSOOB = false);
@@ -54,7 +54,7 @@ class MIRGenerator
     const JitRuntime* jitRuntime() const {
         return GetJitContext()->runtime->jitRuntime();
     }
-    CompileInfo& info() {
+    const CompileInfo& info() const {
         return *info_;
     }
     const OptimizationInfo& optimizationInfo() const {
@@ -169,7 +169,7 @@ class MIRGenerator
     CompileCompartment* compartment;
 
   protected:
-    CompileInfo* info_;
+    const CompileInfo* info_;
     const OptimizationInfo* optimizationInfo_;
     TempAllocator* alloc_;
     JSFunction* fun_;

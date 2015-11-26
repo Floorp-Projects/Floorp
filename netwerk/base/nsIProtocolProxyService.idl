@@ -18,7 +18,7 @@ interface nsIURI;
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
  */
-[scriptable, uuid(deec8e08-a246-443c-90b6-f655632d1abf)]
+[scriptable, uuid(ef57c8b6-e09d-4cd4-9222-2a5d2402e15d)]
 interface nsIProtocolProxyService : nsISupports
 {
     /** Flag 1 << 0 is unused **/
@@ -138,6 +138,45 @@ interface nsIProtocolProxyService : nsISupports
                               in long aPort, in unsigned long aFlags,
                               in unsigned long aFailoverTimeout,
                               in nsIProxyInfo aFailoverProxy);
+
+    /**
+     * This method may be called to construct a nsIProxyInfo instance for
+     * with the specified username and password.
+     * Currently implemented for SOCKS proxies only.
+     * @param aType
+     *        The proxy type.  This is a string value that identifies the proxy
+     *        type.  Standard values include:
+     *          "socks"   - specifies a SOCKS version 5 proxy
+     *          "socks4"  - specifies a SOCKS version 4 proxy
+     *        The type name is case-insensitive.  Other string values may be
+     *        possible, and new types may be defined by a future version of
+     *        this interface.
+     * @param aHost
+     *        The proxy hostname or IP address.
+     * @param aPort
+     *        The proxy port.
+     * @param aUsername
+     *        The proxy username
+     * @param aPassword
+     *        The proxy password
+     * @param aFlags
+     *        Flags associated with this connection.  See nsIProxyInfo.idl
+     *        for currently defined flags.
+     * @param aFailoverTimeout
+     *        Specifies the length of time (in seconds) to ignore this proxy if
+     *        this proxy fails.  Pass UINT32_MAX to specify the default
+     *        timeout value, causing nsIProxyInfo::failoverTimeout to be
+     *        assigned the default value.
+     * @param aFailoverProxy
+     *        Specifies the next proxy to try if this proxy fails.  This
+     *        parameter may be null.
+     */
+    nsIProxyInfo newProxyInfoWithAuth(in ACString aType, in AUTF8String aHost,
+                                      in long aPort,
+                                      in ACString aUsername, in ACString aPassword,
+                                      in unsigned long aFlags,
+                                      in unsigned long aFailoverTimeout,
+                                      in nsIProxyInfo aFailoverProxy);
 
     /**
      * If the proxy identified by aProxyInfo is unavailable for some reason,

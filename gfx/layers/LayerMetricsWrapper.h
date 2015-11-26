@@ -299,6 +299,20 @@ public:
     return gfx::Matrix4x4();
   }
 
+  bool TransformIsPerspective() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    // mLayer->GetTransformIsPerspective() tells us whether
+    // mLayer->GetTransform() is a perspective transform. Since
+    // mLayer->GetTransform() is only used at the bottom layer, we only
+    // need to check GetTransformIsPerspective() at the bottom layer too.
+    if (AtBottomLayer()) {
+      return mLayer->GetTransformIsPerspective();
+    }
+    return false;
+  }
+
   EventRegions GetEventRegions() const
   {
     MOZ_ASSERT(IsValid());

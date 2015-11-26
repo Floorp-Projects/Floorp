@@ -144,9 +144,6 @@ TraceLoggerThread::init()
     if (!events.ensureSpaceBeforeAdd(3))
         return false;
 
-    enabled = 1;
-    logTimestamp(TraceLogger_Enable);
-
     return true;
 }
 
@@ -870,8 +867,8 @@ TraceLoggerThreadState::forMainThread(PerThreadData* mainThread)
         if (graphSpewingEnabled)
             logger->initGraph();
 
-        if (!mainThreadEnabled)
-            logger->disable();
+        if (mainThreadEnabled)
+            logger->enable();
     }
 
     return mainThread->traceLogger;
@@ -909,8 +906,8 @@ TraceLoggerThreadState::forThread(PRThread* thread)
     if (graphSpewingEnabled)
         logger->initGraph();
 
-    if (!offThreadEnabled)
-        logger->disable();
+    if (offThreadEnabled)
+        logger->enable();
 
     return logger;
 }

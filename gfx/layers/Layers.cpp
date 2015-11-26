@@ -245,6 +245,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mContentFlags(0),
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
+  mTransformIsPerspective(false),
   mFixedPositionData(nullptr),
   mStickyPositionData(nullptr),
   mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
@@ -1886,6 +1887,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (!mTransform.IsIdentity()) {
     AppendToString(aStream, mTransform, " [transform=", "]");
   }
+  if (mTransformIsPerspective) {
+    aStream << " [perspective]";
+  }
   if (!mLayerBounds.IsEmpty()) {
     AppendToString(aStream, mLayerBounds, " [bounds=", "]");
   }
@@ -1905,6 +1909,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
     aStream << " [componentAlpha]";
+  }
+  if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
+    aStream << " [backfaceHidden]";
   }
   if (GetScrollbarDirection() == VERTICAL) {
     aStream << nsPrintfCString(" [vscrollbar=%lld]", GetScrollbarTargetContainerId()).get();
