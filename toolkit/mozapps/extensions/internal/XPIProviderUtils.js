@@ -1627,10 +1627,12 @@ this.XPIDatabaseReconcile = {
 
       // Remove the invalid add-on from the install location if the install
       // location isn't locked, no restart will be necessary
-      if (!aInstallLocation.locked)
-        aInstallLocation.uninstallAddon(aId);
-      else
+      if (aInstallLocation.isLinkedAddon(aId))
+        logger.warn("Not uninstalling invalid item because it is a proxy file");
+      else if (aInstallLocation.locked)
         logger.warn("Could not uninstall invalid item from locked install location");
+      else
+        aInstallLocation.uninstallAddon(aId);
       return null;
     }
 
