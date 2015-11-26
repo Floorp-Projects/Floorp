@@ -3478,7 +3478,7 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
 
         if (jsbytecode* pc = i.pc()) {
             fprintf(stderr, "  pc = %p\n", pc);
-            fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
+            fprintf(stderr, "  current op: %s\n", CodeName[*pc]);
             MaybeDumpObject("staticScope", i.script()->getStaticBlockScope(pc));
         }
         if (i.isNonEvalFunctionFrame())
