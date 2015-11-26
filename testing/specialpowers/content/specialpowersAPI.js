@@ -643,6 +643,14 @@ SpecialPowersAPI.prototype = {
     return this.wrap(chromeScript);
   },
 
+  importInMainProcess: function (importString) {
+    var message = this._sendSyncMessage("SPImportInMainProcess", importString)[0];
+    if (message.hadError) {
+      throw "SpecialPowers.importInMainProcess failed with error " + message.errorMessage;
+    }
+    return;
+  },
+
   get Services() {
     return wrapPrivileged(Services);
   },

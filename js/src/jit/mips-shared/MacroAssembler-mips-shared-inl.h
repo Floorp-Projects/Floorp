@@ -75,6 +75,28 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
     ma_xor(dest, imm);
 }
 
+// ===============================================================
+// Arithmetic instructions
+
+void
+MacroAssembler::sub32(Register src, Register dest)
+{
+    as_subu(dest, dest, src);
+}
+
+void
+MacroAssembler::sub32(Imm32 imm, Register dest)
+{
+    ma_subu(dest, dest, imm);
+}
+
+void
+MacroAssembler::sub32(const Address& src, Register dest)
+{
+    load32(src, SecondScratchReg);
+    as_subu(dest, dest, SecondScratchReg);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

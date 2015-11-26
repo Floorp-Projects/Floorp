@@ -4,34 +4,34 @@
 #include "gtest/gtest.h"
 #include "mozilla/BasePrincipal.h"
 
-using mozilla::OriginAttributes;
+using mozilla::PrincipalOriginAttributes;
 
 static void
-TestSuffix(const OriginAttributes& attrs)
+TestSuffix(const PrincipalOriginAttributes& attrs)
 {
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
-  OriginAttributes attrsFromSuffix;
+  PrincipalOriginAttributes attrsFromSuffix;
   attrsFromSuffix.PopulateFromSuffix(suffix);
 
   EXPECT_EQ(attrs, attrsFromSuffix);
 }
 
-TEST(OriginAttributes, Suffix_default)
+TEST(PrincipalOriginAttributes, Suffix_default)
 {
-  OriginAttributes attrs;
+  PrincipalOriginAttributes attrs;
   TestSuffix(attrs);
 }
 
-TEST(OriginAttributes, Suffix_appId_inBrowser)
+TEST(PrincipalOriginAttributes, Suffix_appId_inBrowser)
 {
-  OriginAttributes attrs(1, true);
+  PrincipalOriginAttributes attrs(1, true);
   TestSuffix(attrs);
 }
 
-TEST(OriginAttributes, Suffix_maxAppId_inBrowser)
+TEST(PrincipalOriginAttributes, Suffix_maxAppId_inBrowser)
 {
-  OriginAttributes attrs(4294967295, true);
+  PrincipalOriginAttributes attrs(4294967295, true);
   TestSuffix(attrs);
 }

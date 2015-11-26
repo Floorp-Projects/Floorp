@@ -76,7 +76,7 @@ LCovSource::LCovSource(LifoAlloc* alloc, JSObject* sso)
     numLinesInstrumented_(0),
     numLinesHit_(0),
     hasFilename_(false),
-    hasScripts_(false)
+    hasTopLevelScript_(false)
 {
 }
 
@@ -84,7 +84,7 @@ void
 LCovSource::exportInto(GenericPrinter& out) const
 {
     // Only write if everything got recorded.
-    if (!hasFilename_ || !hasScripts_)
+    if (!hasFilename_ || !hasTopLevelScript_)
         return;
 
     outSF_.exportInto(out);
@@ -103,75 +103,6 @@ LCovSource::exportInto(GenericPrinter& out) const
     out.printf("LH:%d\n", numLinesHit_);
 
     out.put("end_of_record\n");
-}
-
-bool
-LCovSource::writeTopLevelScript(JSScript* script)
-{
-    MOZ_ASSERT(script->isTopLevel());
-
-    Vector<JSScript*, 8, SystemAllocPolicy> queue;
-    if (!queue.append(script))
-        return false;
-
-    do {
-        script = queue.popCopy();
-
-        // Save the lcov output of the current script.
-        if (!writeScript(script))
-            return false;
-
-        // Iterate from the last to the first object in order to have the
-        // functions visited in the opposite order when popping elements from
-        // the queue of remaining scripts, such that the functions are listed
-        // with increasing line numbers.
-        if (!script->hasObjects())
-            continue;
-
-        size_t idx = script->objects()->length;
-        while (idx--) {
-            JSObject* obj = script->getObject(idx);
-
-            // Only continue on JSFunction objects.
-            if (!obj->is<JSFunction>())
-                continue;
-            JSFunction& fun = obj->as<JSFunction>();
-
-            // Let's skip asm.js for now.
-            if (!fun.isInterpreted())
-                continue;
-            MOZ_ASSERT(!fun.isInterpretedLazy());
-
-            // Eval scripts can refer to their parent script in order to extend
-            // their scope.  We only care about the inner functions, which are
-            // in the same source, and which are assumed to be visited in the
-            // same order as the source content.
-            //
-            // Note: It is possible that the JSScript visited here has already
-            // been finalized, in which case the sourceObject() will be a
-            // poisoned pointer.  This is safe because all scripts are currently
-            // finalized in the foreground.
-            JSScript* child = fun.nonLazyScript();
-            if (child->sourceObject() != source_)
-                continue;
-
-            // Queue the script in the list of script associated to the
-            // current source.
-            if (!queue.append(fun.nonLazyScript()))
-                return false;
-        }
-    } while (!queue.empty());
-
-    if (outFN_.hadOutOfMemory() ||
-        outFNDA_.hadOutOfMemory() ||
-        outBRDA_.hadOutOfMemory() ||
-        outDA_.hadOutOfMemory())
-    {
-        return false;
-    }
-
-    hasScripts_ = true;
-    return true;
 }
 
 bool
@@ -227,11 +158,12 @@ LCovSource::writeScript(JSScript* script)
 
     size_t lineno = script->lineno();
     jsbytecode* end = script->codeEnd();
-    size_t blockId = 0;
+    size_t branchId = 0;
+    size_t tableswitchExitOffset = 0;
     for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
         JSOp op = JSOp(*pc);
-        bool jump = IsJumpOpcode(op);
-        bool fallsthrough = BytecodeFallsThrough(op);
+        bool jump = IsJumpOpcode(op) || op == JSOP_TABLESWITCH;
+        bool fallsthrough = BytecodeFallsThrough(op) && op != JSOP_GOSUB;
 
         // If the current script & pc has a hit-count report, then update the
         // current number of hits.
@@ -251,6 +183,8 @@ LCovSource::writeScript(JSScript* script)
                     lineno = size_t(GetSrcNoteOffset(sn, 0));
                 else if (type == SRC_NEWLINE)
                     lineno++;
+                else if (type == SRC_TABLESWITCH)
+                    tableswitchExitOffset = GetSrcNoteOffset(sn, 0);
 
                 sn = SN_NEXT(sn);
                 snpc += SN_DELTA(sn);
@@ -277,7 +211,6 @@ LCovSource::writeScript(JSScript* script)
         // If the current pc corresponds to a conditional jump instruction, then reports
         // branch hits.
         if (jump && fallsthrough) {
-            jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
             jsbytecode* fallthroughTarget = GetNextPc(pc);
             uint64_t fallthroughHits = 0;
             if (sc) {
@@ -286,23 +219,140 @@ LCovSource::writeScript(JSScript* script)
                     fallthroughHits = counts->numExec();
             }
 
-            size_t targetId = script->pcToOffset(target);
             uint64_t taken = hits - fallthroughHits;
-            outBRDA_.printf("BRDA:%d,%d,%d,", lineno, blockId, targetId);
-            if (hits)
+            outBRDA_.printf("BRDA:%d,%d,0,", lineno, branchId);
+            if (taken)
                 outBRDA_.printf("%d\n", taken);
             else
                 outBRDA_.put("-\n", 2);
 
-            // Count the number of branches, and the number of branches hit.
-            numBranchesFound_++;
-            if (hits)
-                numBranchesHit_++;
+            outBRDA_.printf("BRDA:%d,%d,1,", lineno, branchId);
+            if (fallthroughHits)
+                outBRDA_.printf("%d\n", fallthroughHits);
+            else
+                outBRDA_.put("-\n", 2);
 
-            // Update the blockId when there is a discontinuity.
-            blockId = script->pcToOffset(fallthroughTarget);
+            // Count the number of branches, and the number of branches hit.
+            numBranchesFound_ += 2;
+            if (hits)
+                numBranchesHit_ += !!taken + !!fallthroughHits;
+            branchId++;
+        }
+
+        // If the current pc corresponds to a pre-computed switch case, then
+        // reports branch hits for each case statement.
+        if (jump && op == JSOP_TABLESWITCH) {
+            MOZ_ASSERT(tableswitchExitOffset != 0);
+
+            // Get the default and exit pc
+            jsbytecode* exitpc = pc + tableswitchExitOffset;
+            jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
+            MOZ_ASSERT(defaultpc > pc && defaultpc <= exitpc);
+
+            // Get the low and high from the tableswitch
+            int32_t low = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 1);
+            int32_t high = GET_JUMP_OFFSET(pc + JUMP_OFFSET_LEN * 2);
+            int32_t numCases = high - low + 1;
+            jsbytecode* jumpTable = pc + JUMP_OFFSET_LEN * 3;
+
+            jsbytecode* firstcasepc = exitpc;
+            for (int j = 0; j < numCases; j++) {
+                jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                if (testpc < firstcasepc)
+                    firstcasepc = testpc;
+            }
+
+            jsbytecode* lastcasepc = firstcasepc;
+            uint64_t allCaseHits = 0;
+            for (int i = 0; i < numCases; i++) {
+                jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
+                // The case is not present, and jumps to the default pc if used.
+                if (casepc == pc)
+                    continue;
+
+                // PCs might not be in increasing order of case indexes.
+                lastcasepc = firstcasepc - 1;
+                for (int j = 0; j < numCases; j++) {
+                    jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                    if (lastcasepc < testpc && testpc < casepc)
+                        lastcasepc = testpc;
+                }
+
+                if (casepc != lastcasepc) {
+                    // Case (i + low)
+                    uint64_t caseHits = 0;
+                    if (sc) {
+                        const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(casepc));
+                        if (counts)
+                            caseHits = counts->numExec();
+
+                        // Remove fallthrough.
+                        if (casepc != firstcasepc) {
+                            jsbytecode* endpc = lastcasepc;
+                            while (GetNextPc(endpc) < casepc)
+                                endpc = GetNextPc(endpc);
+
+                            if (BytecodeFallsThrough(JSOp(*endpc)))
+                                caseHits -= script->getHitCount(endpc);
+                        }
+
+                        allCaseHits += caseHits;
+                    }
+
+                    outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, i);
+                    if (caseHits)
+                        outBRDA_.printf("%d\n", caseHits);
+                    else
+                        outBRDA_.put("-\n", 2);
+
+                    numBranchesFound_++;
+                    numBranchesHit_ += !!caseHits;
+                    lastcasepc = casepc;
+                }
+            }
+
+            // Add one branch entry for the default statement.
+            uint64_t defaultHits = 0;
+
+            if (sc) {
+                const PCCounts* counts = sc->maybeGetPCCounts(script->pcToOffset(defaultpc));
+                if (counts)
+                    defaultHits = counts->numExec();
+
+                // Note: currently we do not track edges, so we might have
+                // false-positive if we have any throw / return inside some
+                // of the case statements.
+                defaultHits -= allCaseHits;
+            }
+
+            outBRDA_.printf("BRDA:%d,%d,%d,", lineno, branchId, numCases);
+            if (defaultHits)
+                outBRDA_.printf("%d\n", defaultHits);
+            else
+                outBRDA_.put("-\n", 2);
+            numBranchesFound_++;
+            numBranchesHit_ += !!defaultHits;
+
+            // Increment the branch identifier, and go to the next instruction.
+            branchId++;
+            tableswitchExitOffset = 0;
         }
     }
+
+    // Report any new OOM.
+    if (outFN_.hadOutOfMemory() ||
+        outFNDA_.hadOutOfMemory() ||
+        outBRDA_.hadOutOfMemory() ||
+        outDA_.hadOutOfMemory())
+    {
+        return false;
+    }
+
+    // If this script is the top-level script, then record it such that we can
+    // assume that the code coverage report is complete, as this script has
+    // references on all inner scripts.
+    if (script->isTopLevel())
+        hasTopLevelScript_ = true;
 
     return true;
 }
@@ -317,14 +367,13 @@ LCovCompartment::LCovCompartment()
 
 void
 LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
-                                         JSScript* topLevel)
+                                         JSScript* script)
 {
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
         return;
 
-    // We expect to visit the source before visiting any of its scripts.
-    if (!sources_)
+    if (!script->code())
         return;
 
     // Get the existing source LCov summary, or create a new one.
@@ -333,7 +382,7 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
         return;
 
     // Write code coverage data into the LCovSource.
-    if (!source->writeTopLevelScript(topLevel)) {
+    if (!source->writeScript(script)) {
         outTN_.reportOutOfMemory();
         return;
     }
@@ -396,14 +445,29 @@ LCovCompartment::lookupOrAdd(JSCompartment* comp, JSObject* sso)
 }
 
 void
-LCovCompartment::exportInto(GenericPrinter& out) const
+LCovCompartment::exportInto(GenericPrinter& out, bool* isEmpty) const
 {
     if (!sources_ || outTN_.hadOutOfMemory())
         return;
 
+    // If we only have cloned function, then do not serialize anything.
+    bool someComplete = false;
+    for (const LCovSource& sc : *sources_) {
+        if (sc.isComplete()) {
+            someComplete = true;
+            break;
+        };
+    }
+
+    if (!someComplete)
+        return;
+
+    *isEmpty = false;
     outTN_.exportInto(out);
-    for (const LCovSource& sc : *sources_)
-        sc.exportInto(out);
+    for (const LCovSource& sc : *sources_) {
+        if (sc.isComplete())
+            sc.exportInto(out);
+    }
 }
 
 bool
@@ -446,41 +510,66 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
 LCovRuntime::LCovRuntime()
   : out_(),
 #if defined(XP_WIN)
-    pid_(GetCurrentProcessId())
+    pid_(GetCurrentProcessId()),
 #else
-    pid_(getpid())
+    pid_(getpid()),
 #endif
+    isEmpty_(false)
 {
 }
 
 LCovRuntime::~LCovRuntime()
 {
     if (out_.isInitialized())
-        out_.finish();
+        finishFile();
 }
 
-void
-LCovRuntime::init()
+bool
+LCovRuntime::fillWithFilename(char *name, size_t length)
 {
     const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
     if (!outDir || *outDir == 0)
-        return;
+        return false;
 
     int64_t timestamp = static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_SEC;
     static mozilla::Atomic<size_t> globalRuntimeId(0);
     size_t rid = globalRuntimeId++;
 
-    char name[1024];
-    size_t len = JS_snprintf(name, sizeof(name), "%s/%" PRId64 "-%d-%d.info",
+    size_t len = JS_snprintf(name, length, "%s/%" PRId64 "-%d-%d.info",
                              outDir, timestamp, size_t(pid_), rid);
-    if (sizeof(name) < len) {
+    if (length <= len) {
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
-        return;
+        return false;
     }
+
+    return true;
+}
+
+void
+LCovRuntime::init()
+{
+    char name[1024];
+    if (!fillWithFilename(name, sizeof(name)))
+        return;
 
     // If we cannot open the file, report a warning.
     if (!out_.init(name))
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot open file named '%s'.", name);
+    isEmpty_ = true;
+}
+
+void
+LCovRuntime::finishFile()
+{
+    MOZ_ASSERT(out_.isInitialized());
+    out_.finish();
+
+    if (isEmpty_) {
+        char name[1024];
+        if (!fillWithFilename(name, sizeof(name)))
+            return;
+        remove(name);
+    }
 }
 
 void
@@ -496,13 +585,13 @@ LCovRuntime::writeLCovResult(LCovCompartment& comp)
 #endif
     if (pid_ != p) {
         pid_ = p;
-        out_.finish();
+        finishFile();
         init();
         if (!out_.isInitialized())
             return;
     }
 
-    comp.exportInto(out_);
+    comp.exportInto(out_, &isEmpty_);
     out_.flush();
 }
 

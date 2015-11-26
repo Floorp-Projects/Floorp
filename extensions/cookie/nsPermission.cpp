@@ -84,8 +84,8 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost, bool* aMatches)
   }
 
   // Compare their OriginAttributes
-  const mozilla::OriginAttributes& theirAttrs = mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-  const mozilla::OriginAttributes& ourAttrs = mozilla::BasePrincipal::Cast(mPrincipal)->OriginAttributesRef();
+  const mozilla::PrincipalOriginAttributes& theirAttrs = mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  const mozilla::PrincipalOriginAttributes& ourAttrs = mozilla::BasePrincipal::Cast(mPrincipal)->OriginAttributesRef();
 
   if (theirAttrs != ourAttrs) {
       return NS_OK;
@@ -167,7 +167,7 @@ nsPermission::MatchesURI(nsIURI* aURI, bool aExactHost, bool* aMatches)
 {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  mozilla::OriginAttributes attrs;
+  mozilla::PrincipalOriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 

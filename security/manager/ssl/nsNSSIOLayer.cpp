@@ -1817,8 +1817,7 @@ nsresult
 nsSSLIOLayerNewSocket(int32_t family,
                       const char* host,
                       int32_t port,
-                      const char* proxyHost,
-                      int32_t proxyPort,
+                      nsIProxyInfo *proxy,
                       PRFileDesc** fd,
                       nsISupports** info,
                       bool forSTARTTLS,
@@ -1828,7 +1827,7 @@ nsSSLIOLayerNewSocket(int32_t family,
   PRFileDesc* sock = PR_OpenTCPSocket(family);
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = nsSSLIOLayerAddToSocket(family, host, port, proxyHost, proxyPort,
+  nsresult rv = nsSSLIOLayerAddToSocket(family, host, port, proxy,
                                         sock, info, forSTARTTLS, flags);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
@@ -2513,11 +2512,11 @@ loser:
 
 static nsresult
 nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
-                       const char* proxyHost, const char* host, int32_t port,
+                       bool haveProxy, const char* host, int32_t port,
                        nsNSSSocketInfo* infoObject)
 {
   nsNSSShutDownPreventionLock locker;
-  if (forSTARTTLS || proxyHost) {
+  if (forSTARTTLS || haveProxy) {
     if (SECSuccess != SSL_OptionSet(fd, SSL_SECURITY, false)) {
       return NS_ERROR_FAILURE;
     }
@@ -2594,8 +2593,7 @@ nsresult
 nsSSLIOLayerAddToSocket(int32_t family,
                         const char* host,
                         int32_t port,
-                        const char* proxyHost,
-                        int32_t proxyPort,
+                        nsIProxyInfo* proxy,
                         PRFileDesc* fd,
                         nsISupports** info,
                         bool forSTARTTLS,
@@ -2616,6 +2614,13 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->SetForSTARTTLS(forSTARTTLS);
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
+
+  bool haveProxy = false;
+  if (proxy) {
+    nsCString proxyHost;
+    proxy->GetHost(proxyHost);
+    haveProxy = !proxyHost.IsEmpty();
+  }
 
   // A plaintext observer shim is inserted so we can observe some protocol
   // details without modifying nss
@@ -2638,7 +2643,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
 
   infoObject->SetFileDescPtr(sslSock);
 
-  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, proxyHost, host, port,
+  rv = nsSSLIOLayerSetOptions(sslSock, forSTARTTLS, haveProxy, host, port,
                               infoObject);
 
   if (NS_FAILED(rv))
@@ -2661,7 +2666,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
 
   // We are going use a clear connection first //
-  if (forSTARTTLS || proxyHost) {
+  if (forSTARTTLS || haveProxy) {
     infoObject->SetHandshakeNotPending();
   }
 

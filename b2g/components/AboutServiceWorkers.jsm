@@ -35,7 +35,7 @@ function serializeServiceWorkerInfo(aServiceWorkerInfo) {
     }
     if (property === "principal") {
       result.principal = {
-        origin: aServiceWorkerInfo.principal.origin,
+        origin: aServiceWorkerInfo.principal.originNoSuffix,
         originAttributes: aServiceWorkerInfo.principal.originAttributes
       };
       return;

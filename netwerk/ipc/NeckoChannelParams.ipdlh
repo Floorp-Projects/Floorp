@@ -12,6 +12,7 @@ include URIParams;
 include InputStreamParams;
 include PBackgroundSharedTypes;
 
+using mozilla::NeckoOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
@@ -37,7 +38,7 @@ struct LoadInfoArgs
   uint64_t         parentOuterWindowID;
   bool             enforceSecurity;
   bool             initialSecurityCheckDone;
-  OriginAttributes originAttributes;
+  NeckoOriginAttributes originAttributes;
   PrincipalInfo[]  redirectChainIncludingInternalRedirects;
   PrincipalInfo[]  redirectChain;
 };

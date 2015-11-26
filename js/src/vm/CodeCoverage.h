@@ -30,18 +30,19 @@ class LCovSource
   public:
     explicit LCovSource(LifoAlloc* alloc, JSObject* sso);
 
-    // Wether the given script source object matches this LCovSource.
-    bool match(JSObject* sso) {
+    // Whether the given script source object matches this LCovSource.
+    bool match(JSObject* sso) const {
         return sso == source_;
     }
 
-    // Visit all JSScript in pre-order, and collect the lcov output based on
-    // the ScriptCounts counters.
-    //
-    // In case of the where this function is called during the finalization,
-    // this assumes that all of the children scripts are still alive, and
-    // not finalized yet.
-    bool writeTopLevelScript(JSScript* script);
+    // Whether the current source is complete and if it can be flushed.
+    bool isComplete() const {
+        return hasFilename_ && hasTopLevelScript_;
+    }
+
+    // Iterate over the bytecode and collect the lcov output based on the
+    // ScriptCounts counters.
+    bool writeScript(JSScript* script);
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.
@@ -53,10 +54,6 @@ class LCovSource
   private:
     // Write the script name in out.
     bool writeScriptName(LSprinter& out, JSScript* script);
-
-    // Iterate over the bytecode and collect the lcov output based on the
-    // ScriptCounts counters.
-    bool writeScript(JSScript* script);
 
   private:
     // Weak pointer of the Script Source Object used by the current source.
@@ -84,7 +81,7 @@ class LCovSource
 
     // Status flags.
     bool hasFilename_ : 1;
-    bool hasScripts_ : 1;
+    bool hasTopLevelScript_ : 1;
 };
 
 class LCovCompartment
@@ -100,7 +97,7 @@ class LCovCompartment
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.
-    void exportInto(GenericPrinter& out) const;
+    void exportInto(GenericPrinter& out, bool* isEmpty) const;
 
   private:
     // Write the script name in out.
@@ -151,6 +148,14 @@ class LCovRuntime
     // the child process.
     void maybeReopenAfterFork();
 
+    // Fill an array with the name of the file. Return false if we are unable to
+    // serialize the filename in this array.
+    bool fillWithFilename(char *name, size_t length);
+
+    // Finish the current opened file, and remove if it does not have any
+    // content.
+    void finishFile();
+
   private:
     // Output file which is created if code coverage is enabled.
     Fprinter out_;
@@ -158,6 +163,11 @@ class LCovRuntime
     // The process' PID is used to watch for fork. When the process fork,
     // we want to close the current file and open a new one.
     size_t pid_;
+
+    // Flag used to report if the generated file is empty or not. If it is empty
+    // when the runtime is destroyed, then the file would be removed as an empty
+    // file is not a valid LCov file.
+    bool isEmpty_;
 };
 
 } // namespace coverage

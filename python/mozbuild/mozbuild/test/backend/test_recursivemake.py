@@ -299,10 +299,10 @@ class TestRecursiveMakeBackend(BackendTester):
             ],
             'MOZBUILD_CXXFLAGS': [
                 'MOZBUILD_CXXFLAGS += -fcxx-exceptions',
-                'MOZBUILD_CXXFLAGS += -include foo.h',
+                "MOZBUILD_CXXFLAGS += '-option with spaces'",
             ],
             'MOZBUILD_LDFLAGS': [
-                'MOZBUILD_LDFLAGS += -framework Foo',
+                "MOZBUILD_LDFLAGS += '-ld flag with spaces'",
                 'MOZBUILD_LDFLAGS += -x',
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:foo.dll',
                 'MOZBUILD_LDFLAGS += -DELAYLOAD:bar.dll',
@@ -586,7 +586,7 @@ class TestRecursiveMakeBackend(BackendTester):
         var = 'DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=xyz']
         self.assertEqual(defines, expected)
 
     def test_host_defines(self):
@@ -599,7 +599,7 @@ class TestRecursiveMakeBackend(BackendTester):
         var = 'HOST_DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['HOST_DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['HOST_DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -UQUX -DBAR=7 -DVALUE=xyz']
         self.assertEqual(defines, expected)
 
     def test_local_includes(self):

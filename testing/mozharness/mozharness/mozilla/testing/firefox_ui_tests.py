@@ -96,10 +96,12 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         config_options = config_options or firefox_ui_tests_config_options
         actions = [
             'clobber',
-            'checkout',
+            'download-and-extract',
+            'checkout',  # keep until firefox-ui-tests are located in tree
             'create-virtualenv',
-            'query_minidump_stackwalk',
+            'install',
             'run-tests',
+            'uninstall',
         ]
 
         super(FirefoxUITests, self).__init__(
@@ -121,9 +123,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         # As long as we don't run on buildbot the installers are not handled by TestingMixin
         self.installer_url = self.config.get('installer_url')
         self.installer_path = self.config.get('installer_path')
-
-        if self.installer_path:
-            self.installer_path = os.path.abspath(self.installer_path)
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
@@ -159,7 +158,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             repo=self.firefox_ui_repo,
             dest=dirs['fx_ui_dir'],
             branch=self.firefox_ui_branch,
-            vcs='gittool'
+            vcs='gittool',
+            env=self.query_env(),
         )
 
     def clobber(self):
@@ -180,6 +180,17 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
                                     short_desc='%s log' % self.reports[report],
                                     long_desc='%s log' % self.reports[report],
                                     max_backups=self.config.get("log_max_rotate", 0))
+
+    def download_and_extract(self):
+        """Overriding method from TestingMixin until firefox-ui-tests are in tree.
+
+        Right now we only care about the installer and symbolds.
+
+        """
+        self._download_installer()
+
+        if self.config.get('download_symbols'):
+            self._download_and_extract_symbols()
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -231,14 +242,14 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         if self.config.get("copy_reports_post_run", True):
             self.copy_reports_to_upload_dir()
 
-    def run_test(self, installer_path, env=None, cleanup=True, marionette_port=2828):
+    def run_test(self, binary_path, env=None, marionette_port=2828):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
 
         cmd = [
             self.query_python_path(),
             os.path.join(dirs['fx_ui_dir'], 'firefox_ui_harness', self.cli_script),
-            '--installer', installer_path,
+            '--binary', binary_path,
             '--address', 'localhost:{}'.format(marionette_port),
 
             # Use the work dir to get temporary data stored
@@ -259,11 +270,11 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         # Set further environment settings
         env = env or self.query_env()
 
-        if self.minidump_stackwalk_path:
-            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+        if self.symbols_url:
+            cmd.extend(['--symbols-path', self.symbols_url])
 
-            if self.query_symbols_url():
-                cmd += ['--symbols-path', self.symbols_url]
+        if self.query_minidump_stackwalk():
+            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
@@ -278,12 +289,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         tbpl_status, log_level = parser.evaluate_parser(return_code)
         self.buildbot_status(tbpl_status, level=log_level)
 
-        if cleanup:
-            for filepath in (installer_path,):
-                if os.path.exists(filepath):
-                    self.debug('Removing {}'.format(filepath))
-                    os.remove(filepath)
-
         return return_code
 
     @PreScriptAction('run-tests')
@@ -292,22 +297,11 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             self.critical('Please specify an installer via --installer-path or --installer-url.')
             sys.exit(1)
 
-        # Necessary to allow mozlog to be activated
-        self.activate_virtualenv()
-
     def run_tests(self):
-        dirs = self.query_abs_dirs()
-
-        if self.installer_url:
-            self.installer_path = self.download_file(
-                self.installer_url,
-                parent_dir=dirs['abs_work_dir']
-            )
-
+        """Run all the tests"""
         return self.run_test(
-            installer_path=self.installer_path,
+            binary_path=self.binary_path,
             env=self.query_env(),
-            cleanup=False,
         )
 
 

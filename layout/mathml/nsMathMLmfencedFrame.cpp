@@ -391,7 +391,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   if (isRTL) {
-    childFrame = this->GetLastChild(nsIFrame::kPrincipalList);
+    childFrame = this->GetChildList(nsIFrame::kPrincipalList).LastChild();
   } else {
     childFrame = firstChild;
   }

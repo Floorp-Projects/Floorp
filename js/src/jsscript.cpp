@@ -1340,6 +1340,30 @@ JSScript::initScriptCounts(JSContext* cx)
                     return false;
             }
         }
+
+        if (JSOp(*pc) == JSOP_TABLESWITCH) {
+            jsbytecode* pc2 = pc;
+            int32_t len = GET_JUMP_OFFSET(pc2);
+
+            // Default target.
+            if (!jumpTargets.append(pc + len))
+                return false;
+
+            pc2 += JUMP_OFFSET_LEN;
+            int32_t low = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+            int32_t high = GET_JUMP_OFFSET(pc2);
+
+            for (int i = 0; i < high-low+1; i++) {
+                pc2 += JUMP_OFFSET_LEN;
+                int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
+                if (off) {
+                    // Case (i + low)
+                    if (!jumpTargets.append(pc + off))
+                        return false;
+                }
+            }
+        }
     }
 
     // Mark catch/finally blocks as being jump targets.
@@ -2820,9 +2844,9 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
     }
 
     if (script->bindings.count() != 0) {
-	// Make sure bindings are sufficiently aligned.
-	cursor = reinterpret_cast<uint8_t*>
-	    (JS_ROUNDUP(reinterpret_cast<uintptr_t>(cursor), JS_ALIGNMENT_OF(Binding)));
+        // Make sure bindings are sufficiently aligned.
+        cursor = reinterpret_cast<uint8_t*>
+            (JS_ROUNDUP(reinterpret_cast<uintptr_t>(cursor), JS_ALIGNMENT_OF(Binding)));
     }
     cursor = script->bindings.switchToScriptStorage(reinterpret_cast<Binding*>(cursor));
 
@@ -3073,7 +3097,7 @@ JSScript::finalize(FreeOp* fop)
 
     // Collect code coverage information for this script and all its inner
     // scripts, and store the aggregated information on the compartment.
-    if (isTopLevel() && fop->runtime()->lcovOutput.isEnabled())
+    if (fop->runtime()->lcovOutput.isEnabled())
         compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), sourceObject(), this);
 
     fop->runtime()->spsProfiler.onScriptFinalized(this);
@@ -3400,7 +3424,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     /* Script data */
 
     size_t size = src->dataSize();
-    uint8_t* data = AllocScriptData(cx->zone(), size);
+    ScopedJSFreePtr<uint8_t> data(AllocScriptData(cx->zone(), size));
     if (size && !data) {
         ReportOutOfMemory(cx);
         return false;
@@ -3499,9 +3523,9 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->bindings = bindings;
 
     /* This assignment must occur before all the Rebase calls. */
-    dst->data = data;
+    dst->data = data.forget();
     dst->dataSize_ = size;
-    memcpy(data, src->data, size);
+    memcpy(dst->data, src->data, size);
 
     /* Script filenames, bytecodes and atoms are runtime-wide. */
     dst->setCode(src->code());
