@@ -41,6 +41,7 @@ public:
                                     nsACString& aOutVersion) override;
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
+                       const nsAString& aGMPName,
                        bool aInPrivateBrowsingMode,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
   NS_IMETHOD UpdateTrialCreateState(const nsAString& aKeySystem,
@@ -73,6 +74,7 @@ private:
                                   size_t* aOutPluginIndex);
 
   nsresult GetNodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
+                     const nsAString& aGMPName,
                      bool aInPrivateBrowsing, nsACString& aOutId);
 
   void UnloadPlugins();
@@ -215,6 +217,7 @@ public:
                            uint32_t* aPluginId) override;
   virtual bool RecvGetGMPNodeId(const nsString& aOrigin,
                                 const nsString& aTopLevelOrigin,
+                                const nsString& aGMPName,
                                 const bool& aInPrivateBrowsing,
                                 nsCString* aID) override;
   static bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,

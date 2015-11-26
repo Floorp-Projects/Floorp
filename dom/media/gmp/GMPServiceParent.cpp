@@ -1212,6 +1212,7 @@ GeckoMediaPluginServiceParent::IsPersistentStorageAllowed(const nsACString& aNod
 nsresult
 GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
                                          const nsAString& aTopLevelOrigin,
+                                         const nsAString& aGMPName,
                                          bool aInPrivateBrowsing,
                                          nsACString& aOutId)
 {
@@ -1360,11 +1361,12 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
                                          const nsAString& aTopLevelOrigin,
+                                         const nsAString& aGMPName,
                                          bool aInPrivateBrowsing,
                                          UniquePtr<GetNodeIdCallback>&& aCallback)
 {
   nsCString nodeId;
-  nsresult rv = GetNodeId(aOrigin, aTopLevelOrigin, aInPrivateBrowsing, nodeId);
+  nsresult rv = GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, aInPrivateBrowsing, nodeId);
   aCallback->Done(rv, nodeId);
   return rv;
 }
@@ -1702,10 +1704,11 @@ GMPServiceParent::RecvLoadGMP(const nsCString& aNodeId,
 bool
 GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
                                    const nsString& aTopLevelOrigin,
+                                   const nsString& aGMPName,
                                    const bool& aInPrivateBrowsing,
                                    nsCString* aID)
 {
-  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin,
+  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName,
                                     aInPrivateBrowsing, *aID);
   return NS_SUCCEEDED(rv);
 }

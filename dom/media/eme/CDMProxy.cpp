@@ -18,6 +18,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/CDMCallbackProxy.h"
 #include "MediaData.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -41,6 +42,7 @@ void
 CDMProxy::Init(PromiseId aPromiseId,
                const nsAString& aOrigin,
                const nsAString& aTopLevelOrigin,
+               const nsAString& aGMPName,
                bool aInPrivateBrowsing)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -68,10 +70,17 @@ CDMProxy::Init(PromiseId aPromiseId,
     }
   }
 
+  if (aGMPName.IsEmpty()) {
+    RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
+      nsPrintfCString("Unknown GMP for keysystem '%s'", NS_ConvertUTF16toUTF8(mKeySystem).get()));
+    return;
+  }
+
   nsAutoPtr<InitData> data(new InitData());
   data->mPromiseId = aPromiseId;
   data->mOrigin = aOrigin;
   data->mTopLevelOrigin = aTopLevelOrigin;
+  data->mGMPName = aGMPName;
   data->mInPrivateBrowsing = aInPrivateBrowsing;
   nsCOMPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsAutoPtr<InitData>>(this,
@@ -176,6 +185,7 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData>&& aData)
     new gmp_InitGetGMPDecryptorCallback(this, Move(aData)));
   nsresult rv = mps->GetNodeId(data.mOrigin,
                                data.mTopLevelOrigin,
+                               data.mGMPName,
                                data.mInPrivateBrowsing,
                                Move(callback));
   if (NS_FAILED(rv)) {

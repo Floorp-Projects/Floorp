@@ -368,6 +368,7 @@ MediaKeys::Init(ErrorResult& aRv)
   mProxy->Init(mCreatePromiseId,
                origin,
                topLevelOrigin,
+               KeySystemToGMPName(mKeySystem),
                inPrivateBrowsing);
 
   return promise.forget();
