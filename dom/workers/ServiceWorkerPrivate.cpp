@@ -61,6 +61,7 @@ NS_IMPL_ISUPPORTS0(KeepAliveToken)
 ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
   : mInfo(aInfo)
   , mIsPushWorker(false)
+  , mDebuggerCount(0)
   , mTokenCount(0)
 {
   AssertIsOnMainThread();
@@ -1331,7 +1332,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   if (mWorkerPrivate) {
     mWorkerPrivate->UpdateOverridenLoadGroup(aLoadGroup);
-    ResetIdleTimeout(aWhy);
+    RenewKeepAliveToken(aWhy);
 
     return NS_OK;
   }
@@ -1411,7 +1412,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
 
   mIsPushWorker = false;
-  ResetIdleTimeout(aWhy);
+  RenewKeepAliveToken(aWhy);
 
   return NS_OK;
 }
@@ -1477,7 +1478,7 @@ void
 ServiceWorkerPrivate::NoteStoppedControllingDocuments()
 {
   AssertIsOnMainThread();
-  if (mIsPushWorker) {
+  if (mIsPushWorker || mDebuggerCount) {
     return;
   }
 
@@ -1505,6 +1506,68 @@ ServiceWorkerPrivate::Activated()
       NS_WARNING("Failed to dispatch pending functional event!");
     }
   }
+}
+
+nsresult
+ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aResult);
+
+  if (!mDebuggerCount) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mWorkerPrivate);
+
+  nsCOMPtr<nsIWorkerDebugger> debugger = do_QueryInterface(mWorkerPrivate->Debugger());
+  debugger.forget(aResult);
+
+  return NS_OK;
+}
+
+nsresult
+ServiceWorkerPrivate::AttachDebugger()
+{
+  AssertIsOnMainThread();
+
+  // When the first debugger attaches to a worker, we spawn a worker if needed,
+  // and cancel the idle timeout. The idle timeout should not be reset until
+  // the last debugger detached from the worker.
+  if (!mDebuggerCount) {
+    nsresult rv = SpawnWorkerIfNeeded(AttachEvent, nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mIdleWorkerTimer->Cancel();
+  }
+
+  ++mDebuggerCount;
+
+  return NS_OK;
+}
+
+nsresult
+ServiceWorkerPrivate::DetachDebugger()
+{
+  AssertIsOnMainThread();
+
+  if (!mDebuggerCount) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  --mDebuggerCount;
+
+  // When the last debugger detaches from a worker, we either reset the idle
+  // timeout, or terminate the worker if there are no more active tokens.
+  if (!mDebuggerCount) {
+    if (mTokenCount) {
+      ResetIdleTimeout();
+    } else {
+      TerminateWorker();
+    }
+  }
+
+  return NS_OK;
 }
 
 /* static */ void
@@ -1550,24 +1613,36 @@ ServiceWorkerPrivate::TerminateWorkerCallback(nsITimer* aTimer, void *aPrivate)
 }
 
 void
-ServiceWorkerPrivate::ResetIdleTimeout(WakeUpReason aWhy)
+ServiceWorkerPrivate::RenewKeepAliveToken(WakeUpReason aWhy)
 {
-  // We should have an active worker if we're reseting the idle timeout
+  // We should have an active worker if we're renewing the keep alive token.
   MOZ_ASSERT(mWorkerPrivate);
 
   if (aWhy == PushEvent || aWhy == PushSubscriptionChangeEvent) {
     mIsPushWorker = true;
   }
 
+  // If there is at least one debugger attached to the worker, the idle worker
+  // timeout was canceled when the first debugger attached to the worker. It
+  // should not be reset until the last debugger detaches from the worker.
+  if (!mDebuggerCount) {
+    ResetIdleTimeout();
+  }
+
+  if (!mKeepAliveToken) {
+    mKeepAliveToken = new KeepAliveToken(this);
+  }
+}
+
+void
+ServiceWorkerPrivate::ResetIdleTimeout()
+{
   uint32_t timeout = Preferences::GetInt("dom.serviceWorkers.idle_timeout");
   DebugOnly<nsresult> rv =
     mIdleWorkerTimer->InitWithFuncCallback(ServiceWorkerPrivate::NoteIdleWorkerCallback,
                                            this, timeout,
                                            nsITimer::TYPE_ONE_SHOT);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (!mKeepAliveToken) {
-    mKeepAliveToken = new KeepAliveToken(this);
-  }
 }
 
 void
