@@ -52,50 +52,33 @@ callback interface UncaughtRejectionObserver {
 
 [ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
-  /**
-   * The various functions on this interface all expect to take promises but
-   * don't want the WebIDL behavior of assimilating random passed-in objects
-   * into promises.  They also want to treat Promise subclass instances as
-   * promises instead of wrapping them in a vanilla Promise, which is what the
-   * IDL spec says to do.  So we list all our arguments as "object" instead of
-   * "Promise" and check for them being a Promise internally.
-   */
-
-  /**
-   * Get the current state of the given promise.
-   */
-  [Throws]
-  static PromiseDebuggingStateHolder getState(object p);
+  static PromiseDebuggingStateHolder getState(Promise<any> p);
 
   /**
    * Return the stack to the promise's allocation point.  This can
    * return null if the promise was not created from script.
    */
-  [Throws]
-  static object? getAllocationStack(object p);
+  static object? getAllocationStack(Promise<any> p);
 
   /**
    * Return the stack to the promise's rejection point, if the
    * rejection happened from script.  This can return null if the
    * promise has not been rejected or was not rejected from script.
    */
-  [Throws]
-  static object? getRejectionStack(object p);
+  static object? getRejectionStack(Promise<any> p);
 
   /**
    * Return the stack to the promise's fulfillment point, if the
    * fulfillment happened from script.  This can return null if the
    * promise has not been fulfilled or was not fulfilled from script.
    */
-  [Throws]
-  static object? getFullfillmentStack(object p);
+  static object? getFullfillmentStack(Promise<any> p);
 
   /**
    * Return an identifier for a promise. This identifier is guaranteed
    * to be unique to this instance of Firefox.
    */
-  [Throws]
-  static DOMString getPromiseID(object p);
+  static DOMString getPromiseID(Promise<any> p);
 
   /**
    * Get the promises directly depending on a given promise.  These are:
@@ -113,14 +96,12 @@ interface PromiseDebugging {
    * p.  It does not recursively return promises that depend on promises that
    * depend on p.
    */
-  [Throws]
-  static sequence<Promise<any>> getDependentPromises(object p);
+  static sequence<Promise<any>> getDependentPromises(Promise<any> p);
 
   /**
    * Get the number of milliseconds elapsed since the given promise was created.
    */
-  [Throws]
-  static DOMHighResTimeStamp getPromiseLifetime(object p);
+  static DOMHighResTimeStamp getPromiseLifetime(Promise<any> p);
 
   /*
    * Get the number of milliseconds elapsed between the promise being created
@@ -128,7 +109,7 @@ interface PromiseDebugging {
    * settled.
    */
   [Throws]
-  static DOMHighResTimeStamp getTimeToSettle(object p);
+  static DOMHighResTimeStamp getTimeToSettle(Promise<any> p);
 
   /**
    * Watching uncaught rejections on the current thread.

@@ -14,7 +14,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/PromiseDebuggingBinding.h"
 
@@ -66,39 +65,23 @@ private:
 /* static */ ThreadLocal<bool>
 FlushRejections::sDispatched;
 
-static Promise*
-UnwrapPromise(JS::Handle<JSObject*> aPromise, ErrorResult& aRv)
-{
-  Promise* promise;
-  if (NS_WARN_IF(NS_FAILED(UNWRAP_OBJECT(Promise, aPromise, promise)))) {
-    aRv.ThrowTypeError<MSG_IS_NOT_PROMISE>(NS_LITERAL_STRING("Argument"));
-    return nullptr;
-  }
-  return promise;
-}
-
 /* static */ void
-PromiseDebugging::GetState(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                           PromiseDebuggingStateHolder& aState,
-                           ErrorResult& aRv)
+PromiseDebugging::GetState(GlobalObject&, Promise& aPromise,
+                           PromiseDebuggingStateHolder& aState)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  switch (promise->mState) {
+  switch (aPromise.mState) {
   case Promise::Pending:
     aState.mState = PromiseDebuggingState::Pending;
     break;
   case Promise::Resolved:
     aState.mState = PromiseDebuggingState::Fulfilled;
-    JS::ExposeValueToActiveJS(promise->mResult);
-    aState.mValue = promise->mResult;
+    JS::ExposeValueToActiveJS(aPromise.mResult);
+    aState.mValue = aPromise.mResult;
     break;
   case Promise::Rejected:
     aState.mState = PromiseDebuggingState::Rejected;
-    JS::ExposeValueToActiveJS(promise->mResult);
-    aState.mReason = promise->mResult;
+    JS::ExposeValueToActiveJS(aPromise.mResult);
+    aState.mReason = aPromise.mResult;
     break;
   }
 }
@@ -135,79 +118,49 @@ PromiseDebugging::FlushUncaughtRejections()
 }
 
 /* static */ void
-PromiseDebugging::GetAllocationStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                     JS::MutableHandle<JSObject*> aStack,
-                                     ErrorResult& aRv)
+PromiseDebugging::GetAllocationStack(GlobalObject&, Promise& aPromise,
+                                     JS::MutableHandle<JSObject*> aStack)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mAllocationStack);
+  aStack.set(aPromise.mAllocationStack);
 }
 
 /* static */ void
-PromiseDebugging::GetRejectionStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                    JS::MutableHandle<JSObject*> aStack,
-                                    ErrorResult& aRv)
+PromiseDebugging::GetRejectionStack(GlobalObject&, Promise& aPromise,
+                                    JS::MutableHandle<JSObject*> aStack)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mRejectionStack);
+  aStack.set(aPromise.mRejectionStack);
 }
 
 /* static */ void
-PromiseDebugging::GetFullfillmentStack(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                       JS::MutableHandle<JSObject*> aStack,
-                                       ErrorResult& aRv)
+PromiseDebugging::GetFullfillmentStack(GlobalObject&, Promise& aPromise,
+                                       JS::MutableHandle<JSObject*> aStack)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  aStack.set(promise->mFullfillmentStack);
+  aStack.set(aPromise.mFullfillmentStack);
 }
 
 /* static */ void
-PromiseDebugging::GetDependentPromises(GlobalObject&, JS::Handle<JSObject*> aPromise,
-                                       nsTArray<RefPtr<Promise>>& aPromises,
-                                       ErrorResult& aRv)
+PromiseDebugging::GetDependentPromises(GlobalObject&, Promise& aPromise,
+                                       nsTArray<RefPtr<Promise>>& aPromises)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  promise->GetDependentPromises(aPromises);
+  aPromise.GetDependentPromises(aPromises);
 }
 
 /* static */ double
-PromiseDebugging::GetPromiseLifetime(GlobalObject&,
-                                     JS::Handle<JSObject*> aPromise,
-                                     ErrorResult& aRv)
+PromiseDebugging::GetPromiseLifetime(GlobalObject&, Promise& aPromise)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return 0;
-  }
-  return (TimeStamp::Now() - promise->mCreationTimestamp).ToMilliseconds();
+  return (TimeStamp::Now() - aPromise.mCreationTimestamp).ToMilliseconds();
 }
 
 /* static */ double
-PromiseDebugging::GetTimeToSettle(GlobalObject&, JS::Handle<JSObject*> aPromise,
+PromiseDebugging::GetTimeToSettle(GlobalObject&, Promise& aPromise,
                                   ErrorResult& aRv)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return 0;
-  }
-  if (promise->mState == Promise::Pending) {
+  if (aPromise.mState == Promise::Pending) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return 0;
   }
-  return (promise->mSettlementTimestamp -
-          promise->mCreationTimestamp).ToMilliseconds();
+  return (aPromise.mSettlementTimestamp -
+          aPromise.mCreationTimestamp).ToMilliseconds();
 }
 
 /* static */ void
@@ -251,15 +204,10 @@ PromiseDebugging::AddConsumedRejection(Promise& aPromise)
 
 /* static */ void
 PromiseDebugging::GetPromiseID(GlobalObject&,
-                               JS::Handle<JSObject*> aPromise,
-                               nsString& aID,
-                               ErrorResult& aRv)
+                               Promise& aPromise,
+                               nsString& aID)
 {
-  Promise* promise = UnwrapPromise(aPromise, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  uint64_t promiseID = promise->GetID();
+  uint64_t promiseID = aPromise.GetID();
   aID = sIDPrefix;
   aID.AppendInt(promiseID);
 }
