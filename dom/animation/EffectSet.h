@@ -55,6 +55,70 @@ private:
   // this set when it releases its reference to the target element.
   typedef nsTHashtable<nsPtrHashKey<dom::KeyframeEffectReadOnly>> EffectPtrSet;
 
+public:
+  // A simple iterator to support iterating over the effects in this object in
+  // range-based for loops.
+  //
+  // This allows us to avoid exposing mEffects directly and saves the
+  // caller from having to dereference hashtable iterators using
+  // the rather complicated: iter.Get()->GetKey().
+  class Iterator
+  {
+  public:
+    explicit Iterator(EffectPtrSet::Iterator&& aHashIterator)
+      : mHashIterator(mozilla::Move(aHashIterator))
+      , mIsEndIterator(false) { }
+    Iterator(Iterator&& aOther)
+      : mHashIterator(mozilla::Move(aOther.mHashIterator))
+      , mIsEndIterator(aOther.mIsEndIterator) { }
+
+    static Iterator EndIterator(EffectPtrSet::Iterator&& aHashIterator)
+    {
+      Iterator result(mozilla::Move(aHashIterator));
+      result.mIsEndIterator = true;
+      return result;
+    }
+
+    bool operator!=(const Iterator& aOther) const {
+      if (Done() || aOther.Done()) {
+        return Done() != aOther.Done();
+      }
+      return mHashIterator.Get() != aOther.mHashIterator.Get();
+    }
+
+    Iterator& operator++() {
+      MOZ_ASSERT(!Done());
+      mHashIterator.Next();
+      return *this;
+    }
+
+    dom::KeyframeEffectReadOnly* operator* ()
+    {
+      MOZ_ASSERT(!Done());
+      return mHashIterator.Get()->GetKey();
+    }
+
+  private:
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+
+    bool Done() const {
+      return mIsEndIterator || mHashIterator.Done();
+    }
+
+    EffectPtrSet::Iterator mHashIterator;
+    bool mIsEndIterator;
+  };
+
+  Iterator begin() { return Iterator(mEffects.Iter()); }
+  Iterator end()
+  {
+    return Iterator::EndIterator(mEffects.Iter());
+  }
+
+private:
   static nsIAtom* GetEffectSetPropertyAtom(nsCSSPseudoElements::Type
                                              aPseudoType);
 
