@@ -353,6 +353,15 @@ public:
     return DispatchLifecycleEvent(aCx, aWorkerPrivate);
   }
 
+  NS_IMETHOD
+  Cancel() override
+  {
+    mCallback->SetResult(false);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(mCallback)));
+
+    return WorkerRunnable::Cancel();
+  }
+
 private:
   bool
   DispatchLifecycleEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
@@ -360,52 +369,116 @@ private:
 };
 
 /*
- * Used to handle ExtendableEvent::waitUntil() and proceed with
- * installation/activation.
+ * Used to handle ExtendableEvent::waitUntil() and catch abnormal worker
+ * termination during the execution of life cycle events. It is responsible
+ * with advancing the job queue for install/activate tasks.
  */
-class LifecycleEventPromiseHandler final : public PromiseNativeHandler
+class LifeCycleEventWatcher final : public PromiseNativeHandler,
+                                    public WorkerFeature
 {
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<LifeCycleEventCallback> mCallback;
+  bool mDone;
 
-  virtual
-  ~LifecycleEventPromiseHandler()
-  { }
+  ~LifeCycleEventWatcher()
+  {
+    if (mDone) {
+      return;
+    }
+
+    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
+    // XXXcatalinb: If all the promises passed to waitUntil go out of scope,
+    // the resulting Promise.all will be cycle collected and it will drop its
+    // native handlers (including this object). Instead of waiting for a timeout
+    // we report the failure now.
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+    ReportResult(cx, false);
+  }
 
 public:
   NS_DECL_ISUPPORTS
 
-  explicit LifecycleEventPromiseHandler(LifeCycleEventCallback* aCallback)
-    : mCallback(aCallback)
+  LifeCycleEventWatcher(WorkerPrivate* aWorkerPrivate,
+                        LifeCycleEventCallback* aCallback)
+    : mWorkerPrivate(aWorkerPrivate)
+    , mCallback(aCallback)
+    , mDone(false)
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  bool
+  Init()
+  {
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+
+    // We need to listen for worker termination in case the event handler
+    // never completes or never resolves the waitUntil promise. There are
+    // two possible scenarios:
+    // 1. The keepAlive token expires and the worker is terminated, in which
+    //    case the registration/update promise will be rejected
+    // 2. A new service worker is registered which will terminate the current
+    //    installing worker.
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
+      NS_WARNING("LifeCycleEventWatcher failed to add feature.");
+      ReportResult(cx, false);
+      return false;
+    }
+
+    return true;
+  }
+
+  bool
+  Notify(JSContext* aCx, Status aStatus) override
+  {
+    if (aStatus < Terminating) {
+      return true;
+    }
+
+    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
+    ReportResult(aCx, false);
+
+    return true;
+  }
+
+  void
+  ReportResult(JSContext* aCx, bool aResult)
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    if (mDone) {
+      return;
+    }
+    mDone = true;
+
+    mCallback->SetResult(aResult);
+    nsresult rv = NS_DispatchToMainThread(mCallback);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
+    }
+
+    mWorkerPrivate->RemoveFeature(aCx, this);
   }
 
   void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-    workerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
 
-    mCallback->SetResult(true);
-    nsresult rv = NS_DispatchToMainThread(mCallback);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
-    }
+    ReportResult(aCx, true);
   }
 
   void
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-    workerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(GetCurrentThreadWorkerPrivate() == mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
 
-    mCallback->SetResult(false);
-    nsresult rv = NS_DispatchToMainThread(mCallback);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      NS_RUNTIMEABORT("Failed to dispatch life cycle event handler.");
-    }
+    ReportResult(aCx, false);
 
     // Note, all WaitUntil() rejections are reported to client consoles
     // by the WaitUntilHandler in ServiceWorkerEvents.  This ensures that
@@ -414,7 +487,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS0(LifecycleEventPromiseHandler)
+NS_IMPL_ISUPPORTS0(LifeCycleEventWatcher)
 
 bool
 LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
@@ -437,16 +510,23 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
 
   event->SetTrusted(true);
 
+  // It is important to initialize the watcher before actually dispatching
+  // the event in order to catch worker termination while the event handler
+  // is still executing. This can happen with infinite loops, for example.
+  RefPtr<LifeCycleEventWatcher> watcher =
+    new LifeCycleEventWatcher(aWorkerPrivate, mCallback);
+
+  if (!watcher->Init()) {
+    return true;
+  }
+
   RefPtr<Promise> waitUntil;
   DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
                                        event, getter_AddRefs(waitUntil));
   if (waitUntil) {
-    RefPtr<LifecycleEventPromiseHandler> handler =
-      new LifecycleEventPromiseHandler(mCallback);
-    waitUntil->AppendNativeHandler(handler);
+    waitUntil->AppendNativeHandler(watcher);
   } else {
-    mCallback->SetResult(false);
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(mCallback)));
+    watcher->ReportResult(aCx, false);
   }
 
   return true;
