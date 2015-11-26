@@ -826,6 +826,40 @@ class TestRecursiveMakeBackend(BackendTester):
         # way to iterate the manifest.
         self.assertFalse('instrumentation/./not_packaged.java' in m)
 
+    def test_binary_components(self):
+        """Ensure binary components are correctly handled."""
+        env = self._consume('binary-components', RecursiveMakeBackend)
+
+        with open(mozpath.join(env.topobjdir, 'foo', 'backend.mk')) as fh:
+            lines = fh.readlines()[2:]
+
+        self.assertEqual(lines, [
+            'misc::\n',
+            '\t$(call py_action,buildlist,$(DEPTH)/dist/bin/chrome.manifest '
+            + "'manifest components/components.manifest')\n",
+            '\t$(call py_action,buildlist,'
+            + '$(DEPTH)/dist/bin/components/components.manifest '
+            + "'binary-component foo')\n",
+            'LIBRARY_NAME := foo\n',
+            'FORCE_SHARED_LIB := 1\n',
+            'IMPORT_LIBRARY := foo\n',
+            'SHARED_LIBRARY := foo\n',
+            'IS_COMPONENT := 1\n',
+            'DSO_SONAME := foo\n',
+        ])
+
+        with open(mozpath.join(env.topobjdir, 'bar', 'backend.mk')) as fh:
+            lines = fh.readlines()[2:]
+
+        self.assertEqual(lines, [
+            'LIBRARY_NAME := bar\n',
+            'FORCE_SHARED_LIB := 1\n',
+            'IMPORT_LIBRARY := bar\n',
+            'SHARED_LIBRARY := bar\n',
+            'IS_COMPONENT := 1\n',
+            'DSO_SONAME := bar\n',
+        ])
+
 
 if __name__ == '__main__':
     main()

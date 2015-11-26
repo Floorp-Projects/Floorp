@@ -12,6 +12,7 @@ from mozunit import main
 from mozbuild.frontend.data import (
     AndroidResDirs,
     BrandingFiles,
+    ChromeManifestEntry,
     ConfigFileSubstitution,
     Defines,
     DistFiles,
@@ -27,6 +28,7 @@ from mozbuild.frontend.data import (
     LocalInclude,
     Program,
     Resources,
+    SharedLibrary,
     SimpleProgram,
     Sources,
     StaticLibrary,
@@ -41,6 +43,7 @@ from mozbuild.frontend.reader import (
     BuildReaderError,
     SandboxValidationError,
 )
+from mozpack.chrome import manifest
 
 from mozbuild.test.common import MockConfig
 
@@ -920,6 +923,24 @@ class TestEmitterBasic(unittest.TestCase):
             '/dir3',
         ]
         self.assertEquals([p.full_path for p in objs[0].paths], expected)
+
+    def test_binary_components(self):
+        """Test that IS_COMPONENT/NO_COMPONENTS_MANIFEST work properly."""
+        reader = self.reader('binary-components')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        self.assertIsInstance(objs[0], ChromeManifestEntry)
+        self.assertEqual(objs[0].path,
+                         'dist/bin/components/components.manifest')
+        self.assertIsInstance(objs[0].entry, manifest.ManifestBinaryComponent)
+        self.assertEqual(objs[0].entry.base, 'dist/bin/components')
+        self.assertEqual(objs[0].entry.relpath, objs[1].lib_name)
+        self.assertIsInstance(objs[1], SharedLibrary)
+        self.assertEqual(objs[1].basename, 'foo')
+        self.assertIsInstance(objs[2], SharedLibrary)
+        self.assertEqual(objs[2].basename, 'bar')
+
 
 if __name__ == '__main__':
     main()

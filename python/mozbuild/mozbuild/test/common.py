@@ -36,4 +36,8 @@ class MockConfig(object):
 
         self.external_source_dir = None
         self.lib_prefix = 'lib'
-        self.lib_suffix = '.so'
+        self.lib_suffix = '.a'
+        self.import_prefix = 'lib'
+        self.import_suffix = '.so'
+        self.dll_prefix = 'lib'
+        self.dll_suffix = '.so'
