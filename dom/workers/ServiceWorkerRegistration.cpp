@@ -266,7 +266,8 @@ UpdateInternal(nsIPrincipal* aPrincipal,
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
 
-  swm->Update(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
+  // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
+  swm->SoftUpdate(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
 
 class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
@@ -392,22 +393,14 @@ public:
     AssertIsOnMainThread();
     ErrorResult result;
 
-    nsCOMPtr<nsIPrincipal> principal;
-    // UpdateInternal may try to reject the promise synchronously leading
-    // to a deadlock.
-    {
-      MutexAutoLock lock(mPromiseProxy->Lock());
-      if (mPromiseProxy->CleanedUp()) {
-        return NS_OK;
-      }
-
-      principal = mPromiseProxy->GetWorkerPrivate()->GetPrincipal();
+    MutexAutoLock lock(mPromiseProxy->Lock());
+    if (mPromiseProxy->CleanedUp()) {
+      return NS_OK;
     }
-    MOZ_ASSERT(principal);
 
     RefPtr<WorkerThreadUpdateCallback> cb =
       new WorkerThreadUpdateCallback(mPromiseProxy);
-    UpdateInternal(principal, mScope, cb);
+    UpdateInternal(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope, cb);
     return NS_OK;
   }
 
