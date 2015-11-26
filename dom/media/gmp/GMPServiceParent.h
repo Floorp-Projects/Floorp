@@ -97,7 +97,8 @@ private:
     ~DirectoryFilter() {}
   };
   void ClearNodeIdAndPlugin(DirectoryFilter& aFilter);
-
+  void ClearNodeIdAndPlugin(nsIFile* aPluginStorageDir,
+                            DirectoryFilter& aFilter);
   void ForgetThisSiteOnGMPThread(const nsACString& aOrigin);
   void ClearRecentHistoryOnGMPThread(PRTime aSince);
 
