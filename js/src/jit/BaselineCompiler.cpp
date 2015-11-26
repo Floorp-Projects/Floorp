@@ -923,7 +923,7 @@ BaselineCompiler::emitBody()
     while (true) {
         JSOp op = JSOp(*pc);
         JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
-                int(script->pcToOffset(pc)), js_CodeName[op]);
+                int(script->pcToOffset(pc)), CodeName[op]);
 
         BytecodeInfo* info = analysis_.maybeInfo(pc);
 
@@ -979,7 +979,7 @@ BaselineCompiler::emitBody()
 
         switch (op) {
           default:
-            JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineAbort, "Unhandled op: %s", CodeName[op]);
             return Method_CantCompile;
 
 #define EMIT_OP(OP)                            \
