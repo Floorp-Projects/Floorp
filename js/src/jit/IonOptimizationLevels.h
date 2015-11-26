@@ -152,37 +152,37 @@ class OptimizationInfo
     }
 
     bool inlineInterpreted() const {
-        return inlineInterpreted_ && !js_JitOptions.disableInlining;
+        return inlineInterpreted_ && !JitOptions.disableInlining;
     }
 
     bool inlineNative() const {
-        return inlineNative_ && !js_JitOptions.disableInlining;
+        return inlineNative_ && !JitOptions.disableInlining;
     }
 
     uint32_t compilerWarmUpThreshold(JSScript* script, jsbytecode* pc = nullptr) const;
 
     bool eagerSimdUnboxEnabled() const {
-        return eagerSimdUnbox_ && !js_JitOptions.disableEagerSimdUnbox;
+        return eagerSimdUnbox_ && !JitOptions.disableEagerSimdUnbox;
     }
 
     bool gvnEnabled() const {
-        return gvn_ && !js_JitOptions.disableGvn;
+        return gvn_ && !JitOptions.disableGvn;
     }
 
     bool licmEnabled() const {
-        return licm_ && !js_JitOptions.disableLicm;
+        return licm_ && !JitOptions.disableLicm;
     }
 
     bool rangeAnalysisEnabled() const {
-        return rangeAnalysis_ && !js_JitOptions.disableRangeAnalysis;
+        return rangeAnalysis_ && !JitOptions.disableRangeAnalysis;
     }
 
     bool loopUnrollingEnabled() const {
-        return loopUnrolling_ && !js_JitOptions.disableLoopUnrolling;
+        return loopUnrolling_ && !JitOptions.disableLoopUnrolling;
     }
 
     bool instructionReorderingEnabled() const {
-        return reordering_ && !js_JitOptions.disableInstructionReordering;
+        return reordering_ && !JitOptions.disableInstructionReordering;
     }
 
     bool autoTruncateEnabled() const {
@@ -190,23 +190,23 @@ class OptimizationInfo
     }
 
     bool sincosEnabled() const {
-        return sincos_ && !js_JitOptions.disableSincos;
+        return sincos_ && !JitOptions.disableSincos;
     }
 
     bool sinkEnabled() const {
-        return sink_ && !js_JitOptions.disableSink;
+        return sink_ && !JitOptions.disableSink;
     }
 
     bool eaaEnabled() const {
-        return eaa_ && !js_JitOptions.disableEaa;
+        return eaa_ && !JitOptions.disableEaa;
     }
 
     bool amaEnabled() const {
-        return ama_ && !js_JitOptions.disableAma;
+        return ama_ && !JitOptions.disableAma;
     }
 
     bool edgeCaseAnalysisEnabled() const {
-        return edgeCaseAnalysis_ && !js_JitOptions.disableEdgeCaseAnalysis;
+        return edgeCaseAnalysis_ && !JitOptions.disableEdgeCaseAnalysis;
     }
 
     bool eliminateRedundantChecksEnabled() const {
@@ -214,13 +214,13 @@ class OptimizationInfo
     }
 
     IonRegisterAllocator registerAllocator() const {
-        if (js_JitOptions.forcedRegisterAllocator.isSome())
-            return js_JitOptions.forcedRegisterAllocator.ref();
+        if (JitOptions.forcedRegisterAllocator.isSome())
+            return JitOptions.forcedRegisterAllocator.ref();
         return registerAllocator_;
     }
 
     bool scalarReplacementEnabled() const {
-        return scalarReplacement_ && !js_JitOptions.disableScalarReplacement;
+        return scalarReplacement_ && !JitOptions.disableScalarReplacement;
     }
 
     uint32_t smallFunctionMaxInlineDepth() const {
@@ -234,7 +234,7 @@ class OptimizationInfo
     }
 
     uint32_t inlineMaxBytecodePerCallSite(bool offThread) const {
-        return (offThread || !js_JitOptions.limitScriptSize)
+        return (offThread || !JitOptions.limitScriptSize)
                ? inlineMaxBytecodePerCallSiteOffThread_
                : inlineMaxBytecodePerCallSiteMainThread_;
     }
@@ -253,8 +253,8 @@ class OptimizationInfo
 
     uint32_t inliningWarmUpThreshold() const {
         uint32_t compilerWarmUpThreshold = compilerWarmUpThreshold_;
-        if (js_JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
-            compilerWarmUpThreshold = js_JitOptions.forcedDefaultIonWarmUpThreshold.ref();
+        if (JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
+            compilerWarmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.ref();
         return compilerWarmUpThreshold * inliningWarmUpThresholdFactor_;
     }
 

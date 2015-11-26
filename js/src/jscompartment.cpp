@@ -1079,7 +1079,7 @@ JSCompartment::updateDebuggerObservesCoverage()
 bool
 JSCompartment::collectCoverage() const
 {
-    return !js_JitOptions.disablePgo ||
+    return !JitOptions.disablePgo ||
            debuggerObservesCoverage() ||
            runtimeFromAnyThread()->profilingScripts ||
            runtimeFromAnyThread()->lcovOutput.isEnabled();

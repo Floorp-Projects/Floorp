@@ -70,7 +70,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
 #ifdef CHECK_OSIPOINT_REGISTERS
-    checkOsiPointRegisters(js_JitOptions.checkOsiPointRegisters),
+    checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
     frameInitialAdjustment_(0)

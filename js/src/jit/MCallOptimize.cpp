@@ -2580,7 +2580,7 @@ IonBuilder::inlineAssertRecoveredOnBailout(CallInfo& callInfo)
     if (callInfo.argc() != 2)
         return InliningStatus_NotInlined;
 
-    if (js_JitOptions.checkRangeAnalysis) {
+    if (JitOptions.checkRangeAnalysis) {
         // If we are checking the range of all instructions, then the guards
         // inserted by Range Analysis prevent the use of recover
         // instruction. Thus, we just disable these checks.
