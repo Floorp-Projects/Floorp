@@ -717,10 +717,10 @@ js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
     return Proxy::fun_toString(cx, proxy, indent);
 }
 
-const Class js::ProxyObject::class_ =
+const Class js::ProxyObject::proxyClass =
     PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
 
-const Class* const js::ProxyClassPtr = &js::ProxyObject::class_;
+const Class* const js::ProxyClassPtr = &js::ProxyObject::proxyClass;
 
 JS_FRIEND_API(JSObject*)
 js::NewProxyObject(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv, JSObject* proto_,
@@ -738,7 +738,7 @@ void
 ProxyObject::renew(JSContext* cx, const BaseProxyHandler* handler, Value priv)
 {
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
-    MOZ_ASSERT(getClass() == &ProxyObject::class_);
+    MOZ_ASSERT(getClass() == &ProxyObject::proxyClass);
     MOZ_ASSERT(!IsWindowProxy(this));
     MOZ_ASSERT(hasLazyPrototype());
 

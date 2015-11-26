@@ -104,22 +104,30 @@ class ProxyObject : public JSObject
 
     void nuke(const BaseProxyHandler* handler);
 
-    static const Class class_;
+    // There is no class_ member to force specialization of JSObject::is<T>().
+    // The implementation in JSObject is incorrect for proxies since it doesn't
+    // take account of the handler type.
+    static const Class proxyClass;
 };
 
-} // namespace js
+bool IsDerivedProxyObject(const JSObject* obj, const js::BaseProxyHandler* handler);
 
-// Note: the following |JSObject::is<T>| methods are implemented in terms of
-// the Is*Proxy() friend API functions to ensure the implementations are tied
-// together.  The exception is |JSObject::is<js::OuterWindowProxyObject>()
-// const|, which uses the standard template definition, because there is no
-// IsOuterWindowProxy() function in the friend API.
+} // namespace js
 
 template<>
 inline bool
 JSObject::is<js::ProxyObject>() const
 {
+    // Note: this method is implemented in terms of the IsProxy() friend API
+    // functions to ensure the implementations are tied together.
+    // Note 2: this specialization isn't used for subclasses of ProxyObject
+    // which must supply their own implementation.
     return js::IsProxy(const_cast<JSObject*>(this));
+}
+
+inline bool
+js::IsDerivedProxyObject(const JSObject* obj, const js::BaseProxyHandler* handler) {
+    return obj->is<js::ProxyObject>() && obj->as<js::ProxyObject>().handler() == handler;
 }
 
 #endif /* vm_ProxyObject_h */
