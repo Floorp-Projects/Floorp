@@ -1354,7 +1354,7 @@ class Assembler : public AssemblerShared
                 dataRelocations_.writeUnsigned(nextOffset().getOffset());
         }
     }
-    void writePrebarrierOffset(CodeOffsetLabel label) {
+    void writePrebarrierOffset(CodeOffset label) {
         preBarriers_.writeUnsigned(label.offset());
     }
 
@@ -1430,7 +1430,7 @@ class Assembler : public AssemblerShared
     static void WriteInstStatic(uint32_t x, uint32_t* dest);
 
   public:
-    void writeCodePointer(CodeOffsetLabel* label);
+    void writeCodePointer(CodeOffset* label);
 
     void haltingAlign(int alignment);
     void nopAlign(int alignment);
@@ -1696,10 +1696,10 @@ class Assembler : public AssemblerShared
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label* label, void* target, Relocation::Kind reloc);
 
-    void Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address);
+    void Bind(uint8_t* rawCode, CodeOffset* label, const void* address);
 
     // See Bind
-    size_t labelToPatchOffset(CodeOffsetLabel label) {
+    size_t labelToPatchOffset(CodeOffset label) {
         return label.offset();
     }
 

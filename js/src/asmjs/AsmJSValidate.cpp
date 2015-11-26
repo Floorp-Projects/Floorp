@@ -7286,8 +7286,8 @@ GenerateCheckForHeapDetachment(ModuleValidator& m, Register scratch)
     MOZ_ASSERT(int(masm.framePushed()) >= int(ShadowStackSpace));
     AssertStackAlignment(masm, ABIStackAlignment);
 #if defined(JS_CODEGEN_X86)
-    CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
-    masm.append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
+    CodeOffset offset = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
+    masm.append(AsmJSGlobalAccess(offset, AsmJSHeapGlobalDataOffset));
     masm.branchTestPtr(Assembler::Zero, scratch, scratch, &m.onDetachedLabel());
 #else
     masm.branchTestPtr(Assembler::Zero, HeapReg, HeapReg, &m.onDetachedLabel());

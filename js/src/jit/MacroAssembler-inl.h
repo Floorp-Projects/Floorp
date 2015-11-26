@@ -62,14 +62,14 @@ MacroAssembler::implicitPop(uint32_t bytes)
 // ===============================================================
 // Stack manipulation functions.
 
-CodeOffsetLabel
+CodeOffset
 MacroAssembler::PushWithPatch(ImmWord word)
 {
     framePushed_ += sizeof(word.value);
     return pushWithPatch(word);
 }
 
-CodeOffsetLabel
+CodeOffset
 MacroAssembler::PushWithPatch(ImmPtr imm)
 {
     return PushWithPatch(ImmWord(uintptr_t(imm.value)));
@@ -81,21 +81,21 @@ MacroAssembler::PushWithPatch(ImmPtr imm)
 void
 MacroAssembler::call(const CallSiteDesc& desc, const Register reg)
 {
-    CodeOffsetLabel l = call(reg);
+    CodeOffset l = call(reg);
     append(desc, l, framePushed());
 }
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, Label* label)
 {
-    CodeOffsetLabel l = call(label);
+    CodeOffset l = call(label);
     append(desc, l, framePushed());
 }
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, AsmJSInternalCallee callee)
 {
-    CodeOffsetLabel l = callWithPatch();
+    CodeOffset l = callWithPatch();
     append(desc, l, framePushed(), callee.index);
 }
 
