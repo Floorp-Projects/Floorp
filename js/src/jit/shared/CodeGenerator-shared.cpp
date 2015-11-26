@@ -308,7 +308,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
                  nativeDelta,
                  ref.pc - script->code(),
                  pcDelta,
-                 js_CodeName[JSOp(*ref.pc)],
+                 CodeName[JSOp(*ref.pc)],
                  script->filename(), script->lineno());
 
     for (tree = tree->caller(); tree; tree = tree->caller()) {
