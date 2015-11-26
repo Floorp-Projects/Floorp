@@ -326,7 +326,7 @@ ServiceWorkerRegistrar::ReadData()
     nsAutoCString suffix;
     GET_LINE(suffix);
 
-    OriginAttributes attrs;
+    PrincipalOriginAttributes attrs;
     if (!attrs.PopulateFromSuffix(suffix)) {
       return NS_ERROR_INVALID_ARG;
     }
