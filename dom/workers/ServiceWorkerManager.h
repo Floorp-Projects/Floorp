@@ -312,7 +312,9 @@ class ServiceWorkerManager final
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class ServiceWorkerJobQueue;
+  friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
+  friend class ServiceWorkerJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
 
