@@ -744,7 +744,12 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
     }
   }
 
-  transform.PostTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
+  // If our parent isn't a perspective layer, then the offset into reference
+  // frame coordinates will have been applied to us. Add an inverse translation
+  // to cancel it out.
+  if (!layer->GetParent() || !layer->GetParent()->GetTransformIsPerspective()) {
+    transform.PostTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
+  }
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal

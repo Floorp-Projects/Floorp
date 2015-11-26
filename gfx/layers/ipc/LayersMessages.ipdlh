@@ -164,10 +164,7 @@ struct TransformData {
   nsPoint origin;
   // the transform-origin property for the transform in device pixels
   Point3D transformOrigin;
-  // the perspective-origin property for the transform in device pixels
-  Point3D perspectiveOrigin;
   nsRect bounds;
-  nscoord perspective;
   int32_t appUnitsPerDevPixel;
 };
 
