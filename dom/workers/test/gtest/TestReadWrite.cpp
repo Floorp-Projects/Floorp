@@ -219,7 +219,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
 
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
-      d->principal() = mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2), spec);
+      d->principal() = mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(i, i % 2), spec);
       d->scope().AppendPrintf("scope write %d", i);
       d->scriptSpec().AppendPrintf("scriptSpec write %d", i);
       d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
@@ -245,7 +245,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     ASSERT_EQ(data[i].principal().type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
     const mozilla::ipc::ContentPrincipalInfo& cInfo = data[i].principal();
 
-    mozilla::OriginAttributes attrs(i, i % 2);
+    mozilla::PrincipalOriginAttributes attrs(i, i % 2);
     nsAutoCString suffix, expectSuffix;
     attrs.CreateSuffix(expectSuffix);
     cInfo.attrs().CreateSuffix(suffix);

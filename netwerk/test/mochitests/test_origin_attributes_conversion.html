@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Bug 1209162 - Test Origin Attributes Conversion </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  { "set": [["network.http.enable-packaged-apps", true],
+            ["network.http.signed-packages.enabled", true],
+            ["network.http.signed-packages.trusted-origin", "http://mochi.test:8888"],
+            ["dom.mozBrowserFramesEnabled", true]] },
+  () => SpecialPowers.pushPermissions([
+    { "type": "browser", "allow": 1, "context": document }
+  ], function() {
+    runTest();
+}));
+
+var Ci = SpecialPowers.Ci;
+
+function runTest() {
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute('remote', 'true');
+  iframe.setAttribute("src", "http://example.org:80");
+
+  iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+    iframe.removeEventListener("mozbrowserloadend", loadend);
+    info("Got mozbrowserloadend");
+    iframe.setAttribute("src", "http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app.sjs!//index.html");
+
+    iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+      iframe.removeEventListener("mozbrowserloadend", loadend);
+      info("Got 2nd mozbrowserloadend");
+
+      // Expected origin attributes for signed package.
+      var expectedSignedOA = {inBrowser: true,
+                              signedPkg: "09bc9714-7ab6-4320-9d20-fde4c237522c"};
+
+      // Expected origin attributes for network request.
+      var expectedOA = {inBrowser: true};
+
+      function checkOriginAttributes(attrs, expected) {
+        for (var p in expected) {
+          is(attrs[p], expected[p]);
+        }
+      }
+
+      var mm = SpecialPowers.wrap(iframe)
+                            .QueryInterface(Ci.nsIFrameLoaderOwner)
+                            .frameLoader
+                            .messageManager;
+      mm.addMessageListener("test-document-origin-attributes", function (message) {
+        info("checking origin attributes from document");
+        checkOriginAttributes(message.data.originAttributes, expectedSignedOA);
+      });
+
+      mm.addMessageListener("test-tabchild-origin-attributes", function (message) {
+        info("checking origin attributes from TabChild");
+        checkOriginAttributes(message.data.originAttributes, expectedSignedOA);
+      });
+
+      mm.addMessageListener("test-child-docshell-origin-attributes", function (message) {
+        info("checking origin attributes from inner iframe");
+        checkOriginAttributes(message.data.originAttributes, expectedSignedOA);
+      });
+
+      mm.addMessageListener("test-necko-origin-attributes", function (message) {
+        checkOriginAttributes(message.data.originAttributes, expectedOA);
+
+        SimpleTest.finish();
+      });
+
+      var scriptLoader = mm.QueryInterface(Ci.nsIFrameScriptLoader);
+      getOriginAttributes(scriptLoader, iframe);
+      sendNetworkRequest(scriptLoader, iframe);
+    });
+  });
+
+  document.body.appendChild(iframe);
+}
+
+function getOriginAttributes(scriptLoader, iframe) {
+  var frameScript =
+    `
+    function sendOA() {
+      sendAsyncMessage("test-document-origin-attributes",
+                       {originAttributes: content.document.nodePrincipal.originAttributes});
+
+      var loadContext = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell)
+                               .QueryInterface(Ci.nsILoadContext);
+      sendAsyncMessage("test-tabchild-origin-attributes",
+                       {originAttributes: loadContext.originAttributes});
+
+      var frameWindow = content.document.getElementById("innerFrame").contentWindow;
+      var childLoadContext = frameWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIWebNavigation)
+                                        .QueryInterface(Ci.nsIDocShell)
+                                        .QueryInterface(Ci.nsILoadContext);
+      sendAsyncMessage("test-child-docshell-origin-attributes",
+                       {originAttributes: childLoadContext.originAttributes});
+    }
+    `;
+  scriptLoader.loadFrameScript("data:,(" + frameScript + ")()", true);
+}
+
+function sendNetworkRequest(scriptLoader, iframe) {
+  var frameScript =
+    `
+    function sendNetworkerOA() {
+      var myXHR = new content.XMLHttpRequest();
+      myXHR.open("GET", "http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app.sjs!//page2.html");
+      myXHR.send();
+      myXHR.onload = function() {
+        var loadInfo = myXHR.channel.loadInfo;
+        sendAsyncMessage("test-necko-origin-attributes",
+                         {originAttributes: loadInfo.originAttributes});
+      };
+    }
+    `;
+  scriptLoader.loadFrameScript("data:,(" + frameScript + ")()", true)
+}
+
+</script>
+</pre>
+</body>
+</html>

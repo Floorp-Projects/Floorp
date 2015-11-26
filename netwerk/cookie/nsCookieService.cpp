@@ -61,7 +61,7 @@ using namespace mozilla::net;
 // on content processes (see bug 777620), change to use the appropriate app
 // namespace.  For now those IDLs aren't supported on child processes.
 #define DEFAULT_APP_KEY(baseDomain) \
-        nsCookieKey(baseDomain, OriginAttributes())
+        nsCookieKey(baseDomain, NeckoOriginAttributes())
 
 /******************************************************************************
  * nsCookieService impl:
@@ -573,7 +573,7 @@ public:
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_CLEAR_ORIGIN_DATA));
 
     MOZ_ASSERT(XRE_IsParentProcess());
-    OriginAttributes attrs;
+    NeckoOriginAttributes attrs;
     MOZ_ALWAYS_TRUE(attrs.Init(nsDependentString(aData)));
 
     nsCOMPtr<nsICookieManager2> cookieManager
@@ -833,7 +833,7 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
 
   // Create an originAttributes object by appId and inBrowserElemnt.
   // Then create the originSuffix string from this object.
-  OriginAttributes attrs(appId, (inBrowser ? 1 : 0));
+  NeckoOriginAttributes attrs(appId, (inBrowser ? 1 : 0));
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
@@ -861,7 +861,7 @@ SetAppIdFromOriginAttributesSQLFunction::OnFunctionCall(
 {
   nsresult rv;
   nsAutoCString suffix;
-  OriginAttributes attrs;
+  NeckoOriginAttributes attrs;
 
   rv = aFunctionArguments->GetUTF8String(0, suffix);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -893,7 +893,7 @@ SetInBrowserFromOriginAttributesSQLFunction::OnFunctionCall(
 {
   nsresult rv;
   nsAutoCString suffix;
-  OriginAttributes attrs;
+  NeckoOriginAttributes attrs;
 
   rv = aFunctionArguments->GetUTF8String(0, suffix);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1895,7 +1895,7 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   // Get originAttributes.
-  OriginAttributes attrs;
+  NeckoOriginAttributes attrs;
   if (aChannel) {
     NS_GetOriginAttributes(aChannel, attrs);
   }
@@ -1968,7 +1968,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   // Get originAttributes.
-  OriginAttributes attrs;
+  NeckoOriginAttributes attrs;
   if (aChannel) {
     NS_GetOriginAttributes(aChannel, attrs);
   }
@@ -1989,7 +1989,7 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
                                          nsDependentCString     &aCookieHeader,
                                          const nsCString        &aServerTime,
                                          bool                    aFromHttp,
-                                         const OriginAttributes &aOriginAttrs,
+                                         const NeckoOriginAttributes &aOriginAttrs,
                                          bool                    aIsPrivate,
                                          nsIChannel             *aChannel)
 {
@@ -2300,7 +2300,7 @@ nsCookieService::Add(const nsACString &aHost,
 
 
 nsresult
-nsCookieService::Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
+nsCookieService::Remove(const nsACString& aHost, const NeckoOriginAttributes& aAttrs,
                         const nsACString& aName, const nsACString& aPath,
                         bool aBlocked)
 {
@@ -2358,7 +2358,7 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         bool             aBlocked)
 {
-  OriginAttributes attrs;
+  NeckoOriginAttributes attrs;
   return Remove(aHost, attrs, aName, aPath, aBlocked);
 }
 
@@ -2682,7 +2682,7 @@ nsCookieService::EnsureReadComplete()
     stmt->GetUTF8String(IDX_BASE_DOMAIN, baseDomain);
 
     nsAutoCString suffix;
-    OriginAttributes attrs;
+    NeckoOriginAttributes attrs;
     stmt->GetUTF8String(IDX_ORIGIN_ATTRIBUTES, suffix);
     attrs.PopulateFromSuffix(suffix);
 
@@ -2831,7 +2831,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
       continue;
 
     // pre-existing cookies have appId=0, inBrowser=false set by default
-    // constructor of OriginAttributes().
+    // constructor of NeckoOriginAttributes().
     nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
 
     // Create a new nsCookie and assign the data. We don't know the cookie
@@ -2922,7 +2922,7 @@ void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
                                          bool aHttpBound,
-                                         const OriginAttributes aOriginAttrs,
+                                         const NeckoOriginAttributes aOriginAttrs,
                                          bool aIsPrivate,
                                          nsCString &aCookieString)
 {
@@ -4330,7 +4330,7 @@ nsCookieService::RemoveCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement)
     //
     // NOTE: we could make this better by getting nsCookieEntry objects instead
     // of plain nsICookie.
-    OriginAttributes attrs(aAppId, true);
+    NeckoOriginAttributes attrs(aAppId, true);
     Remove(host, attrs, name, path, false);
     if (!aOnlyBrowserElement) {
       attrs.mInBrowser = false;
