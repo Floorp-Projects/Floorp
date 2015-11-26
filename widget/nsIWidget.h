@@ -825,19 +825,10 @@ class nsIWidget : public nsISupports {
      * Get this widget's outside dimensions in global coordinates. This
      * includes any title bar on the window.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
     NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetScreenBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Similar to GetScreenBounds except that this function will always
