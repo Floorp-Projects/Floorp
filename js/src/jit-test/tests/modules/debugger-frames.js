@@ -57,11 +57,11 @@ dbg.onDebuggerStatement = function (frame) {
 
 f = g2.eval(
 `
-    let moduleRepo = new Map();
+    let moduleRepo = {};
     setModuleResolveHook(function(module, specifier) {
         if (specifier in moduleRepo)
             return moduleRepo[specifier];
-        throw "Module " + specifier + " not found";
+        throw "Module '" + specifier + "' not found";
     });
 
     // Set up a module to import from.
