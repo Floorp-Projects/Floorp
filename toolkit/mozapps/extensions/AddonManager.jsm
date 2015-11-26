@@ -84,6 +84,7 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   return certUtils;
 });
 
+const INTEGER = /^[1-9]\d*$/;
 
 this.EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
 
@@ -2346,7 +2347,10 @@ var AddonManagerInternal = {
    * match an icon of size 96px.
    *
    * @param  aAddon
-   *         The addon to find an icon for
+   *         An addon object, meaning:
+   *         An object with either an icons property that is a key-value
+   *         list of icon size and icon URL, or an object having an iconURL
+   *         and icon64URL property.
    * @param  aSize
    *         Ideal icon size in pixels
    * @param  aWindow
@@ -2380,11 +2384,12 @@ var AddonManagerInternal = {
     let bestSize = null;
 
     for (let size of Object.keys(icons)) {
-      size = parseInt(size, 10);
-      if (isNaN(size)) {
+      if (!INTEGER.test(size)) {
         throw Components.Exception("Invalid icon size, must be an integer",
                                    Cr.NS_ERROR_ILLEGAL_VALUE);
       }
+
+      size = parseInt(size, 10);
 
       if (!bestSize) {
         bestSize = size;
