@@ -10,28 +10,24 @@ const JS_URL = EXAMPLE_URL + "sjs_random-javascript.sjs";
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    const gPanel = aPanel;
-    const gDebugger = aPanel.panelWin;
-    const gEditor = gDebugger.DebuggerView.editor;
-    const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
-    const actions = bindActionCreators(gPanel);
-    const getState = gDebugger.DebuggerController.getState;
+    let gDebugger = aPanel.panelWin;
+    let gEditor = gDebugger.DebuggerView.editor;
+    let gSources = gDebugger.DebuggerView.Sources;
+    let gControllerSources = gDebugger.DebuggerController.SourceScripts;
 
     Task.spawn(function*() {
-      yield waitForSourceShown(gPanel, JS_URL);
-      let source = queries.getSelectedSource(getState());
+      yield waitForSourceShown(aPanel, JS_URL);
 
-      is(queries.getSourceCount(getState()), 1,
+      is(gSources.itemCount, 1,
         "There should be one source displayed in the view.")
-      is(source.url, JS_URL,
+      is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected in the view.");
       ok(gEditor.getText().includes("bacon"),
         "The currently shown source contains bacon. Mmm, delicious!");
 
-      const { text: firstText } = yield queries.getSourceText(getState(), source.actor);
-      const firstNumber = parseFloat(firstText.match(/\d\.\d+/)[0]);
+      let { source } = gSources.selectedItem.attachment;
+      let [, firstText] = yield gControllerSources.getText(source);
+      let firstNumber = parseFloat(firstText.match(/\d\.\d+/)[0]);
 
       is(firstText, gEditor.getText(),
         "gControllerSources.getText() returned the expected contents.");
@@ -40,16 +36,16 @@ function test() {
 
       yield reloadActiveTab(aPanel, gDebugger.EVENTS.SOURCE_SHOWN);
 
-      is(queries.getSourceCount(getState()), 1,
-        "There should be one source displayed in the view.")
-      is(source.url, JS_URL,
-        "The correct source is currently selected in the view.");
+      is(gSources.itemCount, 1,
+        "There should be one source displayed in the view after reloading.")
+      is(getSelectedSourceURL(gSources), JS_URL,
+        "The correct source is currently selected in the view after reloading.");
       ok(gEditor.getText().includes("bacon"),
         "The newly shown source contains bacon. Mmm, delicious!");
 
-      source = queries.getSelectedSource(getState());
-      const { text: secondText } = yield queries.getSourceText(getState(), source.actor);
-      const secondNumber = parseFloat(secondText.match(/\d\.\d+/)[0]);
+      ({ source } = gSources.selectedItem.attachment);
+      let [, secondText] = yield gControllerSources.getText(source);
+      let secondNumber = parseFloat(secondText.match(/\d\.\d+/)[0]);
 
       is(secondText, gEditor.getText(),
         "gControllerSources.getText() returned the expected contents.");

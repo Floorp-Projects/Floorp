@@ -17,7 +17,7 @@ function update(state = initialState, action, emit) {
   switch(action.type) {
   case constants.UPDATE_EVENT_BREAKPOINTS:
     state.activeEventNames = action.eventNames;
-    emit("activeEventNames", state.activeEventNames);
+    emit("@redux:activeEventNames", state.activeEventNames);
     break;
   case constants.FETCH_EVENT_LISTENERS:
     if (action.status === "begin") {
@@ -26,7 +26,7 @@ function update(state = initialState, action, emit) {
     else if (action.status === "done") {
       state.fetchingListeners = false;
       state.listeners = action.listeners;
-      emit("event-listeners", state.listeners);
+      emit("@redux:listeners", state.listeners);
     }
     break;
   }
