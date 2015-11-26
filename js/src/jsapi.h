@@ -4122,43 +4122,6 @@ extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
          const char* filename, JS::MutableHandleValue rval);
 
-/**
- * Evaluate the given character buffer as self-hosted JS.
- *
- * Can only be used in a process' main runtime and before the first global
- * object is created, because the self-hosting compartment is shared between
- * all runtimes in a process, and frozen upon creation of the first content
- * global in the main runtime.
- */
-extern JS_PUBLIC_API(bool)
-EvaluateSelfHosted(JSRuntime* rt, const char16_t* chars, size_t length, const char* filename);
-
-/**
- * Evaluate the given byte buffer as UTF8-encoded self-hosted JS.
- *
- * See comment in the char16_t buffer-taking overload above.
- */
-extern JS_PUBLIC_API(bool)
-EvaluateSelfHosted(JSRuntime* rt, const char* bytes, size_t length, const char* filename);
-
-/**
- * Load and evaluate the given file path as UTF8-encoded self-hosted JS.
- *
- * See comment in the char16_t buffer-taking overload above.
- */
-extern JS_PUBLIC_API(bool)
-EvaluateSelfHosted(JSRuntime* rt, const char* filename);
-
-/**
- * Add functions available to self-hosted code.
- *
- * Must be called before the self-hosted code using it is run with
- * EvaluateSelfHosted, and thus has the same restrictions regarding when it
- * can be used.
- */
-extern JS_PUBLIC_API(bool)
-AddSelfHostingIntrinsics(JSRuntime* rt, const JSFunctionSpec* intrinsicFunctions);
-
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
