@@ -54,7 +54,7 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
   effectSet = new EffectSet();
 
   nsresult rv = aElement->SetProperty(propName, effectSet,
-                                      &EffectSet::PropertyDtor, false);
+                                      &EffectSet::PropertyDtor, true);
   if (NS_FAILED(rv)) {
     NS_WARNING("SetProperty failed");
     // The set must be destroyed via PropertyDtor, otherwise
