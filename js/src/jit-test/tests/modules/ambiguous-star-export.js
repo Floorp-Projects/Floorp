@@ -3,6 +3,7 @@
 "use strict";
 
 load(libdir + "asserts.js");
+load(libdir + "dummyModuleResolveHook.js");
 
 function checkModuleEval(source, result) {
     let m = parseModule(source);
@@ -15,19 +16,11 @@ function checkModuleSyntaxError(source) {
     assertThrowsInstanceOf(() => m.declarationInstantiation(), SyntaxError);
 }
 
-let moduleRepo = new Map();
-setModuleResolveHook(function(module, specifier) {
-    if (specifier in moduleRepo)
-        return moduleRepo[specifier];
-    throw "Module " + specifier + " not found";
-});
-
 let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
 let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
 let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
-let ms = [a, b, c];
-ms.map((m) => m.declarationInstantiation());
-ms.map((m) => m.evaluation(), moduleRepo.values());
+c.declarationInstantiation();
+c.evaluation();
 
 // Check importing/exporting non-ambiguous name works.
 checkModuleEval("import { a } from 'c'; a;", 1);
