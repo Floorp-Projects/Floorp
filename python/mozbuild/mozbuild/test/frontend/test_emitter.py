@@ -895,11 +895,15 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         self.assertIsInstance(objs[0], DistFiles)
 
-        self.assertEqual(len(objs[0].files), 2)
+        # Ideally we'd test hierarchies, but that would just be testing
+        # the HierarchicalStringList class, which we test separately.
+        for path, files in objs[0].files.walk():
+            self.assertEqual(path, '')
+            self.assertEqual(len(files), 2)
 
-        expected = {'install.rdf', 'main.js'}
-        for f in objs[0].files:
-            self.assertTrue(f in expected)
+            expected = {'install.rdf', 'main.js'}
+            for f in files:
+                self.assertTrue(f in expected)
 
     def test_missing_dist_files(self):
         """Test that DIST_FILES with missing files throws errors."""
