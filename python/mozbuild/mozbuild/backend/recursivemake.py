@@ -605,12 +605,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_final_target_files(obj, obj.files, obj.target)
 
         elif isinstance(obj, DistFiles):
-            # We'd like to install these via manifests as preprocessed files.
-            # But they currently depend on non-standard flags being added via
-            # some Makefiles, so for now we just pass them through to the
-            # underlying Makefile.in.
-            for f in obj.files:
-                backend_file.write('DIST_FILES += %s\n' % f)
+            self._process_dist_files(obj, obj.files, obj.target, backend_file)
 
         elif isinstance(obj, AndroidResDirs):
             # Order matters.
@@ -1394,6 +1389,18 @@ INSTALL_TARGETS += %(prefix)s
                 source = mozpath.normpath(os.path.join(obj.srcdir, f))
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
                 install_manifest.add_symlink(source, dest)
+
+    def _process_dist_files(self, obj, files, target, backend_file):
+        # We'd like to install these via manifests as preprocessed files.
+        # But they currently depend on non-standard flags being added via
+        # some Makefiles, so for now we just pass them through to the
+        # underlying Makefile.in.
+        for i, (path, strings) in enumerate(files.walk()):
+            for f in strings:
+                backend_file.write('DIST_FILES_%d += %s\n' % (i, f))
+            backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
+                               % (i, mozpath.join(target, path)))
+            backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
 
     def _process_chrome_manifest_entry(self, obj, backend_file):
         fragment = Makefile()

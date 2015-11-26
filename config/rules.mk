@@ -1268,11 +1268,6 @@ $(error $(srcdir) contains a jar.mn file but this file is not declared in a JAR_
 endif
 endif
 
-ifneq ($(DIST_FILES),)
-DIST_FILES_PATH := $(FINAL_TARGET)
-PP_TARGETS += DIST_FILES
-endif
-
 # When you move this out of the tools tier, please remove the corresponding
 # hacks in recursivemake.py that check if Makefile.in sets the variable.
 ifneq ($(XPI_PKGNAME),)

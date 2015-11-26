@@ -150,20 +150,17 @@ class FasterMakeBackend(CommonBackend):
                             mozpath.join(base, mozpath.basename(f))
                         )
 
-        elif isinstance(obj, FinalTargetFiles) and \
+        elif isinstance(obj, (FinalTargetFiles, DistFiles)) and \
                 obj.install_target.startswith('dist/bin'):
             for path, strings in obj.files.walk():
-                base = mozpath.join(obj.install_target, path)
                 for f in strings:
-                    self._install_manifests[obj.install_target].add_symlink(
-                        mozpath.join(obj.srcdir, f),
-                        mozpath.join(path, mozpath.basename(f))
-                    )
-
-        elif isinstance(obj, DistFiles) and \
-                obj.install_target.startswith('dist/bin'):
-            for f in obj.files:
-                self._add_preprocess(obj, f, '', defines=defines)
+                    if isinstance(obj, DistFiles):
+                        self._add_preprocess(obj, f, path, defines=defines)
+                    else:
+                        self._install_manifests[obj.install_target].add_symlink(
+                            mozpath.join(obj.srcdir, f),
+                            mozpath.join(path, mozpath.basename(f))
+                        )
 
         elif isinstance(obj, ChromeManifestEntry) and \
                 obj.install_target.startswith('dist/bin'):

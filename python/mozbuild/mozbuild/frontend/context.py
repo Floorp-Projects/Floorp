@@ -997,10 +997,8 @@ VARIABLES = {
         disabled.
         """, None),
 
-    'DIST_FILES': (StrictOrderingOnAppendList, list,
-        """Additional files to place in ``FINAL_TARGET`` (typically ``dist/bin``).
-
-        Unlike ``FINAL_TARGET_FILES``, these files are preprocessed.
+    'DIST_FILES': (HierarchicalStringList, list,
+        """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list,

@@ -673,11 +673,13 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'DIST_FILES += install.rdf',
-            'DIST_FILES += main.js',
+            'DIST_FILES_0 += install.rdf',
+            'DIST_FILES_0 += main.js',
+            'DIST_FILES_0_PATH := $(DEPTH)/dist/bin/',
+            'PP_TARGETS += DIST_FILES_0',
         ]
 
-        found = [str for str in lines if str.startswith('DIST_FILES')]
+        found = [str for str in lines if 'DIST_FILES' in str]
         self.assertEqual(found, expected)
 
     def test_config(self):
