@@ -19,6 +19,7 @@ from __future__ import absolute_import, unicode_literals
 
 from mozbuild.util import StrictOrderingOnAppendList
 from mozbuild.shellutil import quote as shell_quote
+from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
 from .context import FinalTargetValue
@@ -999,3 +1000,20 @@ class AndroidExtraPackages(ContextDerived):
     def __init__(self, context, packages):
         ContextDerived.__init__(self, context)
         self.packages = packages
+
+class ChromeManifestEntry(ContextDerived):
+    """Represents a chrome.manifest entry."""
+
+    __slots__ = (
+        'entry',
+    )
+
+    def __init__(self, context, manifest_path, entry):
+        ContextDerived.__init__(self, context)
+        assert isinstance(entry, ManifestEntry)
+        self.path = mozpath.join(self.install_target, manifest_path)
+        # Ensure the entry is relative to the directory containing the
+        # manifest path.
+        entry = entry.rebase(mozpath.dirname(manifest_path))
+        # Then add the install_target to the entry base directory.
+        self.entry = entry.move(mozpath.dirname(self.path))

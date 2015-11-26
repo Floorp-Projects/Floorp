@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
+    ChromeManifestEntry,
     ContextDerived,
     Defines,
     DistFiles,
@@ -166,6 +167,16 @@ class FasterMakeBackend(CommonBackend):
             for f in obj.files:
                 self._add_preprocess(obj, f, '', defines=defines,
                                      silence_missing_directive_warnings=True)
+
+        elif isinstance(obj, ChromeManifestEntry) and \
+                obj.install_target.startswith('dist/bin'):
+            top_level = mozpath.join(obj.install_target, 'chrome.manifest')
+            if obj.path != top_level:
+                entry = 'manifest %s' % mozpath.relpath(obj.path,
+                                                        obj.install_target)
+                if entry not in self._manifest_entries[top_level]:
+                    self._manifest_entries[top_level].append(entry)
+            self._manifest_entries[obj.path].append(str(obj.entry))
 
         else:
             # We currently ignore a lot of object types, so just acknowledge

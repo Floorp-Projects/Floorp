@@ -37,6 +37,7 @@ from ..frontend.data import (
     AndroidExtraPackages,
     AndroidEclipseProjectData,
     BrandingFiles,
+    ChromeManifestEntry,
     ConfigFileSubstitution,
     ContextDerived,
     ContextWrapped,
@@ -630,6 +631,9 @@ class RecursiveMakeBackend(CommonBackend):
             # Order does not matter.
             for p in sorted(set(obj.packages)):
                 backend_file.write('ANDROID_EXTRA_PACKAGES += %s\n' % p)
+
+        elif isinstance(obj, ChromeManifestEntry):
+            self._process_chrome_manifest_entry(obj, backend_file)
 
         else:
             return False
@@ -1390,6 +1394,29 @@ INSTALL_TARGETS += %(prefix)s
                 source = mozpath.normpath(os.path.join(obj.srcdir, f))
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
                 install_manifest.add_symlink(source, dest)
+
+    def _process_chrome_manifest_entry(self, obj, backend_file):
+        fragment = Makefile()
+        rule = fragment.create_rule(targets=['misc:'])
+
+        top_level = mozpath.join(obj.install_target, 'chrome.manifest')
+        if obj.path != top_level:
+            args = [
+                mozpath.join('$(DEPTH)', top_level),
+                make_quote(shell_quote('manifest %s' %
+                                       mozpath.relpath(obj.path,
+                                                       obj.install_target))),
+            ]
+            rule.add_commands(['$(call py_action,buildlist,%s)' %
+                               ' '.join(args)])
+        args = [
+            mozpath.join('$(DEPTH)', obj.path),
+            make_quote(shell_quote(str(obj.entry))),
+        ]
+        rule.add_commands(['$(call py_action,buildlist,%s)' % ' '.join(args)])
+        fragment.dump(backend_file.fh, removal_guard=False)
+
+        self._no_skip['misc'].add(obj.relativedir)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
