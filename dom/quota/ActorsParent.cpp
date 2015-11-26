@@ -5719,7 +5719,7 @@ OriginClearOp::DoInitOnMainThread()
     return rv;
   }
 
-  const mozilla::OriginAttributes& attrs =
+  const mozilla::PrincipalOriginAttributes& attrs =
     mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
 
   nsAutoCString pattern;
@@ -6183,7 +6183,7 @@ StorageDirectoryHelper::RunOnMainThread()
           rv = secMan->GetSimpleCodebasePrincipal(uri,
                                                   getter_AddRefs(principal));
         } else {
-          OriginAttributes attrs(originProps.mAppId, originProps.mInMozBrowser);
+          PrincipalOriginAttributes attrs(originProps.mAppId, originProps.mInMozBrowser);
           principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
           rv = principal ? NS_OK : NS_ERROR_FAILURE;
         }

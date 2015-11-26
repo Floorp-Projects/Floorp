@@ -40,7 +40,7 @@ nsApplicationCacheService::BuildGroupID(nsIURI *aManifestURL,
 {
     nsresult rv;
 
-    mozilla::OriginAttributes const *oa = aLoadContextInfo
+    mozilla::NeckoOriginAttributes const *oa = aLoadContextInfo
         ? aLoadContextInfo->OriginAttributesPtr()
         : nullptr;
 
@@ -57,7 +57,7 @@ nsApplicationCacheService::BuildGroupIDForApp(nsIURI *aManifestURL,
                                               bool aIsInBrowser,
                                               nsACString &_result)
 {
-    OriginAttributes oa;
+    NeckoOriginAttributes oa;
     oa.mAppId = aAppId;
     oa.mInBrowser = aIsInBrowser;
     nsresult rv = nsOfflineCacheDevice::BuildApplicationCacheGroupID(
