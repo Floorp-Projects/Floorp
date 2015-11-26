@@ -219,6 +219,7 @@ public:
   const AnimationTiming& Timing() const { return mTiming; }
   AnimationTiming& Timing() { return mTiming; }
   void SetTiming(const AnimationTiming& aTiming);
+  void NotifyAnimationTimingUpdated() { UpdateTargetRegistration(); }
 
   Nullable<TimeDuration> GetLocalTime() const;
 
@@ -296,6 +297,18 @@ public:
 protected:
   virtual ~KeyframeEffectReadOnly();
   void ResetIsRunningOnCompositor();
+
+  // This effect is registered with its target element so long as:
+  //
+  // (a) It has a target element, and
+  // (b) It is "relevant" (i.e. yet to finish but not idle, or finished but
+  //     filling forwards)
+  //
+  // As a result, we need to make sure this gets called whenever anything
+  // changes with regards to this effects's timing including changes to the
+  // owning Animation's timing.
+  void UpdateTargetRegistration();
+  void UnregisterFromTarget();
 
   static AnimationTiming ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
