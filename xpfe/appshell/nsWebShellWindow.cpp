@@ -145,8 +145,8 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
-  nsIntRect r(initialX, initialY, aInitialWidth, aInitialHeight);
-  
+  LayoutDeviceIntRect r(initialX, initialY, aInitialWidth, aInitialHeight);
+
   // Create top level window
   mWindow = do_CreateInstance(kWindowCID, &rv);
   if (NS_OK != rv) {
@@ -173,9 +173,9 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetWidgetListener(this);
   mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
                   nullptr,                            // Native parent widget
-                  r,                                  // Widget dimensions
+                  r.ToUnknownRect(),                  // Widget dimensions
                   &widgetInitData);                   // Widget initialization data
-  mWindow->GetClientBoundsUntyped(r);
+  mWindow->GetClientBounds(r);
   // Match the default background color of content. Important on windows
   // since we no longer use content child widgets.
   mWindow->SetBackgroundColor(NS_RGB(255,255,255));
