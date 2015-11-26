@@ -66,11 +66,11 @@ if CONFIG['GNU_CXX']:
         '-Wno-missing-braces',
         '-Wno-pointer-to-int-cast',
         '-Wno-sign-compare',
-        '-include stdio.h',         # for sprintf() prototype
-        '-include unistd.h',        # for getpid() prototype
+        '-include', 'stdio.h',      # for sprintf() prototype
+        '-include', 'unistd.h',     # for getpid() prototype
     ]
 elif CONFIG['_MSC_VER']:
     CFLAGS += [
-        '-FI stdio.h',              # for sprintf() prototype
+        '-FI', 'stdio.h',           # for sprintf() prototype
         '-wd4090',                  # '=' : different 'const' qualifiers
     ]

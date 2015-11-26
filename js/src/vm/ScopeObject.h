@@ -11,6 +11,7 @@
 #include "jsobj.h"
 #include "jsweakmap.h"
 
+#include "builtin/ModuleObject.h"
 #include "gc/Barrier.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"

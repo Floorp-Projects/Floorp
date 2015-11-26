@@ -35,6 +35,8 @@ public:
   int32_t          Port()  { return mPort; }
   const char      *Type()  { return mType; }
   uint32_t         Flags() { return mFlags; }
+  const nsCString &Username()  { return mUsername; }
+  const nsCString &Password()  { return mPassword; }
 
   bool IsDirect();
   bool IsHTTP();
@@ -60,6 +62,8 @@ private:
 
   const char  *mType;  // pointer to statically allocated value
   nsCString    mHost;
+  nsCString    mUsername;
+  nsCString    mPassword;
   int32_t      mPort;
   uint32_t     mFlags;
   uint32_t     mResolveFlags;

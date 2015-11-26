@@ -1363,13 +1363,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Add(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
     }
 
-    void sub32(Imm32 imm, Register dest) {
-        Sub(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
-    }
-    void sub32(Register src, Register dest) {
-        Sub(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
-    }
-
     void subs32(Imm32 imm, Register dest) {
         Subs(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
     }

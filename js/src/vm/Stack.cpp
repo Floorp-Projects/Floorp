@@ -34,11 +34,9 @@ using mozilla::PodCopy;
 
 void
 InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr evalInFramePrev,
-                                   const Value& thisv, const Value& newTargetValue, HandleObject scopeChain,
+                                   const Value& newTargetValue, HandleObject scopeChain,
                                    ExecuteType type)
 {
-    MOZ_ASSERT_IF(type & MODULE, thisv.isUndefined());
-
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
      * script in the context of another frame and the frame type is determined
@@ -77,8 +75,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
         }
     }
 
-    Value* dstvp = (Value*)this - 3;
-    dstvp[2] = thisv;
+    Value* dstvp = (Value*)this - 2;
 
     if (isFunctionFrame()) {
         dstvp[1] = ObjectValue(*callee);
@@ -259,15 +256,15 @@ InterpreterFrame::prologue(JSContext* cx)
     if (isConstructing()) {
         if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(callee().isClassConstructor());
-            functionThis() = MagicValue(JS_UNINITIALIZED_LEXICAL);
-        } else if (functionThis().isPrimitive()) {
+            thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
+        } else if (thisArgument().isPrimitive()) {
             RootedObject callee(cx, &this->callee());
             RootedObject newTarget(cx, &this->newTarget().toObject());
             JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
                                                   createSingleton() ? SingletonObject : GenericObject);
             if (!obj)
                 return false;
-            functionThis() = ObjectValue(*obj);
+            thisArgument() = ObjectValue(*obj);
         }
     }
 
@@ -316,8 +313,13 @@ InterpreterFrame::epilogue(JSContext* cx)
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
         DebugScopes::onPopCall(this, cx);
 
-    if (!fun()->isGenerator() && isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
-        setReturnValue(ObjectValue(constructorThis()));
+    if (!fun()->isGenerator() &&
+        isConstructing() &&
+        thisArgument().isObject() &&
+        returnValue().isPrimitive())
+    {
+        setReturnValue(thisArgument());
+    }
 }
 
 bool
@@ -449,8 +451,8 @@ InterpreterFrame::markValues(JSTracer* trc, Value* sp, jsbytecode* pc)
         unsigned argc = Max(numActualArgs(), numFormalArgs());
         TraceRootRange(trc, argc + 2 + isConstructing(), argv_ - 2, "fp argv");
     } else {
-        // Mark callee, |this|, and newTarget
-        TraceRootRange(trc, 3, ((Value*)this) - 3, "stack callee, this, newTarget");
+        // Mark callee and newTarget
+        TraceRootRange(trc, 2, ((Value*)this) - 2, "stack callee and newTarget");
     }
 }
 
@@ -507,20 +509,20 @@ InterpreterStack::pushInvokeFrame(JSContext* cx, const CallArgs& args, InitialFr
 }
 
 InterpreterFrame*
-InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Value& thisv,
-                                   const Value& newTargetValue, HandleObject scopeChain,
-                                   ExecuteType type, AbstractFramePtr evalInFrame)
+InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Value& newTargetValue,
+                                   HandleObject scopeChain, ExecuteType type,
+                                   AbstractFramePtr evalInFrame)
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
-    unsigned nvars = 3 /* callee, this, newTarget */ + script->nslots();
+    unsigned nvars = 2 /* callee, newTarget */ + script->nslots();
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvars * sizeof(Value));
     if (!buffer)
         return nullptr;
 
-    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 3 * sizeof(Value));
+    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 2 * sizeof(Value));
     fp->mark_ = mark;
-    fp->initExecuteFrame(cx, script, evalInFrame, thisv, newTargetValue, scopeChain, type);
+    fp->initExecuteFrame(cx, script, evalInFrame, newTargetValue, scopeChain, type);
     fp->initLocals();
 
     return fp;
@@ -1293,7 +1295,7 @@ FrameIter::argsObj() const
 }
 
 Value
-FrameIter::originalFunctionThis(JSContext* cx) const
+FrameIter::thisArgument(JSContext* cx) const
 {
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
@@ -1304,11 +1306,11 @@ FrameIter::originalFunctionThis(JSContext* cx) const
       case JIT:
         if (data_.jitFrames_.isIonScripted()) {
             jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
-            return ionInlineFrames_.thisValue(recover);
+            return ionInlineFrames_.thisArgument(recover);
         }
-        return data_.jitFrames_.baselineFrame()->thisValue();
+        return data_.jitFrames_.baselineFrame()->thisArgument();
       case INTERP:
-        return interpFrame()->thisValue();
+        return interpFrame()->thisArgument();
     }
     MOZ_CRASH("Unexpected state");
 }

@@ -254,8 +254,11 @@ PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
   mRespondingSessionIds.Put(aWindowId, new nsAutoString(aSessionId));
   mRespondingWindowIds.Put(aSessionId, aWindowId);
 
-  mCallback = nullptr;
   NS_WARN_IF(!sPresentationChild->SendNotifyReceiverReady(nsAutoString(aSessionId)));
+
+  // Release mCallback after using aSessionId
+  // because aSessionId is held by mCallback.
+  mCallback = nullptr;
   return NS_OK;
 }
 

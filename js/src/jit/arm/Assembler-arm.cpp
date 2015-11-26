@@ -633,6 +633,15 @@ Assembler::finish()
     isFinished = true;
 }
 
+bool
+Assembler::asmMergeWith(const Assembler& other)
+{
+    flush();
+    if (!AssemblerShared::asmMergeWith(size(), other))
+        return false;
+    return m_buffer.appendBuffer(other.m_buffer);
+}
+
 void
 Assembler::executableCopy(uint8_t* buffer)
 {
@@ -937,28 +946,19 @@ Assembler::processCodeLabels(uint8_t* rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        Bind(rawCode, label.dest(), rawCode + label.src()->offset());
+        Bind(rawCode, label.patchAt(), rawCode + label.target()->offset());
     }
 }
 
 void
-Assembler::writeCodePointer(AbsoluteLabel* absoluteLabel) {
-    MOZ_ASSERT(!absoluteLabel->bound());
+Assembler::writeCodePointer(CodeOffsetLabel* label) {
     BufferOffset off = writeInst(LabelBase::INVALID_OFFSET);
-
-    // The x86/x64 makes general use of AbsoluteLabel and weaves a linked list
-    // of uses of an AbsoluteLabel through the assembly. ARM only uses labels
-    // for the case statements of switch jump tables. Thus, for simplicity, we
-    // simply treat the AbsoluteLabel as a label and bind it to the offset of
-    // the jump table entry that needs to be patched.
-    LabelBase* label = absoluteLabel;
-    label->bind(off.getOffset());
+    label->use(off.getOffset());
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
+Assembler::Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address)
 {
-    // See writeCodePointer comment.
     *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
 }
 
@@ -2874,6 +2874,40 @@ Assembler::retarget(Label* label, Label* target)
     }
     label->reset();
 
+}
+
+void
+Assembler::retargetWithOffset(size_t baseOffset, const LabelBase* label, LabelBase* target)
+{
+    if (!label->used())
+        return;
+
+    MOZ_ASSERT(!target->bound());
+    bool more;
+    BufferOffset labelBranchOffset(label->offset() + baseOffset);
+    do {
+        BufferOffset next;
+        more = nextLink(labelBranchOffset, &next);
+
+        Instruction branch = *editSrc(labelBranchOffset);
+        Condition c = branch.extractCond();
+        int32_t prev = target->use(labelBranchOffset.getOffset());
+
+        MOZ_RELEASE_ASSERT(prev == Label::INVALID_OFFSET || unsigned(prev) < size());
+
+        BOffImm newOffset;
+        if (prev != Label::INVALID_OFFSET)
+            newOffset = BOffImm(prev);
+
+        if (branch.is<InstBImm>())
+            as_b(newOffset, c, labelBranchOffset);
+        else if (branch.is<InstBLImm>())
+            as_bl(newOffset, c, labelBranchOffset);
+        else
+            MOZ_CRASH("crazy fixup!");
+
+        labelBranchOffset = BufferOffset(next.getOffset() + baseOffset);
+    } while (more);
 }
 
 static int stopBKPT = -1;

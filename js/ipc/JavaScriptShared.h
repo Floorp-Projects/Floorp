@@ -11,6 +11,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/jsipc/PJavaScript.h"
+#include "js/GCHashTable.h"
 #include "nsJSUtils.h"
 
 namespace mozilla {
@@ -50,6 +51,10 @@ class ObjectId {
     static ObjectId deserialize(uint64_t data) {
         return ObjectId(data >> FLAG_BITS, data & 1);
     }
+
+    // For use with StructGCPolicy.
+    void trace(JSTracer*) const {}
+    bool needsSweep() const { return false; }
 
   private:
     ObjectId() : serialNumber_(0), hasXrayWaiver_(false) {}
@@ -103,8 +108,8 @@ class IdToObjectMap
 // Map JSObjects -> ids
 class ObjectToIdMap
 {
-    typedef js::PointerHasher<JSObject*, 3> Hasher;
-    typedef js::HashMap<JSObject*, ObjectId, Hasher, js::SystemAllocPolicy> Table;
+    using Hasher = js::MovableCellHasher<JS::Heap<JSObject*>>;
+    using Table = js::GCHashMap<JS::Heap<JSObject*>, ObjectId, Hasher, js::SystemAllocPolicy>;
 
   public:
     explicit ObjectToIdMap(JSRuntime* rt);
@@ -120,8 +125,6 @@ class ObjectToIdMap
     void clear();
 
   private:
-    static void keyMarkCallback(JSTracer* trc, JSObject* key, void* data);
-
     JSRuntime* rt_;
     Table table_;
 };

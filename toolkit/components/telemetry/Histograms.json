@@ -6365,52 +6365,60 @@
     "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
   },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 7,
     "description": "The ICE connection state when the PC was closed"
   },
   "WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": "20",
     "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived when ICE was not in a failure state (ie; a candidate that we could do something with, hence 'on time')"
   },
   "WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": "20",
     "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
   },
   "WEBRTC_ICE_SUCCESS_TIME": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": "20",
     "description": "The length of time (in milliseconds) it took for ICE to complete, given that ICE succeeded."
   },
   "WEBRTC_ICE_FAILURE_TIME": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": "20",
     "description": "The length of time (in milliseconds) it took for ICE to complete, given that it failed."
   },
   "WEBRTC_ICE_SUCCESS_RATE": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "boolean",
     "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
   },
   "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 4,
     "description": "For each successful PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
   },
   "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 4,
     "description": "For each failed PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
@@ -6640,14 +6648,16 @@
     "description": "The number of calls made during a session."
   },
   "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "linear",
     "high": "30",
     "n_buckets": "29",
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
   },
   "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
-    "expires_in_version": "never",
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
     "kind": "linear",
     "high": "30",
     "n_buckets": "29",
@@ -10065,5 +10075,12 @@
     "expires_in_version": "48",
     "kind": "flag",
     "description": "Flag activated whenever a youtube flash embed is seen during a session."
+  },
+  "WEBRTC_ICE_CHECKING_RATE": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "boolean",
+    "bug_numbers": [1188391],
+    "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
   }
 }
