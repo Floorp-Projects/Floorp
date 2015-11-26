@@ -29,6 +29,7 @@ from .data import (
     AndroidExtraResDirs,
     AndroidResDirs,
     BrandingFiles,
+    ChromeManifestEntry,
     ConfigFileSubstitution,
     ContextWrapped,
     Defines,
@@ -75,6 +76,7 @@ from .data import (
     WebIDLFile,
     XPIDLFile,
 )
+from mozpack.chrome.manifest import ManifestBinaryComponent
 
 from .reader import SandboxValidationError
 
@@ -509,6 +511,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 lib = SharedLibrary(context, libname, **shared_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
+                if is_component and not context['NO_COMPONENTS_MANIFEST']:
+                    yield ChromeManifestEntry(context,
+                        'components/components.manifest',
+                        ManifestBinaryComponent('components', lib.lib_name))
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
@@ -582,7 +588,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'LD_VERSION_SCRIPT',
             'USE_EXTENSION_MANIFEST',
             'NO_JS_MANIFEST',
-            'NO_COMPONENTS_MANIFEST',
         ]
         for v in varlist:
             if v in context and context[v]:
@@ -695,7 +700,8 @@ class TreeMetadataEmitter(LoggingMixin):
         if branding_files:
             yield BrandingFiles(context, branding_files)
 
-        self._handle_libraries(context)
+        for obj in self._handle_libraries(context):
+            yield obj
 
         for obj in self._process_test_manifests(context):
             yield obj
