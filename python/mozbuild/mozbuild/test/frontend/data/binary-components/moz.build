@@ -1,0 +1,10 @@
+@template
+def Component(name):
+    LIBRARY_NAME = name
+    FORCE_SHARED_LIB = True
+    IS_COMPONENT = True
+
+DIRS += [
+    'foo',
+    'bar',
+]
