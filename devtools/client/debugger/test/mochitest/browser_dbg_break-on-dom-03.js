@@ -12,13 +12,13 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
-    let gStore = gDebugger.store;
+    let gController = gDebugger.DebuggerController;
     let constants = gDebugger.require('./content/constants');
 
     Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
 
-      let fetched = afterDispatch(gStore, constants.FETCH_EVENT_LISTENERS);
+      let fetched = waitForDispatch(aPanel, constants.FETCH_EVENT_LISTENERS);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
       yield fetched;
 
