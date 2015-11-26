@@ -856,8 +856,7 @@ class FinalTargetFiles(ContextDerived):
 
 
 class DistFiles(ContextDerived):
-    """Sandbox container object for FINAL_TARGET_FILES, which is a
-    HierarchicalStringList.
+    """Sandbox container object for DIST_FILES, which is a HierarchicalStringList.
 
     We need an object derived from ContextDerived for use in the backend, so
     this object fills that role. It just has a reference to the underlying

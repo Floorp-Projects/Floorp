@@ -682,27 +682,22 @@ class TreeMetadataEmitter(LoggingMixin):
                     local_include.full_path), context)
             yield LocalInclude(context, local_include)
 
-        final_target_files = context.get('FINAL_TARGET_FILES')
-        if final_target_files:
-            for _, files in final_target_files.walk():
+        for var, cls in (
+            ('FINAL_TARGET_FILES', FinalTargetFiles),
+            ('DIST_FILES', DistFiles),
+        ):
+            all_files = context.get(var)
+            if not all_files:
+                continue
+            for _, files in all_files.walk():
                 for f in files:
                     path = os.path.join(context.srcdir, f)
                     if not os.path.exists(path):
                         raise SandboxValidationError(
-                            'File listed in FINAL_TARGET_FILES does not exist:'
-                            ' %s' % f, context)
+                            'File listed in %s does not exist: %s'
+                            % (var, f), context)
 
-            yield FinalTargetFiles(context, final_target_files, context['FINAL_TARGET'])
-
-        dist_files = context.get('DIST_FILES')
-        if dist_files:
-            for f in dist_files:
-                path = os.path.join(context.srcdir, f)
-                if not os.path.exists(path):
-                    raise SandboxValidationError('File listed in DIST_FILES '
-                        'does not exist: %s' % f, context)
-
-            yield DistFiles(context, dist_files, context['FINAL_TARGET'])
+            yield cls(context, all_files, context['FINAL_TARGET'])
 
         branding_files = context.get('BRANDING_FILES')
         if branding_files:
