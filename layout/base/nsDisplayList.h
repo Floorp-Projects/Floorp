@@ -3912,26 +3912,28 @@ public:
    *        Otherwise, it will use the value of aBoundsOverride.  This is
    *        mostly for internal use and in most cases you will not need to
    *        specify a value.
-   * @param aOffsetByOrigin If true, the resulting matrix will be translated
+   * @param aFlags OFFSET_BY_ORIGIN The resulting matrix will be translated
    *        by aOrigin. This translation is applied *before* the CSS transform.
+   * @param aFlags INCLUDE_PRESERVE3D_ANCESTORS The computed transform will
+   *        include the transform of any ancestors participating in the same
+   *        3d rendering context.
    */
+  enum {
+    OFFSET_BY_ORIGIN = 1 << 0,
+    INCLUDE_PRESERVE3D_ANCESTORS = 1 << 1,
+  };
   static Matrix4x4 GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
+                                               uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr,
-                                               nsIFrame** aOutAncestor = nullptr,
-                                               bool aOffsetByOrigin = false);
+                                               nsIFrame** aOutAncestor = nullptr);
   static Matrix4x4 GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
+                                               uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr,
                                                nsIFrame** aOutAncestor = nullptr);
-  static Matrix4x4 GetResultingTransformMatrixP3D(const nsIFrame* aFrame,
-                                                  const nsPoint& aOrigin,
-                                                  float aAppUnitsPerPixel,
-                                                  const nsRect* aBoundsOverride = nullptr,
-                                                  nsIFrame** aOutAncestor = nullptr,
-                                                  bool aOffsetByOrigin = false);
   /**
    * Return true when we should try to prerender the entire contents of the
    * transformed frame even when it's not completely visible (yet).
@@ -4012,10 +4014,9 @@ private:
   static Matrix4x4 GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                        const nsPoint& aOrigin,
                                                        float aAppUnitsPerPixel,
+                                                       uint32_t aFlags,
                                                        const nsRect* aBoundsOverride,
-                                                       nsIFrame** aOutAncestor,
-                                                       bool aOffsetByOrigin,
-                                                       bool aDoPreserves3D);
+                                                       nsIFrame** aOutAncestor);
 
   StoreList mStoredList;
   Matrix4x4 mTransform;
