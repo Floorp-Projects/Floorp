@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1219928
+-->
+<head>
+  <title>Test for Bug 1219928</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1219928">Mozilla Bug 1219928</a>
+<p id="display"></p>
+
+<div contenteditable id="en-US" lang="en-US">
+<p>And here a missspelled word</p>
+<style>
+<!-- and here another onnee in a style comment -->
+</style>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1219928 **/
+/* Very simple test to check that <style> blocks are skipped in the spell check */
+
+var spellchecker;
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
+  var elem = document.getElementById('en-US');
+  elem.focus();
+
+  onSpellCheck(elem, function () {
+    var Ci = Components.interfaces;
+    var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIEditingSession);
+    var editor = editingSession.getEditorForWindow(window);
+    var selcon = editor.selectionController;
+    var sel = selcon.getSelection(selcon.SELECTION_SPELLCHECK);
+
+    is(sel.toString(), "missspelled", "one misspelled word expected: missspelled");
+
+    spellchecker = Components.classes['@mozilla.org/editor/editorspellchecker;1'].createInstance(Components.interfaces.nsIEditorSpellCheck);
+    var filterContractId = "@mozilla.org/editor/txtsrvfilter;1";
+    spellchecker.setFilter(Components.classes[filterContractId].createInstance(Components.interfaces.nsITextServicesFilter));
+    spellchecker.InitSpellChecker(editor, false, spellCheckStarted);
+  });
+});
+
+function spellCheckStarted() {
+  var misspelledWord = spellchecker.GetNextMisspelledWord();
+  is(misspelledWord, "missspelled", "first misspelled word expected: missspelled");
+
+  // Without the fix, the next misspelled word was 'onnee', so we check that we don't get it.
+  misspelledWord = spellchecker.GetNextMisspelledWord();
+  isnot(misspelledWord, "onnee", "second misspelled word should not be: onnee");
+
+  spellchecker = "";
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

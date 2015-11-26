@@ -270,7 +270,7 @@ public:
   }
   bool InFrameSwap();
 
-  mozilla::OriginAttributes GetOriginAttributes();
+  mozilla::DocShellOriginAttributes GetOriginAttributes();
 
 private:
   // An observed docshell wrapper is created when recording markers is enabled.

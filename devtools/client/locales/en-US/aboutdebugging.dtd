@@ -6,4 +6,5 @@
 <!ENTITY aboutDebugging.addons                     "Add-ons">
 <!ENTITY aboutDebugging.addonDebugging.label       "Enable add-on debugging">
 <!ENTITY aboutDebugging.addonDebugging.tooltip     "Turning this on will allow you to debug add-ons and various other parts of the browser chrome">
+<!ENTITY aboutDebugging.loadTemporaryAddon         "Load Temporary Add-on">
 <!ENTITY aboutDebugging.workers                    "Workers">

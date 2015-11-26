@@ -113,7 +113,7 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
         self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r10e'))
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
-	self.ndk_url = android_ndk_url('linux')
+        self.ndk_url = android.android_ndk_url('linux')
 
         android.ensure_android_sdk_and_ndk(path=mozbuild_path,
                                            sdk_path=self.sdk_path, sdk_url=self.sdk_url,

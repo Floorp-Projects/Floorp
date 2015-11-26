@@ -1268,6 +1268,28 @@ private:
   BluetoothReplyRunnable* mRunnable;
 };
 
+class BluetoothServiceBluedroid::CancelBondResultHandler final
+  : public BluetoothCoreResultHandler
+{
+public:
+  CancelBondResultHandler(BluetoothReplyRunnable* aRunnable)
+    : mRunnable(aRunnable)
+  { }
+
+  void CancelBond() override
+  {
+    DispatchReplySuccess(mRunnable);
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    DispatchReplyError(mRunnable, aStatus);
+  }
+
+private:
+  BluetoothReplyRunnable* mRunnable;
+};
+
 void
 BluetoothServiceBluedroid::PinReplyInternal(
   const BluetoothAddress& aDeviceAddress, bool aAccept,
@@ -1277,8 +1299,14 @@ BluetoothServiceBluedroid::PinReplyInternal(
 
   ENSURE_BLUETOOTH_IS_ENABLED_VOID(aRunnable);
 
-  sBtCoreInterface->PinReply(aDeviceAddress, aAccept, aPinCode,
-                             new PinReplyResultHandler(aRunnable));
+  if (aAccept) {
+    sBtCoreInterface->PinReply(aDeviceAddress, aAccept, aPinCode,
+                               new PinReplyResultHandler(aRunnable));
+  } else {
+    // Call CancelBond to trigger BondStateChangedNotification
+    sBtCoreInterface->CancelBond(aDeviceAddress,
+                                 new CancelBondResultHandler(aRunnable));
+  }
 }
 
 void

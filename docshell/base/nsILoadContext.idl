@@ -11,7 +11,7 @@ interface nsIDOMElement;
 
 %{C++
 #ifdef MOZILLA_INTERNAL_API
-#include "mozilla/BasePrincipal.h" // for OriginAttributes
+#include "mozilla/BasePrincipal.h" // for DocShellOriginAttributes
 #include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
 #include "xpcpublic.h" // for PrivilegedJunkScope
 #include "nsContentUtils.h" // for IsSystemPrincipal
@@ -140,7 +140,7 @@ interface nsILoadContext : nsISupports
   /**
    * The C++ getter for origin attributes.
    */
-  bool GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+  bool GetOriginAttributes(mozilla::DocShellOriginAttributes& aAttrs)
   {
     mozilla::dom::AutoJSAPI jsapi;
     bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
@@ -156,12 +156,13 @@ interface nsILoadContext : nsISupports
     MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)));
     JSAutoCompartment ac(jsapi.cx(), obj);
 
-    mozilla::OriginAttributes attrs;
+    mozilla::DocShellOriginAttributes attrs;
     ok = attrs.Init(jsapi.cx(), v);
     NS_ENSURE_TRUE(ok, false);
     aAttrs = attrs;
     return true;
   }
+
 #endif
 %}
 };

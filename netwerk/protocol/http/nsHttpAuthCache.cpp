@@ -292,8 +292,8 @@ RemoveEntriesForPattern(PLHashEntry *entry, int32_t number, void *arg)
     nsDependentCSubstring oaSuffix;
     oaSuffix.Rebind(key.BeginReading(), colon);
 
-    // Build the OriginAttributes object of it...
-    OriginAttributes oa;
+    // Build the NeckoOriginAttributes object of it...
+    NeckoOriginAttributes oa;
     DebugOnly<bool> rv = oa.PopulateFromSuffix(oaSuffix);
     MOZ_ASSERT(rv);
 

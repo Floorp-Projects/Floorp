@@ -7,7 +7,7 @@
 include('../templates.mozbuild')
 
 DIRS += [
-    'aboutdebugging/components',
+    'aboutdebugging',
     'animationinspector',
     'canvasdebugger',
     'commandline',

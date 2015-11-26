@@ -65,12 +65,9 @@ exports.testBasename = function(assert) {
 
 exports.testList = function(assert) {
   let list = file.list(profilePath);
-  let found = [ true for (name of list)
-                    if (name === fileNameInProfile) ];
+  let found = list.filter(name => name === fileNameInProfile);
 
-  if (found.length > 1)
-    assert.fail("a dir can't contain two files of the same name!");
-  assert.equal(found[0], true, "file.list() should work");
+  assert.equal(found.length, 1, "file.list() should work");
 
   assert.throws(function() {
     file.list(filePathInProfile);

@@ -23,7 +23,8 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   , mIsNotNull(true)
 #endif
 {
-  mOriginAttributes = BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  PrincipalOriginAttributes poa = BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+  mOriginAttributes = DocShellOriginAttributes(poa.mAppId, poa.mInBrowser);
 
   if (!aOptionalBase) {
     return;

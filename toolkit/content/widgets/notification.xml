@@ -458,7 +458,7 @@
             else {
               var callback = button.callback;
               if (callback) {
-                var result = callback(this, button);
+                var result = callback(this, button, aEvent.target);
                 if (!result)
                   this.close();
                 aEvent.stopPropagation();

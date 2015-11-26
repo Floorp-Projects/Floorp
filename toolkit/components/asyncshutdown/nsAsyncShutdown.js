@@ -226,17 +226,25 @@ function nsAsyncShutdownService() {
   // Cache for the getters
 
   for (let _k of
-   ["profileBeforeChange",
+   [// Parent process
+    "profileBeforeChange",
     "profileChangeTeardown",
     "sendTelemetry",
+
+    // Child processes
+    "contentChildShutdown",
+
+    // All processes
     "webWorkersShutdown",
-    "xpcomThreadsShutdown"]) {
+    "xpcomThreadsShutdown",
+    ]) {
     let k = _k;
     Object.defineProperty(this, k, {
       configurable: true,
       get: function() {
         delete this[k];
-        let result = new nsAsyncShutdownClient(AsyncShutdown[k]);
+        let wrapped = AsyncShutdown[k]; // May be undefined, if we're on the wrong process.
+        let result = wrapped ? new nsAsyncShutdownClient(wrapped) : undefined;
         Object.defineProperty(this, k, {
           value: result
         });
@@ -266,4 +274,3 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
     nsAsyncShutdownBarrier,
     nsAsyncShutdownClient,
 ]);
-
