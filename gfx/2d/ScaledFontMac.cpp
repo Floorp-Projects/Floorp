@@ -105,7 +105,7 @@ ScaledFontMac::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aT
       return ret.forget();
 #else
       //TODO: probably want CTFontCreatePathForGlyph
-      MOZ_CRASH("This needs implemented");
+      MOZ_CRASH("GFX: This needs implemented 1");
 #endif
   }
   return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
@@ -135,7 +135,7 @@ ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBui
   }
 #else
     //TODO: probably want CTFontCreatePathForGlyph
-    MOZ_CRASH("This needs implemented");
+    MOZ_CRASH("GFX: This needs implemented 2");
 #endif
 }
 

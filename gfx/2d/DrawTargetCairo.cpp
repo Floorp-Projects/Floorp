@@ -656,7 +656,7 @@ DrawTargetCairo::GetType() const
     case CAIRO_SURFACE_TYPE_TEE: // included to silence warning about unhandled enum value
       return DrawTargetType::SOFTWARE_RASTER;
     default:
-      MOZ_CRASH("Unsupported cairo surface type");
+      MOZ_CRASH("GFX: Unsupported cairo surface type");
     }
   }
   MOZ_ASSERT(false, "Could not determine DrawTargetType for DrawTargetCairo");
@@ -1279,7 +1279,8 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   // allocation in ~99% of cases.
   Vector<cairo_glyph_t, 1024 / sizeof(cairo_glyph_t)> glyphs;
   if (!glyphs.resizeUninitialized(aBuffer.mNumGlyphs)) {
-    MOZ_CRASH("glyphs allocation failed");
+    gfxDevCrash(LogReason::GlyphAllocFailedCairo) << "glyphs allocation failed";
+    return;
   }
   for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
     glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
