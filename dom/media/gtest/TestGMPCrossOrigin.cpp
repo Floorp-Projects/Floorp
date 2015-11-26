@@ -469,6 +469,7 @@ GetNodeId(const nsAString& aOrigin,
   // GeckoMediaPluginServiceParent is synchronous.
   nsresult rv = service->GetNodeId(aOrigin,
                                    aTopLevelOrigin,
+                                   NS_LITERAL_STRING("gmp-fake"),
                                    aInPBMode,
                                    Move(callback));
   EXPECT_TRUE(NS_SUCCEEDED(rv) && NS_SUCCEEDED(result));
