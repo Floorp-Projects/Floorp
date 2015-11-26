@@ -1205,10 +1205,10 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
 void
 CompositorD3D11::EnsureSize()
 {
-  IntRect rect;
-  mWidget->GetClientBoundsUntyped(rect);
+  LayoutDeviceIntRect rect;
+  mWidget->GetClientBounds(rect);
 
-  mSize = rect.Size();
+  mSize = rect.Size().ToUnknownSize();
 }
 
 bool
