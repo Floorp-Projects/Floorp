@@ -375,7 +375,6 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& a
   , mScope(aScope)
   , mPrincipal(aPrincipal)
   , mLastUpdateCheckTime(0)
-  , mUpdating(false)
   , mPendingUninstall(false)
 {}
 
@@ -864,7 +863,7 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerJob,
   nsCString mScope;
   nsCString mScriptSpec;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-  RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
+  nsTArray<RefPtr<ServiceWorkerUpdateFinishCallback>> mCallbacks;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   RefPtr<ServiceWorkerInfo> mUpdateAndInstallInfo;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -893,7 +892,6 @@ public:
     : ServiceWorkerJob(aQueue)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
-    , mCallback(aCallback)
     , mPrincipal(aPrincipal)
     , mLoadGroup(aLoadGroup)
     , mJobType(REGISTER_JOB)
@@ -902,6 +900,8 @@ public:
     AssertIsOnMainThread();
     MOZ_ASSERT(mLoadGroup);
     MOZ_ASSERT(aCallback);
+
+    mCallbacks.AppendElement(aCallback);
   }
 
   // [[Update]]
@@ -910,17 +910,29 @@ public:
                            ServiceWorkerUpdateFinishCallback* aCallback)
     : ServiceWorkerJob(aQueue)
     , mRegistration(aRegistration)
-    , mCallback(aCallback)
     , mJobType(UPDATE_JOB)
     , mCanceled(false)
   {
     AssertIsOnMainThread();
+    MOZ_ASSERT(aCallback);
+
+    mCallbacks.AppendElement(aCallback);
   }
 
   bool
   IsRegisterJob() const override
   {
     return true;
+  }
+
+  void
+  AppendCallback(ServiceWorkerUpdateFinishCallback* aCallback)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(!mCallbacks.Contains(aCallback));
+
+    mCallbacks.AppendElement(aCallback);
   }
 
   void
@@ -974,6 +986,10 @@ public:
       swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UPDATE_JOB);
+      MOZ_ASSERT(mRegistration);
+      MOZ_ASSERT(mRegistration->mUpdateJob == nullptr);
+
+      mRegistration->mUpdateJob = this;
     }
 
     Update();
@@ -1105,6 +1121,8 @@ public:
   Fail(ErrorResult& aRv)
   {
     AssertIsOnMainThread();
+    MOZ_ASSERT(mCallbacks.Length());
+
     // With cancellation support, we may only be running with one reference
     // from another object like a stream loader or something.
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
@@ -1137,10 +1155,14 @@ public:
       aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(scriptSpec, scope);
     }
 
-    if (mCallback) {
-      mCallback->UpdateFailed(aRv);
-      mCallback = nullptr;
+    for (uint32_t i = 1; i < mCallbacks.Length(); ++i) {
+      ErrorResult rv;
+      aRv.CloneTo(rv);
+      mCallbacks[i]->UpdateFailed(rv);
+      rv.SuppressException();
     }
+
+    mCallbacks[0]->UpdateFailed(aRv);
 
     // In case the callback does not consume the exception
     aRv.SuppressException();
@@ -1157,6 +1179,7 @@ public:
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->MaybeRemoveRegistration(mRegistration);
     // Ensures that the job can't do anything useful from this point on.
+    mRegistration->mUpdateJob = nullptr;
     mRegistration = nullptr;
     Done(origStatus);
   }
@@ -1172,13 +1195,10 @@ public:
   void
   ContinueInstall()
   {
-    AssertIsOnMainThread();
     // mRegistration will be null if we have already Fail()ed.
     if (!mRegistration) {
       return;
     }
-
-    mRegistration->mUpdating = false;
 
     // Even if we are canceled, ensure integrity of mSetOfScopesBeingUpdated
     // first.
@@ -1255,16 +1275,12 @@ private:
   void
   Update()
   {
-    AssertIsOnMainThread();
-
     // Since Update() is called synchronously from Start(), we can assert this.
     MOZ_ASSERT(!mCanceled);
     MOZ_ASSERT(mRegistration);
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableMethod(this, &ServiceWorkerRegisterJob::ContinueUpdate);
     NS_DispatchToMainThread(r);
-
-    mRegistration->mUpdating = true;
   }
 
   // Aspects of (actually the whole algorithm) of [[Update]] after
@@ -1307,11 +1323,12 @@ private:
   Succeed()
   {
     AssertIsOnMainThread();
-    // We don't have a callback for soft updates.
-    if (mCallback) {
-      mCallback->UpdateSucceeded(mRegistration);
-      mCallback = nullptr;
+    MOZ_ASSERT(mCallbacks.Length());
+
+    for (uint32_t i = 0; i < mCallbacks.Length(); ++i) {
+      mCallbacks[i]->UpdateSucceeded(mRegistration);
     }
+    mCallbacks.Clear();
   }
 
   void
@@ -1369,13 +1386,13 @@ private:
   void
   Done(nsresult aStatus)
   {
-    AssertIsOnMainThread();
-
-    if (mRegistration) {
-      mRegistration->mUpdating = false;
-    }
-
     ServiceWorkerJob::Done(aStatus);
+
+    if (mJobType == UPDATE_JOB && mRegistration) {
+      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_ASSERT(mRegistration->mUpdateJob);
+      mRegistration->mUpdateJob = nullptr;
+    }
   }
 };
 
@@ -2647,6 +2664,23 @@ ServiceWorkerRegistrationInfo::NotifyListenersOnChange()
   }
 }
 
+bool
+ServiceWorkerRegistrationInfo::IsUpdating() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mUpdateJob != nullptr;
+}
+
+void
+ServiceWorkerRegistrationInfo::AppendUpdateCallback(ServiceWorkerUpdateFinishCallback* aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(mUpdateJob);
+
+  mUpdateJob->AppendCallback(aCallback);
+}
+
 void
 ServiceWorkerManager::LoadRegistration(
                              const ServiceWorkerRegistrationData& aRegistration)
@@ -3493,15 +3527,55 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
 }
 
 void
-ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
-                                 const nsACString& aScope)
+ServiceWorkerManager::SoftUpdate(nsIPrincipal* aPrincipal,
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  SoftUpdate(scopeKey, aScope, aCallback);
+}
+
+void
+ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
+{
   nsAutoCString scopeKey;
   aOriginAttributes.CreateSuffix(scopeKey);
+  SoftUpdate(scopeKey, aScope, aCallback);
+}
 
+namespace {
+
+// Empty callback.  Only use when you really want to ignore errors.
+class EmptyUpdateFinishCallback final : public ServiceWorkerUpdateFinishCallback
+{
+public:
+  void
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
+  {}
+
+  void
+  UpdateFailed(ErrorResult& aStatus) override
+  {}
+};
+
+} // anonymous namespace
+
+void
+ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
+                                 const nsACString& aScope,
+                                 ServiceWorkerUpdateFinishCallback* aCallback)
+{
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(scopeKey, aScope);
+    GetRegistration(aScopeKey, aScope);
   if (NS_WARN_IF(!registration)) {
     return;
   }
@@ -3527,71 +3601,28 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
   // "Set registration's registering script url to newestWorker's script url."
   registration->mScriptSpec = newest->ScriptSpec();
 
-  // "If the registration queue for registration is empty, invoke Update algorithm,
-  // or its equivalent, with client, registration as its argument."
-  // TODO(catalinb): We don't implement the force bypass cache flag.
-  // See: https://github.com/slightlyoff/ServiceWorker/issues/759
-  if (!registration->mUpdating) {
-    ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(scopeKey, aScope);
-    MOZ_ASSERT(queue);
-
-    RefPtr<ServiceWorkerRegisterJob> job =
-      new ServiceWorkerRegisterJob(queue, registration, nullptr);
-    queue->Append(job);
-  }
-}
-
-void
-ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
-                             const nsACString& aScope,
-                             ServiceWorkerUpdateFinishCallback* aCallback)
-{
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aCallback);
-
-  nsAutoCString scopeKey;
-  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(scopeKey, aScope);
-  if (NS_WARN_IF(!registration)) {
-    return;
-  }
-
-  // "If registration's uninstalling flag is set, abort these steps."
-  if (registration->mPendingUninstall) {
-    return;
-  }
-
-  // "Let newestWorker be the result of running Get Newest Worker algorithm
-  // passing registration as its argument.
-  // If newestWorker is null, return a promise rejected with "InvalidStateError"
-  RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-  if (!newest) {
-    ErrorResult error(NS_ERROR_DOM_INVALID_STATE_ERR);
-    aCallback->UpdateFailed(error);
-
-    // In case the callback does not consume the exception
-    error.SuppressException();
-
-    return;
-  }
-
-  // "Set registration's registering script url to newestWorker's script url."
-  registration->mScriptSpec = newest->ScriptSpec();
-
   ServiceWorkerJobQueue* queue =
-    GetOrCreateJobQueue(scopeKey, aScope);
+    GetOrCreateJobQueue(aScopeKey, aScope);
   MOZ_ASSERT(queue);
+
+  RefPtr<ServiceWorkerUpdateFinishCallback> cb(aCallback);
+  if (!cb) {
+    cb = new EmptyUpdateFinishCallback();
+  }
 
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
-  RefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, registration, aCallback);
-  queue->Append(job);
+  if (registration->IsUpdating()) {
+    // This is used to reduce burst of update events. If there is an update
+    // job in queue when we try to create a new one, drop current one and
+    // merge the callback function to existing update job.
+    // See. https://github.com/slightlyoff/ServiceWorker/issues/759
+    registration->AppendUpdateCallback(cb);
+  } else {
+    RefPtr<ServiceWorkerRegisterJob> job =
+      new ServiceWorkerRegisterJob(queue, registration, cb);
+    queue->Append(job);
+  }
 }
 
 namespace {
