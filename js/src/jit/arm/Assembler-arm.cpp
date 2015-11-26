@@ -951,13 +951,13 @@ Assembler::processCodeLabels(uint8_t* rawCode)
 }
 
 void
-Assembler::writeCodePointer(CodeOffsetLabel* label) {
+Assembler::writeCodePointer(CodeOffset* label) {
     BufferOffset off = writeInst(LabelBase::INVALID_OFFSET);
     label->use(off.getOffset());
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address)
+Assembler::Bind(uint8_t* rawCode, CodeOffset* label, const void* address)
 {
     *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
 }

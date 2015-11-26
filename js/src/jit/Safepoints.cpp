@@ -428,7 +428,7 @@ SafepointReader::InvalidationPatchPoint(IonScript* script, const SafepointIndex*
 {
     SafepointReader reader(script, si);
 
-    return CodeLocationLabel(script->method(), CodeOffsetLabel(reader.osiCallPointOffset()));
+    return CodeLocationLabel(script->method(), CodeOffset(reader.osiCallPointOffset()));
 }
 
 void

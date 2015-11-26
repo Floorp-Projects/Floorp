@@ -2103,7 +2103,7 @@ MacroAssembler::AutoProfilerCallInstrumentation::AutoProfilerCallInstrumentation
     JitContext* icx = GetJitContext();
     AbsoluteAddress profilingActivation(icx->runtime->addressOfProfilingActivation());
 
-    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), reg);
+    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), reg);
     masm.loadPtr(profilingActivation, reg2);
     masm.storePtr(reg, Address(reg2, JitActivation::offsetOfLastProfilingCallSite()));
 
@@ -2117,7 +2117,7 @@ void
 MacroAssembler::linkProfilerCallSites(JitCode* code)
 {
     for (size_t i = 0; i < profilerCallSites_.length(); i++) {
-        CodeOffsetLabel offset = profilerCallSites_[i];
+        CodeOffset offset = profilerCallSites_[i];
         CodeLocationLabel location(code, offset);
         PatchDataWithValueCheck(location, ImmPtr(location.raw()), ImmPtr((void*)-1));
     }
