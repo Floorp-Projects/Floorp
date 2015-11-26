@@ -1031,7 +1031,7 @@ CodeGeneratorARM::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
         // The entries of the jump table need to be absolute addresses and thus
         // must be patched after codegen is finished.
         CodeLabel cl = ool->codeLabel(i);
-        cl.target()->use(caseoffset);
+        cl.target()->bind(caseoffset);
         masm.addCodeLabel(cl);
     }
 }

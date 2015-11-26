@@ -891,7 +891,7 @@ BaselineCompiler::emitProfilerEnterFrame()
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(!profilerEnterFrameToggleOffset_.used());
+    MOZ_ASSERT(!profilerEnterFrameToggleOffset_.bound());
     profilerEnterFrameToggleOffset_ = toggleOffset;
 }
 
@@ -906,7 +906,7 @@ BaselineCompiler::emitProfilerExitFrame()
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(!profilerExitFrameToggleOffset_.used());
+    MOZ_ASSERT(!profilerExitFrameToggleOffset_.bound());
     profilerExitFrameToggleOffset_ = toggleOffset;
 }
 

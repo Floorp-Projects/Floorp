@@ -614,7 +614,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(CodeOffset* label, Register dest) {
         masm.movq_i64r(/* placeholder */ 0, dest.encoding());
-        label->use(masm.size());
+        label->bind(masm.size());
     }
     void xchg(Register src, Register dest) {
         xchgq(src, dest);
