@@ -278,11 +278,11 @@ private:
 
   mWaitingForPaint = NO;
 
-  nsIntRect geckoBounds;
-  mGeckoChild->GetBoundsUntyped(geckoBounds);
-  nsIntRegion region(geckoBounds);
+  LayoutDeviceIntRect geckoBounds;
+  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRegion region(geckoBounds);
 
-  mGeckoChild->PaintWindow(region);
+  mGeckoChild->PaintWindow(region.ToUnknownRegion());
 }
 
 // Called asynchronously after setNeedsDisplay in order to avoid entering the

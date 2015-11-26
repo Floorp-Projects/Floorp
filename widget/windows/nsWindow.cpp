@@ -2663,12 +2663,12 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
   // all values must be set to -1 to get a full sheet of glass.
   MARGINS margins = { -1, -1, -1, -1 };
   if (!aOpaqueRegion.IsEmpty()) {
-    nsIntRect pluginBounds;
+    LayoutDeviceIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       if (child->IsPlugin()) {
         // Collect the bounds of all plugins for GetLargestRectangle.
-        nsIntRect childBounds;
-        child->GetBoundsUntyped(childBounds);
+        LayoutDeviceIntRect childBounds;
+        child->GetBounds(childBounds);
         pluginBounds.UnionRect(pluginBounds, childBounds);
       }
     }
@@ -2678,7 +2678,8 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
-    nsIntRect largest = aOpaqueRegion.GetLargestRectangle(pluginBounds);
+    LayoutDeviceIntRect largest =
+      LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion).GetLargestRectangle(pluginBounds);
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyBottomHeight = clientBounds.height - largest.YMost();

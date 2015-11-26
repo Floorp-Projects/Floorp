@@ -3440,7 +3440,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       widget->UpdateOpaqueRegion(
         opaqueRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
 
-      const nsIntRegion& draggingRegion = builder.GetWindowDraggingRegion();
+      const nsIntRegion& draggingRegion =
+        builder.GetWindowDraggingRegion().ToUnknownRegion();
       widget->UpdateWindowDraggingRegion(draggingRegion);
     }
   }
@@ -7916,10 +7917,13 @@ UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
 #endif
 
   if (widget) {
-    nsIntRect widgetBounds;
-    widget->GetBoundsUntyped(widgetBounds);
+    LayoutDeviceIntRect widgetBounds;
+    widget->GetBounds(widgetBounds);
     widgetBounds.MoveTo(0, 0);
-    aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
+    aCompBounds = ParentLayerRect(
+      ViewAs<ParentLayerPixel>(
+        widgetBounds,
+        PixelCastJustification::LayoutDeviceIsParentLayerForRCDRSF));
     return true;
   }
 
@@ -8041,9 +8045,11 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
     }
   } else {
     nsIWidget* widget = aFrame->GetNearestWidget();
-    nsIntRect widgetBounds;
-    widget->GetBoundsUntyped(widgetBounds);
-    rootCompositionSize = ScreenSize(ViewAs<ScreenPixel>(widgetBounds.Size()));
+    LayoutDeviceIntRect widgetBounds;
+    widget->GetBounds(widgetBounds);
+    rootCompositionSize = ScreenSize(
+      ViewAs<ScreenPixel>(widgetBounds.Size(),
+                          PixelCastJustification::LayoutDeviceIsScreenForBounds));
   }
 
   // Adjust composition size for the size of scroll bars.
