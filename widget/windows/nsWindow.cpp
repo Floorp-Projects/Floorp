@@ -2653,7 +2653,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(true)->SetWindowTranslucencyInner(aMode);
 }
 
-void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
+void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)
 {
   if (!HasGlass() || GetParent())
     return;
@@ -2679,7 +2679,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
     LayoutDeviceIntRect largest =
-      LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion).GetLargestRectangle(pluginBounds);
+      aOpaqueRegion.GetLargestRectangle(pluginBounds);
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyBottomHeight = clientBounds.height - largest.YMost();
@@ -2709,7 +2709,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 **************************************************************/
 
 void
-nsWindow::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
+nsWindow::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion)
 {
   if (mDraggableRegion != aRegion) {
     mDraggableRegion = aRegion;
