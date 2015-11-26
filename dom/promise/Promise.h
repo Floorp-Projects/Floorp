@@ -163,55 +163,40 @@ public:
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv, JS::Handle<JSObject*> aDesiredProto);
 
-  static void
-  Resolve(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-          JS::Handle<JS::Value> aValue,
-          JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
+  static already_AddRefed<Promise>
+  Resolve(const GlobalObject& aGlobal,
+          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  static void
-  Reject(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-         JS::Handle<JS::Value> aValue,
-         JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
+  static already_AddRefed<Promise>
+  Reject(const GlobalObject& aGlobal,
+         JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  void
-  Then(JSContext* aCx,
-       // aCalleeGlobal may not be in the compartment of aCx, when called over
-       // Xrays.
-       JS::Handle<JSObject*> aCalleeGlobal,
-       AnyCallback* aResolveCallback, AnyCallback* aRejectCallback,
-       JS::MutableHandle<JS::Value> aRetval,
-       ErrorResult& aRv);
+  already_AddRefed<Promise>
+  Then(JSContext* aCx, AnyCallback* aResolveCallback,
+       AnyCallback* aRejectCallback, ErrorResult& aRv);
 
-  void
-  Catch(JSContext* aCx,
-        AnyCallback* aRejectCallback,
-        JS::MutableHandle<JS::Value> aRetval,
-        ErrorResult& aRv);
+  already_AddRefed<Promise>
+  Catch(JSContext* aCx, AnyCallback* aRejectCallback, ErrorResult& aRv);
 
-  static void
-  All(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-      JS::Handle<JS::Value> aIterable, JS::MutableHandle<JS::Value> aRetval,
-      ErrorResult& aRv);
+  static already_AddRefed<Promise>
+  All(const GlobalObject& aGlobal,
+      const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   All(const GlobalObject& aGlobal,
       const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
 
-  static void
-  Race(const GlobalObject& aGlobal, JS::Handle<JS::Value> aThisv,
-       JS::Handle<JS::Value> aIterable, JS::MutableHandle<JS::Value> aRetval,
-       ErrorResult& aRv);
-
-  static bool
-  PromiseSpecies(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
+  static already_AddRefed<Promise>
+  Race(const GlobalObject& aGlobal,
+       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
@@ -226,14 +211,7 @@ public:
   static void
   DispatchToMicroTask(nsIRunnable* aRunnable);
 
-  enum JSCallbackSlots {
-    SLOT_PROMISE = 0,
-    SLOT_DATA
-  };
-
 protected:
-  struct PromiseCapability;
-
   // Do NOT call this unless you're Promise::Create.  I wish we could enforce
   // that from inside this class too, somehow.
   explicit Promise(nsIGlobalObject* aGlobal);
@@ -249,17 +227,6 @@ protected:
   // constructor.
   void CallInitFunction(const GlobalObject& aGlobal, PromiseInit& aInit,
                         ErrorResult& aRv);
-
-  // The NewPromiseCapability function from
-  // <http://www.ecma-international.org/ecma-262/6.0/#sec-newpromisecapability>.
-  // Errors are communicated via aRv.  If aForceCallbackCreation is
-  // true, then this function will ensure that aCapability has a
-  // useful mResolve/mReject even if mNativePromise is non-null.
-  static void NewPromiseCapability(JSContext* aCx, nsIGlobalObject* aGlobal,
-                                   JS::Handle<JS::Value> aConstructor,
-                                   bool aForceCallbackCreation,
-                                   PromiseCapability& aCapability,
-                                   ErrorResult& aRv);
 
   bool IsPending()
   {

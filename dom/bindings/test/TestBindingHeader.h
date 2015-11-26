@@ -1371,18 +1371,6 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
-class TestInterfaceWithPromiseConstructorArg : public nsISupports, public nsWrapperCache
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  static
-  already_AddRefed<TestInterfaceWithPromiseConstructorArg>
-    Constructor(const GlobalObject&, Promise&, ErrorResult&);
-
-  virtual nsISupports* GetParentObject();
-};
-
 } // namespace dom
 } // namespace mozilla
 
