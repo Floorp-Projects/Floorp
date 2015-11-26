@@ -7,6 +7,9 @@
 XPI_NAME = 'indexedDB'
 
 DIST_FILES += [
-    'bootstrap.js',
     'install.rdf',
+]
+
+FINAL_TARGET_FILES += [
+    'bootstrap.js',
 ]
