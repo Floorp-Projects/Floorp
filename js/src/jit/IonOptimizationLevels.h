@@ -284,7 +284,7 @@ class OptimizationInfos
     OptimizationLevel levelForScript(JSScript* script, jsbytecode* pc = nullptr) const;
 };
 
-extern OptimizationInfos js_IonOptimizations;
+extern OptimizationInfos IonOptimizations;
 
 } // namespace jit
 } // namespace js
