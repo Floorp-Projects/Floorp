@@ -101,12 +101,44 @@ DebuggerPanel.prototype = {
 
   // DebuggerPanel API
 
-  addBreakpoint: function(aLocation, aOptions) {
-    return this._controller.Breakpoints.addBreakpoint(aLocation, aOptions);
+  addBreakpoint: function(location) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+    // const deferred = promise.defer();
+
+    // dispatch({
+    //   type: this.panelWin.services.WAIT_UNTIL,
+    //   predicate: action => (
+    //     action.type === this.panelWin.constants.ADD_BREAKPOINT &&
+    //     action.status === "done"
+    //   ),
+    //   run: deferred.resolve
+    // });
+    return dispatch(actions.addBreakpoint(location));
+    // return deferred.promise;
   },
 
-  removeBreakpoint: function(aLocation) {
-    return this._controller.Breakpoints.removeBreakpoint(aLocation);
+  removeBreakpoint: function(location) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+    // const deferred = promise.defer();
+
+    // dispatch({
+    //   type: this.panelWin.services.WAIT_UNTIL,
+    //   predicate: action => (
+    //     action.type === this.panelWin.constants.REMOVE_BREAKPOINT &&
+    //     action.status === "done"
+    //   ),
+    //   run: deferred.resolve
+    // });
+    return dispatch(actions.removeBreakpoint(location));
+    // return deferred.promise;
+  },
+
+  blackbox: function(source, flag) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+    return dispatch(actions.blackbox(source, flag))
   },
 
   handleHostChanged: function() {

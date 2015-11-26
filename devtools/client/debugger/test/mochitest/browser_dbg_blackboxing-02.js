@@ -30,8 +30,8 @@ function test() {
 }
 
 function testBlackBoxSource() {
-  return toggleBlackBoxing(gPanel).then(aSource => {
-    ok(aSource.isBlackBoxed, "The source should be black boxed now.");
+  return toggleBlackBoxing(gPanel).then(source => {
+    ok(source.isBlackBoxed, "The source should be black boxed now.");
   });
 }
 
