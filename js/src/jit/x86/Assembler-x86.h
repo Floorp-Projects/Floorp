@@ -302,7 +302,7 @@ class Assembler : public AssemblerX86Shared
     void mov(CodeOffset* label, Register dest) {
         // Put a placeholder value in the instruction stream.
         masm.movl_i32r(0, dest.encoding());
-        label->use(masm.size());
+        label->bind(masm.size());
     }
     void mov(Register src, Register dest) {
         movl(src, dest);

@@ -441,7 +441,7 @@ class AssemblerX86Shared : public AssemblerShared
     void writeCodePointer(CodeOffset* label) {
         // A CodeOffset only has one use, bake in the "end of list" value.
         masm.jumpTablePointer(LabelBase::INVALID_OFFSET);
-        label->use(masm.size());
+        label->bind(masm.size());
     }
     void movl(Imm32 imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.encoding());
@@ -924,7 +924,7 @@ class AssemblerX86Shared : public AssemblerShared
         label->bind(dst.offset());
     }
     void use(CodeOffset* label) {
-        label->use(currentOffset());
+        label->bind(currentOffset());
     }
     uint32_t currentOffset() {
         return masm.label().offset();
@@ -956,7 +956,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     static void Bind(uint8_t* raw, CodeOffset* label, const void* address) {
-        if (label->used()) {
+        if (label->bound()) {
             intptr_t offset = label->offset();
             X86Encoding::SetPointer(raw + offset, address);
         }
