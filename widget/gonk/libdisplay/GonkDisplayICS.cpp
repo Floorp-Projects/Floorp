@@ -171,6 +171,9 @@ GonkDisplayICS::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     mFBSurface->compositionComplete();
 
     if (!mHwc) {
+        if (sur != EGL_NO_SURFACE) {
+            return eglSwapBuffers(dpy, sur);
+        }
         return true;
     }
 
