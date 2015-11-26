@@ -1910,6 +1910,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
     aStream << " [componentAlpha]";
   }
+  if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
+    aStream << " [backfaceHidden]";
+  }
   if (GetScrollbarDirection() == VERTICAL) {
     aStream << nsPrintfCString(" [vscrollbar=%lld]", GetScrollbarTargetContainerId()).get();
   }

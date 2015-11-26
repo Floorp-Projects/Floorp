@@ -533,7 +533,7 @@ SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
   Matrix4x4 transform =
     nsDisplayTransform::GetResultingTransformMatrix(props, origin,
                                                     data.appUnitsPerDevPixel(),
-                                                    &data.bounds());
+                                                    0, &data.bounds());
   Point3D scaledOrigin =
     Point3D(NS_round(NSAppUnitsToFloatPixels(origin.x, data.appUnitsPerDevPixel())),
             NS_round(NSAppUnitsToFloatPixels(origin.y, data.appUnitsPerDevPixel())),
