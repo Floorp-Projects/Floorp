@@ -9,7 +9,7 @@ import errno
 import os
 import stat
 import subprocess
-
+import sys
 
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
@@ -209,7 +209,6 @@ def ensure_android_packages(android_tool, packages=None):
     if not packages:
         packages = ANDROID_PACKAGES
 
-
     # Bug 1171232: The |android| tool behaviour has changed; we no longer can
     # see what packages are installed easily.  Force installing everything until
     # we find a way to actually see the missing packages.
@@ -236,11 +235,14 @@ def ensure_android_packages(android_tool, packages=None):
 def suggest_mozconfig(sdk_path=None, ndk_path=None):
     print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
 
-def android_ndk_url(os_name, ver='r10e') :
-    from sys import maxsize
-    base_url = 'https://dl.google.com/android/ndk/android-ndk-'
 
-    if maxsize > 2**32 :
-	return (base_url+ver+'-'+os_name+'-x86_64.bin')
-    else :
-	return (base_url+ver+'-'+os_name+'-x86.bin')
+def android_ndk_url(os_name, ver='r10e'):
+    # Produce a URL like 'https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin'.
+    base_url = 'https://dl.google.com/android/ndk/android-ndk'
+
+    if sys.maxsize > 2**32:
+        arch = 'x86_64'
+    else:
+        arch = 'x86'
+
+    return '%s-%s-%s-%s.bin' % (base_url, ver, os_name, arch)
