@@ -185,8 +185,8 @@ FrameManager.prototype = {
     mm.addWeakMessageListener("Marionette:error", this.server);
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.server);
     mm.addWeakMessageListener("Marionette:log", this.server);
-    mm.addWeakMessageListener("Marionette:runEmulatorCmd", this.server.emulator);
-    mm.addWeakMessageListener("Marionette:runEmulatorShell", this.server.emulator);
+    mm.addWeakMessageListener("Marionette:runEmulatorCmd", this.server);
+    mm.addWeakMessageListener("Marionette:runEmulatorShell", this.server);
     mm.addWeakMessageListener("Marionette:shareData", this.server);
     mm.addWeakMessageListener("Marionette:switchToModalOrigin", this.server);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.server);
@@ -217,8 +217,8 @@ FrameManager.prototype = {
     mm.removeWeakMessageListener("Marionette:error", this.server);
     mm.removeWeakMessageListener("Marionette:log", this.server);
     mm.removeWeakMessageListener("Marionette:shareData", this.server);
-    mm.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server.emulator);
-    mm.removeWeakMessageListener("Marionette:runEmulatorShell", this.server.emulator);
+    mm.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server);
+    mm.removeWeakMessageListener("Marionette:runEmulatorShell", this.server);
     mm.removeWeakMessageListener("Marionette:switchedToFrame", this.server);
     mm.removeWeakMessageListener("Marionette:getVisibleCookies", this.server);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.server);

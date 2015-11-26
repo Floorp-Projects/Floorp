@@ -1903,48 +1903,40 @@ function getAppCacheStatus(msg) {
 }
 
 // emulator callbacks
+var _emu_cb_id = 0;
 var _emu_cbs = {};
 
 function runEmulatorCmd(cmd, callback) {
-  logger.info("listener runEmulatorCmd cmd=" + cmd);
   if (callback) {
-    _emu_cbs[asyncTestCommandId] = callback;
+    _emu_cbs[_emu_cb_id] = callback;
   }
-  sendAsyncMessage("Marionette:runEmulatorCmd",
-      {command: cmd, id: asyncTestCommandId});
+  sendAsyncMessage("Marionette:runEmulatorCmd", {emulator_cmd: cmd, id: _emu_cb_id});
+  _emu_cb_id += 1;
 }
 
 function runEmulatorShell(args, callback) {
   if (callback) {
-    _emu_cbs[asyncTestCommandId] = callback;
+    _emu_cbs[_emu_cb_id] = callback;
   }
-  sendAsyncMessage("Marionette:runEmulatorShell",
-      {arguments: args, id: asyncTestCommandId});
+  sendAsyncMessage("Marionette:runEmulatorShell", {emulator_shell: args, id: _emu_cb_id});
+  _emu_cb_id += 1;
 }
 
 function emulatorCmdResult(msg) {
-  let {error, result, id} = msg.json;
-
-  if (error) {
-    let err = new JavaScriptError(error);
-    sendError(err, id);
-    return;
-  }
-
+  let message = msg.json;
   if (!sandboxes[sandboxName]) {
     return;
   }
-  let cb = _emu_cbs[id];
-  delete _emu_cbs[id];
+  let cb = _emu_cbs[message.id];
+  delete _emu_cbs[message.id];
   if (!cb) {
     return;
   }
-
   try {
-    cb(result);
+    cb(message.result);
   } catch (e) {
-    let err = new JavaScriptError(e);
-    sendError(err, id);
+    sendError(e, -1);
+    return;
   }
 }
 
