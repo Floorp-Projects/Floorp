@@ -850,19 +850,10 @@ class nsIWidget : public nsISupports {
      * position of the client area relative to the client area of the parent
      * widget (for root widgets and popup widgets it is in screen coordinates).
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
     NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetClientBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetClientBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Get the non-client area dimensions of the window.
