@@ -198,6 +198,10 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
     return &aDestination;
   }
 
+  WEB_AUDIO_API_LOG("%f: %s %u Connect() to %s %u",
+                    Context()->CurrentTime(), NodeType(), Id(),
+                    aDestination.NodeType(), aDestination.Id());
+
   // The MediaStreamGraph will handle cycle detection. We don't need to do it
   // here.
 
@@ -299,6 +303,9 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
+
+  WEB_AUDIO_API_LOG("%f: %s %u Disconnect()", Context()->CurrentTime(),
+                    NodeType(), Id());
 
   // An upstream node may be starting to play on the graph thread, and the
   // engine for a downstream node may be sending a PlayingRefChangeHandler

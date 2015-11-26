@@ -8,7 +8,7 @@
 /**
  * This interface identifies a proxy server.
  */
-[scriptable, uuid(9e557d99-7af0-4895-95b7-e6dba28c9ad9)]
+[scriptable, uuid(63fff172-2564-4138-96c6-3ae7d245fbed)]
 interface nsIProxyInfo : nsISupports
 {
   /**
@@ -49,6 +49,16 @@ interface nsIProxyInfo : nsISupports
    * creating this ProxyInfo element. 
    */
   readonly attribute unsigned long resolveFlags;
+
+  /**
+   * Specifies a proxy username.
+   */
+  readonly attribute ACString username;
+
+  /**
+   * Specifies a proxy password.
+   */
+  readonly attribute ACString password;
 
   /**
    * This attribute specifies the failover timeout in seconds for this proxy.

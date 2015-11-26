@@ -55,7 +55,7 @@ class RematerializedFrame
     ArgumentsObject* argsObj_;
 
     Value returnValue_;
-    Value thisValue_;
+    Value thisArgument_;
     Value slots_[1];
 
     RematerializedFrame(JSContext* cx, uint8_t* top, unsigned numActualArgs,
@@ -169,8 +169,8 @@ class RematerializedFrame
     Value calleev() const {
         return ObjectValue(*callee());
     }
-    Value& thisValue() {
-        return thisValue_;
+    Value& thisArgument() {
+        return thisArgument_;
     }
 
     bool isConstructing() const {

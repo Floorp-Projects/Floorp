@@ -1067,16 +1067,8 @@ public:
    */
   void GetCrossDocChildLists(nsTArray<ChildList>* aLists);
 
-  // XXXbz this method should go away
-  nsIFrame* GetFirstChild(ChildListID aListID) const {
-    return GetChildList(aListID).FirstChild();
-  }
-  // XXXmats this method should also go away then
-  nsIFrame* GetLastChild(ChildListID aListID) const {
-    return GetChildList(aListID).LastChild();
-  }
   nsIFrame* GetFirstPrincipalChild() const {
-    return GetFirstChild(kPrincipalList);
+    return GetChildList(kPrincipalList).FirstChild();
   }
 
   // The individual concrete child lists.

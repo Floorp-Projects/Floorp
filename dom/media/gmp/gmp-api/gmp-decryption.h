@@ -94,10 +94,12 @@ enum GMPMediaKeyStatus {
   kGMPUsable = 0,
   kGMPExpired = 1,
   kGMPOutputDownscaled = 2,
-  kGMPOutputNotAllowed = 3,
+  kGMPOutputRestricted = 3,
   kGMPInternalError = 4,
-  kGMPUnknown = 5,
-  kGMPMediaKeyStatusInvalid = 6 // Must always be last.
+  kGMPUnknown = 5, // Removes key from MediaKeyStatusMap
+  kGMPReleased = 6,
+  kGMPStatusPending = 7,
+  kGMPMediaKeyStatusInvalid = 8 // Must always be last.
 };
 
 // Time in milliseconds, as offset from epoch, 1 Jan 1970.

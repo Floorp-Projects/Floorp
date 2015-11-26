@@ -743,6 +743,32 @@ public:
     bool                  mOldValue;
   };
 
+  class AutoSaveRestorePerspectiveIndex;
+  friend class AutoSaveRestorePerspectiveIndex;
+  class AutoSaveRestorePerspectiveIndex {
+  public:
+    AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+      : mBuilder(nullptr)
+    {
+      if (aFrame->ChildrenHavePerspective()) {
+        mBuilder = aBuilder;
+        mCachedItemIndex = aBuilder->mPerspectiveItemIndex;
+        aBuilder->mPerspectiveItemIndex = 0;
+      }
+    }
+
+    ~AutoSaveRestorePerspectiveIndex()
+    {
+      if (mBuilder) {
+        mBuilder->mPerspectiveItemIndex = mCachedItemIndex;
+      }
+    }
+
+  private:
+    nsDisplayListBuilder* mBuilder;
+    uint32_t mCachedItemIndex;
+  };
+
   /**
    * A helper class to temporarily set the value of mCurrentScrollParentId.
    */
@@ -995,6 +1021,8 @@ public:
     return mContainedBlendModes;
   }
 
+  uint32_t AllocatePerspectiveItemIndex() { return mPerspectiveItemIndex++; }
+
   DisplayListClipState& ClipState() { return mClipState; }
 
   /**
@@ -1199,6 +1227,7 @@ private:
   uint32_t                       mCurrentScrollbarFlags;
   BlendModeSet                   mContainedBlendModes;
   Preserves3DContext             mPreserves3DCtx;
+  uint32_t                       mPerspectiveItemIndex;
   bool                           mIsBuildingScrollbar;
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
@@ -3815,7 +3844,15 @@ public:
     INDEX_MAX = UINT32_MAX >> nsDisplayItem::TYPE_BITS
   };
 
+  /**
+   * We include the perspective matrix from our containing block for the
+   * purposes of visibility calculations, but we exclude it from the transform
+   * we set on the layer (for rendering), since there will be an
+   * nsDisplayPerspective created for that.
+   */
   const Matrix4x4& GetTransform();
+  Matrix4x4 GetTransformForRendering();
+
   /**
    * Return the transform that is aggregation of all transform on the
    * preserves3d chain.
@@ -3848,11 +3885,6 @@ public:
                               const nsRect* aBoundsOverride = nullptr,
                               bool aPreserves3D = true);
 
-  static nsRect TransformRectOut(const nsRect &aUntransformedBounds, 
-                                 const nsIFrame* aFrame,
-                                 const nsPoint &aOrigin,
-                                 const nsRect* aBoundsOverride = nullptr);
-
   /* UntransformRect is like TransformRect, except that it inverts the
    * transform.
    */
@@ -3870,8 +3902,18 @@ public:
                                            float aAppUnitsPerPixel,
                                            const nsRect* aBoundsOverride);
 
-  static Point3D GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
-                                             float aAppUnitsPerPixel);
+  /*
+   * Returns true if aFrame has perspective applied from its containing
+   * block.
+   * Returns the matrix to append to apply the persective (taking
+   * perspective-origin into account), relative to aFrames coordinate
+   * space).
+   * aOutMatrix is assumed to be the identity matrix, and isn't explicitly
+   * cleared.
+   */
+  static bool ComputePerspectiveMatrix(const nsIFrame* aFrame,
+                                       float aAppUnitsPerPixel,
+                                       Matrix4x4& aOutMatrix);
 
   struct FrameTransformProperties
   {
@@ -3879,30 +3921,15 @@ public:
                              float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
     FrameTransformProperties(nsCSSValueSharedList* aTransformList,
-                             const Point3D& aToTransformOrigin,
-                             const Point3D& aToPerspectiveOrigin,
-                             nscoord aChildPerspective)
+                             const Point3D& aToTransformOrigin)
       : mFrame(nullptr)
       , mTransformList(aTransformList)
       , mToTransformOrigin(aToTransformOrigin)
-      , mChildPerspective(aChildPerspective)
-      , mToPerspectiveOrigin(aToPerspectiveOrigin)
     {}
-
-    const Point3D& GetToPerspectiveOrigin() const
-    {
-      MOZ_ASSERT(mChildPerspective > 0, "Only valid with mChildPerspective > 0");
-      return mToPerspectiveOrigin;
-    }
 
     const nsIFrame* mFrame;
     RefPtr<nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
-    nscoord mChildPerspective;
-
-  private:
-    // mToPerspectiveOrigin is only valid if mChildPerspective > 0.
-    Point3D mToPerspectiveOrigin;
   };
 
   /**
@@ -3917,26 +3944,31 @@ public:
    *        Otherwise, it will use the value of aBoundsOverride.  This is
    *        mostly for internal use and in most cases you will not need to
    *        specify a value.
-   * @param aOffsetByOrigin If true, the resulting matrix will be translated
+   * @param aFlags OFFSET_BY_ORIGIN The resulting matrix will be translated
    *        by aOrigin. This translation is applied *before* the CSS transform.
+   * @param aFlags INCLUDE_PRESERVE3D_ANCESTORS The computed transform will
+   *        include the transform of any ancestors participating in the same
+   *        3d rendering context.
+   * @param aFlags INCLUDE_PERSPECTIVE The resulting matrix will include the
+   *        perspective transform from the containing block if applicable.
    */
+  enum {
+    OFFSET_BY_ORIGIN = 1 << 0,
+    INCLUDE_PRESERVE3D_ANCESTORS = 1 << 1,
+    INCLUDE_PERSPECTIVE = 1 << 2,
+  };
   static Matrix4x4 GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
+                                               uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr,
-                                               nsIFrame** aOutAncestor = nullptr,
-                                               bool aOffsetByOrigin = false);
+                                               nsIFrame** aOutAncestor = nullptr);
   static Matrix4x4 GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
+                                               uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr,
                                                nsIFrame** aOutAncestor = nullptr);
-  static Matrix4x4 GetResultingTransformMatrixP3D(const nsIFrame* aFrame,
-                                                  const nsPoint& aOrigin,
-                                                  float aAppUnitsPerPixel,
-                                                  const nsRect* aBoundsOverride = nullptr,
-                                                  nsIFrame** aOutAncestor = nullptr,
-                                                  bool aOffsetByOrigin = false);
   /**
    * Return true when we should try to prerender the entire contents of the
    * transformed frame even when it's not completely visible (yet).
@@ -4017,10 +4049,9 @@ private:
   static Matrix4x4 GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                        const nsPoint& aOrigin,
                                                        float aAppUnitsPerPixel,
+                                                       uint32_t aFlags,
                                                        const nsRect* aBoundsOverride,
-                                                       nsIFrame** aOutAncestor,
-                                                       bool aOffsetByOrigin,
-                                                       bool aDoPreserves3D);
+                                                       nsIFrame** aOutAncestor);
 
   StoreList mStoredList;
   Matrix4x4 mTransform;
@@ -4048,6 +4079,85 @@ private:
   bool mIsTransformSeparator;
   // True if mTransformPreserves3D have been initialized.
   bool mTransformPreserves3DInited;
+};
+
+/* A display item that applies a perspective transformation to a single
+ * nsDisplayTransform child item. We keep this as a separate item since the
+ * perspective-origin is relative to an ancestor of the transformed frame, and
+ * APZ can scroll the child separately.
+ */
+class nsDisplayPerspective : public nsDisplayItem
+{
+  typedef mozilla::gfx::Point3D Point3D;
+
+public:
+  NS_DISPLAY_DECL_NAME("nsDisplayPerspective", TYPE_PERSPECTIVE)
+
+  nsDisplayPerspective(nsDisplayListBuilder* aBuilder, nsIFrame* aTransformFrame,
+                       nsIFrame* aPerspectiveFrame,
+                       nsDisplayList* aList);
+
+  virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
+
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override
+  {
+    return mList.HitTest(aBuilder, aRect, aState, aOutFrames);
+  }
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
+  {
+    return mList.GetBounds(aBuilder, aSnap);
+  }
+
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion) override
+  {}
+
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap) override
+  {
+    return mList.GetOpaqueRegion(aBuilder, aSnap);
+  }
+
+  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
+  {
+    return mList.IsUniform(aBuilder, aColor);
+  }
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+
+  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override
+  {
+    return mList.ShouldBuildLayerEvenIfInvisible(aBuilder);
+  }
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                 nsRegion* aVisibleRegion) override
+  {
+    mList.RecomputeVisibility(aBuilder, aVisibleRegion);
+    return true;
+  }
+  virtual nsDisplayList* GetSameCoordinateSystemChildren() override { return mList.GetChildren(); }
+  virtual nsDisplayList* GetChildren() override { return mList.GetChildren(); }
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  {
+    return mList.GetComponentAlphaBounds(aBuilder);
+  }
+
+  nsIFrame* TransformFrame() { return mTransformFrame; }
+
+private:
+  nsDisplayWrapList mList;
+  nsIFrame* mTransformFrame;
+  uint32_t mIndex;
 };
 
 /**

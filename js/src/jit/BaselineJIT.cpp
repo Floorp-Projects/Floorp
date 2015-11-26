@@ -110,9 +110,15 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterBaseline();
 
-    // Caller must construct |this| before invoking the Ion function.
-    MOZ_ASSERT_IF(data.constructing, data.maxArgv[0].isObject() ||
-                                     data.maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
+    bool constructingLegacyGen =
+        data.constructing && CalleeTokenToFunction(data.calleeToken)->isLegacyGenerator();
+
+    // Caller must construct |this| before invoking the Ion function. Legacy
+    // generators can be called with 'new' but when we resume them, the
+    // this-slot and arguments are |undefined| (they are stored in the
+    // CallObject).
+    MOZ_ASSERT_IF(data.constructing && !constructingLegacyGen,
+                  data.maxArgv[0].isObject() || data.maxArgv[0].isMagic(JS_UNINITIALIZED_LEXICAL));
 
     data.result.setInt32(data.numActualArgs);
     {
@@ -135,7 +141,11 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 
     // Jit callers wrap primitive constructor return, except for derived
     // class constructors, which are forced to do it themselves.
-    if (!data.result.isMagic() && data.constructing && data.result.isPrimitive()) {
+    if (!data.result.isMagic() &&
+        data.constructing &&
+        data.result.isPrimitive() &&
+        !constructingLegacyGen)
+    {
         MOZ_ASSERT(data.maxArgv[0].isObject());
         data.result = data.maxArgv[0];
     }
@@ -198,7 +208,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
         data.scopeChain = nullptr;
         data.calleeToken = CalleeToToken(&fp->callee(), data.constructing);
     } else {
-        thisv = fp->thisValue();
+        thisv.setUndefined();
         data.constructing = false;
         data.numActualArgs = 0;
         data.maxArgc = 1;

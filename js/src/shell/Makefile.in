@@ -4,12 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(OS_ARCH),Darwin)
-ifeq ($(TARGET_CPU),x86_64)
-DARWIN_EXE_LDFLAGS += -pagezero_size 10000 -image_base 100000000
-endif
-endif
-
 ifdef QEMU_EXE
 MOZ_POST_PROGRAM_COMMAND = $(topsrcdir)/build/qemu-wrap --qemu $(QEMU_EXE) --libdir $(CROSS_LIB)
 endif
