@@ -28,6 +28,7 @@ skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
 skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
+fuzzy(1,60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
