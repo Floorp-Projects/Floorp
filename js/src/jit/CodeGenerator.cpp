@@ -3611,7 +3611,7 @@ CodeGenerator::visitApplyArrayGeneric(LApplyArrayGeneric* apply)
 
     Address length(ToRegister(apply->getElements()), ObjectElements::offsetOfLength());
     masm.load32(length, tmp);
-    bailoutCmp32(Assembler::Above, tmp, Imm32(js_JitOptions.maxStackArgs), snapshot);
+    bailoutCmp32(Assembler::Above, tmp, Imm32(JitOptions.maxStackArgs), snapshot);
 
     Address initializedLength(ToRegister(apply->getElements()),
                               ObjectElements::offsetOfInitializedLength());

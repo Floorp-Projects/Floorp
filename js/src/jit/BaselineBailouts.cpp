@@ -802,7 +802,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     // FirstExecution bailouts, we invalidate and recompile the script with
     // IonMonkey. Failing to increment the counter of the current basic block
     // might lead to repeated bailouts and invalidations.
-    if (!js_JitOptions.disablePgo && script->hasScriptCounts())
+    if (!JitOptions.disablePgo && script->hasScriptCounts())
         script->incHitCount(pc);
 
     JSOp op = JSOp(*pc);
