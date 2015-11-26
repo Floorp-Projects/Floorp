@@ -257,6 +257,7 @@ public:
   bool IsInEffect() const;
 
   void SetAnimation(Animation* aAnimation);
+  Animation* GetAnimation() const { return mAnimation; }
 
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSProperty aProperty) const;
