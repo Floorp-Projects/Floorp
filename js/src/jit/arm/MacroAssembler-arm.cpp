@@ -1969,18 +1969,6 @@ MacroAssemblerARMCompat::add32(Imm32 imm, const Address& dest)
 }
 
 void
-MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
-{
-    ma_sub(imm, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::sub32(Register src, Register dest)
-{
-    ma_sub(src, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::addPtr(Register src, Register dest)
 {
     ma_add(src, dest);

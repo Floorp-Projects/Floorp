@@ -64,6 +64,8 @@ var LoopMochaUtils = (function(global, _) {
       throw result;
     };
 
+    this.catch = function() {};
+
     asyncFn(this.resolve.bind(this), this.reject.bind(this));
   }
 

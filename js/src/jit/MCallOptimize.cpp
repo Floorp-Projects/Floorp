@@ -726,7 +726,7 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
     if (unboxedType == JSVAL_TYPE_MAGIC)
         obj = addMaybeCopyElementsForWrite(obj, /* checkNative = */ false);
 
-    if (NeedsPostBarrier(info(), value))
+    if (NeedsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     MArrayPush* ins = MArrayPush::New(alloc(), obj, value, unboxedType);
@@ -2354,7 +2354,7 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo& callInfo)
     current->add(store);
     current->push(store);
 
-    if (NeedsPostBarrier(info(), callInfo.getArg(2)))
+    if (NeedsPostBarrier(callInfo.getArg(2)))
         current->add(MPostWriteBarrier::New(alloc(), callInfo.getArg(0), callInfo.getArg(2)));
 
     return InliningStatus_Inlined;

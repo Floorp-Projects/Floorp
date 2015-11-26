@@ -76,6 +76,27 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
     xorl(imm, dest);
 }
 
+// ===============================================================
+// Arithmetic instructions
+
+void
+MacroAssembler::sub32(Register src, Register dest)
+{
+    subl(src, dest);
+}
+
+void
+MacroAssembler::sub32(Imm32 imm, Register dest)
+{
+    subl(imm, dest);
+}
+
+void
+MacroAssembler::sub32(const Address& src, Register dest)
+{
+    subl(Operand(src), dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

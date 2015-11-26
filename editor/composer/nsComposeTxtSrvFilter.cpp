@@ -45,6 +45,7 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, bool *_retval)
     } else if (content->IsAnyOfHTMLElements(nsGkAtoms::script,
                                             nsGkAtoms::textarea,
                                             nsGkAtoms::select,
+                                            nsGkAtoms::style,
                                             nsGkAtoms::map)) {
       *_retval = true;
     } else if (content->IsHTMLElement(nsGkAtoms::table)) {

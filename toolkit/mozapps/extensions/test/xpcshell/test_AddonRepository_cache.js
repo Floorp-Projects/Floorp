@@ -6,7 +6,6 @@
 
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
-Components.utils.import("resource://testing-common/httpd.js");
 var gServer;
 
 const PORT      = 4444;

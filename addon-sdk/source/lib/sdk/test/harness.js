@@ -193,7 +193,7 @@ function showResults() {
           var data = ref.__url__ ? ref.__url__ : ref;
           var warning = data == "[object Object]"
             ? "[object " + data.constructor.name + "(" +
-              [p for (p in data)].join(", ") + ")]"
+              Object.keys(data).join(", ") + ")]"
             : data;
           console.warn("LEAK", warning, info.bin);
         }
@@ -461,8 +461,7 @@ var consoleListener = {
       testConsole.error(message);
       return;
     }
-    var pointless = [err for (err of POINTLESS_ERRORS)
-                         if (message.indexOf(err) >= 0)];
+    var pointless = POINTLESS_ERRORS.filter(err => message.indexOf(err) >= 0);
     if (pointless.length == 0 && message)
       testConsole.log(message);
   }

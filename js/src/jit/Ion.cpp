@@ -2743,8 +2743,8 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
     } else {
         data.constructing = false;
         data.numActualArgs = 0;
-        data.maxArgc = 1;
-        data.maxArgv = state.asExecute()->addressOfThisv();
+        data.maxArgc = 0;
+        data.maxArgv = nullptr;
         data.scopeChain = state.asExecute()->scopeChain();
 
         data.calleeToken = CalleeToToken(state.script());
@@ -2756,13 +2756,12 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             if (iter.isFunctionFrame())
                 data.calleeToken = CalleeToToken(iter.callee(cx), /* constructing = */ false);
 
-            // Push newTarget onto the stack, as well as Argv.
-            if (!vals.reserve(2))
+            // Push newTarget onto the stack.
+            if (!vals.reserve(1))
                 return false;
 
-            data.maxArgc = 2;
+            data.maxArgc = 1;
             data.maxArgv = vals.begin();
-            vals.infallibleAppend(state.asExecute()->thisv());
             if (iter.isFunctionFrame()) {
                 if (state.asExecute()->newTarget().isNull())
                     vals.infallibleAppend(iter.newTarget());

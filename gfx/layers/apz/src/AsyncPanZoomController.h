@@ -754,11 +754,6 @@ protected:
 
     PAN_MOMENTUM,             /* like PANNING, but controlled by momentum PanGestureInput events */
 
-    CROSS_SLIDING_X,          /* Panning disabled while user does a horizontal gesture
-                                 on a vertically-scrollable view. This used for the
-                                 Windows Metro "cross-slide" gesture. */
-    CROSS_SLIDING_Y,          /* as above for Y axis */
-
     PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
     ANIMATING_ZOOM,           /* animated zoom to a new rect */
     OVERSCROLL_ANIMATION,     /* Spring-based animation used to relieve overscroll once
@@ -1056,7 +1051,8 @@ public:
 
 private:
   /* This is the cumulative CSS transform for all the layers from (and including)
-   * the parent APZC down to (but excluding) this one. */
+   * the parent APZC down to (but excluding) this one, and excluding any
+   * perspective transforms. */
   Matrix4x4 mAncestorTransform;
 
 

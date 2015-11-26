@@ -380,7 +380,7 @@ TestRunner.prototype = {
         name: this.test.name,
         passed: this.test.passed,
         failed: this.test.failed,
-        errors: [error for (error in this.test.errors)].join(", ")
+        errors: Object.keys(this.test.errors).join(", ")
       });
 
       if (this.onDone !== null) {

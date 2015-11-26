@@ -216,7 +216,7 @@ class AbstractFramePtr
     inline JSFunction* maybeFun() const;
     inline JSFunction* callee() const;
     inline Value calleev() const;
-    inline Value& thisValue() const;
+    inline Value& thisArgument() const;
 
     inline Value newTarget() const;
 
@@ -427,8 +427,7 @@ class InterpreterFrame
 
     /* Used for global and eval frames. */
     void initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr prev,
-                          const Value& thisv, const Value& newTargetValue,
-                          HandleObject scopeChain, ExecuteType type);
+                          const Value& newTargetValue, HandleObject scopeChain, ExecuteType type);
 
   public:
     /*
@@ -711,33 +710,13 @@ class InterpreterFrame
     }
 
     /*
-     * This value
-     *
-     * Every frame has a this value although, until 'this' is computed, the
-     * value may not be the semantically-correct 'this' value.
-     *
-     * The 'this' value is stored before the formal arguments for function
-     * frames and directly before the frame for global frames. The *Args
-     * members assert !isEvalFrame(), so we implement specialized inline
-     * methods for accessing 'this'. When the caller has static knowledge that
-     * a frame is a function, 'functionThis' allows more efficient access.
+     * Return the 'this' argument passed to a non-eval function frame. This is
+     * not necessarily the frame's this-binding, for instance non-strict
+     * functions will box primitive 'this' values and thisArgument() will
+     * return the original, unboxed Value.
      */
-
-    Value& functionThis() const {
-        MOZ_ASSERT(isFunctionFrame());
-        if (isEvalFrame())
-            return ((Value*)this)[-1];
-        return argv()[-1];
-    }
-
-    JSObject& constructorThis() const {
-        MOZ_ASSERT(hasArgs());
-        return argv()[-1].toObject();
-    }
-
-    Value& thisValue() const {
-        if (flags_ & (EVAL | GLOBAL | MODULE))
-            return ((Value*)this)[-1];
+    Value& thisArgument() const {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return argv()[-1];
     }
 
@@ -762,7 +741,7 @@ class InterpreterFrame
 
     const Value& maybeCalleev() const {
         Value& calleev = flags_ & (EVAL | GLOBAL)
-                         ? ((Value*)this)[-2]
+                         ? ((Value*)this)[-1]
                          : argv()[-2];
         MOZ_ASSERT(calleev.isObjectOrNull());
         return calleev;
@@ -771,12 +750,8 @@ class InterpreterFrame
     Value& mutableCalleev() const {
         MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((Value*)this)[-2];
+            return ((Value*)this)[-1];
         return argv()[-2];
-    }
-
-    CallReceiver callReceiver() const {
-        return CallReceiverFromArgv(argv());
     }
 
     /*
@@ -789,7 +764,7 @@ class InterpreterFrame
     Value newTarget() const {
         MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((Value*)this)[-3];
+            return ((Value*)this)[-2];
 
         if (callee().isArrow())
             return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
@@ -1075,9 +1050,9 @@ class InterpreterStack
     }
 
     // For execution of eval or global code.
-    InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script, const Value& thisv,
-                                 const Value& newTargetValue, HandleObject scopeChain,
-                                 ExecuteType type, AbstractFramePtr evalInFrame);
+    InterpreterFrame* pushExecuteFrame(JSContext* cx, HandleScript script,
+                                       const Value& newTargetValue, HandleObject scopeChain,
+                                       ExecuteType type, AbstractFramePtr evalInFrame);
 
     // Called to invoke a function.
     InterpreterFrame* pushInvokeFrame(JSContext* cx, const CallArgs& args,
@@ -1091,8 +1066,8 @@ class InterpreterStack
     void popInlineFrame(InterpreterRegs& regs);
 
     bool resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
-                                  HandleFunction callee, HandleValue thisv,
-                                  HandleValue newTarget, HandleObject scopeChain);
+                                  HandleFunction callee, HandleValue newTarget,
+                                  HandleObject scopeChain);
 
     inline void purge(JSRuntime* rt);
 
@@ -1493,8 +1468,8 @@ class InterpreterActivation : public Activation
                                 InitialFrameFlags initial);
     inline void popInlineFrame(InterpreterFrame* frame);
 
-    inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue thisv,
-                                     HandleValue newTarget, HandleObject scopeChain);
+    inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
+                                     HandleObject scopeChain);
 
     InterpreterFrame* current() const {
         return regs_.fp();
@@ -2006,7 +1981,7 @@ class FrameIter
     // actual this-binding (for instance, derived class constructors will
     // change their this-value later and non-strict functions will box
     // primitives).
-    Value       originalFunctionThis(JSContext* cx) const;
+    Value       thisArgument(JSContext* cx) const;
 
     Value       newTarget() const;
 

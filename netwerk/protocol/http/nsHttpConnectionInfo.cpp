@@ -16,6 +16,30 @@
 #include "nsHttpConnectionInfo.h"
 #include "mozilla/net/DNS.h"
 #include "prnetdb.h"
+#include "nsICryptoHash.h"
+
+static nsresult
+SHA256(const char* aPlainText, nsAutoCString& aResult)
+{
+  static nsICryptoHash* hasher = nullptr;
+  nsresult rv;
+  if (!hasher) {
+    rv = CallCreateInstance("@mozilla.org/security/hash;1", &hasher);
+    if (NS_FAILED(rv)) {
+      LOG(("nsHttpDigestAuth: no crypto hash!\n"));
+      return rv;
+    }
+  }
+
+  rv = hasher->Init(nsICryptoHash::SHA256);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hasher->Update((unsigned char*) aPlainText, strlen(aPlainText));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hasher->Finish(false, aResult);
+  return rv;
+}
 
 namespace mozilla {
 namespace net {
@@ -151,6 +175,11 @@ void nsHttpConnectionInfo::BuildHashKey()
     // information so that a change in proxy config will mean this connection
     // is not reused
 
+    // NOTE: Adding the username and the password provides a means to isolate
+    // keep-alive to the URL bar domain as well: If the username is the URL bar
+    // domain, keep-alive connections are not reused by resources bound to
+    // different URL bar domains as the respective hash keys are not matching.
+
     if ((!mUsingHttpProxy && ProxyHost()) ||
         (mUsingHttpProxy && mUsingConnect)) {
         mHashKey.AppendLiteral(" (");
@@ -160,6 +189,18 @@ void nsHttpConnectionInfo::BuildHashKey()
         mHashKey.Append(':');
         mHashKey.AppendInt(ProxyPort());
         mHashKey.Append(')');
+        mHashKey.Append('[');
+        mHashKey.Append(ProxyUsername());
+        mHashKey.Append(':');
+        const char* password = ProxyPassword();
+        if (strlen(password) > 0) {
+            nsAutoCString digestedPassword;
+            nsresult rv = SHA256(password, digestedPassword);
+            if (rv == NS_OK) {
+                mHashKey.Append(digestedPassword);
+            }
+        }
+        mHashKey.Append(']');
     }
 
     if(!mRoutedHost.IsEmpty()) {

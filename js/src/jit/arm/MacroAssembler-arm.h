@@ -1188,8 +1188,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);
-    void sub32(Imm32 imm, Register dest);
-    void sub32(Register src, Register dest);
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* label) {
         add32(src, dest);
@@ -1197,7 +1195,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
-        sub32(src, dest);
+        ma_sub(src, dest, SetCC);
         j(cond, label);
     }
 

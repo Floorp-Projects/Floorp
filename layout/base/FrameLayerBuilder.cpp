@@ -675,6 +675,7 @@ struct NewLayerEntry {
     , mPropagateComponentAlphaFlattening(true)
     , mUntransformedVisibleRegion(false)
     , mIsCaret(false)
+    , mIsPerspectiveItem(false)
   {}
   // mLayer is null if the previous entry is for a PaintedLayer that hasn't
   // been optimized to some other form (yet).
@@ -716,6 +717,7 @@ struct NewLayerEntry {
   // transform.
   bool mUntransformedVisibleRegion;
   bool mIsCaret;
+  bool mIsPerspectiveItem;
 };
 
 class PaintedLayerDataTree;
@@ -2966,7 +2968,7 @@ ContainerState::FindFixedPosFrameForLayerData(AnimatedGeometryRoot* aAnimatedGeo
     return viewport;
   }
   // Viewports with no fixed-pos frames are not relevant.
-  if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
+  if (!viewport->GetChildList(nsIFrame::kFixedList).FirstChild()) {
     return nullptr;
   }
   for (const nsIFrame* f = *aAnimatedGeometryRoot; f; f = f->GetParent()) {
@@ -4116,6 +4118,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       newLayerEntry->mAnimatedGeometryRoot = animatedGeometryRoot;
       newLayerEntry->mAnimatedGeometryRootForScrollMetadata = animatedGeometryRootForScrollMetadata;
       newLayerEntry->mFixedPosFrameForLayerData = fixedPosFrame;
+      if (itemType == nsDisplayItem::TYPE_PERSPECTIVE) {
+        newLayerEntry->mIsPerspectiveItem = true;
+      }
 
       // Don't attempt to flatten compnent alpha layers that are within
       // a forced active layer, or an active transform;
@@ -4132,9 +4137,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                    "Transform items must set layerContentsVisibleRect!");
       if (mLayerBuilder->IsBuildingRetainedLayers()) {
         newLayerEntry->mLayerContentsVisibleRect = layerContentsVisibleRect;
-        if (itemType == nsDisplayItem::TYPE_TRANSFORM &&
-            (item->Frame()->Extend3DContext() ||
-             item->Frame()->Combines3DTransformWithAncestors())) {
+        if (itemType == nsDisplayItem::TYPE_PERSPECTIVE ||
+            (itemType == nsDisplayItem::TYPE_TRANSFORM &&
+             (item->Frame()->Extend3DContext() ||
+              item->Frame()->Combines3DTransformWithAncestors() ||
+              item->Frame()->HasPerspective()))) {
           // Give untransformed visible region as outer visible region
           // to avoid failure caused by singular transforms.
           newLayerEntry->mUntransformedVisibleRegion = true;
@@ -5093,7 +5100,9 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   gfxSize scale;
   // XXX Should we do something for 3D transforms?
-  if (canDraw2D && !aContainerFrame->Combines3DTransformWithAncestors()) {
+  if (canDraw2D &&
+      !aContainerFrame->Combines3DTransformWithAncestors() &&
+      !aContainerFrame->HasPerspective()) {
     // If the container's transform is animated off main thread, fix a suitable scale size
     // for animation
     if (aContainerItem &&

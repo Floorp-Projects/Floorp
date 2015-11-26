@@ -353,8 +353,8 @@ InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const Ca
 
 MOZ_ALWAYS_INLINE bool
 InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
-                                           HandleFunction callee, HandleValue thisv,
-                                           HandleValue newTarget, HandleObject scopeChain)
+                                           HandleFunction callee, HandleValue newTarget,
+                                           HandleObject scopeChain)
 {
     MOZ_ASSERT(callee->isGenerator());
     RootedScript script(cx, callee->getOrCreateScript(cx));
@@ -379,7 +379,7 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
 
     Value* argv = reinterpret_cast<Value*>(buffer) + 2;
     argv[-2] = ObjectValue(*callee);
-    argv[-1] = thisv;
+    argv[-1] = UndefinedValue();
     SetValueRangeToUndefined(argv, nformal);
     if (constructing)
         argv[nformal] = newTarget;
@@ -849,13 +849,13 @@ AbstractFramePtr::unsetPrevUpToDate() const
 }
 
 inline Value&
-AbstractFramePtr::thisValue() const
+AbstractFramePtr::thisArgument() const
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->thisValue();
+        return asInterpreterFrame()->thisArgument();
     if (isBaselineFrame())
-        return asBaselineFrame()->thisValue();
-    return asRematerializedFrame()->thisValue();
+        return asBaselineFrame()->thisArgument();
+    return asRematerializedFrame()->thisArgument();
 }
 
 inline Value
@@ -1012,11 +1012,11 @@ InterpreterActivation::popInlineFrame(InterpreterFrame* frame)
 }
 
 inline bool
-InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue thisv,
-                                            HandleValue newTarget, HandleObject scopeChain)
+InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
+                                            HandleObject scopeChain)
 {
     InterpreterStack& stack = cx_->asJSContext()->runtime()->interpreterStack();
-    if (!stack.resumeGeneratorCallFrame(cx_->asJSContext(), regs_, callee, thisv, newTarget, scopeChain))
+    if (!stack.resumeGeneratorCallFrame(cx_->asJSContext(), regs_, callee, newTarget, scopeChain))
         return false;
 
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment_);
