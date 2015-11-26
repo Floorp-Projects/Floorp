@@ -111,24 +111,8 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsISimpleEnumerator> iter;
-    rv = storageDir->GetDirectoryEntries(getter_AddRefs(iter));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    bool hasMore;
-    while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-      nsCOMPtr<nsISupports> supports;
-      rv = iter->GetNext(getter_AddRefs(supports));
-      if (NS_FAILED(rv)) {
-        continue;
-      }
-      nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-      if (NS_FAILED(rv)) {
-        continue;
-      }
-
+    DirectoryEnumerator iter(storageDir, DirectoryEnumerator::FilesAndDirs);
+    for (nsCOMPtr<nsIFile> dirEntry; (dirEntry = iter.Next()) != nullptr;) {
       PRFileDesc* fd = nullptr;
       if (NS_FAILED(dirEntry->OpenNSPRFileDesc(PR_RDONLY, 0, &fd))) {
         continue;

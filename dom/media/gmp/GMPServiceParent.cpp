@@ -1497,38 +1497,12 @@ GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(DirectoryFilter& aFilter)
   }
 
   // Iterate all sub-folders of $profileDir/gmp/id/
-  nsCOMPtr<nsISimpleEnumerator> iter;
-  rv = path->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  bool hasMore = false;
   nsTArray<nsCString> nodeIDsToClear;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = iter->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    // $profileDir/gmp/id/$hash
-    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    // Skip non-directory files.
-    bool isDirectory = false;
-    rv = dirEntry->IsDirectory(&isDirectory);
-    if (NS_FAILED(rv) || !isDirectory) {
-      continue;
-    }
-
+  DirectoryEnumerator iter(path, DirectoryEnumerator::DirsOnly);
+  for (nsCOMPtr<nsIFile> dirEntry; (dirEntry = iter.Next()) != nullptr;) {
     if (!aFilter(dirEntry)) {
       continue;
     }
-
     nsAutoCString salt;
     if (NS_SUCCEEDED(ReadSalt(dirEntry, salt))) {
       // Keep node IDs to clear data/plugins associated with them later.
@@ -1616,27 +1590,9 @@ GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(PRTime aSince)
       if (NS_SUCCEEDED(rv) && lastModified >= mSince) {
         return true;
       }
-      // Check sub-directories recursively
-      nsCOMPtr<nsISimpleEnumerator> iter;
-      rv = aPath->GetDirectoryEntries(getter_AddRefs(iter));
-      if (NS_FAILED(rv)) {
-        return false;
-      }
-
-      bool hasMore = false;
-      while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-        nsCOMPtr<nsISupports> supports;
-        rv = iter->GetNext(getter_AddRefs(supports));
-        if (NS_FAILED(rv)) {
-          continue;
-        }
-
-        nsCOMPtr<nsIFile> path(do_QueryInterface(supports, &rv));
-        if (NS_FAILED(rv)) {
-          continue;
-        }
-
-        if (IsModifiedAfter(path)) {
+      DirectoryEnumerator iter(aPath, DirectoryEnumerator::FilesAndDirs);
+      for (nsCOMPtr<nsIFile> dirEntry; (dirEntry = iter.Next()) != nullptr;) {
+        if (IsModifiedAfter(dirEntry)) {
           return true;
         }
       }
