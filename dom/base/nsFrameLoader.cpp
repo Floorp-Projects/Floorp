@@ -282,18 +282,10 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI, const nsACString& aPackageId)
 {
-  nsCOMPtr<nsIURI> URIToLoad = aURI;
   RefPtr<TabParent> tp = nullptr;
 
-  nsCString signedPkgOrigin;
-  if (!aPackageId.IsEmpty()) {
-    // Only when aPackageId is not empty would signed package origin
-    // be meaningful.
-    nsPrincipal::GetOriginForURI(aURI, signedPkgOrigin);
-  }
-
   MutableTabContext context;
-  nsresult rv = GetNewTabContext(&context, signedPkgOrigin, aPackageId);
+  nsresult rv = GetNewTabContext(&context, aURI, aPackageId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
@@ -307,7 +299,7 @@ nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI, const nsACString& aPackageI
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  LoadURI(URIToLoad);
+  LoadURI(aURI);
   return NS_OK;
 }
 
@@ -3041,13 +3033,20 @@ nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
 
 nsresult
 nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
-                                const nsACString& aSignedPkgOriginNoSuffix,
+                                nsIURI* aURI,
                                 const nsACString& aPackageId)
 {
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
-  OriginAttributes attrs = OriginAttributes();
+  DocShellOriginAttributes attrs;
   attrs.mInBrowser = OwnerIsBrowserFrame();
+
+  nsCString signedPkgOrigin;
+  if (!aPackageId.IsEmpty()) {
+    // Only when aPackageId is not empty would signed package origin
+    // be meaningful.
+    nsPrincipal::GetOriginForURI(aURI, signedPkgOrigin);
+  }
 
   // Get the AppId from ownApp
   uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
@@ -3065,8 +3064,8 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   // Populate packageId to signedPkg.
   attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aPackageId);
 
-  bool tabContextUpdated = aTabContext->SetTabContext(ownApp, containingApp,
-                                                      attrs, aSignedPkgOriginNoSuffix);
+  bool tabContextUpdated =
+    aTabContext->SetTabContext(ownApp, containingApp, attrs, signedPkgOrigin);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

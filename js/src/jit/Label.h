@@ -37,6 +37,13 @@ struct LabelBase
         MOZ_ASSERT(bound() || used());
         return offset_;
     }
+    void offsetBy(int32_t delta) {
+        MOZ_ASSERT(bound() || used());
+        MOZ_ASSERT(offset() + delta >= offset(), "no overflow");
+        mozilla::DebugOnly<int32_t> oldOffset(offset());
+        offset_ += delta;
+        MOZ_ASSERT(offset_ == delta + oldOffset, "new offset fits in 31 bits");
+    }
     // Returns whether the label is not bound, but has incoming uses.
     bool used() const {
         return !bound() && offset_ > INVALID_OFFSET;
@@ -46,7 +53,7 @@ struct LabelBase
         MOZ_ASSERT(!bound());
         offset_ = offset;
         bound_ = true;
-        MOZ_ASSERT(offset_ == offset);
+        MOZ_ASSERT(offset_ == offset, "offset fits in 31 bits");
     }
     // Marks the label as neither bound nor used.
     void reset() {
@@ -60,7 +67,7 @@ struct LabelBase
 
         int32_t old = offset_;
         offset_ = offset;
-        MOZ_ASSERT(offset_ == offset);
+        MOZ_ASSERT(offset_ == offset, "offset fits in 31 bits");
 
         return old;
     }

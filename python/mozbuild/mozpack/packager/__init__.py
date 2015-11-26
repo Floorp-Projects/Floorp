@@ -246,6 +246,13 @@ class SimplePackager(object):
         self._included_manifests = {}
         self._closed = False
 
+    # Parsing RDF is complex, and would require an external library to do
+    # properly. Just go with some hackish but probably sufficient regexp
+    UNPACK_ADDON_RE = re.compile(r'''(?:
+        <em:unpack>true</em:unpack>
+        |em:unpack=(?P<quote>["']?)true(?P=quote)
+    )''', re.VERBOSE)
+
     def add(self, path, file):
         '''
         Add the given BaseFile instance with the given path.
@@ -258,7 +265,11 @@ class SimplePackager(object):
         else:
             self._file_queue.append(self.formatter.add, path, file)
             if mozpath.basename(path) == 'install.rdf':
-                self._addons[mozpath.dirname(path)] = True
+                addon = True
+                install_rdf = file.open().read()
+                if self.UNPACK_ADDON_RE.search(install_rdf):
+                    addon = 'unpacked'
+                self._addons[mozpath.dirname(path)] = addon
 
     def _add_manifest_file(self, path, file):
         '''

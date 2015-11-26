@@ -387,6 +387,9 @@ class JitFrameLayout : public CommonFrameLayout
     static size_t offsetOfThis() {
         return sizeof(JitFrameLayout);
     }
+    static size_t offsetOfEvalNewTarget() {
+        return sizeof(JitFrameLayout);
+    }
     static size_t offsetOfActualArgs() {
         return offsetOfThis() + sizeof(Value);
     }
@@ -395,9 +398,11 @@ class JitFrameLayout : public CommonFrameLayout
     }
 
     Value thisv() {
+        MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
         return argv()[0];
     }
     Value* argv() {
+        MOZ_ASSERT(CalleeTokenIsFunction(calleeToken()));
         return (Value*)(this + 1);
     }
     uintptr_t numActualArgs() const {

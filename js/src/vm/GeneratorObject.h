@@ -26,7 +26,6 @@ class GeneratorObject : public NativeObject
 
     enum {
         CALLEE_SLOT = 0,
-        THIS_SLOT,
         SCOPE_CHAIN_SLOT,
         ARGS_OBJ_SLOT,
         EXPRESSION_STACK_SLOT,
@@ -79,13 +78,6 @@ class GeneratorObject : public NativeObject
     }
     void setCallee(JSFunction& callee) {
         setFixedSlot(CALLEE_SLOT, ObjectValue(callee));
-    }
-
-    const Value& thisValue() const {
-        return getFixedSlot(THIS_SLOT);
-    }
-    void setThisValue(Value& thisv) {
-        setFixedSlot(THIS_SLOT, thisv);
     }
 
     JSObject& scopeChain() const {
@@ -179,7 +171,6 @@ class GeneratorObject : public NativeObject
     }
     void setClosed() {
         setFixedSlot(CALLEE_SLOT, NullValue());
-        setFixedSlot(THIS_SLOT, NullValue());
         setFixedSlot(SCOPE_CHAIN_SLOT, NullValue());
         setFixedSlot(ARGS_OBJ_SLOT, NullValue());
         setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
@@ -189,9 +180,6 @@ class GeneratorObject : public NativeObject
 
     static size_t offsetOfCalleeSlot() {
         return getFixedSlotOffset(CALLEE_SLOT);
-    }
-    static size_t offsetOfThisSlot() {
-        return getFixedSlotOffset(THIS_SLOT);
     }
     static size_t offsetOfScopeChainSlot() {
         return getFixedSlotOffset(SCOPE_CHAIN_SLOT);

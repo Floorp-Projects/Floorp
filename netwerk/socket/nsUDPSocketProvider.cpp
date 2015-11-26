@@ -16,8 +16,7 @@ NS_IMETHODIMP
 nsUDPSocketProvider::NewSocket(int32_t aFamily,
                                const char *aHost, 
                                int32_t aPort, 
-                               const char *aProxyHost, 
-                               int32_t aProxyPort,
+                               nsIProxyInfo *aProxy,
                                uint32_t aFlags,
                                PRFileDesc * *aFileDesc, 
                                nsISupports **aSecurityInfo)
@@ -36,8 +35,7 @@ NS_IMETHODIMP
 nsUDPSocketProvider::AddToSocket(int32_t aFamily,
                                  const char *aHost,
                                  int32_t aPort,
-                                 const char *aProxyHost,
-                                 int32_t aProxyPort,
+                                 nsIProxyInfo *aProxy,
                                  uint32_t aFlags,
                                  struct PRFileDesc * aFileDesc,
                                  nsISupports **aSecurityInfo)

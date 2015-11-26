@@ -46,6 +46,9 @@ CompositorChild::CompositorChild(ClientLayerManager *aLayerManager)
 
 CompositorChild::~CompositorChild()
 {
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new DeleteTask<Transport>(GetTransport()));
+
   if (mCanSend) {
     gfxCriticalError() << "CompositorChild was not deinitialized";
   }

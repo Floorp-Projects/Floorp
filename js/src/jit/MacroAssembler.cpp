@@ -2002,6 +2002,21 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
     }
 }
 
+bool
+MacroAssembler::asmMergeWith(const MacroAssembler& other)
+{
+    size_t sizeBeforeMerge = size();
+
+    if (!MacroAssemblerSpecific::asmMergeWith(other))
+        return false;
+
+    retargetWithOffset(sizeBeforeMerge, other.asmSyncInterruptLabel(), asmSyncInterruptLabel());
+    retargetWithOffset(sizeBeforeMerge, other.asmStackOverflowLabel(), asmStackOverflowLabel());
+    retargetWithOffset(sizeBeforeMerge, other.asmOnOutOfBoundsLabel(), asmOnOutOfBoundsLabel());
+    retargetWithOffset(sizeBeforeMerge, other.asmOnConversionErrorLabel(), asmOnConversionErrorLabel());
+    return true;
+}
+
 void
 MacroAssembler::finish()
 {

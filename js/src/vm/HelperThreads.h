@@ -20,6 +20,7 @@
 #include "jscntxt.h"
 #include "jslock.h"
 
+#include "asmjs/AsmJSCompileInputs.h"
 #include "frontend/TokenStream.h"
 #include "jit/Ion.h"
 
@@ -28,6 +29,9 @@ namespace js {
 struct HelperThread;
 struct AsmJSParallelTask;
 struct ParseTask;
+class AsmFunction;
+class FunctionCompileResults;
+struct ModuleCompileInputs;
 namespace jit {
   class IonBuilder;
 } // namespace jit
@@ -210,7 +214,7 @@ class GlobalHelperThreadState
         numAsmJSFailedJobs = 0;
         return n;
     }
-    void noteAsmJSFailure(void* func) {
+    void noteAsmJSFailure(AsmFunction* func) {
         // Be mindful to signal the main thread after calling this function.
         MOZ_ASSERT(isLocked());
         if (!asmJSFailedFunction)
@@ -224,7 +228,7 @@ class GlobalHelperThreadState
         numAsmJSFailedJobs = 0;
         asmJSFailedFunction = nullptr;
     }
-    void* maybeAsmJSFailedFunction() const {
+    AsmFunction* maybeAsmJSFailedFunction() const {
         return asmJSFailedFunction;
     }
 
@@ -274,7 +278,7 @@ class GlobalHelperThreadState
      * Function index |i| in |Module.function(i)| of first failed AsmJS function.
      * -1 if no function has failed.
      */
-    void* asmJSFailedFunction;
+    AsmFunction* asmJSFailedFunction;
 };
 
 static inline GlobalHelperThreadState&
@@ -471,27 +475,6 @@ class MOZ_RAII AutoUnlockHelperThreadState
     ~AutoUnlockHelperThreadState()
     {
         HelperThreadState().lock();
-    }
-};
-
-struct AsmJSParallelTask
-{
-    JSRuntime* runtime;     // Associated runtime.
-    LifoAlloc lifo;         // Provider of all heap memory used for compilation.
-    void* func;             // Really, an AsmFunction*
-    jit::MIRGenerator* mir; // Passed from main thread to helper.
-    jit::LIRGraph* lir;     // Passed from helper to main thread.
-    unsigned compileTime;
-
-    explicit AsmJSParallelTask(size_t defaultChunkSize)
-      : runtime(nullptr), lifo(defaultChunkSize), func(nullptr), mir(nullptr), lir(nullptr), compileTime(0)
-    { }
-
-    void init(JSRuntime* rt, void* func, jit::MIRGenerator* mir) {
-        this->runtime = rt;
-        this->func = func;
-        this->mir = mir;
-        this->lir = nullptr;
     }
 };
 

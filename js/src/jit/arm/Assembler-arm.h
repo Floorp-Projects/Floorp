@@ -1397,6 +1397,7 @@ class Assembler : public AssemblerShared
     bool isFinished;
   public:
     void finish();
+    bool asmMergeWith(const Assembler& other);
     void executableCopy(void* buffer);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
@@ -1429,7 +1430,7 @@ class Assembler : public AssemblerShared
     static void WriteInstStatic(uint32_t x, uint32_t* dest);
 
   public:
-    void writeCodePointer(AbsoluteLabel* label);
+    void writeCodePointer(CodeOffsetLabel* label);
 
     void haltingAlign(int alignment);
     void nopAlign(int alignment);
@@ -1690,15 +1691,16 @@ class Assembler : public AssemblerShared
     uint32_t currentOffset() {
         return nextOffset().getOffset();
     }
+    void retargetWithOffset(size_t baseOffset, const LabelBase* label, LabelBase* target);
     void retarget(Label* label, Label* target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label* label, void* target, Relocation::Kind reloc);
 
-    void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address);
+    void Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address);
 
     // See Bind
-    size_t labelOffsetToPatchOffset(size_t offset) {
-        return offset;
+    size_t labelToPatchOffset(CodeOffsetLabel label) {
+        return label.offset();
     }
 
     void as_bkpt();
@@ -1910,9 +1912,6 @@ class Assembler : public AssemblerShared
 
     static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction* inst);
     void processCodeLabels(uint8_t* rawCode);
-    static int32_t ExtractCodeLabelOffset(uint8_t* code) {
-        return *(uintptr_t*)code;
-    }
 
     bool bailed() {
         return m_buffer.bail();

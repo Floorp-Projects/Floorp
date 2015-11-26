@@ -2411,7 +2411,7 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                "We have no permissionManager in the Content process !");
 
     nsAutoCString originNoSuffix;
-    OriginAttributes attrs;
+    PrincipalOriginAttributes attrs;
     attrs.PopulateFromOrigin(permission.origin, originNoSuffix);
 
     nsCOMPtr<nsIURI> uri;

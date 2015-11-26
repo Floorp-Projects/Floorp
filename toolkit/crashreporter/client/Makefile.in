@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifneq ($(OS_TARGET),Android)
-DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 MOZ_WINCONSOLE = 0
 endif
