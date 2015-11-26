@@ -77,6 +77,7 @@ from ..util import (
     FileAvoidWrite,
 )
 from ..makeutil import Makefile
+from mozbuild.shellutil import quote as shell_quote
 
 MOZBUILD_VARIABLES = [
     b'ANDROID_APK_NAME',
@@ -167,6 +168,10 @@ DEPRECATED_VARIABLES_MESSAGE = (
     'This variable has been deprecated. It does nothing. It must be removed '
     'in order to build.'
 )
+
+
+def make_quote(s):
+    return s.replace('#', '\#').replace('$', '$$')
 
 
 class BackendMakeFile(object):
@@ -494,7 +499,8 @@ class RecursiveMakeBackend(CommonBackend):
             for k, v in sorted(obj.variables.items()):
                 if isinstance(v, list):
                     for item in v:
-                        backend_file.write('%s += %s\n' % (k, item))
+                        backend_file.write(
+                            '%s += %s\n' % (k, make_quote(shell_quote(item))))
                 elif isinstance(v, bool):
                     if v:
                         backend_file.write('%s := 1\n' % k)

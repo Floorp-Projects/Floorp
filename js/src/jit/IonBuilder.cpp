@@ -75,7 +75,8 @@ jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame, Compil
     // during compilation could capture nursery pointers, so the values' types
     // are recorded instead.
 
-    inspector->thisType = TypeSet::GetMaybeUntrackedValueType(frame->thisValue());
+    if (frame->isNonEvalFunctionFrame())
+        inspector->thisType = TypeSet::GetMaybeUntrackedValueType(frame->thisArgument());
 
     if (frame->scopeChain()->isSingleton())
         inspector->singletonScopeChain = frame->scopeChain();
@@ -6335,6 +6336,17 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Fallback to regular call if arg 2 is not definitely |arguments|.
     if (argument->type() != MIRType_MagicOptimizedArguments) {
+        // Optimize fun.apply(self, array) if the length is sane and there are no holes.
+        TemporaryTypeSet* objTypes = argument->resultTypeSet();
+        if (native && native->isNative() && native->native() == fun_apply &&
+            objTypes &&
+            objTypes->getKnownClass(constraints()) == &ArrayObject::class_ &&
+            !objTypes->hasObjectFlags(constraints(), OBJECT_FLAG_LENGTH_OVERFLOW) &&
+            ElementAccessIsPacked(constraints(), argument))
+        {
+            return jsop_funapplyarray(argc);
+        }
+
         CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
@@ -6350,6 +6362,43 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Use funapply that definitely uses |arguments|
     return jsop_funapplyarguments(argc);
+}
+
+bool
+IonBuilder::jsop_funapplyarray(uint32_t argc)
+{
+    MOZ_ASSERT(argc == 2);
+
+    int funcDepth = -((int)argc + 1);
+
+    // Extract call target.
+    TemporaryTypeSet* funTypes = current->peek(funcDepth)->resultTypeSet();
+    JSFunction* target = getSingleCallTarget(funTypes);
+
+    // Pop the array agument
+    MDefinition* argObj = current->pop();
+
+    MElements* elements = MElements::New(alloc(), argObj);
+    current->add(elements);
+
+    // Pop the |this| argument.
+    MDefinition* argThis = current->pop();
+
+    // Unwrap the (JSFunction *) parameter.
+    MDefinition* argFunc = current->pop();
+
+    // Pop apply function.
+    MDefinition* nativeFunc = current->pop();
+    nativeFunc->setImplicitlyUsedUnchecked();
+
+    MApplyArray* apply = MApplyArray::New(alloc(), target, argFunc, elements, argThis);
+    current->add(apply);
+    current->push(apply);
+    if (!resumeAfter(apply))
+        return false;
+
+    TemporaryTypeSet* types = bytecodeTypes(pc);
+    return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
 }
 
 bool
@@ -7150,7 +7199,7 @@ IonBuilder::initializeArrayElement(MDefinition* obj, size_t index, MDefinition* 
                 return false;
         }
     } else {
-        if (NeedsPostBarrier(info(), value))
+        if (NeedsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
         if (obj->toNewArray()->convertDoubleElements()) {
@@ -8116,7 +8165,7 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
 bool
-jit::NeedsPostBarrier(CompileInfo& info, MDefinition* value)
+jit::NeedsPostBarrier(MDefinition* value)
 {
     if (!GetJitContext()->runtime->gcNursery().exists())
         return false;
@@ -8165,7 +8214,7 @@ IonBuilder::setStaticName(JSObject* staticObject, PropertyName* name)
     MDefinition* obj = current->pop();
     MOZ_ASSERT(&obj->toConstant()->value().toObject() == staticObject);
 
-    if (NeedsPostBarrier(info(), value))
+    if (NeedsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     // If the property has a known type, we may be able to optimize typed stores by not
@@ -9861,7 +9910,7 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
     bool checkNative = !clasp || !clasp->isNative();
     object = addMaybeCopyElementsForWrite(object, checkNative);
 
-    if (NeedsPostBarrier(info(), value))
+    if (NeedsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), object, value));
 
     // Emit SetPropertyCache.
@@ -9893,7 +9942,7 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
     // cannot hit another indexed property on the object or its prototypes.
     bool writeOutOfBounds = !ElementAccessHasExtraIndexedProperty(this, obj);
 
-    if (NeedsPostBarrier(info(), value))
+    if (NeedsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     // Ensure id is an integer.
@@ -10224,7 +10273,7 @@ IonBuilder::jsop_rest()
                                                   /* needsHoleCheck = */ false);
         current->add(store);
 
-        if (NeedsPostBarrier(info(), arg))
+        if (NeedsPostBarrier(arg))
             current->add(MPostWriteBarrier::New(alloc(), array, arg));
     }
 
@@ -11999,7 +12048,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
 
     // Add post barrier if needed. The instructions above manage any post
     // barriers they need directly.
-    if (NeedsPostBarrier(info(), value))
+    if (NeedsPostBarrier(value))
         current->add(MPostWriteBarrier::New(alloc(), obj, value));
 
     if (!forceInlineCaches()) {
@@ -12664,7 +12713,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
     // If an arguments object is in use, and it aliases formals, then all SETARGs
     // must go through the arguments object.
     if (info().argsObjAliasesFormals()) {
-        if (NeedsPostBarrier(info(), val))
+        if (NeedsPostBarrier(val))
             current->add(MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
         current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
                                                  GET_ARGNO(pc), val));
@@ -13102,7 +13151,7 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
 
     Shape* shape = ScopeCoordinateToStaticScopeShape(script(), pc);
 
-    if (NeedsPostBarrier(info(), rval))
+    if (NeedsPostBarrier(rval))
         current->add(MPostWriteBarrier::New(alloc(), obj, rval));
 
     MInstruction* store;
@@ -13746,7 +13795,7 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
     MInstruction* store = nullptr;  // initialize to silence GCC warning
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
-        if (NeedsPostBarrier(info(), value))
+        if (NeedsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
         store = MStoreElement::New(alloc(), elements, scaledOffset, value, false, adjustment);
         store->toStoreElement()->setNeedsBarrier();

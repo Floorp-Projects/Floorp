@@ -3270,8 +3270,9 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     }
 }
 
+template<typename T>
 void
-CodeGenerator::emitCallInvokeFunction(LApplyArgsGeneric* apply, Register extraStackSize)
+CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize)
 {
     Register objreg = ToRegister(apply->getTempObject());
     MOZ_ASSERT(objreg != extraStackSize);
@@ -3294,12 +3295,8 @@ CodeGenerator::emitCallInvokeFunction(LApplyArgsGeneric* apply, Register extraSt
 // Do not bailout after the execution of this function since the stack no longer
 // correspond to what is expected by the snapshots.
 void
-CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace)
+CodeGenerator::emitAllocateSpaceForApply(Register argcreg, Register extraStackSpace, Label* end)
 {
-    // Holds the function nargs. Initially undefined.
-    Register argcreg = ToRegister(apply->getArgc());
-    Register copyreg = ToRegister(apply->getTempObject());
-
     // Initialize the loop counter AND Compute the stack usage (if == 0)
     masm.movePtr(argcreg, extraStackSpace);
 
@@ -3335,9 +3332,53 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSp
     }
 #endif
 
-    // Skip the copy of arguments.
+    // Skip the copy of arguments if there are none.
+    masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, end);
+}
+
+// Destroys argvIndex and copyreg.
+void
+CodeGenerator::emitCopyValuesForApply(Register argvSrcBase, Register argvIndex, Register copyreg,
+                                      size_t argvSrcOffset, size_t argvDstOffset)
+{
+    Label loop;
+    masm.bind(&loop);
+
+    // As argvIndex is off by 1, and we use the decBranchPtr instruction
+    // to loop back, we have to substract the size of the word which are
+    // copied.
+    BaseValueIndex srcPtr(argvSrcBase, argvIndex, argvSrcOffset - sizeof(void*));
+    BaseValueIndex dstPtr(masm.getStackPointer(), argvIndex, argvDstOffset - sizeof(void*));
+    masm.loadPtr(srcPtr, copyreg);
+    masm.storePtr(copyreg, dstPtr);
+
+    // Handle 32 bits architectures.
+    if (sizeof(Value) == 2 * sizeof(void*)) {
+        BaseValueIndex srcPtrLow(argvSrcBase, argvIndex, argvSrcOffset - 2 * sizeof(void*));
+        BaseValueIndex dstPtrLow(masm.getStackPointer(), argvIndex, argvDstOffset - 2 * sizeof(void*));
+        masm.loadPtr(srcPtrLow, copyreg);
+        masm.storePtr(copyreg, dstPtrLow);
+    }
+
+    masm.decBranchPtr(Assembler::NonZero, argvIndex, Imm32(1), &loop);
+}
+
+void
+CodeGenerator::emitPopArguments(Register extraStackSpace)
+{
+    // Pop |this| and Arguments.
+    masm.freeStack(extraStackSpace);
+}
+
+void
+CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSpace)
+{
+    // Holds the function nargs. Initially the number of args to the caller.
+    Register argcreg = ToRegister(apply->getArgc());
+    Register copyreg = ToRegister(apply->getTempObject());
+
     Label end;
-    masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, &end);
+    emitAllocateSpaceForApply(argcreg, extraStackSpace, &end);
 
     // We are making a copy of the arguments which are above the JitFrameLayout
     // of the current Ion frame.
@@ -3365,28 +3406,7 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSp
     masm.addStackPtrTo(argvSrcBase);
 
     // Copy arguments.
-    {
-        Label loop;
-        masm.bind(&loop);
-
-        // As argvIndex is off by 1, and we use the decBranchPtr instruction
-        // to loop back, we have to substract the size of the word which are
-        // copied.
-        BaseValueIndex srcPtr(argvSrcBase, argvIndex, argvSrcOffset - sizeof(void*));
-        BaseValueIndex dstPtr(masm.getStackPointer(), argvIndex, argvDstOffset - sizeof(void*));
-        masm.loadPtr(srcPtr, copyreg);
-        masm.storePtr(copyreg, dstPtr);
-
-        // Handle 32 bits architectures.
-        if (sizeof(Value) == 2 * sizeof(void*)) {
-            BaseValueIndex srcPtrLow(argvSrcBase, argvIndex, argvSrcOffset - 2 * sizeof(void*));
-            BaseValueIndex dstPtrLow(masm.getStackPointer(), argvIndex, argvDstOffset - 2 * sizeof(void*));
-            masm.loadPtr(srcPtrLow, copyreg);
-            masm.storePtr(copyreg, dstPtrLow);
-        }
-
-        masm.decBranchPtr(Assembler::NonZero, argvIndex, Imm32(1), &loop);
-    }
+    emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, argvSrcOffset, argvDstOffset);
 
     // Restore argcreg and the extra stack space counter.
     masm.pop(argcreg);
@@ -3401,14 +3421,61 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply, Register extraStackSp
 }
 
 void
-CodeGenerator::emitPopArguments(LApplyArgsGeneric* apply, Register extraStackSpace)
+CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply, Register extraStackSpace)
 {
-    // Pop |this| and Arguments.
-    masm.freeStack(extraStackSpace);
+    Label noCopy, epilogue;
+    Register tmpArgc = ToRegister(apply->getTempObject());
+    Register elementsAndArgc = ToRegister(apply->getElements());
+
+    // Invariants guarded in the caller:
+    //  - the array is not too long
+    //  - the array length equals its initialized length
+
+    // The array length is our argc for the purposes of allocating space.
+    Address length(ToRegister(apply->getElements()), ObjectElements::offsetOfLength());
+    masm.load32(length, tmpArgc);
+
+    // Allocate space for the values.
+    emitAllocateSpaceForApply(tmpArgc, extraStackSpace, &noCopy);
+
+    // Copy the values.  This code is skipped entirely if there are
+    // no values.
+    size_t argvDstOffset = 0;
+
+    Register argvSrcBase = elementsAndArgc; // Elements value
+
+    masm.push(extraStackSpace);
+    Register copyreg = extraStackSpace;
+    argvDstOffset += sizeof(void*);
+
+    masm.push(tmpArgc);
+    Register argvIndex = tmpArgc;
+    argvDstOffset += sizeof(void*);
+
+    // Copy
+    emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, 0, argvDstOffset);
+
+    // Restore.
+    masm.pop(elementsAndArgc);
+    masm.pop(extraStackSpace);
+    masm.jump(&epilogue);
+
+    // Clear argc if we skipped the copy step.
+    masm.bind(&noCopy);
+    masm.movePtr(ImmPtr(0), elementsAndArgc);
+
+    // Join with all arguments copied and the extra stack usage computed.
+    // Note, "elements" has become "argc".
+    masm.bind(&epilogue);
+
+    // Push |this|.
+    masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
+    masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
+template<typename T>
 void
-CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
+CodeGenerator::emitApplyGeneric(T* apply)
 {
     // Holds the function object.
     Register calleereg = ToRegister(apply->getFunction());
@@ -3417,7 +3484,8 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
     Register objreg = ToRegister(apply->getTempObject());
     Register extraStackSpace = ToRegister(apply->getTempStackCounter());
 
-    // Holds the function nargs. Initially undefined.
+    // Holds the function nargs, computed in the invoker or (for
+    // ApplyArray) in the argument pusher.
     Register argcreg = ToRegister(apply->getArgc());
 
     // Unless already known, guard that calleereg is actually a function object.
@@ -3429,6 +3497,15 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
     }
 
     // Copy the arguments of the current function.
+    //
+    // In the case of ApplyArray, also compute argc: the argc register
+    // and the elements register are the same; argc must not be
+    // referenced before the call to emitPushArguments() and elements
+    // must not be referenced after it returns.
+    //
+    // objreg is dead across this call.
+    //
+    // extraStackSpace is garbage on entry and defined on exit.
     emitPushArguments(apply, extraStackSpace);
 
     masm.checkStackAlignment();
@@ -3436,7 +3513,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
     // If the function is native, only emit the call to InvokeFunction.
     if (apply->hasSingleTarget() && apply->getSingleTarget()->isNative()) {
         emitCallInvokeFunction(apply, extraStackSpace);
-        emitPopArguments(apply, extraStackSpace);
+        emitPopArguments(extraStackSpace);
         return;
     }
 
@@ -3518,7 +3595,31 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
 
     // Pop arguments and continue.
     masm.bind(&end);
-    emitPopArguments(apply, extraStackSpace);
+    emitPopArguments(extraStackSpace);
+}
+
+void
+CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply)
+{
+    emitApplyGeneric(apply);
+}
+
+void
+CodeGenerator::visitApplyArrayGeneric(LApplyArrayGeneric* apply)
+{
+    LSnapshot* snapshot = apply->snapshot();
+    Register tmp = ToRegister(apply->getTempObject());
+
+    Address length(ToRegister(apply->getElements()), ObjectElements::offsetOfLength());
+    masm.load32(length, tmp);
+    bailoutCmp32(Assembler::Above, tmp, Imm32(js_JitOptions.maxStackArgs), snapshot);
+
+    Address initializedLength(ToRegister(apply->getElements()),
+                              ObjectElements::offsetOfInitializedLength());
+    masm.sub32(initializedLength, tmp);
+    bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
+
+    emitApplyGeneric(apply);
 }
 
 typedef bool (*ArraySpliceDenseFn)(JSContext*, HandleObject, uint32_t, uint32_t);
@@ -3619,7 +3720,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     // No registers are allocated yet, so it's safe to grab anything.
     Register temp = GeneralRegisterSet(EntryTempMask).getAny();
 
-    CompileInfo& info = gen->info();
+    const CompileInfo& info = gen->info();
 
     Label miss;
     for (uint32_t i = info.startArgSlot(); i < info.endArgSlot(); i++) {
@@ -3788,7 +3889,7 @@ CodeGenerator::maybeCreateScriptCounts()
 
     IonScriptCounts* counts = nullptr;
 
-    CompileInfo* outerInfo = &gen->info();
+    const CompileInfo* outerInfo = &gen->info();
     JSScript* script = outerInfo->script();
 
     counts = js_new<IonScriptCounts>();
@@ -4753,7 +4854,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     DeclEnvObject* templateObj = lir->mir()->templateObj();
-    CompileInfo& info = lir->mir()->block()->info();
+    const CompileInfo& info = lir->mir()->block()->info();
 
     // If we have a template object, we can inline call object creation.
     OutOfLineCode* ool = oolCallVM(NewDeclEnvObjectInfo, lir,
@@ -7805,6 +7906,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionLabels* labels)
     // is nothing else to do after this point since the LifoAlloc memory
     // holding the MIR graph is about to be popped and reused. In particular,
     // every step in CodeGenerator::link must be a nop, as asserted here:
+    MOZ_ASSERT(!masm.failureLabel()->used());
     MOZ_ASSERT(snapshots_.listSize() == 0);
     MOZ_ASSERT(snapshots_.RVATableSize() == 0);
     MOZ_ASSERT(recovers_.size() == 0);

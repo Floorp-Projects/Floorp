@@ -8,5 +8,9 @@ DIRS += [
     'SimpleTest'
 ]
 
+TESTING_JS_MODULES += [
+    'Harness_sanity/ImportTesting.jsm',
+]
+
 MOCHITEST_MANIFESTS += ['Harness_sanity/mochitest.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']

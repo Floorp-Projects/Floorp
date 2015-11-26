@@ -17,6 +17,7 @@ from .context import (
     VARIABLES,
 )
 from mozbuild.util import (
+    expand_variables,
     List,
     memoize,
 )
@@ -216,12 +217,13 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                         # We may be getting make variable references out of the
                         # gyp data, and we don't want those in emitted data, so
                         # substitute them with their actual value.
-                        if f.startswith('$(') and f.endswith(')'):
-                            f = config.substs.get(f[2:-1])
-                        # config.substs may contain strings or lists.
+                        f = expand_variables(f, config.substs)
+                        if not f:
+                            continue
+                        # the result may be a string or a list.
                         if isinstance(f, types.StringTypes):
                             context[var].append(f)
-                        elif f:
+                        else:
                             context[var].extend(f)
         else:
             # Ignore other types than static_library because we don't have

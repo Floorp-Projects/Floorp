@@ -922,18 +922,6 @@ MacroAssemblerMIPS64Compat::add32(Imm32 imm, const Address& dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::sub32(Imm32 imm, Register dest)
-{
-    ma_subu(dest, dest, imm);
-}
-
-void
-MacroAssemblerMIPS64Compat::sub32(Register src, Register dest)
-{
-    as_subu(dest, dest, src);
-}
-
-void
 MacroAssemblerMIPS64Compat::addPtr(Register src, Register dest)
 {
     ma_daddu(dest, src);

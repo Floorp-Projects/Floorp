@@ -197,6 +197,46 @@ class TestSimplePackager(unittest.TestCase):
             packager.add('addon3/components/components.manifest',
                          GeneratedFile('binary-component addon3.so'))
 
+        with errors.context('manifest', 12):
+            install_rdf_addon4 = GeneratedFile(
+                '<RDF>\n<...>\n<em:unpack>true</em:unpack>\n<...>\n</RDF>')
+            packager.add('addon4/install.rdf', install_rdf_addon4)
+
+        with errors.context('manifest', 13):
+            install_rdf_addon5 = GeneratedFile(
+                '<RDF>\n<...>\n<em:unpack>false</em:unpack>\n<...>\n</RDF>')
+            packager.add('addon5/install.rdf', install_rdf_addon5)
+
+        with errors.context('manifest', 14):
+            install_rdf_addon6 = GeneratedFile(
+                '<RDF>\n<... em:unpack=true>\n<...>\n</RDF>')
+            packager.add('addon6/install.rdf', install_rdf_addon6)
+
+        with errors.context('manifest', 15):
+            install_rdf_addon7 = GeneratedFile(
+                '<RDF>\n<... em:unpack=false>\n<...>\n</RDF>')
+            packager.add('addon7/install.rdf', install_rdf_addon7)
+
+        with errors.context('manifest', 16):
+            install_rdf_addon8 = GeneratedFile(
+                '<RDF>\n<... em:unpack="true">\n<...>\n</RDF>')
+            packager.add('addon8/install.rdf', install_rdf_addon8)
+
+        with errors.context('manifest', 17):
+            install_rdf_addon9 = GeneratedFile(
+                '<RDF>\n<... em:unpack="false">\n<...>\n</RDF>')
+            packager.add('addon9/install.rdf', install_rdf_addon9)
+
+        with errors.context('manifest', 18):
+            install_rdf_addon10 = GeneratedFile(
+                '<RDF>\n<... em:unpack=\'true\'>\n<...>\n</RDF>')
+            packager.add('addon10/install.rdf', install_rdf_addon10)
+
+        with errors.context('manifest', 19):
+            install_rdf_addon11 = GeneratedFile(
+                '<RDF>\n<... em:unpack=\'false\'>\n<...>\n</RDF>')
+            packager.add('addon11/install.rdf', install_rdf_addon11)
+
         self.assertEqual(formatter.log, [])
 
         with errors.context('dummy', 1):
@@ -207,8 +247,16 @@ class TestSimplePackager(unittest.TestCase):
         self.assertEqual(formatter.log, [
             (('dummy', 1), 'add_base', '', False),
             (('dummy', 1), 'add_base', 'addon', True),
+            (('dummy', 1), 'add_base', 'addon10', 'unpacked'),
+            (('dummy', 1), 'add_base', 'addon11', True),
             (('dummy', 1), 'add_base', 'addon2', 'unpacked'),
             (('dummy', 1), 'add_base', 'addon3', 'unpacked'),
+            (('dummy', 1), 'add_base', 'addon4', 'unpacked'),
+            (('dummy', 1), 'add_base', 'addon5', True),
+            (('dummy', 1), 'add_base', 'addon6', 'unpacked'),
+            (('dummy', 1), 'add_base', 'addon7', True),
+            (('dummy', 1), 'add_base', 'addon8', 'unpacked'),
+            (('dummy', 1), 'add_base', 'addon9', True),
             (('dummy', 1), 'add_base', 'qux', False),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 2),
              'add_manifest', ManifestContent('foo', 'bar', 'bar/')),
@@ -233,10 +281,28 @@ class TestSimplePackager(unittest.TestCase):
             (('manifest', 9), 'add', 'addon/install.rdf', install_rdf),
             (('manifest', 10), 'add', 'addon2/install.rdf', install_rdf),
             (('manifest', 11), 'add', 'addon3/install.rdf', install_rdf),
+            (('manifest', 12), 'add', 'addon4/install.rdf',
+             install_rdf_addon4),
+            (('manifest', 13), 'add', 'addon5/install.rdf',
+             install_rdf_addon5),
+            (('manifest', 14), 'add', 'addon6/install.rdf',
+             install_rdf_addon6),
+            (('manifest', 15), 'add', 'addon7/install.rdf',
+             install_rdf_addon7),
+            (('manifest', 16), 'add', 'addon8/install.rdf',
+             install_rdf_addon8),
+            (('manifest', 17), 'add', 'addon9/install.rdf',
+             install_rdf_addon9),
+            (('manifest', 18), 'add', 'addon10/install.rdf',
+             install_rdf_addon10),
+            (('manifest', 19), 'add', 'addon11/install.rdf',
+             install_rdf_addon11),
         ])
 
         self.assertEqual(packager.get_bases(),
-                         set(['', 'addon', 'addon2', 'addon3', 'qux']))
+                         set(['', 'addon', 'addon2', 'addon3', 'addon4',
+                              'addon5', 'addon6', 'addon7', 'addon8',
+                              'addon9', 'addon10', 'addon11', 'qux']))
         self.assertEqual(packager.get_bases(addons=False), set(['', 'qux']))
 
     def test_simple_packager_manifest_consistency(self):

@@ -17,10 +17,9 @@ structures.
 
 from __future__ import absolute_import, unicode_literals
 
-from mozbuild.util import (
-    shell_quote,
-    StrictOrderingOnAppendList,
-)
+from mozbuild.util import StrictOrderingOnAppendList
+from mozbuild.shellutil import quote as shell_quote
+
 import mozpack.path as mozpath
 from .context import FinalTargetValue
 
