@@ -120,7 +120,7 @@ class FDWrapper {
 //
 class MmapWrapper {
  public:
-  MmapWrapper() : is_set_(false) {}
+  MmapWrapper() : is_set_(false), size_(0), base_(NULL) {}
   ~MmapWrapper() {
     if (is_set_ && base_ != NULL) {
       MOZ_ASSERT(size_ > 0);
