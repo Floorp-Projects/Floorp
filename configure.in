@@ -324,8 +324,6 @@ if test -n "$gonkdir" ; then
 else
     if test "$COMPILE_ENVIRONMENT"; then
         MOZ_ANDROID_NDK
-    else
-        AC_DEFINE(ANDROID)
     fi # COMPILE_ENVIRONMENT
 
     case "$target" in
@@ -335,6 +333,7 @@ else
         fi
         MOZ_CHROME_FILE_FORMAT=omni
         ZLIB_DIR=yes
+        AC_DEFINE(ANDROID)
         ;;
     *-linux*)
         AC_PATH_PROG(OBJCOPY,objcopy)
