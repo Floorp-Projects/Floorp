@@ -4473,6 +4473,25 @@
     "n_buckets": 20,
     "description": "Session restore: If a session is restored by the user clicking on 'Restore Session', this probe measures the time elapsed between the instant the user has clicked and the instant we have finished restoring tabs eagerly. At this stage, the tabs that are restored on demand are not restored yet."
   },
+  "FX_SESSION_RESTORE_NUMBER_OF_TABS_RESTORED": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "500",
+    "n_buckets": 20,
+    "description": "Session restore: Number of tabs in the session that has just been restored."
+  },
+  "FX_SESSION_RESTORE_NUMBER_OF_WINDOWS_RESTORED": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": "50",
+    "description": "Session restore: Number of windows in the session that has just been restored."
+  },
+  "FX_SESSION_RESTORE_NUMBER_OF_EAGER_TABS_RESTORED": {
+    "expires_in_version": "default",
+    "kind": "enumerated",
+    "n_values": "50",
+    "description": "Session restore: Number of tabs restored eagerly in the session that has just been restored."
+  },
   "FX_TABLETMODE_PAGE_LOAD": {
     "expires_in_version": "47",
     "kind": "exponential",
