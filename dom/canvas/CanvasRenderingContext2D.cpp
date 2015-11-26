@@ -1196,6 +1196,13 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   }
 
 #ifdef USE_SKIA_GPU
+  // Do not attempt to switch into GL mode if the platform doesn't allow it.
+  if ((aRenderingMode == RenderingMode::OpenGLBackendMode) &&
+      (!gfxPlatform::GetPlatform()->HaveChoiceOfHWAndSWCanvas() ||
+       !gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas())) {
+      return false;
+  }
+
   if (mRenderingMode == RenderingMode::OpenGLBackendMode) {
     if (mVideoTexture) {
       gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
