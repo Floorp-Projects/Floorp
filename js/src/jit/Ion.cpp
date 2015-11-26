@@ -2163,7 +2163,7 @@ IonCompile(JSContext* cx, JSScript* script,
     if (!constraints)
         return AbortReason_Alloc;
 
-    const OptimizationInfo* optimizationInfo = js_IonOptimizations.get(optimizationLevel);
+    const OptimizationInfo* optimizationInfo = IonOptimizations.get(optimizationLevel);
     const JitCompileOptions options(cx);
 
     IonBuilder* builder = alloc->new_<IonBuilder>((JSContext*) nullptr,
@@ -2364,7 +2364,7 @@ CanIonCompileScript(JSContext* cx, JSScript* script, bool osr)
 static OptimizationLevel
 GetOptimizationLevel(HandleScript script, jsbytecode* pc)
 {
-    return js_IonOptimizations.levelForScript(script, pc);
+    return IonOptimizations.levelForScript(script, pc);
 }
 
 static MethodStatus
