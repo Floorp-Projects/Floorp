@@ -1068,6 +1068,12 @@ GMPParent::Bridge(GMPServiceParent* aGMPServiceParent)
   return true;
 }
 
+nsString
+GMPParent::GetPluginBaseName() const
+{
+  return NS_LITERAL_STRING("gmp-") + mName;
+}
+
 } // namespace gmp
 } // namespace mozilla
 
