@@ -2316,19 +2316,6 @@ notification[value="translation"] {
   -moz-appearance: none;
 }
 
-/* Loop/ Hello browser styles */
-
-notification[value="loop-sharing-notification"] .button-menubutton-button {
-  -moz-appearance: none;
-  min-width: 0;
-  border: 0;
-  margin: 0;
-}
-
-notification[value="loop-sharing-notification"] .messageImage {
-  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16.png);
-}
-
 /* Bookmarks roots menu-items */
 #subscribeToPageMenuitem:not([disabled]),
 #subscribeToPageMenupopup,

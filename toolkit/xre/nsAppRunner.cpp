@@ -4638,7 +4638,7 @@ mozilla::BrowserTabsRemoteAutostart()
   // allowed because these tests must be allowed to run remotely.
   // We are also allowing e10s to be enabled on Beta (which doesn't have E10S_TESTING_ONLY defined.
   bool e10sAllowed = Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("beta") ||
-                     Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
+                     gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
 #endif
 
   // Check for some conditions that might disable e10s.
@@ -4662,8 +4662,8 @@ mozilla::BrowserTabsRemoteAutostart()
   // e10s auto start on mac.
   if (gBrowserTabsRemoteAutostart) {
     // Check prefs
-    bool accelDisabled = Preferences::GetBool("layers.acceleration.disabled", false) &&
-                         !Preferences::GetBool("layers.acceleration.force-enabled", false);
+    bool accelDisabled = gfxPrefs::GetSingleton().LayersAccelerationDisabled() &&
+                         !gfxPrefs::LayersAccelerationForceEnabled();
 
     accelDisabled = accelDisabled || !nsCocoaFeatures::AccelerateByDefault();
 

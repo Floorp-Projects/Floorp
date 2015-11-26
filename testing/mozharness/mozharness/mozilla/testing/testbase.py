@@ -600,6 +600,25 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
     def install(self):
         self.binary_path = self.install_app(app=self.config.get('application'))
 
+    def uninstall_app(self, install_dir=None):
+        """ Dependent on mozinstall """
+        # uninstall the application
+        cmd = self.query_exe("mozuninstall",
+                             default=self.query_python_path("mozuninstall"),
+                             return_type="list")
+        dirs = self.query_abs_dirs()
+        if not install_dir:
+            install_dir = dirs.get('abs_app_install_dir',
+                                   os.path.join(dirs['abs_work_dir'],
+                                                'application'))
+        cmd.append(install_dir)
+        # TODO we'll need some error checking here
+        self.get_output_from_command(cmd, halt_on_failure=True,
+                                     fatal_exit_code=3)
+
+    def uninstall(self):
+        self.uninstall_app()
+
     def query_minidump_tooltool_manifest(self):
         if self.config.get('minidump_tooltool_manifest_path'):
             return self.config['minidump_tooltool_manifest_path']

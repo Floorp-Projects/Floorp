@@ -1250,6 +1250,19 @@ var SessionStoreInternal = {
       // we don't want to save the busy state
       delete winData.busy;
 
+      // When closing windows one after the other until Firefox quits, we
+      // will move those closed in series back to the "open windows" bucket
+      // before writing to disk. If however there is only a single window
+      // with tabs we deem not worth saving then we might end up with a
+      // random closed or even a pop-up window re-opened. To prevent that
+      // we explicitly allow saving an "empty" window state.
+      let isLastWindow =
+        Object.keys(this._windows).length == 1 &&
+        !this._closedWindows.some(win => win._shouldRestore || false);
+
+      // clear this window from the list, since it has definitely been closed.
+      delete this._windows[aWindow.__SSi];
+
       // Now we have to figure out if this window is worth saving in the _closedWindows
       // Object.
       //
@@ -1265,7 +1278,7 @@ var SessionStoreInternal = {
       if (!winData.isPrivate) {
         // Remove any open private tabs the window may contain.
         PrivacyFilter.filterPrivateTabs(winData);
-        this.maybeSaveClosedWindow(winData);
+        this.maybeSaveClosedWindow(winData, isLastWindow);
       }
 
       // The tabbrowser binding will go away once the window is closed,
@@ -1292,11 +1305,9 @@ var SessionStoreInternal = {
           // It's possible that a tab switched its privacy state at some point
           // before our flush, so we need to filter again.
           PrivacyFilter.filterPrivateTabs(winData);
-          this.maybeSaveClosedWindow(winData);
+          this.maybeSaveClosedWindow(winData, isLastWindow);
         }
 
-        // clear this window from the list
-        delete this._windows[aWindow.__SSi];
         // Update the tabs data now that we've got the most
         // recent information.
         this.cleanUpWindow(aWindow, winData);
@@ -1312,7 +1323,6 @@ var SessionStoreInternal = {
       this.onTabRemove(aWindow, tabbrowser.tabs[i], true);
     }
   },
-
 
   /**
    * Clean up the message listeners on a window that has finally
@@ -1345,21 +1355,18 @@ var SessionStoreInternal = {
    *
    * @param winData
    *        The data for the closed window that we might save.
+   * @param isLastWindow
+   *        Whether or not the window being closed is the last
+   *        browser window. Callers of this function should pass
+   *        in the value of SessionStoreInternal.atLastWindow for
+   *        this argument, and pass in the same value if they happen
+   *        to call this method again asynchronously (for example, after
+   *        a window flush).
    */
-  maybeSaveClosedWindow(winData) {
+  maybeSaveClosedWindow(winData, isLastWindow) {
     if (RunState.isRunning) {
       // Determine whether the window has any tabs worth saving.
       let hasSaveableTabs = winData.tabs.some(this._shouldSaveTabState);
-
-      // When closing windows one after the other until Firefox quits, we
-      // will move those closed in series back to the "open windows" bucket
-      // before writing to disk. If however there is only a single window
-      // with tabs we deem not worth saving then we might end up with a
-      // random closed or even a pop-up window re-opened. To prevent that
-      // we explicitly allow saving an "empty" window state.
-      let isLastWindow =
-        Object.keys(this._windows).length == 1 &&
-        !this._closedWindows.some(win => win._shouldRestore || false);
 
       // Note that we might already have this window stored in
       // _closedWindows from a previous call to this function.

@@ -51,7 +51,7 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top, unsigned n
 
     CopyValueToRematerializedFrame op(slots_);
     iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &hasCallObj_, &returnValue_,
-                                &argsObj_, &thisValue_, ReadFrame_Actuals,
+                                &argsObj_, &thisArgument_, ReadFrame_Actuals,
                                 fallback);
 }
 
@@ -162,7 +162,7 @@ RematerializedFrame::mark(JSTracer* trc)
     if (argsObj_)
         TraceRoot(trc, &argsObj_, "remat ion frame argsobj");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
-    TraceRoot(trc, &thisValue_, "remat ion frame this");
+    TraceRoot(trc, &thisArgument_, "remat ion frame this");
     TraceRootRange(trc, numActualArgs_ + isConstructing_ + script_->nfixed(),
                    slots_, "remat ion frame stack");
 }
@@ -207,7 +207,7 @@ RematerializedFrame::dump()
 
         fprintf(stderr, "  this: ");
 #ifdef DEBUG
-        DumpValue(thisValue());
+        DumpValue(thisArgument());
 #else
         fprintf(stderr, "?\n");
 #endif

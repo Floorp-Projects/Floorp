@@ -3482,7 +3482,7 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
             MaybeDumpObject("staticScope", i.script()->getStaticBlockScope(pc));
         }
         if (i.isNonEvalFunctionFrame())
-            MaybeDumpValue("this", i.originalFunctionThis(cx));
+            MaybeDumpValue("this", i.thisArgument(cx));
         if (!i.isJit()) {
             fprintf(stderr, "  rval: ");
             dumpValue(i.interpFrame()->returnValue());

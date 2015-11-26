@@ -26,7 +26,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
                      VideoFrameContainer* aContainer,
                      bool aRealTime,
                      FrameStatistics& aFrameStats,
-                     int aDelayDuration,
                      uint32_t aVQueueSentToCompositerSize)
   : mOwnerThread(aThread)
   , mAudioSink(aAudioSink)
@@ -38,7 +37,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mVideoFrameEndTime(-1)
   , mHasVideo(false)
   , mUpdateScheduler(aThread)
-  , mDelayDuration(aDelayDuration)
   , mVideoQueueSendToCompositorSize(aVQueueSentToCompositerSize)
 {
   MOZ_ASSERT(mAudioSink, "AudioSink should exist.");
@@ -218,12 +216,18 @@ VideoSink::Shutdown()
 }
 
 void
-VideoSink::OnVideoQueueEvent()
+VideoSink::OnVideoQueueEvent(RefPtr<MediaData>&& aSample)
 {
   AssertOwnerThread();
   // Listen to push event, VideoSink should try rendering ASAP if first frame
   // arrives but update scheduler is not triggered yet.
-  TryUpdateRenderedVideoFrames();
+  VideoData* v = aSample->As<VideoData>();
+  if (!v->mSentToCompositor) {
+    // Since we push rendered frames back to the queue, we will receive
+    // push events for them. We only need to trigger render loop
+    // when this frame is not rendered yet.
+    TryUpdateRenderedVideoFrames();
+  }
 }
 
 void
@@ -338,7 +342,7 @@ VideoSink::UpdateRenderedVideoFrames()
   // the current frame.
   NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
 
-  int64_t remainingTime = mDelayDuration;
+  int64_t remainingTime = -1;
   if (VideoQueue().GetSize() > 0) {
     RefPtr<MediaData> currentFrame = VideoQueue().PopFront();
     int32_t framesRemoved = 0;
@@ -365,7 +369,14 @@ VideoSink::UpdateRenderedVideoFrames()
 
   RenderVideoFrames(mVideoQueueSendToCompositorSize, clockTime, nowTime);
 
-  TimeStamp target = nowTime + TimeDuration::FromMicroseconds(remainingTime);
+  // No next fame to render. There is no need to schedule next render
+  // loop. We will run render loops again upon incoming frames.
+  if (remainingTime < 0) {
+    return;
+  }
+
+  TimeStamp target = nowTime + TimeDuration::FromMicroseconds(
+    remainingTime / mAudioSink->GetPlaybackParams().mPlaybackRate);
 
   RefPtr<VideoSink> self = this;
   mUpdateScheduler.Ensure(target, [self] () {

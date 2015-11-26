@@ -53,6 +53,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mChunkSize(session->SendingChunkSize())
   , mRequestBlockedOnRead(0)
   , mRecvdFin(0)
+  , mReceivedData(0)
   , mRecvdReset(0)
   , mSentReset(0)
   , mCountAsActive(0)

@@ -1055,18 +1055,20 @@ MarkThisAndArguments(JSTracer* trc, const JitFrameIterator& frame)
                              ? frame.exitFrame()->as<LazyLinkExitFrameLayout>()->jsFrame()
                              : frame.jsFrame();
 
+    if (!CalleeTokenIsFunction(layout->calleeToken()))
+        return;
+
     size_t nargs = layout->numActualArgs();
     size_t nformals = 0;
-    size_t newTargetOffset = 0;
-    if (CalleeTokenIsFunction(layout->calleeToken())) {
-        JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
-        if (!frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
-            !fun->nonLazyScript()->argumentsHasVarBinding())
-        {
-            nformals = fun->nargs();
-        }
-        newTargetOffset = Max(nargs, fun->nargs());
+
+    JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
+    if (!frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
+        !fun->nonLazyScript()->argumentsHasVarBinding())
+    {
+        nformals = fun->nargs();
     }
+
+    size_t newTargetOffset = Max(nargs, fun->nargs());
 
     Value* argv = layout->argv();
 

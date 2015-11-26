@@ -430,6 +430,17 @@ private:
   // turn on or turn off high precision based on various factors
   void ConfigureHighPrecision();
   void SetHighPrecisionTimersEnabled(bool aEnable);
+
+  // `true` if we are currently in jank-critical mode.
+  //
+  // In jank-critical mode, any iteration of the event loop that takes
+  // more than 16ms to compute will cause an ongoing animation to miss
+  // frames.
+  //
+  // For simplicity, the current implementation assumes that we are
+  // in jank-critical mode if and only if the vsync driver has at least
+  // one observer.
+  static bool IsJankCritical();
 };
 
 #endif /* !defined(nsRefreshDriver_h_) */

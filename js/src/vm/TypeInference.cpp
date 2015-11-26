@@ -3881,7 +3881,7 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
         // we shouldn't run the definite properties analysis on them.
         MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
 
-        Value thisv = iter.originalFunctionThis(cx);
+        Value thisv = iter.thisArgument(cx);
         if (!thisv.isObject() ||
             thisv.toObject().hasLazyGroup() ||
             thisv.toObject().group() != group)

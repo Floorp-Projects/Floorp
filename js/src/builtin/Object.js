@@ -22,7 +22,7 @@ function ObjectStaticAssign(target, firstSource) {
         var from = ToObject(nextSource);
 
         // Steps 5.b.iii-iv.
-        var keys = OwnPropertyKeys(from);
+        var keys = OwnPropertyKeys(from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
 
         // Step 5.c.
         for (var nextIndex = 0, len = keys.length; nextIndex < len; nextIndex++) {
@@ -134,3 +134,48 @@ function ObjectLookupGetter(name) {
     } while (object !== null);
 }
 
+// Draft proposal http://tc39.github.io/proposal-object-values-entries/#Object.values
+function ObjectValues(O) {
+    // Steps 1-2.
+    var object = ToObject(O);
+
+    // Steps 3-4.
+    // EnumerableOwnProperties is inlined here.
+    var keys = OwnPropertyKeys(object, JSITER_OWNONLY | JSITER_HIDDEN);
+    var values = [];
+    var valuesCount = 0;
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (!callFunction(std_Object_propertyIsEnumerable, object, key))
+            continue;
+
+        var value = object[key];
+        _DefineDataProperty(values, valuesCount++, value);
+    }
+
+    // Step 5.
+    return values;
+}
+
+// Draft proposal http://tc39.github.io/proposal-object-values-entries/#Object.entries
+function ObjectEntries(O) {
+    // Steps 1-2.
+    var object = ToObject(O);
+
+    // Steps 3-4.
+    // EnumerableOwnProperties is inlined here.
+    var keys = OwnPropertyKeys(object, JSITER_OWNONLY | JSITER_HIDDEN);
+    var entries = [];
+    var entriesCount = 0;
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (!callFunction(std_Object_propertyIsEnumerable, object, key))
+            continue;
+
+        var value = object[key];
+        _DefineDataProperty(entries, entriesCount++, [key, value]);
+    }
+
+    // Step 5.
+    return entries;
+}

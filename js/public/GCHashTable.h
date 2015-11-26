@@ -65,10 +65,7 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
             return;
         for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
             GCPolicy::ValuePolicy::trace(trc, &e.front().value(), "hashmap value");
-            Key key = e.front().key();
-            GCPolicy::KeyPolicy::trace(trc, &key, "hashmap key");
-            if (key != e.front().key())
-                e.rekeyFront(key);
+            GCPolicy::KeyPolicy::trace(trc, &e.front().mutableKey(), "hashmap key");
         }
     }
 
@@ -210,12 +207,8 @@ class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
     void trace(JSTracer* trc) {
         if (!this->initialized())
             return;
-        for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-            T elem = e.front();
-            GCPolicy::trace(trc, &elem, "hashset element");
-            if (elem != e.front())
-                e.rekeyFront(elem);
-        }
+        for (typename Base::Enum e(*this); !e.empty(); e.popFront())
+            GCPolicy::trace(trc, &e.mutableFront(), "hashset element");
     }
 
     void sweep() {

@@ -333,6 +333,10 @@ FontFaceSet::Load(JSContext* aCx,
   }
 
   nsIGlobalObject* globalObject = GetParentObject();
+  if (!globalObject) {
+    return nullptr;
+  }
+
   JS::Rooted<JSObject*> jsGlobal(aCx, globalObject->GetGlobalJSObject());
   GlobalObject global(aCx, jsGlobal);
 
@@ -658,21 +662,6 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   return rv;
 }
 
-static PLDHashOperator DetachFontEntries(const nsAString& aKey,
-                                         RefPtr<gfxUserFontFamily>& aFamily,
-                                         void* aUserArg)
-{
-  aFamily->DetachFontEntries();
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator RemoveIfEmpty(const nsAString& aKey,
-                                     RefPtr<gfxUserFontFamily>& aFamily,
-                                     void* aUserArg)
-{
-  return aFamily->GetFontList().Length() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
-}
-
 bool
 FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 {
@@ -707,7 +696,9 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // the same font entries as before. (The order can affect font selection
   // where multiple faces match the requested style, perhaps with overlapping
   // unicode-range coverage.)
-  mUserFontSet->mFontFamilies.Enumerate(DetachFontEntries, nullptr);
+  for (auto it = mUserFontSet->mFontFamilies.Iter(); !it.Done(); it.Next()) {
+    it.Data()->DetachFontEntries();
+  }
 
   // Sometimes aRules has duplicate @font-face rules in it; we should make
   // that not happen, but in the meantime, don't try to insert the same
@@ -739,7 +730,11 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 
   // Remove any residual families that have no font entries (i.e., they were
   // not defined at all by the updated set of @font-face rules).
-  mUserFontSet->mFontFamilies.Enumerate(RemoveIfEmpty, nullptr);
+  for (auto it = mUserFontSet->mFontFamilies.Iter(); !it.Done(); it.Next()) {
+    if (it.Data()->GetFontList().IsEmpty()) {
+      it.Remove();
+    }
+  }
 
   // If any FontFace objects for rules are left in the old list, note that the
   // set has changed (even if the new set was built entirely by migrating old

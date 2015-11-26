@@ -14,6 +14,7 @@ import functools
 import hashlib
 import itertools
 import os
+import re
 import stat
 import sys
 import time
@@ -716,22 +717,6 @@ def lock_file(lockfile, max_wait = 600):
     return LockFile(lockfile)
 
 
-def shell_quote(s):
-    '''Given a string, returns a version enclosed with single quotes for use
-    in a shell command line.
-
-    As a special case, if given an int, returns a string containing the int,
-    not enclosed in quotes.
-    '''
-    if type(s) == int:
-        return '%d' % s
-    # Single quoted strings can contain any characters unescaped except the
-    # single quote itself, which can't even be escaped, so the string needs to
-    # be closed, an escaped single quote added, and reopened.
-    t = type(s)
-    return t("'%s'") % s.replace(t("'"), t("'\\''"))
-
-
 class OrderedDefaultDict(OrderedDict):
     '''A combination of OrderedDict and defaultdict.'''
     def __init__(self, default_factory, *args, **kwargs):
@@ -950,3 +935,36 @@ def group_unified_files(files, unified_prefix, unified_suffix,
                                               files)):
         just_the_filenames = list(filter_out_dummy(unified_group))
         yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
+
+
+def pair(iterable):
+    '''Given an iterable, returns an iterable pairing its items.
+
+    For example,
+        list(pair([1,2,3,4,5,6]))
+    returns
+        [(1,2), (3,4), (5,6)]
+    '''
+    i = iter(iterable)
+    return itertools.izip_longest(i, i)
+
+
+VARIABLES_RE = re.compile('\$\((\w+)\)')
+
+
+def expand_variables(s, variables):
+    '''Given a string with $(var) variable references, replace those references
+    with the corresponding entries from the given `variables` dict.
+
+    If a variable value is not a string, it is iterated and its items are
+    joined with a whitespace.'''
+    result = ''
+    for s, name in pair(VARIABLES_RE.split(s)):
+        result += s
+        value = variables.get(name)
+        if not value:
+            continue
+        if not isinstance(value, types.StringTypes):
+            value = ' '.join(value)
+        result += value
+    return result

@@ -35,7 +35,6 @@ public:
             VideoFrameContainer* aContainer,
             bool aRealTime,
             FrameStatistics& aFrameStats,
-            int aDelayDuration,
             uint32_t aVQueueSentToCompositerSize);
 
   const PlaybackParams& GetPlaybackParams() const override;
@@ -74,7 +73,7 @@ private:
   virtual ~VideoSink();
 
   // VideoQueue listener related.
-  void OnVideoQueueEvent();
+  void OnVideoQueueEvent(RefPtr<MediaData>&& aSample);
   void ConnectListener();
   void DisconnectListener();
 
@@ -138,10 +137,6 @@ private:
 
   // Used to trigger another update of rendered frames in next round.
   DelayedScheduler mUpdateScheduler;
-
-  // A delay duration to trigger next time UpdateRenderedVideoFrames().
-  // Based on the default value in MDSM.
-  const int mDelayDuration;
 
   // Max frame number sent to compositor at a time.
   // Based on the pref value obtained in MDSM.

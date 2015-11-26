@@ -21,6 +21,7 @@ DevToolsModules(
     'media.js',
     'pagemod.js',
     'paintflashing.js',
+    'qsa.js',
     'restart.js',
     'rulers.js',
     'screenshot.js',

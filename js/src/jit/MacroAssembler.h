@@ -337,6 +337,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
+    // Asm failure labels
+    NonAssertingLabel asmStackOverflowLabel_;
+    NonAssertingLabel asmSyncInterruptLabel_;
+    NonAssertingLabel asmOnConversionErrorLabel_;
+    NonAssertingLabel asmOnOutOfBoundsLabel_;
+
   public:
     MacroAssembler()
       : framePushed_(0),
@@ -717,6 +723,13 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void xorPtr(Register src, Register dest) PER_ARCH;
     inline void xorPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    // ===============================================================
+    // Arithmetic functions
+
+    inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
+    inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
 
     // ===============================================================
     // Shift functions
@@ -1336,6 +1349,32 @@ class MacroAssembler : public MacroAssemblerSpecific
         return &failureLabel_;
     }
 
+    Label* asmSyncInterruptLabel() {
+        return &asmSyncInterruptLabel_;
+    }
+    const Label* asmSyncInterruptLabel() const {
+        return &asmSyncInterruptLabel_;
+    }
+    Label* asmStackOverflowLabel() {
+        return &asmStackOverflowLabel_;
+    }
+    const Label* asmStackOverflowLabel() const {
+        return &asmStackOverflowLabel_;
+    }
+    Label* asmOnOutOfBoundsLabel() {
+        return &asmOnOutOfBoundsLabel_;
+    }
+    const Label* asmOnOutOfBoundsLabel() const {
+        return &asmOnOutOfBoundsLabel_;
+    }
+    Label* asmOnConversionErrorLabel() {
+        return &asmOnConversionErrorLabel_;
+    }
+    const Label* asmOnConversionErrorLabel() const {
+        return &asmOnConversionErrorLabel_;
+    }
+
+    bool asmMergeWith(const MacroAssembler& masm);
     void finish();
     void link(JitCode* code);
 
