@@ -492,12 +492,13 @@ ClientLayerManager::MakeSnapshotIfRequired()
       // The compositor doesn't draw to a different sized surface
       // when there's a rotation. Instead we rotate the result
       // when drawing into dt
-      IntRect outerBounds;
-      mWidget->GetBoundsUntyped(outerBounds);
+      LayoutDeviceIntRect outerBounds;
+      mWidget->GetBounds(outerBounds);
 
       IntRect bounds = ToOutsideIntRect(mShadowTarget->GetClipExtents());
       if (mTargetRotation) {
-        bounds = RotateRect(bounds, outerBounds, mTargetRotation);
+        bounds =
+          RotateRect(bounds, outerBounds.ToUnknownRect(), mTargetRotation);
       }
 
       SurfaceDescriptor inSnapshot;
@@ -512,7 +513,9 @@ ClientLayerManager::MakeSnapshotIfRequired()
         Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);
         Rect srcRect(0, 0, bounds.width, bounds.height);
 
-        gfx::Matrix rotate = ComputeTransformForUnRotation(outerBounds, mTargetRotation);
+        gfx::Matrix rotate =
+          ComputeTransformForUnRotation(outerBounds.ToUnknownRect(),
+                                        mTargetRotation);
 
         gfx::Matrix oldMatrix = dt->GetTransform();
         dt->SetTransform(rotate * oldMatrix);

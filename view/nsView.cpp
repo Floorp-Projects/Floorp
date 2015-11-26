@@ -801,11 +801,11 @@ void nsView::List(FILE* out, int32_t aIndent) const
   fprintf(out, "%p ", (void*)this);
   if (nullptr != mWindow) {
     nscoord p2a = mViewManager->AppUnitsPerDevPixel();
-    nsIntRect rect;
-    mWindow->GetClientBoundsUntyped(rect);
-    nsRect windowBounds = ToAppUnits(rect, p2a);
-    mWindow->GetBoundsUntyped(rect);
-    nsRect nonclientBounds = ToAppUnits(rect, p2a);
+    LayoutDeviceIntRect rect;
+    mWindow->GetClientBounds(rect);
+    nsRect windowBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
+    mWindow->GetBounds(rect);
+    nsRect nonclientBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
     nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
     mWindow.get()->Release();
     int32_t Z = mWindow->GetZIndex();
