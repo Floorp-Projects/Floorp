@@ -259,15 +259,15 @@ InterpreterFrame::prologue(JSContext* cx)
     if (isConstructing()) {
         if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(callee().isClassConstructor());
-            functionThis() = MagicValue(JS_UNINITIALIZED_LEXICAL);
-        } else if (functionThis().isPrimitive()) {
+            thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
+        } else if (thisArgument().isPrimitive()) {
             RootedObject callee(cx, &this->callee());
             RootedObject newTarget(cx, &this->newTarget().toObject());
             JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
                                                   createSingleton() ? SingletonObject : GenericObject);
             if (!obj)
                 return false;
-            functionThis() = ObjectValue(*obj);
+            thisArgument() = ObjectValue(*obj);
         }
     }
 
@@ -316,8 +316,13 @@ InterpreterFrame::epilogue(JSContext* cx)
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
         DebugScopes::onPopCall(this, cx);
 
-    if (!fun()->isGenerator() && isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
-        setReturnValue(ObjectValue(constructorThis()));
+    if (!fun()->isGenerator() &&
+        isConstructing() &&
+        thisArgument().isObject() &&
+        returnValue().isPrimitive())
+    {
+        setReturnValue(thisArgument());
+    }
 }
 
 bool
@@ -1293,7 +1298,7 @@ FrameIter::argsObj() const
 }
 
 Value
-FrameIter::originalFunctionThis(JSContext* cx) const
+FrameIter::thisArgument(JSContext* cx) const
 {
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
@@ -1304,11 +1309,11 @@ FrameIter::originalFunctionThis(JSContext* cx) const
       case JIT:
         if (data_.jitFrames_.isIonScripted()) {
             jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
-            return ionInlineFrames_.thisValue(recover);
+            return ionInlineFrames_.thisArgument(recover);
         }
-        return data_.jitFrames_.baselineFrame()->thisValue();
+        return data_.jitFrames_.baselineFrame()->thisArgument();
       case INTERP:
-        return interpFrame()->thisValue();
+        return interpFrame()->thisArgument();
     }
     MOZ_CRASH("Unexpected state");
 }

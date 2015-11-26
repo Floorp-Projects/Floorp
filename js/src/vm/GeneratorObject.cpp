@@ -48,7 +48,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 
     GeneratorObject* genObj = &obj->as<GeneratorObject>();
     genObj->setCallee(*frame.callee());
-    genObj->setThisValue(frame.thisValue());
+    genObj->setThisValue(frame.thisArgument());
     genObj->setNewTarget(frame.newTarget());
     genObj->setScopeChain(*frame.scopeChain());
     if (frame.script()->needsArgsObj())

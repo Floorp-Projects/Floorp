@@ -75,7 +75,8 @@ jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame, Compil
     // during compilation could capture nursery pointers, so the values' types
     // are recorded instead.
 
-    inspector->thisType = TypeSet::GetMaybeUntrackedValueType(frame->thisValue());
+    if (frame->isNonEvalFunctionFrame())
+        inspector->thisType = TypeSet::GetMaybeUntrackedValueType(frame->thisArgument());
 
     if (frame->scopeChain()->isSingleton())
         inspector->singletonScopeChain = frame->scopeChain();

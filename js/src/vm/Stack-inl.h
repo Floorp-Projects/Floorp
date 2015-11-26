@@ -849,13 +849,13 @@ AbstractFramePtr::unsetPrevUpToDate() const
 }
 
 inline Value&
-AbstractFramePtr::thisValue() const
+AbstractFramePtr::thisArgument() const
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->thisValue();
+        return asInterpreterFrame()->thisArgument();
     if (isBaselineFrame())
-        return asBaselineFrame()->thisValue();
-    return asRematerializedFrame()->thisValue();
+        return asBaselineFrame()->thisArgument();
+    return asRematerializedFrame()->thisArgument();
 }
 
 inline Value
