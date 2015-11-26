@@ -1834,11 +1834,6 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    if (!cx->runtime()->hasContentGlobals) {
-        if (!cx->runtime()->completeInitialization(cx))
-            return nullptr;
-    }
-
     return GlobalObject::new_(cx, Valueify(clasp), principals, hookOption, options);
 }
 
@@ -4407,7 +4402,6 @@ MOZ_NEVER_INLINE static bool
 ExecuteScript(JSContext* cx, HandleObject scope, HandleScript script, Value* rval)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(!cx->runtime()->isSelfHostingCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, scope, script);
@@ -4618,43 +4612,6 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
              const char* filename, MutableHandleValue rval)
 {
     return ::Evaluate(cx, optionsArg, filename, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS::EvaluateSelfHosted(JSRuntime* rt, const char16_t* chars, size_t length, const char* filename)
-{
-    return rt->evaluateSelfHosted(chars, length, filename);
-}
-
-JS_PUBLIC_API(bool)
-JS::EvaluateSelfHosted(JSRuntime* rt, const char* bytes, size_t length, const char* filename)
-{
-    JSContext* cx = rt->contextList.getFirst();
-    char16_t* chars = UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(bytes, length), &length).get();
-    if (!chars)
-        return false;
-    return EvaluateSelfHosted(rt, chars, length, filename);
-}
-
-JS_PUBLIC_API(bool)
-JS::EvaluateSelfHosted(JSRuntime* rt, const char* filename)
-{
-    JSContext* cx = rt->contextList.getFirst();
-    FileContents buffer(cx);
-    {
-        AutoFile file;
-        if (!file.open(cx, filename) || !file.readAll(cx, buffer))
-            return false;
-    }
-    char* bytes = buffer.begin();
-    size_t length = buffer.length();
-    return EvaluateSelfHosted(rt, bytes, length, filename);
-}
-
-JS_PUBLIC_API(bool)
-JS::AddSelfHostingIntrinsics(JSRuntime* rt, const JSFunctionSpec* intrinsicFunctions)
-{
-    return rt->addSelfHostingIntrinsics(intrinsicFunctions);
 }
 
 static JSObject*
