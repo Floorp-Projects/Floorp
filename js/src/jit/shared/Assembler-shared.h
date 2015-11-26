@@ -426,28 +426,28 @@ class CodeOffset
 {
     size_t offset_;
 
-    static const size_t NOT_USED = size_t(-1);
+    static const size_t NOT_BOUND = size_t(-1);
 
   public:
     explicit CodeOffset(size_t offset) : offset_(offset) {}
-    CodeOffset() : offset_(NOT_USED) {}
+    CodeOffset() : offset_(NOT_BOUND) {}
 
     size_t offset() const {
-        MOZ_ASSERT(used());
+        MOZ_ASSERT(bound());
         return offset_;
     }
 
-    void use(size_t offset) {
-        MOZ_ASSERT(!used());
+    void bind(size_t offset) {
+        MOZ_ASSERT(!bound());
         offset_ = offset;
-        MOZ_ASSERT(used());
+        MOZ_ASSERT(bound());
     }
-    bool used() const {
-        return offset_ != NOT_USED;
+    bool bound() const {
+        return offset_ != NOT_BOUND;
     }
 
     void offsetBy(size_t delta) {
-        MOZ_ASSERT(used());
+        MOZ_ASSERT(bound());
         MOZ_ASSERT(offset_ + delta >= offset_, "no overflow");
         offset_ += delta;
     }
