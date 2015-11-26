@@ -20,6 +20,7 @@ class BluetoothServiceBluedroid
   , public BluetoothCoreNotificationHandler
   , public BluetoothNotificationHandler
 {
+  class CancelBondResultHandler;
   class CleanupResultHandler;
   class DisableResultHandler;
   class DispatchReplyErrorResultHandler;
