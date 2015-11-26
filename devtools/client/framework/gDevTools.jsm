@@ -829,7 +829,7 @@ var gDevToolsBrowser = {
       broadcaster.removeAttribute("key");
     }
 
-    let tabContainer = win.document.getElementById("tabbrowser-tabs");
+    let tabContainer = win.gBrowser.tabContainer;
     tabContainer.addEventListener("TabSelect", this, false);
     tabContainer.addEventListener("TabOpen", this, false);
     tabContainer.addEventListener("TabClose", this, false);
@@ -1024,20 +1024,17 @@ var gDevToolsBrowser = {
         }
       }
 
-      let mp = doc.getElementById("menuWebDeveloperPopup");
-      if (mp) {
-        let ref;
+      let ref;
 
-        if (prevDef != null) {
-          let menuitem = doc.getElementById("menuitem_" + prevDef.id);
-          ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
-        } else {
-          ref = doc.getElementById("menu_devtools_separator");
-        }
+      if (prevDef) {
+        let menuitem = doc.getElementById("menuitem_" + prevDef.id);
+        ref = menuitem && menuitem.nextSibling ? menuitem.nextSibling : null;
+      } else {
+        ref = doc.getElementById("menu_devtools_separator");
+      }
 
-        if (ref) {
-          mp.insertBefore(elements.menuitem, ref);
-        }
+      if (ref) {
+        ref.parentNode.insertBefore(elements.menuitem, ref);
       }
     }
 
@@ -1087,15 +1084,15 @@ var gDevToolsBrowser = {
     let mbs = doc.getElementById("mainBroadcasterSet");
     mbs.appendChild(fragBroadcasters);
 
-    let amp = doc.getElementById("appmenu_webDeveloper_popup");
-    if (amp) {
-      let amps = doc.getElementById("appmenu_devtools_separator");
-      amp.insertBefore(fragAppMenuItems, amps);
+    let amps = doc.getElementById("appmenu_devtools_separator");
+    if (amps) {
+      amps.parentNode.insertBefore(fragAppMenuItems, amps);
     }
 
-    let mp = doc.getElementById("menuWebDeveloperPopup");
     let mps = doc.getElementById("menu_devtools_separator");
-    mp.insertBefore(fragMenuItems, mps);
+    if (mps) {
+      mps.parentNode.insertBefore(fragMenuItems, mps);
+    }
   },
 
   /**
@@ -1256,7 +1253,7 @@ var gDevToolsBrowser = {
       }
     }
 
-    let tabContainer = win.document.getElementById("tabbrowser-tabs");
+    let tabContainer = win.gBrowser.tabContainer;
     tabContainer.removeEventListener("TabSelect", this, false);
     tabContainer.removeEventListener("TabOpen", this, false);
     tabContainer.removeEventListener("TabClose", this, false);
@@ -1275,7 +1272,7 @@ var gDevToolsBrowser = {
 
         for (let win of this._trackedBrowserWindows) {
           let tabContainer = win.gBrowser.tabContainer;
-          let numPinnedTabs = tabContainer.tabbrowser._numPinnedTabs;
+          let numPinnedTabs = win.gBrowser._numPinnedTabs || 0;
           let numTabs = tabContainer.itemCount - numPinnedTabs;
 
           open += numTabs;
