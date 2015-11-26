@@ -744,14 +744,11 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
     }
   }
 
-  // Undo the translation to the origin of the reference frame applied by
-  // AsyncCompositionManager::SampleValue
-  transform.PreTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
+  transform.PostTranslate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal
-  Point3D basis = -scaledOrigin - transformOrigin;
-  transform.ChangeBasis(basis.x, basis.y, basis.z);
+  transform.ChangeBasis(-transformOrigin);
 
   // Convert to CSS pixels (this undoes the operations performed by
   // nsStyleTransformMatrix::ProcessTranslatePart which is called from

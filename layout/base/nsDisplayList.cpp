@@ -5134,13 +5134,17 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
     }
   }
 
-  nsPoint parentOffset = aFrame->GetOffsetTo(cbFrame);
-  Point3D gfxOffset(
-            NSAppUnitsToFloatPixels(parentOffset.x, aAppUnitsPerPixel),
-            NSAppUnitsToFloatPixels(parentOffset.y, aAppUnitsPerPixel),
+  /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
+   * in aFrame. Although we actually want the inverse of this, it's faster to
+   * compute this way.
+   */
+  nsPoint frameToCbOffset = -aFrame->GetOffsetTo(cbFrame);
+  Point3D frameToCbGfxOffset(
+            NSAppUnitsToFloatPixels(frameToCbOffset.x, aAppUnitsPerPixel),
+            NSAppUnitsToFloatPixels(frameToCbOffset.y, aAppUnitsPerPixel),
             0.0f);
 
-  return result - gfxOffset;
+  return result + frameToCbGfxOffset;
 }
 
 nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsIFrame* aFrame,
@@ -5266,7 +5270,6 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // This is a simplification of the following |else| block, the
     // simplification being possible because we don't need to apply
     // mToTransformOrigin between two transforms.
-    Point3D offsets = roundedOrigin + aProperties.mToTransformOrigin;
     if ((aFlags & OFFSET_BY_ORIGIN) &&
         !hasPerspective) {
       // We can fold the final translation by roundedOrigin into the first matrix
@@ -5274,9 +5277,9 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
       // insufficient floating point precision than reversing the translation
       // afterwards.
       result.PreTranslate(-aProperties.mToTransformOrigin);
-      result.PostTranslate(offsets);
+      result.PostTranslate(roundedOrigin + aProperties.mToTransformOrigin);
     } else {
-      result.ChangeBasis(offsets);
+      result.ChangeBasis(aProperties.mToTransformOrigin);
     }
   } else {
     Point3D refBoxOffset(NSAppUnitsToFloatPixels(refBox.X(), aAppUnitsPerPixel),
@@ -5301,13 +5304,12 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // Similar to the code in the |if| block above, but since we've accounted
     // for mToTransformOrigin so we don't include that. We also need to reapply
     // refBoxOffset.
-    Point3D offsets = roundedOrigin + refBoxOffset;
     if ((aFlags & OFFSET_BY_ORIGIN) &&
         !hasPerspective) {
       result.PreTranslate(-refBoxOffset);
-      result.PostTranslate(offsets);
+      result.PostTranslate(roundedOrigin + refBoxOffset);
     } else {
-      result.ChangeBasis(offsets);
+      result.ChangeBasis(refBoxOffset);
     }
   }
 
@@ -5316,11 +5318,11 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     perspective._34 =
       -1.0 / NSAppUnitsToFloatPixels(aProperties.mChildPerspective, aAppUnitsPerPixel);
 
-    perspective.ChangeBasis(aProperties.GetToPerspectiveOrigin() + roundedOrigin);
+    perspective.ChangeBasis(aProperties.GetToPerspectiveOrigin());
     result = result * perspective;
 
     if (aFlags & OFFSET_BY_ORIGIN) {
-      result.PreTranslate(roundedOrigin);
+      result.PostTranslate(roundedOrigin);
     }
   }
 
