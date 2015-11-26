@@ -75,4 +75,9 @@ if CONFIG['ENABLE_TESTS']:
         'gtest/include',
     ]
 
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        LOCAL_INCLUDES += [
+            '/security/sandbox/chromium',
+        ]    
+    
     FINAL_LIBRARY = 'xul-gtest'
