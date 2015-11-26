@@ -16,7 +16,7 @@ using namespace js::jit;
 namespace js {
 namespace jit {
 
-OptimizationInfos js_IonOptimizations;
+OptimizationInfos IonOptimizations;
 
 void
 OptimizationInfo::initNormalOptimizationInfo()
