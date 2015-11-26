@@ -168,7 +168,7 @@ class IonCache::StubAttacher
     CodeLocationLabel rejoinLabel_;
     CodeOffsetJump nextStubOffset_;
     CodeOffsetJump rejoinOffset_;
-    CodeOffsetLabel stubCodePatchOffset_;
+    CodeOffset stubCodePatchOffset_;
 
   public:
     explicit StubAttacher(IonCache& cache)
@@ -282,7 +282,7 @@ IonCache::emitInitialJump(MacroAssembler& masm, RepatchLabel& entry)
     lastJump_ = initialJump_;
     Label label;
     masm.bind(&label);
-    rejoinLabel_ = CodeOffsetLabel(label.offset());
+    rejoinLabel_ = CodeOffset(label.offset());
 }
 
 void

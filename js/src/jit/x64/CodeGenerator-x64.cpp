@@ -735,7 +735,7 @@ CodeGeneratorX64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
     MIRType type = mir->type();
     MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
 
-    CodeOffsetLabel label;
+    CodeOffset label;
     switch (type) {
       case MIRType_Int32:
         label = masm.loadRipRelativeInt32(ToRegister(ins->output()));
@@ -769,7 +769,7 @@ CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
     MIRType type = mir->value()->type();
     MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
 
-    CodeOffsetLabel label;
+    CodeOffset label;
     switch (type) {
       case MIRType_Int32:
         label = masm.storeRipRelativeInt32(ToRegister(ins->value()));
@@ -804,7 +804,7 @@ CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
     Register tmp = ToRegister(ins->temp());
     Register out = ToRegister(ins->output());
 
-    CodeOffsetLabel label = masm.leaRipRelative(tmp);
+    CodeOffset label = masm.leaRipRelative(tmp);
     masm.loadPtr(Operand(tmp, index, TimesEight, 0), out);
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
 }
@@ -814,7 +814,7 @@ CodeGeneratorX64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
 {
     MAsmJSLoadFFIFunc* mir = ins->mir();
 
-    CodeOffsetLabel label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
+    CodeOffset label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
 }
 

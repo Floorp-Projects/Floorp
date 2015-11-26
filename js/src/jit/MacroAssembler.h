@@ -459,8 +459,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(JSValueType type, Register reg);
     void PushValue(const Address& addr);
     void PushEmptyRooted(VMFunction::RootType rootType);
-    inline CodeOffsetLabel PushWithPatch(ImmWord word);
-    inline CodeOffsetLabel PushWithPatch(ImmPtr imm);
+    inline CodeOffset PushWithPatch(ImmWord word);
+    inline CodeOffset PushWithPatch(ImmPtr imm);
 
     void Pop(const Operand op) DEFINED_ON(x86_shared);
     void Pop(Register reg) PER_SHARED_ARCH;
@@ -491,8 +491,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Simple call functions.
 
-    CodeOffsetLabel call(Register reg) PER_SHARED_ARCH;
-    CodeOffsetLabel call(Label* label) PER_SHARED_ARCH;
+    CodeOffset call(Register reg) PER_SHARED_ARCH;
+    CodeOffset call(Label* label) PER_SHARED_ARCH;
     void call(const Address& addr) DEFINED_ON(x86_shared);
     void call(ImmWord imm) PER_SHARED_ARCH;
     // Call a target native function, which is neither traceable nor movable.
@@ -505,7 +505,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void call(const CallSiteDesc& desc, Label* label);
     inline void call(const CallSiteDesc& desc, AsmJSInternalCallee callee);
 
-    CodeOffsetLabel callWithPatch() PER_SHARED_ARCH;
+    CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
 
     // Push the return address and make a call. On platforms where this function
@@ -690,7 +690,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // If the JitCode that created this assembler needs to transition into the VM,
     // we want to store the JitCode on the stack in order to mark it during a GC.
     // This is a reference to a patch location where the JitCode* will be written.
-    CodeOffsetLabel selfReferencePatch_;
+    CodeOffset selfReferencePatch_;
 
   public:
     // ===============================================================
@@ -1050,7 +1050,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         // All barriers are off by default.
         // They are enabled if necessary at the end of CodeGenerator::generate().
-        CodeOffsetLabel nopJump = toggledJump(&done);
+        CodeOffset nopJump = toggledJump(&done);
         writePrebarrierOffset(nopJump);
 
         callPreBarrier(address, type);
@@ -1309,7 +1309,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
     friend class AutoProfilerCallInstrumentation;
 
-    void appendProfilerCallSite(CodeOffsetLabel label) {
+    void appendProfilerCallSite(CodeOffset label) {
         propagateOOM(profilerCallSites_.append(label));
     }
 
@@ -1323,7 +1323,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     bool emitProfilingInstrumentation_;
 
     // Record locations of the call sites.
-    Vector<CodeOffsetLabel, 0, SystemAllocPolicy> profilerCallSites_;
+    Vector<CodeOffset, 0, SystemAllocPolicy> profilerCallSites_;
 
   public:
     void loadBaselineOrIonRaw(Register script, Register dest, Label* failure);

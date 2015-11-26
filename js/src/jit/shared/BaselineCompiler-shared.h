@@ -53,19 +53,19 @@ class BaselineCompilerShared
     // has been allocated.
     struct ICLoadLabel {
         size_t icEntry;
-        CodeOffsetLabel label;
+        CodeOffset label;
     };
     js::Vector<ICLoadLabel, 16, SystemAllocPolicy> icLoadLabels_;
 
     uint32_t pushedBeforeCall_;
     mozilla::DebugOnly<bool> inCall_;
 
-    CodeOffsetLabel spsPushToggleOffset_;
-    CodeOffsetLabel profilerEnterFrameToggleOffset_;
-    CodeOffsetLabel profilerExitFrameToggleOffset_;
-    CodeOffsetLabel traceLoggerEnterToggleOffset_;
-    CodeOffsetLabel traceLoggerExitToggleOffset_;
-    CodeOffsetLabel traceLoggerScriptTextIdOffset_;
+    CodeOffset spsPushToggleOffset_;
+    CodeOffset profilerEnterFrameToggleOffset_;
+    CodeOffset profilerExitFrameToggleOffset_;
+    CodeOffset traceLoggerEnterToggleOffset_;
+    CodeOffset traceLoggerExitToggleOffset_;
+    CodeOffset traceLoggerScriptTextIdOffset_;
 
     BaselineCompilerShared(JSContext* cx, TempAllocator& alloc, JSScript* script);
 
@@ -90,7 +90,7 @@ class BaselineCompilerShared
     // Append an ICEntry without a stub.
     bool appendICEntry(ICEntry::Kind kind, uint32_t returnOffset) {
         ICEntry entry(script->pcToOffset(pc), kind);
-        entry.setReturnOffset(CodeOffsetLabel(returnOffset));
+        entry.setReturnOffset(CodeOffset(returnOffset));
         if (!icEntries_.append(entry)) {
             ReportOutOfMemory(cx);
             return false;
@@ -98,7 +98,7 @@ class BaselineCompilerShared
         return true;
     }
 
-    bool addICLoadLabel(CodeOffsetLabel label) {
+    bool addICLoadLabel(CodeOffset label) {
         MOZ_ASSERT(!icEntries_.empty());
         ICLoadLabel loadLabel;
         loadLabel.label = label;

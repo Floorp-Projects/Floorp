@@ -422,15 +422,15 @@ struct AbsoluteLabel : public LabelBase
     }
 };
 
-class CodeOffsetLabel
+class CodeOffset
 {
     size_t offset_;
 
     static const size_t NOT_USED = size_t(-1);
 
   public:
-    explicit CodeOffsetLabel(size_t offset) : offset_(offset) {}
-    CodeOffsetLabel() : offset_(NOT_USED) {}
+    explicit CodeOffset(size_t offset) : offset_(offset) {}
+    CodeOffset() : offset_(NOT_USED) {}
 
     size_t offset() const {
         MOZ_ASSERT(used());
@@ -461,26 +461,26 @@ class CodeLabel
 {
     // The destination position, where the absolute reference should get
     // patched into.
-    CodeOffsetLabel patchAt_;
+    CodeOffset patchAt_;
 
     // The source label (relative) in the code to where the destination should
     // get patched to.
-    CodeOffsetLabel target_;
+    CodeOffset target_;
 
   public:
     CodeLabel()
     { }
-    explicit CodeLabel(const CodeOffsetLabel& patchAt)
+    explicit CodeLabel(const CodeOffset& patchAt)
       : patchAt_(patchAt)
     { }
-    CodeLabel(const CodeOffsetLabel& patchAt, const CodeOffsetLabel& target)
+    CodeLabel(const CodeOffset& patchAt, const CodeOffset& target)
       : patchAt_(patchAt),
         target_(target)
     { }
-    CodeOffsetLabel* patchAt() {
+    CodeOffset* patchAt() {
         return &patchAt_;
     }
-    CodeOffsetLabel* target() {
+    CodeOffset* target() {
         return &target_;
     }
     void offsetBy(size_t delta) {
@@ -625,7 +625,7 @@ class CodeLocationLabel
         raw_ = nullptr;
         setUninitialized();
     }
-    CodeLocationLabel(JitCode* code, CodeOffsetLabel base) {
+    CodeLocationLabel(JitCode* code, CodeOffset base) {
         *this = base;
         repoint(code);
     }
@@ -638,7 +638,7 @@ class CodeLocationLabel
         setAbsolute();
     }
 
-    void operator = (CodeOffsetLabel base) {
+    void operator = (CodeOffset base) {
         raw_ = (uint8_t*)base.offset();
         setRelative();
     }
@@ -857,10 +857,10 @@ typedef Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> AsmJSHeapAccessVector;
 
 struct AsmJSGlobalAccess
 {
-    CodeOffsetLabel patchAt;
+    CodeOffset patchAt;
     unsigned globalDataOffset;
 
-    AsmJSGlobalAccess(CodeOffsetLabel patchAt, unsigned globalDataOffset)
+    AsmJSGlobalAccess(CodeOffset patchAt, unsigned globalDataOffset)
       : patchAt(patchAt), globalDataOffset(globalDataOffset)
     {}
 };
@@ -955,9 +955,9 @@ class AsmJSAbsoluteAddress
 // the MacroAssembler (in AsmJSModule::staticallyLink).
 struct AsmJSAbsoluteLink
 {
-    AsmJSAbsoluteLink(CodeOffsetLabel patchAt, AsmJSImmKind target)
+    AsmJSAbsoluteLink(CodeOffset patchAt, AsmJSImmKind target)
       : patchAt(patchAt), target(target) {}
-    CodeOffsetLabel patchAt;
+    CodeOffset patchAt;
     AsmJSImmKind target;
 };
 
@@ -1011,7 +1011,7 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    void append(const CallSiteDesc& desc, CodeOffsetLabel label, size_t framePushed,
+    void append(const CallSiteDesc& desc, CodeOffset label, size_t framePushed,
                 uint32_t targetIndex = CallSiteAndTarget::NOT_INTERNAL)
     {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see

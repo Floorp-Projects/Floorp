@@ -243,7 +243,7 @@ class Assembler : public vixl::Assembler
         }
     }
 
-    void Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address) {
+    void Bind(uint8_t* rawCode, CodeOffset* label, const void* address) {
         *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
     }
 
@@ -262,7 +262,7 @@ class Assembler : public vixl::Assembler
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
     }
-    size_t labelToPatchOffset(CodeOffsetLabel label) {
+    size_t labelToPatchOffset(CodeOffset label) {
         return label.offset();
     }
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
