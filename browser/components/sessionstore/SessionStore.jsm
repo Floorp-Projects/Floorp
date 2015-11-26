@@ -18,9 +18,14 @@ const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 const TAB_STATE_WILL_RESTORE = 3;
 
+// A new window has just been restored. At this stage, tabs are generally
+// not restored.
+const NOTIFY_SINGLE_WINDOW_RESTORED = "sessionstore-single-window-restored";
 const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 const NOTIFY_BROWSER_STATE_RESTORED = "sessionstore-browser-state-restored";
 const NOTIFY_LAST_SESSION_CLEARED = "sessionstore-last-session-cleared";
+const NOTIFY_RESTORING_ON_STARTUP = "sessionstore-restoring-on-startup";
+const NOTIFY_INITIATING_MANUAL_RESTORE = "sessionstore-initiating-manual-restore";
 
 const NOTIFY_TAB_RESTORED = "sessionstore-debug-tab-restored"; // WARNING: debug-only
 
@@ -1179,6 +1184,9 @@ var SessionStoreInternal = {
         let initialState = this.initSession();
         this._sessionInitialized = true;
 
+        if (initialState) {
+          Services.obs.notifyObservers(null, NOTIFY_RESTORING_ON_STARTUP, "");
+        }
         TelemetryStopwatch.start("FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS");
         this.initializeWindow(aWindow, initialState);
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS");
@@ -2316,6 +2324,8 @@ var SessionStoreInternal = {
       throw Components.Exception("Last session can not be restored");
     }
 
+    Services.obs.notifyObservers(null, NOTIFY_INITIATING_MANUAL_RESTORE, "");
+
     // First collect each window with its id...
     let windows = {};
     this._forEachBrowserWindow(function(aWindow) {
@@ -3017,6 +3027,9 @@ var SessionStoreInternal = {
     TelemetryStopwatch.finish("FX_SESSION_RESTORE_RESTORE_WINDOW_MS");
 
     this._setWindowStateReady(aWindow);
+
+    Services.obs.notifyObservers(aWindow, NOTIFY_SINGLE_WINDOW_RESTORED, "");
+
     this._sendRestoreCompletedNotifications();
   },
 
