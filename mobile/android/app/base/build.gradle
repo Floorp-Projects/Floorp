@@ -24,10 +24,10 @@ android {
 
     sourceSets {
         main {
-            manifest.srcFile 'AndroidManifest.xml'
+            manifest.srcFile "${topsrcdir}/mobile/android/base/AndroidManifest.xml"
+
             java {
                 srcDir "${topobjdir}/gradle/base/src"
-                exclude 'org/mozilla/gecko/resources/**'
 
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/javaaddons/java"
@@ -64,9 +64,9 @@ android {
             res {
                 srcDir "${topsrcdir}/${mozconfig.substs.MOZ_BRANDING_DIRECTORY}/res"
                 srcDir "${project.buildDir}/generated/source/preprocessed_resources" // See syncPreprocessedResources.
-                srcDir 'resources'
+                srcDir "${topsrcdir}/mobile/android/base/resources"
                 if (mozconfig.substs.MOZ_CRASHREPORTER) {
-                    srcDir 'crashreporter/res'
+                    srcDir "${topsrcdir}/mobile/android/base/crashreporter/res"
                 }
             }
         }
