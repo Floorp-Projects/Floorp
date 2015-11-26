@@ -1429,7 +1429,7 @@ nsXMLContentSerializer::AppendFormatedWrapped_WhitespaceSequence(
       case ' ':
       case '\t':
         sawBlankOrTab = true;
-        // no break
+        MOZ_FALLTHROUGH;
       case '\n':
         ++aPos;
         // do not increase mColPos,

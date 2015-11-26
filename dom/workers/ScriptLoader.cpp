@@ -1990,7 +1990,7 @@ void ReportLoadError(JSContext* aCx, nsresult aLoadResult)
 
     case NS_ERROR_MALFORMED_URI:
       aLoadResult = NS_ERROR_DOM_SYNTAX_ERR;
-      // fall through
+      MOZ_FALLTHROUGH;
     case NS_ERROR_DOM_SECURITY_ERR:
     case NS_ERROR_DOM_SYNTAX_ERR:
       Throw(aCx, aLoadResult);
