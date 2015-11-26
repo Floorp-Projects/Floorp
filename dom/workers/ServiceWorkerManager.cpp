@@ -3777,7 +3777,7 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
 {
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(aPrincipal, aScope);
-  if (!registration) {
+  if (NS_WARN_IF(!registration)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3791,6 +3791,7 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
       registration->TryToActivate();
     }
   } else {
+    NS_WARNING("Failed to set skipWaiting flag, no matching worker.");
     return NS_ERROR_FAILURE;
   }
 
