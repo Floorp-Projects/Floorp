@@ -128,6 +128,9 @@ public:
   void
   NoteStoppedControllingDocuments();
 
+  void
+  Activated();
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,
@@ -191,6 +194,10 @@ private:
   // |StoreISupports| and |RemoveISupports|. Note that the array is also
   // cleared whenever the worker is terminated.
   nsTArray<nsCOMPtr<nsISupports>> mSupportsArray;
+
+  // Array of function event worker runnables that are pending due to
+  // the worker activating.  Main thread only.
+  nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
 };
 
 } // namespace workers
