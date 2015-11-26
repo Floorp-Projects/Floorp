@@ -151,10 +151,8 @@ DeadObjectProxy::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard*
 const char DeadObjectProxy::family = 0;
 const DeadObjectProxy DeadObjectProxy::singleton;
 
-
 bool
 js::IsDeadProxyObject(JSObject* obj)
 {
-    return obj->is<ProxyObject>() &&
-           obj->as<ProxyObject>().handler() == &DeadObjectProxy::singleton;
+    return IsDerivedProxyObject(obj, &DeadObjectProxy::singleton);
 }
