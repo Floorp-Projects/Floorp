@@ -29919,16 +29919,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "js/builtins/Promise-subclassing.html": [
-          {
-            "path": "js/builtins/Promise-subclassing.html",
-            "url": "/js/builtins/Promise-subclassing.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
