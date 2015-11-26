@@ -8,11 +8,14 @@
 #define mozilla_EffectSet_h
 
 #include "nsCSSPseudoElements.h" // For nsCSSPseudoElements::Type
+#include "nsHashKeys.h" // For nsPtrHashKey
+#include "nsTHashtable.h" // For nsTHashtable
 
 namespace mozilla {
 
 namespace dom {
 class Element;
+class KeyframeEffectReadOnly;
 } // namespace dom
 
 // A wrapper around a hashset of AnimationEffect objects to handle
@@ -42,9 +45,20 @@ public:
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
                                          nsCSSPseudoElements::Type aPseudoType);
 
+  void AddEffect(dom::KeyframeEffectReadOnly& aEffect);
+  void RemoveEffect(dom::KeyframeEffectReadOnly& aEffect);
+
 private:
+  // We store a raw (non-owning) pointer here because KeyframeEffectReadOnly
+  // keeps a strong reference to the target element where this object is
+  // stored. KeyframeEffectReadOnly is responsible for removing itself from
+  // this set when it releases its reference to the target element.
+  typedef nsTHashtable<nsPtrHashKey<dom::KeyframeEffectReadOnly>> EffectPtrSet;
+
   static nsIAtom* GetEffectSetPropertyAtom(nsCSSPseudoElements::Type
                                              aPseudoType);
+
+  EffectPtrSet mEffects;
 
 #ifdef DEBUG
   bool mCalledPropertyDtor;
