@@ -1187,7 +1187,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
     } else {
       // For a non-leaf frame, recurse into TraverseFrames
       nsIFrame* kid = frame->GetFirstPrincipalChild();
-      MOZ_ASSERT(!frame->GetFirstChild(nsIFrame::kOverflowList),
+      MOZ_ASSERT(!frame->GetChildList(nsIFrame::kOverflowList).FirstChild(),
                  "should have drained the overflow list above");
       if (kid) {
         const nsStyleTextReset* text = frame->StyleTextReset();
