@@ -57,9 +57,8 @@ function waitUntilService({ dispatch, getState }) {
       pending.push(action);
     }
     else {
-      var result = next(action);
+      next(action);
       checkPending(action);
-      return result;
     }
   }
 }

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test resuming from button and keyboard shortcuts.
+ * Test if the breakpoints toggle button works as advertised.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
@@ -71,7 +71,7 @@ function test() {
       evalInTab(gTab, "1+1;");
     });
 
-    return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN)
+    return oncePaused
       .then(() => {
         ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
@@ -88,6 +88,7 @@ function test() {
     ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
     ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
     ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
+    let oncePaused = gTarget.once("thread-paused");
 
     // Press the key to break on next execution
     EventUtils.synthesizeKey(key, { }, gDebugger);
@@ -100,7 +101,7 @@ function test() {
       evalInTab(gTab, "1+1;");
     });
 
-    return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN)
+    return oncePaused
       .then(() => {
         ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
