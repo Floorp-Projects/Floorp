@@ -567,16 +567,6 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     float scale = devPixelsToAppUnits;
     Point3D offsetToTransformOrigin =
       nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, scale, &bounds);
-    Point3D offsetToPerspectiveOrigin =
-      nsDisplayTransform::GetDeltaToPerspectiveOrigin(aFrame, scale);
-    nscoord perspective = 0.0;
-    nsStyleContext* parentStyleContext = aFrame->StyleContext()->GetParent();
-    if (parentStyleContext) {
-      const nsStyleDisplay* disp = parentStyleContext->StyleDisplay();
-      if (disp && disp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
-        perspective = disp->mChildPerspective.GetCoordValue();
-      }
-    }
     nsPoint origin;
     if (aItem) {
       // This branch is for display items to leverage the cache of
@@ -594,8 +584,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     }
 
     data = TransformData(origin, offsetToTransformOrigin,
-                         offsetToPerspectiveOrigin, bounds, perspective,
-                         devPixelsToAppUnits);
+                         bounds, devPixelsToAppUnits);
   } else if (aProperty == eCSSProperty_opacity) {
     data = null_t();
   }
@@ -631,6 +620,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarFlags(0),
+      mPerspectiveItemIndex(0),
       mIsBuildingScrollbar(false),
       mCurrentScrollbarWillHaveLayer(false),
       mBuildCaret(aBuildCaret),
@@ -1747,10 +1737,13 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   // If this is the content process, we ship plugin geometry updates over with layer
   // updates, so calculate that now before we call EndTransaction.
-  if (rootPresContext &&
-      aBuilder->WillComputePluginGeometry() &&
-      XRE_IsContentProcess()) {
-    rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+  if (rootPresContext && XRE_IsContentProcess()) {
+    if (aBuilder->WillComputePluginGeometry()) {
+      rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+    }
+    // The layer system caches plugin configuration information for forwarding
+    // with layer updates which needs to get set during reflow. This must be
+    // called even if there are no windowed plugins in the page.
     rootPresContext->CollectPluginGeometryUpdates(layerManager);
   }
 
@@ -5069,51 +5062,61 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
                                          aAppUnitsPerPixel));
 }
 
-/* Returns the delta specified by the -moz-perspective-origin property.
- * This is a positive delta, meaning that it indicates the direction to move
- * to get from (0, 0) of the frame to the perspective origin. This function is
- * called off the main thread.
- */
-/* static */ Point3D
-nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
-                                                float aAppUnitsPerPixel)
+/* static */ bool
+nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
+                                             float aAppUnitsPerPixel,
+                                             Matrix4x4& aOutMatrix)
 {
   NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
   NS_PRECONDITION(aFrame->IsTransformed() ||
                   aFrame->StyleDisplay()->BackfaceIsHidden() ||
                   aFrame->Combines3DTransformWithAncestors(),
                   "Shouldn't get a delta for an untransformed frame!");
+  NS_PRECONDITION(aOutMatrix.IsIdentity(), "Must have a blank output matrix");
 
   if (!aFrame->IsTransformed()) {
-    return Point3D();
+    return false;
   }
 
-  /* For both of the coordinates, if the value of -moz-perspective-origin is a
-   * percentage, it's relative to the size of the frame.  Otherwise, if it's
-   * a distance, it's already computed for us!
+  /* Find our containing block, which is the element that provides the
+   * value for perspective we need to use
    */
 
-  //TODO: Should this be using our bounds or the parent's bounds?
-  // How do we handle aBoundsOverride in the latter case?
+  //TODO: Is it possible that the cbFrame's bounds haven't been set correctly yet
+  // (similar to the aBoundsOverride case for GetResultingTransformMatrix)?
   nsIFrame* cbFrame = aFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
   if (!cbFrame) {
-    return Point3D();
+    return false;
   }
-  const nsStyleDisplay* display = cbFrame->StyleDisplay();
+
+  /* Grab the values for perspective and perspective-origin (if present) */
+
+  const nsStyleDisplay* cbDisplay = cbFrame->StyleDisplay();
+  if (cbDisplay->mChildPerspective.GetUnit() != eStyleUnit_Coord) {
+    return false;
+  }
+  nscoord perspective = cbDisplay->mChildPerspective.GetCoordValue();
+  if (perspective <= 0) {
+    return false;
+  }
+
   TransformReferenceBox refBox(cbFrame);
 
   /* Allows us to access named variables by index. */
-  Point3D result;
-  result.z = 0.0f;
-  gfx::Float* coords[2] = {&result.x, &result.y};
+  Point3D perspectiveOrigin;
+  gfx::Float* coords[2] = {&perspectiveOrigin.x, &perspectiveOrigin.y};
   TransformReferenceBox::DimensionGetter dimensionGetter[] =
     { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
 
+  /* For both of the coordinates, if the value of perspective-origin is a
+   * percentage, it's relative to the size of the frame.  Otherwise, if it's
+   * a distance, it's already computed for us!
+   */
   for (uint8_t index = 0; index < 2; ++index) {
-    /* If the transform-origin specifies a percentage, take the percentage
+    /* If the -transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
-    const nsStyleCoord &coord = display->mPerspectiveOrigin[index];
+    const nsStyleCoord &coord = cbDisplay->mPerspectiveOrigin[index];
     if (coord.GetUnit() == eStyleUnit_Calc) {
       const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       *coords[index] =
@@ -5131,13 +5134,25 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
     }
   }
 
-  nsPoint parentOffset = aFrame->GetOffsetTo(cbFrame);
-  Point3D gfxOffset(
-            NSAppUnitsToFloatPixels(parentOffset.x, aAppUnitsPerPixel),
-            NSAppUnitsToFloatPixels(parentOffset.y, aAppUnitsPerPixel),
+  /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
+   * in aFrame. Although we actually want the inverse of this, it's faster to
+   * compute this way.
+   */
+  nsPoint frameToCbOffset = -aFrame->GetOffsetTo(cbFrame);
+  Point3D frameToCbGfxOffset(
+            NSAppUnitsToFloatPixels(frameToCbOffset.x, aAppUnitsPerPixel),
+            NSAppUnitsToFloatPixels(frameToCbOffset.y, aAppUnitsPerPixel),
             0.0f);
 
-  return result - gfxOffset;
+  /* Move the perspective origin to be relative to aFrame, instead of relative
+   * to the containing block which is how it was specified in the style system.
+   */
+  perspectiveOrigin += frameToCbGfxOffset;
+
+  aOutMatrix._34 =
+    -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
+  aOutMatrix.ChangeBasis(perspectiveOrigin);
+  return true;
 }
 
 nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsIFrame* aFrame,
@@ -5146,20 +5161,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
   : mFrame(aFrame)
   , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
   , mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
-  , mChildPerspective(0)
 {
-  nsIFrame* cbFrame = aFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
-  if (cbFrame) {
-    const nsStyleDisplay* display = cbFrame->StyleDisplay();
-    if (display->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
-      mChildPerspective = display->mChildPerspective.GetCoordValue();
-      // Calling GetDeltaToPerspectiveOrigin can be expensive, so we avoid
-      // calling it unnecessarily.
-      if (mChildPerspective > 0.0) {
-        mToPerspectiveOrigin = GetDeltaToPerspectiveOrigin(aFrame, aAppUnitsPerPixel);
-      }
-    }
-  }
 }
 
 /* Wraps up the transform matrix in a change-of-basis matrix pair that
@@ -5170,57 +5172,40 @@ Matrix4x4
 nsDisplayTransform::GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
                                                 const nsPoint& aOrigin,
                                                 float aAppUnitsPerPixel,
+                                                uint32_t aFlags,
                                                 const nsRect* aBoundsOverride,
                                                 nsIFrame** aOutAncestor)
 {
   return GetResultingTransformMatrixInternal(aProperties, aOrigin, aAppUnitsPerPixel,
-                                             aBoundsOverride, aOutAncestor, false, false);
+                                             aFlags, aBoundsOverride, aOutAncestor);
 }
  
 Matrix4x4
 nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                 const nsPoint& aOrigin,
                                                 float aAppUnitsPerPixel,
+                                                uint32_t aFlags,
                                                 const nsRect* aBoundsOverride,
-                                                nsIFrame** aOutAncestor,
-                                                bool aOffsetByOrigin)
+                                                nsIFrame** aOutAncestor)
 {
   FrameTransformProperties props(aFrame,
                                  aAppUnitsPerPixel,
                                  aBoundsOverride);
 
   return GetResultingTransformMatrixInternal(props, aOrigin, aAppUnitsPerPixel,
-                                             aBoundsOverride, aOutAncestor,
-                                             aOffsetByOrigin, false);
-}
-
-Matrix4x4
-nsDisplayTransform::GetResultingTransformMatrixP3D(const nsIFrame* aFrame,
-                                                   const nsPoint& aOrigin,
-                                                   float aAppUnitsPerPixel,
-                                                   const nsRect* aBoundsOverride,
-                                                   nsIFrame** aOutAncestor,
-                                                   bool aOffsetByOrigin)
-{
-  FrameTransformProperties props(aFrame,
-                                 aAppUnitsPerPixel,
-                                 aBoundsOverride);
-
-  return GetResultingTransformMatrixInternal(props, aOrigin, aAppUnitsPerPixel,
-                                             aBoundsOverride, aOutAncestor,
-                                             aOffsetByOrigin, true);
+                                             aFlags, aBoundsOverride, aOutAncestor);
 }
 
 Matrix4x4
 nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                         const nsPoint& aOrigin,
                                                         float aAppUnitsPerPixel,
+                                                        uint32_t aFlags,
                                                         const nsRect* aBoundsOverride,
-                                                        nsIFrame** aOutAncestor,
-                                                        bool aOffsetByOrigin,
-                                                        bool aDoPreserves3D)
+                                                        nsIFrame** aOutAncestor)
 {
   const nsIFrame *frame = aProperties.mFrame;
+  NS_ASSERTION(frame || !(aFlags & INCLUDE_PERSPECTIVE), "Must have a frame to compute perspective!");
 
   if (aOutAncestor) {
     *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(frame);
@@ -5275,23 +5260,27 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                         hasSVGTransforms ? newOrigin.y : NS_round(newOrigin.y),
                         0);
 
-  bool hasPerspective = aProperties.mChildPerspective > 0.0;
+  Matrix4x4 perspectiveMatrix;
+  bool hasPerspective = aFlags & INCLUDE_PERSPECTIVE;
+  if (hasPerspective) {
+    hasPerspective = ComputePerspectiveMatrix(frame, aAppUnitsPerPixel,
+                                              perspectiveMatrix);
+  }
 
   if (!hasSVGTransforms || !hasTransformFromSVGParent) {
     // This is a simplification of the following |else| block, the
     // simplification being possible because we don't need to apply
     // mToTransformOrigin between two transforms.
-    Point3D offsets = roundedOrigin + aProperties.mToTransformOrigin;
-    if (aOffsetByOrigin &&
+    if ((aFlags & OFFSET_BY_ORIGIN) &&
         !hasPerspective) {
       // We can fold the final translation by roundedOrigin into the first matrix
       // basis change translation. This is more stable against variation due to
       // insufficient floating point precision than reversing the translation
       // afterwards.
       result.PreTranslate(-aProperties.mToTransformOrigin);
-      result.PostTranslate(offsets);
+      result.PostTranslate(roundedOrigin + aProperties.mToTransformOrigin);
     } else {
-      result.ChangeBasis(offsets);
+      result.ChangeBasis(aProperties.mToTransformOrigin);
     }
   } else {
     Point3D refBoxOffset(NSAppUnitsToFloatPixels(refBox.X(), aAppUnitsPerPixel),
@@ -5316,30 +5305,25 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // Similar to the code in the |if| block above, but since we've accounted
     // for mToTransformOrigin so we don't include that. We also need to reapply
     // refBoxOffset.
-    Point3D offsets = roundedOrigin + refBoxOffset;
-    if (aOffsetByOrigin &&
+    if ((aFlags & OFFSET_BY_ORIGIN) &&
         !hasPerspective) {
       result.PreTranslate(-refBoxOffset);
-      result.PostTranslate(offsets);
+      result.PostTranslate(roundedOrigin + refBoxOffset);
     } else {
-      result.ChangeBasis(offsets);
+      result.ChangeBasis(refBoxOffset);
     }
   }
 
   if (hasPerspective) {
-    Matrix4x4 perspective;
-    perspective._34 =
-      -1.0 / NSAppUnitsToFloatPixels(aProperties.mChildPerspective, aAppUnitsPerPixel);
+    result = result * perspectiveMatrix;
 
-    perspective.ChangeBasis(aProperties.GetToPerspectiveOrigin() + roundedOrigin);
-    result = result * perspective;
-
-    if (aOffsetByOrigin) {
-      result.PreTranslate(roundedOrigin);
+    if (aFlags & OFFSET_BY_ORIGIN) {
+      result.PostTranslate(roundedOrigin);
     }
   }
 
-  if (aDoPreserves3D && frame && frame->Combines3DTransformWithAncestors()) {
+  if ((aFlags & INCLUDE_PRESERVE3D_ANCESTORS) &&
+      frame && frame->Combines3DTransformWithAncestors()) {
     // Include the transform set on our parent
     NS_ASSERTION(frame->GetParent() &&
                  frame->GetParent()->IsTransformed() &&
@@ -5351,14 +5335,17 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 
     // If this frame isn't transformed (but we exist for backface-visibility),
     // then we're not a reference frame so no offset to origin will be added. Our
-    // parent transform however *is* the reference frame, so we pass true for
-    // aOffsetByOrigin to convert into the correct coordinate space.
+    // parent transform however *is* the reference frame, so we pass
+    // OFFSET_BY_ORIGIN to convert into the correct coordinate space.
+    uint32_t flags = aFlags & (INCLUDE_PRESERVE3D_ANCESTORS|INCLUDE_PERSPECTIVE);
+    if (!frame->IsTransformed()) {
+      flags |= OFFSET_BY_ORIGIN;
+    }
     Matrix4x4 parent =
       GetResultingTransformMatrixInternal(props,
                                           aOrigin - frame->GetPosition(),
-                                          aAppUnitsPerPixel, nullptr,
-                                          aOutAncestor, !frame->IsTransformed(),
-                                          aDoPreserves3D);
+                                          aAppUnitsPerPixel, flags,
+                                          nullptr, aOutAncestor);
     result = result * parent;
   }
 
@@ -5502,21 +5489,29 @@ nsDisplayTransform::GetTransform()
       bool isReference =
         mFrame->IsTransformed() ||
         mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
-      /**
-       * Passing true as the final argument means that we want to shift the
-       * coordinates to be relative to our reference frame instead of relative
-       * to this frame.
-       * When we have preserve-3d, our reference frame is already guaranteed
-       * to be an ancestor of the preserve-3d chain, so we only need to do
-       * this once.
-       * For preserve-3d leaf, itself is a refrence frame.
-       */
+      uint32_t flags = INCLUDE_PERSPECTIVE;
+      if (isReference) {
+        flags |= OFFSET_BY_ORIGIN;
+      }
       mTransform = GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                               scale, nullptr, nullptr,
-                                               isReference);
+                                               scale, flags);
     }
   }
   return mTransform;
+}
+
+Matrix4x4
+nsDisplayTransform::GetTransformForRendering()
+{
+  if (!mFrame->HasPerspective() || mTransformGetter || mIsTransformSeparator) {
+    return GetTransform();
+  }
+  MOZ_ASSERT(!mTransformGetter);
+
+  float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+  // Don't include perspective transform, or the offset to origin, since
+  // nsDisplayPerspective will handle both of those.
+  return GetResultingTransformMatrix(mFrame, ToReferenceFrame(), scale, 0);
 }
 
 const Matrix4x4&
@@ -5542,9 +5537,9 @@ nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBu
 
     nsPoint offset = mFrame->GetOffsetToCrossDoc(establisherReference);
     float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+    uint32_t flags = INCLUDE_PRESERVE3D_ANCESTORS|INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN;
     mTransformPreserves3D =
-      GetResultingTransformMatrixP3D(mFrame, offset, scale,
-                                     nullptr, nullptr, true);
+      GetResultingTransformMatrix(mFrame, offset, scale, flags);
   }
   return mTransformPreserves3D;
 }
@@ -5566,7 +5561,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
    * backface hidden here.  But, it would be removed by the init
    * function of nsDisplayTransform.
    */
-  const Matrix4x4& newTransformMatrix = GetTransform();
+  const Matrix4x4& newTransformMatrix = GetTransformForRendering();
 
   uint32_t flags = ShouldPrerender(aBuilder) ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
@@ -5970,26 +5965,14 @@ nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
   NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+
+  uint32_t flags = INCLUDE_PERSPECTIVE;
+  if (aPreserves3D) {
+    flags |= INCLUDE_PRESERVE3D_ANCESTORS;
+  }
   return nsLayoutUtils::MatrixTransformRect
     (aUntransformedBounds,
-     (aPreserves3D ?
-      GetResultingTransformMatrixP3D(aFrame, aOrigin, factor,
-                                     aBoundsOverride) :
-      GetResultingTransformMatrix(aFrame, aOrigin, factor, aBoundsOverride)),
-     factor);
-}
-
-nsRect nsDisplayTransform::TransformRectOut(const nsRect &aUntransformedBounds,
-                                            const nsIFrame* aFrame,
-                                            const nsPoint &aOrigin,
-                                            const nsRect* aBoundsOverride)
-{
-  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
-
-  float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
-  return nsLayoutUtils::MatrixTransformRectOut
-    (aUntransformedBounds,
-     GetResultingTransformMatrixP3D(aFrame, aOrigin, factor, aBoundsOverride),
+     GetResultingTransformMatrix(aFrame, aOrigin, factor, flags, aBoundsOverride),
      factor);
 }
 
@@ -6004,9 +5987,12 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  Matrix4x4 transform = aPreserves3D ?
-    GetResultingTransformMatrixP3D(aFrame, aOrigin, factor, nullptr) :
-    GetResultingTransformMatrix(aFrame, aOrigin, factor, nullptr);
+  uint32_t flags = INCLUDE_PERSPECTIVE;
+  if (aPreserves3D) {
+    flags |= INCLUDE_PRESERVE3D_ANCESTORS;
+  }
+
+  Matrix4x4 transform = GetResultingTransformMatrix(aFrame, aOrigin, factor, flags);
   if (transform.IsSingular()) {
     return false;
   }
@@ -6059,6 +6045,71 @@ void
 nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
 {
   AppendToString(aStream, GetTransform());
+}
+
+nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
+                                           nsIFrame* aTransformFrame,
+                                           nsIFrame* aPerspectiveFrame,
+                                           nsDisplayList* aList)
+  : nsDisplayItem(aBuilder, aPerspectiveFrame)
+  , mList(aBuilder, aPerspectiveFrame, aList)
+  , mTransformFrame(aTransformFrame)
+  , mIndex(aBuilder->AllocatePerspectiveItemIndex())
+{}
+
+already_AddRefed<Layer>
+nsDisplayPerspective::BuildLayer(nsDisplayListBuilder *aBuilder,
+                                 LayerManager *aManager,
+                                 const ContainerLayerParameters& aContainerParameters)
+{
+  float appUnitsPerPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  Matrix4x4 perspectiveMatrix;
+  DebugOnly<bool> hasPerspective =
+    nsDisplayTransform::ComputePerspectiveMatrix(mTransformFrame, appUnitsPerPixel,
+                                                 perspectiveMatrix);
+  MOZ_ASSERT(hasPerspective, "Why did we create nsDisplayPerspective?");
+
+  /*
+   * The resulting matrix is still in the coordinate space of the transformed
+   * frame. Append a translation to the reference frame coordinates.
+   */
+  nsDisplayTransform* transform =
+    static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop());
+
+  Point3D newOrigin =
+    Point3D(NSAppUnitsToFloatPixels(transform->ToReferenceFrame().x, appUnitsPerPixel),
+            NSAppUnitsToFloatPixels(transform->ToReferenceFrame().y, appUnitsPerPixel),
+            0.0f);
+  Point3D roundedOrigin(NS_round(newOrigin.x),
+                        NS_round(newOrigin.y),
+                        0);
+
+  perspectiveMatrix.PostTranslate(roundedOrigin);
+
+  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+    BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList.GetChildren(),
+                           aContainerParameters, &perspectiveMatrix, 0);
+
+  if (!container) {
+    return nullptr;
+  }
+
+  // Sort of a lie, but we want to pretend that the perspective layer extends a 3d context
+  // so that it gets its transform combined with children. Might need a better name that reflects
+  // this use case and isn't specific to preserve-3d.
+  container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_EXTEND_3D_CONTEXT);
+  container->SetTransformIsPerspective(true);
+
+  return container.forget();
+}
+
+LayerState
+nsDisplayPerspective::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                    LayerManager* aManager,
+                                    const ContainerLayerParameters& aParameters)
+{
+  return LAYER_ACTIVE;
 }
 
 nsDisplayItemGeometry*

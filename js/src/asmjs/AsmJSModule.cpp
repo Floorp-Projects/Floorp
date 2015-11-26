@@ -341,22 +341,12 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     // CodeLabels are used for switch cases and loads from floating-point /
     // SIMD values in the constant pool.
     for (size_t i = 0; i < masm.numCodeLabels(); i++) {
-        CodeLabel src = masm.codeLabel(i);
-        int32_t labelOffset = src.dest()->offset();
-        int32_t targetOffset = src.src()->offset();
-        // The patched uses of a label embed a linked list where the
-        // to-be-patched immediate is the offset of the next to-be-patched
-        // instruction.
-        while (labelOffset != LabelBase::INVALID_OFFSET) {
-            size_t patchAtOffset = masm.labelOffsetToPatchOffset(labelOffset);
-            RelativeLink link(RelativeLink::CodeLabel);
-            link.patchAtOffset = patchAtOffset;
-            link.targetOffset = targetOffset;
-            if (!staticLinkData_.relativeLinks.append(link))
-                return false;
-
-            labelOffset = Assembler::ExtractCodeLabelOffset(code_ + patchAtOffset);
-        }
+        CodeLabel cl = masm.codeLabel(i);
+        RelativeLink link(RelativeLink::CodeLabel);
+        link.patchAtOffset = masm.labelToPatchOffset(*cl.patchAt());
+        link.targetOffset = cl.target()->offset();
+        if (!staticLinkData_.relativeLinks.append(link))
+            return false;
     }
 
 #if defined(JS_CODEGEN_X86)
@@ -366,7 +356,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
         AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
         RelativeLink link(RelativeLink::InstructionImmediate);
-        link.patchAtOffset = masm.labelOffsetToPatchOffset(a.patchAt.offset());
+        link.patchAtOffset = masm.labelToPatchOffset(a.patchAt);
         link.targetOffset = offsetOfGlobalData() + a.globalDataOffset;
         if (!staticLinkData_.relativeLinks.append(link))
             return false;

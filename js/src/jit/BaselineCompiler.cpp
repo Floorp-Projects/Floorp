@@ -891,7 +891,7 @@ BaselineCompiler::emitProfilerEnterFrame()
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(profilerEnterFrameToggleOffset_.offset() == 0);
+    MOZ_ASSERT(!profilerEnterFrameToggleOffset_.used());
     profilerEnterFrameToggleOffset_ = toggleOffset;
 }
 
@@ -906,7 +906,7 @@ BaselineCompiler::emitProfilerExitFrame()
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(profilerExitFrameToggleOffset_.offset() == 0);
+    MOZ_ASSERT(!profilerExitFrameToggleOffset_.used());
     profilerExitFrameToggleOffset_ = toggleOffset;
 }
 
@@ -4028,8 +4028,8 @@ BaselineCompiler::emit_JSOP_RESUME()
     }
     masm.bind(&loopDone);
 
-    // Push |this|.
-    masm.pushValue(Address(genObj, GeneratorObject::offsetOfThisSlot()));
+    // Push |undefined| for |this|.
+    masm.pushValue(UndefinedValue());
 
     // Update BaselineFrame frameSize field and create the frame descriptor.
     masm.computeEffectiveAddress(Address(BaselineFrameReg, BaselineFrame::FramePointerOffset),

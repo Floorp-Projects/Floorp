@@ -491,6 +491,17 @@ SpecialPowersObserverAPI.prototype = {
         return undefined;	// See comment at the beginning of this function.
       }
 
+      case "SPImportInMainProcess": {
+        var message = { hadError: false, errorMessage: null };
+        try {
+          Components.utils.import(aMessage.data);
+        } catch (e) {
+          message.hadError = true;
+          message.errorMessage = e.toString();
+        }
+        return message;
+      }
+
       case "SPCleanUpSTSData": {
         let origin = aMessage.data.origin;
         let flags = aMessage.data.flags;

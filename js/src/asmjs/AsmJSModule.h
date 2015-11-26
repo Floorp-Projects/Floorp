@@ -623,6 +623,12 @@ class AsmJSModule
             MOZ_ASSERT(isFunction());
             return lineNumber_;
         }
+        void functionOffsetBy(uint32_t offset) {
+            MOZ_ASSERT(isFunction());
+            begin_ += offset;
+            profilingReturn_ += offset;
+            end_ += offset;
+        }
         AsmJSExit::BuiltinKind thunkTarget() const {
             MOZ_ASSERT(isThunk());
             return AsmJSExit::BuiltinKind(u.thunk.target_);

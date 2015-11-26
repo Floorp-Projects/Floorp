@@ -105,7 +105,7 @@ class XPCShellTestThread(Thread):
     def __init__(self, test_object, event, cleanup_dir_list, retry=True,
             app_dir_key=None, interactive=False,
             verbose=False, pStdout=None, pStderr=None, keep_going=False,
-            log=None, **kwargs):
+            log=None, usingTSan=False, **kwargs):
         Thread.__init__(self)
         self.daemon = True
 
@@ -140,6 +140,7 @@ class XPCShellTestThread(Thread):
         self.pStderr = pStderr
         self.keep_going = keep_going
         self.log = log
+        self.usingTSan = usingTSan
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -699,7 +700,23 @@ class XPCShellTestThread(Thread):
                 self.parse_output(process_output)
 
             return_code = self.getReturnCode(proc)
-            passed = (not self.has_failure_output) and (return_code == 0)
+
+            # TSan'd processes return 66 if races are detected.  This isn't
+            # good in the sense that there's no way to distinguish between
+            # a process that would normally have returned zero but has races,
+            # and a race-free process that returns 66.  But I don't see how
+            # to do better.  This ambiguity is at least constrained to the
+            # with-TSan case.  It doesn't affect normal builds.
+            #
+            # This also assumes that the magic value 66 isn't overridden by
+            # a TSAN_OPTIONS=exitcode=<number> environment variable setting.
+            #
+            TSAN_EXIT_CODE_WITH_RACES = 66
+
+            return_code_ok = (return_code == 0 or
+                              (self.usingTSan and
+                               return_code == TSAN_EXIT_CODE_WITH_RACES))
+            passed = (not self.has_failure_output) and return_code_ok
 
             status = 'PASS' if passed else 'FAIL'
             expected = 'PASS' if expect_pass else 'FAIL'
@@ -727,6 +744,12 @@ class XPCShellTestThread(Thread):
                             f.write('%s = %s\n' % (k, v))
 
             else:
+                # If TSan reports a race, dump the output, else we can't
+                # diagnose what the problem was.  See comments above about
+                # the significance of TSAN_EXIT_CODE_WITH_RACES.
+                if self.usingTSan and return_code == TSAN_EXIT_CODE_WITH_RACES:
+                    self.log_full_output(self.output_lines)
+
                 self.log.test_end(name, status, expected=expected, message=message)
                 if self.verbose:
                     self.log_full_output(self.output_lines)
@@ -913,7 +936,8 @@ class XPCShellTests(object):
                 if usingASan:
                     self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 else:
-                    self.env["TSAN_OPTIONS"] = "external_symbolizer_path=%s" % llvmsym
+                    oldTSanOptions = self.env.get("TSAN_OPTIONS", "")
+                    self.env["TSAN_OPTIONS"] = "external_symbolizer_path={} {}".format(llvmsym, oldTSanOptions)
                 self.log.info("runxpcshelltests.py | using symbolizer at %s" % llvmsym)
             else:
                 self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | Failed to find symbolizer at %s" % llvmsym)
@@ -1262,6 +1286,10 @@ class XPCShellTests(object):
                 self.log.error("Error: --jsdebugger can only be used with a single test!")
                 return False
 
+        # The test itself needs to know whether it is a tsan build, since
+        # that has an effect on interpretation of the process return value.
+        usingTSan = "tsan" in self.mozInfo and self.mozInfo["tsan"]
+
         # create a queue of all tests that will run
         tests_queue = deque()
         # also a list for the tests that need to be run sequentially
@@ -1284,7 +1312,7 @@ class XPCShellTests(object):
                     interactive=interactive,
                     verbose=verbose or test_object.get("verbose") == "true",
                     pStdout=pStdout, pStderr=pStderr,
-                    keep_going=keepGoing, log=self.log,
+                    keep_going=keepGoing, log=self.log, usingTSan=usingTSan,
                     mobileArgs=mobileArgs, **kwargs)
             if 'run-sequentially' in test_object or self.sequential:
                 sequential_tests.append(test)

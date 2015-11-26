@@ -238,6 +238,10 @@ body {
   background-color: var(--even-animation-timeline-background-color);
 }
 
+.animation-timeline .animation.selected {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
 .animation-timeline .animation .target {
   width: var(--timeline-sidebar-width);
   overflow: hidden;
@@ -254,6 +258,7 @@ body {
   left: var(--timeline-sidebar-width);
   right: 0;
   height: var(--timeline-animation-height);
+  cursor: pointer;
 }
 
 /* Animation iterations */

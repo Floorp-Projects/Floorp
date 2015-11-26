@@ -136,65 +136,55 @@ function checkGetOffsetsCoverage(fun) {
   }
 }
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
   ",".split(','); //DA:$,1
-  //FNF:1
-  //FNH:1
-  //LF:1
-  //LH:1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
   function f() {    //FN:$,f
     ",".split(','); //DA:$,0
   }
   ",".split(',');   //DA:$,1
-  //FNF:2
-  //FNH:1
-  //LF:2
-  //LH:1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
-  function f() {    //FN:$,f //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  function f() {    //FN:$,f
     ",".split(','); //DA:$,1
   }
   f();              //DA:$,1
-  //FNF:2
-  //FNH:2
-  //LF:2
-  //LH:2
 });
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 3)      //DA:$,1
     l.push('');           //DA:$,0
-  else
-    l.pop();              //DA:$,1
-  //FNF:1
-  //FNH:1
-  //LF:4
-  //LH:3
-  //BRF:1
-  //BRH:1
+  l.pop();                //DA:$,1
 });
 
 checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
   if (l.length == 2)      //DA:$,1
     l.push('');           //DA:$,1
-  else
-    l.pop();              //DA:$,0
-  //FNF:1
-  //FNH:1
-  //LF:4
-  //LH:3
-  //BRF:1
-  //BRH:1
+  l.pop();                //DA:$,1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 3)      //DA:$,1
+    l.push('');           //DA:$,0
+  else
+    l.pop();              //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  if (l.length == 2)      //DA:$,1
+    l.push('');           //DA:$,1
+  else
+    l.pop();              //DA:$,0
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
   var l = ",".split(','); //DA:$,1
   if (l.length == 2)      //DA:$,1
     l.push('');           //DA:$,1
@@ -202,16 +192,10 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
     if (l.length == 1)    //DA:$,0
       l.pop();            //DA:$,0
   }
-  //FNF:1
-  //FNH:1
-  //LF:5
-  //LH:3
-  //BRF:2
-  //BRH:1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
-  function f(i) { //FN:$,f //FNDA:2,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  function f(i) { //FN:$,f
     var x = 0;    //DA:$,2
     while (i--) { // Currently OSR wrongly count the loop header twice.
                   // So instead of DA:$,12 , we have DA:$,13 .
@@ -219,20 +203,16 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
       x = x / 2;  //DA:$,10
     }
     return x;     //DA:$,2
-    //BRF:1
-    //BRH:1
   }
 
   f(5);           //DA:$,1
   f(5);           //DA:$,1
-  //FNF:2
-  //FNH:2
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
   try {                     //DA:$,1
     var l = ",".split(','); //DA:$,1
-    if (l.length == 2) {    //DA:$,1 // BRDA:$,0
+    if (l.length == 2) {    //DA:$,1
       l.push('');           //DA:$,1
       throw l;              //DA:$,1
     }
@@ -240,39 +220,26 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
   } catch (x) {             //DA:$,1
     x.pop();                //DA:$,1
   }
-  //FNF:1
-  //FNH:1
-  //LF:9 // Expected LF:8 , Apparently if the first statement is a try, the
-         // statement following the "try{" statement is visited twice.
-  //LH:8 // Expected LH:7
-  //BRF:1
-  //BRH:1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
   var l = ",".split(',');   //DA:$,1
   try {                     //DA:$,1
     try {                   //DA:$,1
-      if (l.length == 2) {  //DA:$,1 // BRDA:$,0
+      if (l.length == 2) {  //DA:$,1
         l.push('');         //DA:$,1
         throw l;            //DA:$,1
       }
-      l.pop();              //DA:$,0 // BRDA:$,-
+      l.pop();              //DA:$,0
     } finally {             //DA:$,1
       l.pop();              //DA:$,1
     }
   } catch (x) {             //DA:$,1
   }
-  //FNF:1
-  //FNH:1
-  //LF:10
-  //LH:9
-  //BRF:2
-  //BRH:1
 });
 
-checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
-  function f() {            //FN:$,f //FNDA:1,%
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  function f() {            //FN:$,f
     throw 1;                //DA:$,1
     f();                    //DA:$,0
   }
@@ -282,12 +249,95 @@ checkGetOffsetsCoverage(function () { //FN:$,top-level //FNDA:1,%
     f();                    //DA:$,0
   } catch (x) {             //DA:$,1
   }
-  //FNF:2
-  //FNH:2
-  //LF:7
-  //LH:5
-  //BRF:0
-  //BRH:0
+});
+
+
+// Test TableSwitch opcode
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 0:
+      l.push('0');        //DA:$,0
+      break;
+    case 1:
+      l.push('1');        //DA:$,0
+      break;
+    case 2:
+      l.push('2');        //DA:$,1
+      break;
+    case 3:
+      l.push('3');        //DA:$,0
+      break;
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 5:
+      l.push('5');        //DA:$,0
+    case 4:
+      l.push('4');        //DA:$,0
+    case 3:
+      l.push('3');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 2:
+      l.push('2');        //DA:$,1
+    case 5:
+      l.push('5');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+});
+
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case 3:
+      l.push('1');        //DA:$,0
+    case 5:
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
+});
+
+// Unfortunately the differences between switch implementations leaks in the
+// code coverage reports.
+checkGetOffsetsCoverage(function () { //FN:$,top-level
+  function f(a) {         //FN:$,f
+    return a;             //DA:$,2
+  }
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1
+    case f(-42):          //DA:$,1
+      l.push('1');        //DA:$,0
+    case f(51):           //DA:$,1
+      l.push('5');        //DA:$,0
+  }
+  l.pop();                //DA:$,1
 });
 
 // If you add a test case here, do the same in

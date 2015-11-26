@@ -132,8 +132,11 @@ private:
   // applied for |aLayer|. |*aOutFoundRoot| is set to true on Android only, if
   // one of the metrics on one of the layers was determined to be the "root"
   // and its state was synced to the Java front-end. |aOutFoundRoot| must be
-  // non-null.
-  bool ApplyAsyncContentTransformToTree(Layer* aLayer, bool* aOutFoundRoot);
+  // non-null. As the function recurses over the layer tree, a layer may
+  // populate |aClipDeferredToParent| a clip rect it wants to set on its parent.
+  bool ApplyAsyncContentTransformToTree(Layer* aLayer,
+                                        bool* aOutFoundRoot,
+                                        Maybe<ParentLayerIntRect>& aClipDeferredToParent);
   /**
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.

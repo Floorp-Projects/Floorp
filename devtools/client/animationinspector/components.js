@@ -565,6 +565,7 @@ function AnimationsTimeline(inspector) {
   this.onScrubberMouseUp = this.onScrubberMouseUp.bind(this);
   this.onScrubberMouseOut = this.onScrubberMouseOut.bind(this);
   this.onScrubberMouseMove = this.onScrubberMouseMove.bind(this);
+  this.onAnimationSelected = this.onAnimationSelected.bind(this);
   EventEmitter.decorate(this);
 }
 
@@ -633,14 +634,17 @@ AnimationsTimeline.prototype = {
     this.win = null;
     this.inspector = null;
   },
+
   destroyTargetNodes: function() {
     for (let targetNode of this.targetNodes) {
       targetNode.destroy();
     }
     this.targetNodes = [];
   },
+
   destroyTimeBlocks: function() {
     for (let timeBlock of this.timeBlocks) {
+      timeBlock.off("selected", this.onAnimationSelected);
       timeBlock.destroy();
     }
     this.timeBlocks = [];
@@ -654,6 +658,24 @@ AnimationsTimeline.prototype = {
     this.destroyTargetNodes();
     this.destroyTimeBlocks();
     this.animationsEl.innerHTML = "";
+  },
+
+  onAnimationSelected: function(e, animation) {
+    // Unselect the previously selected animation if any.
+    [...this.rootWrapperEl.querySelectorAll(".animation.selected")].forEach(el => {
+      el.classList.remove("selected");
+    });
+
+    // Select the new animation.
+    let index = this.animations.indexOf(animation);
+    if (index === -1) {
+      return;
+    }
+    this.rootWrapperEl.querySelectorAll(".animation")[index]
+                      .classList.toggle("selected");
+
+    // Relay the event to the parent component.
+    this.emit("selected", animation);
   },
 
   onScrubberMouseDown: function(e) {
@@ -764,6 +786,8 @@ AnimationsTimeline.prototype = {
       timeBlock.init(timeBlockEl);
       timeBlock.render(animation);
       this.timeBlocks.push(timeBlock);
+
+      timeBlock.on("selected", this.onAnimationSelected);
     }
     // Use the document's current time to position the scrubber (if the server
     // doesn't provide it, hide the scrubber entirely).
@@ -872,15 +896,21 @@ AnimationsTimeline.prototype = {
  * UI component responsible for displaying a single animation timeline, which
  * basically looks like a rectangle that shows the delay and iterations.
  */
-function AnimationTimeBlock() {}
+function AnimationTimeBlock() {
+  EventEmitter.decorate(this);
+  this.onClick = this.onClick.bind(this);
+}
 
 exports.AnimationTimeBlock = AnimationTimeBlock;
 
 AnimationTimeBlock.prototype = {
   init: function(containerEl) {
     this.containerEl = containerEl;
+    this.containerEl.addEventListener("click", this.onClick);
   },
+
   destroy: function() {
+    this.containerEl.removeEventListener("click", this.onClick);
     while (this.containerEl.firstChild) {
       this.containerEl.firstChild.remove();
     }
@@ -999,6 +1029,10 @@ AnimationTimeBlock.prototype = {
     }
 
     return text;
+  },
+
+  onClick: function() {
+    this.emit("selected", this.animation);
   }
 };
 

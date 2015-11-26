@@ -1118,16 +1118,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   display: block;
 }
 
-/* Loop/ Hello browser styles */
-
-notification[value="loop-sharing-notification"] .button-menubutton-button {
-  min-width: 0;
-}
-
-notification[value="loop-sharing-notification"] .messageImage {
-  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16.png);
-}
-
 #treecolAutoCompleteImage {
   max-width : 36px;
 }

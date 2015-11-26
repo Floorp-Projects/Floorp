@@ -594,8 +594,8 @@ IsTopLevelWidget(nsIWidget* aWidget)
   nsWindowType windowType = aWidget->WindowType();
   return windowType == eWindowType_toplevel ||
          windowType == eWindowType_dialog ||
+         windowType == eWindowType_popup ||
          windowType == eWindowType_sheet;
-  // popups aren't toplevel so they're not handled here
 }
 
 void

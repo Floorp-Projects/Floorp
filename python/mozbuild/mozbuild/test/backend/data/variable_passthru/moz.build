@@ -17,8 +17,8 @@ DEFFILE = 'baz.def'
 USE_STATIC_LIBS = True
 
 CFLAGS += ['-fno-exceptions', '-w']
-CXXFLAGS += ['-fcxx-exceptions', '-include foo.h']
-LDFLAGS += ['-framework Foo', '-x']
+CXXFLAGS += ['-fcxx-exceptions', '-option with spaces']
+LDFLAGS += ['-ld flag with spaces', '-x']
 HOST_CFLAGS += ['-funroll-loops', '-wall']
 HOST_CXXFLAGS += ['-funroll-loops-harder', '-wall-day-everyday']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']

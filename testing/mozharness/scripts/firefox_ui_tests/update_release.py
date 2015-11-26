@@ -240,13 +240,22 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
                     parent_dir=dirs['abs_work_dir']
                 )
 
+                binary_path = self.install_app(app=self.config.get('application'),
+                                               installer_path=installer_path)
+
                 marionette_port += 1
 
                 retcode = self.run_test(
-                    installer_path=installer_path,
+                    binary_path=binary_path,
                     env=self.query_env(avoid_host_env=True),
                     marionette_port=marionette_port,
                 )
+
+                self.uninstall_app()
+
+                # Remove installer which is not needed anymore
+                self.info('Removing {}'.format(installer_path))
+                os.remove(installer_path)
 
                 if retcode:
                     self.warning('FAIL: {} has failed.'.format(sys.argv[0]))
