@@ -2244,6 +2244,13 @@ class DebugScopeProxy : public BaseProxyHandler
 
 } /* anonymous namespace */
 
+template<>
+bool
+JSObject::is<js::DebugScopeObject>() const
+{
+    return IsDerivedProxyObject(this, &DebugScopeProxy::singleton);
+}
+
 const char DebugScopeProxy::family = 0;
 const DebugScopeProxy DebugScopeProxy::singleton;
 
@@ -2331,13 +2338,6 @@ DebugScopeObject::isOptimizedOut() const
     }
 
     return false;
-}
-
-bool
-js::IsDebugScopeSlow(ProxyObject* proxy)
-{
-    MOZ_ASSERT(proxy->hasClass(&ProxyObject::class_));
-    return proxy->handler() == &DebugScopeProxy::singleton;
 }
 
 /*****************************************************************************/
