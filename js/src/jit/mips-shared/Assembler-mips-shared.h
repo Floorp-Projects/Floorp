@@ -779,7 +779,7 @@ class AssemblerMIPSShared : public AssemblerShared
             dataRelocations_.writeUnsigned(nextOffset().getOffset());
         }
     }
-    void writePrebarrierOffset(CodeOffsetLabel label) {
+    void writePrebarrierOffset(CodeOffset label) {
         preBarriers_.writeUnsigned(label.offset());
     }
 
@@ -1044,7 +1044,7 @@ class AssemblerMIPSShared : public AssemblerShared
     }
 
     // See Bind
-    size_t labelToPatchOffset(CodeOffsetLabel label) { return label.offset(); }
+    size_t labelToPatchOffset(CodeOffset label) { return label.offset(); }
 
     void call(Label* label);
     void call(void* target);
