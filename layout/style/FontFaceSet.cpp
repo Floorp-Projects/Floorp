@@ -347,6 +347,7 @@ FontFaceSet::Load(JSContext* aCx,
 
   nsIGlobalObject* globalObject = GetParentObject();
   if (!globalObject) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
