@@ -6,7 +6,6 @@
 
 DIRS += [
     'about',
-    'contextualidentity',
     'customizableui',
     'dirprovider',
     'downloads',
