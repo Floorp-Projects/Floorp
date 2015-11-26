@@ -9,227 +9,293 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
+  let gTab, gPanel, gDebugger;
+  let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
+
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    const gTab = aTab;
-    const gPanel = aPanel;
-    const gDebugger = gPanel.panelWin;
-    const gEditor = gDebugger.DebuggerView.editor;
-    const gSources = gDebugger.DebuggerView.Sources;
-    const queries = gDebugger.require('./content/queries');
-    const constants = gDebugger.require('./content/constants');
-    const actions = bindActionCreators(gPanel);
-    const getState = gDebugger.DebuggerController.getState;
+    gTab = aTab;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
+    gEditor = gDebugger.DebuggerView.editor;
+    gSources = gDebugger.DebuggerView.Sources;
+    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
+    gBreakpointsAdded = gBreakpoints._added;
+    gBreakpointsRemoving = gBreakpoints._removing;
 
-    Task.spawn(function*() {
-      yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1).then(performTest);
+    callInTab(gTab, "firstCall");
+  });
 
-      is(gDebugger.gThreadClient.state, "paused",
-         "Should only be getting stack frames while paused.");
-      is(queries.getSourceCount(getState()), 2,
-         "Found the expected number of sources.");
-      is(gEditor.getText().indexOf("debugger"), 166,
-         "The correct source was loaded initially.");
-      is(queries.getSelectedSource(getState()).actor, gSources.values[1],
-         "The correct source is selected.");
+  function performTest() {
+    is(gDebugger.gThreadClient.state, "paused",
+      "Should only be getting stack frames while paused.");
+    is(gSources.itemCount, 2,
+      "Found the expected number of sources.");
+    is(gEditor.getText().indexOf("debugger"), 166,
+      "The correct source was loaded initially.");
+    is(gSources.selectedValue, gSources.values[1],
+      "The correct source is selected.");
 
-      is(queries.getBreakpoints(getState()).length, 0,
-         "No breakpoints currently added.");
+    is(gBreakpointsAdded.size, 0,
+      "No breakpoints currently added.");
+    is(gBreakpointsRemoving.size, 0,
+      "No breakpoints currently being removed.");
+    is(gEditor.getBreakpoints().length, 0,
+      "No breakpoints currently shown in the editor.");
 
-      info("Add the first breakpoint.");
-      gEditor.once("breakpointAdded", onEditorBreakpointAddFirst);
-      let location = { actor: gSources.selectedValue, line: 6 };
-      yield actions.addBreakpoint(location);
-      checkFirstBreakpoint(location);
+    ok(!gBreakpoints._getAdded({ url: "foo", line: 3 }),
+      "_getAdded('foo', 3) returns falsey.");
+    ok(!gBreakpoints._getRemoving({ url: "bar", line: 3 }),
+      "_getRemoving('bar', 3) returns falsey.");
 
-      info("Remove the first breakpoint.");
-      gEditor.once("breakpointRemoved", onEditorBreakpointRemoveFirst);
-      yield actions.removeBreakpoint(location);
-      checkFirstBreakpointRemoved(location);
-      checkBackgroundBreakpoint(yield testBreakpointAddBackground());
+    is(gSources.values[1], gSources.selectedValue,
+      "The second source should be currently selected.");
 
-      info("Switch to the first source, which is not yet selected");
-      gEditor.once("breakpointAdded", onEditorBreakpointAddSwitch);
-      gEditor.once("change", onEditorTextChanged);
-      actions.selectSource(gSources.items[0].attachment.source);
-      yield waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-      onReadyForClick();
+    info("Add the first breakpoint.");
+    let location = { actor: gSources.selectedValue, line: 6 };
+    gEditor.once("breakpointAdded", onEditorBreakpointAddFirst);
+    gPanel.addBreakpoint(location).then(onBreakpointAddFirst);
+  }
+
+  let breakpointsAdded = 0;
+  let breakpointsRemoved = 0;
+  let editorBreakpointChanges = 0;
+
+  function onEditorBreakpointAddFirst(aEvent, aLine) {
+    editorBreakpointChanges++;
+
+    ok(aEvent,
+      "breakpoint1 added to the editor.");
+    is(aLine, 5,
+      "Editor breakpoint line is correct.");
+
+    is(gEditor.getBreakpoints().length, 1,
+      "editor.getBreakpoints().length is correct.");
+  }
+
+  function onBreakpointAddFirst(aBreakpointClient) {
+    breakpointsAdded++;
+
+    ok(aBreakpointClient,
+      "breakpoint1 added, client received.");
+    is(aBreakpointClient.location.actor, gSources.selectedValue,
+      "breakpoint1 client url is correct.");
+    is(aBreakpointClient.location.line, 6,
+      "breakpoint1 client line is correct.");
+
+    ok(gBreakpoints._getAdded(aBreakpointClient.location),
+      "breakpoint1 client found in the list of added breakpoints.");
+    ok(!gBreakpoints._getRemoving(aBreakpointClient.location),
+      "breakpoint1 client found in the list of removing breakpoints.");
+
+    is(gBreakpointsAdded.size, 1,
+      "The list of added breakpoints holds only one breakpoint.");
+    is(gBreakpointsRemoving.size, 0,
+      "The list of removing breakpoints holds no breakpoint.");
+
+    gBreakpoints._getAdded(aBreakpointClient.location).then(aClient => {
+      is(aClient, aBreakpointClient,
+        "_getAdded() returns the correct breakpoint.");
     });
 
-    callInTab(gTab, "firstCall");
+    is(gSources.values[1], gSources.selectedValue,
+      "The second source should be currently selected.");
 
-    let breakpointsAdded = 0;
-    let breakpointsRemoved = 0;
-    let editorBreakpointChanges = 0;
+    info("Remove the first breakpoint.");
+    gEditor.once("breakpointRemoved", onEditorBreakpointRemoveFirst);
+    gPanel.removeBreakpoint(aBreakpointClient.location).then(onBreakpointRemoveFirst);
+  }
 
-    function onEditorBreakpointAddFirst(aEvent, aLine) {
-      editorBreakpointChanges++;
+  function onEditorBreakpointRemoveFirst(aEvent, aLine) {
+    editorBreakpointChanges++;
 
-      ok(aEvent,
-         "breakpoint1 added to the editor.");
-      is(aLine, 5,
-         "Editor breakpoint line is correct.");
+    ok(aEvent,
+      "breakpoint1 removed from the editor.");
+    is(aLine, 5,
+      "Editor breakpoint line is correct.");
 
-      is(gEditor.getBreakpoints().length, 1,
-         "editor.getBreakpoints().length is correct.");
-    }
+    is(gEditor.getBreakpoints().length, 0,
+      "editor.getBreakpoints().length is correct.");
+  }
 
-    function onEditorBreakpointRemoveFirst(aEvent, aLine) {
-      editorBreakpointChanges++;
+  function onBreakpointRemoveFirst(aLocation) {
+    breakpointsRemoved++;
 
-      ok(aEvent,
-         "breakpoint1 removed from the editor.");
-      is(aLine, 5,
-         "Editor breakpoint line is correct.");
+    ok(aLocation,
+      "breakpoint1 removed");
+    is(aLocation.actor, gSources.selectedValue,
+      "breakpoint1 removal url is correct.");
+    is(aLocation.line, 6,
+      "breakpoint1 removal line is correct.");
 
-      is(gEditor.getBreakpoints().length, 0,
-         "editor.getBreakpoints().length is correct.");
-    }
+    testBreakpointAddBackground();
+  }
 
-    function checkFirstBreakpoint(location) {
-      breakpointsAdded++;
-      const bp = queries.getBreakpoint(getState(), location);
+  function testBreakpointAddBackground() {
+    is(gBreakpointsAdded.size, 0,
+      "No breakpoints currently added.");
+    is(gBreakpointsRemoving.size, 0,
+      "No breakpoints currently being removed.");
+    is(gEditor.getBreakpoints().length, 0,
+      "No breakpoints currently shown in the editor.");
 
-      ok(bp,
-         "breakpoint1 exists");
-      is(bp.location.actor, queries.getSelectedSource(getState()).actor,
-         "breakpoint1 actor is correct.");
-      is(bp.location.line, 6,
-         "breakpoint1 line is correct.");
+    ok(!gBreakpoints._getAdded({ actor: gSources.selectedValue, line: 6 }),
+      "_getAdded('gSources.selectedValue', 6) returns falsey.");
+    ok(!gBreakpoints._getRemoving({ actor: gSources.selectedValue, line: 6 }),
+      "_getRemoving('gSources.selectedValue', 6) returns falsey.");
 
-      is(queries.getBreakpoints(getState()).length, 1,
-         "The list of added breakpoints holds only one breakpoint.");
+    is(gSources.values[1], gSources.selectedValue,
+      "The second source should be currently selected.");
 
-      is(queries.getSelectedSource(getState()).actor, gSources.values[1],
-         "The second source should be currently selected.");
-    }
+    info("Add a breakpoint to the first source, which is not selected.");
+    let location = { actor: gSources.values[0], line: 5 };
+    let options = { noEditorUpdate: true };
+    gEditor.on("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
+    gPanel.addBreakpoint(location, options).then(onBreakpointAddBackground);
+  }
 
-    function checkFirstBreakpointRemoved(location) {
-      breakpointsRemoved++;
-      const bp = queries.getBreakpoint(getState(), location);
-      ok(!bp, "breakpoint1 removed");
-    }
+  function onEditorBreakpointAddBackgroundTrap() {
+    // Trap listener: no breakpoint must be added to the editor when a
+    // breakpoint is added to a source that is not currently selected.
+    editorBreakpointChanges++;
+    ok(false, "breakpoint2 must not be added to the editor.");
+  }
 
-    function testBreakpointAddBackground() {
-      is(queries.getBreakpoints(getState()).length, 0,
-         "No breakpoints currently added.");
+  function onBreakpointAddBackground(aBreakpointClient, aResponseError) {
+    breakpointsAdded++;
 
-      is(gSources.values[1], gSources.selectedValue,
-         "The second source should be currently selected.");
+    ok(aBreakpointClient,
+      "breakpoint2 added, client received");
+    is(aBreakpointClient.location.actor, gSources.values[0],
+      "breakpoint2 client url is correct.");
+    is(aBreakpointClient.location.line, 5,
+      "breakpoint2 client line is correct.");
 
-      info("Add a breakpoint to the first source, which is not selected.");
-      let location = { actor: gSources.values[0], line: 5 };
-      gEditor.on("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
-      return actions.addBreakpoint(location).then(() => location);
-    }
+    ok(gBreakpoints._getAdded(aBreakpointClient.location),
+      "breakpoint2 client found in the list of added breakpoints.");
+    ok(!gBreakpoints._getRemoving(aBreakpointClient.location),
+      "breakpoint2 client found in the list of removing breakpoints.");
 
-    function onEditorBreakpointAddBackgroundTrap() {
-      // Trap listener: no breakpoint must be added to the editor when a
-      // breakpoint is added to a source that is not currently selected.
-      editorBreakpointChanges++;
-      ok(false, "breakpoint2 must not be added to the editor.");
-    }
+    is(gBreakpointsAdded.size, 1,
+      "The list of added breakpoints holds only one breakpoint.");
+    is(gBreakpointsRemoving.size, 0,
+      "The list of removing breakpoints holds no breakpoint.");
 
-    function checkBackgroundBreakpoint(location) {
-      breakpointsAdded++;
-      const bp = queries.getBreakpoint(getState(), location);
+    gBreakpoints._getAdded(aBreakpointClient.location).then(aClient => {
+      is(aClient, aBreakpointClient,
+        "_getAdded() returns the correct breakpoint.");
+    });
 
-      ok(bp,
-        "breakpoint2 added, client received");
-      is(bp.location.actor, gSources.values[0],
-        "breakpoint2 client url is correct.");
-      is(bp.location.line, 5,
-        "breakpoint2 client line is correct.");
+    is(gSources.values[1], gSources.selectedValue,
+      "The second source should be currently selected.");
 
-      ok(queries.getBreakpoint(getState(), bp.location),
-         "breakpoint2 found in the list of added breakpoints.");
+    // Remove the trap listener.
+    gEditor.off("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
 
-      is(queries.getBreakpoints(getState()).length, 1,
-         "The list of added breakpoints holds only one breakpoint.");
+    info("Switch to the first source, which is not yet selected");
+    gEditor.once("breakpointAdded", onEditorBreakpointAddSwitch);
+    gEditor.once("change", onEditorTextChanged);
+    gSources.selectedIndex = 0;
+  }
 
-      is(queries.getSelectedSource(getState()).actor, gSources.values[1],
-         "The second source should be currently selected.");
+  function onEditorBreakpointAddSwitch(aEvent, aLine) {
+    editorBreakpointChanges++;
 
-      // Remove the trap listener.
-      gEditor.off("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
-    }
+    ok(aEvent,
+      "breakpoint2 added to the editor.");
+    is(aLine, 4,
+      "Editor breakpoint line is correct.");
 
-    function onEditorBreakpointAddSwitch(aEvent, aLine) {
-      editorBreakpointChanges++;
+    is(gEditor.getBreakpoints().length, 1,
+      "editor.getBreakpoints().length is correct");
+  }
 
-      ok(aEvent,
-        "breakpoint2 added to the editor.");
-      is(aLine, 4,
-        "Editor breakpoint line is correct.");
+  function onEditorTextChanged() {
+    // Wait for the actual text to be shown.
+    if (gEditor.getText() == gDebugger.L10N.getStr("loadingText"))
+      return void gEditor.once("change", onEditorTextChanged);
 
-      is(gEditor.getBreakpoints().length, 1,
-        "editor.getBreakpoints().length is correct");
-    }
+    is(gEditor.getText().indexOf("debugger"), -1,
+      "The second source is no longer displayed.");
+    is(gEditor.getText().indexOf("firstCall"), 118,
+      "The first source is displayed.");
 
-    function onEditorTextChanged() {
-      // Wait for the actual text to be shown.
-      if (gEditor.getText() == gDebugger.L10N.getStr("loadingText"))
-        return void gEditor.once("change", onEditorTextChanged);
+    is(gSources.values[0], gSources.selectedValue,
+      "The first source should be currently selected.");
 
-      is(gEditor.getText().indexOf("debugger"), -1,
-        "The second source is no longer displayed.");
-      is(gEditor.getText().indexOf("firstCall"), 118,
-        "The first source is displayed.");
+    let window = gEditor.container.contentWindow;
+    executeSoon(() => window.requestAnimationFrame(onReadyForClick));
+  }
 
-      is(gSources.values[0], gSources.selectedValue,
-        "The first source should be currently selected.");
-    }
+  function onReadyForClick() {
+    info("Remove the second breakpoint using the mouse.");
+    gEditor.once("breakpointRemoved", onEditorBreakpointRemoveSecond);
 
-    function onReadyForClick() {
-      info("Remove the second breakpoint using the mouse.");
-      gEditor.once("breakpointRemoved", onEditorBreakpointRemoveSecond);
+    let iframe = gEditor.container;
+    let testWin = iframe.ownerDocument.defaultView;
 
-      let iframe = gEditor.container;
-      let testWin = iframe.ownerDocument.defaultView;
+    // Flush the layout for the iframe.
+    info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
 
-      // Flush the layout for the iframe.
-      info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
+    let utils = testWin
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
 
-      let utils = testWin
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils);
+    let coords = gEditor.getCoordsFromPosition({ line: 4, ch: 0 });
+    let rect = iframe.getBoundingClientRect();
+    let left = rect.left + 10;
+    let top = rect.top + coords.top + 4;
+    utils.sendMouseEventToWindow("mousedown", left, top, 0, 1, 0, false, 0, 0);
+    utils.sendMouseEventToWindow("mouseup", left, top, 0, 1, 0, false, 0, 0);
+  }
 
-      let coords = gEditor.getCoordsFromPosition({ line: 4, ch: 0 });
-      let rect = iframe.getBoundingClientRect();
-      let left = rect.left + 10;
-      let top = rect.top + coords.top + 4;
-      utils.sendMouseEventToWindow("mousedown", left, top, 0, 1, 0, false, 0, 0);
-      utils.sendMouseEventToWindow("mouseup", left, top, 0, 1, 0, false, 0, 0);
-    }
+  function onEditorBreakpointRemoveSecond(aEvent, aLine) {
+    editorBreakpointChanges++;
 
-    function onEditorBreakpointRemoveSecond(aEvent, aLine) {
-      editorBreakpointChanges++;
+    ok(aEvent,
+      "breakpoint2 removed from the editor.");
+    is(aLine, 4,
+      "Editor breakpoint line is correct.");
 
-      ok(aEvent,
-        "breakpoint2 removed from the editor.");
-      is(aLine, 4,
-        "Editor breakpoint line is correct.");
+    is(gEditor.getBreakpoints().length, 0,
+      "editor.getBreakpoints().length is correct.");
 
-      is(gEditor.getBreakpoints().length, 0,
-        "editor.getBreakpoints().length is correct.");
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {
+      finalCheck();
+      closeDebuggerAndFinish(gPanel);
+    });
 
-      waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {
-        finalCheck();
-        closeDebuggerAndFinish(gPanel);
-      });
+    gDebugger.gThreadClient.resume();
+  }
 
-      gDebugger.gThreadClient.resume();
-    }
+  function finalCheck() {
+    is(gBreakpointsAdded.size, 0,
+      "No breakpoints currently added.");
+    is(gBreakpointsRemoving.size, 0,
+      "No breakpoints currently being removed.");
+    is(gEditor.getBreakpoints().length, 0,
+      "No breakpoints currently shown in the editor.");
 
-    function finalCheck() {
-      is(queries.getBreakpoints(getState()).length, 0,
-         "No breakpoints currently added.");
+    ok(!gBreakpoints._getAdded({ actor: gSources.values[0], line: 5 }),
+      "_getAdded('gSources.values[0]', 5) returns falsey.");
+    ok(!gBreakpoints._getRemoving({ actor: gSources.values[0], line: 5 }),
+      "_getRemoving('gSources.values[0]', 5) returns falsey.");
 
-      is(breakpointsAdded, 2,
-         "Correct number of breakpoints have been added.");
-      is(breakpointsRemoved, 1,
-         "Correct number of breakpoints have been removed.");
-      is(editorBreakpointChanges, 4,
-         "Correct number of editor breakpoint changes.");
-    }
-  });
+    ok(!gBreakpoints._getAdded({ actor: gSources.values[1], line: 6 }),
+      "_getAdded('gSources.values[1]', 6) returns falsey.");
+    ok(!gBreakpoints._getRemoving({ actor: gSources.values[1], line: 6 }),
+      "_getRemoving('gSources.values[1]', 6) returns falsey.");
+
+    ok(!gBreakpoints._getAdded({ actor: "foo", line: 3 }),
+      "_getAdded('foo', 3) returns falsey.");
+    ok(!gBreakpoints._getRemoving({ actor: "bar", line: 3 }),
+      "_getRemoving('bar', 3) returns falsey.");
+
+    is(breakpointsAdded, 2,
+      "Correct number of breakpoints have been added.");
+    is(breakpointsRemoved, 1,
+      "Correct number of breakpoints have been removed.");
+    is(editorBreakpointChanges, 4,
+      "Correct number of editor breakpoint changes.");
+  }
 }

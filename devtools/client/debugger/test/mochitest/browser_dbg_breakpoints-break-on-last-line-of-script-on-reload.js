@@ -21,7 +21,6 @@ function test() {
     gThreadClient = gDebugger.gThreadClient;
     gEvents = gDebugger.EVENTS;
     gSources = gDebugger.DebuggerView.Sources;
-    const actions = bindActionCreators(gPanel);
 
     Task.spawn(function* () {
       try {
@@ -39,18 +38,17 @@ function test() {
         is(paused.why.type, "debuggerStatement");
 
         // Set our breakpoints.
-        const sourceActor = getSourceActor(gSources, CODE_URL);
-        yield promise.all([
-          actions.addBreakpoint({
-            actor: sourceActor,
+        const [bp1, bp2, bp3] = yield promise.all([
+          setBreakpoint({
+            url: CODE_URL,
             line: 3
           }),
-          actions.addBreakpoint({
-            actor: sourceActor,
+          setBreakpoint({
+            url: CODE_URL,
             line: 4
           }),
-          actions.addBreakpoint({
-            actor: sourceActor,
+          setBreakpoint({
+            url: CODE_URL,
             line: 5
           })
         ]);
@@ -77,9 +75,9 @@ function test() {
 
         // Clean up the breakpoints.
         yield promise.all([
-          actions.removeBreakpoint({ actor: sourceActor, line: 3 }),
-          actions.removeBreakpoint({ actor: sourceActor, line: 4 }),
-          actions.removeBreakpoint({ actor: sourceActor, line: 5 })
+          rdpInvoke(bp1, bp1.remove),
+          rdpInvoke(bp2, bp1.remove),
+          rdpInvoke(bp3, bp1.remove),
         ]);
 
         yield resumeDebuggerThenCloseAndFinish(gPanel);

@@ -7,18 +7,30 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_terminate-on-tab-close.html";
 
+var gTab, gDebugger, gPanel;
+
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    const gTab = aTab;
-    const gPanel = aPanel;
-    const gDebugger = gPanel.panelWin;
+    gTab = aTab;
+    gPanel = aPanel;
+    gDebugger = gPanel.panelWin;
 
-    gDebugger.gThreadClient.addOneTimeListener("paused", () => {
-      resumeDebuggerThenCloseAndFinish(gPanel).then(function () {
-        ok(true, "should not throw after this point");
-      });
-    });
-
-    callInTab(gTab, "debuggerThenThrow");
+    testTerminate();
   });
 }
+
+function testTerminate() {
+  gDebugger.gThreadClient.addOneTimeListener("paused", () => {
+    resumeDebuggerThenCloseAndFinish(gPanel).then(function () {
+      ok(true, "should not throw after this point");
+    });
+  });
+
+  callInTab(gTab, "debuggerThenThrow");
+}
+
+registerCleanupFunction(function() {
+  gTab = null;
+  gPanel = null;
+  gDebugger = null;
+});

@@ -52,9 +52,9 @@ function performTest() {
   });
 
   function selectBottomFrame() {
-    let shown = waitForSourceShown(gPanel, "-01.js");
+    let updated = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES);
     gClassicFrames.selectedIndex = gClassicFrames.itemCount - 1;
-    return shown;
+    return updated.then(waitForTick);
   }
 
   function testBottomFrame(debugLocation) {

@@ -9,17 +9,14 @@ const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
   Task.spawn(function*() {
-    const [tab,, panel] = yield initDebugger(TAB_URL);
-    const win = panel.panelWin;
-    const frames = win.DebuggerController.StackFrames;
-    const framesView = win.DebuggerView.StackFrames;
-    const sourcesView = win.DebuggerView.Sources;
-    const editorView = win.DebuggerView.editor;
-    const events = win.EVENTS;
-    const queries = win.require('./content/queries');
-    const constants = win.require('./content/constants');
-    const actions = bindActionCreators(panel);
-    const getState = win.DebuggerController.getState;
+    let [tab,, panel] = yield initDebugger(TAB_URL);
+    let win = panel.panelWin;
+    let frames = win.DebuggerController.StackFrames;
+    let framesView = win.DebuggerView.StackFrames;
+    let sources = win.DebuggerController.SourceScripts;
+    let sourcesView = win.DebuggerView.Sources;
+    let editorView = win.DebuggerView.editor;
+    let events = win.EVENTS;
 
     function checkView(selectedFrame, selectedSource, caretLine, editorText) {
       is(win.gThreadClient.state, "paused",
@@ -36,12 +33,9 @@ function test() {
         "The correct source is not displayed.");
     }
 
-    // Cache the sources text to avoid having to wait for their
-    // retrieval.
-    const sources = queries.getSources(getState());
-    yield promise.all(Object.keys(sources).map(k => {
-      return actions.loadSourceText(sources[k]);
-    }));
+    // Cache the sources text to avoid having to wait for their retrieval.
+    yield promise.all(sourcesView.attachments.map(e => sources.getText(e.source)));
+    is(sources._cache.size, 2, "There should be two cached sources in the cache.");
 
     // Allow this generator function to yield first.
     callInTab(tab, "firstCall");
