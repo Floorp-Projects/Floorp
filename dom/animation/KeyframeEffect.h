@@ -309,7 +309,6 @@ protected:
   // changes with regards to this effects's timing including changes to the
   // owning Animation's timing.
   void UpdateTargetRegistration();
-  void UnregisterFromTarget();
 
   static AnimationTiming ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);

@@ -69,18 +69,10 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(KeyframeEffectReadOnly)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(KeyframeEffectReadOnly,
-                                                AnimationEffectReadOnly)
-  tmp->UnregisterFromTarget();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTarget, mAnimation)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(KeyframeEffectReadOnly,
-                                                  AnimationEffectReadOnly)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTarget, mAnimation)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly,
+                                   AnimationEffectReadOnly,
+                                   mTarget,
+                                   mAnimation)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadOnly,
                                                AnimationEffectReadOnly)
@@ -525,7 +517,6 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
 
 KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
-  UnregisterFromTarget();
 }
 
 void
@@ -561,19 +552,6 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     if (effectSet) {
       effectSet->RemoveEffect(*this);
     }
-  }
-}
-
-void
-KeyframeEffectReadOnly::UnregisterFromTarget()
-{
-  if (!mTarget) {
-    return;
-  }
-
-  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
-  if (effectSet) {
-    effectSet->RemoveEffect(*this);
   }
 }
 

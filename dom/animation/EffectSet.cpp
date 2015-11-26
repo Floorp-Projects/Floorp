@@ -6,6 +6,7 @@
 
 #include "EffectSet.h"
 #include "mozilla/dom/Element.h" // For Element
+#include "nsCycleCollectionNoteChild.h" // For CycleCollectionNoteChild
 
 namespace mozilla {
 
@@ -21,6 +22,15 @@ EffectSet::PropertyDtor(void* aObject, nsIAtom* aPropertyName,
 #endif
 
   delete effectSet;
+}
+
+void
+EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback)
+{
+  for (auto iter = mEffects.Iter(); !iter.Done(); iter.Next()) {
+    CycleCollectionNoteChild(aCallback, iter.Get()->GetKey(),
+                             "EffectSet::mEffects[]", aCallback.Flags());
+  }
 }
 
 /* static */ EffectSet*
@@ -58,6 +68,20 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
   }
 
   return effectSet;
+}
+
+/* static */ nsIAtom**
+EffectSet::GetEffectSetPropertyAtoms()
+{
+  static nsIAtom* effectSetPropertyAtoms[] =
+    {
+      nsGkAtoms::animationEffectsProperty,
+      nsGkAtoms::animationEffectsForBeforeProperty,
+      nsGkAtoms::animationEffectsForAfterProperty,
+      nullptr
+    };
+
+  return effectSetPropertyAtoms;
 }
 
 /* static */ nsIAtom*
