@@ -9634,7 +9634,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       }
     }
 
-    nsIntRect r1, r2;
+    LayoutDeviceIntRect r1, r2;
     nsView* v1;
     nsView* v2;
     for (nsFrameList::Enumerator e1(kids1), e2(kids2);
@@ -9679,10 +9679,11 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
             LogVerifyMessage(k1, k2, "child widgets are not matched\n");
           }
           else if (nullptr != w1) {
-            w1->GetBoundsUntyped(r1);
-            w2->GetBoundsUntyped(r2);
+            w1->GetBounds(r1);
+            w2->GetBounds(r2);
             if (!r1.IsEqualEdges(r2)) {
-              LogVerifyMessage(k1, k2, "(widget rects)", r1, r2);
+              LogVerifyMessage(k1, k2, "(widget rects)",
+                               r1.ToUnknownRect(), r2.ToUnknownRect());
             }
           }
         }

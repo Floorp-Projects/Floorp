@@ -3098,14 +3098,17 @@ nsRootPresContext::CancelApplyPluginGeometryTimer()
 #ifndef XP_MACOSX
 
 static bool
-HasOverlap(const nsIntPoint& aOffset1, const nsTArray<nsIntRect>& aClipRects1,
-           const nsIntPoint& aOffset2, const nsTArray<nsIntRect>& aClipRects2)
+HasOverlap(const LayoutDeviceIntPoint& aOffset1,
+           const nsTArray<nsIntRect>& aClipRects1,
+           const LayoutDeviceIntPoint& aOffset2,
+           const nsTArray<nsIntRect>& aClipRects2)
 {
-  nsIntPoint offsetDelta = aOffset1 - aOffset2;
+  nsIntPoint offsetDelta = (aOffset1 - aOffset2).ToUnknownPoint();
   for (uint32_t i = 0; i < aClipRects1.Length(); ++i) {
     for (uint32_t j = 0; j < aClipRects2.Length(); ++j) {
-      if ((aClipRects1[i] + offsetDelta).Intersects(aClipRects2[j]))
+      if ((aClipRects1[i] + offsetDelta).Intersects(aClipRects2[j])) {
         return true;
+      }
     }
   }
   return false;
@@ -3144,12 +3147,12 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
       for (uint32_t j = 0; j < pluginsToMove.Length(); ++j) {
         if (i == j)
           continue;
-        nsIntRect bounds;
-        pluginsToMove[j].mChild->GetBoundsUntyped(bounds);
+        LayoutDeviceIntRect bounds;
+        pluginsToMove[j].mChild->GetBounds(bounds);
         nsAutoTArray<nsIntRect,1> clipRects;
         pluginsToMove[j].mChild->GetWindowClipRegion(&clipRects);
         if (HasOverlap(bounds.TopLeft(), clipRects,
-                       config->mBounds.ToUnknownRect().TopLeft(),
+                       config->mBounds.TopLeft(),
                        config->mClipRegion)) {
           foundOverlap = true;
           break;

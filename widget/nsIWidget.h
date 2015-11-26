@@ -816,19 +816,10 @@ class nsIWidget : public nsISupports {
      * popup widgets the returned rect is in screen coordinates and not
      * relative to its parent widget.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
     NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Get this widget's outside dimensions in global coordinates. This

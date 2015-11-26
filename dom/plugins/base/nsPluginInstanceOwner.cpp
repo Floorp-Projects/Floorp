@@ -832,8 +832,8 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
   nsPoint windowPosition = AsNsPoint(rootWidget->GetWindowPosition()) / scaleFactor;
 
   // Window size is tab size + chrome size.
-  nsIntRect tabContentBounds;
-  NS_ENSURE_SUCCESS(puppetWidget->GetBoundsUntyped(tabContentBounds), false);
+  LayoutDeviceIntRect tabContentBounds;
+  NS_ENSURE_SUCCESS(puppetWidget->GetBounds(tabContentBounds), false);
   tabContentBounds.ScaleInverseRoundOut(scaleFactor);
   int32_t windowH = tabContentBounds.height + int(chromeSize.y);
 

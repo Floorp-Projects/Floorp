@@ -2196,10 +2196,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             if (kid && gdk_window_is_visible(gdkWin)) {
                 nsAutoTArray<nsIntRect,1> clipRects;
                 kid->GetWindowClipRegion(&clipRects);
-                nsIntRect bounds;
-                kid->GetBoundsUntyped(bounds);
+                LayoutDeviceIntRect bounds;
+                kid->GetBounds(bounds);
                 for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-                    nsIntRect r = clipRects[i] + bounds.TopLeft();
+                    nsIntRect r = clipRects[i] +
+                                  bounds.TopLeft().ToUnknownPoint();
                     region.Sub(region, r);
                 }
             }

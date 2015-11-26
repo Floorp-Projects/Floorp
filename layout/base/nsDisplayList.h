@@ -158,6 +158,9 @@ struct AnimatedGeometryRoot
  * for faster/more convenient access.
  */
 class nsDisplayListBuilder {
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+  typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
+
   /**
    * This manages status of a 3d context to collect visible rects of
    * descendants and passing a dirty rect.
@@ -612,7 +615,7 @@ public:
    */
   void AdjustWindowDraggingRegion(nsIFrame* aFrame);
 
-  const nsIntRegion& GetWindowDraggingRegion() { return mWindowDraggingRegion; }
+  const LayoutDeviceIntRegion& GetWindowDraggingRegion() { return mWindowDraggingRegion; }
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -1209,7 +1212,7 @@ private:
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
   nsRegion                       mWindowOpaqueRegion;
-  nsIntRegion                    mWindowDraggingRegion;
+  LayoutDeviceIntRegion          mWindowDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   // When encountering inactive layers, we need to hoist scroll info items

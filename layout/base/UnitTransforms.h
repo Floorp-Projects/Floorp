@@ -44,7 +44,10 @@ enum class PixelCastJustification : uint8_t {
   LayoutDeviceIsScreenForUntransformedEvent,
   // Similar to LayoutDeviceIsScreenForUntransformedEvent, PBrowser handles
   // some widget/tab dimension information as the OS does -- in screen units.
-  LayoutDeviceIsScreenForTabDims
+  LayoutDeviceIsScreenForTabDims,
+  // A combination of LayoutDeviceIsScreenForBounds and
+  // ScreenIsParentLayerForRoot, which is how we're using it.
+  LayoutDeviceIsParentLayerForRCDRSF
 };
 
 template <class TargetUnits, class SourceUnits>
