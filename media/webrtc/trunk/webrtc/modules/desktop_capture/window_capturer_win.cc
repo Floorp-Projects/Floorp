@@ -11,7 +11,6 @@
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 
 #include <assert.h>
-#include <VersionHelpers.h>
 
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/win32.h"
@@ -49,14 +48,6 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   // windows as well (e.g. toolbars).
   if (wcscmp(class_name, L"Progman") == 0 || wcscmp(class_name, L"Button") == 0)
     return TRUE;
-
-  // Win8 introduced "Modern Apps" whose associated window is
-  // non-shareable. We want to filter them out.
-  if (IsWindows8OrGreater() &&
-      (wcscmp(class_name, L"ApplicationFrameWindow") == 0 ||
-       wcscmp(class_name, L"Windows.UI.Core.CoreWindow") == 0)) {
-    return TRUE;
-  }
 
   WindowCapturer::Window window;
   window.id = reinterpret_cast<WindowCapturer::WindowId>(hwnd);
