@@ -684,6 +684,14 @@ class TreeMetadataEmitter(LoggingMixin):
 
         final_target_files = context.get('FINAL_TARGET_FILES')
         if final_target_files:
+            for _, files in final_target_files.walk():
+                for f in files:
+                    path = os.path.join(context.srcdir, f)
+                    if not os.path.exists(path):
+                        raise SandboxValidationError(
+                            'File listed in FINAL_TARGET_FILES does not exist:'
+                            ' %s' % f, context)
+
             yield FinalTargetFiles(context, final_target_files, context['FINAL_TARGET'])
 
         dist_files = context.get('DIST_FILES')
