@@ -133,18 +133,6 @@ static EGLint gTerminationAttribs[] = {
     EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
 };
 
-static EGLint gContextAttribs[] = {
-    LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
-};
-
-static EGLint gContextAttribsRobustness[] = {
-    LOCAL_EGL_CONTEXT_CLIENT_VERSION, 2,
-    //LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT, LOCAL_EGL_TRUE,
-    LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT, LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT,
-    EGL_ATTRIBS_LIST_SAFE_TERMINATION_WORKING_AROUND_BUGS
-};
-
 static int
 next_power_of_two(int v)
 {
@@ -510,19 +498,31 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
 
     EGLContext eglShareContext = shareContext ? shareContext->mContext
                                               : EGL_NO_CONTEXT;
-    EGLint* attribs = sEGLLibrary.HasRobustness() ? gContextAttribsRobustness
-                                                  : gContextAttribs;
+
+    nsTArray<EGLint> contextAttribs;
+
+    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
+    contextAttribs.AppendElement(2);
+
+    if (sEGLLibrary.HasRobustness()) {
+//    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT);
+//    contextAttribs.AppendElement(LOCAL_EGL_TRUE);
+    }
+
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(gTerminationAttribs); i++) {
+      contextAttribs.AppendElement(gTerminationAttribs[i]);
+    }
 
     EGLContext context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
                                                     config,
                                                     eglShareContext,
-                                                    attribs);
+                                                    contextAttribs.Elements());
     if (!context && shareContext) {
         shareContext = nullptr;
         context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
                                               config,
                                               EGL_NO_CONTEXT,
-                                              attribs);
+                                              contextAttribs.Elements());
     }
     if (!context) {
         NS_WARNING("Failed to create EGLContext!");
