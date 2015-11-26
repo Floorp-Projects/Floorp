@@ -591,7 +591,8 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
         uintptr_t index;
         StoreValueFromGPReg(SharedMem<void*>::unshared(&index), sizeof(uintptr_t),
                             AddressOfGPRegisterSlot(context, address.index()));
-        result += index * (1 << address.scale());
+        MOZ_ASSERT(address.scale() < 32, "address shift overflow");
+        result += index * (uintptr_t(1) << address.scale());
     }
 
     return reinterpret_cast<uint8_t*>(result);
