@@ -3351,7 +3351,7 @@ var E10SUINotification = {
 var E10SAccessibilityCheck = {
   init: function() {
     Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
-    if (Services.appinfo.accessibilityIsBlacklistedForE10S) {
+    if (Services.appinfo.accessibilityEnabled) {
       this._showE10sAccessibilityWarning();
     }
   },
@@ -3360,8 +3360,7 @@ var E10SAccessibilityCheck = {
 
   observe: function(subject, topic, data) {
     if (topic == "a11y-init-or-shutdown"
-        && data == "1" &&
-        Services.appinfo.accessibilityIsBlacklistedForE10S) {
+        && data == "1") {
       this._showE10sAccessibilityWarning();
     }
   },
