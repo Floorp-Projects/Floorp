@@ -927,7 +927,8 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     js::NativeObject* selfHostingGlobal_;
 
-    static js::GlobalObject* createSelfHostingGlobal(JSContext* cx);
+    static js::GlobalObject*
+    createSelfHostingGlobal(JSContext* cx);
 
     /* Space for interpreter frames. */
     js::InterpreterStack interpreterStack_;
@@ -953,17 +954,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     //-------------------------------------------------------------------------
 
     bool initSelfHosting(JSContext* cx);
-    bool evaluateSelfHosted(const char16_t* chars, size_t length, const char* filename);
-    bool addSelfHostingIntrinsics(const JSFunctionSpec* intrinsicFunctions);
     void finishSelfHosting();
-    /*
-     * Completes the runtime's initialization by freezing the initial set of
-     * atoms. To be invoked before creating the first content global, and
-     * delayed until then to enable execution of multiple self-hosted scripts
-     * before the self-hosting compartment is frozen to be shared with child
-     * runtimes.
-     */
-    bool completeInitialization(JSContext* cx);
     void markSelfHostingGlobal(JSTracer* trc);
     bool isSelfHostingGlobal(JSObject* global) {
         return global == selfHostingGlobal_;
@@ -1116,9 +1107,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* A context has been created on this runtime. */
     bool                haveCreatedContext;
-
-    /* At least one content global has been created on this runtime. */
-    bool                hasContentGlobals;
 
     /*
      * Allow relazifying functions in compartments that are active. This is

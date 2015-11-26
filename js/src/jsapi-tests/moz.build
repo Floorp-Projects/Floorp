@@ -27,7 +27,6 @@ UNIFIED_SOURCES += [
     'testDifferentNewTargetInvokeConstructor.cpp',
     'testEnclosingFunction.cpp',
     'testErrorCopying.cpp',
-    'testEvaluateSelfHosted.cpp',
     'testException.cpp',
     'testExternalStrings.cpp',
     'testFindSCCs.cpp',
