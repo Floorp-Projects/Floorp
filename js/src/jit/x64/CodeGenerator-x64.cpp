@@ -336,15 +336,14 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap* ins)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         before = after;
-        loadSimd(type, 1, srcAddrZ, ScratchSimd128Reg);
+        loadSimd(type, 1, srcAddrZ, ScratchSimdReg);
         after = masm.size();
-        verifyHeapAccessDisassembly(before, after, /*isLoad=*/true, type, 1, srcAddrZ,
-                                    LFloatReg(ScratchSimd128Reg));
+        verifyHeapAccessDisassembly(before, after, /*isLoad=*/true, type, 1, srcAddrZ, LFloatReg(ScratchSimdReg));
         masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw,
                                     AsmJSHeapAccess::NoLengthCheck, 8));
 
         // Move ZW atop XY
-        masm.vmovlhps(ScratchSimd128Reg, out, out);
+        masm.vmovlhps(ScratchSimdReg, out, out);
     } else {
         uint32_t before = masm.size();
         loadSimd(type, numElems, srcAddr, out);
@@ -484,12 +483,11 @@ CodeGeneratorX64::emitSimdStore(LAsmJSStoreHeap* ins)
         // store the Z first, and record its offset in the AsmJSHeapAccess so
         // that the signal handler knows to check the bounds of the full
         // access, rather than just the Z.
-        masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
+        masm.vmovhlps(in, ScratchSimdReg, ScratchSimdReg);
         uint32_t before = masm.size();
-        storeSimd(type, 1, ScratchSimd128Reg, dstAddrZ);
+        storeSimd(type, 1, ScratchSimdReg, dstAddrZ);
         uint32_t after = masm.size();
-        verifyHeapAccessDisassembly(before, after, /*isLoad=*/false, type, 1, dstAddrZ,
-                                    LFloatReg(ScratchSimd128Reg));
+        verifyHeapAccessDisassembly(before, after, /*isLoad=*/false, type, 1, dstAddrZ, LFloatReg(ScratchSimdReg));
         masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset, 8));
 
         // Store XY

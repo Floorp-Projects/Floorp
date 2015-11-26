@@ -289,7 +289,8 @@ class TypedRegisterSet;
 class FloatRegisterMIPSShared
 {
   public:
-    bool isSimd128() const { return false; }
+    bool isInt32x4() const { return false; }
+    bool isFloat32x4() const { return false; }
 
     typedef FloatRegistersMIPSShared::SetType SetType;
 
