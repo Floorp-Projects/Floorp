@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for ServiceWorkerInfo"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome_helpers.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+    let IFRAME_URL = EXAMPLE_URL + "serviceworkerinfo_iframe.html";
+
+    function test() {
+      SimpleTest.waitForExplicitFinish();
+
+      SpecialPowers.pushPrefEnv({'set': [
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.idle_extended_timeout", 1000000],
+        ["dom.serviceWorkers.idle_timeout", 0],
+        ["dom.serviceWorkers.testing.enabled", true],
+      ]}, function () {
+        Task.spawn(function *() {
+          let iframe = $("iframe");
+          let promise = new Promise(function (resolve) {
+            iframe.onload = function () {
+              resolve();
+            };
+          });
+          iframe.src = IFRAME_URL;
+          yield promise;
+
+          info("Check that a service worker eventually shuts down.");
+          promise = Promise.all([
+            waitForRegister(EXAMPLE_URL),
+            waitForServiceWorkerShutdown()
+          ]);
+          iframe.contentWindow.postMessage("register", "*");
+          let [registration] = yield promise;
+          let activeWorker = registration.activeWorker;
+          ok(activeWorker !== null);
+          ok(activeWorker.debugger === null);
+
+          info("Attach a debugger to the service worker, and check that the " +
+               "service worker is restarted.");
+          activeWorker.attachDebugger();
+          ok(activeWorker.debugger !== null);
+
+          info("Detach the debugger from the service worker, and check that " +
+               "the service worker eventually shuts down again.");
+          promise = waitForServiceWorkerShutdown();
+          activeWorker.detachDebugger();
+          yield promise;
+          ok(activeWorker.debugger === null);
+
+          promise = waitForUnregister(EXAMPLE_URL);
+          iframe.contentWindow.postMessage("unregister", "*");
+          registration = yield promise;
+
+          SimpleTest.finish();
+        });
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+    <iframe id="iframe"></iframe>
+  </body>
+  <label id="test-result"/>
+</window>

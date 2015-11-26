@@ -21,11 +21,19 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(1a1e71dd-0f78-4e2e-a2db-a946fe02cddf)]
+interface nsIWorkerDebugger;
+
+[scriptable, builtinclass, uuid(76e357ed-208d-4e4c-9165-1c4059707879)]
 interface nsIServiceWorkerInfo : nsISupports
 {
   readonly attribute DOMString scriptSpec;
   readonly attribute DOMString cacheName;
+
+  readonly attribute nsIWorkerDebugger debugger;
+
+  void attachDebugger();
+
+  void detachDebugger();
 };
 
 [scriptable, uuid(87e63548-d440-4b8a-b158-65ad1de0211E)]
