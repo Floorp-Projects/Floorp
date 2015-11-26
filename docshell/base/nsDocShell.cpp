@@ -13744,13 +13744,6 @@ nsDocShell::SetIsSignedPackage(const nsAString& aSignedPkg)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetUserContextId(uint32_t aUserContextId)
-{
-  mUserContextId = aUserContextId;
-  return NS_OK;
-}
-
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
 {
@@ -13853,8 +13846,6 @@ nsDocShell::GetOriginAttributes()
   if (mOwnOrContainingAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     attrs.mAppId = mOwnOrContainingAppId;
   }
-
-  attrs.mUserContextId = mUserContextId;
 
   if (mFrameType == eFrameTypeBrowser) {
     attrs.mInBrowser = true;
@@ -14072,7 +14063,8 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
   }
 
   if (aIsNonSubresourceRequest) {
-    *aShouldIntercept = swm->IsAvailable(GetOriginAttributes(), aURI);
+    OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
+    *aShouldIntercept = swm->IsAvailable(attrs, aURI);
     return NS_OK;
   }
 
@@ -14162,9 +14154,11 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel,
 
   bool isReload = mLoadType & LOAD_CMD_RELOAD;
 
+  OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
+
   ErrorResult error;
   nsCOMPtr<nsIRunnable> runnable =
-    swm->PrepareFetchEvent(GetOriginAttributes(), doc, aChannel, isReload, isSubresourceLoad, error);
+    swm->PrepareFetchEvent(attrs, doc, aChannel, isReload, isSubresourceLoad, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
