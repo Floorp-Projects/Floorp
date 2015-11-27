@@ -935,6 +935,10 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
   nsPoint pt =
     LayoutDevicePixel::ToAppUnits(aPoint, aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
+  if (aPresContext->PresShell()) {
+    pt = pt.RemoveResolution(aPresContext->PresShell()->GetCumulativeScaleResolution());
+  }
+
   pt += LayoutDevicePixel::ToAppUnits(guiEvent->widget->WidgetToScreenOffset(),
                                       aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
