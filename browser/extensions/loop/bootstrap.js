@@ -1,9 +1,18 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+const { utils: Cu, classes: Cc } = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 var WindowListener = {
-
+  /**
+   * Sets up the chrome integration within browser windows for Loop.
+   *
+   * @param {Object} window The window to inject the integration into.
+   */
   setupBrowserUI: function(window) {
     const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     const kBrowserSharingNotificationId = "loop-sharing-notification";
@@ -22,7 +31,7 @@ var WindowListener = {
        */
       get toolbarButton() {
         delete this.toolbarButton;
-        return this.toolbarButton = CustomizableUI.getWidget("loop-button").forWindow(window);
+        return (this.toolbarButton = CustomizableUI.getWidget("loop-button").forWindow(window));
       },
 
       /**
@@ -30,7 +39,7 @@ var WindowListener = {
        */
       get panel() {
         delete this.panel;
-        return this.panel = document.getElementById("loop-notification-panel");
+        return (this.panel = document.getElementById("loop-notification-panel"));
       },
 
       /**
@@ -93,7 +102,7 @@ var WindowListener = {
             win.LoopUI.togglePanel(event, tabId);
           };
           Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
-          return OpenBrowserWindow();
+          return window.OpenBrowserWindow();
         }
         if (this.panel.state == "open") {
           return new Promise(resolve => {
@@ -106,7 +115,7 @@ var WindowListener = {
           let fm = Services.focus;
           fm.moveFocus(doc.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
         }).catch(err => {
-          Cu.reportError(x);
+          Cu.reportError(err);
         });
       },
 
@@ -383,7 +392,9 @@ var WindowListener = {
 
           try {
             window.focus();
-          } catch (ex) {}
+          } catch (ex) {
+            // Do nothing.
+          }
 
           // We need a setTimeout here, otherwise the panel won't show after the
           // window received focus.
@@ -616,4 +627,32 @@ var WindowListener = {
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
   }
+};
+
+/**
+ * Loads the default preferences from the prefs file. This loads the preferences
+ * into the default branch, so they don't appear as user preferences.
+ */
+function loadDefaultPrefs() {
+  var branch = Services.prefs.getDefaultBranch("");
+  Services.scriptloader.loadSubScript("chrome://loop/content/preferences/prefs.js", {
+    pref: (key, val) => {
+      switch (typeof val) {
+        case "boolean":
+          branch.setBoolPref(key, val);
+          break;
+        case "number":
+          branch.setIntPref(key, val);
+          break;
+        case "string":
+          branch.setCharPref(key, val);
+         break;
+      }
+    }
+  });
+}
+
+
+function startup(data, reason) {
+  loadDefaultPrefs();
 }
