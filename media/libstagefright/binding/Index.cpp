@@ -5,7 +5,6 @@
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
-#include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/SinfParser.h"
 #include "nsAutoPtr.h"
 #include "mozilla/RefPtr.h"
@@ -15,6 +14,7 @@
 
 using namespace stagefright;
 using namespace mozilla;
+using namespace mozilla::media;
 
 namespace mp4_demuxer
 {
@@ -45,7 +45,7 @@ RangeFinder::Contains(MediaByteRange aByteRange)
     return false;
   }
 
-  if (mRanges[mIndex].Contains(aByteRange)) {
+  if (mRanges[mIndex].ContainsStrict(aByteRange)) {
     return true;
   }
 
@@ -56,7 +56,7 @@ RangeFinder::Contains(MediaByteRange aByteRange)
         return false;
       }
       --mIndex;
-      if (mRanges[mIndex].Contains(aByteRange)) {
+      if (mRanges[mIndex].ContainsStrict(aByteRange)) {
         return true;
       }
     } while (aByteRange.mStart < mRanges[mIndex].mStart);
@@ -69,7 +69,7 @@ RangeFinder::Contains(MediaByteRange aByteRange)
       return false;
     }
     ++mIndex;
-    if (mRanges[mIndex].Contains(aByteRange)) {
+    if (mRanges[mIndex].ContainsStrict(aByteRange)) {
       return true;
     }
   }
@@ -246,8 +246,19 @@ Index::Index(const nsTArray<Indice>& aIndex,
       // OOM.
       return;
     }
-    for (size_t i = 0; i < aIndex.Length(); i++) {
-      const Indice& indice = aIndex[i];
+    media::IntervalSet<int64_t> intervalTime;
+    MediaByteRange intervalRange;
+    bool haveSync = false;
+    bool progressive = true;
+    int64_t lastOffset = 0;
+    for (const Indice& indice : aIndex) {
+      if (indice.sync) {
+        haveSync = true;
+      }
+      if (!haveSync) {
+        continue;
+      }
+
       Sample sample;
       sample.mByteRange = MediaByteRange(indice.start_offset,
                                          indice.end_offset);
@@ -257,6 +268,40 @@ Index::Index(const nsTArray<Indice>& aIndex,
       sample.mSync = indice.sync;
       // FIXME: Make this infallible after bug 968520 is done.
       MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
+      if (indice.start_offset < lastOffset) {
+        NS_WARNING("Chunks in MP4 out of order, expect slow down");
+        progressive = false;
+      }
+      lastOffset = indice.end_offset;
+
+      if (sample.mSync && progressive) {
+        if (mDataOffset.Length()) {
+          auto& last = mDataOffset.LastElement();
+          last.mEndOffset = intervalRange.mEnd;
+          NS_ASSERTION(intervalTime.Length() == 1, "Discontinuous samples between keyframes");
+          last.mTime.start = intervalTime.GetStart();
+          last.mTime.end = intervalTime.GetEnd();
+        }
+        if (!mDataOffset.AppendElement(MP4DataOffset(mIndex.Length() - 1,
+                                                     indice.start_offset),
+                                       fallible)) {
+          // OOM.
+          return;
+        }
+        intervalTime = media::IntervalSet<int64_t>();
+        intervalRange = MediaByteRange();
+      }
+      intervalTime += media::Interval<int64_t>(sample.mCompositionRange.start,
+                                               sample.mCompositionRange.end);
+      intervalRange = intervalRange.Span(sample.mByteRange);
+    }
+
+    if (mDataOffset.Length() && progressive) {
+      auto& last = mDataOffset.LastElement();
+      last.mEndOffset = aIndex.LastElement().end_offset;
+      last.mTime = Interval<int64_t>(intervalTime.GetStart(), intervalTime.GetEnd());
+    } else {
+      mDataOffset.Clear();
     }
   }
 }
@@ -301,14 +346,47 @@ Index::GetEndCompositionIfBuffered(const MediaByteRangeSet& aByteRanges)
   return 0;
 }
 
-void
-Index::ConvertByteRangesToTimeRanges(
-  const MediaByteRangeSet& aByteRanges,
-  nsTArray<Interval<Microseconds>>* aTimeRanges)
+TimeIntervals
+Index::ConvertByteRangesToTimeRanges(const MediaByteRangeSet& aByteRanges)
 {
+  if (aByteRanges == mLastCachedRanges) {
+    return mLastBufferedRanges;
+  }
+  mLastCachedRanges = aByteRanges;
+
+  if (mDataOffset.Length()) {
+    TimeIntervals timeRanges;
+    for (const auto& range : aByteRanges) {
+      uint32_t start = mDataOffset.IndexOfFirstElementGt(range.mStart - 1);
+      if (start == mDataOffset.Length()) {
+        continue;
+      }
+      uint32_t end = mDataOffset.IndexOfFirstElementGt(range.mEnd, MP4DataOffset::EndOffsetComparator());
+      if (end < start) {
+        continue;
+      }
+      if (end > start) {
+        timeRanges +=
+          TimeInterval(TimeUnit::FromMicroseconds(mDataOffset[start].mTime.start),
+                       TimeUnit::FromMicroseconds(mDataOffset[end-1].mTime.end));
+      }
+      if (end < mDataOffset.Length()) {
+        // Find samples in partial block contained in the byte range.
+        for (size_t i = mDataOffset[end].mIndex;
+             i < mIndex.Length() && range.ContainsStrict(mIndex[i].mByteRange);
+             i++) {
+          timeRanges +=
+            TimeInterval(TimeUnit::FromMicroseconds(mIndex[i].mCompositionRange.start),
+                         TimeUnit::FromMicroseconds(mIndex[i].mCompositionRange.end));
+        }
+      }
+    }
+    mLastBufferedRanges = timeRanges;
+    return timeRanges;
+  }
+
   RangeFinder rangeFinder(aByteRanges);
   nsTArray<Interval<Microseconds>> timeRanges;
-
   nsTArray<FallibleTArray<Sample>*> indexes;
   if (mMoofParser) {
     // We take the index out of the moof parser and move it into a local
@@ -353,7 +431,17 @@ Index::ConvertByteRangesToTimeRanges(
   }
 
   // This fixes up when the compositon order differs from the byte range order
-  Interval<Microseconds>::Normalize(timeRanges, aTimeRanges);
+  nsTArray<Interval<Microseconds>> timeRangesNormalized;
+  Interval<Microseconds>::Normalize(timeRanges, &timeRangesNormalized);
+  // convert timeRanges.
+  media::TimeIntervals ranges;
+  for (size_t i = 0; i < timeRangesNormalized.Length(); i++) {
+    ranges +=
+      media::TimeInterval(media::TimeUnit::FromMicroseconds(timeRangesNormalized[i].start),
+                          media::TimeUnit::FromMicroseconds(timeRangesNormalized[i].end));
+  }
+  mLastBufferedRanges = ranges;
+  return ranges;
 }
 
 uint64_t
