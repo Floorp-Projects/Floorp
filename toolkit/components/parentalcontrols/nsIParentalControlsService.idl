@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(ec6ae96e-e161-481e-bb51-78b11fc1fdbe)]
+[scriptable, uuid(f35733bc-114b-49ce-a8dd-a423f19318bc)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -29,7 +29,7 @@ interface nsIParentalControlsService : nsISupports
   const short REMOTE_DEBUGGING = 10; // Remote debugging
   const short IMPORT_SETTINGS = 11; // Importing settings from other apps
   const short PRIVATE_BROWSING = 12; // Disallow usage of private browsing
-  const short LOCATION_SERVICE = 13; // Sharing of location data to location service
+  const short DATA_CHOICES = 13; // Choose whether or not to send usage information
   const short CLEAR_HISTORY = 14; // Clear browsing history
   const short MASTER_PASSWORD = 15; // Setting master password for logins
   const short GUEST_BROWSING = 16; // Disallow usage of guest browsing
