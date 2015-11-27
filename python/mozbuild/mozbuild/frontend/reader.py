@@ -219,6 +219,8 @@ class MozbuildSandbox(Sandbox):
         return Sandbox.__contains__(self, key)
 
     def __setitem__(self, key, value):
+        if key in self.special_variables and value is self[key]:
+            return
         if key in self.special_variables or key in self.functions or key in self.subcontext_types:
             raise KeyError('Cannot set "%s" because it is a reserved keyword'
                            % key)
