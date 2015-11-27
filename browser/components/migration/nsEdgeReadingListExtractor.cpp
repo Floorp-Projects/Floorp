@@ -13,6 +13,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWindowsMigrationUtils.h"
+#include "nsStringGlue.h"
 
 #define NS_HANDLE_JET_ERROR(err) { \
   if (err < JET_errSuccess) {	\
@@ -202,11 +203,10 @@ nsEdgeReadingListExtractor::ConvertJETError(const JET_ERR &aError)
     default: {
       nsCOMPtr<nsIConsoleService>
         consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      static const char16ptr_t
-        kFormat = MOZ_UTF16("Unexpected JET error from ESE database: %ld");
-      wchar_t msg[80];
-      swprintf(msg, mozilla::ArrayLength(msg), kFormat, aError);
-      consoleService->LogStringMessage(char16ptr_t(msg));
+      nsAutoString msg;
+      msg.AppendLiteral("Unexpected JET error from ESE database: ");
+      msg.AppendInt(aError);
+      consoleService->LogStringMessage(msg.get());
       return NS_ERROR_FAILURE;
     }
   }
