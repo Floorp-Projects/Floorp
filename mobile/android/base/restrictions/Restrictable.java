@@ -46,7 +46,7 @@ public enum Restrictable {
 
     CLEAR_HISTORY(14, "clear_history", R.string.restrictable_feature_clear_history),
 
-    MASTER_PASSWORD(15, "master_password", R.string.restrictable_feature_master_password),
+    MASTER_PASSWORD(15, "master_password", 0),
 
     GUEST_BROWSING(16, "guest_browsing",  R.string.restrictable_feature_guest_browsing),
 
