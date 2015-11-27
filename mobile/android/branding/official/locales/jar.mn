@@ -8,4 +8,4 @@
 % locale branding @AB_CD@ %locale/branding/
 # Branding only exists in en-US
   locale/branding/brand.dtd        (en-US/brand.dtd)
-* locale/branding/brand.properties (en-US/brand.properties)
+  locale/branding/brand.properties (en-US/brand.properties)
