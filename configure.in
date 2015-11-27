@@ -4217,6 +4217,7 @@ cairo-uikit)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
+    AC_DEFINE(MOZ_SINGLE_PROCESS_APZ)
     ;;
 
 cairo-android)
@@ -4800,8 +4801,11 @@ MOZ_ARG_ENABLE_BOOL(android-apz,
     MOZ_ANDROID_APZ=1,
     MOZ_ANDROID_APZ=)
 if test -n "$MOZ_ANDROID_APZ"; then
-     dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_ANDROID_APZ)
+    dnl Do this if defined in confvars.sh
+    AC_DEFINE(MOZ_ANDROID_APZ)
+    if test -z "$MOZ_B2GDROID"; then
+      AC_DEFINE(MOZ_SINGLE_PROCESS_APZ)
+    fi
 fi
 
 dnl ========================================================
