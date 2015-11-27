@@ -266,15 +266,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'DISABLE_STL_WRAPPING': [
                 'DISABLE_STL_WRAPPING := 1',
             ],
-            'EXTRA_COMPONENTS': [
-                'EXTRA_COMPONENTS += bar.js',
-                'EXTRA_COMPONENTS += dummy.manifest',
-                'EXTRA_COMPONENTS += foo.js',
-            ],
-            'EXTRA_PP_COMPONENTS': [
-                'EXTRA_PP_COMPONENTS += bar.pp.js',
-                'EXTRA_PP_COMPONENTS += foo.pp.js',
-            ],
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],

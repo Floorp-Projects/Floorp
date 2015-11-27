@@ -209,6 +209,7 @@ class TestMozbuildSandbox(unittest.TestCase):
 
     def test_special_variables(self):
         sandbox = self.sandbox()
+        sandbox._context.add_source(sandbox.normalize_path('moz.build'))
 
         for k in SPECIAL_VARIABLES:
             with self.assertRaises(KeyError):

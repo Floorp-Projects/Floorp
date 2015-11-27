@@ -15,7 +15,6 @@ from mozbuild.frontend.data import (
     JavaScriptModules,
     JsPreferenceFile,
     Resources,
-    VariablePassthru,
     XPIDLFile,
 )
 from mozbuild.jar import JarManifestParser
@@ -77,30 +76,6 @@ class FasterMakeBackend(CommonBackend):
         elif isinstance(obj, JARManifest) and \
                 obj.install_target.startswith('dist/bin'):
             self._consume_jar_manifest(obj, defines)
-
-        elif isinstance(obj, VariablePassthru) and \
-                obj.install_target.startswith('dist/bin'):
-            for f in obj.variables.get('EXTRA_COMPONENTS', {}):
-                path = mozpath.join(obj.install_target, 'components',
-                                    mozpath.basename(f))
-                self._install_manifests[obj.install_target].add_symlink(
-                    mozpath.join(obj.srcdir, f),
-                    mozpath.join('components', mozpath.basename(f))
-                )
-                if f.endswith('.manifest'):
-                    manifest = mozpath.join(obj.install_target,
-                                            'chrome.manifest')
-                    self._manifest_entries[manifest].append(
-                        'manifest components/%s' % mozpath.basename(f))
-
-            for f in obj.variables.get('EXTRA_PP_COMPONENTS', {}):
-                self._add_preprocess(obj, f, 'components', defines=defines)
-
-                if f.endswith('.manifest'):
-                    manifest = mozpath.join(obj.install_target,
-                                            'chrome.manifest')
-                    self._manifest_entries[manifest].append(
-                        'manifest components/%s' % mozpath.basename(f))
 
         elif isinstance(obj, JavaScriptModules) and \
                 obj.install_target.startswith('dist/bin'):

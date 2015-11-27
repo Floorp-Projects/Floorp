@@ -1173,33 +1173,6 @@ endif
 endif
 
 ################################################################################
-# Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
-ifdef EXTRA_COMPONENTS
-misc:: $(EXTRA_COMPONENTS)
-ifndef NO_DIST_INSTALL
-EXTRA_COMPONENTS_FILES := $(EXTRA_COMPONENTS)
-EXTRA_COMPONENTS_DEST := $(FINAL_TARGET)/components
-EXTRA_COMPONENTS_TARGET := misc
-INSTALL_TARGETS += EXTRA_COMPONENTS
-endif
-
-endif
-
-ifdef EXTRA_PP_COMPONENTS
-ifndef NO_DIST_INSTALL
-EXTRA_PP_COMPONENTS_PATH := $(FINAL_TARGET)/components
-EXTRA_PP_COMPONENTS_TARGET := misc
-PP_TARGETS += EXTRA_PP_COMPONENTS
-endif
-endif
-
-EXTRA_MANIFESTS = $(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS))
-ifneq (,$(EXTRA_MANIFESTS))
-misc:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest $(patsubst %,'manifest components/%',$(notdir $(EXTRA_MANIFESTS))))
-endif
-
-################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
@@ -1584,8 +1557,6 @@ FREEZE_VARIABLES = \
   DIRS \
   LIBRARY \
   MODULE \
-  EXTRA_COMPONENTS \
-  EXTRA_PP_COMPONENTS \
   $(NULL)
 
 $(foreach var,$(FREEZE_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))

@@ -2,9 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-EXTRA_COMPONENTS = ['bar.js', 'dummy.manifest', 'foo.js']
-EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
-
 NO_VISIBILITY_FLAGS = True
 
 DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']

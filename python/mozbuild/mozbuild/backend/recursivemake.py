@@ -1378,6 +1378,9 @@ INSTALL_TARGETS += %(prefix)s
         elif target.startswith('dist/xpi-stage'):
             install_manifest = self._install_manifests['dist_xpi-stage']
             reltarget = mozpath.relpath(target, 'dist/xpi-stage')
+        elif target.startswith('_tests'):
+            install_manifest = self._install_manifests['tests']
+            reltarget = mozpath.relpath(target, '_tests')
         else:
             raise Exception("Cannot install to " + target)
 
