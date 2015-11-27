@@ -238,6 +238,7 @@ Index::Index(const nsTArray<Indice>& aIndex,
              uint32_t aTrackId,
              bool aIsAudio)
   : mSource(aSource)
+  , mIsAudio(aIsAudio)
 {
   if (aIndex.IsEmpty()) {
     mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio);
@@ -251,7 +252,8 @@ Index::Index(const nsTArray<Indice>& aIndex,
     bool haveSync = false;
     bool progressive = true;
     int64_t lastOffset = 0;
-    for (const Indice& indice : aIndex) {
+    for (size_t i = 0; i < aIndex.Length(); i++) {
+      const Indice& indice = aIndex[i];
       if (indice.sync) {
         haveSync = true;
       }
@@ -274,7 +276,8 @@ Index::Index(const nsTArray<Indice>& aIndex,
       }
       lastOffset = indice.end_offset;
 
-      if (sample.mSync && progressive) {
+      // Pack audio samples in group of 128.
+      if (sample.mSync && progressive && (!mIsAudio || !(i % 128))) {
         if (mDataOffset.Length()) {
           auto& last = mDataOffset.LastElement();
           last.mEndOffset = intervalRange.mEnd;
@@ -358,12 +361,24 @@ Index::ConvertByteRangesToTimeRanges(const MediaByteRangeSet& aByteRanges)
     TimeIntervals timeRanges;
     for (const auto& range : aByteRanges) {
       uint32_t start = mDataOffset.IndexOfFirstElementGt(range.mStart - 1);
-      if (start == mDataOffset.Length()) {
+      if (!mIsAudio && start == mDataOffset.Length()) {
         continue;
       }
       uint32_t end = mDataOffset.IndexOfFirstElementGt(range.mEnd, MP4DataOffset::EndOffsetComparator());
-      if (end < start) {
+      if (!mIsAudio && end < start) {
         continue;
+      }
+      if (mIsAudio && start &&
+          range.Intersects(MediaByteRange(mDataOffset[start-1].mStartOffset,
+                                          mDataOffset[start-1].mEndOffset))) {
+        // Check if previous audio data block contains some available samples.
+        for (size_t i = mDataOffset[start-1].mIndex; i < mIndex.Length(); i++) {
+          if (range.ContainsStrict(mIndex[i].mByteRange)) {
+            timeRanges +=
+              TimeInterval(TimeUnit::FromMicroseconds(mIndex[i].mCompositionRange.start),
+                           TimeUnit::FromMicroseconds(mIndex[i].mCompositionRange.end));
+          }
+        }
       }
       if (end > start) {
         timeRanges +=

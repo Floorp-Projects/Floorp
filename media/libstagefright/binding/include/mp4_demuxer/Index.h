@@ -115,6 +115,7 @@ private:
   // ConvertByteRangesToTimeRanges cache
   mozilla::MediaByteRangeSet mLastCachedRanges;
   mozilla::media::TimeIntervals mLastBufferedRanges;
+  bool mIsAudio;
 };
 }
 
