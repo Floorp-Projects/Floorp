@@ -32,8 +32,6 @@ loader.lazyGetter(this, "clipboardHelper", () => {
 
 loader.lazyImporter(this, "CommandUtils", "resource://devtools/client/shared/DeveloperToolbar.jsm");
 
-const LAYOUT_CHANGE_TIMER = 250;
-
 /**
  * Represents an open instance of the Inspector for a tab.
  * The inspector controls the breadcrumbs, the markup view, and the sidebar
@@ -49,8 +47,6 @@ const LAYOUT_CHANGE_TIMER = 250;
  *      view has been reloaded)
  * - markuploaded
  *      Fired when the markup-view frame has loaded
- * - layout-change
- *      Fired when the layout of the inspector changes
  * - breadcrumbs-updated
  *      Fired when the breadcrumb widget updates to a new node
  * - layoutview-updated
@@ -90,7 +86,6 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
   this.onDetached = this.onDetached.bind(this);
   this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
-  this.scheduleLayoutChange = this.scheduleLayoutChange.bind(this);
   this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
 
@@ -170,9 +165,6 @@ InspectorPanel.prototype = {
     this._toolbox.on("host-changed", this.onToolboxHostChanged);
 
     if (this.target.isLocalTab) {
-      this.browser = this.target.tab.linkedBrowser;
-      this.browser.addEventListener("resize", this.scheduleLayoutChange, true);
-
       // Show a warning when the debugger is paused.
       // We show the warning only when the inspector
       // is selected.
@@ -469,8 +461,6 @@ InspectorPanel.prototype = {
       return;
     }
 
-    this.cancelLayoutChange();
-
     // Wait for all the known tools to finish updating and then let the
     // client know.
     let selection = this.selection.nodeFront;
@@ -570,7 +560,6 @@ InspectorPanel.prototype = {
    * node was selected).
    */
   onDetached: function(event, parentNode) {
-    this.cancelLayoutChange();
     this.breadcrumbs.cutAfter(this.breadcrumbs.indexOf(parentNode));
     this.selection.setNodeFront(parentNode ? parentNode : this._defaultNode, "detached");
   },
@@ -589,12 +578,6 @@ InspectorPanel.prototype = {
     }
 
     this.cancelUpdate();
-    this.cancelLayoutChange();
-
-    if (this.browser) {
-      this.browser.removeEventListener("resize", this.scheduleLayoutChange, true);
-      this.browser = null;
-    }
 
     this.target.off("will-navigate", this._onBeforeNavigate);
 
@@ -1392,41 +1375,5 @@ InspectorPanel.prototype = {
     this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {
       clipboardHelper.copyString(url);
     }, console.error);
-  },
-
-  /**
-   * Trigger a high-priority layout change for things that need to be
-   * updated immediately
-   */
-  immediateLayoutChange: function() {
-    this.emit("layout-change");
-  },
-
-  /**
-   * Schedule a low-priority change event for things like paint
-   * and resize.
-   */
-  scheduleLayoutChange: function(event) {
-    // Filter out non browser window resize events (i.e. triggered by iframes)
-    if (this.browser.contentWindow === event.target) {
-      if (this._timer) {
-        return null;
-      }
-      this._timer = this.panelWin.setTimeout(() => {
-        this.emit("layout-change");
-        this._timer = null;
-      }, LAYOUT_CHANGE_TIMER);
-    }
-  },
-
-  /**
-   * Cancel a pending low-priority change event if any is
-   * scheduled.
-   */
-  cancelLayoutChange: function() {
-    if (this._timer) {
-      this.panelWin.clearTimeout(this._timer);
-      delete this._timer;
-    }
   }
 };

@@ -8,11 +8,9 @@ function testUSSD() {
   log("Test *#1234# ...");
 
   return gSendMMI("*#1234#").then(aResult => {
-    // Since emulator doesn't support sending USSD, so we expect the result is
-    // always failed.
-    ok(!aResult.success, "Check success");
+    ok(aResult.success, "Check success");
     is(aResult.serviceCode, "scUssd", "Check serviceCode");
-    is(aResult.statusMessage, "RequestNotSupported", "Check statusMessage");
+    is(aResult.statusMessage, "", "Check statusMessage");
     is(aResult.additionalInformation, undefined, "No additional information");
   });
 }
