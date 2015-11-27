@@ -13,6 +13,7 @@
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "FontFaceSet.h"
 #include "nsPresContext.h"
 #include "nsIPrincipal.h"
@@ -39,6 +40,7 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
     mFontFaceSet(aFontFaceSet),
     mChannel(aChannel)
 {
+  mStartTime = TimeStamp::Now();
 }
 
 nsFontFaceLoader::~nsFontFaceLoader()
@@ -148,12 +150,17 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   mFontFaceSet->RemoveLoader(this);
 
+  TimeStamp doneTime = TimeStamp::Now();
+  TimeDuration downloadTime = doneTime - mStartTime;
+  uint32_t downloadTimeMS = uint32_t(downloadTime.ToMilliseconds());
+  Telemetry::Accumulate(Telemetry::WEBFONT_DOWNLOAD_TIME, downloadTimeMS);
+
   if (LOG_ENABLED()) {
     nsAutoCString fontURI;
     mFontURI->GetSpec(fontURI);
     if (NS_SUCCEEDED(aStatus)) {
-      LOG(("userfonts (%p) download completed - font uri: (%s)\n",
-           this, fontURI.get()));
+      LOG(("userfonts (%p) download completed - font uri: (%s) time: %d ms\n",
+           this, fontURI.get(), downloadTimeMS));
     } else {
       LOG(("userfonts (%p) download failed - font uri: (%s) error: %8.8x\n",
            this, fontURI.get(), aStatus));
@@ -187,6 +194,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   // and we need to load the next source.
   bool fontUpdate =
     mUserFontEntry->FontDataDownloadComplete(aString, aStringLen, aStatus);
+
+  mFontFaceSet->GetUserFontSet()->RecordFontLoadDone(aStringLen, doneTime);
 
   // when new font loaded, need to reflow
   if (fontUpdate) {

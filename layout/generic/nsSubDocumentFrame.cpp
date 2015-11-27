@@ -441,6 +441,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     aBuilder->EnterPresShell(subdocRootFrame,
                              pointerEventsNone && !passPointerEventsToChildren);
+
+#if defined(MOZ_SINGLE_PROCESS_APZ)
+    if (!haveDisplayPort) {
+      // Remove nsPresShell resolution
+      dirty = dirty.RemoveResolution(presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f);
+    }
+#endif
   } else {
     dirty = aDirtyRect;
   }

@@ -1557,6 +1557,21 @@ ContentParent::Init()
         Unused << SendActivateA11y();
     }
 #endif
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
+    bool profilerActive = false;
+    DebugOnly<nsresult> rv = profiler->IsActive(&profilerActive);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    if (profilerActive) {
+        nsCOMPtr<nsIProfilerStartParams> currentProfilerParams;
+        rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+        StartProfiler(currentProfilerParams);
+    }
+#endif
 }
 
 void
@@ -3275,13 +3290,7 @@ ContentParent::Observe(nsISupports* aSubject,
 #ifdef MOZ_ENABLE_PROFILER_SPS
     else if (!strcmp(aTopic, "profiler-started")) {
         nsCOMPtr<nsIProfilerStartParams> params(do_QueryInterface(aSubject));
-        uint32_t entries;
-        double interval;
-        params->GetEntries(&entries);
-        params->GetInterval(&interval);
-        const nsTArray<nsCString>& features = params->GetFeatures();
-        const nsTArray<nsCString>& threadFilterNames = params->GetThreadFilterNames();
-        Unused << SendStartProfiler(entries, interval, features, threadFilterNames);
+        StartProfiler(params);
     }
     else if (!strcmp(aTopic, "profiler-stopped")) {
         Unused << SendStopProfiler();
@@ -5707,6 +5716,24 @@ ContentParent::RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo)
   MOZ_CRASH("wrong platform!");
   return false;
 #endif
+}
+
+void
+ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
+{
+    if (NS_WARN_IF(!aParams)) {
+        return;
+    }
+
+    ProfilerInitParams ipcParams;
+
+    ipcParams.enabled() = true;
+    aParams->GetEntries(&ipcParams.entries());
+    aParams->GetInterval(&ipcParams.interval());
+    ipcParams.features() = aParams->GetFeatures();
+    ipcParams.threadFilters() = aParams->GetThreadFilterNames();
+
+    Unused << SendStartProfiler(ipcParams);
 }
 
 } // namespace dom
