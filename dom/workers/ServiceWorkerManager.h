@@ -16,6 +16,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -434,6 +435,11 @@ public:
               uint32_t aColumnNumber,
               uint32_t aFlags,
               JSExnType aExnType);
+
+  UniquePtr<ServiceWorkerClientInfo>
+  GetClient(nsIPrincipal* aPrincipal,
+            const nsAString& aClientId,
+            ErrorResult& aRv);
 
   void
   GetAllClients(nsIPrincipal* aPrincipal,
