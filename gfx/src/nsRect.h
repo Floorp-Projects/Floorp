@@ -171,6 +171,8 @@ struct nsRect :
   {
     return IsEqualEdges(aRect);
   }
+
+  MOZ_WARN_UNUSED_RESULT inline nsRect RemoveResolution(const float aResolution) const;
 };
 
 /*
@@ -277,6 +279,25 @@ inline mozilla::gfx::IntRect
 nsRect::ToInsidePixels(nscoord aAppUnitsPerPixel) const
 {
   return ScaleToInsidePixels(1.0f, 1.0f, aAppUnitsPerPixel);
+}
+
+inline nsRect
+nsRect::RemoveResolution(const float aResolution) const
+{
+  MOZ_ASSERT(aResolution > 0.0f);
+  nsRect rect;
+  rect.x = NSToCoordRound(NSCoordToFloat(x) / aResolution);
+  rect.y = NSToCoordRound(NSCoordToFloat(y) / aResolution);
+  // A 1x1 rect indicates we are just hit testing a point, so pass down a 1x1
+  // rect as well instead of possibly rounding the width or height to zero.
+  if (width == 1 && height == 1) {
+    rect.width = rect.height = 1;
+  } else {
+    rect.width = NSToCoordCeil(NSCoordToFloat(width) / aResolution);
+    rect.height = NSToCoordCeil(NSCoordToFloat(height) / aResolution);
+  }
+
+  return rect;
 }
 
 const mozilla::gfx::IntRect& GetMaxSizedIntRect();

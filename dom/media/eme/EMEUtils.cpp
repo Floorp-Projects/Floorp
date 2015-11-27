@@ -141,4 +141,17 @@ CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aB
   aOutData.AppendElements(data.mData, data.mLength);
 }
 
+nsString
+KeySystemToGMPName(const nsAString& aKeySystem)
+{
+  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    return NS_LITERAL_STRING("gmp-eme-adobe");
+  }
+  if (aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+    return NS_LITERAL_STRING("gmp-clearkey");
+  }
+  MOZ_ASSERT(false, "We should only call this for known GMPs");
+  return EmptyString();
+}
+
 } // namespace mozilla

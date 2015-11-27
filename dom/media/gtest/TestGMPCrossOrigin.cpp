@@ -273,7 +273,7 @@ EnumerateDir(nsIFile* aPath, T&& aDirIter)
 }
 
 /**
- * Enumerate files under $profileDir/gmp/$aDir/ (non-recursive).
+ * Enumerate files under $profileDir/gmp/$platform/gmp-fake/$aDir/ (non-recursive).
  */
 template<typename T>
 static nsresult
@@ -283,14 +283,21 @@ EnumerateGMPStorageDir(const nsACString& aDir, T&& aDirIter)
     GeckoMediaPluginServiceParent::GetSingleton();
   MOZ_ASSERT(service);
 
-  // $profileDir/gmp/
+  // $profileDir/gmp/$platform/
   nsCOMPtr<nsIFile> path;
   nsresult rv = service->GetStorageDir(getter_AddRefs(path));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // $profileDir/gmp/$aDir/
+
+  // $profileDir/gmp/$platform/gmp-fake/
+  rv = path->Append(NS_LITERAL_STRING("gmp-fake"));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // $profileDir/gmp/$platform/gmp-fake/$aDir/
   rv = path->AppendNative(aDir);
   if (NS_FAILED(rv)) {
     return rv;
@@ -469,6 +476,7 @@ GetNodeId(const nsAString& aOrigin,
   // GeckoMediaPluginServiceParent is synchronous.
   nsresult rv = service->GetNodeId(aOrigin,
                                    aTopLevelOrigin,
+                                   NS_LITERAL_STRING("gmp-fake"),
                                    aInPBMode,
                                    Move(callback));
   EXPECT_TRUE(NS_SUCCEEDED(rv) && NS_SUCCEEDED(result));
@@ -820,10 +828,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
 
   /**
    * 1. Generate some storage data.
-   * 2. Find the max mtime |t| in $profileDir/gmp/id/.
+   * 2. Find the max mtime |t| in $profileDir/gmp/$platform/gmp-fake/id/.
    * 3. Pass |t| to clear recent history.
-   * 4. Check if all directories in $profileDir/gmp/id/ and
-   *    $profileDir/gmp/storage are removed.
+   * 4. Check if all directories in $profileDir/gmp/$platform/gmp-fake/id/ and
+   *    $profileDir/gmp/$platform/gmp-fake/storage are removed.
    */
   void TestClearRecentHistory1() {
     AssertIsOnGMPThread();
@@ -842,10 +850,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
 
   /**
    * 1. Generate some storage data.
-   * 2. Find the max mtime |t| in $profileDir/gmp/storage/.
+   * 2. Find the max mtime |t| in $profileDir/gmp/$platform/gmp-fake/storage/.
    * 3. Pass |t| to clear recent history.
-   * 4. Check if all directories in $profileDir/gmp/id/ and
-   *    $profileDir/gmp/storage are removed.
+   * 4. Check if all directories in $profileDir/gmp/$platform/gmp-fake/id/ and
+   *    $profileDir/gmp/$platform/gmp-fake/storage are removed.
    */
   void TestClearRecentHistory2() {
     AssertIsOnGMPThread();
@@ -864,10 +872,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
 
   /**
    * 1. Generate some storage data.
-   * 2. Find the max mtime |t| in $profileDir/gmp/storage/.
+   * 2. Find the max mtime |t| in $profileDir/gmp/$platform/gmp-fake/storage/.
    * 3. Pass |t+1| to clear recent history.
-   * 4. Check if all directories in $profileDir/gmp/id/ and
-   *    $profileDir/gmp/storage remain unchanged.
+   * 4. Check if all directories in $profileDir/gmp/$platform/gmp-fake/id/ and
+   *    $profileDir/gmp/$platform/gmp-fake/storage remain unchanged.
    */
   void TestClearRecentHistory3() {
     AssertIsOnGMPThread();
@@ -948,13 +956,13 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     FileCounter c1;
     nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), c1);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
-    // There should be no files under $profileDir/gmp/id/
+    // There should be no files under $profileDir/gmp/$platform/gmp-fake/id/
     EXPECT_EQ(c1.GetCount(), 0);
 
     FileCounter c2;
     rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), c2);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
-    // There should be no files under $profileDir/gmp/storage/
+    // There should be no files under $profileDir/gmp/$platform/gmp-fake/storage/
     EXPECT_EQ(c2.GetCount(), 0);
 
     SetFinished();
@@ -964,13 +972,13 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     FileCounter c1;
     nsresult rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"), c1);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
-    // There should be one directory under $profileDir/gmp/id/
+    // There should be one directory under $profileDir/gmp/$platform/gmp-fake/id/
     EXPECT_EQ(c1.GetCount(), 1);
 
     FileCounter c2;
     rv = EnumerateGMPStorageDir(NS_LITERAL_CSTRING("storage"), c2);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
-    // There should be one directory under $profileDir/gmp/storage/
+    // There should be one directory under $profileDir/gmp/$platform/gmp-fake/storage/
     EXPECT_EQ(c2.GetCount(), 1);
 
     SetFinished();
