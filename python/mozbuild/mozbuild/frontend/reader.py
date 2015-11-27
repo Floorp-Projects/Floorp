@@ -36,6 +36,7 @@ from io import StringIO
 
 from mozbuild.util import (
     EmptyValue,
+    HierarchicalStringList,
     memoize,
     ReadOnlyDefaultDict,
 )
@@ -415,7 +416,7 @@ class MozbuildSandbox(Sandbox):
             for key, value in context.items():
                 if isinstance(value, dict):
                     self[key].update(value)
-                elif isinstance(value, list):
+                elif isinstance(value, (list, HierarchicalStringList)):
                     self[key] += value
                 else:
                     self[key] = value
