@@ -33,9 +33,9 @@ function check_mp4(v, enabled) {
   // Not the MIME type that other browsers respond to, so we won't either.
   check("audio/m4a", "");
   check("video/m4v", "");
-  // Only Safari responds affirmatively to "audio/aac",
-  // so we'll let x-m4a cover aac support.
-  check("audio/aac", "");
+
+  check("audio/aac", "maybe");
+  check("audio/aacp", "maybe");
 
   // H.264 Constrained Baseline Profile Level 3.0, AAC-LC
   check("video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"", "probably");
