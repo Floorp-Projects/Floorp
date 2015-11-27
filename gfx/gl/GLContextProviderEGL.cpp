@@ -485,7 +485,8 @@ GLContextEGL::DestroySurface(EGLSurface aSurface)
 }
 
 already_AddRefed<GLContextEGL>
-GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
+GLContextEGL::CreateGLContext(CreateContextFlags flags,
+                const SurfaceCaps& caps,
                 GLContextEGL *shareContext,
                 bool isOffscreen,
                 EGLConfig config,
@@ -502,7 +503,10 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
     nsTArray<EGLint> contextAttribs;
 
     contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_CLIENT_VERSION);
-    contextAttribs.AppendElement(2);
+    if (flags & CreateContextFlags::PREFER_ES3)
+        contextAttribs.AppendElement(3);
+    else
+        contextAttribs.AppendElement(2);
 
     if (sEGLLibrary.HasRobustness()) {
 //    contextAttribs.AppendElement(LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT);
@@ -782,7 +786,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     SurfaceCaps caps = SurfaceCaps::Any();
     RefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateGLContext(caps,
+        GLContextEGL::CreateGLContext(CreateContextFlags::NONE, caps,
                                       nullptr, false,
                                       config, surface);
 
@@ -835,13 +839,17 @@ GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
 
 static void
 FillContextAttribs(bool alpha, bool depth, bool stencil, bool bpp16,
-                   nsTArray<EGLint>* out)
+                   bool es3, nsTArray<EGLint>* out)
 {
     out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
     out->AppendElement(LOCAL_EGL_PBUFFER_BIT);
 
     out->AppendElement(LOCAL_EGL_RENDERABLE_TYPE);
-    out->AppendElement(LOCAL_EGL_OPENGL_ES2_BIT);
+    if (es3) {
+        out->AppendElement(LOCAL_EGL_OPENGL_ES3_BIT_KHR);
+    } else {
+        out->AppendElement(LOCAL_EGL_OPENGL_ES2_BIT);
+    }
 
     out->AppendElement(LOCAL_EGL_RED_SIZE);
     if (bpp16) {
@@ -896,12 +904,12 @@ GetAttrib(GLLibraryEGL* egl, EGLConfig config, EGLint attrib)
 }
 
 static EGLConfig
-ChooseConfig(GLLibraryEGL* egl, const SurfaceCaps& minCaps,
+ChooseConfig(GLLibraryEGL* egl, CreateContextFlags flags, const SurfaceCaps& minCaps,
              SurfaceCaps* const out_configCaps)
 {
     nsTArray<EGLint> configAttribList;
     FillContextAttribs(minCaps.alpha, minCaps.depth, minCaps.stencil, minCaps.bpp16,
-                       &configAttribList);
+                       bool(flags & CreateContextFlags::PREFER_ES3), &configAttribList);
 
     const EGLint* configAttribs = configAttribList.Elements();
 
@@ -930,11 +938,12 @@ ChooseConfig(GLLibraryEGL* egl, const SurfaceCaps& minCaps,
 }
 
 /*static*/ already_AddRefed<GLContextEGL>
-GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size,
+GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
+                                               const mozilla::gfx::IntSize& size,
                                                const SurfaceCaps& minCaps)
 {
     SurfaceCaps configCaps;
-    EGLConfig config = ChooseConfig(&sEGLLibrary, minCaps, &configCaps);
+    EGLConfig config = ChooseConfig(&sEGLLibrary, flags, minCaps, &configCaps);
     if (config == EGL_NO_CONFIG) {
         NS_WARNING("Failed to find a compatible config.");
         return nullptr;
@@ -953,7 +962,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size
     }
 
 
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(configCaps, nullptr, true,
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, nullptr, true,
                                                             config, surface);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
@@ -990,7 +999,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
     RefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateGLContext(dummyCaps,
+        GLContextEGL::CreateGLContext(CreateContextFlags::NONE, dummyCaps,
                                       nullptr, true,
                                       config, surface);
     if (!glContext) {
@@ -1019,7 +1028,7 @@ GLContextProviderEGL::CreateHeadless(CreateContextFlags flags)
 
     mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    return GLContextEGL::CreateEGLPBufferOffscreenContext(dummySize, dummyCaps);
+    return GLContextEGL::CreateEGLPBufferOffscreenContext(flags, dummySize, dummyCaps);
 }
 
 // Under EGL, on Android, pbuffers are supported fine, though
@@ -1054,7 +1063,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
             minBackbufferCaps.stencil = false;
         }
 
-        gl = GLContextEGL::CreateEGLPBufferOffscreenContext(size, minBackbufferCaps);
+        gl = GLContextEGL::CreateEGLPBufferOffscreenContext(flags, size, minBackbufferCaps);
         if (!gl)
             return nullptr;
 

@@ -20,7 +20,8 @@ class GLContextEGL : public GLContext
     friend class TextureImageEGL;
 
     static already_AddRefed<GLContextEGL>
-    CreateGLContext(const SurfaceCaps& caps,
+    CreateGLContext(CreateContextFlags flags,
+                    const SurfaceCaps& caps,
                     GLContextEGL *shareContext,
                     bool isOffscreen,
                     EGLConfig config,
@@ -108,7 +109,8 @@ public:
     CreateEGLPixmapOffscreenContext(const gfx::IntSize& size);
 
     static already_AddRefed<GLContextEGL>
-    CreateEGLPBufferOffscreenContext(const gfx::IntSize& size,
+    CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
+                                     const gfx::IntSize& size,
                                      const SurfaceCaps& minCaps);
 
 protected:
