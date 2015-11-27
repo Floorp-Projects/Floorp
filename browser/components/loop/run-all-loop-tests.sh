@@ -44,6 +44,7 @@ fi
 
 TESTS="
   ${LOOPDIR}/test/mochitest
+  browser/components/uitour/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
   browser/base/content/test/general/browser_parsable_css.js
 "
@@ -55,6 +56,7 @@ do
   ./mach mochitest $test
   # UITour & get user media aren't compatible with e10s currenly.
   if [ "$1" != "--skip-e10s" ] && \
+     [ "$test" != "browser/components/uitour/test/browser_UITour_loop.js" ] && \
      [ "$test" != "browser/base/content/test/general/browser_devices_get_user_media_about_urls.js" ];
   then
     ./mach mochitest --e10s $test
