@@ -212,11 +212,10 @@ class MachCommands(MachCommandBase):
         cmd_args = [binary,
             '--ext', ext,  # This keeps ext as a single argument.
         ] + args
-        # Path must come after arguments.  Path is '.' due to cwd below.
-        cmd_args += ['.']
+        # Path must come after arguments.
+        cmd_args += [path]
 
         return self.run_process(cmd_args,
-            cwd=path,
             pass_thru=True,  # Allow user to run eslint interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
         )
