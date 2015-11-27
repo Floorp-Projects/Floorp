@@ -91,16 +91,7 @@ loop.conversation = (function(mozL10n) {
    * Conversation initialisation.
    */
   function init() {
-    // Obtain the windowId and pass it through
-    var locationHash = loop.shared.utils.locationData().hash;
-    var windowId;
-
-    var hash = locationHash.match(/#(.*)/);
-    if (hash) {
-      windowId = hash[1];
-    }
-
-    var requests = [
+    return loop.requestMulti(
       ["GetAllConstants"],
       ["GetAllStrings"],
       ["GetLocale"],
@@ -108,20 +99,12 @@ loop.conversation = (function(mozL10n) {
       ["GetLoopPref", "textChat.enabled"],
       ["GetLoopPref", "feedback.periodSec"],
       ["GetLoopPref", "feedback.dateLastSeenSec"]
-    ];
-    var prefetch = [
-      ["GetConversationWindowData", windowId]
-    ];
-
-    return loop.requestMulti.apply(null, requests.concat(prefetch)).then(function(results) {
-      // `requestIdx` is keyed off the order of the `requests` and `prefetch`
-      // arrays. Be careful to update both when making changes.
-      var requestIdx = 0;
-      var constants = results[requestIdx];
+    ).then(function(results) {
+      var constants = results[0];
       // Do the initial L10n setup, we do this before anything
       // else to ensure the L10n environment is setup correctly.
-      var stringBundle = results[++requestIdx];
-      var locale = results[++requestIdx];
+      var stringBundle = results[1];
+      var locale = results[2];
       mozL10n.initialize({
         locale: locale,
         getStrings: function(key) {
@@ -136,22 +119,20 @@ loop.conversation = (function(mozL10n) {
 
       // Plug in an alternate client ID mechanism, as localStorage and cookies
       // don't work in the conversation window
-      var currGuid = results[++requestIdx];
       window.OT.overrideGuidStorage({
         get: function(callback) {
-          callback(null, currGuid);
+          callback(null, results[3]);
         },
         set: function(guid, callback) {
           // See nsIPrefBranch
           var PREF_STRING = 32;
-          currGuid = guid;
           loop.request("SetLoopPref", "ot.guid", guid, PREF_STRING);
           callback(null);
         }
       });
 
       // We want data channels only if the text chat preference is enabled.
-      var useDataChannels = results[++requestIdx];
+      var useDataChannels = results[4];
 
       var dispatcher = new loop.Dispatcher();
       var sdkDriver = new loop.OTSdkDriver({
@@ -173,15 +154,9 @@ loop.conversation = (function(mozL10n) {
       var conversationAppStore = new loop.store.ConversationAppStore({
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
-        feedbackPeriod: results[++requestIdx],
-        feedbackTimestamp: results[++requestIdx]
+        feedbackPeriod: results[5],
+        feedbackTimestamp: results[6]
       });
-
-      prefetch.forEach(function(req) {
-        req.shift();
-        loop.storeRequest(req, results[++requestIdx]);
-      });
-
       var roomStore = new loop.store.RoomStore(dispatcher, {
         activeRoomStore: activeRoomStore,
         constants: constants
@@ -194,6 +169,15 @@ loop.conversation = (function(mozL10n) {
         conversationAppStore: conversationAppStore,
         textChatStore: textChatStore
       });
+
+      // Obtain the windowId and pass it through
+      var locationHash = loop.shared.utils.locationData().hash;
+      var windowId;
+
+      var hash = locationHash.match(/#(.*)/);
+      if (hash) {
+        windowId = hash[1];
+      }
 
       React.render(
         React.createElement(AppControllerView, {
