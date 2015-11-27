@@ -104,9 +104,10 @@ private:
 
     unsigned numberOfPartialsForRange(unsigned rangeIndex) const;
 
-    // Creates tables based on numberOfComponents Fourier coefficients.
-    void createBandLimitedTables(float fundamentalFrequency);
+    // Creates table for specified index based on fundamental frequency.
+    void createBandLimitedTables(float fundamentalFrequency, unsigned rangeIndex);
     float m_lowestRequestedFundamentalFrequency;
+    float m_normalizationScale;
     nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
 };
 
