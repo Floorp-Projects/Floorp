@@ -785,10 +785,10 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext* cx)
     // heapDatum() may point to shared memory but that memory is only
     // accessed from maybeHeap(), which wraps it, and from
     // hasDetachedHeap(), which checks it for null.
-    heapDatum() = heap->dataPointerMaybeShared().unwrap(/*safe - explained above*/);
+    heapDatum() = heap->dataPointerEither().unwrap(/*safe - explained above*/);
 
 #if defined(JS_CODEGEN_X86)
-    uint8_t* heapOffset = heap->dataPointerMaybeShared().unwrap(/*safe - used for value*/);
+    uint8_t* heapOffset = heap->dataPointerEither().unwrap(/*safe - used for value*/);
     uint32_t heapLength = heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess& access = heapAccesses_[i];
@@ -834,7 +834,7 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared* maybePrevBu
 #if defined(JS_CODEGEN_X86)
     if (maybePrevBuffer) {
         // Subtract out the base-pointer added by AsmJSModule::initHeap.
-        uint8_t* ptrBase = maybePrevBuffer->dataPointerMaybeShared().unwrap(/*safe - used for value*/);
+        uint8_t* ptrBase = maybePrevBuffer->dataPointerEither().unwrap(/*safe - used for value*/);
         uint32_t heapLength = maybePrevBuffer->byteLength();
         for (unsigned i = 0; i < heapAccesses_.length(); i++) {
             const jit::AsmJSHeapAccess& access = heapAccesses_[i];

@@ -2492,30 +2492,6 @@ IsArrayViewCtorName(ModuleValidator& m, PropertyName* name, Scalar::Type* type, 
         *type = Scalar::Float32;
     } else if (name == names.Float64Array) {
         *type = Scalar::Float64;
-    } else if (name == names.SharedInt8Array) {
-        *shared = true;
-        *type = Scalar::Int8;
-    } else if (name == names.SharedUint8Array) {
-        *shared = true;
-        *type = Scalar::Uint8;
-    } else if (name == names.SharedInt16Array) {
-        *shared = true;
-        *type = Scalar::Int16;
-    } else if (name == names.SharedUint16Array) {
-        *shared = true;
-        *type = Scalar::Uint16;
-    } else if (name == names.SharedInt32Array) {
-        *shared = true;
-        *type = Scalar::Int32;
-    } else if (name == names.SharedUint32Array) {
-        *shared = true;
-        *type = Scalar::Uint32;
-    } else if (name == names.SharedFloat32Array) {
-        *shared = true;
-        *type = Scalar::Float32;
-    } else if (name == names.SharedFloat64Array) {
-        *shared = true;
-        *type = Scalar::Float64;
     } else {
         return false;
     }
@@ -2576,11 +2552,6 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
         type = global->viewType();
         shared = global->viewIsSharedView();
     }
-
-#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
-    if (shared)
-        return m.fail(ctorExpr, "shared views not supported by this build");
-#endif
 
     if (!CheckNewArrayViewArgs(m, ctorExpr, bufferName))
         return false;
@@ -2726,10 +2697,6 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
         Scalar::Type type;
         bool shared = false;
         if (IsArrayViewCtorName(m, field, &type, &shared)) {
-#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
-            if (shared)
-                return m.fail(initNode, "shared views not supported by this build");
-#endif
             if (!m.module().isValidViewSharedness(shared))
                 return m.failName(initNode, "'%s' has different sharedness than previous view constructors", field);
             return m.addArrayViewCtor(varName, type, field, shared);
@@ -6819,12 +6786,6 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
         return false;
 
     m.startFunctionBodies();
-
-#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
-    if (m.module().hasArrayView() && m.module().isSharedView())
-        return m.failOffset(m.parser().tokenStream.currentToken().pos.begin,
-                            "shared views not supported by this build");
-#endif
 
     if (!CheckFunctions(m))
         return false;

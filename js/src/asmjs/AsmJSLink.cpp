@@ -220,7 +220,7 @@ ValidateFFI(JSContext* cx, AsmJSModule::Global& global, HandleValue importVal,
 }
 
 static bool
-ValidateArrayView(JSContext* cx, AsmJSModule::Global& global, HandleValue globalVal, bool isShared)
+ValidateArrayView(JSContext* cx, AsmJSModule::Global& global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.maybeViewName());
     if (!field)
@@ -231,8 +231,7 @@ ValidateArrayView(JSContext* cx, AsmJSModule::Global& global, HandleValue global
         return false;
 
     bool tac = IsTypedArrayConstructor(v, global.viewType());
-    bool stac = IsSharedTypedArrayConstructor(v, global.viewType());
-    if (!(tac || (stac && isShared)))
+    if (!tac)
         return LinkFail(cx, "bad typed array constructor");
 
     return true;
@@ -556,7 +555,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
           case AsmJSModule::Global::ArrayView:
           case AsmJSModule::Global::SharedArrayView:
           case AsmJSModule::Global::ArrayViewCtor:
-            if (!ValidateArrayView(cx, global, globalVal, module.hasArrayView() && module.isSharedView()))
+            if (!ValidateArrayView(cx, global, globalVal))
                 return false;
             break;
           case AsmJSModule::Global::ByteLength:
