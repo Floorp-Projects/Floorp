@@ -4,14 +4,11 @@
 
 this.EXPORTED_SYMBOLS = ["WebVTT"];
 
-const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
-
 /**
  * Code below is vtt.js the JS WebVTT implementation.
  * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit 789a540b534169946fb767f200cedaed2f6c1b53
+ * Code taken from commit 364c6b951a07306848a706d1d03c2a6ae942517d
  */
 /**
  * Copyright 2013 vtt.js Contributors
@@ -31,56 +28,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 
 (function(global) {
-  function makeColorSet(color, opacity) {
-    if(opacity === undefined) {
-      opacity = 1;
-    }
-    return "rgba(" + [parseInt(color.substring(0, 2), 16),
-                      parseInt(color.substring(2, 4), 16),
-                      parseInt(color.substring(4, 6), 16),
-                      opacity].join(",") + ")";
-  }
-
-  var WebVTTPrefs = ['webvtt.font.color', 'webvtt.font.opacity', 'webvtt.font.scale',
-                     'webvtt.bg.color', 'webvtt.bg.opacity',
-                     'webvtt.edge.color', 'webvtt.edge.type'];
-
-  var fontScale = 1;
-
-  function observe(subject, topic, data) {
-    switch (data) {
-      case "webvtt.font.color":
-      case "webvtt.font.opacity":
-        var fontColor = Services.prefs.getCharPref("webvtt.font.color");
-        var fontOpacity = Services.prefs.getIntPref("webvtt.font.opacity") / 100;
-        WebVTTSet.fontSet = makeColorSet(fontColor, fontOpacity);
-        break;
-      case "webvtt.font.scale":
-        fontScale = Services.prefs.getIntPref("webvtt.font.scale") / 100;
-        break;
-      case "webvtt.bg.color":
-      case "webvtt.bg.opacity":
-        var backgroundColor = Services.prefs.getCharPref("webvtt.bg.color");
-        var backgroundOpacity = Services.prefs.getIntPref("webvtt.bg.opacity") / 100;
-        WebVTTSet.backgroundSet = makeColorSet(backgroundColor, backgroundOpacity);
-        break;
-      case "webvtt.edge.color":
-      case "webvtt.edge.type":
-        var edgeTypeList = ["", "0px 0px ", "4px 4px 4px ", "-2px -2px ", "2px 2px "];
-        var edgeType = Services.prefs.getIntPref("webvtt.edge.type");
-        var edgeColor = Services.prefs.getCharPref("webvtt.edge.color");
-        WebVTTSet.edgeSet = edgeTypeList[edgeType] + makeColorSet(edgeColor);
-        break;
-    }
-  }
-
-  if(typeof Services !== "undefined") {
-    var WebVTTSet = {};
-    WebVTTPrefs.forEach(function (pref) {
-      observe(undefined, undefined, pref);
-      Services.prefs.addObserver(pref, observe, false);
-    });
-  }
 
   var _objCreate = Object.create || (function() {
     function F() {}
@@ -782,13 +729,6 @@ Cu.import("resource://gre/modules/Services.jsm");
     var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
     var color = "rgba(255, 255, 255, 1)";
     var backgroundColor = "rgba(0, 0, 0, 0.8)";
-    var textShadow = "";
-
-    if(typeof WebVTTSet !== "undefined") {
-      color = WebVTTSet.fontSet;
-      backgroundColor = WebVTTSet.backgroundSet;
-      textShadow = WebVTTSet.edgeSet;
-    }
 
     if (isIE8) {
       color = "rgb(255, 255, 255)";
@@ -804,7 +744,6 @@ Cu.import("resource://gre/modules/Services.jsm");
     var styles = {
       color: color,
       backgroundColor: backgroundColor,
-      textShadow: textShadow,
       position: "relative",
       left: 0,
       right: 0,
@@ -1250,7 +1189,7 @@ Cu.import("resource://gre/modules/Services.jsm");
         containerBox = BoxPosition.getSimpleBoxPosition(paddedOverlay),
         fontSize = Math.round(containerBox.height * FONT_SIZE_PERCENT * 100) / 100;
     var styleOptions = {
-      font: (fontSize * fontScale) + "px " + FONT_STYLE
+      font: fontSize + "px " + FONT_STYLE
     };
 
     (function() {
