@@ -997,7 +997,7 @@ VARIABLES = {
         disabled.
         """, None),
 
-    'DIST_FILES': (HierarchicalStringList, list,
+    'FINAL_TARGET_PP_FILES': (HierarchicalStringList, list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
@@ -2117,6 +2117,16 @@ DEPRECATION_HINTS = {
         instead of
 
             GENERATED_INCLUDES += [ 'foo' ]
+    ''',
+
+    'DIST_FILES': '''
+        Please use
+
+            FINAL_TARGET_PP_FILES += [ 'foo' ]
+
+        instead of
+
+            DIST_FILES += [ 'foo' ]
     ''',
 }
 

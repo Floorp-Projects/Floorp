@@ -665,8 +665,8 @@ class TestRecursiveMakeBackend(BackendTester):
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
 
-    def test_dist_files(self):
-        """Test that DIST_FILES is written to backend.mk correctly."""
+    def test_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES is written to backend.mk correctly."""
         env = self._consume('dist-files', RecursiveMakeBackend)
 
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')

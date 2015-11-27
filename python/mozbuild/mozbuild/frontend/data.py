@@ -855,12 +855,14 @@ class FinalTargetFiles(ContextDerived):
         self.target = target
 
 
-class DistFiles(ContextDerived):
-    """Sandbox container object for DIST_FILES, which is a HierarchicalStringList.
+class FinalTargetPreprocessedFiles(ContextDerived):
+    """Sandbox container object for FINAL_TARGET_PP_FILES, which is a
+    HierarchicalStringList.
 
     We need an object derived from ContextDerived for use in the backend, so
     this object fills that role. It just has a reference to the underlying
-    HierarchicalStringList, which is created when parsing DIST_FILES.
+    HierarchicalStringList, which is created when parsing
+    FINAL_TARGET_PP_FILES.
     """
     __slots__ = ('files', 'target')
 

@@ -6,7 +6,7 @@
 
 XPI_NAME = 'workerbootstrap'
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
     'install.rdf',
 ]
 
