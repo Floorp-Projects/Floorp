@@ -56,7 +56,26 @@ MockDocShell.prototype = {
   addWeakReflowObserver: function(observer) {
     this.observer = observer;
   },
-  removeWeakReflowObserver: function(observer) {}
+  removeWeakReflowObserver: function() {},
+  get chromeEventHandler() {
+    return {
+      addEventListener: (type, cb) => {
+        if (type === "resize") {
+          this.resizeCb = cb;
+        }
+      },
+      removeEventListener: (type, cb) => {
+        if (type === "resize" && cb === this.resizeCb) {
+          this.resizeCb = null;
+        }
+      }
+    };
+  },
+  mockResize: function() {
+    if (this.resizeCb) {
+      this.resizeCb();
+    }
+  }
 };
 
 function run_test() {
@@ -110,6 +129,10 @@ function eventsAreBatched() {
   let onReflows = (event, reflows) => reflowsEvents.push(reflows);
   observer.on("reflows", onReflows);
 
+  let resizeEvents = [];
+  let onResize = () => resizeEvents.push("resize");
+  observer.on("resize", onResize);
+
   do_print("Fake one reflow event");
   tabActor.window.docShell.observer.reflow();
   do_print("Checking that no batched reflow event has been emitted");
@@ -120,12 +143,21 @@ function eventsAreBatched() {
   do_print("Checking that still no batched reflow event has been emitted");
   do_check_eq(reflowsEvents.length, 0);
 
-  do_print("Faking timeout expiration and checking that reflow events are sent");
+  do_print("Fake a few of resize events too");
+  tabActor.window.docShell.mockResize();
+  tabActor.window.docShell.mockResize();
+  tabActor.window.docShell.mockResize();
+  do_print("Checking that still no batched resize event has been emitted");
+  do_check_eq(resizeEvents.length, 0);
+
+  do_print("Faking timeout expiration and checking that events are sent");
   observer.eventLoopTimer();
   do_check_eq(reflowsEvents.length, 1);
   do_check_eq(reflowsEvents[0].length, 2);
+  do_check_eq(resizeEvents.length, 1);
 
   observer.off("reflows", onReflows);
+  observer.off("resize", onResize);
   releaseLayoutChangesObserver(tabActor);
 }
 
@@ -153,13 +185,13 @@ function observerIsAlreadyStarted() {
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
-  do_check_true(observer.observing);
+  do_check_true(observer.isObserving);
 
   observer.stop();
-  do_check_false(observer.observing);
+  do_check_false(observer.isObserving);
 
   observer.start();
-  do_check_true(observer.observing);
+  do_check_true(observer.isObserving);
 
   releaseLayoutChangesObserver(tabActor);
 }
@@ -169,10 +201,10 @@ function destroyStopsObserving() {
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
-  do_check_true(observer.observing);
+  do_check_true(observer.isObserving);
 
   observer.destroy();
-  do_check_false(observer.observing);
+  do_check_false(observer.isObserving);
 
   releaseLayoutChangesObserver(tabActor);
 }
@@ -184,18 +216,18 @@ function stoppingAndStartingSeveralTimesWorksCorrectly() {
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
 
-  do_check_true(observer.observing);
+  do_check_true(observer.isObserving);
   observer.start();
   observer.start();
   observer.start();
-  do_check_true(observer.observing);
+  do_check_true(observer.isObserving);
 
   observer.stop();
-  do_check_false(observer.observing);
+  do_check_false(observer.isObserving);
 
   observer.stop();
   observer.stop();
-  do_check_false(observer.observing);
+  do_check_false(observer.isObserving);
 
   releaseLayoutChangesObserver(tabActor);
 }
