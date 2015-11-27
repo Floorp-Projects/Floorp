@@ -3,8 +3,8 @@
 != data:text/plain,HELLO about:blank
 
 # these tests make sure async reftests work:
-skip-if(B2G||Mulet) == test-async.xul test-async-ref.xul   # bug 785074 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == test-async.html test-async-ref.html # bug 785074 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == test-async.xul test-async-ref.xul   # bug 785074 # Initial mulet triage: parity with B2G
+skip-if(B2G||Mulet) == test-async.html test-async-ref.html # bug 785074 # Initial mulet triage: parity with B2G
 
 # test that zoom works (and really zooms, not just scales)
 == test-zoom.html test-zoom-ref.html
@@ -36,15 +36,15 @@ HTTP == data:text/html,<div>Text</div> default.html
 != blank.html default.html
 HTTP != blank.html default.html
 
-skip-if(B2G||Mulet) HTTP(..) == filter-1.xhtml filter-1-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) HTTP(..) == filter-2.xhtml filter-2-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) HTTP(..) == filter-1.xhtml filter-1-ref.xhtml # Initial mulet triage: parity with B2G
+skip-if(B2G||Mulet) HTTP(..) == filter-2.xhtml filter-2-ref.xhtml # bug 773482 # Initial mulet triage: parity with B2G
 
 # test that the MozReftestInvalidate event fires
 == invalidation.html about:blank
 == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
-skip-if(B2G||B2GDT||Mulet) fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script> # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script> # Initial mulet triage: parity with B2G
 fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 
@@ -76,9 +76,9 @@ skip-if(Android&&AndroidVersion==15) != corners-4.html corners-4-ref.html    # s
 
 # Test that the harness gives the correct page dimensions.
 != page-width-3.9in.html page-width-4in.html
-skip-if(B2G||B2GDT||Mulet) == page-width-4.1in.html page-width-4in.html   # bug 774396 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||B2GDT||Mulet) == page-width-auto.html page-width-4in.html    # bug 774396 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||B2GDT||Mulet) != page-height-2in.html page-height-2.1in.html # bug 774396 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == page-width-4.1in.html page-width-4in.html   # bug 774396 # Initial mulet triage: parity with B2G
+skip-if(B2G||Mulet) == page-width-auto.html page-width-4in.html    # bug 774396 # Initial mulet triage: parity with B2G
+skip-if(B2G||Mulet) != page-height-2in.html page-height-2.1in.html # bug 774396 # Initial mulet triage: parity with B2G
 == page-height-2in.html page-height-nobreak.html
 == page-height-2.1in.html page-height-forcebreak.html
 
@@ -91,8 +91,8 @@ needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android&&AndroidVersion<15) random-if(B2G||B2GDT||Mulet) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(!browserIsRemote||((B2G&&browserIsRemote)||Mulet)) == 656041-1.html 656041-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android&&AndroidVersion<15) random-if(B2G||Mulet) random-if(transparentScrollbars) == 647192-1.html 647192-1-ref.html # Initial mulet triage: parity with B2G
+skip-if(!browserIsRemote||((B2G&&browserIsRemote)||Mulet)) == 656041-1.html 656041-1-ref.html # Initial mulet triage: parity with B2G
 pref(dom.meta-viewport.enabled,true) skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
 
 # IPC Position-fixed frames/layers test
