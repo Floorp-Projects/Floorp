@@ -196,7 +196,7 @@ describe("loop.roomViews", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        roomData: {},
+        roomData: { roomUrl: "http://invalid" },
         savingContext: false,
         show: true,
         showEditContext: false
@@ -208,9 +208,7 @@ describe("loop.roomViews", function() {
     it("should dispatch an EmailRoomUrl with no description" +
        " for rooms without context when the email button is pressed",
       function() {
-        view = mountTestComponent({
-          roomData: { roomUrl: "http://invalid" }
-        });
+        view = mountTestComponent();
 
         var emailBtn = view.getDOMNode().querySelector(".btn-email");
 
@@ -250,9 +248,7 @@ describe("loop.roomViews", function() {
 
     describe("Copy Button", function() {
       beforeEach(function() {
-        view = mountTestComponent({
-          roomData: { roomUrl: "http://invalid" }
-        });
+        view = mountTestComponent();
       });
 
       it("should dispatch a CopyRoomUrl action when the copy button is pressed", function() {
@@ -323,6 +319,8 @@ describe("loop.roomViews", function() {
         }
       });
       onCallTerminatedStub = sandbox.stub();
+
+      activeRoomStore.setStoreState({ roomUrl: "http://invalid " });
     });
 
     function mountTestComponent(props) {
