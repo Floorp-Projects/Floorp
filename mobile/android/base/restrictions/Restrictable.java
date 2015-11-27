@@ -42,7 +42,7 @@ public enum Restrictable {
 
     PRIVATE_BROWSING(12, "private_browsing", R.string.restrictable_feature_private_browsing),
 
-    LOCATION_SERVICE(13, "location_service", R.string.restrictable_feature_location_services),
+    LOCATION_SERVICE(13, "location_service", 0),
 
     CLEAR_HISTORY(14, "clear_history", R.string.restrictable_feature_clear_history),
 
