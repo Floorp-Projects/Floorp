@@ -409,7 +409,7 @@ var WindowListener = {
         }
 
         this.activeSound = new window.Audio();
-        this.activeSound.src = `chrome://browser/content/loop/shared/sounds/${name}.ogg`;
+        this.activeSound.src = `chrome://loop/content/shared/sounds/${name}.ogg`;
         this.activeSound.load();
         this.activeSound.play();
 
@@ -610,9 +610,9 @@ var WindowListener = {
     };
 
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "hookWindowCloseForPanelClose", "resource://gre/modules/MozSocialAPI.jsm");
-    XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
-    XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopRooms", "resource:///modules/loop/LoopRooms.jsm");
-    XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
+    XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopAPI", "chrome://loop/content/modules/MozLoopAPI.jsm");
+    XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopRooms", "chrome://loop/content/modules/LoopRooms.jsm");
+    XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "chrome://loop/content/modules/MozLoopService.jsm");
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
   }

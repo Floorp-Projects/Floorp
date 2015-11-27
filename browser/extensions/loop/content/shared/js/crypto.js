@@ -18,7 +18,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     rootObject = {
       crypto: crypto
     };
-    sharedUtils = Cu.import("resource:///modules/loop/utils.js", {}).utils;
+    sharedUtils = Cu.import("chrome://loop/content/shared/js/utils.js", {}).utils;
   } else {
     sharedUtils = this.shared.utils;
   }

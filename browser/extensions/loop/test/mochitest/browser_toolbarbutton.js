@@ -8,7 +8,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
-const { LoopRoomsInternal } = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { LoopRoomsInternal } = Components.utils.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
 
 const fxASampleToken = {

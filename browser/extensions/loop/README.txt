@@ -22,9 +22,9 @@ using npm in order to compile the .jsx files into regular .js ones:
     npm install -g react-tools@0.12.2
 
 Once installed, run build-jsx with the --watch option from
-browser/components/loop, eg.:
+browser/extensions/loop, eg.:
 
-    cd browser/components/loop
+    cd browser/extensions/loop
     ./build-jsx --watch
 
 build-jsx can also be do a one-time compile pass instead of watching if
@@ -36,7 +36,7 @@ Hacking
 =======
 Please be sure to execute
 
-  browser/components/loop/run-all-loop-tests.sh
+  browser/extensions/loop/run-all-loop-tests.sh
 
 from the top level before requesting review on a patch.
 
@@ -52,7 +52,7 @@ If you install eslint and the react plugin globally:
   npm install -g eslint
   npm install -g eslint-plugin-react
 
-You can also run it by hand in the browser/components/loop directory:
+You can also run it by hand in the browser/extensions/loop directory:
 
   eslint --ext .js --ext .jsx --ext .jsm .
 
@@ -88,7 +88,7 @@ install that is properly configured.  From the top-level gecko directory,
 execute:
 
   export LOOP_SERVER=/Users/larry/src/loop-server
-  ./mach marionette-test browser/components/loop/test/functional/manifest.ini
+  ./mach marionette-test browser/extensions/loop/test/functional/manifest.ini
 
 Once the automation is complete, we'll include this in run-all-loop-tests.sh
 as well.
