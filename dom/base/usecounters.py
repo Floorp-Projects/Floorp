@@ -8,18 +8,9 @@ import re
 import StringIO
 import sys
 
-from mozbuild.preprocessor import preprocess
-
 def read_conf(conf_filename):
-    # Invoking the preprocessor ourselves is easier than writing build rules
-    # to do it for us.
-    processed = StringIO.StringIO()
-    preprocess(includes=[conf_filename],
-               defines=buildconfig.defines,
-               output=processed)
-
     # Can't read/write from a single StringIO, so make a new one for reading.
-    stream = StringIO.StringIO(processed.getvalue())
+    stream = open(conf_filename, 'rU')
 
     def parse_counters(stream):
         for line_num, line in enumerate(stream):
