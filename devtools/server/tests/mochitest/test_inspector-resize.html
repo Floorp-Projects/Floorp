@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the inspector actor emits "resize" events when the page is resized.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1222409</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const Cu = Components.utils;
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  const {Promise: promise} =
+    Cu.import("resource://gre/modules/Promise.jsm", {});
+  const {InspectorFront} =
+    devtools.require("devtools/server/actors/inspector");
+  const {console} =
+    Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+
+  SimpleTest.waitForExplicitFinish();
+
+  let win = null;
+  let inspector = null;
+
+  addAsyncTest(function* setup() {
+    info ("Setting up inspector and walker actors.");
+
+    let url = document.getElementById("inspectorContent").href;
+
+    yield new Promise(resolve => {
+      attachURL(url, function(err, client, tab, doc) {
+        win = doc.defaultView;
+        inspector = InspectorFront(client, tab);
+        resolve();
+      });
+    });
+
+    runNextTest();
+  });
+
+  addAsyncTest(function*() {
+    let walker = yield inspector.getWalker();
+
+    // We can't receive events from the walker if we haven't first executed a
+    // method on the actor to initialize it.
+    yield walker.querySelector(walker.rootNode, "img");
+
+    let {outerWidth, outerHeight} = win;
+    let onResize = new Promise(resolve => {
+      walker.once("resize", () => {
+        resolve();
+      });
+    });
+    win.resizeTo(800, 600);
+    yield onResize;
+
+    ok(true, "The resize event was emitted");
+    win.resizeTo(outerWidth, outerHeight);
+
+    runNextTest();
+  });
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a id="inspectorContent" target="_blank" href="inspector-search-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

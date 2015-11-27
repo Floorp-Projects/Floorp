@@ -1,100 +1,66 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  let instance;
+"use strict";
 
-  let computedView;
-  let inspector;
+// Check that when the viewport is resized, the computed-view refreshes.
 
-  waitForExplicitFinish();
-  let mgr = ResponsiveUI.ResponsiveUIManager;
+const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +
+                 "div {" +
+                 "  width: 500px;" +
+                 "  height: 10px;" +
+                 "  background: purple;" +
+                 "} " +
+                 "@media screen and (max-width: 200px) {" +
+                 "  div { " +
+                 "    width: 100px;" +
+                 "  }" +
+                 "};" +
+                 "</style><div></div></html>";
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    startTest();
-  }, true);
+add_task(function*() {
+  yield addTab(TEST_URI);
 
-  content.location = "data:text/html;charset=utf-8,<html><style>" +
-    "div {" +
-    "  width: 500px;" +
-    "  height: 10px;" +
-    "  background: purple;" +
-    "} " +
-    "@media screen and (max-width: 200px) {" +
-    "  div { " +
-    "    width: 100px;" +
-    "  }" +
-    "};" +
-    "</style><div></div></html>"
+  info("Open the responsive design mode and set its size to 500x500 to start");
+  let {rdm} = yield openRDM();
+  rdm.setSize(500, 500);
 
-  function computedWidth() {
-    for (let prop of computedView.propertyViews) {
-      if (prop.name === "width") {
-        return prop.valueNode.textContent;
-      }
+  info("Open the inspector, computed-view and select the test node");
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("div", inspector);
+
+  info("Try shrinking the viewport and checking the applied styles");
+  yield testShrink(view, inspector, rdm);
+
+  info("Try growing the viewport and checking the applied styles");
+  yield testGrow(view, inspector, rdm);
+
+  gBrowser.removeCurrentTab();
+});
+
+function* testShrink(computedView, inspector, rdm) {
+  is(computedWidth(computedView), "500px", "Should show 500px initially.");
+
+  let onRefresh = inspector.once("computed-view-refreshed");
+  rdm.setSize(100, 100);
+  yield onRefresh;
+
+  is(computedWidth(computedView), "100px", "Should be 100px after shrinking.");
+}
+
+function* testGrow(computedView, inspector, rdm) {
+  let onRefresh = inspector.once("computed-view-refreshed");
+  rdm.setSize(500, 500);
+  yield onRefresh;
+
+  is(computedWidth(computedView), "500px", "Should be 500px after growing.");
+}
+
+function computedWidth(computedView) {
+  for (let prop of computedView.propertyViews) {
+    if (prop.name === "width") {
+      return prop.valueNode.textContent;
     }
-    return null;
   }
-
-  function startTest() {
-    document.getElementById("Tools:ResponsiveUI").doCommand();
-    executeSoon(onUIOpen);
-  }
-
-  function onUIOpen() {
-    instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
-    ok(instance, "instance of the module is attached to the tab.");
-
-    instance.stack.setAttribute("notransition", "true");
-    registerCleanupFunction(function() {
-      instance.stack.removeAttribute("notransition");
-    });
-
-    instance.setSize(500, 500);
-
-    openComputedView().then(onInspectorUIOpen);
-  }
-
-  function onInspectorUIOpen(args) {
-    inspector = args.inspector;
-    computedView = args.view;
-    ok(inspector, "Got inspector instance");
-
-    let div = content.document.getElementsByTagName("div")[0];
-
-    inspector.selection.setNode(div);
-    inspector.once("inspector-updated", testShrink);
-  }
-
-  function testShrink() {
-    is(computedWidth(), "500px", "Should show 500px initially.");
-
-    inspector.once("computed-view-refreshed", function onShrink() {
-      is(computedWidth(), "100px", "div should be 100px after shrinking.");
-      testGrow();
-    });
-
-    instance.setSize(100, 100);
-  }
-
-  function testGrow() {
-    inspector.once("computed-view-refreshed", function onGrow() {
-      is(computedWidth(), "500px", "Should be 500px after growing.");
-      finishUp();
-    });
-
-    instance.setSize(500, 500);
-  }
-
-  function finishUp() {
-    document.getElementById("Tools:ResponsiveUI").doCommand();
-
-    // Menus are correctly updated?
-    is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "false", "menu unchecked");
-
-    gBrowser.removeCurrentTab();
-    finish();
-  }
+  return null;
 }
