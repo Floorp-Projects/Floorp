@@ -902,11 +902,6 @@ notification[value="translation"] {
   -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
 }
 
-/* Loop/ Hello */
-notification[value="loop-sharing-notification"] .close-icon {
-  display: none;
-}
-
 /* Social */
 /* Note the chatbox 'width' values are duplicated in socialchat.xml */
 chatbox {

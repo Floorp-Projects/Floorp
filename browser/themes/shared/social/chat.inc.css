@@ -105,40 +105,10 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   transform: none;
 }
 
-chatbox[src^="about:loopconversation#"] .chat-minimize-button {
-  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-white");
-}
-
-chatbox[src^="about:loopconversation#"] .chat-swap-button {
-  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-white");
-}
-
-.chat-loop-hangup {
-  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#exit-white");
-  background-color: #d13f1a;
-  border: 1px solid #d13f1a;
-  border-top-right-radius: 4px;
-  width: 32px;
-  height: 26px;
-  margin-top: -6px;
-  margin-bottom: -5px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: -5px;
-}
-
-.chat-toolbarbutton.chat-loop-hangup:-moz-any(:hover,:hover:active) {
-  background-color: #ef6745;
-  border-color: #ef6745;
-}
-
 .chat-title {
   color: #666;
   text-shadow: none;
   cursor: inherit;
-}
-
-chatbox[src^="about:loopconversation#"] .chat-title {
-  color: white;
 }
 
 .chat-titlebar {
@@ -157,11 +127,6 @@ chatbox[src^="about:loopconversation#"] .chat-title {
 
 .chat-titlebar[selected] {
   background-color: #f0f0f0;
-}
-
-chatbox[src^="about:loopconversation#"] > .chat-titlebar {
-  background-color: #00a9dc;
-  border-color: #00a9dc;
 }
 
 .chat-titlebar > .notification-anchor-icon {
