@@ -9,8 +9,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/loop/MozLoopService.jsm");
-Cu.import("resource:///modules/loop/LoopRooms.jsm");
+Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
+Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.importGlobalProperties(["Blob"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",

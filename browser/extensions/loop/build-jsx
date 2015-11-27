@@ -74,7 +74,7 @@ def find_react_command():
     return [node, jsx_path]
 
 
-SHARED_LIBS_DIR=os.path.join(os.path.dirname(__file__), "content", "shared", "libs")
+SHARED_LIBS_DIR=os.path.join(os.path.dirname(__file__), "content", "shared", "vendor")
 REACT_VERSION=find_react_version(SHARED_LIBS_DIR)
 
 src_files = []  # files to be compiled
@@ -99,7 +99,7 @@ else:
 # parse the CLI arguments
 description = 'Loop build tool for JSX files. ' + \
               'Will scan entire loop directory and compile them in place. ' + \
-              'Must be executed from browser/components/loop directory.'
+              'Must be executed from browser/extensions/loop directory.'
 
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('--watch', '-w', action='store_true', help='continuous' +

@@ -29,7 +29,7 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.createElement("div", {className: "fte-get-started-content"}, 
           React.createElement("header", {className: "fte-title"}, 
-            React.createElement("img", {src: "loop/shared/img/hello_logo.svg"}), 
+            React.createElement("img", {src: "shared/img/hello_logo.svg"}), 
             React.createElement("div", {className: "fte-subheader"}, 
               mozL10n.get("first_time_experience_subheading")
             )
@@ -379,7 +379,7 @@ loop.panel = (function(_, mozL10n) {
     _renderDefaultIcon: function() {
       return (
         React.createElement("div", {className: "room-entry-context-item"}, 
-          React.createElement("img", {src: "loop/shared/img/icons-16x16.svg#globe"})
+          React.createElement("img", {src: "shared/img/icons-16x16.svg#globe"})
         )
       );
     },
@@ -390,7 +390,7 @@ loop.panel = (function(_, mozL10n) {
           React.createElement("a", {href: roomUrl.location, 
             onClick: this.handleClick, 
             title: roomUrl.description}, 
-            React.createElement("img", {src: roomUrl.thumbnail || "loop/shared/img/icons-16x16.svg#globe"})
+            React.createElement("img", {src: roomUrl.thumbnail || "shared/img/icons-16x16.svg#globe"})
           )
         )
       );
@@ -717,7 +717,7 @@ loop.panel = (function(_, mozL10n) {
         React.createElement("div", {className: "room-list"}, 
           this._renderNewRoomButton(), 
           React.createElement("div", {className: "room-list-loading"}, 
-            React.createElement("img", {src: "loop/shared/img/animated-spinner.svg"})
+            React.createElement("img", {src: "shared/img/animated-spinner.svg"})
           )
         )
       );
@@ -884,7 +884,7 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.createElement("div", {className: "error-content"}, 
           React.createElement("header", {className: "error-title"}, 
-            React.createElement("img", {src: "loop/shared/img/sad_hello_icon_64x64.svg"}), 
+            React.createElement("img", {src: "shared/img/sad_hello_icon_64x64.svg"}), 
             React.createElement("p", {className: "error-subheader"}, 
               mozL10n.get("e10s_not_supported_subheading", {
                 brandShortname: mozL10n.get("clientShortname2")

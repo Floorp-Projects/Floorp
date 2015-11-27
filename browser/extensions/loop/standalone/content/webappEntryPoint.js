@@ -17,20 +17,20 @@
 // The OpenTok SDK tries to do some heuristic detection of require and
 // assumes a node environment if it's present, which confuses webpack, so
 // we turn that off by forcing require to false in that context.
-require("imports?require=>false!shared/libs/sdk.js");
+require("imports?require=>false!shared/vendor/sdk.js");
 
 // Ultimately, we'll likely want to pull the vendor libraries from npm, as that
 // makes upgrading easier, and it's generally better practice to minify the
 // "source" versions of libraries rather than built artifacts.  We probably do
 // want to minify them ourselves since this allows for better dead-code
 // elimination, but that can be a bit of judgement call.
-require("exports?_!shared/libs/lodash-3.9.3.js");
+require("exports?_!shared/vendor/lodash-3.9.3.js");
 
 // Disable Backbone's AMD auto-detection, as described at:
 //
 // https://github.com/jashkenas/backbone/wiki/Using-Backbone-without-jQuery
 //
-require("expose?Backbone!imports?define=>false!shared/libs/backbone-1.2.1.js");
+require("expose?Backbone!imports?define=>false!shared/vendor/backbone-1.2.1.js");
 
 /* global: __PROD__ */
 if (typeof __PROD__ !== "undefined") {
@@ -41,8 +41,8 @@ if (typeof __PROD__ !== "undefined") {
   require("expose?classNames!classnames");
 } else {
   // our development server setup doesn't yet handle real modules, so for now...
-  require("shared/libs/react-0.13.3.js");
-  require("shared/libs/classnames-2.2.0.js");
+  require("shared/vendor/react-0.13.3.js");
+  require("shared/vendor/classnames-2.2.0.js");
 }
 
 

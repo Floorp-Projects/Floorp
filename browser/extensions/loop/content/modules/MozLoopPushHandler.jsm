@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-const { MozLoopService } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+const { MozLoopService } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
 const consoleLog = MozLoopService.log;
 
 this.EXPORTED_SYMBOLS = ["MozLoopPushHandler"];

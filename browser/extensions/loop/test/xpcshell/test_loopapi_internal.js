@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
+const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 const [LoopAPIInternal] = LoopAPI.inspect();
 
 add_test(function test_intialize() {

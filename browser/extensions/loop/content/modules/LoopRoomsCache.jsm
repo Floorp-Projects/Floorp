@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 const { MozLoopService, LOOP_SESSION_TYPE } =
-  Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
