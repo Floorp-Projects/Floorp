@@ -72,11 +72,9 @@ public:
                    UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
 
   // This is used to validate the worker script and continue the installation
-  // process. Note that the callback is dispatched to the main thread
-  // ONLY if the evaluation was successful. Failure is handled by the JS
-  // exception handler which will call ServiceWorkerManager::HandleError.
+  // process.
   nsresult
-  ContinueOnSuccessfulScriptEvaluation(nsRunnable* aCallback);
+  CheckScriptEvaluation(LifeCycleEventCallback* aCallback);
 
   nsresult
   SendLifeCycleEvent(const nsAString& aEventType,
@@ -137,6 +135,15 @@ public:
   void
   Activated();
 
+  nsresult
+  GetDebugger(nsIWorkerDebugger** aResult);
+
+  nsresult
+  AttachDebugger();
+
+  nsresult
+  DetachDebugger();
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,
@@ -144,7 +151,8 @@ private:
     PushSubscriptionChangeEvent,
     MessageEvent,
     NotificationClickEvent,
-    LifeCycleEvent
+    LifeCycleEvent,
+    AttachEvent
   };
 
   // Timer callbacks
@@ -155,7 +163,10 @@ private:
   TerminateWorkerCallback(nsITimer* aTimer, void *aPrivate);
 
   void
-  ResetIdleTimeout(WakeUpReason aWhy);
+  RenewKeepAliveToken(WakeUpReason aWhy);
+
+  void
+  ResetIdleTimeout();
 
   void
   AddToken();
@@ -192,6 +203,8 @@ private:
   // We keep a token for |dom.serviceWorkers.idle_timeout| seconds to give the
   // worker a grace period after each event.
   RefPtr<KeepAliveToken> mKeepAliveToken;
+
+  uint64_t mDebuggerCount;
 
   uint64_t mTokenCount;
 

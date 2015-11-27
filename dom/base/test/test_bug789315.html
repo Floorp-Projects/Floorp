@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789315
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 789315</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      (function() {
+        const observerConfig = {
+          childList: true,
+        };
+
+        var observer = new MutationObserver(onMutations);
+        observer.observe(document.head, observerConfig);
+
+        function onMutations(mutations) {
+          for (var i in mutations) {
+            var mutation = mutations[i];
+            for (var j in mutation.addedNodes) {
+              var addedNode = mutation.addedNodes[j];
+              addedNode.mutationObserverHasNotified = true;
+            }
+          }
+        }
+
+      })();
+    </script>
+
+    <link id="testnode" rel="localization" href="dummy"></link>
+
+    <script type="text/javascript">
+      var testNode = document.getElementById("testnode");
+      ok(testNode.mutationObserverHasNotified);
+    </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=789315">Mozilla Bug 789315</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

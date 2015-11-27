@@ -19,6 +19,26 @@ registerCleanupFunction(() => {
 });
 
 /**
+ * Open the Responsive Design Mode
+ * @param {Tab} The browser tab to open it into (defaults to the selected tab).
+ * @return {Promise} Resolves to the instance of the responsive design mode.
+ */
+function openRDM(tab = gBrowser.selectedTab) {
+  return new Promise(resolve => {
+    let manager = ResponsiveUI.ResponsiveUIManager;
+    document.getElementById("Tools:ResponsiveUI").doCommand();
+    executeSoon(() => {
+      let rdm = manager.getResponsiveUIForTab(tab);
+      rdm.stack.setAttribute("notransition", "true");
+      registerCleanupFunction(function() {
+        rdm.stack.removeAttribute("notransition");
+      });
+      resolve({rdm, manager});
+    });
+  });
+}
+
+/**
  * Open the toolbox, with the inspector tool visible.
  * @return a promise that resolves when the inspector is ready
  */
@@ -125,7 +145,6 @@ function openRuleView() {
   return openInspectorSideBar("ruleview");
 }
 
-
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
@@ -216,3 +235,36 @@ function waitForDocLoadComplete(aBrowser=gBrowser) {
   info("Waiting for browser load");
   return deferred.promise;
 }
+
+/**
+ * Get the NodeFront for a node that matches a given css selector, via the
+ * protocol.
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves to the NodeFront instance
+ */
+function getNodeFront(selector, {walker}) {
+  if (selector._form) {
+    return selector;
+  }
+  return walker.querySelector(walker.rootNode, selector);
+}
+
+/**
+ * Set the inspector's current selection to the first match of the given css
+ * selector
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
+ * @return {Promise} Resolves when the inspector is updated with the new node
+ */
+var selectNode = Task.async(function*(selector, inspector, reason = "test") {
+  info("Selecting the node for '" + selector + "'");
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let updated = inspector.once("inspector-updated");
+  inspector.selection.setNodeFront(nodeFront, reason);
+  yield updated;
+});

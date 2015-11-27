@@ -57,3 +57,18 @@ function waitForServiceWorkerRegistrationChange(registration, callback) {
     registration.addListener(listener);
   });
 }
+
+function waitForServiceWorkerShutdown() {
+  return new Promise(function (resolve) {
+    let observer = {
+      observe: function (subject, topic, data) {
+        if (topic !== "service-worker-shutdown") {
+          return;
+        }
+        SpecialPowers.removeObserver(observer, "service-worker-shutdown");
+        resolve();
+      }
+    };
+    SpecialPowers.addObserver(observer, "service-worker-shutdown", false);
+  });
+}
