@@ -20,7 +20,7 @@ describe("loop.standaloneRoomViews", function() {
   var clock, fakeWindow, view;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
     dispatcher = new loop.Dispatcher();
     dispatch = sandbox.stub(dispatcher, "dispatch");
     activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
@@ -59,6 +59,11 @@ describe("loop.standaloneRoomViews", function() {
 
     // Prevents audio request errors in the test console.
     sandbox.useFakeXMLHttpRequest();
+    sandbox.stub(sharedUtils, "isDesktop").returns(true);
+    LoopMochaUtils.stubLoopRequest({
+      GetDoNotDisturb: sinon.stub().returns(true),
+      GetLoopPref: sinon.stub()
+    });
   });
 
   afterEach(function() {
