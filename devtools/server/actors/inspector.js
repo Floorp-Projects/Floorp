@@ -1268,29 +1268,36 @@ var WalkerActor = protocol.ActorClass({
   typeName: "domwalker",
 
   events: {
-    "new-mutations" : {
+    "new-mutations": {
       type: "newMutations"
     },
-    "picker-node-picked" : {
+    "picker-node-picked": {
       type: "pickerNodePicked",
       node: Arg(0, "disconnectedNode")
     },
-    "picker-node-hovered" : {
+    "picker-node-hovered": {
       type: "pickerNodeHovered",
       node: Arg(0, "disconnectedNode")
     },
-    "picker-node-canceled" : {
+    "picker-node-canceled": {
       type: "pickerNodeCanceled"
     },
-    "highlighter-ready" : {
+    "highlighter-ready": {
       type: "highlighter-ready"
     },
-    "highlighter-hide" : {
+    "highlighter-hide": {
       type: "highlighter-hide"
     },
-    "display-change" : {
+    "display-change": {
       type: "display-change",
       nodes: Arg(0, "array:domnode")
+    },
+    // The walker actor emits a useful "resize" event to its front to let
+    // clients know when the browser window gets resized. This may be useful
+    // for refreshing a DOM node's styles for example, since those may depend on
+    // media-queries.
+    "resize": {
+      type: "resize"
     }
   },
 
@@ -1332,9 +1339,11 @@ var WalkerActor = protocol.ActorClass({
     // managed.
     this.rootNode = this.document();
 
-    this.reflowObserver = getLayoutChangesObserver(this.tabActor);
+    this.layoutChangeObserver = getLayoutChangesObserver(this.tabActor);
     this._onReflows = this._onReflows.bind(this);
-    this.reflowObserver.on("reflows", this._onReflows);
+    this.layoutChangeObserver.on("reflows", this._onReflows);
+    this._onResize = this._onResize.bind(this);
+    this.layoutChangeObserver.on("resize", this._onResize);
   },
 
   // Returns the JSON representation of this object over the wire.
@@ -1395,9 +1404,10 @@ var WalkerActor = protocol.ActorClass({
       this.onFrameUnload = null;
 
       this.walkerSearch.destroy();
-      this.reflowObserver.off("reflows", this._onReflows);
-      this.reflowObserver = null;
-      this._onReflows = null;
+
+      this.layoutChangeObserver.off("reflows", this._onReflows);
+      this.layoutChangeObserver.off("resize", this._onResize);
+      this.layoutChangeObserver = null;
       releaseLayoutChangesObserver(this.tabActor);
 
       this.onMutations = null;
@@ -1465,6 +1475,13 @@ var WalkerActor = protocol.ActorClass({
     if (changes.length) {
       events.emit(this, "display-change", changes);
     }
+  },
+
+  /**
+   * When the browser window gets resized, relay the event to the front.
+   */
+  _onResize: function() {
+    events.emit(this, "resize");
   },
 
   /**
@@ -3687,6 +3704,7 @@ var AttributeModificationList = Class({
  */
 var InspectorActor = exports.InspectorActor = protocol.ActorClass({
   typeName: "inspector",
+
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -3694,6 +3712,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
 
   destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
+
     this._highlighterPromise = null;
     this._pageStylePromise = null;
     this._walkerPromise = null;
