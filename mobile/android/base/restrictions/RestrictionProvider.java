@@ -57,6 +57,10 @@ public class RestrictionProvider extends BroadcastReceiver {
                 continue;
             }
 
+            if (RestrictedProfileConfiguration.shouldHide(restrictable)) {
+                continue;
+            }
+
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restrictable,
                     oldRestrictions.getBoolean(restrictable.name, false));
             entries.add(entry);

@@ -721,7 +721,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restrictable_feature_location_services "Location Services">
 <!ENTITY restrictable_feature_clear_history "Clear History">
 <!ENTITY restrictable_feature_guest_browsing "Guest browsing">
-<!ENTITY restrictable_feature_master_password "Master password">
 <!ENTITY restrictable_feature_advanced_settings "Advanced Settings">
 <!ENTITY restrictable_feature_camera_microphone "Camera &amp; Microphone">
 
