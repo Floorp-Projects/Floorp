@@ -42,7 +42,7 @@ ClearKeySession::~ClearKeySession()
 
   auto& keyIds = GetKeyIds();
   for (auto it = keyIds.begin(); it != keyIds.end(); it++) {
-    assert(ClearKeyDecryptionManager::Get()->HasKeyForKeyId(*it));
+    assert(ClearKeyDecryptionManager::Get()->HasSeenKeyId(*it));
 
     ClearKeyDecryptionManager::Get()->ReleaseKeyId(*it);
     mCallback->KeyStatusChanged(&mSessionId[0], mSessionId.size(),
