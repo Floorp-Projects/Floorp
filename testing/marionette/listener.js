@@ -14,8 +14,11 @@ loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 loader.loadSubScript("chrome://marionette/content/actions.js");
 Cu.import("chrome://marionette/content/capture.js");
+Cu.import("chrome://marionette/content/cookies.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/proxy.js");
+
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -76,6 +79,9 @@ var onDOMContentLoaded;
 var EVENT_INTERVAL = 30; // milliseconds
 // last touch for each fingerId
 var multiLast = {};
+
+var chrome = proxy.toChrome(sendSyncMessage.bind(this));
+var cookies = new Cookies(() => curContainer.frame.document, chrome);
 
 Cu.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("Marionette");
@@ -217,6 +223,11 @@ var switchToShadowRootFn = dispatch(switchToShadowRoot);
 var getCookiesFn = dispatch(getCookies);
 var singleTapFn = dispatch(singleTap);
 var takeScreenshotFn = dispatch(takeScreenshot);
+var actionChainFn = dispatch(actionChain);
+var multiActionFn = dispatch(multiAction);
+var addCookieFn = dispatch(addCookie);
+var deleteCookieFn = dispatch(deleteCookie);
+var deleteAllCookiesFn = dispatch(deleteAllCookies);
 
 /**
  * Start all message listeners
@@ -228,8 +239,8 @@ function startListeners() {
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   addMessageListenerId("Marionette:executeJSScript", executeJSScript);
   addMessageListenerId("Marionette:singleTap", singleTapFn);
-  addMessageListenerId("Marionette:actionChain", actionChain);
-  addMessageListenerId("Marionette:multiAction", multiAction);
+  addMessageListenerId("Marionette:actionChain", actionChainFn);
+  addMessageListenerId("Marionette:multiAction", multiActionFn);
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
@@ -263,10 +274,10 @@ function startListeners() {
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  addMessageListenerId("Marionette:addCookie", addCookie);
+  addMessageListenerId("Marionette:addCookie", addCookieFn);
   addMessageListenerId("Marionette:getCookies", getCookiesFn);
-  addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
-  addMessageListenerId("Marionette:deleteCookie", deleteCookie);
+  addMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
+  addMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
 }
 
 /**
@@ -333,8 +344,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
   removeMessageListenerId("Marionette:executeJSScript", executeJSScript);
   removeMessageListenerId("Marionette:singleTap", singleTapFn);
-  removeMessageListenerId("Marionette:actionChain", actionChain);
-  removeMessageListenerId("Marionette:multiAction", multiAction);
+  removeMessageListenerId("Marionette:actionChain", actionChainFn);
+  removeMessageListenerId("Marionette:multiAction", multiActionFn);
   removeMessageListenerId("Marionette:get", get);
   removeMessageListenerId("Marionette:pollForReadyState", pollForReadyState);
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
@@ -368,10 +379,10 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
   removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  removeMessageListenerId("Marionette:addCookie", addCookie);
+  removeMessageListenerId("Marionette:addCookie", addCookieFn);
   removeMessageListenerId("Marionette:getCookies", getCookiesFn);
-  removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
-  removeMessageListenerId("Marionette:deleteCookie", deleteCookie);
+  removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
+  removeMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
   if (isB2G) {
     content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
   }
@@ -1060,32 +1071,22 @@ function createATouch(el, corx, cory, touchId) {
 }
 
 /**
- * Function to start action chain on one finger
+ * Start action chain on one finger.
  */
-function actionChain(msg) {
-  let command_id = msg.json.command_id;
-  let args = msg.json.chain;
-  let touchId = msg.json.nextId;
-
-  let callbacks = {};
-  callbacks.onSuccess = value => sendResponse(value, command_id);
-  callbacks.onError = err => sendError(err, command_id);
-
+function actionChain(chain, touchId) {
   let touchProvider = {};
   touchProvider.createATouch = createATouch;
   touchProvider.emitTouchEvent = emitTouchEvent;
 
-  try {
+  return new Promise((resolve, reject) => {
     actions.dispatchActions(
-        args,
+        chain,
         touchId,
         curContainer,
         elementManager,
-        callbacks,
+        {onSuccess: resolve, onError: reject},
         touchProvider);
-  } catch (e) {
-    sendError(e, command_id);
-  }
+  });
 }
 
 /**
@@ -1124,16 +1125,13 @@ function emitMultiEvents(type, touch, touches) {
  * Function to dispatch one set of actions
  * @param touches represents all pending touches, batchIndex represents the batch we are dispatching right now
  */
-function setDispatch(batches, touches, command_id, batchIndex) {
-  if (typeof batchIndex === "undefined") {
-    batchIndex = 0;
-  }
+function setDispatch(batches, touches, batchIndex=0) {
   // check if all the sets have been fired
   if (batchIndex >= batches.length) {
     multiLast = {};
-    sendOk(command_id);
     return;
   }
+
   // a set of actions need to be done
   let batch = batches[batchIndex];
   // each action for some finger
@@ -1152,38 +1150,43 @@ function setDispatch(batches, touches, command_id, batchIndex) {
   let waitTime = 0;
   let maxTime = 0;
   let c;
-  batchIndex++;
+
   // loop through the batch
+  batchIndex++;
   for (let i = 0; i < batch.length; i++) {
     pack = batch[i];
     touchId = pack[0];
     command = pack[1];
+
     switch (command) {
-      case 'press':
+      case "press":
         el = elementManager.getKnownElement(pack[2], curContainer);
         c = coordinates(el, pack[3], pack[4]);
         touch = createATouch(el, c.x, c.y, touchId);
         multiLast[touchId] = touch;
         touches.push(touch);
-        emitMultiEvents('touchstart', touch, touches);
+        emitMultiEvents("touchstart", touch, touches);
         break;
-      case 'release':
+
+      case "release":
         touch = multiLast[touchId];
         // the index of the previous touch for the finger may change in the touches array
         touchIndex = touches.indexOf(touch);
         touches.splice(touchIndex, 1);
-        emitMultiEvents('touchend', touch, touches);
+        emitMultiEvents("touchend", touch, touches);
         break;
-      case 'move':
+
+      case "move":
         el = elementManager.getKnownElement(pack[2], curContainer);
         c = coordinates(el);
         touch = createATouch(multiLast[touchId].target, c.x, c.y, touchId);
         touchIndex = touches.indexOf(lastTouch);
         touches[touchIndex] = touch;
         multiLast[touchId] = touch;
-        emitMultiEvents('touchmove', touch, touches);
+        emitMultiEvents("touchmove", touch, touches);
         break;
-      case 'moveByOffset':
+
+      case "moveByOffset":
         el = multiLast[touchId].target;
         lastTouch = multiLast[touchId];
         touchIndex = touches.indexOf(lastTouch);
@@ -1199,59 +1202,58 @@ function setDispatch(batches, touches, command_id, batchIndex) {
         touch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
         touches[touchIndex] = touch;
         multiLast[touchId] = touch;
-        emitMultiEvents('touchmove', touch, touches);
+        emitMultiEvents("touchmove", touch, touches);
         break;
-      case 'wait':
-        if (pack[2] != undefined ) {
-          waitTime = pack[2]*1000;
+
+      case "wait":
+        if (typeof pack[2] != "undefined") {
+          waitTime = pack[2] * 1000;
           if (waitTime > maxTime) {
             maxTime = waitTime;
           }
         }
         break;
-    }//end of switch block
-  }//end of for loop
-  if (maxTime != 0) {
-    checkTimer.initWithCallback(function(){setDispatch(batches, touches, command_id, batchIndex);}, maxTime, Ci.nsITimer.TYPE_ONE_SHOT);
+    }
   }
-  else {
-    setDispatch(batches, touches, command_id, batchIndex);
+
+  if (maxTime != 0) {
+    checkTimer.initWithCallback(function() {
+      setDispatch(batches, touches, batchIndex);
+    }, maxTime, Ci.nsITimer.TYPE_ONE_SHOT);
+  } else {
+    setDispatch(batches, touches, batchIndex);
   }
 }
 
 /**
- * Function to start multi-action
+ * Start multi-action.
+ *
+ * @param {Number} maxLen
+ *     Longest action chain for one finger.
  */
-function multiAction(msg) {
-  let command_id = msg.json.command_id;
-  let args = msg.json.value;
-  // maxlen is the longest action chain for one finger
-  let maxlen = msg.json.maxlen;
-  try {
-    // unwrap the original nested array
-    let commandArray = elementManager.convertWrappedArguments(args, curContainer);
-    let concurrentEvent = [];
-    let temp;
-    for (let i = 0; i < maxlen; i++) {
-      let row = [];
-      for (let j = 0; j < commandArray.length; j++) {
-        if (commandArray[j][i] != undefined) {
-          // add finger id to the front of each action, i.e. [finger_id, action, element]
-          temp = commandArray[j][i];
-          temp.unshift(j);
-          row.push(temp);
-        }
+function multiAction(args, maxLen) {
+  // unwrap the original nested array
+  let commandArray = elementManager.convertWrappedArguments(args, curContainer);
+  let concurrentEvent = [];
+  let temp;
+  for (let i = 0; i < maxLen; i++) {
+    let row = [];
+    for (let j = 0; j < commandArray.length; j++) {
+      if (typeof commandArray[j][i] != "undefined") {
+        // add finger id to the front of each action, i.e. [finger_id, action, element]
+        temp = commandArray[j][i];
+        temp.unshift(j);
+        row.push(temp);
       }
-      concurrentEvent.push(row);
     }
-    // now concurrent event is made of sets where each set contain a list of actions that need to be fired.
-    // note: each action belongs to a different finger
-    // pendingTouches keeps track of current touches that's on the screen
-    let pendingTouches = [];
-    setDispatch(concurrentEvent, pendingTouches, command_id);
-  } catch (e) {
-    sendError(e, command_id);
+    concurrentEvent.push(row);
   }
+
+  // now concurrent event is made of sets where each set contain a list of actions that need to be fired.
+  // note: each action belongs to a different finger
+  // pendingTouches keeps track of current touches that's on the screen
+  let pendingTouches = [];
+  setDispatch(concurrentEvent, pendingTouches);
 }
 
 /*
@@ -1667,7 +1669,15 @@ function switchToShadowRoot(id) {
     // If no host element is passed, attempt to find a parent shadow root or, if
     // none found, unset the current shadow root
     if (curContainer.shadowRoot) {
-      let parent = curContainer.shadowRoot.host;
+      let parent;
+      try {
+        parent = curContainer.shadowRoot.host;
+      } catch (e) {
+        // There is a chance that host element is dead and we are trying to
+        // access a dead object.
+        curContainer.shadowRoot = null;
+        return;
+      }
       while (parent && !(parent instanceof curContainer.frame.ShadowRoot)) {
         parent = parent.parentNode;
       }
@@ -1837,47 +1847,9 @@ function switchToFrame(msg) {
 
   sendResponse({value: rv}, command_id);
 }
- /**
-  * Add a cookie to the document
-  */
-function addCookie(msg) {
-  let cookie = msg.json.cookie;
-  if (!cookie.expiry) {
-    var date = new Date();
-    var thePresent = new Date(Date.now());
-    date.setYear(thePresent.getFullYear() + 20);
-    cookie.expiry = date.getTime() / 1000;  // Stored in seconds.
-  }
 
-  if (!cookie.domain) {
-    var location = curContainer.frame.document.location;
-    cookie.domain = location.hostname;
-  } else {
-    var currLocation = curContainer.frame.location;
-    var currDomain = currLocation.host;
-    if (currDomain.indexOf(cookie.domain) == -1) {
-      sendError(new InvalidCookieDomainError("You may only set cookies for the current domain"), msg.json.command_id);
-    }
-  }
-
-  // The cookie's domain may include a port. Which is bad. Remove it
-  // We'll catch ip6 addresses by mistake. Since no-one uses those
-  // this will be okay for now. See Bug 814416
-  if (cookie.domain.match(/:\d+$/)) {
-    cookie.domain = cookie.domain.replace(/:\d+$/, '');
-  }
-
-  var document = curContainer.frame.document;
-  if (!document || !document.contentType.match(/html/i)) {
-    sendError(new UnableToSetCookieError("You may only set cookies on html documents"), msg.json.command_id);
-  }
-
-  let added = sendSyncMessage("Marionette:addCookie", {value: cookie});
-  if (added[0] !== true) {
-    sendError(new UnableToSetCookieError(), msg.json.command_id);
-    return;
-  }
-  sendOk(msg.json.command_id);
+function addCookie(cookie) {
+  cookies.add(cookie.name, cookie.value, cookie);
 }
 
 /**
@@ -1885,7 +1857,6 @@ function addCookie(msg) {
  */
 function getCookies() {
   let rv = [];
-  let cookies = getVisibleCookies(curContainer.frame.location);
 
   for (let cookie of cookies) {
     let expires = cookie.expires;
@@ -1911,47 +1882,19 @@ function getCookies() {
 }
 
 /**
- * Delete a cookie by name
+ * Delete a cookie by name.
  */
-function deleteCookie(msg) {
-  let toDelete = msg.json.name;
-  let cookies = getVisibleCookies(curContainer.frame.location);
-  for (let cookie of cookies) {
-    if (cookie.name == toDelete) {
-      let deleted = sendSyncMessage("Marionette:deleteCookie", {value: cookie});
-      if (deleted[0] !== true) {
-        sendError(new UnknownError("Could not delete cookie: " + msg.json.name), msg.json.command_id);
-        return;
-      }
-    }
-  }
-
-  sendOk(msg.json.command_id);
+function deleteCookie(name) {
+  cookies.delete(name);
 }
 
 /**
- * Delete all the visibile cookies on a page
+ * Delete all the visibile cookies on a page.
  */
-function deleteAllCookies(msg) {
-  let cookies = getVisibleCookies(curContainer.frame.location);
+function deleteAllCookies() {
   for (let cookie of cookies) {
-    let deleted = sendSyncMessage("Marionette:deleteCookie", {value: cookie});
-    if (!deleted[0]) {
-      sendError(new UnknownError("Could not delete cookie: " + JSON.stringify(cookie)), msg.json.command_id);
-      return;
-    }
+    cookies.delete(cookie);
   }
-  sendOk(msg.json.command_id);
-}
-
-/**
- * Get all the visible cookies from a location
- */
-function getVisibleCookies(location) {
-  let currentPath = location.pathname || '/';
-  let result = sendSyncMessage("Marionette:getVisibleCookies",
-                               {value: [currentPath, location.hostname]});
-  return result[0];
 }
 
 function getAppCacheStatus(msg) {

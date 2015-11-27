@@ -68,6 +68,9 @@ public:
     virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                                const gfxFontFaceSrc* aFontFaceSrc) override;
 
+    void RecordFontLoadDone(uint32_t aFontSize,
+                            mozilla::TimeStamp aDoneTime) override;
+
   protected:
     virtual bool GetPrivateBrowsing() override;
     virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
@@ -292,6 +295,8 @@ private:
                              const nsAString& aText,
                              nsTArray<FontFace*>& aFontFaces,
                              mozilla::ErrorResult& aRv);
+
+  TimeStamp GetNavigationStartTimeStamp();
 
   RefPtr<UserFontSet> mUserFontSet;
 

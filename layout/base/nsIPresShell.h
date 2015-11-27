@@ -140,10 +140,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// 327d78a0-0680-4709-b209-1cf9578720e6
+// 5023beaa-0e54-4fc7-b9dc-0344dc4fb8be
 #define NS_IPRESSHELL_IID \
-{ 0x327d78a0, 0x0680, 0x4709, \
-  { 0xb2, 0x09, 0x1c, 0xf9, 0x57, 0x87, 0x20, 0xe6 } }
+{ 0x5023beaa, 0x0e54, 0x4fc7, \
+  { 0xb9, 0xdc, 0x03, 0x44, 0xdc, 0x4f, 0xb8, 0xbe } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1416,6 +1416,7 @@ public:
   virtual nsresult SetResolution(float aResolution) = 0;
   float GetResolution() { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
+  virtual float GetCumulativeScaleResolution() = 0;
 
   /**
    * Was the current resolution set by the user or just default initialized?

@@ -7,6 +7,7 @@ include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PCrashReporter;
 include protocol PContent;
+include ProfilerTypes;
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
@@ -93,8 +94,7 @@ child:
   /**
    * Control the Gecko Profiler in the plugin process.
    */
-  async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
-                      nsCString[] aThreadNameFilters);
+  async StartProfiler(ProfilerInitParams params);
   async StopProfiler();
 
   async GatherProfile();

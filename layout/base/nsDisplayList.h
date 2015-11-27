@@ -3508,7 +3508,10 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayResolution();
 #endif
-
+  virtual void HitTest(nsDisplayListBuilder* aBuilder,
+                       const nsRect& aRect,
+                       HitTestState* aState,
+                       nsTArray<nsIFrame*> *aOutFrames) override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;

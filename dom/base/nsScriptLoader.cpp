@@ -969,6 +969,11 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   // The window may have gone away by this point, in which case there's no point
   // in trying to run the script.
   nsCOMPtr<nsIDocument> master = mDocument->MasterDocument();
+  {
+    // Try to perform a microtask checkpoint
+    nsAutoMicroTask mt;
+  }
+
   nsPIDOMWindow *pwin = master->GetInnerWindow();
   bool runScript = !!pwin;
   if (runScript) {

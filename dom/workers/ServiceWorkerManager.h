@@ -47,11 +47,9 @@ class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
-class ServiceWorkerRegisterJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
-class ServiceWorkerUpdateFinishCallback;
 
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
@@ -79,7 +77,11 @@ public:
 
   uint64_t mLastUpdateCheckTime;
 
-  RefPtr<ServiceWorkerRegisterJob> mUpdateJob;
+  // According to the spec, Soft Update shouldn't queue an update job
+  // if the registration queue is not empty. Because our job queue
+  // works slightly different, we use a flag to determine if the registration
+  // is already updating.
+  bool mUpdating;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -149,12 +151,6 @@ public:
 
   void
   NotifyListenersOnChange();
-
-  bool
-  IsUpdating() const;
-
-  void
-  AppendUpdateCallback(ServiceWorkerUpdateFinishCallback* aCallback);
 };
 
 class ServiceWorkerUpdateFinishCallback
@@ -316,7 +312,9 @@ class ServiceWorkerManager final
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class ServiceWorkerJobQueue;
+  friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
+  friend class ServiceWorkerJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
 
@@ -373,14 +371,13 @@ public:
                              ErrorResult& aRv);
 
   void
-  SoftUpdate(nsIPrincipal* aPrincipal,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
+  Update(nsIPrincipal* aPrincipal,
+         const nsACString& aScope,
+         ServiceWorkerUpdateFinishCallback* aCallback);
 
   void
-  SoftUpdate(const PrincipalOriginAttributes& aOriginAttributes,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
+  SoftUpdate(const OriginAttributes& aOriginAttributes,
+             const nsACString& aScope);
 
   void
   PropagateSoftUpdate(const PrincipalOriginAttributes& aOriginAttributes,
@@ -489,11 +486,6 @@ private:
   void
   MaybeRemoveRegistrationInfo(const nsACString& aScopeKey);
 
-  void
-  SoftUpdate(const nsACString& aScopeKey,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
-
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(const nsACString& aScopeKey,
                   const nsACString& aScope) const;
@@ -524,6 +516,9 @@ private:
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
                                             WhichServiceWorker aWhichOnes);
+
+  void
+  NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,

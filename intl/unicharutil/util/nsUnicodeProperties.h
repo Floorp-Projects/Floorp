@@ -57,6 +57,16 @@ inline VerticalOrientation GetVerticalOrientation(uint32_t aCh) {
   return VerticalOrientation(GetCharProps2(aCh).mVertOrient);
 }
 
+/* This MUST match the values assigned by genUnicodePropertyData.pl! */
+enum PairedBracketType {
+  PAIRED_BRACKET_TYPE_NONE = 0,
+  PAIRED_BRACKET_TYPE_OPEN = 1,
+  PAIRED_BRACKET_TYPE_CLOSE = 2
+};
+
+PairedBracketType GetPairedBracketType(uint32_t aCh);
+uint32_t GetPairedBracket(uint32_t aCh);
+
 enum XidmodType {
   XIDMOD_RECOMMENDED,
   XIDMOD_INCLUSION,

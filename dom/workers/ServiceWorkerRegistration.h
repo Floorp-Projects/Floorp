@@ -66,6 +66,9 @@ public:
   InvalidateWorkers(WhichServiceWorker aWhichOnes) = 0;
 
   virtual void
+  RegistrationRemoved() = 0;
+
+  virtual void
   GetScope(nsAString& aScope) const = 0;
 };
 
@@ -105,9 +108,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationMainThread,
                                            ServiceWorkerRegistrationBase)
-
-  ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
-                                      const nsAString& aScope);
 
   already_AddRefed<Promise>
   Update(ErrorResult& aRv);
@@ -155,12 +155,18 @@ public:
   InvalidateWorkers(WhichServiceWorker aWhichOnes) override;
 
   void
+  RegistrationRemoved() override;
+
+  void
   GetScope(nsAString& aScope) const override
   {
     aScope = mScope;
   }
 
 private:
+  friend nsPIDOMWindow;
+  ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
+                                      const nsAString& aScope);
   ~ServiceWorkerRegistrationMainThread();
 
   already_AddRefed<workers::ServiceWorker>

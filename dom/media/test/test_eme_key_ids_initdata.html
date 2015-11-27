@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var tests = [
+  {
+    name: "One keyId",
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds",
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds, temporary session",
+    initData: '{"type":"temporary", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Two keyIds, persistent session, type before kids",
+    initData: '{"type":"persistent", "kids":["LwVHf8JLtPrv2GUXFW2v_A", "0DdtU9od-Bh5L3xbv0Xf_A"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A","0DdtU9od-Bh5L3xbv0Xf_A"],"type":"persistent"}',
+    sessionType: 'persistent',
+    expectPass: true,
+  },
+  {
+    name: "Invalid keyId",
+    initData: '{"kids":["0"]}',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+  {
+    name: "Empty keyId",
+    initData: '{"kids":[""]}',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+  {
+    name: "SessionType in license doesn't match MediaKeySession's sessionType",
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}',
+    sessionType: 'persistent',
+    expectPass: false,
+  },
+  {
+    name: "One valid and one invalid kid",
+    initData: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A", "invalid"]}',
+    expectedRequest: '{"kids":["LwVHf8JLtPrv2GUXFW2v_A"],"type":"temporary"}',
+    sessionType: 'temporary',
+    expectPass: true,
+  },
+  {
+    name: "Invalid initData",
+    initData: 'invalid initData',
+    sessionType: 'temporary',
+    expectPass: false,
+  },
+];
+
+function Test(test) {
+  return new Promise(function(resolve, reject) {
+    navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{initDataTypes: ['keyids']}]).then(
+      (access) => access.createMediaKeys()
+      ).then(
+        (mediaKeys) => {
+          var session = mediaKeys.createSession(test.sessionType);
+          var initData = new TextEncoder().encode(test.initData);
+          session.addEventListener("message", function(event) {
+            is(event.messageType, "license-request", "'" + test.name + "' MediaKeyMessage type should be license-request.");
+            var text = new TextDecoder().decode(event.message);
+            is(text, test.expectedRequest, "'" + test.name + "' got expected response.");
+            is(text == test.expectedRequest, test.expectPass,
+               "'" + test.name + "' expected to " + (test.expectPass ? "pass" : "fail"));
+            resolve();
+          });
+          return session.generateRequest('keyids', initData);
+        }
+      ).catch((x) => {
+        ok(!test.expectPass, "'" + test.name + "' expected to fail.");
+        resolve();
+      });
+  });
+}
+
+function beginTest() {
+  Promise.all(tests.map(Test)).then(function() { SimpleTest.finish(); });
+}
+
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -74,7 +74,7 @@ ActionChain.prototype.dispatchActions = function(
   try {
     this.actions(commandArray, touchId, 0, keyModifiers);
   } catch (e) {
-    this.onError(e);
+    callbacks.onError(e);
     this.resetValues();
   }
 };
@@ -156,7 +156,7 @@ ActionChain.prototype.resetValues = function() {
  */
 ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
   if (i == chain.length) {
-    this.onSuccess({value: touchId || null});
+    this.onSuccess(touchId || null);
     this.resetValues();
     return;
   }
