@@ -54,11 +54,6 @@ const XPCOM_EXCEPTIONS = [];
 this.error = {};
 
 /**
- * Determines if the given status is successful.
- */
-error.isSuccess = status => status === "success";
-
-/**
  * Checks if obj is an instance of the Error prototype in a safe manner.
  * Prefer using this over using instanceof since the Error prototype
  * isn't unique across browsers, and XPCOM exceptions are special

@@ -278,7 +278,7 @@ this.PushService = {
         break;
 
       case "clear-origin-data":
-        this._clearOriginData(data).catch(error => {
+        this._clearOriginData(aData).catch(error => {
           console.error("clearOriginData: Error clearing origin data:", error);
         });
         break;

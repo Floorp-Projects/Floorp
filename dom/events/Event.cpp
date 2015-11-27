@@ -927,19 +927,22 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
 
   // Doing a straight conversion from LayoutDeviceIntPoint to CSSIntPoint
   // seem incorrect, but it is needed to maintain legacy functionality.
-  if (!aPresContext) {
+  WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
+  if (!aPresContext || !(guiEvent && guiEvent->widget)) {
     return CSSIntPoint(aPoint.x, aPoint.y);
   }
 
-  LayoutDeviceIntPoint offset = aPoint;
-
-  WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
-  if (guiEvent && guiEvent->widget) {
-    offset += guiEvent->widget->WidgetToScreenOffset();
-  }
-
   nsPoint pt =
-    LayoutDevicePixel::ToAppUnits(offset, aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+    LayoutDevicePixel::ToAppUnits(aPoint, aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+
+#if defined(MOZ_SINGLE_PROCESS_APZ)
+  if (aPresContext->PresShell()) {
+    pt = pt.RemoveResolution(aPresContext->PresShell()->GetCumulativeScaleResolution());
+  }
+#endif
+
+  pt += LayoutDevicePixel::ToAppUnits(guiEvent->widget->WidgetToScreenOffset(),
+                                      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   return CSSPixel::FromAppUnitsRounded(pt);
 }

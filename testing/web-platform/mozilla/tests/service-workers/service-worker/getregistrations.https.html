@@ -36,12 +36,12 @@ promise_test(function(t) {
     var registrations = [];
     return service_worker_unregister_and_register(t, script, scope)
       .then(function(r) {
-          registrations.push(r.scope);
+          registrations.push(r);
           return navigator.serviceWorker.getRegistrations();
         })
       .then(function(value) {
           assert_array_equals(
-            value.map((r) => r.scope),
+            value,
             registrations,
             'getRegistrations should resolve with array of registrations.');
           return service_worker_unregister(t, scope);
@@ -55,16 +55,16 @@ promise_test(function(t) {
     var registrations = [];
     return service_worker_unregister_and_register(t, script, scope1)
       .then(function(r) {
-          registrations.push(r.scope);
+          registrations.push(r);
           return service_worker_unregister_and_register(t, script, scope2);
         })
       .then(function(r) {
-          registrations.push(r.scope);
+          registrations.push(r);
           return navigator.serviceWorker.getRegistrations();
         })
       .then(function(value) {
           assert_array_equals(
-            value.map((r) => r.scope),
+            value,
             registrations,
             'getRegistrations should resolve with array of registrations.');
           return service_worker_unregister(t, scope1);
@@ -129,12 +129,12 @@ promise_test(function(t) {
           return service_worker_unregister_and_register(t, script, scope);
         })
       .then(function(r) {
-          registrations.push(r.scope);
+          registrations.push(r);
           return navigator.serviceWorker.getRegistrations();
         })
       .then(function(value) {
           assert_array_equals(
-            value.map((r) => r.scope),
+            value,
             registrations,
             'getRegistrations should only return same origin registrations.');
 

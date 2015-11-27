@@ -3150,7 +3150,15 @@ PluginProfilerObserver::Observe(nsISupports *aSubject,
         params->GetInterval(&interval);
         const nsTArray<nsCString>& features = params->GetFeatures();
         const nsTArray<nsCString>& threadFilterNames = params->GetThreadFilterNames();
-        Unused << mPmp->SendStartProfiler(entries, interval, features, threadFilterNames);
+
+        ProfilerInitParams ipcParams;
+        ipcParams.enabled() = true;
+        ipcParams.entries() = entries;
+        ipcParams.interval() = interval;
+        ipcParams.features() = features;
+        ipcParams.threadFilters() = threadFilterNames;
+
+        Unused << mPmp->SendStartProfiler(ipcParams);
     } else if (!strcmp(aTopic, "profiler-stopped")) {
         Unused << mPmp->SendStopProfiler();
     } else if (!strcmp(aTopic, "profiler-subprocess-gather")) {

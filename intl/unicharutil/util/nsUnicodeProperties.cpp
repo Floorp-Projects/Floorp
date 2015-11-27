@@ -170,6 +170,26 @@ GetScriptTagForCode(int32_t aScriptCode)
     return sScriptCodeToTag[aScriptCode];
 }
 
+PairedBracketType GetPairedBracketType(uint32_t aCh)
+{
+#if ENABLE_INTL_API
+  return PairedBracketType
+           (u_getIntPropertyValue(aCh, UCHAR_BIDI_PAIRED_BRACKET_TYPE));
+#else
+  return PairedBracketType(GetCharProps2(aCh).mPairedBracketType);
+#endif
+}
+
+uint32_t GetPairedBracket(uint32_t aCh)
+{
+#if ENABLE_INTL_API
+  return u_getBidiPairedBracket(aCh);
+#else
+  return GetPairedBracketType(aCh) != PAIRED_BRACKET_TYPE_NONE
+         ? GetMirroredChar(aCh) : aCh;
+#endif
+}
+
 static inline uint32_t
 GetCaseMapValue(uint32_t aCh)
 {

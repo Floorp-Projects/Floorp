@@ -1,13 +1,8 @@
 // Test many exports.
 
-const count = 1024;
+load(libdir + "dummyModuleResolveHook.js");
 
-let moduleRepo = {};
-setModuleResolveHook(function(module, specifier) {
-    if (specifier in moduleRepo)
-        return moduleRepo[specifier];
-    throw "Module " + specifier + " not found";
-});
+const count = 1024;
 
 let s = "";
 for (let i = 0; i < count; i++)
