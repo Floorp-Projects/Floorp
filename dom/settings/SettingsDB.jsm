@@ -8,10 +8,16 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.importGlobalProperties(['Blob', 'File']);
+Cu.importGlobalProperties(["Blob", "File"]);
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
+this.EXPORTED_SYMBOLS = [
+  "SettingsDB",
+  "SETTINGSDB_NAME",
+  "SETTINGSSTORE_NAME",
+  "SETTINGSDB_VERSION"
+];
 
 var DEBUG = false;
 var VERBOSE = false;
@@ -53,7 +59,10 @@ SettingsDB.prototype = {
 
   __proto__: IndexedDBHelper.prototype,
 
-  upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
+  _dbVersion: SETTINGSDB_VERSION,
+
+  upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
+    if (DEBUG) debug("Upgrade schema ", aOldVersion, aNewVersion);
     let objectStore;
     if (aOldVersion == 0) {
       objectStore = aDb.createObjectStore(SETTINGSSTORE_NAME, { keyPath: "settingName" });
@@ -67,75 +76,11 @@ SettingsDB.prototype = {
       objectStore = aTransaction.objectStore(SETTINGSSTORE_NAME);
     }
 
-    // Loading resource://app/defaults/settings.json doesn't work because
-    // settings.json is not in the omnijar.
-    // So we look for the app dir instead and go from here...
-    let settingsFile = FileUtils.getFile("DefRt", ["settings.json"], false);
-    if (!settingsFile || (settingsFile && !settingsFile.exists())) {
-      // On b2g desktop builds the settings.json file is moved in the
-      // profile directory by the build system.
-      settingsFile = FileUtils.getFile("ProfD", ["settings.json"], false);
-      if (!settingsFile || (settingsFile && !settingsFile.exists())) {
-        return;
-      }
-    }
-
-    let chan = NetUtil.newChannel({
-      uri: NetUtil.newURI(settingsFile),
-      loadUsingSystemPrincipal: true});
-    let stream = chan.open();
-    // Obtain a converter to read from a UTF-8 encoded input stream.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let rawstr = converter.ConvertToUnicode(NetUtil.readInputStreamToString(
-                                            stream,
-                                            stream.available()) || "");
-    let settings;
-    try {
-      settings = JSON.parse(rawstr);
-    } catch(e) {
-      if (DEBUG) debug("Error parsing " + settingsFile.path + " : " + e);
-      return;
-    }
-    stream.close();
-
-    objectStore.openCursor().onsuccess = function(event) {
-      let cursor = event.target.result;
-      if (cursor) {
-        let value = cursor.value;
-        if (value.settingName in settings) {
-          if (VERBOSE) debug("Upgrade " +settings[value.settingName]);
-          value.defaultValue = this.prepareValue(settings[value.settingName]);
-          delete settings[value.settingName];
-          if ("settingValue" in value) {
-            value.userValue = this.prepareValue(value.settingValue);
-            delete value.settingValue;
-          }
-          cursor.update(value);
-        } else if ("userValue" in value || "settingValue" in value) {
-          value.defaultValue = undefined;
-          if (aOldVersion == 1 && value.settingValue) {
-            value.userValue = this.prepareValue(value.settingValue);
-            delete value.settingValue;
-          }
-          cursor.update(value);
-        } else {
-          cursor.delete();
-        }
-        cursor.continue();
-      } else {
-        for (let name in settings) {
-          let value = this.prepareValue(settings[name]);
-          if (VERBOSE) debug("Set new:" + name +", " + value);
-          objectStore.add({ settingName: name, defaultValue: value, userValue: undefined });
-        }
-      }
-    }.bind(this);
+    this.loadDefaultSettings(objectStore, aOldVersion);
   },
 
   // If the value is a data: uri, convert it to a Blob.
-  convertDataURIToBlob: function(aValue) {
+  convertDataURIToBlob(aValue) {
     /* base64 to ArrayBuffer decoding, from
        https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
     */
@@ -199,7 +144,7 @@ SettingsDB.prototype = {
     return aValue
   },
 
-  getObjectKind: function(aObject) {
+  getObjectKind(aObject) {
     if (aObject === null || aObject === undefined) {
       return "primitive";
     } else if (Array.isArray(aObject)) {
@@ -220,7 +165,7 @@ SettingsDB.prototype = {
   },
 
   // Makes sure any property that is a data: uri gets converted to a Blob.
-  prepareValue: function(aObject) {
+  prepareValue(aObject) {
     let kind = this.getObjectKind(aObject);
     if (kind == "array") {
       let res = [];
@@ -242,8 +187,118 @@ SettingsDB.prototype = {
     return res;
   },
 
-  init: function init() {
-    this.initDBHelper(SETTINGSDB_NAME, SETTINGSDB_VERSION,
+  loadDefaultSettings(aObjectStore, aOldVersion) {
+    // Loading resource://app/defaults/settings.json doesn't work because
+    // settings.json is not in the omnijar.
+    // So we look for the app dir instead and go from here...
+    let settingsFile = FileUtils.getFile("DefRt", ["settings.json"], false);
+    if (!settingsFile || (settingsFile && !settingsFile.exists())) {
+      // On b2g desktop builds the settings.json file is moved in the
+      // profile directory by the build system.
+      settingsFile = FileUtils.getFile("ProfD", ["settings.json"], false);
+      if (!settingsFile || (settingsFile && !settingsFile.exists())) {
+        return;
+      }
+    }
+
+    let chan = NetUtil.newChannel({
+      uri: NetUtil.newURI(settingsFile),
+      loadUsingSystemPrincipal: true
+    });
+    let stream = chan.open();
+    // Obtain a converter to read from a UTF-8 encoded input stream.
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let rawstr = converter.ConvertToUnicode(
+      NetUtil.readInputStreamToString(stream, stream.available()) || ""
+    );
+    let settings;
+    try {
+      settings = JSON.parse(rawstr);
+    } catch(e) {
+      if (DEBUG) debug("Error parsing " + settingsFile.path + " : " + e);
+      return;
+    }
+    stream.close();
+
+    aObjectStore.openCursor().onsuccess = event => {
+      let cursor = event.target.result;
+      if (cursor) {
+        let value = cursor.value;
+        if (value.settingName in settings) {
+          if (VERBOSE) {
+            debug("Upgrade " + value.settingName + " " +
+                  settings[value.settingName]);
+          }
+          value.defaultValue = this.prepareValue(settings[value.settingName]);
+          delete settings[value.settingName];
+          if ("settingValue" in value) {
+            value.userValue = this.prepareValue(value.settingValue);
+            delete value.settingValue;
+          }
+          cursor.update(value);
+        } else if ("userValue" in value || "settingValue" in value) {
+          value.defaultValue = undefined;
+          if (aOldVersion !== undefined &&
+              aOldVersion == 1 && value.settingValue) {
+            value.userValue = this.prepareValue(value.settingValue);
+            delete value.settingValue;
+          }
+          cursor.update(value);
+        } else {
+          cursor.delete();
+        }
+        cursor.continue();
+      } else {
+        for (let name in settings) {
+          let value = this.prepareValue(settings[name]);
+          if (VERBOSE) debug("Set new:" + name +", " + value);
+          aObjectStore.add({
+            settingName: name,
+            defaultValue: value,
+            userValue: undefined
+          });
+        }
+      }
+    };
+  },
+
+  /**
+   * Only for testing purposes.
+   */
+  set dbVersion(version) {
+    this._dbVersion = SETTINGSDB_VERSION || version;
+  },
+
+  init() {
+    this.initDBHelper(SETTINGSDB_NAME, this._dbVersion,
                       [SETTINGSSTORE_NAME]);
+
+    // We need to store the db version to avoid reading the setting.json
+    // file twice on the very first run and after an OTA update where
+    // the db version was bumped.
+    // upgradeSchema already takes care of loading and applying the
+    // setting.json content in these two scenarios.
+    const dbVersionPref = "settings.api.db.version";
+    let oldDbVersion = 0;
+    try {
+      oldDbVersion = Services.prefs.getIntPref(dbVersionPref);
+    } catch(e) {}
+    Services.prefs.setIntPref(dbVersionPref, this._dbVersion);
+
+    if (!AppsUtils.isFirstRun(Services.prefs) ||
+        oldDbVersion != this._dbVersion) {
+      return;
+    }
+
+    // We get there in case of a first run after an OTA update where
+    // the settings db version was not bumped. In this case, we need to
+    // load and apply the content of the settings.json file.
+    this.newTxn("readwrite", SETTINGSSTORE_NAME, (txn, store) => {
+      this.loadDefaultSettings(store);
+    }, null, error => {
+      dump("*** WARNING *** Settings DB initialization error " + error + "\n");
+    });
   }
 }
