@@ -1077,7 +1077,11 @@ const LoopAPIInternal = {
 
     if (!reply) {
       reply = result => {
-        message.target.sendAsyncMessage(message.name, [seq, result]);
+        try {
+          message.target.sendAsyncMessage(message.name, [seq, result]);
+        } catch (ex) {
+          MozLoopService.log.error("Failed to send reply back to content:", ex);
+        }
       }
     }
 
