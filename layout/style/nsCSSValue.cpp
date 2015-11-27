@@ -2480,17 +2480,8 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
 css::ImageValue::~ImageValue()
 {
   for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
-    nsISupports* key = iter.Key();
+    nsIDocument* doc = iter.Key();
     RefPtr<imgRequestProxy>& proxy = iter.Data();
-
-    nsIDocument* doc = static_cast<nsIDocument*>(key);
-
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDocument> slowDoc = do_QueryInterface(key);
-      MOZ_ASSERT(slowDoc == doc);
-    }
-#endif
 
     if (doc) {
       doc->StyleImageLoader()->DeregisterCSSImage(this);
