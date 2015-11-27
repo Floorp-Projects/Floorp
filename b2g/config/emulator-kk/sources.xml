@@ -132,7 +132,7 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="b2f83825411be614e8f7ec75fc731fc9c67a7078"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="29cbaa03a380ab69d47c476dd433059f7680837c"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="d3ab8090c5c2ac77429575131c4718d96bfb93cc"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="6a1bb59af65b6485b1090522f66fac95c3f9e22c"/>
