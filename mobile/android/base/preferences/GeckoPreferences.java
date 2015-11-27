@@ -672,7 +672,7 @@ OnSharedPreferenceChangeListener
             if (pref instanceof PreferenceGroup) {
                 // If datareporting is disabled, remove UI.
                 if (PREFS_DATA_REPORTING_PREFERENCES.equals(key)) {
-                    if (!AppConstants.MOZ_DATA_REPORTING) {
+                    if (!AppConstants.MOZ_DATA_REPORTING || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -714,27 +714,27 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_TELEMETRY_ENABLED.equals(key)) {
-                    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
+                    if (!AppConstants.MOZ_TELEMETRY_REPORTING || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(key) ||
                            PREFS_HEALTHREPORT_LINK.equals(key)) {
-                    if (!AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+                    if (!AppConstants.MOZ_SERVICES_HEALTHREPORT || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_CRASHREPORTER_ENABLED.equals(key)) {
-                    if (!AppConstants.MOZ_CRASHREPORTER) {
+                    if (!AppConstants.MOZ_CRASHREPORTER || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_GEO_REPORTING.equals(key) ||
                            PREFS_GEO_LEARN_MORE.equals(key)) {
-                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !Restrictions.isAllowed(this, Restrictable.LOCATION_SERVICE)) {
+                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
