@@ -718,7 +718,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      a restricted profile (e.g. child). Used inside the Android settings UI. -->
 <!ENTITY restrictable_feature_addons_installation "Add-ons">
 <!ENTITY restrictable_feature_private_browsing "Private Browsing">
-<!ENTITY restrictable_feature_location_services "Location Services">
 <!ENTITY restrictable_feature_clear_history "Clear History">
 <!ENTITY restrictable_feature_advanced_settings "Advanced Settings">
 <!ENTITY restrictable_feature_camera_microphone "Camera &amp; Microphone">
