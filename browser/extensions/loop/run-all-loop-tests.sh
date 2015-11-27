@@ -12,7 +12,7 @@ set -e
 
 # Main tests
 
-LOOPDIR=browser/components/loop
+LOOPDIR=browser/extensions/loop
 ESLINT=standalone/node_modules/.bin/eslint
 if [ -x "${LOOPDIR}/${ESLINT}" ]; then
   echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
@@ -25,7 +25,7 @@ fi
 
 # Build tests coverage.
 MISSINGDEPSMSG="\nMake sure all dependencies are up to date by running
-'npm install' inside the 'browser/components/loop/test/' directory.\n"
+'npm install' inside the 'browser/extensions/loop/test/' directory.\n"
 (
 cd ${LOOPDIR}/test
 if ! npm run-script build-coverage ; then

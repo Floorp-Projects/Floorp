@@ -4,23 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FINAL_TARGET = 'dist/bin/browser/features/loop@test.mozilla.org'
+
+FINAL_TARGET_FILES += [
+ 'bootstrap.js'
+]
+
+DIST_FILES += [
+  'install.rdf.in'
+]
+
 JAR_MANIFESTS += ['jar.mn']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
 
 BROWSER_CHROME_MANIFESTS += [
     'test/mochitest/browser.ini',
-]
-
-EXTRA_JS_MODULES.loop += [
-    'content/shared/js/crypto.js',
-    'content/shared/js/utils.js',
-    'modules/LoopRooms.jsm',
-    'modules/LoopRoomsCache.jsm',
-    'modules/MozLoopAPI.jsm',
-    'modules/MozLoopPushHandler.jsm',
-    'modules/MozLoopService.jsm',
-    'modules/MozLoopWorker.js',
 ]
 
 with Files('**'):
