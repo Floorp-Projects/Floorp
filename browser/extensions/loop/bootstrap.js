@@ -787,8 +787,12 @@ function startup() {
                 "chrome://loop/skin/platform.css"];
   for (let sheet of sheets) {
     let styleSheetURI = Services.io.newURI(sheet, null, null);
+    // XXX We would love to specify AUTHOR_SHEET here and in shutdown, however
+    // bug 1228542 prevents us from doing that as we'd cause a lot of assertions
+    // in debug mode for tests. Once that is fixed, we should be able to change
+    // this, and remove the !important attributes from our syle sheets.
     styleSheetService.loadAndRegisterSheet(styleSheetURI,
-                                           styleSheetService.AUTHOR_SHEET);
+                                           styleSheetService.USER_SHEET);
   }
 }
 
