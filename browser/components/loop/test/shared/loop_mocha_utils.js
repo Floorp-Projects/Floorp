@@ -258,7 +258,11 @@ var LoopMochaUtils = (function(global, _) {
     };
     console.error = function() {
       var args = Array.slice(arguments);
-      gCaughtIssues.push(args);
+      try {
+        throw new Error();
+      } catch (e) {
+        gCaughtIssues.push([args, e.stack]);
+      }
       consoleError.apply(console, args);
     };
   }
