@@ -33,10 +33,10 @@ from .data import (
     ConfigFileSubstitution,
     ContextWrapped,
     Defines,
-    DistFiles,
     DirectoryTraversal,
     Exports,
     FinalTargetFiles,
+    FinalTargetPreprocessedFiles,
     GeneratedEventWebIDLFile,
     GeneratedFile,
     GeneratedSources,
@@ -684,7 +684,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for var, cls in (
             ('FINAL_TARGET_FILES', FinalTargetFiles),
-            ('DIST_FILES', DistFiles),
+            ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
         ):
             all_files = context.get(var)
             if not all_files:

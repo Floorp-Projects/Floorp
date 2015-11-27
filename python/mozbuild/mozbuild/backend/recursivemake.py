@@ -42,11 +42,11 @@ from ..frontend.data import (
     ContextDerived,
     ContextWrapped,
     Defines,
-    DistFiles,
     DirectoryTraversal,
     Exports,
     ExternalLibrary,
     FinalTargetFiles,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     GeneratedSources,
     HostDefines,
@@ -604,8 +604,9 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, FinalTargetFiles):
             self._process_final_target_files(obj, obj.files, obj.target)
 
-        elif isinstance(obj, DistFiles):
-            self._process_dist_files(obj, obj.files, obj.target, backend_file)
+        elif isinstance(obj, FinalTargetPreprocessedFiles):
+            self._process_final_target_pp_files(obj, obj.files, obj.target,
+                                                backend_file)
 
         elif isinstance(obj, AndroidResDirs):
             # Order matters.
@@ -1390,7 +1391,7 @@ INSTALL_TARGETS += %(prefix)s
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
                 install_manifest.add_symlink(source, dest)
 
-    def _process_dist_files(self, obj, files, target, backend_file):
+    def _process_final_target_pp_files(self, obj, files, target, backend_file):
         # We'd like to install these via manifests as preprocessed files.
         # But they currently depend on non-standard flags being added via
         # some Makefiles, so for now we just pass them through to the

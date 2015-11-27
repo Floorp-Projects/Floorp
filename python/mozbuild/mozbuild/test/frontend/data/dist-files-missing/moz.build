@@ -2,7 +2,7 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
     'install.rdf',
     'main.js',
 ]

@@ -15,7 +15,7 @@ JAR_MANIFESTS += ['jar.mn']
 USE_EXTENSION_MANIFEST = True
 NO_JS_MANIFEST = True
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
     'install.rdf',
 ]
 

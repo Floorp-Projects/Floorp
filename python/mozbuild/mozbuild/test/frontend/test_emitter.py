@@ -15,9 +15,9 @@ from mozbuild.frontend.data import (
     ChromeManifestEntry,
     ConfigFileSubstitution,
     Defines,
-    DistFiles,
     DirectoryTraversal,
     Exports,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     GeneratedSources,
     HostDefines,
@@ -887,13 +887,13 @@ class TestEmitterBasic(unittest.TestCase):
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
             self.assertFalse(sources.have_unified_mapping)
 
-    def test_dist_files(self):
-        """Test that DIST_FILES works properly."""
+    def test_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES works properly."""
         reader = self.reader('dist-files')
         objs = self.read_topsrcdir(reader)
 
         self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], DistFiles)
+        self.assertIsInstance(objs[0], FinalTargetPreprocessedFiles)
 
         # Ideally we'd test hierarchies, but that would just be testing
         # the HierarchicalStringList class, which we test separately.
@@ -905,10 +905,10 @@ class TestEmitterBasic(unittest.TestCase):
             for f in files:
                 self.assertTrue(f in expected)
 
-    def test_missing_dist_files(self):
-        """Test that DIST_FILES with missing files throws errors."""
+    def test_missing_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES with missing files throws errors."""
         with self.assertRaisesRegexp(SandboxValidationError, 'File listed in '
-            'DIST_FILES does not exist'):
+            'FINAL_TARGET_PP_FILES does not exist'):
             reader = self.reader('dist-files-missing')
             self.read_topsrcdir(reader)
 
