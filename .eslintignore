@@ -58,18 +58,26 @@ xulrunner/**
 # browser/ exclusions
 browser/app/**
 browser/base/**
-browser/branding/**
-browser/components/**
-browser/config/**
-browser/docs/**
+browser/components/customizableui/**
+browser/components/downloads/**
+browser/components/feeds/**
+browser/components/migration/**
+browser/components/*.js
+browser/components/places/**
+browser/components/pocket/**
+browser/components/preferences/**
+browser/components/privatebrowsing/**
+browser/components/sessionstore/**
+browser/components/shell/**
+browser/components/tabview/**
+browser/components/translation/**
+browser/components/uitour/**
 browser/experiments/**
 browser/extensions/pdfjs/**
 browser/extensions/shumway/**
 browser/fuel/**
-browser/installer/**
 browser/locales/**
 browser/modules/**
-browser/themes/**
 
 # Loop specific exclusions
 
