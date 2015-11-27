@@ -35,7 +35,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
      * These restrictions are hidden from the admin configuration UI.
      */
     private static List<Restrictable> hiddenRestrictions = Arrays.asList(
-            Restrictable.MASTER_PASSWORD
+            Restrictable.MASTER_PASSWORD,
+            Restrictable.GUEST_BROWSING
     );
 
     /* package-private */ static boolean shouldHide(Restrictable restrictable) {
@@ -128,10 +129,6 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
         if (!bundle.containsKey(Restrictable.CLEAR_HISTORY.name) && bundle.containsKey("no_clear_history")) {
             bundle.putBoolean(Restrictable.CLEAR_HISTORY.name, !bundle.getBoolean("no_clear_history"));
-        }
-
-        if (!bundle.containsKey(Restrictable.GUEST_BROWSING.name) && bundle.containsKey("no_guest_browsing")) {
-            bundle.putBoolean(Restrictable.GUEST_BROWSING.name, !bundle.getBoolean("no_guest_browsing"));
         }
 
         if (!bundle.containsKey(Restrictable.ADVANCED_SETTINGS.name) && bundle.containsKey("no_advanced_settings")) {

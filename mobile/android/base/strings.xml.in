@@ -569,7 +569,6 @@
   <string name="restrictable_feature_private_browsing">&restrictable_feature_private_browsing;</string>
   <string name="restrictable_feature_location_services">&restrictable_feature_location_services;</string>
   <string name="restrictable_feature_clear_history">&restrictable_feature_clear_history;</string>
-  <string name="restrictable_feature_guest_browsing">&restrictable_feature_guest_browsing;</string>
   <string name="restrictable_feature_advanced_settings">&restrictable_feature_advanced_settings;</string>
   <string name="restrictable_feature_camera_microphone">&restrictable_feature_camera_microphone;</string>
 
