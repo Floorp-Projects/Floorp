@@ -172,6 +172,7 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
 
   RefPtr<PresentationConnection> connection =
     PresentationConnection::Create(GetOwner(), aSessionId,
+                                   nsIPresentationService::ROLE_RECEIVER,
                                    PresentationConnectionState::Closed);
   if (NS_WARN_IF(!connection)) {
     return NS_ERROR_NOT_AVAILABLE;
