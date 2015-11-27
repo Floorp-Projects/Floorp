@@ -235,6 +235,8 @@ public class FxAccountStatusFragment
         // There is no native equivalent, bind the click action to fire an intent.
         ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=avatar");
       }
+      // Either we handled the event or there is no native equivalent.
+      return true;
     }
 
     if (preference == manageAccountPreference) {
