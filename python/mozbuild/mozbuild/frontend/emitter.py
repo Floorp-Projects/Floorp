@@ -76,7 +76,10 @@ from .data import (
     WebIDLFile,
     XPIDLFile,
 )
-from mozpack.chrome.manifest import ManifestBinaryComponent
+from mozpack.chrome.manifest import (
+    ManifestBinaryComponent,
+    Manifest,
+)
 
 from .reader import SandboxValidationError
 
@@ -554,17 +557,6 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_xpidl(context):
             yield obj
 
-        # Check for manifest declarations in EXTRA_{PP_,}COMPONENTS.
-        extras = context.get('EXTRA_COMPONENTS', []) + context.get('EXTRA_PP_COMPONENTS', [])
-        if any(e.endswith('.js') for e in extras) and \
-                not any(e.endswith('.manifest') for e in extras) and \
-                not context.get('NO_JS_MANIFEST', False):
-            raise SandboxValidationError('A .js component was specified in EXTRA_COMPONENTS '
-                                         'or EXTRA_PP_COMPONENTS without a matching '
-                                         '.manifest file.  See '
-                                         'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
-                                         context);
-
         # Proxy some variables as-is until we have richer classes to represent
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
@@ -575,9 +567,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'ANDROID_APK_PACKAGE',
             'ANDROID_GENERATED_RESFILES',
             'DISABLE_STL_WRAPPING',
-            'EXTRA_COMPONENTS',
             'EXTRA_DSO_LDOPTS',
-            'EXTRA_PP_COMPONENTS',
             'USE_STATIC_LIBS',
             'PYTHON_UNIT_TESTS',
             'RCFILE',
@@ -686,6 +676,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     local_include.full_path), context)
             yield LocalInclude(context, local_include)
 
+        components = []
         for var, cls in (
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
@@ -697,7 +688,9 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError(
                     '%s cannot be used with DIST_INSTALL = False' % var,
                     context)
-            for _, files in all_files.walk():
+            for base, files in all_files.walk():
+                if base == 'components':
+                    components.extend(files)
                 for f in files:
                     path = os.path.join(context.srcdir, f)
                     if not os.path.exists(path):
@@ -706,6 +699,22 @@ class TreeMetadataEmitter(LoggingMixin):
                             % (var, f), context)
 
             yield cls(context, all_files, context['FINAL_TARGET'])
+
+        # Check for manifest declarations in EXTRA_{PP_,}COMPONENTS.
+        if any(e.endswith('.js') for e in components) and \
+                not any(e.endswith('.manifest') for e in components) and \
+                not context.get('NO_JS_MANIFEST', False):
+            raise SandboxValidationError('A .js component was specified in EXTRA_COMPONENTS '
+                                         'or EXTRA_PP_COMPONENTS without a matching '
+                                         '.manifest file.  See '
+                                         'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
+                                         context);
+
+        for c in components:
+            if c.endswith('.manifest'):
+                yield ChromeManifestEntry(context, 'chrome.manifest',
+                                          Manifest('components',
+                                                   mozpath.basename(c)))
 
         branding_files = context.get('BRANDING_FILES')
         if branding_files:

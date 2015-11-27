@@ -156,8 +156,6 @@ class TestEmitterBasic(unittest.TestCase):
         wanted = {
             'ALLOW_COMPILER_WARNINGS': True,
             'DISABLE_STL_WRAPPING': True,
-            'EXTRA_COMPONENTS': ['dummy.manifest', 'fans.js', 'tans.js'],
-            'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
             'NO_DIST_INSTALL': True,
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',
