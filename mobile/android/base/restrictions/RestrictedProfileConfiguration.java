@@ -36,7 +36,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
      */
     private static List<Restrictable> hiddenRestrictions = Arrays.asList(
             Restrictable.MASTER_PASSWORD,
-            Restrictable.GUEST_BROWSING
+            Restrictable.GUEST_BROWSING,
+            Restrictable.LOCATION_SERVICE
     );
 
     /* package-private */ static boolean shouldHide(Restrictable restrictable) {
@@ -121,10 +122,6 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
         if (!bundle.containsKey(Restrictable.PRIVATE_BROWSING.name) && bundle.containsKey("no_private_browsing")) {
             bundle.putBoolean(Restrictable.PRIVATE_BROWSING.name, !bundle.getBoolean("no_private_browsing"));
-        }
-
-        if (!bundle.containsKey(Restrictable.LOCATION_SERVICE.name) && bundle.containsKey("no_location_service")) {
-            bundle.putBoolean(Restrictable.LOCATION_SERVICE.name, !bundle.getBoolean("no_location_service"));
         }
 
         if (!bundle.containsKey(Restrictable.CLEAR_HISTORY.name) && bundle.containsKey("no_clear_history")) {
