@@ -35,7 +35,8 @@ class MochiRemote(MochitestDesktop):
         self._automation = automation
         self._dm = devmgr
         self.environment = self._automation.environment
-        self.remoteProfile = options.remoteTestRoot + "/profile"
+        self.remoteProfile = os.path.join(options.remoteTestRoot, "profile/")
+        self.remoteModulesDir = os.path.join(options.remoteTestRoot, "modules/")
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
@@ -165,7 +166,20 @@ class MochiRemote(MochitestDesktop):
 
     def buildProfile(self, options):
         restoreRemotePaths = self.switchToLocalPaths(options)
+        if options.testingModulesDir:
+            try:
+                self._dm.pushDir(options.testingModulesDir, self.remoteModulesDir)
+            except devicemanager.DMError:
+                self.log.error(
+                    "Automation Error: Unable to copy test modules to device.")
+                raise
+            savedTestingModulesDir = options.testingModulesDir
+            options.testingModulesDir = self.remoteModulesDir
+        else:
+            savedTestingModulesDir = None
         manifest = MochitestDesktop.buildProfile(self, options)
+        if savedTestingModulesDir:
+            options.testingModulesDir = savedTestingModulesDir
         self.localProfile = options.profilePath
         self._dm.removeDir(self.remoteProfile)
 
