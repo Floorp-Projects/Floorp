@@ -1571,10 +1571,16 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 #if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
 #endif
-	_write(STDERR_FILENO, p1, (unsigned int) strlen(p1));
-	_write(STDERR_FILENO, p2, (unsigned int) strlen(p2));
-	_write(STDERR_FILENO, p3, (unsigned int) strlen(p3));
-	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
+	// Pretend to check _write() errors to suppress gcc warnings about
+	// warn_unused_result annotations in some versions of glibc headers.
+	if (_write(STDERR_FILENO, p1, (unsigned int) strlen(p1)) < 0)
+		return;
+	if (_write(STDERR_FILENO, p2, (unsigned int) strlen(p2)) < 0)
+		return;
+	if (_write(STDERR_FILENO, p3, (unsigned int) strlen(p3)) < 0)
+		return;
+	if (_write(STDERR_FILENO, p4, (unsigned int) strlen(p4)) < 0)
+		return;
 }
 
 MOZ_JEMALLOC_API
@@ -2446,9 +2452,10 @@ pages_map(void *addr, size_t size)
 		if (munmap(ret, size) == -1) {
 			char buf[STRERROR_BUF];
 
-			strerror_r(errno, buf, sizeof(buf));
-			_malloc_message(_getprogname(),
-			    ": (malloc) Error in munmap(): ", buf, "\n");
+			if (strerror_r(errno, buf, sizeof(buf)) == 0) {
+				_malloc_message(_getprogname(),
+					": (malloc) Error in munmap(): ", buf, "\n");
+			}
 			if (opt_abort)
 				abort();
 		}
@@ -2475,9 +2482,10 @@ pages_unmap(void *addr, size_t size)
 	if (munmap(addr, size) == -1) {
 		char buf[STRERROR_BUF];
 
-		strerror_r(errno, buf, sizeof(buf));
-		_malloc_message(_getprogname(),
-		    ": (malloc) Error in munmap(): ", buf, "\n");
+		if (strerror_r(errno, buf, sizeof(buf)) == 0) {
+			_malloc_message(_getprogname(),
+				": (malloc) Error in munmap(): ", buf, "\n");
+		}
 		if (opt_abort)
 			abort();
 	}
