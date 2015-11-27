@@ -409,17 +409,8 @@ MP4TrackDemuxer::GetBuffered()
   if (NS_FAILED(rv)) {
     return media::TimeIntervals();
   }
-  nsTArray<mp4_demuxer::Interval<int64_t>> timeRanges;
 
-  mIndex->ConvertByteRangesToTimeRanges(byteRanges, &timeRanges);
-  // convert timeRanges.
-  media::TimeIntervals ranges = media::TimeIntervals();
-  for (size_t i = 0; i < timeRanges.Length(); i++) {
-    ranges +=
-      media::TimeInterval(media::TimeUnit::FromMicroseconds(timeRanges[i].start),
-                          media::TimeUnit::FromMicroseconds(timeRanges[i].end));
-  }
-  return ranges;
+  return mIndex->ConvertByteRangesToTimeRanges(byteRanges);
 }
 
 void
