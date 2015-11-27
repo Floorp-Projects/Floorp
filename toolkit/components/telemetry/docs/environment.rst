@@ -63,7 +63,7 @@ Structure::
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
       },
-      partner: {
+      partner: { // This section may not be immediately available on startup
         distributionId: <string>, // pref "distribution.id", null on failure
         distributionVersion: <string>, // pref "distribution.version", null on failure
         partnerId: <string>, // pref mozilla.partner.id, null on failure
@@ -299,6 +299,11 @@ The following is a partial list of collected preferences.
 - ``browser.urlbar.unifiedcomplete``: True if the urlbar's UnifiedComplete back-end is enabled.
 
 - ``browser.urlbar.userMadeSearchSuggestionsChoice``: True if the user has clicked Yes or No in the urlbar's opt-in notification. Defaults to false.
+
+partner
+~~~~~~~
+
+If the user is using a partner repack, this contains information identifying the repack being used, otherwise "partnerNames" will be an empty array and other entries will be null. The information may be missing when the profile just becomes available. In Firefox for desktop, the information along with other customizations defined in distribution.ini are processed later in the startup phase, and will be fully applied when "distribution-customization-complete" notification is sent.
 
 activeAddons
 ~~~~~~~~~~~~

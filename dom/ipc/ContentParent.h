@@ -935,6 +935,7 @@ private:
     virtual bool RecvGamepadListenerRemoved() override;
     virtual bool RecvProfile(const nsCString& aProfile) override;
     virtual bool RecvGetGraphicsDeviceInitData(DeviceInitData* aOut) override;
+    void StartProfiler(nsIProfilerStartParams* aParams);
 
     virtual bool RecvGetDeviceStorageLocation(const nsString& aType,
                                               nsString* aPath) override;

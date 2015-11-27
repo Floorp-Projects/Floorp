@@ -1084,6 +1084,20 @@ PresShell::Destroy()
       LogTextPerfStats(tp, this, tp->cumulative, 0.0, eLog_totals, nullptr);
     }
   }
+  if (mPresContext) {
+    gfxUserFontSet* fs = mPresContext->GetUserFontSet();
+    if (fs) {
+      uint32_t fontCount;
+      uint64_t fontSize;
+      fs->GetLoadStatistics(fontCount, fontSize);
+      Telemetry::Accumulate(Telemetry::WEBFONT_PER_PAGE, fontCount);
+      Telemetry::Accumulate(Telemetry::WEBFONT_SIZE_PER_PAGE,
+                            uint32_t(fontSize/1024));
+    } else {
+      Telemetry::Accumulate(Telemetry::WEBFONT_PER_PAGE, 0);
+      Telemetry::Accumulate(Telemetry::WEBFONT_SIZE_PER_PAGE, 0);
+    }
+  }
 
 #ifdef MOZ_REFLOW_PERF
   DumpReflows();
@@ -5337,6 +5351,22 @@ float PresShell::GetCumulativeResolution()
   return resolution;
 }
 
+float PresShell::GetCumulativeScaleResolution()
+{
+  float resolution = 1.0;
+  nsIPresShell* currentShell = this;
+  while (currentShell) {
+    resolution *=  currentShell->ScaleToResolution() ? currentShell->GetResolution() : 1.0f;
+    nsPresContext* parentCtx = currentShell->GetPresContext()->GetParentPresContext();
+    if (parentCtx) {
+      currentShell = parentCtx->PresShell();
+    } else {
+      currentShell = nullptr;
+    }
+  }
+  return resolution;
+}
+
 void PresShell::SetRenderingState(const RenderingState& aState)
 {
   if (mRenderFlags != aState.mRenderFlags) {
@@ -7083,8 +7113,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // document that is being captured.
       retargetEventDoc = capturingContent->GetCrossShadowCurrentDoc();
 #ifdef ANDROID
-    } else if (aEvent->mClass == eTouchEventClass ||
-              (aEvent->AsMouseEvent() && aEvent->AsMouseEvent()->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH)) {
+    } else if ((aEvent->mClass == eTouchEventClass) ||
+               (aEvent->mClass == eMouseEventClass) ||
+               (aEvent->mClass == eWheelEventClass)) {
       retargetEventDoc = GetTouchEventTargetDocument();
 #endif
     }
