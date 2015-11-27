@@ -48,7 +48,7 @@ public enum Restrictable {
 
     MASTER_PASSWORD(15, "master_password", 0),
 
-    GUEST_BROWSING(16, "guest_browsing",  R.string.restrictable_feature_guest_browsing),
+    GUEST_BROWSING(16, "guest_browsing",  0),
 
     ADVANCED_SETTINGS(17, "advanced_settings", R.string.restrictable_feature_advanced_settings),
 
