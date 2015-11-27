@@ -1001,13 +1001,6 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
-    'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list,
-        """Additional component files to distribute.
-
-       This variable contains a list of files to copy into
-       ``$(FINAL_TARGET)/components/``.
-        """, 'misc'),
-
     'EXTRA_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
@@ -1033,13 +1026,6 @@ VARIABLES = {
 
         ``TESTING_JS_MODULES.foo += ['module.jsm']``.
         """, None),
-
-    'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list,
-        """Javascript XPCOM files.
-
-       This variable contains a list of files to preprocess.  Generated
-       files will be installed in the ``/components`` directory of the distribution.
-        """, 'misc'),
 
     'FINAL_LIBRARY': (unicode, unicode,
         """Library in which the objects of the current directory will be linked.
@@ -1969,6 +1955,21 @@ SPECIAL_VARIABLES = {
 
         Access to an unknown variable will return None.
         """),
+
+    'EXTRA_COMPONENTS': (lambda context: context['FINAL_TARGET_FILES'].components._strings, list,
+        """Additional component files to distribute.
+
+       This variable contains a list of files to copy into
+       ``$(FINAL_TARGET)/components/``.
+        """),
+
+    'EXTRA_PP_COMPONENTS': (lambda context: context['FINAL_TARGET_PP_FILES'].components._strings, list,
+        """Javascript XPCOM files.
+
+       This variable contains a list of files to preprocess.  Generated
+       files will be installed in the ``/components`` directory of the distribution.
+        """),
+
 }
 
 # Deprecation hints.
