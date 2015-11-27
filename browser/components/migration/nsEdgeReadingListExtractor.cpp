@@ -199,12 +199,16 @@ nsEdgeReadingListExtractor::ConvertJETError(const JET_ERR &aError)
       return NS_ERROR_FILE_NOT_FOUND;
     case JET_errDatabaseDirtyShutdown:
       return NS_ERROR_FILE_CORRUPTED;
-    default:
-      nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      wchar_t* msg = new wchar_t[80];
-      swprintf(msg, 80, MOZ_UTF16("Unexpected JET error from ESE database: %ld"), aError);
-      consoleService->LogStringMessage(msg);
+    default: {
+      nsCOMPtr<nsIConsoleService>
+        consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      static const char16ptr_t
+        kFormat = MOZ_UTF16("Unexpected JET error from ESE database: %ld");
+      wchar_t msg[80];
+      swprintf(msg, mozilla::ArrayLength(msg), kFormat, aError);
+      consoleService->LogStringMessage(char16ptr_t(msg));
       return NS_ERROR_FAILURE;
+    }
   }
 }
 
