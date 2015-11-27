@@ -7,7 +7,7 @@
 
 "use strict";
 
-const BASE_URL = "http://mochi.test:8888/browser/browser/components/loop/test/mochitest/loop_fxa.sjs?";
+const BASE_URL = "http://mochi.test:8888/browser/browser/extensions/loop/test/mochitest/loop_fxa.sjs?";
 
 registerCleanupFunction(function* () {
   yield promiseDeletedOAuthParams(BASE_URL);
