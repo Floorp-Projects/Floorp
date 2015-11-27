@@ -30,8 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <li>We execute commands during the "clients" engine stage of a Sync. Each
  * command takes a <code>GlobalSession</code> instance as a parameter.</li>
  * <li>We queue commands to be executed or propagated to other Sync clients
- * during an activity completely unrelated to a sync (such as
- * <code>SendTabActivity</code>.)</li>
+ * during an activity completely unrelated to a sync</li>
  * </ol>
  * To provide a processor for both these time frames, we maintain a static
  * long-lived singleton.
