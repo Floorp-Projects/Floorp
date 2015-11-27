@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.3.38';
-PDFJS.build = '83dbdc1';
+PDFJS.version = '1.3.14';
+PDFJS.build = 'df46b64';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -58,19 +58,6 @@ var AnnotationType = {
   WIDGET: 1,
   TEXT: 2,
   LINK: 3
-};
-
-var AnnotationFlag = {
-  INVISIBLE: 0x01,
-  HIDDEN: 0x02,
-  PRINT: 0x04,
-  NOZOOM: 0x08,
-  NOROTATE: 0x10,
-  NOVIEW: 0x20,
-  READONLY: 0x40,
-  LOCKED: 0x80,
-  TOGGLENOVIEW: 0x100,
-  LOCKEDCONTENTS: 0x200
 };
 
 var AnnotationBorderStyleType = {
@@ -1199,20 +1186,26 @@ PDFJS.createObjectURL = (function createObjectURLClosure() {
   };
 })();
 
-function MessageHandler(sourceName, targetName, comObj) {
-  this.sourceName = sourceName;
-  this.targetName = targetName;
+function MessageHandler(name, comObj) {
+  this.name = name;
   this.comObj = comObj;
   this.callbackIndex = 1;
   this.postMessageTransfers = true;
   var callbacksCapabilities = this.callbacksCapabilities = {};
   var ah = this.actionHandler = {};
 
-  this._onComObjOnMessage = function messageHandlerComObjOnMessage(event) {
+  ah['console_log'] = [function ahConsoleLog(data) {
+    console.log.apply(console, data);
+  }];
+  ah['console_error'] = [function ahConsoleError(data) {
+    console.error.apply(console, data);
+  }];
+  ah['_unsupported_feature'] = [function ah_unsupportedFeature(data) {
+    UnsupportedManager.notify(data);
+  }];
+
+  comObj.onmessage = function messageHandlerComObjOnMessage(event) {
     var data = event.data;
-    if (data.targetName !== this.sourceName) {
-      return;
-    }
     if (data.isReply) {
       var callbackId = data.callbackId;
       if (data.callbackId in callbacksCapabilities) {
@@ -1229,14 +1222,10 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else if (data.action in ah) {
       var action = ah[data.action];
       if (data.callbackId) {
-        var sourceName = this.sourceName;
-        var targetName = data.sourceName;
         Promise.resolve().then(function () {
           return action[0].call(action[1], data.data);
         }).then(function (result) {
           comObj.postMessage({
-            sourceName: sourceName,
-            targetName: targetName,
             isReply: true,
             callbackId: data.callbackId,
             data: result
@@ -1247,8 +1236,6 @@ function MessageHandler(sourceName, targetName, comObj) {
             reason = reason + '';
           }
           comObj.postMessage({
-            sourceName: sourceName,
-            targetName: targetName,
             isReply: true,
             callbackId: data.callbackId,
             error: reason
@@ -1260,8 +1247,7 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else {
       error('Unknown action from worker: ' + data.action);
     }
-  }.bind(this);
-  comObj.addEventListener('message', this._onComObjOnMessage);
+  };
 }
 
 MessageHandler.prototype = {
@@ -1280,8 +1266,6 @@ MessageHandler.prototype = {
    */
   send: function messageHandlerSend(actionName, data, transfers) {
     var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
       action: actionName,
       data: data
     };
@@ -1299,8 +1283,6 @@ MessageHandler.prototype = {
     function messageHandlerSendWithPromise(actionName, data, transfers) {
     var callbackId = this.callbackIndex++;
     var message = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
       action: actionName,
       data: data,
       callbackId: callbackId
@@ -1326,10 +1308,6 @@ MessageHandler.prototype = {
     } else {
       this.comObj.postMessage(message);
     }
-  },
-
-  destroy: function () {
-    this.comObj.removeEventListener('message', this._onComObjOnMessage);
   }
 };
 
@@ -1883,10 +1861,6 @@ var BasePdfManager = (function BasePdfManagerClosure() {
   }
 
   BasePdfManager.prototype = {
-    get docId() {
-      return this._docId;
-    },
-
     onLoadedStream: function BasePdfManager_onLoadedStream() {
       throw new NotImplementedException();
     },
@@ -1948,8 +1922,7 @@ var BasePdfManager = (function BasePdfManagerClosure() {
 })();
 
 var LocalPdfManager = (function LocalPdfManagerClosure() {
-  function LocalPdfManager(docId, data, password) {
-    this._docId = docId;
+  function LocalPdfManager(data, password) {
     var stream = new Stream(data);
     this.pdfDocument = new PDFDocument(this, stream, password);
     this._loadedStreamCapability = createPromiseCapability();
@@ -2000,8 +1973,8 @@ var LocalPdfManager = (function LocalPdfManagerClosure() {
 })();
 
 var NetworkPdfManager = (function NetworkPdfManagerClosure() {
-  function NetworkPdfManager(docId, args, msgHandler) {
-    this._docId = docId;
+  function NetworkPdfManager(args, msgHandler) {
+
     this.msgHandler = msgHandler;
 
     var params = {
@@ -2278,8 +2251,7 @@ var Page = (function PageClosure() {
       });
     },
 
-    extractTextContent: function Page_extractTextContent(task,
-                                                         normalizeWhitespace) {
+    extractTextContent: function Page_extractTextContent(task) {
       var handler = {
         on: function nullHandlerOn() {},
         send: function nullHandlerSend() {}
@@ -2309,22 +2281,14 @@ var Page = (function PageClosure() {
 
         return partialEvaluator.getTextContent(contentStream,
                                                task,
-                                               self.resources,
-                                               /* stateManager = */ null,
-                                               normalizeWhitespace);
+                                               self.resources);
       });
     },
 
-    getAnnotationsData: function Page_getAnnotationsData(intent) {
+    getAnnotationsData: function Page_getAnnotationsData() {
       var annotations = this.annotations;
       var annotationsData = [];
       for (var i = 0, n = annotations.length; i < n; ++i) {
-        if (intent) {
-          if (!(intent === 'display' && annotations[i].viewable) &&
-              !(intent === 'print' && annotations[i].printable)) {
-            continue;
-          }
-        }
         annotationsData.push(annotations[i].data);
       }
       return annotationsData;
@@ -2337,7 +2301,8 @@ var Page = (function PageClosure() {
       for (var i = 0, n = annotationRefs.length; i < n; ++i) {
         var annotationRef = annotationRefs[i];
         var annotation = annotationFactory.create(this.xref, annotationRef);
-        if (annotation) {
+        if (annotation &&
+            (annotation.isViewable() || annotation.isPrintable())) {
           annotations.push(annotation);
         }
       }
@@ -4546,9 +4511,7 @@ var Annotation = (function AnnotationClosure() {
     var data = this.data = {};
 
     data.subtype = dict.get('Subtype').name;
-
-    this.setFlags(dict.get('F'));
-    data.annotationFlags = this.flags;
+    data.annotationFlags = dict.get('F');
 
     this.setRectangle(dict.get('Rect'));
     data.rect = this.rectangle;
@@ -4565,64 +4528,6 @@ var Annotation = (function AnnotationClosure() {
   }
 
   Annotation.prototype = {
-    /**
-     * @return {boolean}
-     */
-    get viewable() {
-      if (this.flags) {
-        return !this.hasFlag(AnnotationFlag.INVISIBLE) &&
-               !this.hasFlag(AnnotationFlag.HIDDEN) &&
-               !this.hasFlag(AnnotationFlag.NOVIEW);
-      }
-      return true;
-    },
-
-    /**
-     * @return {boolean}
-     */
-    get printable() {
-      if (this.flags) {
-        return this.hasFlag(AnnotationFlag.PRINT) &&
-               !this.hasFlag(AnnotationFlag.INVISIBLE) &&
-               !this.hasFlag(AnnotationFlag.HIDDEN);
-      }
-      return false;
-    },
-
-    /**
-     * Set the flags.
-     *
-     * @public
-     * @memberof Annotation
-     * @param {number} flags - Unsigned 32-bit integer specifying annotation
-     *                         characteristics
-     * @see {@link shared/util.js}
-     */
-    setFlags: function Annotation_setFlags(flags) {
-      if (isInt(flags)) {
-        this.flags = flags;
-      } else {
-        this.flags = 0;
-      }
-    },
-
-    /**
-     * Check if a provided flag is set.
-     *
-     * @public
-     * @memberof Annotation
-     * @param {number} flag - Hexadecimal representation for an annotation
-     *                        characteristic
-     * @return {boolean}
-     * @see {@link shared/util.js}
-     */
-    hasFlag: function Annotation_hasFlag(flag) {
-      if (this.flags) {
-        return (this.flags & flag) > 0;
-      }
-      return false;
-    },
-
     /**
      * Set the rectangle.
      *
@@ -4722,6 +4627,32 @@ var Annotation = (function AnnotationClosure() {
       }
     },
 
+    isInvisible: function Annotation_isInvisible() {
+      var data = this.data;
+      return !!(data &&
+                data.annotationFlags &&            // Default: not invisible
+                data.annotationFlags & 0x1);       // Invisible
+    },
+
+    isViewable: function Annotation_isViewable() {
+      var data = this.data;
+      return !!(!this.isInvisible() &&
+                data &&
+                (!data.annotationFlags ||
+                 !(data.annotationFlags & 0x22)) &&  // Hidden or NoView
+                data.rect);                          // rectangle is necessary
+    },
+
+    isPrintable: function Annotation_isPrintable() {
+      var data = this.data;
+      return !!(!this.isInvisible() &&
+                data &&
+                data.annotationFlags &&              // Default: not printable
+                data.annotationFlags & 0x4 &&        // Print
+                !(data.annotationFlags & 0x2) &&     // Hidden
+                data.rect);                          // rectangle is necessary
+    },
+
     loadResources: function Annotation_loadResources(keys) {
       return new Promise(function (resolve, reject) {
         this.appearance.dict.getAsync('Resources').then(function (resources) {
@@ -4788,8 +4719,8 @@ var Annotation = (function AnnotationClosure() {
 
     var annotationPromises = [];
     for (var i = 0, n = annotations.length; i < n; ++i) {
-      if (intent === 'display' && annotations[i].viewable ||
-          intent === 'print' && annotations[i].printable) {
+      if (intent === 'display' && annotations[i].isViewable() ||
+          intent === 'print' && annotations[i].isPrintable()) {
         annotationPromises.push(
           annotations[i].getOperatorList(partialEvaluator, task));
       }
@@ -4965,12 +4896,6 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
     data.fieldFlags = Util.getInheritableProperty(dict, 'Ff') || 0;
     this.fieldResources = Util.getInheritableProperty(dict, 'DR') || Dict.empty;
 
-    // Hide unsupported Widget signatures.
-    if (data.fieldType === 'Sig') {
-      warn('unimplemented annotation type: Widget signature');
-      this.setFlags(AnnotationFlag.HIDDEN);
-    }
-
     // Building the full field name by collecting the field and
     // its ancestors 'T' data and joining them using '.'.
     var fieldName = [];
@@ -5004,7 +4929,17 @@ var WidgetAnnotation = (function WidgetAnnotationClosure() {
     data.fullName = fieldName.join('.');
   }
 
-  Util.inherit(WidgetAnnotation, Annotation, {});
+  var parent = Annotation.prototype;
+  Util.inherit(WidgetAnnotation, Annotation, {
+    isViewable: function WidgetAnnotation_isViewable() {
+      if (this.data.fieldType === 'Sig') {
+        warn('unimplemented annotation type: Widget signature');
+        return false;
+      }
+
+      return parent.isViewable.call(this);
+    }
+  });
 
   return WidgetAnnotation;
 })();
@@ -5103,7 +5038,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         if (!isValidUrl(url, false)) {
           url = '';
         }
-        // According to ISO 32000-1:2008, section 12.6.4.7,
+        // According to ISO 32000-1:2008, section 12.6.4.7, 
         // URI should to be encoded in 7-bit ASCII.
         // Some bad PDFs may have URIs in UTF-8 encoding, see Bugzilla 1122280.
         try {
@@ -10835,7 +10770,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       // Keep track of each font we translated so the caller can
       // load them asynchronously before calling display on a page.
-      font.loadedName = 'g_' + this.pdfManager.docId + '_f' + (fontRefIsDict ?
+      font.loadedName = 'g_font_' + (fontRefIsDict ?
         fontName.replace(/\W/g, '') : fontID);
 
       font.translated = fontCapability.promise;
@@ -11214,14 +11149,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       });
     },
 
-    getTextContent:
-        function PartialEvaluator_getTextContent(stream, task, resources,
-                                                 stateManager,
-                                                 normalizeWhitespace) {
+    getTextContent: function PartialEvaluator_getTextContent(stream, task,
+                                                             resources,
+                                                             stateManager) {
 
       stateManager = (stateManager || new StateManager(new TextState()));
-
-      var WhitespaceRegexp = /\s/g;
 
       var textContent = {
         items: [],
@@ -11336,23 +11268,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         return textContentItem;
       }
 
-      function replaceWhitespace(str) {
-        // Replaces all whitespaces with standard spaces (0x20), to avoid
-        // alignment issues between the textLayer and the canvas if the text
-        // contains e.g. tabs (fixes issue6612.pdf).
-        var i = 0, ii = str.length, code;
-        while (i < ii && (code = str.charCodeAt(i)) >= 0x20 && code <= 0x7F) {
-          i++;
-        }
-        return (i < ii ? str.replace(WhitespaceRegexp, ' ') : str);
-      }
-
       function runBidiTransform(textChunk) {
         var str = textChunk.str.join('');
         var bidiResult = PDFJS.bidi(str, -1, textChunk.vertical);
         return {
-          str: (normalizeWhitespace ? replaceWhitespace(bidiResult.str) :
-                                      bidiResult.str),
+          str: bidiResult.str,
           dir: bidiResult.dir,
           width: textChunk.width,
           height: textChunk.height,
@@ -11673,8 +11593,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               }
 
               return self.getTextContent(xobj, task,
-                xobj.dict.get('Resources') || resources, stateManager,
-                normalizeWhitespace).then(function (formTextContent) {
+                xobj.dict.get('Resources') || resources, stateManager).
+                then(function (formTextContent) {
                   Util.appendToArray(textContent.items, formTextContent.items);
                   Util.extendObj(textContent.styles, formTextContent.styles);
                   stateManager.restore();
@@ -33917,50 +33837,11 @@ var WorkerTask = (function WorkerTaskClosure() {
 })();
 
 var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
-  setup: function wphSetup(handler, port) {
-    handler.on('test', function wphSetupTest(data) {
-      // check if Uint8Array can be sent to worker
-      if (!(data instanceof Uint8Array)) {
-        handler.send('test', 'main', false);
-        return;
-      }
-      // making sure postMessage transfers are working
-      var supportTransfers = data[0] === 255;
-      handler.postMessageTransfers = supportTransfers;
-      // check if the response property is supported by xhr
-      var xhr = new XMLHttpRequest();
-      var responseExists = 'response' in xhr;
-      // check if the property is actually implemented
-      try {
-        var dummy = xhr.responseType;
-      } catch (e) {
-        responseExists = false;
-      }
-      if (!responseExists) {
-        handler.send('test', false);
-        return;
-      }
-      handler.send('test', {
-        supportTypedArray: true,
-        supportTransfers: supportTransfers
-      });
-    });
-
-    handler.on('GetDocRequest', function wphSetupDoc(data) {
-      return WorkerMessageHandler.createDocumentHandler(data, port);
-    });
-  },
-  createDocumentHandler: function wphCreateDocumentHandler(docParams, port) {
-    // This context is actually holds references on pdfManager and handler,
-    // until the latter is destroyed.
+  setup: function wphSetup(handler) {
     var pdfManager;
     var terminated = false;
     var cancelXHRs = null;
     var WorkerTasks = [];
-
-    var docId = docParams.docId;
-    var workerHandlerName = docParams.docId + '_worker';
-    var handler = new MessageHandler(workerHandlerName, docId, port);
 
     function ensureNotTerminated() {
       if (terminated) {
@@ -34019,7 +33900,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       var disableRange = data.disableRange;
       if (source.data) {
         try {
-          pdfManager = new LocalPdfManager(docId, source.data, source.password);
+          pdfManager = new LocalPdfManager(source.data, source.password);
           pdfManagerCapability.resolve(pdfManager);
         } catch (ex) {
           pdfManagerCapability.reject(ex);
@@ -34027,7 +33908,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         return pdfManagerCapability.promise;
       } else if (source.chunkedViewerLoading) {
         try {
-          pdfManager = new NetworkPdfManager(docId, source, handler);
+          pdfManager = new NetworkPdfManager(source, handler);
           pdfManagerCapability.resolve(pdfManager);
         } catch (ex) {
           pdfManagerCapability.reject(ex);
@@ -34084,7 +33965,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
           }
 
           try {
-            pdfManager = new NetworkPdfManager(docId, source, handler);
+            pdfManager = new NetworkPdfManager(source, handler);
             pdfManagerCapability.resolve(pdfManager);
           } catch (ex) {
             pdfManagerCapability.reject(ex);
@@ -34129,7 +34010,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
           // the data is array, instantiating directly from it
           try {
-            pdfManager = new LocalPdfManager(docId, pdfFile, source.password);
+            pdfManager = new LocalPdfManager(pdfFile, source.password);
             pdfManagerCapability.resolve(pdfManager);
           } catch (ex) {
             pdfManagerCapability.reject(ex);
@@ -34167,7 +34048,35 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       return pdfManagerCapability.promise;
     }
 
-    var setupDoc = function(data) {
+    handler.on('test', function wphSetupTest(data) {
+      // check if Uint8Array can be sent to worker
+      if (!(data instanceof Uint8Array)) {
+        handler.send('test', false);
+        return;
+      }
+      // making sure postMessage transfers are working
+      var supportTransfers = data[0] === 255;
+      handler.postMessageTransfers = supportTransfers;
+      // check if the response property is supported by xhr
+      var xhr = new XMLHttpRequest();
+      var responseExists = 'response' in xhr;
+      // check if the property is actually implemented
+      try {
+        var dummy = xhr.responseType;
+      } catch (e) {
+        responseExists = false;
+      }
+      if (!responseExists) {
+        handler.send('test', false);
+        return;
+      }
+      handler.send('test', {
+        supportTypedArray: true,
+        supportTransfers: supportTransfers
+      });
+    });
+
+    handler.on('GetDocRequest', function wphSetupDoc(data) {
       var onSuccess = function(doc) {
         ensureNotTerminated();
         handler.send('GetDoc', { pdfInfo: doc });
@@ -34212,6 +34121,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         }
 
         pdfManager = newPdfManager;
+
         handler.send('PDFManagerReady', null);
         pdfManager.onLoadedStream().then(function(stream) {
           handler.send('DataLoaded', { length: stream.bytes.byteLength });
@@ -34242,7 +34152,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
           });
         }, onFailure);
       }, onFailure);
-    };
+    });
 
     handler.on('GetPage', function wphSetupGetPage(data) {
       return pdfManager.getPage(data.pageIndex).then(function(page) {
@@ -34275,7 +34185,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
     handler.on('GetDestination',
       function wphSetupGetDestination(data) {
-        return pdfManager.ensureCatalog('getDestination', [data.id]);
+        return pdfManager.ensureCatalog('getDestination', [ data.id ]);
       }
     );
 
@@ -34323,7 +34233,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
     handler.on('GetAnnotations', function wphSetupGetAnnotations(data) {
       return pdfManager.getPage(data.pageIndex).then(function(page) {
-        return pdfManager.ensure(page, 'getAnnotationsData', [data.intent]);
+        return pdfManager.ensure(page, 'getAnnotationsData', []);
       });
     });
 
@@ -34382,14 +34292,12 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
     handler.on('GetTextContent', function wphExtractText(data) {
       var pageIndex = data.pageIndex;
-      var normalizeWhitespace = data.normalizeWhitespace;
       return pdfManager.getPage(pageIndex).then(function(page) {
         var task = new WorkerTask('GetTextContent: page ' + pageIndex);
         startWorkerTask(task);
         var pageNum = pageIndex + 1;
         var start = Date.now();
-        return page.extractTextContent(task, normalizeWhitespace).then(
-            function(textContent) {
+        return page.extractTextContent(task).then(function(textContent) {
           finishWorkerTask(task);
           info('text indexing: page=' + pageNum + ' - time=' +
                (Date.now() - start) + 'ms');
@@ -34424,19 +34332,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         task.terminate();
       });
 
-      return Promise.all(waitOn).then(function () {
-        // Notice that even if we destroying handler, resolved response promise
-        // must be sent back.
-        handler.destroy();
-        handler = null;
-      });
+      return Promise.all(waitOn).then(function () {});
     });
-
-    handler.on('Ready', function wphReady(data) {
-      setupDoc(docParams);
-      docParams = null; // we don't need docParams anymore -- saving memory.
-    });
-    return workerHandlerName;
   }
 };
 
@@ -34446,7 +34343,6 @@ var workerConsole = {
   log: function log() {
     var args = Array.prototype.slice.call(arguments);
     globalScope.postMessage({
-      targetName: 'main',
       action: 'console_log',
       data: args
     });
@@ -34455,7 +34351,6 @@ var workerConsole = {
   error: function error() {
     var args = Array.prototype.slice.call(arguments);
     globalScope.postMessage({
-      targetName: 'main',
       action: 'console_error',
       data: args
     });
@@ -34485,14 +34380,13 @@ if (typeof window === 'undefined') {
   // Listen for unsupported features so we can pass them on to the main thread.
   PDFJS.UnsupportedManager.listen(function (msg) {
     globalScope.postMessage({
-      targetName: 'main',
       action: '_unsupported_feature',
       data: msg
     });
   });
 
-  var handler = new MessageHandler('worker', 'main', this);
-  WorkerMessageHandler.setup(handler, this);
+  var handler = new MessageHandler('worker_processor', this);
+  WorkerMessageHandler.setup(handler);
 }
 
 
