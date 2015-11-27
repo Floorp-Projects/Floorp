@@ -112,6 +112,8 @@ nsXMLContentSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
 
   mDoWrap = (mFlags & nsIDocumentEncoder::OutputWrap && !mDoRaw);
 
+  mAllowLineBreaking = !(mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
+
   if (!aWrapColumn) {
     mMaxColumn = 72;
   }
@@ -1539,22 +1541,24 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
         // we must wrap
         onceAgainBecauseWeAddedBreakInFront = false;
         bool foundWrapPosition = false;
-        int32_t wrapPosition;
+        int32_t wrapPosition = 0;
 
-        nsILineBreaker *lineBreaker = nsContentUtils::LineBreaker();
+        if (mAllowLineBreaking) {
+          nsILineBreaker *lineBreaker = nsContentUtils::LineBreaker();
 
-        wrapPosition = lineBreaker->Prev(aSequenceStart,
-                                         (aEnd - aSequenceStart),
-                                         (aPos - aSequenceStart) + 1);
-        if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
-          foundWrapPosition = true;
-        }
-        else {
-          wrapPosition = lineBreaker->Next(aSequenceStart,
+          wrapPosition = lineBreaker->Prev(aSequenceStart,
                                            (aEnd - aSequenceStart),
-                                           (aPos - aSequenceStart));
+                                           (aPos - aSequenceStart) + 1);
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = true;
+          }
+          else {
+            wrapPosition = lineBreaker->Next(aSequenceStart,
+                                             (aEnd - aSequenceStart),
+                                             (aPos - aSequenceStart));
+            if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
+              foundWrapPosition = true;
+            }
           }
         }
 
