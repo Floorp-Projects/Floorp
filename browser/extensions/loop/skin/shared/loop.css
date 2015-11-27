@@ -1,0 +1,280 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Only apply to browser.xul documents */
+@-moz-document url("chrome://browser/content/browser.xul") {
+  /*
+     XXX Copied from browser/themes/<platform>/browser.css. Should really be
+     changing the sizes of icons in files to 16px x 16px and no borders.
+   */
+  :-moz-any(toolbar, .widget-overflow-list) #loop-button > .toolbarbutton-icon,
+  :-moz-any(toolbar, .widget-overflow-list) #loop-button > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+    max-width: 18px;
+    margin: 0;
+  }
+
+  #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/toolbar.png);
+    -moz-image-region: rect(0, 18px, 18px, 0);
+  }
+
+  toolbar[brighttext] #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/toolbar-inverted.png);
+  }
+
+  #loop-button[state="disabled"],
+  #loop-button[disabled="true"] {
+    -moz-image-region: rect(0, 36px, 18px, 18px);
+  }
+
+  #loop-button:not([disabled="true"])[state="error"] {
+    -moz-image-region: rect(0, 54px, 18px, 36px);
+  }
+
+  #loop-button:not([disabled="true"])[state="action"] {
+    -moz-image-region: rect(0, 72px, 18px, 54px);
+  }
+
+  #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 90px, 18px, 72px);
+  }
+
+  #loop-button:not([disabled="true"])[state="active"] {
+    -moz-image-region: rect(0, 108px, 18px, 90px);
+  }
+
+  #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 126px, 18px, 108px);
+  }
+
+  @media (min-resolution: 1.1dppx) {
+    #loop-button {
+      list-style-image: url("chrome://browser/skin/loop/toolbar@2x.png");
+      -moz-image-region: rect(0, 36px, 36px, 0);
+    }
+
+    toolbar[brighttext] #loop-button {
+      list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
+    }
+
+    #loop-button[state="disabled"],
+    #loop-button[disabled="true"] {
+      -moz-image-region: rect(0, 72px, 36px, 36px);
+    }
+
+    #loop-button:not([disabled="true"])[state="error"] {
+      -moz-image-region: rect(0, 108px, 36px, 72px);
+    }
+
+    #loop-button:not([disabled="true"])[state="action"] {
+      -moz-image-region: rect(0, 144px, 36px, 108px);
+    }
+
+    #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 180px, 36px, 144px);
+    }
+
+    #loop-button:not([disabled="true"])[state="active"] {
+      -moz-image-region: rect(0, 216px, 36px, 180px);
+    }
+
+    #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 252px, 36px, 216px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"],
+    toolbarpaletteitem[place="palette"] > #loop-button {
+      list-style-image: url(chrome://browser/skin/loop/menuPanel@2x.png);
+      -moz-image-region: rect(0, 64px, 64px, 0);
+    }
+
+    /* Make sure that the state icons are not shown in the customization palette. */
+    toolbarpaletteitem[place="palette"] > #loop-button {
+      -moz-image-region: rect(0, 64px, 64px, 0) !important;
+    }
+
+    #loop-button[cui-areatype="menu-panel"][state="disabled"],
+    #loop-button[cui-areatype="menu-panel"][disabled="true"] {
+      -moz-image-region: rect(0, 128px, 64px, 64px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] {
+      -moz-image-region: rect(0, 192px, 64px, 128px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] {
+      -moz-image-region: rect(0, 256px, 64px, 192px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 320px, 64px, 256px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] {
+      -moz-image-region: rect(0, 384px, 64px, 320px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 448px, 64px, 384px);
+    }
+  }
+
+  @media not all and (min-resolution: 1.1dppx) {
+    #loop-button[cui-areatype="menu-panel"],
+    toolbarpaletteitem[place="palette"] > #loop-button {
+      list-style-image: url(chrome://browser/skin/loop/menuPanel.png);
+      -moz-image-region: rect(0, 32px, 32px, 0);
+    }
+
+    /* Make sure that the state icons are not shown in the customization palette. */
+    toolbarpaletteitem[place="palette"] > #loop-button {
+      -moz-image-region: rect(0, 32px, 32px, 0) !important;
+    }
+
+    #loop-button[cui-areatype="menu-panel"][state="disabled"],
+    #loop-button[cui-areatype="menu-panel"][disabled="true"] {
+      -moz-image-region: rect(0, 64px, 32px, 32px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] {
+      -moz-image-region: rect(0, 96px, 32px, 64px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] {
+      -moz-image-region: rect(0, 128px, 32px, 96px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 160px, 32px, 128px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] {
+      -moz-image-region: rect(0, 192px, 32px, 160px);
+    }
+
+    #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+      -moz-image-region: rect(0, 224px, 32px, 192px);
+    }
+  }
+
+  notification[value="loop-sharing-notification"] {
+    -moz-appearance: none;
+    height: 40px;
+    background-color: #00a9dc;
+    box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+  }
+
+  notification[value="loop-sharing-notification"].paused {
+    background-color: #ebebeb;
+  }
+
+  notification[value="loop-sharing-notification"] .notification-inner {
+    color: #fff;
+    padding: 0;
+  }
+
+  notification[value="loop-sharing-notification"].paused .notification-inner {
+    color: #00a9dc;
+  }
+
+  notification[value="loop-sharing-notification"] .notification-button {
+    -moz-appearance: none;
+    background-color: #fff;
+    border: 0;
+    border-right: solid 1px #ebebeb;
+    width: 100px;
+    height: 40px;
+    margin: 0;
+    list-style-image: url(chrome://browser/content/loop/shared/img/pause-12x12.svg);
+    box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+    text-shadow: none;
+  }
+
+  notification[value="loop-sharing-notification"] .notification-button:-moz-locale-dir(rtl) {
+    border-right: 0;
+    border-left: solid 1px #ebebeb;
+  }
+
+  notification[value="loop-sharing-notification"].paused .notification-button {
+    background-color: #57bd35;
+    color: #fff;
+    list-style-image: url(chrome://browser/content/loop/shared/img/play-12x12.svg);
+  }
+
+  notification[value="loop-sharing-notification"].paused .notification-button:hover {
+    background-color: #39a017;
+  }
+
+  notification[value="loop-sharing-notification"] .notification-button:hover,
+  notification[value="loop-sharing-notification"].paused .notification-button-default:hover {
+    background-color: #ebebeb;
+  }
+
+  notification[value="loop-sharing-notification"] .notification-button-default,
+  notification[value="loop-sharing-notification"].paused .notification-button-default {
+    color: #d92215;
+    background-color: #fff;
+    border-right: 0;
+    list-style-image: url(chrome://browser/content/loop/shared/img/stop-12x12.svg);
+  }
+
+  notification[value="loop-sharing-notification"] .notification-button .button-icon {
+    display: block;
+    -moz-margin-end: 6px;
+  }
+
+  notification[value="loop-sharing-notification"] .button-menubutton-button {
+    min-width: 0;
+  }
+
+  notification[value="loop-sharing-notification"] .messageImage {
+    list-style-image: url(chrome://browser/content/loop/shared/img/icons-16x16.svg#loop-icon-white);
+    margin-inline-start: 14px;
+  }
+
+  notification[value="loop-sharing-notification"].paused .messageImage {
+    list-style-image: url(chrome://browser/content/loop/shared/img/icons-16x16.svg#loop-icon-still);
+  }
+
+  notification[value="loop-sharing-notification"] .close-icon {
+    display: none;
+  }
+
+  chatbox[src^="about:loopconversation#"] > .chat-titlebar {
+    background-color: #00a9dc;
+    border-color: #00a9dc;
+  }
+
+  chatbox[src^="about:loopconversation#"] .chat-title {
+    color: white;
+  }
+
+  chatbox[src^="about:loopconversation#"] .chat-minimize-button {
+    list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-white");
+  }
+
+  chatbox[src^="about:loopconversation#"] .chat-swap-button {
+    list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-white");
+  }
+
+  .chat-loop-hangup {
+    list-style-image: url("chrome://browser/skin/social/chat-icons.svg#exit-white");
+    background-color: #d13f1a;
+    border: 1px solid #d13f1a;
+    border-top-right-radius: 4px;
+    width: 32px;
+    height: 26px;
+    margin-top: -6px;
+    margin-bottom: -5px;
+    -moz-margin-start: 6px;
+    -moz-margin-end: -5px;
+  }
+
+  .chat-toolbarbutton.chat-loop-hangup:-moz-any(:hover,:hover:active) {
+    background-color: #ef6745;
+    border-color: #ef6745;
+  }
+}
