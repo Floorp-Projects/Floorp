@@ -4,11 +4,14 @@
 
 this.EXPORTED_SYMBOLS = ["WebVTT"];
 
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+
 /**
  * Code below is vtt.js the JS WebVTT implementation.
  * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit 364c6b951a07306848a706d1d03c2a6ae942517d
+ * Code taken from commit 789a540b534169946fb767f200cedaed2f6c1b53
  */
 /**
  * Copyright 2013 vtt.js Contributors
