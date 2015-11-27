@@ -693,6 +693,10 @@ class TreeMetadataEmitter(LoggingMixin):
             all_files = context.get(var)
             if not all_files:
                 continue
+            if dist_install is False:
+                raise SandboxValidationError(
+                    '%s cannot be used with DIST_INSTALL = False' % var,
+                    context)
             for _, files in all_files.walk():
                 for f in files:
                     path = os.path.join(context.srcdir, f)
