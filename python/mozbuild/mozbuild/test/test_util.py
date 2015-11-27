@@ -292,6 +292,33 @@ class TestHierarchicalStringList(unittest.TestCase):
                                     'grandchild213', 'grandchild214']),
         ])
 
+    def test_merge(self):
+        l1 = HierarchicalStringList()
+        l1 += ['root1', 'root2', 'root3']
+        l1.child1 += ['child11', 'child12', 'child13']
+        l1.child1.grandchild1 += ['grandchild111', 'grandchild112']
+        l1.child1.grandchild2 += ['grandchild121', 'grandchild122']
+        l1.child2.grandchild1 += ['grandchild211', 'grandchild212']
+        l1.child2.grandchild1 += ['grandchild213', 'grandchild214']
+        l2 = HierarchicalStringList()
+        l2.child1 += ['child14', 'child15']
+        l2.child1.grandchild2 += ['grandchild123']
+        l2.child3 += ['child31', 'child32']
+
+        l1 += l2
+        els = list((path, list(seq)) for path, seq in l1.walk())
+        self.assertEqual(els, [
+            ('', ['root1', 'root2', 'root3']),
+            ('child1', ['child11', 'child12', 'child13', 'child14',
+                        'child15']),
+            ('child1/grandchild1', ['grandchild111', 'grandchild112']),
+            ('child1/grandchild2', ['grandchild121', 'grandchild122',
+                                    'grandchild123']),
+            ('child2/grandchild1', ['grandchild211', 'grandchild212',
+                                    'grandchild213', 'grandchild214']),
+            ('child3', ['child31', 'child32']),
+        ])
+
 
 class TestStrictOrderingOnAppendList(unittest.TestCase):
     def test_init(self):

@@ -554,8 +554,13 @@ class HierarchicalStringList(object):
         raise MozbuildDeletionError('Unable to delete attributes for this object')
 
     def __iadd__(self, other):
-        self._check_list(other)
-        self._strings += other
+        if isinstance(other, HierarchicalStringList):
+            self._strings += other._strings
+            for c in other._children:
+                self[c] += other[c]
+        else:
+            self._check_list(other)
+            self._strings += other
         return self
 
     def __getitem__(self, name):
