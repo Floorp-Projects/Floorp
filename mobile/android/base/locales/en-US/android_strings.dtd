@@ -717,10 +717,15 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- Localization note: These are features the device owner (e.g. parent) can enable or disable for
      a restricted profile (e.g. child). Used inside the Android settings UI. -->
 <!ENTITY restrictable_feature_addons_installation "Add-ons">
+<!ENTITY restrictable_feature_addons_installation_description "Add features or functionality to Firefox. Note: Add-ons can disable certain restrictions.">
 <!ENTITY restrictable_feature_private_browsing "Private Browsing">
+<!ENTITY restrictable_feature_private_browsing_description "Allows family members to browse without saving information about the sites and pages they\'ve visited.">
 <!ENTITY restrictable_feature_clear_history "Clear History">
+<!ENTITY restrictable_feature_clear_history_description "Allows family members to delete information about the sites and pages they\'ve visited.">
 <!ENTITY restrictable_feature_advanced_settings "Advanced Settings">
+<!ENTITY restrictable_feature_advanced_settings_description "This includes importing bookmarks, restoring tabs and automated updates. Turn off for simplified settings suitable for any family member.">
 <!ENTITY restrictable_feature_camera_microphone "Camera &amp; Microphone">
+<!ENTITY restrictable_feature_camera_microphone_description "Allows family members to engage in real time communication on websites.">
 
 <!-- Default Bookmarks titles-->
 <!-- LOCALIZATION NOTE (bookmarks_about_browser): link title for about:fennec -->

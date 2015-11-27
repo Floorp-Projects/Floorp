@@ -566,10 +566,15 @@
 
   <!-- Restrictable features -->
   <string name="restrictable_feature_addons_installation">&restrictable_feature_addons_installation;</string>
+  <string name="restrictable_feature_addons_installation_description">&restrictable_feature_addons_installation_description;</string>
   <string name="restrictable_feature_private_browsing">&restrictable_feature_private_browsing;</string>
+  <string name="restrictable_feature_private_browsing_description">&restrictable_feature_private_browsing_description;</string>
   <string name="restrictable_feature_clear_history">&restrictable_feature_clear_history;</string>
+  <string name="restrictable_feature_clear_history_description">&restrictable_feature_clear_history_description;</string>
   <string name="restrictable_feature_advanced_settings">&restrictable_feature_advanced_settings;</string>
+  <string name="restrictable_feature_advanced_settings_description">&restrictable_feature_advanced_settings_description;</string>
   <string name="restrictable_feature_camera_microphone">&restrictable_feature_camera_microphone;</string>
+  <string name="restrictable_feature_camera_microphone_description">&restrictable_feature_camera_microphone_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
