@@ -55,46 +55,130 @@ ServiceWorkerClients::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 namespace {
 
-class ResolvePromiseWorkerRunnable final : public WorkerRunnable
+class GetRunnable final : public nsRunnable
 {
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  nsTArray<ServiceWorkerClientInfo> mValue;
-
-public:
-  ResolvePromiseWorkerRunnable(WorkerPrivate* aWorkerPrivate,
-                               PromiseWorkerProxy* aPromiseProxy,
-                               nsTArray<ServiceWorkerClientInfo>& aValue)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
-      mPromiseProxy(aPromiseProxy)
+  class ResolvePromiseWorkerRunnable final : public WorkerRunnable
   {
-    AssertIsOnMainThread();
-    mValue.SwapElements(aValue);
-  }
+    RefPtr<PromiseWorkerProxy> mPromiseProxy;
+    UniquePtr<ServiceWorkerClientInfo> mValue;
+    nsresult mRv;
 
-  bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    Promise* promise = mPromiseProxy->WorkerPromise();
-    MOZ_ASSERT(promise);
-
-    nsTArray<RefPtr<ServiceWorkerClient>> ret;
-    for (size_t i = 0; i < mValue.Length(); i++) {
-      ret.AppendElement(RefPtr<ServiceWorkerClient>(
-            new ServiceWorkerWindowClient(promise->GetParentObject(),
-                                          mValue.ElementAt(i))));
+  public:
+    ResolvePromiseWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                                 PromiseWorkerProxy* aPromiseProxy,
+                                 UniquePtr<ServiceWorkerClientInfo>&& aValue,
+                                 nsresult aRv)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+        mPromiseProxy(aPromiseProxy),
+        mValue(Move(aValue)),
+        mRv(Move(aRv))
+    {
+      AssertIsOnMainThread();
     }
 
-    promise->MaybeResolve(ret);
-    mPromiseProxy->CleanUp(aCx);
-    return true;
+    bool
+    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+    {
+      MOZ_ASSERT(aWorkerPrivate);
+      aWorkerPrivate->AssertIsOnWorkerThread();
+
+      Promise* promise = mPromiseProxy->WorkerPromise();
+      MOZ_ASSERT(promise);
+
+      if (NS_FAILED(mRv)) {
+        promise->MaybeReject(mRv);
+      } else if (mValue) {
+        RefPtr<ServiceWorkerWindowClient> windowClient =
+          new ServiceWorkerWindowClient(promise->GetParentObject(), *mValue);
+        promise->MaybeResolve(windowClient.get());
+      } else {
+        promise->MaybeResolve(JS::UndefinedHandleValue);
+      }
+      mPromiseProxy->CleanUp(aCx);
+      return true;
+    }
+  };
+
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
+  nsString mClientId;
+public:
+  GetRunnable(PromiseWorkerProxy* aPromiseProxy,
+              const nsAString& aClientId)
+    : mPromiseProxy(aPromiseProxy),
+      mClientId(aClientId)
+  {
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    AssertIsOnMainThread();
+
+    MutexAutoLock lock(mPromiseProxy->Lock());
+    if (mPromiseProxy->CleanedUp()) {
+      return NS_OK;
+    }
+
+    WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    ErrorResult rv;
+    UniquePtr<ServiceWorkerClientInfo> result = swm->GetClient(workerPrivate->GetPrincipal(),
+                                                               mClientId, rv);
+    RefPtr<ResolvePromiseWorkerRunnable> r =
+      new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
+                                       mPromiseProxy, Move(result),
+                                       rv.StealNSResult());
+    rv.SuppressException();
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    r->Dispatch(jsapi.cx());
+    return NS_OK;
   }
 };
 
 class MatchAllRunnable final : public nsRunnable
 {
+  class ResolvePromiseWorkerRunnable final : public WorkerRunnable
+  {
+    RefPtr<PromiseWorkerProxy> mPromiseProxy;
+    nsTArray<ServiceWorkerClientInfo> mValue;
+
+  public:
+    ResolvePromiseWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                                 PromiseWorkerProxy* aPromiseProxy,
+                                 nsTArray<ServiceWorkerClientInfo>& aValue)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+        mPromiseProxy(aPromiseProxy)
+    {
+      AssertIsOnMainThread();
+      mValue.SwapElements(aValue);
+    }
+
+    bool
+    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+    {
+      MOZ_ASSERT(aWorkerPrivate);
+      aWorkerPrivate->AssertIsOnWorkerThread();
+
+      Promise* promise = mPromiseProxy->WorkerPromise();
+      MOZ_ASSERT(promise);
+
+      nsTArray<RefPtr<ServiceWorkerClient>> ret;
+      for (size_t i = 0; i < mValue.Length(); i++) {
+        ret.AppendElement(RefPtr<ServiceWorkerClient>(
+              new ServiceWorkerWindowClient(promise->GetParentObject(),
+                                            mValue.ElementAt(i))));
+      }
+
+      promise->MaybeResolve(ret);
+      mPromiseProxy->CleanUp(aCx);
+      return true;
+    }
+  };
+
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
 public:
@@ -568,6 +652,31 @@ private:
 };
 
 } // namespace
+
+already_AddRefed<Promise>
+ServiceWorkerClients::Get(const nsAString& aClientId, ErrorResult& aRv)
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+  workerPrivate->AssertIsOnWorkerThread();
+
+  RefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<PromiseWorkerProxy> promiseProxy =
+    PromiseWorkerProxy::Create(workerPrivate, promise);
+  if (!promiseProxy) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
+  RefPtr<GetRunnable> r =
+    new GetRunnable(promiseProxy, aClientId);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+  return promise.forget();
+}
 
 already_AddRefed<Promise>
 ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
