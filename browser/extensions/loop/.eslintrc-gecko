@@ -42,6 +42,7 @@
     "MozLoopPushHandler": true,
     "MozLoopService": true,
     "OS": false,
+    "PrivateBrowsingUtils": false,
     "roomsPushNotification": true,
     "Services": false,
     "Social": false,
