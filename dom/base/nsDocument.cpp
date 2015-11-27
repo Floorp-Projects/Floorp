@@ -240,6 +240,7 @@
 #include "mozilla/dom/BoxObject.h"
 #include "gfxVR.h"
 #include "gfxPrefs.h"
+#include "nsISupportsPrimitives.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 
@@ -1644,6 +1645,11 @@ nsDocument::~nsDocument()
   mImageTracker.Clear();
 
   mPlugins.Clear();
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->RemoveObserver(this, "service-worker-get-client");
+  }
 }
 
 NS_INTERFACE_TABLE_HEAD(nsDocument)
@@ -2044,6 +2050,11 @@ nsDocument::Init()
   mScriptLoader = new nsScriptLoader(this);
 
   mozilla::HoldJSObjects(this);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->AddObserver(this, "service-worker-get-client", /* ownsWeak */ true);
+  }
 
   return NS_OK;
 }
@@ -12204,6 +12215,16 @@ nsDocument::Observe(nsISupports *aSubject,
         !IsUnstyledDocument()) {
       // We don't want to style the chrome window, only app ones.
       OnAppThemeChanged();
+    }
+  } else if (strcmp("service-worker-get-client", aTopic) == 0) {
+    nsAutoString clientId;
+    GetOrCreateId(clientId);
+    if (!clientId.IsEmpty() && clientId.Equals(aData)) {
+      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_QueryInterface(aSubject);
+      if (ifptr) {
+        ifptr->SetData(static_cast<nsIDocument*>(this));
+        ifptr->SetDataIID(&NS_GET_IID(nsIDocument));
+      }
     }
   }
   return NS_OK;
