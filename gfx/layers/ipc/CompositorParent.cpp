@@ -1664,11 +1664,13 @@ CompositorParent::SetControllerForLayerTree(uint64_t aLayersId,
 CompositorParent::GetAPZCTreeManager(uint64_t aLayersId)
 {
   EnsureLayerTreeMapReady();
-  const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
-  if (state && state->mParent) {
-    return state->mParent->mApzcTreeManager;
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aLayersId);
+  if (sIndirectLayerTrees.end() == cit) {
+    return nullptr;
   }
-  return nullptr;
+  LayerTreeState* lts = &cit->second;
+  return (lts->mParent ? lts->mParent->mApzcTreeManager.get() : nullptr);
 }
 
 float

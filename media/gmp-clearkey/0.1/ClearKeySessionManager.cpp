@@ -101,8 +101,9 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
 {
   CK_LOGD("ClearKeySessionManager::CreateSession type:%s", aInitDataType);
 
-  // initDataType must be "cenc".
-  if (strcmp("cenc", aInitDataType)) {
+  string initDataType(aInitDataType, aInitDataType + aInitDataTypeSize);
+  // initDataType must be "cenc" or "keyids".
+  if (initDataType != "cenc" && initDataType != "keyids") {
     mCallback->RejectPromise(aPromiseId, kGMPNotSupportedError,
                              nullptr /* message */, 0 /* messageLen */);
     return;
@@ -111,6 +112,7 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
   if (ClearKeyPersistence::DeferCreateSessionIfNotReady(this,
                                                         aCreateSessionToken,
                                                         aPromiseId,
+                                                        initDataType,
                                                         aInitData,
                                                         aInitDataSize,
                                                         aSessionType)) {
@@ -121,7 +123,7 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
   assert(mSessions.find(sessionId) == mSessions.end());
 
   ClearKeySession* session = new ClearKeySession(sessionId, mCallback, aSessionType);
-  session->Init(aCreateSessionToken, aPromiseId, aInitData, aInitDataSize);
+  session->Init(aCreateSessionToken, aPromiseId, initDataType, aInitData, aInitDataSize);
   mSessions[sessionId] = session;
 
   const vector<KeyId>& sessionKeys = session->GetKeyIds();

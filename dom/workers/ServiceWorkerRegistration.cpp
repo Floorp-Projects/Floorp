@@ -250,6 +250,19 @@ ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhich
   if (aWhichOnes & WhichServiceWorker::ACTIVE_WORKER) {
     mActiveWorker = nullptr;
   }
+
+}
+
+void
+ServiceWorkerRegistrationMainThread::RegistrationRemoved()
+{
+  // If the registration is being removed completely, remove it from the
+  // window registration hash table so that a new registration would get a new
+  // wrapper JS object.
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  if (window) {
+    window->InvalidateServiceWorkerRegistration(mScope);
+  }
 }
 
 namespace {
@@ -266,8 +279,7 @@ UpdateInternal(nsIPrincipal* aPrincipal,
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
 
-  // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
-  swm->SoftUpdate(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
+  swm->Update(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
 
 class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
@@ -393,14 +405,22 @@ public:
     AssertIsOnMainThread();
     ErrorResult result;
 
-    MutexAutoLock lock(mPromiseProxy->Lock());
-    if (mPromiseProxy->CleanedUp()) {
-      return NS_OK;
+    nsCOMPtr<nsIPrincipal> principal;
+    // UpdateInternal may try to reject the promise synchronously leading
+    // to a deadlock.
+    {
+      MutexAutoLock lock(mPromiseProxy->Lock());
+      if (mPromiseProxy->CleanedUp()) {
+        return NS_OK;
+      }
+
+      principal = mPromiseProxy->GetWorkerPrivate()->GetPrincipal();
     }
+    MOZ_ASSERT(principal);
 
     RefPtr<WorkerThreadUpdateCallback> cb =
       new WorkerThreadUpdateCallback(mPromiseProxy);
-    UpdateInternal(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope, cb);
+    UpdateInternal(principal, mScope, cb);
     return NS_OK;
   }
 
@@ -855,6 +875,12 @@ public:
   {
     AssertIsOnMainThread();
     // FIXME(nsm);
+  }
+
+  void
+  RegistrationRemoved() override
+  {
+    AssertIsOnMainThread();
   }
 
   void

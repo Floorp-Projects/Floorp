@@ -2807,22 +2807,20 @@ ContentChild::RecvOnAppThemeChanged()
 }
 
 bool
-ContentChild::RecvStartProfiler(const uint32_t& aEntries,
-                                const double& aInterval,
-                                nsTArray<nsCString>&& aFeatures,
-                                nsTArray<nsCString>&& aThreadNameFilters)
+ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
 {
     nsTArray<const char*> featureArray;
-    for (size_t i = 0; i < aFeatures.Length(); ++i) {
-        featureArray.AppendElement(aFeatures[i].get());
+    for (size_t i = 0; i < params.features().Length(); ++i) {
+        featureArray.AppendElement(params.features()[i].get());
     }
 
     nsTArray<const char*> threadNameFilterArray;
-    for (size_t i = 0; i < aThreadNameFilters.Length(); ++i) {
-        threadNameFilterArray.AppendElement(aThreadNameFilters[i].get());
+    for (size_t i = 0; i < params.threadFilters().Length(); ++i) {
+        threadNameFilterArray.AppendElement(params.threadFilters()[i].get());
     }
 
-    profiler_start(aEntries, aInterval, featureArray.Elements(), featureArray.Length(),
+    profiler_start(params.entries(), params.interval(),
+                   featureArray.Elements(), featureArray.Length(),
                    threadNameFilterArray.Elements(), threadNameFilterArray.Length());
 
     return true;

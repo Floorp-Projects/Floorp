@@ -18,6 +18,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Snprintf.h"
+#include "mozilla/Telemetry.h"
 #include "nsCORSListenerProxy.h"
 #include "nsCSSParser.h"
 #include "nsDeviceContext.h"
@@ -39,6 +40,7 @@
 #include "nsPrintfCString.h"
 #include "nsStyleSet.h"
 #include "nsUTF8Utils.h"
+#include "nsDOMNavigationTiming.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -305,6 +307,17 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
   }
 }
 
+TimeStamp
+FontFaceSet::GetNavigationStartTimeStamp()
+{
+  TimeStamp navStart;
+  RefPtr<nsDOMNavigationTiming> timing(mDocument->GetNavigationTiming());
+  if (timing) {
+    navStart = timing->GetNavigationStartTimeStamp();
+  }
+  return navStart;
+}
+
 already_AddRefed<Promise>
 FontFaceSet::Load(JSContext* aCx,
                   const nsAString& aFont,
@@ -334,6 +347,7 @@ FontFaceSet::Load(JSContext* aCx,
 
   nsIGlobalObject* globalObject = GetParentObject();
   if (!globalObject) {
+    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
@@ -1720,6 +1734,26 @@ FontFaceSet::UserFontSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
     return NS_ERROR_FAILURE;
   }
   return mFontFaceSet->StartLoad(aUserFontEntry, aFontFaceSrc);
+}
+
+void
+FontFaceSet::UserFontSet::RecordFontLoadDone(uint32_t aFontSize,
+                                             TimeStamp aDoneTime)
+{
+  mDownloadCount++;
+  mDownloadSize += aFontSize;
+  Telemetry::Accumulate(Telemetry::WEBFONT_SIZE, aFontSize / 1024);
+
+  if (!mFontFaceSet) {
+    return;
+  }
+
+  TimeStamp navStart = mFontFaceSet->GetNavigationStartTimeStamp();
+  TimeStamp zero;
+  if (navStart != zero) {
+    Telemetry::AccumulateTimeDelta(Telemetry::WEBFONT_DOWNLOAD_TIME_AFTER_START,
+                                   navStart, aDoneTime);
+  }
 }
 
 /* virtual */ nsresult

@@ -122,7 +122,7 @@ void
 ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 {
   CK_LOGD("ClearKeyDecryptionManager::ReleaseKeyId");
-  assert(HasKeyForKeyId(aKeyId));
+  assert(HasSeenKeyId(aKeyId));
 
   ClearKeyDecryptor* decryptor = mDecryptors[aKeyId];
   if (!decryptor->Release()) {

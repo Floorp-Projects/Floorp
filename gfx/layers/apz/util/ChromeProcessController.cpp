@@ -147,6 +147,16 @@ ChromeProcessController::HandleDoubleTap(const mozilla::CSSPoint& aPoint,
   }
 
   CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
+#if defined(MOZ_SINGLE_PROCESS_APZ)
+  // CalculateRectToZoomTo performs a hit test on the frame associated with the
+  // Root Content Document. Unfortunately that frame does not know about the
+  // resolution of the document and so we must remove it before calculating
+  // the zoomToRect.
+  nsIPresShell* presShell = document->GetShell();
+  const float resolution = presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f;
+  point.x = point.x / resolution;
+  point.y = point.y / resolution;
+#endif // MOZ_SINGLE_PROCESS_APZ
   CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
 
   uint32_t presShellId;

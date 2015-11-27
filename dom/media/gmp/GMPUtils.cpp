@@ -11,6 +11,7 @@
 #include "nsLiteralString.h"
 #include "nsCRTGlue.h"
 #include "mozilla/Base64.h"
+#include "nsISimpleEnumerator.h"
 
 namespace mozilla {
 
@@ -69,6 +70,43 @@ FileExists(nsIFile* aFile)
 {
   bool exists = false;
   return aFile && NS_SUCCEEDED(aFile->Exists(&exists)) && exists;
+}
+
+DirectoryEnumerator::DirectoryEnumerator(nsIFile* aPath, Mode aMode)
+  : mMode(aMode)
+{
+  aPath->GetDirectoryEntries(getter_AddRefs(mIter));
+}
+
+already_AddRefed<nsIFile>
+DirectoryEnumerator::Next()
+{
+  if (!mIter) {
+    return nullptr;
+  }
+  bool hasMore = false;
+  while (NS_SUCCEEDED(mIter->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    nsresult rv = mIter->GetNext(getter_AddRefs(supports));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    nsCOMPtr<nsIFile> path(do_QueryInterface(supports, &rv));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    if (mMode == DirsOnly) {
+      bool isDirectory = false;
+      rv = path->IsDirectory(&isDirectory);
+      if (NS_FAILED(rv) || !isDirectory) {
+        continue;
+      }
+    }
+    return path.forget();
+  }
+  return nullptr;
 }
 
 } // namespace mozilla

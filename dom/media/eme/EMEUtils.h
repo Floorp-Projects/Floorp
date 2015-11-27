@@ -104,6 +104,9 @@ struct ArrayData {
 ArrayData
 GetArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView);
 
+nsString
+KeySystemToGMPName(const nsAString& aKeySystem);
+
 } // namespace mozilla
 
 #endif // EME_LOG_H_

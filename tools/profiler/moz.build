@@ -109,6 +109,12 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     FINAL_LIBRARY = 'xul'
 
+IPDL_SOURCES += [
+    'gecko/ProfilerTypes.ipdlh',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 EXPORTS += [
     'public/GeckoProfiler.h',
 ]

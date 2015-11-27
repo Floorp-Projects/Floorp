@@ -47,6 +47,7 @@ public:
                                     nsACString& aOutVersion) override;
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
+                       const nsAString& aGMPName,
                        bool aInPrivateBrowsingMode,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
   NS_IMETHOD UpdateTrialCreateState(const nsAString& aKeySystem,

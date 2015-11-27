@@ -684,14 +684,29 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
     int endIndex = Count();
 
     switch (Action()) {
+        case AndroidMotionEvent::ACTION_HOVER_ENTER: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
+        }
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
             type = MultiTouchInput::MULTITOUCH_START;
             break;
         }
+        case AndroidMotionEvent::ACTION_HOVER_MOVE: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
+        }
         case AndroidMotionEvent::ACTION_MOVE: {
             type = MultiTouchInput::MULTITOUCH_MOVE;
             break;
+        }
+        case AndroidMotionEvent::ACTION_HOVER_EXIT: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
         }
         case AndroidMotionEvent::ACTION_UP:
         case AndroidMotionEvent::ACTION_POINTER_UP: {

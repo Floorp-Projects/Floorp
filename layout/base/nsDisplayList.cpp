@@ -698,7 +698,7 @@ nsDisplayListBuilder::WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
 
   AnimatedGeometryRoot* result = nullptr;
   if (!mFrameToAnimatedGeometryRootMap.Get(aAnimatedGeometryRoot, &result)) {
-    MOZ_ASSERT(aAnimatedGeometryRoot != RootReferenceFrame());
+    MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(RootReferenceFrame(), aAnimatedGeometryRoot));
     AnimatedGeometryRoot* parent = aParent;
     if (!parent) {
       nsIFrame* parentFrame = nsLayoutUtils::GetCrossDocParentFrame(aAnimatedGeometryRoot);
@@ -717,7 +717,7 @@ nsDisplayListBuilder::WrapAGRForFrame(nsIFrame* aAnimatedGeometryRoot,
 AnimatedGeometryRoot*
 nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsIFrame* aFrame)
 {
-  if (!IsForPainting()) {
+  if (!IsPaintingToWindow()) {
     return &mRootAGR;
   }
   if (aFrame == mCurrentFrame) {
@@ -1091,8 +1091,16 @@ IsStickyFrameActive(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* 
 bool
 nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParent)
 {
-  if (aFrame == mReferenceFrame)
+  if (aFrame == mReferenceFrame) {
     return true;
+  }
+  if (!IsPaintingToWindow()) {
+    if (aParent) {
+      *aParent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+    }
+    return false;
+  }
+
   if (nsLayoutUtils::IsPopup(aFrame))
     return true;
   if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(aFrame))
@@ -1145,6 +1153,7 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParen
 nsIFrame*
 nsDisplayListBuilder::FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame)
 {
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(RootReferenceFrame(), aFrame));
   nsIFrame* cursor = aFrame;
   while (cursor != RootReferenceFrame()) {
     nsIFrame* next;
@@ -4557,6 +4566,21 @@ nsDisplayResolution::~nsDisplayResolution() {
 }
 #endif
 
+void
+nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
+                             const nsRect& aRect,
+                             HitTestState* aState,
+                             nsTArray<nsIFrame*> *aOutFrames)
+{
+#if defined(MOZ_SINGLE_PROCESS_APZ)
+  nsIPresShell* presShell = mFrame->PresContext()->PresShell();
+  nsRect rect = aRect.RemoveResolution(presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f);
+  mList.HitTest(aBuilder, rect, aState, aOutFrames);
+#else
+  mList.HitTest(aBuilder, aRect, aState, aOutFrames);
+#endif // MOZ_SINGLE_PROCESS_APZ
+}
+
 already_AddRefed<Layer>
 nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
@@ -4883,6 +4907,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
 {
+  mAnimatedGeometryRootForChildren = mAnimatedGeometryRoot;
   if (mFrame == aBuilder->RootReferenceFrame()) {
     return;
   }
@@ -4890,7 +4915,6 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
   mReferenceFrame =
     aBuilder->FindReferenceFrameFor(outerFrame);
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
-  mAnimatedGeometryRootForChildren = mAnimatedGeometryRoot;
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(mFrame)) {
     // This is an odd special case. If we are both IsFixedPosFrameInDisplayPort
     // and transformed that we are our own AGR parent.
@@ -4898,7 +4922,7 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
     // determine if we are inside a fixed pos subtree. If we use the outer AGR
     // from outside the fixed pos subtree FLB can't tell that we are fixed pos.
     mAnimatedGeometryRoot = mAnimatedGeometryRootForChildren;
-  } else {
+  } else if (mAnimatedGeometryRoot->mParentAGR) {
     mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
   }
   mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;

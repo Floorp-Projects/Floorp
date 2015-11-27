@@ -610,6 +610,38 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
 
   t->ToJSObjectAsync(aSinceTime, aPromise);
 }
+
+void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
+                                               double* aInterval,
+                                               mozilla::Vector<const char*>* aFilters,
+                                               mozilla::Vector<const char*>* aFeatures)
+{
+  if (NS_WARN_IF(!aEntrySize) || NS_WARN_IF(!aInterval) ||
+      NS_WARN_IF(!aFilters) || NS_WARN_IF(!aFeatures)) {
+    return;
+  }
+
+  GeckoSampler *t = tlsTicker.get();
+  if (NS_WARN_IF(!t)) {
+    return;
+  }
+
+  *aEntrySize = t->EntrySize();
+  *aInterval = t->interval();
+
+  const ThreadNameFilterList& threadNameFilterList = t->ThreadNameFilters();
+  MOZ_ALWAYS_TRUE(aFilters->resize(threadNameFilterList.length()));
+  for (uint32_t i = 0; i < threadNameFilterList.length(); ++i) {
+    (*aFilters)[i] = threadNameFilterList[i].c_str();
+  }
+
+  const FeatureList& featureList = t->Features();
+  MOZ_ALWAYS_TRUE(aFeatures->resize(featureList.length()));
+  for (size_t i = 0; i < featureList.length(); ++i) {
+    (*aFeatures)[i] = featureList[i].c_str();
+  }
+}
+
 #endif
 
 void mozilla_sampler_save_profile_to_file(const char* aFilename)
