@@ -42,7 +42,7 @@ ServiceWorkerManagerChild::RecvNotifySoftUpdate(
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
 
-  swm->SoftUpdate(aOriginAttributes, NS_ConvertUTF16toUTF8(aScope), nullptr);
+  swm->SoftUpdate(aOriginAttributes, NS_ConvertUTF16toUTF8(aScope));
   return true;
 }
 

@@ -5359,9 +5359,12 @@ ScrollFrameHelper::SaveState() const
     pt = mRestorePos;
   }
   state->SetScrollState(pt);
-  nsIPresShell* shell = mOuter->PresContext()->PresShell();
-  state->SetResolution(shell->GetResolution());
-  state->SetScaleToResolution(shell->ScaleToResolution());
+  if (mIsRoot) {
+    // Only save resolution properties for root scroll frames
+    nsIPresShell* shell = mOuter->PresContext()->PresShell();
+    state->SetResolution(shell->GetResolution());
+    state->SetScaleToResolution(shell->ScaleToResolution());
+  }
   return state;
 }
 
@@ -5372,8 +5375,9 @@ ScrollFrameHelper::RestoreState(nsPresState* aState)
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0,0);
 
-  // Scaling-to-resolution should only be used on root scroll frames.
-  MOZ_ASSERT(mIsRoot || !aState->GetScaleToResolution());
+  // Resolution properties should only exist on root scroll frames.
+  MOZ_ASSERT(mIsRoot || (!aState->GetScaleToResolution() &&
+                         aState->GetResolution() == 1.0));
 
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresContext()->PresShell();

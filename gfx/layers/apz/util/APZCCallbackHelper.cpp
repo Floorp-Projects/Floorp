@@ -422,11 +422,13 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     if (aGuid.mScrollId == FrameMetrics::NULL_SCROLL_ID) {
         return input;
     }
+
     nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
     if (!content) {
         return input;
     }
 
+#if !defined(MOZ_SINGLE_PROCESS_APZ)
     // First, scale inversely by the root content document's pres shell
     // resolution to cancel the scale-to-resolution transform that the
     // compositor adds to the layer with the pres shell resolution. The points
@@ -435,8 +437,9 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     if (nsIPresShell* shell = GetRootContentDocumentPresShellForContent(content)) {
         input = input / shell->GetResolution();
     }
+#endif
 
-    // Now apply the callback-transform.
+    // Apply the callback-transform.
     // XXX: technically we need to walk all the way up the layer tree from the layer
     // represented by |aGuid.mScrollId| up to the root of the layer tree and apply
     // the input transforms at each level in turn. However, it is quite difficult
@@ -447,9 +450,22 @@ APZCCallbackHelper::ApplyCallbackTransform(const CSSPoint& aInput,
     // some things transformed improperly. In practice we should rarely hit scenarios
     // where any of this matters, so I'm skipping it for now and just doing the single
     // transform for the layer that the input hit.
+
     void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
     if (property) {
         CSSPoint delta = (*static_cast<CSSPoint*>(property));
+
+#if defined(MOZ_SINGLE_PROCESS_APZ)
+        // The delta is in root content document coordinate space while the
+        // aInput point is in root document coordinate space so convert the
+        // delta to root document space before adding it to the aInput point.
+        float resolution = 1.0f;
+        if (nsIPresShell* shell = GetRootContentDocumentPresShellForContent(content)) {
+            resolution = shell->GetResolution();
+        }
+        delta.x = delta.x * resolution;
+        delta.y = delta.y * resolution;
+#endif // MOZ_SINGLE_PROCESS_APZ
         input += delta;
     }
     return input;

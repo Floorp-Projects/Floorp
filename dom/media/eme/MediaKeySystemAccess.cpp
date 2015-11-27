@@ -443,6 +443,9 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
     for (const nsString& candidate : aCandidate.mInitDataTypes.Value()) {
       if (candidate.EqualsLiteral("cenc")) {
         initDataTypes.AppendElement(candidate);
+      } else if (candidate.EqualsLiteral("keyids") &&
+                 aKeySystem.EqualsLiteral("org.w3.clearkey")) {
+        initDataTypes.AppendElement(candidate);
       }
     }
     if (initDataTypes.IsEmpty()) {

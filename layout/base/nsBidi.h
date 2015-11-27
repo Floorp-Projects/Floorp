@@ -49,14 +49,6 @@
  * It holds an embedding level and indicates the visual direction
  * by its bit 0 (even/odd value).<p>
  *
- * It can also hold non-level values for the
- * <code>aParaLevel</code> and <code>aEmbeddingLevels</code>
- * arguments of <code>SetPara</code>; there:
- * <ul>
- * <li>bit 7 of an <code>aEmbeddingLevels[]</code>
- * value indicates whether the using application is
- * specifying the level of a character to <i>override</i> whatever the
- * Bidi implementation would resolve it to.</li>
  * <li><code>aParaLevel</code> can be set to the
  * pseudo-level values <code>NSBIDI_DEFAULT_LTR</code>
  * and <code>NSBIDI_DEFAULT_RTL</code>.</li></ul>
@@ -127,64 +119,28 @@ enum nsBidiDirection {
   NSBIDI_MIXED
 };
 
-typedef enum nsBidiDirection nsBidiDirection;
-
 /* miscellaneous definitions ------------------------------------------------ */
-/** option flags for WriteReverse() */
-/**
- * option bit for WriteReverse():
- * keep combining characters after their base characters in RTL runs
- *
- * @see WriteReverse
- */
-#define NSBIDI_KEEP_BASE_COMBINING       1
-
-/**
- * option bit for WriteReverse():
- * replace characters with the "mirrored" property in RTL runs
- * by their mirror-image mappings
- *
- * @see WriteReverse
- */
-#define NSBIDI_DO_MIRRORING              2
-
-/**
- * option bit for WriteReverse():
- * remove Bidi control characters
- *
- * @see WriteReverse
- */
-#define NSBIDI_REMOVE_BIDI_CONTROLS      8
 
 /* helper macros for each allocated array member */
-#define GETDIRPROPSMEMORY(length) \
-                                  GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
-                                  mMayAllocateText, (length))
+#define GETDIRPROPSMEMORY(length) nsBidi::GetMemory((void **)&mDirPropsMemory, \
+                                                    &mDirPropsSize, \
+                                                    (length))
 
-#define GETLEVELSMEMORY(length) \
-                                GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
-                                mMayAllocateText, (length))
+#define GETLEVELSMEMORY(length) nsBidi::GetMemory((void **)&mLevelsMemory, \
+                                                  &mLevelsSize, \
+                                                  (length))
 
-#define GETRUNSMEMORY(length) \
-                              GetMemory((void **)&mRunsMemory, &mRunsSize, \
-                              mMayAllocateRuns, (length)*sizeof(Run))
+#define GETRUNSMEMORY(length) nsBidi::GetMemory((void **)&mRunsMemory, \
+                                                &mRunsSize, \
+                                                (length)*sizeof(Run))
 
-/* additional macros used by constructor - always allow allocation */
-#define GETINITIALDIRPROPSMEMORY(length) \
-                                         GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
-                                         true, (length))
+#define GETISOLATESMEMORY(length) nsBidi::GetMemory((void **)&mIsolatesMemory, \
+                                                    &mIsolatesSize, \
+                                                    (length)*sizeof(Isolate))
 
-#define GETINITIALLEVELSMEMORY(length) \
-                                       GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
-                                       true, (length))
-
-#define GETINITIALRUNSMEMORY(length) \
-                                     GetMemory((void **)&mRunsMemory, &mRunsSize, \
-                                     true, (length)*sizeof(Run))
-
-#define GETINITIALISOLATESMEMORY(length) \
-                                     GetMemory((void **)&mIsolatesMemory, &mIsolatesSize, \
-                                     true, (length)*sizeof(Isolate))
+#define GETOPENINGSMEMORY(length) nsBidi::GetMemory((void **)&mOpeningsMemory, \
+                                                    &mOpeningsSize, \
+                                                    (length)*sizeof(Opening))
 
 /*
  * Sometimes, bit values are more appropriate
@@ -234,15 +190,6 @@ typedef uint8_t DirProp;
 #define IS_DEFAULT_LEVEL(level) (((level)&0xfe)==0xfe)
 
 /*
- * The following bit is ORed to the property of directional control
- * characters which are ignored: unmatched PDF or PDI; LRx, RLx or FSI
- * which would exceed the maximum explicit bidi level.
- */
-#define IGNORE_CC 0x40
-
-#define PURE_DIRPROP(prop) ((prop)&~IGNORE_CC)
-
-/*
  * The following bit is used for the directional isolate status.
  * Stack entries corresponding to isolate sequences are greater than ISOLATE.
  */
@@ -250,6 +197,9 @@ typedef uint8_t DirProp;
 
 /* number of isolate entries allocated initially without malloc */
 #define SIMPLE_ISOLATES_SIZE 5
+
+/* number of isolate run entries for paired brackets allocated initially without malloc */
+#define SIMPLE_OPENINGS_COUNT 8
 
 /* handle surrogate pairs --------------------------------------------------- */
 
@@ -390,6 +340,32 @@ struct Isolate {
   int16_t state;
 };
 
+// For bracket matching
+
+#define FOUND_L DIRPROP_FLAG(L)
+#define FOUND_R DIRPROP_FLAG(R)
+
+struct Opening {
+  int32_t position;                   /* position of opening bracket */
+  int32_t match;                      /* matching char or -position of closing bracket */
+  int32_t contextPos;                 /* position of last strong char found before opening */
+  uint16_t flags;                     /* bits for L or R/AL found within the pair */
+  DirProp contextDir;                 /* L or R according to last strong char before opening */
+  uint8_t filler;                     /* to complete a nice multiple of 4 chars */
+};
+
+struct IsoRun {
+  int32_t  contextPos;                /* position of char determining context */
+  uint16_t start;                     /* index of first opening entry for this run */
+  uint16_t limit;                     /* index after last opening entry for this run */
+  nsBidiLevel level;                  /* level of this run */
+  DirProp lastStrong;                 /* bidi class of last strong char found in this run */
+  DirProp lastBase;                   /* bidi class of last base char found in this run */
+  DirProp contextDir;                 /* L or R to use as context for following openings */
+};
+
+class nsBidi;
+
 /* Run structure for reordering --------------------------------------------- */
 
 typedef struct Run {
@@ -505,28 +481,8 @@ public:
    *      the desired default is used (0 for LTR or 1 for RTL).
    *      Any other value between 0 and <code>NSBIDI_MAX_EXPLICIT_LEVEL</code> is also valid,
    *      with odd levels indicating RTL.
-   *
-   * @param aEmbeddingLevels (in) may be used to preset the embedding and override levels,
-   *      ignoring characters like LRE and PDF in the text.
-   *      A level overrides the directional property of its corresponding
-   *      (same index) character if the level has the
-   *      <code>NSBIDI_LEVEL_OVERRIDE</code> bit set.<p>
-   *      Except for that bit, it must be
-   *      <code>aParaLevel<=aEmbeddingLevels[]<=NSBIDI_MAX_EXPLICIT_LEVEL</code>.<p>
-   *      <strong>Caution: </strong>A copy of this pointer, not of the levels,
-   *      will be stored in the <code>nsBidi</code> object;
-   *      the <code>aEmbeddingLevels</code> array must not be
-   *      deallocated before the <code>nsBidi</code> object is destroyed or reused,
-   *      and the <code>aEmbeddingLevels</code>
-   *      should not be modified to avoid unexpected results on subsequent Bidi operations.
-   *      However, the <code>SetPara</code> and
-   *      <code>SetLine</code> functions may modify some or all of the levels.<p>
-   *      After the <code>nsBidi</code> object is reused or destroyed, the caller
-   *      must take care of the deallocation of the <code>aEmbeddingLevels</code> array.<p>
-   *      <strong>The <code>aEmbeddingLevels</code> array must be
-   *      at least <code>aLength</code> long.</strong>
    */
-  nsresult SetPara(const char16_t *aText, int32_t aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
+  nsresult SetPara(const char16_t *aText, int32_t aLength, nsBidiLevel aParaLevel);
 
   /**
    * Get the directionality of the text.
@@ -548,73 +504,6 @@ public:
    */
   nsresult GetParaLevel(nsBidiLevel* aParaLevel);
 
-#ifdef FULL_BIDI_ENGINE
-  /**
-   * <code>SetLine</code> sets an <code>nsBidi</code> to
-   * contain the reordering information, especially the resolved levels,
-   * for all the characters in a line of text. This line of text is
-   * specified by referring to an <code>nsBidi</code> object representing
-   * this information for a paragraph of text, and by specifying
-   * a range of indexes in this paragraph.<p>
-   * In the new line object, the indexes will range from 0 to <code>aLimit-aStart</code>.<p>
-   *
-   * This is used after calling <code>SetPara</code>
-   * for a paragraph, and after line-breaking on that paragraph.
-   * It is not necessary if the paragraph is treated as a single line.<p>
-   *
-   * After line-breaking, rules (L1) and (L2) for the treatment of
-   * trailing WS and for reordering are performed on
-   * an <code>nsBidi</code> object that represents a line.<p>
-   *
-   * <strong>Important:</strong> the line <code>nsBidi</code> object shares data with
-   * <code>aParaBidi</code>.
-   * You must destroy or reuse this object before <code>aParaBidi</code>.
-   * In other words, you must destroy or reuse the <code>nsBidi</code> object for a line
-   * before the object for its parent paragraph.
-   *
-   * @param aParaBidi is the parent paragraph object.
-   *
-   * @param aStart is the line's first index into the paragraph text.
-   *
-   * @param aLimit is just behind the line's last index into the paragraph text
-   *      (its last index +1).<br>
-   *      It must be <code>0<=aStart<=aLimit<=</code>paragraph length.
-   *
-   * @see SetPara
-   */
-  nsresult SetLine(const nsBidi* aParaBidi, int32_t aStart, int32_t aLimit);
-
-  /**
-   * Get the length of the text.
-   *
-   * @param aLength receives the length of the text that the nsBidi object was created for.
-   */
-  nsresult GetLength(int32_t* aLength);
-
-  /**
-   * Get the level for one character.
-   *
-   * @param aCharIndex the index of a character.
-   *
-   * @param aLevel receives the level for the character at aCharIndex.
-   *
-   * @see nsBidiLevel
-   */
-  nsresult GetLevelAt(int32_t aCharIndex,  nsBidiLevel* aLevel);
-
-  /**
-   * Get an array of levels for each character.<p>
-   *
-   * Note that this function may allocate memory under some
-   * circumstances, unlike <code>GetLevelAt</code>.
-   *
-   * @param aLevels receives a pointer to the levels array for the text,
-   *       or <code>nullptr</code> if an error occurs.
-   *
-   * @see nsBidiLevel
-   */
-  nsresult GetLevels(nsBidiLevel** aLevels);
-#endif // FULL_BIDI_ENGINE
   /**
    * Get the bidirectional type for one character.
    *
@@ -707,92 +596,6 @@ public:
    */
   nsresult GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart, int32_t* aLength, nsBidiDirection* aDirection);
 
-#ifdef FULL_BIDI_ENGINE
-  /**
-   * Get the visual position from a logical text position.
-   * If such a mapping is used many times on the same
-   * <code>nsBidi</code> object, then calling
-   * <code>GetLogicalMap</code> is more efficient.<p>
-   *
-   * Note that in right-to-left runs, this mapping places
-   * modifier letters before base characters and second surrogates
-   * before first ones.
-   *
-   * @param aLogicalIndex is the index of a character in the text.
-   *
-   * @param aVisualIndex will receive the visual position of this character.
-   *
-   * @see GetLogicalMap
-   * @see GetLogicalIndex
-   */
-  nsresult GetVisualIndex(int32_t aLogicalIndex, int32_t* aVisualIndex);
-
-  /**
-   * Get the logical text position from a visual position.
-   * If such a mapping is used many times on the same
-   * <code>nsBidi</code> object, then calling
-   * <code>GetVisualMap</code> is more efficient.<p>
-   *
-   * This is the inverse function to <code>GetVisualIndex</code>.
-   *
-   * @param aVisualIndex is the visual position of a character.
-   *
-   * @param aLogicalIndex will receive the index of this character in the text.
-   *
-   * @see GetVisualMap
-   * @see GetVisualIndex
-   */
-  nsresult GetLogicalIndex(int32_t aVisualIndex, int32_t* aLogicalIndex);
-
-  /**
-   * Get a logical-to-visual index map (array) for the characters in the nsBidi
-   * (paragraph or line) object.
-   *
-   * @param aIndexMap is a pointer to an array of <code>GetLength</code>
-   *      indexes which will reflect the reordering of the characters.
-   *      The array does not need to be initialized.<p>
-   *      The index map will result in <code>aIndexMap[aLogicalIndex]==aVisualIndex</code>.<p>
-   *
-   * @see GetVisualMap
-   * @see GetVisualIndex
-   */
-  nsresult GetLogicalMap(int32_t *aIndexMap);
-
-  /**
-   * Get a visual-to-logical index map (array) for the characters in the nsBidi
-   * (paragraph or line) object.
-   *
-   * @param aIndexMap is a pointer to an array of <code>GetLength</code>
-   *      indexes which will reflect the reordering of the characters.
-   *      The array does not need to be initialized.<p>
-   *      The index map will result in <code>aIndexMap[aVisualIndex]==aLogicalIndex</code>.<p>
-   *
-   * @see GetLogicalMap
-   * @see GetLogicalIndex
-   */
-  nsresult GetVisualMap(int32_t *aIndexMap);
-
-  /**
-   * This is a convenience function that does not use a nsBidi object.
-   * It is intended to be used for when an application has determined the levels
-   * of objects (character sequences) and just needs to have them reordered (L2).
-   * This is equivalent to using <code>GetLogicalMap</code> on a
-   * <code>nsBidi</code> object.
-   *
-   * @param aLevels is an array with <code>aLength</code> levels that have been determined by
-   *      the application.
-   *
-   * @param aLength is the number of levels in the array, or, semantically,
-   *      the number of objects to be reordered.
-   *      It must be <code>aLength>0</code>.
-   *
-   * @param aIndexMap is a pointer to an array of <code>aLength</code>
-   *      indexes which will reflect the reordering of the characters.
-   *      The array does not need to be initialized.<p>
-   *      The index map will result in <code>aIndexMap[aLogicalIndex]==aVisualIndex</code>.
-   */
-  static nsresult ReorderLogical(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap);
-#endif // FULL_BIDI_ENGINE
   /**
    * This is a convenience function that does not use a nsBidi object.
    * It is intended to be used for when an application has determined the levels
@@ -814,22 +617,6 @@ public:
    */
   static nsresult ReorderVisual(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap);
 
-#ifdef FULL_BIDI_ENGINE
-  /**
-   * Invert an index map.
-   * The one-to-one index mapping of the first map is inverted and written to
-   * the second one.
-   *
-   * @param aSrcMap is an array with <code>aLength</code> indexes
-   *      which define the original mapping.
-   *
-   * @param aDestMap is an array with <code>aLength</code> indexes
-   *      which will be filled with the inverse mapping.
-   *
-   * @param aLength is the length of each array.
-   */
-  nsresult InvertMap(const int32_t *aSrcMap, int32_t *aDestMap, int32_t aLength);
-#endif // FULL_BIDI_ENGINE
   /**
    * Reverse a Right-To-Left run of Unicode text.
    *
@@ -870,6 +657,45 @@ public:
 protected:
   friend class nsBidiPresUtils;
 
+  class BracketData {
+  public:
+    explicit BracketData(const nsBidi* aBidi);
+    ~BracketData();
+
+    void ProcessBoundary(int32_t aLastDirControlCharPos,
+                         nsBidiLevel aContextLevel,
+                         nsBidiLevel aEmbeddingLevel,
+                         const DirProp* aDirProps);
+    void ProcessLRI_RLI(nsBidiLevel aLevel);
+    void ProcessPDI();
+    bool AddOpening(char16_t aMatch, int32_t aPosition);
+    void FixN0c(int32_t aOpeningIndex, int32_t aNewPropPosition,
+                DirProp aNewProp, DirProp* aDirProps);
+    DirProp ProcessClosing(int32_t aOpenIdx, int32_t aPosition,
+                           DirProp* aDirProps);
+    bool ProcessChar(int32_t aPosition, char16_t aCh, DirProp* aDirProps,
+                     nsBidiLevel* aLevels);
+
+  private:
+    // array of opening entries which should be enough in most cases;
+    // no malloc() needed
+    Opening  mSimpleOpenings[SIMPLE_OPENINGS_COUNT];
+    Opening* mOpenings;      // pointer to current array of entries,
+                             // either mSimpleOpenings or malloced array
+
+    Opening* mOpeningsMemory;
+    size_t   mOpeningsSize;
+
+    // array of nested isolated sequence entries; can never exceed
+    // UBIDI_MAX_EXPLICIT_LEVEL
+    //   + 1 for index 0
+    //   + 1 for before the first isolated sequence
+    IsoRun  mIsoRuns[NSBIDI_MAX_EXPLICIT_LEVEL+2];
+    int32_t mIsoRunLast;     // index of last used entry in mIsoRuns
+
+    int32_t mOpeningsCount;  // number of allocated entries in mOpenings
+  };
+
   /** length of the current text */
   int32_t mLength;
 
@@ -882,9 +708,6 @@ protected:
   nsBidiLevel* mLevelsMemory;
   Run* mRunsMemory;
   Isolate* mIsolatesMemory;
-
-  /** indicators for whether memory may be allocated after construction */
-  bool mMayAllocateText, mMayAllocateRuns;
 
   DirProp* mDirProps;
   nsBidiLevel* mLevels;
@@ -924,15 +747,13 @@ private:
 
   void Init();
 
-  bool GetMemory(void **aMemory, size_t* aSize, bool aMayAllocate, size_t aSizeNeeded);
+  static bool GetMemory(void **aMemory, size_t* aSize, size_t aSizeNeeded);
 
   void Free();
 
   void GetDirProps(const char16_t *aText);
 
-  void ResolveExplicitLevels(nsBidiDirection *aDirection);
-
-  nsresult CheckExplicitLevels(nsBidiDirection *aDirection);
+  void ResolveExplicitLevels(nsBidiDirection *aDirection, const char16_t *aText);
 
   nsBidiDirection DirectionFromFlags(Flags aFlags);
 
@@ -951,10 +772,6 @@ private:
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
   static bool PrepareReorder(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
-
-  int32_t doWriteReverse(const char16_t *src, int32_t srcLength,
-                         char16_t *dest, uint16_t options);
-
 };
 
 #endif // _nsBidi_h_

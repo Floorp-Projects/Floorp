@@ -46,7 +46,6 @@ promise_test(function(t) {
                         'Worker with url2 should be redundant');
           assert_equals(sw_registration.active.scriptURL, normalizeURL(url3),
                         'Worker with url3 should be activated');
-          frame.remove();
           return service_worker_unregister_and_done(t, scope);
         });
   }, 'Test skipWaiting with both active and waiting workers');
