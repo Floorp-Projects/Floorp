@@ -9,7 +9,7 @@ from mozbuild.frontend.data import (
     ChromeManifestEntry,
     ContextDerived,
     Defines,
-    DistFiles,
+    FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     JARManifest,
     JavaScriptModules,
@@ -150,11 +150,12 @@ class FasterMakeBackend(CommonBackend):
                             mozpath.join(base, mozpath.basename(f))
                         )
 
-        elif isinstance(obj, (FinalTargetFiles, DistFiles)) and \
+        elif isinstance(obj, (FinalTargetFiles,
+                              FinalTargetPreprocessedFiles)) and \
                 obj.install_target.startswith('dist/bin'):
             for path, strings in obj.files.walk():
                 for f in strings:
-                    if isinstance(obj, DistFiles):
+                    if isinstance(obj, FinalTargetPreprocessedFiles):
                         self._add_preprocess(obj, f, path, defines=defines)
                     else:
                         self._install_manifests[obj.install_target].add_symlink(

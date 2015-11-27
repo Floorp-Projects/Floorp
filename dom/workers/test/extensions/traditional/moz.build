@@ -17,7 +17,7 @@ EXTRA_COMPONENTS += [
 
 XPI_NAME = 'worker'
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
     'install.rdf',
 ]
 

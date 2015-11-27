@@ -54,6 +54,6 @@ JS_PREFERENCE_FILES += [
     'prefs.js',
 ]
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
     'webapprt.ini',
 ]
