@@ -1,5 +1,7 @@
 // Exercise ModuleDeclarationInstantiation() operation.
 
+load(libdir + "dummyModuleResolveHook.js");
+
 function testModuleEnvironment(module, expected) {
     var actual = getModuleEnvironmentNames(module).sort();
     assertEq(actual.length, expected.length);
@@ -12,13 +14,6 @@ function testModuleEnvironment(module, expected) {
 let m = parseModule("");
 m.declarationInstantiation();
 testModuleEnvironment(m, []);
-
-let moduleRepo = new Map();
-setModuleResolveHook(function(module, specifier) {
-    if (specifier in moduleRepo)
-        return moduleRepo[specifier];
-    throw "Module " + specifier + " not found";
-});
 
 let a = moduleRepo['a'] = parseModule("var x = 1; export { x };");
 let b = moduleRepo['b'] = parseModule("import { x as y } from 'a';");

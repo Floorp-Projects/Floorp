@@ -40,6 +40,7 @@ const DISTRIBUTOR_NAME = "Some Distributor";
 const DISTRIBUTOR_CHANNEL = "A Channel";
 const PARTNER_NAME = "test";
 const PARTNER_ID = "NicePartner-ID-3785";
+const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC = "distribution-customization-complete";
 
 const GFX_VENDOR_ID = "0xabcd";
 const GFX_DEVICE_ID = "0x1234";
@@ -303,7 +304,7 @@ function checkProfileSection(data) {
   Assert.equal(data.profile.resetDate, truncateToDays(PROFILE_RESET_DATE_MS));
 }
 
-function checkPartnerSection(data) {
+function checkPartnerSection(data, isInitial) {
   const EXPECTED_FIELDS = {
     distributionId: DISTRIBUTION_ID,
     distributionVersion: DISTRIBUTION_VERSION,
@@ -315,12 +316,17 @@ function checkPartnerSection(data) {
   Assert.ok("partner" in data, "There must be a partner section in Environment.");
 
   for (let f in EXPECTED_FIELDS) {
-    Assert.equal(data.partner[f], EXPECTED_FIELDS[f], f + " must have the correct value.");
+    let expected = isInitial ? null : EXPECTED_FIELDS[f];
+    Assert.strictEqual(data.partner[f], expected, f + " must have the correct value.");
   }
 
   // Check that "partnerNames" exists and contains the correct element.
   Assert.ok(Array.isArray(data.partner.partnerNames));
-  Assert.ok(data.partner.partnerNames.indexOf(PARTNER_NAME) >= 0);
+  if (isInitial) {
+    Assert.equal(data.partner.partnerNames.length, 0);
+  } else {
+    Assert.ok(data.partner.partnerNames.indexOf(PARTNER_NAME) >= 0);
+  }
 }
 
 function checkGfxAdapter(data) {
@@ -611,11 +617,11 @@ function checkAddonsSection(data) {
   Assert.ok(checkNullOrString(data.addons.persona));
 }
 
-function checkEnvironmentData(data) {
+function checkEnvironmentData(data, isInitial = false) {
   checkBuildSection(data);
   checkSettingsSection(data);
   checkProfileSection(data);
-  checkPartnerSection(data);
+  checkPartnerSection(data, isInitial);
   checkSystemSection(data);
   checkAddonsSection(data);
 }
@@ -645,7 +651,6 @@ function run_test() {
   gHttpServer.registerDirectory("/data/", do_get_cwd());
   do_register_cleanup(() => gHttpServer.stop(() => {}));
 
-  spoofPartnerInfo();
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
 
@@ -664,6 +669,12 @@ add_task(function* asyncSetup() {
 
 add_task(function* test_checkEnvironment() {
   let environmentData = yield TelemetryEnvironment.onInitialized();
+  checkEnvironmentData(environmentData, true);
+
+  spoofPartnerInfo();
+  Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC, null);
+
+  environmentData = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(environmentData);
 });
 

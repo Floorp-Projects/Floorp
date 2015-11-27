@@ -57,6 +57,7 @@ public:
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
+            const nsAString& aGMPName,
             bool aInPrivateBrowsing);
 
   // Main thread only.
@@ -186,6 +187,7 @@ private:
     uint32_t mPromiseId;
     nsAutoString mOrigin;
     nsAutoString mTopLevelOrigin;
+    nsString mGMPName;
     bool mInPrivateBrowsing;
   };
 
