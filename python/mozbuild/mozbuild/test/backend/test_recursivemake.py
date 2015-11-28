@@ -422,24 +422,6 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('quux.png', m)
         self.assertIn('icons/foo.ico', m)
 
-    def test_js_preference_files(self):
-        """Ensure PREF_JS_EXPORTS is written out correctly."""
-        env = self._consume('js_preference_files', RecursiveMakeBackend)
-
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
-        lines = [l.strip() for l in open(backend_path, 'rt').readlines()]
-
-        # Avoid positional parameter and async related breakage
-        var = 'PREF_JS_EXPORTS'
-        found = [val for val in lines if val.startswith(var)]
-
-        # Assignment[aa], append[cc], conditional[valid]
-        expected = ('aa/aa.js', 'bb/bb.js', 'cc/cc.js', 'dd/dd.js', 'valid_val/prefs.js')
-        expected_top = ('ee/ee.js', 'ff/ff.js')
-        self.assertEqual(found,
-            ['PREF_JS_EXPORTS += $(topsrcdir)/%s' % val for val in expected_top] +
-            ['PREF_JS_EXPORTS += $(srcdir)/%s' % val for val in expected])
-
     def test_test_manifests_files_written(self):
         """Ensure test manifests get turned into files."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
