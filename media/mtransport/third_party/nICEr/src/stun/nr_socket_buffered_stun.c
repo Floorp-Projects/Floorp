@@ -501,13 +501,15 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
     sock->pending += len;
   }
 
-  if (sock->pending && !already_armed) {
+  if (sock->pending) {
+    if (!already_armed) {
       if ((r=nr_socket_buffered_stun_arm_writable_cb(sock)))
         ABORT(r);
+    }
+    r_log(LOG_GENERIC, LOG_INFO, "Write buffer not empty for %s  %u - %s armed (@%p)",
+          sock->remote_addr.as_string, (uint32_t)sock->pending,
+          already_armed ? "already" : "", &sock->pending);
   }
-  r_log(LOG_GENERIC, LOG_INFO, "Write buffer not empty for %s  %u - %s armed (@%p)",
-        sock->remote_addr.as_string, (uint32_t)sock->pending,
-        already_armed ? "already" : "", &sock->pending);
 
   *written = original_len;
 
