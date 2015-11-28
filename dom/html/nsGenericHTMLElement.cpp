@@ -52,6 +52,7 @@
 #include "nsRuleData.h"
 #include "nsIPrincipal.h"
 #include "nsContainerFrame.h"
+#include "nsStyleUtil.h"
 
 #include "nsPresState.h"
 #include "nsILayoutHistoryState.h"
@@ -1326,12 +1327,28 @@ nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(const nsMappedAttribut
     }
   }
 
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
-    nsCSSValue* lang = aData->ValueForLang();
-    if (lang->GetUnit() == eCSSUnit_Null) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
-      if (value && value->Type() == nsAttrValue::eString) {
-        lang->SetStringValue(value->GetStringValue(), eCSSUnit_Ident);
+  const nsAttrValue* langValue = aAttributes->GetAttr(nsGkAtoms::lang);
+  if (langValue && langValue->Type() == nsAttrValue::eString) {
+    if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
+      nsCSSValue* lang = aData->ValueForLang();
+      if (lang->GetUnit() == eCSSUnit_Null) {
+        lang->SetStringValue(langValue->GetStringValue(), eCSSUnit_Ident);
+      }
+    }
+    if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
+      nsCSSValue* emphasisPos = aData->ValueForTextEmphasisPosition();
+      if (emphasisPos->GetUnit() == eCSSUnit_Null) {
+        const nsAString& lang = langValue->GetStringValue();
+        if (nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("zh"))) {
+          emphasisPos->SetIntValue(NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH,
+                                   eCSSUnit_Enumerated);
+        } else if (nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("ja")) ||
+                   nsStyleUtil::MatchesLanguagePrefix(lang, MOZ_UTF16("mn"))) {
+          // This branch is currently no part of the spec.
+          // See bug 1040668 comment 69 and comment 75.
+          emphasisPos->SetIntValue(NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT,
+                                   eCSSUnit_Enumerated);
+        }
       }
     }
   }
