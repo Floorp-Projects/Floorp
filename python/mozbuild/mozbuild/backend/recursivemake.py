@@ -62,7 +62,6 @@ from ..frontend.data import (
     LocalInclude,
     PerSourceFlag,
     Program,
-    Resources,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -532,9 +531,6 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, TestHarnessFiles):
             self._process_test_harness_files(obj, backend_file)
 
-        elif isinstance(obj, Resources):
-            self._process_resources(obj, obj.resources, backend_file)
-
         elif isinstance(obj, BrandingFiles):
             self._process_branding_files(obj, obj.files, backend_file)
 
@@ -999,19 +995,6 @@ INSTALL_TARGETS += %(prefix)s
         'dest': '$(DEPTH)/_tests/%s' % path,
         'files': ' '.join(mozpath.relpath(f, backend_file.objdir)
                           for f in files) })
-
-    def _process_resources(self, obj, resources, backend_file):
-        dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
-
-        # Resources need to go in the 'res' subdirectory of $(DIST)/bin, so we
-        # specify a root namespace of 'res'.
-        for source, dest, flags in self._walk_hierarchy(obj, resources,
-                                                        namespace='res'):
-            assert flags is None
-            self._install_manifests['dist_bin'].add_symlink(source, dest)
-
-            if not os.path.exists(source):
-                raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)
 
     def _process_branding_files(self, obj, files, backend_file):
         for source, dest, flags in self._walk_hierarchy(obj, files):
