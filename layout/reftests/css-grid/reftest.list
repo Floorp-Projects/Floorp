@@ -77,3 +77,4 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-row-gap-002.html grid-row-gap-002-ref.html
 == grid-row-gap-003.html grid-row-gap-003-ref.html
 == grid-row-gap-004.html grid-row-gap-004-ref.html
+== grid-container-overflow-001.html grid-container-overflow-001-ref.html
