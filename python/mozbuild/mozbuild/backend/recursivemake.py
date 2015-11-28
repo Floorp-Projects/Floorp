@@ -591,11 +591,10 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, FinalTargetFiles):
-            self._process_final_target_files(obj, obj.files, obj.target)
+            self._process_final_target_files(obj, obj.files)
 
         elif isinstance(obj, FinalTargetPreprocessedFiles):
-            self._process_final_target_pp_files(obj, obj.files, obj.target,
-                                                backend_file)
+            self._process_final_target_pp_files(obj, obj.files, backend_file)
 
         elif isinstance(obj, AndroidResDirs):
             # Order matters.
@@ -1319,7 +1318,8 @@ INSTALL_TARGETS += %(prefix)s
         # Process library-based defines
         self._process_defines(obj.defines, backend_file)
 
-    def _process_final_target_files(self, obj, files, target):
+    def _process_final_target_files(self, obj, files):
+        target = obj.install_target
         if target.startswith('dist/bin'):
             install_manifest = self._install_manifests['dist_bin']
             reltarget = mozpath.relpath(target, 'dist/bin')
@@ -1338,7 +1338,7 @@ INSTALL_TARGETS += %(prefix)s
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
                 install_manifest.add_symlink(source, dest)
 
-    def _process_final_target_pp_files(self, obj, files, target, backend_file):
+    def _process_final_target_pp_files(self, obj, files, backend_file):
         # We'd like to install these via manifests as preprocessed files.
         # But they currently depend on non-standard flags being added via
         # some Makefiles, so for now we just pass them through to the
@@ -1347,7 +1347,7 @@ INSTALL_TARGETS += %(prefix)s
             for f in strings:
                 backend_file.write('DIST_FILES_%d += %s\n' % (i, f))
             backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
-                               % (i, mozpath.join(target, path)))
+                               % (i, mozpath.join(obj.install_target, path)))
             backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
 
     def _process_chrome_manifest_entry(self, obj, backend_file):
