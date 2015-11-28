@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .outer {
+    text-decoration: underline;
+    position: absolute;
+  }
+  .outer+.outer {
+    color: green;
+  }
+  .inner {
+    vertical-align: 1em;
+  }
+  .outer+.outer>.inner {
+    position: relative;
+    top: 1em;
+  }
+</style>
+</head>
+<body>
+  <span class="outer"><span class="inner">x</span></span>
+  <span class="outer"><span class="inner">x</span></span>
+</body>
+</html>
