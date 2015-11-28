@@ -23,6 +23,7 @@ TEST_TEMPLATE = '''<!DOCTYPE html>
 <link rel="help" href="https://drafts.csswg.org/css-text-decor-3/#text-emphasis-position-property">
 <meta name="assert" content="'text-emphasis-position: {value}' with 'writing-mode: {wm}' puts emphasis marks {position} the text.">
 <link rel="match" href="text-emphasis-position-property-{index:03}-ref.html">
+<style> div {{ font-family: monospace; }} </style>
 <p>Pass if the emphasis marks are {position} the text below:</p>
 <div style="line-height: 5; text-emphasis: circle; writing-mode: {wm}; text-orientation: {orient}; text-emphasis-position: {value}">試験テスト</div>
 '''
