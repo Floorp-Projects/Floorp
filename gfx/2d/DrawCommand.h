@@ -6,8 +6,6 @@
 #ifndef MOZILLA_GFX_DRAWCOMMAND_H_
 #define MOZILLA_GFX_DRAWCOMMAND_H_
 
-
-#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include "2D.h"
@@ -591,6 +589,5 @@ public:
 } // namespace gfx
 
 } // namespace mozilla
-
 
 #endif /* MOZILLA_GFX_DRAWCOMMAND_H_ */
