@@ -1141,7 +1141,7 @@ protected:
  * The glyph data is copied into gfxTextRuns as needed from the cache of
  * ShapedWords associated with each gfxFont instance.
  */
-class gfxShapedWord : public gfxShapedText
+class gfxShapedWord final : public gfxShapedText
 {
 public:
     // Create a ShapedWord that can hold glyphs for aLength characters,
