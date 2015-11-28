@@ -13,7 +13,6 @@ from mozbuild.frontend.data import (
     FinalTargetFiles,
     JARManifest,
     JavaScriptModules,
-    Resources,
     XPIDLFile,
 )
 from mozbuild.jar import JarManifestParser
@@ -88,16 +87,6 @@ class FasterMakeBackend(CommonBackend):
                         )
                     elif obj.flavor == 'extra_pp':
                         self._add_preprocess(obj, f, base, defines=defines)
-
-        elif isinstance(obj, Resources) and \
-                obj.install_target.startswith('dist/bin'):
-            for path, strings in obj.resources.walk():
-                base = mozpath.join('res', path)
-                for f in strings:
-                    self._install_manifests[obj.install_target].add_symlink(
-                        mozpath.join(obj.srcdir, f),
-                        mozpath.join(base, mozpath.basename(f))
-                    )
 
         elif isinstance(obj, (FinalTargetFiles,
                               FinalTargetPreprocessedFiles)) and \

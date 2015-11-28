@@ -225,16 +225,6 @@ class TestHarnessFiles(ContextDerived):
         self.srcdir_pattern_files = srcdir_pattern_files
         self.objdir_files = objdir_files
 
-class Resources(ContextDerived):
-    """Context derived container object for RESOURCE_FILES, which is a
-    HierarchicalStringList.
-    """
-    __slots__ = ('resources',)
-
-    def __init__(self, context, resources):
-        ContextDerived.__init__(self, context)
-        self.resources = resources
-
 class BrandingFiles(ContextDerived):
     """Sandbox container object for BRANDING_FILES, which is a
     HierarchicalStringList.

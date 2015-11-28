@@ -1209,21 +1209,6 @@ VARIABLES = {
            BRANDING_FILES.dir['baz.png'].source = 'quux.png'
         """, None),
 
-    'RESOURCE_FILES': (HierarchicalStringList, list,
-        """List of resources to be exported, and in which subdirectories.
-
-        ``RESOURCE_FILES`` is used to list the resource files to be exported to
-        ``dist/bin/res``, but it can be used for other files as well. This variable
-        behaves as a list when appending filenames for resources in the top-level
-        directory. Files can also be appended to a field to indicate which
-        subdirectory they should be exported to. For example, to export
-        ``foo.res`` to the top-level directory, and ``bar.res`` to ``fonts/``,
-        append to ``RESOURCE_FILES`` like so::
-
-           RESOURCE_FILES += ['foo.res']
-           RESOURCE_FILES.fonts += ['bar.res']
-        """, None),
-
     'SDK_LIBRARY': (bool, bool,
         """Whether the library built in the directory is part of the SDK.
 
@@ -1972,6 +1957,21 @@ SPECIAL_VARIABLES = {
 
     'JS_PREFERENCE_PP_FILES': (lambda context: context['FINAL_TARGET_PP_FILES'].defaults.pref._strings, list,
         """Like JS_PREFERENCE_FILES, preprocessed..
+        """),
+
+    'RESOURCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].res, list,
+        """List of resources to be exported, and in which subdirectories.
+
+        ``RESOURCE_FILES`` is used to list the resource files to be exported to
+        ``dist/bin/res``, but it can be used for other files as well. This variable
+        behaves as a list when appending filenames for resources in the top-level
+        directory. Files can also be appended to a field to indicate which
+        subdirectory they should be exported to. For example, to export
+        ``foo.res`` to the top-level directory, and ``bar.res`` to ``fonts/``,
+        append to ``RESOURCE_FILES`` like so::
+
+           RESOURCE_FILES += ['foo.res']
+           RESOURCE_FILES.fonts += ['bar.res']
         """),
 
 }

@@ -62,7 +62,6 @@ from .data import (
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
-    Resources,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -628,14 +627,6 @@ class TreeMetadataEmitter(LoggingMixin):
         if host_defines:
             yield HostDefines(context, host_defines)
 
-        resources = context.get('RESOURCE_FILES')
-        if resources:
-            if context.get('DIST_SUBDIR') or context.get('XPI_NAME'):
-                raise SandboxValidationError(
-                    'RESOURCES_FILES cannot be used with DIST_SUBDIR or '
-                    'XPI_NAME.', context)
-            yield Resources(context, resources)
-
         self._handle_programs(context)
 
         extra_js_modules = context.get('EXTRA_JS_MODULES')
@@ -685,11 +676,14 @@ class TreeMetadataEmitter(LoggingMixin):
                     '%s cannot be used with DIST_INSTALL = False' % var,
                     context)
             has_prefs = False
+            has_resources = False
             for base, files in all_files.walk():
                 if base == 'components':
                     components.extend(files)
                 if base == 'defaults/pref':
                     has_prefs = True
+                if mozpath.split(base)[0] == 'res':
+                    has_resources = True
                 for f in files:
                     path = os.path.join(context.srcdir, f)
                     if not os.path.exists(path):
@@ -706,6 +700,12 @@ class TreeMetadataEmitter(LoggingMixin):
                               context.get('DIST_SUBDIR')):
                 all_files.defaults.preferences += all_files.defaults.pref
                 del all_files.defaults._children['pref']
+
+            if has_resources and (context.get('DIST_SUBDIR') or
+                                  context.get('XPI_NAME')):
+                raise SandboxValidationError(
+                    'RESOURCES_FILES cannot be used with DIST_SUBDIR or '
+                    'XPI_NAME.', context)
 
             yield cls(context, all_files, context['FINAL_TARGET'])
 
