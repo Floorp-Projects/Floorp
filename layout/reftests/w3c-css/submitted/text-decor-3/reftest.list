@@ -8,8 +8,8 @@ default-preferences pref(layout.css.text-emphasis.enabled,true)
 # text-emphasis-style
 == text-emphasis-style-property-001.html text-emphasis-style-property-001-ref.html
 == text-emphasis-style-property-002.html text-emphasis-style-property-002-ref.html
-== text-emphasis-style-property-003.html text-emphasis-style-property-003-ref.html
-== text-emphasis-style-property-004.html text-emphasis-style-property-004-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-003.html text-emphasis-style-property-003-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-004.html text-emphasis-style-property-004-ref.html
 == text-emphasis-style-property-005.html text-emphasis-style-property-005-ref.html
 == text-emphasis-style-property-005a.html text-emphasis-style-property-005-ref.html
 # START tests from support/generate-text-emphasis-style-property-010-tests.sh
@@ -34,9 +34,9 @@ default-preferences pref(layout.css.text-emphasis.enabled,true)
 == text-emphasis-style-property-014.html text-emphasis-style-property-014-ref.html
 == text-emphasis-style-property-014a.html text-emphasis-style-property-014-ref.html
 == text-emphasis-style-property-014b.html text-emphasis-style-property-014-ref.html
-== text-emphasis-style-property-015.html text-emphasis-style-property-015-ref.html
-== text-emphasis-style-property-015a.html text-emphasis-style-property-015-ref.html
-== text-emphasis-style-property-015b.html text-emphasis-style-property-015-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-015.html text-emphasis-style-property-015-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-015a.html text-emphasis-style-property-015-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-015b.html text-emphasis-style-property-015-ref.html
 == text-emphasis-style-property-016.html text-emphasis-style-property-016-ref.html
 == text-emphasis-style-property-016a.html text-emphasis-style-property-016-ref.html
 == text-emphasis-style-property-017.html text-emphasis-style-property-017-ref.html
@@ -46,8 +46,8 @@ default-preferences pref(layout.css.text-emphasis.enabled,true)
 == text-emphasis-style-property-018a.html text-emphasis-style-property-018-ref.html
 == text-emphasis-style-property-019.html text-emphasis-style-property-019-ref.html
 == text-emphasis-style-property-019a.html text-emphasis-style-property-019-ref.html
-== text-emphasis-style-property-020.html text-emphasis-style-property-020-ref.html
-== text-emphasis-style-property-020a.html text-emphasis-style-property-020-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-020.html text-emphasis-style-property-020-ref.html
+skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-property-020a.html text-emphasis-style-property-020-ref.html
 # END tests from support/generate-text-emphasis-style-property-tests.py
 
 # text-emphasis-color
