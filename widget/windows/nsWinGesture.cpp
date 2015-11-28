@@ -12,10 +12,11 @@
 #include "nsUXThemeData.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMWheelEvent.h"
-#include "mozilla/Constants.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
+
+#include <cmath>
 
 using namespace mozilla;
 using namespace mozilla::widget;
