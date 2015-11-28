@@ -1013,13 +1013,8 @@ INSTALL_TARGETS += %(prefix)s
         # specify a root namespace of 'res'.
         for source, dest, flags in self._walk_hierarchy(obj, resources,
                                                         namespace='res'):
-            if flags and flags.preprocess:
-                if dest.endswith('.in'):
-                    dest = dest[:-3]
-                dep_file = mozpath.join(dep_path, mozpath.basename(source) + '.pp')
-                self._install_manifests['dist_bin'].add_preprocess(source, dest, dep_file, marker='%', defines=obj.defines)
-            else:
-                self._install_manifests['dist_bin'].add_symlink(source, dest)
+            assert flags is None
+            self._install_manifests['dist_bin'].add_symlink(source, dest)
 
             if not os.path.exists(source):
                 raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)

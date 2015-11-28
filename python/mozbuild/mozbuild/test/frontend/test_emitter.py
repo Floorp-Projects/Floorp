@@ -290,36 +290,18 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('resources')
         objs = self.read_topsrcdir(reader)
 
-        expected_defines = dict(reader.config.defines)
-        expected_defines.update({
-            'FOO': True,
-            'BAR': 'BAZ',
-        })
-
         self.assertEqual(len(objs), 2)
         self.assertIsInstance(objs[0], Defines)
         self.assertIsInstance(objs[1], Resources)
 
-        self.assertEqual(objs[1].defines, expected_defines)
-
         resources = objs[1].resources
         self.assertEqual(resources._strings, ['foo.res', 'bar.res', 'baz.res',
                                               'foo_p.res.in', 'bar_p.res.in', 'baz_p.res.in'])
-        self.assertFalse(resources['foo.res'].preprocess)
-        self.assertFalse(resources['bar.res'].preprocess)
-        self.assertFalse(resources['baz.res'].preprocess)
-        self.assertTrue(resources['foo_p.res.in'].preprocess)
-        self.assertTrue(resources['bar_p.res.in'].preprocess)
-        self.assertTrue(resources['baz_p.res.in'].preprocess)
 
         self.assertIn('mozilla', resources._children)
         mozilla = resources._children['mozilla']
         self.assertEqual(mozilla._strings, ['mozilla1.res', 'mozilla2.res',
                                             'mozilla1_p.res.in', 'mozilla2_p.res.in'])
-        self.assertFalse(mozilla['mozilla1.res'].preprocess)
-        self.assertFalse(mozilla['mozilla2.res'].preprocess)
-        self.assertTrue(mozilla['mozilla1_p.res.in'].preprocess)
-        self.assertTrue(mozilla['mozilla2_p.res.in'].preprocess)
 
         self.assertIn('dom', mozilla._children)
         dom = mozilla._children['dom']

@@ -7,7 +7,3 @@ RESOURCE_FILES.fonts += ['font1.ttf', 'font2.ttf']
 RESOURCE_FILES.fonts.desktop += ['desktop1.ttf', 'desktop2.ttf']
 RESOURCE_FILES.fonts.mobile += ['mobile.ttf']
 RESOURCE_FILES.tests += ['extra.manifest', 'test.manifest']
-
-RESOURCE_FILES['bar.res.in'].preprocess = True
-RESOURCE_FILES.tests['extra.manifest'].preprocess = True
-RESOURCE_FILES.tests['test.manifest'].preprocess = True

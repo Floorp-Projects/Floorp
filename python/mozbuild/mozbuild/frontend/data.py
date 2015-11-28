@@ -227,22 +227,13 @@ class TestHarnessFiles(ContextDerived):
 
 class Resources(ContextDerived):
     """Context derived container object for RESOURCE_FILES, which is a
-    HierarchicalStringList, with an extra ``.preprocess`` property on each
-    entry.
-
-    The local defines plus anything in ACDEFINES are stored in ``defines`` as a
-    dictionary, for any files that need preprocessing.
+    HierarchicalStringList.
     """
-    __slots__ = ('resources', 'defines')
+    __slots__ = ('resources',)
 
-    def __init__(self, context, resources, defines=None):
+    def __init__(self, context, resources):
         ContextDerived.__init__(self, context)
         self.resources = resources
-        defs = {}
-        defs.update(context.config.defines)
-        if defines:
-            defs.update(defines)
-        self.defines = defs
 
 class BrandingFiles(ContextDerived):
     """Sandbox container object for BRANDING_FILES, which is a
