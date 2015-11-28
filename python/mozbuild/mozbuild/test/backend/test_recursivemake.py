@@ -414,7 +414,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('res/fonts/font1.ttf', m)
         self.assertIn('res/fonts/desktop/desktop2.ttf', m)
 
-        self.assertIn('res/bar.res', m)
+        self.assertIn('res/bar.res.in', m)
         self.assertIn('res/tests/test.manifest', m)
         self.assertIn('res/tests/extra.manifest', m)
 

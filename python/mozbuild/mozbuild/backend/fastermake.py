@@ -140,15 +140,10 @@ class FasterMakeBackend(CommonBackend):
             for path, strings in obj.resources.walk():
                 base = mozpath.join('res', path)
                 for f in strings:
-                    flags = strings.flags_for(f)
-                    if flags and flags.preprocess:
-                        self._add_preprocess(obj, f, base, marker='%',
-                                             defines=obj.defines)
-                    else:
-                        self._install_manifests[obj.install_target].add_symlink(
-                            mozpath.join(obj.srcdir, f),
-                            mozpath.join(base, mozpath.basename(f))
-                        )
+                    self._install_manifests[obj.install_target].add_symlink(
+                        mozpath.join(obj.srcdir, f),
+                        mozpath.join(base, mozpath.basename(f))
+                    )
 
         elif isinstance(obj, (FinalTargetFiles,
                               FinalTargetPreprocessedFiles)) and \
