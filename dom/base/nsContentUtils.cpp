@@ -7671,11 +7671,9 @@ nsContentUtils::ToWidgetPoint(const CSSPoint& aPoint,
                               const nsPoint& aOffset,
                               nsPresContext* aPresContext)
 {
-  nsPoint point = CSSPoint::ToAppUnits(aPoint) + aOffset;
-#if defined(MOZ_SINGLE_PROCESS_APZ)
-  point = point.ApplyResolution(aPresContext->PresShell()->GetCumulativeScaleResolution());
-#endif
-  return LayoutDeviceIntPoint::FromAppUnitsRounded(point, aPresContext->AppUnitsPerDevPixel());
+  return LayoutDeviceIntPoint::FromAppUnitsRounded(
+    (CSSPoint::ToAppUnits(aPoint) + aOffset).ApplyResolution(aPresContext->PresShell()->GetCumulativeScaleResolution()),
+    aPresContext->AppUnitsPerDevPixel());
 }
 
 nsView*
