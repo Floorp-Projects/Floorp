@@ -12,18 +12,13 @@ var ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
              .getService(Ci.nsIMessageListenerManager);
 
 var pickResult = null;
-var timer = null;
 
 function processPickMessage(message) {
   let sender = message.target.QueryInterface(Ci.nsIMessageSender);
   // reply FilePicker's message
   sender.sendAsyncMessage('file-picked', pickResult);
-  timer = Cc["@mozilla.org/timer;1"]
-            .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(function() {
-    // notify caller
-    sendAsyncMessage('file-picked-posted', { type: 'file-picked-posted' });
-  }, 3000, Ci.nsITimer.TYPE_ONE_SHOT);
+  // notify caller
+  sendAsyncMessage('file-picked-posted', { type: 'file-picked-posted' });
 }
 
 function updatePickResult(result) {
