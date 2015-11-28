@@ -252,6 +252,16 @@ public:
               gfxTextRunDrawCallbacks *aCallbacks = nullptr);
 
     /**
+     * Draws the emphasis marks for this text run. Uses only GetSpacing
+     * from aProvider. The provided point is the baseline origin of the
+     * line of emphasis marks.
+     */
+    void DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
+                           gfxFloat aMarkAdvance, gfxPoint aPt,
+                           uint32_t aStart, uint32_t aLength,
+                           PropertyProvider* aProvider);
+
+    /**
      * Computes the ReflowMetrics for a substring.
      * Uses GetSpacing from aBreakProvider.
      * @param aBoundingBoxType which kind of bounding box (loose/tight)

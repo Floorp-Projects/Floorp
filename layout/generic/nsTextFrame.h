@@ -440,6 +440,12 @@ public:
                                      SelectionType aSelectionType,
                                      DrawPathCallbacks* aCallbacks);
 
+  void DrawEmphasisMarks(gfxContext* aContext,
+                         mozilla::WritingMode aWM,
+                         const gfxPoint& aTextBaselinePt,
+                         uint32_t aOffset, uint32_t aLength,
+                         PropertyProvider& aProvider);
+
   virtual nscolor GetCaretColorAt(int32_t aOffset) override;
 
   int16_t GetSelectionStatus(int16_t* aSelectionFlags);
@@ -584,6 +590,11 @@ protected:
                                PropertyProvider& aProvider,
                                nsRect* aVisualOverflowRect,
                                bool aIncludeTextDecorations);
+
+  // Update information of emphasis marks, and return the visial
+  // overflow rect of the emphasis marks.
+  nsRect UpdateTextEmphasis(mozilla::WritingMode aWM,
+                            PropertyProvider& aProvider);
 
   void PaintOneShadow(uint32_t aOffset,
                       uint32_t aLength,
@@ -812,6 +823,14 @@ protected:
   void ClearMetrics(nsHTMLReflowMetrics& aMetrics);
 
   NS_DECLARE_FRAME_PROPERTY(JustificationAssignment, nullptr)
+
+  struct EmphasisMarkInfo
+  {
+    nsAutoPtr<gfxTextRun> textRun;
+    gfxFloat advance;
+    gfxFloat baselineOffset;
+  };
+  NS_DECLARE_FRAME_PROPERTY(EmphasisMarkProperty, DeleteValue<EmphasisMarkInfo>)
 };
 
 #endif

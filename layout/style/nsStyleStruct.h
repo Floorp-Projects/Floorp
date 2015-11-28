@@ -1811,6 +1811,8 @@ struct nsStyleText {
   inline bool NewlineIsSignificant(const nsTextFrame* aContextFrame) const;
   inline bool WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const;
   inline bool WordCanWrap(const nsIFrame* aContextFrame) const;
+
+  mozilla::LogicalSide TextEmphasisSide(mozilla::WritingMode aWM) const;
 };
 
 struct nsStyleImageOrientation {
