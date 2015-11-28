@@ -1000,11 +1000,13 @@ protected:
     {
         MOZ_ASSERT(GetCharacterGlyphs() + aIndex == &aGlyph);
         if (aGlyph.IsSimpleGlyph()) {
-            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
-            details->mGlyphID = aGlyph.GetSimpleGlyph();
-            details->mAdvance = aGlyph.GetSimpleAdvance();
-            details->mXOffset = details->mYOffset = 0;
-            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
+            DetailedGlyph details = {
+                aGlyph.GetSimpleGlyph(),
+                (int32_t) aGlyph.GetSimpleAdvance(),
+                0, 0
+            };
+            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1),
+                      &details);
         }
     }
 
