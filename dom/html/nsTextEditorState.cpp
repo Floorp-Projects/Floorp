@@ -110,7 +110,10 @@ public:
       }
       mTextEditorState->mSelectionRestoreEagerInit = false;
     }
-    mTextEditorState->FinishedRestoringSelection();
+
+    if (mTextEditorState) {
+      mTextEditorState->FinishedRestoringSelection();
+    }
     return NS_OK;
   }
 
