@@ -652,21 +652,6 @@ class JARManifest(ContextDerived):
         self.path = path
 
 
-class JavaScriptModules(ContextDerived):
-    """Describes a JavaScript module."""
-
-    __slots__ = (
-        'modules',
-        'flavor',
-    )
-
-    def __init__(self, context, modules, flavor):
-        super(JavaScriptModules, self).__init__(context)
-
-        self.modules = modules
-        self.flavor = flavor
-
-
 class ContextWrapped(ContextDerived):
     """Generic context derived container object for a wrapped rich object.
 
@@ -839,6 +824,12 @@ class FinalTargetPreprocessedFiles(ContextDerived):
     def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
+
+
+class TestingFiles(FinalTargetFiles):
+    @property
+    def install_target(self):
+        return '_tests'
 
 
 class GeneratedFile(ContextDerived):
