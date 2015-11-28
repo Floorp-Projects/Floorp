@@ -1016,6 +1016,9 @@ protected:
   bool ParseTextAlignLast(nsCSSValue& aValue);
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
+  bool ParseTextEmphasis();
+  bool ParseTextEmphasisPosition(nsCSSValue& aValue);
+  bool ParseTextEmphasisStyle(nsCSSValue& aValue);
   bool ParseTextCombineUpright(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
   bool ParseTouchAction(nsCSSValue& aValue);
@@ -11223,6 +11226,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseQuotes();
   case eCSSProperty_text_decoration:
     return ParseTextDecoration();
+  case eCSSProperty_text_emphasis:
+    return ParseTextEmphasis();
   case eCSSProperty_will_change:
     return ParseWillChange();
   case eCSSProperty_transform:
@@ -11343,6 +11348,10 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
       return ParseTextDecorationLine(aValue);
     case eCSSProperty_text_combine_upright:
       return ParseTextCombineUpright(aValue);
+    case eCSSProperty_text_emphasis_position:
+      return ParseTextEmphasisPosition(aValue);
+    case eCSSProperty_text_emphasis_style:
+      return ParseTextEmphasisStyle(aValue);
     case eCSSProperty_text_overflow:
       return ParseTextOverflow(aValue);
     case eCSSProperty_touch_action:
@@ -14498,6 +14507,108 @@ CSSParserImpl::ParseTextDecoration()
   for (int32_t index = 0; index < numProps; index++) {
     AppendValue(kTextDecorationIDs[index], values[index]);
   }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTextEmphasis()
+{
+  static MOZ_CONSTEXPR_VAR nsCSSProperty kTextEmphasisIDs[] = {
+    eCSSProperty_text_emphasis_style,
+    eCSSProperty_text_emphasis_color
+  };
+  MOZ_CONSTEXPR_VAR int32_t numProps = MOZ_ARRAY_LENGTH(kTextEmphasisIDs);
+  nsCSSValue values[numProps];
+
+  int32_t found = ParseChoice(values, kTextEmphasisIDs, numProps);
+  if (found < 1) {
+    return false;
+  }
+
+  if (!(found & 1)) { // Provide default text-emphasis-style
+    values[0].SetIntValue(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE,
+                          eCSSUnit_Enumerated);
+  }
+  if (!(found & 2)) { // Provide default text-emphasis-color
+    values[1].SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
+  }
+
+  for (int32_t index = 0; index < numProps; index++) {
+    AppendValue(kTextEmphasisIDs[index], values[index]);
+  }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTextEmphasisPosition(nsCSSValue& aValue)
+{
+  static_assert((NS_STYLE_TEXT_EMPHASIS_POSITION_OVER ^
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER ^
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT ^
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT) ==
+                (NS_STYLE_TEXT_EMPHASIS_POSITION_OVER |
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER |
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT |
+                 NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT),
+                "text-emphasis-position constants should be bitmasks");
+
+  if (ParseSingleTokenVariant(aValue, VARIANT_INHERIT, nullptr)) {
+    return true;
+  }
+
+  nsCSSValue first, second;
+  const auto& kTable = nsCSSProps::kTextEmphasisPositionKTable;
+  if (!ParseSingleTokenVariant(first, VARIANT_KEYWORD, kTable) ||
+      !ParseSingleTokenVariant(second, VARIANT_KEYWORD, kTable)) {
+    return false;
+  }
+
+  auto firstValue = first.GetIntValue();
+  auto secondValue = second.GetIntValue();
+  if ((firstValue == NS_STYLE_TEXT_EMPHASIS_POSITION_OVER ||
+      firstValue == NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER) ==
+      (secondValue == NS_STYLE_TEXT_EMPHASIS_POSITION_OVER ||
+      secondValue == NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER)) {
+    return false;
+  }
+
+  aValue.SetIntValue(firstValue | secondValue, eCSSUnit_Enumerated);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTextEmphasisStyle(nsCSSValue& aValue)
+{
+  static_assert((NS_STYLE_TEXT_EMPHASIS_STYLE_SHAPE_MASK ^
+                 NS_STYLE_TEXT_EMPHASIS_STYLE_FILL_MASK) ==
+                (NS_STYLE_TEXT_EMPHASIS_STYLE_SHAPE_MASK |
+                 NS_STYLE_TEXT_EMPHASIS_STYLE_FILL_MASK),
+                "text-emphasis-style shape and fill constants "
+                "should not intersect");
+  static_assert(NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED == 0,
+                "Making 'filled' zero ensures that if neither 'filled' nor "
+                "'open' is specified, we compute it to 'filled' per spec");
+
+  if (ParseSingleTokenVariant(aValue, VARIANT_HOS, nullptr)) {
+    return true;
+  }
+
+  nsCSSValue first, second;
+  const auto& fillKTable = nsCSSProps::kTextEmphasisStyleFillKTable;
+  const auto& shapeKTable = nsCSSProps::kTextEmphasisStyleShapeKTable;
+  if (ParseSingleTokenVariant(first, VARIANT_KEYWORD, fillKTable)) {
+    ParseSingleTokenVariant(second, VARIANT_KEYWORD, shapeKTable);
+  } else if (ParseSingleTokenVariant(first, VARIANT_KEYWORD, shapeKTable)) {
+    ParseSingleTokenVariant(second, VARIANT_KEYWORD, fillKTable);
+  } else {
+    return false;
+  }
+
+  auto value = first.GetIntValue();
+  if (second.GetUnit() == eCSSUnit_Enumerated) {
+    value |= second.GetIntValue();
+  }
+  aValue.SetIntValue(value, eCSSUnit_Enumerated);
   return true;
 }
 

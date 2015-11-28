@@ -3097,6 +3097,14 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_text_emphasis_color: {
+          auto styleText = static_cast<const nsStyleText*>(styleStruct);
+          nscolor color = styleText->mTextEmphasisColorForeground ?
+            aStyleContext->StyleColor()->mColor : styleText->mTextEmphasisColor;
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);
