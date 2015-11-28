@@ -2984,6 +2984,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     for (uint32_t i = 0; i < mGridRowEnd; ++i) {
       bSize += gridReflowState.mRows.mSizes[i].mBase;
     }
+    bSize += gridReflowState.mRows.SumOfGridGaps();
   } else {
     bSize = computedBSize;
   }
