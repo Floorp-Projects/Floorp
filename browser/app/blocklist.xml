@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1447879967000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1448384581000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -121,6 +121,12 @@
                     </versionRange>
                     <prefs>
                   <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1058" id="amo-validator-bypass@example.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i140" id="mozillahmpg@mozilla.org">
@@ -463,7 +469,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i461" id="{8E9E3331-D360-4f87-8803-52DE43566502}">
+      <emItem  blockID="i748" id="{32da2f20-827d-40aa-a3b4-2fc4a294352e}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -2386,7 +2392,7 @@
                   <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
-      <emItem  blockID="i748" id="{32da2f20-827d-40aa-a3b4-2fc4a294352e}">
+      <emItem  blockID="i461" id="{8E9E3331-D360-4f87-8803-52DE43566502}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
