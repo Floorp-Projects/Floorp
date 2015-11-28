@@ -734,7 +734,7 @@ class TestEmitterBasic(unittest.TestCase):
         }
         defines = {}
         for lib in libraries:
-            defines[lib.basename] = ' '.join(lib.defines.get_defines())
+            defines[lib.basename] = ' '.join(lib.lib_defines.get_defines())
         self.assertEqual(expected, defines)
 
     def test_sources(self):

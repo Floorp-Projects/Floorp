@@ -1242,7 +1242,7 @@ INSTALL_TARGETS += %(prefix)s
                 backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
         # Process library-based defines
-        self._process_defines(obj.defines, backend_file)
+        self._process_defines(obj.lib_defines, backend_file)
 
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
