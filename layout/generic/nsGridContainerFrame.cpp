@@ -1020,10 +1020,10 @@ AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
   auto alignSelf = aAlignSelf;
   bool overflowSafe = alignSelf & NS_STYLE_ALIGN_SAFE;
   alignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
-  MOZ_ASSERT(alignSelf != NS_STYLE_ALIGN_LEFT &&
-             alignSelf != NS_STYLE_ALIGN_RIGHT,
-             "Grid's 'align-self' axis is never parallel to the container's "
-             "inline axis, so these should've computed to 'start' already");
+  // Grid's 'align-self' axis is never parallel to the container's inline axis.
+  if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
+    alignSelf = NS_STYLE_ALIGN_START;
+  }
   if (MOZ_UNLIKELY(alignSelf == NS_STYLE_ALIGN_AUTO)) {
     // Happens in rare edge cases when 'position' was ignored by the frame
     // constructor (and the style system computed 'auto' based on 'position').
@@ -1097,9 +1097,10 @@ GetAlignJustifyValue(uint16_t aAlignment, const WritingMode aWM,
   switch (aAlignment) {
     case NS_STYLE_ALIGN_LEFT:
     case NS_STYLE_ALIGN_RIGHT: {
-      MOZ_ASSERT(!aIsAlign, "Grid container's 'align-contents' axis is never "
-                 "parallel to its inline axis, so these should've computed to "
-                 "'start' already");
+      if (aIsAlign) {
+        // Grid's 'align-content' axis is never parallel to the inline axis.
+        return NS_STYLE_ALIGN_START;
+      }
       bool isStart = aWM.IsBidiLTR() == (aAlignment == NS_STYLE_ALIGN_LEFT);
       return isStart ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
     }
@@ -2600,7 +2601,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   const bool isAlign = mAxis == eLogicalAxisBlock;
   auto stylePos = aReflowState.mStylePosition;
   const auto valueAndFallback = isAlign ?
-    stylePos->ComputedAlignContent(aReflowState.mStyleDisplay) :
+    stylePos->ComputedAlignContent() :
     stylePos->ComputedJustifyContent(aReflowState.mStyleDisplay);
   WritingMode wm = aReflowState.GetWritingMode();
   bool overflowSafe;
