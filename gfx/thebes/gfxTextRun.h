@@ -619,6 +619,24 @@ public:
         mShapingState = aShapingState;
     }
 
+    int32_t GetAdvanceForGlyph(uint32_t aIndex)
+    {
+        const CompressedGlyph& glyphData = mCharacterGlyphs[aIndex];
+        if (glyphData.IsSimpleGlyph()) {
+            return glyphData.GetSimpleAdvance();
+        }
+        uint32_t glyphCount = glyphData.GetGlyphCount();
+        if (!glyphCount) {
+            return 0;
+        }
+        const DetailedGlyph* details = GetDetailedGlyphs(aIndex);
+        int32_t advance = 0;
+        for (uint32_t j = 0; j < glyphCount; ++j, ++details) {
+            advance += details->mAdvance;
+        }
+        return advance;
+    }
+
 #ifdef DEBUG
     void Dump(FILE* aOutput);
 #endif
