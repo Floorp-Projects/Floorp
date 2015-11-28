@@ -637,7 +637,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     'XPI_NAME.', context)
             yield Resources(context, resources)
 
-        for pref in sorted(context['JS_PREFERENCE_FILES']):
+        for pref in sorted(context['JS_PREFERENCE_FILES'] +
+                           context['JS_PREFERENCE_PP_FILES']):
             yield JsPreferenceFile(context, pref)
 
         self._handle_programs(context)

@@ -33,6 +33,6 @@ if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
      'b2gdroid.js',
 ]

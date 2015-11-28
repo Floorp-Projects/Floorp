@@ -54,7 +54,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 DISABLE_STL_WRAPPING = True
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
     'xulrunner.js',
 ]
 

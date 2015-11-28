@@ -5,8 +5,11 @@
 DIST_SUBDIR = 'browser'
 export('DIST_SUBDIR')
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
     '/b2g/app/b2g.js',
+]
+
+JS_PREFERENCE_FILES += [
     '/b2g/dev/app/mulet.js',
 ]
 

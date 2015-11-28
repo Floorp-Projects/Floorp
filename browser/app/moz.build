@@ -11,7 +11,7 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_ASAN']:
 else:
     GeckoProgram(CONFIG['MOZ_APP_NAME'], msvcrt='static')
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
     'profile/firefox.js',
 ]
 
