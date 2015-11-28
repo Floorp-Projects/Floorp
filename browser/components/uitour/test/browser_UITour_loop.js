@@ -9,8 +9,8 @@ var gContentWindow;
 var loopButton;
 var loopPanel = document.getElementById("loop-notification-panel");
 
-const { LoopRooms } = Components.utils.import("chrome://loop/content/modules/LoopRooms.jsm", {});
-const { MozLoopServiceInternal } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
+const { LoopRooms } = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 
 function test() {
   UITourTest();

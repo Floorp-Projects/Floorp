@@ -652,6 +652,16 @@ menuitem.bookmark-item {
   #bookmarks-menu-button.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
   }
+
+  #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver.png)
+  }
+}
+
+@media (-moz-windows-theme: luna-silver) and (min-resolution: 1.1dppx) {
+  #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver@2x.png)
+  }
 }
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
