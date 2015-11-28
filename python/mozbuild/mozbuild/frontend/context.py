@@ -1096,6 +1096,10 @@ VARIABLES = {
         Path will be defined for gre or application prefs dir based on what is building.
         """, 'libs'),
 
+    'JS_PREFERENCE_PP_FILES': (StrictOrderingOnAppendList, list,
+        """Like JS_PREFERENCE_FILES, preprocessed..
+        """, 'libs'),
+
     'LIBRARY_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for the entire library.
 
