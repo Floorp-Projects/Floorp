@@ -820,10 +820,9 @@ class FinalTargetFiles(ContextDerived):
     """
     __slots__ = ('files', 'target')
 
-    def __init__(self, sandbox, files, target):
+    def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
-        self.target = target
 
 
 class FinalTargetPreprocessedFiles(ContextDerived):
@@ -837,10 +836,9 @@ class FinalTargetPreprocessedFiles(ContextDerived):
     """
     __slots__ = ('files', 'target')
 
-    def __init__(self, sandbox, files, target):
+    def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
-        self.target = target
 
 
 class GeneratedFile(ContextDerived):
