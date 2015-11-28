@@ -476,7 +476,7 @@ public:
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
 
-    CompressedGlyph* GetCharacterGlyphs() {
+    CompressedGlyph* GetCharacterGlyphs() final {
         NS_ASSERTION(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
         return mCharacterGlyphs;
     }
