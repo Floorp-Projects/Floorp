@@ -322,25 +322,9 @@ gfxTextRun::ComputePartialLigatureWidth(uint32_t aPartStart, uint32_t aPartEnd,
 int32_t
 gfxTextRun::GetAdvanceForGlyphs(uint32_t aStart, uint32_t aEnd)
 {
-    const CompressedGlyph *glyphData = mCharacterGlyphs + aStart;
     int32_t advance = 0;
-    uint32_t i;
-    for (i = aStart; i < aEnd; ++i, ++glyphData) {
-        if (glyphData->IsSimpleGlyph()) {
-            advance += glyphData->GetSimpleAdvance();   
-        } else {
-            uint32_t glyphCount = glyphData->GetGlyphCount();
-            if (glyphCount == 0) {
-                continue;
-            }
-            const DetailedGlyph *details = GetDetailedGlyphs(i);
-            if (details) {
-                uint32_t j;
-                for (j = 0; j < glyphCount; ++j, ++details) {
-                    advance += details->mAdvance;
-                }
-            }
-        }
+    for (auto i = aStart; i < aEnd; ++i) {
+        advance += GetAdvanceForGlyph(i);
     }
     return advance;
 }
