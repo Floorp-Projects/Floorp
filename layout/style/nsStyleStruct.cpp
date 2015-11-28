@@ -3599,13 +3599,14 @@ AreShadowArraysEqual(nsCSSShadowArray* lhs,
 // nsStyleText
 //
 
-nsStyleText::nsStyleText(void)
+nsStyleText::nsStyleText(nsPresContext* aPresContext)
 { 
   MOZ_COUNT_CTOR(nsStyleText);
   mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
   mTextAlignLast = NS_STYLE_TEXT_ALIGN_AUTO;
   mTextAlignTrue = false;
   mTextAlignLastTrue = false;
+  mTextEmphasisColorForeground = true;
   mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
   mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
   mWordBreak = NS_STYLE_WORDBREAK_NORMAL;
@@ -3615,6 +3616,10 @@ nsStyleText::nsStyleText(void)
   mRubyPosition = NS_STYLE_RUBY_POSITION_OVER;
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
+  mTextEmphasisStyle = NS_STYLE_TEXT_EMPHASIS_STYLE_NONE;
+  mTextEmphasisPosition = NS_STYLE_TEXT_EMPHASIS_POSITION_OVER |
+    NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT;
+  mTextEmphasisColor = aPresContext->DefaultColor();
   mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
 
   mWordSpacing.SetCoordValue(0);
@@ -3631,6 +3636,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextAlignLast(aSource.mTextAlignLast),
     mTextAlignTrue(false),
     mTextAlignLastTrue(false),
+    mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground),
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
     mWordBreak(aSource.mWordBreak),
@@ -3641,12 +3647,16 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mTextSizeAdjust(aSource.mTextSizeAdjust),
     mTextCombineUpright(aSource.mTextCombineUpright),
     mControlCharacterVisibility(aSource.mControlCharacterVisibility),
+    mTextEmphasisPosition(aSource.mTextEmphasisPosition),
+    mTextEmphasisStyle(aSource.mTextEmphasisStyle),
     mTabSize(aSource.mTabSize),
+    mTextEmphasisColor(aSource.mTextEmphasisColor),
     mWordSpacing(aSource.mWordSpacing),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
-    mTextShadow(aSource.mTextShadow)
+    mTextShadow(aSource.mTextShadow),
+    mTextEmphasisStyleString(aSource.mTextEmphasisStyleString)
 {
   MOZ_COUNT_CTOR(nsStyleText);
 }
@@ -3693,6 +3703,26 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
            nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }
+
+  if (mTextEmphasisPosition != aOther.mTextEmphasisPosition ||
+      mTextEmphasisStyle != aOther.mTextEmphasisStyle ||
+      mTextEmphasisStyleString != aOther.mTextEmphasisStyleString) {
+    return nsChangeHint_UpdateOverflow |
+           nsChangeHint_SchedulePaint |
+           nsChangeHint_RepaintFrame;
+  }
+
+  MOZ_ASSERT(!mTextEmphasisColorForeground ||
+             !aOther.mTextEmphasisColorForeground ||
+             mTextEmphasisColor == aOther.mTextEmphasisColor,
+             "If the text-emphasis-color are both foreground color, "
+             "mTextEmphasisColor should also be identical");
+  if (mTextEmphasisColorForeground != aOther.mTextEmphasisColorForeground ||
+      mTextEmphasisColor != aOther.mTextEmphasisColor) {
+    return nsChangeHint_SchedulePaint |
+           nsChangeHint_RepaintFrame;
+  }
+
   return NS_STYLE_HINT_NONE;
 }
 

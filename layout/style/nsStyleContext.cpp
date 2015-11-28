@@ -1066,6 +1066,17 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
     }
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleText()) {
+      const nsStyleText* thisVisText = thisVis->StyleText();
+      const nsStyleText* otherVisText = otherVis->StyleText();
+      if (thisVisText->mTextEmphasisColorForeground !=
+          otherVisText->mTextEmphasisColorForeground ||
+          thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor) {
+        change = true;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleTextReset()) {
       const nsStyleTextReset *thisVisTextReset = thisVis->StyleTextReset();
       const nsStyleTextReset *otherVisTextReset = otherVis->StyleTextReset();
@@ -1281,6 +1292,7 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
                aProperty == eCSSProperty_outline_color ||
                aProperty == eCSSProperty__moz_column_rule_color ||
                aProperty == eCSSProperty_text_decoration_color ||
+               aProperty == eCSSProperty_text_emphasis_color ||
                aProperty == eCSSProperty_fill ||
                aProperty == eCSSProperty_stroke,
                "we need to add to nsStyleContext::CalcStyleDifference");
