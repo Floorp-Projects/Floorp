@@ -217,22 +217,16 @@ nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 /* static */ already_AddRefed<nsIAtom>
 nsStyleFont::GetLanguage(nsPresContext* aPresContext)
 {
-  nsAutoString language;
-  aPresContext->Document()->GetContentLanguage(language);
-  language.StripWhitespace();
-
-  // Content-Language may be a comma-separated list of language codes,
-  // in which case the HTML5 spec says to treat it as unknown
-  if (!language.IsEmpty() &&
-      !language.Contains(char16_t(','))) {
-    return do_GetAtom(language);
-    // NOTE:  This does *not* count as an explicit language; in other
-    // words, it doesn't trigger language-specific hyphenation.
-  } else {
+  RefPtr<nsIAtom> language = aPresContext->GetContentLanguage();
+  if (!language) {
     // we didn't find a (usable) Content-Language, so we fall back
     // to whatever the presContext guessed from the charset
-    return do_AddRef(aPresContext->GetLanguageFromCharset());
+    // NOTE this should not be used elsewhere, because we want websites
+    // to use UTF-8 with proper language tag, instead of relying on
+    // deriving language from charset. See bug 1040668 comment 67.
+    language = aPresContext->GetLanguageFromCharset();
   }
+  return language.forget();
 }
 
 nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
