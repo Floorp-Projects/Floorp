@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Loop shared mocha tests</title>
+  <link rel="stylesheet" media="all" href="vendor/mocha-2.2.5.css">
+</head>
+<body>
+  <div id="mocha">
+    <p><a href="../">Index</a></p>
+  </div>
+  <div id="messages"></div>
+  <div id="fixtures"></div>
+  <script src="../../content/shared/libs/lodash-3.9.3.js"></script>
+  <script src="../shared/loop_mocha_utils.js"></script>
+  <script>
+    LoopMochaUtils.trapErrors();
+  </script>
+
+  <!-- libs -->
+  <script src="../../content/shared/libs/react-0.13.3.js"></script>
+  <script src="../../content/shared/libs/classnames-2.2.0.js"></script>
+  <script src="../../content/shared/libs/backbone-1.2.1.js"></script>
+  <script src="../../standalone/content/libs/l10n-gaia-02ca67948fe8.js"></script>
+
+  <!-- test dependencies -->
+  <script src="vendor/mocha-2.2.5.js"></script>
+  <script src="vendor/chai-3.0.0.js"></script>
+  <script src="vendor/chai-as-promised-5.1.0.js"></script>
+  <script src="vendor/sinon-1.16.1.js"></script>
+  <script>
+    /*global chai, mocha */
+    chai.config.includeStack = true;
+    mocha.setup({ui: 'bdd', timeout: 10000});
+  </script>
+
+  <!-- App scripts -->
+  <script src="../../content/shared/js/loopapi-client.js"></script>
+  <script src="../../content/shared/js/utils.js"></script>
+  <script src="../../content/shared/js/models.js"></script>
+  <script src="../../content/shared/js/mixins.js"></script>
+  <script src="../../content/shared/js/crypto.js"></script>
+  <script src="../../content/shared/js/validate.js"></script>
+  <script src="../../content/shared/js/actions.js"></script>
+  <script src="../../content/shared/js/dispatcher.js"></script>
+  <script src="../../content/shared/js/otSdkDriver.js"></script>
+  <script src="../../content/shared/js/store.js"></script>
+  <script src="../../content/shared/js/activeRoomStore.js"></script>
+  <script src="../../content/shared/js/views.js"></script>
+  <script src="../../content/shared/js/textChatStore.js"></script>
+  <script src="../../content/shared/js/textChatView.js"></script>
+  <script src="../../content/shared/js/urlRegExps.js"></script>
+  <script src="../../content/shared/js/linkifiedTextView.js"></script>
+
+  <!-- Test scripts -->
+  <script src="models_test.js"></script>
+  <script src="mixins_test.js"></script>
+  <script src="utils_test.js"></script>
+  <script src="crypto_test.js"></script>
+  <script src="views_test.js"></script>
+  <script src="validate_test.js"></script>
+  <script src="dispatcher_test.js"></script>
+  <script src="activeRoomStore_test.js"></script>
+  <script src="otSdkDriver_test.js"></script>
+  <script src="store_test.js"></script>
+  <script src="textChatStore_test.js"></script>
+  <script src="textChatView_test.js"></script>
+  <script src="linkifiedTextView_test.js"></script>
+  <script src="loopapi-client_test.js"></script>
+
+  <script>
+    LoopMochaUtils.addErrorCheckingTests();
+    LoopMochaUtils.runTests();
+  </script>
+</body>
+</html>

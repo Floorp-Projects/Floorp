@@ -191,6 +191,42 @@
     -moz-image-region: rect(0, 832px, 32px, 800px);
   }
 
+  #loop-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/menuPanel.png);
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  /* Make sure that the state icons are not shown in the customization palette. */
+  toolbarpaletteitem[place="palette"] > #loop-button {
+    -moz-image-region: rect(0, 32px, 32px, 0) !important;
+  }
+
+  #loop-button[cui-areatype="menu-panel"][state="disabled"],
+  #loop-button[cui-areatype="menu-panel"][disabled="true"] {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] {
+    -moz-image-region: rect(0, 128px, 32px, 96px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 160px, 32px, 128px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] {
+    -moz-image-region: rect(0, 192px, 32px, 160px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 224px, 32px, 192px);
+  }
+
   /* Wide panel control icons */
 
   #edit-controls@inAnyPanel@ > toolbarbutton,
@@ -337,6 +373,42 @@
 
   #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
     -moz-image-region: rect(64px, 1984px, 128px, 1920px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #loop-button {
+    list-style-image: url(chrome://browser/skin/loop/menuPanel@2x.png);
+    -moz-image-region: rect(0, 64px, 64px, 0);
+  }
+
+  /* Make sure that the state icons are not shown in the customization palette. */
+  toolbarpaletteitem[place="palette"] > #loop-button {
+    -moz-image-region: rect(0, 64px, 64px, 0) !important;
+  }
+
+  #loop-button[cui-areatype="menu-panel"][state="disabled"],
+  #loop-button[cui-areatype="menu-panel"][disabled="true"] {
+    -moz-image-region: rect(0, 128px, 64px, 64px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] {
+    -moz-image-region: rect(0, 192px, 64px, 128px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] {
+    -moz-image-region: rect(0, 256px, 64px, 192px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 320px, 64px, 256px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] {
+    -moz-image-region: rect(0, 384px, 64px, 320px);
+  }
+
+  #loop-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
+    -moz-image-region: rect(0, 448px, 64px, 384px);
   }
 
   #new-tab-button[cui-areatype="menu-panel"],
