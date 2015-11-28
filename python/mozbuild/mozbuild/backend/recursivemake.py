@@ -57,7 +57,6 @@ from ..frontend.data import (
     InstallationTarget,
     JARManifest,
     JavaJarData,
-    JavaScriptModules,
     Library,
     LocalInclude,
     PerSourceFlag,
@@ -562,9 +561,6 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
 
-        elif isinstance(obj, JavaScriptModules):
-            self._process_javascript_modules(obj, backend_file)
-
         elif isinstance(obj, ContextWrapped):
             # Process a rich build system object from the front-end
             # as-is.  Please follow precedent and handle CamelCaseData
@@ -1026,18 +1022,6 @@ INSTALL_TARGETS += %(prefix)s
 
         if not obj.enabled:
             backend_file.write('NO_DIST_INSTALL := 1\n')
-
-    def _process_javascript_modules(self, obj, backend_file):
-        if obj.flavor != 'testing':
-            raise Exception('Unsupported JavaScriptModules instance: %s' % obj.flavor)
-
-        if not self.environment.substs.get('ENABLE_TESTS', False):
-            return
-
-        manifest = self._install_manifests['tests']
-
-        for source, dest, _ in self._walk_hierarchy(obj, obj.modules):
-            manifest.add_symlink(source, mozpath.join('modules', dest))
 
     def _handle_idl_manager(self, manager):
         build_files = self._install_manifests['xpidl']

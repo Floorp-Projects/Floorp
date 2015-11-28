@@ -53,7 +53,6 @@ from .data import (
     InstallationTarget,
     IPDLFile,
     JARManifest,
-    JavaScriptModules,
     Library,
     Linkable,
     LinkageWrongKindError,
@@ -67,6 +66,7 @@ from .data import (
     Sources,
     StaticLibrary,
     TestHarnessFiles,
+    TestingFiles,
     TestWebIDLFile,
     TestManifest,
     UnifiedSources,
@@ -629,10 +629,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self._handle_programs(context)
 
-        test_js_modules = context.get('TESTING_JS_MODULES')
-        if test_js_modules:
-            yield JavaScriptModules(context, test_js_modules, 'testing')
-
         simple_lists = [
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
             ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
@@ -659,11 +655,12 @@ class TreeMetadataEmitter(LoggingMixin):
         for var, cls in (
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
+            ('TESTING_FILES', TestingFiles),
         ):
             all_files = context.get(var)
             if not all_files:
                 continue
-            if dist_install is False:
+            if dist_install is False and var != 'TESTING_FILES':
                 raise SandboxValidationError(
                     '%s cannot be used with DIST_INSTALL = False' % var,
                     context)
