@@ -21,7 +21,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
-#include "nsCRT.h"
 #include "nsFontMetrics.h"
 #include "nsSplittableFrame.h"
 #include "nsLineLayout.h"
@@ -52,6 +51,7 @@
 #include "MathMLTextRunFactory.h"
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
+#include "nsStyleUtil.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -2910,10 +2910,8 @@ static bool IsChineseOrJapanese(nsTextFrame* aFrame)
   if (!language) {
     return false;
   }
-  const char16_t *lang = language->GetUTF16String();
-  return (!nsCRT::strncmp(lang, MOZ_UTF16("ja"), 2) ||
-          !nsCRT::strncmp(lang, MOZ_UTF16("zh"), 2)) &&
-         (language->GetLength() == 2 || lang[2] == '-');
+  return nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("ja")) ||
+         nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh"));
 }
 
 #ifdef DEBUG
