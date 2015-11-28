@@ -1927,28 +1927,31 @@ nsGridContainerFrame::Tracks::Initialize(
                explicitGridOffset + aFunctions.mMinSizingFunctions.Length());
   MOZ_ASSERT(aFunctions.mMinSizingFunctions.Length() ==
                aFunctions.mMaxSizingFunctions.Length());
+  // First we initialize the implicit tracks before the explicit grid starts.
   uint32_t i = 0;
-  for (; i < explicitGridOffset; ++i) {
+  uint32_t sentinel = std::min<uint32_t>(explicitGridOffset, mSizes.Length());
+  for (; i < sentinel; ++i) {
     mSizes[i].Initialize(percentageBasis,
                          aFunctions.mAutoMinSizing,
                          aFunctions.mAutoMaxSizing);
   }
-  uint32_t j = 0;
-  for (uint32_t len = aFunctions.mMinSizingFunctions.Length(); j < len; ++j) {
-    mSizes[i + j].Initialize(percentageBasis,
-                             aFunctions.mMinSizingFunctions[j],
-                             aFunctions.mMaxSizingFunctions[j]);
+  // Now initialize the explicit grid tracks.
+  sentinel = std::min<uint32_t>(i + aFunctions.mMinSizingFunctions.Length(),
+                                mSizes.Length());
+  for (uint32_t j = 0; i < sentinel; ++i, ++j) {
+    mSizes[i].Initialize(percentageBasis,
+                         aFunctions.mMinSizingFunctions[j],
+                         aFunctions.mMaxSizingFunctions[j]);
   }
-  i += j;
-  for (; i < mSizes.Length(); ++i) {
+  // Finally, initialize the implicit tracks that comes after the explicit grid.
+  sentinel = mSizes.Length();
+  for (; i < sentinel; ++i) {
     mSizes[i].Initialize(percentageBasis,
                          aFunctions.mAutoMinSizing,
                          aFunctions.mAutoMaxSizing);
   }
 
   mGridGap = aGridGap;
-  // XXX allow negative values? pending outcome of www-style thread:
-  // https://lists.w3.org/Archives/Public/www-style/2015Oct/0028.html
   MOZ_ASSERT(mGridGap >= nscoord(0), "negative grid gap");
 }
 
