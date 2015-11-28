@@ -629,14 +629,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self._handle_programs(context)
 
-        extra_js_modules = context.get('EXTRA_JS_MODULES')
-        if extra_js_modules:
-            yield JavaScriptModules(context, extra_js_modules, 'extra')
-
-        extra_pp_js_modules = context.get('EXTRA_PP_JS_MODULES')
-        if extra_pp_js_modules:
-            yield JavaScriptModules(context, extra_pp_js_modules, 'extra_pp')
-
         test_js_modules = context.get('TESTING_JS_MODULES')
         if test_js_modules:
             yield JavaScriptModules(context, test_js_modules, 'testing')
