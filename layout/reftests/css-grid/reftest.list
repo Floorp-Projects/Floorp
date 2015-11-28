@@ -13,6 +13,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
 == grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
+== grid-track-sizing-002.html grid-track-sizing-002-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
 == grid-abspos-items-002.html grid-abspos-items-002-ref.html
 == grid-abspos-items-003.html grid-abspos-items-003-ref.html
