@@ -19,10 +19,6 @@ UNIFIED_SOURCES += [
 
 GeckoSharedLibrary('testcrasher')
 
-EXTRA_JS_MODULES += [
-    'CrashTestUtils.jsm',
-]
-
 DEFINES['SHARED_LIBRARY'] = '%s%s%s' % (
     CONFIG['DLL_PREFIX'],
     LIBRARY_NAME,
