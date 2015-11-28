@@ -5116,6 +5116,92 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
   return nsLayoutUtils::FontSizeInflationInner(aFrame, aInflationMinFontSize);
 }
 
+static already_AddRefed<nsFontMetrics>
+GetFontMetricsOfEmphasisMarks(nsStyleContext* aStyleContext, float aInflation)
+{
+  nsPresContext* pc = aStyleContext->PresContext();
+  WritingMode wm(aStyleContext);
+  gfxFont::Orientation orientation = wm.IsVertical() && !wm.IsSideways() ?
+                                     gfxFont::eVertical : gfxFont::eHorizontal;
+
+  const nsStyleFont* styleFont = aStyleContext->StyleFont();
+  nsFont font = styleFont->mFont;
+  font.size = NSToCoordRound(font.size * aInflation * 0.5f);
+
+  RefPtr<nsFontMetrics> fm;
+  pc->DeviceContext()->GetMetricsFor(font, styleFont->mLanguage,
+                                     styleFont->mExplicitLanguage,
+                                     orientation, pc->GetUserFontSet(),
+                                     pc->GetTextPerfMetrics(),
+                                     *getter_AddRefs(fm));
+  return fm.forget();
+}
+
+static gfxTextRun*
+GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
+                                WritingMode aWM, const nsStyleText* aStyleText)
+{
+  const nsString& emphasisString = aStyleText->mTextEmphasisStyleString;
+  RefPtr<gfxContext> ctx = CreateReferenceThebesContext(aFrame);
+  auto appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
+  uint32_t flags = nsLayoutUtils::
+    GetTextRunOrientFlagsForStyle(aFrame->StyleContext());
+  if (flags == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
+    // The emphasis marks should always be rendered upright per spec.
+    flags = gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+  }
+  return aFontMetrics->GetThebesFontGroup()->
+    MakeTextRun<char16_t>(emphasisString.get(), emphasisString.Length(),
+                          ctx, appUnitsPerDevUnit, flags, nullptr);
+}
+
+nsRect
+nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
+{
+  const nsStyleText* styleText = StyleText();
+  if (!styleText->HasTextEmphasis()) {
+    Properties().Delete(EmphasisMarkProperty());
+    return nsRect();
+  }
+
+  RefPtr<nsFontMetrics> fm =
+    GetFontMetricsOfEmphasisMarks(StyleContext(), GetFontSizeInflation());
+  EmphasisMarkInfo* info = new EmphasisMarkInfo;
+  info->textRun =
+    GenerateTextRunForEmphasisMarks(this, fm, aWM, styleText);
+  info->advance =
+    info->textRun->GetAdvanceWidth(0, info->textRun->GetLength(), nullptr);
+
+  // Calculate the baseline offset
+  LogicalSide side = styleText->TextEmphasisSide(aWM);
+  nsFontMetrics* baseFontMetrics = aProvider.GetFontMetrics();
+  LogicalSize frameSize = GetLogicalSize();
+  // The overflow rect is inflated in the inline direction by half
+  // advance of the emphasis mark on each side, so that even if a mark
+  // is drawn for a zero-width character, it won't be clipped.
+  LogicalRect overflowRect(aWM, -info->advance / 2,
+                           /* BStart to be computed below */0,
+                           frameSize.ISize(aWM) + info->advance,
+                           fm->MaxAscent() + fm->MaxDescent());
+  // When the writing mode is vertical-lr the line is inverted, and thus
+  // the ascent and descent are swapped.
+  nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
+    baseFontMetrics->MaxAscent() + fm->MaxDescent() :
+    baseFontMetrics->MaxDescent() + fm->MaxAscent();
+  // XXX emphasis marks should be drawn outside ruby, see bug 1224013.
+  if (side == eLogicalSideBStart) {
+    info->baselineOffset = -absOffset;
+    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM);
+  } else {
+    MOZ_ASSERT(side == eLogicalSideBEnd);
+    info->baselineOffset = absOffset;
+    overflowRect.BStart(aWM) = frameSize.BSize(aWM);
+  }
+
+  Properties().Set(EmphasisMarkProperty(), info);
+  return overflowRect.GetPhysicalRect(aWM, frameSize.GetPhysicalSize(aWM));
+}
+
 void
 nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                      nsIFrame* aBlock,
@@ -5123,9 +5209,10 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                      nsRect* aVisualOverflowRect,
                                      bool aIncludeTextDecorations)
 {
+  const WritingMode wm = GetWritingMode();
   bool verticalRun = mTextRun->IsVertical();
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
-  bool inverted = GetWritingMode().IsLineInverted();
+  bool inverted = wm.IsLineInverted();
 
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
@@ -5185,7 +5272,6 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
                      gfxWidth = measure / appUnitsPerDevUnit;
       gfxFloat ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
-      const WritingMode wm = GetWritingMode();
       if (wm.IsVerticalRL()) {
         ascent = -ascent;
       }
@@ -5295,6 +5381,9 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
         verticalRun ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
                     : nsRect(0, topOrLeft, measure, bottomOrRight - topOrLeft));
     }
+
+    aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
+                                   UpdateTextEmphasis(wm, aProvider));
   }
 
   // Text-shadow overflows
@@ -6107,6 +6196,36 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   return true;
 }
 
+void
+nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
+                               const gfxPoint& aTextBaselinePt,
+                               uint32_t aOffset, uint32_t aLength,
+                               PropertyProvider& aProvider)
+{
+  auto info = static_cast<const EmphasisMarkInfo*>(
+    Properties().Get(EmphasisMarkProperty()));
+  if (!info) {
+    MOZ_ASSERT(!StyleText()->HasTextEmphasis());
+    return;
+  }
+
+  nscolor color = nsLayoutUtils::
+    GetColor(this, eCSSProperty_text_emphasis_color);
+  aContext->SetColor(Color::FromABGR(color));
+  gfxPoint pt(aTextBaselinePt);
+  if (!aWM.IsVertical()) {
+    pt.y += info->baselineOffset;
+  } else {
+    if (aWM.IsVerticalRL()) {
+      pt.x -= info->baselineOffset;
+    } else {
+      pt.x += info->baselineOffset;
+    }
+  }
+  mTextRun->DrawEmphasisMarks(aContext, info->textRun, info->advance,
+                              pt, aOffset, aLength, &aProvider);
+}
+
 nscolor
 nsTextFrame::GetCaretColorAt(int32_t aOffset)
 {
@@ -6609,6 +6728,9 @@ nsTextFrame::DrawTextRunAndDecorations(
     DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider, aTextColor,
                 aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
+    // Emphasis marks
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength, aProvider);
+
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
       const LineDecoration& dec = aDecorations.mStrikes[i];
@@ -6655,7 +6777,8 @@ nsTextFrame::DrawText(
 
   // Hide text decorations if we're currently hiding @font-face fallback text
   const bool drawDecorations = !aProvider.GetFontGroup()->ShouldSkipDrawing() &&
-                               decorations.HasDecorationLines();
+                               (decorations.HasDecorationLines() ||
+                                StyleText()->HasTextEmphasis());
   if (drawDecorations) {
     DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aOffset, aLength,
                               aProvider, aTextStyle, aTextColor, aClipEdges, aAdvanceWidth,
