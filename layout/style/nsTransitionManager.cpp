@@ -141,6 +141,16 @@ CSSTransition::QueueEvents()
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
+  // Do not queue any event for disabled properties. This could happen
+  // if the property has a default value which derives value from other
+  // property, e.g. color.
+  nsCSSProperty property = TransitionProperty();
+  if (!nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledForAllContent) &&
+      (!nsContentUtils::IsSystemPrincipal(owningElement->NodePrincipal()) ||
+       !nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledInChrome))) {
+    return;
+  }
+
   nsPresContext* presContext = mOwningElement.GetRenderedPresContext();
   if (!presContext) {
     return;
@@ -148,9 +158,8 @@ CSSTransition::QueueEvents()
 
   nsTransitionManager* manager = presContext->TransitionManager();
   manager->QueueEvent(TransitionEventInfo(owningElement, owningPseudoType,
-                                          TransitionProperty(),
-                                          mEffect->Timing()
-                                            .mIterationDuration,
+                                          property,
+                                          mEffect->Timing().mIterationDuration,
                                           AnimationTimeToTimeStamp(EffectEnd()),
                                           this));
 }
