@@ -1678,9 +1678,13 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
 
 void
 nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
+                             const nsStyleText* aStyleText,
+                             nsFontMetrics* aFontMetrics,
                              bool* aZeroEffectiveSpanBox)
 {
   MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
+  nscoord requiredStartLeading = 0;
+  nscoord requiredEndLeading = 0;
   if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
     // We may need to extend leadings here for ruby annotations as
     // required by section Line Spacing in the CSS Ruby spec.
@@ -1688,19 +1692,43 @@ nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
     auto rubyFrame = static_cast<nsRubyFrame*>(spanFrame);
     nscoord startLeading, endLeading;
     rubyFrame->GetBlockLeadings(startLeading, endLeading);
-    nscoord deltaLeading = startLeading + endLeading -
-                           (psd->mBStartLeading + psd->mBEndLeading);
+    requiredStartLeading += startLeading;
+    requiredEndLeading += endLeading;
+  }
+  if (aStyleText->HasTextEmphasis()) {
+    // Emphasis marks are symbols rendered using the same font settings
+    // as the element with its size scaled down to 50%, so we add half
+    // height of the font metrics to the specified side as leading.
+    nscoord halfHeight = aFontMetrics->MaxHeight() / 2;
+    LogicalSide side = aStyleText->TextEmphasisSide(mRootSpan->mWritingMode);
+    if (side == eLogicalSideBStart) {
+      requiredStartLeading += halfHeight;
+    } else {
+      MOZ_ASSERT(side == eLogicalSideBEnd,
+                 "emphasis marks must be in block axis");
+      requiredEndLeading += halfHeight;
+    }
+  }
+
+  nscoord requiredLeading = requiredStartLeading + requiredEndLeading;
+  // If we do not require any additional leadings, don't touch anything
+  // here even if it is greater than the original leading, because the
+  // latter could be negative.
+  if (requiredLeading != 0) {
+    nscoord leading = psd->mBStartLeading + psd->mBEndLeading;
+    nscoord deltaLeading = requiredLeading - leading;
     if (deltaLeading > 0) {
-      // If the total leading is not wide enough for ruby annotations,
-      // extend the side which is not enough. If both sides are not
-      // wide enough, replace the leadings with the requested values.
-      if (startLeading < psd->mBStartLeading) {
+      // If the total leading is not wide enough for ruby annotations
+      // and/or emphasis marks, extend the side which is not enough. If
+      // both sides are not wide enough, replace the leadings with the
+      // requested values.
+      if (requiredStartLeading < psd->mBStartLeading) {
         psd->mBEndLeading += deltaLeading;
-      } else if (endLeading < psd->mBEndLeading) {
+      } else if (requiredEndLeading < psd->mBEndLeading) {
         psd->mBStartLeading += deltaLeading;
       } else {
-        psd->mBStartLeading = startLeading;
-        psd->mBEndLeading = endLeading;
+        psd->mBStartLeading = requiredStartLeading;
+        psd->mBEndLeading = requiredEndLeading;
       }
       psd->mLogicalBSize += deltaLeading;
       // We have adjusted the leadings, it is no longer a zero
@@ -1881,9 +1909,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
     // Special-case for a ::first-letter frame, set the line height to
     // the frame block size if the user has left line-height == normal
+    const nsStyleText* styleText = spanFrame->StyleText();
     if (spanFramePFD->mIsLetterFrame &&
         !spanFrame->GetPrevInFlow() &&
-        spanFrame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal) {
+        styleText->mLineHeight.GetUnit() == eStyleUnit_Normal) {
       logicalBSize = spanFramePFD->mBounds.BSize(lineWM);
     }
 
@@ -1891,7 +1920,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     psd->mBStartLeading = leading / 2;
     psd->mBEndLeading = leading - psd->mBStartLeading;
     psd->mLogicalBSize = logicalBSize;
-    AdjustLeadings(spanFrame, psd, &zeroEffectiveSpanBox);
+    AdjustLeadings(spanFrame, psd, styleText, fm, &zeroEffectiveSpanBox);
 
     if (zeroEffectiveSpanBox) {
       // When the span-box is to be ignored, zero out the initial
