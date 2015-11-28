@@ -1138,9 +1138,8 @@ export:: $(FINAL_TARGET)
 endif
 
 ################################################################################
-# Copy each element of PREF_JS_EXPORTS
-
-# The default location for PREF_JS_EXPORTS is the gre prefs directory.
+# The default location for prefs is the gre prefs directory.
+# PREF_DIR is used for L10N_PREF_JS_EXPORTS in various locales/ directories.
 PREF_DIR = defaults/pref
 
 # If DIST_SUBDIR is defined it indicates that app and gre dirs are
@@ -1148,16 +1147,6 @@ PREF_DIR = defaults/pref
 # PREF_DIR should point to the app prefs location.
 ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
 PREF_DIR = defaults/preferences
-endif
-
-ifneq ($(PREF_JS_EXPORTS),)
-ifndef NO_DIST_INSTALL
-PREF_JS_EXPORTS_PATH := $(FINAL_TARGET)/$(PREF_DIR)
-# We preprocess these, but they don't necessarily have preprocessor directives,
-# so tell them preprocessor to not complain about that.
-PREF_JS_EXPORTS_FLAGS := $(PREF_PPFLAGS) --silence-missing-directive-warnings
-PP_TARGETS += PREF_JS_EXPORTS
-endif
 endif
 
 ################################################################################
