@@ -271,9 +271,11 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
                                  const LineRange&            aRange,
                                  nsIFrame*                   aGridItem);
   /**
-   * Collect the tracks which are growable (matching aSelector) and return
-   * aAvailableSpace minus the sum of mBase's in aPlan for the tracks
-   * in aRange, or 0 if this subtraction goes below 0.
+   * Collect the tracks which are growable (matching aSelector) into
+   * aGrowableTracks, and return the amount of space that can be used
+   * to grow those tracks.  Specifically, we return aAvailableSpace minus
+   * the sum of mBase's in aPlan (clamped to 0) for the tracks in aRange,
+   * or zero when there are no growable tracks.
    * @note aPlan[*].mBase represents a planned new base or limit.
    */
   static nscoord CollectGrowable(nscoord                    aAvailableSpace,
@@ -288,16 +290,15 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
     const uint32_t end = aRange.mEnd;
     for (uint32_t i = start; i < end; ++i) {
       const TrackSize& sz = aPlan[i];
-      MOZ_ASSERT(!sz.IsFrozen());
       space -= sz.mBase;
       if (space <= 0) {
         return 0;
       }
-      if (sz.mState & aSelector) {
+      if ((sz.mState & aSelector) && !sz.IsFrozen()) {
         aGrowableTracks.AppendElement(i);
       }
     }
-    return space;
+    return aGrowableTracks.IsEmpty() ? 0 : space;
   }
 
   void SetupGrowthPlan(nsTArray<TrackSize>&      aPlan,
