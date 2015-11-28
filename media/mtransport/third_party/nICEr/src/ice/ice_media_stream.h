@@ -63,6 +63,7 @@ struct nr_ice_media_stream_ {
 #define NR_ICE_MEDIA_STREAM_CHECKS_FAILED      5
 
   nr_ice_cand_pair_head check_list;
+  nr_ice_cand_pair_head trigger_check_queue;
   void *timer;  /* Check list periodic timer */
 
 /*  nr_ice_cand_pair_head valid_list; */
