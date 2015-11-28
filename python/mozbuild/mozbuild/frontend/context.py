@@ -1001,20 +1001,6 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
-    'EXTRA_JS_MODULES': (HierarchicalStringList, list,
-        """Additional JavaScript files to distribute.
-
-        This variable contains a list of files to copy into
-        ``$(FINAL_TARGET)/modules.
-        """, 'misc'),
-
-    'EXTRA_PP_JS_MODULES': (HierarchicalStringList, list,
-        """Additional JavaScript files to distribute.
-
-        This variable contains a list of files to copy into
-        ``$(FINAL_TARGET)/modules``, after preprocessing.
-        """, 'misc'),
-
     'TESTING_JS_MODULES': (HierarchicalStringList, list,
         """JavaScript modules to install in the test-only destination.
 
@@ -1972,6 +1958,20 @@ SPECIAL_VARIABLES = {
 
            RESOURCE_FILES += ['foo.res']
            RESOURCE_FILES.fonts += ['bar.res']
+        """),
+
+    'EXTRA_JS_MODULES': (lambda context: context['FINAL_TARGET_FILES'].modules, list,
+        """Additional JavaScript files to distribute.
+
+        This variable contains a list of files to copy into
+        ``$(FINAL_TARGET)/modules.
+        """),
+
+    'EXTRA_PP_JS_MODULES': (lambda context: context['FINAL_TARGET_PP_FILES'].modules, list,
+        """Additional JavaScript files to distribute.
+
+        This variable contains a list of files to copy into
+        ``$(FINAL_TARGET)/modules``, after preprocessing.
         """),
 
 }

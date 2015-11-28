@@ -1029,36 +1029,8 @@ INSTALL_TARGETS += %(prefix)s
             backend_file.write('NO_DIST_INSTALL := 1\n')
 
     def _process_javascript_modules(self, obj, backend_file):
-        if obj.flavor not in ('extra', 'extra_pp', 'testing'):
+        if obj.flavor != 'testing':
             raise Exception('Unsupported JavaScriptModules instance: %s' % obj.flavor)
-
-        if obj.flavor == 'extra':
-            for path, strings in obj.modules.walk():
-                if not strings:
-                    continue
-
-                prefix = 'extra_js_%s' % path.replace('/', '_')
-                backend_file.write('%s_FILES := %s\n'
-                                   % (prefix, ' '.join(strings)))
-                backend_file.write('%s_DEST = %s\n' %
-                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
-                backend_file.write('%s_TARGET := misc\n' % prefix)
-                backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
-            return
-
-        if obj.flavor == 'extra_pp':
-            for path, strings in obj.modules.walk():
-                if not strings:
-                    continue
-
-                prefix = 'extra_pp_js_%s' % path.replace('/', '_')
-                backend_file.write('%s := %s\n'
-                                   % (prefix, ' '.join(strings)))
-                backend_file.write('%s_PATH = %s\n' %
-                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
-                backend_file.write('%s_TARGET := misc\n' % prefix)
-                backend_file.write('PP_TARGETS += %s\n\n' % prefix)
-            return
 
         if not self.environment.substs.get('ENABLE_TESTS', False):
             return
