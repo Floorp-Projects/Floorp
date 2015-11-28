@@ -1,6 +1,0 @@
-{
-  // When adding items to this file please check for effects on sub-directories.
-  "rules": {
-    "eol-last": 2,
-  }
-}

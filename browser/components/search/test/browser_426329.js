@@ -148,11 +148,11 @@ function* prepareTest() {
   return deferred.promise;
 }
 
-add_task(function* testSetupEngine() {
+add_task(function testSetupEngine() {
   yield promiseSetEngine();
 });
 
-add_task(function* testReturn() {
+add_task(function testReturn() {
   yield prepareTest();
   EventUtils.synthesizeKey("VK_RETURN", {});
   let event = yield promiseOnLoad();
@@ -163,7 +163,7 @@ add_task(function* testReturn() {
   is(event.originalTarget.URL, expectedURL(searchBar.value), "testReturn opened correct search page");
 });
 
-add_task(function* testAltReturn() {
+add_task(function testAltReturn() {
   yield prepareTest();
   EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
   let event = yield promiseOnLoad();
@@ -177,7 +177,7 @@ add_task(function* testAltReturn() {
 });
 
 //Shift key has no effect for now, so skip it
-add_task(function* testShiftAltReturn() {
+add_task(function testShiftAltReturn() {
   return;
 
   yield prepareTest();
@@ -192,7 +192,7 @@ add_task(function* testShiftAltReturn() {
   is(event.originalTarget.URL, expectedURL(searchBar.value), "testShiftAltReturn opened correct search page");
 });
 
-add_task(function* testLeftClick() {
+add_task(function testLeftClick() {
   yield prepareTest();
   simulateClick({ button: 0 }, searchButton);
   let event = yield promiseOnLoad();
@@ -202,7 +202,7 @@ add_task(function* testLeftClick() {
   is(event.originalTarget.URL, expectedURL(searchBar.value), "testLeftClick opened correct search page");
 });
 
-add_task(function* testMiddleClick() {
+add_task(function testMiddleClick() {
   yield prepareTest();
   simulateClick({ button: 1 }, searchButton);
   let event = yield promiseOnLoad();
@@ -214,7 +214,7 @@ add_task(function* testMiddleClick() {
   is(event.originalTarget.URL, expectedURL(searchBar.value), "testMiddleClick opened correct search page");
 });
 
-add_task(function* testShiftMiddleClick() {
+add_task(function testShiftMiddleClick() {
   yield prepareTest();
   simulateClick({ button: 1, shiftKey: true }, searchButton);
   let event = yield promiseOnLoad();
@@ -226,7 +226,7 @@ add_task(function* testShiftMiddleClick() {
   is(event.originalTarget.URL, expectedURL(searchBar.value), "testShiftMiddleClick opened correct search page");
 });
 
-add_task(function* testRightClick() {
+add_task(function testRightClick() {
   preTabNo = gBrowser.tabs.length;
   content.location.href = "about:blank";
   simulateClick({ button: 2 }, searchButton);
@@ -242,7 +242,7 @@ add_task(function* testRightClick() {
   searchBar.textbox.popup.hidePopup();
 });
 
-add_task(function* testSearchHistory() {
+add_task(function testSearchHistory() {
   var textbox = searchBar._textbox;
   for (var i = 0; i < searchEntries.length; i++) {
     let count = yield countEntries(textbox.getAttribute("autocompletesearchparam"), searchEntries[i]);
@@ -250,7 +250,7 @@ add_task(function* testSearchHistory() {
   }
 });
 
-add_task(function* testAutocomplete() {
+add_task(function testAutocomplete() {
   var popup = searchBar.textbox.popup;
   let popupShownPromise = promiseEvent(popup, "popupshown");
   searchBar.textbox.showHistoryPopup();
@@ -258,7 +258,7 @@ add_task(function* testAutocomplete() {
   checkMenuEntries(searchEntries);
 });
 
-add_task(function* testClearHistory() {
+add_task(function testClearHistory() {
   let controller = searchBar.textbox.controllers.getControllerForCommand("cmd_clearhistory")
   ok(controller.isCommandEnabled("cmd_clearhistory"), "Clear history command enabled");
   controller.doCommand("cmd_clearhistory");
@@ -266,7 +266,7 @@ add_task(function* testClearHistory() {
   ok(count == 0, "History cleared");
 });
 
-add_task(function* asyncCleanup() {
+add_task(function asyncCleanup() {
   searchBar.value = "";
   while (gBrowser.tabs.length != 1) {
     gBrowser.removeTab(gBrowser.tabs[0], {animate: false});
