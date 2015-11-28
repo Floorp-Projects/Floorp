@@ -49,6 +49,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     ]
     DEFINES['USE_WINMM'] = True
     DEFINES['USE_WASAPI'] = True
+    CXXFLAGS += ['-wd4005'] # C4005: '_USE_MATH_DEFINES' : macro redefinition
 
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_opensl.c']

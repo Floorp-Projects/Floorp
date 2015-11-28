@@ -8,7 +8,6 @@
 #include <math.h>
 #include "DrawTargetD2D.h"
 #include "Logging.h"
-#include "mozilla/Constants.h"
 
 namespace mozilla {
 namespace gfx {

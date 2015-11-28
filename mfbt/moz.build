@@ -30,7 +30,6 @@ EXPORTS.mozilla = [
     'CheckedInt.h',
     'Compiler.h',
     'Compression.h',
-    'Constants.h',
     'DebugOnly.h',
     'decimal/Decimal.h',
     'double-conversion/double-conversion.h',
