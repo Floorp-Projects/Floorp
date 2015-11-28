@@ -696,38 +696,6 @@ class TestRecursiveMakeBackend(BackendTester):
 
         self.assertIn('JAR_MANIFEST := %s/jar.mn' % env.topsrcdir, lines)
 
-    def test_extra_js_modules(self):
-        env = self._consume('extra-js-modules', RecursiveMakeBackend)
-
-        with open(os.path.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
-            lines = fh.readlines()
-
-        lines = [line.rstrip() for line in lines]
-        self.maxDiff = None
-        expected = [
-            'extra_js__FILES := module1.js module2.js',
-            'extra_js__DEST = $(FINAL_TARGET)/modules/',
-            'extra_js__TARGET := misc',
-            'INSTALL_TARGETS += extra_js_',
-            'extra_js_submodule_FILES := module3.js module4.js',
-            'extra_js_submodule_DEST = $(FINAL_TARGET)/modules/submodule',
-            'extra_js_submodule_TARGET := misc',
-            'INSTALL_TARGETS += extra_js_submodule',
-            'extra_pp_js_ := pp-module1.js',
-            'extra_pp_js__PATH = $(FINAL_TARGET)/modules/',
-            'extra_pp_js__TARGET := misc',
-            'PP_TARGETS += extra_pp_js_',
-            'extra_pp_js_ppsub := pp-module2.js',
-            'extra_pp_js_ppsub_PATH = $(FINAL_TARGET)/modules/ppsub',
-            'extra_pp_js_ppsub_TARGET := misc',
-            'PP_TARGETS += extra_pp_js_ppsub',
-        ]
-
-        found = [line for line in lines if line.startswith(('extra_',
-                                                            'INSTALL_TARGETS',
-                                                            'PP_TARGETS'))]
-        self.assertEqual(expected, found)
-
     def test_test_manifests_duplicate_support_files(self):
         """Ensure duplicate support-files in test manifests work."""
         env = self._consume('test-manifests-duplicate-support-files',
