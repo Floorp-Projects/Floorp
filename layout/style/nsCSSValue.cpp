@@ -1343,6 +1343,25 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       AppendAlignJustifyValueToString(intValue, aResult);
       break;
 
+    case eCSSProperty_text_emphasis_position: {
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_STYLE_TEXT_EMPHASIS_POSITION_OVER,
+                                         NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT,
+                                         aResult);
+      break;
+    }
+
+    case eCSSProperty_text_emphasis_style: {
+      auto fill = intValue & NS_STYLE_TEXT_EMPHASIS_STYLE_FILL_MASK;
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
+        fill, nsCSSProps::kTextEmphasisStyleFillKTable), aResult);
+      aResult.Append(' ');
+      auto shape = intValue & NS_STYLE_TEXT_EMPHASIS_STYLE_SHAPE_MASK;
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
+        shape, nsCSSProps::kTextEmphasisStyleShapeKTable), aResult);
+      break;
+    }
+
     default:
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, intValue);
       AppendASCIItoUTF16(name, aResult);
