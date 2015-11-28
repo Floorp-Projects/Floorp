@@ -5,23 +5,12 @@
     "react"
   ],
   "ecmaFeatures": {
-    // Allow these.
     "forOf": true,
     "jsx": true,
-    // Disallow due to content.
-    "arrowFunctions": false,
-    "blockBindings": false,
-    "destructuring": false,
-    "generators": false,
-    "objectLiteralShorthandMethods": false,
-    "restParams": false,
-    "spread": false,
-    "templateStrings": false,
   },
   "env": {
     "browser": true,
-    "es6": false,
-    "mocha": true,
+    "mocha": true
   },
   "extends": "eslint:recommended",
   "globals": {
