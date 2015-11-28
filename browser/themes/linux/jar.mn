@@ -47,6 +47,12 @@ browser.jar:
   skin/classic/browser/Toolbar-inverted.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/webRTC-indicator.css
+  skin/classic/browser/loop/menuPanel.png             (loop/menuPanel.png)
+  skin/classic/browser/loop/menuPanel@2x.png          (loop/menuPanel@2x.png)
+  skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
+  skin/classic/browser/loop/toolbar@2x.png            (loop/toolbar@2x.png)
+  skin/classic/browser/loop/toolbar-inverted.png      (loop/toolbar-inverted.png)
+  skin/classic/browser/loop/toolbar-inverted@2x.png   (loop/toolbar-inverted@2x.png)
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)

@@ -11,6 +11,7 @@ DIRS += [
     'downloads',
     'extensions',
     'feeds',
+    'loop',
     'migration',
     'newtab',
     'places',

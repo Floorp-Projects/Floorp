@@ -274,6 +274,7 @@ var gInitialPages = [
 #include browser-fullScreen.js
 #include browser-fullZoom.js
 #include browser-gestureSupport.js
+#include browser-loop.js
 #include browser-places.js
 #include browser-plugins.js
 #include browser-safebrowsing.js
@@ -1356,6 +1357,8 @@ var gBrowserInit = {
     gDataNotificationInfoBar.init();
 #endif
 
+    LoopUI.init();
+
     gBrowserThumbnails.init();
 
     // Add Devtools menuitems and listeners
@@ -1537,6 +1540,7 @@ var gBrowserInit = {
       TabView.uninit();
       SocialUI.uninit();
       gBrowserThumbnails.uninit();
+      LoopUI.uninit();
       FullZoom.destroy();
 
       Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
