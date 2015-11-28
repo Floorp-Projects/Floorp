@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: overflow:hidden/auto</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1227162">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-auto-rows: 5px;
+  grid-template-columns: repeat(3, 8px);
+  border: 1px solid black;
+  grid-row-gap: 4px;
+  grid-column-gap: 2px;
+  float: left;
+}
+
+.grid :first-child { background:lime; }
+.grid :nth-child(2n) { border-left:1px solid black; }
+
+x { background: grey;  width:7px; height:5px; }
+y { background: blue;  width:7px; height:5px; }
+z { background: green; width:7px; height:5px; }
+
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="width:40px; justify-content:center; align-content:center;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="width:40px; justify-content:start; align-content:end;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="width:40px; height:40px; justify-content:center; align-content:center;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="height:40px; justify-content:start; align-content:end;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="width:8px; grid-template-columns: repeat(1, 8px);">
+<x></x>
+<y></y>
+<z></z>
+</div>
+
+<div class="grid" style="height:8px; grid-template-rows: repeat(1, 5px);">
+<x></x><x></x><x></x>
+</div>
+
+<div class="grid" style="width:8px; height:8px; grid-template-columns: 8px; grid-template-rows: 5px;">
+<x></x>
+</div>
+
+<div class="grid" style="width:8px; height:8px; justify-content:center;  grid-template-columns: 8px; grid-template-rows: 5px;">
+<x style="background:grey; border-left:1px solid black;"></x>
+</div>
+
+<div class="grid" style="width:8px; height:8px; align-content:center;">
+<y style="background:blue; border-left:1px solid black;"></y>
+</div>
+
+<div class="grid" style="grid-template-columns: repeat(3, 12px); justify-items:end;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="grid-auto-rows: 10px;; align-items:end;">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="grid-auto-flow:column; grid-template-rows: repeat(3, 5px);">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+<div class="grid" style="grid-auto-columns: 12px; grid-template-columns: none; ">
+<x></x><x></x><x></x>
+<y></y><y></y><y></y>
+<z></z><z></z><z></z>
+</div>
+
+</body>
+</html>
