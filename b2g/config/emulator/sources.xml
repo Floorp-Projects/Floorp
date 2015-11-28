@@ -31,7 +31,7 @@
   <project name="screencap-gonk" path="external/screencap-gonk" remote="b2g" revision="e6403c71e9eca8cb943739d5a0a192deac60fc51"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c72c9278ddc2f442d193474993d36e7f2cfb08c4"/>
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="6afc63abe52776ae6a1d32a2d927e630a743a86a"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9a58f2e395da17c252f61f28900b5b09aeb813bd"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cb4604d5a578efd027277059ce3e0f6e3af59bd1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
