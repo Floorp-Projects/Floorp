@@ -244,7 +244,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # Propagate LIBRARY_DEFINES to all child libraries recursively.
         def propagate_defines(outerlib, defines):
-            outerlib.defines.update(defines)
+            outerlib.lib_defines.update(defines)
             for lib in outerlib.linked_libraries:
                 # Propagate defines only along FINAL_LIBRARY paths, not USE_LIBS
                 # paths.
@@ -254,7 +254,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for lib in (l for libs in self._libs.values() for l in libs):
             if isinstance(lib, Library):
-                propagate_defines(lib, lib.defines)
+                propagate_defines(lib, lib.lib_defines)
             yield lib
 
         for obj in self._binaries.values():
@@ -524,7 +524,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 if not libname:
                     raise SandboxValidationError('LIBRARY_DEFINES needs a '
                         'LIBRARY_NAME to take effect', context)
-                lib.defines.update(lib_defines)
+                lib.lib_defines.update(lib_defines)
 
     def emit_from_context(self, context):
         """Convert a Context to tree metadata objects.
