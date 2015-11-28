@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 et sw=4 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -992,6 +993,20 @@ protected:
     // Allocate aCount DetailedGlyphs for the given index
     DetailedGlyph *AllocateDetailedGlyphs(uint32_t aCharIndex,
                                           uint32_t aCount);
+
+    // Ensure the glyph on the given index is complex glyph so that we can use
+    // it to record specific characters that layout may need to detect.
+    void EnsureComplexGlyph(uint32_t aIndex, CompressedGlyph& aGlyph)
+    {
+        MOZ_ASSERT(GetCharacterGlyphs() + aIndex == &aGlyph);
+        if (aGlyph.IsSimpleGlyph()) {
+            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+            details->mGlyphID = aGlyph.GetSimpleGlyph();
+            details->mAdvance = aGlyph.GetSimpleAdvance();
+            details->mXOffset = details->mYOffset = 0;
+            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
+        }
+    }
 
     // For characters whose glyph data does not fit the "simple" glyph criteria
     // in CompressedGlyph, we use a sorted array to store the association

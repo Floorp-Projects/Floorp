@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 et sw=4 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -510,26 +511,10 @@ public:
     // to "complex" ones as the Tab and Newline flags are not present in
     // simple CompressedGlyph records.
     void SetIsTab(uint32_t aIndex) {
-        CompressedGlyph *g = &mCharacterGlyphs[aIndex];
-        if (g->IsSimpleGlyph()) {
-            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
-            details->mGlyphID = g->GetSimpleGlyph();
-            details->mAdvance = g->GetSimpleAdvance();
-            details->mXOffset = details->mYOffset = 0;
-            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
-        }
-        g->SetIsTab();
+        EnsureComplexGlyph(aIndex).SetIsTab();
     }
     void SetIsNewline(uint32_t aIndex) {
-        CompressedGlyph *g = &mCharacterGlyphs[aIndex];
-        if (g->IsSimpleGlyph()) {
-            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
-            details->mGlyphID = g->GetSimpleGlyph();
-            details->mAdvance = g->GetSimpleAdvance();
-            details->mXOffset = details->mYOffset = 0;
-            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
-        }
-        g->SetIsNewline();
+        EnsureComplexGlyph(aIndex).SetIsNewline();
     }
 
     /**
@@ -676,6 +661,12 @@ private:
                                    PropertyProvider *aProvider,
                                    uint32_t aSpacingStart, uint32_t aSpacingEnd,
                                    nsTArray<PropertyProvider::Spacing> *aSpacing);
+
+    CompressedGlyph& EnsureComplexGlyph(uint32_t aIndex)
+    {
+        gfxShapedText::EnsureComplexGlyph(aIndex, mCharacterGlyphs[aIndex]);
+        return mCharacterGlyphs[aIndex];
+    }
 
     //  **** ligature helpers ****
     // (Platforms do the actual ligaturization, but we need to do a bunch of stuff
