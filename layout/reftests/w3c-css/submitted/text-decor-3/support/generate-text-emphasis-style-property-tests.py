@@ -19,7 +19,6 @@ TEST_TEMPLATE = '''<!DOCTYPE html>
 <link rel="help" href="https://drafts.csswg.org/css-text-decor-3/#text-emphasis-style-property">
 <meta name="assert" content="'text-emphasis-style: {value}' produces {code} as emphasis marks.">
 <link rel="match" href="text-emphasis-style-property-{index:03}-ref.html">
-<style> div {{ font-family: monospace; }} </style>
 <p>Pass if there is a '{char}' above every character below:</p>
 <div style="line-height: 5; text-emphasis-style: {value}">試験テスト</div>
 '''
@@ -31,7 +30,6 @@ REF_TEMPLATE = '''<!DOCTYPE html>
 <link rel="author" title="Xidorn Quan" href="https://www.upsuper.org">
 <link rel="author" title="Mozilla" href="https://www.mozilla.org">
 <style> rt {{ font-variant-east-asian: inherit; }} </style>
-<style> div {{ font-family: monospace; }} </style>
 <p>Pass if there is a '{1}' above every character below:</p>
 <div style="line-height: 5;"><ruby>試<rt>{1}</rt>験<rt>{1}</rt>テ<rt>{1}</rt>ス<rt>{1}</rt>ト<rt>{1}</rt></ruby></div>
 '''
