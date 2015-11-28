@@ -641,7 +641,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         resources = context.get('RESOURCE_FILES')
         if resources:
-            yield Resources(context, resources, defines)
+            yield Resources(context, resources)
 
         for pref in sorted(context['JS_PREFERENCE_FILES']):
             yield JsPreferenceFile(context, pref)

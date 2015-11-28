@@ -18,13 +18,8 @@ RESOURCE_FILES.overwrite = ['old.res']
 RESOURCE_FILES.overwrite = ['new.res']
 
 RESOURCE_FILES += ['foo_p.res.in']
-RESOURCE_FILES['foo_p.res.in'].preprocess=True
 
 RESOURCE_FILES += ['bar_p.res.in', 'baz_p.res.in']
-RESOURCE_FILES['bar_p.res.in'].preprocess=True
-RESOURCE_FILES['baz_p.res.in'].preprocess=True
 
 RESOURCE_FILES.mozilla += ['mozilla1_p.res.in']
 RESOURCE_FILES.mozilla += ['mozilla2_p.res.in']
-RESOURCE_FILES.mozilla['mozilla1_p.res.in'].preprocess=True
-RESOURCE_FILES.mozilla['mozilla2_p.res.in'].preprocess=True
