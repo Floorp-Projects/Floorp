@@ -129,6 +129,10 @@ public:
         NS_ASSERTION(aPos < GetLength(), "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsNewline();
     }
+    bool CharMayHaveEmphasisMark(uint32_t aPos) const {
+        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
+        return mCharacterGlyphs[aPos].CharMayHaveEmphasisMark();
+    }
 
     // All uint32_t aStart, uint32_t aLength ranges below are restricted to
     // grapheme cluster boundaries! All offsets are in terms of the string
@@ -515,6 +519,9 @@ public:
     }
     void SetIsNewline(uint32_t aIndex) {
         EnsureComplexGlyph(aIndex).SetIsNewline();
+    }
+    void SetNoEmphasisMark(uint32_t aIndex) {
+        EnsureComplexGlyph(aIndex).SetNoEmphasisMark();
     }
 
     /**
