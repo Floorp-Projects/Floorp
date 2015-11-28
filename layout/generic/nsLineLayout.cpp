@@ -1676,6 +1676,40 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
   }
 }
 
+void
+nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
+                             bool* aZeroEffectiveSpanBox)
+{
+  MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
+  if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
+    // We may need to extend leadings here for ruby annotations as
+    // required by section Line Spacing in the CSS Ruby spec.
+    // See http://dev.w3.org/csswg/css-ruby/#line-height
+    auto rubyFrame = static_cast<nsRubyFrame*>(spanFrame);
+    nscoord startLeading, endLeading;
+    rubyFrame->GetBlockLeadings(startLeading, endLeading);
+    nscoord deltaLeading = startLeading + endLeading -
+                           (psd->mBStartLeading + psd->mBEndLeading);
+    if (deltaLeading > 0) {
+      // If the total leading is not wide enough for ruby annotations,
+      // extend the side which is not enough. If both sides are not
+      // wide enough, replace the leadings with the requested values.
+      if (startLeading < psd->mBStartLeading) {
+        psd->mBEndLeading += deltaLeading;
+      } else if (endLeading < psd->mBEndLeading) {
+        psd->mBStartLeading += deltaLeading;
+      } else {
+        psd->mBStartLeading = startLeading;
+        psd->mBEndLeading = endLeading;
+      }
+      psd->mLogicalBSize += deltaLeading;
+      // We have adjusted the leadings, it is no longer a zero
+      // effective span box.
+      *aZeroEffectiveSpanBox = false;
+    }
+  }
+}
+
 static float
 GetInflationForBlockDirAlignment(nsIFrame* aFrame,
                                  nscoord aInflationMinFontSize)
@@ -1857,32 +1891,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     psd->mBStartLeading = leading / 2;
     psd->mBEndLeading = leading - psd->mBStartLeading;
     psd->mLogicalBSize = logicalBSize;
-    if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
-      // We may need to extend leadings here for ruby annotations as
-      // required by section Line Spacing in the CSS Ruby spec.
-      // See http://dev.w3.org/csswg/css-ruby/#line-height
-      auto rubyFrame = static_cast<nsRubyFrame*>(spanFrame);
-      nscoord startLeading, endLeading;
-      rubyFrame->GetBlockLeadings(startLeading, endLeading);
-      nscoord deltaLeading = startLeading + endLeading - leading;
-      if (deltaLeading > 0) {
-        // If the total leading is not wide enough for ruby annotations,
-        // extend the side which is not enough. If both sides are not
-        // wide enough, replace the leadings with the requested values.
-        if (startLeading < psd->mBStartLeading) {
-          psd->mBEndLeading += deltaLeading;
-        } else if (endLeading < psd->mBEndLeading) {
-          psd->mBStartLeading += deltaLeading;
-        } else {
-          psd->mBStartLeading = startLeading;
-          psd->mBEndLeading = endLeading;
-        }
-        psd->mLogicalBSize += deltaLeading;
-        // We have adjusted the leadings, it is no longer a zero
-        // effective span box.
-        zeroEffectiveSpanBox = false;
-      }
-    }
+    AdjustLeadings(spanFrame, psd, &zeroEffectiveSpanBox);
 
     if (zeroEffectiveSpanBox) {
       // When the span-box is to be ignored, zero out the initial
