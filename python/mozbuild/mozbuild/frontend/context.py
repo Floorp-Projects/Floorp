@@ -1001,16 +1001,10 @@ VARIABLES = {
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
-    'TESTING_JS_MODULES': (HierarchicalStringList, list,
-        """JavaScript modules to install in the test-only destination.
+    'TESTING_FILES': (HierarchicalStringList, list,
+        """List of files to be installed in the _tests directory.
 
-        Some JavaScript modules (JSMs) are test-only and not distributed
-        with Firefox. This variable defines them.
-
-        To install modules in a subdirectory, use properties of this
-        variable to control the final destination. e.g.
-
-        ``TESTING_JS_MODULES.foo += ['module.jsm']``.
+        This works similarly to FINAL_TARGET_FILES.
         """, None),
 
     'FINAL_LIBRARY': (unicode, unicode,
@@ -1972,6 +1966,18 @@ SPECIAL_VARIABLES = {
 
         This variable contains a list of files to copy into
         ``$(FINAL_TARGET)/modules``, after preprocessing.
+        """),
+
+    'TESTING_JS_MODULES': (lambda context: context['TESTING_FILES'].modules, list,
+        """JavaScript modules to install in the test-only destination.
+
+        Some JavaScript modules (JSMs) are test-only and not distributed
+        with Firefox. This variable defines them.
+
+        To install modules in a subdirectory, use properties of this
+        variable to control the final destination. e.g.
+
+        ``TESTING_JS_MODULES.foo += ['module.jsm']``.
         """),
 
 }
