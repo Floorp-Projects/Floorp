@@ -24,7 +24,6 @@ from mozbuild.frontend.data import (
     HostSources,
     IPDLFile,
     JARManifest,
-    JsPreferenceFile,
     LocalInclude,
     Program,
     Resources,
@@ -339,21 +338,6 @@ class TestEmitterBasic(unittest.TestCase):
         icons = files._children['icons']
 
         self.assertEqual(icons._strings, ['quux.icns'])
-
-    def test_preferences_js(self):
-        reader = self.reader('js_preference_files')
-        objs = self.read_topsrcdir(reader)
-
-        prefs = [o.path for o in objs if isinstance(o, JsPreferenceFile)]
-
-        prefsByDir = [
-            'valid_val/prefs.js',
-            'ww/ww.js',
-            'xx/xx.js',
-            'yy/yy.js',
-            ]
-
-        self.assertEqual(sorted(prefs), prefsByDir)
 
     def test_program(self):
         reader = self.reader('program')

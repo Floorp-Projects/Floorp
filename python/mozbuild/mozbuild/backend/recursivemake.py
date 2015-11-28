@@ -58,7 +58,6 @@ from ..frontend.data import (
     JARManifest,
     JavaJarData,
     JavaScriptModules,
-    JsPreferenceFile,
     Library,
     LocalInclude,
     PerSourceFlag,
@@ -538,12 +537,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, BrandingFiles):
             self._process_branding_files(obj, obj.files, backend_file)
-
-        elif isinstance(obj, JsPreferenceFile):
-            if obj.path.startswith('/'):
-                backend_file.write('PREF_JS_EXPORTS += $(topsrcdir)%s\n' % obj.path)
-            else:
-                backend_file.write('PREF_JS_EXPORTS += $(srcdir)/%s\n' % obj.path)
 
         elif isinstance(obj, JARManifest):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path)

@@ -13,7 +13,6 @@ from mozbuild.frontend.data import (
     FinalTargetFiles,
     JARManifest,
     JavaScriptModules,
-    JsPreferenceFile,
     Resources,
     XPIDLFile,
 )
@@ -89,29 +88,6 @@ class FasterMakeBackend(CommonBackend):
                         )
                     elif obj.flavor == 'extra_pp':
                         self._add_preprocess(obj, f, base, defines=defines)
-
-        elif isinstance(obj, JsPreferenceFile) and \
-                obj.install_target.startswith('dist/bin'):
-            # The condition for the directory value in config/rules.mk is:
-            # ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
-            # - when XPI_NAME is set, obj.install_target will start with
-            # dist/xpi-stage
-            # - when DIST_SUBDIR is set, obj.install_target will start with
-            # dist/bin/$(DIST_SUBDIR)
-            # So an equivalent condition that is not cumbersome for us and that
-            # is enough at least for now is checking if obj.install_target is
-            # different from dist/bin.
-            if obj.install_target == 'dist/bin':
-                pref_dir = 'defaults/pref'
-            else:
-                pref_dir = 'defaults/preferences'
-
-            dest = mozpath.join(obj.install_target, pref_dir,
-                                mozpath.basename(obj.path))
-            # We preprocess these, but they don't necessarily have preprocessor
-            # directives, so tell the preprocessor to not complain about that.
-            self._add_preprocess(obj, obj.path, pref_dir, defines=defines,
-                                 silence_missing_directive_warnings=True)
 
         elif isinstance(obj, Resources) and \
                 obj.install_target.startswith('dist/bin'):

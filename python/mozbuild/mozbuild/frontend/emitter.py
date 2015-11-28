@@ -54,7 +54,6 @@ from .data import (
     IPDLFile,
     JARManifest,
     JavaScriptModules,
-    JsPreferenceFile,
     Library,
     Linkable,
     LinkageWrongKindError,
@@ -637,10 +636,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     'XPI_NAME.', context)
             yield Resources(context, resources)
 
-        for pref in sorted(context['JS_PREFERENCE_FILES'] +
-                           context['JS_PREFERENCE_PP_FILES']):
-            yield JsPreferenceFile(context, pref)
-
         self._handle_programs(context)
 
         extra_js_modules = context.get('EXTRA_JS_MODULES')
@@ -689,15 +684,28 @@ class TreeMetadataEmitter(LoggingMixin):
                 raise SandboxValidationError(
                     '%s cannot be used with DIST_INSTALL = False' % var,
                     context)
+            has_prefs = False
             for base, files in all_files.walk():
                 if base == 'components':
                     components.extend(files)
+                if base == 'defaults/pref':
+                    has_prefs = True
                 for f in files:
                     path = os.path.join(context.srcdir, f)
                     if not os.path.exists(path):
                         raise SandboxValidationError(
                             'File listed in %s does not exist: %s'
                             % (var, f), context)
+
+            # Addons (when XPI_NAME is defined) and Applications (when
+            # DIST_SUBDIR is defined) use a different preferences directory
+            # (default/preferences) from the one the GRE uses (defaults/pref).
+            # Hence, we move the files from the latter to the former in that
+            # case.
+            if has_prefs and (context.get('XPI_NAME') or
+                              context.get('DIST_SUBDIR')):
+                all_files.defaults.preferences += all_files.defaults.pref
+                del all_files.defaults._children['pref']
 
             yield cls(context, all_files, context['FINAL_TARGET'])
 
