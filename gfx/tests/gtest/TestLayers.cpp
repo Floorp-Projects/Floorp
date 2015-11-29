@@ -214,7 +214,7 @@ already_AddRefed<Layer> CreateLayerTree(
     } else {
       RefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
       if (aVisibleRegions) {
-        layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
+        layer->SetVisibleRegion(LayerIntRegion::FromUnknownRegion(aVisibleRegions[layerNumber]));
         layer->SetEventRegions(EventRegions(aVisibleRegions[layerNumber]));
       }
       if (aTransforms) {
