@@ -10,6 +10,43 @@ do_get_profile();
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+// Setup the add-ons manager for this test.
+Cu.import("resource://gre/modules/FileUtils.jsm");
+
+function registerDirectory(key, dir) {
+  let dirProvider = {
+    getFile: function(prop, persistent) {
+      persistent.value = false;
+      if (prop == key) {
+        return dir.clone();
+      }
+      return null;
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
+                                           Ci.nsISupports])
+  };
+  Services.dirsvc.registerProvider(dirProvider);
+}
+
+// As we're not running in application, we need to setup the features directory
+// manually.
+const distroDir = FileUtils.getDir("GreD", ["browser", "features"], true);
+registerDirectory("XREAppFeat", distroDir);
+
+// Set up application info - xpcshell doesn't have this by default.
+Cu.import("resource://testing-common/AppInfo.jsm");
+updateAppInfo();
+
+// Now trigger the addons-startup, and hence startup the manager itself. This
+// should load the manager correctly.
+var gInternalManager = Cc["@mozilla.org/addons/integration;1"]
+  .getService(Ci.nsIObserver)
+  .QueryInterface(Ci.nsITimerCallback);
+
+gInternalManager.observe(null, "addons-startup", null);
+
 Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
