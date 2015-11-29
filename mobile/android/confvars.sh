@@ -107,6 +107,11 @@ if test "$NIGHTLY_BUILD"; then
   MOZ_ANDROID_GCM=1
 fi
 
+# Enable C++ APZ on Nightly builds only.
+if test "$NIGHTLY_BUILD"; then
+  MOZ_ANDROID_APZ=1
+fi
+
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1
 
