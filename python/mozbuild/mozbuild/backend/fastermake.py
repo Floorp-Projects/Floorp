@@ -34,9 +34,6 @@ class FasterMakeBackend(CommonBackend):
     def _init(self):
         super(FasterMakeBackend, self)._init()
 
-        self._seen_directories = set()
-        self._defines = dict()
-
         self._manifest_entries = OrderedDefaultDict(set)
 
         self._install_manifests = OrderedDefaultDict(InstallManifest)
@@ -63,20 +60,12 @@ class FasterMakeBackend(CommonBackend):
             **kwargs)
 
     def consume_object(self, obj):
-        if not isinstance(obj, Defines) and isinstance(obj, ContextDerived):
-            defines = self._defines.get(obj.objdir, {})
+        if isinstance(obj, (JARManifest, FinalTargetPreprocessedFiles)):
+            defines = obj.defines or {}
             if defines:
                 defines = defines.defines
 
-        if isinstance(obj, Defines):
-            self._defines[obj.objdir] = obj
-
-            # We're assuming below that Defines come first for a given objdir,
-            # which is kind of set in stone from the order things are treated
-            # in emitter.py.
-            assert obj.objdir not in self._seen_directories
-
-        elif isinstance(obj, JARManifest) and \
+        if isinstance(obj, JARManifest) and \
                 obj.install_target.startswith('dist/bin'):
             self._consume_jar_manifest(obj, defines)
 
@@ -105,18 +94,9 @@ class FasterMakeBackend(CommonBackend):
 
         elif isinstance(obj, XPIDLFile):
             self._has_xpidl = True
-            # XPIDL are emitted before Defines, which breaks the assert in the
-            # branch for Defines. OTOH, we don't actually care about the
-            # XPIDLFile objects just yet, so we can just pretend we didn't see
-            # an object in the directory yet.
-            return True
 
-        else:
-            # We currently ignore a lot of object types, so just acknowledge
-            # everything.
-            return True
-
-        self._seen_directories.add(obj.objdir)
+        # We currently ignore a lot of object types, so just acknowledge
+        # everything.
         return True
 
     def _consume_jar_manifest(self, obj, defines):
