@@ -1490,8 +1490,8 @@ nsIOService::Observe(nsISupports *subject,
                 nsIAppOfflineInfo::ONLINE : nsIAppOfflineInfo::OFFLINE;
 
             for (auto it = mAppsOfflineStatus.Iter(); !it.Done(); it.Next()) {
-                if (iter.UserData() == nsIAppOfflineInfo::WIFI_ONLY) {
-                    NotifyAppOfflineStatus(iter.Key(), status);
+                if (it.UserData() == nsIAppOfflineInfo::WIFI_ONLY) {
+                    NotifyAppOfflineStatus(it.Key(), status);
                 }
             }
         }
