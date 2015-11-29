@@ -2543,7 +2543,7 @@ nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
     return;
   }
 
-  nsIntPoint topLeft = aContainer->GetVisibleRegion().GetBounds().TopLeft();
+  nsIntPoint topLeft = aContainer->GetVisibleRegion().ToUnknownRegion().GetBounds().TopLeft();
 
   nsIntRegionRectIterator iter(aRegion);
   while (const nsIntRect* r = iter.Next()) {

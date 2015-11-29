@@ -83,11 +83,11 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
   std::stringstream ss;
   aLayer->PrintInfo(ss, "");
 
-  nsIntRegion visibleRegion = aLayer->GetVisibleRegion();
+  LayerIntRegion visibleRegion = aLayer->GetVisibleRegion();
 
   uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().width, 500);
 
-  IntPoint topLeft = visibleRegion.GetBounds().TopLeft();
+  IntPoint topLeft = visibleRegion.ToUnknownRegion().GetBounds().TopLeft();
   aManager->GetTextRenderer()->RenderText(ss.str().c_str(), topLeft,
                                           aLayer->GetEffectiveTransform(), 16,
                                           maxWidth);
@@ -96,7 +96,7 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 template<class ContainerT>
 static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
 {
-  gfx::IntRect surfaceRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::IntRect surfaceRect = aContainer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds();
   return surfaceRect;
 }
 
@@ -233,7 +233,7 @@ ContainerRenderVR(ContainerT* aContainer,
           IntRectToRect(static_cast<CanvasLayer*>(layer)->GetBounds());
       } else {
         layerBounds =
-          IntRectToRect(layer->GetEffectiveVisibleRegion().GetBounds());
+          IntRectToRect(layer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
       }
       const gfx::Matrix4x4 childTransform = layer->GetEffectiveTransform();
       layerBounds = childTransform.TransformBounds(layerBounds);
@@ -642,7 +642,7 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                            LayerManagerComposite* aManager)
 {
   Compositor* compositor = aManager->GetCompositor();
-  gfx::IntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::IntRect visibleRect = aContainer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds();
   RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
   gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
                                           visibleRect.width, visibleRect.height);
@@ -710,7 +710,7 @@ ContainerRender(ContainerT* aContainer,
       return;
     }
 
-    gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
+    gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
     RefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxEnv::DumpCompositorTextures()) {

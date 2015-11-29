@@ -238,7 +238,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
 
   // Recalculate our visible region.
   LayerComposite* composite = aLayer->AsLayerComposite();
-  LayerIntRegion visible = LayerIntRegion::FromUnknownRegion(composite->GetShadowVisibleRegion());
+  LayerIntRegion visible = composite->GetShadowVisibleRegion();
 
   // If we have descendants, throw away the visible region stored on this
   // layer, and use the region accumulated by our descendants instead.
@@ -251,7 +251,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     visible.SubOut(LayerIntRegion::FromUnknownRegion(obscured));
   }
 
-  composite->SetShadowVisibleRegion(visible.ToUnknownRegion());
+  composite->SetShadowVisibleRegion(visible);
 
   // Transform the newly calculated visible region into our parent's space,
   // apply our clip to it (if any), and accumulate it into |aVisibleRegion|
@@ -1140,7 +1140,7 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   }
 
   // See if there's any incomplete rendering
-  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion();
+  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
   incompleteRegion.Sub(incompleteRegion, paintedLayer->GetValidRegion());
 
   if (!incompleteRegion.IsEmpty()) {
@@ -1475,14 +1475,14 @@ nsIntRegion
 LayerComposite::GetFullyRenderedRegion() {
   if (TiledContentHost* tiled = GetCompositableHost() ? GetCompositableHost()->AsTiledContentHost()
                                                         : nullptr) {
-    nsIntRegion shadowVisibleRegion = GetShadowVisibleRegion();
+    nsIntRegion shadowVisibleRegion = GetShadowVisibleRegion().ToUnknownRegion();
     // Discard the region which hasn't been drawn yet when doing
     // progressive drawing. Note that if the shadow visible region
     // shrunk the tiled valig region may not have discarded this yet.
     shadowVisibleRegion.And(shadowVisibleRegion, tiled->GetValidRegion());
     return shadowVisibleRegion;
   } else {
-    return GetShadowVisibleRegion();
+    return GetShadowVisibleRegion().ToUnknownRegion();
   }
 }
 
