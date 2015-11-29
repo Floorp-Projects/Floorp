@@ -4,36 +4,44 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-notification[value="loop-sharing-notification"] {
-  background: #00a9dc;
-  padding: 0;
-  border: 0;
-}
+/* Only apply to browser.xul documents */
+@-moz-document url("chrome://browser/content/browser.xul") {
+  /**
+   * XXX Due to bug 1228542, anything in this file that overrides a browser style
+   * must specify !important. Otherwise the style won't get applied correctly
+   * due to the limitations caused by the bug.
+   */
 
-notification[value="loop-sharing-notification"].paused {
-  background: #ebebeb;
-}
+  notification[value="loop-sharing-notification"] {
+    background: #00a9dc !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
 
-notification[value="loop-sharing-notification"] .notification-button {
-  background: #fff;
-  border-radius: 0;
-}
+  notification[value="loop-sharing-notification"].paused {
+    background: #ebebeb !important;
+  }
 
-notification[value="loop-sharing-notification"].paused .notification-button {
-  background: #57bd35;
-}
+  notification[value="loop-sharing-notification"] .notification-button {
+    background: #fff !important;
+    border-radius: 0 !important;
+  }
 
-notification[value="loop-sharing-notification"].paused .notification-button:hover {
-  background: #39a017;
-}
+  notification[value="loop-sharing-notification"].paused .notification-button {
+    background: #57bd35 !important;
+  }
 
-notification[value="loop-sharing-notification"] .notification-button:hover,
-notification[value="loop-sharing-notification"].paused .notification-button-default:hover {
-  background: #ebebeb;
-}
+  notification[value="loop-sharing-notification"].paused .notification-button:hover {
+    background: #39a017 !important;
+  }
 
-notification[value="loop-sharing-notification"] .notification-button-default,
-notification[value="loop-sharing-notification"].paused .notification-button-default {
-  background: #fff;
-}
+  notification[value="loop-sharing-notification"] .notification-button:hover,
+  notification[value="loop-sharing-notification"].paused .notification-button-default:hover {
+    background: #ebebeb !important;
+  }
 
+  notification[value="loop-sharing-notification"] .notification-button-default,
+  notification[value="loop-sharing-notification"].paused .notification-button-default {
+    background: #fff !important;
+  }
+}
