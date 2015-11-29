@@ -78,8 +78,20 @@ class ContextDerived(TreeMetadata):
         return self._context['FINAL_TARGET']
 
     @property
+    def defines(self):
+        defines = self._context.get('DEFINES')
+        return Defines(self._context, defines) if defines else None
+
+    @property
     def relobjdir(self):
         return mozpath.relpath(self.objdir, self.topobjdir)
+
+
+class HostMixin(object):
+    @property
+    def defines(self):
+        defines = self._context.get('HOST_DEFINES')
+        return HostDefines(self._context, defines) if defines else None
 
 
 class DirectoryTraversal(ContextDerived):
@@ -374,7 +386,7 @@ class Program(BaseProgram):
     KIND = 'target'
 
 
-class HostProgram(BaseProgram):
+class HostProgram(HostMixin, BaseProgram):
     """Context derived container object for HOST_PROGRAM"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
     KIND = 'host'
@@ -386,7 +398,7 @@ class SimpleProgram(BaseProgram):
     KIND = 'target'
 
 
-class HostSimpleProgram(BaseProgram):
+class HostSimpleProgram(HostMixin, BaseProgram):
     """Context derived container object for each program in
     HOST_SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
@@ -500,7 +512,7 @@ class ExternalSharedLibrary(SharedLibrary, ExternalLibrary):
     build system."""
 
 
-class HostLibrary(BaseLibrary):
+class HostLibrary(HostMixin, BaseLibrary):
     """Context derived container object for a host library"""
     KIND = 'host'
 
@@ -694,7 +706,7 @@ class GeneratedSources(BaseSources):
         BaseSources.__init__(self, context, files, canonical_suffix)
 
 
-class HostSources(BaseSources):
+class HostSources(HostMixin, BaseSources):
     """Represents files to be compiled for the host during the build."""
 
     def __init__(self, context, files, canonical_suffix):
