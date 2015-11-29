@@ -76,8 +76,8 @@ static gfxFloat RecoverZDepth(const Matrix4x4& aTransform, const gfxPoint& aPoin
  * unsolved without changing our rendering code.
  */
 static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
-  gfxRect ourRect = ThebesRect(aOne->GetEffectiveVisibleRegion().GetBounds());
-  gfxRect otherRect = ThebesRect(aTwo->GetEffectiveVisibleRegion().GetBounds());
+  gfxRect ourRect = ThebesRect(aOne->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
+  gfxRect otherRect = ThebesRect(aTwo->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
 
   MOZ_ASSERT(aOne->GetParent() && aOne->GetParent()->Extend3DContext() &&
              aTwo->GetParent() && aTwo->GetParent()->Extend3DContext());

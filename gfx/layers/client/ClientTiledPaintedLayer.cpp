@@ -410,7 +410,7 @@ ClientTiledPaintedLayer::RenderLayer()
     ClientManager()->GetPaintedLayerCallback();
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
-  IntSize layerSize = mVisibleRegion.GetBounds().Size();
+  IntSize layerSize = mVisibleRegion.ToUnknownRegion().GetBounds().Size();
   if (mContentClient && !mContentClient->SupportsLayerSize(layerSize, ClientManager())) {
     ClearCachedResources();
     MOZ_ASSERT(!mContentClient);
@@ -439,7 +439,7 @@ ClientTiledPaintedLayer::RenderLayer()
   TILING_LOG("TILING %p: Initial valid region %s\n", this, Stringify(mValidRegion).c_str());
   TILING_LOG("TILING %p: Initial low-precision valid region %s\n", this, Stringify(mLowPrecisionValidRegion).c_str());
 
-  nsIntRegion neededRegion = mVisibleRegion;
+  nsIntRegion neededRegion = mVisibleRegion.ToUnknownRegion();
 #ifndef MOZ_IGNORE_PAINT_WILL_RESAMPLE
   // This is handled by PadDrawTargetOutFromRegion in TiledContentClient for mobile
   if (MayResample()) {

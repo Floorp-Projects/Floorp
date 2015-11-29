@@ -343,14 +343,14 @@ public:
     return nullptr;
   }
 
-  nsIntRegion GetVisibleRegion() const
+  LayerIntRegion GetVisibleRegion() const
   {
     MOZ_ASSERT(IsValid());
 
     if (AtBottomLayer()) {
       return mLayer->GetVisibleRegion();
     }
-    nsIntRegion region = mLayer->GetVisibleRegion();
+    LayerIntRegion region = mLayer->GetVisibleRegion();
     region.Transform(mLayer->GetTransform());
     return region;
   }

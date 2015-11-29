@@ -245,7 +245,7 @@ public:
   // Set the opaque rect to match the bounds of the visible region.
   void AnnotateOpaqueRect()
   {
-    const nsIntRegion& visibleRegion = mLayer->GetEffectiveVisibleRegion();
+    const nsIntRegion visibleRegion = mLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
     const IntRect& bounds = visibleRegion.GetBounds();
 
     DrawTarget *dt = mTarget->GetDrawTarget();
@@ -432,7 +432,7 @@ MarkLayersHidden(Layer* aLayer, const IntRect& aClipRect,
       return;
     }
 
-    nsIntRegion region = aLayer->GetEffectiveVisibleRegion();
+    nsIntRegion region = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
     IntRect r = region.GetBounds();
     TransformIntRect(r, transform, ToOutsideIntRect);
     r.IntersectRect(r, aDirtyRect);
@@ -920,7 +920,7 @@ BasicLayerManager::FlushGroup(PaintLayerContext& aPaintContext, bool aNeedsClipT
   if (!mTransactionIncomplete) {
     if (aNeedsClipToVisibleRegion) {
       gfxUtils::ClipToRegion(aPaintContext.mTarget,
-                             aPaintContext.mLayer->GetEffectiveVisibleRegion());
+                             aPaintContext.mLayer->GetEffectiveVisibleRegion().ToUnknownRegion());
     }
 
     CompositionOp op = GetEffectiveOperator(aPaintContext.mLayer);
@@ -1032,7 +1032,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   paintLayerContext.Apply2DTransform();
 
-  const nsIntRegion& visibleRegion = aLayer->GetEffectiveVisibleRegion();
+  const nsIntRegion visibleRegion = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
   // If needsGroup is true, we'll clip to the visible region after we've popped the group
   if (needsClipToVisibleRegion && !needsGroup) {
     gfxUtils::ClipToRegion(aTarget, visibleRegion);
@@ -1053,7 +1053,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   if (is2D) {
     if (needsGroup) {
       PushedGroup pushedGroup =
-        PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion());
+        PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion().ToUnknownRegion());
       PaintSelfOrChildren(paintLayerContext, pushedGroup.mGroupTarget);
       PopGroupForLayer(pushedGroup);
     } else {

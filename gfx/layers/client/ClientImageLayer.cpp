@@ -46,7 +46,7 @@ protected:
     mImageClientTypeContainer = CompositableType::UNKNOWN;
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
