@@ -11,7 +11,7 @@ a file: or HTTP URL to run the tests.  Alternately, from the top-level of your
 Gecko source directory, execute:
 
 ```
-./mach marionette-test browser/components/loop/test/manifest.ini
+./mach marionette-test browser/extensions/loop/test/manifest.ini
 ```
 
 Next steps:

@@ -11,11 +11,11 @@ module.exports = function(config) {
   // List of files / patterns to load in the browser.
   baseConfig.files = baseConfig.files.concat([
     "standalone/content/libs/l10n-gaia-02ca67948fe8.js",
-    "content/shared/libs/lodash-3.9.3.js",
-    "content/shared/libs/backbone-1.2.1.js",
-    "content/shared/libs/react-0.13.3.js",
-    "content/shared/libs/classnames-2.2.0.js",
-    "content/shared/libs/sdk.js",
+    "content/shared/vendor/lodash-3.9.3.js",
+    "content/shared/vendor/backbone-1.2.1.js",
+    "content/shared/vendor/react-0.13.3.js",
+    "content/shared/vendor/classnames-2.2.0.js",
+    "content/shared/vendor/sdk.js",
     "test/shared/vendor/*.js",
     "test/shared/loop_mocha_utils.js",
     "test/karma/head.js", // Add test fixture container

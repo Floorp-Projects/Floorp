@@ -6,13 +6,13 @@
 
 @media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
   #loop-button {
-    list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver.png)
+    list-style-image: url(chrome://loop/skin/toolbar-lunaSilver.png)
   }
 }
 
 @media (-moz-windows-theme: luna-silver) and (min-resolution: 1.1dppx) {
   #loop-button {
-    list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver@2x.png)
+    list-style-image: url(chrome://loop/skin/toolbar-lunaSilver@2x.png)
   }
 }
 
