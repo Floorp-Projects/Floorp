@@ -12,6 +12,8 @@ function test() {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
+    let gController = gDebugger.DebuggerController;
+    let constants = gDebugger.require('./content/constants');
 
     gDebugger.on(gDebugger.EVENTS.EVENT_LISTENERS_FETCHED, () => {
       ok(false, "Shouldn't have fetched any event listeners.");
@@ -44,7 +46,7 @@ function test() {
     function waitForSourcesAfterReload() {
       return promise.all([
         waitForDebuggerEvents(aPanel, gDebugger.EVENTS.NEW_SOURCE),
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCES_ADDED),
+        waitForDispatch(aPanel, gDebugger.constants.LOAD_SOURCES),
         waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCE_SHOWN)
       ]);
     }
