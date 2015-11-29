@@ -17,6 +17,7 @@
     "do_timeout": false,
     "run_next_test": false,
     // head.js items.
+    "FileUtils": false,
     "MockWebSocketChannel": false,
     "extend": true,
     "getLoopString": false,
@@ -27,7 +28,8 @@
     "mockPushHandler": true,
     "setupFakeFxAUserProfile": false,
     "setupFakeLoopServer": false,
-    "timerHandlers",
+    "timerHandlers": false,
+    "updateAppInfo": false,
     "waitForCondition": true,
     // Loop specific items
     "MozLoopServiceInternal": true,

@@ -6,8 +6,8 @@
 
 Cu.import("resource://services-common/utils.js");
 
-const loopCrypto = Cu.import("resource:///modules/loop/crypto.js", {}).LoopCrypto;
-const { LOOP_ROOMS_CACHE_FILENAME } = Cu.import("resource:///modules/loop/LoopRoomsCache.jsm", {});
+const loopCrypto = Cu.import("chrome://loop/content/shared/js/crypto.js", {}).LoopCrypto;
+const { LOOP_ROOMS_CACHE_FILENAME } = Cu.import("chrome://loop/content/modules/LoopRoomsCache.jsm", {});
 
 var gTimerArgs = [];
 

@@ -12,15 +12,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource:///modules/loop/MozLoopService.jsm");
+Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource:///modules/loop/LoopRooms.jsm");
+Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-const { LoopRoomsInternal, timerHandlers } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { MozLoopServiceInternal } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
+const { LoopRoomsInternal, timerHandlers } = Cu.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
-                                  "resource:///modules/loop/MozLoopPushHandler.jsm");
+                                  "chrome://loop/content/modules/MozLoopPushHandler.jsm");
 
 const kMockWebSocketChannelName = "Mock WebSocket Channel";
 const kWebSocketChannelContractID = "@mozilla.org/network/protocol;1?name=wss";

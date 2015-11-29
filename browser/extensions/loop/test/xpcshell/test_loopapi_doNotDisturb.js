@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
+const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 var [, gHandlers] = LoopAPI.inspect();
 
 add_task(function* test_mozLoop_doNotDisturb() {

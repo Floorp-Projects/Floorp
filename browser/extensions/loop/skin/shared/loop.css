@@ -17,12 +17,12 @@
   }
 
   #loop-button {
-    list-style-image: url(chrome://browser/skin/loop/toolbar.png);
+    list-style-image: url(chrome://loop/skin/toolbar.png);
     -moz-image-region: rect(0, 18px, 18px, 0);
   }
 
   toolbar[brighttext] #loop-button {
-    list-style-image: url(chrome://browser/skin/loop/toolbar-inverted.png);
+    list-style-image: url(chrome://loop/skin/toolbar-inverted.png);
   }
 
   #loop-button[state="disabled"],
@@ -52,12 +52,12 @@
 
   @media (min-resolution: 1.1dppx) {
     #loop-button {
-      list-style-image: url("chrome://browser/skin/loop/toolbar@2x.png");
+      list-style-image: url("chrome://loop/skin/toolbar@2x.png");
       -moz-image-region: rect(0, 36px, 36px, 0);
     }
 
     toolbar[brighttext] #loop-button {
-      list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
+      list-style-image: url("chrome://loop/skin/toolbar-inverted@2x.png");
     }
 
     #loop-button[state="disabled"],
@@ -87,7 +87,7 @@
 
     #loop-button[cui-areatype="menu-panel"],
     toolbarpaletteitem[place="palette"] > #loop-button {
-      list-style-image: url(chrome://browser/skin/loop/menuPanel@2x.png);
+      list-style-image: url(chrome://loop/skin/menuPanel@2x.png);
       -moz-image-region: rect(0, 64px, 64px, 0);
     }
 
@@ -125,7 +125,7 @@
   @media not all and (min-resolution: 1.1dppx) {
     #loop-button[cui-areatype="menu-panel"],
     toolbarpaletteitem[place="palette"] > #loop-button {
-      list-style-image: url(chrome://browser/skin/loop/menuPanel.png);
+      list-style-image: url(chrome://loop/skin/menuPanel.png);
       -moz-image-region: rect(0, 32px, 32px, 0);
     }
 

@@ -854,7 +854,7 @@ loop.shared.views = (function(_, mozL10n) {
 
       if (!thumbnail) {
         thumbnail = this.props.useDesktopPaths ?
-          "loop/shared/img/icons-16x16.svg#globe" :
+          "shared/img/icons-16x16.svg#globe" :
           "shared/img/icons-16x16.svg#globe";
       }
 
