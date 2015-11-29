@@ -12,7 +12,7 @@ body {
 
 /* Beta Ribbon */
 .beta-ribbon {
-  background: url("../shared/img/beta-ribbon.svg") no-repeat;
+  background: url("../../shared/img/beta-ribbon.svg") no-repeat;
   background-size: 30px;
   width: 30px;
   height: 30px;
@@ -158,7 +158,7 @@ body {
   transform: translateY(-50%);
   padding-top: 11rem;
   padding-bottom: 1rem;
-  background-image: url("../shared/img/empty_conversations.svg");
+  background-image: url("../../shared/img/empty_conversations.svg");
   background-repeat: no-repeat;
   background-position: top center;
 }
@@ -324,11 +324,11 @@ body {
 }
 
 .room-list > .room-entry:hover > h2 > .copy-link {
-  background-image: url(../shared/img/icons-16x16.svg#copy);
+  background-image: url(../../shared/img/icons-16x16.svg#copy);
 }
 
 .room-list > .room-entry:hover > h2 > .delete-link {
-  background-image: url(../shared/img/icons-16x16.svg#trash);
+  background-image: url(../../shared/img/icons-16x16.svg#trash);
 }
 
 /* scale this up to 1.1x and then back to the original size */
@@ -338,7 +338,7 @@ body {
 }
 
 .room-list > .room-entry > h2 > .copy-link.checked {
-  background: transparent url(../shared/img/icons-16x16.svg#checkmark);
+  background: transparent url(../../shared/img/icons-16x16.svg#checkmark);
   animation: pulse .150s;
   animation-timing-function: ease-in-out;
   top: 0;
@@ -362,7 +362,7 @@ body {
 
 /* Room entry edit button */
 .room-entry-context-edit-btn {
-  background-image: url("../shared/img/icons-10x10.svg#edit-darkgrey");
+  background-image: url("../../shared/img/icons-10x10.svg#edit-darkgrey");
   background-position: center;
   background-repeat: no-repeat;
   background-size: 12px;
@@ -399,7 +399,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
 
 .button-close {
   background-color: transparent;
-  background-image: url(../shared/img/icons-10x10.svg#close);
+  background-image: url(../../shared/img/icons-10x10.svg#close);
   background-repeat: no-repeat;
   background-size: 8px 8px;
   border: none;
@@ -428,7 +428,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
 }
 
 .spinner.busy {
-  background-image: url(../shared/img/spinner.png);
+  background-image: url(../../shared/img/spinner.png);
   animation-name: spinnerRotate;
   animation-duration: 1s;
   animation-timing-function: linear;
@@ -437,7 +437,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
 
 @media (min-resolution: 2dppx) {
   .spinner.busy {
-    background-image: url(../shared/img/spinner@2x.png);
+    background-image: url(../../shared/img/spinner@2x.png);
   }
 }
 
@@ -502,7 +502,7 @@ html[dir="rtl"] .generate-url-spinner {
   margin-left: 10px;
   margin-right: 10px;
   vertical-align: middle;
-  background-image: url("../shared/img/telefonica.png");
+  background-image: url("../../shared/img/telefonica.png");
   background-size: 72px 20px;
   width: 72px;
   height: 20px;
@@ -510,21 +510,21 @@ html[dir="rtl"] .generate-url-spinner {
 
 #powered-by-logo.en-GB,
 #powered-by-logo.de {
-  background-image: url("../shared/img/02.png");
+  background-image: url("../../shared/img/02.png");
   background-size: 21px 20px;
   width: 21px;
   height: 20px;
 }
 
 #powered-by-logo.pt-BR {
-  background-image: url("../shared/img/vivo.png");
+  background-image: url("../../shared/img/vivo.png");
   background-size: 53px 26px;
   width: 53px;
   height: 26px;
 }
 
 #powered-by-logo[class^="es-"] {
-  background-image: url("../shared/img/movistar.png");
+  background-image: url("../../shared/img/movistar.png");
   background-size: 92px 20px;
   width: 92px;
   height: 20px;
@@ -532,20 +532,20 @@ html[dir="rtl"] .generate-url-spinner {
 
 @media (min-resolution: 2dppx) {
   #powered-by-logo {
-    background-image: url("../shared/img/telefonica@2x.png");
+    background-image: url("../../shared/img/telefonica@2x.png");
   }
 
   #powered-by-logo.en-GB,
   #powered-by-logo.de {
-    background-image: url("../shared/img/02@2x.png");
+    background-image: url("../../shared/img/02@2x.png");
   }
 
   #powered-by-logo.pt-BR {
-    background-image: url("../shared/img/vivo@2x.png");
+    background-image: url("../../shared/img/vivo@2x.png");
   }
 
   #powered-by-logo[class^="es-"] {
-    background-image: url("../shared/img/movistar@2x.png");
+    background-image: url("../../shared/img/movistar@2x.png");
   }
 }
 
@@ -594,7 +594,7 @@ html[dir="rtl"] .generate-url-spinner {
   border: none;
   cursor: pointer;
   vertical-align: middle;
-  background: transparent url("../shared/img/icons-10x10.svg#settings-cog");
+  background: transparent url("../../shared/img/icons-10x10.svg#settings-cog");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;

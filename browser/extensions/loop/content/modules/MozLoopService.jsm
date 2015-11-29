@@ -121,14 +121,14 @@ XPCOMUtils.defineConstant(this, "ROOM_DELETE", ROOM_DELETE);
 XPCOMUtils.defineConstant(this, "ROOM_CONTEXT_ADD", ROOM_CONTEXT_ADD);
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopAPI",
-  "resource:///modules/loop/MozLoopAPI.jsm");
+  "chrome://loop/content/modules/MozLoopAPI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "convertToRTCStatsReport",
   "resource://gre/modules/media/RTCStatsReport.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
-  "resource:///modules/loop/utils.js", "utils");
+  "chrome://loop/content/modules/utils.js", "utils");
 XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
-  "resource:///modules/loop/crypto.js", "LoopCrypto");
+  "chrome://loop/content/shared/js/crypto.js", "LoopCrypto");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chat", "resource:///modules/Chat.jsm");
 
@@ -151,13 +151,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                   "resource://gre/modules/MozSocialAPI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
-                                  "resource:///modules/loop/LoopRooms.jsm");
+                                  "chrome://loop/content/modules/LoopRooms.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "roomsPushNotification",
-                                  "resource:///modules/loop/LoopRooms.jsm");
+                                  "chrome://loop/content/modules/LoopRooms.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
-                                  "resource:///modules/loop/MozLoopPushHandler.jsm");
+                                  "chrome://loop/content/modules/MozLoopPushHandler.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                   "resource:///modules/UITour.jsm");

@@ -840,7 +840,7 @@ describe("loop.shared.views", function() {
       });
 
       expect(view.getDOMNode().querySelector(".context-preview").getAttribute("src"))
-        .eql("loop/shared/img/icons-16x16.svg#globe");
+        .eql("shared/img/icons-16x16.svg#globe");
     });
 
     it("should not display a title if by default", function() {

@@ -8,8 +8,8 @@ const {
   LOOP_SESSION_TYPE,
   MozLoopServiceInternal,
   MozLoopService
-} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-const { LoopRooms } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
+} = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
+const { LoopRooms } = Cu.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a
 // test run, so that it doesn't pick up the offline=true
@@ -133,7 +133,7 @@ function promiseOAuthParamsSetup(baseURL, params) {
 }
 
 function* resetFxA() {
-  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  let global = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
   global.gHawkClient = null;
   global.gFxAOAuthClientPromise = null;
   global.gFxAOAuthClient = null;
@@ -152,7 +152,7 @@ function checkFxAOAuthTokenData(aValue) {
 }
 
 function checkLoggedOutState() {
-  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  let global = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
   is(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
   is(MozLoopService.userProfile, null, "fxAOAuthProfile should be cleared");
   is(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");

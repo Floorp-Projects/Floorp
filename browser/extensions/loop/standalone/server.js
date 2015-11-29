@@ -90,6 +90,10 @@ app.use("/content/c", express.static(path.join(__dirname, "..", "content")));
 // Two lines for the same reason as /content above.
 app.use("/test", express.static(path.join(__dirname, "test")));
 app.use("/test", express.static(path.join(__dirname, "..", "test")));
+// Hacks for desktop to stop errors being raised in the tests for content loading.
+app.use("/test/shared/shared", express.static(path.join(__dirname, "..", "content/shared")));
+app.use("/test/desktop-local/shared", express.static(path.join(__dirname, "..", "content/shared")));
+
 
 // As we don't have hashes on the urls, the best way to serve the index files
 // appears to be to be to closely filter the url and match appropriately.

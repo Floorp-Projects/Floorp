@@ -12,7 +12,7 @@ var { WebChannel } = Cu.import("resource://gre/modules/WebChannel.jsm", {});
 var { Chat } = Cu.import("resource:///modules/Chat.jsm", {});
 
 const TEST_URI =
-  "example.com/browser/browser/components/loop/test/mochitest/test_loopLinkClicker_channel.html";
+  "example.com/browser/browser/extensions/loop/test/mochitest/test_loopLinkClicker_channel.html";
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URI, null, null);
 const TEST_URI_BAD = Services.io.newURI("http://" + TEST_URI, null, null);
 

@@ -10,7 +10,7 @@
 
 "use strict";
 
-const { INVALID_AUTH_TOKEN } = Cu.import("resource:///modules/loop/MozLoopService.jsm");
+const { INVALID_AUTH_TOKEN } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm");
 
 /**
  * An HTTP request for /NNN responds with a request with a status of NNN.

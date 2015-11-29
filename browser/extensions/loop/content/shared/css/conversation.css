@@ -65,7 +65,7 @@ html[dir="rtl"] .conversation-toolbar > li {
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent;
-  background-image: url("../img/svg/media-group.svg");
+  background-image: url("../img/media-group.svg");
   background-size: cover;
   height: 28px;
   width: 67px;
@@ -73,25 +73,25 @@ html[dir="rtl"] .conversation-toolbar > li {
 
 .conversation-toolbar-media-btn-group-box > button:last-child:active,
 .conversation-toolbar-media-btn-group-box > button:last-child:hover {
-  background-image: url("../img/svg/media-group-right-hover.svg");
+  background-image: url("../img/media-group-right-hover.svg");
   background-size: cover;
 }
 
 html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:last-child:active,
 html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:last-child:hover {
-  background-image: url("../img/svg/media-group-left-hover.svg");
+  background-image: url("../img/media-group-left-hover.svg");
   background-size: cover;
 }
 
 .conversation-toolbar-media-btn-group-box > button:first-child:active,
 .conversation-toolbar-media-btn-group-box > button:first-child:hover {
-  background-image: url("../img/svg/media-group-left-hover.svg");
+  background-image: url("../img/media-group-left-hover.svg");
   background-size: cover;
 }
 
 html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:active,
 html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:hover {
-  background-image: url("../img/svg/media-group-right-hover.svg");
+  background-image: url("../img/media-group-right-hover.svg");
   background-size: cover;
 }
 
@@ -106,76 +106,76 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 /* conversationViews.jsx */
 
 .conversation-toolbar .btn-hangup {
-  background-image: url("../img/svg/exit.svg");
+  background-image: url("../img/exit.svg");
   border: 0;
 }
 
 /* Audio mute button */
 .btn-mute-audio:after {
-  content: url("../img/svg/audio.svg");
+  content: url("../img/audio.svg");
 }
 
 .btn-mute-audio.muted:after {
-  content: url("../img/svg/audio-mute.svg");
+  content: url("../img/audio-mute.svg");
 }
 .btn-mute-audio:hover:after,
 .btn-mute-audio:active:after {
-  content: url("../img/svg/audio-hover.svg");
+  content: url("../img/audio-hover.svg");
 }
 
 .btn-mute-audio.muted:hover:after,
 .btn-mute-audio.muted:active:after {
-  content: url("../img/svg/audio-mute-hover.svg");
+  content: url("../img/audio-mute-hover.svg");
 }
 
 /* Video mute button */
 .btn-mute-video:after {
-  content: url("../img/svg/video.svg");
+  content: url("../img/video.svg");
 }
 
 .btn-mute-video:active:after,
 .btn-mute-video:hover:after {
-  content: url("../img/svg/video-hover.svg");
+  content: url("../img/video-hover.svg");
 }
 
 .btn-mute-video.muted:after {
-  content: url("../img/svg/video-mute.svg");
+  content: url("../img/video-mute.svg");
 }
 
 .btn-mute-video.muted:hover:after,
 .btn-mute-video.muted:active:after {
-  content: url("../img/svg/video-mute-hover.svg");
+  content: url("../img/video-mute-hover.svg");
 }
 
 .btn-settings {
   width: 28px;
   height: 28px;
   background-size: 28px;
-  background-image: url("../img/svg/settings.svg");
+  background-image: url("../img/settings.svg");
   background-color: transparent;
 }
 
 .btn-settings:hover,
 .btn-settings:active {
-  background-image: url("../img/svg/settings-hover.svg");
+  background-image: url("../img/settings-hover.svg");
 }
 
 .btn-screen-share {
-  background-image: url("../img/svg/sharing.svg");
+  background-image: url("../img/sharing.svg");
 }
 
 .btn-screen-share:hover,
 .btn-screen-share:active {
-  background-image: url("../img/svg/sharing-hover.svg");
+  background-image: url("../img/sharing-hover.svg");
 }
 
 .btn-screen-share.active {
-  background-image: url("../img/svg/sharing-active.svg");
+  background-image: url("../img/sharing-active.svg");
 }
 
 .btn-screen-share.disabled {
   /* The screen share button is in its pending state when its disabled. */
-  background-image: url("../img/svg/sharing-pending.svg");
+  background-image: url("../img/sharing-pending.svg");
 }
 
 /* General Call (incoming or outgoing). */
