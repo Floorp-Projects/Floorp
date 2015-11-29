@@ -135,7 +135,6 @@ var Service = {
 
     this.uuidMap.set(uuid, extension);
     this.aps.setAddonLoadURICallback(extension.id, this.checkAddonMayLoad.bind(this, extension));
-    this.aps.setAddonLocalizeCallback(extension.id, extension.localize.bind(extension));
   },
 
   // Called when an extension is unloaded.
@@ -143,7 +142,6 @@ var Service = {
     let extension = this.uuidMap.get(uuid);
     this.uuidMap.delete(uuid);
     this.aps.setAddonLoadURICallback(extension.id, null);
-    this.aps.setAddonLocalizeCallback(extension.id, null);
 
     let handler = Services.io.getProtocolHandler("moz-extension");
     handler.QueryInterface(Ci.nsISubstitutingProtocolHandler);
