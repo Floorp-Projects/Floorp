@@ -13,14 +13,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class T>
-static PLDHashOperator
-UnbindCacheEntryFromDocument(const void* aKey, RefPtr<T>& aAccessible,
-                             void* aUserArg)
+void
+UnbindCacheEntriesFromDocument(
+  nsRefPtrHashtable<nsPtrHashKey<const void>, T>& aCache)
 {
-  MOZ_ASSERT(aAccessible && !aAccessible->IsDefunct());
-  aAccessible->Document()->UnbindFromDocument(aAccessible);
-
-  return PL_DHASH_REMOVE;
+  for (auto iter = aCache.Iter(); !iter.Done(); iter.Next()) {
+    T* accessible = iter.Data();
+    MOZ_ASSERT(accessible && !accessible->IsDefunct());
+    accessible->Document()->UnbindFromDocument(accessible);
+    iter.Remove();
+  }
 }
 
 /**

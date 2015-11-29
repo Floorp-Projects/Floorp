@@ -145,8 +145,9 @@ XULTreeAccessible::Value(nsString& aValue)
 void
 XULTreeAccessible::Shutdown()
 {
-  if (!mDoc->IsDefunct())
-    mAccessibleCache.Enumerate(UnbindCacheEntryFromDocument<Accessible>, nullptr);
+  if (!mDoc->IsDefunct()) {
+    UnbindCacheEntriesFromDocument(mAccessibleCache);
+  }
 
   mTree = nullptr;
   mTreeView = nullptr;
@@ -550,8 +551,7 @@ XULTreeAccessible::InvalidateCache(int32_t aRow, int32_t aCount)
     return;
 
   if (!mTreeView) {
-    mAccessibleCache.Enumerate(UnbindCacheEntryFromDocument<Accessible>,
-                               nullptr);
+    UnbindCacheEntriesFromDocument(mAccessibleCache);
     return;
   }
 
@@ -609,8 +609,7 @@ XULTreeAccessible::TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
     return;
 
   if (!mTreeView) {
-    mAccessibleCache.Enumerate(UnbindCacheEntryFromDocument<Accessible>,
-                               nullptr);
+    UnbindCacheEntriesFromDocument(mAccessibleCache);
     return;
   }
 
@@ -669,8 +668,7 @@ XULTreeAccessible::TreeViewChanged(nsITreeView* aView)
   Document()->FireDelayedEvent(reorderEvent);
 
   // Clear cache.
-  mAccessibleCache.Enumerate(UnbindCacheEntryFromDocument<Accessible>,
-                             nullptr);
+  UnbindCacheEntriesFromDocument(mAccessibleCache);
 
   mTreeView = aView;
 }
@@ -687,7 +685,7 @@ XULTreeAccessible::CreateTreeItemAccessible(int32_t aRow) const
 
   return accessible.forget();
 }
-                             
+
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase
 ////////////////////////////////////////////////////////////////////////////////
