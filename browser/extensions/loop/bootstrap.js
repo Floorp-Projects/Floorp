@@ -3,10 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { utils: Cu, classes: Cc } = Components;
+const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
+
+const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kBrowserSharingNotificationId = "loop-sharing-notification";
+const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
+
+/**
+ * This window listener gets loaded into each browser.xul window and is used
+ * to provide the required loop functions for the window.
+ */
 var WindowListener = {
   /**
    * Sets up the chrome integration within browser windows for Loop.
@@ -14,10 +30,6 @@ var WindowListener = {
    * @param {Object} window The window to inject the integration into.
    */
   setupBrowserUI: function(window) {
-    const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    const kBrowserSharingNotificationId = "loop-sharing-notification";
-    const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
-
     let document = window.document;
     let gBrowser = window.gBrowser;
     let xhrClass = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
@@ -254,6 +266,11 @@ var WindowListener = {
        * delayedStartup.
        */
       init: function() {
+        // Cleanup when the window unloads.
+        window.addEventListener("unload", () => {
+          this.uninit();
+        });
+
         // Add observer notifications before the service is initialized
         Services.obs.addObserver(this, "loop-status-changed", false);
 
@@ -597,7 +614,7 @@ var WindowListener = {
         this.PlacesUtils.promiseFaviconLinkUrl(pageURI).then(uri => {
           // We XHR the favicon to get a File object, which we can pass to the FileReader
           // object. The FileReader turns the File object into a data-uri.
-          let xhr = new XMLHttpRequest();
+          let xhr = xhrClass.createInstance(Ci.nsIXMLHttpRequest);
           xhr.open("get", uri.spec, true);
           xhr.responseType = "blob";
           xhr.overrideMimeType("image/x-icon");
@@ -626,8 +643,88 @@ var WindowListener = {
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "chrome://loop/content/modules/MozLoopService.jsm");
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
     XPCOMUtils.defineLazyModuleGetter(LoopUI, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
+
+    LoopUI.init();
+    window.LoopUI = LoopUI;
+  },
+
+  tearDownBrowserUI: function(window) {
+    let document = window.document;
+
+    // Take any steps to remove UI or anything from the browser window
+    // document.getElementById() etc. will work here
+    // XXX Add in tear-down of the panel.
+  },
+
+  // nsIWindowMediatorListener functions.
+  onOpenWindow: function(xulWindow) {
+    // A new window has opened.
+    let domWindow = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindow);
+
+    // Wait for it to finish loading.
+    domWindow.addEventListener("load", function listener() {
+      domWindow.removeEventListener("load", listener, false);
+
+      // If this is a browser window then setup its UI.
+      if (domWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser") {
+        WindowListener.setupBrowserUI(domWindow);
+      }
+    }, false);
+  },
+
+  onCloseWindow: function(xulWindow) {
+  },
+
+  onWindowTitleChange: function(xulWindow, newTitle) {
   }
 };
+
+/**
+ * Creates the loop button on the toolbar. Due to loop being a system-addon
+ * CustomizableUI already has a placement location for the button, so that
+ * we can be on the toolbar.
+ */
+function createLoopButton() {
+  CustomizableUI.createWidget({
+    id: "loop-button",
+    type: "custom",
+    label: "loop-call-button3.label",
+    tooltiptext: "loop-call-button3.tooltiptext2",
+    privateBrowsingTooltiptext: "loop-call-button3-pb.tooltiptext",
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+    removable: true,
+    onBuild: function(aDocument) {
+      // If we're not supposed to see the button, return zip.
+      if (!Services.prefs.getBoolPref("loop.enabled")) {
+        return null;
+      }
+
+      let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView);
+
+      let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+      node.setAttribute("id", this.id);
+      node.classList.add("toolbarbutton-1");
+      node.classList.add("chromeclass-toolbar-additional");
+      node.classList.add("badged-button");
+      node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+      if (isWindowPrivate) {
+        node.setAttribute("disabled", "true");
+      }
+      let tooltiptext = isWindowPrivate ?
+        CustomizableUI.getLocalizedProperty(this, "privateBrowsingTooltiptext",
+          [CustomizableUI.getLocalizedProperty(this, "label")]) :
+        CustomizableUI.getLocalizedProperty(this, "tooltiptext");
+      node.setAttribute("tooltiptext", tooltiptext);
+      node.setAttribute("removable", "true");
+      node.addEventListener("command", function(event) {
+        aDocument.defaultView.LoopUI.togglePanel(event);
+      });
+
+      return node;
+    }
+  });
+}
 
 /**
  * Loads the default preferences from the prefs file. This loads the preferences
@@ -646,13 +743,103 @@ function loadDefaultPrefs() {
           break;
         case "string":
           branch.setCharPref(key, val);
-         break;
+          break;
       }
     }
   });
 }
 
-
-function startup(data, reason) {
+/**
+ * Called when the add-on is started, e.g. when installed or when Firefox starts.
+ */
+function startup() {
   loadDefaultPrefs();
+
+  createLoopButton();
+
+  // Attach to hidden window (for OS X).
+  try {
+    WindowListener.setupBrowserUI(Services.appShell.hiddenDOMWindow);
+  } catch (ex) {
+    // Hidden window didn't exist, so wait until startup is done.
+    let topic = "browser-delayed-startup-finished";
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, topic);
+      WindowListener.setupBrowserUI(Services.appShell.hiddenDOMWindow);
+    }, topic, false);
+  }
+
+  // Attach to existing browser windows, for modifying UI.
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  let windows = wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+    WindowListener.setupBrowserUI(domWindow);
+  }
+
+  // Wait for any new browser windows to open.
+  wm.addListener(WindowListener);
+
+  // Load our stylesheets.
+  let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
+    .getService(Components.interfaces.nsIStyleSheetService);
+  let sheets = ["chrome://loop-shared/skin/loop.css",
+                "chrome://loop/skin/platform.css"];
+  for (let sheet of sheets) {
+    let styleSheetURI = Services.io.newURI(sheet, null, null);
+    styleSheetService.loadAndRegisterSheet(styleSheetURI,
+                                           styleSheetService.AUTHOR_SHEET);
+  }
 }
+
+/**
+ * Called when the add-on is shutting down, could be for re-installation
+ * or just uninstall.
+ */
+function shutdown() {
+  // Close any open chat windows
+  Cu.import("resource:///modules/Chat.jsm");
+  let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
+  [...Chat.chatboxes].filter(isLoopURL).forEach(chatbox => {
+    chatbox.content.contentWindow.close();
+  });
+
+  // Detach from hidden window (for OS X).
+  WindowListener.tearDownBrowserUI(Services.appShell.hiddenDOMWindow);
+
+  // Detach from browser windows.
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  let windows = wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let domWindow = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+    WindowListener.tearDownBrowserUI(domWindow);
+  }
+
+  // Stop waiting for browser windows to open.
+  wm.removeListener(WindowListener);
+
+  CustomizableUI.destroyWidget("loop-button");
+
+  // Unload stylesheets.
+  let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
+    .getService(Components.interfaces.nsIStyleSheetService);
+  let sheets = ["chrome://loop/content/addon/css/loop.css",
+                "chrome://loop/skin/platform.css"];
+  for (let sheet of sheets) {
+    let styleSheetURI = Services.io.newURI(sheet, null, null);
+    if (styleSheetService.sheetRegistered(styleSheetURI,
+                                          styleSheetService.USER_SHEET)) {
+      styleSheetService.unregisterSheet(styleSheetURI,
+                                        styleSheetService.USER_SHEET);
+    }
+  }
+
+  // Unload modules.
+  Cu.unload("chrome://loop/content/modules/MozLoopAPI.jsm");
+  Cu.unload("chrome://loop/content/modules/LoopRooms.jsm");
+  Cu.unload("chrome://loop/content/modules/MozLoopService.jsm");
+}
+
+function install() {}
+
+function uninstall() {}
