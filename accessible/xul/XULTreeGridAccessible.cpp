@@ -277,8 +277,7 @@ void
 XULTreeGridRowAccessible::Shutdown()
 {
   if (!mDoc->IsDefunct()) {
-    mAccessibleCache.Enumerate(UnbindCacheEntryFromDocument<XULTreeGridCellAccessible>,
-                               nullptr);
+    UnbindCacheEntriesFromDocument(mAccessibleCache);
   }
 
   XULTreeItemAccessibleBase::Shutdown();
