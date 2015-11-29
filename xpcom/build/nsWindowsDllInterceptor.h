@@ -6,14 +6,8 @@
 
 #ifndef NS_WINDOWS_DLL_INTERCEPTOR_H_
 #define NS_WINDOWS_DLL_INTERCEPTOR_H_
-
-#include <wchar.h>
 #include <windows.h>
 #include <winternl.h>
-
-#include "mozilla/ArrayUtils.h"
-#include "nsAutoPtr.h"
-#include "nsWindowsHelpers.h"
 
 /*
  * Simple function interception.
@@ -146,12 +140,6 @@ public:
 
   void Init(const char* aModuleName)
   {
-    if (!IsCompatible()) {
-#if defined(MOZILLA_INTERNAL_API)
-      NS_WARNING("NOP space patching is unavailable for compatibility reasons");
-#endif
-      return;
-    }
     mModule = LoadLibraryExA(aModuleName, nullptr, 0);
     if (!mModule) {
       //printf("LoadLibraryEx for '%s' failed\n", aModuleName);
@@ -159,90 +147,10 @@ public:
     }
   }
 
-  /**
-   * NVIDIA Optimus drivers utilize Microsoft Detours 2.x to patch functions
-   * in our address space. There is a bug in Detours 2.x that causes it to
-   * patch at the wrong address when attempting to detour code that is already
-   * NOP space patched. This function is an effort to detect the presence of
-   * this NVIDIA code in our address space and disable NOP space patching if it
-   * is. We also check AppInit_DLLs since this is the mechanism that the Optimus
-   * drivers use to inject into our process.
-   */
-  static bool IsCompatible()
-  {
-    // These DLLs are known to have bad interactions with this style of patching
-    const wchar_t* kIncompatibleDLLs[] = {
-      MOZ_UTF16("detoured.dll"),
-      MOZ_UTF16("_etoured.dll"),
-      MOZ_UTF16("nvd3d9wrap.dll"),
-      MOZ_UTF16("nvdxgiwrap.dll")
-    };
-    // See if the infringing DLLs are already loaded
-    for (unsigned int i = 0; i < mozilla::ArrayLength(kIncompatibleDLLs); ++i) {
-      if (GetModuleHandleW(kIncompatibleDLLs[i])) {
-        return false;
-      }
-    }
-    if (GetModuleHandleW(MOZ_UTF16("user32.dll"))) {
-      // user32 is loaded but the infringing DLLs are not, assume we're safe to
-      // proceed.
-      return true;
-    }
-    // If user32 has not loaded yet, check AppInit_DLLs to ensure that Optimus
-    // won't be loaded once user32 is initialized.
-    HKEY hkey = NULL;
-    if (!RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-          MOZ_UTF16("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
-          0, KEY_QUERY_VALUE, &hkey)) {
-      nsAutoRegKey key(hkey);
-      DWORD numBytes = 0;
-      const wchar_t kAppInitDLLs[] = MOZ_UTF16("AppInit_DLLs");
-      // Query for required buffer size
-      LONG status = RegQueryValueExW(hkey, kAppInitDLLs, nullptr,
-                                     nullptr, nullptr, &numBytes);
-      nsAutoArrayPtr<wchar_t> data;
-      if (!status) {
-        // Allocate the buffer and query for the actual data
-        data = new wchar_t[numBytes / sizeof(wchar_t)];
-        status = RegQueryValueExW(hkey, kAppInitDLLs, nullptr,
-                                  nullptr, (LPBYTE)data.get(), &numBytes);
-      }
-      if (!status) {
-        // For each token, split up the filename components and then check the
-        // name of the file.
-        const wchar_t kDelimiters[] = MOZ_UTF16(", ");
-        wchar_t* tokenContext = nullptr;
-        wchar_t* token = wcstok_s(data, kDelimiters, &tokenContext);
-        while (token) {
-          wchar_t fname[_MAX_FNAME] = {0};
-          if (!_wsplitpath_s(token, nullptr, 0, nullptr, 0,
-                             fname, mozilla::ArrayLength(fname),
-                             nullptr, 0)) {
-            // nvinit.dll is responsible for bootstrapping the DLL injection, so
-            // that is the library that we check for here
-            const wchar_t kNvInitName[] = MOZ_UTF16("nvinit");
-            if (!_wcsnicmp(fname, kNvInitName,
-                           mozilla::ArrayLength(kNvInitName))) {
-              return false;
-            }
-          }
-          token = wcstok_s(nullptr, kDelimiters, &tokenContext);
-        }
-      }
-    }
-    return true;
-  }
-
 #if defined(_M_IX86)
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     if (!mModule) {
-      return false;
-    }
-    if (!IsCompatible()) {
-#if defined(MOZILLA_INTERNAL_API)
-      NS_WARNING("NOP space patching is unavailable for compatibility reasons");
-#endif
       return false;
     }
 
