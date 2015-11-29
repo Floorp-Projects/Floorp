@@ -39,8 +39,6 @@ protected:
 
     return false;
   }
-
-  virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result) override;
 };
 
 } // namespace mozilla
