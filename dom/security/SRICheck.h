@@ -9,8 +9,10 @@
 
 #include "mozilla/CORSMode.h"
 #include "nsCOMPtr.h"
+#include "nsICryptoHash.h"
 #include "SRIMetadata.h"
 
+class nsIChannel;
 class nsIDocument;
 class nsIIncrementalStreamLoader;
 class nsIUnicharStreamLoader;
@@ -52,6 +54,30 @@ public:
                                   uint32_t aStringLen,
                                   const uint8_t* aString,
                                   const nsIDocument* aDocument);
+};
+
+class SRICheckDataVerifier final
+{
+  public:
+    SRICheckDataVerifier(const SRIMetadata& aMetadata,
+                         const nsIDocument* aDocument);
+
+    nsresult Update(uint32_t aStringLen, const uint8_t* aString);
+    nsresult Verify(const SRIMetadata& aMetadata, nsIChannel* aChannel,
+                    const CORSMode aCORSMode, const nsIDocument* aDocument);
+
+  private:
+    nsCOMPtr<nsICryptoHash> mCryptoHash;
+    nsAutoCString           mComputedHash;
+    size_t                  mBytesHashed;
+    int8_t                  mHashType;
+    bool                    mInvalidMetadata;
+    bool                    mComplete;
+
+    nsresult EnsureCryptoHash();
+    nsresult Finish();
+    nsresult VerifyHash(const SRIMetadata& aMetadata, uint32_t aHashIndex,
+                        const nsIDocument* aDocument);
 };
 
 } // namespace dom
