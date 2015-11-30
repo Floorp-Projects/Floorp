@@ -501,7 +501,7 @@ describe("loop.panel", function() {
         feedbackUrl = "https://example.com";
         LoopMochaUtils.stubLoopRequest({
           GetLoopPref: function(pref) {
-            if (pref === "feedback.formURL") {
+            if (pref === "feedback.manualFormURL") {
               return feedbackUrl;
             }
 
