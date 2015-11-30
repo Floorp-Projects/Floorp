@@ -6,6 +6,7 @@ skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
 fuzzy(1,246) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
+skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling.html bg-fixed-child-no-culling-ref.html
 fuzzy-if(B2G,2,5366) fuzzy-if(Android,2,4000) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
@@ -27,6 +28,7 @@ skip-if(!asyncPan) == culling-1.html culling-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-1.html position-fixed-iframe-1-ref.html
 skip-if(!asyncPan) == position-fixed-iframe-2.html position-fixed-iframe-2-ref.html
 skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container-ref.html
+fuzzy(1,60000) skip-if(!asyncPan) == group-opacity-surface-size-1.html group-opacity-surface-size-1-ref.html
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in

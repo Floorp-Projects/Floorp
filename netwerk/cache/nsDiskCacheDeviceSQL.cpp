@@ -1365,22 +1365,6 @@ nsOfflineCacheDevice::InitActiveCaches()
   return NS_OK;
 }
 
-/* static */
-PLDHashOperator
-nsOfflineCacheDevice::ShutdownApplicationCache(const nsACString &key,
-                                               nsIWeakReference *weakRef,
-                                               void *ctx)
-{
-  nsCOMPtr<nsIApplicationCache> obj = do_QueryReferent(weakRef);
-  if (obj)
-  {
-    nsApplicationCache *appCache = static_cast<nsApplicationCache*>(obj.get());
-    appCache->MarkInvalid();
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsOfflineCacheDevice::Shutdown()
 {
@@ -1388,7 +1372,13 @@ nsOfflineCacheDevice::Shutdown()
 
   {
     MutexAutoLock lock(mLock);
-    mCaches.EnumerateRead(ShutdownApplicationCache, this);
+    for (auto iter = mCaches.Iter(); !iter.Done(); iter.Next()) {
+      nsCOMPtr<nsIApplicationCache> obj = do_QueryReferent(iter.UserData());
+      if (obj) {
+        auto appCache = static_cast<nsApplicationCache*>(obj.get());
+        appCache->MarkInvalid();
+      }
+    }
   }
 
   {

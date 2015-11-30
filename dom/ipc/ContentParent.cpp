@@ -3524,6 +3524,18 @@ ContentParent::DeallocPBlobParent(PBlobParent* aActor)
     return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
+bool
+ContentParent::RecvPBlobConstructor(PBlobParent* aActor,
+                                    const BlobConstructorParams& aParams)
+{
+  const ParentBlobConstructorParams& params = aParams.get_ParentBlobConstructorParams();
+  if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
+    return aActor->SendCreatedFromKnownBlob();
+  }
+
+  return true;
+}
+
 mozilla::PRemoteSpellcheckEngineParent *
 ContentParent::AllocPRemoteSpellcheckEngineParent()
 {
@@ -5721,6 +5733,7 @@ ContentParent::RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo)
 void
 ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
 {
+#ifdef MOZ_ENABLE_PROFILER_SPS
     if (NS_WARN_IF(!aParams)) {
         return;
     }
@@ -5734,6 +5747,7 @@ ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
     ipcParams.threadFilters() = aParams->GetThreadFilterNames();
 
     Unused << SendStartProfiler(ipcParams);
+#endif
 }
 
 } // namespace dom

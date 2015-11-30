@@ -2080,7 +2080,7 @@ protected:
     if (aScrollId == FrameMetrics::START_SCROLL_ID) {
       metrics.SetIsLayersIdRoot(true);
     }
-    IntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
+    IntRect layerBound = aLayer->GetVisibleRegion().ToUnknownRegion().GetBounds();
     metrics.SetCompositionBounds(ParentLayerRect(layerBound.x, layerBound.y,
                                                  layerBound.width, layerBound.height));
     metrics.SetScrollableRect(aScrollableRect);
@@ -2755,7 +2755,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
   }
   mcc->AdvanceByMillis(100);
 
-  layers[0]->SetVisibleRegion(nsIntRegion(IntRect(0,50,200,150)));
+  layers[0]->SetVisibleRegion(LayerIntRegion(LayerIntRect(0,50,200,150)));
   layers[0]->SetBaseTransform(Matrix4x4::Translation(0, 50, 0));
   manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
 

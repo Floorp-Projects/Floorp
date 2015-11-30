@@ -129,6 +129,7 @@ struct KeyBindingsCommand
 class nsCocoaUtils
 {
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
 
 public:
@@ -153,11 +154,11 @@ public:
     return NSToIntRound(aPts * aBackingScale);
   }
 
-  static nsIntPoint
+  static LayoutDeviceIntPoint
   CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale)
   {
-    return nsIntPoint(NSToIntRound(aPt.x * aBackingScale),
-                      NSToIntRound(aPt.y * aBackingScale));
+    return LayoutDeviceIntPoint(NSToIntRound(aPt.x * aBackingScale),
+                                NSToIntRound(aPt.y * aBackingScale));
   }
 
   static LayoutDeviceIntRect
