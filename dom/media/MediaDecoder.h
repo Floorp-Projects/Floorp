@@ -570,26 +570,6 @@ private:
   // so recompute it. The monitor must be held.
   virtual void UpdatePlaybackRate();
 
-  // Used to estimate rates of data passing through the decoder's channel.
-  // Records activity stopping on the channel.
-  void DispatchPlaybackStarted() {
-    RefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction([self] () { self->mPlaybackStatistics->Start(); });
-    AbstractThread::MainThread()->Dispatch(r.forget());
-  }
-
-  // Used to estimate rates of data passing through the decoder's channel.
-  // Records activity stopping on the channel.
-  void DispatchPlaybackStopped() {
-    RefPtr<MediaDecoder> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
-      self->mPlaybackStatistics->Stop();
-      self->ComputePlaybackRate();
-    });
-    AbstractThread::MainThread()->Dispatch(r.forget());
-  }
-
   // The actual playback rate computation. The monitor must be held.
   void ComputePlaybackRate();
 
@@ -820,6 +800,18 @@ private:
   MediaEventSource<void>*
   DataArrivedEvent() override { return &mDataArrivedEvent; }
 
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel.
+  void OnPlaybackStarted() { mPlaybackStatistics->Start(); }
+
+  // Used to estimate rates of data passing through the decoder's channel.
+  // Records activity stopping on the channel.
+  void OnPlaybackStopped()
+  {
+    mPlaybackStatistics->Stop();
+    ComputePlaybackRate();
+  }
+
   MediaEventProducer<void> mDataArrivedEvent;
 
   // The state machine object for handling the decoding. It is safe to
@@ -940,6 +932,13 @@ protected:
 
   MediaEventListener mMetadataLoadedListener;
   MediaEventListener mFirstFrameLoadedListener;
+
+  MediaEventListener mOnPlaybackStart;
+  MediaEventListener mOnPlaybackStop;
+  MediaEventListener mOnPlaybackEnded;
+  MediaEventListener mOnDecodeError;
+  MediaEventListener mOnInvalidate;
+  MediaEventListener mOnSeekingStart;
 
 protected:
   // Whether the state machine is shut down.

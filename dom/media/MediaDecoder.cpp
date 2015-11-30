@@ -615,6 +615,12 @@ MediaDecoder::Shutdown()
     mTimedMetadataListener.Disconnect();
     mMetadataLoadedListener.Disconnect();
     mFirstFrameLoadedListener.Disconnect();
+    mOnPlaybackStart.Disconnect();
+    mOnPlaybackStop.Disconnect();
+    mOnPlaybackEnded.Disconnect();
+    mOnDecodeError.Disconnect();
+    mOnInvalidate.Disconnect();
+    mOnSeekingStart.Disconnect();
   }
 
   // Force any outstanding seek and byterange requests to complete
@@ -698,6 +704,19 @@ MediaDecoder::SetStateMachineParameters()
     AbstractThread::MainThread(), this, &MediaDecoder::MetadataLoaded);
   mFirstFrameLoadedListener = mDecoderStateMachine->FirstFrameLoadedEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::FirstFrameLoaded);
+
+  mOnPlaybackStart = mDecoderStateMachine->OnPlaybackStart().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackStarted);
+  mOnPlaybackStop = mDecoderStateMachine->OnPlaybackStop().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackStopped);
+  mOnPlaybackEnded = mDecoderStateMachine->OnPlaybackEnded().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::PlaybackEnded);
+  mOnDecodeError = mDecoderStateMachine->OnDecodeError().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::DecodeError);
+  mOnInvalidate = mDecoderStateMachine->OnInvalidate().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::Invalidate);
+  mOnSeekingStart = mDecoderStateMachine->OnSeekingStart().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::SeekingStarted);
 }
 
 void
