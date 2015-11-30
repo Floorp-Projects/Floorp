@@ -12,6 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* globals PDFJS, PDFBug, FirefoxCom, Stats, Cache, ProgressBar,
+           DownloadManager, getFileName, getPDFFileNameFromURL,
+           PDFHistory, Preferences, SidebarView, ViewHistory, Stats,
+           PDFThumbnailViewer, URL, noContextMenuHandler, SecondaryToolbar,
+           PasswordPrompt, PDFPresentationMode, PDFDocumentProperties, HandTool,
+           Promise, PDFLinkService, PDFOutlineView, PDFAttachmentView,
+           OverlayManager, PDFFindController, PDFFindBar, PDFViewer,
+           PDFRenderingQueue, PresentationModeState, parseQueryString,
+           RenderingStates, UNKNOWN_SCALE, DEFAULT_SCALE_VALUE,
+           IGNORE_CURRENT_POSITION_ON_ZOOM: true */
+
+'use strict';
 
 var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
 var DEFAULT_SCALE_DELTA = 1.1;
@@ -1027,7 +1039,6 @@ var PDFFindController = (function PDFFindControllerClosure() {
       '\u00BC': '1/4', // Vulgar fraction one quarter
       '\u00BD': '1/2', // Vulgar fraction one half
       '\u00BE': '3/4', // Vulgar fraction three quarters
-      '\u00A0': ' ' // No-break space
     };
     this.findBar = options.findBar || null;
 
@@ -3675,7 +3686,7 @@ var PDFPageView = (function PDFPageViewClosure() {
       }
 
       if (redrawAnnotations && this.annotationLayer) {
-        this.annotationLayer.setupAnnotations(this.viewport);
+        this.annotationLayer.setupAnnotations(this.viewport, 'display');
       }
     },
 
@@ -3878,7 +3889,7 @@ var PDFPageView = (function PDFPageViewClosure() {
         function pdfPageRenderCallback() {
           pageViewDrawCallback(null);
           if (textLayer) {
-            self.pdfPage.getTextContent().then(
+            self.pdfPage.getTextContent({ normalizeWhitespace: true }).then(
               function textContentResolved(textContent) {
                 textLayer.setTextContent(textContent);
                 textLayer.render(TEXT_LAYER_RENDER_DELAY);
@@ -3896,7 +3907,7 @@ var PDFPageView = (function PDFPageViewClosure() {
           this.annotationLayer = this.annotationsLayerFactory.
             createAnnotationsLayerBuilder(div, this.pdfPage);
         }
-        this.annotationLayer.setupAnnotations(this.viewport);
+        this.annotationLayer.setupAnnotations(this.viewport, 'display');
       }
       div.setAttribute('data-loaded', true);
 
@@ -4313,9 +4324,10 @@ var AnnotationsLayerBuilder = (function AnnotationsLayerBuilderClosure() {
 
     /**
      * @param {PageViewport} viewport
+     * @param {string} intent (default value is 'display')
      */
     setupAnnotations:
-        function AnnotationsLayerBuilder_setupAnnotations(viewport) {
+        function AnnotationsLayerBuilder_setupAnnotations(viewport, intent) {
       function bindLink(link, dest) {
         link.href = linkService.getDestinationHash(dest);
         link.onclick = function annotationsLayerBuilderLinksOnclick() {
@@ -4341,8 +4353,12 @@ var AnnotationsLayerBuilder = (function AnnotationsLayerBuilderClosure() {
       var linkService = this.linkService;
       var pdfPage = this.pdfPage;
       var self = this;
+      var getAnnotationsParams = {
+        intent: (intent === undefined ? 'display' : intent),
+      };
 
-      pdfPage.getAnnotations().then(function (annotationsData) {
+      pdfPage.getAnnotations(getAnnotationsParams).then(
+          function (annotationsData) {
         viewport = viewport.clone({ dontFlip: true });
         var transform = viewport.transform;
         var transformStr = 'matrix(' + transform.join(',') + ')';
@@ -4882,7 +4898,7 @@ var PDFViewer = (function pdfViewer() {
       if (!this.pdfDocument) {
         return;
       }
-      
+
       var pageView = this._pages[pageNumber - 1];
 
       if (this.isInPresentationMode) {
@@ -5140,7 +5156,7 @@ var PDFViewer = (function pdfViewer() {
 
     getPageTextContent: function (pageIndex) {
       return this.pdfDocument.getPage(pageIndex + 1).then(function (page) {
-        return page.getTextContent();
+        return page.getTextContent({ normalizeWhitespace: true });
       });
     },
 
@@ -7389,7 +7405,7 @@ document.addEventListener('textlayerrendered', function (e) {
   if (pageView.textLayer && pageView.textLayer.textDivs &&
       pageView.textLayer.textDivs.length > 0 &&
       !PDFViewerApplication.supportsDocumentColors) {
-    console.error(mozL10n.get('document_colors_disabled', null,
+    console.error(mozL10n.get('document_colors_not_allowed', null,
       'PDF documents are not allowed to use their own colors: ' +
       '\'Allow pages to choose their own colors\' ' +
       'is deactivated in the browser.'));
