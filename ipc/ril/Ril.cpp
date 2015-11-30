@@ -206,9 +206,18 @@ RilConsumer::Send(JSContext* aCx, const CallArgs& aArgs)
       return NS_ERROR_FAILURE;
     }
 
-    AutoCheckCannotGC nogc;
     size_t size = JS_GetTypedArrayByteLength(obj);
-    void* data = JS_GetArrayBufferViewData(obj, nogc);
+    bool isShared;
+    void* data;
+    {
+      AutoCheckCannotGC nogc;
+      data = JS_GetArrayBufferViewData(obj, &isShared, nogc);
+    }
+    if (isShared) {
+      JS_ReportError(
+        aCx, "Incorrect argument.  Shared memory not supported");
+      return NS_ERROR_FAILURE;
+    }
     raw = new UnixSocketRawData(data, size);
   } else {
     JS_ReportError(
@@ -241,8 +250,10 @@ RilConsumer::Receive(JSContext* aCx,
   }
   {
     AutoCheckCannotGC nogc;
-    memcpy(JS_GetArrayBufferViewData(array, nogc),
+    bool isShared;
+    memcpy(JS_GetArrayBufferViewData(array, &isShared, nogc),
            aBuffer->GetData(), aBuffer->GetSize());
+    MOZ_ASSERT(!isShared);      // Array was constructed above.
   }
 
   AutoValueArray<2> args(aCx);
