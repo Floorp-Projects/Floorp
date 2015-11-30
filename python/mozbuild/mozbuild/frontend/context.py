@@ -1290,7 +1290,7 @@ VARIABLES = {
         complete.
         """, None),
 
-    'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list,
+    'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files that will be generated using configure-like substitution.
 
         This is a substitute for ``AC_OUTPUT`` in autoconf. For each path in this
@@ -1300,7 +1300,7 @@ VARIABLES = {
         ``AC_SUBST`` variables declared during configure.
         """, None),
 
-    'CONFIGURE_DEFINE_FILES': (StrictOrderingOnAppendList, list,
+    'CONFIGURE_DEFINE_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files generated from configure/config.status.
 
         This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very

@@ -744,12 +744,9 @@ class TreeMetadataEmitter(LoggingMixin):
             yield passthru
 
     def _create_substitution(self, cls, context, path):
-        if os.path.isabs(path):
-            path = path[1:]
-
         sub = cls(context)
-        sub.input_path = mozpath.join(context.srcdir, '%s.in' % path)
-        sub.output_path = mozpath.join(context.objdir, path)
+        sub.input_path = '%s.in' % path.full_path
+        sub.output_path = path.translated
         sub.relpath = path
 
         return sub
