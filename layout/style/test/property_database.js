@@ -2746,6 +2746,11 @@ var gCSSProperties = {
       "table-column",
       "table-cell",
       "table-caption",
+      "ruby",
+      "ruby-base",
+      "ruby-base-container",
+      "ruby-text",
+      "ruby-text-container",
       "none"
     ],
     invalid_values: []
@@ -3550,6 +3555,27 @@ var gCSSProperties = {
     ],
     invalid_values: [],
     quirks_values: { "5": "5px" },
+  },
+  "ruby-align": {
+    domProp: "rubyAlign",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "space-around" ],
+    other_values: [ "start", "center", "space-between" ],
+    invalid_values: [
+      "end", "1", "10px", "50%", "start center"
+    ]
+  },
+  "ruby-position": {
+    domProp: "rubyPosition",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "over" ],
+    other_values: [ "under" ],
+    invalid_values: [
+      "left", "right", "auto", "none", "not_a_position",
+      "over left", "right under", "0", "100px", "50%"
+    ]
   },
   "table-layout": {
     domProp: "tableLayout",
@@ -5827,38 +5853,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "sepia(#my-filter)",
       "sepia(10px)",
       "sepia(-1)",
-    ]
-  };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.ruby.enabled")) {
-  // Using unshift to add these values at the beginning.
-  // Adding them to the end would trigger bug 1038905. The "unshift" should be
-  // changed to a "push" when this bug is resolved.
-  gCSSProperties["display"].other_values.unshift("ruby",
-                                                 "ruby-base",
-                                                 "ruby-base-container",
-                                                 "ruby-text",
-                                                 "ruby-text-container");
-  gCSSProperties["ruby-align"] = {
-    domProp: "rubyAlign",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "space-around" ],
-    other_values: [ "start", "center", "space-between" ],
-    invalid_values: [
-      "end", "1", "10px", "50%", "start center"
-    ]
-  };
-  gCSSProperties["ruby-position"] = {
-    domProp: "rubyPosition",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "over" ],
-    other_values: [ "under" ],
-    invalid_values: [
-      "left", "right", "auto", "none", "not_a_position",
-      "over left", "right under", "0", "100px", "50%"
     ]
   };
 }
