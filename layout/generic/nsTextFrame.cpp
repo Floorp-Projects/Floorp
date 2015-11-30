@@ -1709,8 +1709,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   const nsStyleFont* fontStyle2 = sc2->StyleFont();
   nscoord letterSpacing1 = LetterSpacing(aFrame1);
   nscoord letterSpacing2 = LetterSpacing(aFrame2);
-  return fontStyle1->mFont.BaseEquals(fontStyle2->mFont) &&
-    sc1->StyleFont()->mLanguage == sc2->StyleFont()->mLanguage &&
+  return fontStyle1->mFont == fontStyle2->mFont &&
+    fontStyle1->mLanguage == fontStyle2->mLanguage &&
     textStyle1->mTextTransform == textStyle2->mTextTransform &&
     nsLayoutUtils::GetTextRunFlagsForStyle(sc1, fontStyle1, textStyle1, letterSpacing1) ==
       nsLayoutUtils::GetTextRunFlagsForStyle(sc2, fontStyle2, textStyle2, letterSpacing2);
