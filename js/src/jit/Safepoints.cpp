@@ -201,7 +201,7 @@ SafepointWriter::writeValueSlots(LSafepoint* safepoint)
     MapSlotsToBitset(frameSlots_, argumentSlots_, stream_, slots);
 }
 
-#if defined(DEBUG) && defined(JS_NUNBOX32)
+#if defined(JS_JITSPEW) && defined(JS_NUNBOX32)
 static void
 DumpNunboxPart(const LAllocation& a)
 {

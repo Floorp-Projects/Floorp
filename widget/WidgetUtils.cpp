@@ -92,7 +92,6 @@ nsIntRect RotateRect(nsIntRect aRect,
                        aRect.height, aRect.width);
     default:
       MOZ_CRASH("Unknown rotation");
-      return aRect;
   }
 }
 

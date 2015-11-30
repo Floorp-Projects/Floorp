@@ -156,9 +156,6 @@ protected:
   void CreatePoster(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight, int32_t aRotation);
 
   nsresult LoadRecorderProfiles();
-  static PLDHashOperator Enumerate(const nsAString& aProfileName,
-                                   RecorderProfile* aProfile,
-                                   void* aUserArg);
 
   friend class SetPictureSize;
   friend class SetThumbnailSize;

@@ -13,6 +13,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
 == grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
+== grid-track-sizing-002.html grid-track-sizing-002-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
 == grid-abspos-items-002.html grid-abspos-items-002-ref.html
 == grid-abspos-items-003.html grid-abspos-items-003-ref.html
@@ -73,4 +74,8 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-column-gap-001.html grid-column-gap-001-ref.html
 == grid-column-gap-002.html grid-column-gap-002-ref.html
 == grid-column-gap-003.html grid-column-gap-003-ref.html
-== grid-row-gap-001-ref.html grid-row-gap-001-ref.html
+== grid-row-gap-001.html grid-row-gap-001-ref.html
+== grid-row-gap-002.html grid-row-gap-002-ref.html
+== grid-row-gap-003.html grid-row-gap-003-ref.html
+== grid-row-gap-004.html grid-row-gap-004-ref.html
+== grid-container-overflow-001.html grid-container-overflow-001-ref.html

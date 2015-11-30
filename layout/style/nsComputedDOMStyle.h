@@ -375,6 +375,9 @@ private:
   mozilla::dom::CSSValue* DoGetTextDecorationColor();
   mozilla::dom::CSSValue* DoGetTextDecorationLine();
   mozilla::dom::CSSValue* DoGetTextDecorationStyle();
+  mozilla::dom::CSSValue* DoGetTextEmphasisColor();
+  mozilla::dom::CSSValue* DoGetTextEmphasisPosition();
+  mozilla::dom::CSSValue* DoGetTextEmphasisStyle();
   mozilla::dom::CSSValue* DoGetTextIndent();
   mozilla::dom::CSSValue* DoGetTextOrientation();
   mozilla::dom::CSSValue* DoGetTextOverflow();

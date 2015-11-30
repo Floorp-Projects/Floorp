@@ -3044,23 +3044,23 @@ public:
     template<class Impl> class Natives;
 };
 
-class RestrictedProfiles : public mozilla::jni::Class<RestrictedProfiles>
+class Restrictions : public mozilla::jni::Class<Restrictions>
 {
 public:
-    typedef mozilla::jni::Ref<RestrictedProfiles> Ref;
-    typedef mozilla::jni::LocalRef<RestrictedProfiles> LocalRef;
-    typedef mozilla::jni::GlobalRef<RestrictedProfiles> GlobalRef;
-    typedef const mozilla::jni::Param<RestrictedProfiles>& Param;
+    typedef mozilla::jni::Ref<Restrictions> Ref;
+    typedef mozilla::jni::LocalRef<Restrictions> LocalRef;
+    typedef mozilla::jni::GlobalRef<Restrictions> GlobalRef;
+    typedef const mozilla::jni::Param<Restrictions>& Param;
 
     static constexpr char name[] =
-            "org/mozilla/gecko/RestrictedProfiles";
+            "org/mozilla/gecko/Restrictions";
 
 protected:
-    RestrictedProfiles(jobject instance) : Class(instance) {}
+    Restrictions(jobject instance) : Class(instance) {}
 
 public:
     struct IsAllowed_t {
-        typedef RestrictedProfiles Owner;
+        typedef Restrictions Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
@@ -3079,7 +3079,7 @@ public:
 
 public:
     struct IsUserRestricted_t {
-        typedef RestrictedProfiles Owner;
+        typedef Restrictions Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<> Args;

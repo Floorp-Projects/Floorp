@@ -2057,7 +2057,7 @@ SpdySession31::WriteSegments(nsAHttpSegmentWriter *writer,
         mInputFrameDataStream->SetRecvdData(true);
         rv = ResponseHeadersComplete();
         if (rv == NS_ERROR_ILLEGAL_VALUE) {
-          LOG3(("SpdySession31 %p PROTOCOL_ERROR detected 0x%X\n",
+          LOG3(("SpdySession31 %p ResponseHeadersComplete PROTOCOL_ERROR detected 0x%X\n",
                 this, streamID));
           CleanupStream(mInputFrameDataStream, rv, RST_PROTOCOL_ERROR);
           ChangeDownstreamState(DISCARDING_DATA_FRAME);

@@ -85,7 +85,7 @@ TEST(ContainerParser, ADTSHeader) {
   ASSERT_NE(init, nullptr);
   EXPECT_EQ(init->Length(), header->Length());
 
-  EXPECT_EQ(parser->InitSegmentRange(), MediaByteRange(0, header->Length()));
+  EXPECT_EQ(parser->InitSegmentRange(), MediaByteRange(0, int64_t(header->Length())));
   // Media segment range should be empty here.
   EXPECT_EQ(parser->MediaHeaderRange(), MediaByteRange());
   EXPECT_EQ(parser->MediaSegmentRange(), MediaByteRange());

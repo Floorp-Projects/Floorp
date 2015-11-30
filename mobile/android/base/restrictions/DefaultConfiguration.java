@@ -11,7 +11,7 @@ package org.mozilla.gecko.restrictions;
  */
 public class DefaultConfiguration implements RestrictionConfiguration {
     @Override
-    public boolean isAllowed(Restriction restriction) {
+    public boolean isAllowed(Restrictable restrictable) {
         return true;
     }
 

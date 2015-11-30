@@ -96,8 +96,8 @@ Each image also has a `REGISTRY`, defaulting to the `REGISTRY` in this directory
 
 ## Building images
 
-Generally images can be pulled from the [registry](./REGISTRY) rather then
-build locally, but for developing new images its often helpful to hack on
+Generally, images can be pulled from the [registry](./REGISTRY) rather than
+built locally, however, for developing new images it's often helpful to hack on
 them locally.
 
 To build an image, invoke `build.sh` with the name of the folder (without a trailing slash):

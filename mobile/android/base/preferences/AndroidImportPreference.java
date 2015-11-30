@@ -7,9 +7,9 @@ package org.mozilla.gecko.preferences;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.RestrictedProfiles;
-import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.Restrictions;
 
 import java.util.Set;
 
@@ -28,7 +28,7 @@ class AndroidImportPreference extends MultiPrefMultiChoicePreference {
     public static class Handler implements GeckoPreferences.PrefHandler {
         public boolean setupPref(Context context, Preference pref) {
             // Feature disabled on devices running Android M+ (Bug 1183559)
-            return Versions.preM && RestrictedProfiles.isAllowed(context, Restriction.DISALLOW_IMPORT_SETTINGS);
+            return Versions.preM && Restrictions.isAllowed(context, Restrictable.IMPORT_SETTINGS);
         }
 
         public void onChange(Context context, Preference pref, Object newValue) { }
