@@ -244,7 +244,7 @@ loop.panel = (function(_, mozL10n) {
      */
     handleSubmitFeedback: function(event) {
       event.preventDefault();
-      loop.request("GetLoopPref", "feedback.formURL").then(function(helloFeedbackUrl) {
+      loop.request("GetLoopPref", "feedback.manualFormURL").then(function(helloFeedbackUrl) {
         loop.request("OpenURL", helloFeedbackUrl);
         this.closeWindow();
       }.bind(this));
