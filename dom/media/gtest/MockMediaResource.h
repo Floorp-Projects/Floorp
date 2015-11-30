@@ -58,7 +58,7 @@ public:
 
   virtual bool IsTransportSeekable() override { return true; }
   virtual nsresult Open(nsIStreamListener** aStreamListener) override;
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges)
     override;
   virtual const nsCString& GetContentType() const override
   {
@@ -74,7 +74,7 @@ protected:
 private:
   FILE* mFileHandle;
   const char* mFileName;
-  nsTArray<MediaByteRange> mRanges;
+  MediaByteRangeSet mRanges;
   Atomic<int> mEntry;
   nsCString mContentType;
 };

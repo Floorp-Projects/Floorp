@@ -12,7 +12,7 @@ var promise = require("promise");
 var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { assert  } = DevToolsUtils;
+var { assert } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 
@@ -23,6 +23,7 @@ loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", t
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
+loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -130,6 +131,7 @@ function createRootActor(aConnection)
                          tabList: new BrowserTabList(aConnection),
                          addonList: new BrowserAddonList(aConnection),
                          workerList: new WorkerActorList({}),
+                         serviceWorkerRegistrationList: new ServiceWorkerRegistrationActorList(),
                          globalActorFactories: DebuggerServer.globalActorFactories,
                          onShutdown: sendShutdownEvent
                        });
@@ -1346,7 +1348,26 @@ TabActor.prototype = {
       this._tabActorPool = null;
     }
 
+    // Make sure that no more workerListChanged notifications are sent.
+    if (this._workerActorList !== null) {
+      this._workerActorList.onListChanged = null;
+      this._workerActorList = null;
+    }
+
+    if (this._workerActorPool !== null) {
+      this.conn.removeActorPool(this._workerActorPool);
+      this._workerActorPool = null;
+    }
+
+    // Make sure that no more serviceWorkerRegistrationChanged notifications are
+    // sent.
+    if (this._mustNotifyServiceWorkerRegistrationChanged) {
+      swm.removeListener(this);
+      this._mustNotifyServiceWorkerRegistrationChanged = false;
+    }
+
     this._attached = false;
+
     return true;
   },
 

@@ -383,7 +383,7 @@ void WebMBufferedState::Reset() {
   mTimeMapping.Clear();
 }
 
-void WebMBufferedState::UpdateIndex(const nsTArray<MediaByteRange>& aRanges, MediaResource* aResource)
+void WebMBufferedState::UpdateIndex(const MediaByteRangeSet& aRanges, MediaResource* aResource)
 {
   for (uint32_t index = 0; index < aRanges.Length(); index++) {
     const MediaByteRange& range = aRanges[index];
