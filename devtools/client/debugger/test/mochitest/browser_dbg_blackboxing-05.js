@@ -44,7 +44,7 @@ function testBlackBoxMessageShown() {
 function clickStopBlackBoxingButton() {
   // Give the test a chance to finish before triggering the click event.
   executeSoon(() => getEditorBlackboxMessageButton().click());
-  return waitForDispatch(gPanel, gDebugger.constants.BLACKBOX);
+  return waitForThreadEvents(gPanel, "blackboxchange");
 }
 
 function testSourceEditorShownAgain() {

@@ -12,12 +12,11 @@ var test = Task.async(function* () {
   requestLongerTimeout(4);
 
   const [tab,, panel] = yield initDebugger(TAB_URL);
-  const actions = bindActionCreators(panel);
 
   yield ensureSourceIs(panel, "doc_breakpoints-reload.html", true);
 
   const sources = panel.panelWin.DebuggerView.Sources;
-  yield actions.addBreakpoint({
+  yield panel.addBreakpoint({
     actor: sources.selectedValue,
     line: 10 // "break on me" string
   });

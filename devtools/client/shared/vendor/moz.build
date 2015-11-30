@@ -9,5 +9,4 @@ DevToolsModules(
     'react-redux.js',
     'react.js',
     'redux.js',
-    'seamless-immutable.js'
 )
