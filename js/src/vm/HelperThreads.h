@@ -33,7 +33,7 @@ namespace jit {
 } // namespace jit
 namespace wasm {
   struct CompileArgs;
-  struct CompileTask;
+  class CompileTask;
   class FuncIR;
   class FunctionCompileResults;
   typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskVector;
@@ -211,24 +211,24 @@ class GlobalHelperThreadState
         numWasmFailedJobs = 0;
         return n;
     }
-    void noteWasmFailure(const wasm::FuncIR* func) {
+    void noteWasmFailure() {
         // Be mindful to signal the main thread after calling this function.
         MOZ_ASSERT(isLocked());
-        if (!wasmFailedFunction)
-            wasmFailedFunction = func;
         numWasmFailedJobs++;
     }
-    bool wasmFailed() const {
+    bool wasmFailed() {
+        MOZ_ASSERT(isLocked());
         return bool(numWasmFailedJobs);
     }
-    void resetWasmFailureState() {
-        numWasmFailedJobs = 0;
-        wasmFailedFunction = nullptr;
-    }
-    const wasm::FuncIR* maybeWasmFailedFunction() const {
-        return wasmFailedFunction;
-    }
 
+  private:
+    /*
+     * Number of wasm jobs that encountered failure for the active module.
+     * Their parent is logically the main thread, and this number serves for harvesting.
+     */
+    uint32_t numWasmFailedJobs;
+
+  public:
     JSScript* finishParseTask(JSContext* maybecx, JSRuntime* rt, void* token);
     void mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
                                    Handle<GlobalObject*> global,
@@ -264,18 +264,6 @@ class GlobalHelperThreadState
           default: MOZ_CRASH();
         }
     }
-
-    /*
-     * Number of wasm jobs that encountered failure for the active module.
-     * Their parent is logically the main thread, and this number serves for harvesting.
-     */
-    uint32_t numWasmFailedJobs;
-
-    /*
-     * Function index |i| in |Module.function(i)| of first failed wasm function.
-     * -1 if no function has failed.
-     */
-    const wasm::FuncIR* wasmFailedFunction;
 };
 
 static inline GlobalHelperThreadState&

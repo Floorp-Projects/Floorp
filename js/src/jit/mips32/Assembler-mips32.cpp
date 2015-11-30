@@ -423,6 +423,13 @@ Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
     Assembler::UpdateLuiOriValue(inst, inst->next(), (uint32_t)imm.value);
 }
 
+uint32_t
+Assembler::ExtractInstructionImmediate(uint8_t* code)
+{
+    InstImm* inst = (InstImm*)code;
+    return Assembler::ExtractLuiOriValue(inst, inst->next());
+}
+
 void
 Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 {

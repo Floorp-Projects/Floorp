@@ -272,52 +272,63 @@ class AsmJSModule
 
     class Exit
     {
-        unsigned ffiIndex_;
-        unsigned globalDataOffset_;
-        unsigned interpCodeOffset_;
-        unsigned jitCodeOffset_;
+        wasm::MallocSig sig_;
+        struct Pod {
+            unsigned ffiIndex_;
+            unsigned globalDataOffset_;
+            unsigned interpCodeOffset_;
+            unsigned jitCodeOffset_;
+        } pod;
 
       public:
         Exit() {}
-        Exit(unsigned ffiIndex, unsigned globalDataOffset)
-          : ffiIndex_(ffiIndex), globalDataOffset_(globalDataOffset),
-            interpCodeOffset_(0), jitCodeOffset_(0)
-        {}
+        Exit(Exit&& rhs) : sig_(Move(rhs.sig_)), pod(rhs.pod) {}
+        Exit(wasm::MallocSig&& sig, unsigned ffiIndex, unsigned globalDataOffset)
+          : sig_(Move(sig))
+        {
+            pod.ffiIndex_ = ffiIndex;
+            pod.globalDataOffset_ = globalDataOffset;
+            pod.interpCodeOffset_ = 0;
+            pod.jitCodeOffset_ = 0;
+        }
+        const wasm::MallocSig& sig() const {
+            return sig_;
+        }
         unsigned ffiIndex() const {
-            return ffiIndex_;
+            return pod.ffiIndex_;
         }
         unsigned globalDataOffset() const {
-            return globalDataOffset_;
+            return pod.globalDataOffset_;
         }
         void initInterpOffset(unsigned off) {
-            MOZ_ASSERT(!interpCodeOffset_);
-            interpCodeOffset_ = off;
+            MOZ_ASSERT(!pod.interpCodeOffset_);
+            pod.interpCodeOffset_ = off;
         }
         void initJitOffset(unsigned off) {
-            MOZ_ASSERT(!jitCodeOffset_);
-            jitCodeOffset_ = off;
+            MOZ_ASSERT(!pod.jitCodeOffset_);
+            pod.jitCodeOffset_ = off;
         }
         ExitDatum& datum(const AsmJSModule& module) const {
-            return *reinterpret_cast<ExitDatum*>(module.globalData() + globalDataOffset_);
+            return *reinterpret_cast<ExitDatum*>(module.globalData() + pod.globalDataOffset_);
         }
         void initDatum(const AsmJSModule& module) const {
-            MOZ_ASSERT(interpCodeOffset_);
+            MOZ_ASSERT(pod.interpCodeOffset_);
             ExitDatum& d = datum(module);
-            d.exit = module.codeBase() + interpCodeOffset_;
+            d.exit = module.codeBase() + pod.interpCodeOffset_;
             d.baselineScript = nullptr;
             d.fun = nullptr;
         }
         bool isOptimized(const AsmJSModule& module) const {
-            return datum(module).exit == module.codeBase() + jitCodeOffset_;
+            return datum(module).exit == module.codeBase() + pod.jitCodeOffset_;
         }
         void optimize(const AsmJSModule& module, jit::BaselineScript* baselineScript) const {
             ExitDatum& d = datum(module);
-            d.exit = module.codeBase() + jitCodeOffset_;
+            d.exit = module.codeBase() + pod.jitCodeOffset_;
             d.baselineScript = baselineScript;
         }
         void deoptimize(const AsmJSModule& module) const {
             ExitDatum& d = datum(module);
-            d.exit = module.codeBase() + interpCodeOffset_;
+            d.exit = module.codeBase() + pod.interpCodeOffset_;
             d.baselineScript = nullptr;
         }
 
@@ -341,6 +352,7 @@ class AsmJSModule
         wasm::MallocSig sig_;
         struct Pod {
             bool isChangeHeap_;
+            uint32_t funcIndex_;
             uint32_t codeOffset_;
             uint32_t startOffsetInModule_;  // Store module-start-relative offsets
             uint32_t endOffsetInModule_;    // so preserved by serialization.
@@ -348,7 +360,7 @@ class AsmJSModule
 
         friend class AsmJSModule;
 
-        ExportedFunction(PropertyName* name,
+        ExportedFunction(PropertyName* name, uint32_t funcIndex,
                          uint32_t startOffsetInModule, uint32_t endOffsetInModule,
                          PropertyName* maybeFieldName,
                          wasm::MallocSig&& sig)
@@ -359,6 +371,7 @@ class AsmJSModule
             MOZ_ASSERT(name_->isTenured());
             MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
             mozilla::PodZero(&pod);  // zero padding for Valgrind
+            pod.funcIndex_ = funcIndex;
             pod.isChangeHeap_ = false;
             pod.codeOffset_ = UINT32_MAX;
             pod.startOffsetInModule_ = startOffsetInModule;
@@ -410,6 +423,10 @@ class AsmJSModule
         }
         bool isChangeHeap() const {
             return pod.isChangeHeap_;
+        }
+        uint32_t funcIndex() const {
+            MOZ_ASSERT(!isChangeHeap());
+            return pod.funcIndex_;
         }
         void initCodeOffset(unsigned off) {
             MOZ_ASSERT(!isChangeHeap());
@@ -526,19 +543,6 @@ class AsmJSModule
         }
     };
 
-    class FuncPtrTable
-    {
-        uint32_t globalDataOffset_;
-        uint32_t numElems_;
-      public:
-        FuncPtrTable() {}
-        FuncPtrTable(uint32_t globalDataOffset, uint32_t numElems)
-          : globalDataOffset_(globalDataOffset), numElems_(numElems)
-        {}
-        uint32_t globalDataOffset() const { return globalDataOffset_; }
-        uint32_t numElems() const { return numElems_; }
-    };
-
     class Name
     {
         PropertyName* name_;
@@ -627,29 +631,26 @@ class AsmJSModule
         RelativeLink()
         { }
 
-        explicit RelativeLink(Kind kind)
-        {
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-            kind_ = kind;
-#elif defined(JS_CODEGEN_ARM)
-            // On ARM, CodeLabels are only used to label raw pointers, so in
-            // all cases on ARM, a RelativePatch means patching a raw pointer.
-            MOZ_ASSERT(kind == CodeLabel || kind == RawPointer);
-#endif
-            // On X64 and X86, all RelativePatch-es are patched as raw pointers.
+        // On MIPS, CodeLabels are instruction immediates so RelativeLinks only
+        // patch instruction immediates.
+        explicit RelativeLink(Kind kind) {
+            MOZ_ASSERT(kind == CodeLabel || kind == InstructionImmediate);
         }
-
         bool isRawPointerPatch() {
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-            return kind_ == RawPointer;
-#else
-            return true;
-#endif
+            return false;
         }
-
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        Kind kind_;
+#else
+        // On the rest, CodeLabels are raw pointers so RelativeLinks only patch
+        // raw pointers.
+        explicit RelativeLink(Kind kind) {
+            MOZ_ASSERT(kind == CodeLabel || kind == RawPointer);
+        }
+        bool isRawPointerPatch() {
+            return true;
+        }
 #endif
+
         uint32_t patchAtOffset;
         uint32_t targetOffset;
     };
@@ -680,16 +681,47 @@ class AsmJSModule
         size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
     };
 
+    class FuncPtrTable
+    {
+        struct Pod {
+            uint32_t globalDataOffset_;
+        } pod;
+        OffsetVector elemOffsets_;
+
+      public:
+        FuncPtrTable() {}
+        FuncPtrTable(FuncPtrTable&& rhs) : pod(rhs.pod), elemOffsets_(Move(rhs.elemOffsets_)) {}
+        explicit FuncPtrTable(uint32_t globalDataOffset) { pod.globalDataOffset_ = globalDataOffset; }
+        void define(OffsetVector&& elemOffsets) { elemOffsets_ = Move(elemOffsets); }
+        uint32_t globalDataOffset() const { return pod.globalDataOffset_; }
+        const OffsetVector& elemOffsets() const { return elemOffsets_; }
+
+        size_t serializedSize() const;
+        uint8_t* serialize(uint8_t* cursor) const;
+        const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);
+        bool clone(ExclusiveContext* cx, FuncPtrTable* out) const;
+
+        size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    };
+
+    typedef Vector<FuncPtrTable, 0, SystemAllocPolicy> FuncPtrTableVector;
+
     // Static-link data is used to patch a module either after it has been
     // compiled or deserialized with various absolute addresses (of code or
     // data in the process) or relative addresses (of code or data in the same
     // AsmJSModule).
     struct StaticLinkData
     {
-        uint32_t interruptExitOffset;
-        uint32_t outOfBoundsExitOffset;
+        StaticLinkData() { mozilla::PodZero(&pod); }
+
+        struct Pod {
+            uint32_t interruptExitOffset;
+            uint32_t outOfBoundsExitOffset;
+        } pod;
+
         RelativeLinkVector relativeLinks;
         AbsoluteLinkArray absoluteLinks;
+        FuncPtrTableVector funcPtrTables;
 
         size_t serializedSize() const;
         uint8_t* serialize(uint8_t* cursor) const;
@@ -715,7 +747,7 @@ class AsmJSModule
         bool                              hasArrayView_;
         bool                              isSharedView_;
         bool                              hasFixedMinHeapLength_;
-        bool                              usesSignalHandlers_;
+        bool                              canUseSignalHandlers_;
     } pod;
 
     // These two fields need to be kept out pod as they depend on the position
@@ -729,7 +761,6 @@ class AsmJSModule
     Vector<ExportedFunction,       0, SystemAllocPolicy> exports_;
     Vector<jit::CallSite,          0, SystemAllocPolicy> callSites_;
     Vector<CodeRange,              0, SystemAllocPolicy> codeRanges_;
-    Vector<FuncPtrTable,           0, SystemAllocPolicy> funcPtrTables_;
     Vector<uint32_t,               0, SystemAllocPolicy> builtinThunkOffsets_;
     Vector<Name,                   0, SystemAllocPolicy> names_;
     Vector<ProfilingLabel,         0, SystemAllocPolicy> profilingLabels_;
@@ -778,12 +809,15 @@ class AsmJSModule
     bool strict() const {
         return pod.strict_;
     }
+    bool canUseSignalHandlers() const {
+        return pod.canUseSignalHandlers_;
+    }
     bool usesSignalHandlersForInterrupt() const {
-        return pod.usesSignalHandlers_;
+        return pod.canUseSignalHandlers_;
     }
     bool usesSignalHandlersForOOB() const {
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        return pod.usesSignalHandlers_;
+        return pod.canUseSignalHandlers_;
 #else
         return false;
 #endif
@@ -1040,14 +1074,14 @@ class AsmJSModule
         return builtinThunkOffsets_.append(offsets.begin) &&
                codeRanges_.append(CodeRange(builtin, offsets));
     }
-    bool addExit(unsigned ffiIndex, unsigned* exitIndex) {
+    bool addExit(wasm::MallocSig&& sig, unsigned ffiIndex, unsigned* exitIndex) {
         MOZ_ASSERT(!isFinished());
         static_assert(sizeof(ExitDatum) % sizeof(void*) == 0, "word aligned");
         uint32_t globalDataOffset;
         if (!allocateGlobalBytes(sizeof(ExitDatum), sizeof(void*), &globalDataOffset))
             return false;
         *exitIndex = unsigned(exits_.length());
-        return exits_.append(Exit(ffiIndex, globalDataOffset));
+        return exits_.append(Exit(Move(sig), ffiIndex, globalDataOffset));
     }
     unsigned numExits() const {
         return exits_.length();
@@ -1058,12 +1092,17 @@ class AsmJSModule
     const Exit& exit(unsigned i) const {
         return exits_[i];
     }
-    bool addFuncPtrTable(unsigned numElems, uint32_t* globalDataOffset) {
+    bool declareFuncPtrTable(unsigned numElems, uint32_t* funcPtrTableIndex) {
         MOZ_ASSERT(!isFinished());
         MOZ_ASSERT(IsPowerOfTwo(numElems));
-        if (!allocateGlobalBytes(numElems * sizeof(void*), sizeof(void*), globalDataOffset))
+        uint32_t globalDataOffset;
+        if (!allocateGlobalBytes(numElems * sizeof(void*), sizeof(void*), &globalDataOffset))
             return false;
-        return funcPtrTables_.append(FuncPtrTable(*globalDataOffset, numElems));
+        *funcPtrTableIndex = staticLinkData_.funcPtrTables.length();
+        return staticLinkData_.funcPtrTables.append(FuncPtrTable(globalDataOffset));
+    }
+    FuncPtrTable& funcPtrTable(uint32_t funcPtrTableIndex) {
+        return staticLinkData_.funcPtrTables[funcPtrTableIndex];
     }
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     bool addProfiledFunction(ProfiledFunction func) {
@@ -1079,6 +1118,7 @@ class AsmJSModule
 #endif
 
     bool addExportedFunction(PropertyName* name,
+                             uint32_t funcIndex,
                              uint32_t funcSrcBegin,
                              uint32_t funcSrcEnd,
                              PropertyName* maybeFieldName,
@@ -1090,7 +1130,7 @@ class AsmJSModule
         MOZ_ASSERT(!isFinished());
         MOZ_ASSERT(srcStart_ < funcSrcBegin);
         MOZ_ASSERT(funcSrcBegin < funcSrcEnd);
-        ExportedFunction func(name, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
+        ExportedFunction func(name, funcIndex, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
                               maybeFieldName, mozilla::Move(sig));
         return exports_.length() < UINT32_MAX && exports_.append(mozilla::Move(func));
     }
@@ -1116,6 +1156,12 @@ class AsmJSModule
     ExportedFunction& exportedFunction(unsigned i) {
         return exports_[i];
     }
+    void setAsyncInterruptOffset(uint32_t o) {
+        staticLinkData_.pod.interruptExitOffset = o;
+    }
+    void setOnOutOfBoundsExitOffset(uint32_t o) {
+        staticLinkData_.pod.outOfBoundsExitOffset = o;
+    }
 
     /*************************************************************************/
 
@@ -1123,11 +1169,7 @@ class AsmJSModule
     // tokenStream) and all function and entry/exit trampolines have been
     // generated (via masm). After this function, the module must still be
     // statically and dynamically linked before code can be run.
-    bool finish(ExclusiveContext* cx,
-                frontend::TokenStream& tokenStream,
-                jit::MacroAssembler& masm,
-                const jit::Label& interruptLabel,
-                const jit::Label& outOfBoundsLabel);
+    bool finish(ExclusiveContext* cx, frontend::TokenStream& ts, jit::MacroAssembler& masm);
 
     /*************************************************************************/
     // These accessor functions can be used after finish():

@@ -464,6 +464,13 @@ Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
     Assembler::UpdateLoad64Value(inst, (uint64_t)imm.value);
 }
 
+uint64_t
+Assembler::ExtractInstructionImmediate(uint8_t* code)
+{
+    InstImm* inst = (InstImm*)code;
+    return Assembler::ExtractLoad64Value(inst);
+}
+
 void
 Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 {
