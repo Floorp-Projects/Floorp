@@ -790,51 +790,49 @@ marquee[direction="up"], marquee[direction="down"] {
 
 /* Ruby */
 
-@supports (display: ruby) {
-  ruby {
-    display: ruby;
-  }
-  rb {
-    display: ruby-base;
-    white-space: nowrap;
-  }
-  rp {
-    display: none;
-  }
-  rt {
-    display: ruby-text;
-  }
-  rtc {
-    display: ruby-text-container;
-  }
-  rtc, rt {
-    white-space: nowrap;
-    font-size: 50%;
-    -moz-min-font-size-ratio: 50%;
-    line-height: 1;
+ruby {
+  display: ruby;
+}
+rb {
+  display: ruby-base;
+  white-space: nowrap;
+}
+rp {
+  display: none;
+}
+rt {
+  display: ruby-text;
+}
+rtc {
+  display: ruby-text-container;
+}
+rtc, rt {
+  white-space: nowrap;
+  font-size: 50%;
+  -moz-min-font-size-ratio: 50%;
+  line-height: 1;
 %ifndef XP_WIN
-    /* The widely-used Windows font Meiryo doesn't work fine with this
-     * setting, so disable this on Windows. We should re-enable it once
-     * Microsoft fixes this issue. See bug 1164279. */
-    font-variant-east-asian: ruby;
+  /* The widely-used Windows font Meiryo doesn't work fine with this
+   * setting, so disable this on Windows. We should re-enable it once
+   * Microsoft fixes this issue. See bug 1164279. */
+  font-variant-east-asian: ruby;
 %endif
+}
+@supports (text-emphasis: none) {
+  rtc, rt {
+    text-emphasis: none;
   }
-  @supports (text-emphasis: none) {
-    rtc, rt {
-      text-emphasis: none;
-    }
-  }
-  rtc:lang(zh), rt:lang(zh) {
-    ruby-align: center;
-  }
-  rtc:lang(zh-TW), rt:lang(zh-TW) {
-    font-size: 30%; /* bopomofo */
-    -moz-min-font-size-ratio: 30%;
-  }
-  rtc > rt {
-    font-size: inherit;
-  }
-  ruby, rb, rt, rtc {
-    unicode-bidi: -moz-isolate;
-  }
+}
+rtc:lang(zh), rt:lang(zh) {
+  ruby-align: center;
+}
+rtc:lang(zh-TW), rt:lang(zh-TW) {
+  font-size: 30%; /* bopomofo */
+  -moz-min-font-size-ratio: 30%;
+}
+rtc > rt {
+  font-size: inherit;
+}
+ruby, rb, rt, rtc {
+  unicode-bidi: -moz-isolate;
 }
