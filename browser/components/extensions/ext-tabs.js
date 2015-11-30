@@ -1,3 +1,5 @@
+"use strict";
+
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
@@ -374,6 +376,14 @@ extensions.registerAPI((extension, context) => {
       get: function(tabId, callback) {
         let tab = TabManager.getTab(tabId);
         runSafe(context, callback, TabManager.convert(extension, tab));
+      },
+
+      getCurrent(callback) {
+        let tab;
+        if (context.tabId) {
+          tab = TabManager.convert(extension, TabManager.getTab(context.tabId));
+        }
+        runSafe(context, callback, tab);
       },
 
       getAllInWindow: function(...args) {

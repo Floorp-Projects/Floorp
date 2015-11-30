@@ -1,0 +1,173 @@
+#! /usr/bin/env python
+
+import os
+import sys
+import re
+from distutils import spawn
+import subprocess
+from threading import Thread
+import argparse
+
+
+def find_react_version(lib_dir):
+    "Finds the React library version number currently used."
+    for filename in os.listdir(lib_dir):
+        match = re.match(r"react-(.*)-prod\.js", filename)
+        if (match and match.group(1)):
+            return match.group(1)
+    print 'Unable to find the current react version used in content.'
+    print 'Please checked the %s directory.' % lib_dir
+    exit(1)
+
+
+def append_arguments(array1, array2):
+    "Appends array2 onto the end of array1"
+    result = array1[:]
+    result.extend(array2)
+    return result
+
+
+def check_jsx(jsx_path):
+    "Checks to see if jsx is installed or not"
+    if jsx_path is None:
+        print 'You do not have the react-tools installed'
+        print 'Please do $ npm install -g react-tools and make sure it is available in PATH'
+        exit(1)
+
+
+def find_react_command():
+    "Searches for a jsx location and forms a runnable command"
+    if sys.platform != 'win32':
+        jsx_path = spawn.find_executable('jsx')
+        check_jsx(jsx_path)
+        return [jsx_path]
+
+    # Else windows.
+    def find_excutable_no_extension(fileName):
+        """
+            spawn.find_executable assumes a '.exe' extension on windows
+            something which jsx doesn't have...
+        """
+        paths = os.environ['PATH'].split(os.pathsep)
+        for path in paths:
+            file = os.path.join(path, fileName)
+            if os.path.isfile(file):
+                return path
+        return None
+
+    # jsx isn't a true windows executable, so the standard spawn
+    # processes get upset. Hence, we have to use node to run the
+    # jsx file direct.
+    node = spawn.find_executable('node')
+    if node is None:
+        print 'You do not have node installed, or it is not in your PATH'
+        exit(1)
+
+    # We need the jsx path to make node happy
+    jsx_path = find_excutable_no_extension('jsx')
+    check_jsx(jsx_path)
+
+    # This is what node really wants to run.
+    jsx_path = os.path.join(jsx_path,
+                            "node_modules", "react-tools", "bin", "jsx")
+
+    return [node, jsx_path]
+
+
+SHARED_LIBS_DIR=os.path.join(os.path.dirname(__file__), "content", "shared", "vendor")
+REACT_VERSION=find_react_version(SHARED_LIBS_DIR)
+
+src_files = []  # files to be compiled
+
+run_command = find_react_command()
+
+if sys.platform == 'win32':
+    print 'Please ensure you are running react-tools version %s' % REACT_VERSION
+    print 'You may be already, but we are not currently able to detect it'
+else:
+    p = subprocess.Popen(append_arguments(run_command, ['-V']),
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    for line in iter(p.stdout.readline, b''):
+        info = line.rstrip()
+
+    if not info == REACT_VERSION:
+        print 'You have the wrong version of react-tools installed'
+        print 'Please use version %s' % REACT_VERSION
+        exit(1)
+
+# parse the CLI arguments
+description = 'Loop build tool for JSX files. ' + \
+              'Will scan entire loop directory and compile them in place. ' + \
+              'Must be executed from browser/extensions/loop directory.'
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('--watch', '-w', action='store_true', help='continuous' +
+                    'build based on file changes (optional)')
+args = parser.parse_args()
+
+# loop through all tuples and get unique dirs only
+unique_jsx_dirs = []
+
+# find all .jsx files
+for dirname, dirnames, filenames in os.walk('.'):
+    for filename in filenames:
+        if '.jsx' == os.path.splitext(filename)[1]:  # (root, ext)
+            src_files.append(filename)
+            if dirname not in unique_jsx_dirs:
+                unique_jsx_dirs.append(dirname)
+
+
+def jsx_run_watcher(path):
+    # keep --target=es3 for now, as at least our UnsupportedBrowserView wants
+    # to be able to render on IE8
+    subprocess.call(append_arguments(run_command, ['--target=es3', '-w', '-x',
+                                                   'jsx', path, path]))
+
+
+def start_jsx_watcher_threads(dirs):
+    """
+        starts a thread with a jsx watch process
+        for every dir in the dirs argument
+    """
+    threads = []
+    for udir in dirs:
+        t = Thread(target=jsx_run_watcher, args=(udir,))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+
+def check_file_packaging(srcs):
+    """
+        get all lines from jar.mn file
+        check against the files we are going to compile.
+        Note that this only looks at filenames, and will miss
+        the one of two identically named files.
+    """
+    # get all lines from jar.mn
+    packaged_files = [line.strip() for line in open('./jar.mn')]
+
+    # loop through our compiled files and compare against jar.mn
+    # XXX fix to use paths so that identically named files don't get overlooked
+    # and update the docstring for this function
+    missing_jar_files = []  # initially empty
+    for src_file in srcs:
+        transpiled_file = os.path.splitext(src_file)[0] + ".js"  # (root, ext)
+        if not any(transpiled_file in x for x in packaged_files):
+            missing_jar_files.append(transpiled_file)
+
+    # output a message to the user
+    if len(missing_jar_files):
+        for f in missing_jar_files:
+            print f + ' not in jar.mn file'
+
+check_file_packaging(src_files)
+
+if args.watch:
+    start_jsx_watcher_threads(unique_jsx_dirs)
+else:
+    for d in unique_jsx_dirs:
+        out = subprocess.call(append_arguments(run_command, ['-x', 'jsx', d, d]))
