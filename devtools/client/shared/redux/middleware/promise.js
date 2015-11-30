@@ -4,7 +4,6 @@
 "use strict";
 
 const uuidgen = require("sdk/util/uuid").uuid;
-const promise = require("promise");
 const {
   entries, toObject, reportException, executeSoon
 } = require("devtools/shared/DevToolsUtils");
@@ -16,7 +15,7 @@ function promiseMiddleware ({ dispatch, getState }) {
       return next(action);
     }
 
-    const promiseInst = action[PROMISE];
+    const promise = action[PROMISE];
     const seqId = uuidgen().toString();
 
     // Create a new action that doesn't have the promise field and has
@@ -27,27 +26,26 @@ function promiseMiddleware ({ dispatch, getState }) {
 
     dispatch(Object.assign({}, action, { status: "start" }));
 
-    // Return the promise so action creators can still compose if they
-    // want to.
-    const deferred = promise.defer();
-    promiseInst.then(value => {
+    promise.then(value => {
       executeSoon(() => {
         dispatch(Object.assign({}, action, {
           status: "done",
           value: value
         }));
-        deferred.resolve(value);
       });
-    }, error => {
+    }).catch(error => {
       executeSoon(() => {
         dispatch(Object.assign({}, action, {
           status: "error",
-          error: error.message || error
+          error
         }));
-        deferred.reject(error);
       });
+      reportException(`@@redux/middleware/promise#${action.type}`, error);
     });
-    return deferred.promise;
+
+    // Return the promise so action creators can still compose if they
+    // want to.
+    return promise;
   };
 }
 

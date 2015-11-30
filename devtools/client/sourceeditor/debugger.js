@@ -132,17 +132,9 @@ function addBreakpoint(ctx, line, cond) {
     let meta = dbginfo.get(ed);
     let info = cm.lineInfo(line);
 
-    // The line does not exist in the editor. This is harmless, the
-    // architecture calling this assumes the editor will handle this
-    // gracefully, and make sure breakpoints exist when they need to.
-    if (!info) {
-      return;
-    }
-
     ed.addMarker(line, "breakpoints", "breakpoint");
     meta.breakpoints[line] = { condition: cond };
 
-    // TODO(jwl): why is `info` null when breaking on page reload?
     info.handle.on("delete", function onDelete() {
       info.handle.off("delete", onDelete);
       meta.breakpoints[info.line] = null;
@@ -185,25 +177,23 @@ function removeBreakpoint(ctx, line) {
 
 function moveBreakpoint(ctx, fromLine, toLine) {
   let { ed, cm } = ctx;
+  let info = cm.lineInfo(fromLine);
 
   var fromTop = cm.cursorCoords({ line: fromLine }).top;
   var toTop = cm.cursorCoords({ line: toLine }).top;
 
-  ed.removeBreakpoint(fromLine);
-  ed.addBreakpoint(toLine);
-  let info = cm.lineInfo(toLine);
   var marker = ed.getMarker(info.line, "breakpoints", "breakpoint");
   if (marker) {
     marker.setAttribute("adding", "");
-    marker.style.position = 'relative';
-    marker.style.top = -(toTop - fromTop) + 'px';
     marker.style.transform = "translateY(" + (toTop - fromTop) + "px)";
     marker.addEventListener('transitionend', function(e) {
+      ed.removeBreakpoint(info.line);
+      ed.addBreakpoint(toLine);
+
       // For some reason, we have to reset the styles after the marker
       // is already removed, not before.
       e.target.removeAttribute("adding");
       e.target.style.transform = "none";
-      e.target.style.top = '0px';
     });
   }
 }

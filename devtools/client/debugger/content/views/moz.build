@@ -4,6 +4,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'event-listeners-view.js',
-    'sources-view.js'
+    'event-listeners-view.js'
 )
