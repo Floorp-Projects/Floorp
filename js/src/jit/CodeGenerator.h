@@ -293,6 +293,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitStoreUnboxedScalar(LStoreUnboxedScalar* lir);
     void visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir);
     void visitAtomicIsLockFree(LAtomicIsLockFree* lir);
+    void visitGuardSharedTypedArray(LGuardSharedTypedArray* lir);
     void visitClampIToUint8(LClampIToUint8* lir);
     void visitClampDToUint8(LClampDToUint8* lir);
     void visitClampVToUint8(LClampVToUint8* lir);
@@ -466,6 +467,10 @@ class CodeGenerator : public CodeGeneratorSpecific
                                      Label* ifEmulatesUndefined,
                                      Label* ifDoesntEmulateUndefined,
                                      Register scratch, OutOfLineTestObject* ool);
+
+    // Branch to target unless obj has an emptyObjectElements or emptyObjectElementsShared
+    // elements pointer.
+    void branchIfNotEmptyObjectElements(Register obj, Label* target);
 
     // Get a label for the start of block which can be used for jumping, in
     // place of jumpToBlock.

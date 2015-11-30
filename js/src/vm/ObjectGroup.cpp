@@ -210,8 +210,7 @@ ObjectGroup::useSingletonForAllocationSite(JSScript* script, jsbytecode* pc, JSP
         return GenericObject;
 
     if (key != JSProto_Object &&
-        !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray) &&
-        !(key >= JSProto_SharedInt8Array && key <= JSProto_SharedUint8ClampedArray))
+        !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
     {
         return GenericObject;
     }
@@ -704,17 +703,6 @@ GetClassForProtoKey(JSProtoKey key)
       case JSProto_Float64Array:
       case JSProto_Uint8ClampedArray:
         return &TypedArrayObject::classes[key - JSProto_Int8Array];
-
-      case JSProto_SharedInt8Array:
-      case JSProto_SharedUint8Array:
-      case JSProto_SharedInt16Array:
-      case JSProto_SharedUint16Array:
-      case JSProto_SharedInt32Array:
-      case JSProto_SharedUint32Array:
-      case JSProto_SharedFloat32Array:
-      case JSProto_SharedFloat64Array:
-      case JSProto_SharedUint8ClampedArray:
-        return &SharedTypedArrayObject::classes[key - JSProto_SharedInt8Array];
 
       case JSProto_ArrayBuffer:
         return &ArrayBufferObject::class_;

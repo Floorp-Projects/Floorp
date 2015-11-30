@@ -105,6 +105,10 @@ enum BailoutKind
     Bailout_NonSimdInt32x4Input,
     Bailout_NonSimdFloat32x4Input,
 
+    // Atomic operations require shared memory, bail out if the typed array
+    // maps unshared memory.
+    Bailout_NonSharedTypedArrayInput,
+
     // For the initial snapshot when entering a function.
     Bailout_InitialState,
 
@@ -213,6 +217,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonSimdInt32x4Input";
       case Bailout_NonSimdFloat32x4Input:
         return "Bailout_NonSimdFloat32x4Input";
+      case Bailout_NonSharedTypedArrayInput:
+        return "Bailout_NonSharedTypedArrayInput";
       case Bailout_InitialState:
         return "Bailout_InitialState";
       case Bailout_Debugger:

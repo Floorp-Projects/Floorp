@@ -3400,6 +3400,16 @@ LIRGenerator::visitGuardString(MGuardString* ins)
 }
 
 void
+LIRGenerator::visitGuardSharedTypedArray(MGuardSharedTypedArray* ins)
+{
+    MOZ_ASSERT(ins->input()->type() == MIRType_Object);
+    LGuardSharedTypedArray* guard =
+        new(alloc()) LGuardSharedTypedArray(useRegister(ins->obj()), temp());
+    assignSnapshot(guard, Bailout_NonSharedTypedArrayInput);
+    add(guard, ins);
+}
+
+void
 LIRGenerator::visitPolyInlineGuard(MPolyInlineGuard* ins)
 {
     MOZ_ASSERT(ins->input()->type() == MIRType_Object);

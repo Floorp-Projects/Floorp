@@ -4962,9 +4962,6 @@ jit::ElementAccessIsAnyTypedArray(CompilerConstraintList* constraints,
         return false;
 
     *arrayType = types->getTypedArrayType(constraints);
-    if (*arrayType != Scalar::MaxTypedArrayViewType)
-        return true;
-    *arrayType = types->getSharedTypedArrayType(constraints);
     return *arrayType != Scalar::MaxTypedArrayViewType;
 }
 

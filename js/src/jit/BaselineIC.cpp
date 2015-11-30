@@ -2355,7 +2355,7 @@ LoadTypedThingLength(MacroAssembler& masm, TypedThingLayout layout, Register obj
 {
     switch (layout) {
       case Layout_TypedArray:
-        masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), result);
+        masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), result);
         break;
       case Layout_OutlineTypedObject:
       case Layout_InlineTypedObject:

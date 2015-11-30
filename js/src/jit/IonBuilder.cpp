@@ -13574,6 +13574,14 @@ IonBuilder::addGuardReceiverPolymorphic(MDefinition* obj,
     return guard;
 }
 
+MInstruction*
+IonBuilder::addSharedTypedArrayGuard(MDefinition* obj)
+{
+    MGuardSharedTypedArray* guard = MGuardSharedTypedArray::New(alloc(), obj);
+    current->add(guard);
+    return guard;
+}
+
 TemporaryTypeSet*
 IonBuilder::bytecodeTypes(jsbytecode* pc)
 {

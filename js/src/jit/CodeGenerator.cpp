@@ -5242,7 +5242,7 @@ CodeGenerator::visitTypedArrayLength(LTypedArrayLength* lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), out);
+    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
 }
 
 void
@@ -5250,7 +5250,7 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements* lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
 }
 
 void
@@ -7510,6 +7510,21 @@ CodeGenerator::visitCallIteratorStart(LCallIteratorStart* lir)
 }
 
 void
+CodeGenerator::branchIfNotEmptyObjectElements(Register obj, Label* target)
+{
+    Label emptyObj;
+    masm.branchPtr(Assembler::Equal,
+                   Address(obj, NativeObject::offsetOfElements()),
+                   ImmPtr(js::emptyObjectElements),
+                   &emptyObj);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(obj, NativeObject::offsetOfElements()),
+                   ImmPtr(js::emptyObjectElementsShared),
+                   target);
+    masm.bind(&emptyObj);
+}
+
+void
 CodeGenerator::visitIteratorStart(LIteratorStart* lir)
 {
     const Register obj = ToRegister(lir->object());
@@ -7552,10 +7567,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
 
         // Ensure the object does not have any elements. The presence of dense
         // elements is not captured by the shape tests above.
-        masm.branchPtr(Assembler::NotEqual,
-                       Address(obj, NativeObject::offsetOfElements()),
-                       ImmPtr(js::emptyObjectElements),
-                       ool->entry());
+        branchIfNotEmptyObjectElements(obj, ool->entry());
         masm.jump(&guardDone);
 
         masm.bind(&shapeMismatch);
@@ -7563,10 +7575,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
         masm.branchPtr(Assembler::NotEqual, groupAddr, temp1, ool->entry());
         masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), temp1);
         masm.branchTestPtr(Assembler::Zero, temp1, temp1, &noExpando);
-        masm.branchPtr(Assembler::NotEqual,
-                       Address(temp1, NativeObject::offsetOfElements()),
-                       ImmPtr(js::emptyObjectElements),
-                       ool->entry());
+        branchIfNotEmptyObjectElements(temp1, ool->entry());
         masm.loadObjShape(temp1, temp1);
         masm.bind(&noExpando);
         masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, ool->entry());
@@ -7578,10 +7587,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
     // have the delegate flag set). Also check for the absence of dense elements.
     Address prototypeShapeAddr(temp2, sizeof(ReceiverGuard) + offsetof(ReceiverGuard, shape));
     masm.loadObjProto(obj, temp1);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(temp1, NativeObject::offsetOfElements()),
-                   ImmPtr(js::emptyObjectElements),
-                   ool->entry());
+    branchIfNotEmptyObjectElements(temp1, ool->entry());
     masm.loadObjShape(temp1, temp1);
     masm.branchPtr(Assembler::NotEqual, prototypeShapeAddr, temp1, ool->entry());
 
@@ -9313,7 +9319,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
     // Load the length.
     Register scratch = out.scratchReg();
     Int32Key key = ToInt32Key(lir->index());
-    masm.unboxInt32(Address(object, TypedArrayLayout::lengthOffset()), scratch);
+    masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
 
     // Load undefined unless length > key.
     Label inbounds, done;
@@ -9323,7 +9329,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
 
     // Load the elements vector.
     masm.bind(&inbounds);
-    masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), scratch);
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
 
     Scalar::Type arrayType = lir->mir()->arrayType();
     int width = Scalar::byteSize(arrayType);
@@ -9445,6 +9451,20 @@ CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir)
         masm.bind(&Lfailed);
     masm.move32(Imm32(0), output);
     masm.bind(&Ldone);
+}
+
+void
+CodeGenerator::visitGuardSharedTypedArray(LGuardSharedTypedArray* guard)
+{
+    Register obj = ToRegister(guard->input());
+    Register tmp = ToRegister(guard->tempInt());
+
+    // The shared-memory flag is a bit in the ObjectElements header
+    // that is set if the TypedArray is mapping a SharedArrayBuffer.
+    // The flag is set at construction and does not change subsequently.
+    masm.loadPtr(Address(obj, TypedArrayObject::offsetOfElements()), tmp);
+    masm.load32(Address(tmp, ObjectElements::offsetOfFlags()), tmp);
+    bailoutTest32(Assembler::Zero, tmp, Imm32(ObjectElements::SHARED_MEMORY), guard->snapshot());
 }
 
 void
