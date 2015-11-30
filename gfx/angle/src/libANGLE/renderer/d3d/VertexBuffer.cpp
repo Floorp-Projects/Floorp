@@ -243,7 +243,7 @@ gl::Error StreamingVertexBufferInterface::reserveSpace(unsigned int size)
 }
 
 StaticVertexBufferInterface::StaticVertexBufferInterface(BufferFactoryD3D *factory)
-    : VertexBufferInterface(factory, false)
+    : VertexBufferInterface(factory, false), mIsCommitted(false)
 {
 }
 
@@ -255,13 +255,14 @@ bool StaticVertexBufferInterface::lookupAttribute(const gl::VertexAttribute &att
 {
     for (unsigned int element = 0; element < mCache.size(); element++)
     {
-        if (mCache[element].type == attrib.type &&
-            mCache[element].size == attrib.size &&
-            mCache[element].stride == ComputeVertexAttributeStride(attrib) &&
+        size_t attribStride = ComputeVertexAttributeStride(attrib);
+
+        if (mCache[element].type == attrib.type && mCache[element].size == attrib.size &&
+            mCache[element].stride == attribStride &&
             mCache[element].normalized == attrib.normalized &&
             mCache[element].pureInteger == attrib.pureInteger)
         {
-            size_t offset = (static_cast<size_t>(attrib.offset) % ComputeVertexAttributeStride(attrib));
+            size_t offset = (static_cast<size_t>(attrib.offset) % attribStride);
             if (mCache[element].attributeOffset == offset)
             {
                 if (outStreamOffset)
@@ -321,4 +322,11 @@ gl::Error StaticVertexBufferInterface::storeVertexAttributes(const gl::VertexAtt
     return gl::Error(GL_NO_ERROR);
 }
 
+void StaticVertexBufferInterface::commit()
+{
+    if (getBufferSize() > 0)
+    {
+        mIsCommitted = true;
+    }
+}
 }

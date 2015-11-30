@@ -71,12 +71,19 @@ class ConstantFinder : public TIntermTraverser
 
     bool isEqual(const TConstantUnion &node, const int &value) const
     {
-        return mFaultTolerance >= abs(node.getIConst() - value);
+        ASSERT(mFaultTolerance < std::numeric_limits<int>::max());
+        // abs() returns 0 at least on some platforms when the minimum int value is passed in (it
+        // doesn't have a positive counterpart).
+        return mFaultTolerance >= abs(node.getIConst() - value) &&
+               (node.getIConst() - value) != std::numeric_limits<int>::min();
     }
 
     bool isEqual(const TConstantUnion &node, const unsigned int &value) const
     {
-        return mFaultTolerance >= abs(static_cast<int>(node.getUConst() - value));
+        ASSERT(mFaultTolerance < static_cast<unsigned int>(std::numeric_limits<int>::max()));
+        return static_cast<int>(mFaultTolerance) >=
+                   abs(static_cast<int>(node.getUConst() - value)) &&
+               static_cast<int>(node.getUConst() - value) != std::numeric_limits<int>::min();
     }
 
     bool isEqual(const TConstantUnion &node, const bool &value) const
@@ -482,3 +489,258 @@ TEST_F(ConstantFoldingTest, Fold3x3MatrixTranspose)
     ASSERT_TRUE(constantVectorFoundInAST(result));
 }
 
+// Test that 0xFFFFFFFF wraps to -1 when parsed as integer.
+// This is featured in the examples of ESSL3 section 4.1.3. ESSL3 section 12.42
+// means that any 32-bit unsigned integer value is a valid literal.
+TEST_F(ConstantFoldingTest, ParseWrappedHexIntLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision highp int;\n"
+        "uniform int inInt;\n"
+        "out vec4 my_Vec;\n"
+        "void main() {\n"
+        "   const int i = 0xFFFFFFFF;\n"
+        "   my_Vec = vec4(i * inInt);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(-1));
+}
+
+// Test that 3000000000 wraps to -1294967296 when parsed as integer.
+// This is featured in the examples of GLSL 4.5, and ESSL behavior should match
+// desktop GLSL when it comes to integer parsing.
+TEST_F(ConstantFoldingTest, ParseWrappedDecimalIntLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision highp int;\n"
+        "uniform int inInt;\n"
+        "out vec4 my_Vec;\n"
+        "void main() {\n"
+        "   const int i = 3000000000;\n"
+        "   my_Vec = vec4(i * inInt);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(-1294967296));
+}
+
+// Test that 0xFFFFFFFFu is parsed correctly as an unsigned integer literal.
+// This is featured in the examples of ESSL3 section 4.1.3. ESSL3 section 12.42
+// means that any 32-bit unsigned integer value is a valid literal.
+TEST_F(ConstantFoldingTest, ParseMaxUintLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision highp int;\n"
+        "uniform uint inInt;\n"
+        "out vec4 my_Vec;\n"
+        "void main() {\n"
+        "   const uint i = 0xFFFFFFFFu;\n"
+        "   my_Vec = vec4(i * inInt);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(0xFFFFFFFFu));
+}
+
+// Test that unary minus applied to unsigned int is constant folded correctly.
+// This is featured in the examples of ESSL3 section 4.1.3. ESSL3 section 12.42
+// means that any 32-bit unsigned integer value is a valid literal.
+TEST_F(ConstantFoldingTest, FoldUnaryMinusOnUintLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision highp int;\n"
+        "uniform uint inInt;\n"
+        "out vec4 my_Vec;\n"
+        "void main() {\n"
+        "   const uint i = -1u;\n"
+        "   my_Vec = vec4(i * inInt);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(0xFFFFFFFFu));
+}
+
+// Test that constant mat2 initialization with a mat2 parameter works correctly.
+TEST_F(ConstantFoldingTest, FoldMat2ConstructorTakingMat2)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "void main() {\n"
+        "   const mat2 cm = mat2(mat2(0.0, 1.0, 2.0, 3.0));\n"
+        "   mat2 m = cm * mult;\n"
+        "   gl_FragColor = vec4(m[0], m[1]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        0.0f, 1.0f,
+        2.0f, 3.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 4);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+// Test that constant mat2 initialization with an int parameter works correctly.
+TEST_F(ConstantFoldingTest, FoldMat2ConstructorTakingScalar)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "void main() {\n"
+        "   const mat2 cm = mat2(3);\n"
+        "   mat2 m = cm * mult;\n"
+        "   gl_FragColor = vec4(m[0], m[1]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        3.0f, 0.0f,
+        0.0f, 3.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 4);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+// Test that constant mat2 initialization with a mix of parameters works correctly.
+TEST_F(ConstantFoldingTest, FoldMat2ConstructorTakingMix)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "void main() {\n"
+        "   const mat2 cm = mat2(-1, vec2(0.0, 1.0), vec4(2.0));\n"
+        "   mat2 m = cm * mult;\n"
+        "   gl_FragColor = vec4(m[0], m[1]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        -1.0, 0.0f,
+        1.0f, 2.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 4);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+// Test that constant mat2 initialization with a mat3 parameter works correctly.
+TEST_F(ConstantFoldingTest, FoldMat2ConstructorTakingMat3)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "void main() {\n"
+        "   const mat2 cm = mat2(mat3(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0));\n"
+        "   mat2 m = cm * mult;\n"
+        "   gl_FragColor = vec4(m[0], m[1]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        0.0f, 1.0f,
+        3.0f, 4.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 4);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+// Test that constant mat4x3 initialization with a mat3x2 parameter works correctly.
+TEST_F(ConstantFoldingTest, FoldMat4x3ConstructorTakingMat3x2)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "   const mat4x3 cm = mat4x3(mat3x2(1.0, 2.0,\n"
+        "                                   3.0, 4.0,\n"
+        "                                   5.0, 6.0));\n"
+        "   mat4x3 m = cm * mult;\n"
+        "   my_FragColor = vec4(m[0], m[1][0]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        1.0f, 2.0f, 0.0f,
+        3.0f, 4.0f, 0.0f,
+        5.0f, 6.0f, 1.0f,
+        0.0f, 0.0f, 0.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 12);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+
+// Test that constant mat2 initialization with a vec4 parameter works correctly.
+TEST_F(ConstantFoldingTest, FoldMat2ConstructorTakingVec4)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float mult;\n"
+        "void main() {\n"
+        "   const mat2 cm = mat2(vec4(0.0, 1.0, 2.0, 3.0));\n"
+        "   mat2 m = cm * mult;\n"
+        "   gl_FragColor = vec4(m[0], m[1]);\n"
+        "}\n";
+    compile(shaderString);
+    float outputElements[] =
+    {
+        0.0f, 1.0f,
+        2.0f, 3.0f
+    };
+    std::vector<float> result(outputElements, outputElements + 4);
+    ASSERT_TRUE(constantVectorFoundInAST(result));
+}
+
+// Test that equality comparison of two different structs with a nested struct inside returns false.
+TEST_F(ConstantFoldingTest, FoldNestedDifferentStructEqualityComparison)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "struct nested {\n"
+        "    float f\n;"
+        "};\n"
+        "struct S {\n"
+        "    nested a;\n"
+        "    float f;\n"
+        "};\n"
+        "uniform vec4 mult;\n"
+        "void main()\n"
+        "{\n"
+        "    const S s1 = S(nested(0.0), 2.0);\n"
+        "    const S s2 = S(nested(0.0), 3.0);\n"
+        "    gl_FragColor = (s1 == s2 ? 1.0 : 0.5) * mult;\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(0.5f));
+}
+
+// Test that equality comparison of two identical structs with a nested struct inside returns true.
+TEST_F(ConstantFoldingTest, FoldNestedIdenticalStructEqualityComparison)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "struct nested {\n"
+        "    float f\n;"
+        "};\n"
+        "struct S {\n"
+        "    nested a;\n"
+        "    float f;\n"
+        "    int i;\n"
+        "};\n"
+        "uniform vec4 mult;\n"
+        "void main()\n"
+        "{\n"
+        "    const S s1 = S(nested(0.0), 2.0, 3);\n"
+        "    const S s2 = S(nested(0.0), 2.0, 3);\n"
+        "    gl_FragColor = (s1 == s2 ? 1.0 : 0.5) * mult;\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(1.0f));
+}

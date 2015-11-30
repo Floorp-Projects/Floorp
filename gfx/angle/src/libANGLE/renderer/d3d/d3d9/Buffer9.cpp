@@ -38,7 +38,7 @@ gl::Error Buffer9::setData(const void* data, size_t size, GLenum usage)
         memcpy(mMemory.data(), data, size);
     }
 
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 
     updateD3DBufferUsage(usage);
     return gl::Error(GL_NO_ERROR);
@@ -66,7 +66,7 @@ gl::Error Buffer9::setSubData(const void* data, size_t size, size_t offset)
         memcpy(mMemory.data() + offset, data, size);
     }
 
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -79,7 +79,7 @@ gl::Error Buffer9::copySubData(BufferImpl* source, GLintptr sourceOffset, GLintp
 
     memcpy(mMemory.data() + destOffset, sourceBuffer->mMemory.data() + sourceOffset, size);
 
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 
     return gl::Error(GL_NO_ERROR);
 }

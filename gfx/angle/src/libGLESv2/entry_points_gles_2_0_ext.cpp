@@ -390,7 +390,6 @@ void GL_APIENTRY GetTranslatedShaderSourceANGLE(GLuint shader, GLsizei bufsize, 
             return;
         }
 
-        // Only returns extra info if ANGLE_GENERATE_SHADER_DEBUG_INFO is defined
         shaderObject->getTranslatedSourceWithDebugInfo(bufsize, length, source);
     }
 }
@@ -1201,5 +1200,87 @@ ANGLE_EXPORT void GL_APIENTRY EGLImageTargetRenderbufferStorageOES(GLenum target
             return;
         }
     }
+}
+
+void GL_APIENTRY BindVertexArrayOES(GLuint array)
+{
+    EVENT("(GLuint array = %u)", array);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!ValidateBindVertexArrayOES(context, array))
+        {
+            return;
+        }
+
+        context->bindVertexArray(array);
+    }
+}
+
+void GL_APIENTRY DeleteVertexArraysOES(GLsizei n, const GLuint *arrays)
+{
+    EVENT("(GLsizei n = %d, const GLuint* arrays = 0x%0.8p)", n, arrays);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!ValidateDeleteVertexArraysOES(context, n))
+        {
+            return;
+        }
+
+        for (int arrayIndex = 0; arrayIndex < n; arrayIndex++)
+        {
+            if (arrays[arrayIndex] != 0)
+            {
+                context->deleteVertexArray(arrays[arrayIndex]);
+            }
+        }
+    }
+}
+
+void GL_APIENTRY GenVertexArraysOES(GLsizei n, GLuint *arrays)
+{
+    EVENT("(GLsizei n = %d, GLuint* arrays = 0x%0.8p)", n, arrays);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!ValidateGenVertexArraysOES(context, n))
+        {
+            return;
+        }
+
+        for (int arrayIndex = 0; arrayIndex < n; arrayIndex++)
+        {
+            arrays[arrayIndex] = context->createVertexArray();
+        }
+    }
+}
+
+GLboolean GL_APIENTRY IsVertexArrayOES(GLuint array)
+{
+    EVENT("(GLuint array = %u)", array);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!ValidateIsVertexArrayOES(context))
+        {
+            return GL_FALSE;
+        }
+
+        if (array == 0)
+        {
+            return GL_FALSE;
+        }
+
+        VertexArray *vao = context->getVertexArray(array);
+
+        return (vao != nullptr ? GL_TRUE : GL_FALSE);
+    }
+
+    return GL_FALSE;
 }
 }
