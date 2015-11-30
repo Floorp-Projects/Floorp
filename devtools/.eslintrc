@@ -1,7 +1,4 @@
 {
-  "env": {
-    "es6": true
-  },
   "globals": {
     "Cc": true,
     "Ci": true,
