@@ -346,7 +346,7 @@ GrallocTextureData::CreateForDrawing(gfx::IntSize aSize, gfx::SurfaceFormat aFor
   // (not with WebGL for instance). Not sure why that's OK, but we have tests that
   // rely on being able to create 32x32 webgl canvases with gralloc, so moving
   // this check in DisableGralloc will break them.
-  if (aSizeHint.width < 64 || aSizeHint.height < 32) {
+  if (aSize.width < 64 || aSize.height < 32) {
     return true;
   }
 #endif
