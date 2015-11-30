@@ -44,7 +44,7 @@ protected:
   }
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
@@ -119,7 +119,7 @@ protected:
     // here (OR doesn't automatically simplify to the simplest possible
     // representation of a region.)
     nsIntRegion tmp;
-    tmp.Or(mVisibleRegion, aExtendedRegionToDraw);
+    tmp.Or(mVisibleRegion.ToUnknownRegion(), aExtendedRegionToDraw);
     mValidRegion.Or(mValidRegion, tmp);
   }
 

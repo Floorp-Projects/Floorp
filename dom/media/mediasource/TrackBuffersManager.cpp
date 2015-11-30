@@ -680,7 +680,7 @@ TrackBuffersManager::SegmentParserLoop()
     // 5. If the append state equals PARSING_INIT_SEGMENT, then run the
     // following steps:
     if (mAppendState == AppendState::PARSING_INIT_SEGMENT) {
-      if (mParser->InitSegmentRange().IsNull()) {
+      if (mParser->InitSegmentRange().IsEmpty()) {
         mInputBuffer = nullptr;
         NeedMoreData();
         return;
@@ -707,7 +707,7 @@ TrackBuffersManager::SegmentParserLoop()
           ResetDemuxingState();
           return;
         }
-        if (newData || !mParser->MediaSegmentRange().IsNull()) {
+        if (newData || !mParser->MediaSegmentRange().IsEmpty()) {
           if (mPendingInputBuffer) {
             // We now have a complete media segment header. We can resume parsing
             // the data.
@@ -1135,7 +1135,7 @@ TrackBuffersManager::CodedFrameProcessing()
   MOZ_ASSERT(mProcessingPromise.IsEmpty());
 
   MediaByteRange mediaRange = mParser->MediaSegmentRange();
-  if (mediaRange.IsNull()) {
+  if (mediaRange.IsEmpty()) {
     AppendDataToCurrentInputBuffer(mInputBuffer);
     mInputBuffer = nullptr;
   } else {
@@ -1309,7 +1309,7 @@ TrackBuffersManager::CompleteCodedFrameProcessing()
   }
 
   // 5. If the input buffer does not contain a complete media segment, then jump to the need more data step below.
-  if (mParser->MediaSegmentRange().IsNull()) {
+  if (mParser->MediaSegmentRange().IsEmpty()) {
     ResolveProcessing(true, __func__);
     return;
   }

@@ -1025,27 +1025,15 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFileActor);
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    Remove(nsISupports* aKey,
-           PBackgroundIDBDatabaseFileChild*& aValue,
-           void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
+  for (auto iter = mFileActors.Iter(); !iter.Done(); iter.Next()) {
+    MOZ_ASSERT(iter.Key());
+    PBackgroundIDBDatabaseFileChild* actor = iter.Data();
+    MOZ_ASSERT(actor);
 
-      if (aValue == static_cast<PBackgroundIDBDatabaseFileChild*>(aClosure)) {
-        return PL_DHASH_REMOVE;
-      }
-
-      return PL_DHASH_NEXT;
+    if (actor == aFileActor) {
+      iter.Remove();
     }
-  };
-
-  mFileActors.Enumerate(&Helper::Remove, aFileActor);
+  }
 }
 
 void
@@ -1163,23 +1151,16 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
 {
   AssertIsOnOwningThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static PLDHashOperator
-    MaybeExpireFileActors(nsISupports* aKey,
-                          PBackgroundIDBDatabaseFileChild*& aValue,
-                          void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
+  if (mBackgroundActor && mFileActors.Count()) {
+    for (auto iter = mFileActors.Iter(); !iter.Done(); iter.Next()) {
+      nsISupports* key = iter.Key();
+      PBackgroundIDBDatabaseFileChild* actor = iter.Data();
+      MOZ_ASSERT(key);
+      MOZ_ASSERT(actor);
 
-      const bool expiringAll = *static_cast<bool*>(aClosure);
-
-      bool shouldExpire = expiringAll;
+      bool shouldExpire = aExpireAll;
       if (!shouldExpire) {
-        nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(aKey);
+        nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(key);
         MOZ_ASSERT(weakRef);
 
         nsCOMPtr<nsISupports> referent = do_QueryReferent(weakRef);
@@ -1187,19 +1168,13 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
       }
 
       if (shouldExpire) {
-        PBackgroundIDBDatabaseFileChild::Send__delete__(aValue);
+        PBackgroundIDBDatabaseFileChild::Send__delete__(actor);
 
-        if (!expiringAll) {
-          return PL_DHASH_REMOVE;
+        if (!aExpireAll) {
+          iter.Remove();
         }
       }
-
-      return PL_DHASH_NEXT;
     }
-  };
-
-  if (mBackgroundActor && mFileActors.Count()) {
-    mFileActors.Enumerate(&Helper::MaybeExpireFileActors, &aExpireAll);
     if (aExpireAll) {
       mFileActors.Clear();
     }

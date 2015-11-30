@@ -13,6 +13,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWindowsMigrationUtils.h"
+#include "nsStringGlue.h"
 
 #define NS_HANDLE_JET_ERROR(err) { \
   if (err < JET_errSuccess) {	\
@@ -199,12 +200,15 @@ nsEdgeReadingListExtractor::ConvertJETError(const JET_ERR &aError)
       return NS_ERROR_FILE_NOT_FOUND;
     case JET_errDatabaseDirtyShutdown:
       return NS_ERROR_FILE_CORRUPTED;
-    default:
-      nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      wchar_t* msg = new wchar_t[80];
-      swprintf(msg, 80, MOZ_UTF16("Unexpected JET error from ESE database: %ld"), aError);
-      consoleService->LogStringMessage(msg);
+    default: {
+      nsCOMPtr<nsIConsoleService>
+        consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      nsAutoString msg;
+      msg.AppendLiteral("Unexpected JET error from ESE database: ");
+      msg.AppendInt(aError);
+      consoleService->LogStringMessage(msg.get());
       return NS_ERROR_FAILURE;
+    }
   }
 }
 

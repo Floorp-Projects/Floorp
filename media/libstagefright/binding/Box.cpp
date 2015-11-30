@@ -56,7 +56,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
       return;
     }
 
-    byteRange = &mContext->mByteRanges[i];
+    byteRange = static_cast<const MediaByteRange*>(&mContext->mByteRanges[i]);
     if (byteRange->Contains(headerRange)) {
       break;
     }
@@ -88,7 +88,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     mBodyOffset = bigLengthRange.mEnd;
   } else if (size == 0) {
     // box extends to end of file.
-    size = mContext->mByteRanges.LastElement().mEnd - aOffset;
+    size = mContext->mByteRanges.LastInterval().mEnd - aOffset;
     mBodyOffset = headerRange.mEnd;
   } else {
     mBodyOffset = headerRange.mEnd;
