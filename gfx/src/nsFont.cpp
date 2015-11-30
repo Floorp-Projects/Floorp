@@ -19,28 +19,24 @@
 using namespace mozilla;
 
 nsFont::nsFont(const FontFamilyList& aFontlist, uint8_t aStyle,
-               uint16_t aWeight, int16_t aStretch,
-               uint8_t aDecoration, nscoord aSize)
+               uint16_t aWeight, int16_t aStretch, nscoord aSize)
   : fontlist(aFontlist)
 {
   Init();
   style = aStyle;
   weight = aWeight;
   stretch = aStretch;
-  decorations = aDecoration;
   size = aSize;
 }
 
 nsFont::nsFont(FontFamilyType aGenericType, uint8_t aStyle,
-               uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
-               nscoord aSize)
+               uint16_t aWeight, int16_t aStretch, nscoord aSize)
   : fontlist(aGenericType)
 {
   Init();
   style = aStyle;
   weight = aWeight;
   stretch = aStretch;
-  decorations = aDecoration;
   size = aSize;
 }
 
@@ -52,6 +48,7 @@ nsFont::Init()
   sizeAdjust = -1.0f;
   kerning = NS_FONT_KERNING_AUTO;
   synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
+  decorations = 0;
 
   variantAlternates = 0;
   variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
