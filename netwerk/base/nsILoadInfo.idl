@@ -26,7 +26,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(c21803eb-ad4f-46bd-b0a5-8081381253f2)]
+[scriptable, builtinclass, uuid(5a2dce9f-accd-45ae-98cc-319dec0ae4f0)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -231,6 +231,14 @@ interface nsILoadInfo : nsISupports
    * Allows to query only the security mode bits from above.
    */
   [infallible] readonly attribute unsigned long securityMode;
+
+  /**
+   * True if this request is embedded in a context that can't be third-party
+   * (i.e. an iframe embedded in a cross-origin parent window). If this is
+   * false, then this request may be third-party if it's a third-party to
+   * loadingPrincipal.
+   */
+  [infallible] readonly attribute boolean isInThirdPartyContext;
 
   /**
    * Determines whether credentials are sent with CORS requests.
