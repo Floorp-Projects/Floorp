@@ -16,6 +16,7 @@ from mozbuild.frontend.data import (
     JsPreferenceFile,
     Resources,
     VariablePassthru,
+    XPIDLFile,
 )
 from mozbuild.jar import JarManifestParser
 from mozbuild.makeutil import Makefile
@@ -41,6 +42,8 @@ class FasterMakeBackend(CommonBackend):
         self._install_manifests = OrderedDefaultDict(InstallManifest)
 
         self._dependencies = OrderedDefaultDict(list)
+
+        self._has_xpidl = False
 
     def _add_preprocess(self, obj, path, dest, target=None, **kwargs):
         if target is None:
@@ -168,6 +171,14 @@ class FasterMakeBackend(CommonBackend):
                     self._manifest_entries[top_level].append(entry)
             self._manifest_entries[obj.path].append(str(obj.entry))
 
+        elif isinstance(obj, XPIDLFile):
+            self._has_xpidl = True
+            # XPIDL are emitted before Defines, which breaks the assert in the
+            # branch for Defines. OTOH, we don't actually care about the
+            # XPIDLFile objects just yet, so we can just pretend we didn't see
+            # an object in the directory yet.
+            return True
+
         else:
             # We currently ignore a lot of object types, so just acknowledge
             # everything.
@@ -286,6 +297,8 @@ class FasterMakeBackend(CommonBackend):
         mk.add_statement('TOPSRCDIR = %s' % self.environment.topsrcdir)
         mk.add_statement('TOPOBJDIR = %s' % self.environment.topobjdir)
         mk.add_statement('BACKEND = %s' % self._backend_output_list_file)
+        if not self._has_xpidl:
+            mk.add_statement('NO_XPIDL = 1')
 
         # Add a few necessary variables inherited from configure
         for var in (
