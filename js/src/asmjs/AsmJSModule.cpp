@@ -51,6 +51,7 @@ using namespace js::wasm;
 using namespace js::frontend;
 using mozilla::BinarySearch;
 using mozilla::Compression::LZ4;
+using mozilla::MallocSizeOf;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::PodZero;
@@ -92,7 +93,7 @@ AsmJSModule::AsmJSModule(ScriptSource* scriptSource, uint32_t srcStart, uint32_t
     pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
     pod.maxHeapLength_ = 0x80000000;
     pod.strict_ = strict;
-    pod.usesSignalHandlers_ = canUseSignalHandlers;
+    pod.canUseSignalHandlers_ = canUseSignalHandlers;
 
     // AsmJSCheckedImmediateRange should be defined to be at most the minimum
     // heap length so that offsets can be folded into bounds checks.
@@ -154,7 +155,7 @@ AsmJSModule::trace(JSTracer* trc)
 }
 
 void
-AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* asmJSModuleCode,
+AsmJSModule::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* asmJSModuleCode,
                            size_t* asmJSModuleData)
 {
     *asmJSModuleCode += pod.totalBytes_;
@@ -164,7 +165,6 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* asmJSModu
                         exports_.sizeOfExcludingThis(mallocSizeOf) +
                         callSites_.sizeOfExcludingThis(mallocSizeOf) +
                         codeRanges_.sizeOfExcludingThis(mallocSizeOf) +
-                        funcPtrTables_.sizeOfExcludingThis(mallocSizeOf) +
                         builtinThunkOffsets_.sizeOfExcludingThis(mallocSizeOf) +
                         names_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
@@ -265,8 +265,7 @@ AsmJSModule::lookupHeapAccess(void* pc) const
 }
 
 bool
-AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembler& masm,
-                    const Label& interruptLabel, const Label& outOfBoundsLabel)
+AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembler& masm)
 {
     MOZ_ASSERT(!isFinished());
 
@@ -294,6 +293,10 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     if (!code_)
         return false;
 
+    // Delay flushing until dynamic linking. The flush-inhibited range is set within
+    // masm.executableCopy.
+    AutoFlushICache afc("CheckModule", /* inhibit = */ true);
+
     // Copy the code from the MacroAssembler into its final resting place in the
     // AsmJSModule.
     MOZ_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
@@ -304,10 +307,6 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     MOZ_ASSERT(masm.dataRelocationTableBytes() == 0);
     MOZ_ASSERT(masm.preBarrierTableBytes() == 0);
     MOZ_ASSERT(!masm.hasSelfReference());
-
-    // Copy over metadata.
-    staticLinkData_.interruptExitOffset = interruptLabel.offset();
-    staticLinkData_.outOfBoundsExitOffset = outOfBoundsLabel.offset();
 
     // Heap-access metadata used for link-time patching and fault-handling.
     heapAccesses_ = masm.extractAsmJSHeapAccesses();
@@ -346,7 +345,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     // code section so we can just use an RelativeLink.
     for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
         AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
-        RelativeLink link(RelativeLink::InstructionImmediate);
+        RelativeLink link(RelativeLink::RawPointer);
         link.patchAtOffset = masm.labelToPatchOffset(a.patchAt);
         link.targetOffset = offsetOfGlobalData() + a.globalDataOffset;
         if (!staticLinkData_.relativeLinks.append(link))
@@ -354,25 +353,15 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     }
 #endif
 
-#if defined(JS_CODEGEN_MIPS32)
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     // On MIPS we need to update all the long jumps because they contain an
-    // absolute adress.
+    // absolute adress. The values are correctly patched for the current address
+    // space, but not after serialization or profiling-mode toggling.
     for (size_t i = 0; i < masm.numLongJumps(); i++) {
+        size_t off = masm.longJump(i);
         RelativeLink link(RelativeLink::InstructionImmediate);
-        link.patchAtOffset = masm.longJump(i);
-        InstImm* inst = (InstImm*)(code_ + masm.longJump(i));
-        link.targetOffset = Assembler::ExtractLuiOriValue(inst, inst->next()) - (uint32_t)code_;
-        if (!staticLinkData_.relativeLinks.append(link))
-            return false;
-    }
-#elif defined(JS_CODEGEN_MIPS64)
-    // On MIPS64 we need to update all the long jumps because they contain an
-    // absolute adress.
-    for (size_t i = 0; i < masm.numLongJumps(); i++) {
-        RelativeLink link(RelativeLink::InstructionImmediate);
-        link.patchAtOffset = masm.longJump(i);
-        InstImm* inst = (InstImm*)(code_ + masm.longJump(i));
-        link.targetOffset = Assembler::ExtractLoad64Value(inst) - (uint64_t)code_;
+        link.patchAtOffset = off;
+        link.targetOffset = Assembler::ExtractInstructionImmediate(code_ + off) - uintptr_t(code_);
         if (!staticLinkData_.relativeLinks.append(link))
             return false;
     }
@@ -714,15 +703,18 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
 
     // Process staticLinkData_
 
-    interruptExit_ = code_ + staticLinkData_.interruptExitOffset;
-    outOfBoundsExit_ = code_ + staticLinkData_.outOfBoundsExitOffset;
+    MOZ_ASSERT(staticLinkData_.pod.interruptExitOffset != 0);
+    interruptExit_ = code_ + staticLinkData_.pod.interruptExitOffset;
+
+    MOZ_ASSERT(staticLinkData_.pod.outOfBoundsExitOffset != 0);
+    outOfBoundsExit_ = code_ + staticLinkData_.pod.outOfBoundsExitOffset;
 
     for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
         RelativeLink link = staticLinkData_.relativeLinks[i];
         uint8_t* patchAt = code_ + link.patchAtOffset;
         uint8_t* target = code_ + link.targetOffset;
 
-        // In the case of function-pointer tables and long-jumps on MIPS, the
+        // In the case of long-jumps on MIPS and possibly future cases, a
         // RelativeLink is used to patch a pointer to the function entry. If
         // profiling is enabled (by cloning a module with profiling enabled),
         // the target should be the profiling entry.
@@ -764,6 +756,18 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
 
     *(double*)(globalData() + AsmJSNaN64GlobalDataOffset) = GenericNaN();
     *(float*)(globalData() + AsmJSNaN32GlobalDataOffset) = GenericNaN();
+
+    for (size_t tableIndex = 0; tableIndex < staticLinkData_.funcPtrTables.length(); tableIndex++) {
+        FuncPtrTable& funcPtrTable = staticLinkData_.funcPtrTables[tableIndex];
+        const OffsetVector& offsets = funcPtrTable.elemOffsets();
+        auto array = reinterpret_cast<void**>(globalData() + funcPtrTable.globalDataOffset());
+        for (size_t elemIndex = 0; elemIndex < offsets.length(); elemIndex++) {
+            uint8_t* target = code_ + offsets[elemIndex];
+            if (profilingEnabled_)
+                target = code_ + lookupCodeRange(target)->profilingEntry();
+            array[elemIndex] = target;
+        }
+    }
 
     for (AsmJSModule::Exit& exit : exits_)
         exit.initDatum(*this);
@@ -1289,28 +1293,31 @@ AsmJSModule::Global::clone(ExclusiveContext* cx, Global* out) const
 uint8_t*
 AsmJSModule::Exit::serialize(uint8_t* cursor) const
 {
-    cursor = WriteBytes(cursor, this, sizeof(*this));
+    cursor = SerializeSig(cursor, sig_);
+    cursor = WriteBytes(cursor, &pod, sizeof(pod));
     return cursor;
 }
 
 size_t
 AsmJSModule::Exit::serializedSize() const
 {
-    return sizeof(*this);
+    return SerializedSigSize(sig_) +
+           sizeof(pod);
 }
 
 const uint8_t*
 AsmJSModule::Exit::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    cursor = ReadBytes(cursor, this, sizeof(*this));
+    (cursor = DeserializeSig(cx, cursor, &sig_)) &&
+    (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
     return cursor;
 }
 
 bool
 AsmJSModule::Exit::clone(ExclusiveContext* cx, Exit* out) const
 {
-    *out = *this;
-    return true;
+    out->pod = pod;
+    return CloneSig(cx, sig_, &out->sig_);
 }
 
 uint8_t*
@@ -1462,8 +1469,11 @@ AsmJSModule::AbsoluteLinkArray::serialize(uint8_t* cursor) const
 const uint8_t*
 AsmJSModule::AbsoluteLinkArray::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    for (size_t i = 0; i < AsmJSImm_Limit; i++)
+    for (size_t i = 0; i < AsmJSImm_Limit; i++) {
         cursor = DeserializePodVector(cx, cursor, &array_[i]);
+        if (!cursor)
+            return nullptr;
+    }
     return cursor;
 }
 
@@ -1478,7 +1488,7 @@ AsmJSModule::AbsoluteLinkArray::clone(ExclusiveContext* cx, AbsoluteLinkArray* o
 }
 
 size_t
-AsmJSModule::AbsoluteLinkArray::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+AsmJSModule::AbsoluteLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t size = 0;
     for (size_t i = 0; i < AsmJSImm_Limit; i++)
@@ -1487,44 +1497,90 @@ AsmJSModule::AbsoluteLinkArray::sizeOfExcludingThis(mozilla::MallocSizeOf malloc
 }
 
 size_t
+AsmJSModule::FuncPtrTable::serializedSize() const
+{
+    return sizeof(pod) +
+           SerializedPodVectorSize(elemOffsets_);
+}
+
+uint8_t*
+AsmJSModule::FuncPtrTable::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &pod, sizeof(pod));
+    cursor = SerializePodVector(cursor, elemOffsets_);
+    return cursor;
+}
+
+const uint8_t*
+AsmJSModule::FuncPtrTable::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &pod, sizeof(pod))) &&
+    (cursor = DeserializePodVector(cx, cursor, &elemOffsets_));
+    return cursor;
+}
+
+bool
+AsmJSModule::FuncPtrTable::clone(ExclusiveContext* cx, FuncPtrTable* out) const
+{
+    out->pod = pod;
+    return ClonePodVector(cx, elemOffsets_, &out->elemOffsets_);
+}
+
+size_t
+AsmJSModule::FuncPtrTable::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return elemOffsets_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
 AsmJSModule::StaticLinkData::serializedSize() const
 {
-    return sizeof(uint32_t) +
+    return sizeof(pod) +
            SerializedPodVectorSize(relativeLinks) +
-           absoluteLinks.serializedSize();
+           absoluteLinks.serializedSize() +
+           SerializedVectorSize(funcPtrTables);
 }
 
 uint8_t*
 AsmJSModule::StaticLinkData::serialize(uint8_t* cursor) const
 {
-    cursor = WriteScalar<uint32_t>(cursor, interruptExitOffset);
+    cursor = WriteBytes(cursor, &pod, sizeof(pod));
     cursor = SerializePodVector(cursor, relativeLinks);
     cursor = absoluteLinks.serialize(cursor);
+    cursor = SerializeVector(cursor, funcPtrTables);
     return cursor;
 }
 
 const uint8_t*
 AsmJSModule::StaticLinkData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    (cursor = ReadScalar<uint32_t>(cursor, &interruptExitOffset)) &&
+    (cursor = ReadBytes(cursor, &pod, sizeof(pod))) &&
     (cursor = DeserializePodVector(cx, cursor, &relativeLinks)) &&
-    (cursor = absoluteLinks.deserialize(cx, cursor));
+    (cursor = absoluteLinks.deserialize(cx, cursor)) &&
+    (cursor = DeserializeVector(cx, cursor, &funcPtrTables));
     return cursor;
 }
 
 bool
 AsmJSModule::StaticLinkData::clone(ExclusiveContext* cx, StaticLinkData* out) const
 {
-    out->interruptExitOffset = interruptExitOffset;
+    out->pod = pod;
     return ClonePodVector(cx, relativeLinks, &out->relativeLinks) &&
-           absoluteLinks.clone(cx, &out->absoluteLinks);
+           absoluteLinks.clone(cx, &out->absoluteLinks) &&
+           CloneVector(cx, funcPtrTables, &out->funcPtrTables);
 }
 
 size_t
-AsmJSModule::StaticLinkData::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+AsmJSModule::StaticLinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return relativeLinks.sizeOfExcludingThis(mallocSizeOf) +
-           absoluteLinks.sizeOfExcludingThis(mallocSizeOf);
+    size_t size = relativeLinks.sizeOfExcludingThis(mallocSizeOf) +
+                  absoluteLinks.sizeOfExcludingThis(mallocSizeOf) +
+                  funcPtrTables.sizeOfExcludingThis(mallocSizeOf);
+
+    for (const FuncPtrTable& table : funcPtrTables)
+        size += table.sizeOfExcludingThis(mallocSizeOf);
+
+    return size;
 }
 
 size_t
@@ -1540,7 +1596,6 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(callSites_) +
            SerializedPodVectorSize(codeRanges_) +
-           SerializedPodVectorSize(funcPtrTables_) +
            SerializedPodVectorSize(builtinThunkOffsets_) +
            SerializedVectorSize(names_) +
            SerializedPodVectorSize(heapAccesses_) +
@@ -1568,7 +1623,6 @@ AsmJSModule::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, callSites_);
     cursor = SerializePodVector(cursor, codeRanges_);
-    cursor = SerializePodVector(cursor, funcPtrTables_);
     cursor = SerializePodVector(cursor, builtinThunkOffsets_);
     cursor = SerializeVector(cursor, names_);
     cursor = SerializePodVector(cursor, heapAccesses_);
@@ -1597,7 +1651,6 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites_)) &&
     (cursor = DeserializePodVector(cx, cursor, &codeRanges_)) &&
-    (cursor = DeserializePodVector(cx, cursor, &funcPtrTables_)) &&
     (cursor = DeserializePodVector(cx, cursor, &builtinThunkOffsets_)) &&
     (cursor = DeserializeVector(cx, cursor, &names_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
@@ -1615,7 +1668,7 @@ bool
 AsmJSModule::clone(JSContext* cx, ScopedJSDeletePtr<AsmJSModule>* moduleOut) const
 {
     *moduleOut = cx->new_<AsmJSModule>(scriptSource_, srcStart_, srcBodyStart_, pod.strict_,
-                                       pod.usesSignalHandlers_);
+                                       pod.canUseSignalHandlers_);
     if (!*moduleOut)
         return false;
 
@@ -1640,7 +1693,6 @@ AsmJSModule::clone(JSContext* cx, ScopedJSDeletePtr<AsmJSModule>* moduleOut) con
         !CloneVector(cx, exports_, &out.exports_) ||
         !ClonePodVector(cx, callSites_, &out.callSites_) ||
         !ClonePodVector(cx, codeRanges_, &out.codeRanges_) ||
-        !ClonePodVector(cx, funcPtrTables_, &out.funcPtrTables_) ||
         !ClonePodVector(cx, builtinThunkOffsets_, &out.builtinThunkOffsets_) ||
         !CloneVector(cx, names_, &out.names_) ||
         !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
@@ -1796,20 +1848,19 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 
     // Update all the addresses in the function-pointer tables to point to the
     // profiling prologues:
-    for (size_t i = 0; i < funcPtrTables_.length(); i++) {
-        FuncPtrTable& funcPtrTable = funcPtrTables_[i];
-        auto array = reinterpret_cast<uint8_t**>(globalData() + funcPtrTable.globalDataOffset());
-        for (size_t j = 0; j < funcPtrTable.numElems(); j++) {
-            void* callee = array[j];
+    for (FuncPtrTable& funcPtrTable : staticLinkData_.funcPtrTables) {
+        auto array = reinterpret_cast<void**>(globalData() + funcPtrTable.globalDataOffset());
+        for (size_t i = 0; i < funcPtrTable.elemOffsets().length(); i++) {
+            void* callee = array[i];
             const CodeRange* codeRange = lookupCodeRange(callee);
-            uint8_t* profilingEntry = code_ + codeRange->profilingEntry();
-            uint8_t* entry = code_ + codeRange->entry();
+            void* profilingEntry = code_ + codeRange->profilingEntry();
+            void* entry = code_ + codeRange->entry();
             MOZ_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
             MOZ_ASSERT_IF(!profilingEnabled_, callee == entry);
             if (enabled)
-                array[j] = profilingEntry;
+                array[i] = profilingEntry;
             else
-                array[j] = entry;
+                array[i] = entry;
         }
     }
 
@@ -2271,10 +2322,10 @@ js::LookupAsmJSModuleInCache(ExclusiveContext* cx,
     uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
     bool strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
 
-    // usesSignalHandlers will be clobbered when deserializing
+    // canUseSignalHandlers will be clobbered when deserializing and checked below
     ScopedJSDeletePtr<AsmJSModule> module(
         cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict,
-                              /* usesSignalHandlers = */ false));
+                              /* canUseSignalHandlers = */ false));
     if (!module)
         return false;
 
@@ -2285,6 +2336,9 @@ js::LookupAsmJSModuleInCache(ExclusiveContext* cx,
     bool atEnd = cursor == entry.memory + entry.serializedSize;
     MOZ_ASSERT(atEnd, "Corrupt cache file");
     if (!atEnd)
+        return true;
+
+    if (module->canUseSignalHandlers() != cx->canUseSignalHandlers())
         return true;
 
     if (!parser.tokenStream.advance(module->srcEndBeforeCurly()))

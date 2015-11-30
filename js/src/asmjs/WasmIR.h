@@ -22,6 +22,9 @@
 #include "asmjs/Wasm.h"
 
 namespace js {
+
+class PropertyName;
+
 namespace wasm {
 
 enum class Stmt : uint8_t
@@ -397,6 +400,13 @@ class FuncIR
     typedef Vector<wasm::Val, 4, LifoAllocPolicy<Fallible>> VarInitVector;
     typedef Vector<uint8_t, 4096, LifoAllocPolicy<Fallible>> Bytecode;
 
+    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
+    // asm.js compilation. Wasm compilation will require an alternative way to
+    // name CodeRanges (index).
+    PropertyName* name_;
+    unsigned line_;
+    unsigned column_;
+
     uint32_t index_;
     const wasm::LifoSig* sig_;
     VarInitVector varInits_;
@@ -404,8 +414,11 @@ class FuncIR
     unsigned generateTime_;
 
   public:
-    explicit FuncIR(LifoAlloc& alloc)
-      : index_(UINT_MAX),
+    FuncIR(LifoAlloc& alloc, PropertyName* name, unsigned line, unsigned column)
+      : name_(name),
+        line_(line),
+        column_(column),
+        index_(UINT_MAX),
         sig_(nullptr),
         varInits_(alloc),
         bytecode_(alloc),
@@ -511,6 +524,9 @@ class FuncIR
     }
 
     // Read-only interface
+    PropertyName* name() const { return name_; }
+    unsigned line() const { return line_; }
+    unsigned column() const { return column_; }
     uint32_t index() const { MOZ_ASSERT(index_ != UINT32_MAX); return index_; }
     size_t size() const { return bytecode_.length(); }
     const wasm::LifoSig& sig() const { MOZ_ASSERT(sig_); return *sig_; }

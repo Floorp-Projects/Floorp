@@ -29,17 +29,22 @@ namespace wasm {
 
 class FunctionCompileResults
 {
+    jit::TempAllocator alloc_;
     jit::MacroAssembler masm_;
     AsmJSFunctionOffsets offsets_;
     unsigned compileTime_;
 
+    FunctionCompileResults(const FunctionCompileResults&) = delete;
+    FunctionCompileResults& operator=(const FunctionCompileResults&) = delete;
+
   public:
-    FunctionCompileResults()
-      : masm_(jit::MacroAssembler::AsmJSToken()),
+    explicit FunctionCompileResults(LifoAlloc& lifo)
+      : alloc_(&lifo),
+        masm_(jit::MacroAssembler::AsmJSToken(), &alloc_),
         compileTime_(0)
     {}
 
-    const jit::MacroAssembler& masm() const { return masm_; }
+    jit::TempAllocator& alloc() { return alloc_; }
     jit::MacroAssembler& masm() { return masm_; }
 
     AsmJSFunctionOffsets& offsets() { return offsets_; }
@@ -49,30 +54,48 @@ class FunctionCompileResults
     unsigned compileTime() const { return compileTime_; }
 };
 
-struct CompileTask
+class CompileTask
 {
-    LifoAlloc lifo;
-    wasm::CompileArgs args;
-    JSRuntime* runtime;
-    const wasm::FuncIR* func;
-    mozilla::Maybe<FunctionCompileResults> results;
+    LifoAlloc lifo_;
+    const CompileArgs args_;
+    const FuncIR* func_;
+    mozilla::Maybe<FunctionCompileResults> results_;
 
-    CompileTask(size_t defaultChunkSize, wasm::CompileArgs args)
-      : lifo(defaultChunkSize),
-        args(args),
-        runtime(nullptr),
-        func(nullptr)
-    { }
+    CompileTask(const CompileTask&) = delete;
+    CompileTask& operator=(const CompileTask&) = delete;
 
-    void init(JSRuntime* rt, const wasm::FuncIR* func) {
-        this->runtime = rt;
-        this->func = func;
-        results.emplace();
+  public:
+    CompileTask(size_t defaultChunkSize, CompileArgs args)
+      : lifo_(defaultChunkSize),
+        args_(args),
+        func_(nullptr)
+    {}
+    LifoAlloc& lifo() {
+        return lifo_;
+    }
+    CompileArgs args() const {
+        return args_;
+    }
+    void init(const FuncIR& func) {
+        func_ = &func;
+        results_.emplace(lifo_);
+    }
+    const FuncIR& func() const {
+        MOZ_ASSERT(func_);
+        return *func_;
+    }
+    FunctionCompileResults& results() {
+        return *results_;
+    }
+    void reset() {
+        func_ = nullptr;
+        results_.reset();
+        lifo_.releaseAll();
     }
 };
 
-bool CompileFunction(LifoAlloc& lifo, CompileArgs args, const FuncIR& func,
-                     FunctionCompileResults* results);
+bool
+CompileFunction(CompileTask* task);
 
 } // namespace wasm
 } // namespace js
