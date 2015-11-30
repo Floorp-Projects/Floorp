@@ -606,9 +606,10 @@ BluetoothDaemonGattModule::ClientSetAdvDataCmd(
     PackConversion<int, int32_t>(aMinInterval),
     PackConversion<int, int32_t>(aMaxInterval),
     PackConversion<int, int32_t>(aApperance),
-    aManufacturerLen, PackArray<char>(aManufacturerData, aManufacturerLen),
-    aServiceDataLen, PackArray<char>(aServiceData, aServiceDataLen),
-    aServiceUuidLen, PackArray<char>(aServiceUuid, aServiceUuidLen), *pdu);
+    aManufacturerLen, aServiceDataLen, aServiceUuidLen,
+    PackArray<char>(aManufacturerData, aManufacturerLen),
+    PackArray<char>(aServiceData, aServiceDataLen),
+    PackArray<char>(aServiceUuid, aServiceUuidLen), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
