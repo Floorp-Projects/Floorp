@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "../../../../../testing/mochitest/browser.eslintrc",
+    "../../../../../testing/mochitest/mochitest.eslintrc",
+  ]
+}
