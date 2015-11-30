@@ -143,9 +143,4 @@ protected:
 #define NS_FONT_VARIANT_NORMAL            0
 #define NS_FONT_VARIANT_SMALL_CAPS        1
 
-#define NS_FONT_DECORATION_NONE           0x0
-#define NS_FONT_DECORATION_UNDERLINE      0x1
-#define NS_FONT_DECORATION_OVERLINE       0x2
-#define NS_FONT_DECORATION_LINE_THROUGH   0x4
-
 #endif /* nsFont_h___ */
