@@ -5,11 +5,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SandboxInfo.h"
+#include "SandboxLogging.h"
 #include "LinuxSched.h"
 
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/prctl.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -35,6 +37,30 @@
 // that omit the assertion.
 
 namespace mozilla {
+
+// Bug 1229136: this is copied from ../SandboxUtil.cpp to avoid
+// complicated build issues; renamespaced to avoid the possibility of
+// symbol conflict.
+namespace {
+
+static bool
+IsSingleThreaded()
+{
+  // This detects the thread count indirectly.  /proc/<pid>/task has a
+  // subdirectory for each thread in <pid>'s thread group, and the
+  // link count on the "task" directory follows Unix expectations: the
+  // link from its parent, the "." link from itself, and the ".." link
+  // from each subdirectory; thus, 2+N links for N threads.
+  struct stat sb;
+  if (stat("/proc/self/task", &sb) < 0) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Couldn't access /proc/self/task!");
+    return false;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(sb.st_nlink >= 3);
+  return sb.st_nlink == 3;
+}
+
+} // anonymous namespace
 
 static bool
 HasSeccompBPF()
@@ -159,7 +185,7 @@ CanCreateUserNamespace()
 }
 
 /* static */
-const SandboxInfo SandboxInfo::sSingleton = SandboxInfo();
+SandboxInfo SandboxInfo::sSingleton = SandboxInfo();
 
 SandboxInfo::SandboxInfo() {
   int flags = 0;
@@ -172,10 +198,15 @@ SandboxInfo::SandboxInfo() {
     }
   }
 
-  if (HasUserNamespaceSupport()) {
-    flags |= kHasPrivilegedUserNamespaces;
-    if (CanCreateUserNamespace()) {
-      flags |= kHasUserNamespaces;
+  // Detect the threading-problem signal from the parent process.
+  if (getenv("MOZ_SANDBOX_UNEXPECTED_THREADS")) {
+    flags |= kUnexpectedThreads;
+  } else {
+    if (HasUserNamespaceSupport()) {
+      flags |= kHasPrivilegedUserNamespaces;
+      if (CanCreateUserNamespace()) {
+        flags |= kHasUserNamespaces;
+      }
     }
   }
 
@@ -197,6 +228,30 @@ SandboxInfo::SandboxInfo() {
   }
 
   mFlags = static_cast<Flags>(flags);
+}
+
+/* static */ void
+SandboxInfo::ThreadingCheck()
+{
+  // Allow MOZ_SANDBOX_UNEXPECTED_THREADS to be set manually for testing.
+  if (IsSingleThreaded() &&
+      !getenv("MOZ_SANDBOX_UNEXPECTED_THREADS")) {
+    return;
+  }
+  SANDBOX_LOG_ERROR("unexpected multithreading found; this prevents using"
+                    " namespace sandboxing.%s",
+                    // getenv isn't thread-safe, but see below.
+                    getenv("LD_PRELOAD") ? "  (If you're LD_PRELOAD'ing"
+                    " nVidia GL: that's not necessary for Gecko.)" : "");
+
+  // Propagate this information for use by child processes.  (setenv
+  // isn't thread-safe, but other threads are from non-Gecko code so
+  // they wouldn't be using NSPR; we have to hope for the best.)
+  setenv("MOZ_SANDBOX_UNEXPECTED_THREADS", "1", 0);
+  int flags = sSingleton.mFlags;
+  flags |= kUnexpectedThreads;
+  flags &= ~(kHasUserNamespaces | kHasPrivilegedUserNamespaces);
+  sSingleton.mFlags = static_cast<Flags>(flags);
 }
 
 } // namespace mozilla
