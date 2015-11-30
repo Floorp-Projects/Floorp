@@ -698,8 +698,6 @@ class InfluxRecordingMixin(object):
 
     @PostScriptAction('build')
     def record_mach_stats(self, action, success=None):
-        if not self.recording:
-            return
         if not os.path.exists(self.res_props):
             self.info('No build_resources.json found, not logging stats')
             return
@@ -762,6 +760,8 @@ class InfluxRecordingMixin(object):
             self.record_influx_stat([data])
 
     def record_influx_stat(self, json_data):
+        if not self.recording:
+            return
         try:
             r = self.post(self.posturl, data=json.dumps(json_data), timeout=5)
             if r.status_code != 200:
