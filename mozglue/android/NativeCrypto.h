@@ -37,7 +37,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_Native
  * Signature: ([B[B)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update
-  (JNIEnv *, jclass, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jint);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
