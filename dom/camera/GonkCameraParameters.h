@@ -93,8 +93,6 @@ protected:
   nsClassHashtable<nsStringHashKey, nsCString> mIsoModeMap;
   nsClassHashtable<nsCStringHashKey, nsCString> mParams;
 
-  static PLDHashOperator EnumerateFlatten(const nsACString& aKey, nsCString* aValue, void* aUserArg);
-
   nsresult SetImpl(const char* aKey, const char* aValue)
   {
     if (!aValue || strchr(aValue, ';') || strchr(aValue, '=')) {

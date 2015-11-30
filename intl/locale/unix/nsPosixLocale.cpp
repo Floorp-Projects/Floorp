@@ -66,6 +66,10 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsAString& locale)
       locale.AssignLiteral("en-US");
       return NS_OK;
     }
+    if (strcmp(posixLocale,"C.UTF-8")==0) {
+      locale.AssignLiteral("en-US.UTF-8");
+      return NS_OK;
+    }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,extra,'_')) {
 //      * locale = "x-user-defined";
       // use posix if parse failed

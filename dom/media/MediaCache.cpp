@@ -2442,7 +2442,7 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   return NS_OK;
 }
 
-nsresult MediaCacheStream::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
 {
   // Take the monitor, so that the cached data ranges can't grow while we're
   // trying to loop over them.
@@ -2457,7 +2457,7 @@ nsresult MediaCacheStream::GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
     int64_t endOffset = GetCachedDataEndInternal(startOffset);
     NS_ASSERTION(startOffset < endOffset, "Buffered range must end after its start");
     // Bytes [startOffset..endOffset] are cached.
-    aRanges.AppendElement(MediaByteRange(startOffset, endOffset));
+    aRanges += MediaByteRange(startOffset, endOffset);
     startOffset = GetNextCachedDataInternal(endOffset);
     NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
       "Must have advanced to start of next range, or hit end of stream");

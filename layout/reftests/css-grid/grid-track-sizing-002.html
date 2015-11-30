@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+<meta charset="utf-8">
+  <title>CSS Grid Test: freezing tracks in step 2.5 of the Track Sizing Algorithm</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1225368">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#algo-content">
+  <link rel="match" href="grid-track-sizing-002-ref.html">
+  <style>
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  grid-template-rows: 20px;
+  justify-items: start;
+  margin-right: 5px;
+}
+
+x {
+  min-width: 0;
+  width: 30px;
+  background: grey;
+}
+.grid div {
+  grid-column:1/span 2;
+  min-width: 0;
+  width: 100px;
+  height: 20px;
+  background: black;
+}
+div div:nth-child(2n+1) {
+  background: grey;
+}
+.grid.c3 div {
+  grid-column:1/span 3;
+}
+</style>
+</head>
+<body>
+
+<div class="grid">
+  <x></x>
+  <div></div>
+</div>
+
+<div class="grid">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid">
+  <x></x>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid" style="grid-auto-columns: minmax(0,auto)">
+  <x></x>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid" style="grid-auto-columns: minmax(0,auto)">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid" style="grid-template-columns: minmax(0,auto) 0">
+  <x></x>
+  <div></div>
+</div>
+
+<br clear=all>
+
+<div class="grid" style="grid-template-columns: minmax(0,auto) 0">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid" style="grid-template-columns: minmax(0,auto) 0">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid" style="grid-template-columns: minmax(0,auto) 0">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 0 auto">
+  <x></x>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 0 auto">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 0 auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 0 auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<br clear=all>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 10px auto">
+  <x></x>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 10px auto">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 10px auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) 10px auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) min-content auto">
+  <x></x>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) min-content auto">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) min-content auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+</div>
+
+<br clear=all>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) min-content auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div style="grid-row:2; grid-column:span 2"></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div style="grid-column:span 2"></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div style="grid-row:2; grid-column:span 2; width:80px"></div>
+  <div></div>
+</div>
+
+<div class="grid c3" style="grid-template-columns: minmax(0,auto) auto auto">
+  <x></x>
+  <div style="width:80px"></div>
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+
+</body>
+</html>

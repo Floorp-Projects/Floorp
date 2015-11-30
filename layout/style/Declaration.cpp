@@ -1181,7 +1181,27 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       }
       break;
     }
+    case eCSSProperty_text_emphasis: {
+      const nsCSSValue* emphasisStyle =
+        data->ValueFor(eCSSProperty_text_emphasis_style);
+      const nsCSSValue* emphasisColor =
+        data->ValueFor(eCSSProperty_text_emphasis_color);
+      bool isDefaultColor = emphasisColor->GetUnit() == eCSSUnit_EnumColor &&
+        emphasisColor->GetIntValue() == NS_COLOR_CURRENTCOLOR;
 
+      if (emphasisStyle->GetUnit() != eCSSUnit_None || isDefaultColor) {
+        AppendValueToString(eCSSProperty_text_emphasis_style,
+                            aValue, aSerialization);
+        if (!isDefaultColor) {
+          aValue.Append(char16_t(' '));
+        }
+      }
+      if (!isDefaultColor) {
+        AppendValueToString(eCSSProperty_text_emphasis_color,
+                            aValue, aSerialization);
+      }
+      break;
+    }
     case eCSSProperty__moz_transform: {
       // shorthands that are just aliases with different parsing rules
       const nsCSSProperty* subprops =

@@ -1054,7 +1054,7 @@ void MediaDecoderStateMachine::StopPlayback()
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("StopPlayback()");
 
-  mDecoder->DispatchPlaybackStopped();
+  mOnPlaybackStop.Notify();
 
   if (IsPlaying()) {
     mMediaSink->SetPlaying(false);
@@ -1087,7 +1087,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   DECODER_LOG("MaybeStartPlayback() starting playback");
-  mDecoder->DispatchPlaybackStarted();
+  mOnPlaybackStart.Notify();
   StartMediaSink();
 
   if (!IsPlaying()) {
@@ -1599,12 +1599,7 @@ MediaDecoderStateMachine::InitiateSeek()
   StopPlayback();
   UpdatePlaybackPositionInternal(mCurrentSeek.mTarget.mTime);
 
-  nsCOMPtr<nsIRunnable> startEvent =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-        mDecoder,
-        &MediaDecoder::SeekingStarted,
-        mCurrentSeek.mTarget.mEventVisibility);
-  AbstractThread::MainThread()->Dispatch(startEvent.forget());
+  mOnSeekingStart.Notify(mCurrentSeek.mTarget.mEventVisibility);
 
   // Reset our state machine and decoding pipeline before seeking.
   Reset();
@@ -1897,9 +1892,7 @@ MediaDecoderStateMachine::DecodeError()
 
   // MediaDecoder::DecodeError notifies the owner, and then shuts down the state
   // machine.
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-  AbstractThread::MainThread()->Dispatch(event.forget());
+  mOnDecodeError.Notify();
 }
 
 void
@@ -2158,9 +2151,7 @@ MediaDecoderStateMachine::SeekCompleted()
 
   if (video) {
     mMediaSink->Redraw();
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::Invalidate);
-    AbstractThread::MainThread()->Dispatch(event.forget());
+    mOnInvalidate.Notify();
   }
 }
 
@@ -2413,9 +2404,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         // Ensure readyState is updated before firing the 'ended' event.
         UpdateNextFrameStatus();
 
-        nsCOMPtr<nsIRunnable> event =
-          NS_NewRunnableMethod(mDecoder, &MediaDecoder::PlaybackEnded);
-        AbstractThread::MainThread()->Dispatch(event.forget());
+        mOnPlaybackEnded.Notify();
 
         mSentPlaybackEndedEvent = true;
 

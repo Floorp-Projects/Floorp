@@ -439,7 +439,7 @@ WebMDemuxer::EnsureUpToDateIndex()
     return;
   }
   AutoPinned<MediaResource> resource(mResource.GetResource());
-  nsTArray<MediaByteRange> byteRanges;
+  MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
   if (NS_FAILED(rv) || !byteRanges.Length()) {
     return;
@@ -732,7 +732,7 @@ WebMDemuxer::GetBuffered()
 
   media::TimeIntervals buffered;
 
-  nsTArray<MediaByteRange> ranges;
+  MediaByteRangeSet ranges;
   nsresult rv = resource->GetCachedRanges(ranges);
   if (NS_FAILED(rv)) {
     return media::TimeIntervals();

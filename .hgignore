@@ -104,6 +104,9 @@ GPATH
 ^testing/mozharness/logs/
 ^testing/mozharness/build/
 
+# Ignore tox generated dir
+.tox/
+
 # Ignore node_modules from eslint-plugin-mozilla
 ^testing/eslint-plugin-mozilla/node_modules/
 

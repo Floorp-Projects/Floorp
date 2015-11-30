@@ -9,6 +9,7 @@
 
 #include "windows.h" // HRESULT, DWORD
 #include "MediaDecoderReader.h"
+#include "MediaResource.h"
 #include "mozilla/RefPtr.h"
 #include "MP3FrameParser.h"
 
@@ -105,7 +106,7 @@ private:
   // Duration of the stream, in microseconds.
   int64_t mDuration;
 
-  NotifyDataArrivedFilter mFilter;
+  MediaByteRangeSet mLastCachedRanges;
 };
 
 } // namespace mozilla

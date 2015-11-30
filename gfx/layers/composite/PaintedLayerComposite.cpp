@@ -112,7 +112,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
              mBuffer->GetLayer() == this,
              "buffer is corrupted");
 
-  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
+  const nsIntRegion visibleRegion = GetEffectiveVisibleRegion().ToUnknownRegion();
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxEnv::DumpCompositorTextures()) {

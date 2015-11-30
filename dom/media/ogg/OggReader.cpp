@@ -1160,12 +1160,12 @@ nsresult OggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
 {
   MOZ_ASSERT(OnTaskQueue());
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  nsTArray<MediaByteRange> cached;
+  MediaByteRangeSet cached;
   nsresult res = resource->GetCachedRanges(cached);
   NS_ENSURE_SUCCESS(res, res);
 
   for (uint32_t index = 0; index < cached.Length(); index++) {
-    MediaByteRange& range = cached[index];
+    auto& range = cached[index];
     int64_t startTime = -1;
     int64_t endTime = -1;
     if (NS_FAILED(ResetDecode())) {
@@ -1841,7 +1841,7 @@ media::TimeIntervals OggReader::GetBuffered()
   }
 
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  nsTArray<MediaByteRange> ranges;
+  MediaByteRangeSet ranges;
   nsresult res = resource->GetCachedRanges(ranges);
   NS_ENSURE_SUCCESS(res, media::TimeIntervals::Invalid());
 
