@@ -243,6 +243,16 @@ describe("loopapi-client", function() {
       sinon.assert.calledOnce(stub3);
       sinon.assert.calledWithExactly(stub3, "Foo", "Bar");
     });
+
+    it("should invoke subscription with non-array arguments too", function() {
+      var stub = sinon.stub();
+      loop.subscribe("LoopStatusChanged", stub);
+
+      sendMessage({ data: ["LoopStatusChanged", "Foo"] });
+
+      sinon.assert.calledOnce(stub);
+      sinon.assert.calledWithExactly(stub, "Foo");
+    });
   });
 
   describe("unsubscribe", function() {
