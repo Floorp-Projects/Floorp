@@ -14,7 +14,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcpublic.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -54,7 +53,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/unused.h"
-#include "mozilla/dom/SRICheck.h"
 #include "nsIScriptError.h"
 
 using namespace mozilla;
@@ -352,7 +350,13 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
   }
 
-  RefPtr<nsScriptLoadHandler> handler = new nsScriptLoadHandler(this, aRequest);
+  nsAutoPtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
+  if (!aRequest->mIntegrity.IsEmpty()) {
+    sriDataVerifier = new SRICheckDataVerifier(aRequest->mIntegrity, mDocument);
+  }
+
+  RefPtr<nsScriptLoadHandler> handler =
+      new nsScriptLoadHandler(this, aRequest, sriDataVerifier.forget());
 
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
   rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
@@ -1410,20 +1414,33 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 nsresult
 nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                  nsISupports* aContext,
-                                 nsresult aStatus,
-                                 uint32_t aStringLen,
-                                 const uint8_t* aString)
+                                 nsresult aChannelStatus,
+                                 nsresult aSRIStatus,
+                                 mozilla::Vector<char16_t> &aString,
+                                 mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier)
 {
   nsScriptLoadRequest* request = static_cast<nsScriptLoadRequest*>(aContext);
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  nsresult rv = NS_ERROR_SRI_CORRUPT;
-  if (request->mIntegrity.IsEmpty() ||
-      NS_SUCCEEDED(SRICheck::VerifyIntegrity(request->mIntegrity, aLoader,
-                                             request->mCORSMode, aStringLen,
-                                             aString, mDocument))) {
-    rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen, aString);
+  nsresult rv = NS_OK;
+  if (!request->mIntegrity.IsEmpty() &&
+      NS_SUCCEEDED((rv = aSRIStatus))) {
+    MOZ_ASSERT(aSRIDataVerifier);
+
+    nsCOMPtr<nsIRequest> channelRequest;
+    aLoader->GetRequest(getter_AddRefs(channelRequest));
+    nsCOMPtr<nsIChannel> channel;
+    channel = do_QueryInterface(channelRequest);
+
+    if (NS_FAILED(aSRIDataVerifier->Verify(request->mIntegrity, channel,
+                                           request->mCORSMode, mDocument))) {
+      rv = NS_ERROR_SRI_CORRUPT;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = PrepareLoadedRequest(request, aLoader, aChannelStatus, aString);
   }
 
   if (NS_FAILED(rv)) {
@@ -1466,16 +1483,12 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     } else {
       mPreloads.RemoveElement(request, PreloadRequestComparator());
     }
-    rv = NS_OK;
-  } else {
-    free(const_cast<uint8_t *>(aString));
-    rv = NS_SUCCESS_ADOPTED_DATA;
   }
 
   // Process our request and/or any pending ones
   ProcessPendingRequests();
 
-  return rv;
+  return NS_OK;
 }
 
 void
@@ -1506,8 +1519,7 @@ nsresult
 nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                      nsIIncrementalStreamLoader* aLoader,
                                      nsresult aStatus,
-                                     uint32_t aStringLen,
-                                     const uint8_t* aString)
+                                     mozilla::Vector<char16_t> &aString)
 {
   if (NS_FAILED(aStatus)) {
     return aStatus;
@@ -1555,21 +1567,9 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aStringLen) {
-    // Check the charset attribute to determine script charset.
-    nsAutoString hintCharset;
-    if (!aRequest->IsPreload()) {
-      aRequest->mElement->GetScriptCharset(hintCharset);
-    } else {
-      nsTArray<PreloadInfo>::index_type i =
-        mPreloads.IndexOf(aRequest, 0, PreloadRequestComparator());
-      NS_ASSERTION(i != mPreloads.NoIndex, "Incorrect preload bookkeeping");
-      hintCharset = mPreloads[i].mCharset;
-    }
-    rv = ConvertToUTF16(channel, aString, aStringLen, hintCharset, mDocument,
-                        aRequest->mScriptTextBuf, aRequest->mScriptTextLength);
-
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!aString.empty()) {
+    aRequest->mScriptTextLength = aString.length();
+    aRequest->mScriptTextBuf = aString.extractRawBuffer();
   }
 
   // This assertion could fire errorously if we ran out of memory when
@@ -1714,9 +1714,14 @@ nsScriptLoader::MaybeRemovedDeferRequests()
 //////////////////////////////////////////////////////////////
 
 nsScriptLoadHandler::nsScriptLoadHandler(nsScriptLoader *aScriptLoader,
-                                         nsScriptLoadRequest *aRequest)
+                                         nsScriptLoadRequest *aRequest,
+                                         mozilla::dom::SRICheckDataVerifier *aSRIDataVerifier)
   : mScriptLoader(aScriptLoader),
-    mRequest(aRequest)
+    mRequest(aRequest),
+    mSRIDataVerifier(aSRIDataVerifier),
+    mSRIStatus(NS_OK),
+    mDecoder(),
+    mBuffer()
 {}
 
 nsScriptLoadHandler::~nsScriptLoadHandler()
@@ -1731,18 +1736,164 @@ nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
                                        const uint8_t* aData,
                                        uint32_t *aConsumedLength)
 {
+  if (mRequest->IsCanceled()) {
+    // If request cancelled, ignore any incoming data.
+    *aConsumedLength = aDataLength;
+    return NS_OK;
+  }
+
+  if (!EnsureDecoder(aLoader, aData, aDataLength,
+                     /* aEndOfStream = */ false)) {
+    return NS_OK;
+  }
+
+  // Below we will/shall consume entire data chunk.
+  *aConsumedLength = aDataLength;
+
+  // Decoder has already been initialized. -- trying to decode all loaded bytes.
+  nsresult rv = TryDecodeRawData(aData, aDataLength,
+                                 /* aEndOfStream = */ false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If SRI is required for this load, appending new bytes to the hash.
+  if (mSRIDataVerifier && NS_SUCCEEDED(mSRIStatus)) {
+    mSRIStatus = mSRIDataVerifier->Update(aDataLength, aData);
+  }
+
+  return rv;
+}
+
+nsresult
+nsScriptLoadHandler::TryDecodeRawData(const uint8_t* aData,
+                                      uint32_t aDataLength,
+                                      bool aEndOfStream)
+{
+  int32_t srcLen = aDataLength;
+  const char* src = reinterpret_cast<const char *>(aData);
+  int32_t dstLen;
+  nsresult rv =
+    mDecoder->GetMaxLength(src, srcLen, &dstLen);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t haveRead = mBuffer.length();
+  uint32_t capacity = haveRead + dstLen;
+  if (!mBuffer.reserve(capacity)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  rv = mDecoder->Convert(src,
+                      &srcLen,
+                      mBuffer.begin() + haveRead,
+                      &dstLen);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  haveRead += dstLen;
+  MOZ_ASSERT(haveRead <= capacity, "mDecoder produced more data than expected");
+  mBuffer.resizeUninitialized(haveRead);
+
   return NS_OK;
+}
+
+bool
+nsScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader *aLoader,
+                                   const uint8_t* aData,
+                                   uint32_t aDataLength,
+                                   bool aEndOfStream)
+{
+  // Check if decoder has already been created.
+  if (mDecoder) {
+    return true;
+  }
+
+  nsAutoCString charset;
+
+  // Determine if BOM check should be done.  This occurs either
+  // if end-of-stream has been reached, or at least 3 bytes have
+  // been read from input.
+  if (!aEndOfStream && (aDataLength < 3)) {
+    return false;
+  }
+
+  // Do BOM detection.
+  if (DetectByteOrderMark(aData, aDataLength, charset)) {
+    mDecoder = EncodingUtils::DecoderForEncoding(charset);
+    return true;
+  }
+
+  // BOM detection failed, check content stream for charset.
+  nsCOMPtr<nsIRequest> req;
+  nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
+  NS_ASSERTION(req, "StreamLoader's request went away prematurely");
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
+
+  if (channel &&
+      NS_SUCCEEDED(channel->GetContentCharset(charset)) &&
+      EncodingUtils::FindEncodingForLabel(charset, charset)) {
+    mDecoder = EncodingUtils::DecoderForEncoding(charset);
+    return true;
+  }
+
+  // Check the hint charset from the script element or preload
+  // request.
+  nsAutoString hintCharset;
+  if (!mRequest->IsPreload()) {
+    mRequest->mElement->GetScriptCharset(hintCharset);
+  } else {
+    nsTArray<nsScriptLoader::PreloadInfo>::index_type i =
+      mScriptLoader->mPreloads.IndexOf(mRequest, 0,
+            nsScriptLoader::PreloadRequestComparator());
+
+    NS_ASSERTION(i != mScriptLoader->mPreloads.NoIndex,
+                 "Incorrect preload bookkeeping");
+    hintCharset = mScriptLoader->mPreloads[i].mCharset;
+  }
+
+  if (EncodingUtils::FindEncodingForLabel(hintCharset, charset)) {
+    mDecoder = EncodingUtils::DecoderForEncoding(charset);
+    return true;
+  }
+
+  // Get the charset from the charset of the document.
+  if (mScriptLoader->mDocument) {
+    charset = mScriptLoader->mDocument->GetDocumentCharacterSet();
+    mDecoder = EncodingUtils::DecoderForEncoding(charset);
+    return true;
+  }
+
+  // Curiously, there are various callers that don't pass aDocument. The
+  // fallback in the old code was ISO-8859-1, which behaved like
+  // windows-1252. Saying windows-1252 for clarity and for compliance
+  // with the Encoding Standard.
+  charset = "windows-1252";
+  mDecoder = EncodingUtils::DecoderForEncoding(charset);
+  return true;
 }
 
 NS_IMETHODIMP
 nsScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                       nsISupports* aContext,
                                       nsresult aStatus,
-                                      uint32_t aStringLen,
-                                      const uint8_t* aString)
+                                      uint32_t aDataLength,
+                                      const uint8_t* aData)
 {
-  // pass arguments through except for the aContext,
-  // we have to mediate and use mRequest instead.
-  return mScriptLoader->OnStreamComplete(aLoader, mRequest, aStatus,
-                                         aStringLen, aString);
+  if (!mRequest->IsCanceled()) {
+    DebugOnly<bool> encoderSet =
+      EnsureDecoder(aLoader, aData, aDataLength, /* aEndOfStream = */ true);
+    MOZ_ASSERT(encoderSet);
+    DebugOnly<nsresult> rv = TryDecodeRawData(aData, aDataLength,
+                                              /* aEndOfStream = */ true);
+
+    // If SRI is required for this load, appending new bytes to the hash.
+    if (mSRIDataVerifier && NS_SUCCEEDED(mSRIStatus)) {
+      mSRIStatus = mSRIDataVerifier->Update(aDataLength, aData);
+    }
+  }
+
+  // we have to mediate and use mRequest.
+  return mScriptLoader->OnStreamComplete(aLoader, mRequest, aStatus, mSRIStatus,
+                                         mBuffer, mSRIDataVerifier);
 }
