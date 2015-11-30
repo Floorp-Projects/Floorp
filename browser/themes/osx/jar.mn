@@ -73,16 +73,6 @@ browser.jar:
   skin/classic/browser/webRTC-sharingScreen-menubar.png
   skin/classic/browser/webRTC-sharingScreen-menubar@2x.png
   skin/classic/browser/webRTC-indicator.css
-  skin/classic/browser/loop/menuPanel.png             (loop/menuPanel.png)
-  skin/classic/browser/loop/menuPanel@2x.png          (loop/menuPanel@2x.png)
-  skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
-  skin/classic/browser/loop/toolbar@2x.png            (loop/toolbar@2x.png)
-  skin/classic/browser/loop/toolbar-inverted.png      (loop/toolbar-inverted.png)
-  skin/classic/browser/loop/toolbar-inverted@2x.png   (loop/toolbar-inverted@2x.png)
-  skin/classic/browser/yosemite/loop/menuPanel.png          (loop/menuPanel-yosemite.png)
-  skin/classic/browser/yosemite/loop/menuPanel@2x.png       (loop/menuPanel-yosemite@2x.png)
-  skin/classic/browser/yosemite/loop/toolbar.png            (loop/toolbar-yosemite.png)
-  skin/classic/browser/yosemite/loop/toolbar@2x.png         (loop/toolbar-yosemite@2x.png)
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
@@ -280,10 +270,6 @@ browser.jar:
 % override chrome://browser/skin/Toolbar@2x.png                            chrome://browser/skin/yosemite/Toolbar@2x.png                           os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel.png                             chrome://browser/skin/yosemite/menuPanel.png                            os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel@2x.png                          chrome://browser/skin/yosemite/menuPanel@2x.png                         os=Darwin osversion>=10.10
-% override chrome://browser/skin/loop/menuPanel.png                        chrome://browser/skin/yosemite/loop/menuPanel.png                       os=Darwin osversion>=10.10
-% override chrome://browser/skin/loop/menuPanel@2x.png                     chrome://browser/skin/yosemite/loop/menuPanel@2x.png                    os=Darwin osversion>=10.10
-% override chrome://browser/skin/loop/toolbar.png                          chrome://browser/skin/yosemite/loop/toolbar.png                         os=Darwin osversion>=10.10
-% override chrome://browser/skin/loop/toolbar@2x.png                       chrome://browser/skin/yosemite/loop/toolbar@2x.png                      os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize.png                   chrome://browser/skin/yosemite/menuPanel-customize.png                  os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-customize@2x.png                chrome://browser/skin/yosemite/menuPanel-customize@2x.png               os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-exit.png                        chrome://browser/skin/yosemite/menuPanel-exit.png                       os=Darwin osversion>=10.10

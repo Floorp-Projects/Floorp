@@ -436,6 +436,18 @@ gbjar.sources += [
     'NotificationService.java',
     'NSSBridge.java',
     'OrderedBroadcastHelper.java',
+    'overlays/OverlayConstants.java',
+    'overlays/service/OverlayActionService.java',
+    'overlays/service/ShareData.java',
+    'overlays/service/sharemethods/AddBookmark.java',
+    'overlays/service/sharemethods/AddToReadingList.java',
+    'overlays/service/sharemethods/SendTab.java',
+    'overlays/service/sharemethods/ShareMethod.java',
+    'overlays/ui/OverlayDialogButton.java',
+    'overlays/ui/SendTabDeviceListArrayAdapter.java',
+    'overlays/ui/SendTabList.java',
+    'overlays/ui/SendTabTargetSelectedListener.java',
+    'overlays/ui/ShareDialog.java',
     'preferences/AlignRightLinkPreference.java',
     'preferences/AndroidImport.java',
     'preferences/AndroidImportPreference.java',
@@ -478,11 +490,11 @@ gbjar.sources += [
     'RemoteClientsDialogFragment.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
-    'RestrictedProfiles.java',
+    'Restrictions.java',
     'restrictions/DefaultConfiguration.java',
     'restrictions/GuestProfileConfiguration.java',
+    'restrictions/Restrictable.java',
     'restrictions/RestrictedProfileConfiguration.java',
-    'restrictions/Restriction.java',
     'restrictions/RestrictionConfiguration.java',
     'restrictions/RestrictionProvider.java',
     'ServiceNotificationClient.java',
@@ -631,22 +643,6 @@ gbjar.extra_jars += [
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]
     ANDROID_RES_DIRS += [ 'crashreporter/res' ]
-
-if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
-    gbjar.sources += [
-        'overlays/OverlayConstants.java',
-        'overlays/service/OverlayActionService.java',
-        'overlays/service/ShareData.java',
-        'overlays/service/sharemethods/AddBookmark.java',
-        'overlays/service/sharemethods/AddToReadingList.java',
-        'overlays/service/sharemethods/SendTab.java',
-        'overlays/service/sharemethods/ShareMethod.java',
-        'overlays/ui/OverlayDialogButton.java',
-        'overlays/ui/SendTabDeviceListArrayAdapter.java',
-        'overlays/ui/SendTabList.java',
-        'overlays/ui/SendTabTargetSelectedListener.java',
-        'overlays/ui/ShareDialog.java',
-    ]
 
 if (CONFIG['MOZ_ANDROID_MAX_SDK_VERSION']):
     max_sdk_version = int(CONFIG['MOZ_ANDROID_MAX_SDK_VERSION'])
@@ -880,7 +876,7 @@ ANDROID_ASSETS_DIRS += [
 # appropriate in Makefile.in.
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZ_DEBUG',
             'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
-            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
+            'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
             'MOZ_ANDROID_GCM', 'MOZ_ANDROID_TAB_QUEUE'):
     if CONFIG[var]:
         DEFINES[var] = 1

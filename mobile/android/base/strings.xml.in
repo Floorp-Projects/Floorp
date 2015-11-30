@@ -564,15 +564,15 @@
   <!-- Voice search from the Awesome Bar -->
   <string name="voicesearch_prompt">&voicesearch_prompt;</string>
 
-  <!-- Restrictions -->
-  <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title2;</string>
-  <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title2;</string>
-  <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title2;</string>
-  <string name="restriction_disallow_clear_history_title">&restriction_disallow_clear_history_title2;</string>
-  <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title2;</string>
-  <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title2;</string>
-  <string name="restriction_disallow_advanced_settings_title">&restriction_disallow_advanced_settings_title;</string>
-  <string name="restriction_disallow_camera_microphone_title">&restriction_disallow_camera_microphone_title;</string>
+  <!-- Restrictable features -->
+  <string name="restrictable_feature_addons_installation">&restrictable_feature_addons_installation;</string>
+  <string name="restrictable_feature_private_browsing">&restrictable_feature_private_browsing;</string>
+  <string name="restrictable_feature_location_services">&restrictable_feature_location_services;</string>
+  <string name="restrictable_feature_clear_history">&restrictable_feature_clear_history;</string>
+  <string name="restrictable_feature_guest_browsing">&restrictable_feature_guest_browsing;</string>
+  <string name="restrictable_feature_master_password">&restrictable_feature_master_password;</string>
+  <string name="restrictable_feature_advanced_settings">&restrictable_feature_advanced_settings;</string>
+  <string name="restrictable_feature_camera_microphone">&restrictable_feature_camera_microphone;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
