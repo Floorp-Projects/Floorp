@@ -123,6 +123,10 @@ struct nsFont {
     return Equals(aOther);
   }
 
+  bool operator!=(const nsFont& aOther) const {
+    return !Equals(aOther);
+  }
+
   bool Equals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
