@@ -111,11 +111,13 @@ struct nsFont {
 
   // initialize the font with a fontlist
   nsFont(const mozilla::FontFamilyList& aFontlist, uint8_t aStyle,
-         uint16_t aWeight, int16_t aStretch, nscoord aSize);
+         uint16_t aWeight, int16_t aStretch,
+         uint8_t aDecoration, nscoord aSize);
 
   // initialize the font with a single generic
   nsFont(mozilla::FontFamilyType aGenericType, uint8_t aStyle,
-         uint16_t aWeight, int16_t aStretch, nscoord aSize);
+         uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,
+         nscoord aSize);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
