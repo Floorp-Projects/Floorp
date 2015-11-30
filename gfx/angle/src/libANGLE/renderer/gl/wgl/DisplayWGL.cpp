@@ -233,7 +233,7 @@ egl::Error DisplayWGL::initialize(egl::Display *display)
         // Request core profile
         mask |= WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
 
-        std::vector<int> contextCreationAttibutes;
+        std::vector<int> contextCreationAttributes;
 
         // Don't request a specific version unless the user wants one.  WGL will return the highest version
         // that the driver supports if no version is requested.
@@ -242,32 +242,32 @@ egl::Error DisplayWGL::initialize(egl::Display *display)
         EGLint requestedMinorVersion = displayAttributes.get(EGL_PLATFORM_ANGLE_MAX_VERSION_MINOR_ANGLE, EGL_DONT_CARE);
         if (requestedMajorVersion != EGL_DONT_CARE && requestedMinorVersion != EGL_DONT_CARE)
         {
-            contextCreationAttibutes.push_back(WGL_CONTEXT_MAJOR_VERSION_ARB);
-            contextCreationAttibutes.push_back(requestedMajorVersion);
+            contextCreationAttributes.push_back(WGL_CONTEXT_MAJOR_VERSION_ARB);
+            contextCreationAttributes.push_back(requestedMajorVersion);
 
-            contextCreationAttibutes.push_back(WGL_CONTEXT_MINOR_VERSION_ARB);
-            contextCreationAttibutes.push_back(requestedMinorVersion);
+            contextCreationAttributes.push_back(WGL_CONTEXT_MINOR_VERSION_ARB);
+            contextCreationAttributes.push_back(requestedMinorVersion);
         }
 
         // Set the flag attributes
         if (flags != 0)
         {
-            contextCreationAttibutes.push_back(WGL_CONTEXT_FLAGS_ARB);
-            contextCreationAttibutes.push_back(flags);
+            contextCreationAttributes.push_back(WGL_CONTEXT_FLAGS_ARB);
+            contextCreationAttributes.push_back(flags);
         }
 
         // Set the mask attribute
         if (mask != 0)
         {
-            contextCreationAttibutes.push_back(WGL_CONTEXT_PROFILE_MASK_ARB);
-            contextCreationAttibutes.push_back(mask);
+            contextCreationAttributes.push_back(WGL_CONTEXT_PROFILE_MASK_ARB);
+            contextCreationAttributes.push_back(mask);
         }
 
         // Signal the end of the attributes
-        contextCreationAttibutes.push_back(0);
-        contextCreationAttibutes.push_back(0);
+        contextCreationAttributes.push_back(0);
+        contextCreationAttributes.push_back(0);
 
-        mWGLContext = mFunctionsWGL->createContextAttribsARB(mDeviceContext, NULL, &contextCreationAttibutes[0]);
+        mWGLContext = mFunctionsWGL->createContextAttribsARB(mDeviceContext, NULL, &contextCreationAttributes[0]);
     }
 
     // If wglCreateContextAttribsARB is unavailable or failed, try the standard wglCreateContext
