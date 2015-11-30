@@ -226,15 +226,15 @@ class BaselineCompiler : public BaselineCompilerSpecific
     NonAssertingLabel           postBarrierSlot_;
 
     // Native code offset right before the scope chain is initialized.
-    CodeOffset prologueOffset_;
+    CodeOffsetLabel prologueOffset_;
 
     // Native code offset right before the frame is popped and the method
     // returned from.
-    CodeOffset epilogueOffset_;
+    CodeOffsetLabel epilogueOffset_;
 
     // Native code offset right after debug prologue and epilogue, or
     // equivalent positions when debug mode is off.
-    CodeOffset postDebugPrologueOffset_;
+    CodeOffsetLabel postDebugPrologueOffset_;
 
     // For each INITIALYIELD or YIELD op, this Vector maps the yield index
     // to the bytecode offset of the next op.

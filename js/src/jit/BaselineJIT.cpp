@@ -575,7 +575,7 @@ BaselineScript::pcMappingReader(size_t indexEntry)
 }
 
 ICEntry&
-BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
+BaselineScript::icEntryFromReturnOffset(CodeOffsetLabel returnOffset)
 {
     size_t bottom = 0;
     size_t top = numICEntries();
@@ -702,7 +702,7 @@ BaselineScript::icEntryFromReturnAddress(uint8_t* returnAddr)
 {
     MOZ_ASSERT(returnAddr > method_->raw());
     MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
-    CodeOffset offset(returnAddr - method_->raw());
+    CodeOffsetLabel offset(returnAddr - method_->raw());
     return icEntryFromReturnOffset(offset);
 }
 
@@ -912,7 +912,7 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
                     script->hasBreakpointsAt(curPC);
 
                 // Patch the trap.
-                CodeLocationLabel label(method(), CodeOffset(nativeOffset));
+                CodeLocationLabel label(method(), CodeOffsetLabel(nativeOffset));
                 Assembler::ToggleCall(label, enabled);
             }
 
@@ -934,8 +934,8 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script)
     traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
 
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-        CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-        CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
+        CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
+        CodeLocationLabel exit(method_, CodeOffsetLabel(traceLoggerExitToggleOffset_));
         Assembler::ToggleToCmp(enter);
         Assembler::ToggleToCmp(exit);
     }
@@ -960,8 +960,8 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
     AutoWritableJitCode awjc(method());
 
     // Enable/Disable the traceLogger prologue and epilogue.
-    CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-    CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
+    CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
+    CodeLocationLabel exit(method_, CodeOffsetLabel(traceLoggerExitToggleOffset_));
     if (!engineEnabled) {
         if (enable) {
             Assembler::ToggleToCmp(enter);
@@ -988,8 +988,8 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
     AutoWritableJitCode awjc(method());
 
     // Enable/Disable the traceLogger prologue and epilogue.
-    CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-    CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
+    CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
+    CodeLocationLabel exit(method_, CodeOffsetLabel(traceLoggerExitToggleOffset_));
     if (!scriptsEnabled) {
         if (enable) {
             Assembler::ToggleToCmp(enter);
@@ -1018,8 +1018,8 @@ BaselineScript::toggleProfilerInstrumentation(bool enable)
     AutoWritableJitCode awjc(method());
 
     // Toggle the jump
-    CodeLocationLabel enterToggleLocation(method_, CodeOffset(profilerEnterToggleOffset_));
-    CodeLocationLabel exitToggleLocation(method_, CodeOffset(profilerExitToggleOffset_));
+    CodeLocationLabel enterToggleLocation(method_, CodeOffsetLabel(profilerEnterToggleOffset_));
+    CodeLocationLabel exitToggleLocation(method_, CodeOffsetLabel(profilerExitToggleOffset_));
     if (enable) {
         Assembler::ToggleToCmp(enterToggleLocation);
         Assembler::ToggleToCmp(exitToggleLocation);

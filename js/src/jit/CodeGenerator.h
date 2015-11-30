@@ -484,14 +484,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertRangeI(const Range* r, Register input);
     void emitAssertRangeD(const Range* r, FloatRegister input, FloatRegister temp);
 
-    Vector<CodeOffset, 0, JitAllocPolicy> ionScriptLabels_;
+    Vector<CodeOffsetLabel, 0, JitAllocPolicy> ionScriptLabels_;
 
     struct SharedStub {
         ICStub::Kind kind;
         IonICEntry entry;
-        CodeOffset label;
+        CodeOffsetLabel label;
 
-        SharedStub(ICStub::Kind kind, IonICEntry entry, CodeOffset label)
+        SharedStub(ICStub::Kind kind, IonICEntry entry, CodeOffsetLabel label)
           : kind(kind), entry(entry), label(label)
         {}
     };

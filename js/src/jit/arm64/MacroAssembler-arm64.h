@@ -225,11 +225,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // FIXME: This is the same on every arch.
     // FIXME: If we can share framePushed_, we can share this.
     // FIXME: Or just make it at the highest level.
-    CodeOffset PushWithPatch(ImmWord word) {
+    CodeOffsetLabel PushWithPatch(ImmWord word) {
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
     }
-    CodeOffset PushWithPatch(ImmPtr ptr) {
+    CodeOffsetLabel PushWithPatch(ImmPtr ptr) {
         return PushWithPatch(ImmWord(uintptr_t(ptr.value)));
     }
 
@@ -389,21 +389,21 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             movePtr(src.valueReg(), dest.valueReg());
     }
 
-    CodeOffset pushWithPatch(ImmWord imm) {
+    CodeOffsetLabel pushWithPatch(ImmWord imm) {
         vixl::UseScratchRegisterScope temps(this);
         const Register scratch = temps.AcquireX().asUnsized();
-        CodeOffset label = movWithPatch(imm, scratch);
+        CodeOffsetLabel label = movWithPatch(imm, scratch);
         push(scratch);
         return label;
     }
 
-    CodeOffset movWithPatch(ImmWord imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
         BufferOffset off = immPool64(ARMRegister(dest, 64), imm.value);
-        return CodeOffset(off.getOffset());
+        return CodeOffsetLabel(off.getOffset());
     }
-    CodeOffset movWithPatch(ImmPtr imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
         BufferOffset off = immPool64(ARMRegister(dest, 64), uint64_t(imm.value));
-        return CodeOffset(off.getOffset());
+        return CodeOffsetLabel(off.getOffset());
     }
 
     void boxValue(JSValueType type, Register src, Register dest) {
@@ -778,7 +778,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void movePtr(AsmJSImmPtr imm, Register dest) {
         BufferOffset off = movePatchablePtr(ImmWord(0xffffffffffffffffULL), dest);
-        append(AsmJSAbsoluteLink(CodeOffset(off.getOffset()), imm.kind()));
+        append(AsmJSAbsoluteLink(CodeOffsetLabel(off.getOffset()), imm.kind()));
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         BufferOffset load = movePatchablePtr(ImmPtr(imm.value), dest);
@@ -2516,9 +2516,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
-    CodeOffset toggledJump(Label* label) {
+    CodeOffsetLabel toggledJump(Label* label) {
         BufferOffset offset = b(label, Always);
-        CodeOffset ret(offset.getOffset());
+        CodeOffsetLabel ret(offset.getOffset());
         return ret;
     }
 
@@ -2536,7 +2536,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         }
     }
 
-    void writePrebarrierOffset(CodeOffset label) {
+    void writePrebarrierOffset(CodeOffsetLabel label) {
         preBarriers_.writeUnsigned(label.offset());
     }
 
@@ -2554,14 +2554,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
   public:
-    CodeOffset labelForPatch() {
-        return CodeOffset(nextOffset().getOffset());
+    CodeOffsetLabel labelForPatch() {
+        return CodeOffsetLabel(nextOffset().getOffset());
     }
 
     void handleFailureWithHandlerTail(void* handler);
 
     // FIXME: See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
-    void patchAsmJSGlobalAccess(CodeOffset patchAt, uint8_t* code,
+    void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t* code,
                                 uint8_t* globalData, unsigned globalDataOffset)
     {
         MOZ_CRASH("patchAsmJSGlobalAccess");
@@ -2866,7 +2866,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     // Emit a BLR or NOP instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffset toggledCall(JitCode* target, bool enabled) {
+    CodeOffsetLabel toggledCall(JitCode* target, bool enabled) {
         // The returned offset must be to the first instruction generated,
         // for the debugger to match offset with Baseline's pcMappingEntries_.
         BufferOffset offset = nextOffset();
@@ -2892,7 +2892,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         }
 
         addPendingJump(loadOffset, ImmPtr(target->raw()), Relocation::JITCODE);
-        CodeOffset ret(offset.getOffset());
+        CodeOffsetLabel ret(offset.getOffset());
         return ret;
     }
 

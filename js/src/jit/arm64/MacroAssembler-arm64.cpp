@@ -509,20 +509,20 @@ MacroAssembler::reserveStack(uint32_t amount)
 // ===============================================================
 // Simple call functions.
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
     syncStackPtr();
     Blr(ARMRegister(reg, 64));
-    return CodeOffset(currentOffset());
+    return CodeOffsetLabel(currentOffset());
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
     syncStackPtr();
     Bl(label);
-    return CodeOffset(currentOffset());
+    return CodeOffsetLabel(currentOffset());
 }
 
 void
@@ -560,11 +560,11 @@ MacroAssembler::call(JitCode* c)
     blr(scratch64);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::callWithPatch()
 {
     MOZ_CRASH("NYI");
-    return CodeOffset();
+    return CodeOffsetLabel();
 }
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)

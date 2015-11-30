@@ -1701,10 +1701,10 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
     masm.Push(Imm32(descriptor));
 
     // Call into the stubcode.
-    CodeOffset patchOffset;
+    CodeOffsetLabel patchOffset;
     IonICEntry entry(script->pcToOffset(pc), ICEntry::Kind_Op, script);
     EmitCallIC(&patchOffset, masm);
-    entry.setReturnOffset(CodeOffset(masm.currentOffset()));
+    entry.setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
 
     SharedStub sharedStub(kind, entry, patchOffset);
     masm.propagateOOM(sharedStubs_.append(sharedStub));
@@ -3989,7 +3989,7 @@ struct ScriptCountBlockState
 void
 CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated)
 {
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), temp);
+    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), temp);
     masm.propagateOOM(ionScriptLabels_.append(label));
 
     // If IonScript::invalidationCount_ != 0, the script has been invalidated.
@@ -8274,7 +8274,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 #endif
         // Patch shared stub IC loads using IC entries
         for (size_t i = 0; i < sharedStubs_.length(); i++) {
-            CodeOffset label = sharedStubs_[i].label;
+            CodeOffsetLabel label = sharedStubs_[i].label;
 
             IonICEntry& entry = ionScript->sharedStubList()[i];
             entry = sharedStubs_[i].entry;
@@ -10219,7 +10219,7 @@ CodeGenerator::visitRecompileCheck(LRecompileCheck* ins)
     }
 
     // Check if not yet recompiling.
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
+    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
     masm.propagateOOM(ionScriptLabels_.append(label));
     masm.branch32(Assembler::Equal,
                   Address(tmp, IonScript::offsetOfRecompiling()),

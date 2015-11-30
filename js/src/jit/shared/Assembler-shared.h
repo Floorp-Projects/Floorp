@@ -422,32 +422,32 @@ struct AbsoluteLabel : public LabelBase
     }
 };
 
-class CodeOffset
+class CodeOffsetLabel
 {
     size_t offset_;
 
-    static const size_t NOT_BOUND = size_t(-1);
+    static const size_t NOT_USED = size_t(-1);
 
   public:
-    explicit CodeOffset(size_t offset) : offset_(offset) {}
-    CodeOffset() : offset_(NOT_BOUND) {}
+    explicit CodeOffsetLabel(size_t offset) : offset_(offset) {}
+    CodeOffsetLabel() : offset_(NOT_USED) {}
 
     size_t offset() const {
-        MOZ_ASSERT(bound());
+        MOZ_ASSERT(used());
         return offset_;
     }
 
-    void bind(size_t offset) {
-        MOZ_ASSERT(!bound());
+    void use(size_t offset) {
+        MOZ_ASSERT(!used());
         offset_ = offset;
-        MOZ_ASSERT(bound());
+        MOZ_ASSERT(used());
     }
-    bool bound() const {
-        return offset_ != NOT_BOUND;
+    bool used() const {
+        return offset_ != NOT_USED;
     }
 
     void offsetBy(size_t delta) {
-        MOZ_ASSERT(bound());
+        MOZ_ASSERT(used());
         MOZ_ASSERT(offset_ + delta >= offset_, "no overflow");
         offset_ += delta;
     }
@@ -461,26 +461,26 @@ class CodeLabel
 {
     // The destination position, where the absolute reference should get
     // patched into.
-    CodeOffset patchAt_;
+    CodeOffsetLabel patchAt_;
 
     // The source label (relative) in the code to where the destination should
     // get patched to.
-    CodeOffset target_;
+    CodeOffsetLabel target_;
 
   public:
     CodeLabel()
     { }
-    explicit CodeLabel(const CodeOffset& patchAt)
+    explicit CodeLabel(const CodeOffsetLabel& patchAt)
       : patchAt_(patchAt)
     { }
-    CodeLabel(const CodeOffset& patchAt, const CodeOffset& target)
+    CodeLabel(const CodeOffsetLabel& patchAt, const CodeOffsetLabel& target)
       : patchAt_(patchAt),
         target_(target)
     { }
-    CodeOffset* patchAt() {
+    CodeOffsetLabel* patchAt() {
         return &patchAt_;
     }
-    CodeOffset* target() {
+    CodeOffsetLabel* target() {
         return &target_;
     }
     void offsetBy(size_t delta) {
@@ -625,7 +625,7 @@ class CodeLocationLabel
         raw_ = nullptr;
         setUninitialized();
     }
-    CodeLocationLabel(JitCode* code, CodeOffset base) {
+    CodeLocationLabel(JitCode* code, CodeOffsetLabel base) {
         *this = base;
         repoint(code);
     }
@@ -638,7 +638,7 @@ class CodeLocationLabel
         setAbsolute();
     }
 
-    void operator = (CodeOffset base) {
+    void operator = (CodeOffsetLabel base) {
         raw_ = (uint8_t*)base.offset();
         setRelative();
     }
@@ -857,10 +857,10 @@ typedef Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> AsmJSHeapAccessVector;
 
 struct AsmJSGlobalAccess
 {
-    CodeOffset patchAt;
+    CodeOffsetLabel patchAt;
     unsigned globalDataOffset;
 
-    AsmJSGlobalAccess(CodeOffset patchAt, unsigned globalDataOffset)
+    AsmJSGlobalAccess(CodeOffsetLabel patchAt, unsigned globalDataOffset)
       : patchAt(patchAt), globalDataOffset(globalDataOffset)
     {}
 };
@@ -955,9 +955,9 @@ class AsmJSAbsoluteAddress
 // the MacroAssembler (in AsmJSModule::staticallyLink).
 struct AsmJSAbsoluteLink
 {
-    AsmJSAbsoluteLink(CodeOffset patchAt, AsmJSImmKind target)
+    AsmJSAbsoluteLink(CodeOffsetLabel patchAt, AsmJSImmKind target)
       : patchAt(patchAt), target(target) {}
-    CodeOffset patchAt;
+    CodeOffsetLabel patchAt;
     AsmJSImmKind target;
 };
 
@@ -1011,7 +1011,7 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    void append(const CallSiteDesc& desc, CodeOffset label, size_t framePushed,
+    void append(const CallSiteDesc& desc, CodeOffsetLabel label, size_t framePushed,
                 uint32_t targetIndex = CallSiteAndTarget::NOT_INTERNAL)
     {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
