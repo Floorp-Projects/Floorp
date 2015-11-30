@@ -552,7 +552,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   NSPoint tmpPoint = NSMakePoint(point.x,
                                  [mainView frame].size.height - point.y);
-  nsIntPoint geckoPoint = nsCocoaUtils::
+  LayoutDeviceIntPoint geckoPoint = nsCocoaUtils::
     CocoaPointsToDevPixels(tmpPoint, nsCocoaUtils::GetBackingScaleFactor(mainView));
 
   mozAccessible* nativeChild = nil;

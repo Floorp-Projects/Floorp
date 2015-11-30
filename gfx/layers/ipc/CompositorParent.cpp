@@ -773,7 +773,7 @@ CompositorParent::Invalidate()
 {
   if (mLayerManager && mLayerManager->GetRoot()) {
     mLayerManager->AddInvalidRegion(
-        mLayerManager->GetRoot()->GetVisibleRegion().GetBounds());
+                                    mLayerManager->GetRoot()->GetVisibleRegion().ToUnknownRegion().GetBounds());
   }
 }
 

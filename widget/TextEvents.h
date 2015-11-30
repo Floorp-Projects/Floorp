@@ -489,7 +489,6 @@ public:
     NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
       "WidgetQueryContentEvent needs to support Duplicate()");
     MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
-    return nullptr;
   }
 
   void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength,

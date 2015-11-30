@@ -259,8 +259,6 @@ NetAddrElement::~NetAddrElement()
 {
 }
 
-NS_IMPL_ISUPPORTS0(AddrInfo)
-
 AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
                    bool disableIPv4, bool filterNameCollision, const char *cname)
 {

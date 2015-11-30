@@ -169,11 +169,20 @@ public:
   virtual const char* Name() const override { return ""; }
 
   /**
-   * Restricts the shadow visible region of layers that are covered with
-   * opaque content. aOpaqueRegion is the region already known to be covered
-   * with opaque content, in the post-transform coordinate space of aLayer.
+   * Post-processes layers before composition. This performs the following:
+   *
+   *   - Applies occlusion culling. This restricts the shadow visible region
+   *     of layers that are covered with opaque content.
+   *     |aOpaqueRegion| is the region already known to be covered with opaque
+   *     content, in the post-transform coordinate space of aLayer.
+   *
+   *   - Recomputes visible regions to account for async transforms.
+   *     Each layer accumulates into |aVisibleRegion| its post-transform
+   *     (including async transforms) visible region.
    */
-  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion);
+  void PostProcessLayers(Layer* aLayer,
+                         nsIntRegion& aOpaqueRegion,
+                         LayerIntRegion& aVisibleRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
@@ -440,7 +449,7 @@ public:
    *
    * They are analogous to the Layer interface.
    */
-  void SetShadowVisibleRegion(const nsIntRegion& aRegion)
+  void SetShadowVisibleRegion(const LayerIntRegion& aRegion)
   {
     mShadowVisibleRegion = aRegion;
   }
@@ -477,7 +486,7 @@ public:
   // These getters can be used anytime.
   float GetShadowOpacity() { return mShadowOpacity; }
   const Maybe<ParentLayerIntRect>& GetShadowClipRect() { return mShadowClipRect; }
-  const nsIntRegion& GetShadowVisibleRegion() { return mShadowVisibleRegion; }
+  const LayerIntRegion& GetShadowVisibleRegion() { return mShadowVisibleRegion; }
   const gfx::Matrix4x4& GetShadowTransform() { return mShadowTransform; }
   bool GetShadowTransformSetByAnimation() { return mShadowTransformSetByAnimation; }
   bool HasLayerBeenComposited() { return mLayerComposited; }
@@ -492,7 +501,7 @@ public:
 
 protected:
   gfx::Matrix4x4 mShadowTransform;
-  nsIntRegion mShadowVisibleRegion;
+  LayerIntRegion mShadowVisibleRegion;
   Maybe<ParentLayerIntRect> mShadowClipRect;
   LayerManagerComposite* mCompositeManager;
   RefPtr<Compositor> mCompositor;
@@ -567,7 +576,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
   // into. The final mask gets rendered into the original render target.
 
   // Calculate the size of the intermediate surfaces.
-  gfx::Rect visibleRect(aLayer->GetEffectiveVisibleRegion().GetBounds());
+  gfx::Rect visibleRect(aLayer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
   gfx::Matrix4x4 transform = aLayer->GetEffectiveTransform();
   // TODO: Use RenderTargetIntRect and TransformTo<...> here
   gfx::IntRect surfaceRect =

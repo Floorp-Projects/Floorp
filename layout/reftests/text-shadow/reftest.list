@@ -36,3 +36,5 @@ fails-if(Android||B2G) needs-focus == text-shadow-selected-2.html text-shadow-se
 # bug 721750
 needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1-ref.html
 needs-focus == text-shadow-on-selection-2.html text-shadow-on-selection-2-ref.html
+
+== overflow-decoration.html overflow-decoration-ref.html

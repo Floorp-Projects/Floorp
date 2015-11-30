@@ -54,28 +54,15 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
         'RtspOmxDecoder.cpp',
         'RtspOmxReader.cpp',
     ]
-    if CONFIG['ANDROID_VERSION'] >= '18':
-        EXPORTS += [
-            'RtspMediaCodecDecoder.h',
-            'RtspMediaCodecReader.h',
-        ]
-        SOURCES += [
-            'RtspMediaCodecDecoder.cpp',
-            'RtspMediaCodecReader.cpp',
-        ]
 
 if CONFIG['ANDROID_VERSION'] >= '18':
     EXPORTS += [
         'I420ColorConverterHelper.h',
-        'MediaCodecDecoder.h',
         'MediaCodecProxy.h',
-        'MediaCodecReader.h',
     ]
     SOURCES += [
         'I420ColorConverterHelper.cpp',
-        'MediaCodecDecoder.cpp',
         'MediaCodecProxy.cpp',
-        'MediaCodecReader.cpp',
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

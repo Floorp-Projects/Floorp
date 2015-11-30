@@ -205,51 +205,79 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
 }
 
 void
-LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion)
+LayerManagerComposite::PostProcessLayers(Layer* aLayer,
+                                         nsIntRegion& aOpaqueRegion,
+                                         LayerIntRegion& aVisibleRegion)
 {
   nsIntRegion localOpaque;
   Matrix transform2d;
-  bool isTranslation = false;
+  Maybe<nsIntPoint> integerTranslation;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
   if (aLayer->GetLocalTransform().Is2D(&transform2d)) {
     if (transform2d.IsIntegerTranslation()) {
-      isTranslation = true;
+      integerTranslation = Some(TruncatedToInt(transform2d.GetTranslation()));
       localOpaque = aOpaqueRegion;
-      localOpaque.MoveBy(-transform2d._31, -transform2d._32);
+      localOpaque.MoveBy(-*integerTranslation);
     }
   }
 
-  // Subtract any areas that we know to be opaque from our
-  // visible region.
-  LayerComposite *composite = aLayer->AsLayerComposite();
-  if (!localOpaque.IsEmpty()) {
-    nsIntRegion visible = composite->GetShadowVisibleRegion();
-    visible.Sub(visible, localOpaque);
-    composite->SetShadowVisibleRegion(visible);
+  // Save the value of localOpaque, which currently stores the region obscured
+  // by siblings (and uncles and such), before our descendants contribute to it.
+  nsIntRegion obscured = localOpaque;
+
+  // Recurse on our descendants, in front-to-back order. In this process:
+  //  - Occlusions are computed for them, and they contribute to localOpaque.
+  //  - They recalculate their visible regions, and accumulate them into
+  //    descendantsVisibleRegion.
+  LayerIntRegion descendantsVisibleRegion;
+  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
+    PostProcessLayers(child, localOpaque, descendantsVisibleRegion);
   }
 
-  // Compute occlusions for our descendants (in front-to-back order) and allow them to
-  // contribute to localOpaque.
-  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    ApplyOcclusionCulling(child, localOpaque);
+  // Recalculate our visible region.
+  LayerComposite* composite = aLayer->AsLayerComposite();
+  LayerIntRegion visible = composite->GetShadowVisibleRegion();
+
+  // If we have descendants, throw away the visible region stored on this
+  // layer, and use the region accumulated by our descendants instead.
+  if (aLayer->GetFirstChild()) {
+    visible = descendantsVisibleRegion;
   }
+
+  // Subtract any areas that we know to be opaque.
+  if (!obscured.IsEmpty()) {
+    visible.SubOut(LayerIntRegion::FromUnknownRegion(obscured));
+  }
+
+  composite->SetShadowVisibleRegion(visible);
+
+  // Transform the newly calculated visible region into our parent's space,
+  // apply our clip to it (if any), and accumulate it into |aVisibleRegion|
+  // for the caller to use.
+  ParentLayerIntRegion visibleParentSpace = TransformTo<ParentLayerPixel>(
+      aLayer->GetLocalTransform(), visible);
+  if (const Maybe<ParentLayerIntRect>& clipRect = composite->GetShadowClipRect()) {
+    visibleParentSpace.AndWith(*clipRect);
+  }
+  aVisibleRegion.OrWith(ViewAs<LayerPixel>(visibleParentSpace,
+      PixelCastJustification::MovingDownToChildren));
 
   // If we have a simple transform, then we can add our opaque area into
   // aOpaqueRegion.
-  if (isTranslation &&
+  if (integerTranslation &&
       !aLayer->HasMaskLayers() &&
       aLayer->IsOpaqueForVisibility()) {
     if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
-      localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
+      localOpaque.OrWith(composite->GetFullyRenderedRegion());
     }
-    localOpaque.MoveBy(transform2d._31, transform2d._32);
+    localOpaque.MoveBy(*integerTranslation);
     const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
     if (clip) {
-      localOpaque.And(localOpaque, clip->ToUnknownRect());
+      localOpaque.AndWith(clip->ToUnknownRect());
     }
-    aOpaqueRegion.Or(aOpaqueRegion, localOpaque);
+    aOpaqueRegion.OrWith(localOpaque);
   }
 }
 
@@ -361,7 +389,8 @@ LayerManagerComposite::UpdateAndRender()
   }
 
   nsIntRegion opaque;
-  ApplyOcclusionCulling(mRoot, opaque);
+  LayerIntRegion visible;
+  PostProcessLayers(mRoot, opaque, visible);
 
   Render(invalid);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
@@ -1020,7 +1049,8 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   mRoot->ComputeEffectiveTransforms(matrix);
   nsIntRegion opaque;
-  ApplyOcclusionCulling(mRoot, opaque);
+  LayerIntRegion visible;
+  PostProcessLayers(mRoot, opaque, visible);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
@@ -1110,7 +1140,7 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   }
 
   // See if there's any incomplete rendering
-  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion();
+  nsIntRegion incompleteRegion = aLayer->GetEffectiveVisibleRegion().ToUnknownRegion();
   incompleteRegion.Sub(incompleteRegion, paintedLayer->GetValidRegion());
 
   if (!incompleteRegion.IsEmpty()) {
@@ -1445,14 +1475,14 @@ nsIntRegion
 LayerComposite::GetFullyRenderedRegion() {
   if (TiledContentHost* tiled = GetCompositableHost() ? GetCompositableHost()->AsTiledContentHost()
                                                         : nullptr) {
-    nsIntRegion shadowVisibleRegion = GetShadowVisibleRegion();
+    nsIntRegion shadowVisibleRegion = GetShadowVisibleRegion().ToUnknownRegion();
     // Discard the region which hasn't been drawn yet when doing
     // progressive drawing. Note that if the shadow visible region
     // shrunk the tiled valig region may not have discarded this yet.
     shadowVisibleRegion.And(shadowVisibleRegion, tiled->GetValidRegion());
     return shadowVisibleRegion;
   } else {
-    return GetShadowVisibleRegion();
+    return GetShadowVisibleRegion().ToUnknownRegion();
   }
 }
 
