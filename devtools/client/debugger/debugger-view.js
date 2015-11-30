@@ -10,6 +10,10 @@ const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const STACK_FRAMES_SOURCE_URL_MAX_LENGTH = 15; // chars
 const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
 const STACK_FRAMES_SCROLL_DELAY = 100; // ms
+const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
+const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "before_start";
+const BREAKPOINT_CONDITIONAL_POPUP_OFFSET_X = 7; // px
+const BREAKPOINT_CONDITIONAL_POPUP_OFFSET_Y = -3; // px
 const BREAKPOINT_SMALL_WINDOW_WIDTH = 850; // px
 const RESULTS_PANEL_POPUP_POSITION = "before_end";
 const RESULTS_PANEL_MAX_RESULTS = 10;
@@ -27,21 +31,37 @@ const SEARCH_AUTOFILL = [SEARCH_GLOBAL_FLAG, SEARCH_FUNCTION_FLAG, SEARCH_TOKEN_
 const EDITOR_VARIABLE_HOVER_DELAY = 750; // ms
 const EDITOR_VARIABLE_POPUP_POSITION = "topcenter bottomleft";
 const TOOLBAR_ORDER_POPUP_POSITION = "topcenter bottomleft";
+const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";
 const RESIZE_REFRESH_RATE = 50; // ms
 const PROMISE_DEBUGGER_URL =
   "chrome://devtools/content/promisedebugger/promise-debugger.xhtml";
 
+const debuggerControllerEmit = DebuggerController.emit.bind(DebuggerController);
+const createStore = require("devtools/client/shared/redux/create-store")();
+const { combineEmittingReducers } = require("devtools/client/shared/redux/reducers");
+const reducers = require("./content/reducers/index");
+const store = createStore(combineEmittingReducers(reducers, debuggerControllerEmit));
+const { NAME: WAIT_UNTIL_NAME } = require("devtools/client/shared/redux/middleware/wait-service");
+
+const services = {
+  WAIT_UNTIL: WAIT_UNTIL_NAME
+};
+
 const EventListenersView = require('./content/views/event-listeners-view');
-const SourcesView = require('./content/views/sources-view');
-var actions = Object.assign(
-  {},
-  require('./content/globalActions'),
-  require('./content/actions/breakpoints'),
-  require('./content/actions/sources'),
-  require('./content/actions/event-listeners')
-);
-var queries = require('./content/queries');
-var constants = require('./content/constants');
+const actions = require('./content/actions/event-listeners');
+
+Object.defineProperties(this, {
+  "store": {
+    value: store,
+    enumerable: true,
+    writable: false
+  },
+  "services": {
+    value: services,
+    enumerable: true,
+    writable: false
+  }
+});
 
 /**
  * Object defining the debugger view components.
@@ -54,10 +74,12 @@ var DebuggerView = {
    *         A promise that is resolved when the view finishes initializing.
    */
   initialize: function() {
-    if (this._hasStartup) {
-      return;
+    if (this._startup) {
+      return this._startup;
     }
-    this._hasStartup = true;
+
+    let deferred = promise.defer();
+    this._startup = deferred.promise;
 
     this._initializePanes();
     this.Toolbar.initialize();
@@ -72,36 +94,11 @@ var DebuggerView = {
     this.EventListeners.initialize();
     this.GlobalSearch.initialize();
     this._initializeVariablesView();
-    this._initializeEditor();
-    this._editorSource = {};
+    this._initializeEditor(deferred.resolve);
 
     document.title = L10N.getStr("DebuggerWindowTitle");
 
-    this.editor.on("cursorActivity", this.Sources._onEditorCursorActivity);
-
-    this.controller = DebuggerController;
-    const getState = this.controller.getState;
-
-    onReducerEvents(this.controller, {
-      "source-text-loaded": this.renderSourceText,
-      "source-selected": this.renderSourceText,
-      "blackboxed": this.renderBlackBoxed,
-      "prettyprinted": this.renderPrettyPrinted,
-      "breakpoint-added": this.addEditorBreakpoint,
-      "breakpoint-enabled": this.addEditorBreakpoint,
-      "breakpoint-disabled": this.removeEditorBreakpoint,
-      "breakpoint-removed": this.removeEditorBreakpoint,
-      "breakpoint-moved": ({ breakpoint, prevLocation }) => {
-        const selectedSource = queries.getSelectedSource(getState());
-        const { location } = breakpoint;
-
-        if (selectedSource &&
-           selectedSource.actor === location.actor) {
-          this.editor.moveBreakpoint(prevLocation.line - 1,
-                                     location.line - 1);
-        }
-      }
-    }, this);
+    return deferred.promise;
   },
 
   /**
@@ -111,13 +108,14 @@ var DebuggerView = {
    *         A promise that is resolved when the view finishes destroying.
    */
   destroy: function() {
-    if (this._hasShutdown) {
-      return;
+    if (this._shutdown) {
+      return this._shutdown;
     }
-    this._hasShutdown = true;
 
     window.removeEventListener("resize", this._onResize, false);
-    this.editor.off("cursorActivity", this.Sources._onEditorCursorActivity);
+
+    let deferred = promise.defer();
+    this._shutdown = deferred.promise;
 
     this.Toolbar.destroy();
     this.Options.destroy();
@@ -131,11 +129,9 @@ var DebuggerView = {
     this.GlobalSearch.destroy();
     this._destroyPromiseDebugger();
     this._destroyPanes();
+    this._destroyEditor(deferred.resolve);
 
-    this.editor.destroy();
-    this.editor = null;
-
-    this.controller.dispatch(actions.removeAllBreakpoints());
+    return deferred.promise;
   },
 
   /**
@@ -154,6 +150,7 @@ var DebuggerView = {
     this.showEditor = this.showEditor.bind(this);
     this.showBlackBoxMessage = this.showBlackBoxMessage.bind(this);
     this.showProgressBar = this.showProgressBar.bind(this);
+    this.maybeShowBlackBoxMessage = this.maybeShowBlackBoxMessage.bind(this);
 
     this._onTabSelect = this._onInstrumentsPaneTabSelect.bind(this);
     this._instrumentsPane.tabpanels.addEventListener("select", this._onTabSelect);
@@ -273,7 +270,7 @@ var DebuggerView = {
    * @param function aCallback
    *        Called after the editor finishes initializing.
    */
-  _initializeEditor: function() {
+  _initializeEditor: function(aCallback) {
     dumpn("Initializing the DebuggerView editor");
 
     let extraKeys = {};
@@ -305,6 +302,7 @@ var DebuggerView = {
     this.editor.appendTo(document.getElementById("editor")).then(() => {
       this.editor.extend(DebuggerEditor);
       this._loadingText = L10N.getStr("loadingText");
+      this._onEditorLoad(aCallback);
     });
 
     this.editor.on("gutterClick", (ev, line, button) => {
@@ -313,52 +311,51 @@ var DebuggerView = {
       if (button == 2) {
         this.clickedLine = line;
       }
-      else {
-        const source = queries.getSelectedSource(this.controller.getState());
-        if (source) {
-          const location = { actor: source.actor, line: line + 1 };
-          if (this.editor.hasBreakpoint(line)) {
-            this.controller.dispatch(actions.removeBreakpoint(location));
-          } else {
-            this.controller.dispatch(actions.addBreakpoint(location));
-          }
+      // Bug 1201008: Only add the breakpoint to the editor if we're currently
+      // looking at a source. Even if no source is loaded, you can
+      // interact with line 1 of the editor.
+      else if (DebuggerView.Sources.selectedValue) {
+        if (this.editor.hasBreakpoint(line)) {
+          this.editor.removeBreakpoint(line);
+        } else {
+          this.editor.addBreakpoint(line);
         }
       }
     });
   },
 
-  updateEditorBreakpoints: function(source) {
-    const breakpoints = queries.getBreakpoints(this.controller.getState());
-    const sources = queries.getSources(this.controller.getState());
+  /**
+   * The load event handler for the source editor, also executing any necessary
+   * post-load operations.
+   *
+   * @param function aCallback
+   *        Called after the editor finishes loading.
+   */
+  _onEditorLoad: function(aCallback) {
+    dumpn("Finished loading the DebuggerView editor");
 
-    for (let bp of breakpoints) {
-      if (sources[bp.location.actor] && !bp.disabled) {
-        this.addEditorBreakpoint(bp);
-      }
-      else {
-        this.removeEditorBreakpoint(bp);
-      }
-    }
+    DebuggerController.Breakpoints.initialize().then(() => {
+      window.emit(EVENTS.EDITOR_LOADED, this.editor);
+      aCallback();
+    });
   },
 
-  addEditorBreakpoint: function(breakpoint) {
-    const { location } = breakpoint;
-    const source = queries.getSelectedSource(this.controller.getState());
+  /**
+   * Destroys the Editor instance and also executes any necessary
+   * post-unload operations.
+   *
+   * @param function aCallback
+   *        Called after the editor finishes destroying.
+   */
+  _destroyEditor: function(aCallback) {
+    dumpn("Destroying the DebuggerView editor");
 
-    if (source &&
-       source.actor === location.actor &&
-       !breakpoint.disabled) {
-      this.editor.addBreakpoint(location.line - 1);
-    }
-  },
-
-  removeEditorBreakpoint: function (breakpoint) {
-    const { location } = breakpoint;
-    const source = queries.getSelectedSource(this.controller.getState());
-
-    if (source && source.actor === location.actor) {
-      this.editor.removeBreakpoint(location.line - 1);
-    }
+    DebuggerController.Breakpoints.destroy().then(() => {
+      window.emit(EVENTS.EDITOR_UNLOADED, this.editor);
+      this.editor.destroy();
+      this.editor = null;
+      aCallback();
+    });
   },
 
   /**
@@ -380,6 +377,19 @@ var DebuggerView = {
    */
   showProgressBar: function() {
     this._editorDeck.selectedIndex = 2;
+  },
+
+  /**
+   * Show or hide the black box message vs. source editor depending on if the
+   * selected source is black boxed or not.
+   */
+  maybeShowBlackBoxMessage: function() {
+    let { source } = DebuggerView.Sources.selectedItem.attachment;
+    if (gThreadClient.source(source).isBlackBoxed) {
+      this.showBlackBoxMessage();
+    } else {
+      this.showEditor();
+    }
   },
 
   /**
@@ -429,122 +439,69 @@ var DebuggerView = {
     this.editor.setMode(Editor.modes.text);
   },
 
-  renderBlackBoxed: function(source) {
-    this._renderSourceText(
-      source,
-      queries.getSourceText(this.controller.getState(), source.actor)
-    );
-  },
-
-  renderPrettyPrinted: function(source) {
-    this._renderSourceText(
-      source,
-      queries.getSourceText(this.controller.getState(), source.actor)
-    );
-  },
-
-  renderSourceText: function(source) {
-    this._renderSourceText(
-      source,
-      queries.getSourceText(this.controller.getState(), source.actor),
-      queries.getSelectedSourceOpts(this.controller.getState())
-    );
-  },
-
-  _renderSourceText: function(source, textInfo, opts = {}) {
-    const selectedSource = queries.getSelectedSource(this.controller.getState());
-
-    if (!selectedSource || selectedSource.actor !== source.actor) {
-      return;
+  /**
+   * Sets the currently displayed source text in the editor.
+   *
+   * You should use DebuggerView.updateEditor instead. It updates the current
+   * caret and debug location based on a requested url and line.
+   *
+   * @param object aSource
+   *        The source object coming from the active thread.
+   * @param object aFlags
+   *        Additional options for setting the source. Supported options:
+   *          - force: boolean forcing all text to be reshown in the editor
+   * @return object
+   *         A promise that is resolved after the source text has been set.
+   */
+  _setEditorSource: function(aSource, aFlags={}) {
+    // Avoid setting the same source text in the editor again.
+    if (this._editorSource.actor == aSource.actor && !aFlags.force) {
+      return this._editorSource.promise;
     }
+    let transportType = gClient.localTransport ? "_LOCAL" : "_REMOTE";
+    let histogramId = "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE" + transportType + "_MS";
+    let histogram = Services.telemetry.getHistogramById(histogramId);
+    let startTime = Date.now();
 
-    if (source.isBlackBoxed) {
-      this.showBlackBoxMessage();
-      setTimeout(() => {
-        window.emit(EVENTS.SOURCE_SHOWN, source);
-      }, 0);
-      return;
-    }
-    else {
-      this.showEditor();
-    }
+    let deferred = promise.defer();
 
-    if (textInfo.loading) {
-      // TODO: bug 1228866, we need to update `_editorSource` here but
-      // still make the editor be updated when the full text comes
-      // through somehow.
-      this._setEditorText(L10N.getStr("loadingText"));
-      return;
-    }
-    else if (textInfo.error) {
-      let url = textInfo.error;
+    this._setEditorText(L10N.getStr("loadingText"));
+    this._editorSource = { actor: aSource.actor, promise: deferred.promise };
+
+    DebuggerController.SourceScripts.getText(aSource).then(([, aText, aContentType]) => {
+      // Avoid setting an unexpected source. This may happen when switching
+      // very fast between sources that haven't been fetched yet.
+      if (this._editorSource.actor != aSource.actor) {
+        return;
+      }
+
+      this._setEditorText(aText);
+      this._setEditorMode(aSource.url, aContentType, aText);
+
+      // Synchronize any other components with the currently displayed
+      // source.
+      DebuggerView.Sources.selectedValue = aSource.actor;
+      DebuggerController.Breakpoints.updateEditorBreakpoints();
+
+      histogram.add(Date.now() - startTime);
+
+      // Resolve and notify that a source file was shown.
+      window.emit(EVENTS.SOURCE_SHOWN, aSource);
+      deferred.resolve([aSource, aText, aContentType]);
+    },
+    ([, aError]) => {
+      let url = aError;
       let msg = L10N.getFormatStr("errorLoadingText2", url);
       this._setEditorText(msg);
       Cu.reportError(msg);
       dumpn(msg);
 
-      this.showEditor();
-      window.emit(EVENTS.SOURCE_ERROR_SHOWN, source);
-      return;
-    }
+      // Reject and notify that there was an error showing the source file.
+      window.emit(EVENTS.SOURCE_ERROR_SHOWN, aSource);
+      deferred.reject([aSource, aError]);
+    });
 
-    // If the line is not specified, default to the current frame's position,
-    // if available and the frame's url corresponds to the requested url.
-    if (!('line' in opts)) {
-      let cachedFrames = DebuggerController.activeThread.cachedFrames;
-      let currentDepth = DebuggerController.StackFrames.currentFrameDepth;
-      let frame = cachedFrames[currentDepth];
-      if (frame && frame.source.actor == source.actor) {
-        opts.line = frame.where.line;
-      }
-    }
-
-    if (this._editorSource.actor === source.actor &&
-        this._editorSource.prettyPrinted === source.isPrettyPrinted &&
-        this._editorSource.blackboxed === source.isBlackBoxed) {
-      this.updateEditorPosition(opts);
-      return;
-    }
-
-    this._editorSource.actor = source.actor;
-    this._editorSource.prettyPrinted = source.isPrettyPrinted;
-    this._editorSource.blackboxed = source.isBlackBoxed;
-
-    let { text, contentType } = textInfo;
-    this._setEditorText(text);
-    this._setEditorMode(source.url, contentType, text);
-    this.updateEditorBreakpoints(source);
-    setTimeout(() => {
-      window.emit(EVENTS.SOURCE_SHOWN, source);
-    }, 0);
-
-    this.updateEditorPosition(opts);
-  },
-
-  updateEditorPosition: function(opts) {
-    let line = opts.line || 0;
-
-    // Line numbers in the source editor should start from 1. If
-    // invalid or not specified, then don't do anything.
-    if (line < 1) {
-      window.emit(EVENTS.EDITOR_LOCATION_SET);
-      return;
-    }
-
-    if (opts.charOffset) {
-      line += this.editor.getPosition(opts.charOffset).line;
-    }
-    if (opts.lineOffset) {
-      line += opts.lineOffset;
-    }
-    if (opts.moveCursor) {
-      let location = { line: line - 1, ch: opts.columnOffset || 0 };
-      this.editor.setCursor(location);
-    }
-    if (!opts.noDebug) {
-      this.editor.setDebugLocation(line - 1);
-    }
-    window.emit(EVENTS.EDITOR_LOCATION_SET);
+    return deferred.promise;
   },
 
   /**
@@ -568,27 +525,58 @@ var DebuggerView = {
    * @return object
    *         A promise that is resolved after the source text has been set.
    */
-  setEditorLocation: function(aActor, aLine, aFlags = {}) {
+  setEditorLocation: function(aActor, aLine = 0, aFlags = {}) {
     // Avoid trying to set a source for a url that isn't known yet.
     if (!this.Sources.containsValue(aActor)) {
-      throw new Error("Unknown source for the specified URL.");
+      return promise.reject(new Error("Unknown source for the specified URL."));
+    }
+
+    // If the line is not specified, default to the current frame's position,
+    // if available and the frame's url corresponds to the requested url.
+    if (!aLine) {
+      let cachedFrames = DebuggerController.activeThread.cachedFrames;
+      let currentDepth = DebuggerController.StackFrames.currentFrameDepth;
+      let frame = cachedFrames[currentDepth];
+      if (frame && frame.source.actor == aActor) {
+        aLine = frame.where.line;
+      }
     }
 
     let sourceItem = this.Sources.getItemByValue(aActor);
-    let source = sourceItem.attachment.source;
+    let sourceForm = sourceItem.attachment.source;
 
-    // Make sure the requested source client is shown in the editor,
-    // then update the source editor's caret position and debug
-    // location.
-    this.controller.dispatch(actions.selectSource(source, {
-      line: aLine,
-      charOffset: aFlags.charOffset,
-      lineOffset: aFlags.lineOffset,
-      columnOffset: aFlags.columnOffset,
-      moveCursor: !aFlags.noCaret,
-      noDebug: aFlags.noDebug,
-      forceUpdate: aFlags.force
-    }));
+    this._editorLoc = { actor: sourceForm.actor };
+
+    // Make sure the requested source client is shown in the editor, then
+    // update the source editor's caret position and debug location.
+    return this._setEditorSource(sourceForm, aFlags).then(([,, aContentType]) => {
+      if (this._editorLoc.actor !== sourceForm.actor) {
+        return;
+      }
+
+      // Record the contentType learned from fetching
+      sourceForm.contentType = aContentType;
+      // Line numbers in the source editor should start from 1. If invalid
+      // or not specified, then don't do anything.
+      if (aLine < 1) {
+        window.emit(EVENTS.EDITOR_LOCATION_SET);
+        return;
+      }
+      if (aFlags.charOffset) {
+        aLine += this.editor.getPosition(aFlags.charOffset).line;
+      }
+      if (aFlags.lineOffset) {
+        aLine += aFlags.lineOffset;
+      }
+      if (!aFlags.noCaret) {
+        let location = { line: aLine -1, ch: aFlags.columnOffset || 0 };
+        this.editor.setCursor(location, aFlags.align);
+      }
+      if (!aFlags.noDebug) {
+        this.editor.setDebugLocation(aLine - 1);
+      }
+      window.emit(EVENTS.EDITOR_LOCATION_SET);
+    }).then(null, console.error);
   },
 
   /**
@@ -658,7 +646,7 @@ var DebuggerView = {
    */
   _onInstrumentsPaneTabSelect: function() {
     if (this._instrumentsPane.selectedTab.id == "events-tab") {
-      this.controller.dispatch(actions.fetchEventListeners());
+      store.dispatch(actions.fetchEventListeners());
     }
   },
 
@@ -783,6 +771,8 @@ var DebuggerView = {
     this.Sources.emptyText = L10N.getStr("loadingSourcesText");
   },
 
+  _startup: null,
+  _shutdown: null,
   Toolbar: null,
   Options: null,
   Filtering: null,
@@ -794,6 +784,7 @@ var DebuggerView = {
   WatchExpressions: null,
   EventListeners: null,
   editor: null,
+  _editorSource: {},
   _loadingText: "",
   _body: null,
   _editorDeck: null,
@@ -957,5 +948,4 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
   top: 0
 });
 
-DebuggerView.EventListeners = new EventListenersView(DebuggerController);
-DebuggerView.Sources = new SourcesView(DebuggerController, DebuggerView);
+DebuggerView.EventListeners = new EventListenersView(store, DebuggerController);

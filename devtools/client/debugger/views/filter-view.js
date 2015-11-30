@@ -653,8 +653,7 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
     }
 
     // There's at least one item displayed in this container. Don't select it
-    // automatically if not forced (by tests) or in tandem with an
-    // operator.
+    // automatically if not forced (by tests) or in tandem with an operator.
     if (this._autoSelectFirstItem || this.DebuggerView.Filtering.searchOperator) {
       this.selectedIndex = 0;
     }
@@ -683,9 +682,8 @@ FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype,
    */
   _onSelect: function({ detail: locationItem }) {
     if (locationItem) {
-      let source = queries.getSourceByURL(DebuggerController.getState(),
-                                          locationItem.attachment.url);
-      this.DebuggerView.setEditorLocation(source.actor, undefined, {
+      let actor = this.DebuggerView.Sources.getActorForLocation({ url: locationItem.attachment.url });
+      this.DebuggerView.setEditorLocation(actor, undefined, {
         noCaret: true,
         noDebug: true
       });
@@ -747,7 +745,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
     setNamedTimeout("function-search", delay, () => {
       // Start fetching as many sources as possible, then perform the search.
       let actors = this.DebuggerView.Sources.values;
-      let sourcesFetched = DebuggerController.dispatch(actions.getTextForSources(actors));
+      let sourcesFetched = this.SourceScripts.getTextForSources(actors);
       sourcesFetched.then(aSources => this._doSearch(aToken, aSources));
     });
   },
@@ -897,7 +895,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
   _onSelect: function({ detail: functionItem }) {
     if (functionItem) {
       let sourceUrl = functionItem.attachment.sourceUrl;
-      let actor = queries.getSourceByURL(DebuggerController.getState(), sourceUrl).actor;
+      let actor = this.DebuggerView.Sources.getActorForLocation({ url: sourceUrl });
       let scriptOffset = functionItem.attachment.scriptOffset;
       let actualLocation = functionItem.attachment.actualLocation;
 
