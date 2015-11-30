@@ -35,6 +35,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozbuild/test/backend/__init__.py',
     'mozbuild/mozbuild/test/backend/common.py',
     'mozbuild/mozbuild/test/backend/test_android_eclipse.py',
+    'mozbuild/mozbuild/test/backend/test_build.py',
     'mozbuild/mozbuild/test/backend/test_configenvironment.py',
     'mozbuild/mozbuild/test/backend/test_recursivemake.py',
     'mozbuild/mozbuild/test/backend/test_visualstudio.py',
