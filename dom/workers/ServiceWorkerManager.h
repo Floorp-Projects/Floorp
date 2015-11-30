@@ -444,7 +444,8 @@ public:
   void
   GetAllClients(nsIPrincipal* aPrincipal,
                 const nsCString& aScope,
-                nsTArray<ServiceWorkerClientInfo>& aControlledDocuments);
+                bool aIncludeUncontrolled,
+                nsTArray<ServiceWorkerClientInfo>& aDocuments);
 
   void
   MaybeClaimClient(nsIDocument* aDocument,
