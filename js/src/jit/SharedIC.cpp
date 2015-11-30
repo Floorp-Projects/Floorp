@@ -4236,7 +4236,7 @@ LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout, Register obj, 
 {
     switch (layout) {
       case Layout_TypedArray:
-        masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), result);
+        masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), result);
         break;
       case Layout_OutlineTypedObject:
         masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);

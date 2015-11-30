@@ -980,7 +980,7 @@ UnboxedArrayObject::convertToNativeWithGroup(ExclusiveContext* cx, JSObject* obj
     aobj->setLastPropertyMakeNative(cx, shape);
 
     // Make sure there is at least one element, so that this array does not
-    // use emptyObjectElements.
+    // use emptyObjectElements / emptyObjectElementsShared.
     if (!aobj->ensureElements(cx, Max<size_t>(initlen, 1)))
         return false;
 

@@ -37,7 +37,6 @@ using namespace js::jit;
 using mozilla::tl::FloorLog2;
 
 typedef Rooted<TypedArrayObject*> RootedTypedArrayObject;
-typedef Rooted<SharedTypedArrayObject*> RootedSharedTypedArrayObject;
 
 void
 CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)
@@ -1208,8 +1207,7 @@ GenerateUnboxedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAt
 // caches the stub code must distinguish between the two cases.
 static void
 GenerateTypedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
-                         const TypedArrayLayout& layout, Register object, TypedOrValueRegister output,
-                         Label* failures)
+                         Register object, TypedOrValueRegister output, Label* failures)
 {
     Register tmpReg;
     if (output.hasValue()) {
@@ -1222,14 +1220,14 @@ GenerateTypedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
 
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(object, tmpReg);
-    masm.branchPtr(Assembler::Below, tmpReg, ImmPtr(layout.addressOfFirstClass()),
+    masm.branchPtr(Assembler::Below, tmpReg, ImmPtr(&TypedArrayObject::classes[0]),
                    failures);
     masm.branchPtr(Assembler::AboveOrEqual, tmpReg,
-                   ImmPtr(layout.addressOfMaxClass()),
+                   ImmPtr(&TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]),
                    failures);
 
     // Load length.
-    masm.loadTypedOrValue(Address(object, TypedArrayLayout::lengthOffset()), output);
+    masm.loadTypedOrValue(Address(object, TypedArrayObject::lengthOffset()), output);
 
     /* Success. */
     attacher.jumpRejoin(masm);
@@ -1624,7 +1622,7 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript
     if (!JSID_IS_ATOM(id, cx->names().length))
         return true;
 
-    if (hasAnyTypedArrayLengthStub(obj))
+    if (hasTypedArrayLengthStub(obj))
         return true;
 
     if (output().type() != MIRType_Value && output().type() != MIRType_Int32) {
@@ -1644,8 +1642,7 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript
     Label failures;
     emitIdGuard(masm, id, &failures);
 
-    GenerateTypedArrayLength(cx, masm, attacher, AnyTypedArrayLayout(obj), object(), output(),
-                             &failures);
+    GenerateTypedArrayLength(cx, masm, attacher, object(), output(), &failures);
 
     setHasTypedArrayLengthStub(obj);
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array length",
@@ -2287,7 +2284,6 @@ GetPropertyIC::reset(ReprotectCode reprotect)
 {
     IonCache::reset(reprotect);
     hasTypedArrayLengthStub_ = false;
-    hasSharedTypedArrayLengthStub_ = false;
     hasMappedArgumentsLengthStub_ = false;
     hasUnmappedArgumentsLengthStub_ = false;
     hasMappedArgumentsElementStub_ = false;
@@ -4093,7 +4089,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
 
     if (IsAnyTypedArray(array)) {
         // Guard on the initialized length.
-        Address length(object, TypedArrayLayout::lengthOffset());
+        Address length(object, TypedArrayObject::lengthOffset());
         masm.branch32(Assembler::BelowOrEqual, length, indexReg, &failures);
 
         // Save the object register on the stack in case of failure.
@@ -4101,7 +4097,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
         masm.push(object);
 
         // Load elements vector.
-        masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), elementReg);
+        masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elementReg);
 
         // Load the value. We use an invalid register because the destination
         // register is necessary a non double register.
@@ -4542,13 +4538,13 @@ GenerateSetTypedArrayElement(JSContext* cx, MacroAssembler& masm, IonCache::Stub
     }
 
     // Guard on the length.
-    Address length(object, TypedArrayLayout::lengthOffset());
+    Address length(object, TypedArrayObject::lengthOffset());
     masm.unboxInt32(length, temp);
     masm.branch32(Assembler::BelowOrEqual, temp, indexReg, &done);
 
     // Load the elements vector.
     Register elements = temp;
-    masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), elements);
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elements);
 
     // Set the value.
     Scalar::Type arrayType = AnyTypedArrayType(tarr);
