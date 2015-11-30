@@ -33,14 +33,6 @@ assertEq(f(0x100),0);
         setJitCompilerOption("signals.enable", 0);
 
         var buf = new ArrayBuffer(BUF_MIN);
-
-        if (isCachingEnabled()) {
-            // Cloned modules should fail on linking if the initial module has
-            // been compiled with signals but signals are deactivated.
-            var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
-            assertAsmLinkFail(code, this, null, new ArrayBuffer(BUF_MIN));
-        }
-
         var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
         var f = asmLink(code, this, null, buf);
         assertEq(f(0),0);

@@ -47,7 +47,7 @@ class FunctionCompiler
     TempAllocator&           alloc_;
     MIRGraph&                graph_;
     const CompileInfo&       info_;
-    MIRGenerator*            mirGen_;
+    MIRGenerator&            mirGen_;
 
     MBasicBlock*             curBlock_;
 
@@ -63,15 +63,14 @@ class FunctionCompiler
     FunctionCompileResults&  compileResults_;
 
   public:
-    FunctionCompiler(CompileArgs args, const FuncIR& func, const CompileInfo& info,
-                     TempAllocator* alloc, MIRGraph* graph, MIRGenerator* mirGen,
+    FunctionCompiler(CompileArgs args, const FuncIR& func, MIRGenerator& mirGen,
                      FunctionCompileResults& compileResults)
       : args_(args),
         func_(func),
         pc_(0),
-        alloc_(*alloc),
-        graph_(*graph),
-        info_(info),
+        alloc_(mirGen.alloc()),
+        graph_(mirGen.graph()),
+        info_(mirGen.info()),
         mirGen_(mirGen),
         curBlock_(nullptr),
         compileResults_(compileResults)
@@ -103,7 +102,7 @@ class FunctionCompiler
             MAsmJSParameter* ins = MAsmJSParameter::New(alloc(), *i, i.mirType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(i.index()), ins);
-            if (!mirGen_->ensureBallast())
+            if (!mirGen_.ensureBallast())
                 return false;
             localTypes_.append(args[i.index()]);
         }
@@ -133,7 +132,7 @@ class FunctionCompiler
 
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(firstVarSlot + i), ins);
-            if (!mirGen_->ensureBallast())
+            if (!mirGen_.ensureBallast())
                 return false;
             localTypes_.append(v.type());
         }
@@ -154,9 +153,9 @@ class FunctionCompiler
 
     /************************* Read-only interface (after local scope setup) */
 
-    MIRGenerator &      mirGen() const     { MOZ_ASSERT(mirGen_); return *mirGen_; }
-    MIRGraph &          mirGraph() const   { return graph_; }
-    const CompileInfo & info() const       { return info_; }
+    MIRGenerator&       mirGen() const     { return mirGen_; }
+    MIRGraph&           mirGraph() const   { return graph_; }
+    const CompileInfo&  info() const       { return info_; }
 
     MDefinition* getLocalDef(unsigned slot)
     {
@@ -693,7 +692,7 @@ class FunctionCompiler
             newStackBytes = Max(call->prevMaxStackBytes_,
                                 Max(call->maxChildStackBytes_, parentStackBytes));
         }
-        mirGen_->setAsmJSMaxStackArgBytes(newStackBytes);
+        mirGen_.setAsmJSMaxStackArgBytes(newStackBytes);
     }
 
   private:
@@ -1207,7 +1206,7 @@ class FunctionCompiler
                 *createdJoinBlock = true;
             }
             MOZ_ASSERT(curBlock_->begin() == curBlock_->end());
-            if (!mirGen_->ensureBallast())
+            if (!mirGen_.ensureBallast())
                 return false;
         }
         preds->clear();
@@ -1226,7 +1225,7 @@ class FunctionCompiler
                     return false;
                 map->remove(p);
             }
-            if (!mirGen_->ensureBallast())
+            if (!mirGen_.ensureBallast())
                 return false;
         }
         return true;
@@ -2923,24 +2922,26 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
 }
 
 bool
-wasm::CompileFunction(LifoAlloc& lifo, CompileArgs args, const FuncIR& func,
-                      FunctionCompileResults* results)
+wasm::CompileFunction(CompileTask* task)
 {
     int64_t before = PRMJ_Now();
 
-    TempAllocator alloc(&lifo);
-    JitContext jitContext(args.runtime, &alloc);
+    CompileArgs args = task->args();
+    const FuncIR& func = task->func();
+    FunctionCompileResults& results = task->results();
+
+    JitContext jitContext(CompileRuntime::get(args.runtime), &results.alloc());
 
     const JitCompileOptions options;
-    MIRGraph graph(&alloc);
+    MIRGraph graph(&results.alloc());
     CompileInfo compileInfo(func.numLocals());
-    MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
+    MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      js_IonOptimizations.get(Optimization_AsmJS),
                      args.usesSignalHandlersForOOB);
 
     // Build MIR graph
     {
-        FunctionCompiler f(args, func, compileInfo, &alloc, &graph, &mir, *results);
+        FunctionCompiler f(args, func, mir, results);
         if (!f.init())
             return false;
 
@@ -2965,13 +2966,11 @@ wasm::CompileFunction(LifoAlloc& lifo, CompileArgs args, const FuncIR& func,
         if (!lir)
             return false;
 
-        results->masm().moveResolver().setAllocator(alloc);
-
-        CodeGenerator codegen(&mir, lir, &results->masm());
-        if (!codegen.generateAsmJS(&results->offsets()))
+        CodeGenerator codegen(&mir, lir, &results.masm());
+        if (!codegen.generateAsmJS(&results.offsets()))
             return false;
     }
 
-    results->setCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
+    results.setCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
     return true;
 }

@@ -151,6 +151,7 @@ class Assembler : public AssemblerMIPSShared
                                         PatchedImmPtr expectedValue);
 
     static void PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm);
+    static uint64_t ExtractInstructionImmediate(uint8_t* code);
 
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 

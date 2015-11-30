@@ -81,9 +81,6 @@ js::SetFakeCPUCount(size_t count)
 bool
 js::StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::CompileTask* task)
 {
-    // Threads already initialized by the wasm compiler.
-    MOZ_ASSERT(task->results);
-
     AutoLockHelperThreadState lock;
 
     // Don't append this task if another failed.
@@ -501,8 +498,6 @@ GlobalHelperThreadState::ensureInitialized()
         }
     }
 
-    resetWasmFailureState();
-
     return true;
 }
 
@@ -511,12 +506,11 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threadCount(0),
    threads(nullptr),
    wasmCompilationInProgress(false),
+   numWasmFailedJobs(0),
    helperLock(nullptr),
    consumerWakeup(nullptr),
    producerWakeup(nullptr),
-   pauseWakeup(nullptr),
-   numWasmFailedJobs(0),
-   wasmFailedFunction(nullptr)
+   pauseWakeup(nullptr)
 {
     cpuCount = GetCPUCount();
     threadCount = ThreadCountForCPUCount(cpuCount);
@@ -1205,23 +1199,19 @@ HelperThread::handleWasmWorkload()
     wasm::CompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock;
-        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->runtime);
-        success = wasm::CompileFunction(task->lifo, task->args, *task->func, task->results.ptr());
+        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->args().runtime);
+        success = wasm::CompileFunction(task);
     }
 
     // On success, try to move work to the finished list.
     if (success)
         success = HelperThreadState().wasmFinishedList().append(task);
 
-    // On failure, signal parent for harvesting in CancelOutstandingJobs().
-    if (!success) {
-        HelperThreadState().noteWasmFailure(task->func);
-        HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
-        currentTask.reset();
-        return;
-    }
+    // On failure, note the failure for harvesting by the parent.
+    if (!success)
+        HelperThreadState().noteWasmFailure();
 
-    // Notify the main thread in case it's blocked waiting for a LifoAlloc.
+    // Notify the main thread in case it's waiting.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
     currentTask.reset();
 }

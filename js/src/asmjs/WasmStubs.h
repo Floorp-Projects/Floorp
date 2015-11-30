@@ -16,27 +16,23 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_compile_args_h
-#define asmjs_wasm_compile_args_h
+#ifndef asmjs_wasm_stubs_h
+#define asmjs_wasm_stubs_h
 
-struct JSRuntime;
+#include "asmjs/Wasm.h"
 
 namespace js {
+
+class AsmJSModule;
+namespace jit { class MacroAssembler; }
+
 namespace wasm {
 
-struct CompileArgs
-{
-    JSRuntime* runtime;
-    bool usesSignalHandlersForOOB;
+typedef Vector<uint32_t> FuncOffsetVector;
 
-    CompileArgs(JSRuntime* runtime,
-                bool usesSignalHandlersForOOB)
-      : runtime(runtime),
-        usesSignalHandlersForOOB(usesSignalHandlersForOOB)
-    {}
-};
+bool
+GenerateStubs(jit::MacroAssembler& masm, AsmJSModule& module, const FuncOffsetVector& funcOffsets);
 
 } // namespace wasm
 } // namespace js
-
-#endif // asmjs_wasm_compile_args_h
+#endif // asmjs_wasm_stubs_h
