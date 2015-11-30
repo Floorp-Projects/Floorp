@@ -18,16 +18,15 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -35,7 +34,6 @@ import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -226,7 +224,7 @@ public class HistoryPanel extends HomeFragment {
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
 
-        if (!RestrictedProfiles.isAllowed(getActivity(), Restriction.DISALLOW_CLEAR_HISTORY)) {
+        if (!Restrictions.isAllowed(getActivity(), Restrictable.CLEAR_HISTORY)) {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
     }
@@ -293,7 +291,7 @@ public class HistoryPanel extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
-            if (RestrictedProfiles.isAllowed(getActivity(), Restriction.DISALLOW_CLEAR_HISTORY)) {
+            if (Restrictions.isAllowed(getActivity(), Restrictable.CLEAR_HISTORY)) {
                 mClearHistoryButton.setVisibility(View.VISIBLE);
             }
             return;
@@ -324,7 +322,7 @@ public class HistoryPanel extends HomeFragment {
                 emptyHint.setVisibility(View.VISIBLE);
             }
 
-            if (!RestrictedProfiles.isAllowed(getActivity(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+            if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
                 emptyHint.setVisibility(View.GONE);
             }
 

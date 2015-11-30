@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html id="outer-html">
+  <head>
+    <meta charset="utf-8">
+    <title>Loop UI Components Showcase</title>
+    <link rel="stylesheet" type="text/css" href="../content/shared/css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../content/shared/css/common.css">
+    <link rel="stylesheet" type="text/css" href="../content/shared/css/conversation.css">
+    <link class="fx-embedded-panel" rel="stylesheet" type="text/css"
+          href="../content/panels/css/panel.css">
+    <link class="standalone" rel="stylesheet" type="text/css"
+          href="../content/css/webapp.css">
+    <link rel="stylesheet" type="text/css" href="ui-showcase.css">
+ </head>
+  <body>
+    <script>
+      var uncaughtError;
+      window.addEventListener("error", function(error) {
+        uncaughtError = error;
+      });
+    </script>
+
+    <div id="main"></div>
+    <div id="results"></div>
+    <script src="../content/shared/vendor/react-0.13.3.js"></script>
+    <script src="../content/shared/vendor/classnames-2.2.0.js"></script>
+    <script src="../content/shared/vendor/lodash-3.9.3.js"></script>
+    <script src="../content/shared/vendor/backbone-1.2.1.js"></script>
+    <script src="../test/shared/loop_mocha_utils.js"></script>
+    <script src="../content/shared/js/loopapi-client.js"></script>
+    <script src="fake-mozLoop.js"></script>
+    <script src="fake-l10n.js"></script>
+    <script src="../content/shared/js/actions.js"></script>
+    <script src="../content/shared/js/utils.js"></script>
+    <script src="../content/shared/js/models.js"></script>
+    <script src="../content/shared/js/mixins.js"></script>
+    <script src="../content/shared/js/validate.js"></script>
+    <script src="../content/shared/js/dispatcher.js"></script>
+    <script src="../content/shared/js/store.js"></script>
+    <script src="../content/shared/js/activeRoomStore.js"></script>
+    <script src="../content/shared/js/views.js"></script>
+    <script src="../content/shared/js/textChatStore.js"></script>
+    <script src="../content/panels/js/feedbackViews.js"></script>
+    <script src="../content/shared/js/textChatView.js"></script>
+    <script src="../content/shared/js/urlRegExps.js"></script>
+    <script src="../content/shared/js/linkifiedTextView.js"></script>
+    <script src="../content/panels/js/roomStore.js"></script>
+    <script src="../content/panels/js/roomViews.js"></script>
+    <script src="../standalone/content/js/webapp.js"></script>
+    <script src="../standalone/content/js/standaloneRoomViews.js"></script>
+    <script src="../content/panels/js/panel.js"></script>
+    <script src="../content/panels/js/conversation.js"></script>
+    <script src="react-frame-component.js"></script>
+    <script src="ui-showcase.js"></script>
+  </body>
+</html>

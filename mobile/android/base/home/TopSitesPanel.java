@@ -18,7 +18,7 @@ import java.util.Map;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -34,7 +34,7 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
 import org.mozilla.gecko.home.TopSitesGridView.OnEditPinnedSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
-import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tiles.TilesRecorder;
 import org.mozilla.gecko.tiles.Tile;
 import org.mozilla.gecko.util.StringUtils;
@@ -343,7 +343,7 @@ public class TopSitesPanel extends HomeFragment {
             // can handle this.
             super.onCreateContextMenu(menu, view, menuInfo);
 
-            if (!RestrictedProfiles.isAllowed(view.getContext(), Restriction.DISALLOW_CLEAR_HISTORY)) {
+            if (!Restrictions.isAllowed(view.getContext(), Restrictable.CLEAR_HISTORY)) {
                 menu.findItem(R.id.home_remove).setVisible(false);
             }
 
@@ -359,7 +359,7 @@ public class TopSitesPanel extends HomeFragment {
         // Hide unused menu items.
         menu.findItem(R.id.home_edit_bookmark).setVisible(false);
 
-        menu.findItem(R.id.home_remove).setVisible(RestrictedProfiles.isAllowed(context, Restriction.DISALLOW_CLEAR_HISTORY));
+        menu.findItem(R.id.home_remove).setVisible(Restrictions.isAllowed(context, Restrictable.CLEAR_HISTORY));
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
@@ -381,7 +381,7 @@ public class TopSitesPanel extends HomeFragment {
             menu.findItem(R.id.home_share).setVisible(false);
         }
 
-        if (!RestrictedProfiles.isAllowed(context, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+        if (!Restrictions.isAllowed(context, Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
 
