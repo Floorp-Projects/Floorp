@@ -3001,12 +3001,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // test above handles relevant changes in the
   // NS_STYLE_WILL_CHANGE_TRANSFORM bit, which in turn handles frame 
   // reconstruction for changes in the containing block of 
-  // fixed-positioned elements.  Other than that, all changes to 
-  // 'will-change' can be handled by a repaint.
+  // fixed-positioned elements.
   uint8_t willChangeBitsChanged =
     mWillChangeBitField ^ aOther.mWillChangeBitField;
-  if (willChangeBitsChanged) {
+  if (willChangeBitsChanged & (NS_STYLE_WILL_CHANGE_STACKING_CONTEXT |
+                               NS_STYLE_WILL_CHANGE_SCROLL |
+                               NS_STYLE_WILL_CHANGE_OPACITY)) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
+  if (willChangeBitsChanged & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
+    NS_UpdateHint(hint, nsChangeHint_UpdateContainingBlock);
   }
 
   // Note:  Our current behavior for handling changes to the
