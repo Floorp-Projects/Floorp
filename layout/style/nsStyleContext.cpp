@@ -389,6 +389,29 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   return result.forget();
 }
 
+/* static */ bool
+nsStyleContext::ListContainsStyleContextThatUsesGrandancestorStyle(const nsStyleContext* aHead)
+{
+  if (aHead) {
+    const nsStyleContext* child = aHead;
+    do {
+      if (child->UsesGrandancestorStyle()) {
+        return true;
+      }
+      child = child->mNextSibling;
+    } while (child != aHead);
+  }
+
+  return false;
+}
+
+bool
+nsStyleContext::HasChildThatUsesGrandancestorStyle() const
+{
+  return ListContainsStyleContextThatUsesGrandancestorStyle(mEmptyChild) ||
+         ListContainsStyleContextThatUsesGrandancestorStyle(mChild);
+}
+
 const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 {
   const void* cachedData = GetCachedStyleData(aSID);
@@ -1544,8 +1567,8 @@ nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
   if (IsStyleIfVisited()) {
     flags.AppendLiteral("IS_STYLE_IF_VISITED ");
   }
-  if (HasChildThatUsesGrandancestorStyle()) {
-    flags.AppendLiteral("CHILD_USES_GRANDANCESTOR_STYLE ");
+  if (UsesGrandancestorStyle()) {
+    flags.AppendLiteral("USES_GRANDANCESTOR_STYLE ");
   }
   if (IsShared()) {
     flags.AppendLiteral("IS_SHARED ");
