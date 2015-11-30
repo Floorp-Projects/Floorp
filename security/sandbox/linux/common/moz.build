@@ -13,7 +13,8 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/security/sandbox/chromium'
+    '/security/sandbox/chromium',
+    '/security/sandbox/linux', # SandboxLogging.h
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
