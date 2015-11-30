@@ -79,6 +79,7 @@ $(TOPOBJDIR)/_virtualenv/%: ;
 # if there is no other rule.
 $(TOPOBJDIR)/dist/%:
 	rm -f $@
+	mkdir -p $(@D)
 	cp $< $@
 
 # Refresh backend
