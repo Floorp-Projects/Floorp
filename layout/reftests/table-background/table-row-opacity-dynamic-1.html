@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<title>Test for bug 1224253</title>
+<style>
+
+body { background: white; color: black }
+
+table {
+  padding: 0;
+  border-spacing: 0;
+  border: none;
+  width: 15em;
+}
+
+tr {
+  background: rgba(0, 0, 255, 0.8);
+}
+
+td {
+  border: none;
+}
+
+</style>
+
+
+<table>
+  <tr><td>cell</td></tr>
+</table>
+
+<script>
+
+var tr = document.getElementsByTagName("tr")[0];
+
+document.addEventListener("MozReftestInvalidate", step1, false);
+
+function step1(event) {
+  requestAnimationFrame(step2);
+}
+
+function step2(now) {
+  tr.style.opacity = "0.8";
+  setTimeout(step3, 0);
+}
+
+function step3() {
+  tr.style.opacity = "0.8";
+  setTimeout(step4, 0);
+}
+
+function step4() {
+  tr.style.opacity = "0.8";
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+</script>
