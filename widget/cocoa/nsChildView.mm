@@ -93,6 +93,8 @@
 #include "VibrancyManager.h"
 #include "nsNativeThemeCocoa.h"
 #include "nsIDOMWindowUtils.h"
+#include "Units.h"
+#include "UnitTransforms.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -191,7 +193,7 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (id<mozAccessible>)accessible;
 #endif
 
-- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
+- (LayoutDeviceIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
 - (APZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
@@ -1528,7 +1530,7 @@ LayoutDeviceIntPoint nsChildView::GetClientOffset()
 
   NSPoint origin = [mView convertPoint:NSMakePoint(0, 0) toView:nil];
   origin.y = [[mView window] frame].size.height - origin.y;
-  return LayoutDeviceIntPoint::FromUnknownPoint(CocoaPointsToDevPixels(origin));
+  return CocoaPointsToDevPixels(origin);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
@@ -1553,7 +1555,7 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   FlipCocoaScreenCoordinate(origin);
 
   // convert to device pixels
-  return LayoutDeviceIntPoint::FromUnknownPoint(CocoaPointsToDevPixels(origin));
+  return CocoaPointsToDevPixels(origin);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
@@ -4568,8 +4570,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   EventMessage msg = aEnter ? eMouseEnterIntoWidget : eMouseExitFromWidget;
   WidgetMouseEvent event(true, msg, mGeckoChild, WidgetMouseEvent::eReal);
-  event.refPoint = LayoutDeviceIntPoint::FromUnknownPoint(
-    mGeckoChild->CocoaPointsToDevPixels(localEventLocation));
+  event.refPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
 
   event.exit = aType;
 
@@ -4901,8 +4902,9 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
 
-  ScreenPoint position = ScreenPoint::FromUnknownPoint(
-    [self convertWindowCoordinates:locationInWindow]);
+  ScreenPoint position = ViewAs<ScreenPixel>(
+    [self convertWindowCoordinates:locationInWindow],
+    PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
   bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(theEvent) &&
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
@@ -4976,7 +4978,9 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   CGPoint loc = CGEventGetLocation(cgEvent);
   loc.y = nsCocoaUtils::FlippedScreenY(loc.y);
   NSPoint locationInWindow = [[self window] convertScreenToBase:NSPointFromCGPoint(loc)];
-  ScreenIntPoint location = ScreenIntPoint::FromUnknownPoint([self convertWindowCoordinates:locationInWindow]);
+  ScreenIntPoint location = ViewAs<ScreenPixel>(
+    [self convertWindowCoordinates:locationInWindow],
+    PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
   static NSTimeInterval sStartTime = [NSDate timeIntervalSinceReferenceDate];
   static TimeStamp sStartTimeStamp = TimeStamp::Now();
@@ -4993,8 +4997,9 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     NSPoint locationInWindowMoved = NSMakePoint(
       locationInWindow.x + pixelDeltaX,
       locationInWindow.y - pixelDeltaY);
-    ScreenIntPoint locationMoved = ScreenIntPoint::FromUnknownPoint(
-      [self convertWindowCoordinates:locationInWindowMoved]);
+    ScreenIntPoint locationMoved = ViewAs<ScreenPixel>(
+      [self convertWindowCoordinates:locationInWindowMoved],
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
     ScreenPoint delta = ScreenPoint(locationMoved - location);
     ScrollableLayerGuid guid;
 
@@ -5140,8 +5145,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   // convert point to view coordinate system
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
 
-  outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUnknownPoint(
-    [self convertWindowCoordinates:locationInWindow]);
+  outGeckoEvent->refPoint = [self convertWindowCoordinates:locationInWindow];
 
   WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
   mouseEvent->buttons = 0;
@@ -5591,10 +5595,10 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   return NSDragOperationNone;
 }
 
-- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint
+- (LayoutDeviceIntPoint)convertWindowCoordinates:(NSPoint)aPoint
 {
   if (!mGeckoChild) {
-    return nsIntPoint(0, 0);
+    return LayoutDeviceIntPoint(0, 0);
   }
 
   NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
@@ -5673,8 +5677,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   // Convert event from gecko global coords to gecko view coords.
   NSPoint draggingLoc = [aSender draggingLocation];
 
-  geckoEvent.refPoint = LayoutDeviceIntPoint::FromUnknownPoint(
-    [self convertWindowCoordinates:draggingLoc]);
+  geckoEvent.refPoint = [self convertWindowCoordinates:draggingLoc];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -5780,7 +5783,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
     NSPoint pnt = [NSEvent mouseLocation];
     FlipCocoaScreenCoordinate(pnt);
 
-    nsIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(pnt);
+    LayoutDeviceIntPoint devPoint = mGeckoChild->CocoaPointsToDevPixels(pnt);
     dragService->DragMoved(devPoint.x, devPoint.y);
   }
 }

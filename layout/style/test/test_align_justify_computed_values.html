@@ -1,0 +1,603 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test align/justify-items/self/content computed values</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body style="position:relative">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<style>
+#flexContainer, #flexContainerGrid { display: flex; position:relative; }
+#gridContainer, #gridContainerFlex { display: grid; position:relative; }
+#display b, #absChild { position:absolute; }
+</style>
+<div id="display">
+  <div id="myDiv"></div>
+  <div id="flexContainer"><a></a><b></b></div>
+  <div id="gridContainer"><a></a><b></b></div>
+  <div id="flexContainerGrid"><a style="diplay:grid"></a><b style="diplay:grid"></b></div>
+  <div id="gridContainerFlex"><a style="diplay:flex"></a><b style="diplay:flex"></b></div>
+</div>
+<div id="absChild"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/*
+ * Utility function for getting computed style of "align-self":
+ */
+function getComputedAlignSelf(elem) {
+  return window.getComputedStyle(elem, "").alignSelf;
+}
+function getComputedAlignItems(elem) {
+  return window.getComputedStyle(elem, "").alignItems;
+}
+function getComputedAlignContent(elem) {
+  return window.getComputedStyle(elem, "").alignContent;
+}
+function getComputedJustifySelf(elem) {
+  return window.getComputedStyle(elem, "").justifySelf;
+}
+function getComputedJustifyItems(elem) {
+  return window.getComputedStyle(elem, "").justifyItems;
+}
+function getComputedJustifyContent(elem) {
+  return window.getComputedStyle(elem, "").justifyContent;
+}
+
+/**
+ * Test behavior of 'align-self:auto' (Bug 696253)
+ * ===============================================
+ *
+ * The value "align-self: auto" is special.  It's the initial value for
+ * "align-self", and it's supposed to compute to the parent's "align-items" value.
+ *
+ * However, to allow its style-struct to be shared by default, we internally
+ * make it compute to a special "auto" enumerated value, and then we resolve that
+ * to the correct value by examining the parent's style struct whenever we actually
+ * need to use it.
+ *
+ * This test makes sure that optimization isn't detectable to content.
+ *
+ * One special case of this is inheritance -- e.g.:
+ *
+ *  <html style="align-items: baseline">
+ *    <body style="align-self: auto; align-items: center">
+ *      <div style="align-self: inherit">
+ *
+ * In that example, the child div's "inherit" should get the _computed_ value
+ * of "align-self" on the body.  That, in turn, is "auto", so it should compute to
+ * its parent's "align-items" value, which is "baseline".  So we need to end up 
+ * with a computed "align-self" value of "baseline" on the child.
+ *
+ * (NOTE: if we instead allowed the child div to directly inherit the value "auto"
+ * from its parent, then we'd get different & incorrect behavior. The div would
+ * resolve that inherited "auto" value to its own parent's "align-items" value,
+ * which is "center" -- not "baseline".)
+ *
+ * This mochitest tests that situation and a few other similar tricky situations.
+ */
+
+/*
+ * Tests that are useful regardless of whether we have a parent node:
+ */
+function testGeneralNode(elem) {
+  // Test initial computed style
+  // (Initial value should be 'auto', which should compute to 'start')
+  is(getComputedAlignSelf(elem), "start",
+     "initial computed value of 'align-self' should be 'start', " +
+     "if we haven't explicitly set any style on the parent");
+
+  // Test value after setting align-self explicitly to "auto"
+  elem.style.alignSelf = "auto";
+  is(getComputedAlignSelf(elem), "start",
+     "computed value of 'align-self: auto' should be 'start', " +
+     "if we haven't explicitly set any style on the parent");
+  elem.style.alignSelf = ""; // clean up
+
+  // Test value after setting align-self explicitly to "inherit"
+  elem.style.alignSelf = "inherit";
+  is(getComputedAlignSelf(elem), "start",
+     "computed value of 'align-self: inherit' should be 'start', " +
+     "if we haven't explicitly set any style on the parent");
+  elem.style.alignSelf = ""; // clean up
+}
+
+/*
+ * Tests that depend on us having a parent node:
+ */
+function testNodeThatHasParent(elem) {
+  // Sanity-check that we actually do have a styleable parent:
+  ok(elem.parentNode && elem.parentNode.style,
+     "bug in test -- expecting caller to pass us a node with a parent");
+
+  // Test initial computed style when "align-items" has been set on our parent.
+  // (elem's initial "align-self" value should be "auto", which should compute
+  // to its parent's "align-items" value, which in this case is "center".)
+  elem.parentNode.style.alignItems = "center";
+  is(getComputedAlignSelf(elem), "center",
+     "initial computed value of 'align-self' should match parent's " +
+     "specified 'align-items' value");
+
+  // ...and now test computed style after setting "align-self" explicitly to
+  // "auto" (with parent "align-items" still at "center")
+  elem.style.alignSelf = "auto";
+  is(getComputedAlignSelf(elem), "center",
+     "computed value of 'align-self: auto' should match parent's " +
+     "specified 'align-items' value");
+
+  elem.style.alignSelf = ""; // clean up
+  elem.parentNode.style.alignItems = ""; // clean up
+
+  // Finally: test computed style after setting "align-self" to "inherit"
+  // and leaving parent at its initial value (which should be "auto", which
+  // should compute to "start")
+  elem.style.alignSelf = "inherit";
+  is(getComputedAlignSelf(elem), "start",
+     "computed value of 'align-self: inherit' should take parent's " +
+     "computed 'align-self' value (which should be 'start', " +
+     "if we haven't explicitly set any other style");
+  elem.style.alignSelf = ""; // clean up
+ }
+
+/*
+ * Tests that depend on us having a grandparent node:
+ */
+function testNodeThatHasGrandparent(elem) {
+  // Sanity-check that we actually do have a styleable grandparent:
+  ok(elem.parentNode && elem.parentNode.parentNode &&
+     elem.parentNode.parentNode.style,
+     "bug in test -- should be getting a node with a grandparent");
+
+  // Test computed "align-self" after we set "align-self" to "inherit" on our elem
+  // and to "auto" on its parent, and "align-items" to "baseline" on its
+  // grandparent. The parent's "auto" value should resolve to "baseline", and
+  // that's what our elem should inherit.
+
+  elem.style.alignSelf = "inherit";
+  elem.parentNode.style.alignSelf = "auto";
+  elem.parentNode.parentNode.style.alignItems = "baseline";
+
+  is(getComputedAlignSelf(elem), "baseline",
+     "computed value of 'align-self:inherit' on node when parent has " +
+     "'align-self:auto' and grandparent has 'align-items:baseline'")
+
+  // clean up:
+  elem.style.alignSelf = "";
+  elem.parentNode.style.alignSelf = "";
+  elem.parentNode.parentNode.style.alignItems = "";
+
+  // Test computed "align-self" after we set it to "auto" on our node, set
+  // "align-items" to "inherit" on its parent, and "align-items" to "baseline"
+  // on its grandparent. The parent's "inherit" should compute to "baseline",
+  // and our elem's "auto" value should resolve to that.
+  elem.style.alignSelf = "auto";
+  elem.parentNode.style.alignItems = "inherit";
+  elem.parentNode.parentNode.style.alignItems = "baseline";
+  is(getComputedAlignSelf(elem), "baseline",
+     "computed value of 'align-self:auto on node when parent has " +
+     "'align-items:inherit' and grandparent has 'align-items:baseline'")
+
+  // clean up:
+  elem.style.alignSelf = "";
+  elem.parentNode.style.alignItems = "";
+  elem.parentNode.parentNode.style.alignItems = "";
+}
+
+/*
+ * Main test function
+ */
+function main() {
+  // Test the root node
+  // ==================
+  // (It's special because it has no parent style context.)
+
+  var rootNode = document.documentElement;
+
+  // Sanity-check that we actually have the root node, as far as CSS is concerned.
+  // (Note: rootNode.parentNode is a HTMLDocument object -- not an element that
+  // we inherit style from.)
+  ok(!rootNode.parentNode.style,
+     "expecting root node to have no node to inherit style from");
+
+  testGeneralNode(rootNode);
+
+  // Test the body node
+  // ==================
+  // (It's special because it has no grandparent style context.)
+
+  var body = document.getElementsByTagName("body")[0];
+  is(body.parentNode, document.documentElement,
+     "expecting body element's parent to be the root node");
+
+  testGeneralNode(body);
+  testNodeThatHasParent(body);
+
+  // Test the <div id="display"> node
+  // ================================
+  // (It has both a parent and a grandparent style context.)
+
+  var displayNode = document.getElementById("display");
+  is(displayNode.parentNode.parentNode, document.documentElement,
+     "expecting 'display' node's grandparent to be the root node");
+
+  testGeneralNode(displayNode);
+  testNodeThatHasParent(displayNode);
+  testNodeThatHasGrandparent(displayNode);
+
+  // 
+  // align-items/self tests:
+  //
+  //// Block tests
+  var elem = document.body;
+  var child = document.getElementById("display");
+  var abs = document.getElementById("absChild");
+  is(getComputedAlignItems(elem), 'start', "default align-items value for block container");
+  is(getComputedAlignSelf(child), 'start', "default align-self value for block child");
+  is(getComputedAlignSelf(abs), 'auto', "default align-self value for block container abs.pos. child");
+  elem.style.alignItems = "end";
+  is(getComputedAlignSelf(child), 'end', "auto value copies align-items of parent");
+  is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for block container abs.pos. child");
+  elem.style.alignItems = "left";
+  is(getComputedAlignItems(elem), 'left', "align-items:left computes to itself on a block");
+  is(getComputedAlignSelf(child), 'left', "align-self:left computes to left on block child");
+  is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for block container abs.pos. child");
+  elem.style.alignItems = "right";
+  is(getComputedAlignSelf(child), 'right', "align-self:right computes to right on block child");
+  is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for block container abs.pos. child");
+  elem.style.alignItems = "right safe";
+  is(getComputedAlignSelf(child), 'right safe', "align-items:'right safe' computes to 'align-self:right safe' on block child");
+  elem.style.alignItems = "";
+  child.style.alignSelf = "left";
+  is(getComputedAlignSelf(child), 'left', "align-self:left computes to left on block child");
+  child.style.alignSelf = "right";
+  is(getComputedAlignSelf(child), 'right', "align-self:right computes to right on block child");
+  child.style.alignSelf = "";
+  abs.style.alignSelf = "right";
+  is(getComputedAlignSelf(abs), 'right', "align-self:right computes to right on block container abs.pos. child");
+
+  //// Flexbox tests
+  function testFlexAlignItemsSelf(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedAlignItems(elem), 'stretch', "default align-items value for flex container");
+    is(getComputedAlignSelf(item), 'stretch', "default align-self value for flex item");
+    is(getComputedAlignSelf(abs), 'auto', "default align-self value for flex container abs.pos. child");
+    elem.style.alignItems = "flex-end";
+    is(getComputedAlignSelf(item), 'flex-end', "auto value copies align-items of parent");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for flex container abs.pos. child");
+    elem.style.alignItems = "left";
+    is(getComputedAlignItems(elem), 'left', "align-items:left computes to itself for flex container");
+    // XXX TODO: add left/right tests (bug 1221565)
+    elem.style.alignItems = "";
+  }
+  testFlexAlignItemsSelf(document.getElementById("flexContainer"));
+  testFlexAlignItemsSelf(document.getElementById("flexContainerGrid"));
+
+  //// Grid tests
+  function testGridAlignItemsSelf(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedAlignItems(elem), 'stretch', "default align-items value for grid container");
+    is(getComputedAlignSelf(item), 'stretch', "default align-self value for grid item");
+    is(getComputedAlignSelf(abs), 'auto', "default align-self value for grid container abs.pos. child");
+    elem.style.alignItems = "end";
+    is(getComputedAlignSelf(item), 'end', "auto value copies align-items of parent");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for grid container abs.pos. child");
+    elem.style.alignItems = "left";
+    is(getComputedAlignItems(elem), 'left', "align-items:left computes to itself for grid container");
+    is(getComputedAlignSelf(item), 'left', "align-self:left computes to left on grid item");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for grid container abs.pos. child");
+    elem.style.alignItems = "right";
+    is(getComputedAlignSelf(item), 'right', "align-self:right computes to right on grid item");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto isn't affected by parent align-items value for grid container abs.pos. child");
+    elem.style.alignItems = "right safe";
+    is(getComputedAlignSelf(item), 'right safe', "align-items:'right safe' computes to 'align-self:right safe' on grid item");
+    item.style.alignSelf = "left";
+    is(getComputedAlignSelf(item), 'left', "align-self:left computes to left on grid item");
+    item.style.alignSelf = "right";
+    is(getComputedAlignSelf(item), 'right', "align-self:right computes to right on grid item");
+    item.style.alignSelf = "right safe";
+    is(getComputedAlignSelf(item), 'right safe', "align-self:'right safe' computes to 'right safe' on grid item");
+    item.style.alignSelf = "";
+    abs.style.alignSelf = "right";
+    is(getComputedAlignSelf(abs), 'right', "align-self:right computes to right on grid container abs.pos. child");
+    abs.style.alignSelf = "";
+    elem.style.alignItems = "";
+    item.style.alignSelf = "";
+  }
+  testGridAlignItemsSelf(document.getElementById("gridContainer"));
+  testGridAlignItemsSelf(document.getElementById("gridContainerFlex"));
+
+  //
+  // justify-items/self tests:
+  //
+  //// Block tests
+  var elem = document.body;
+  var child = document.getElementById("display");
+  var abs = document.getElementById("absChild");
+  is(getComputedJustifyItems(elem), 'start', "default justify-items value for block container");
+  is(getComputedJustifySelf(child), 'start', "default justify-self value for block child");
+  is(getComputedJustifySelf(abs), 'auto', "default justify-self value for block container abs.pos. child");
+  elem.style.justifyItems = "end";
+  is(getComputedJustifySelf(child), 'end', "auto value copies justify-items of parent");
+  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for block container abs.pos. child");
+  elem.style.justifyItems = "left";
+  is(getComputedJustifyItems(elem), 'left', "justify-items:left computes to itself on a block");
+  is(getComputedJustifySelf(child), 'left', "justify-self:left computes to left on block child");
+  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for block container abs.pos. child");
+  elem.style.justifyItems = "right";
+  is(getComputedJustifySelf(child), 'right', "justify-self:right computes to right on block child");
+  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for block container abs.pos. child");
+  elem.style.justifyItems = "right safe";
+  is(getComputedJustifySelf(child), 'right safe', "justify-items:'right safe' computes to 'justify-self:right safe' on block child");
+  elem.style.justifyItems = "";
+  child.style.justifySelf = "left";
+  is(getComputedJustifySelf(child), 'left', "justify-self:left computes to left on block child");
+  child.style.justifySelf = "right";
+  is(getComputedJustifySelf(child), 'right', "justify-self:right computes to right on block child");
+  child.style.justifySelf = "";
+  abs.style.justifySelf = "right";
+  is(getComputedJustifySelf(abs), 'right', "justify-self:right computes to right on block container abs.pos. child");
+
+  //// Flexbox tests
+  function testFlexJustifyItemsSelf(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedJustifyItems(elem), 'stretch', "default justify-items value for flex container");
+    is(getComputedJustifySelf(item), 'stretch', "default justify-self value for flex item");
+    is(getComputedJustifySelf(abs), 'auto', "default justify-self value for flex container abs.pos. child");
+    elem.style.justifyItems = "flex-end";
+    is(getComputedJustifySelf(item), 'flex-end', "auto value copies justify-items of parent");
+    is(getComputedJustifySelf(abs), 'auto', "default justify-self value for flex container abs.pos. child");
+    elem.style.justifyItems = "left";
+    is(getComputedJustifyItems(elem), 'left', "justify-items:left computes to itself for flex container");
+    elem.style.justifyItems = "right safe";
+    is(getComputedJustifySelf(item), 'right safe', "justify-items:'right safe' computes to 'justify-self:right safe' on flex item");
+    // XXX TODO: add left/right tests (bug 1221565)
+    elem.style.justifyItems = "";
+  }
+  testFlexJustifyItemsSelf(document.getElementById("flexContainer"));
+  testFlexJustifyItemsSelf(document.getElementById("flexContainerGrid"));
+
+  //// Grid tests
+  function testGridJustifyItemsSelf(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedJustifyItems(elem), 'stretch', "default justify-items value for grid container");
+    is(getComputedJustifySelf(item), 'stretch', "default justify-self value for grid item");
+    is(getComputedJustifySelf(abs), 'auto', "default justify-self value for grid container abs.pos. child");
+    elem.style.justifyItems = "end";
+    is(getComputedJustifySelf(item), 'end', "auto value copies justify-items of parent");
+    is(getComputedJustifySelf(abs), 'auto', "default justify-self value for grid container abs.pos. child");
+    elem.style.justifyItems = "left";
+    is(getComputedJustifyItems(elem), 'left', "justify-items:left computes to itself for grid container");
+    is(getComputedJustifySelf(item), 'left', "justify-self:left computes to left on grid item");
+    is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for grid container abs.pos. child");
+    elem.style.justifyItems = "legacy left";
+    is(getComputedJustifySelf(item), 'left', "justify-self inherits without the legacy keyword on grid item");
+    is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for grid container abs.pos. child");
+    elem.style.justifyItems = "right";
+    is(getComputedJustifySelf(item), 'right', "justify-self:right computes to right on grid item");
+    is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for grid container abs.pos. child");
+    elem.style.justifyItems = "right safe";
+    is(getComputedJustifySelf(item), 'right safe', "justify-items:'right safe' computes to 'justify-self:right safe' on grid item");
+    elem.style.justifyItems = "legacy right";
+    is(getComputedJustifySelf(item), 'right', "justify-self inherits without the legacy keyword on grid item");
+    is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for grid container abs.pos. child");
+    elem.style.justifyItems = "legacy center";
+    item.style.justifyItems = "inherit";
+    abs.style.justifyItems = "inherit";
+    is(getComputedJustifySelf(item), 'center', "justify-self inherits without the legacy keyword on grid item");
+    is(getComputedJustifySelf(abs), 'auto', "justify-self:auto isn't affected by parent justify-items value for grid container abs.pos. child");
+    is(getComputedJustifyItems(elem), 'legacy center', "justify-items computes to itself grid container");
+    is(getComputedJustifyItems(item), 'legacy center', "justify-items inherits including legacy keyword to grid item");
+    is(getComputedJustifyItems(abs), 'legacy center', "justify-items inherits including legacy keyword to grid container abs.pos. child");
+    elem.style.justifyItems = "";
+    item.style.justifySelf = "left";
+    is(getComputedJustifySelf(item), 'left', "justify-self:left computes to left on grid item");
+    item.style.justifySelf = "right";
+    is(getComputedJustifySelf(item), 'right', "justify-self:right computes to right on grid item");
+    item.style.justifySelf = "right safe";
+    is(getComputedJustifySelf(item), 'right safe', "justify-self:'right safe' computes to 'right safe' on grid item");
+    item.style.justifySelf = "";
+    abs.style.justifySelf = "right";
+    is(getComputedJustifySelf(abs), 'right', "justify-self:right computes to right on grid container abs.pos. child");
+    abs.style.justifySelf = "";
+    elem.style.justifyItems = "";
+    item.style.justifySelf = "";
+  }
+  testGridJustifyItemsSelf(document.getElementById("gridContainer"));
+  testGridJustifyItemsSelf(document.getElementById("gridContainerFlex"));
+
+  // 
+  // align-content tests:
+  //
+  //// Block tests
+  var elem = document.body;
+  var child = document.getElementById("display");
+  var abs = document.getElementById("absChild");
+  is(getComputedAlignContent(elem), 'auto', "default align-content value for block container");
+  is(getComputedAlignContent(child), 'auto', "default align-content value for block child");
+  is(getComputedAlignContent(abs), 'auto', "default align-content value for block container abs.pos. child");
+  elem.style.alignContent = "end";
+  is(getComputedAlignContent(child), 'auto', "align-content:auto isn't affected by parent align-content value for in-flow child");
+  is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for block container abs.pos. child");
+  elem.style.alignContent = "left";
+  is(getComputedAlignContent(elem), 'left', "align-content:left computes to left on block child");
+  is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for block container abs.pos. child");
+  elem.style.alignContent = "right";
+  is(getComputedAlignContent(elem), 'right', "align-content:right computes to right on block child");
+  is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for block container abs.pos. child");
+  elem.style.alignContent = "right safe";
+  is(getComputedAlignContent(elem), 'right safe', "align-content:'right safe' computes to 'align-content:right safe'");
+  elem.style.alignContent = "";
+  child.style.alignContent = "left";
+  is(getComputedAlignContent(child), 'left', "align-content:left computes to left on block child");
+  child.style.alignContent = "right";
+  is(getComputedAlignContent(child), 'right', "align-content:right computes to right on block child");
+  child.style.alignContent = "left safe";
+  is(getComputedAlignContent(child), 'left safe', "align-content:left computes to 'left safe' on block child");
+  child.style.alignContent = "";
+  abs.style.alignContent = "right";
+  is(getComputedAlignContent(abs), 'right', "align-content:right computes to right on block container abs.pos. child");
+  abs.style.alignContent = "";
+
+  //// Flexbox tests
+  function testFlexAlignContent(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedAlignContent(elem), 'auto', "default align-content value for flex container");
+    is(getComputedAlignContent(item), 'auto', "default align-content value for flex item");
+    is(getComputedAlignContent(abs), 'auto', "default align-content value for flex container abs.pos. child");
+    elem.style.alignContent = "flex-end safe";
+    is(getComputedAlignContent(elem), 'flex-end safe', "align-content:'flex-end safe' computes to itself for flex container");
+    is(getComputedAlignContent(item), 'auto', "align-content:auto isn't affected by parent align-content value for flex item");
+    is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for flex container abs.pos. child");
+    // XXX TODO: add left/right tests (bug 1221565)
+    elem.style.alignContent = "";
+  }
+  testFlexAlignContent(document.getElementById("flexContainer"));
+  testFlexAlignContent(document.getElementById("flexContainerGrid"));
+
+  //// Grid tests
+  function testGridAlignContent(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedAlignContent(elem), 'auto', "default align-content value for grid container");
+    is(getComputedAlignContent(item), 'auto', "default align-content value for grid item");
+    is(getComputedAlignContent(abs), 'auto', "default align-content value for grid container abs.pos. child");
+    elem.style.alignContent = "end safe";
+    is(getComputedAlignContent(elem), 'end safe', "align-content:'end safe' computes to itself on grid container");
+    is(getComputedAlignContent(item), 'auto', "align-content:auto isn't affected by parent align-content value for grid item");
+    is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for grid container abs.pos. child");
+    elem.style.alignContent = "left";
+    is(getComputedAlignContent(elem), 'left', "align-content:left computes to left on grid container");
+    is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for grid container abs.pos. child");
+    elem.style.alignContent = "right";
+    is(getComputedAlignContent(elem), 'right', "align-content:right computes to right on grid container");
+    is(getComputedAlignContent(abs), 'auto', "align-content:auto isn't affected by parent align-content value for grid container abs.pos. child");
+    elem.style.alignContent = "right safe";
+    item.style.alignContent = "inherit";
+    abs.style.alignContent = "inherit";
+    is(getComputedAlignContent(elem), 'right safe', "align-content:'right safe' computes to 'align-content:right safe' on grid container");
+    is(getComputedAlignContent(item), 'right safe', "align-content:'right safe' inherits as 'align-content:right safe' to grid item");
+    is(getComputedAlignContent(abs), 'right safe', "align-content:'right safe' inherits as 'align-content:right safe' to grid container abs.pos. child");
+    item.style.alignContent = "left";
+    is(getComputedAlignContent(item), 'left', "align-content:left computes to left on grid item");
+    item.style.alignContent = "right";
+    is(getComputedAlignContent(item), 'right', "align-content:right computes to right on grid item");
+    item.style.alignContent = "right safe";
+    is(getComputedAlignContent(item), 'right safe', "align-content:'right safe' computes to 'right safe' on grid item");
+    item.style.alignContent = "";
+    abs.style.alignContent = "right";
+    is(getComputedAlignContent(abs), 'right', "align-content:right computes to right on grid container abs.pos. child");
+    abs.style.alignContent = "";
+    elem.style.alignContent = "";
+    item.style.alignContent = "";
+  }
+  testGridAlignContent(document.getElementById("gridContainer"));
+  testGridAlignContent(document.getElementById("gridContainerFlex"));
+
+
+  // 
+  // justify-content tests:
+  //
+  //// Block tests
+  var elem = document.body;
+  var child = document.getElementById("display");
+  var abs = document.getElementById("absChild");
+  is(getComputedJustifyContent(elem), 'auto', "default justify-content value for block container");
+  is(getComputedJustifyContent(child), 'auto', "default justify-content value for block child");
+  is(getComputedJustifyContent(abs), 'auto', "default justify-content value for block container abs.pos. child");
+  elem.style.justifyContent = "end";
+  is(getComputedJustifyContent(child), 'auto', "justify-content:auto isn't affected by parent justify-content value for in-flow child");
+  is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for block container abs.pos. child");
+  elem.style.justifyContent = "left";
+  is(getComputedJustifyContent(elem), 'left', "justify-content:left computes to left on block child");
+  is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for block container abs.pos. child");
+  elem.style.justifyContent = "right";
+  is(getComputedJustifyContent(elem), 'right', "justify-content:right computes to right on block child");
+  is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for block container abs.pos. child");
+  elem.style.justifyContent = "right safe";
+  is(getComputedJustifyContent(elem), 'right safe', "justify-content:'right safe' computes to 'justify-content:right safe'");
+  elem.style.justifyContent = "";
+  child.style.justifyContent = "left";
+  is(getComputedJustifyContent(child), 'left', "justify-content:left computes to left on block child");
+  child.style.justifyContent = "right";
+  is(getComputedJustifyContent(child), 'right', "justify-content:right computes to right on block child");
+  child.style.justifyContent = "left safe";
+  is(getComputedJustifyContent(child), 'left safe', "justify-content:left computes to 'left safe' on block child");
+  child.style.justifyContent = "";
+  abs.style.justifyContent = "right";
+  is(getComputedJustifyContent(abs), 'right', "justify-content:right computes to right on block container abs.pos. child");
+  abs.style.justifyContent = "";
+
+  //// Flexbox tests
+  function testFlexJustifyContent(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedJustifyContent(elem), 'auto', "default justify-content value for flex container");
+    is(getComputedJustifyContent(item), 'auto', "default justify-content value for flex item");
+    is(getComputedJustifyContent(abs), 'auto', "default justify-content value for flex container abs.pos. child");
+    elem.style.justifyContent = "flex-end safe";
+    is(getComputedJustifyContent(elem), 'flex-end safe', "justify-content:'flex-end safe' computes to itself for flex container");
+    is(getComputedJustifyContent(item), 'auto', "justify-content:auto isn't affected by parent justify-content value for flex item");
+    is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for flex container abs.pos. child");
+    // XXX TODO: add left/right tests (bug 1221565)
+    elem.style.justifyContent = "";
+  }
+  testFlexJustifyContent(document.getElementById("flexContainer"));
+  testFlexJustifyContent(document.getElementById("flexContainerGrid"));
+
+  //// Grid tests
+  function testGridJustifyContent(elem) {
+    var item = elem.firstChild;
+    var abs = elem.children[1];
+    is(getComputedJustifyContent(elem), 'auto', "default justify-content value for grid container");
+    is(getComputedJustifyContent(item), 'auto', "default justify-content value for grid item");
+    is(getComputedJustifyContent(abs), 'auto', "default justify-content value for grid container abs.pos. child");
+    elem.style.justifyContent = "end safe";
+    is(getComputedJustifyContent(elem), 'end safe', "justify-content:'end safe' computes to itself on grid container");
+    is(getComputedJustifyContent(item), 'auto', "justify-content:auto isn't affected by parent justify-content value for grid item");
+    is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for grid container abs.pos. child");
+    elem.style.justifyContent = "left";
+    is(getComputedJustifyContent(elem), 'left', "justify-content:left computes to left on grid container");
+    is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for grid container abs.pos. child");
+    elem.style.justifyContent = "right";
+    is(getComputedJustifyContent(elem), 'right', "justify-content:right computes to right on grid container");
+    is(getComputedJustifyContent(abs), 'auto', "justify-content:auto isn't affected by parent justify-content value for grid container abs.pos. child");
+    elem.style.justifyContent = "right safe";
+    item.style.justifyContent = "inherit";
+    abs.style.justifyContent = "inherit";
+    is(getComputedJustifyContent(elem), 'right safe', "justify-content:'right safe' computes to 'justify-content:right safe' on grid container");
+    is(getComputedJustifyContent(item), 'right safe', "justify-content:'right safe' inherits as 'justify-content:right safe' to grid item");
+    is(getComputedJustifyContent(abs), 'right safe', "justify-content:'right safe' inherits as 'justify-content:right safe' to grid container abs.pos. child");
+    item.style.justifyContent = "left";
+    is(getComputedJustifyContent(item), 'left', "justify-content:left computes to left on grid item");
+    item.style.justifyContent = "right";
+    is(getComputedJustifyContent(item), 'right', "justify-content:right computes to right on grid item");
+    item.style.justifyContent = "right safe";
+    is(getComputedJustifyContent(item), 'right safe', "justify-content:'right safe' computes to 'right safe' on grid item");
+    item.style.justifyContent = "";
+    abs.style.justifyContent = "right";
+    is(getComputedJustifyContent(abs), 'right', "justify-content:right computes to right on grid container abs.pos. child");
+    abs.style.justifyContent = "";
+    elem.style.justifyContent = "";
+    item.style.justifyContent = "";
+  }
+  testGridJustifyContent(document.getElementById("gridContainer"));
+  testGridJustifyContent(document.getElementById("gridContainerFlex"));
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

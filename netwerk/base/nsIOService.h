@@ -125,7 +125,6 @@ private:
     // notify content processes of offline status
     // 'status' must be a nsIAppOfflineInfo mode constant.
     void NotifyAppOfflineStatus(uint32_t appId, int32_t status);
-    static PLDHashOperator EnumerateWifiAppsChangingState(const unsigned int &, int32_t, void*);
 
     nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                      nsIURI* aProxyURI,
