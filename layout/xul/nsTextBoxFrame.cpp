@@ -492,12 +492,12 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     // (We don't apply this rule to the access-key underline because we only
     // find out where that is as a side effect of drawing the text, in the
     // general case -- see below.)
-    if (decorations & (NS_FONT_DECORATION_OVERLINE |
-                       NS_FONT_DECORATION_UNDERLINE)) {
+    if (decorations & (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |
+                       NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
       Float sizePixel = presContext->AppUnitsToGfxUnits(size);
-      if ((decorations & NS_FONT_DECORATION_UNDERLINE) &&
+      if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) &&
           underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(this, *drawTarget,
                                             ToRect(dirtyRect), underColor,
@@ -506,7 +506,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                           NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle,
                           vertical);
       }
-      if ((decorations & NS_FONT_DECORATION_OVERLINE) &&
+      if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) &&
           overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(this, *drawTarget,
                                             ToRect(dirtyRect), overColor,
@@ -586,7 +586,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     // Strikeout is drawn on top of the text, per
     // http://www.w3.org/TR/CSS21/zindex.html point 7.2.1.4.1.1.
-    if ((decorations & NS_FONT_DECORATION_LINE_THROUGH) &&
+    if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) &&
         strikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
       fontMet->GetStrikeout(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
