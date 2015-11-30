@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(9eabaac6-cc7c-4ca1-9430-65f2daaa578f)]
+[scriptable, uuid(23b3f883-ce09-4350-8f67-1d9858d619e1)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -83,21 +83,6 @@ interface nsIHttpChannelInternal : nsISupports
      * even if normally they wouldn't be.
      */
     const unsigned long THIRD_PARTY_FORCE_ALLOW = 1 << 0;
-
-    /**
-     * This flag is set in the parent if the child has already computed that
-     * it originates from a 3rd party frame (i.e. a 3rd party iframe).
-     */
-    const unsigned long THIRD_PARTY_PARENT_IS_THIRD_PARTY = 1 << 1;
-
-    /**
-     * This flag is set in the parent if the child has already computed that
-     * it is not a 3rd party request due to iframe parentage. However, if
-     * someone calls mozIThirdPartyUtil::IsThirdPartyChannel with a 3rd-party
-     * URI, the result would be true if the URI is third-party from this
-     * channel's URI.
-     */
-    const unsigned long THIRD_PARTY_PARENT_IS_SAME_PARTY = 1 << 2;
 
     /**
      * When set, these flags modify the algorithm used to decide whether to

@@ -38,6 +38,7 @@ struct LoadInfoArgs
   uint64_t         parentOuterWindowID;
   bool             enforceSecurity;
   bool             initialSecurityCheckDone;
+  bool             isInThirdPartyContext;
   NeckoOriginAttributes originAttributes;
   PrincipalInfo[]  redirectChainIncludingInternalRedirects;
   PrincipalInfo[]  redirectChain;

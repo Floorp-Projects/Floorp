@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1022869</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <iframe src="about:blank"></iframe>
+  <script type="text/javascript; version=1.8">
+
+  var f = document.getElementsByTagName("iframe")[0];
+
+  SimpleTest.waitForExplicitFinish();
+
+  /** Test for Bug 1022869 **/
+  function startTest() {
+    // Initialize our cookie.
+    document.cookie = "a=b";
+
+    // Set a cookie in example.org so we can test that we can't read it in
+    // third-party cases.
+    f.contentWindow.location =
+        "http://example.org/tests/dom/tests/mochitest/bugs/file_prime_cookie.html";
+    waitForLoad().then(function() {
+        // Cookies are set up, disallow third-party cookies and start the test.
+        SpecialPowers.pushPrefEnv({ set: [[ 'network.cookie.cookieBehavior', 1 ]] },
+                                  () => { spawn_task(continueTest); });
+    }).catch((e) => { ok(false, `Got exception: ${e}`) });
+  }
+
+  function waitForLoad() {
+    return new Promise((resolve) => {
+      window.addEventListener("message", function received(msg) {
+        window.removeEventListener("message", received);
+        info(`got message ${msg.data}`);
+        resolve(msg.data);
+      });
+    });
+  }
+
+  function* continueTest() {
+    var sameOrigin = "http://mochi.test:8888";
+    var thirdParty = "http://example.org";
+    var page = "tests/dom/tests/mochitest/bugs/file_cookieOutputter.html"
+    var redirect = "tests/dom/tests/mochitest/bugs/file_redirector.sjs";
+
+    function createRedirect(firstOrigin, secondOrigin) {
+      return `${firstOrigin}/${redirect}?${secondOrigin}/${page}`;
+    }
+
+    info("starting test");
+
+    // Same origin to same origin.
+    f.contentWindow.location = createRedirect(sameOrigin, sameOrigin);
+    let cookie = yield waitForLoad();
+    is(cookie, "a=b", "got the cookie");
+
+    // Cross origin to cross origin.
+    f.contentWindow.location = createRedirect(thirdParty, thirdParty);
+    cookie = yield waitForLoad();
+    is(cookie, "", "no third-party cookies");
+
+    // Same origin to cross origin.
+    f.contentWindow.location = createRedirect(sameOrigin, thirdParty);
+    cookie = yield waitForLoad();
+    is(cookie, "", "no third-party cookies");
+
+    // Cross origin to same origin
+    f.contentWindow.location = createRedirect(thirdParty, sameOrigin);
+    cookie = yield waitForLoad();
+    is(cookie, "a=b", "got the cookie");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="startTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022869">Mozilla Bug 1022869</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
