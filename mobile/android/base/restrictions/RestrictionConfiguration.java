@@ -6,13 +6,13 @@
 package org.mozilla.gecko.restrictions;
 
 /**
- * Interface for classes that RestrictedProfiles will delegate to for making decisions.
+ * Interface for classes that Restrictions will delegate to for making decisions.
  */
 public interface RestrictionConfiguration {
     /**
      * Is the user allowed to perform this action?
      */
-    boolean isAllowed(Restriction restriction);
+    boolean isAllowed(Restrictable restrictable);
 
     /**
      * Is the user allowed to load the given URL?

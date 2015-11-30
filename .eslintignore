@@ -1,0 +1,157 @@
+# Always ignore node_modules.
+**/node_modules/**/*.*
+
+# Exclude expected objdirs.
+obj*/**
+
+# We ignore all these directories by default, until we get them enabled.
+# If you are enabling a directory, please add directory specific exclusions
+# below.
+accessible/**
+addon-sdk/**
+b2g/**
+build/**
+caps/**
+chrome/**
+config/**
+db/**
+docshell/**
+dom/**
+editor/**
+embedding/**
+extensions/**
+gfx/**
+gradle/**
+hal/**
+image/**
+intl/**
+ipc/**
+js/**
+layout/**
+media/**
+memory/**
+mfbt/**
+modules/**
+mozglue/**
+netwerk/**
+nsprpub/**
+other-licenses/**
+parser/**
+probes/**
+python/**
+rdf/**
+security/**
+services/**
+startupcache/**
+storage/**
+testing/**
+toolkit/**
+tools/**
+uriloader/**
+view/**
+webapprt/**
+widget/**
+xpcom/**
+xpfe/**
+xulrunner/**
+
+# browser/ exclusions
+browser/app/**
+browser/base/**
+browser/branding/**
+browser/components/**
+browser/config/**
+browser/docs/**
+browser/experiments/**
+browser/extensions/pdfjs/**
+browser/extensions/shumway/**
+browser/fuel/**
+browser/installer/**
+browser/locales/**
+browser/modules/**
+browser/themes/**
+
+# Loop specific exclusions
+
+# This file currently uses a non-standard (and not on a standards track)
+# if statement within catch.
+browser/extensions/loop/content/modules/MozLoopWorker.js
+# This file currently uses es7 features eslint issue:
+# https://github.com/eslint/espree/issues/125
+browser/extensions/loop/content/modules/MozLoopAPI.jsm
+# Need to fix the configuration for this.
+browser/extensions/loop/bootstrap.js
+# Need to drop the preprocessing (bug 1212428)
+browser/extensions/loop/content/preferences/prefs.js
+# Libs we don't need to check
+browser/extensions/loop/content/panels/vendor
+browser/extensions/loop/content/shared/vendor
+browser/extensions/loop/standalone/content/libs
+# Libs we don't need to check
+browser/extensions/loop/test/shared/vendor
+# Coverage files
+browser/extensions/loop/test/coverage
+# These are generated react files that we don't need to check
+browser/extensions/loop/content/panels/js/conversation.js
+browser/extensions/loop/content/panels/js/conversationViews.js
+browser/extensions/loop/content/panels/js/panel.js
+browser/extensions/loop/content/panels/js/roomViews.js
+browser/extensions/loop/content/panels/js/feedbackViews.js
+browser/extensions/loop/content/shared/js/textChatView.js
+browser/extensions/loop/content/shared/js/linkifiedTextView.js
+browser/extensions/loop/content/shared/js/views.js
+browser/extensions/loop/standalone/content/js/standaloneRoomViews.js
+browser/extensions/loop/standalone/content/js/webapp.js
+browser/extensions/loop/ui/ui-showcase.js
+# Don't need to check the built tree
+browser/extensions/loop/standalone/dist
+
+# devtools/ exclusions
+# Ignore d3
+devtools/client/shared/d3.js
+devtools/client/webaudioeditor/lib/dagre-d3.js
+
+# Ignore codemirror
+devtools/client/sourceeditor/codemirror/*.js
+devtools/client/sourceeditor/codemirror/**/*.js
+
+# Ignore jquery test libs
+devtools/client/markupview/test/lib_*
+
+# Ignore pre-processed files
+devtools/client/framework/toolbox-process-window.js
+devtools/client/performance/system.js
+devtools/client/webide/webide-prefs.js
+
+# Ignore various libs
+devtools/shared/jsbeautify/*
+devtools/shared/acorn/*
+devtools/shared/tern/*
+devtools/shared/pretty-fast/*
+devtools/shared/sourcemap/*
+
+# mobile/android/ exclusions
+mobile/android/chrome/content
+mobile/android/tests/
+
+# Uses `#filter substitution`
+mobile/android/b2gdroid/app/b2gdroid.js
+mobile/android/app/mobile.js
+mobile/android/chrome/content/healthreport-prefs.js
+
+# Uses `#expand`
+mobile/android/chrome/content/about.js
+
+# Not much JS to lint and non-standard at that
+mobile/android/installer/
+mobile/android/locales/
+
+# Pretty sure we're disabling this one anyway
+mobile/android/modules/ContactService.jsm
+
+# es7 proposed: array comprehensions
+#   https://github.com/eslint/espree/issues/125
+mobile/android/modules/WebappManager.jsm
+
+# Non-standard `(catch ex if ...)`
+mobile/android/components/Snippets.js

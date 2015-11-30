@@ -40,8 +40,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -512,7 +511,7 @@ public class SuggestedSites {
                 continue;
             }
 
-            final boolean restrictedProfile =  RestrictedProfiles.isRestrictedProfile(context);
+            final boolean restrictedProfile =  Restrictions.isRestrictedProfile(context);
 
             if (restrictedProfile == site.restricted) {
                 final RowBuilder row = cursor.newRow();

@@ -14,7 +14,7 @@ nsParentalControlsService::nsParentalControlsService() :
   mEnabled(false)
 {
   if (mozilla::jni::IsAvailable()) {
-    mEnabled = mozilla::widget::RestrictedProfiles::IsUserRestricted();
+    mEnabled = mozilla::widget::Restrictions::IsUserRestricted();
   }
 }
 
@@ -92,7 +92,7 @@ nsParentalControlsService::IsAllowed(int16_t aAction,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    *_retval = mozilla::widget::RestrictedProfiles::IsAllowed(aAction,
+    *_retval = mozilla::widget::Restrictions::IsAllowed(aAction,
                                                     NS_ConvertUTF8toUTF16(url));
     return rv;
   }
