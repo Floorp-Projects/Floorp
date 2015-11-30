@@ -62,14 +62,14 @@ MacroAssembler::implicitPop(uint32_t bytes)
 // ===============================================================
 // Stack manipulation functions.
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::PushWithPatch(ImmWord word)
 {
     framePushed_ += sizeof(word.value);
     return pushWithPatch(word);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::PushWithPatch(ImmPtr imm)
 {
     return PushWithPatch(ImmWord(uintptr_t(imm.value)));
@@ -81,21 +81,21 @@ MacroAssembler::PushWithPatch(ImmPtr imm)
 void
 MacroAssembler::call(const CallSiteDesc& desc, const Register reg)
 {
-    CodeOffset l = call(reg);
+    CodeOffsetLabel l = call(reg);
     append(desc, l, framePushed());
 }
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, Label* label)
 {
-    CodeOffset l = call(label);
+    CodeOffsetLabel l = call(label);
     append(desc, l, framePushed());
 }
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, AsmJSInternalCallee callee)
 {
-    CodeOffset l = callWithPatch();
+    CodeOffsetLabel l = callWithPatch();
     append(desc, l, framePushed(), callee.index);
 }
 
@@ -310,7 +310,7 @@ MacroAssembler::leaveExitFrame(size_t extraFrame)
 bool
 MacroAssembler::hasSelfReference() const
 {
-    return selfReferencePatch_.bound();
+    return selfReferencePatch_.used();
 }
 
 //}}} check_macroassembler_style

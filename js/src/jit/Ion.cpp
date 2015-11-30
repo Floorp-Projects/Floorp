@@ -875,7 +875,7 @@ JitCode::togglePreBarriers(bool enabled)
 
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        CodeLocationLabel loc(this, CodeOffset(offset));
+        CodeLocationLabel loc(this, CodeOffsetLabel(offset));
         if (enabled)
             Assembler::ToggleToCmp(loc);
         else
@@ -1118,8 +1118,8 @@ IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
 
         info.backedge.fixup(&masm);
         CodeLocationJump backedge(code, info.backedge);
-        CodeLocationLabel loopHeader(code, CodeOffset(info.loopHeader->offset()));
-        CodeLocationLabel interruptCheck(code, CodeOffset(info.interruptCheck->offset()));
+        CodeLocationLabel loopHeader(code, CodeOffsetLabel(info.loopHeader->offset()));
+        CodeLocationLabel interruptCheck(code, CodeOffsetLabel(info.interruptCheck->offset()));
         new(patchableBackedge) PatchableBackedge(backedge, loopHeader, interruptCheck);
 
         // Point the backedge to either of its possible targets, according to
@@ -2984,7 +2984,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         Assembler::PatchWrite_Imm32(dataLabelToMunge, Imm32(delta));
 
         CodeLocationLabel osiPatchPoint = SafepointReader::InvalidationPatchPoint(ionScript, si);
-        CodeLocationLabel invalidateEpilogue(ionCode, CodeOffset(ionScript->invalidateEpilogueOffset()));
+        CodeLocationLabel invalidateEpilogue(ionCode, CodeOffsetLabel(ionScript->invalidateEpilogueOffset()));
 
         JitSpew(JitSpew_IonInvalidate, "   ! Invalidate ionScript %p (inv count %u) -> patching osipoint %p",
                 ionScript, ionScript->invalidationCount(), (void*) osiPatchPoint.raw());

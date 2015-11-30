@@ -31,10 +31,10 @@ EmitRepushTailCallReg(MacroAssembler& masm)
 }
 
 inline void
-EmitCallIC(CodeOffset* patchOffset, MacroAssembler& masm)
+EmitCallIC(CodeOffsetLabel* patchOffset, MacroAssembler& masm)
 {
     // Move ICEntry offset into ICStubReg
-    CodeOffset offset = masm.movWithPatch(ImmWord(-1), ICStubReg);
+    CodeOffsetLabel offset = masm.movWithPatch(ImmWord(-1), ICStubReg);
     *patchOffset = offset;
 
     // Load stub pointer into ICStubReg

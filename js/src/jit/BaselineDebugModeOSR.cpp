@@ -1115,7 +1115,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 
     // Not all patched baseline frames are returning from a situation where
     // the frame reg is already fixed up.
-    CodeOffset noFrameRegPopOffset(masm.currentOffset());
+    CodeOffsetLabel noFrameRegPopOffset(masm.currentOffset());
 
     // Record the stack pointer for syncing.
     masm.moveStackPtrTo(syncedStackStart);
