@@ -110,6 +110,9 @@ class TraceLoggerEvent {
     bool hasPayload() const {
         return !!payload_;
     }
+
+    TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
+    TraceLoggerEvent(const TraceLoggerEvent& event) = delete;
 };
 
 /**
@@ -129,6 +132,10 @@ class TraceLoggerEventPayload {
         string_(string),
         uses_(0)
     { }
+
+    ~TraceLoggerEventPayload() {
+        MOZ_ASSERT(uses_ == 0);
+    }
 
     uint32_t textId() {
         return textId_;
