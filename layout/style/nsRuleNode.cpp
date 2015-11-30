@@ -1703,29 +1703,18 @@ nsRuleNode::PropagateGrandancestorBit(nsStyleContext* aContext,
 {
   MOZ_ASSERT(aContext);
   MOZ_ASSERT(aContextInheritedFrom &&
-             aContextInheritedFrom != aContext &&
-             aContextInheritedFrom != aContext->GetParent(),
-             "aContextInheritedFrom must be an ancestor of aContext's parent");
+             aContextInheritedFrom != aContext,
+             "aContextInheritedFrom must be an ancestor of aContext");
 
-  aContext->AddStyleBit(NS_STYLE_USES_GRANDANCESTOR_STYLE);
-
-  nsStyleContext* context = aContext->GetParent();
-  if (!context) {
-    return;
-  }
-
-  for (;;) {
-    nsStyleContext* parent = context->GetParent();
-    if (!parent) {
+  for (nsStyleContext* context = aContext->GetParent();
+       context != aContextInheritedFrom;
+       context = context->GetParent()) {
+    if (!context) {
       MOZ_ASSERT(false, "aContextInheritedFrom must be an ancestor of "
                         "aContext's parent");
       break;
     }
-    if (parent == aContextInheritedFrom) {
-      break;
-    }
-    context->AddStyleBit(NS_STYLE_USES_GRANDANCESTOR_STYLE);
-    context = parent;
+    context->AddStyleBit(NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE);
   }
 }
 
@@ -8040,7 +8029,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
     if (MOZ_LIKELY(parentContext)) {
       nsStyleContext* grandparentContext = parentContext->GetParent();
       if (MOZ_LIKELY(grandparentContext)) {
-        aContext->AddStyleBit(NS_STYLE_USES_GRANDANCESTOR_STYLE);
+        parentContext->AddStyleBit(NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE);
       }
       pos->mAlignSelf =
         parentPos->ComputedAlignSelf(parentContext->StyleDisplay(),
@@ -8100,7 +8089,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
     if (MOZ_LIKELY(parentContext)) {
       nsStyleContext* grandparentContext = parentContext->GetParent();
       if (MOZ_LIKELY(grandparentContext)) {
-        aContext->AddStyleBit(NS_STYLE_USES_GRANDANCESTOR_STYLE);
+        parentContext->AddStyleBit(NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE);
       }
       pos->mJustifySelf =
         parentPos->ComputedJustifySelf(parentContext->StyleDisplay(),
