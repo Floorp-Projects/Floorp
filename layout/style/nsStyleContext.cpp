@@ -627,8 +627,9 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     // This is covering the <div align="right"><table>...</table></div> case.
     // In this case, we don't want to inherit the text alignment into the table.
     const nsStyleText* text = StyleText();
-    
-    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
+
+    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_LEFT ||
+        text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
     {
       nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(eStyleStruct_Text);

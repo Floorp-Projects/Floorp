@@ -1,0 +1,31 @@
+<title>Testcase, bug 196292</title>
+<meta charset="UTF-8">
+
+<table border width="500">
+  <tr>
+    <td>
+      <p style="text-align: left">Left</p>
+      <table border width="300">
+        <tr><th>Center</th></tr>
+        <tr><td>Left</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p style="text-align: center">Center</p>
+      <table border width="300" style="margin-left: auto; margin-right: auto">
+        <tr><th>Center</th></tr>
+        <tr><td>Left</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p style="text-align: right">Right</p>
+      <table border width="300" style="margin-left: auto">
+        <tr><th>Center</th></tr>
+        <tr><td>Left</td></tr>
+      </table>
+    </td>
+  </tr>
