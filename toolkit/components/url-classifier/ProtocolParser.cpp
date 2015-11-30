@@ -65,6 +65,7 @@ ProtocolParser::ProtocolParser()
   , mUpdateStatus(NS_OK)
   , mUpdateWait(0)
   , mResetRequested(false)
+  , mTableUpdate(nullptr)
 {
 }
 
