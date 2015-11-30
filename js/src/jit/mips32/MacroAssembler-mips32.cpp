@@ -892,7 +892,7 @@ MacroAssemblerMIPSCompat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerMIPSCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
-    append(AsmJSAbsoluteLink(CodeOffset(nextOffset().getOffset()), imm.kind()));
+    append(AsmJSAbsoluteLink(CodeOffsetLabel(nextOffset().getOffset()), imm.kind()));
     ma_liPatchable(dest, ImmWord(-1));
 }
 
@@ -2521,19 +2521,19 @@ MacroAssemblerMIPSCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, 
                                                         Register offsetTemp, Register maskTemp,
                                                         AnyRegister output);
 
-CodeOffset
+CodeOffsetLabel
 MacroAssemblerMIPSCompat::toggledJump(Label* label)
 {
-    CodeOffset ret(nextOffset().getOffset());
+    CodeOffsetLabel ret(nextOffset().getOffset());
     ma_b(label);
     return ret;
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssemblerMIPSCompat::toggledCall(JitCode* target, bool enabled)
 {
     BufferOffset bo = nextOffset();
-    CodeOffset offset(bo.getOffset());
+    CodeOffsetLabel offset(bo.getOffset());
     addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
     if (enabled) {

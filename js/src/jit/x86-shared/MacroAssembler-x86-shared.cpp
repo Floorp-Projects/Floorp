@@ -305,7 +305,7 @@ static bool
 AppendShiftedUses(const MacroAssemblerX86Shared::UsesVector& old, size_t delta,
                   MacroAssemblerX86Shared::UsesVector* vec)
 {
-    for (CodeOffset use : old) {
+    for (CodeOffsetLabel use : old) {
         use.offsetBy(delta);
         if (!vec->append(use))
             return false;
@@ -548,13 +548,13 @@ MacroAssembler::Pop(const ValueOperand& val)
 // ===============================================================
 // Simple call functions.
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
     return Assembler::call(reg);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
     return Assembler::call(label);
@@ -592,7 +592,7 @@ MacroAssembler::call(JitCode* target)
     Assembler::call(target);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::callWithPatch()
 {
     return Assembler::callWithPatch();

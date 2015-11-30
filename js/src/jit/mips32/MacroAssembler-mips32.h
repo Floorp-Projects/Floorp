@@ -274,29 +274,29 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // Emit a branch that can be toggled to a non-operation. On MIPS we use
     // "andi" instruction to toggle the branch.
     // See ToggleToJmp(), ToggleToCmp().
-    CodeOffset toggledJump(Label* label);
+    CodeOffsetLabel toggledJump(Label* label);
 
     // Emit a "jalr" or "nop" instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffset toggledCall(JitCode* target, bool enabled);
+    CodeOffsetLabel toggledCall(JitCode* target, bool enabled);
 
     static size_t ToggledCallSize(uint8_t* code) {
         // Four instructions used in: MacroAssemblerMIPSCompat::toggledCall
         return 4 * sizeof(uint32_t);
     }
 
-    CodeOffset pushWithPatch(ImmWord imm) {
-        CodeOffset label = movWithPatch(imm, ScratchRegister);
+    CodeOffsetLabel pushWithPatch(ImmWord imm) {
+        CodeOffsetLabel label = movWithPatch(imm, ScratchRegister);
         ma_push(ScratchRegister);
         return label;
     }
 
-    CodeOffset movWithPatch(ImmWord imm, Register dest) {
-        CodeOffset label = CodeOffset(currentOffset());
+    CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
+        CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
         ma_liPatchable(dest, imm);
         return label;
     }
-    CodeOffset movWithPatch(ImmPtr imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
@@ -1314,8 +1314,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
   public:
-    CodeOffset labelForPatch() {
-        return CodeOffset(nextOffset().getOffset());
+    CodeOffsetLabel labelForPatch() {
+        return CodeOffsetLabel(nextOffset().getOffset());
     }
 
     void memIntToValue(Address Source, Address Dest) {

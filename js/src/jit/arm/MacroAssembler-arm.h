@@ -602,25 +602,25 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_dtr(IsLoad, sp, totSpace, reg, PostIndex);
     }
 
-    CodeOffset toggledJump(Label* label);
+    CodeOffsetLabel toggledJump(Label* label);
 
     // Emit a BLX or NOP instruction. ToggleCall can be used to patch this
     // instruction.
-    CodeOffset toggledCall(JitCode* target, bool enabled);
+    CodeOffsetLabel toggledCall(JitCode* target, bool enabled);
 
-    CodeOffset pushWithPatch(ImmWord imm) {
+    CodeOffsetLabel pushWithPatch(ImmWord imm) {
         ScratchRegisterScope scratch(asMasm());
-        CodeOffset label = movWithPatch(imm, scratch);
+        CodeOffsetLabel label = movWithPatch(imm, scratch);
         ma_push(scratch);
         return label;
     }
 
-    CodeOffset movWithPatch(ImmWord imm, Register dest) {
-        CodeOffset label = CodeOffset(currentOffset());
+    CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
+        CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
         ma_movPatchable(Imm32(imm.value), dest, Always, HasMOVWT() ? L_MOVWT : L_LDR);
         return label;
     }
-    CodeOffset movWithPatch(ImmPtr imm, Register dest) {
+    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
@@ -1764,8 +1764,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
   public:
-    CodeOffset labelForPatch() {
-        return CodeOffset(nextOffset().getOffset());
+    CodeOffsetLabel labelForPatch() {
+        return CodeOffsetLabel(nextOffset().getOffset());
     }
 
     void computeEffectiveAddress(const Address& address, Register dest) {

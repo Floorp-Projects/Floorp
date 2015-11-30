@@ -188,19 +188,19 @@ class MacroAssemblerNone : public Assembler
     void nopAlign(size_t) { MOZ_CRASH(); }
     void checkStackAlignment() { MOZ_CRASH(); }
     uint32_t currentOffset() { MOZ_CRASH(); }
-    uint32_t labelToPatchOffset(CodeOffset) { MOZ_CRASH(); }
-    CodeOffset labelForPatch() { MOZ_CRASH(); }
+    uint32_t labelToPatchOffset(CodeOffsetLabel) { MOZ_CRASH(); }
+    CodeOffsetLabel labelForPatch() { MOZ_CRASH(); }
 
     void nop() { MOZ_CRASH(); }
     void breakpoint() { MOZ_CRASH(); }
     void abiret() { MOZ_CRASH(); }
     void ret() { MOZ_CRASH(); }
 
-    CodeOffset toggledJump(Label*) { MOZ_CRASH(); }
-    CodeOffset toggledCall(JitCode*, bool) { MOZ_CRASH(); }
+    CodeOffsetLabel toggledJump(Label*) { MOZ_CRASH(); }
+    CodeOffsetLabel toggledCall(JitCode*, bool) { MOZ_CRASH(); }
     static size_t ToggledCallSize(uint8_t*) { MOZ_CRASH(); }
 
-    void writePrebarrierOffset(CodeOffset) { MOZ_CRASH(); }
+    void writePrebarrierOffset(CodeOffsetLabel) { MOZ_CRASH(); }
 
     void finish() { MOZ_CRASH(); }
 
@@ -218,7 +218,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void Push(T) { MOZ_CRASH(); }
     template <typename T> void pop(T) { MOZ_CRASH(); }
     template <typename T> void Pop(T) { MOZ_CRASH(); }
-    template <typename T> CodeOffset pushWithPatch(T) { MOZ_CRASH(); }
+    template <typename T> CodeOffsetLabel pushWithPatch(T) { MOZ_CRASH(); }
 
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Label* doc = nullptr) { MOZ_CRASH(); }
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition, Label* doc = nullptr) { MOZ_CRASH(); }
@@ -266,7 +266,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void moveFloat32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void moveDouble(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void move64(T, S) { MOZ_CRASH(); }
-    template <typename T> CodeOffset movWithPatch(T, Register) { MOZ_CRASH(); }
+    template <typename T> CodeOffsetLabel movWithPatch(T, Register) { MOZ_CRASH(); }
 
     template <typename T> void loadInt32x1(T, FloatRegister dest) { MOZ_CRASH(); }
     template <typename T> void loadInt32x2(T, FloatRegister dest) { MOZ_CRASH(); }

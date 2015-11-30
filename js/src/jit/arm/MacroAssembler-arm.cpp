@@ -2027,7 +2027,7 @@ MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
     else
         rs = L_LDR;
 
-    append(AsmJSAbsoluteLink(CodeOffset(currentOffset()), imm.kind()));
+    append(AsmJSAbsoluteLink(CodeOffsetLabel(currentOffset()), imm.kind()));
     ma_movPatchable(Imm32(-1), dest, Always, rs);
 }
 
@@ -4091,16 +4091,16 @@ MacroAssemblerARMCompat::ceilf(FloatRegister input, Register output, Label* bail
     bind(&fin);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssemblerARMCompat::toggledJump(Label* label)
 {
     // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
     BufferOffset b = ma_b(label, Always);
-    CodeOffset ret(b.getOffset());
+    CodeOffsetLabel ret(b.getOffset());
     return ret;
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssemblerARMCompat::toggledCall(JitCode* target, bool enabled)
 {
     BufferOffset bo = nextOffset();
@@ -4111,7 +4111,7 @@ MacroAssemblerARMCompat::toggledCall(JitCode* target, bool enabled)
         ma_blx(scratch);
     else
         ma_nop();
-    return CodeOffset(bo.getOffset());
+    return CodeOffsetLabel(bo.getOffset());
 }
 
 void
@@ -5086,19 +5086,19 @@ MacroAssembler::reserveStack(uint32_t amount)
 // ===============================================================
 // Simple call functions.
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
     as_blx(reg);
-    return CodeOffset(currentOffset());
+    return CodeOffsetLabel(currentOffset());
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
     // For now, assume that it'll be nearby.
     as_bl(label, Always);
-    return CodeOffset(currentOffset());
+    return CodeOffsetLabel(currentOffset());
 }
 
 void
@@ -5138,12 +5138,12 @@ MacroAssembler::call(JitCode* c)
     callJitNoProfiler(scratch);
 }
 
-CodeOffset
+CodeOffsetLabel
 MacroAssembler::callWithPatch()
 {
     // For now, assume that it'll be nearby.
     as_bl(BOffImm(), Always, /* documentation */ nullptr);
-    return CodeOffset(currentOffset());
+    return CodeOffsetLabel(currentOffset());
 }
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)

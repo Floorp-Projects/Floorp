@@ -248,7 +248,7 @@ BaselineCompiler::compile()
 
     // Patch IC loads using IC entries.
     for (size_t i = 0; i < icLoadLabels_.length(); i++) {
-        CodeOffset label = icLoadLabels_[i].label;
+        CodeOffsetLabel label = icLoadLabels_[i].label;
         size_t icEntry = icLoadLabels_[i].icEntry;
         ICEntry* entryAddr = &(baselineScript->icEntry(icEntry));
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),
@@ -416,7 +416,7 @@ BaselineCompiler::emitPrologue()
 
     // Record the offset of the prologue, because Ion can bailout before
     // the scope chain is initialized.
-    prologueOffset_ = CodeOffset(masm.currentOffset());
+    prologueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     // When compiling with Debugger instrumentation, set the debuggeeness of
     // the frame before any operation that can call into the VM.
@@ -447,7 +447,7 @@ BaselineCompiler::emitEpilogue()
 {
     // Record the offset of the epilogue, so we can do early return from
     // Debugger handlers during on-stack recompile.
-    epilogueOffset_ = CodeOffset(masm.currentOffset());
+    epilogueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     masm.bind(&return_);
 
@@ -509,9 +509,9 @@ BaselineCompiler::emitIC(ICStub* stub, ICEntry::Kind kind)
     if (!entry)
         return false;
 
-    CodeOffset patchOffset;
+    CodeOffsetLabel patchOffset;
     EmitCallIC(&patchOffset, masm);
-    entry->setReturnOffset(CodeOffset(masm.currentOffset()));
+    entry->setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
     if (!addICLoadLabel(patchOffset))
         return false;
 
@@ -624,7 +624,7 @@ BaselineCompiler::emitDebugPrologue()
         masm.bind(&done);
     }
 
-    postDebugPrologueOffset_ = CodeOffset(masm.currentOffset());
+    postDebugPrologueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
     return true;
 }
@@ -798,7 +798,7 @@ BaselineCompiler::emitDebugTrap()
     JitCode* handler = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
     if (!handler)
         return false;
-    mozilla::DebugOnly<CodeOffset> offset = masm.toggledCall(handler, enabled);
+    mozilla::DebugOnly<CodeOffsetLabel> offset = masm.toggledCall(handler, enabled);
 
 #ifdef DEBUG
     // Patchable call offset has to match the pc mapping offset.
@@ -886,12 +886,12 @@ BaselineCompiler::emitProfilerEnterFrame()
     // Store stack position to lastProfilingFrame variable, guarded by a toggled jump.
     // Starts off initially disabled.
     Label noInstrument;
-    CodeOffset toggleOffset = masm.toggledJump(&noInstrument);
+    CodeOffsetLabel toggleOffset = masm.toggledJump(&noInstrument);
     masm.profilerEnterFrame(masm.getStackPointer(), R0.scratchReg());
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(!profilerEnterFrameToggleOffset_.bound());
+    MOZ_ASSERT(!profilerEnterFrameToggleOffset_.used());
     profilerEnterFrameToggleOffset_ = toggleOffset;
 }
 
@@ -901,12 +901,12 @@ BaselineCompiler::emitProfilerExitFrame()
     // Store previous frame to lastProfilingFrame variable, guarded by a toggled jump.
     // Starts off initially disabled.
     Label noInstrument;
-    CodeOffset toggleOffset = masm.toggledJump(&noInstrument);
+    CodeOffsetLabel toggleOffset = masm.toggledJump(&noInstrument);
     masm.profilerExitFrame();
     masm.bind(&noInstrument);
 
     // Store the start offset in the appropriate location.
-    MOZ_ASSERT(!profilerExitFrameToggleOffset_.bound());
+    MOZ_ASSERT(!profilerExitFrameToggleOffset_.used());
     profilerExitFrameToggleOffset_ = toggleOffset;
 }
 
