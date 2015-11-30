@@ -2385,11 +2385,6 @@ pref("layout.css.grid-template-subgrid-value.enabled", false);
 pref("layout.css.contain.enabled", false);
 
 // Is support for CSS Ruby enabled?
-//
-// When this pref is removed, make sure that the pref callback registration
-// in nsLayoutStylesheetCache::EnsureGlobal and the invalidation of
-// mUASheet in nsLayoutStylesheetCache::DependentPrefChanged (if it's not
-// otherwise needed) are removed.
 pref("layout.css.ruby.enabled", true);
 
 // Is support for CSS display:contents enabled?
