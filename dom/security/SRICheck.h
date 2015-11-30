@@ -12,7 +12,7 @@
 #include "SRIMetadata.h"
 
 class nsIDocument;
-class nsIStreamLoader;
+class nsIIncrementalStreamLoader;
 class nsIUnicharStreamLoader;
 
 namespace mozilla {
@@ -47,7 +47,7 @@ public:
    * must prevent the resource from loading.
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIStreamLoader* aLoader,
+                                  nsIIncrementalStreamLoader* aLoader,
                                   const CORSMode aCORSMode,
                                   uint32_t aStringLen,
                                   const uint8_t* aString,

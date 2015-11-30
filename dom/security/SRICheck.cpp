@@ -16,7 +16,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIStreamLoader.h"
+#include "nsIIncrementalStreamLoader.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -317,7 +317,7 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
 
 /* static */ nsresult
 SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIStreamLoader* aLoader,
+                          nsIIncrementalStreamLoader* aLoader,
                           const CORSMode aCORSMode,
                           uint32_t aStringLen,
                           const uint8_t* aString,

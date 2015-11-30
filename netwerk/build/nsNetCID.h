@@ -226,6 +226,18 @@
     { 0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } \
 }
 
+// component implementing nsIStreamLoader.
+#define NS_INCREMENTALSTREAMLOADER_CONTRACTID \
+    "@mozilla.org/network/incremental-stream-loader;1"
+#define NS_INCREMENTALSTREAMLOADER_CID \
+{ /* 5d6352a3-b9c3-4fa3-87aa-b2a3c6e5a501 */         \
+    0x5d6352a3,                                      \
+    0xb9c3,                                          \
+    0x4fa3,                                          \
+    {0x87, 0xaa, 0xb2, 0xa3, 0xc6, 0xe5, 0xa5, 0x01} \
+}
+
+
 // component implementing nsIUnicharStreamLoader.
 #define NS_UNICHARSTREAMLOADER_CONTRACTID \
     "@mozilla.org/network/unichar-stream-loader;1"
