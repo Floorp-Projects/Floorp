@@ -809,7 +809,8 @@ class RecursiveMakeBackend(CommonBackend):
                     self._makefile_in_count += 1
 
                     for tier, skiplist in self._may_skip.items():
-                        if bf.relobjdir in skiplist:
+                        # topobjdir is an exception, it's still skipped.
+                        if bf.relobjdir and bf.relobjdir in skiplist:
                             skiplist.remove(bf.relobjdir)
                 else:
                     self.log(logging.DEBUG, 'stub_makefile',
