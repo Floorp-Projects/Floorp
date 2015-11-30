@@ -59,6 +59,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/dom/DOMJSClass.h"
@@ -519,16 +520,15 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, JS::GCCellPtr aThing,
         nsAutoString chars;
         AssignJSFlatString(chars, flat);
         NS_ConvertUTF16toUTF8 fname(chars);
-        JS_snprintf(name, sizeof(name),
-                    "JS Object (Function - %s)", fname.get());
+        snprintf_literal(name, "JS Object (Function - %s)", fname.get());
       } else {
-        JS_snprintf(name, sizeof(name), "JS Object (Function)");
+        snprintf_literal(name, "JS Object (Function)");
       }
     } else {
-      JS_snprintf(name, sizeof(name), "JS Object (%s)", clasp->name);
+      snprintf_literal(name, "JS Object (%s)", clasp->name);
     }
   } else {
-    JS_snprintf(name, sizeof(name), "JS %s", JS::GCTraceKindToAscii(aThing.kind()));
+    snprintf_literal(name, "JS %s", JS::GCTraceKindToAscii(aThing.kind()));
   }
 
   // Disable printing global for objects while we figure out ObjShrink fallout.
