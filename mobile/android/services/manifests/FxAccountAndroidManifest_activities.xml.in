@@ -32,12 +32,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             </intent-filter>
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_GET_STARTED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
         </activity>
 
         <activity
@@ -53,12 +47,6 @@
             android:configChanges="locale|layoutDirection"
             android:noHistory="true"
             android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_CONFIRM_ACCOUNT"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
         </activity>
 
         <activity
@@ -81,12 +69,6 @@
             android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
             android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_UPDATE_CREDENTIALS"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
         </activity>
 
         <activity
@@ -94,12 +76,6 @@
             android:name="org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity"
             android:configChanges="locale|layoutDirection"
             android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_FINISH_MIGRATING"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
         </activity>
 
         <activity
@@ -134,7 +110,6 @@
             </intent-filter>
         </receiver>
 
-#ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
         <activity
             android:exported="false"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivityWeb">
@@ -170,4 +145,3 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
-#endif
