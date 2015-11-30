@@ -126,10 +126,7 @@ add_task(function* testPageActionPopup() {
   let panelId = makeWidgetId(extension.id) + "-panel";
 
   extension.onMessage("send-click", () => {
-    let image = document.getElementById(pageActionId);
-
-    let evt = new MouseEvent("click", {});
-    image.dispatchEvent(evt);
+    clickPageAction(extension);
   });
 
   extension.onMessage("next-test", Task.async(function* () {
@@ -146,7 +143,8 @@ add_task(function* testPageActionPopup() {
   }));
 
 
-  yield Promise.all([extension.startup(), extension.awaitFinish("pageaction-tests-done")]);
+  yield extension.startup();
+  yield extension.awaitFinish("pageaction-tests-done");
 
   yield extension.unload();
 
@@ -192,21 +190,15 @@ add_task(function* testPageActionSecurity() {
     },
   });
 
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
 
-  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
-  let pageActionId = makeWidgetId(extension.id) + "-page-action";
-
-  let browserAction = document.getElementById(browserActionId);
-  let evt = new CustomEvent("command", {});
-  browserAction.dispatchEvent(evt);
-
-  let pageAction = document.getElementById(pageActionId);
-  evt = new MouseEvent("click", {});
-  pageAction.dispatchEvent(evt);
+  yield clickBrowserAction(extension);
+  yield clickPageAction(extension);
 
   yield extension.unload();
 
+  let pageActionId = makeWidgetId(extension.id) + "-page-action";
   let node = document.getElementById(pageActionId);
   is(node, undefined, "pageAction image removed from document");
 

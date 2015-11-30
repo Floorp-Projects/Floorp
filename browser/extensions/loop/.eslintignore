@@ -1,0 +1,35 @@
+# This file currently uses a non-standard (and not on a standards track)
+# if statement within catch.
+content/modules/MozLoopWorker.js
+# This file currently uses es7 features eslint issue:
+# https://github.com/eslint/espree/issues/125
+content/modules/MozLoopAPI.jsm
+# Need to fix the configuration for this.
+bootstrap.js
+# Need to drop the preprocessing (bug 1212428)
+content/preferences/prefs.js
+# Libs we don't need to check
+content/panels/vendor
+content/shared/vendor
+standalone/content/libs
+standalone/node_modules
+# Libs we don't need to check
+test/shared/vendor
+# Coverage files
+test/coverage
+test/node_modules
+# These are generated react files that we don't need to check
+content/panels/js/conversation.js
+content/panels/js/conversationViews.js
+content/panels/js/panel.js
+content/panels/js/roomViews.js
+content/panels/js/feedbackViews.js
+content/shared/js/textChatView.js
+content/shared/js/linkifiedTextView.js
+content/shared/js/views.js
+standalone/content/js/standaloneRoomViews.js
+standalone/content/js/webapp.js
+ui/ui-showcase.js
+# Don't need to check the built tree
+standalone/dist
+

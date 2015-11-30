@@ -8,11 +8,11 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
   var messageHandler = new Map();
   var messageAwaiter = new Map();
 
-  var messageQueue = [];
+  var messageQueue = new Set();
 
   SimpleTest.registerCleanupFunction(() => {
-    if (messageQueue.length) {
-      SimpleTest.is(messageQueue.length, 0, "message queue is empty");
+    if (messageQueue.size) {
+      SimpleTest.is(messageQueue.size, 0, "message queue is empty");
     }
     if (messageAwaiter.size) {
       SimpleTest.is(messageAwaiter.size, 0, "no tasks awaiting on messages");
@@ -20,18 +20,17 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
   });
 
   function checkMessages() {
-    while (messageQueue.length) {
-      let [msg, ...args] = messageQueue[0];
+    for (let message of messageQueue) {
+      let [msg, ...args] = message;
 
       let listener = messageAwaiter.get(msg);
-      if (!listener) {
-        break;
+      if (listener) {
+        messageQueue.delete(message);
+        messageAwaiter.delete(msg);
+
+        listener.resolve(...args);
+        return;
       }
-
-      messageQueue.shift();
-      messageAwaiter.delete(msg);
-
-      listener.resolve(...args);
     }
   }
 
@@ -66,7 +65,7 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
       if (handler) {
         handler(...args);
       } else {
-        messageQueue.push([msg, ...args]);
+        messageQueue.add([msg, ...args]);
         checkMessages();
       }
 
