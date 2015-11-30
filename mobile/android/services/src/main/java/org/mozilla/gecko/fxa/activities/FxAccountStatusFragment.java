@@ -244,10 +244,6 @@ public class FxAccountStatusFragment
     if (preference == needsPasswordPreference) {
       final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_UPDATE_CREDENTIALS);
       intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_PREFERENCES);
-      final Bundle extras = getExtrasForAccount();
-      if (extras != null) {
-        intent.putExtras(extras);
-      }
       // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
       // the soft keyboard not being shown for the started activity. Why, Android, why?
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -259,10 +255,6 @@ public class FxAccountStatusFragment
     if (preference == needsFinishMigratingPreference) {
       final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_FINISH_MIGRATING);
       intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_PREFERENCES);
-      final Bundle extras = getExtrasForAccount();
-      if (extras != null) {
-        intent.putExtras(extras);
-      }
       // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
       // the soft keyboard not being shown for the started activity. Why, Android, why?
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -303,18 +295,6 @@ public class FxAccountStatusFragment
     }
 
     return false;
-  }
-
-  protected Bundle getExtrasForAccount() {
-    final Bundle extras = new Bundle();
-    final ExtendedJSONObject o = new ExtendedJSONObject();
-    o.put(FxAccountAbstractSetupActivity.JSON_KEY_AUTH, fxAccount.getAccountServerURI());
-    final ExtendedJSONObject services = new ExtendedJSONObject();
-    services.put(FxAccountAbstractSetupActivity.JSON_KEY_SYNC, fxAccount.getTokenServerURI());
-    services.put(FxAccountAbstractSetupActivity.JSON_KEY_PROFILE, fxAccount.getProfileServerURI());
-    o.put(FxAccountAbstractSetupActivity.JSON_KEY_SERVICES, services);
-    extras.putString(FxAccountAbstractSetupActivity.EXTRA_EXTRAS, o.toJSONString());
-    return extras;
   }
 
   protected void setCheckboxesEnabled(boolean enabled) {
