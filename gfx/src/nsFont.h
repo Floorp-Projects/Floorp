@@ -123,12 +123,7 @@ struct nsFont {
     return Equals(aOther);
   }
 
-  // FIXME (in patch 3): These are now the same.  Remove BaseEquals!
-  bool Equals(const nsFont& aOther) const
-  {
-    return BaseEquals(aOther);
-  }
-  bool BaseEquals(const nsFont& aOther) const;
+  bool Equals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);
 
