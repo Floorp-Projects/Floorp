@@ -854,6 +854,21 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         didReflowThisFrame = true;
       }
 
+      if ((hint & nsChangeHint_UpdateUsesOpacity) &&
+          frame->IsFrameOfType(nsIFrame::eTablePart)) {
+        NS_ASSERTION(hint & nsChangeHint_UpdateOpacityLayer,
+                     "should only return UpdateUsesOpacity hint "
+                     "when also returning UpdateOpacityLayer hint");
+        // When an internal table part (including cells) changes between
+        // having opacity 1 and non-1, it changes whether its
+        // backgrounds (and those of table parts inside of it) are
+        // painted as part of the table's nsDisplayTableBorderBackground
+        // display item, or part of its own display item.  That requires
+        // invalidation, so change UpdateOpacityLayer to RepaintFrame.
+        hint &= ~nsChangeHint_UpdateOpacityLayer;
+        hint |= nsChangeHint_RepaintFrame;
+      }
+
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
                   nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer |
                   nsChangeHint_ChildrenOnlyTransform | nsChangeHint_SchedulePaint)) {
