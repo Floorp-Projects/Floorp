@@ -24,6 +24,20 @@ class Program;
 struct VertexAttribute;
 struct VertexAttribCurrentValueData;
 
+enum PrimitiveType
+{
+    PRIMITIVE_POINTS,
+    PRIMITIVE_LINES,
+    PRIMITIVE_LINE_STRIP,
+    PRIMITIVE_LINE_LOOP,
+    PRIMITIVE_TRIANGLES,
+    PRIMITIVE_TRIANGLE_STRIP,
+    PRIMITIVE_TRIANGLE_FAN,
+    PRIMITIVE_TYPE_MAX,
+};
+
+PrimitiveType GetPrimitiveType(GLenum drawMode);
+
 enum SamplerType
 {
     SAMPLER_PIXEL,

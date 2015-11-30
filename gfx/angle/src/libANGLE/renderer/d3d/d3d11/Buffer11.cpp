@@ -361,7 +361,7 @@ gl::Error Buffer11::setSubData(const void *data, size_t size, size_t offset)
     }
 
     mSize = std::max(mSize, requiredSize);
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -417,7 +417,7 @@ gl::Error Buffer11::copySubData(BufferImpl *source,
     copyDest->setDataRevision(copyDest->getDataRevision() + 1);
 
     mSize = std::max<size_t>(mSize, destOffset + size);
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -457,7 +457,7 @@ gl::Error Buffer11::mapRange(size_t offset, size_t length, GLbitfield access, GL
     {
         // Update the data revision immediately, since the data might be changed at any time
         mMappedStorage->setDataRevision(mMappedStorage->getDataRevision() + 1);
-        invalidateStaticData();
+        invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
     }
 
     uint8_t *mappedBuffer = mMappedStorage->map(offset, length, access);
@@ -492,7 +492,7 @@ void Buffer11::markTransformFeedbackUsage()
         transformFeedbackStorage->setDataRevision(transformFeedbackStorage->getDataRevision() + 1);
     }
 
-    invalidateStaticData();
+    invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
 }
 
 void Buffer11::markBufferUsage()
