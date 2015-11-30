@@ -1100,6 +1100,10 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
                     Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
             MOZ_ASSERT(!ntemplate->hasPrivate());
         } else {
+            // If the target type could be a TypedArray that maps shared memory
+            // then this would need to store emptyObjectElementsShared in that case.
+            // That cannot happen at present; TypedArray allocation is always
+            // a VM call.
             storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
 
             initGCSlots(obj, temp, ntemplate, initContents);

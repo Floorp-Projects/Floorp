@@ -257,6 +257,7 @@
     _(StoreTypedArrayElementHole)   \
     _(StoreTypedArrayElementStatic) \
     _(AtomicIsLockFree)             \
+    _(GuardSharedTypedArray)        \
     _(CompareExchangeTypedArrayElement) \
     _(AtomicExchangeTypedArrayElement) \
     _(AtomicTypedArrayElementBinop) \
