@@ -3687,7 +3687,7 @@ BluetoothGattManager::RequestReadNotification(
   AppendNamedValue(properties, "AttrHandle", aAttributeHandle);
   AppendNamedValue(properties, "Address", bdAddrStr);
   AppendNamedValue(properties, "NeedResponse", true);
-  AppendNamedValue(properties, "Value", new nsTArray<uint8_t>());
+  AppendNamedValue(properties, "Value", nsTArray<uint8_t>());
 
   bs->DistributeSignal(NS_LITERAL_STRING("ReadRequested"),
                        server->mAppUuid,
