@@ -1348,7 +1348,26 @@ TabActor.prototype = {
       this._tabActorPool = null;
     }
 
+    // Make sure that no more workerListChanged notifications are sent.
+    if (this._workerActorList !== null) {
+      this._workerActorList.onListChanged = null;
+      this._workerActorList = null;
+    }
+
+    if (this._workerActorPool !== null) {
+      this.conn.removeActorPool(this._workerActorPool);
+      this._workerActorPool = null;
+    }
+
+    // Make sure that no more serviceWorkerRegistrationChanged notifications are
+    // sent.
+    if (this._mustNotifyServiceWorkerRegistrationChanged) {
+      swm.removeListener(this);
+      this._mustNotifyServiceWorkerRegistrationChanged = false;
+    }
+
     this._attached = false;
+
     return true;
   },
 
