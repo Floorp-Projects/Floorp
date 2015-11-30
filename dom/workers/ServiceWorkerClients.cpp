@@ -181,11 +181,14 @@ class MatchAllRunnable final : public nsRunnable
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
+  bool mIncludeUncontrolled;
 public:
   MatchAllRunnable(PromiseWorkerProxy* aPromiseProxy,
-                   const nsCString& aScope)
+                   const nsCString& aScope,
+                   bool aIncludeUncontrolled)
     : mPromiseProxy(aPromiseProxy),
-      mScope(aScope)
+      mScope(aScope),
+      mIncludeUncontrolled(aIncludeUncontrolled)
   {
     MOZ_ASSERT(mPromiseProxy);
   }
@@ -203,7 +206,8 @@ public:
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsTArray<ServiceWorkerClientInfo> result;
 
-    swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope, result);
+    swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope,
+                       mIncludeUncontrolled, result);
     RefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, result);
@@ -689,7 +693,7 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
   nsString scope;
   mWorkerScope->GetScope(scope);
 
-  if (aOptions.mIncludeUncontrolled || aOptions.mType != ClientType::Window) {
+  if (aOptions.mType != ClientType::Window) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
@@ -708,7 +712,8 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
 
   RefPtr<MatchAllRunnable> r =
     new MatchAllRunnable(promiseProxy,
-                         NS_ConvertUTF16toUTF8(scope));
+                         NS_ConvertUTF16toUTF8(scope),
+                         aOptions.mIncludeUncontrolled);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
   return promise.forget();
 }
