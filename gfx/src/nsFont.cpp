@@ -89,7 +89,7 @@ nsFont::~nsFont()
 {
 }
 
-bool nsFont::Equals(const nsFont& aOther) const
+bool nsFont::BaseEquals(const nsFont& aOther) const
 {
   if ((style == aOther.style) &&
       (systemFont == aOther.systemFont) &&
