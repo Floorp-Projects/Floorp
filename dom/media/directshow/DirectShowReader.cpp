@@ -11,7 +11,6 @@
 #include "AudioSinkFilter.h"
 #include "SourceFilter.h"
 #include "SampleSink.h"
-#include "MediaResource.h"
 #include "VideoUtils.h"
 
 using namespace mozilla::media;
@@ -384,17 +383,19 @@ DirectShowReader::NotifyDataArrivedInternal()
   }
 
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  nsTArray<MediaByteRange> byteRanges;
+  MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
 
   if (NS_FAILED(rv)) {
     return;
   }
 
-  IntervalSet<int64_t> intervals;
-  for (auto& range : byteRanges) {
-    intervals += mFilter.NotifyDataArrived(range.Length(), range.mStart);
+  if (byteRanges == mLastCachedRanges) {
+    return;
   }
+  MediaByteRangeSet intervals = byteRanges - mLastCachedRanges;
+  mLastCachedRanges = byteRanges;
+
   for (const auto& interval : intervals) {
     RefPtr<MediaByteBuffer> bytes =
       resource->MediaReadAt(interval.mStart, interval.Length());

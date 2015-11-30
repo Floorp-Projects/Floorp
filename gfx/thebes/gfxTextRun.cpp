@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -322,25 +323,9 @@ gfxTextRun::ComputePartialLigatureWidth(uint32_t aPartStart, uint32_t aPartEnd,
 int32_t
 gfxTextRun::GetAdvanceForGlyphs(uint32_t aStart, uint32_t aEnd)
 {
-    const CompressedGlyph *glyphData = mCharacterGlyphs + aStart;
     int32_t advance = 0;
-    uint32_t i;
-    for (i = aStart; i < aEnd; ++i, ++glyphData) {
-        if (glyphData->IsSimpleGlyph()) {
-            advance += glyphData->GetSimpleAdvance();   
-        } else {
-            uint32_t glyphCount = glyphData->GetGlyphCount();
-            if (glyphCount == 0) {
-                continue;
-            }
-            const DetailedGlyph *details = GetDetailedGlyphs(i);
-            if (details) {
-                uint32_t j;
-                for (j = 0; j < glyphCount; ++j, ++details) {
-                    advance += details->mAdvance;
-                }
-            }
-        }
+    for (auto i = aStart; i < aEnd; ++i) {
+        advance += GetAdvanceForGlyph(i);
     }
     return advance;
 }
@@ -678,6 +663,50 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
     if (aAdvanceWidth) {
         *aAdvanceWidth = advance;
+    }
+}
+
+// This method is mostly parallel to Draw().
+void
+gfxTextRun::DrawEmphasisMarks(gfxContext *aContext, gfxTextRun* aMark,
+                              gfxFloat aMarkAdvance, gfxPoint aPt,
+                              uint32_t aStart, uint32_t aLength,
+                              PropertyProvider* aProvider)
+{
+    MOZ_ASSERT(aStart + aLength <= GetLength());
+
+    EmphasisMarkDrawParams params;
+    params.context = aContext;
+    params.mark = aMark;
+    params.advance = aMarkAdvance;
+    params.direction = GetDirection();
+    params.isVertical = IsVertical();
+
+    gfxFloat& inlineCoord = params.isVertical ? aPt.y : aPt.x;
+    gfxFloat direction = params.direction;
+
+    GlyphRunIterator iter(this, aStart, aLength);
+    while (iter.NextRun()) {
+        gfxFont* font = iter.GetGlyphRun()->mFont;
+        uint32_t start = iter.GetStringStart();
+        uint32_t end = iter.GetStringEnd();
+        uint32_t ligatureRunStart = start;
+        uint32_t ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
+
+        inlineCoord += direction *
+            ComputePartialLigatureWidth(start, ligatureRunStart, aProvider);
+
+        nsAutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
+        bool haveSpacing = GetAdjustedSpacingArray(
+            ligatureRunStart, ligatureRunEnd, aProvider,
+            ligatureRunStart, ligatureRunEnd, &spacingBuffer);
+        params.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
+        font->DrawEmphasisMarks(this, &aPt, ligatureRunStart,
+                                ligatureRunEnd - ligatureRunStart, params);
+
+        inlineCoord += direction *
+            ComputePartialLigatureWidth(ligatureRunEnd, end, aProvider);
     }
 }
 

@@ -96,25 +96,22 @@ TEST(stagefright_MoofParser, EmptyStream)
 {
   RefPtr<Stream> stream = new TestStream(nullptr, 0);
 
-  Monitor monitor("MP4Metadata::gtest");
-  MonitorAutoLock mon(monitor);
-  MoofParser parser(stream, 0, false, &monitor);
+  MoofParser parser(stream, 0, false);
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
 
-  nsTArray<MediaByteRange> byteRanges;
-  byteRanges.AppendElement(MediaByteRange(0, 0));
+  MediaByteRangeSet byteRanges;
   EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
   EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-  EXPECT_TRUE(parser.mInitRange.IsNull());
+  EXPECT_TRUE(parser.mInitRange.IsEmpty());
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
   EXPECT_FALSE(parser.HasMetadata());
   RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
   EXPECT_FALSE(metadataBuffer);
-  EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
-  EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+  EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
+  EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsEmpty());
 }
 
 nsTArray<uint8_t>
@@ -286,25 +283,22 @@ TEST(stagefright_MoofParser, test_case_mp4)
     ASSERT_FALSE(buffer.IsEmpty());
     RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
-    Monitor monitor("MP4Metadata::HasCompleteMetadata");
-    MonitorAutoLock mon(monitor);
-    MoofParser parser(stream, 0, false, &monitor);
+    MoofParser parser(stream, 0, false);
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
 
-    nsTArray<MediaByteRange> byteRanges;
-    byteRanges.AppendElement(MediaByteRange(0, 0));
+    MediaByteRangeSet byteRanges;
     EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
     EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-    EXPECT_TRUE(parser.mInitRange.IsNull());
+    EXPECT_TRUE(parser.mInitRange.IsEmpty());
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
     EXPECT_TRUE(parser.HasMetadata());
     RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
     EXPECT_TRUE(metadataBuffer);
-    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
-    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
+    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsEmpty());
   }
 }
 
@@ -317,8 +311,6 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     ASSERT_LE(step, buffer.Length());
-    Monitor monitor("MP4Metadata::HasCompleteMetadata");
-    MonitorAutoLock mon(monitor);
     // Just exercizing the parser starting at different points through the file,
     // making sure it doesn't crash.
     // No checks because results would differ for each position.
@@ -328,9 +320,8 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
         RefPtr<TestStream> stream =
           new TestStream(buffer.Elements() + offset, size);
 
-        MoofParser parser(stream, 0, false, &monitor);
-        nsTArray<MediaByteRange> byteRanges;
-        byteRanges.AppendElement(MediaByteRange(0, 0));
+        MoofParser parser(stream, 0, false);
+        MediaByteRangeSet byteRanges;
         EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
         parser.GetCompositionRange(byteRanges);
         parser.HasMetadata();

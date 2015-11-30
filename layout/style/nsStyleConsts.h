@@ -1068,6 +1068,36 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_TEXT_ANCHOR_MIDDLE             1
 #define NS_STYLE_TEXT_ANCHOR_END                2
 
+// text-emphasis-position
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_OVER    (1 << 0)
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER   (1 << 1)
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT    (1 << 2)
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT   (1 << 3)
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT \
+  (NS_STYLE_TEXT_EMPHASIS_POSITION_OVER | \
+   NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)
+#define NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH \
+  (NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER | \
+   NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT)
+
+// text-emphasis-style
+// Note that filled and none here both have zero as their value. This is
+// not an problem because:
+// * In specified style, none is represented as eCSSUnit_None.
+// * In computed style, 'filled' always has its shape computed, and thus
+//   the combined value is never zero.
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_NONE           0
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_FILL_MASK      (1 << 3)
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED         (0 << 3)
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN           (1 << 3)
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_SHAPE_MASK     7
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_DOT            1
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_CIRCLE         2
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_DOUBLE_CIRCLE  3
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_TRIANGLE       4
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_SESAME         5
+#define NS_STYLE_TEXT_EMPHASIS_STYLE_STRING         255
+
 // text-rendering
 #define NS_STYLE_TEXT_RENDERING_AUTO               0
 #define NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED      1

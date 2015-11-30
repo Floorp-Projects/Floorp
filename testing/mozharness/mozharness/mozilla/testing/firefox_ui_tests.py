@@ -216,7 +216,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         return self.abs_dirs
 
-    def query_harness_args(self, extra_harness_config_options):
+    def query_harness_args(self, extra_harness_config_options=None):
         """Collects specific update test related command line arguments.
 
         Sub classes should override this method for their own specific arguments.

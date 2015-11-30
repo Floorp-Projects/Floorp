@@ -1901,6 +1901,29 @@ const KTableEntry nsCSSProps::kTextOrientationKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kTextEmphasisPositionKTable[] = {
+  { eCSSKeyword_over, NS_STYLE_TEXT_EMPHASIS_POSITION_OVER },
+  { eCSSKeyword_under, NS_STYLE_TEXT_EMPHASIS_POSITION_UNDER },
+  { eCSSKeyword_left, NS_STYLE_TEXT_EMPHASIS_POSITION_LEFT },
+  { eCSSKeyword_right, NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kTextEmphasisStyleFillKTable[] = {
+  { eCSSKeyword_filled, NS_STYLE_TEXT_EMPHASIS_STYLE_FILLED },
+  { eCSSKeyword_open, NS_STYLE_TEXT_EMPHASIS_STYLE_OPEN },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kTextEmphasisStyleShapeKTable[] = {
+  { eCSSKeyword_dot, NS_STYLE_TEXT_EMPHASIS_STYLE_DOT },
+  { eCSSKeyword_circle, NS_STYLE_TEXT_EMPHASIS_STYLE_CIRCLE },
+  { eCSSKeyword_double_circle, NS_STYLE_TEXT_EMPHASIS_STYLE_DOUBLE_CIRCLE },
+  { eCSSKeyword_triangle, NS_STYLE_TEXT_EMPHASIS_STYLE_TRIANGLE },
+  { eCSSKeyword_sesame, NS_STYLE_TEXT_EMPHASIS_STYLE_SESAME} ,
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
   { eCSSKeyword_clip, NS_STYLE_TEXT_OVERFLOW_CLIP },
   { eCSSKeyword_ellipsis, NS_STYLE_TEXT_OVERFLOW_ELLIPSIS },
@@ -2754,6 +2777,12 @@ static const nsCSSProperty gTextDecorationSubpropTable[] = {
   eCSSProperty_text_decoration_color,
   eCSSProperty_text_decoration_line,
   eCSSProperty_text_decoration_style,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gTextEmphasisSubpropTable[] = {
+  eCSSProperty_text_emphasis_style,
+  eCSSProperty_text_emphasis_color,
   eCSSProperty_UNKNOWN
 };
 

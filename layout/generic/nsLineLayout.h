@@ -662,6 +662,11 @@ protected:
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
 
+  void AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
+                      const nsStyleText* aStyleText,
+                      nsFontMetrics* aFontMetrics,
+                      bool* aZeroEffectiveSpanBox);
+
   void VerticalAlignFrames(PerSpanData* psd);
 
   void PlaceTopBottomFrames(PerSpanData* psd,
