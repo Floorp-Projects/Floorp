@@ -251,7 +251,10 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.fontFeatureSettings == aFont2.fontFeatureSettings) &&
       (aFont1.languageOverride == aFont2.languageOverride) &&
       (aFont1.systemFont == aFont2.systemFont)) {
-    return NS_STYLE_HINT_NONE;
+    if ((aFont1.decorations == aFont2.decorations)) {
+      return NS_STYLE_HINT_NONE;
+    }
+    return nsChangeHint_RepaintFrame;
   }
   return NS_STYLE_HINT_REFLOW;
 }

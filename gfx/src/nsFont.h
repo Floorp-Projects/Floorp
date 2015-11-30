@@ -66,6 +66,10 @@ struct nsFont {
   // -- bitmask for both enumerated and functional propvals
   uint16_t variantAlternates;
 
+  // The decorations on the font (underline, overline,
+  // line-through). The decorations can be binary or'd together.
+  uint8_t decorations;
+
   // Smoothing - controls subpixel-antialiasing (currently OSX only)
   uint8_t smoothing;
 
@@ -123,11 +127,8 @@ struct nsFont {
     return Equals(aOther);
   }
 
-  // FIXME (in patch 3): These are now the same.  Remove BaseEquals!
-  bool Equals(const nsFont& aOther) const
-  {
-    return BaseEquals(aOther);
-  }
+  bool Equals(const nsFont& aOther) const ;
+  // Compare ignoring differences in 'variant' and 'decoration'
   bool BaseEquals(const nsFont& aOther) const;
 
   nsFont& operator=(const nsFont& aOther);

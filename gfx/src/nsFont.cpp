@@ -48,6 +48,7 @@ nsFont::Init()
   sizeAdjust = -1.0f;
   kerning = NS_FONT_KERNING_AUTO;
   synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
+  decorations = 0;
 
   variantAlternates = 0;
   variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
@@ -64,6 +65,7 @@ nsFont::nsFont(const nsFont& aOther)
   systemFont = aOther.systemFont;
   weight = aOther.weight;
   stretch = aOther.stretch;
+  decorations = aOther.decorations;
   smoothing = aOther.smoothing;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
@@ -116,6 +118,15 @@ bool nsFont::BaseEquals(const nsFont& aOther) const
   return false;
 }
 
+bool nsFont::Equals(const nsFont& aOther) const
+{
+  if (BaseEquals(aOther) &&
+      (decorations == aOther.decorations)) {
+    return true;
+  }
+  return false;
+}
+
 nsFont& nsFont::operator=(const nsFont& aOther)
 {
   fontlist = aOther.fontlist;
@@ -123,6 +134,7 @@ nsFont& nsFont::operator=(const nsFont& aOther)
   systemFont = aOther.systemFont;
   weight = aOther.weight;
   stretch = aOther.stretch;
+  decorations = aOther.decorations;
   smoothing = aOther.smoothing;
   size = aOther.size;
   sizeAdjust = aOther.sizeAdjust;
