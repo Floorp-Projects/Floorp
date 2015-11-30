@@ -89,7 +89,7 @@
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color,
                "background-color": gComputedStyle.backgroundColor};
-      testTextAttrs(ID, 27, attrs, defAttrs, 27, 49);
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 50);
 
       //////////////////////////////////////////////////////////////////////////
       // area4
@@ -110,7 +110,7 @@
       tempElem = tempElem.parentNode;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
-      testTextAttrs(ID, 34, attrs, defAttrs, 33, 45);
+      testTextAttrs(ID, 34, attrs, defAttrs, 33, 46);
 
       //////////////////////////////////////////////////////////////////////////
       // area5: "Green!*!RedNormal"
@@ -144,7 +144,7 @@
 
       // Normal
       attrs = {};
-      testTextAttrs(ID, 11, attrs, defAttrs, 11, 17);
+      testTextAttrs(ID, 11, attrs, defAttrs, 11, 18);
 
       //////////////////////////////////////////////////////////////////////////
       // area6 (CSS vertical-align property, refer to bug 445938 for details
@@ -323,7 +323,7 @@
       testTextAttrs(ID, 152, attrs, defAttrs, 151, 164);
 
       attrs = {};
-      testTextAttrs(ID, 165, attrs, defAttrs, 164, 171);
+      testTextAttrs(ID, 165, attrs, defAttrs, 164, 172);
 
       //////////////////////////////////////////////////////////////////////////
       // area10, different single style spans in non-styled paragraph
@@ -383,7 +383,7 @@
       testTextAttrs(ID, 111, attrs, defAttrs, 110, 123);
 
       attrs = {};
-      testTextAttrs(ID, 124, attrs, defAttrs, 123, 130);
+      testTextAttrs(ID, 124, attrs, defAttrs, 123, 131);
 
       //////////////////////////////////////////////////////////////////////////
       // area11, "font-weight" tests
@@ -410,7 +410,7 @@
       testTextAttrs(ID, 51, attrs, defAttrs, 51, 57);
 
       attrs = { };
-      testTextAttrs(ID, 57, attrs, defAttrs, 57, 96);
+      testTextAttrs(ID, 57, attrs, defAttrs, 57, 97);
 
       //////////////////////////////////////////////////////////////////////////
       // test out of range offset
@@ -487,7 +487,7 @@
         testTextAttrs(ID, 27, attrs, defAttrs, 27, 31);
 
         attrs = { };
-        testTextAttrs(ID, 31, attrs, defAttrs, 31, 44);
+        testTextAttrs(ID, 31, attrs, defAttrs, 31, 45);
       }
 
       //////////////////////////////////////////////////////////////////////////
@@ -530,7 +530,7 @@
         "text-line-through-style": "wavy",
         "text-line-through-color": "rgb(0, 0, 0)",
       };
-      testTextAttrs(ID, 39, attrs, defAttrs, 39, 43);
+      testTextAttrs(ID, 39, attrs, defAttrs, 39, 44);
 
       //////////////////////////////////////////////////////////////////////////
       // area18, "auto-generation text" tests
@@ -560,7 +560,7 @@
       testTextAttrs(ID, 11, attrs, defAttrs, 10, 17);
 
       attrs = {};
-      testTextAttrs(ID, 18, attrs, defAttrs, 17, 27);
+      testTextAttrs(ID, 18, attrs, defAttrs, 17, 28);
 
        //////////////////////////////////////////////////////////////////////////
       // area20, "aOffset as -1 (Mozilla Bug 789621)" test
