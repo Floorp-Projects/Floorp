@@ -990,7 +990,7 @@ BluetoothDaemonGattModule::ServerSendResponseCmd(
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aConnId),
     PackConversion<int, int32_t>(aTransId),
-    aResponse.mHandle,
+    PackConversion<BluetoothAttributeHandle, uint16_t>(aResponse.mHandle),
     aResponse.mOffset,
     PackConversion<BluetoothGattAuthReq, uint8_t>(aResponse.mAuthReq),
     PackConversion<uint16_t, int32_t>(aStatus),
