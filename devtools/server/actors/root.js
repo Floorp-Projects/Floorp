@@ -95,6 +95,7 @@ function RootActor(aConnection, aParameters) {
   this._onTabListChanged = this.onTabListChanged.bind(this);
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._onWorkerListChanged = this.onWorkerListChanged.bind(this);
+  this._onServiceWorkerRegistrationListChanged = this.onServiceWorkerRegistrationListChanged.bind(this);
   this._extraActors = {};
 
   this._globalActorPool = new ActorPool(this.conn);
@@ -386,6 +387,37 @@ RootActor.prototype = {
     this._parameters.workerList.onListChanged = null;
   },
 
+  onListServiceWorkerRegistrations: function () {
+    let registrationList = this._parameters.serviceWorkerRegistrationList;
+    if (!registrationList) {
+      return { from: this.actorID, error: "noServiceWorkerRegistrations",
+               message: "This root actor has no service worker registrations." };
+    }
+
+    return registrationList.getList().then(actors => {
+      let pool = new ActorPool(this.conn);
+      for (let actor of actors) {
+        pool.addActor(actor);
+      }
+
+      this.conn.removeActorPool(this._serviceWorkerRegistrationActorPool);
+      this._serviceWorkerRegistrationActorPool = pool;
+      this.conn.addActorPool(this._serviceWorkerRegistrationActorPool);
+
+      registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
+
+      return {
+        "from": this.actorID,
+        "registrations": actors.map(actor => actor.form())
+      };
+    });
+  },
+
+  onServiceWorkerRegistrationListChanged: function () {
+    this.conn.send({ from: this.actorID, type: "serviceWorkerRegistrationListChanged" });
+    this._parameters.serviceWorkerRegistrationList.onListChanged = null;
+  },
+
   onListProcesses: function () {
     let processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
@@ -473,6 +505,7 @@ RootActor.prototype.requestTypes = {
   "getTab": RootActor.prototype.onGetTab,
   "listAddons": RootActor.prototype.onListAddons,
   "listWorkers": RootActor.prototype.onListWorkers,
+  "listServiceWorkerRegistrations": RootActor.prototype.onListServiceWorkerRegistrations,
   "listProcesses": RootActor.prototype.onListProcesses,
   "getProcess": RootActor.prototype.onGetProcess,
   "echo": RootActor.prototype.onEcho,

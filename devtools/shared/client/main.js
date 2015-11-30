@@ -160,6 +160,7 @@ const UnsolicitedNotifications = {
   "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
   "workerListChanged": "workerListChanged",
+  "serviceWorkerRegistrationListChanged": "serviceWorkerRegistrationList",
   "tabNavigated": "tabNavigated",
   "frameUpdate": "frameUpdate",
   "pageError": "pageError",
@@ -1528,6 +1529,15 @@ RootClient.prototype = {
    */
   listWorkers: DebuggerClient.requester({ type: "listWorkers" },
                                         { telemetry: "LISTWORKERS" }),
+
+  /**
+   * List the registered service workers.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  listServiceWorkerRegistrations: DebuggerClient.requester({ type: "listServiceWorkerRegistrations" },
+                                                           { telemetry: "LISTSERVICEWORKERREGISTRATIONS" }),
 
   /**
    * List the running processes.

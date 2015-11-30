@@ -6112,6 +6112,22 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'listTabs' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTSERVICEWORKERREGISTRATIONS_MS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "ejpbruel@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "100",
+    "description": "The time (in milliseconds) that it took a 'listServiceWorkerRegistrations' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_LISTSERVICEWORKERREGISTRATIONS_MS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "ejpbruel@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "100",
+    "description": "The time (in milliseconds) that it took a 'listServiceWorkerRegistrations' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_PROTOCOLDESCRIPTION_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
