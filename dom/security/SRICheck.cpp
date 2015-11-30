@@ -211,34 +211,6 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
   return verifier.Verify(aMetadata, channel, aCORSMode, aDocument);
 }
 
-/* static */ nsresult
-SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIIncrementalStreamLoader* aLoader,
-                          const CORSMode aCORSMode,
-                          uint32_t aStringLen,
-                          const uint8_t* aString,
-                          const nsIDocument* aDocument)
-{
-  NS_ENSURE_ARG_POINTER(aLoader);
-
-  nsCOMPtr<nsIRequest> request;
-  aLoader->GetRequest(getter_AddRefs(request));
-  NS_ENSURE_ARG_POINTER(request);
-  nsCOMPtr<nsIChannel> channel;
-  channel = do_QueryInterface(request);
-
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
-    SRILOG(("SRICheck::VerifyIntegrity (stream)"));
-  }
-
-  SRICheckDataVerifier verifier(aMetadata, aDocument);
-  nsresult rv;
-  rv = verifier.Update(aStringLen, aString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return verifier.Verify(aMetadata, channel, aCORSMode, aDocument);
-}
-
 //////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////
