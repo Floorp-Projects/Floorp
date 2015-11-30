@@ -1,0 +1,6 @@
+{
+  "extends": [
+    "../../../../testing/mochitest/chrome.eslintrc",
+    "../../../../testing/xpcshell/xpcshell.eslintrc"
+  ]
+}
