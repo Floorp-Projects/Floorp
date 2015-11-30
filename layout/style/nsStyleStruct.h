@@ -117,6 +117,7 @@ struct nsStyleFont {
            nsChangeHint_ReflowChangesSizeOrPosition |
            nsChangeHint_ClearAncestorIntrinsics;
   }
+  static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
   /**
    * Return aSize multiplied by the current text zoom factor (in aPresContext).
