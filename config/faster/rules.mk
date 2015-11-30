@@ -45,8 +45,10 @@ default: $(addprefix install-,$(INSTALL_MANIFESTS))
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
 default: $(TOPOBJDIR)/dist/bin/platform.ini
 
+ifndef NO_XPIDL
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
+endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 # Mac builds require to copy things in dist/bin/*.app
