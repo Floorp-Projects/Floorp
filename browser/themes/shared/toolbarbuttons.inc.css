@@ -184,40 +184,6 @@ toolbar[brighttext] #sync-button[status="active"] {
   -moz-image-region: rect(0, 720px, 18px, 702px);
 }
 
-#loop-button {
-  list-style-image: url(chrome://browser/skin/loop/toolbar.png);
-  -moz-image-region: rect(0, 18px, 18px, 0);
-}
-
-toolbar[brighttext] #loop-button {
-  list-style-image: url(chrome://browser/skin/loop/toolbar-inverted.png);
-}
-
-#loop-button[state="disabled"],
-#loop-button[disabled="true"] {
-  -moz-image-region: rect(0, 36px, 18px, 18px);
-}
-
-#loop-button:not([disabled="true"])[state="error"] {
-  -moz-image-region: rect(0, 54px, 18px, 36px);
-}
-
-#loop-button:not([disabled="true"])[state="action"] {
-  -moz-image-region: rect(0, 72px, 18px, 54px);
-}
-
-#loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-  -moz-image-region: rect(0, 90px, 18px, 72px);
-}
-
-#loop-button:not([disabled="true"])[state="active"] {
-  -moz-image-region: rect(0, 108px, 18px, 90px);
-}
-
-#loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-  -moz-image-region: rect(0, 126px, 18px, 108px);
-}
-
 #webide-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 738px, 18px, 720px);
 }
@@ -428,40 +394,6 @@ toolbar[brighttext] #loop-button {
 %else
     -moz-image-region: rect(36px, 1548px, 72px, 1512px);
 %endif
-  }
-
-  #loop-button {
-    list-style-image: url("chrome://browser/skin/loop/toolbar@2x.png");
-    -moz-image-region: rect(0, 36px, 36px, 0);
-  }
-
-  toolbar[brighttext] #loop-button {
-    list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
-  }
-
-  #loop-button[state="disabled"],
-  #loop-button[disabled="true"] {
-    -moz-image-region: rect(0, 72px, 36px, 36px);
-  }
-
-  #loop-button:not([disabled="true"])[state="error"] {
-    -moz-image-region: rect(0, 108px, 36px, 72px);
-  }
-
-  #loop-button:not([disabled="true"])[state="action"] {
-    -moz-image-region: rect(0, 144px, 36px, 108px);
-  }
-
-  #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(0, 180px, 36px, 144px);
-  }
-
-  #loop-button:not([disabled="true"])[state="active"] {
-    -moz-image-region: rect(0, 216px, 36px, 180px);
-  }
-
-  #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(0, 252px, 36px, 216px);
   }
 }
 %endif

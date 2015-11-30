@@ -676,6 +676,7 @@
 @RESPATH@/browser/chrome/icons/default/default32.png
 @RESPATH@/browser/chrome/icons/default/default48.png
 #endif
+@RESPATH@/browser/features/*
 
 ; [Webide Files]
 @RESPATH@/browser/chrome/webide@JAREXT@
