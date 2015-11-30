@@ -17,7 +17,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsIDocument.h"
-#include "nsIStreamLoader.h"
+#include "nsIIncrementalStreamLoader.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
@@ -195,7 +195,7 @@ public:
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class nsScriptLoader final : public nsIStreamLoaderObserver
+class nsScriptLoader final : public nsIIncrementalStreamLoaderObserver
 {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater
   {
@@ -223,7 +223,7 @@ public:
   explicit nsScriptLoader(nsIDocument* aDocument);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
 
   /**
    * The loader maintains a weak reference to the document with
@@ -489,7 +489,7 @@ private:
 
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
-                                nsIStreamLoader* aLoader,
+                                nsIIncrementalStreamLoader* aLoader,
                                 nsresult aStatus,
                                 uint32_t aStringLen,
                                 const uint8_t* aString);

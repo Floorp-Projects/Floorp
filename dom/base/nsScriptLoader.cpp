@@ -157,10 +157,10 @@ nsScriptLoader::~nsScriptLoader()
   // subtree in the meantime and therefore aren't actually going away.
   for (uint32_t j = 0; j < mPendingChildLoaders.Length(); ++j) {
     mPendingChildLoaders[j]->RemoveExecuteBlocker();
-  }  
+  }
 }
 
-NS_IMPL_ISUPPORTS(nsScriptLoader, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsScriptLoader, nsIIncrementalStreamLoaderObserver)
 
 // Helper method for checking if the script element is an event-handler
 // This means that it has both a for-attribute and a event-attribute.
@@ -269,7 +269,7 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
   return NS_OK;
 }
 
-class ContextMediator : public nsIStreamLoaderObserver
+class ContextMediator : public nsIIncrementalStreamLoaderObserver
 {
 public:
   explicit ContextMediator(nsScriptLoader *aScriptLoader, nsISupports *aContext)
@@ -277,7 +277,7 @@ public:
   , mContext(aContext) {}
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
 
 private:
   virtual ~ContextMediator() {}
@@ -285,10 +285,10 @@ private:
   nsCOMPtr<nsISupports>  mContext;
 };
 
-NS_IMPL_ISUPPORTS(ContextMediator, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(ContextMediator, nsIIncrementalStreamLoaderObserver)
 
 NS_IMETHODIMP
-ContextMediator::OnStreamComplete(nsIStreamLoader* aLoader,
+ContextMediator::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                   nsISupports* aContext,
                                   nsresult aStatus,
                                   uint32_t aStringLen,
@@ -385,8 +385,8 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
 
   RefPtr<ContextMediator> mediator = new ContextMediator(this, aRequest);
 
-  nsCOMPtr<nsIStreamLoader> loader;
-  rv = NS_NewStreamLoader(getter_AddRefs(loader), mediator);
+  nsCOMPtr<nsIIncrementalStreamLoader> loader;
+  rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), mediator);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return channel->AsyncOpen2(loader);
@@ -1439,7 +1439,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 }
 
 NS_IMETHODIMP
-nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
+nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                  nsISupports* aContext,
                                  nsresult aStatus,
                                  uint32_t aStringLen,
@@ -1535,7 +1535,7 @@ nsScriptLoader::NumberOfProcessors()
 
 nsresult
 nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
-                                     nsIStreamLoader* aLoader,
+                                     nsIIncrementalStreamLoader* aLoader,
                                      nsresult aStatus,
                                      uint32_t aStringLen,
                                      const uint8_t* aString)

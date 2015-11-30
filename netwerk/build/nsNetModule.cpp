@@ -21,6 +21,7 @@
 #include "nsSimpleNestedURI.h"
 #include "nsLoadGroup.h"
 #include "nsStreamLoader.h"
+#include "nsIncrementalStreamLoader.h"
 #include "nsUnicharStreamLoader.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
@@ -707,6 +708,7 @@ NS_DEFINE_NAMED_CID(NS_ASYNCSTREAMCOPIER_CID);
 NS_DEFINE_NAMED_CID(NS_INPUTSTREAMPUMP_CID);
 NS_DEFINE_NAMED_CID(NS_INPUTSTREAMCHANNEL_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMLOADER_CID);
+NS_DEFINE_NAMED_CID(NS_INCREMENTALSTREAMLOADER_CID);
 NS_DEFINE_NAMED_CID(NS_UNICHARSTREAMLOADER_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOADER_CID);
 NS_DEFINE_NAMED_CID(NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID);
@@ -854,6 +856,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_INPUTSTREAMPUMP_CID, false, nullptr, nsInputStreamPumpConstructor },
     { &kNS_INPUTSTREAMCHANNEL_CID, false, nullptr, nsInputStreamChannelConstructor },
     { &kNS_STREAMLOADER_CID, false, nullptr, nsStreamLoader::Create },
+    { &kNS_INCREMENTALSTREAMLOADER_CID, false, nullptr, nsIncrementalStreamLoader::Create },
     { &kNS_UNICHARSTREAMLOADER_CID, false, nullptr, nsUnicharStreamLoader::Create },
     { &kNS_DOWNLOADER_CID, false, nullptr, nsDownloaderConstructor },
     { &kNS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID, false, nullptr,
@@ -1007,6 +1010,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_INPUTSTREAMPUMP_CONTRACTID, &kNS_INPUTSTREAMPUMP_CID },
     { NS_INPUTSTREAMCHANNEL_CONTRACTID, &kNS_INPUTSTREAMCHANNEL_CID },
     { NS_STREAMLOADER_CONTRACTID, &kNS_STREAMLOADER_CID },
+    { NS_INCREMENTALSTREAMLOADER_CONTRACTID, &kNS_INCREMENTALSTREAMLOADER_CID },
     { NS_UNICHARSTREAMLOADER_CONTRACTID, &kNS_UNICHARSTREAMLOADER_CID },
     { NS_DOWNLOADER_CONTRACTID, &kNS_DOWNLOADER_CID },
     { NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CONTRACTID, &kNS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID },

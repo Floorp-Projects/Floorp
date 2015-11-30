@@ -42,6 +42,8 @@ class nsIRequestObserver;
 class nsIStreamListener;
 class nsIStreamLoader;
 class nsIStreamLoaderObserver;
+class nsIIncrementalStreamLoader;
+class nsIIncrementalStreamLoaderObserver;
 class nsIUnicharStreamLoader;
 class nsIUnicharStreamLoaderObserver;
 
@@ -368,6 +370,9 @@ nsresult NS_NewDownloader(nsIStreamListener   **result,
 nsresult NS_NewStreamLoader(nsIStreamLoader        **result,
                             nsIStreamLoaderObserver *observer,
                             nsIRequestObserver      *requestObserver = nullptr);
+
+nsresult NS_NewIncrementalStreamLoader(nsIIncrementalStreamLoader        **result,
+                                       nsIIncrementalStreamLoaderObserver *observer);
 
 nsresult NS_NewStreamLoaderInternal(nsIStreamLoader        **outStream,
                                     nsIURI                  *aUri,

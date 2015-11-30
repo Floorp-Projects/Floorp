@@ -239,11 +239,11 @@ EvalScript(JSContext* cx,
     return NS_OK;
 }
 
-class AsyncScriptLoader : public nsIStreamLoaderObserver
+class AsyncScriptLoader : public nsIIncrementalStreamLoaderObserver
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_NSISTREAMLOADEROBSERVER
+    NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
 
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AsyncScriptLoader)
 
@@ -277,7 +277,7 @@ private:
 NS_IMPL_CYCLE_COLLECTION_CLASS(AsyncScriptLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncScriptLoader)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIIncrementalStreamLoaderObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AsyncScriptLoader)
@@ -326,7 +326,7 @@ class MOZ_STACK_CLASS AutoRejectPromise
 };
 
 NS_IMETHODIMP
-AsyncScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
+AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                     nsISupports* aContext,
                                     nsresult aStatus,
                                     uint32_t aLength,
@@ -431,8 +431,8 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
                               cache,
                               promise);
 
-    nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), loadObserver);
+    nsCOMPtr<nsIIncrementalStreamLoader> loader;
+    rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), loadObserver);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> listener = loader.get();
@@ -673,11 +673,11 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
   * Let us compile scripts from a URI off the main thread.
   */
 
-class ScriptPrecompiler : public nsIStreamLoaderObserver
+class ScriptPrecompiler : public nsIIncrementalStreamLoaderObserver
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMLOADEROBSERVER
+    NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
 
     ScriptPrecompiler(nsIObserver* aObserver,
                       nsIPrincipal* aPrincipal,
@@ -709,7 +709,7 @@ private:
     size_t mScriptLength;
 };
 
-NS_IMPL_ISUPPORTS(ScriptPrecompiler, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS(ScriptPrecompiler, nsIIncrementalStreamLoaderObserver);
 
 class NotifyPrecompilationCompleteRunnable : public nsRunnable
 {
@@ -770,7 +770,7 @@ NotifyPrecompilationCompleteRunnable::Run(void)
 }
 
 NS_IMETHODIMP
-ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
+ScriptPrecompiler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                     nsISupports* aContext,
                                     nsresult aStatus,
                                     uint32_t aLength,
@@ -876,8 +876,8 @@ mozJSSubScriptLoader::PrecompileScript(nsIURI* aURI,
     RefPtr<ScriptPrecompiler> loadObserver =
         new ScriptPrecompiler(aObserver, aPrincipal, channel);
 
-    nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), loadObserver);
+    nsCOMPtr<nsIIncrementalStreamLoader> loader;
+    rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), loadObserver);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> listener = loader.get();

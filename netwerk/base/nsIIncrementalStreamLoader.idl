@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIStreamListener.idl"
+
+interface nsIRequest;
+interface nsIIncrementalStreamLoader;
+
+[scriptable, uuid(2143eaad-674e-4613-87f8-359d4c40f590)]
+interface nsIIncrementalStreamLoaderObserver : nsISupports
+{
+    /**
+     * Called when the entire stream has been loaded.
+     *
+     * @param loader the stream loader that loaded the stream.
+     * @param ctxt the context parameter of the underlying channel
+     * @param status the status of the underlying channel
+     * @param resultLength the length of the data loaded
+     * @param result the data
+     *
+     * This method will always be called asynchronously by the
+     * nsIIncrementalStreamLoader involved, on the thread that called the
+     * loader's init() method.
+     *
+     * If the observer wants to take over responsibility for the
+     * data buffer (result), it returns NS_SUCCESS_ADOPTED_DATA
+     * in place of NS_OK as its success code. The loader will then
+     * "forget" about the data and not free() it after
+     * onStreamComplete() returns; observer must call free()
+     * when the data is no longer required.
+     */
+    void onStreamComplete(in nsIIncrementalStreamLoader loader,
+                          in nsISupports ctxt,
+                          in nsresult status,
+                          in unsigned long resultLength,
+                          [const,array,size_is(resultLength)] in octet result);
+};
+
+/**
+ * Asynchronously loads a channel into a memory buffer.
+ *
+ * To use this interface, first call init() with a nsIIncrementalStreamLoaderObserver
+ * that will be notified when the data has been loaded. Then call asyncOpen()
+ * on the channel with the nsIIncrementalStreamLoader as the listener. The context
+ * argument in the asyncOpen() call will be passed to the onStreamComplete()
+ * callback.
+ *
+ * XXX define behaviour for sizes >4 GB
+ */
+[scriptable, uuid(a023b060-ba23-431a-b449-2dd63e220554)]
+interface nsIIncrementalStreamLoader : nsIStreamListener
+{
+    /**
+     * Initialize this stream loader, and start loading the data.
+     *
+     * @param aObserver
+     *        An observer that will be notified when the data is complete.
+     */
+    void init(in nsIIncrementalStreamLoaderObserver aObserver);
+
+    /**
+     * Gets the number of bytes read so far.
+     */
+    readonly attribute unsigned long numBytesRead;
+
+    /**
+     * Gets the request that loaded this file.
+     * null after the request has finished loading.
+     */
+    readonly attribute nsIRequest request;
+};
