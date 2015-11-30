@@ -17,10 +17,10 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/IntegerRange.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
-#include "nsCRT.h"
 #include "nsFontMetrics.h"
 #include "nsSplittableFrame.h"
 #include "nsLineLayout.h"
@@ -51,6 +51,7 @@
 #include "MathMLTextRunFactory.h"
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
+#include "nsStyleUtil.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -926,6 +927,7 @@ public:
   void AssignTextRun(gfxTextRun* aTextRun, float aInflation);
   nsTextFrame* GetNextBreakBeforeFrame(uint32_t* aIndex);
   void SetupBreakSinksForTextRun(gfxTextRun* aTextRun, const void* aTextPtr);
+  void SetupTextEmphasisForTextRun(gfxTextRun* aTextRun, const void* aTextPtr);
   struct FindBoundaryState {
     nsIFrame*    mStopAtFrame;
     nsTextFrame* mFirstTextFrame;
@@ -1900,6 +1902,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   const void* textPtr = aTextBuffer;
   bool anyTextTransformStyle = false;
   bool anyMathMLStyling = false;
+  bool anyTextEmphasis = false;
   uint8_t sstyScriptLevel = 0;
   uint32_t mathFlags = 0;
   uint32_t textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
@@ -1967,6 +1970,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textStyle = f->StyleText();
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = true;
+    }
+    if (textStyle->HasTextEmphasis()) {
+      anyTextEmphasis = true;
     }
     textFlags |= GetSpacingFlags(f);
     nsTextFrameUtils::CompressionMode compression =
@@ -2256,6 +2262,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // making up the textrun, but I don't see a way to avoid this.
   SetupBreakSinksForTextRun(textRun, textPtr);
 
+  if (anyTextEmphasis) {
+    SetupTextEmphasisForTextRun(textRun, textPtr);
+  }
+
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
         transformedLength, mDoubleByteText);
@@ -2486,6 +2496,65 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     }
     
     iter = iterNext;
+  }
+}
+
+static bool
+MayCharacterHaveEmphasisMark(uint32_t aCh)
+{
+  auto category = unicode::GetGeneralCategory(aCh);
+  // Comparing an unsigned variable against zero is a compile error,
+  // so we use static assert here to ensure we really don't need to
+  // compare it with the given constant.
+  static_assert(IsUnsigned<decltype(category)>::value &&
+                HB_UNICODE_GENERAL_CATEGORY_CONTROL == 0,
+                "if this constant is not zero, or category is signed, "
+                "we need to explicitly do the comparison below");
+  return !(category <= HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED ||
+           (category >= HB_UNICODE_GENERAL_CATEGORY_LINE_SEPARATOR &&
+            category <= HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR));
+}
+
+static bool
+MayCharacterHaveEmphasisMark(uint8_t aCh)
+{
+  // 0x00~0x1f and 0x7f~0x9f are in category Cc
+  // 0x20 and 0xa0 are in category Zs
+  bool result = !(aCh <= 0x20 || (aCh >= 0x7f && aCh <= 0xa0));
+  MOZ_ASSERT(result == MayCharacterHaveEmphasisMark(uint32_t(aCh)),
+             "result for uint8_t should match result for uint32_t");
+  return result;
+}
+
+void
+BuildTextRunsScanner::SetupTextEmphasisForTextRun(gfxTextRun* aTextRun,
+                                                  const void* aTextPtr)
+{
+  if (!mDoubleByteText) {
+    auto text = reinterpret_cast<const uint8_t*>(aTextPtr);
+    for (auto i : MakeRange(aTextRun->GetLength())) {
+      if (!MayCharacterHaveEmphasisMark(text[i])) {
+        aTextRun->SetNoEmphasisMark(i);
+      }
+    }
+  } else {
+    auto text = reinterpret_cast<const char16_t*>(aTextPtr);
+    auto length = aTextRun->GetLength();
+    for (size_t i = 0; i < length; ++i) {
+      if (NS_IS_HIGH_SURROGATE(text[i]) && i + 1 < length &&
+          NS_IS_LOW_SURROGATE(text[i + 1])) {
+        uint32_t ch = SURROGATE_TO_UCS4(text[i], text[i + 1]);
+        if (!MayCharacterHaveEmphasisMark(ch)) {
+          aTextRun->SetNoEmphasisMark(i);
+          aTextRun->SetNoEmphasisMark(i + 1);
+        }
+        ++i;
+      } else {
+        if (!MayCharacterHaveEmphasisMark(uint32_t(text[i]))) {
+          aTextRun->SetNoEmphasisMark(i);
+        }
+      }
+    }
   }
 }
 
@@ -2841,10 +2910,8 @@ static bool IsChineseOrJapanese(nsTextFrame* aFrame)
   if (!language) {
     return false;
   }
-  const char16_t *lang = language->GetUTF16String();
-  return (!nsCRT::strncmp(lang, MOZ_UTF16("ja"), 2) ||
-          !nsCRT::strncmp(lang, MOZ_UTF16("zh"), 2)) &&
-         (language->GetLength() == 2 || lang[2] == '-');
+  return nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("ja")) ||
+         nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh"));
 }
 
 #ifdef DEBUG
@@ -5047,6 +5114,92 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
   return nsLayoutUtils::FontSizeInflationInner(aFrame, aInflationMinFontSize);
 }
 
+static already_AddRefed<nsFontMetrics>
+GetFontMetricsOfEmphasisMarks(nsStyleContext* aStyleContext, float aInflation)
+{
+  nsPresContext* pc = aStyleContext->PresContext();
+  WritingMode wm(aStyleContext);
+  gfxFont::Orientation orientation = wm.IsVertical() && !wm.IsSideways() ?
+                                     gfxFont::eVertical : gfxFont::eHorizontal;
+
+  const nsStyleFont* styleFont = aStyleContext->StyleFont();
+  nsFont font = styleFont->mFont;
+  font.size = NSToCoordRound(font.size * aInflation * 0.5f);
+
+  RefPtr<nsFontMetrics> fm;
+  pc->DeviceContext()->GetMetricsFor(font, styleFont->mLanguage,
+                                     styleFont->mExplicitLanguage,
+                                     orientation, pc->GetUserFontSet(),
+                                     pc->GetTextPerfMetrics(),
+                                     *getter_AddRefs(fm));
+  return fm.forget();
+}
+
+static gfxTextRun*
+GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
+                                WritingMode aWM, const nsStyleText* aStyleText)
+{
+  const nsString& emphasisString = aStyleText->mTextEmphasisStyleString;
+  RefPtr<gfxContext> ctx = CreateReferenceThebesContext(aFrame);
+  auto appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
+  uint32_t flags = nsLayoutUtils::
+    GetTextRunOrientFlagsForStyle(aFrame->StyleContext());
+  if (flags == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
+    // The emphasis marks should always be rendered upright per spec.
+    flags = gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+  }
+  return aFontMetrics->GetThebesFontGroup()->
+    MakeTextRun<char16_t>(emphasisString.get(), emphasisString.Length(),
+                          ctx, appUnitsPerDevUnit, flags, nullptr);
+}
+
+nsRect
+nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
+{
+  const nsStyleText* styleText = StyleText();
+  if (!styleText->HasTextEmphasis()) {
+    Properties().Delete(EmphasisMarkProperty());
+    return nsRect();
+  }
+
+  RefPtr<nsFontMetrics> fm =
+    GetFontMetricsOfEmphasisMarks(StyleContext(), GetFontSizeInflation());
+  EmphasisMarkInfo* info = new EmphasisMarkInfo;
+  info->textRun =
+    GenerateTextRunForEmphasisMarks(this, fm, aWM, styleText);
+  info->advance =
+    info->textRun->GetAdvanceWidth(0, info->textRun->GetLength(), nullptr);
+
+  // Calculate the baseline offset
+  LogicalSide side = styleText->TextEmphasisSide(aWM);
+  nsFontMetrics* baseFontMetrics = aProvider.GetFontMetrics();
+  LogicalSize frameSize = GetLogicalSize();
+  // The overflow rect is inflated in the inline direction by half
+  // advance of the emphasis mark on each side, so that even if a mark
+  // is drawn for a zero-width character, it won't be clipped.
+  LogicalRect overflowRect(aWM, -info->advance / 2,
+                           /* BStart to be computed below */0,
+                           frameSize.ISize(aWM) + info->advance,
+                           fm->MaxAscent() + fm->MaxDescent());
+  // When the writing mode is vertical-lr the line is inverted, and thus
+  // the ascent and descent are swapped.
+  nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
+    baseFontMetrics->MaxAscent() + fm->MaxDescent() :
+    baseFontMetrics->MaxDescent() + fm->MaxAscent();
+  // XXX emphasis marks should be drawn outside ruby, see bug 1224013.
+  if (side == eLogicalSideBStart) {
+    info->baselineOffset = -absOffset;
+    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM);
+  } else {
+    MOZ_ASSERT(side == eLogicalSideBEnd);
+    info->baselineOffset = absOffset;
+    overflowRect.BStart(aWM) = frameSize.BSize(aWM);
+  }
+
+  Properties().Set(EmphasisMarkProperty(), info);
+  return overflowRect.GetPhysicalRect(aWM, frameSize.GetPhysicalSize(aWM));
+}
+
 void
 nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                      nsIFrame* aBlock,
@@ -5054,13 +5207,10 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                      nsRect* aVisualOverflowRect,
                                      bool aIncludeTextDecorations)
 {
-  // Text-shadow overflows
-  nsRect shadowRect =
-    nsLayoutUtils::GetTextShadowRectsUnion(*aVisualOverflowRect, this);
-  aVisualOverflowRect->UnionRect(*aVisualOverflowRect, shadowRect);
+  const WritingMode wm = GetWritingMode();
   bool verticalRun = mTextRun->IsVertical();
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
-  bool inverted = GetWritingMode().IsLineInverted();
+  bool inverted = wm.IsLineInverted();
 
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
@@ -5120,7 +5270,6 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
                      gfxWidth = measure / appUnitsPerDevUnit;
       gfxFloat ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
-      const WritingMode wm = GetWritingMode();
       if (wm.IsVerticalRL()) {
         ascent = -ascent;
       }
@@ -5230,7 +5379,16 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
         verticalRun ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
                     : nsRect(0, topOrLeft, measure, bottomOrRight - topOrLeft));
     }
+
+    aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
+                                   UpdateTextEmphasis(wm, aProvider));
   }
+
+  // Text-shadow overflows
+  nsRect shadowRect =
+    nsLayoutUtils::GetTextShadowRectsUnion(*aVisualOverflowRect, this);
+  aVisualOverflowRect->UnionRect(*aVisualOverflowRect, shadowRect);
+
   // When this frame is not selected, the text-decoration area must be in
   // frame bounds.
   if (!IsSelected() ||
@@ -6036,6 +6194,36 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   return true;
 }
 
+void
+nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
+                               const gfxPoint& aTextBaselinePt,
+                               uint32_t aOffset, uint32_t aLength,
+                               PropertyProvider& aProvider)
+{
+  auto info = static_cast<const EmphasisMarkInfo*>(
+    Properties().Get(EmphasisMarkProperty()));
+  if (!info) {
+    MOZ_ASSERT(!StyleText()->HasTextEmphasis());
+    return;
+  }
+
+  nscolor color = nsLayoutUtils::
+    GetColor(this, eCSSProperty_text_emphasis_color);
+  aContext->SetColor(Color::FromABGR(color));
+  gfxPoint pt(aTextBaselinePt);
+  if (!aWM.IsVertical()) {
+    pt.y += info->baselineOffset;
+  } else {
+    if (aWM.IsVerticalRL()) {
+      pt.x -= info->baselineOffset;
+    } else {
+      pt.x += info->baselineOffset;
+    }
+  }
+  mTextRun->DrawEmphasisMarks(aContext, info->textRun, info->advance,
+                              pt, aOffset, aLength, &aProvider);
+}
+
 nscolor
 nsTextFrame::GetCaretColorAt(int32_t aOffset)
 {
@@ -6538,6 +6726,9 @@ nsTextFrame::DrawTextRunAndDecorations(
     DrawTextRun(aCtx, aTextBaselinePt, aOffset, aLength, aProvider, aTextColor,
                 aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
+    // Emphasis marks
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength, aProvider);
+
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
       const LineDecoration& dec = aDecorations.mStrikes[i];
@@ -6584,7 +6775,8 @@ nsTextFrame::DrawText(
 
   // Hide text decorations if we're currently hiding @font-face fallback text
   const bool drawDecorations = !aProvider.GetFontGroup()->ShouldSkipDrawing() &&
-                               decorations.HasDecorationLines();
+                               (decorations.HasDecorationLines() ||
+                                StyleText()->HasTextEmphasis());
   if (drawDecorations) {
     DrawTextRunAndDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt, aOffset, aLength,
                               aProvider, aTextStyle, aTextColor, aClipEdges, aAdvanceWidth,

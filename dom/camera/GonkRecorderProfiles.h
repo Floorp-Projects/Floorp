@@ -142,9 +142,6 @@ protected:
   static already_AddRefed<GonkRecorderProfile> CreateProfile(uint32_t aCameraId,
                                                              int aQuality);
   static ProfileHashtable* GetProfileHashtable(uint32_t aCameraId);
-  static PLDHashOperator Enumerate(const nsAString& aProfileName,
-                                   GonkRecorderProfile* aProfile,
-                                   void* aUserArg);
 
   uint32_t mCameraId;
   int mQuality;

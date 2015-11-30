@@ -86,11 +86,13 @@ def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
     - Harness/other failures: 1
     - Success: 0
     """
+    logger = mozlog.commandline.setup_logging('Marionette test runner', {})
     try:
         failed = harness_class(runner_class, parser_class).run()
         if failed > 0:
             sys.exit(10)
     except Exception:
+        logger.error('Failure during harness setup', exc_info=True)
         sys.exit(1)
     sys.exit(0)
 

@@ -222,8 +222,13 @@ void
 MobileViewportManager::UpdateDisplayPortMargins()
 {
   if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
-    if (!nsLayoutUtils::GetDisplayPort(root->GetContent(), nullptr)) {
-      // There isn't already a displayport, so we don't want to add one.
+    bool hasDisplayPort = nsLayoutUtils::GetDisplayPort(root->GetContent(), nullptr);
+    bool hasResolution = mPresShell->ScaleToResolution() &&
+        mPresShell->GetResolution() != 1.0f;
+    if (!hasDisplayPort && !hasResolution) {
+      // We only want to update the displayport if there is one already, or
+      // add one if there's a resolution on the document (see bug 1225508
+      // comment 1).
       return;
     }
     nsIScrollableFrame* scrollable = do_QueryFrame(root);

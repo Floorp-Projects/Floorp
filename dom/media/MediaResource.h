@@ -14,6 +14,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "Intervals.h"
 #include "MediaCache.h"
 #include "MediaData.h"
 #include "MediaResourceCallback.h"
@@ -128,87 +129,11 @@ private:
   bool         mIsStarted;
 };
 
-// Forward declaration for use in MediaByteRange.
-class TimestampedMediaByteRange;
-
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
-class MediaByteRange {
-public:
-  MediaByteRange() : mStart(0), mEnd(0) {}
 
-  MediaByteRange(int64_t aStart, int64_t aEnd)
-    : mStart(aStart), mEnd(aEnd)
-  {
-    NS_ASSERTION(mStart <= mEnd, "Range should end after start!");
-  }
-
-  explicit MediaByteRange(TimestampedMediaByteRange& aByteRange);
-
-  bool IsNull() const {
-    return mStart == 0 && mEnd == 0;
-  }
-
-  bool operator==(const MediaByteRange& aRange) const {
-    return mStart == aRange.mStart && mEnd == aRange.mEnd;
-  }
-
-  // Clears byte range values.
-  void Clear() {
-    mStart = 0;
-    mEnd = 0;
-  }
-
-  bool Contains(const MediaByteRange& aByteRange) const {
-    return aByteRange.mStart >= mStart && aByteRange.mEnd <= mEnd;
-  }
-
-  MediaByteRange Extents(const MediaByteRange& aByteRange) const {
-    if (IsNull()) {
-      return aByteRange;
-    }
-    return MediaByteRange(std::min(mStart, aByteRange.mStart),
-                          std::max(mEnd, aByteRange.mEnd));
-  }
-
-  int64_t Length() const {
-    return mEnd - mStart;
-  }
-
-  int64_t mStart, mEnd;
-};
-
-// Represents a section of contiguous media, with a start and end offset, and
-// a timestamp representing the start time.
-class TimestampedMediaByteRange : public MediaByteRange {
-public:
-  TimestampedMediaByteRange() : MediaByteRange(), mStartTime(-1) {}
-
-  TimestampedMediaByteRange(int64_t aStart, int64_t aEnd, int64_t aStartTime)
-    : MediaByteRange(aStart, aEnd), mStartTime(aStartTime)
-  {
-    NS_ASSERTION(aStartTime >= 0, "Start time should not be negative!");
-  }
-
-  bool IsNull() const {
-    return MediaByteRange::IsNull() && mStartTime == -1;
-  }
-
-  // Clears byte range values.
-  void Clear() {
-    MediaByteRange::Clear();
-    mStartTime = -1;
-  }
-
-  // In usecs.
-  int64_t mStartTime;
-};
-
-inline MediaByteRange::MediaByteRange(TimestampedMediaByteRange& aByteRange)
-  : mStart(aByteRange.mStart), mEnd(aByteRange.mEnd)
-{
-  NS_ASSERTION(mStart < mEnd, "Range should end after start!");
-}
+typedef media::Interval<int64_t> MediaByteRange;
+typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 
 class RtspMediaResource;
 
@@ -400,7 +325,7 @@ public:
    * in the media cache. Stream should be pinned during call and while
    * aRanges is being used.
    */
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
   // Ensure that the media cache writes any data held in its partial block.
   // Called on the main thread only.
@@ -712,7 +637,7 @@ public:
   };
   friend class Listener;
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override;
+  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
 protected:
   // These are called on the main thread by Listener.

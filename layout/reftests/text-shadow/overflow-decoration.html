@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+  .outer { text-decoration: underline; }
+  .inner {
+    vertical-align: 1em;
+    text-shadow: 0 1em green;
+  }
+  .reftest-wait .inner {
+    text-shadow: 0 1em red;
+  }
+</style>
+</head>
+<body>
+  <span class="outer"><span class="inner">x</span></span>
+  <script>
+    document.addEventListener("MozReftestInvalidate", () => {
+      document.documentElement.removeAttribute('class');
+    }, false);
+  </script>
+</body>
+</html>

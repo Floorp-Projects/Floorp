@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: 'grid-row-gap'</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1227099">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-rows: minmax(1px,auto);
+  grid-template-columns: 0px 7px;
+  border: 2px solid black;
+  float: left;
+}
+
+.grid :last-child { background:grey; }
+.grid :nth-child(2) { background:pink; }
+.grid .gap { background:transparent; }
+
+x { background: lime; width:7px; }
+  </style>
+</head>
+<body>
+
+<script>
+document.body.style.display = "none";
+var align = [
+   "start",
+   "end",
+   "center",
+   "start",
+   "end",
+   "start",
+   "start",
+   "start",
+   "start",
+   "end",
+   "center",
+   "start",
+   "end",
+   "start",
+   "end safe",
+   "center",
+   "center",
+   "start",
+   "end safe",
+   "start",
+   "center",
+   "end",
+];
+var rows = [ "0", "1", "2", "3", "8", "9" ];
+var heights = [ "auto", "0", "1", "5", "6" ];
+var gaps = [ "1", "2" ];
+for (var j = 0; j < align.length; ++j) {
+  // document.body.appendChild(document.createTextNode(align[j])); // for debugging
+  var chunk = document.createElement('div');
+  chunk.setAttribute("style", "border:1px solid; padding:2px 10px; overflow:hidden");
+  for (var c = 0; c < rows.length; ++c) {
+    for (var w = 0; w < heights.length; ++w) {
+      // set this to true if you want to see all tests
+      var run_test = heights[w] == "auto" || heights[w] < rows[c] || rows[c] == 0 || rows[c] == 1;
+      if (run_test) {
+        for (var g = 0; g < gaps.length; ++g) {
+          var grid = document.createElement('div');
+          grid.style.height = heights[w]+"px";
+          grid.className = "grid";
+          grid.style.alignContent = align[j];
+          var span = document.createElement('span');
+          grid.appendChild(span);
+          var numRows = parseInt(rows[c]);
+          var gapRows = numRows==0 ? 0 : (numRows-1);
+          numRows += gapRows*parseInt(gaps[g]);
+          span.style.gridRow = "1 / span " + numRows;
+          for (var x = 0; x < numRows; ++x) {
+            var item = document.createElement('x');
+            if (x % (1+(parseInt(gaps[g]))) != 0)
+              item.className = "gap";
+            grid.appendChild(item);
+          }
+          if (j < 5) { // The stretch tests.
+            if (c == 1)
+              grid.style.background = 'pink'
+          }
+          if (j == 6 && rows[c] == 1) { // The 'end safe' tests.
+            if (heights[w] != 0) grid.style.alignContent = 'end';
+          }
+          if (j == 7 && rows[c] == 1) { // The 'center safe' tests.
+            if (heights[w] != 0) grid.style.alignContent = 'center';
+          }
+          if (j > 15) { // The space-around and space-evenly tests.
+            if (rows[c] == 1) {
+              if (heights[w] == 0) {
+                if (grid.style.alignContent != 'end') {
+                  grid.style.alignContent = 'start';
+                }
+              } else {
+                grid.style.alignContent = 'center';
+              }
+            }
+          }
+          chunk.appendChild(grid);
+        }
+      }
+    }
+  }
+  document.body.appendChild(chunk);
+}
+document.body.style.display = "";
+</script>
+
+</body>
+</html>
