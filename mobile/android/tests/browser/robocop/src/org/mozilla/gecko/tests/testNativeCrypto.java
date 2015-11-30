@@ -9,6 +9,8 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -60,6 +62,7 @@ public class testNativeCrypto extends UITest {
     _testSHA256();
     _testSHA256MultiPart();
     _testSHA256AgainstMessageDigest();
+    _testSHA256WithMultipleUpdatesFromStream();
   }
 
   public void _testPBKDF2SHA256A() throws UnsupportedEncodingException, GeneralSecurityException {
@@ -192,7 +195,7 @@ public class testNativeCrypto extends UITest {
       final String expected = expecteds[i];
 
       final byte[] ctx = NativeCrypto.sha256init();
-      NativeCrypto.sha256update(ctx, input);
+      NativeCrypto.sha256update(ctx, input, input.length);
       final byte[] actual = NativeCrypto.sha256finalize(ctx);
       fAssertNotNull("Hashed value is non-null", actual);
       assertExpectedBytes(expected, actual);
@@ -207,7 +210,7 @@ public class testNativeCrypto extends UITest {
     final byte[] inputBytes = input.getBytes("US-ASCII");
     final byte[] ctx = NativeCrypto.sha256init();
     for (int i = 0; i < repetitions; ++i) {
-      NativeCrypto.sha256update(ctx, inputBytes);
+      NativeCrypto.sha256update(ctx, inputBytes, inputBytes.length);
     }
     final byte[] actual = NativeCrypto.sha256finalize(ctx);
     fAssertNotNull("Hashed value is non-null", actual);
@@ -229,9 +232,30 @@ public class testNativeCrypto extends UITest {
       final byte[] mdBytes = digest.digest(inputBytes);
 
       final byte[] ctx = NativeCrypto.sha256init();
-      NativeCrypto.sha256update(ctx, inputBytes);
+      NativeCrypto.sha256update(ctx, inputBytes, inputBytes.length);
       final byte[] ourBytes = NativeCrypto.sha256finalize(ctx);
       fAssertArrayEquals("MessageDigest hash is the same as NativeCrypto SHA-256 hash", mdBytes, ourBytes);
+    }
+  }
+
+  private void _testSHA256WithMultipleUpdatesFromStream() throws UnsupportedEncodingException {
+    final String input = "HelloWorldThisIsASuperLongStringThatIsReadAsAStreamOfBytes";
+    final ByteArrayInputStream stream = new ByteArrayInputStream(input.getBytes("UTF-8"));
+    final String expected = "8b5cb76b80f7eb6fb83ee138bfd31e2922e71dd245daa21a8d9876e8dee9eef5";
+
+    byte[] buffer = new byte[10];
+    final byte[] ctx = NativeCrypto.sha256init();
+    int c;
+
+    try {
+      while ((c = stream.read(buffer)) != -1) {
+        NativeCrypto.sha256update(ctx, buffer, c);
+      }
+      final byte[] actual = NativeCrypto.sha256finalize(ctx);
+      fAssertNotNull("Hashed value is non-null", actual);
+      assertExpectedBytes(expected, actual);
+    } catch (IOException e) {
+      fFail("IOException while reading stream");
     }
   }
 
