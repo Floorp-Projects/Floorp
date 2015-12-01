@@ -105,6 +105,14 @@ MacroAssembler::add64(Register64 src, Register64 dest)
     as_addu(dest.high, dest.high, ScratchRegister);
 }
 
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    as_addiu(dest.low, dest.low, imm.value);
+    as_sltiu(ScratchRegister, dest.low, imm.value);
+    as_addu(dest.high, dest.high, ScratchRegister);
+}
+
 // ===============================================================
 // Shift functions
 

@@ -234,6 +234,12 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    Add(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
+}
+
+void
 MacroAssembler::sub32(Imm32 imm, Register dest)
 {
     Sub(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));

@@ -1192,10 +1192,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         j(cond, label);
     }
 
-    void add64(Imm32 imm, Register64 dest) {
-        ma_add(imm, dest.low, SetCC);
-        ma_adc(Imm32(0), dest.high, LeaveCC);
-    }
     void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
