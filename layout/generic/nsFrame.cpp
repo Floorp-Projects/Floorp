@@ -36,7 +36,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Snprintf.h"
+#include "prprf.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "RestyleManager.h"
@@ -5923,7 +5923,7 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
     aResult.Append(')');
   }
   char buf[40];
-  snprintf_literal(buf, "(%d)", ContentIndexInContainer(this));
+  PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
   AppendASCIItoUTF16(buf, aResult);
   return NS_OK;
 }
@@ -9154,11 +9154,11 @@ GetTagName(nsFrame* aFrame, nsIContent* aContent, int aResultSize,
            char* aResult)
 {
   if (aContent) {
-    snprintf(aResult, aResultSize, "%s@%p",
-             nsAtomCString(aContent->NodeInfo()->NameAtom()).get(), aFrame);
+    PR_snprintf(aResult, aResultSize, "%s@%p",
+                nsAtomCString(aContent->NodeInfo()->NameAtom()).get(), aFrame);
   }
   else {
-    snprintf(aResult, aResultSize, "@%p", aFrame);
+    PR_snprintf(aResult, aResultSize, "@%p", aFrame);
   }
 }
 
