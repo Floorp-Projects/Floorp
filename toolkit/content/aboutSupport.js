@@ -206,21 +206,13 @@ var snapshotFormatters = {
       let out = [];
       for (let type of ['Wheel', 'Touch', 'Drag']) {
         let key = 'Apz' + type + 'Input';
-        let warningKey = key + 'Warning';
 
         if (!(key in info))
           continue;
 
-        let badPref = info[warningKey];
         delete info[key];
-        delete info[warningKey];
 
-        let message;
-        if (badPref)
-          message = localizedMsg([type.toLowerCase() + 'Warning', badPref]);
-        else
-          message = localizedMsg([type.toLowerCase() + 'Enabled']);
-        dump(message + ', ' + (type.toLowerCase() + 'Warning') + ', ' + badPref + '\n');
+        let message = localizedMsg([type.toLowerCase() + 'Enabled']);
         out.push(message);
       }
 
