@@ -132,14 +132,14 @@ public:
   virtual uint32_t IterationDuration() = 0;
 
   /* Return whether we are switching or not. */
-  bool Switching() {
-    return mNextDriver || mPreviousDriver;
-  }
+  bool Switching();
 
-  GraphDriver* NextDriver()
-  {
-    return mNextDriver;
-  }
+  // Those are simply or setting the associated pointer, but assert that the
+  // lock is held.
+  GraphDriver* NextDriver();
+  GraphDriver* PreviousDriver();
+  void SetNextDriver(GraphDriver* aNextDriver);
+  void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
   /**
    * If we are running a real time graph, get the current time stamp to schedule
