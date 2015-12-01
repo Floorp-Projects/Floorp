@@ -769,6 +769,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void mul64(Imm64 imm, const Register64& dest) PER_ARCH;
 
+    inline void mulBy3(Register src, Register dest) PER_ARCH;
+
     // ===============================================================
     // Shift functions
 

@@ -197,6 +197,12 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     movl(eax, dest.low);
 }
 
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    lea(Operand(src, src, TimesTwo), dest);
+}
+
 // ===============================================================
 // Shift functions
 
