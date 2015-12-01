@@ -37,15 +37,16 @@ from ..frontend.data import (
     AndroidExtraPackages,
     AndroidEclipseProjectData,
     BrandingFiles,
+    ChromeManifestEntry,
     ConfigFileSubstitution,
     ContextDerived,
     ContextWrapped,
     Defines,
-    DistFiles,
     DirectoryTraversal,
     Exports,
     ExternalLibrary,
     FinalTargetFiles,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     GeneratedSources,
     HostDefines,
@@ -56,13 +57,10 @@ from ..frontend.data import (
     InstallationTarget,
     JARManifest,
     JavaJarData,
-    JavaScriptModules,
-    JsPreferenceFile,
     Library,
     LocalInclude,
     PerSourceFlag,
     Program,
-    Resources,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -532,17 +530,8 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, TestHarnessFiles):
             self._process_test_harness_files(obj, backend_file)
 
-        elif isinstance(obj, Resources):
-            self._process_resources(obj, obj.resources, backend_file)
-
         elif isinstance(obj, BrandingFiles):
             self._process_branding_files(obj, obj.files, backend_file)
-
-        elif isinstance(obj, JsPreferenceFile):
-            if obj.path.startswith('/'):
-                backend_file.write('PREF_JS_EXPORTS += $(topsrcdir)%s\n' % obj.path)
-            else:
-                backend_file.write('PREF_JS_EXPORTS += $(srcdir)/%s\n' % obj.path)
 
         elif isinstance(obj, JARManifest):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
@@ -572,9 +561,6 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
 
-        elif isinstance(obj, JavaScriptModules):
-            self._process_javascript_modules(obj, backend_file)
-
         elif isinstance(obj, ContextWrapped):
             # Process a rich build system object from the front-end
             # as-is.  Please follow precedent and handle CamelCaseData
@@ -601,15 +587,10 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_linked_libraries(obj, backend_file)
 
         elif isinstance(obj, FinalTargetFiles):
-            self._process_final_target_files(obj, obj.files, obj.target)
+            self._process_final_target_files(obj, obj.files)
 
-        elif isinstance(obj, DistFiles):
-            # We'd like to install these via manifests as preprocessed files.
-            # But they currently depend on non-standard flags being added via
-            # some Makefiles, so for now we just pass them through to the
-            # underlying Makefile.in.
-            for f in obj.files:
-                backend_file.write('DIST_FILES += %s\n' % f)
+        elif isinstance(obj, FinalTargetPreprocessedFiles):
+            self._process_final_target_pp_files(obj, obj.files, backend_file)
 
         elif isinstance(obj, AndroidResDirs):
             # Order matters.
@@ -630,6 +611,9 @@ class RecursiveMakeBackend(CommonBackend):
             # Order does not matter.
             for p in sorted(set(obj.packages)):
                 backend_file.write('ANDROID_EXTRA_PACKAGES += %s\n' % p)
+
+        elif isinstance(obj, ChromeManifestEntry):
+            self._process_chrome_manifest_entry(obj, backend_file)
 
         else:
             return False
@@ -809,7 +793,8 @@ class RecursiveMakeBackend(CommonBackend):
                     self._makefile_in_count += 1
 
                     for tier, skiplist in self._may_skip.items():
-                        if bf.relobjdir in skiplist:
+                        # topobjdir is an exception, it's still skipped.
+                        if bf.relobjdir and bf.relobjdir in skiplist:
                             skiplist.remove(bf.relobjdir)
                 else:
                     self.log(logging.DEBUG, 'stub_makefile',
@@ -1006,24 +991,6 @@ INSTALL_TARGETS += %(prefix)s
         'files': ' '.join(mozpath.relpath(f, backend_file.objdir)
                           for f in files) })
 
-    def _process_resources(self, obj, resources, backend_file):
-        dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
-
-        # Resources need to go in the 'res' subdirectory of $(DIST)/bin, so we
-        # specify a root namespace of 'res'.
-        for source, dest, flags in self._walk_hierarchy(obj, resources,
-                                                        namespace='res'):
-            if flags and flags.preprocess:
-                if dest.endswith('.in'):
-                    dest = dest[:-3]
-                dep_file = mozpath.join(dep_path, mozpath.basename(source) + '.pp')
-                self._install_manifests['dist_bin'].add_preprocess(source, dest, dep_file, marker='%', defines=obj.defines)
-            else:
-                self._install_manifests['dist_bin'].add_symlink(source, dest)
-
-            if not os.path.exists(source):
-                raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)
-
     def _process_branding_files(self, obj, files, backend_file):
         for source, dest, flags in self._walk_hierarchy(obj, files):
             if flags and flags.source:
@@ -1055,46 +1022,6 @@ INSTALL_TARGETS += %(prefix)s
 
         if not obj.enabled:
             backend_file.write('NO_DIST_INSTALL := 1\n')
-
-    def _process_javascript_modules(self, obj, backend_file):
-        if obj.flavor not in ('extra', 'extra_pp', 'testing'):
-            raise Exception('Unsupported JavaScriptModules instance: %s' % obj.flavor)
-
-        if obj.flavor == 'extra':
-            for path, strings in obj.modules.walk():
-                if not strings:
-                    continue
-
-                prefix = 'extra_js_%s' % path.replace('/', '_')
-                backend_file.write('%s_FILES := %s\n'
-                                   % (prefix, ' '.join(strings)))
-                backend_file.write('%s_DEST = %s\n' %
-                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
-                backend_file.write('%s_TARGET := misc\n' % prefix)
-                backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
-            return
-
-        if obj.flavor == 'extra_pp':
-            for path, strings in obj.modules.walk():
-                if not strings:
-                    continue
-
-                prefix = 'extra_pp_js_%s' % path.replace('/', '_')
-                backend_file.write('%s := %s\n'
-                                   % (prefix, ' '.join(strings)))
-                backend_file.write('%s_PATH = %s\n' %
-                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
-                backend_file.write('%s_TARGET := misc\n' % prefix)
-                backend_file.write('PP_TARGETS += %s\n\n' % prefix)
-            return
-
-        if not self.environment.substs.get('ENABLE_TESTS', False):
-            return
-
-        manifest = self._install_manifests['tests']
-
-        for source, dest, _ in self._walk_hierarchy(obj, obj.modules):
-            manifest.add_symlink(source, mozpath.join('modules', dest))
 
     def _handle_idl_manager(self, manager):
         build_files = self._install_manifests['xpidl']
@@ -1375,13 +1302,17 @@ INSTALL_TARGETS += %(prefix)s
         # Process library-based defines
         self._process_defines(obj.defines, backend_file)
 
-    def _process_final_target_files(self, obj, files, target):
+    def _process_final_target_files(self, obj, files):
+        target = obj.install_target
         if target.startswith('dist/bin'):
             install_manifest = self._install_manifests['dist_bin']
             reltarget = mozpath.relpath(target, 'dist/bin')
         elif target.startswith('dist/xpi-stage'):
             install_manifest = self._install_manifests['dist_xpi-stage']
             reltarget = mozpath.relpath(target, 'dist/xpi-stage')
+        elif target.startswith('_tests'):
+            install_manifest = self._install_manifests['tests']
+            reltarget = mozpath.relpath(target, '_tests')
         else:
             raise Exception("Cannot install to " + target)
 
@@ -1390,6 +1321,41 @@ INSTALL_TARGETS += %(prefix)s
                 source = mozpath.normpath(os.path.join(obj.srcdir, f))
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
                 install_manifest.add_symlink(source, dest)
+
+    def _process_final_target_pp_files(self, obj, files, backend_file):
+        # We'd like to install these via manifests as preprocessed files.
+        # But they currently depend on non-standard flags being added via
+        # some Makefiles, so for now we just pass them through to the
+        # underlying Makefile.in.
+        for i, (path, strings) in enumerate(files.walk()):
+            for f in strings:
+                backend_file.write('DIST_FILES_%d += %s\n' % (i, f))
+            backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
+                               % (i, mozpath.join(obj.install_target, path)))
+            backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
+
+    def _process_chrome_manifest_entry(self, obj, backend_file):
+        fragment = Makefile()
+        rule = fragment.create_rule(targets=['misc:'])
+
+        top_level = mozpath.join(obj.install_target, 'chrome.manifest')
+        if obj.path != top_level:
+            args = [
+                mozpath.join('$(DEPTH)', top_level),
+                make_quote(shell_quote('manifest %s' %
+                                       mozpath.relpath(obj.path,
+                                                       obj.install_target))),
+            ]
+            rule.add_commands(['$(call py_action,buildlist,%s)' %
+                               ' '.join(args)])
+        args = [
+            mozpath.join('$(DEPTH)', obj.path),
+            make_quote(shell_quote(str(obj.entry))),
+        ]
+        rule.add_commands(['$(call py_action,buildlist,%s)' % ' '.join(args)])
+        fragment.dump(backend_file.fh, removal_guard=False)
+
+        self._no_skip['misc'].add(obj.relativedir)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',

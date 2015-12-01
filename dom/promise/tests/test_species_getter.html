@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for ...</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var desc = Object.getOwnPropertyDescriptor(Promise, Symbol.species);
+  assert_not_equals(desc, undefined, "Should have a property");
+
+  assert_equals(desc.configurable, true, "Property should be configurable");
+  assert_equals(desc.enumerable, false, "Property should not be enumerable");
+  assert_equals(desc.set, undefined, "Should not have a setter");
+  var getter = desc.get;
+
+  var things = [undefined, null, 5, "xyz", Promise, Object];
+  for (var thing of things) {
+    assert_equals(getter.call(thing), thing,
+                  "Getter should return its this value");
+  }
+
+}, "Promise should have an @@species getter that works per spec");
+</script>

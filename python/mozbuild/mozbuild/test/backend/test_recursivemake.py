@@ -266,15 +266,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'DISABLE_STL_WRAPPING': [
                 'DISABLE_STL_WRAPPING := 1',
             ],
-            'EXTRA_COMPONENTS': [
-                'EXTRA_COMPONENTS += bar.js',
-                'EXTRA_COMPONENTS += dummy.manifest',
-                'EXTRA_COMPONENTS += foo.js',
-            ],
-            'EXTRA_PP_COMPONENTS': [
-                'EXTRA_PP_COMPONENTS += bar.pp.js',
-                'EXTRA_PP_COMPONENTS += foo.pp.js',
-            ],
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],
@@ -414,7 +405,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('res/fonts/font1.ttf', m)
         self.assertIn('res/fonts/desktop/desktop2.ttf', m)
 
-        self.assertIn('res/bar.res', m)
+        self.assertIn('res/bar.res.in', m)
         self.assertIn('res/tests/test.manifest', m)
         self.assertIn('res/tests/extra.manifest', m)
 
@@ -430,24 +421,6 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('bar.ico', m)
         self.assertIn('quux.png', m)
         self.assertIn('icons/foo.ico', m)
-
-    def test_js_preference_files(self):
-        """Ensure PREF_JS_EXPORTS is written out correctly."""
-        env = self._consume('js_preference_files', RecursiveMakeBackend)
-
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
-        lines = [l.strip() for l in open(backend_path, 'rt').readlines()]
-
-        # Avoid positional parameter and async related breakage
-        var = 'PREF_JS_EXPORTS'
-        found = [val for val in lines if val.startswith(var)]
-
-        # Assignment[aa], append[cc], conditional[valid]
-        expected = ('aa/aa.js', 'bb/bb.js', 'cc/cc.js', 'dd/dd.js', 'valid_val/prefs.js')
-        expected_top = ('ee/ee.js', 'ff/ff.js')
-        self.assertEqual(found,
-            ['PREF_JS_EXPORTS += $(topsrcdir)/%s' % val for val in expected_top] +
-            ['PREF_JS_EXPORTS += $(srcdir)/%s' % val for val in expected])
 
     def test_test_manifests_files_written(self):
         """Ensure test manifests get turned into files."""
@@ -665,19 +638,21 @@ class TestRecursiveMakeBackend(BackendTester):
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
 
-    def test_dist_files(self):
-        """Test that DIST_FILES is written to backend.mk correctly."""
+    def test_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES is written to backend.mk correctly."""
         env = self._consume('dist-files', RecursiveMakeBackend)
 
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'DIST_FILES += install.rdf',
-            'DIST_FILES += main.js',
+            'DIST_FILES_0 += install.rdf',
+            'DIST_FILES_0 += main.js',
+            'DIST_FILES_0_PATH := $(DEPTH)/dist/bin/',
+            'PP_TARGETS += DIST_FILES_0',
         ]
 
-        found = [str for str in lines if str.startswith('DIST_FILES')]
+        found = [str for str in lines if 'DIST_FILES' in str]
         self.assertEqual(found, expected)
 
     def test_config(self):
@@ -720,38 +695,6 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [line.rstrip() for line in lines]
 
         self.assertIn('JAR_MANIFEST := %s/jar.mn' % env.topsrcdir, lines)
-
-    def test_extra_js_modules(self):
-        env = self._consume('extra-js-modules', RecursiveMakeBackend)
-
-        with open(os.path.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
-            lines = fh.readlines()
-
-        lines = [line.rstrip() for line in lines]
-        self.maxDiff = None
-        expected = [
-            'extra_js__FILES := module1.js module2.js',
-            'extra_js__DEST = $(FINAL_TARGET)/modules/',
-            'extra_js__TARGET := misc',
-            'INSTALL_TARGETS += extra_js_',
-            'extra_js_submodule_FILES := module3.js module4.js',
-            'extra_js_submodule_DEST = $(FINAL_TARGET)/modules/submodule',
-            'extra_js_submodule_TARGET := misc',
-            'INSTALL_TARGETS += extra_js_submodule',
-            'extra_pp_js_ := pp-module1.js',
-            'extra_pp_js__PATH = $(FINAL_TARGET)/modules/',
-            'extra_pp_js__TARGET := misc',
-            'PP_TARGETS += extra_pp_js_',
-            'extra_pp_js_ppsub := pp-module2.js',
-            'extra_pp_js_ppsub_PATH = $(FINAL_TARGET)/modules/ppsub',
-            'extra_pp_js_ppsub_TARGET := misc',
-            'PP_TARGETS += extra_pp_js_ppsub',
-        ]
-
-        found = [line for line in lines if line.startswith(('extra_',
-                                                            'INSTALL_TARGETS',
-                                                            'PP_TARGETS'))]
-        self.assertEqual(expected, found)
 
     def test_test_manifests_duplicate_support_files(self):
         """Ensure duplicate support-files in test manifests work."""
@@ -825,6 +768,40 @@ class TestRecursiveMakeBackend(BackendTester):
         # processing time.  This is a fragile test because there's currently no
         # way to iterate the manifest.
         self.assertFalse('instrumentation/./not_packaged.java' in m)
+
+    def test_binary_components(self):
+        """Ensure binary components are correctly handled."""
+        env = self._consume('binary-components', RecursiveMakeBackend)
+
+        with open(mozpath.join(env.topobjdir, 'foo', 'backend.mk')) as fh:
+            lines = fh.readlines()[2:]
+
+        self.assertEqual(lines, [
+            'misc::\n',
+            '\t$(call py_action,buildlist,$(DEPTH)/dist/bin/chrome.manifest '
+            + "'manifest components/components.manifest')\n",
+            '\t$(call py_action,buildlist,'
+            + '$(DEPTH)/dist/bin/components/components.manifest '
+            + "'binary-component foo')\n",
+            'LIBRARY_NAME := foo\n',
+            'FORCE_SHARED_LIB := 1\n',
+            'IMPORT_LIBRARY := foo\n',
+            'SHARED_LIBRARY := foo\n',
+            'IS_COMPONENT := 1\n',
+            'DSO_SONAME := foo\n',
+        ])
+
+        with open(mozpath.join(env.topobjdir, 'bar', 'backend.mk')) as fh:
+            lines = fh.readlines()[2:]
+
+        self.assertEqual(lines, [
+            'LIBRARY_NAME := bar\n',
+            'FORCE_SHARED_LIB := 1\n',
+            'IMPORT_LIBRARY := bar\n',
+            'SHARED_LIBRARY := bar\n',
+            'IS_COMPONENT := 1\n',
+            'DSO_SONAME := bar\n',
+        ])
 
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ public:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetDirectoryListingTask(FileSystemBase* aFileSystem,
                           const nsAString& aTargetPath,
+                          const nsAString& aFilters,
                           ErrorResult& aRv);
   GetDirectoryListingTask(FileSystemBase* aFileSystem,
                           const FileSystemGetDirectoryListingParams& aParam,
@@ -55,6 +56,7 @@ protected:
 private:
   RefPtr<Promise> mPromise;
   nsString mTargetRealPath;
+  nsString mFilters;
 
   // We cannot store File or Directory objects bacause this object is created
   // on a different thread and File and Directory are not thread-safe.

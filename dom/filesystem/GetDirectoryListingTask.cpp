@@ -6,6 +6,7 @@
 
 #include "GetDirectoryListingTask.h"
 
+#include "HTMLSplitOnSpacesTokenizer.h"
 #include "js/Value.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
@@ -22,9 +23,11 @@ namespace dom {
 
 GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
                                                  const nsAString& aTargetPath,
+                                                 const nsAString& aFilters,
                                                  ErrorResult& aRv)
   : FileSystemTaskBase(aFileSystem)
   , mTargetRealPath(aTargetPath)
+  , mFilters(aFilters)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
@@ -40,12 +43,13 @@ GetDirectoryListingTask::GetDirectoryListingTask(FileSystemBase* aFileSystem,
                                                  const FileSystemGetDirectoryListingParams& aParam,
                                                  FileSystemRequestParent* aParent)
   : FileSystemTaskBase(aFileSystem, aParam, aParent)
+  , mTargetRealPath(aParam.realPath())
+  , mFilters(aParam.filters())
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Only call from parent process!");
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
-  mTargetRealPath = aParam.realPath();
 }
 
 GetDirectoryListingTask::~GetDirectoryListingTask()
@@ -65,7 +69,8 @@ FileSystemParams
 GetDirectoryListingTask::GetRequestParams(const nsString& aFileSystem) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return FileSystemGetDirectoryListingParams(aFileSystem, mTargetRealPath);
+  return FileSystemGetDirectoryListingParams(aFileSystem, mTargetRealPath,
+                                             mFilters);
 }
 
 FileSystemResponseValue
@@ -155,6 +160,20 @@ GetDirectoryListingTask::Work()
     return rv;
   }
 
+  bool filterOutSensitive = false;
+  {
+    HTMLSplitOnSpacesTokenizer tokenizer(mFilters, ';');
+    nsAutoString token;
+    while (tokenizer.hasMoreTokens()) {
+      token = tokenizer.nextToken();
+      if (token.EqualsLiteral("filter-out-sensitive")) {
+        filterOutSensitive = true;
+      } else {
+        MOZ_CRASH("Unrecognized filter");
+      }
+    }
+  }
+
   for (;;) {
     bool hasMore = false;
     if (NS_WARN_IF(NS_FAILED(entries->HasMoreElements(&hasMore))) || !hasMore) {
@@ -179,6 +198,21 @@ GetDirectoryListingTask::Work()
         !(isFile || isDir)) {
       continue;
     }
+
+    if (filterOutSensitive) {
+      bool isHidden;
+      if (NS_WARN_IF(NS_FAILED(currFile->IsHidden(&isHidden))) || isHidden) {
+        continue;
+      }
+      nsAutoString leafName;
+      if (NS_WARN_IF(NS_FAILED(currFile->GetLeafName(leafName)))) {
+        continue;
+      }
+      if (leafName[0] == char16_t('.')) {
+        continue;
+      }
+    }
+
     BlobImplFile* impl = new BlobImplFile(currFile);
     impl->LookupAndCacheIsDirectory();
     mTargetBlobImpls.AppendElement(impl);
@@ -226,7 +260,10 @@ GetDirectoryListingTask::HandlerCallback()
         MOZ_ASSERT(exist);
       }
 #endif
-      listing[i].SetAsDirectory() = new Directory(mFileSystem, path);
+      RefPtr<Directory> directory = new Directory(mFileSystem, path);
+      // Propogate mFilter onto sub-Directory object:
+      directory->SetContentFilters(mFilters);
+      listing[i].SetAsDirectory() = directory;
     } else {
       listing[i].SetAsFile() = File::Create(mFileSystem->GetWindow(), mTargetBlobImpls[i]);
     }

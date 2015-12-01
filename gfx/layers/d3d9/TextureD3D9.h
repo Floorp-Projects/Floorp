@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "gfxWindowsPlatform.h"
 #include "d3d9.h"
 #include <vector>
@@ -174,52 +175,47 @@ protected:
  * Needs a D3D9 context on the client side.
  * The corresponding TextureHost is TextureHostD3D9.
  */
-class TextureClientD3D9 : public TextureClient
+class D3D9TextureData : public TextureData
 {
 public:
-  TextureClientD3D9(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
-                         TextureFlags aFlags);
+  ~D3D9TextureData();
 
-  virtual ~TextureClientD3D9();
-
-  // TextureClient
-
-  virtual bool IsAllocated() const override { return !!mTexture; }
-
-  virtual bool Lock(OpenMode aOpenMode) override;
-
-  virtual void Unlock() override;
-
-  virtual bool IsLocked() const override { return mIsLocked; }
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual gfx::IntSize GetSize() const { return mSize; }
-
-  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
-
-  virtual bool CanExposeDrawTarget() const override { return true; }
-
-  virtual gfx::DrawTarget* BorrowDrawTarget() override;
-
-  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
-
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
+  virtual bool SupportsMoz2D() const override { return true; }
 
   virtual bool HasInternalBuffer() const override { return true; }
 
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+  virtual bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
 
-private:
+  virtual bool Lock(OpenMode aMode, FenceHandle*) override;
+
+  virtual void Unlock() override;
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+
+  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
+
+  virtual gfx::IntSize GetSize() const override { return mSize; }
+
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+
+  virtual TextureData*
+  CreateSimilar(ISurfaceAllocator* aAllocator,
+                TextureFlags aFlags,
+                TextureAllocationFlags aAllocFlags) const override;
+
+  static D3D9TextureData*
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
+
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) {}
+
+protected:
+  D3D9TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                  IDirect3DTexture9* aTexture);
+
   RefPtr<IDirect3DTexture9> mTexture;
   RefPtr<IDirect3DSurface9> mD3D9Surface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  bool mIsLocked;
   bool mNeedsClear;
   bool mNeedsClearWhite;
   bool mLockRect;
@@ -230,49 +226,27 @@ private:
  * At the moment it is only used with D3D11 compositing, and the corresponding
  * TextureHost is DXGITextureHostD3D11.
  */
-class SharedTextureClientD3D9 : public TextureClient
+class DXGID3D9TextureData : public TextureData
 {
 public:
-  SharedTextureClientD3D9(ISurfaceAllocator* aAllocator,
-                          gfx::SurfaceFormat aFormat,
-                          TextureFlags aFlags);
+  static DXGID3D9TextureData*
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureFlags aFlags, IDirect3DDevice9* aDevice);
 
-  virtual ~SharedTextureClientD3D9();
+  ~DXGID3D9TextureData();
 
-  // Creates a TextureClient and init width.
-  static already_AddRefed<SharedTextureClientD3D9>
-  Create(ISurfaceAllocator* aAllocator,
-         gfx::SurfaceFormat aFormat,
-         TextureFlags aFlags,
-         IDirect3DDevice9* aDevice,
-         const gfx::IntSize& aSize);
-
-  // TextureClient
-
-  virtual bool IsAllocated() const override { return !!mTexture; }
+  virtual gfx::IntSize GetSize() const { return gfx::IntSize(mDesc.Width, mDesc.Height); }
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual bool Lock(OpenMode aOpenMode) override;
+  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
 
-  virtual void Unlock() override;
+  virtual void Unlock() override {}
 
-  virtual bool IsLocked() const override { return mIsLocked; }
+  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
+  virtual bool HasInternalBuffer() const override { return false; }
 
-  virtual gfx::IntSize GetSize() const
-  {
-    return gfx::IntSize(mDesc.Width, mDesc.Height);
-  }
-
-  virtual bool HasInternalBuffer() const override { return true; }
-
-  // This TextureClient should not be used in a context where we use CreateSimilar
-  // (ex. component alpha) because the underlying texture data is always created by
-  // an external producer.
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags, TextureAllocationFlags) const override { return nullptr; }
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) {}
 
   IDirect3DDevice9* GetD3D9Device() { return mDevice; }
   IDirect3DTexture9* GetD3D9Texture() { return mTexture; }
@@ -284,15 +258,16 @@ public:
     return mDesc;
   }
 
-private:
-  virtual void FinalizeOnIPDLThread() override;
+protected:
+  DXGID3D9TextureData(gfx::SurfaceFormat aFormat,
+                      IDirect3DTexture9* aTexture, HANDLE aHandle,
+                      IDirect3DDevice9* aDevice);
 
   RefPtr<IDirect3DDevice9> mDevice;
   RefPtr<IDirect3DTexture9> mTexture;
   gfx::SurfaceFormat mFormat;
   HANDLE mHandle;
   D3DSURFACE_DESC mDesc;
-  bool mIsLocked;
 };
 
 class TextureHostD3D9 : public TextureHost

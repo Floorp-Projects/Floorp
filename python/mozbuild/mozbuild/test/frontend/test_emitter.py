@@ -12,21 +12,21 @@ from mozunit import main
 from mozbuild.frontend.data import (
     AndroidResDirs,
     BrandingFiles,
+    ChromeManifestEntry,
     ConfigFileSubstitution,
     Defines,
-    DistFiles,
     DirectoryTraversal,
     Exports,
+    FinalTargetPreprocessedFiles,
     GeneratedFile,
     GeneratedSources,
     HostDefines,
     HostSources,
     IPDLFile,
     JARManifest,
-    JsPreferenceFile,
     LocalInclude,
     Program,
-    Resources,
+    SharedLibrary,
     SimpleProgram,
     Sources,
     StaticLibrary,
@@ -41,6 +41,7 @@ from mozbuild.frontend.reader import (
     BuildReaderError,
     SandboxValidationError,
 )
+from mozpack.chrome import manifest
 
 from mozbuild.test.common import MockConfig
 
@@ -153,8 +154,6 @@ class TestEmitterBasic(unittest.TestCase):
         wanted = {
             'ALLOW_COMPILER_WARNINGS': True,
             'DISABLE_STL_WRAPPING': True,
-            'EXTRA_COMPONENTS': ['dummy.manifest', 'fans.js', 'tans.js'],
-            'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
             'NO_DIST_INSTALL': True,
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',
@@ -283,63 +282,6 @@ class TestEmitterBasic(unittest.TestCase):
             'Cannot install files to the root of TEST_HARNESS_FILES'):
             objs = self.read_topsrcdir(reader)
 
-    def test_resources(self):
-        reader = self.reader('resources')
-        objs = self.read_topsrcdir(reader)
-
-        expected_defines = dict(reader.config.defines)
-        expected_defines.update({
-            'FOO': True,
-            'BAR': 'BAZ',
-        })
-
-        self.assertEqual(len(objs), 2)
-        self.assertIsInstance(objs[0], Defines)
-        self.assertIsInstance(objs[1], Resources)
-
-        self.assertEqual(objs[1].defines, expected_defines)
-
-        resources = objs[1].resources
-        self.assertEqual(resources._strings, ['foo.res', 'bar.res', 'baz.res',
-                                              'foo_p.res.in', 'bar_p.res.in', 'baz_p.res.in'])
-        self.assertFalse(resources['foo.res'].preprocess)
-        self.assertFalse(resources['bar.res'].preprocess)
-        self.assertFalse(resources['baz.res'].preprocess)
-        self.assertTrue(resources['foo_p.res.in'].preprocess)
-        self.assertTrue(resources['bar_p.res.in'].preprocess)
-        self.assertTrue(resources['baz_p.res.in'].preprocess)
-
-        self.assertIn('mozilla', resources._children)
-        mozilla = resources._children['mozilla']
-        self.assertEqual(mozilla._strings, ['mozilla1.res', 'mozilla2.res',
-                                            'mozilla1_p.res.in', 'mozilla2_p.res.in'])
-        self.assertFalse(mozilla['mozilla1.res'].preprocess)
-        self.assertFalse(mozilla['mozilla2.res'].preprocess)
-        self.assertTrue(mozilla['mozilla1_p.res.in'].preprocess)
-        self.assertTrue(mozilla['mozilla2_p.res.in'].preprocess)
-
-        self.assertIn('dom', mozilla._children)
-        dom = mozilla._children['dom']
-        self.assertEqual(dom._strings, ['dom1.res', 'dom2.res', 'dom3.res'])
-
-        self.assertIn('gfx', mozilla._children)
-        gfx = mozilla._children['gfx']
-        self.assertEqual(gfx._strings, ['gfx.res'])
-
-        self.assertIn('vpx', resources._children)
-        vpx = resources._children['vpx']
-        self.assertEqual(vpx._strings, ['mem.res', 'mem2.res'])
-
-        self.assertIn('nspr', resources._children)
-        nspr = resources._children['nspr']
-        self.assertIn('private', nspr._children)
-        private = nspr._children['private']
-        self.assertEqual(private._strings, ['pprio.res', 'pprthred.res'])
-
-        self.assertIn('overwrite', resources._children)
-        overwrite = resources._children['overwrite']
-        self.assertEqual(overwrite._strings, ['new.res'])
-
     def test_branding_files(self):
         reader = self.reader('branding-files')
         objs = self.read_topsrcdir(reader)
@@ -356,21 +298,6 @@ class TestEmitterBasic(unittest.TestCase):
         icons = files._children['icons']
 
         self.assertEqual(icons._strings, ['quux.icns'])
-
-    def test_preferences_js(self):
-        reader = self.reader('js_preference_files')
-        objs = self.read_topsrcdir(reader)
-
-        prefs = [o.path for o in objs if isinstance(o, JsPreferenceFile)]
-
-        prefsByDir = [
-            'valid_val/prefs.js',
-            'ww/ww.js',
-            'xx/xx.js',
-            'yy/yy.js',
-            ]
-
-        self.assertEqual(sorted(prefs), prefsByDir)
 
     def test_program(self):
         reader = self.reader('program')
@@ -884,24 +811,28 @@ class TestEmitterBasic(unittest.TestCase):
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
             self.assertFalse(sources.have_unified_mapping)
 
-    def test_dist_files(self):
-        """Test that DIST_FILES works properly."""
+    def test_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES works properly."""
         reader = self.reader('dist-files')
         objs = self.read_topsrcdir(reader)
 
         self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], DistFiles)
+        self.assertIsInstance(objs[0], FinalTargetPreprocessedFiles)
 
-        self.assertEqual(len(objs[0].files), 2)
+        # Ideally we'd test hierarchies, but that would just be testing
+        # the HierarchicalStringList class, which we test separately.
+        for path, files in objs[0].files.walk():
+            self.assertEqual(path, '')
+            self.assertEqual(len(files), 2)
 
-        expected = {'install.rdf', 'main.js'}
-        for f in objs[0].files:
-            self.assertTrue(f in expected)
+            expected = {'install.rdf', 'main.js'}
+            for f in files:
+                self.assertTrue(f in expected)
 
-    def test_missing_dist_files(self):
-        """Test that DIST_FILES with missing files throws errors."""
+    def test_missing_final_target_pp_files(self):
+        """Test that FINAL_TARGET_PP_FILES with missing files throws errors."""
         with self.assertRaisesRegexp(SandboxValidationError, 'File listed in '
-            'DIST_FILES does not exist'):
+            'FINAL_TARGET_PP_FILES does not exist'):
             reader = self.reader('dist-files-missing')
             self.read_topsrcdir(reader)
 
@@ -920,6 +851,24 @@ class TestEmitterBasic(unittest.TestCase):
             '/dir3',
         ]
         self.assertEquals([p.full_path for p in objs[0].paths], expected)
+
+    def test_binary_components(self):
+        """Test that IS_COMPONENT/NO_COMPONENTS_MANIFEST work properly."""
+        reader = self.reader('binary-components')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        self.assertIsInstance(objs[0], ChromeManifestEntry)
+        self.assertEqual(objs[0].path,
+                         'dist/bin/components/components.manifest')
+        self.assertIsInstance(objs[0].entry, manifest.ManifestBinaryComponent)
+        self.assertEqual(objs[0].entry.base, 'dist/bin/components')
+        self.assertEqual(objs[0].entry.relpath, objs[1].lib_name)
+        self.assertIsInstance(objs[1], SharedLibrary)
+        self.assertEqual(objs[1].basename, 'foo')
+        self.assertIsInstance(objs[2], SharedLibrary)
+        self.assertEqual(objs[2].basename, 'bar')
+
 
 if __name__ == '__main__':
     main()

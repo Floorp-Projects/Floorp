@@ -22,7 +22,7 @@ setJitCompilerOption("signals.enable", 1);
 
 var m = asmCompile(code);
 assertEq(isAsmJSModule(m), true);
-assertEq(isAsmJSModuleLoadedFromCache(m), true);
+assertEq(isAsmJSModuleLoadedFromCache(m), false);
 
 var g = asmLink(m);
 timeout(1);

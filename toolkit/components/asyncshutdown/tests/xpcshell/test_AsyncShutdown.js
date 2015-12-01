@@ -148,7 +148,7 @@ add_task(function* test_phase_removeBlocker() {
 
     do_print("Attempt to remove a blocker after wait");
     lock = makeLock(kind);
-    blocker = Promise.resolve;
+    blocker = Promise.resolve.bind(Promise);
     yield lock.wait();
     do_remove_blocker(lock, blocker, false);
 

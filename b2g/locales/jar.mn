@@ -9,8 +9,8 @@
 
 % override chrome://global/locale/aboutCertError.dtd     chrome://b2g-l10n/locale/aboutCertError.dtd
 % override chrome://global/locale/appstrings.properties  chrome://b2g-l10n/locale/appstrings.properties
-* locale/@AB_CD@/b2g-l10n/aboutCertError.dtd       (%chrome/overrides/aboutCertError.dtd)
-* locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)
+  locale/@AB_CD@/b2g-l10n/aboutCertError.dtd       (%chrome/overrides/aboutCertError.dtd)
+  locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)
 #ifdef MOZ_GRAPHENE
   locale/@AB_CD@/b2g-l10n/graphene.properties (%chrome/graphene.properties)
 #endif

@@ -7,6 +7,7 @@
 #include "webrtc/modules/desktop_capture/win/win_shared.h"
 #include <inttypes.h>
 #include <stdio.h>
+#include <VersionHelpers.h>
 
 // Duplicating declaration so that it always resolves in decltype use
 // typedef BOOL (WINAPI *QueryFullProcessImageNameProc)(HANDLE hProcess, DWORD dwFlags, LPTSTR lpExeName, PDWORD lpdwSize);
@@ -89,6 +90,17 @@ void DesktopDeviceInfoWin::InitializeApplicationList() {
 
     // filter out non-process, current process
     if (dwProcessId == 0 || dwProcessId == GetCurrentProcessId()) {
+      continue;
+    }
+
+    // Win8 introduced "Modern Apps" whose associated window is
+    // non-shareable. We want to filter them out.
+    const int classLength = 256;
+    WCHAR class_name[classLength] = {0};
+    GetClassName(hWnd, class_name, classLength);
+    if (IsWindows8OrGreater() &&
+        (wcscmp(class_name, L"ApplicationFrameWindow") == 0 ||
+         wcscmp(class_name, L"Windows.UI.Core.CoreWindow") == 0)) {
       continue;
     }
 

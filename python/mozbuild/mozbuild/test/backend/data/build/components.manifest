@@ -1,0 +1,2 @@
+component {foo} foo.js
+component {bar} bar.js

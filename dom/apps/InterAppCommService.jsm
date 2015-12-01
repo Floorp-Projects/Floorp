@@ -883,6 +883,14 @@ this.InterAppCommService = {
     if (DEBUG) {
       debug("Unregistering message port for " + manifestURL);
     }
+
+    let receiver = identity.isPublisher ? identity.pair.subscriber
+                                        : identity.pair.publisher;
+    receiver.target.sendAsyncMessage("InterAppMessagePort:OnClose",
+                                     { manifestURL: receiver.manifestURL,
+                                       pageURL: receiver.pageURL,
+                                       messagePortID: messagePortID });
+
     delete this._messagePortPairs[messagePortID];
   },
 
@@ -901,7 +909,7 @@ this.InterAppCommService = {
         messagePortIDs.push(messagePortID);
         // Send a shutdown message to the part of the pair that is still alive.
         let actor = pair.publisher.target === aTarget ? pair.subscriber
-                                                       : pair.publisher;
+                                                      : pair.publisher;
         actor.target.sendAsyncMessage("InterAppMessagePort:Shutdown",
           { manifestURL: actor.manifestURL,
             pageURL: actor.pageURL,

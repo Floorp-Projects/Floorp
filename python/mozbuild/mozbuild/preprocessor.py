@@ -316,12 +316,20 @@ class Preprocessor:
         if defines:
             self.context.update(defines)
 
-    def warnUnused(self, file):
+    def failUnused(self, file):
+        msg = None
         if self.actionLevel == 0 and not self.silenceMissingDirectiveWarnings:
-            sys.stderr.write('{0}: WARNING: no preprocessor directives found\n'.format(file))
+            msg = 'no preprocessor directives found'
         elif self.actionLevel == 1:
-            sys.stderr.write('{0}: WARNING: no useful preprocessor directives found\n'.format(file))
-        pass
+            msg = 'no useful preprocessor directives found'
+        if msg:
+            class Fake(object): pass
+            fake = Fake()
+            fake.context = {
+                'FILE': file,
+                'LINE': None,
+            }
+            raise Preprocessor.Error(fake, msg, None)
 
     def setMarker(self, aMarker):
         """
@@ -377,7 +385,7 @@ class Preprocessor:
         self.out = output
 
         self.do_include(input, False)
-        self.warnUnused(input.name)
+        self.failUnused(input.name)
 
         if depfile:
             mk = Makefile()
