@@ -237,7 +237,6 @@ class MacroAssemblerNone : public Assembler
     void neg32(Register) { MOZ_CRASH(); }
 
     void negateDouble(FloatRegister) { MOZ_CRASH(); }
-    void mulDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void divDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
 
     template <typename T, typename S> void branch32(Condition, T, S, Label*) { MOZ_CRASH(); }

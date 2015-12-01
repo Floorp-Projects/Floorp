@@ -160,6 +160,12 @@ MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    as_muld(dest, dest, src);
+}
+
+void
 MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
 {
     movePtr(imm, ScratchRegister);
