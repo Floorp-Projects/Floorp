@@ -245,7 +245,7 @@ private:
   void ScanForMetadata(mozilla::MediaByteRange& aFtyp,
                        mozilla::MediaByteRange& aMoov);
   nsTArray<Moof> mMoofs;
-  MediaByteRangeSet mMediaRanges;
+  nsTArray<MediaByteRange> mMediaRanges;
   bool mIsAudio;
 };
 }
