@@ -1236,9 +1236,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void negateFloat(FloatRegister reg) {
         fneg(ARMFPRegister(reg, 32), ARMFPRegister(reg, 32));
     }
-    void mulDouble(FloatRegister src, FloatRegister dest) {
-        fmul(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
-    }
     void divDouble(FloatRegister src, FloatRegister dest) {
         fdiv(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
     }

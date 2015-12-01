@@ -97,7 +97,7 @@ MacroAssemblerARMCompat::convertUInt64ToDouble(Register64 src, Register temp, Fl
     convertUInt32ToDouble(src.high, dest);
     movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), ScratchRegister);
     loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
-    mulDouble(ScratchDoubleReg, dest);
+    asMasm().mulDouble(ScratchDoubleReg, dest);
     convertUInt32ToDouble(src.low, ScratchDoubleReg);
     asMasm().addDouble(ScratchDoubleReg, dest);
 }
@@ -244,12 +244,6 @@ MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest)
     ScratchFloat32Scope scratch(asMasm());
     ma_vldr(src, scratch);
     as_vcvt(dest, VFPRegister(scratch).sintOverlay());
-}
-
-void
-MacroAssemblerARM::mulDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vmul(dest, src, dest);
 }
 
 void
