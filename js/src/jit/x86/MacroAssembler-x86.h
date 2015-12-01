@@ -988,7 +988,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadConstantDouble(double d, FloatRegister dest);
     void addConstantDouble(double d, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
-    void addConstantFloat32(float f, FloatRegister dest);
     void loadConstantInt32x4(const SimdConstant& v, FloatRegister dest);
     void loadConstantFloat32x4(const SimdConstant& v, FloatRegister dest);
 

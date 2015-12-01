@@ -125,16 +125,6 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 }
 
 void
-MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
-{
-    Float* flt = getFloat(f);
-    if (!flt)
-        return;
-    masm.vaddss_mr(nullptr, dest.encoding(), dest.encoding());
-    propagateOOM(flt->uses.append(CodeOffset(masm.size())));
-}
-
-void
 MacroAssemblerX86::loadConstantInt32x4(const SimdConstant& v, FloatRegister dest)
 {
     MOZ_ASSERT(v.type() == SimdConstant::Int32x4);
