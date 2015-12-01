@@ -16,21 +16,22 @@ class ProfileGatherer final : public nsISupports
 public:
   NS_DECL_ISUPPORTS
 
-  ProfileGatherer(GeckoSampler* aTicker,
-                  double aSinceTime,
-                  mozilla::dom::Promise* aPromise);
+  explicit ProfileGatherer(GeckoSampler* aTicker);
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
-  void Start();
+  void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
+  void Cancel();
 
 private:
   ~ProfileGatherer() {};
   void Finish();
+  void Reset();
 
   RefPtr<mozilla::dom::Promise> mPromise;
   GeckoSampler* mTicker;
   double mSinceTime;
   uint32_t mPendingProfiles;
+  bool mGathering;
 };
 
 } // namespace mozilla
