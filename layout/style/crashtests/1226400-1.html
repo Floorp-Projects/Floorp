@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>FontFaceSet::Load crasher</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+
+body {
+  margin: 50px;
+}
+
+p {
+  margin: 0;
+  font-size: 300%;
+}
+
+</style>
+
+</head>
+<body>
+
+<p>This may crash on load...</p>
+
+<script>
+var scriptText = `
+  var fontFaceSet = document.fonts;
+  var link = document.createElement("link");
+  link.onerror = link.onload = function() {
+    fontFaceSet.load("12px foo");
+  }
+  link.rel = "stylesheet";
+  link.href = "data:text/css,";
+  document.body.appendChild(link);
+`;
+
+var styleText = `
+  @font-face {
+    font-family: foo;
+    src: url("data:text/ttf,");
+  }
+`;
+
+var ifr = document.createElement("iframe");
+document.body.appendChild(ifr);
+var style = ifr.contentDocument.createElement("style");
+style.textContent = styleText;
+ifr.contentDocument.body.appendChild(style);
+var script = ifr.contentDocument.createElement("script");
+script.textContent = scriptText;
+ifr.contentDocument.body.appendChild(script);
+ifr.remove();
+</script>
+</body>
+</html>
