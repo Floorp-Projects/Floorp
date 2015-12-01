@@ -185,6 +185,12 @@ MacroAssembler::neg32(Register reg)
     ma_negu(reg, reg);
 }
 
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    as_negd(reg, reg);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

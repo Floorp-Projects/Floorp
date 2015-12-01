@@ -168,6 +168,18 @@ MacroAssembler::negateFloat(FloatRegister reg)
     vxorps(scratch, reg, reg); // s ^ 0x80000000
 }
 
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    // From MacroAssemblerX86Shared::maybeInlineDouble
+    ScratchDoubleScope scratch(*this);
+    vpcmpeqw(scratch, scratch, scratch);
+    vpsllq(Imm32(63), scratch, scratch);
+
+    // XOR the float in a float register with -0.0.
+    vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

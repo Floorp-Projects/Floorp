@@ -902,15 +902,6 @@ class MacroAssemblerX86Shared : public Assembler
     void zeroFloat32(FloatRegister reg) {
         vxorps(reg, reg, reg);
     }
-    void negateDouble(FloatRegister reg) {
-        // From MacroAssemblerX86Shared::maybeInlineDouble
-        ScratchDoubleScope scratch(asMasm());
-        vpcmpeqw(scratch, scratch, scratch);
-        vpsllq(Imm32(63), scratch, scratch);
-
-        // XOR the float in a float register with -0.0.
-        vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
-    }
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
         vcvtss2sd(src, dest, dest);
     }

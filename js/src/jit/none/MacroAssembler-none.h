@@ -234,8 +234,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmpPtrSet(Condition, T, S, Register) { MOZ_CRASH(); }
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
-    void negateDouble(FloatRegister) { MOZ_CRASH(); }
-
     template <typename T, typename S> void branch32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchTest32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchAdd32(Condition, T, S, Label*) { MOZ_CRASH(); }

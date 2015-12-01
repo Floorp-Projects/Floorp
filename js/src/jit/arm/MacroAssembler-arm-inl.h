@@ -347,6 +347,12 @@ MacroAssembler::neg32(Register reg)
     ma_neg(reg, reg, SetCC);
 }
 
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    ma_vneg(reg, reg);
+}
+
 // ===============================================================
 // Shift functions
 
