@@ -61,6 +61,46 @@ class OfflineClockDriver;
  * OfflineClockDriver, if the graph is offline, or a SystemClockDriver, if the
  * graph is real time.
  * A MediaStreamGraph holds an owning reference to its driver.
+ *
+ * The lifetime of drivers is a complicated affair. Here are the different
+ * scenarii that can happen:
+ *
+ * Starting a MediaStreamGraph with an AudioCallbackDriver
+ * - A new thread T is created, from the main thread.
+ * - On this thread T, cubeb is initialized if needed, and a cubeb_stream is
+ *   created and started
+ * - The thread T posts a message to the main thread to terminate itself.
+ * - The graph runs off the audio thread
+ *
+ * Starting a MediaStreamGraph with a SystemClockDriver:
+ * - A new thread T is created from the main thread.
+ * - The graph runs off this thread.
+ *
+ * Switching from a SystemClockDriver to an AudioCallbackDriver:
+ * - A new AudioCallabackDriver is created and initialized on the graph thread
+ * - At the end of the MSG iteration, the SystemClockDriver transfers its timing
+ *   info and a reference to itself to the AudioCallbackDriver. It then starts
+ *   the AudioCallbackDriver.
+ * - When the AudioCallbackDriver starts, it checks if it has been switched from
+ *   a SystemClockDriver, and if that is the case, sends a message to the main
+ *   thread to shut the SystemClockDriver thread down.
+ * - The graph now runs off an audio callback
+ *
+ * Switching from an AudioCallbackDriver to a SystemClockDriver:
+ * - A new SystemClockDriver is created, and set as mNextDriver.
+ * - At the end of the MSG iteration, the AudioCallbackDriver transfers its
+ *   timing info and a reference to itself to the SystemClockDriver. A new
+ *   SystemClockDriver is started from the current audio thread.
+ * - When starting, the SystemClockDriver checks if it has been switched from an
+ *   AudioCallbackDriver. If yes, it creates a new temporary thread to release
+ *   the cubeb_streams. This temporary thread closes the cubeb_stream, and
+ *   then dispatches a message to the main thread to be terminated.
+ * - The graph now runs off a normal thread.
+ *
+ * Two drivers cannot run at the same time for the same graph. The thread safety
+ * of the different attributes of drivers, and they access pattern is documented
+ * next to the members themselves.
+ *
  */
 class GraphDriver
 {
