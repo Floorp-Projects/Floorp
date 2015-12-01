@@ -775,6 +775,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
+    inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
+
     // ===============================================================
     // Shift functions
 
