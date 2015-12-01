@@ -493,13 +493,25 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
     return rv;
   }
 
-  int msg_id = spd_say(mSpeechdClient, SPD_MESSAGE, NS_ConvertUTF16toUTF8(aText).get());
+  if (aText.Length()) {
+    int msg_id = spd_say(
+      mSpeechdClient, SPD_MESSAGE, NS_ConvertUTF16toUTF8(aText).get());
 
-  if (msg_id < 0) {
-    return NS_ERROR_FAILURE;
+    if (msg_id < 0) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mCallbacks.Put(msg_id, callback);
+  } else {
+    // Speech dispatcher does not work well with empty strings.
+    // In that case, don't send empty string to speechd,
+    // and just emulate a speechd start and end event.
+    NS_DispatchToMainThread(NS_NewRunnableMethodWithArgs<SPDNotificationType>(
+        callback, &SpeechDispatcherCallback::OnSpeechEvent, SPD_EVENT_BEGIN));
+
+    NS_DispatchToMainThread(NS_NewRunnableMethodWithArgs<SPDNotificationType>(
+        callback, &SpeechDispatcherCallback::OnSpeechEvent, SPD_EVENT_END));
   }
-
-  mCallbacks.Put(msg_id, callback);
 
   return NS_OK;
 }
