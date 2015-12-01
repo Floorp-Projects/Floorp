@@ -150,6 +150,12 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 // ===============================================================
 
 void
+MacroAssemblerMIPSCompat::incrementInt32Value(const Address& addr)
+{
+    asMasm().add32(Imm32(1), ToPayload(addr));
+}
+
+void
 MacroAssemblerMIPSCompat::computeEffectiveAddress(const BaseIndex& address, Register dest)
 {
     computeScaledAddress(address, dest);

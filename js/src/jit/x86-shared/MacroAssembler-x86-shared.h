@@ -208,21 +208,9 @@ class MacroAssemblerX86Shared : public Assembler
     CodeOffset cmp32WithPatch(Register lhs, Imm32 rhs) {
         return cmplWithPatch(rhs, lhs);
     }
-    void add32(Register src, Register dest) {
-        addl(src, dest);
-    }
-    void add32(Imm32 imm, Register dest) {
-        addl(imm, dest);
-    }
-    void add32(Imm32 imm, const Operand& dest) {
-        addl(imm, dest);
-    }
-    void add32(Imm32 imm, const Address& dest) {
-        addl(imm, Operand(dest));
-    }
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        add32(src, dest);
+        addl(src, dest);
         j(cond, label);
     }
     template <typename T>

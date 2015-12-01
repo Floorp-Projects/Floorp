@@ -731,6 +731,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Arithmetic functions
 
+    inline void add32(Register src, Register dest) PER_SHARED_ARCH;
+    inline void add32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+    inline void add32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
+    inline void add32(Imm32 imm, const AbsoluteAddress& dest) DEFINED_ON(x86_shared);
+
     inline void addPtr(Register src, Register dest) PER_ARCH;
     inline void addPtr(Register src1, Register src2, Register dest) DEFINED_ON(arm64);
     inline void addPtr(Imm32 imm, Register dest) PER_ARCH;
@@ -1012,12 +1017,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
 
-    void bumpKey(Int32Key* key, int diff) {
-        if (key->isRegister())
-            add32(Imm32(diff), key->reg());
-        else
-            key->bumpConstant(diff);
-    }
+    inline void bumpKey(Int32Key* key, int diff);
 
     void storeKey(const Int32Key& key, const Address& dest) {
         if (key.isRegister())

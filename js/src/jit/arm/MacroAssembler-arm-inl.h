@@ -139,6 +139,27 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    ma_add(src, dest, SetCC);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    ma_add(imm, dest, SetCC);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(dest, scratch);
+    ma_add(imm, scratch, SetCC);
+    store32(scratch, dest);
+}
+
+void
 MacroAssembler::addPtr(Register src, Register dest)
 {
     ma_add(src, dest);
@@ -239,6 +260,20 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+template <typename T>
+void
+MacroAssemblerARMCompat::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    asMasm().add32(src, dest);
+    j(cond, label);
+}
+
+void
+MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)
+{
+    asMasm().add32(Imm32(1), ToPayload(addr));
+}
 
 } // namespace jit
 } // namespace js
