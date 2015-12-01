@@ -13,6 +13,8 @@ var frameItem1 = "untouched";
 var scriptItem2 = "untouched";
 var imageItem2 = "untouched";
 var frameItem2 = "untouched";
+var xhrItem = "untouched";
+var fetchItem = "untouched";
 
 function checkLoads() {
   window.parent.is(scriptItem1, "spoiled", "Should not block tracking js 1");
@@ -21,6 +23,8 @@ function checkLoads() {
   window.parent.is(imageItem2, "spoiled", "Should not block tracking img 2");
   window.parent.is(frameItem1, "spoiled", "Should not block tracking iframe 1");
   window.parent.is(frameItem2, "spoiled", "Should not block tracking iframe 2");
+  window.parent.is(xhrItem, "loaded", "Should not block tracking XHR");
+  window.parent.is(fetchItem, "loaded", "Should not block fetches from tracking domains");
   window.parent.is(window.document.blockedTrackingNodeCount, 0,
     "No elements should be blocked");
 
@@ -29,11 +33,27 @@ function checkLoads() {
   window.parent.SimpleTest.finish();
 }
 
+var onloadCalled = false;
+var xhrFinished = false;
+var fetchFinished = false;
+function loaded(type) {
+ if (type === "onload") {
+      onloadCalled = true;
+  } else if (type === "xhr") {
+      xhrFinished = true;
+  } else if (type === "fetch") {
+      fetchFinished = true;
+  }
+
+  if (onloadCalled && xhrFinished && fetchFinished) {
+      checkLoads();
+  }
+}
 </script>
 
 </head>
 
-<body onload="checkLoads()">
+<body onload="loaded('onload')">
 
 <!-- Try loading from a tracking script URI (1) -->
 <script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="scriptItem1 = 'spoiled';"></script>
@@ -66,6 +86,40 @@ newFrame.id = "badframe2";
 newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
 newFrame.addEventListener("load", function onload() {frameItem2 = 'spoiled'});
 document.body.appendChild(newFrame);
+
+// Try doing an XHR against a tracking domain (bug 1216793)
+function reqListener() {
+    xhrItem = "loaded";
+    loaded("xhr");
+}
+function transferFailed() {
+    xhrItem = "failed";
+    loaded("xhr");
+}
+function transferCanceled() {
+    xhrItem = "canceled";
+    loaded("xhr");
+}
+var oReq = new XMLHttpRequest();
+oReq.addEventListener("load", reqListener);
+oReq.addEventListener("error", transferFailed);
+oReq.addEventListener("abort", transferCanceled);
+oReq.open("GET", "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js");
+oReq.send();
+
+// Fetch from a tracking domain
+fetch("http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js").then(function(response) {
+    if(response.ok) {
+        fetchItem = "loaded";
+        loaded("fetch");
+    } else {
+        fetchItem = "badresponse";
+        loaded("fetch");
+    }
+ }).catch(function(error) {
+     fetchItem = "error";
+     loaded("fetch");
+});
 </script>
 </body>
 </html>
