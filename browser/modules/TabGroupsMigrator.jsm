@@ -171,8 +171,62 @@ this.TabGroupsMigrator = {
     }
   }),
 
-  _removeHiddenTabGroupsFromState(state, groupData) {
-    // TODO
+  _removeHiddenTabGroupsFromState(state, groups) {
+    let stateToReturn = {windows: []};
+    for (let win of state.windows) {
+      let groupInfoForWindow = groups.get(win);
+      let hiddenGroupIDs = new Set();
+      for (let i = win.tabs.length - 1; i >= 0; i--) {
+        let tab =  win.tabs[i];
+        // Determine whether the tab is grouped:
+        let tabGroupInfo = null;
+        try {
+          tabGroupInfo = tab.extData && tab.extData["tabview-tab"] &&
+                         JSON.parse(tab.extData["tabview-tab"]);
+        } catch (ex) {}
+
+        // Then remove this data.
+        if (tab.extData) {
+          delete tab.extData["tabview-tab"];
+          if (Object.keys(tab.extData).length == 0) {
+            delete tab.extData;
+          }
+        }
+
+        // If the tab was grouped and hidden, remove it:
+        if (tabGroupInfo && tab.hidden) {
+          hiddenGroupIDs.add(tabGroupInfo.groupID);
+          win.tabs.splice(i, 1);
+          // Make sure we unhide it, or it won't get restored correctly
+          tab.hidden = false;
+        }
+      }
+
+      // We then convert any hidden groups into windows for the state object
+      // we show in about:tabgroupsdata
+      if (groupInfoForWindow) {
+        for (let groupID of hiddenGroupIDs) {
+          let group = groupInfoForWindow.get("" + groupID);
+          if (group) {
+            group.tabGroupsMigrationTitle = group.title;
+            delete group.title;
+            stateToReturn.windows.push(group);
+          }
+        }
+      }
+
+      // Finally we remove tab groups data from the window:
+      if (win.extData) {
+        delete win.extData["tabview-group"];
+        delete win.extData["tabview-groups"];
+        delete win.extData["tabview-ui"];
+        delete win.extData["tabview-visibility"];
+        if (Object.keys(win.extData).length == 0) {
+          delete win.extData;
+        }
+      }
+    }
+    return stateToReturn;
   },
 
   _createBackgroundTabGroupRestorationPage(state, backgroundData) {
