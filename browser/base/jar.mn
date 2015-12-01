@@ -85,7 +85,7 @@ browser.jar:
         content/browser/browser-devedition.js         (content/browser-devedition.js)
         content/browser/browser-eme.js                (content/browser-eme.js)
         content/browser/browser-feeds.js              (content/browser-feeds.js)
-*       content/browser/browser-fullScreen.js         (content/browser-fullScreen.js)
+        content/browser/browser-fullScreen.js         (content/browser-fullScreen.js)
         content/browser/browser-fullZoom.js           (content/browser-fullZoom.js)
         content/browser/browser-fxaccounts.js         (content/browser-fxaccounts.js)
 *       content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
