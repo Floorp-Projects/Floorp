@@ -5147,38 +5147,6 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "PANORAMA_INITIALIZATION_TIME_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Time it takes to initialize Panorama (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "25",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Number of groups in Panorama *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_STACKED_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "25",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Number of stacked groups in Panorama *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_MEDIAN_TABS_IN_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "100",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Median of tabs in groups in Panorama"
-  },
   "BROWSERPROVIDER_XUL_IMPORT_TIME": {
     "expires_in_version": "40",
     "kind": "exponential",
