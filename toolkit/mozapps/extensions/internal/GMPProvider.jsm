@@ -282,14 +282,12 @@ GMPWrapper.prototype = {
       return this._updateTask;
     }
 
-    this._updateTask = Task.spawn(function* GMPProvider_updateTask() {
+    this._updateTask = Task.spawn(function*() {
       this._log.trace("findUpdates() - updateTask");
       try {
         let installManager = new GMPInstallManager();
         let gmpAddons = yield installManager.checkForAddons();
-        let update = gmpAddons.find(function(aAddon) {
-          return aAddon.id === this._plugin.id;
-        }, this);
+        let update = gmpAddons.find(addon => addon.id === this._plugin.id);
         if (update && update.isValid && !update.isInstalled) {
           this._log.trace("findUpdates() - found update for " +
                           this._plugin.id + ", installing");
@@ -467,7 +465,7 @@ GMPWrapper.prototype = {
     return this._updateTask;
   },
 
-  _arePluginFilesOnDisk: function () {
+  _arePluginFilesOnDisk: function() {
     let fileExists = function(aGmpPath, aFileName) {
       let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       let path = OS.Path.join(aGmpPath, aFileName);
@@ -618,7 +616,7 @@ var GMPProvider = {
     this._log.trace("shutdown");
     Preferences.ignore(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
-    let shutdownTask = Task.spawn(function* GMPProvider_shutdownTask() {
+    let shutdownTask = Task.spawn(function*() {
       this._log.trace("shutdown - shutdownTask");
       let shutdownSucceeded = true;
 
