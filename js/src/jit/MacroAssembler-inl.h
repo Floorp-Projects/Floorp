@@ -341,6 +341,15 @@ MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind
     branch32(cond, scratch, Imm32(bit), label);
 }
 
+void
+MacroAssembler::bumpKey(Int32Key* key, int diff)
+{
+    if (key->isRegister())
+        add32(Imm32(diff), key->reg());
+    else
+        key->bumpConstant(diff);
+}
+
 } // namespace jit
 } // namespace js
 

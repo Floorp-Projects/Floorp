@@ -813,27 +813,6 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssemblerMIPSCompat::add32(Register src, Register dest)
-{
-    as_addu(dest, dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::add32(Imm32 imm, Register dest)
-{
-    ma_addu(dest, dest, imm);
-}
-
-void
-
-MacroAssemblerMIPSCompat::add32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_addu(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
 MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
 {
     as_subu(dest, dest, src);
