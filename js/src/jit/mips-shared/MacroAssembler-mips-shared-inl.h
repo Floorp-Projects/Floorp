@@ -138,6 +138,21 @@ MacroAssembler::sub32(const Address& src, Register dest)
     as_subu(dest, dest, SecondScratchReg);
 }
 
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    loadPtr(dest, SecondScratchReg);
+    subPtr(src, SecondScratchReg);
+    storePtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
