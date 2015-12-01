@@ -378,6 +378,12 @@ MacroAssembler::inc64(AbsoluteAddress dest)
     Str(scratch64, MemOperand(scratchAddr64, 0));
 }
 
+void
+MacroAssembler::neg32(Register reg)
+{
+    Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
+}
+
 // ===============================================================
 // Shift functions
 
