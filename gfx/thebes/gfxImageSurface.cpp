@@ -29,6 +29,11 @@ gfxImageSurface::gfxImageSurface()
 void
 gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
 {
+    if (!csurf || cairo_surface_status(csurf)) {
+        MakeInvalid();
+        return;
+    }
+
     mSize.width = cairo_image_surface_get_width(csurf);
     mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);

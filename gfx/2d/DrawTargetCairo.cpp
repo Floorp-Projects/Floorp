@@ -220,6 +220,7 @@ CopyToImageSurface(unsigned char *aData,
   // investigation hasn't been done to determine the underlying cause.  We
   // will just handle the failure to allocate the surface to avoid a crash.
   if (cairo_surface_status(surf)) {
+    gfxWarning() << "Invalid surface DTC " << cairo_surface_status(surf);
     return nullptr;
   }
 
@@ -597,8 +598,15 @@ DrawTargetCairo::~DrawTargetCairo()
   cairo_destroy(mContext);
   if (mSurface) {
     cairo_surface_destroy(mSurface);
+    mSurface = nullptr;
   }
   MOZ_ASSERT(!mLockedBits);
+}
+
+bool
+DrawTargetCairo::IsValid() const
+{
+  return mSurface && !cairo_surface_status(mSurface);
 }
 
 DrawTargetType
@@ -678,6 +686,10 @@ GfxFormatForCairoSurface(cairo_surface_t* surface)
 already_AddRefed<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
+  if (!IsValid()) {
+    gfxCriticalNote << "DrawTargetCairo::Snapshot with bad surface " << cairo_surface_status(mSurface);
+    return nullptr;
+  }
   if (mSnapshot) {
     RefPtr<SourceSurface> snapshot(mSnapshot);
     return snapshot.forget();
@@ -773,6 +785,11 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const DrawSurfaceOptions &aSurfOptions,
                              const DrawOptions &aOptions)
 {
+  if (!IsValid()) {
+    gfxCriticalNote << "DrawSurface with bad surface " << cairo_surface_status(mSurface);
+    return;
+  }
+
   AutoPrepareForDrawing prep(this, mContext);
   AutoClearDeviceOffset clear(aSurface);
 
@@ -1020,7 +1037,7 @@ DrawTargetCairo::CopySurfaceInternal(cairo_surface_t* aSurface,
                                      const IntPoint &aDest)
 {
   if (cairo_surface_status(aSurface)) {
-    gfxWarning() << "Invalid surface";
+    gfxWarning() << "Invalid surface" << cairo_surface_status(aSurface);
     return;
   }
 
@@ -1191,6 +1208,11 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const DrawOptions &aOptions,
                             const GlyphRenderingOptions*)
 {
+  if (!IsValid()) {
+    gfxDebug() << "FillGlyphs bad surface " << cairo_surface_status(mSurface);
+    return;
+  }
+
   AutoPrepareForDrawing prep(this, mContext);
   AutoClearDeviceOffset clear(aPattern);
 
@@ -1223,6 +1245,10 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   }
 
   cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
+
+  if (mSurface && cairo_surface_status(mSurface)) {
+    gfxDebug() << "Ending FillGlyphs with a bad surface " << cairo_surface_status(mSurface);
+  }
 }
 
 void
@@ -1568,7 +1594,7 @@ bool
 DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat)
 {
   if (cairo_surface_status(aSurface)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize)))
+    gfxCriticalNote
       << "Attempt to create DrawTarget for invalid surface. "
       << aSize << " Cairo Status: " << cairo_surface_status(aSurface);
     cairo_surface_destroy(aSurface);

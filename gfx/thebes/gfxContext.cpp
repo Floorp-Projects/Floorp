@@ -89,6 +89,11 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
 /* static */ already_AddRefed<gfxContext>
 gfxContext::ContextForDrawTarget(DrawTarget* aTarget)
 {
+  if (!aTarget || !aTarget->IsValid()) {
+    gfxWarning() << "Invalid target in gfxContext::ContextForDrawTarget";
+    return nullptr;
+  }
+
   Matrix transform = aTarget->GetTransform();
   nsRefPtr<gfxContext> result = new gfxContext(aTarget);
   result->SetMatrix(ThebesMatrix(transform));
