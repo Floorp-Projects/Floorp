@@ -85,10 +85,7 @@
     },
 
     function() {
-      if (SpecialPowers.isMainProcess()) {
-        SpecialPowers.Cu.import("resource://gre/modules/RequestSyncService.jsm");
-      }
-
+      SpecialPowers.importInMainProcess("resource://gre/modules/RequestSyncService.jsm");
       SpecialPowers.setAllAppsLaunchable(true);
       SpecialPowers.pushPrefEnv({"set":[["dom.mozBrowserFramesEnabled", true]]}, runTests);
     },

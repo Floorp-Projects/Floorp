@@ -2154,10 +2154,13 @@ HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames, uint32_t aLen
   }
 
   Sequence<nsString> list;
+  nsString* names = list.AppendElements(aLength, fallible);
+  if (!names) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   for (uint32_t i = 0; i < aLength; ++i) {
-    if (!list.AppendElement(nsDependentString(aFileNames[i]), fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    const char16_t* filename = aFileNames[i];
+    names[i].Rebind(filename, nsCharTraits<char16_t>::length(filename));
   }
 
   ErrorResult rv;

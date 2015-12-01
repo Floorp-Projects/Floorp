@@ -6225,29 +6225,29 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
                              .setUnboxedArrays(enableUnboxedArrays);
 
     if (op.getBoolOption("no-unboxed-objects"))
-        jit::js_JitOptions.disableUnboxedObjects = true;
+        jit::JitOptions.disableUnboxedObjects = true;
 
     if (const char* str = op.getStringOption("ion-scalar-replacement")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableScalarReplacement = false;
+            jit::JitOptions.disableScalarReplacement = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableScalarReplacement = true;
+            jit::JitOptions.disableScalarReplacement = true;
         else
             return OptionFailure("ion-scalar-replacement", str);
     }
 
     if (const char* str = op.getStringOption("ion-shared-stubs")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableSharedStubs = false;
+            jit::JitOptions.disableSharedStubs = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableSharedStubs = true;
+            jit::JitOptions.disableSharedStubs = true;
         else
             return OptionFailure("ion-shared-stubs", str);
     }
 
     if (const char* str = op.getStringOption("ion-gvn")) {
         if (strcmp(str, "off") == 0) {
-            jit::js_JitOptions.disableGvn = true;
+            jit::JitOptions.disableGvn = true;
         } else if (strcmp(str, "on") != 0 &&
                    strcmp(str, "optimistic") != 0 &&
                    strcmp(str, "pessimistic") != 0)
@@ -6260,128 +6260,128 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
 
     if (const char* str = op.getStringOption("ion-licm")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableLicm = false;
+            jit::JitOptions.disableLicm = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableLicm = true;
+            jit::JitOptions.disableLicm = true;
         else
             return OptionFailure("ion-licm", str);
     }
 
     if (const char* str = op.getStringOption("ion-edgecase-analysis")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableEdgeCaseAnalysis = false;
+            jit::JitOptions.disableEdgeCaseAnalysis = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableEdgeCaseAnalysis = true;
+            jit::JitOptions.disableEdgeCaseAnalysis = true;
         else
             return OptionFailure("ion-edgecase-analysis", str);
     }
 
     if (const char* str = op.getStringOption("ion-pgo")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disablePgo = false;
+            jit::JitOptions.disablePgo = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disablePgo = true;
+            jit::JitOptions.disablePgo = true;
         else
             return OptionFailure("ion-pgo", str);
     }
 
     if (const char* str = op.getStringOption("ion-range-analysis")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableRangeAnalysis = false;
+            jit::JitOptions.disableRangeAnalysis = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableRangeAnalysis = true;
+            jit::JitOptions.disableRangeAnalysis = true;
         else
             return OptionFailure("ion-range-analysis", str);
     }
 
     if (const char *str = op.getStringOption("ion-sincos")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableSincos = false;
+            jit::JitOptions.disableSincos = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableSincos = true;
+            jit::JitOptions.disableSincos = true;
         else
             return OptionFailure("ion-sincos", str);
     }
 
     if (const char* str = op.getStringOption("ion-sink")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableSink = false;
+            jit::JitOptions.disableSink = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableSink = true;
+            jit::JitOptions.disableSink = true;
         else
             return OptionFailure("ion-sink", str);
     }
 
     if (const char* str = op.getStringOption("ion-loop-unrolling")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableLoopUnrolling = false;
+            jit::JitOptions.disableLoopUnrolling = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableLoopUnrolling = true;
+            jit::JitOptions.disableLoopUnrolling = true;
         else
             return OptionFailure("ion-loop-unrolling", str);
     }
 
     if (const char* str = op.getStringOption("ion-instruction-reordering")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableInstructionReordering = false;
+            jit::JitOptions.disableInstructionReordering = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableInstructionReordering = true;
+            jit::JitOptions.disableInstructionReordering = true;
         else
             return OptionFailure("ion-instruction-reordering", str);
     }
 
     if (op.getBoolOption("ion-check-range-analysis"))
-        jit::js_JitOptions.checkRangeAnalysis = true;
+        jit::JitOptions.checkRangeAnalysis = true;
 
     if (op.getBoolOption("ion-extra-checks"))
-        jit::js_JitOptions.runExtraChecks = true;
+        jit::JitOptions.runExtraChecks = true;
 
     if (const char* str = op.getStringOption("ion-inlining")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableInlining = false;
+            jit::JitOptions.disableInlining = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableInlining = true;
+            jit::JitOptions.disableInlining = true;
         else
             return OptionFailure("ion-inlining", str);
     }
 
     if (const char* str = op.getStringOption("ion-osr")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.osr = true;
+            jit::JitOptions.osr = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.osr = false;
+            jit::JitOptions.osr = false;
         else
             return OptionFailure("ion-osr", str);
     }
 
     if (const char* str = op.getStringOption("ion-limit-script-size")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.limitScriptSize = true;
+            jit::JitOptions.limitScriptSize = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.limitScriptSize = false;
+            jit::JitOptions.limitScriptSize = false;
         else
             return OptionFailure("ion-limit-script-size", str);
     }
 
     int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
     if (warmUpThreshold >= 0)
-        jit::js_JitOptions.setCompilerWarmUpThreshold(warmUpThreshold);
+        jit::JitOptions.setCompilerWarmUpThreshold(warmUpThreshold);
 
     warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
     if (warmUpThreshold >= 0)
-        jit::js_JitOptions.baselineWarmUpThreshold = warmUpThreshold;
+        jit::JitOptions.baselineWarmUpThreshold = warmUpThreshold;
 
     if (op.getBoolOption("baseline-eager"))
-        jit::js_JitOptions.baselineWarmUpThreshold = 0;
+        jit::JitOptions.baselineWarmUpThreshold = 0;
 
     if (const char* str = op.getStringOption("ion-regalloc")) {
-        jit::js_JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
-        if (!jit::js_JitOptions.forcedRegisterAllocator.isSome())
+        jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
+        if (!jit::JitOptions.forcedRegisterAllocator.isSome())
             return OptionFailure("ion-regalloc", str);
     }
 
     if (op.getBoolOption("ion-eager"))
-        jit::js_JitOptions.setEagerCompilation();
+        jit::JitOptions.setEagerCompilation();
 
     offthreadCompilation = true;
     if (const char* str = op.getStringOption("ion-offthread-compile")) {

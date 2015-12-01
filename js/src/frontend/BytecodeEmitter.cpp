@@ -306,7 +306,7 @@ BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset)
      * Don't updateDepth if op's use-count comes from the immediate
      * operand yet to be stored in the extra bytes after op.
      */
-    if (js_CodeSpec[op].nuses >= 0)
+    if (CodeSpec[op].nuses >= 0)
         updateDepth(off);
 
     if (offset)
@@ -520,7 +520,7 @@ BytecodeEmitter::emitLoopEntry(ParseNode* nextpn)
 void
 BytecodeEmitter::checkTypeSet(JSOp op)
 {
-    if (js_CodeSpec[op].format & JOF_TYPESET) {
+    if (CodeSpec[op].format & JOF_TYPESET) {
         if (typesetCount < UINT16_MAX)
             typesetCount++;
     }
@@ -997,7 +997,7 @@ BytecodeEmitter::emitIndex32(JSOp op, uint32_t index)
     MOZ_ASSERT(checkStrictOrSloppy(op));
 
     const size_t len = 1 + UINT32_INDEX_LEN;
-    MOZ_ASSERT(len == size_t(js_CodeSpec[op].length));
+    MOZ_ASSERT(len == size_t(CodeSpec[op].length));
 
     ptrdiff_t offset;
     if (!emitCheck(len, &offset))
@@ -1016,7 +1016,7 @@ BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
 
-    const size_t len = js_CodeSpec[op].length;
+    const size_t len = CodeSpec[op].length;
     MOZ_ASSERT(len >= 1 + UINT32_INDEX_LEN);
 
     ptrdiff_t offset;
@@ -1141,7 +1141,7 @@ BytecodeEmitter::emitScopeCoordOp(JSOp op, ScopeCoordinate sc)
     MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
 
     unsigned n = SCOPECOORD_HOPS_LEN + SCOPECOORD_SLOT_LEN;
-    MOZ_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
+    MOZ_ASSERT(int(n) + 1 /* op */ == CodeSpec[op].length);
 
     ptrdiff_t off;
     if (!emitN(op, n, &off))
@@ -2742,7 +2742,7 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
 bool
 BytecodeEmitter::emitNameIncDec(ParseNode* pn)
 {
-    const JSCodeSpec* cs = &js_CodeSpec[pn->pn_kid->getOp()];
+    const JSCodeSpec* cs = &CodeSpec[pn->pn_kid->getOp()];
 
     bool global = (cs->format & JOF_GNAME);
     bool post;

@@ -1764,7 +1764,7 @@ CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 CASE(JSOP_TRY)
 {
-    MOZ_ASSERT(js_CodeSpec[*REGS.pc].length == 1);
+    MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
     ADVANCE_AND_DISPATCH(1);
 }
 
@@ -1892,7 +1892,7 @@ CASE(JSOP_RETRVAL)
 
   jit_return:
 
-        MOZ_ASSERT(js_CodeSpec[*REGS.pc].format & JOF_INVOKE);
+        MOZ_ASSERT(CodeSpec[*REGS.pc].format & JOF_INVOKE);
 
         /* Resume execution in the calling frame. */
         if (MOZ_LIKELY(interpReturnOK)) {
@@ -1958,7 +1958,7 @@ END_CASE(JSOP_AND)
 
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
-        MOZ_ASSERT(js_CodeSpec[*REGS.pc].length == 1);                        \
+        MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);                           \
         unsigned diff_ = (unsigned) GET_UINT8(REGS.pc) - (unsigned) JSOP_IFEQ; \
         if (diff_ <= 1) {                                                     \
             REGS.sp -= (spdec);                                               \

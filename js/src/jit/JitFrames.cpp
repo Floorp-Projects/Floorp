@@ -827,7 +827,7 @@ HandleException(ResumeFromException* rfe)
     JitActivation* activation = cx->runtime()->activation()->asJit();
 
 #ifdef CHECK_OSIPOINT_REGISTERS
-    if (js_JitOptions.checkOsiPointRegisters)
+    if (JitOptions.checkOsiPointRegisters)
         activation->setCheckRegs(false);
 #endif
 
@@ -1530,7 +1530,7 @@ MarkJitActivation(JSTracer* trc, const JitActivationIterator& activations)
     JitActivation* activation = activations->asJit();
 
 #ifdef CHECK_OSIPOINT_REGISTERS
-    if (js_JitOptions.checkOsiPointRegisters) {
+    if (JitOptions.checkOsiPointRegisters) {
         // GC can modify spilled registers, breaking our register checks.
         // To handle this, we disable these checks for the current VM call
         // when a GC happens.
@@ -2704,7 +2704,7 @@ JitFrameIterator::dumpBaseline() const
     baselineScriptAndPc(script.address(), &pc);
 
     fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void*)script, pc, uint32_t(script->pcToOffset(pc)));
-    fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
+    fprintf(stderr, "  current op: %s\n", CodeName[*pc]);
 
     fprintf(stderr, "  actual args: %d\n", numActualArgs());
 
@@ -2748,7 +2748,7 @@ InlineFrameIterator::dump() const
             script()->filename(), script()->lineno());
 
     fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());
-    fprintf(stderr, "  current op: %s\n", js_CodeName[*pc()]);
+    fprintf(stderr, "  current op: %s\n", CodeName[*pc()]);
 
     if (!more()) {
         numActualArgs();

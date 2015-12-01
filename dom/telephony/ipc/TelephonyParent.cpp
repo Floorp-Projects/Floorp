@@ -483,8 +483,10 @@ TelephonyRequestParent::DialCallback::NotifyDialMMISuccessWithStrings(const nsAS
                                                                       const char16_t** aAdditionalInformation)
 {
   nsTArray<nsString> additionalInformation;
+  nsString* infos = additionalInformation.AppendElements(aCount);
   for (uint32_t i = 0; i < aCount; i++) {
-    additionalInformation.AppendElement(nsDependentString(aAdditionalInformation[i]));
+    infos[i].Rebind(aAdditionalInformation[i],
+                    nsCharTraits<char16_t>::length(aAdditionalInformation[i]));
   }
 
   return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),

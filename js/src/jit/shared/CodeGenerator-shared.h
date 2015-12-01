@@ -175,7 +175,7 @@ class CodeGeneratorShared : public LElementVisitor
 
   protected:
 #ifdef CHECK_OSIPOINT_REGISTERS
-    // See js_JitOptions.checkOsiPointRegisters. We set this here to avoid
+    // See JitOptions.checkOsiPointRegisters. We set this here to avoid
     // races when enableOsiPointRegisterChecks is called while we're generating
     // code off-thread.
     bool checkOsiPointRegisters;

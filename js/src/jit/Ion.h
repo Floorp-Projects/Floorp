@@ -175,7 +175,7 @@ IsIonInlinablePC(jsbytecode* pc) {
 inline bool
 TooManyActualArguments(unsigned nargs)
 {
-    return nargs > js_JitOptions.maxStackArgs;
+    return nargs > JitOptions.maxStackArgs;
 }
 
 inline bool

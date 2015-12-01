@@ -148,9 +148,10 @@ Statement::initialize(Connection *aDBConnection,
   mResultColumnCount = ::sqlite3_column_count(mDBStatement);
   mColumnNames.Clear();
 
+  nsCString* columnNames = mColumnNames.AppendElements(mResultColumnCount);
   for (uint32_t i = 0; i < mResultColumnCount; i++) {
       const char *name = ::sqlite3_column_name(mDBStatement, i);
-      (void)mColumnNames.AppendElement(nsDependentCString(name));
+      columnNames[i].Assign(name);
   }
 
 #ifdef DEBUG

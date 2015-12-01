@@ -375,9 +375,11 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
     return res;
   }
 
-  nsTArray<nsString> array(mDictionaryTable.Count());
+  nsTArray<nsString> array;
+  nsString* elems = array.AppendElements(mDictionaryTable.Count());
   for (auto iter = mDictionaryTable.Iter(); !iter.Done(); iter.Next()) {
-    array.AppendElement(nsDependentString(iter.Get()->GetKey()));
+    elems->Assign(iter.Get()->GetKey());
+    elems++;
   }
 
   nsCOMPtr<nsIRunnable> runnable =
@@ -396,9 +398,11 @@ NS_IMETHODIMP mozPersonalDictionary::GetWordList(nsIStringEnumerator **aWords)
 
   WaitForLoad();
 
-  nsTArray<nsString> *array = new nsTArray<nsString>(mDictionaryTable.Count());
+  nsTArray<nsString> *array = new nsTArray<nsString>();
+  nsString* elems = array->AppendElements(mDictionaryTable.Count());
   for (auto iter = mDictionaryTable.Iter(); !iter.Done(); iter.Next()) {
-    array->AppendElement(nsDependentString(iter.Get()->GetKey()));
+    elems->Assign(iter.Get()->GetKey());
+    elems++;
   }
 
   array->Sort();
