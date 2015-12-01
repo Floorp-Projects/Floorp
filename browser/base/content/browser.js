@@ -230,10 +230,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "gWebRTCUI",
 
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashHandler",
   "resource:///modules/ContentCrashHandlers.jsm");
-#ifdef MOZ_CRASHREPORTER
-XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
-  "resource:///modules/ContentCrashHandlers.jsm");
-#endif
+
+if (AppConstants.MOZ_CRASHREPORTER) {
+  XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
+    "resource:///modules/ContentCrashHandlers.jsm");
+}
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
   "resource:///modules/FormValidationHandler.jsm");
@@ -289,11 +290,11 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   return null;
 });
 
-#ifdef MOZ_CRASHREPORTER
-XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
-                                   "@mozilla.org/xre/app-info;1",
-                                   "nsICrashReporter");
-#endif
+if (AppConstants.MOZ_CRASHREPORTER) {
+  XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                     "@mozilla.org/xre/app-info;1",
+                                     "nsICrashReporter");
+}
 
 XPCOMUtils.defineLazyGetter(this, "PageMenuParent", function() {
   let tmp = {};
@@ -4460,8 +4461,7 @@ var XULBrowserWindow = {
     else
       this.asyncUpdateUI();
 
-#ifdef MOZ_CRASHREPORTER
-    if (aLocationURI) {
+    if (AppConstants.MOZ_CRASHREPORTER && aLocationURI) {
       let uri = aLocationURI.clone();
       try {
         // If the current URI contains a username/password, remove it.
@@ -4474,7 +4474,6 @@ var XULBrowserWindow = {
         // Don't make noise when the crash reporter is built but not enabled.
       }
     }
-#endif
   },
 
   asyncUpdateUI: function () {
