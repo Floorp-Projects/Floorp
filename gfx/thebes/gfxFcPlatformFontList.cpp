@@ -29,6 +29,7 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
+#include "gfxPlatformGtk.h"
 #endif
 
 using namespace mozilla;
@@ -1551,7 +1552,7 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
 void
 gfxFcPlatformFontList::ClearLangGroupPrefFonts()
 {
-    mGenericMappings.Clear();
+    ClearGenericMappings();
     gfxPlatformFontList::ClearLangGroupPrefFonts();
     mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
 }
@@ -1595,9 +1596,6 @@ gfxFcPlatformFontList::GetFTLibrary()
 
     return sCairoFTLibrary;
 }
-
-// a given generic will map to at most this many families
-const uint32_t kMaxGenericFamilies = 3;
 
 gfxPlatformFontList::PrefFontList*
 gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
@@ -1651,6 +1649,7 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
 
     // -- select the fonts to be used for the generic
     prefFonts = new PrefFontList; // can be empty but in practice won't happen
+    uint32_t limit = gfxPlatformGtk::GetPlatform()->MaxGenericSubstitions();
     for (int i = 0; i < faces->nfont; i++) {
         FcPattern* font = faces->fonts[i];
         FcChar8* mappedGeneric = nullptr;
@@ -1670,7 +1669,7 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
             if (genericFamily && !prefFonts->Contains(genericFamily)) {
                 //printf("generic %s ==> %s\n", genericLang.get(), (const char*)mappedGeneric);
                 prefFonts->AppendElement(genericFamily);
-                if (prefFonts->Length() >= kMaxGenericFamilies) {
+                if (prefFonts->Length() >= limit) {
                     break;
                 }
             }
