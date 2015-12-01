@@ -290,8 +290,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         files = objs[0].files
 
-        self.assertEqual(files._strings, ['app.ico', 'bar.ico', 'baz.png', 'foo.xpm'])
-        self.assertEqual(files['app.ico'].source, 'test/bar.ico')
+        self.assertEqual(files._strings, ['bar.ico', 'baz.png', 'foo.xpm'])
 
         self.assertIn('icons', files._children)
         icons = files._children['icons']
