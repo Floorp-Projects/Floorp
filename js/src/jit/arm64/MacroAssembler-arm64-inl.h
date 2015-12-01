@@ -359,6 +359,12 @@ MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
     fmul(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), scratchDouble);
 }
 
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    fdiv(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+}
+
 // ===============================================================
 // Shift functions
 
