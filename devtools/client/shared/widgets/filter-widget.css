@@ -240,10 +240,9 @@ input {
 }
 
 #toggle-presets {
-  background: url(chrome://devtools/skin/images/pseudo-class.svg#pseudo-class);
+  background: url(chrome://devtools/skin/images/pseudo-class.svg);
 }
 
 .show-presets #toggle-presets {
-  background: url(chrome://devtools/skin/images/pseudo-class.svg#pseudo-class-checked);
-  filter: none;
+  filter: url(chrome://devtools/skin/images/filters.svg#checked-icon-state);
 }
