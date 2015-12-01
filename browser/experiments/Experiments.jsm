@@ -144,7 +144,7 @@ function configureLogging() {
 // Returns a Promise resolved with the json payload or rejected with
 // OS.File.Error or JSON.parse() errors.
 function loadJSONAsync(file, options) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let rawData = yield OS.File.read(file, options);
     // Read json file into a string
     let data;
@@ -156,7 +156,7 @@ function loadJSONAsync(file, options) {
       gLogger.error("Experiments: Could not parse JSON: " + file + " " + ex);
       throw ex;
     }
-    throw new Task.Result(data);
+    return data;
   });
 }
 
