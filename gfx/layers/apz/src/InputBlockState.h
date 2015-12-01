@@ -244,7 +244,7 @@ public:
   /**
    * Update the wheel transaction state for a new event.
    */
-  void Update(const ScrollWheelInput& aEvent);
+  void Update(ScrollWheelInput& aEvent);
 
 protected:
   void UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc) override;
@@ -253,6 +253,7 @@ private:
   nsTArray<ScrollWheelInput> mEvents;
   TimeStamp mLastEventTime;
   TimeStamp mLastMouseMove;
+  uint32_t mScrollSeriesCounter;
   bool mTransactionEnded;
 };
 
