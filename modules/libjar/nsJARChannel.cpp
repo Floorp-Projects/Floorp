@@ -937,8 +937,11 @@ nsJARChannel::OverrideWithSynthesizedResponse(nsIInputStream* aSynthesizedInput,
 NS_IMETHODIMP
 nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
-    MOZ_ASSERT(!mLoadInfo || mLoadInfo->GetSecurityMode() == 0 ||
-               mLoadInfo->GetEnforceSecurity(),
+    MOZ_ASSERT(!mLoadInfo ||
+               mLoadInfo->GetSecurityMode() == 0 ||
+               mLoadInfo->GetInitialSecurityCheckDone() ||
+               (mLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL &&
+                nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
                "security flags in loadInfo but asyncOpen2() not called");
 
     LOG(("nsJARChannel::AsyncOpen [this=%x]\n", this));

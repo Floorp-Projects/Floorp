@@ -13,52 +13,47 @@
 namespace mozilla {
 namespace layers {
 
-/**
- * A TextureClient implementation based on Xlib.
- */
-class TextureClientX11 : public TextureClient
+class X11TextureData : public TextureData
 {
- public:
-  TextureClientX11(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat format, TextureFlags aFlags = TextureFlags::DEFAULT);
+public:
+  static X11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                TextureFlags aFlags, ISurfaceAllocator* aAllocator);
 
-  ~TextureClientX11();
+  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  // TextureClient
-
-  virtual bool IsAllocated() const override;
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual gfx::IntSize GetSize() const override { return mSize; }
-
-  virtual bool Lock(OpenMode aMode) override;
+  virtual bool Lock(OpenMode aMode, FenceHandle*) override;
 
   virtual void Unlock() override;
 
-  virtual bool IsLocked() const override { return mLocked; }
-
-  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags flags) override;
-
-  virtual bool CanExposeDrawTarget() const override { return true; }
-
-  virtual gfx::DrawTarget* BorrowDrawTarget() override;
-
-  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+  virtual gfx::IntSize GetSize() const override { return mSize; }
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+
+  virtual bool SupportsMoz2D() const override { return true; }
+
   virtual bool HasInternalBuffer() const override { return false; }
 
-  virtual already_AddRefed<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+  virtual void Deallocate(ISurfaceAllocator*) override;
+
+  virtual TextureData*
+  CreateSimilar(ISurfaceAllocator* aAllocator,
+                TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
- private:
-  gfx::SurfaceFormat mFormat;
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+
+protected:
+  X11TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                 bool aClientDeallocation, bool aIsCrossProcess,
+                 gfxXlibSurface* aSurface);
+
   gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
   RefPtr<gfxXlibSurface> mSurface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
-  bool mLocked;
+  bool mClientDeallocation;
+  bool mIsCrossProcess;
 };
 
 } // namespace layers

@@ -1341,12 +1341,12 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
     switch (SimdTypeDescr::Type(type_)) {
       case SimdTypeDescr::Int32x4:
         MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG,
-                      a.fpuReg().isInt32x4());
+                      a.fpuReg().isSimd128());
         resultObject = js::CreateSimd<Int32x4>(cx, (const Int32x4::Elem*) raw);
         break;
       case SimdTypeDescr::Float32x4:
         MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG,
-                      a.fpuReg().isFloat32x4());
+                      a.fpuReg().isSimd128());
         resultObject = js::CreateSimd<Float32x4>(cx, (const Float32x4::Elem*) raw);
         break;
       case SimdTypeDescr::Float64x2:

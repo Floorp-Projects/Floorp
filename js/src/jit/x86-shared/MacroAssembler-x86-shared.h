@@ -46,7 +46,7 @@ class MacroAssemblerX86Shared : public Assembler
     const MacroAssembler& asMasm() const;
 
   public:
-    typedef Vector<CodeOffsetLabel, 0, SystemAllocPolicy> UsesVector;
+    typedef Vector<CodeOffset, 0, SystemAllocPolicy> UsesVector;
 
   protected:
     // For Double, Float and SimdData, make the move ctors explicit so that MSVC
@@ -205,7 +205,7 @@ class MacroAssemblerX86Shared : public Assembler
     void cmp32(Register lhs, const Operand& rhs) {
         cmpl(rhs, lhs);
     }
-    CodeOffsetLabel cmp32WithPatch(Register lhs, Imm32 rhs) {
+    CodeOffset cmp32WithPatch(Register lhs, Imm32 rhs) {
         return cmplWithPatch(rhs, lhs);
     }
     void add32(Register src, Register dest) {
@@ -1009,7 +1009,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex srcZ(src);
         srcZ.offset += 2 * sizeof(int32_t);
 
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovq(Operand(src), dest);
         vmovd(Operand(srcZ), scratch);
         vmovlhps(scratch, dest, dest);
@@ -1018,7 +1018,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address srcZ(src);
         srcZ.offset += 2 * sizeof(int32_t);
 
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovq(Operand(src), dest);
         vmovd(Operand(srcZ), scratch);
         vmovlhps(scratch, dest, dest);
@@ -1074,7 +1074,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         vmovq(src, Operand(dest));
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         vmovd(scratch, Operand(destZ));
     }
@@ -1082,7 +1082,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         vmovq(src, Operand(dest));
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         vmovd(scratch, Operand(destZ));
     }
@@ -1145,7 +1145,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address srcZ(src);
         srcZ.offset += 2 * sizeof(float);
         vmovsd(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovss(srcZ, scratch);
         vmovlhps(scratch, dest, dest);
     }
@@ -1153,7 +1153,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex srcZ(src);
         srcZ.offset += 2 * sizeof(float);
         vmovsd(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovss(srcZ, scratch);
         vmovlhps(scratch, dest, dest);
     }
@@ -1169,7 +1169,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         storeDouble(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         storeFloat32(scratch, destZ);
     }
@@ -1177,7 +1177,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         storeDouble(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         storeFloat32(scratch, destZ);
     }
@@ -1472,8 +1472,8 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     // Emit a JMP that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
-    CodeOffsetLabel toggledJump(Label* label) {
-        CodeOffsetLabel offset(size());
+    CodeOffset toggledJump(Label* label) {
+        CodeOffset offset(size());
         jump(label);
         return offset;
     }
@@ -1487,8 +1487,8 @@ class MacroAssemblerX86Shared : public Assembler
         // Exists for ARM compatibility.
     }
 
-    CodeOffsetLabel labelForPatch() {
-        return CodeOffsetLabel(size());
+    CodeOffset labelForPatch() {
+        return CodeOffset(size());
     }
 
     void abiret() {

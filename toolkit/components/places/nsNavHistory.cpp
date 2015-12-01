@@ -3841,22 +3841,15 @@ nsNavHistory::CheckIsRecentEvent(RecentEventHash* hashTable,
 //
 //    This goes through our
 
-static PLDHashOperator
-ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
-                              int64_t& aData,
-                              void* userArg)
-{
-  int64_t* threshold = reinterpret_cast<int64_t*>(userArg);
-  if (aData < *threshold)
-    return PL_DHASH_REMOVE;
-  return PL_DHASH_NEXT;
-}
 void
 nsNavHistory::ExpireNonrecentEvents(RecentEventHash* hashTable)
 {
   int64_t threshold = GetNow() - RECENT_EVENT_THRESHOLD;
-  hashTable->Enumerate(ExpireNonrecentEventsCallback,
-                       reinterpret_cast<void*>(&threshold));
+  for (auto iter = hashTable->Iter(); !iter.Done(); iter.Next()) {
+    if (iter.Data() < threshold) {
+      iter.Remove();
+    }
+  }
 }
 
 

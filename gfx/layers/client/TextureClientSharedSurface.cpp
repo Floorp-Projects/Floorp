@@ -23,40 +23,58 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-SharedSurfaceTextureClient::SharedSurfaceTextureClient(ISurfaceAllocator* aAllocator,
-                                                       TextureFlags aFlags,
-                                                       UniquePtr<gl::SharedSurface> surf,
-                                                       gl::SurfaceFactory* factory)
-  : TextureClient(aAllocator,
-                  aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags())
-  , mSurf(Move(surf))
-{
-}
 
-SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
-{
-  // Free the ShSurf implicitly.
-}
+SharedSurfaceTextureData::SharedSurfaceTextureData(UniquePtr<gl::SharedSurface> surf)
+  : mSurf(Move(surf))
+{}
+
+SharedSurfaceTextureData::~SharedSurfaceTextureData()
+{}
+
+void
+SharedSurfaceTextureData::Deallocate(ISurfaceAllocator*)
+{}
 
 gfx::IntSize
-SharedSurfaceTextureClient::GetSize() const
+SharedSurfaceTextureData::GetSize() const
 {
   return mSurf->mSize;
 }
 
 bool
-SharedSurfaceTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
   return mSurf->ToSurfaceDescriptor(&aOutDescriptor);
+}
+
+
+SharedSurfaceTextureClient::SharedSurfaceTextureClient(SharedSurfaceTextureData* aData,
+                                                       TextureFlags aFlags,
+                                                       ISurfaceAllocator* aAllocator)
+: TextureClient(aData, aFlags, aAllocator)
+{
+  mWorkaroundAnnoyingSharedSurfaceLifetimeIssues = true;
+}
+
+already_AddRefed<SharedSurfaceTextureClient>
+SharedSurfaceTextureClient::Create(UniquePtr<gl::SharedSurface> surf, gl::SurfaceFactory* factory,
+                                   ISurfaceAllocator* aAllocator, TextureFlags aFlags)
+{
+  if (!surf) {
+    return nullptr;
+  }
+  TextureFlags flags = aFlags | TextureFlags::RECYCLE | surf->GetTextureFlags();
+  SharedSurfaceTextureData* data = new SharedSurfaceTextureData(Move(surf));
+  return MakeAndAddRef<SharedSurfaceTextureClient>(data, flags, aAllocator);
 }
 
 void
 SharedSurfaceTextureClient::SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle)
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     surf->GetTextureClient()->SetReleaseFenceHandle(aReleaseFenceHandle);
@@ -70,9 +88,9 @@ FenceHandle
 SharedSurfaceTextureClient::GetAndResetReleaseFenceHandle()
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAndResetReleaseFenceHandle();
@@ -85,9 +103,9 @@ void
 SharedSurfaceTextureClient::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->SetAcquireFenceHandle(aAcquireFenceHandle);
@@ -100,15 +118,39 @@ const FenceHandle&
 SharedSurfaceTextureClient::GetAcquireFenceHandle() const
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (Surf()->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(Surf());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAcquireFenceHandle();
   }
 #endif
   return TextureClient::GetAcquireFenceHandle();
+}
+
+SharedSurfaceTextureClient::~SharedSurfaceTextureClient()
+{
+  // XXX - Things break when using the proper destruction handshake with
+  // SharedSurfaceTextureData because the TextureData outlives its gl
+  // context. Having a strong reference to the gl context creates a cycle.
+  // This needs to be fixed in a better way, though, because deleting
+  // the TextureData here can race with the compositor and cause flashing.
+  TextureData* data = mData;
+  mData = nullptr;
+
+  Destroy();
+
+  if (data) {
+    // Destroy mData right away without doing the proper deallocation handshake,
+    // because SharedSurface depends on things that may not outlive the texture's
+    // destructor so we can't wait until we know the compositor isn't using the
+    // texture anymore.
+    // It goes without saying that this is really bad and we should fix the bugs
+    // that block doing the right thing such as bug 1224199 sooner rather than
+    // later.
+    delete data;
+  }
 }
 
 } // namespace layers

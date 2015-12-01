@@ -281,11 +281,11 @@ class ICEntry
         setKind(kind);
     }
 
-    CodeOffsetLabel returnOffset() const {
-        return CodeOffsetLabel(returnOffset_);
+    CodeOffset returnOffset() const {
+        return CodeOffset(returnOffset_);
     }
 
-    void setReturnOffset(CodeOffsetLabel offset) {
+    void setReturnOffset(CodeOffset offset) {
         MOZ_ASSERT(offset.offset() <= (size_t) UINT32_MAX);
         returnOffset_ = (uint32_t) offset.offset();
     }

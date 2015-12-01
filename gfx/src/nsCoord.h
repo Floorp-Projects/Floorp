@@ -110,8 +110,6 @@ inline nscoord NSToCoordRoundWithClamp(float aValue)
   if (aValue <= nscoord_MIN) {
     return nscoord_MIN;
   }
-  // NOTE: we can't replace the early returns above with fminf/fmaxf because
-  // NSToCoordRound(float(nscoord_MAX)) is negative on win32 (bug 1226627).
 #endif
   return NSToCoordRound(aValue);
 }
@@ -261,8 +259,12 @@ inline nscoord NSToCoordFloorClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
-  aValue = fminf(aValue, nscoord_MAX);
-  aValue = fmaxf(aValue, nscoord_MIN);
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
 #endif
   return NSToCoordFloor(aValue);
 }
@@ -281,8 +283,12 @@ inline nscoord NSToCoordCeilClamped(double aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of double, to avoid overflow
-  aValue = fmin(aValue, nscoord_MAX);
-  aValue = fmax(aValue, nscoord_MIN);
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
 #endif
   return NSToCoordCeil(aValue);
 }
@@ -309,8 +315,12 @@ inline nscoord NSToCoordTruncClamped(float aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of float, to avoid overflow
-  aValue = fminf(aValue, nscoord_MAX);
-  aValue = fmaxf(aValue, nscoord_MIN);
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
 #endif
   return NSToCoordTrunc(aValue);
 }
@@ -319,8 +329,12 @@ inline nscoord NSToCoordTruncClamped(double aValue)
 {
 #ifndef NS_COORD_IS_FLOAT
   // Bounds-check before converting out of double, to avoid overflow
-  aValue = fmin(aValue, nscoord_MAX);
-  aValue = fmax(aValue, nscoord_MIN);
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
 #endif
   return NSToCoordTrunc(aValue);
 }

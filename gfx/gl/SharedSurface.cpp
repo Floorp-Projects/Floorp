@@ -355,7 +355,7 @@ SurfaceFactory::NewTexClient(const gfx::IntSize& size)
         return nullptr;
 
     RefPtr<layers::SharedSurfaceTextureClient> ret;
-    ret = new layers::SharedSurfaceTextureClient(mAllocator, mFlags, Move(surf), this);
+    ret = layers::SharedSurfaceTextureClient::Create(Move(surf), this, mAllocator, mFlags);
 
     StartRecycling(ret);
 
@@ -391,7 +391,7 @@ SurfaceFactory::RecycleCallback(layers::TextureClient* rawTC, void* rawFactory)
     tc = static_cast<layers::SharedSurfaceTextureClient*>(rawTC);
     SurfaceFactory* factory = static_cast<SurfaceFactory*>(rawFactory);
 
-    if (tc->mSurf->mCanRecycle) {
+    if (tc->Surf()->mCanRecycle) {
         if (factory->Recycle(tc))
             return;
     }
