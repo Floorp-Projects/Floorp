@@ -115,30 +115,32 @@ VideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
   // Note: we don't need the codec specific info on a per-frame basis.
   // It's mostly useful for WebRTC use cases.
 
+  // Make a copy of the data, so we can release aInputFrame ASAP,
+  // to avoid too many shmem handles being held by the GMP process.
+  // If the GMP process holds on to too many shmem handles, the Gecko
+  // side can fail to allocate a shmem to send more input. This is
+  // particularly a problem in Gecko mochitests, which can open multiple
+  // actors at once which share the same pool of shmems.
+  DecodeData* data = new DecodeData();
+  Assign(data->mBuffer, aInputFrame->Buffer(), aInputFrame->Size());
+  data->mTimestamp = aInputFrame->TimeStamp();
+  data->mDuration = aInputFrame->Duration();
+  data->mIsKeyframe = (aInputFrame->FrameType() == kGMPKeyFrame);
+  const GMPEncryptedBufferMetadata* crypto = aInputFrame->GetDecryptionData();
+  if (crypto) {
+    data->mCrypto.Init(crypto);
+  }
+  aInputFrame->Destroy();
   mWorkerThread->Post(WrapTaskRefCounted(this,
                                          &VideoDecoder::DecodeTask,
-                                         aInputFrame));
+                                         data));
 }
 
-class AutoReleaseVideoFrame {
-public:
-  AutoReleaseVideoFrame(GMPVideoEncodedFrame* aFrame)
-    : mFrame(aFrame)
-  {
-  }
-  ~AutoReleaseVideoFrame()
-  {
-    GetPlatform()->runonmainthread(WrapTask(mFrame, &GMPVideoEncodedFrame::Destroy));
-  }
-private:
-  GMPVideoEncodedFrame* mFrame;
-};
-
 void
-VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
+VideoDecoder::DecodeTask(DecodeData* aData)
 {
   CK_LOGD("VideoDecoder::DecodeTask");
-  AutoReleaseVideoFrame ensureFrameReleased(aInput);
+  AutoPtr<DecodeData> d(aData);
   HRESULT hr;
 
   {
@@ -152,24 +154,17 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
     return;
   }
 
-  if (!aInput || !mHostAPI || !mDecoder) {
+  if (!aData || !mHostAPI || !mDecoder) {
     CK_LOGE("Decode job not set up correctly!");
     return;
   }
 
-  const uint8_t* inBuffer = aInput->Buffer();
-  if (!inBuffer) {
-    CK_LOGE("No buffer for encoded frame!\n");
-    return;
-  }
-
-  const GMPEncryptedBufferMetadata* crypto = aInput->GetDecryptionData();
-  std::vector<uint8_t> buffer(inBuffer, inBuffer + aInput->Size());
-  if (crypto) {
+  std::vector<uint8_t>& buffer = aData->mBuffer;
+  if (aData->mCrypto.IsValid()) {
     // Plugin host should have set up its decryptor/key sessions
     // before trying to decode!
     GMPErr rv =
-      ClearKeyDecryptionManager::Get()->Decrypt(&buffer[0], buffer.size(), crypto);
+      ClearKeyDecryptionManager::Get()->Decrypt(buffer, aData->mCrypto);
 
     if (GMP_FAILED(rv)) {
       MaybeRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::Error, rv));
@@ -179,7 +174,7 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
 
   AnnexB::ConvertFrameInPlace(buffer);
 
-  if (aInput->FrameType() == kGMPKeyFrame) {
+  if (aData->mIsKeyframe) {
     // We must send the SPS and PPS to Windows Media Foundation's decoder.
     // Note: We do this *after* decryption, otherwise the subsample info
     // would be incorrect.
@@ -188,8 +183,8 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
 
   hr = mDecoder->Input(buffer.data(),
                        buffer.size(),
-                       aInput->TimeStamp(),
-                       aInput->Duration());
+                       aData->mTimestamp,
+                       aData->mDuration);
 
   CK_LOGD("VideoDecoder::DecodeTask() Input ret hr=0x%x\n", hr);
   if (FAILED(hr)) {

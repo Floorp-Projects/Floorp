@@ -60,7 +60,20 @@ private:
 
   void DrainTask();
 
-  void DecodeTask(GMPVideoEncodedFrame* aInputFrame);
+  struct DecodeData {
+    DecodeData()
+      : mTimestamp(0)
+      , mDuration(0)
+      , mIsKeyframe(false)
+    {}
+    std::vector<uint8_t> mBuffer;
+    uint64_t mTimestamp;
+    uint64_t mDuration;
+    bool mIsKeyframe;
+    CryptoMetaData mCrypto;
+  };
+
+  void DecodeTask(DecodeData* aData);
 
   void ResetCompleteTask();
 

@@ -30,7 +30,7 @@ public:
   bool HasKey() const { return !!mKey.size(); }
 
   GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 const GMPEncryptedBufferMetadata* aMetadata);
+                 const CryptoMetaData& aMetadata);
 
   const Key& DecryptionKey() const { return mKey; }
 
@@ -131,17 +131,22 @@ ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 }
 
 GMPErr
+ClearKeyDecryptionManager::Decrypt(std::vector<uint8_t>& aBuffer,
+                                   const CryptoMetaData& aMetadata)
+{
+  return Decrypt(&aBuffer[0], aBuffer.size(), aMetadata);
+}
+
+GMPErr
 ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                                   const GMPEncryptedBufferMetadata* aMetadata)
+                                   const CryptoMetaData& aMetadata)
 {
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
-  KeyId keyId(aMetadata->KeyId(), aMetadata->KeyId() + aMetadata->KeyIdSize());
-
-  if (!HasKeyForKeyId(keyId)) {
+  if (!HasKeyForKeyId(aMetadata.mKeyId)) {
     return GMPNoKeyErr;
   }
 
-  return mDecryptors[keyId]->Decrypt(aBuffer, aBufferSize, aMetadata);
+  return mDecryptors[aMetadata.mKeyId]->Decrypt(aBuffer, aBufferSize, aMetadata);
 }
 
 ClearKeyDecryptor::ClearKeyDecryptor()
@@ -162,21 +167,21 @@ ClearKeyDecryptor::InitKey(const Key& aKey)
 
 GMPErr
 ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                           const GMPEncryptedBufferMetadata* aMetadata)
+                           const CryptoMetaData& aMetadata)
 {
   CK_LOGD("ClearKeyDecryptor::Decrypt");
   // If the sample is split up into multiple encrypted subsamples, we need to
   // stitch them into one continuous buffer for decryption.
   std::vector<uint8_t> tmp(aBufferSize);
 
-  if (aMetadata->NumSubsamples()) {
+  if (aMetadata.NumSubsamples()) {
     // Take all encrypted parts of subsamples and stitch them into one
     // continuous encrypted buffer.
-    unsigned char* data = aBuffer;
-    unsigned char* iter = &tmp[0];
-    for (size_t i = 0; i < aMetadata->NumSubsamples(); i++) {
-      data += aMetadata->ClearBytes()[i];
-      uint32_t cipherBytes = aMetadata->CipherBytes()[i];
+    uint8_t* data = aBuffer;
+    uint8_t* iter = &tmp[0];
+    for (size_t i = 0; i < aMetadata.NumSubsamples(); i++) {
+      data += aMetadata.mClearBytes[i];
+      uint32_t cipherBytes = aMetadata.mCipherBytes[i];
 
       memcpy(iter, data, cipherBytes);
 
@@ -189,20 +194,20 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
     memcpy(&tmp[0], aBuffer, aBufferSize);
   }
 
-  assert(aMetadata->IVSize() == 8 || aMetadata->IVSize() == 16);
-  std::vector<uint8_t> iv(aMetadata->IV(), aMetadata->IV() + aMetadata->IVSize());
-  iv.insert(iv.end(), CLEARKEY_KEY_LEN - aMetadata->IVSize(), 0);
+  assert(aMetadata.mIV.size() == 8 || aMetadata.mIV.size() == 16);
+  std::vector<uint8_t> iv(aMetadata.mIV);
+  iv.insert(iv.end(), CLEARKEY_KEY_LEN - aMetadata.mIV.size(), 0);
 
   ClearKeyUtils::DecryptAES(mKey, tmp, iv);
 
-  if (aMetadata->NumSubsamples()) {
+  if (aMetadata.NumSubsamples()) {
     // Take the decrypted buffer, split up into subsamples, and insert those
     // subsamples back into their original position in the original buffer.
-    unsigned char* data = aBuffer;
-    unsigned char* iter = &tmp[0];
-    for (size_t i = 0; i < aMetadata->NumSubsamples(); i++) {
-      data += aMetadata->ClearBytes()[i];
-      uint32_t cipherBytes = aMetadata->CipherBytes()[i];
+    uint8_t* data = aBuffer;
+    uint8_t* iter = &tmp[0];
+    for (size_t i = 0; i < aMetadata.NumSubsamples(); i++) {
+      data += aMetadata.mClearBytes[i];
+      uint32_t cipherBytes = aMetadata.mCipherBytes[i];
 
       memcpy(data, iter, cipherBytes);
 
