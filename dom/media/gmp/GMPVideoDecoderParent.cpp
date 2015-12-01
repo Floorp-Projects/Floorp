@@ -25,6 +25,7 @@ extern LogModule* GetGMPLog();
 
 #define LOGV(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Verbose, msg)
 #define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
+#define LOGE(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Error, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
 namespace gmp {
@@ -132,6 +133,7 @@ GMPVideoDecoderParent::Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
         aInputFrame->FrameType() == kGMPKeyFrame));
 
   if (!mIsOpen) {
+    LOGE(("GMPVideoDecoderParent[%p]::Decode() ERROR; dead GMPVideoDecoder", this));
     NS_WARNING("Trying to use an dead GMP video decoder");
     return NS_ERROR_FAILURE;
   }
@@ -146,6 +148,8 @@ GMPVideoDecoderParent::Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
   // 3* is because we're using 3 buffers per frame for i420 data for now.
   if ((NumInUse(GMPSharedMem::kGMPFrameData) > 3*GMPSharedMem::kGMPBufLimit) ||
       (NumInUse(GMPSharedMem::kGMPEncodedData) > GMPSharedMem::kGMPBufLimit)) {
+    LOGE(("GMPVideoDecoderParent[%p]::Decode() ERROR; shmem buffer limit hit frame=%d encoded=%d",
+          this, NumInUse(GMPSharedMem::kGMPFrameData), NumInUse(GMPSharedMem::kGMPEncodedData)));
     return NS_ERROR_FAILURE;
   }
 
@@ -156,6 +160,7 @@ GMPVideoDecoderParent::Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
                   aMissingFrames,
                   aCodecSpecificInfo,
                   aRenderTimeMs)) {
+    LOGE(("GMPVideoDecoderParent[%p]::Decode() ERROR; SendDecode() failure.", this));
     return NS_ERROR_FAILURE;
   }
   mFrameCount++;
@@ -309,8 +314,7 @@ GMPVideoDecoderParent::RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame)
   }
 
   if (!GMPVideoi420FrameImpl::CheckFrameData(aDecodedFrame)) {
-    LOG(LogLevel::Error,
-      ("GMPVideoDecoderParent[%p]::RecvDecoded() "
+    LOGE(("GMPVideoDecoderParent[%p]::RecvDecoded() "
        "timestamp=%lld decoded frame corrupt, ignoring"));
     return false;
   }
@@ -458,8 +462,8 @@ GMPVideoDecoderParent::AnswerNeedShmem(const uint32_t& aFrameBufferSize,
                                                 aFrameBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
-    LOG(LogLevel::Error, ("%s: Failed to get a shared mem buffer for Child! size %u",
-                       __FUNCTION__, aFrameBufferSize));
+    LOGE(("%s: Failed to get a shared mem buffer for Child! size %u",
+         __FUNCTION__, aFrameBufferSize));
     return false;
   }
   *aMem = mem;
