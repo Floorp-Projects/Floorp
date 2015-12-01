@@ -1631,10 +1631,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmpPtr(const Address& lhs, ImmGCPtr rhs);
     void cmpPtr(const Address& lhs, Imm32 rhs);
 
-    void mulBy3(const Register& src, const Register& dest) {
-        as_add(dest, src, lsl(src, 1));
-    }
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
     void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
         movePtr(imm, ScratchRegister);

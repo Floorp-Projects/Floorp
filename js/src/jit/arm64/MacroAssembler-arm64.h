@@ -2843,12 +2843,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         vixl::MacroAssembler::Ret(vixl::lr);
     }
 
-    void mulBy3(Register src, Register dest) {
-        ARMRegister xdest(dest, 64);
-        ARMRegister xsrc(src, 64);
-        Add(xdest, xsrc, Operand(xsrc, vixl::LSL, 1));
-    }
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest) {
         Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }
