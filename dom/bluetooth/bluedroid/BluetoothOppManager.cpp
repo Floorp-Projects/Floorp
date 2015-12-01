@@ -1205,20 +1205,16 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
     return;
   }
 
-  auto req = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
-
   int len = aFileName.Length();
-  uint8_t* fileName = new uint8_t[(len + 1) * 2];
-  const char16_t* fileNamePtr = aFileName.BeginReading();
+  nsAutoArrayPtr<uint8_t> fileName(new uint8_t[(len + 1) * 2]);
 
   for (int i = 0; i < len; i++) {
-    fileName[i * 2] = (uint8_t)(fileNamePtr[i] >> 8);
-    fileName[i * 2 + 1] = (uint8_t)fileNamePtr[i];
+    BigEndian::writeUint16(&fileName[i * 2], aFileName[i]);
   }
+  BigEndian::writeUint16(&fileName[len * 2], 0);
 
-  fileName[len * 2] = 0x00;
-  fileName[len * 2 + 1] = 0x00;
-
+  // Prepare packet
+  auto req = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   int index = 3;
   index += AppendHeaderName(&req[index], mRemoteMaxPacketLength - index,
                             fileName, (len + 1) * 2);
@@ -1228,8 +1224,6 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
   uint8_t opcode = (aFileSize > 0) ? ObexRequestCode::Put
                                    : ObexRequestCode::PutFinal;
   SendObexData(Move(req), opcode, index);
-
-  delete [] fileName;
 }
 
 void
