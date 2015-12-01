@@ -42,7 +42,7 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
         loadDouble(Address(temp, 0), ScratchDoubleReg);
         mulDouble(ScratchDoubleReg, dest);
         convertUInt32ToDouble(src.low, ScratchDoubleReg);
-        addDouble(ScratchDoubleReg, dest);
+        asMasm().addDouble(ScratchDoubleReg, dest);
         return;
     }
 

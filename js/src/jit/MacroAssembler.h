@@ -751,6 +751,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) DEFINED_ON(x86_shared);
 
+    inline void addDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
+
     inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
