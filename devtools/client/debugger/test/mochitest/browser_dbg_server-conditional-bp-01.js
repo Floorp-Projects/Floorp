@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Bug 740825: Test adding conditional breakpoints (with server-side support)
+ * Test adding conditional breakpoints (with server-side support)
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
@@ -11,241 +11,201 @@ function test() {
   // Linux debug test slaves are a bit slow at this test sometimes.
   requestLongerTimeout(2);
 
-  let gTab, gPanel, gDebugger;
-  let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
-
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
-    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
-    gBreakpointsAdded = gBreakpoints._added;
-    gBreakpointsRemoving = gBreakpoints._removing;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require('./content/constants');
+    const actions = bindActionCreators(gPanel);
+    const getState = gDebugger.DebuggerController.getState;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
-      .then(() => addBreakpoints())
-      .then(() => initialChecks())
-      .then(() => resumeAndTestBreakpoint(20))
-      .then(() => resumeAndTestBreakpoint(21))
-      .then(() => resumeAndTestBreakpoint(22))
-      .then(() => resumeAndTestBreakpoint(23))
-      .then(() => resumeAndTestBreakpoint(24))
-      .then(() => resumeAndTestBreakpoint(25))
-      .then(() => resumeAndTestBreakpoint(27))
-      .then(() => resumeAndTestBreakpoint(28))
-      .then(() => resumeAndTestBreakpoint(29))
-      .then(() => resumeAndTestBreakpoint(30))
-      .then(() => resumeAndTestNoBreakpoint())
-      .then(() => {
-        return promise.all([
-          reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR, 13),
-          waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_PANE, 13)
-        ]);
-      })
-      .then(() => testAfterReload())
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-
-    callInTab(gTab, "ermahgerd");
-  });
-
-  function addBreakpoints() {
-    return promise.resolve(null)
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 18,
-                                         condition: "undefined"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 19,
-                                         condition: "null"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 20,
-                                         condition: "42"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 21,
-                                         condition: "true"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 22,
-                                         condition: "'nasu'"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 23,
-                                         condition: "/regexp/"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 24,
-                                         condition: "({})"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 25,
-                                         condition: "(function() {})"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 26,
-                                         condition: "(function() { return false; })()"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 27,
-                                         condition: "a"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 28,
-                                         condition: "a !== undefined"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 29,
-                                         condition: "a !== null"
-                                       }))
-      .then(() => gPanel.addBreakpoint({ actor: gSources.selectedValue,
-                                         line: 30,
-                                         condition: "b"
-                                       }));
-  }
-
-  function initialChecks() {
-    is(gDebugger.gThreadClient.state, "paused",
-      "Should only be getting stack frames while paused.");
-    is(gSources.itemCount, 1,
-      "Found the expected number of sources.");
-    is(gEditor.getText().indexOf("ermahgerd"), 253,
-      "The correct source was loaded initially.");
-    is(gSources.selectedValue, gSources.values[0],
-      "The correct source is selected.");
-
-    is(gBreakpointsAdded.size, 13,
-      "13 breakpoints currently added.");
-    is(gBreakpointsRemoving.size, 0,
-      "No breakpoints currently being removed.");
-    is(gEditor.getBreakpoints().length, 13,
-      "13 breakpoints currently shown in the editor.");
-
-    ok(!gBreakpoints._getAdded({ url: "foo", line: 3 }),
-      "_getAdded('foo', 3) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: "bar", line: 3 }),
-      "_getRemoving('bar', 3) returns falsey.");
-  }
-
-  function resumeAndTestBreakpoint(aLine) {
-    let finished = waitForCaretUpdated(gPanel, aLine).then(() => testBreakpoint(aLine));
-
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      gDebugger.document.getElementById("resume"),
-      gDebugger);
-
-    return finished;
-  }
-
-  function resumeAndTestNoBreakpoint() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {
-      is(gSources.itemCount, 1,
-        "Found the expected number of sources.");
-      is(gEditor.getText().indexOf("ermahgerd"), 253,
-        "The correct source was loaded initially.");
-      is(gSources.selectedValue, gSources.values[0],
-        "The correct source is selected.");
-
-      ok(gSources.selectedItem,
-        "There should be a selected source in the sources pane.")
-      ok(!gSources._selectedBreakpointItem,
-        "There should be no selected breakpoint in the sources pane.")
-      is(gSources._conditionalPopupVisible, false,
-        "The breakpoint conditional expression popup should not be shown.");
-
-      is(gDebugger.document.querySelectorAll(".dbg-stackframe").length, 0,
-        "There should be no visible stackframes.");
-      is(gDebugger.document.querySelectorAll(".dbg-breakpoint").length, 13,
-        "There should be thirteen visible breakpoints.");
+    const addBreakpoints = Task.async(function*() {
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 18 },
+                                  "undefined");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 19 },
+                                  "null");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 20 },
+                                  "42");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 21 },
+                                  "true");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 22 },
+                                  "'nasu'");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 23 },
+                                  "/regexp/");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 24 },
+                                  "({})");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 25 },
+                                  "(function() {})");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 26 },
+                                  "(function() { return false; })()");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 27 },
+                                  "a");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 28 },
+                                  "a !== undefined");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 29 },
+                                  "b");
+      yield actions.addBreakpoint({ actor: gSources.selectedValue, line: 30 },
+                                  "a !== null");
     });
 
-    gDebugger.gThreadClient.resume();
+    function resumeAndTestBreakpoint(line) {
+      let finished = waitForCaretUpdated(gPanel, line).then(() => testBreakpoint(line));
 
-    return finished;
-  }
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+                                gDebugger.document.getElementById("resume"),
+                                gDebugger);
 
-  function testBreakpoint(aLine, aHighlightBreakpoint) {
-    // Highlight the breakpoint only if required.
-    if (aHighlightBreakpoint) {
-      let finished = waitForCaretUpdated(gPanel, aLine).then(() => testBreakpoint(aLine));
-      gSources.highlightBreakpoint({ actor: gSources.selectedValue, line: aLine });
       return finished;
     }
 
-    let selectedActor = gSources.selectedValue;
-    let selectedBreakpoint = gSources._selectedBreakpointItem;
-
-    ok(selectedActor,
-      "There should be a selected item in the sources pane.");
-    ok(selectedBreakpoint,
-      "There should be a selected brekapoint in the sources pane.");
-
-    is(selectedBreakpoint.attachment.actor, selectedActor,
-      "The breakpoint on line " + aLine + " wasn't added on the correct source.");
-    is(selectedBreakpoint.attachment.line, aLine,
-      "The breakpoint on line " + aLine + " wasn't found.");
-    is(!!selectedBreakpoint.attachment.disabled, false,
-      "The breakpoint on line " + aLine + " should be enabled.");
-    is(!!selectedBreakpoint.attachment.openPopup, false,
-      "The breakpoint on line " + aLine + " should not have opened a popup.");
-    is(gSources._conditionalPopupVisible, false,
-      "The breakpoint conditional expression popup should not have been shown.");
-
-    return gBreakpoints._getAdded(selectedBreakpoint.attachment).then(aBreakpointClient => {
-      is(aBreakpointClient.location.actor, selectedActor,
-        "The breakpoint's client url is correct");
-      is(aBreakpointClient.location.line, aLine,
-        "The breakpoint's client line is correct");
-      isnot(aBreakpointClient.condition, undefined,
-        "The breakpoint on line " + aLine + " should have a conditional expression.");
-
-      ok(isCaretPos(gPanel, aLine),
-        "The editor caret position is not properly set.");
-    });
-  }
-
-  function testAfterReload() {
-    let selectedActor = getSelectedSourceURL(gSources);
-    let selectedBreakpoint = gSources._selectedBreakpointItem;
-
-    ok(selectedActor,
-      "There should be a selected item in the sources pane after reload.");
-    ok(!selectedBreakpoint,
-      "There should be no selected brekapoint in the sources pane after reload.");
-
-    return promise.resolve(null)
-      .then(() => testBreakpoint(18, true))
-      .then(() => testBreakpoint(19, true))
-      .then(() => testBreakpoint(20, true))
-      .then(() => testBreakpoint(21, true))
-      .then(() => testBreakpoint(22, true))
-      .then(() => testBreakpoint(23, true))
-      .then(() => testBreakpoint(24, true))
-      .then(() => testBreakpoint(25, true))
-      .then(() => testBreakpoint(26, true))
-      .then(() => testBreakpoint(27, true))
-      .then(() => testBreakpoint(28, true))
-      .then(() => testBreakpoint(29, true))
-      .then(() => testBreakpoint(30, true))
-      .then(() => {
+    function resumeAndTestNoBreakpoint() {
+      let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {
         is(gSources.itemCount, 1,
-          "Found the expected number of sources.");
+           "Found the expected number of sources.");
         is(gEditor.getText().indexOf("ermahgerd"), 253,
-          "The correct source was loaded again.");
+           "The correct source was loaded initially.");
         is(gSources.selectedValue, gSources.values[0],
-          "The correct source is selected.");
+           "The correct source is selected.");
 
         ok(gSources.selectedItem,
-          "There should be a selected source in the sources pane.")
-        ok(gSources._selectedBreakpointItem,
-          "There should be a selected breakpoint in the sources pane.")
+           "There should be a selected source in the sources pane.")
+        ok(!gSources._selectedBreakpoint,
+           "There should be no selected breakpoint in the sources pane.")
         is(gSources._conditionalPopupVisible, false,
-          "The breakpoint conditional expression popup should not be shown.");
+           "The breakpoint conditional expression popup should not be shown.");
+
+        is(gDebugger.document.querySelectorAll(".dbg-stackframe").length, 0,
+           "There should be no visible stackframes.");
+        is(gDebugger.document.querySelectorAll(".dbg-breakpoint").length, 13,
+           "There should be thirteen visible breakpoints.");
       });
-  }
+
+      gDebugger.gThreadClient.resume();
+
+      return finished;
+    }
+
+    function testBreakpoint(line, highlightBreakpoint) {
+      // Highlight the breakpoint only if required.
+      if (highlightBreakpoint) {
+        let finished = waitForCaretUpdated(gPanel, line).then(() => testBreakpoint(line));
+        gSources.highlightBreakpoint({ actor: gSources.selectedValue, line: line });
+        return finished;
+      }
+
+      let selectedActor = gSources.selectedValue;
+      let selectedBreakpoint = gSources._selectedBreakpoint;
+      let selectedBreakpointItem = gSources._getBreakpoint(selectedBreakpoint);
+
+      ok(selectedActor,
+         "There should be a selected item in the sources pane.");
+      ok(selectedBreakpoint,
+         "There should be a selected breakpoint in the sources pane.");
+
+      let source = gSources.selectedItem.attachment.source;
+      let bp = queries.getBreakpoint(getState(), selectedBreakpoint.location);
+
+      ok(bp, "The selected breakpoint exists");
+      is(bp.location.actor, source.actor,
+         "The breakpoint on line " + line + " wasn't added on the correct source.");
+      is(bp.location.line, line,
+         "The breakpoint on line " + line + " wasn't found.");
+      is(!!bp.disabled, false,
+         "The breakpoint on line " + line + " should be enabled.");
+      is(!!selectedBreakpointItem.attachment.openPopup, false,
+         "The breakpoint on line " + line + " should not have opened a popup.");
+      is(gSources._conditionalPopupVisible, false,
+         "The breakpoint conditional expression popup should not have been shown.");
+      isnot(bp.condition, undefined,
+            "The breakpoint on line " + line + " should have a conditional expression.");
+      ok(isCaretPos(gPanel, line),
+         "The editor caret position is not properly set.");
+    }
+
+    const testAfterReload = Task.async(function*() {
+      let selectedActor = gSources.selectedValue;
+      let selectedBreakpoint = gSources._selectedBreakpoint;
+
+      ok(selectedActor,
+         "There should be a selected item in the sources pane after reload.");
+      ok(!selectedBreakpoint,
+         "There should be no selected breakpoint in the sources pane after reload.");
+
+      yield testBreakpoint(18, true);
+      yield testBreakpoint(19, true);
+      yield testBreakpoint(20, true);
+      yield testBreakpoint(21, true);
+      yield testBreakpoint(22, true);
+      yield testBreakpoint(23, true);
+      yield testBreakpoint(24, true);
+      yield testBreakpoint(25, true);
+      yield testBreakpoint(26, true);
+      yield testBreakpoint(27, true);
+      yield testBreakpoint(28, true);
+      yield testBreakpoint(29, true);
+      yield testBreakpoint(30, true);
+
+      is(gSources.itemCount, 1,
+         "Found the expected number of sources.");
+      is(gEditor.getText().indexOf("ermahgerd"), 253,
+         "The correct source was loaded again.");
+      is(gSources.selectedValue, gSources.values[0],
+         "The correct source is selected.");
+
+      ok(gSources.selectedItem,
+         "There should be a selected source in the sources pane.")
+      ok(gSources._selectedBreakpoint,
+         "There should be a selected breakpoint in the sources pane.")
+      is(gSources._conditionalPopupVisible, false,
+         "The breakpoint conditional expression popup should not be shown.");
+    });
+
+    Task.spawn(function*() {
+      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+      yield addBreakpoints();
+
+      is(gDebugger.gThreadClient.state, "paused",
+         "Should only be getting stack frames while paused.");
+      is(queries.getSourceCount(getState()), 1,
+         "Found the expected number of sources.");
+      is(gEditor.getText().indexOf("ermahgerd"), 253,
+         "The correct source was loaded initially.");
+      is(gSources.selectedValue, gSources.values[0],
+         "The correct source is selected.");
+      is(queries.getBreakpoints(getState()).length, 13,
+         "13 breakpoints currently added.");
+
+      yield resumeAndTestBreakpoint(20);
+      yield resumeAndTestBreakpoint(21);
+      yield resumeAndTestBreakpoint(22);
+      yield resumeAndTestBreakpoint(23);
+      yield resumeAndTestBreakpoint(24);
+      yield resumeAndTestBreakpoint(25);
+      yield resumeAndTestBreakpoint(27);
+      yield resumeAndTestBreakpoint(28);
+      yield resumeAndTestBreakpoint(29);
+      yield resumeAndTestBreakpoint(30);
+      yield resumeAndTestNoBreakpoint();
+
+      let sourceShown = waitForSourceShown(gPanel, ".html");
+      reload(gPanel),
+      yield sourceShown;
+      testAfterReload();
+
+      // When a breakpoint is highlighted, the conditional expression
+      // popup opens, and then closes, and when it closes it sends the
+      // expression to the server which pauses the server. Make sure
+      // we wait if there is a pending request.
+      if (gDebugger.gThreadClient.state === "paused") {
+        yield waitForThreadEvents(gPanel, "resumed");
+      }
+
+      closeDebuggerAndFinish(gPanel);
+    });
+
+    callInTab(gTab, "ermahgerd");
+  });
 }

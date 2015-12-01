@@ -256,7 +256,8 @@ function ensureSourceIs(aPanel, aUrlOrSource, aWaitFlag = false) {
   let sources = aPanel.panelWin.DebuggerView.Sources;
 
   if (sources.selectedValue === aUrlOrSource ||
-      sources.selectedItem.attachment.source.url.includes(aUrlOrSource)) {
+      (sources.selectedItem &&
+       sources.selectedItem.attachment.source.url.includes(aUrlOrSource))) {
     ok(true, "Expected source is shown: " + aUrlOrSource);
     return promise.resolve(null);
   }
@@ -769,16 +770,23 @@ function getSelectedSourceElement(aPanel) {
     return aPanel.panelWin.DebuggerView.Sources.selectedItem.prebuiltNode;
 }
 
-function toggleBlackBoxing(aPanel, aSource = null) {
+function toggleBlackBoxing(aPanel, aSourceActor = null) {
   function clickBlackBoxButton() {
     getBlackBoxButton(aPanel).click();
   }
 
-  const blackBoxChanged = waitForThreadEvents(aPanel, "blackboxchange");
+  const blackBoxChanged = waitForDispatch(
+    aPanel,
+    aPanel.panelWin.constants.BLACKBOX
+  ).then(() => {
+    return aSourceActor ?
+      getSource(aPanel, aSourceActor) :
+      getSelectedSource(aPanel)
+  });
 
-  if (aSource) {
-    aPanel.panelWin.DebuggerView.Sources.selectedValue = aSource;
-    ensureSourceIs(aPanel, aSource, true).then(clickBlackBoxButton);
+  if (aSourceActor) {
+    aPanel.panelWin.DebuggerView.Sources.selectedValue = aSourceActor;
+    ensureSourceIs(aPanel, aSourceActor, true).then(clickBlackBoxButton);
   } else {
     clickBlackBoxButton();
   }
@@ -921,6 +929,16 @@ function popPrefs() {
 
 // Source helpers
 
+function getSelectedSource(panel) {
+  const win = panel.panelWin;
+  return win.queries.getSelectedSource(win.DebuggerController.getState());
+}
+
+function getSource(panel, actor) {
+  const win = panel.panelWin;
+  return win.queries.getSource(win.DebuggerController.getState(), actor);
+}
+
 function getSelectedSourceURL(aSources) {
   return (aSources.selectedItem &&
           aSources.selectedItem.attachment.source.url);
@@ -932,12 +950,12 @@ function getSourceURL(aSources, aActor) {
 }
 
 function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  let item = aSources.getItemForAttachment(a => a.source && a.source.url === aURL);
   return item && item.value;
 }
 
 function getSourceForm(aSources, aURL) {
-  let item = aSources.getItemByValue(getSourceActor(gSources, aURL));
+  let item = aSources.getItemByValue(getSourceActor(aSources, aURL));
   return item.attachment.source;
 }
 
@@ -1157,23 +1175,6 @@ function source(sourceClient) {
   return rdpInvoke(sourceClient, sourceClient.source);
 }
 
-function afterDispatch(store, type) {
-  info("Waiting on dispatch: " + type);
-  return new Promise(resolve => {
-    store.dispatch({
-      // Normally we would use `services.WAIT_UNTIL`, but use the
-      // internal name here so tests aren't forced to always pass it
-      // in
-      type: "@@service/waitUntil",
-      predicate: action => (
-        action.type === type &&
-        action.status ? action.status === "done" : true
-      ),
-      run: resolve
-    });
-  });
-}
-
 // Return a promise with a reference to jsterm, opening the split
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
@@ -1196,5 +1197,71 @@ function getSplitConsole(toolbox, win) {
       let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
       resolve(jsterm);
     });
+  });
+}
+
+// actions
+
+function bindActionCreators(panel) {
+  const win = panel.panelWin;
+  const dispatch = win.DebuggerController.dispatch;
+  const { bindActionCreators } = win.require('devtools/client/shared/vendor/redux');
+  return bindActionCreators(win.actions, dispatch);
+}
+
+// Wait until an action of `type` is dispatched. This is different
+// then `_afterDispatchDone` because it doesn't wait for async actions
+// to be done/errored. Use this if you want to listen for the "start"
+// action of an async operation (somewhat rare).
+function waitForNextDispatch(store, type) {
+  return new Promise(resolve => {
+    store.dispatch({
+      // Normally we would use `services.WAIT_UNTIL`, but use the
+      // internal name here so tests aren't forced to always pass it
+      // in
+      type: "@@service/waitUntil",
+      predicate: action => action.type === type,
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      }
+    });
+  });
+}
+
+// Wait until an action of `type` is dispatched. If it's part of an
+// async operation, wait until the `status` field is "done" or "error"
+function _afterDispatchDone(store, type) {
+  return new Promise(resolve => {
+    store.dispatch({
+      // Normally we would use `services.WAIT_UNTIL`, but use the
+      // internal name here so tests aren't forced to always pass it
+      // in
+      type: "@@service/waitUntil",
+      predicate: action => {
+        if (action.type === type) {
+          return action.status ?
+            (action.status === "done" || action.status === "error") :
+            true
+        }
+      },
+      run: (dispatch, getState, action) => {
+        resolve(action);
+      }
+    });
+  });
+}
+
+function waitForDispatch(panel, type, eventRepeat = 1) {
+  const controller = panel.panelWin.DebuggerController;
+  const actionType = panel.panelWin.constants[type];
+  let count = 0;
+
+  return Task.spawn(function*() {
+    info("Waiting for " + type + " to dispatch " + eventRepeat + " time(s)");
+    while(count < eventRepeat) {
+      yield _afterDispatchDone(controller, actionType);
+      count++;
+      info(type + " dispatched " + count + " time(s)");
+    }
   });
 }
