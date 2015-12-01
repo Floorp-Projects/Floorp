@@ -554,10 +554,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_b(lhs, imm, label, cond);
     }
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        subPtr(imm, lhs);
-        branchPtr(cond, lhs, Imm32(0), label);
-    }
+    inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
 
     // higher level tag testing code
     Operand ToPayload(Operand base);
@@ -1088,8 +1085,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         }
     }
 
-    void subPtr(Register src, Register dest);
-
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
     void move64(Register64 src, Register64 dest) {
@@ -1230,9 +1225,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void clampIntToUint8(Register reg);
 
-    void subPtr(Imm32 imm, const Register dest);
-    void subPtr(const Address& addr, const Register dest);
-    void subPtr(Register src, const Address& dest);
     void mulBy3(const Register& src, const Register& dest) {
         as_addu(dest, src, src);
         as_addu(dest, dest, src);

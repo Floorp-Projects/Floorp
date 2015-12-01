@@ -543,18 +543,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void subPtr(Imm32 imm, Register dest) {
-        subq(imm, dest);
-    }
-    void subPtr(Register src, Register dest) {
-        subq(src, dest);
-    }
-    void subPtr(const Address& addr, Register dest) {
-        subq(Operand(addr), dest);
-    }
-    void subPtr(Register src, const Address& dest) {
-        subq(src, Operand(dest));
-    }
     void mulBy3(const Register& src, const Register& dest) {
         lea(Operand(src, src, TimesTwo), dest);
     }
@@ -673,7 +661,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        subPtr(imm, lhs);
+        subq(imm, lhs);
         j(cond, label);
     }
 

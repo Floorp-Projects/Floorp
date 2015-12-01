@@ -234,6 +234,35 @@ MacroAssembler::sub32(const Address& src, Register dest)
     ma_sub(scratch, dest, SetCC);
 }
 
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    ma_sub(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(dest, scratch);
+    ma_sub(src, scratch);
+    storePtr(scratch, dest);
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    ma_sub(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(addr, scratch);
+    ma_sub(scratch, dest);
+}
+
 // ===============================================================
 // Shift functions
 
@@ -286,6 +315,13 @@ void
 MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)
 {
     asMasm().add32(Imm32(1), ToPayload(addr));
+}
+
+void
+MacroAssemblerARMCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
+{
+    asMasm().subPtr(imm, lhs);
+    branch32(cond, lhs, Imm32(0), label);
 }
 
 } // namespace jit

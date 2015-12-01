@@ -1032,10 +1032,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     template <typename T> void addToStackPtr(T t);
     template <typename T> void addStackPtrTo(T t);
 
-    template <typename T>
-    void subFromStackPtr(T t) { subPtr(t, getStackPointer()); syncStackPtr(); }
-    template <typename T>
-    void subStackPtrFrom(T t) { subPtr(getStackPointer(), t); }
+    template <typename T> inline void subFromStackPtr(T t);
+    template <typename T> inline void subStackPtrFrom(T t);
 
     template <typename T> void andToStackPtr(T t);
     template <typename T> void andStackPtrTo(T t);
@@ -1346,29 +1344,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Subs(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
     }
 
-    void subPtr(Imm32 imm, Register dest) {
-        Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void subPtr(Register src, Register dest) {
-        Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
-    }
-    void subPtr(const Address& addr, Register dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != addr.base);
-
-        Ldr(scratch64, MemOperand(ARMRegister(addr.base, 64), addr.offset));
-        Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
-    }
-    void subPtr(Register src, const Address& dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != dest.base);
-
-        Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
-        Sub(scratch64, scratch64, Operand(ARMRegister(src, 64)));
-        Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
-    }
     void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) {
         Smull(ARMRegister(dest, 64), ARMRegister(src1, 32), ARMRegister(src2, 32));
         if (onOver) {
