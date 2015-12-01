@@ -2631,7 +2631,7 @@ ElementEditor.prototype = {
       } else {
         // Create a new editor, because the value of an existing attribute
         // has changed.
-        let attribute = this._createAttribute(attr);
+        let attribute = this._createAttribute(attr, el);
         attribute.style.removeProperty("display");
 
         // Temporarily flash the attribute to highlight the change.

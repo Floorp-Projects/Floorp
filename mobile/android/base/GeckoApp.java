@@ -669,19 +669,6 @@ public abstract class GeckoApp
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
-        } else if ("Toast:Show".equals(event)) {
-            final String msg = message.getString("message");
-            final String duration = message.getString("duration");
-            final NativeJSObject button = message.optObject("button", null);
-            if (button != null) {
-                final String label = button.optString("label", "");
-                final String icon = button.optString("icon", "");
-                final String id = button.optString("id", "");
-                showButtonToast(msg, duration, label, icon, id);
-            } else {
-                showNormalToast(msg, duration);
-            }
-
         } else if ("ToggleChrome:Focus".equals(event)) {
             focusChrome();
 
@@ -846,21 +833,6 @@ public abstract class GeckoApp
                         }
                     }
                 });
-            }
-        });
-    }
-
-    public void showNormalToast(final String message, final String duration) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast toast;
-                if (duration.equals("long")) {
-                    toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_LONG);
-                } else {
-                    toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_SHORT);
-                }
-                toast.show();
             }
         });
     }
@@ -1364,7 +1336,6 @@ public abstract class GeckoApp
             "Share:Text",
             "Snackbar:Show",
             "SystemUI:Visibility",
-            "Toast:Show",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
@@ -2189,7 +2160,6 @@ public abstract class GeckoApp
             "Session:StatePurged",
             "Share:Text",
             "SystemUI:Visibility",
-            "Toast:Show",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
             "ToggleChrome:Show",
