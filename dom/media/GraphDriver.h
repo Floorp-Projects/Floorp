@@ -219,12 +219,15 @@ public:
 protected:
   GraphTime StateComputedTime() const;
 
-  // Time of the start of this graph iteration.
+  // Time of the start of this graph iteration. This must be accessed while
+  // having the monitor.
   GraphTime mIterationStart;
-  // Time of the end of this graph iteration.
+  // Time of the end of this graph iteration. This must be accessed while having
+  // the monitor.
   GraphTime mIterationEnd;
   // The MediaStreamGraphImpl that owns this driver. This has a lifetime longer
-  // than the driver, and will never be null.
+  // than the driver, and will never be null. Hence, it can be accesed without
+  // monitor.
   MediaStreamGraphImpl* mGraphImpl;
 
   // This enum specifies the wait state of the driver.
@@ -240,15 +243,26 @@ protected:
     // but it hasn't done so yet
     WAITSTATE_WAKING_UP
   };
+  // This must be access with the monitor.
   WaitState mWaitState;
 
+  // This is used on the main thread (during initialization), and the graph
+  // thread. No monitor needed because we know the graph thread does not run
+  // during the initialization.
   TimeStamp mCurrentTimeStamp;
   // This is non-null only when this driver has recently switched from an other
   // driver, and has not cleaned it up yet (for example because the audio stream
   // is currently calling the callback during initialization).
+  //
+  // This is written to when changing driver, from the previous driver's thread,
+  // or a thread created for the occasion. This is read each time we need to
+  // check whether we're changing driver (in Switching()), from the graph
+  // thread.
+  // This must be accessed using the {Set,Get}PreviousDriver methods.
   RefPtr<GraphDriver> mPreviousDriver;
   // This is non-null only when this driver is going to switch to an other
   // driver at the end of this iteration.
+  // This must be accessed using the {Set,Get}NextDriver methods.
   RefPtr<GraphDriver> mNextDriver;
   virtual ~GraphDriver()
   { }
@@ -304,6 +318,8 @@ public:
 
 
 private:
+  // Those are only modified (after initialization) on the graph thread. The
+  // graph thread does not run during the initialization.
   TimeStamp mInitialTimeStamp;
   TimeStamp mLastTimeStamp;
 };
@@ -460,18 +476,22 @@ private:
   /* The size of this buffer comes from the fact that some audio backends can
    * call back with a number of frames lower than one block (128 frames), so we
    * need to keep at most two block in the SpillBuffer, because we always round
-   * up to block boundaries during an iteration. */
+   * up to block boundaries during an iteration.
+   * This is only ever accessed on the audio callback thread. */
   SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2, ChannelCount> mScratchBuffer;
   /* Wrapper to ensure we write exactly the number of frames we need in the
-   * audio buffer cubeb passes us. */
+   * audio buffer cubeb passes us. This is only ever accessed on the audio
+   * callback thread. */
   AudioCallbackBufferWrapper<AudioDataValue, ChannelCount> mBuffer;
   /* cubeb stream for this graph. This is guaranteed to be non-null after Init()
-   * has been called. */
+   * has been called, and is synchronized internaly. */
   nsAutoRef<cubeb_stream> mAudioStream;
-  /* The sample rate for the aforementionned cubeb stream. */
+  /* The sample rate for the aforementionned cubeb stream. This is set on
+   * initialization and can be read safely afterwards. */
   uint32_t mSampleRate;
   /* Approximation of the time between two callbacks. This is used to schedule
-   * video frames. This is in milliseconds. */
+   * video frames. This is in milliseconds. Only even used (after
+   * inizatialization) on the audio callback thread. */
   uint32_t mIterationDurationMS;
   /* cubeb_stream_init calls the audio callback to prefill the buffers. The
    * previous driver has to be kept alive until the audio stream has been
@@ -499,8 +519,12 @@ private:
   /* Thread for off-main-thread initialization and
    * shutdown of the audio stream. */
   nsCOMPtr<nsIThread> mInitShutdownThread;
+  /* This must be accessed with the graph monitor held. */
   nsAutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
+  /* This is set during initialization, and ca be read safely afterwards. */
   dom::AudioChannel mAudioChannel;
+  /* This is atomic and is set by the audio callback thread. It can be read by
+   * any thread safely. */
   Atomic<bool> mInCallback;
   /* A thread has been created to be able to pause and restart the audio thread,
    * but has not done so yet. This indicates that the callback should return
