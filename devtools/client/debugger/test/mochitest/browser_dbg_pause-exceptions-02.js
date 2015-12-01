@@ -25,9 +25,13 @@ function test() {
     isnot(gOptions._pauseOnExceptionsItem.getAttribute("checked"), "true",
       "The pause-on-exceptions menu item should not be checked.");
 
-    enablePauseOnExceptions()
+    waitForSourceShown(aPanel, ".html")
+      .then(enablePauseOnExceptions)
       .then(disableIgnoreCaughtExceptions)
       .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
+      .then(() => {
+          generateMouseClickInTab(gTab, "content.document.querySelector('button')");
+      })
       .then(testPauseOnExceptionsAfterReload)
       .then(disablePauseOnExceptions)
       .then(enableIgnoreCaughtExceptions)
@@ -124,7 +128,6 @@ function enablePauseOnExceptions() {
 
   gOptions._pauseOnExceptionsItem.setAttribute("checked", "true");
   gOptions._togglePauseOnExceptions();
-
   return deferred.promise;
 }
 

@@ -14,33 +14,36 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-01.html";
 
-add_task(function* () {
-  let tab = yield addTab(TAB_URL);
+function test() {
+  Task.spawn(function*() {
+    let tab = yield addTab(TAB_URL);
 
-  // Create a sandboxed content script the Add-on SDK way. Inspired by bug
-  // 1145996.
-  let tabs = require('sdk/tabs');
-  let sdkTab = [...tabs].find(tab => tab.url === TAB_URL);
-  ok(sdkTab, "Add-on SDK found the loaded tab.");
+    // Create a sandboxed content script the Add-on SDK way. Inspired by bug
+    // 1145996.
+    let tabs = require('sdk/tabs');
+    let sdkTab = [...tabs].find(tab => tab.url === TAB_URL);
+    ok(sdkTab, "Add-on SDK found the loaded tab.");
 
-  info("Attaching an event handler via add-on sdk content scripts.");
-  let worker = sdkTab.attach({
-    contentScript: "document.body.addEventListener('click', e => alert(e))",
-    onError: ok.bind(this, false)
+    info("Attaching an event handler via add-on sdk content scripts.");
+    let worker = sdkTab.attach({
+      contentScript: "document.body.addEventListener('click', e => alert(e))",
+      onError: ok.bind(this, false)
+    });
+
+    let [,, panel, win] = yield initDebugger(tab);
+    let dbg = panel.panelWin;
+    let controller = dbg.DebuggerController;
+    let constants = dbg.require('./content/constants');
+    let actions = dbg.require('./content/actions/event-listeners');
+    let fetched = waitForDispatch(panel, constants.FETCH_EVENT_LISTENERS);
+
+    info("Scheduling event listener fetch.");
+    controller.dispatch(actions.fetchEventListeners());
+
+    info("Waiting for updated event listeners to arrive.");
+    yield fetched;
+
+    ok(true, "The listener update did not hang.");
+    closeDebuggerAndFinish(panel);
   });
-
-  let [,, panel, win] = yield initDebugger(tab);
-  let gDebugger = panel.panelWin;
-  let gStore = gDebugger.store;
-  let constants = gDebugger.require('./content/constants');
-  let actions = gDebugger.require('./content/actions/event-listeners');
-  let fetched = afterDispatch(gStore, constants.FETCH_EVENT_LISTENERS);
-
-  info("Scheduling event listener fetch.");
-  gStore.dispatch(actions.fetchEventListeners());
-
-  info("Waiting for updated event listeners to arrive.");
-  yield fetched;
-
-  ok(true, "The listener update did not hang.");
-});
+}

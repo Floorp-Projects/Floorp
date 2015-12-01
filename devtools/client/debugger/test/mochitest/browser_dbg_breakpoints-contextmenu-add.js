@@ -8,88 +8,71 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
-  let gTab, gPanel, gDebugger;
-  let gEditor, gSources, gContextMenu, gBreakpoints, gBreakpointsAdded;
-
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
-    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
-    gBreakpointsAdded = gBreakpoints._added;
-    gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
+    const queries = gDebugger.require('./content/queries');
+    const actions = bindActionCreators(gPanel);
+    const getState = gDebugger.DebuggerController.getState;
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
-      .then(performTest)
-      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
+    Task.spawn(function*() {
+      yield waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1);
 
-    callInTab(gTab, "firstCall");
-  });
+      is(gDebugger.gThreadClient.state, "paused",
+         "Should only be getting stack frames while paused.");
+      is(queries.getSourceCount(getState()), 2,
+         "Found the expected number of sources.");
+      isnot(gEditor.getText().indexOf("debugger"), -1,
+            "The correct source was loaded initially.");
+      is(gSources.selectedValue, gSources.values[1],
+         "The correct source is selected.");
 
-  function performTest() {
-    is(gDebugger.gThreadClient.state, "paused",
-       "Should only be getting stack frames while paused.");
-    is(gSources.itemCount, 2,
-       "Found the expected number of sources.");
-    isnot(gEditor.getText().indexOf("debugger"), -1,
-       "The correct source was loaded initially.");
-    is(gSources.selectedValue, gSources.values[1],
-       "The correct source is selected.");
+      ok(gContextMenu,
+         "The source editor's context menupopup is available.");
 
-    ok(gContextMenu,
-       "The source editor's context menupopup is available.");
+      gEditor.focus();
+      gEditor.setSelection({ line: 1, ch: 0 }, { line: 1, ch: 10 });
 
-    gEditor.focus();
-    gEditor.setSelection({ line: 1, ch: 0 }, { line: 1, ch: 10 });
+      gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
+      gEditor.emit("gutterClick", 6, 2);
 
-    return testAddBreakpoint().then(testAddConditionalBreakpoint);
-  }
-
-  function testAddBreakpoint() {
-    gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
-    gEditor.emit("gutterClick", 6, 2);
-
-    return once(gContextMenu, "popupshown").then(() => {
-      is(gBreakpointsAdded.size, 0, "no breakpoints added");
+      yield once(gContextMenu, "popupshown");
+      is(queries.getBreakpoints(getState()).length, 0, "no breakpoints added");
 
       let cmd = gContextMenu.querySelector('menuitem[command=addBreakpointCommand]');
-      let bpShown = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN_IN_EDITOR);
       EventUtils.synthesizeMouseAtCenter(cmd, {}, gDebugger);
-      return bpShown;
-    }).then(() => {
-      is(gBreakpointsAdded.size, 1,
+      yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT);
+
+      is(queries.getBreakpoints(getState()).length, 1,
          "1 breakpoint correctly added");
-      is(gEditor.getBreakpoints().length, 1,
-         "1 breakpoint currently shown in the editor.");
-      ok(gBreakpoints._getAdded({ actor: gSources.values[1], line: 7 }),
+      ok(queries.getBreakpoint(getState(),
+                               { actor: gSources.values[1], line: 7 }),
          "Breakpoint on line 7 exists");
-    });
-  }
 
-  function testAddConditionalBreakpoint() {
-    gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
-    gEditor.emit("gutterClick", 7, 2);
+      gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
+      gEditor.emit("gutterClick", 7, 2);
 
-    return once(gContextMenu, "popupshown").then(() => {
-      is(gBreakpointsAdded.size, 1,
+      yield once(gContextMenu, "popupshown");
+      is(queries.getBreakpoints(getState()).length, 1,
          "1 breakpoint correctly added");
 
-      let cmd = gContextMenu.querySelector('menuitem[command=addConditionalBreakpointCommand]');
-      let bpShown = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWING);
+      cmd = gContextMenu.querySelector('menuitem[command=addConditionalBreakpointCommand]');
       EventUtils.synthesizeMouseAtCenter(cmd, {}, gDebugger);
-      return bpShown;
-    }).then(() => {
-      is(gBreakpointsAdded.size, 2,
+      yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT);
+
+      is(queries.getBreakpoints(getState()).length, 2,
          "2 breakpoints correctly added");
-      is(gEditor.getBreakpoints().length, 2,
-         "2 breakpoints currently shown in the editor.");
-      ok(gBreakpoints._getAdded({ actor: gSources.values[1], line: 8 }),
+      ok(queries.getBreakpoint(getState(),
+                               { actor: gSources.values[1], line: 8 }),
          "Breakpoint on line 8 exists");
+
+      resumeDebuggerThenCloseAndFinish(gPanel);
     });
-  }
+
+    callInTab(gTab, "firstCall");
+  })
 }

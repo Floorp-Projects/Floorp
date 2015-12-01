@@ -537,17 +537,15 @@ exports.items.push({
       const blackBoxed = [];
 
       for (let source of toBlackBox) {
-        activeThread.source(source)[cmd.clientMethod](function({ error }) {
-          if (error) {
-            blackBoxed.push(lookup("ErrorDesc") + " " + source.url);
-          } else {
-            blackBoxed.push(source.url);
-          }
-
+        dbg.blackbox(source, cmd.clientMethod === "blackBox").then(() => {
+          blackBoxed.push(source.url);
+        }, err => {
+          blackBoxed.push(lookup("ErrorDesc") + " " + source.url);
+        }).then(() => {
           if (toBlackBox.length === blackBoxed.length) {
             displayResults();
           }
-        });
+        })
       }
 
       // List the results for the user.
