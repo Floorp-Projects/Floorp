@@ -1229,8 +1229,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_addu(dest, dest, src);
     }
 
-    void mul64(Imm64 imm, const Register64& dest);
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
     void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
         movePtr(imm, ScratchRegister);

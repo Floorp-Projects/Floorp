@@ -323,6 +323,16 @@ MacroAssembler::mul32(Register src1, Register src2, Register dest, Label* onOver
     Mov(ARMRegister(dest, 32), ARMRegister(dest, 32));
 }
 
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(dest.reg != scratch64.asUnsized());
+    mov(ImmWord(imm.value), scratch64.asUnsized());
+    Mul(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), scratch64);
+}
+
 // ===============================================================
 // Shift functions
 

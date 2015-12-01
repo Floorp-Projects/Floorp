@@ -154,6 +154,13 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     subq(Operand(addr), dest);
 }
 
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
+    imulq(ScratchReg, dest.reg);
+}
+
 // ===============================================================
 // Shift functions
 
