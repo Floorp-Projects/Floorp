@@ -514,6 +514,9 @@ public:
 
     int32_t GetBidiNumeralOption();
 
+    static void
+    FlushFontAndWordCaches();
+
     /**
      * Returns a 1x1 surface that can be used to create graphics contexts
      * for measuring text etc as if they will be rendered to the screen

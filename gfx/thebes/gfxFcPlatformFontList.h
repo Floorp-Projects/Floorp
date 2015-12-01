@@ -239,6 +239,11 @@ public:
 
     void ClearLangGroupPrefFonts() override;
 
+    // clear out cached generic-lang ==> family-list mappings
+    void ClearGenericMappings() {
+        mGenericMappings.Clear();
+    }
+
     void GetSampleLangForGroup(nsIAtom* aLanguage, nsACString& aLangStr);
 
     static FT_Library GetFTLibrary();
