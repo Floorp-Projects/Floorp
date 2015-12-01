@@ -30,7 +30,8 @@ StaticRefPtr<nsFakeSynthServices> nsFakeSynthServices::sSingleton;
 enum VoiceFlags
 {
   eSuppressEvents = 1,
-  eSuppressEnd = 2
+  eSuppressEnd = 2,
+  eFailAtStart = 4
 };
 
 struct VoiceDetails
@@ -54,6 +55,7 @@ static const VoiceDetails sIndirectVoices[] = {
   {"urn:moz-tts:fake-indirect:zanetta", "Zanetta Farussi", "it-IT", false, 0},
   {"urn:moz-tts:fake-indirect:margherita", "Margherita Durastanti", "it-IT-noevents-noend", false, eSuppressEvents | eSuppressEnd},
   {"urn:moz-tts:fake-indirect:teresa", "Teresa Cornelys", "it-IT-noend", false, eSuppressEnd},
+  {"urn:moz-tts:fake-indirect:cecilia", "Cecilia Bartoli", "it-IT-error", false, eFailAtStart},
 };
 
 // FakeSynthCallback
@@ -241,6 +243,11 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
     if (aUri.EqualsASCII(sIndirectVoices[i].uri)) {
       flags = sIndirectVoices[i].flags;
     }
+  }
+
+  if (flags & eFailAtStart) {
+    aTask->DispatchError(0, 0);
+    return NS_OK;
   }
 
   RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(
