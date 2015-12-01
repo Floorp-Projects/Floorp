@@ -788,8 +788,8 @@ nsDefaultCommandLineHandler.prototype = {
             // * Cortana voice searches use "FORM=WNSBOX" or direct results, or "FORM=WNSFC2"
             //   for "see more results on Bing.com")
             // * Cortana voice searches started from "Hey, Cortana" use "form=WNSHCO"
-            //   or "form=WNSSSV"
-            var allowedParams = ["WNSGPH", "WNSBOX", "WNSFC2", "WNSHCO", "WNSSSV"];
+            //   or "form=WNSSSV" or "form=WNSSCX"
+            var allowedParams = ["WNSGPH", "WNSBOX", "WNSFC2", "WNSHCO", "WNSSCX", "WNSSSV"];
             var formParam = params.get("form");
             if (!formParam) {
               formParam = params.get("FORM");
