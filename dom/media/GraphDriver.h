@@ -149,19 +149,6 @@ public:
     return mCurrentTimeStamp;
   }
 
-  bool IsWaiting() {
-    return mWaitState == WAITSTATE_WAITING_INDEFINITELY ||
-           mWaitState == WAITSTATE_WAITING_FOR_NEXT_ITERATION;
-  }
-
-  bool IsWaitingIndefinitly() {
-    return mWaitState == WAITSTATE_WAITING_INDEFINITELY;
-  }
-
-  GraphTime IterationStart() {
-    return mIterationStart;
-  }
-
   GraphTime IterationEnd() {
     return mIterationEnd;
   }
@@ -191,13 +178,6 @@ public:
   void SetGraphTime(GraphDriver* aPreviousDriver,
                     GraphTime aLastSwitchNextIterationStart,
                     GraphTime aLastSwitchNextIterationEnd);
-
-  /**
-   * Call this to indicate that another iteration of the control loop is
-   * required immediately. The monitor must already be held.
-   */
-  void EnsureImmediateWakeUpLocked();
-
   /**
    * Call this to indicate that another iteration of the control loop is
    * required on its regular schedule. The monitor must not be held.
@@ -526,10 +506,6 @@ private:
   /* This is atomic and is set by the audio callback thread. It can be read by
    * any thread safely. */
   Atomic<bool> mInCallback;
-  /* A thread has been created to be able to pause and restart the audio thread,
-   * but has not done so yet. This indicates that the callback should return
-   * early */
-  bool mPauseRequested;
   /**
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
