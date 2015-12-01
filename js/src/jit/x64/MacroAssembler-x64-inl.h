@@ -76,6 +76,49 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    addq(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    addq(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(dest != scratch);
+    if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
+        addq(Imm32((int32_t)imm.value), dest);
+    } else {
+        mov(imm, scratch);
+        addq(scratch, dest);
+    }
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    addq(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addq(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    addq(Operand(src), dest);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addq(src.reg, dest.reg);
@@ -116,6 +159,24 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerX64::inc64(AbsoluteAddress dest)
+{
+    if (X86Encoding::IsAddressImmediate(dest.addr)) {
+        asMasm().addPtr(Imm32(1), dest);
+    } else {
+        ScratchRegisterScope scratch(asMasm());
+        mov(ImmPtr(dest.addr), scratch);
+        asMasm().addPtr(Imm32(1), Address(scratch, 0));
+    }
+}
+
+void
+MacroAssemblerX64::incrementInt32Value(const Address& addr)
+{
+    asMasm().addPtr(Imm32(1), addr);
+}
 
 } // namespace jit
 } // namespace js

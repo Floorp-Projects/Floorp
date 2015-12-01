@@ -201,12 +201,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         ma_daddu(dest, address.base, Imm32(address.offset));
     }
 
-    void computeEffectiveAddress(const BaseIndex& address, Register dest) {
-        computeScaledAddress(address, dest);
-        if (address.offset) {
-            addPtr(Imm32(address.offset), dest);
-        }
-    }
+    inline void computeEffectiveAddress(const BaseIndex& address, Register dest);
 
     void j(Label* dest) {
         ma_b(dest);
@@ -256,13 +251,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         as_jr(ra);
         as_nop();
     }
-    void retn(Imm32 n) {
-        // pc <- [sp]; sp += n
-        loadPtr(Address(StackPointer, 0), ra);
-        addPtr(n, StackPointer);
-        as_jr(ra);
-        as_nop();
-    }
+    inline void retn(Imm32 n);
     void push(Imm32 imm) {
         ma_li(ScratchRegister, imm);
         ma_push(ScratchRegister);
@@ -1126,9 +1115,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         }
     }
 
-    void addPtr(Register src, Register dest);
     void subPtr(Register src, Register dest);
-    void addPtr(const Address& src, Register dest);
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
@@ -1269,15 +1256,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void subPtr(Imm32 imm, const Register dest);
     void subPtr(const Address& addr, const Register dest);
     void subPtr(Register src, const Address& dest);
-    void addPtr(Imm32 imm, const Register dest);
-    void addPtr(Imm32 imm, const Address& dest);
-    void addPtr(ImmWord imm, const Register dest) {
-        movePtr(imm, ScratchRegister);
-        addPtr(ScratchRegister, dest);
-    }
-    void addPtr(ImmPtr imm, const Register dest) {
-        addPtr(ImmWord(uintptr_t(imm.value)), dest);
-    }
     void mulBy3(const Register& src, const Register& dest) {
         as_daddu(dest, src, src);
         as_daddu(dest, dest, src);
