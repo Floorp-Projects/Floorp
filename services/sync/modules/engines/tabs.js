@@ -43,6 +43,11 @@ TabEngine.prototype = {
   _storeObj: TabStore,
   _trackerObj: TabTracker,
   _recordObj: TabSetRecord,
+  // A flag to indicate if we have synced in this session. This is to help
+  // consumers of remote tabs that may want to differentiate between "I've an
+  // empty tab list as I haven't yet synced" vs "I've an empty tab list
+  // as there really are no tabs"
+  hasSyncedThisSession: false,
 
   syncPriority: 3,
 
@@ -67,6 +72,7 @@ TabEngine.prototype = {
     SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
     this._tracker.modified = true;
+    this.hasSyncedThisSession = false;
   },
 
   removeClientData: function () {
@@ -94,7 +100,12 @@ TabEngine.prototype = {
     }
 
     return SyncEngine.prototype._reconcile.call(this, item);
-  }
+  },
+
+  _syncFinish() {
+    this.hasSyncedThisSession = true;
+    return SyncEngine.prototype._syncFinish.call(this);
+  },
 };
 
 
