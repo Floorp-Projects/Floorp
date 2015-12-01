@@ -234,15 +234,6 @@ MacroAssemblerMIPS64Compat::negateDouble(FloatRegister reg)
 }
 
 void
-MacroAssemblerMIPS64Compat::inc64(AbsoluteAddress dest)
-{
-    ma_li(ScratchRegister, ImmWord(uintptr_t(dest.addr)));
-    as_ld(SecondScratchReg, ScratchRegister, 0);
-    as_daddiu(SecondScratchReg, SecondScratchReg, 1);
-    as_sd(SecondScratchReg, ScratchRegister, 0);
-}
-
-void
 MacroAssemblerMIPS64Compat::movq(Register rs, Register rd)
 {
     ma_move(rd, rs);

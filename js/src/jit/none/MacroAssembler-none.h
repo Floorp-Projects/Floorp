@@ -416,7 +416,6 @@ class MacroAssemblerNone : public Assembler
 
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
     void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }
-    void inc64(AbsoluteAddress) { MOZ_CRASH(); }
     void incrementInt32Value(Address) { MOZ_CRASH(); }
     void ensureDouble(ValueOperand, FloatRegister, Label*) { MOZ_CRASH(); }
     void handleFailureWithHandlerTail(void*) { MOZ_CRASH(); }

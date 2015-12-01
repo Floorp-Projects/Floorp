@@ -252,23 +252,6 @@ MacroAssemblerARM::negateDouble(FloatRegister reg)
     ma_vneg(reg, reg);
 }
 
-void
-MacroAssemblerARM::inc64(AbsoluteAddress dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-
-    ma_strd(r0, r1, EDtrAddr(sp, EDtrOffImm(-8)), PreIndex);
-
-    ma_mov(Imm32((int32_t)dest.addr), scratch);
-    ma_ldrd(EDtrAddr(scratch, EDtrOffImm(0)), r0, r1);
-
-    ma_add(Imm32(1), r0, SetCC);
-    ma_adc(Imm32(0), r1, LeaveCC);
-
-    ma_strd(r0, r1, EDtrAddr(scratch, EDtrOffImm(0)));
-    ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
-}
-
 bool
 MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                            SBit s, Condition c)

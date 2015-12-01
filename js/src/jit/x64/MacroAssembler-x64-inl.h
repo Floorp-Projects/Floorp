@@ -174,6 +174,18 @@ MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
     vmulsd(Operand(ScratchReg, 0), dest, dest);
 }
 
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    if (X86Encoding::IsAddressImmediate(dest.addr)) {
+        addPtr(Imm32(1), dest);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        mov(ImmPtr(dest.addr), scratch);
+        addPtr(Imm32(1), Address(scratch, 0));
+    }
+}
+
 // ===============================================================
 // Shift functions
 
@@ -209,18 +221,6 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
-
-void
-MacroAssemblerX64::inc64(AbsoluteAddress dest)
-{
-    if (X86Encoding::IsAddressImmediate(dest.addr)) {
-        asMasm().addPtr(Imm32(1), dest);
-    } else {
-        ScratchRegisterScope scratch(asMasm());
-        mov(ImmPtr(dest.addr), scratch);
-        asMasm().addPtr(Imm32(1), Address(scratch, 0));
-    }
-}
 
 void
 MacroAssemblerX64::incrementInt32Value(const Address& addr)
