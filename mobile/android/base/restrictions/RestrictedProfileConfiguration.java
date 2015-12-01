@@ -31,6 +31,19 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restrictable.CAMERA_MICROPHONE
     );
 
+    /**
+     * These restrictions are hidden from the admin configuration UI.
+     */
+    private static List<Restrictable> hiddenRestrictions = Arrays.asList(
+            Restrictable.MASTER_PASSWORD,
+            Restrictable.GUEST_BROWSING,
+            Restrictable.LOCATION_SERVICE
+    );
+
+    /* package-private */ static boolean shouldHide(Restrictable restrictable) {
+        return hiddenRestrictions.contains(restrictable);
+    }
+
     private Context context;
     private Bundle cachedAppRestrictions;
     private Bundle cachedUserRestrictions;
@@ -111,20 +124,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             bundle.putBoolean(Restrictable.PRIVATE_BROWSING.name, !bundle.getBoolean("no_private_browsing"));
         }
 
-        if (!bundle.containsKey(Restrictable.LOCATION_SERVICE.name) && bundle.containsKey("no_location_service")) {
-            bundle.putBoolean(Restrictable.LOCATION_SERVICE.name, !bundle.getBoolean("no_location_service"));
-        }
-
         if (!bundle.containsKey(Restrictable.CLEAR_HISTORY.name) && bundle.containsKey("no_clear_history")) {
             bundle.putBoolean(Restrictable.CLEAR_HISTORY.name, !bundle.getBoolean("no_clear_history"));
-        }
-
-        if (!bundle.containsKey(Restrictable.MASTER_PASSWORD.name) && bundle.containsKey("no_master_password")) {
-            bundle.putBoolean(Restrictable.MASTER_PASSWORD.name, !bundle.getBoolean("no_master_password"));
-        }
-
-        if (!bundle.containsKey(Restrictable.GUEST_BROWSING.name) && bundle.containsKey("no_guest_browsing")) {
-            bundle.putBoolean(Restrictable.GUEST_BROWSING.name, !bundle.getBoolean("no_guest_browsing"));
         }
 
         if (!bundle.containsKey(Restrictable.ADVANCED_SETTINGS.name) && bundle.containsKey("no_advanced_settings")) {

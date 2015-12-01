@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.RestrictionEntry;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 
@@ -57,6 +58,10 @@ public class RestrictionProvider extends BroadcastReceiver {
                 continue;
             }
 
+            if (RestrictedProfileConfiguration.shouldHide(restrictable)) {
+                continue;
+            }
+
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restrictable,
                     oldRestrictions.getBoolean(restrictable.name, false));
             entries.add(entry);
@@ -69,6 +74,11 @@ public class RestrictionProvider extends BroadcastReceiver {
         RestrictionEntry entry = new RestrictionEntry(restrictable.name, defaultValue);
 
         entry.setTitle(restrictable.getTitle(context));
+
+        final String description = restrictable.getDescription(context);
+        if (!TextUtils.isEmpty(description)) {
+            entry.setDescription(description);
+        }
 
         return entry;
     }
