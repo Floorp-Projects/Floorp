@@ -12,6 +12,8 @@ Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ESEDBReader",
+                                  "resource:///modules/ESEDBReader.jsm");
 
 const kEdgeRegistryRoot = "SOFTWARE\\Classes\\Local Settings\\Software\\" +
   "Microsoft\\Windows\\CurrentVersion\\AppContainer\\Storage\\" +
@@ -86,9 +88,32 @@ function EdgeReadingListMigrator() {
 
 EdgeReadingListMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
+  _dbFile: null,
 
   get exists() {
-    return !!MSMigrationUtils.getEdgeLocalDataFolder();
+    this._dbFile = this._getDBFile();
+    return !!this._dbFile;
+  },
+
+  _getDBFile() {
+    let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
+    if (!edgeDir) {
+      return null;
+    }
+    edgeDir.appendRelativePath(kEdgeReadingListPath);
+    if (!edgeDir.exists() || !edgeDir.isReadable() || !edgeDir.isDirectory()) {
+      return null;
+    }
+    let expectedLocation = edgeDir.clone();
+    expectedLocation.appendRelativePath("nouser1\\120712-0049\\DBStore\\spartan.edb");
+    if (expectedLocation.exists() && expectedLocation.isReadable() && expectedLocation.isFile()) {
+      return expectedLocation;
+    }
+    // We used to recurse into arbitrary subdirectories here, but that code
+    // went unused, so it likely isn't necessary, even if we don't understand
+    // where the magic folders above come from, they seem to be the same for
+    // everyone. Just return null if they're not there:
+    return null;
   },
 
   migrate(callback) {
@@ -102,78 +127,58 @@ EdgeReadingListMigrator.prototype = {
   },
 
   _migrateReadingList: Task.async(function*(parentGuid) {
-    let edgeDir = MSMigrationUtils.getEdgeLocalDataFolder();
-    if (!edgeDir) {
-      return;
-    }
-    this._readingListExtractor = Cc["@mozilla.org/profile/migrator/edgereadinglistextractor;1"].
-                                 createInstance(Ci.nsIEdgeReadingListExtractor);
-    edgeDir.appendRelativePath(kEdgeReadingListPath);
-    let errorProduced = null;
-    if (edgeDir.exists() && edgeDir.isReadable() && edgeDir.isDirectory()) {
-      let expectedDir = edgeDir.clone();
-      expectedDir.appendRelativePath("nouser1\\120712-0049");
-      if (expectedDir.exists() && expectedDir.isReadable() && expectedDir.isDirectory()) {
-        yield this._migrateReadingListDB(expectedDir, parentGuid).catch(ex => {
-          if (!errorProduced)
-            errorProduced = ex;
-        });
-      } else {
-        let getSubdirs = someDir => {
-          let subdirs = someDir.directoryEntries;
-          let rv = [];
-          while (subdirs.hasMoreElements()) {
-            let subdir = subdirs.getNext().QueryInterface(Ci.nsIFile);
-            if (subdir.isDirectory() && subdir.isReadable()) {
-              rv.push(subdir);
-            }
-          }
-          return rv;
-        };
-        let dirs = getSubdirs(edgeDir).map(getSubdirs);
-        for (let dir of dirs) {
-          yield this._migrateReadingListDB(dir, parentGuid).catch(ex => {
-            if (!errorProduced)
-              errorProduced = ex;
-          });
+    let readingListItems = [];
+    let database;
+    try {
+      let logFile = this._dbFile.parent;
+      logFile.append("LogFiles");
+      database = ESEDBReader.openDB(this._dbFile.parent, this._dbFile, logFile);
+      let columns = [
+        {name: "URL", type: "string"},
+        {name: "Title", type: "string"},
+        {name: "AddedDate", type: "date"}
+      ];
+
+      // Later versions have an isDeleted column:
+      let isDeletedColumn = database.checkForColumn("ReadingList", "isDeleted");
+      if (isDeletedColumn && isDeletedColumn.dbType == ESEDBReader.COLUMN_TYPES.JET_coltypBit) {
+        columns.push({name: "isDeleted", type: "boolean"});
+      }
+
+      let tableReader = database.tableItems("ReadingList", columns);
+      for (let row of tableReader) {
+        if (!row.isDeleted) {
+          readingListItems.push(row);
         }
       }
-    }
-    if (errorProduced) {
-      throw errorProduced;
-    }
-  }),
-  _migrateReadingListDB: Task.async(function*(dbFile, parentGuid) {
-    dbFile.appendRelativePath("DBStore\\spartan.edb");
-
-    if (!dbFile.exists() || !dbFile.isReadable() || !dbFile.isFile()) {
-      return;
-    }
-    let readingListItems;
-    try {
-      readingListItems = this._readingListExtractor.extract(dbFile.path);
     } catch (ex) {
       Cu.reportError("Failed to extract Edge reading list information from " +
-                     "the database at " + dbFile.path + " due to the following error: " + ex);
+                     "the database at " + this._dbFile.path + " due to the following error: " + ex);
       // Deliberately make this fail so we expose failure in the UI:
       throw ex;
-      return;
+    } finally {
+      if (database) {
+        ESEDBReader.closeDB(database);
+      }
     }
     if (!readingListItems.length) {
       return;
     }
     let destFolderGuid = yield this._ensureReadingListFolder(parentGuid);
-    for (let i = 0; i < readingListItems.length; i++) {
-      let readingListItem = readingListItems.queryElementAt(i, Ci.nsIPropertyBag2);
-      let url = readingListItem.get("uri");
-      let title = readingListItem.get("title");
-      let time = readingListItem.get("time");
-      // time is a PRTime, which is microseconds (since unix epoch), or null.
-      // We need milliseconds for the date constructor, so divide by 1000:
-      let dateAdded = time ? new Date(time / 1000) : new Date();
+    let exceptionThrown;
+    for (let item of readingListItems) {
+      let dateAdded = item.AddedDate || new Date();
       yield PlacesUtils.bookmarks.insert({
-        parentGuid: destFolderGuid, url: url, title, dateAdded
+        parentGuid: destFolderGuid, url: item.URL, title: item.Title, dateAdded
+      }).catch(ex => {
+        if (!exceptionThrown) {
+          exceptionThrown = ex;
+        }
+        Cu.reportError(ex);
       });
+    }
+    if (exceptionThrown) {
+      throw exceptionThrown;
     }
   }),
 
