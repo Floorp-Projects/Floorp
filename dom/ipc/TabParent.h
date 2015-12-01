@@ -496,7 +496,7 @@ protected:
 
     // Decide whether we have to use a new process to reload the URI associated
     // with the given channel.
-    bool ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPkg);
+    bool ShouldSwitchProcess(nsIChannel* aChannel);
 
     ContentCacheInParent mContentCache;
 
