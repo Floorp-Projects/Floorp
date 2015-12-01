@@ -80,6 +80,30 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
 // Arithmetic instructions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    addl(src, dest);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    addl(imm, dest);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     subl(src, dest);

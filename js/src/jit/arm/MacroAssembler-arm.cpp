@@ -1948,27 +1948,6 @@ MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
 }
 
 void
-MacroAssemblerARMCompat::add32(Register src, Register dest)
-{
-    ma_add(src, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
-{
-    ma_add(imm, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::add32(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(dest, scratch);
-    ma_add(imm, scratch, SetCC);
-    store32(scratch, dest);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);
