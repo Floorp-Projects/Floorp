@@ -88,7 +88,7 @@ MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register64 src, Register temp,
     ma_or(ScratchRegister, SecondScratchReg);
     as_dmtc1(ScratchRegister, dest);
     as_cvtdl(dest, dest);
-    addDouble(dest, dest);
+    asMasm().addDouble(dest, dest);
     ma_b(&done, ShortJump);
 
     bind(&positive);
@@ -225,12 +225,6 @@ MacroAssemblerMIPS64Compat::convertInt32ToFloat32(const Address& src, FloatRegis
 {
     ma_ls(dest, src);
     as_cvtsw(dest, dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::addDouble(FloatRegister src, FloatRegister dest)
-{
-    as_addd(dest, dest, src);
 }
 
 void
