@@ -184,6 +184,16 @@ enum nsChangeHint {
    */
   nsChangeHint_UpdateComputedBSize = 0x1000000,
 
+  /**
+   * Indicates that the 'opacity' property changed between 1 and non-1.
+   *
+   * Used as extra data for handling UpdateOpacityLayer hints.
+   *
+   * Note that we do not send this hint if the non-1 value was 0.99 or
+   * greater, since in that case we send a RepaintFrame hint instead.
+   */
+  nsChangeHint_UpdateUsesOpacity = 0x2000000,
+
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
   // add them to RestyleManager::ChangeHintToString.
@@ -292,7 +302,8 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_NeedReflow | \
           nsChangeHint_ReflowChangesSizeOrPosition | \
           nsChangeHint_ClearAncestorIntrinsics | \
-          nsChangeHint_UpdateComputedBSize)
+          nsChangeHint_UpdateComputedBSize | \
+          nsChangeHint_UpdateUsesOpacity)
 
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
   nsChangeHint result = nsChangeHint(aChangeHint & (
@@ -307,7 +318,8 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_RecomputePosition |
     nsChangeHint_UpdateContainingBlock |
     nsChangeHint_BorderStyleNoneChange |
-    nsChangeHint_UpdateComputedBSize));
+    nsChangeHint_UpdateComputedBSize |
+    nsChangeHint_UpdateUsesOpacity));
 
   if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint)) {
     if (NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
