@@ -240,6 +240,12 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    fadd(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+}
+
+void
 MacroAssembler::sub32(Imm32 imm, Register dest)
 {
     Sub(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
