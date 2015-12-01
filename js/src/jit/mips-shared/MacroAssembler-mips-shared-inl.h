@@ -173,6 +173,12 @@ MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
     mulDouble(ScratchDoubleReg, dest);
 }
 
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    as_divd(dest, dest, src);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
