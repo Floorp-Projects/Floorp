@@ -116,6 +116,21 @@ DominatorTree::GetImmediatelyDominated(uint64_t aNodeId,
   }
 }
 
+dom::Nullable<uint64_t>
+DominatorTree::GetImmediateDominator(uint64_t aNodeId) const
+{
+  JS::ubi::Node::Id id(aNodeId);
+  Maybe<JS::ubi::Node> node = mHeapSnapshot->getNodeById(id);
+  if (node.isNothing())
+    return dom::Nullable<uint64_t>();
+
+  JS::ubi::Node dominator = mDominatorTree.getImmediateDominator(*node);
+  if (!dominator || dominator == *node)
+    return dom::Nullable<uint64_t>();
+
+  return dom::Nullable<uint64_t>(dominator.identifier());
+}
+
 
 /*** Cycle Collection Boilerplate *****************************************************************/
 
