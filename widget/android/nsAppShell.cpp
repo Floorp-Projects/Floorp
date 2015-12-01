@@ -837,7 +837,7 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
                 if (event) {
                     event->setPrevious(this);
                 } else {
-                    queue.insertFront(this);
+                    queue.insertBack(this);
                 }
                 EVLOG("nsAppShell: Inserting compositor event %d to maintain priority order", ae->Type());
             }
