@@ -416,8 +416,7 @@ class TestRecursiveMakeBackend(BackendTester):
         #BRANDING_FILES should appear in the dist_branding install manifest.
         m = InstallManifest(path=os.path.join(env.topobjdir,
             '_build_manifests', 'install', 'dist_branding'))
-        self.assertEqual(len(m), 4)
-        self.assertIn('app.ico', m)
+        self.assertEqual(len(m), 3)
         self.assertIn('bar.ico', m)
         self.assertIn('quux.png', m)
         self.assertIn('icons/foo.ico', m)
