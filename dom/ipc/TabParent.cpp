@@ -458,28 +458,8 @@ static void LogChannelRelevantInfo(nsIURI* aURI,
   LOG("Result principal origin: %s\n", resultPrincipalOrigin.get());
 }
 
-// This is similar to nsIScriptSecurityManager.getChannelResultPrincipal
-// but taking signedPkg into account. The reason we can't rely on channel
-// loadContext/loadInfo is it's dangerous to mutate them on parent process.
-static already_AddRefed<nsIPrincipal>
-GetChannelPrincipalWithSingedPkg(nsIChannel* aChannel, const nsACString& aSignedPkg)
-{
-  OriginAttributes attrs;
-  NS_GetOriginAttributes(aChannel, attrs);
-  attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aSignedPkg);
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-
-  return principal.forget();
-}
-
 bool
-TabParent::ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPkg)
+TabParent::ShouldSwitchProcess(nsIChannel* aChannel)
 {
   // If we lack of any information which is required to decide the need of
   // process switch, consider that we should switch process.
@@ -493,18 +473,19 @@ TabParent::ShouldSwitchProcess(nsIChannel* aChannel, const nsACString& aSignedPk
   NS_ENSURE_TRUE(loadingPrincipal, true);
 
   // Prepare the channel result principal.
-  nsCOMPtr<nsIPrincipal> channelPrincipal =
-    GetChannelPrincipalWithSingedPkg(aChannel, aSignedPkg);
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetChannelResultPrincipal(aChannel, getter_AddRefs(resultPrincipal));
 
   // Log the debug info which is used to decide the need of proces switch.
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
-  LogChannelRelevantInfo(uri, loadingPrincipal, channelPrincipal,
+  LogChannelRelevantInfo(uri, loadingPrincipal, resultPrincipal,
                          loadInfo->InternalContentPolicyType());
 
   // Check if the signed package is loaded from the same origin.
   bool sameOrigin = false;
-  loadingPrincipal->Equals(channelPrincipal, &sameOrigin);
+  loadingPrincipal->Equals(resultPrincipal, &sameOrigin);
   if (sameOrigin) {
     LOG("Loading singed package from the same origin. Don't switch process.\n");
     return false;
@@ -535,7 +516,7 @@ void
 TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel,
                                        const nsACString& aPackageId)
 {
-  if (!ShouldSwitchProcess(aChannel, aPackageId)) {
+  if (!ShouldSwitchProcess(aChannel)) {
     return;
   }
 
@@ -2363,7 +2344,7 @@ TabParent::RecvStartPluginIME(const WidgetKeyboardEvent& aKeyboardEvent,
     return true;
   }
   widget->StartPluginIME(aKeyboardEvent,
-                         (int32_t&)aPanelX,
+                         (int32_t&)aPanelX, 
                          (int32_t&)aPanelY,
                          *aCommitted);
   return true;
