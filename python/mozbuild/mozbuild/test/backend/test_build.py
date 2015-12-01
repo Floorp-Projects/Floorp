@@ -24,7 +24,7 @@ from tempfile import mkdtemp
 
 
 BASE_SUBSTS = [
-    ('PYTHON', sys.executable),
+    ('PYTHON', mozpath.normsep(sys.executable)),
 ]
 
 
