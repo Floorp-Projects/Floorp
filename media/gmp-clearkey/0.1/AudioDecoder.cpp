@@ -119,7 +119,7 @@ AudioDecoder::DecodeTask(GMPAudioSamples* aInput)
     // Plugin host should have set up its decryptor/key sessions
     // before trying to decode!
     GMPErr rv =
-      ClearKeyDecryptionManager::Get()->Decrypt(&buffer[0], buffer.size(), crypto);
+      ClearKeyDecryptionManager::Get()->Decrypt(buffer, CryptoMetaData(crypto));
 
     if (GMP_FAILED(rv)) {
       CK_LOGE("Failed to decrypt with key id %08x...", *(uint32_t*)crypto->KeyId());
