@@ -17,6 +17,9 @@ function run_test() {
   // overflow the log size.
 
   var root = dominatorTree.root;
+  equal(dominatorTree.getImmediateDominator(root), null,
+        "The root should not have a parent");
+
   var seen = new Set();
   var stack = [root];
   while (stack.length > 0) {
@@ -42,6 +45,10 @@ function run_test() {
     for (var i = 0; i < newNodes.length; i++) {
       if (typeof newNodes[i] !== "number") {
         ok(false, "Every dominated id should be a number");
+      }
+
+      if (dominatorTree.getImmediateDominator(newNodes[i]) !== top) {
+        ok(false, "child's parent should be the expected parent");
       }
 
       var thisSize = dominatorTree.getRetainedSize(newNodes[i]);
