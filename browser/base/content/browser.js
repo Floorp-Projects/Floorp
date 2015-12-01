@@ -1388,7 +1388,6 @@ var gBrowserInit = {
       RestoreLastSessionObserver.init();
 
       SocialUI.init();
-      TabView.init();
 
       // Telemetry for master-password - we do this after 5 seconds as it
       // can cause IO if NSS/PSM has not already initialized.
@@ -1509,7 +1508,6 @@ var gBrowserInit = {
 
       gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
-      TabView.uninit();
       SocialUI.uninit();
       gBrowserThumbnails.uninit();
       FullZoom.destroy();
@@ -1564,7 +1562,7 @@ var gBrowserInit = {
                          'viewToolbarsMenu', 'viewSidebarMenuMenu', 'Browser:Reload',
                          'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
                          'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
-                         'View:PageInfo', 'Browser:ToggleTabView'];
+                         'View:PageInfo'];
     var element;
 
     for (let disabledItem of disabledItems) {
@@ -5521,7 +5519,6 @@ const nodeToTooltipMap = {
   "new-tab-button": "newTabButton.tooltip",
   "tabs-newtab-button": "newTabButton.tooltip",
   "fullscreen-button": "fullscreenButton.tooltip",
-  "tabview-button": "tabviewButton.tooltip",
   "downloads-button": "downloads.tooltip",
 };
 const nodeToShortcutMap = {
@@ -5533,7 +5530,6 @@ const nodeToShortcutMap = {
   "new-tab-button": "key_newNavigatorTab",
   "tabs-newtab-button": "key_newNavigatorTab",
   "fullscreen-button": "key_fullScreen",
-  "tabview-button": "key_tabview",
   "downloads-button": "key_openDownloads"
 };
 const gDynamicTooltipCache = new Map();
@@ -6534,11 +6530,6 @@ function CanCloseWindow()
 
 function WindowIsClosing()
 {
-  if (TabView.isVisible()) {
-    TabView.hide();
-    return false;
-  }
-
   if (!closeWindow(false, warnAboutClosingWindow))
     return false;
 
@@ -6758,9 +6749,7 @@ function undoCloseTab(aIndex) {
 
   var tab = null;
   if (SessionStore.getClosedTabCount(window) > (aIndex || 0)) {
-    TabView.prepareUndoCloseTab(blankTabToRemove);
     tab = SessionStore.undoCloseTab(window, aIndex || 0);
-    TabView.afterUndoCloseTab();
 
     if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
@@ -7853,10 +7842,6 @@ var TabContextMenu = {
     bookmarkAllTabs.hidden = this.contextTab.pinned;
     if (!bookmarkAllTabs.hidden)
       PlacesCommandHook.updateBookmarkAllTabsCommand();
-
-    // Hide "Move to Group" if it's a pinned tab.
-    document.getElementById("context_tabViewMenu").hidden =
-      (this.contextTab.pinned || !TabView.firstUseExperienced);
 
     // Adjust the state of the toggle mute menu item.
     let toggleMute = document.getElementById("context_toggleMuteTab");

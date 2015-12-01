@@ -95,7 +95,6 @@ browser.jar:
         content/browser/browser-social.js             (content/browser-social.js)
 *       content/browser/browser-syncui.js             (content/browser-syncui.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
-        content/browser/browser-tabview.js            (content/browser-tabview.js)
         content/browser/browser-thumbnails.js         (content/browser-thumbnails.js)
         content/browser/browser-trackingprotection.js (content/browser-trackingprotection.js)
 *       content/browser/chatWindow.xul                (content/chatWindow.xul)
