@@ -61,4 +61,10 @@ interface DominatorTree {
    */
   [Throws]
   sequence<NodeId>? getImmediatelyDominated(NodeId node);
+
+  /**
+   * Get the immediate dominator of the node with the given id. Returns null if
+   * given an invalid id, or the id of the root node.
+   */
+  NodeId? getImmediateDominator(NodeId node);
 };
