@@ -566,10 +566,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void add64(Imm32 imm, Register64 dest) {
-        addl(imm, dest.low);
-        adcl(Imm32(0), dest.high);
-    }
     void subPtr(Imm32 imm, Register dest) {
         subl(imm, dest);
     }

@@ -101,6 +101,12 @@ MacroAssembler::add64(Register64 src, Register64 dest)
     addPtr(src.reg, dest.reg);
 }
 
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    ma_daddu(dest.reg, imm);
+}
+
 // ===============================================================
 // Shift functions
 
