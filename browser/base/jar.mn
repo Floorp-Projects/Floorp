@@ -88,7 +88,7 @@ browser.jar:
         content/browser/browser-fullScreen.js         (content/browser-fullScreen.js)
         content/browser/browser-fullZoom.js           (content/browser-fullZoom.js)
         content/browser/browser-fxaccounts.js         (content/browser-fxaccounts.js)
-*       content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
+        content/browser/browser-gestureSupport.js     (content/browser-gestureSupport.js)
 *       content/browser/browser-places.js             (content/browser-places.js)
         content/browser/browser-plugins.js            (content/browser-plugins.js)
 #ifdef MOZ_SAFE_BROWSING
