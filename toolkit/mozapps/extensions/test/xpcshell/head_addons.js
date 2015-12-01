@@ -73,10 +73,35 @@ var resHandler = Services.io.getProtocolHandler("resource")
 var dataURI = NetUtil.newURI(do_get_file("data", true));
 resHandler.setSubstitution("xpcshell-data", dataURI);
 
+function isManifestRegistered(file) {
+  let manifests = Components.manager.getManifestLocations();
+  for (let i = 0; i < manifests.length; i++) {
+    let manifest = manifests.queryElementAt(i, AM_Ci.nsIURI);
+
+    // manifest is the url to the manifest file either in an XPI or a directory.
+    // We want the location of the XPI or directory itself.
+    if (manifest instanceof AM_Ci.nsIJARURI) {
+      manifest = manifest.JARFile.QueryInterface(AM_Ci.nsIFileURL).file;
+    }
+    else if (manifest instanceof AM_Ci.nsIFileURL) {
+      manifest = manifest.file.parent;
+    }
+    else {
+      continue;
+    }
+
+    if (manifest.equals(file))
+      return true;
+  }
+  return false;
+}
+
 // Listens to messages from bootstrap.js telling us what add-ons were started
 // and stopped etc. and performs some sanity checks that only installed add-ons
 // are started etc.
 this.BootstrapMonitor = {
+  inited: false,
+
   // Contain the current state of add-ons in the system
   installed: new Map(),
   started: new Map(),
@@ -89,7 +114,15 @@ this.BootstrapMonitor = {
   installPromises: [],
 
   init() {
+    this.inited = true;
     Services.obs.addObserver(this, "bootstrapmonitor-event", false);
+  },
+
+  shutdownCheck() {
+    if (!this.inited)
+      return;
+
+    do_check_eq(this.started.size, 0);
   },
 
   clear(id) {
@@ -123,6 +156,11 @@ this.BootstrapMonitor = {
     do_check_neq(started, undefined);
     if (version != undefined)
       do_check_eq(started.data.version, version);
+
+    // Chrome should be registered by now
+    let installPath = new FileUtils.File(started.data.installPath);
+    let isRegistered = isManifestRegistered(installPath);
+    do_check_true(isRegistered);
   },
 
   checkAddonNotStarted(id) {
@@ -143,6 +181,7 @@ this.BootstrapMonitor = {
   observe(subject, topic, data) {
     let info = JSON.parse(data);
     let id = info.data.id;
+    let installPath = new FileUtils.File(info.data.installPath);
 
     // If this is the install event the add-ons shouldn't already be installed
     if (info.event == "install") {
@@ -164,17 +203,35 @@ this.BootstrapMonitor = {
 
       this.started.delete(id);
       this.stopped.set(id, info);
+
+      // Chrome should still be registered at this point
+      let isRegistered = isManifestRegistered(installPath);
+      do_check_true(isRegistered);
+
+      // XPIProvider doesn't bother unregistering chrome on app shutdown but
+      // since we simulate restarts we must do so manually to keep the registry
+      // consistent.
+      if (info.reason == 2 /* APP_SHUTDOWN */)
+        Components.manager.removeBootstrappedManifestLocation(installPath);
     }
     else {
       this.checkAddonNotStarted(id);
     }
 
     if (info.event == "uninstall") {
+      // Chrome should be unregistered at this point
+      let isRegistered = isManifestRegistered(installPath);
+      do_check_false(isRegistered);
+
       this.installed.delete(id);
       this.uninstalled.set(id, info)
     }
     else if (info.event == "startup") {
       this.started.set(id, info);
+
+      // Chrome should be registered at this point
+      let isRegistered = isManifestRegistered(installPath);
+      do_check_true(isRegistered);
 
       for (let resolve of this.startupPromises)
         resolve();
@@ -587,6 +644,7 @@ function promiseShutdownManager() {
   return MockAsyncShutdown.hook()
     .then(null, err => hookErr = err)
     .then( () => {
+      BootstrapMonitor.shutdownCheck();
       gInternalManager = null;
 
       // Load the add-ons list as it was after application shutdown
