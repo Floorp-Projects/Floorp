@@ -62,8 +62,8 @@ struct nsStyleVisibility;
 #define NS_STYLE_RELEVANT_LINK_VISITED     0x004000000
 // See nsStyleContext::IsStyleIfVisited
 #define NS_STYLE_IS_STYLE_IF_VISITED       0x008000000
-// See nsStyleContext::UsesGrandancestorStyle
-#define NS_STYLE_USES_GRANDANCESTOR_STYLE  0x010000000
+// See nsStyleContext::HasChildThatUsesGrandancestorStyle
+#define NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE 0x010000000
 // See nsStyleContext::IsShared
 #define NS_STYLE_IS_SHARED                 0x020000000
 // See nsStyleContext::AssertStructsNotUsedElsewhere
