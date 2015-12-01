@@ -342,6 +342,12 @@ MacroAssembler::mulBy3(Register src, Register dest)
 }
 
 void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    fmul(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+}
+
+void
 MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
 {
     vixl::UseScratchRegisterScope temps(this);
