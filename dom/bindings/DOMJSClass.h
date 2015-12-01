@@ -39,11 +39,23 @@ typedef bool
                            JS::Handle<JSObject*> obj,
                            JS::AutoIdVector& props);
 
+// Returns true if aObj's global has any of the permissions named in
+// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
+// null-terminated.
 bool
 CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
+// Returns true if aObj's global has all of the permissions named in
+// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
+// null-terminated.
 bool
 CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
+
+// Returns true if the given global is of a type whose bit is set in
+// aNonExposedGlobals.
+bool
+IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
+                   uint32_t aNonExposedGlobals);
 
 struct ConstantSpec
 {
@@ -68,6 +80,20 @@ static const uint32_t WorkerDebuggerGlobalScope = 1u << 5;
 template<typename T>
 struct Prefable {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
+    // Reading "enabled" on a worker thread is technically undefined behavior,
+    // because it's written only on main threads, with no barriers of any sort.
+    // So we want to avoid doing that.  But we don't particularly want to make
+    // expensive NS_IsMainThread calls here.
+    //
+    // The good news is that "enabled" is only written for things that have a
+    // Pref annotation, and such things can never be exposed on non-Window
+    // globals; our IDL parser enforces that.  So as long as we check our
+    // exposure set before checking "enabled" we will be ok.
+    if (nonExposedGlobals &&
+        IsNonExposedGlobal(cx, js::GetGlobalForObjectCrossCompartment(obj),
+                           nonExposedGlobals)) {
+      return false;
+    }
     if (!enabled) {
       return false;
     }
