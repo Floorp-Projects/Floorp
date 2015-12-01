@@ -919,19 +919,6 @@ MacroAssemblerMIPS64Compat::add32(Imm32 imm, const Address& dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::addPtr(Register src, Register dest)
-{
-    ma_daddu(dest, src);
-}
-
-void
-MacroAssemblerMIPS64Compat::addPtr(const Address& src, Register dest)
-{
-    loadPtr(src, ScratchRegister);
-    ma_daddu(dest, ScratchRegister);
-}
-
-void
 MacroAssemblerMIPS64Compat::subPtr(Register src, Register dest)
 {
     as_dsubu(dest, dest, src);
@@ -1346,20 +1333,6 @@ MacroAssemblerMIPS64Compat::subPtr(Register src, const Address& dest)
     loadPtr(dest, SecondScratchReg);
     subPtr(src, SecondScratchReg);
     storePtr(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::addPtr(Imm32 imm, const Register dest)
-{
-    ma_daddu(dest, imm);
-}
-
-void
-MacroAssemblerMIPS64Compat::addPtr(Imm32 imm, const Address& dest)
-{
-    loadPtr(dest, ScratchRegister);
-    addPtr(imm, ScratchRegister);
-    storePtr(ScratchRegister, dest);
 }
 
 void
@@ -2651,7 +2624,7 @@ MacroAssemblerMIPS64Compat::branchPtrInNurseryRange(Condition cond, Register ptr
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    addPtr(ptr, SecondScratchReg);
+    asMasm().addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
@@ -2667,7 +2640,7 @@ MacroAssemblerMIPS64Compat::branchValueIsNurseryObject(Condition cond, ValueOper
     Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
-    addPtr(value.valueReg(), SecondScratchReg);
+    asMasm().addPtr(value.valueReg(), SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }

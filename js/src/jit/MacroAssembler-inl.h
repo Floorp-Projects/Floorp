@@ -313,6 +313,15 @@ MacroAssembler::hasSelfReference() const
     return selfReferencePatch_.bound();
 }
 
+// ===============================================================
+// Arithmetic functions
+
+void
+MacroAssembler::addPtr(ImmPtr imm, Register dest)
+{
+    addPtr(ImmWord(uintptr_t(imm.value)), dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

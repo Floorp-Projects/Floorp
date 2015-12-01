@@ -16,6 +16,7 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// Logical functions
 
 void
 MacroAssembler::andPtr(Register src, Register dest)
@@ -76,6 +77,42 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 
 // ===============================================================
 // Arithmetic functions
+
+void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    addl(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    addl(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    addl(Imm32(imm.value), dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    addl(Operand(src), dest);
+}
 
 void
 MacroAssembler::add64(Register64 src, Register64 dest)

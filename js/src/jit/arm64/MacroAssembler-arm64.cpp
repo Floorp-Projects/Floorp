@@ -226,7 +226,7 @@ MacroAssemblerCompat::branchPtrInNurseryRange(Condition cond, Register ptr, Regi
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    addPtr(ptr, temp);
+    asMasm().addPtr(ptr, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, ImmWord(nursery.nurserySize()), label);
 }
@@ -248,7 +248,7 @@ MacroAssemblerCompat::branchValueIsNurseryObject(Condition cond, ValueOperand va
     Value start = ObjectValue(*reinterpret_cast<JSObject*>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), temp);
-    addPtr(value.valueReg(), temp);
+    asMasm().addPtr(value.valueReg(), temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, ImmWord(nursery.nurserySize()), label);
 }
