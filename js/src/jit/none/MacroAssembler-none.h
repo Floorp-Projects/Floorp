@@ -394,7 +394,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void convertInt32ToDouble(T, FloatRegister) { MOZ_CRASH(); }
     void convertFloat32ToDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void convertUInt64ToDouble(Register64, Register, FloatRegister) { MOZ_CRASH(); }
-    void mulDoublePtr(ImmPtr, Register, FloatRegister) { MOZ_CRASH(); }
 
     void branchTruncateDouble(FloatRegister, Register, Label*) { MOZ_CRASH(); }
     void branchTruncateFloat32(FloatRegister, Register, Label*) { MOZ_CRASH(); }

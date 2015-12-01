@@ -341,6 +341,18 @@ MacroAssembler::mulBy3(Register src, Register dest)
     Add(xdest, xsrc, Operand(xsrc, vixl::LSL, 1));
 }
 
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    MOZ_ASSERT(temp != scratch);
+    movePtr(imm, scratch);
+    const ARMFPRegister scratchDouble = temps.AcquireD();
+    Ldr(scratchDouble, MemOperand(Address(scratch, 0)));
+    fmul(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), scratchDouble);
+}
+
 // ===============================================================
 // Shift functions
 

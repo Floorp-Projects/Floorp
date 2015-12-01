@@ -2846,15 +2846,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest) {
         Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(temp != scratch);
-        movePtr(imm, scratch);
-        const ARMFPRegister scratchDouble = temps.AcquireD();
-        Ldr(scratchDouble, MemOperand(Address(scratch, 0)));
-        fmul(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), scratchDouble);
-    }
 
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* label) {

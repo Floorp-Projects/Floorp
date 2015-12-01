@@ -167,6 +167,13 @@ MacroAssembler::mulBy3(Register src, Register dest)
     lea(Operand(src, src, TimesTwo), dest);
 }
 
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    movq(imm, ScratchReg);
+    vmulsd(Operand(ScratchReg, 0), dest, dest);
+}
+
 // ===============================================================
 // Shift functions
 
