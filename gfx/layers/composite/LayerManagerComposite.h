@@ -579,7 +579,7 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
   // Calculate the size of the intermediate surfaces.
   gfx::Rect visibleRect(aLayer->GetEffectiveVisibleRegion().ToUnknownRegion().GetBounds());
   gfx::Matrix4x4 transform = aLayer->GetEffectiveTransform();
-  // TODO: Use RenderTargetIntRect and TransformTo<...> here
+  // TODO: Use RenderTargetIntRect and TransformBy here
   gfx::IntRect surfaceRect =
     RoundedOut(transform.TransformAndClipBounds(visibleRect, gfx::Rect(aClipRect)));
   if (surfaceRect.IsEmpty()) {
