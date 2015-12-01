@@ -922,9 +922,6 @@ class MacroAssemblerX86Shared : public Assembler
         // XOR the float in a float register with -0.0.
         vxorps(scratch, reg, reg); // s ^ 0x80000000
     }
-    void subDouble(FloatRegister src, FloatRegister dest) {
-        vsubsd(src, dest, dest);
-    }
     void mulDouble(FloatRegister src, FloatRegister dest) {
         vmulsd(src, dest, dest);
     }

@@ -763,6 +763,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void subPtr(Imm32 imm, Register dest) PER_ARCH;
     inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
+    inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
+
     // ===============================================================
     // Shift functions
 

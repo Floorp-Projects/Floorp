@@ -133,6 +133,12 @@ MacroAssembler::sub32(const Address& src, Register dest)
     subl(Operand(src), dest);
 }
 
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    vsubsd(src, dest, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
