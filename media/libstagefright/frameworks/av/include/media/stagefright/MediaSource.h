@@ -52,8 +52,8 @@ protected:
     virtual ~MediaSource();
 
 private:
-    MediaSource(const MediaSource &);
-    MediaSource &operator=(const MediaSource &);
+    MediaSource(const MediaSource &) = delete;
+    MediaSource &operator=(const MediaSource &) = delete;
 };
 
 }  // namespace stagefright
