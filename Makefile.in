@@ -136,7 +136,7 @@ $(addprefix install-,$(filter dist/%,$(install_manifests))): install-dist/%: $(i
 install-dist_%: install-dist/% ;
 
 install-_tests: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests)
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/_tests)
 
 # For compatibility
 .PHONY: install-tests
