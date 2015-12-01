@@ -1341,19 +1341,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Subs(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
     }
 
-    void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) {
-        Smull(ARMRegister(dest, 64), ARMRegister(src1, 32), ARMRegister(src2, 32));
-        if (onOver) {
-            Cmp(ARMRegister(dest, 64), Operand(ARMRegister(dest, 32), vixl::SXTW));
-            B(onOver, NotEqual);
-        }
-        if (onZero)
-            Cbz(ARMRegister(dest, 32), onZero);
-
-        // Clear upper 32 bits.
-        Mov(ARMRegister(dest, 32), ARMRegister(dest, 32));
-    }
-
     void ret() {
         pop(lr);
         abiret();
