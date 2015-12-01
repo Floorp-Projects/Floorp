@@ -267,6 +267,41 @@ MacroAssembler::sub32(const Address& src, Register dest)
     Sub(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(scratch32));
 }
 
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != dest.base);
+
+    Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Sub(scratch64, scratch64, Operand(ARMRegister(src, 64)));
+    Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != addr.base);
+
+    Ldr(scratch64, MemOperand(ARMRegister(addr.base, 64), addr.offset));
+    Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
+}
+
 // ===============================================================
 // Shift functions
 
@@ -321,6 +356,20 @@ void
 MacroAssemblerCompat::addStackPtrTo(T t)
 {
     asMasm().addPtr(getStackPointer(), t);
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::subFromStackPtr(T t)
+{
+    asMasm().subPtr(t, getStackPointer()); syncStackPtr();
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::subStackPtrFrom(T t)
+{
+    asMasm().subPtr(getStackPointer(), t);
 }
 
 template <typename T>
