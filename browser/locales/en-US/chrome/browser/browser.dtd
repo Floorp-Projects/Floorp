@@ -40,9 +40,6 @@ can reach it easily. -->
 <!ENTITY  pinTab.accesskey                   "P">
 <!ENTITY  unpinTab.label                     "Unpin Tab">
 <!ENTITY  unpinTab.accesskey                 "b">
-<!ENTITY  moveToGroup.label                  "Move to Group">
-<!ENTITY  moveToGroup.accesskey              "M">
-<!ENTITY  moveToNewGroup.label               "New Group">
 <!ENTITY  moveToNewWindow.label              "Move to New Window">
 <!ENTITY  moveToNewWindow.accesskey          "W">
 <!ENTITY  bookmarkAllTabs.label              "Bookmark All Tabs…">
@@ -223,8 +220,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!-- Toolbar items --> 
 <!ENTITY homeButton.label             "Home">
 
-<!ENTITY tabGroupsButton.label        "Tab Groups">
-
 <!ENTITY bookmarksButton.label          "Bookmarks">
 <!ENTITY bookmarksCmd.commandkey "b">
 
@@ -387,8 +382,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 
-<!ENTITY viewTabGroups.label            "Tab Groups">
-<!ENTITY viewTabGroups.accesskey        "G">
 <!ENTITY viewToolbarsMenu.label       "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">
@@ -509,8 +502,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY searchInNewTab.accesskey     "T">
 <!ENTITY searchSetAsDefault.label     "Set As Default Search Engine">
 <!ENTITY searchSetAsDefault.accesskey "D">
-
-<!ENTITY tabView.commandkey           "e">
 
 <!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
 <!ENTITY openLinkCmdInTab.accesskey   "T">

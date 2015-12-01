@@ -42,7 +42,6 @@
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
     locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
-    locale/browser/tabview.properties              (%chrome/browser/tabview.properties)
     locale/browser/taskbar.properties              (%chrome/browser/taskbar.properties)
     locale/browser/translation.dtd                 (%chrome/browser/translation.dtd)
     locale/browser/translation.properties          (%chrome/browser/translation.properties)
