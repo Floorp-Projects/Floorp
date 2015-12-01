@@ -169,6 +169,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                                "config/*",
                                "mozbase/*",
                                "marionette/*",
+                               "tools/wptserve/*",
                                "web-platform/*"],
             suite_categories=["web-platform"])
 
