@@ -189,19 +189,19 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::border, aBorder, aError);
   }
-  void SetReferrer(const nsAString& aReferrer, ErrorResult& aError)
+  void SetReferrerPolicy(const nsAString& aReferrer, ErrorResult& aError)
   {
-    SetHTMLAttr(nsGkAtoms::referrer, aReferrer, aError);
+    SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer, aError);
   }
-  void GetReferrer(nsAString& aReferrer)
+  void GetReferrerPolicy(nsAString& aReferrer)
   {
-    GetHTMLAttr(nsGkAtoms::referrer, aReferrer);
+    GetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer);
   }
 
   net::ReferrerPolicy
   GetImageReferrerPolicy() override
   {
-    return GetReferrerPolicy();
+    return GetReferrerPolicyAsEnum();
   }
 
   int32_t X();
