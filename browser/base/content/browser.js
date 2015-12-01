@@ -1330,9 +1330,8 @@ var gBrowserInit = {
     gSyncUI.init();
     gFxAccounts.init();
 
-#ifdef MOZ_DATA_REPORTING
-    gDataNotificationInfoBar.init();
-#endif
+    if (AppConstants.MOZ_DATA_REPORTING)
+      gDataNotificationInfoBar.init();
 
     gBrowserThumbnails.init();
 
@@ -3649,11 +3648,13 @@ const BrowserSearch = {
   recordSearchInHealthReport: function (engine, source, selection) {
     BrowserUITelemetry.countSearchEvent(source, null, selection);
     this.recordSearchInTelemetry(engine, source);
-#ifdef MOZ_SERVICES_HEALTHREPORT
-    let reporter = Cc["@mozilla.org/datareporting/service;1"]
+
+    let reporter = AppConstants.MOZ_SERVICES_HEALTHREPORT
+                   ? Cc["@mozilla.org/datareporting/service;1"]
                      .getService()
                      .wrappedJSObject
-                     .healthReporter;
+                     .healthReporter
+                   : null;
 
     // This can happen if the FHR component of the data reporting service is
     // disabled. This is controlled by a pref that most will never use.
@@ -3668,7 +3669,6 @@ const BrowserSearch = {
         Cu.reportError(ex);
       }
     });
-#endif
   },
 
   _getSearchEngineId: function (engine) {
