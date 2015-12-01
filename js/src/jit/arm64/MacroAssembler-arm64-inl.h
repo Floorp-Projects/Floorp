@@ -151,6 +151,30 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    Add(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    Add(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    MOZ_ASSERT(scratch32.asUnsized() != dest.base);
+
+    Ldr(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Add(scratch32, scratch32, Operand(imm.value));
+    Str(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+}
+
+void
 MacroAssembler::addPtr(Register src, Register dest)
 {
     addPtr(src, dest, dest);

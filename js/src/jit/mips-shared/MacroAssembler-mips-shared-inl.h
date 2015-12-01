@@ -79,6 +79,26 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
 // Arithmetic instructions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    as_addu(dest, dest, src);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    ma_addu(dest, dest, imm);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    load32(dest, SecondScratchReg);
+    ma_addu(SecondScratchReg, imm);
+    store32(SecondScratchReg, dest);
+}
+
+void
 MacroAssembler::addPtr(Imm32 imm, const Address& dest)
 {
     loadPtr(dest, ScratchRegister);

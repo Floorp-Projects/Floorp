@@ -1185,14 +1185,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Common interface.
     /////////////////////////////////////////////////////////////////
   public:
-    void add32(Register src, Register dest);
-    void add32(Imm32 imm, Register dest);
-    void add32(Imm32 imm, const Address& dest);
-    template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        add32(src, dest);
-        j(cond, label);
-    }
+    template <typename T> inline void branchAdd32(Condition cond, T src, Register dest, Label* label);
     template <typename T>
     void branchSub32(Condition cond, T src, Register dest, Label* label) {
         ma_sub(src, dest, SetCC);
@@ -1629,9 +1622,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(Imm32(0), reg, LeaveCC, Signed);
     }
 
-    void incrementInt32Value(const Address& addr) {
-        add32(Imm32(1), ToPayload(addr));
-    }
+    inline void incrementInt32Value(const Address& addr);
 
     void cmp32(Register lhs, Imm32 rhs);
     void cmp32(Register lhs, Register rhs);
