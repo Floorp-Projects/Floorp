@@ -326,6 +326,16 @@ class MOZ_STACK_CLASS AutoRejectPromise
 };
 
 NS_IMETHODIMP
+AsyncScriptLoader::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
+                                     nsISupports* aContext,
+                                     uint32_t aDataLength,
+                                     const uint8_t* aData,
+                                     uint32_t *aConsumedData)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                     nsISupports* aContext,
                                     nsresult aStatus,
@@ -767,6 +777,16 @@ NotifyPrecompilationCompleteRunnable::Run(void)
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptPrecompiler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
+                                     nsISupports* aContext,
+                                     uint32_t aDataLength,
+                                     const uint8_t* aData,
+                                     uint32_t *aConsumedData)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP

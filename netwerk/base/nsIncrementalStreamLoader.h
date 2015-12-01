@@ -46,6 +46,9 @@ protected:
   // Buffer to accumulate incoming data. We preallocate if contentSize is
   // available.
   mozilla::Vector<uint8_t, 0> mData;
+
+  // Number of consumed bytes from the mData.
+  size_t  mBytesConsumed;
 };
 
 #endif // nsIncrementalStreamLoader_h__
