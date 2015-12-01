@@ -826,7 +826,8 @@ BluetoothDaemonGattModule::ServerAddCharacteristicCmd(
                         4)); // Permissions
 
   nsresult rv = PackPDU(
-    PackConversion<int, int32_t>(aServerIf), aServiceHandle, aUuid,
+    PackConversion<int, int32_t>(aServerIf), aServiceHandle,
+    PackReversed<BluetoothUuid>(aUuid),
     PackConversion<BluetoothGattCharProp, int32_t>(aProperties),
     PackConversion<BluetoothGattAttrPerm, int32_t>(aPermissions), *pdu);
   if (NS_FAILED(rv)) {
@@ -856,7 +857,8 @@ BluetoothDaemonGattModule::ServerAddDescriptorCmd(
                         4)); // Permissions
 
   nsresult rv = PackPDU(
-    PackConversion<int, int32_t>(aServerIf), aServiceHandle, aUuid,
+    PackConversion<int, int32_t>(aServerIf), aServiceHandle,
+    PackReversed<BluetoothUuid>(aUuid),
     PackConversion<BluetoothGattAttrPerm, int32_t>(aPermissions), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1790,22 +1792,119 @@ BluetoothDaemonGattModule::ServerIncludedServiceAddedNtf(
     UnpackPDUInitOp(aPDU));
 }
 
+// Init operator class for ServerCharacteristicAddedNotification
+class BluetoothDaemonGattModule::ServerCharacteristicAddedInitOp final
+  : private PDUInitOp
+{
+public:
+  ServerCharacteristicAddedInitOp(DaemonSocketPDU& aPDU)
+    : PDUInitOp(aPDU)
+  { }
+
+  nsresult
+  operator () (BluetoothGattStatus& aArg1,
+               int& aArg2,
+               BluetoothUuid& aArg3,
+               BluetoothAttributeHandle& aArg4,
+               BluetoothAttributeHandle& aArg5) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    /* Read GATT status */
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read server interface */
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read characteristic UUID */
+    rv = UnpackPDU(pdu, UnpackReversed<BluetoothUuid>(aArg3));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read service handle */
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read characteristic handle */
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
+
 void
 BluetoothDaemonGattModule::ServerCharacteristicAddedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   ServerCharacteristicAddedNotification::Dispatch(
     &BluetoothGattNotificationHandler::CharacteristicAddedNotification,
-    UnpackPDUInitOp(aPDU));
+    ServerCharacteristicAddedInitOp(aPDU));
 }
 
+// Init operator class for ServerDescriptorAddedNotification
+class BluetoothDaemonGattModule::ServerDescriptorAddedInitOp final
+  : private PDUInitOp
+{
+public:
+  ServerDescriptorAddedInitOp(DaemonSocketPDU& aPDU)
+    : PDUInitOp(aPDU)
+  { }
+
+  nsresult
+  operator () (BluetoothGattStatus& aArg1,
+               int& aArg2,
+               BluetoothUuid& aArg3,
+               BluetoothAttributeHandle& aArg4,
+               BluetoothAttributeHandle& aArg5) const
+  {
+    DaemonSocketPDU& pdu = GetPDU();
+
+    /* Read GATT status */
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read server interface */
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read characteristic UUID */
+    rv = UnpackPDU(pdu, UnpackReversed<BluetoothUuid>(aArg3));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read service handle */
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    /* Read descriptor handle */
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
 void
 BluetoothDaemonGattModule::ServerDescriptorAddedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   ServerDescriptorAddedNotification::Dispatch(
     &BluetoothGattNotificationHandler::DescriptorAddedNotification,
-    UnpackPDUInitOp(aPDU));
+    ServerDescriptorAddedInitOp(aPDU));
 }
 
 void

@@ -263,7 +263,7 @@ extern bool gBluetoothDebugFlag;
 #define MAP_MESSAGES_LISTING_REQ_ID          "mapmessageslistingreq"
 #define MAP_GET_MESSAGE_REQ_ID               "mapgetmessagereq"
 #define MAP_SET_MESSAGE_STATUS_REQ_ID        "mapsetmessagestatusreq"
-#define MAP_PUSH_MESSAGE_REQ_ID              "mappushmessagereq"
+#define MAP_SEND_MESSAGE_REQ_ID              "mapsendmessagereq"
 #define MAP_FOLDER_LISTING_REQ_ID            "mapfolderlistingreq"
 #define MAP_MESSAGE_UPDATE_REQ_ID            "mapmessageupdatereq"
 

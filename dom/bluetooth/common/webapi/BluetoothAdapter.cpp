@@ -567,7 +567,7 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     HandleMapGetMessage(aData.value());
   } else if (aData.name().EqualsLiteral(MAP_SET_MESSAGE_STATUS_REQ_ID)) {
     HandleMapSetMessageStatus(aData.value());
-  } else if (aData.name().EqualsLiteral(MAP_PUSH_MESSAGE_REQ_ID)) {
+  } else if (aData.name().EqualsLiteral(MAP_SEND_MESSAGE_REQ_ID)) {
     HandleMapSendMessage(aData.value());
   } else if (aData.name().EqualsLiteral(MAP_MESSAGE_UPDATE_REQ_ID)) {
     HandleMapMessageUpdate(aData.value());
@@ -1596,9 +1596,9 @@ BluetoothAdapter::HandleMapSendMessage(const BluetoothValue& aValue)
     const nsString& name = arr[i].name();
     const BluetoothValue& value = arr[i].value();
     if (name.EqualsLiteral("recipient")) {
-      init.mRecipient = value.get_nsString();
+      init.mRecipient = NS_ConvertUTF8toUTF16(value.get_nsCString());
     } else if (name.EqualsLiteral("messageBody")) {
-      init.mMessageBody = value.get_nsString();
+      init.mMessageBody = NS_ConvertUTF8toUTF16(value.get_nsCString());
     } else if (name.EqualsLiteral("retry")) {
       init.mRetry = value.get_uint32_t();
     }
@@ -1608,7 +1608,7 @@ BluetoothAdapter::HandleMapSendMessage(const BluetoothValue& aValue)
 
   RefPtr<BluetoothMapSendMessageEvent> event =
     BluetoothMapSendMessageEvent::Constructor(this,
-      NS_LITERAL_STRING(MAP_PUSH_MESSAGE_REQ_ID), init);
+      NS_LITERAL_STRING(MAP_SEND_MESSAGE_REQ_ID), init);
   DispatchTrustedEvent(event);
 }
 
