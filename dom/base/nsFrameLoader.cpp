@@ -411,7 +411,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   net::ReferrerPolicy referrerPolicy = mOwnerContent->OwnerDoc()->GetReferrerPolicy();
   HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
   if (iframe) {
-    net::ReferrerPolicy iframeReferrerPolicy = iframe->GetReferrerPolicy();
+    net::ReferrerPolicy iframeReferrerPolicy = iframe->GetReferrerPolicyAsEnum();
     if (iframeReferrerPolicy != net::RP_Unset) {
       referrerPolicy = iframeReferrerPolicy;
     }
