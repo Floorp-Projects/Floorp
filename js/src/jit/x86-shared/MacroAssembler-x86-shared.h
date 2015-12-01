@@ -911,14 +911,6 @@ class MacroAssemblerX86Shared : public Assembler
         // XOR the float in a float register with -0.0.
         vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
     }
-    void negateFloat(FloatRegister reg) {
-        ScratchFloat32Scope scratch(asMasm());
-        vpcmpeqw(scratch, scratch, scratch);
-        vpsllq(Imm32(31), scratch, scratch);
-
-        // XOR the float in a float register with -0.0.
-        vxorps(scratch, reg, reg); // s ^ 0x80000000
-    }
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
         vcvtss2sd(src, dest, dest);
     }
