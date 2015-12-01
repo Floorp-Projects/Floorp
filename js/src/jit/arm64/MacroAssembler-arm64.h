@@ -1029,10 +1029,8 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void storeUnalignedFloat32x4(FloatRegister dest, const BaseIndex& addr) { MOZ_CRASH("NYI"); }
 
     // StackPointer manipulation.
-    template <typename T>
-    void addToStackPtr(T t) { addPtr(t, getStackPointer()); }
-    template <typename T>
-    void addStackPtrTo(T t) { addPtr(getStackPointer(), t); }
+    template <typename T> void addToStackPtr(T t);
+    template <typename T> void addStackPtrTo(T t);
 
     template <typename T>
     void subFromStackPtr(T t) { subPtr(t, getStackPointer()); syncStackPtr(); }
@@ -1370,43 +1368,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Subs(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(ARMRegister(src, 32)));
     }
 
-    void addPtr(Register src, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(ARMRegister(src, 64)));
-    }
-    void addPtr(Register src1, Register src2, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(src1, 64), Operand(ARMRegister(src2, 64)));
-    }
-
-    void addPtr(Imm32 imm, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void addPtr(Imm32 imm, Register src, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(src, 64), Operand(imm.value));
-    }
-
-    void addPtr(Imm32 imm, const Address& dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != dest.base);
-
-        Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
-        Add(scratch64, scratch64, Operand(imm.value));
-        Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
-    }
-    void addPtr(ImmWord imm, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
-    }
-    void addPtr(ImmPtr imm, Register dest) {
-        Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(uint64_t(imm.value)));
-    }
-    void addPtr(const Address& src, Register dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(scratch64.asUnsized() != src.base);
-
-        Ldr(scratch64, MemOperand(ARMRegister(src.base, 64), src.offset));
-        Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
-    }
     void subPtr(Imm32 imm, Register dest) {
         Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
     }

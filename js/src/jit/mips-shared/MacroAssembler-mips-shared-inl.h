@@ -79,6 +79,21 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
 // Arithmetic instructions
 
 void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    loadPtr(dest, ScratchRegister);
+    addPtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, dest);
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    loadPtr(src, ScratchRegister);
+    addPtr(ScratchRegister, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     as_subu(dest, dest, src);

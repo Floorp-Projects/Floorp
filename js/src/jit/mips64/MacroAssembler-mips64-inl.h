@@ -77,6 +77,25 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    ma_daddu(dest, src);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    ma_daddu(dest, imm);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    movePtr(imm, ScratchRegister);
+    addPtr(ScratchRegister, dest);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addPtr(src.reg, dest.reg);
@@ -117,6 +136,24 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerMIPS64Compat::computeEffectiveAddress(const BaseIndex& address, Register dest)
+{
+    computeScaledAddress(address, dest);
+    if (address.offset)
+        asMasm().addPtr(Imm32(address.offset), dest);
+}
+
+void
+MacroAssemblerMIPS64Compat::retn(Imm32 n)
+{
+    // pc <- [sp]; sp += n
+    loadPtr(Address(StackPointer, 0), ra);
+    asMasm().addPtr(n, StackPointer);
+    as_jr(ra);
+    as_nop();
+}
 
 } // namespace jit
 } // namespace js
