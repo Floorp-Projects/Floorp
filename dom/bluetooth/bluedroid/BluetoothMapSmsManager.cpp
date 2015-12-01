@@ -828,15 +828,11 @@ BluetoothMapSmsManager::ReplyToSendMessage(
    */
   int len = aHandleId.Length();
   nsAutoArrayPtr<uint8_t> handleId(new uint8_t[(len + 1) * 2]);
-  const char16_t* handleIdPtr = aHandleId.BeginReading();
 
   for (int i = 0; i < len; i++) {
-    *(handleId + (i * 2)) = (uint8_t)(handleIdPtr[i] >> 8);
-    *(handleId + (i * 2 + 1)) = (uint8_t)handleIdPtr[i];
+    BigEndian::writeUint16(&handleId[i * 2], aHandleId[i]);
   }
-
-  *(handleId + (len * 2)) = 0x00;
-  *(handleId + (len * 2 + 1)) = 0x00;
+  BigEndian::writeUint16(&handleId[len * 2], 0);
 
   auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   int index = kObexRespHeaderSize;
