@@ -14,13 +14,11 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS0(ProfileGatherer)
 
-ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker,
-                                 double aSinceTime,
-                                 Promise* aPromise)
-  : mPromise(aPromise)
-  , mTicker(aTicker)
-  , mSinceTime(aSinceTime)
+ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker)
+  : mTicker(aTicker)
+  , mSinceTime(0)
   , mPendingProfiles(0)
+  , mGathering(false)
 {
 }
 
@@ -50,9 +48,23 @@ ProfileGatherer::WillGatherOOPProfile()
 }
 
 void
-ProfileGatherer::Start()
+ProfileGatherer::Start(double aSinceTime,
+                       Promise* aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mGathering) {
+    // If we're already gathering, reject the promise - this isn't going
+    // to end well.
+    if (aPromise) {
+      aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+    }
+    return;
+  }
+
+  mSinceTime = aSinceTime;
+  mPromise = aPromise;
+  mGathering = true;
+  mPendingProfiles = 0;
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
@@ -69,15 +81,19 @@ void
 ProfileGatherer::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTicker) {
+    // We somehow got called after we were cancelled! This shouldn't
+    // be possible, but doing a belt-and-suspenders check to be sure.
+    return;
+  }
+
   UniquePtr<char[]> buf = mTicker->ToJSON(mSinceTime);
 
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
     // We're really hosed if we can't get a JS context for some reason.
-    // We'll tell the GeckoSampler that we've gathered the profile just
-    // so that it can drop the reference to this ProfileGatherer and maybe
-    // the user can try again.
-    mTicker->ProfileGathered();
+    Reset();
     return;
   }
 
@@ -104,7 +120,29 @@ ProfileGatherer::Finish()
     }
   }
 
-  mTicker->ProfileGathered();
+  Reset();
+}
+
+void
+ProfileGatherer::Reset()
+{
+  mSinceTime = 0;
+  mPromise = nullptr;
+  mPendingProfiles = 0;
+  mGathering = false;
+}
+
+void
+ProfileGatherer::Cancel()
+{
+  // The GeckoSampler is going away. If we have a Promise in flight, we
+  // should reject it.
+  if (mPromise) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  }
+
+  // Clear out the GeckoSampler reference, since it's being destroyed.
+  mTicker = nullptr;
 }
 
 } // namespace mozilla
