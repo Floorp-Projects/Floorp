@@ -95,6 +95,37 @@ var loop = loop || {};
     gListenersMap = {};
   };
 
+  loop.storedRequests = {};
+
+  /**
+   * Store the result of a request for access at a later time.
+   *
+   * @param  {Array} request Set of request parameters
+   * @param  {mixed} result  Whatever the API returned as a result
+   */
+  loop.storeRequest = function(request, result) {
+    loop.storedRequests[request.join("|")] = result;
+  };
+
+  /**
+   * Retrieve the result of a request that was stored previously. If the result
+   * can not be found, |NULL| will be returned and an error will be logged to the
+   * console.
+   *
+   * @param  {Array} request Set of request parameters
+   * @return {mixed} Whatever the result of the API request was at the time it was
+   *                 stored.
+   */
+  loop.getStoredRequest = function(request) {
+    var key = request.join("|");
+    if (!(key in loop.storedRequests)) {
+      console.error("This request has not been stored!", request);
+      return null;
+    }
+
+    return loop.storedRequests[key];
+  };
+
   /**
    * Send multiple requests at once as a batch.
    *

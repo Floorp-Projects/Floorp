@@ -153,7 +153,6 @@ var fakeRooms = [
     },
     GetDoNotDisturb: function() { return true; },
     GetErrors: function() {},
-    GetHasEncryptionKey: function() { return true; },
     GetLoopPref: function(pref) {
       switch (pref) {
         // Ensure we skip FTE completely.
@@ -179,10 +178,21 @@ var fakeRooms = [
     "Rooms:GetAll": function(version) {
       return [].concat(fakeRooms);
     },
-    GetFxAEnabled: function() { return true; },
     StartAlerting: function() {},
     StopAlerting: function() {},
     GetUserProfile: function() { return null; },
     "Rooms:PushSubscription": function() {}
   });
+
+  loop.storedRequests = {
+    GetFxAEnabled: true,
+    GetHasEncryptionKey: true,
+    GetUserProfile: null,
+    GetDoNotDisturb: true,
+    // Ensure we skip FTE completely.
+    "GetLoopPref|gettingStarted.seen": true,
+    "GetLoopPref|legal.ToS_url": null,
+    "GetLoopPref|legal.privacy_url": null,
+    IsMultiProcessEnabled: false
+  };
 })();
