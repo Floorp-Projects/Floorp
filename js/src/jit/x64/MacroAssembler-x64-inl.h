@@ -124,6 +124,12 @@ MacroAssembler::add64(Register64 src, Register64 dest)
     addq(src.reg, dest.reg);
 }
 
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    addq(imm, dest.reg);
+}
+
 // ===============================================================
 // Shift functions
 
