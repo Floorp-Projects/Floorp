@@ -633,9 +633,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_bx(scratch);
     }
 
-    void neg32(Register reg) {
-        ma_neg(reg, reg, SetCC);
-    }
     void negl(Register reg) {
         ma_neg(reg, reg, SetCC);
     }

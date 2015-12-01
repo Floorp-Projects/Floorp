@@ -151,6 +151,12 @@ MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
     vdivsd(src, dest, dest);
 }
 
+void
+MacroAssembler::neg32(Register reg)
+{
+    negl(reg);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
