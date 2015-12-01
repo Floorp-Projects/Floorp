@@ -641,6 +641,10 @@ class TreeMetadataEmitter(LoggingMixin):
 
         resources = context.get('RESOURCE_FILES')
         if resources:
+            if context.get('DIST_SUBDIR') or context.get('XPI_NAME'):
+                raise SandboxValidationError(
+                    'RESOURCES_FILES cannot be used with DIST_SUBDIR or '
+                    'XPI_NAME.', context)
             yield Resources(context, resources)
 
         for pref in sorted(context['JS_PREFERENCE_FILES']):
