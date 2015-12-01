@@ -3606,11 +3606,11 @@ Element::FontSizeInflation()
 }
 
 net::ReferrerPolicy
-Element::GetReferrerPolicy()
+Element::GetReferrerPolicyAsEnum()
 {
   if (Preferences::GetBool("network.http.enablePerElementReferrer", false) &&
       IsHTMLElement()) {
-    const nsAttrValue* referrerValue = GetParsedAttr(nsGkAtoms::referrer);
+    const nsAttrValue* referrerValue = GetParsedAttr(nsGkAtoms::referrerpolicy);
     if (referrerValue && referrerValue->Type() == nsAttrValue::eEnum) {
       return net::ReferrerPolicy(referrerValue->GetEnumValue());
     }

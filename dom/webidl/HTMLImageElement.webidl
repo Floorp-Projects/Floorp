@@ -30,7 +30,7 @@ interface HTMLImageElement : HTMLElement {
            [SetterThrows]
            attribute DOMString useMap;
            [SetterThrows, Pref="network.http.enablePerElementReferrer"]
-           attribute DOMString referrer;
+           attribute DOMString referrerPolicy;
            [SetterThrows]
            attribute boolean isMap;
            [SetterThrows]
