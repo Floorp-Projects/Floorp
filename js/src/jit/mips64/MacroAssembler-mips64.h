@@ -1238,11 +1238,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void clampIntToUint8(Register reg);
 
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        movePtr(imm, ScratchRegister);
-        loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
-        mulDouble(ScratchDoubleReg, dest);
-    }
 
     void breakpoint();
 
