@@ -305,6 +305,12 @@ MacroAssembler::mulBy3(Register src, Register dest)
 }
 
 void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vmul(dest, src, dest);
+}
+
+void
 MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
 {
     movePtr(imm, ScratchRegister);
