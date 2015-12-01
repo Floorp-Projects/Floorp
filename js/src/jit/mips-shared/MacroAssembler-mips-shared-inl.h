@@ -153,6 +153,12 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     subPtr(SecondScratchReg, dest);
 }
 
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    as_subd(dest, dest, src);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
