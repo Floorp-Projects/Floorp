@@ -1125,22 +1125,22 @@ MacroAssembler::Pop(const ValueOperand& val)
 // ===============================================================
 // Simple call functions.
 
-CodeOffsetLabel
+CodeOffset
 MacroAssembler::call(Register reg)
 {
     as_jalr(reg);
     as_nop();
-    return CodeOffsetLabel(currentOffset());
+    return CodeOffset(currentOffset());
 }
 
-CodeOffsetLabel
+CodeOffset
 MacroAssembler::call(Label* label)
 {
     ma_bal(label);
-    return CodeOffsetLabel(currentOffset());
+    return CodeOffset(currentOffset());
 }
 
-CodeOffsetLabel
+CodeOffset
 MacroAssembler::callWithPatch()
 {
     addLongJump(nextOffset());

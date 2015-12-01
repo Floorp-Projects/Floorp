@@ -318,21 +318,17 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
         }
     }  // end lock scope
 
-    sp<GraphicBuffer> graphicBuffer;
     if (alloc) {
-        RefPtr<GrallocTextureClientOGL> textureClient =
-            new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
-                                        gfx::SurfaceFormat::UNKNOWN,
-                                        gfx::BackendType::NONE,
-                                        TextureFlags::DEALLOCATE_CLIENT);
-        textureClient->SetIsOpaque(true);
+        ISurfaceAllocator* allocator = ImageBridgeChild::GetSingleton();
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
-        bool result = textureClient->AllocateGralloc(IntSize(w, h), format, usage);
-        sp<GraphicBuffer> graphicBuffer = textureClient->GetGraphicBuffer();
-        if (!result || !graphicBuffer.get()) {
-            CNW_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
+        GrallocTextureData* texData = GrallocTextureData::Create(IntSize(w, h), format,
+                                                                 gfx::BackendType::NONE, usage,
+                                                                 allocator);
+        if (!texData) {
             return -ENOMEM;
         }
+
+        RefPtr<TextureClient> textureClient = new TextureClient(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
 
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);
@@ -345,7 +341,7 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             if (updateFormat) {
                 mPixelFormat = format;
             }
-            mSlots[buf].mGraphicBuffer = graphicBuffer;
+            mSlots[buf].mGraphicBuffer = texData->GetGraphicBuffer();
             mSlots[buf].mTextureClient = textureClient;
 
             returnFlags |= ISurfaceTexture::BUFFER_NEEDS_REALLOCATION;

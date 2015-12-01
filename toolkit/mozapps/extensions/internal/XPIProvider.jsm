@@ -2455,8 +2455,7 @@ this.XPIProvider = {
         try {
           chan = NetUtil.newChannel({
             uri: aURI,
-            loadUsingSystemPrincipal: true,
-            securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+            loadUsingSystemPrincipal: true
           });
         }
         catch (ex) {
@@ -5534,8 +5533,7 @@ AddonInstall.prototype = {
 
       this.channel = NetUtil.newChannel({
         uri: this.sourceURI,
-        loadUsingSystemPrincipal: true,
-        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+        loadUsingSystemPrincipal: true
       });
       this.channel.notificationCallbacks = this;
       if (this.channel instanceof Ci.nsIHttpChannel) {

@@ -365,7 +365,7 @@ struct BaselineScript
     }
 
     ICEntry& icEntry(size_t index);
-    ICEntry& icEntryFromReturnOffset(CodeOffsetLabel returnOffset);
+    ICEntry& icEntryFromReturnOffset(CodeOffset returnOffset);
     ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
     ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
     ICEntry& callVMEntryFromPCOffset(uint32_t pcOffset);

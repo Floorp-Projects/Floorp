@@ -389,29 +389,6 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
   return result.forget();
 }
 
-/* static */ bool
-nsStyleContext::ListContainsStyleContextThatUsesGrandancestorStyle(const nsStyleContext* aHead)
-{
-  if (aHead) {
-    const nsStyleContext* child = aHead;
-    do {
-      if (child->UsesGrandancestorStyle()) {
-        return true;
-      }
-      child = child->mNextSibling;
-    } while (child != aHead);
-  }
-
-  return false;
-}
-
-bool
-nsStyleContext::HasChildThatUsesGrandancestorStyle() const
-{
-  return ListContainsStyleContextThatUsesGrandancestorStyle(mEmptyChild) ||
-         ListContainsStyleContextThatUsesGrandancestorStyle(mChild);
-}
-
 const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 {
   const void* cachedData = GetCachedStyleData(aSID);
@@ -627,8 +604,9 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     // This is covering the <div align="right"><table>...</table></div> case.
     // In this case, we don't want to inherit the text alignment into the table.
     const nsStyleText* text = StyleText();
-    
-    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
+
+    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_LEFT ||
+        text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
     {
       nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(eStyleStruct_Text);
@@ -1567,8 +1545,8 @@ nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
   if (IsStyleIfVisited()) {
     flags.AppendLiteral("IS_STYLE_IF_VISITED ");
   }
-  if (UsesGrandancestorStyle()) {
-    flags.AppendLiteral("USES_GRANDANCESTOR_STYLE ");
+  if (HasChildThatUsesGrandancestorStyle()) {
+    flags.AppendLiteral("CHILD_USES_GRANDANCESTOR_STYLE ");
   }
   if (IsShared()) {
     flags.AppendLiteral("IS_SHARED ");

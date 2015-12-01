@@ -36,6 +36,7 @@ from io import StringIO
 
 from mozbuild.util import (
     EmptyValue,
+    HierarchicalStringList,
     memoize,
     ReadOnlyDefaultDict,
 )
@@ -219,6 +220,8 @@ class MozbuildSandbox(Sandbox):
         return Sandbox.__contains__(self, key)
 
     def __setitem__(self, key, value):
+        if key in self.special_variables and value is self[key]:
+            return
         if key in self.special_variables or key in self.functions or key in self.subcontext_types:
             raise KeyError('Cannot set "%s" because it is a reserved keyword'
                            % key)
@@ -413,7 +416,7 @@ class MozbuildSandbox(Sandbox):
             for key, value in context.items():
                 if isinstance(value, dict):
                     self[key].update(value)
-                elif isinstance(value, list):
+                elif isinstance(value, (list, HierarchicalStringList)):
                     self[key] += value
                 else:
                     self[key] = value

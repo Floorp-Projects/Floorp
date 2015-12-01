@@ -325,6 +325,11 @@ WebGL2Context::GetActiveUniforms(WebGLProgram* program,
     if (IsContextLost())
         return;
 
+    if (pname == LOCAL_GL_UNIFORM_NAME_LENGTH) {
+        ErrorInvalidEnumInfo("getActiveUniforms: pname", pname);
+        return;
+    }
+
     if (!ValidateObject("getActiveUniforms: program", program))
         return;
 

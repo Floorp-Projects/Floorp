@@ -87,10 +87,11 @@ SpeechSynthesisRequestChild::RecvOnStart(const nsString& aUri)
 }
 
 bool
-SpeechSynthesisRequestChild::Recv__delete__(const bool& aIsError,
-                                            const float& aElapsedTime,
-                                            const uint32_t& aCharIndex)
+SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
+                                       const float& aElapsedTime,
+                                       const uint32_t& aCharIndex)
 {
+  SpeechSynthesisRequestChild* actor = mTask->mActor;
   mTask->mActor = nullptr;
 
   if (aIsError) {
@@ -98,6 +99,8 @@ SpeechSynthesisRequestChild::Recv__delete__(const bool& aIsError,
   } else {
     mTask->DispatchEndImpl(aElapsedTime, aCharIndex);
   }
+
+  actor->Send__delete__(actor);
 
   return true;
 }

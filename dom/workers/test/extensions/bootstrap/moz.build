@@ -6,8 +6,11 @@
 
 XPI_NAME = 'workerbootstrap'
 
-DIST_FILES += [
-    'bootstrap.js',
+FINAL_TARGET_PP_FILES += [
     'install.rdf',
+]
+
+FINAL_TARGET_FILES += [
+    'bootstrap.js',
     'worker.js',
 ]

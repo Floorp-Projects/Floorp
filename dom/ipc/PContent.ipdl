@@ -276,6 +276,16 @@ struct FileSystemGetDirectoryListingParams
 {
   nsString filesystem;
   nsString realPath;
+  // 'filters' could be an array rather than a semicolon separated string
+  // (we'd then use InfallibleTArray<nsString> internally), but that is
+  // wasteful.  E10s requires us to pass the filters over as a string anyway,
+  // so avoiding using an array avoids serialization on the side passing the
+  // filters.  Since an nsString can share its buffer when copied,
+  // using that instead of InfallibleTArray<nsString> makes copying the filters
+  // around in any given process a bit more efficient too, since copying a
+  // single nsString is cheaper than copying InfallibleTArray member data and
+  // each nsString that it contains.
+  nsString filters;
 };
 
 struct FileSystemGetFileOrDirectoryParams

@@ -1662,7 +1662,9 @@ gfxWindowsPlatform::GetDXGIAdapter()
       DXGI_ADAPTER_DESC desc;
       if (SUCCEEDED(adapter->GetDesc(&desc)) &&
           desc.AdapterLuid.HighPart == parent.AdapterLuid.HighPart &&
-          desc.AdapterLuid.LowPart == parent.AdapterLuid.LowPart)
+          desc.AdapterLuid.LowPart == parent.AdapterLuid.LowPart &&
+          desc.VendorId == parent.VendorId &&
+          desc.DeviceId == parent.DeviceId)
       {
         mAdapter = adapter.forget();
         break;

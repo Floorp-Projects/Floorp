@@ -3807,11 +3807,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   mWaitingForPaint = NO;
 
-  nsIntRect geckoBounds;
-  mGeckoChild->GetBoundsUntyped(geckoBounds);
-  nsIntRegion region(geckoBounds);
+  LayoutDeviceIntRect geckoBounds;
+  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRegion region(geckoBounds);
 
-  mGeckoChild->PaintWindow(region);
+  mGeckoChild->PaintWindow(region.ToUnknownRegion());
 
   // Force OpenGL to refresh the very first time we draw. This works around a
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.

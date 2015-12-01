@@ -816,37 +816,19 @@ class nsIWidget : public nsISupports {
      * popup widgets the returned rect is in screen coordinates and not
      * relative to its parent widget.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
     NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Get this widget's outside dimensions in global coordinates. This
      * includes any title bar on the window.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
     NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetScreenBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -868,19 +850,10 @@ class nsIWidget : public nsISupports {
      * position of the client area relative to the client area of the parent
      * widget (for root widgets and popup widgets it is in screen coordinates).
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
     NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
-    NS_IMETHOD GetClientBoundsUntyped(nsIntRect& aRect) {
-      LayoutDeviceIntRect tmp;
-      nsresult rv = GetClientBounds(tmp);
-      aRect = tmp.ToUnknownRect();
-      return rv;
-    }
 
     /**
      * Get the non-client area dimensions of the window.

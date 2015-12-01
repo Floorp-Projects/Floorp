@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace layers {
 
-static SurfaceFormat
+static gfx::SurfaceFormat
 HalFormatToSurfaceFormat(int aHalFormat, TextureFlags aFlags)
 {
   bool swapRB = bool(aFlags & TextureFlags::RB_SWAPPED);
@@ -45,7 +45,7 @@ HalFormatToSurfaceFormat(int aHalFormat, TextureFlags aFlags)
       return gfx::SurfaceFormat::R5G6B5_UINT16;
     } else {
       MOZ_CRASH("Unhandled HAL pixel format");
-      return SurfaceFormat::UNKNOWN; // not reached
+      return gfx::SurfaceFormat::UNKNOWN; // not reached
     }
   }
 }
@@ -134,7 +134,7 @@ GrallocTextureHostBasic::Lock()
       NS_WARNING("Couldn't lock graphic buffer");
       return false;
     }
-    surf = Factory::CreateWrappingDataSourceSurface(
+    surf = gfx::Factory::CreateWrappingDataSourceSurface(
              mMappedBuffer,
              graphicBuffer->getStride() * gfx::BytesPerPixel(mFormat),
              mCropSize,
@@ -217,7 +217,7 @@ GrallocTextureHostBasic::WaitAcquireFenceHandleSyncComplete()
 void
 GrallocTextureHostBasic::SetCropRect(nsIntRect aCropRect)
 {
-  MOZ_ASSERT(aCropRect.TopLeft() == IntPoint(0, 0));
+  MOZ_ASSERT(aCropRect.TopLeft() == gfx::IntPoint(0, 0));
   MOZ_ASSERT(!aCropRect.IsEmpty());
   MOZ_ASSERT(aCropRect.width <= mSize.width);
   MOZ_ASSERT(aCropRect.height <= mSize.height);

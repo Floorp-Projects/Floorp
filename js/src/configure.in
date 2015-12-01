@@ -114,17 +114,6 @@ if test "$_conflict_files"; then
 fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
 
-dnl Choose where to put the 'dist' directory.
-dnl ==============================================================
-
-MOZ_ARG_WITH_STRING(dist-dir,
-[  --with-dist-dir=DIR     Use DIR as 'dist' staging area.  DIR may be
-                          relative to the top of SpiderMonkey build tree,
-                          or absolute.],
-    TOP_DIST=$withval,
-    TOP_DIST=dist)
-AC_SUBST(TOP_DIST)
-
 MOZ_BUILD_BACKEND
 
 MOZ_DEFAULT_COMPILER
@@ -171,11 +160,12 @@ AC_SUBST(JS_SHARED_LIBRARY)
 if test "$JS_STANDALONE" = no; then
   autoconfmk=autoconf-js.mk
   JS_STANDALONE=
+  #DIST is exported from top-level configure
 else
   JS_STANDALONE=1
   AC_DEFINE(JS_STANDALONE)
+  DIST="$MOZ_BUILD_ROOT/dist"
 fi
-DIST="$MOZ_BUILD_ROOT/dist"
 AC_SUBST(JS_STANDALONE)
 BUILDING_JS=1
 AC_SUBST(autoconfmk)
@@ -2136,10 +2126,10 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
   *)
     case $GCC_VERSION in
     4.6*)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden_dso_handle.h'
+      VISIBILITY_FLAGS="-I${DIST}/system_wrappers -include ${_topsrcdir}/config/gcc_hidden_dso_handle.h"
       ;;
     *)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+      VISIBILITY_FLAGS="-I${DIST}/system_wrappers -include ${_topsrcdir}/config/gcc_hidden.h"
       ;;
     esac
     WRAP_SYSTEM_INCLUDES=1
@@ -2156,13 +2146,13 @@ case "${OS_TARGET}" in
 WINNT|Darwin|Android)
   ;;
 *)
-  STL_FLAGS='-I$(DIST)/stl_wrappers'
+  STL_FLAGS="-I${DIST}/stl_wrappers"
   WRAP_STL_INCLUDES=1
   ;;
 esac
 
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
-AC_SUBST(VISIBILITY_FLAGS)
+AC_SUBST_LIST(VISIBILITY_FLAGS)
 
 dnl Checks for header files.
 dnl ========================================================

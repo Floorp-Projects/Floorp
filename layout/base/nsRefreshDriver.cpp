@@ -1562,9 +1562,7 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
         // else window is partially torn down already
       }
       for (auto& callback : docCallbacks.mCallbacks) {
-        ErrorResult ignored;
-        callback->Call(timeStamp, ignored);
-        ignored.SuppressException();
+        callback->Call(timeStamp);
       }
     }
     profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_END);

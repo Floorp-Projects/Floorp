@@ -42,6 +42,14 @@ CONFIGS = defaultdict(lambda: {
             ('ANDROID_TARGET_SDK', '16'),
         ],
     },
+    'binary-components': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('LIB_PREFIX', 'lib'),
+            ('LIB_SUFFIX', 'a'),
+        ],
+    },
     'stub0': {
         'defines': [
             ('MOZ_TRUE_1', '1'),
