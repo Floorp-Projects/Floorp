@@ -240,7 +240,6 @@ class MacroAssemblerNone : public Assembler
     void mul64(Imm64, const Register64&) { MOZ_CRASH(); }
 
     void negateDouble(FloatRegister) { MOZ_CRASH(); }
-    void addDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void subDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void mulDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void divDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }

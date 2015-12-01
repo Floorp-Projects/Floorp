@@ -110,6 +110,12 @@ MacroAssembler::addFloat32(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    vaddsd(src, dest, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     subl(src, dest);
