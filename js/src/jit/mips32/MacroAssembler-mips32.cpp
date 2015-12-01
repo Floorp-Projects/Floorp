@@ -834,19 +834,6 @@ MacroAssemblerMIPSCompat::add32(Imm32 imm, const Address& dest)
 }
 
 void
-MacroAssemblerMIPSCompat::addPtr(Register src, Register dest)
-{
-    ma_addu(dest, src);
-}
-
-void
-MacroAssemblerMIPSCompat::addPtr(const Address& src, Register dest)
-{
-    loadPtr(src, ScratchRegister);
-    ma_addu(dest, ScratchRegister);
-}
-
-void
 MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
 {
     as_subu(dest, dest, src);
@@ -1260,20 +1247,6 @@ MacroAssemblerMIPSCompat::subPtr(Register src, const Address& dest)
     loadPtr(dest, SecondScratchReg);
     subPtr(src, SecondScratchReg);
     storePtr(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::addPtr(Imm32 imm, const Register dest)
-{
-    ma_addu(dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::addPtr(Imm32 imm, const Address& dest)
-{
-    loadPtr(dest, ScratchRegister);
-    addPtr(imm, ScratchRegister);
-    storePtr(ScratchRegister, dest);
 }
 
 void
@@ -2548,7 +2521,7 @@ MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, 
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    addPtr(ptr, SecondScratchReg);
+    asMasm().addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }

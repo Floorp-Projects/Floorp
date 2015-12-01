@@ -566,27 +566,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void addPtr(Register src, Register dest) {
-        add32(src, dest);
-    }
-    void addPtr(Imm32 imm, Register dest) {
-        add32(imm, dest);
-    }
-    void addPtr(ImmWord imm, Register dest) {
-        add32(Imm32(imm.value), dest);
-    }
-    void addPtr(ImmPtr imm, Register dest) {
-        addPtr(ImmWord(uintptr_t(imm.value)), dest);
-    }
-    void addPtr(Imm32 imm, const Address& dest) {
-        add32(imm, Operand(dest));
-    }
-    void addPtr(Imm32 imm, const Operand& dest) {
-        add32(imm, dest);
-    }
-    void addPtr(const Address& src, Register dest) {
-        addl(Operand(src), dest);
-    }
     void add64(Imm32 imm, Register64 dest) {
         addl(imm, dest.low);
         adcl(Imm32(0), dest.high);

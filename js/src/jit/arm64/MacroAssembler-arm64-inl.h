@@ -151,6 +151,59 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    addPtr(src, dest, dest);
+}
+
+void
+MacroAssembler::addPtr(Register src1, Register src2, Register dest)
+{
+    Add(ARMRegister(dest, 64), ARMRegister(src1, 64), Operand(ARMRegister(src2, 64)));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    addPtr(imm, dest, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register src, Register dest)
+{
+    Add(ARMRegister(dest, 64), ARMRegister(src, 64), Operand(imm.value));
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != dest.base);
+
+    Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Add(scratch64, scratch64, Operand(imm.value));
+    Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch64 = temps.AcquireX();
+    MOZ_ASSERT(scratch64.asUnsized() != src.base);
+
+    Ldr(scratch64, MemOperand(ARMRegister(src.base, 64), src.offset));
+    Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addPtr(src.reg, dest.reg);
@@ -219,6 +272,20 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+template <typename T>
+void
+MacroAssemblerCompat::addToStackPtr(T t)
+{
+    asMasm().addPtr(t, getStackPointer());
+}
+
+template <typename T>
+void
+MacroAssemblerCompat::addStackPtrTo(T t)
+{
+    asMasm().addPtr(getStackPointer(), t);
+}
 
 template <typename T>
 void
