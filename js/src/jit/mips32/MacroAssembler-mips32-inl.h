@@ -113,6 +113,18 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
     as_addu(dest.high, dest.high, ScratchRegister);
 }
 
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    as_subu(dest, dest, src);
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    ma_subu(dest, dest, imm);
+}
+
 // ===============================================================
 // Shift functions
 
@@ -178,6 +190,13 @@ MacroAssemblerMIPSCompat::retn(Imm32 n) {
     asMasm().addPtr(n, StackPointer);
     as_jr(ra);
     as_nop();
+}
+
+void
+MacroAssemblerMIPSCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
+{
+    asMasm().subPtr(imm, lhs);
+    branchPtr(cond, lhs, Imm32(0), label);
 }
 
 } // namespace jit

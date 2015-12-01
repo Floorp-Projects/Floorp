@@ -807,12 +807,6 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
-{
-    as_subu(dest, dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -1199,27 +1193,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     bind(&done);
-}
-
-void
-MacroAssemblerMIPSCompat::subPtr(Imm32 imm, const Register dest)
-{
-    ma_subu(dest, dest, imm);
-}
-
-void
-MacroAssemblerMIPSCompat::subPtr(const Address& addr, const Register dest)
-{
-    loadPtr(addr, SecondScratchReg);
-    subPtr(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPSCompat::subPtr(Register src, const Address& dest)
-{
-    loadPtr(dest, SecondScratchReg);
-    subPtr(src, SecondScratchReg);
-    storePtr(SecondScratchReg, dest);
 }
 
 void
@@ -2121,7 +2094,7 @@ void
 MacroAssemblerMIPSCompat::pushValue(ValueOperand val)
 {
     // Allocate stack slots for type and payload. One for each.
-    subPtr(Imm32(sizeof(Value)), StackPointer);
+    asMasm().subPtr(Imm32(sizeof(Value)), StackPointer);
     // Store type and payload.
     storeValue(val, Address(StackPointer, 0));
 }
@@ -2239,7 +2212,7 @@ void
 MacroAssemblerMIPSCompat::alignStackPointer()
 {
     movePtr(StackPointer, SecondScratchReg);
-    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     asMasm().andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
     storePtr(SecondScratchReg, Address(StackPointer, 0));
 }
@@ -2275,7 +2248,7 @@ MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + ABIStackAlignment) & ~(ABIStackAlignment - 1);
-    subPtr(Imm32(size), StackPointer);
+    asMasm().subPtr(Imm32(size), StackPointer);
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 
     // Call the handler.
@@ -2593,7 +2566,7 @@ void
 MacroAssembler::reserveStack(uint32_t amount)
 {
     if (amount)
-        subPtr(Imm32(amount), StackPointer);
+        asMasm().subPtr(Imm32(amount), StackPointer);
     adjustFrame(amount);
 }
 
@@ -2609,7 +2582,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
     ma_move(scratch, StackPointer);
 
     // Force sp to be aligned
-    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
     storePtr(scratch, Address(StackPointer, 0));
 }

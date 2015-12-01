@@ -981,10 +981,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         branch32(cond, lhs, imm, label);
     }
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        subPtr(imm, lhs);
-        branch32(cond, lhs, Imm32(0), label);
-    }
+    inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
     void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp, Label* label);
     void moveValue(const Value& val, Register type, Register data);
 
@@ -1635,10 +1632,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmpPtr(const Address& lhs, ImmGCPtr rhs);
     void cmpPtr(const Address& lhs, Imm32 rhs);
 
-    void subPtr(Imm32 imm, const Register dest);
-    void subPtr(const Address& addr, const Register dest);
-    void subPtr(Register src, Register dest);
-    void subPtr(Register src, const Address& dest);
     void mulBy3(const Register& src, const Register& dest) {
         as_add(dest, src, lsl(src, 1));
     }

@@ -138,6 +138,30 @@ MacroAssembler::addConstantDouble(double d, FloatRegister dest)
     propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
 }
 
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    subl(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    subl(src, Operand(dest));
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    subl(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    subl(Operand(addr), dest);
+}
+
 // ===============================================================
 // Shift functions
 
