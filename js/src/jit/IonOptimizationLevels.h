@@ -265,13 +265,13 @@ class OptimizationInfo
     }
 };
 
-class OptimizationInfos
+class OptimizationLevelInfo
 {
   private:
     mozilla::EnumeratedArray<OptimizationLevel, OptimizationLevel::Count, OptimizationInfo> infos_;
 
   public:
-    OptimizationInfos();
+    OptimizationLevelInfo();
 
     const OptimizationInfo* get(OptimizationLevel level) const {
         return &infos_[level];
@@ -283,7 +283,7 @@ class OptimizationInfos
     OptimizationLevel levelForScript(JSScript* script, jsbytecode* pc = nullptr) const;
 };
 
-extern OptimizationInfos IonOptimizations;
+extern OptimizationLevelInfo IonOptimizations;
 
 } // namespace jit
 } // namespace js
