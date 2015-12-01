@@ -302,6 +302,12 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
 }
 
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    fsub(ARMFPRegister(dest, 64), ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
+}
+
 // ===============================================================
 // Shift functions
 
