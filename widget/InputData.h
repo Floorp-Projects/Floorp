@@ -242,7 +242,7 @@ public:
   // and rotation angle.
   explicit MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
@@ -284,7 +284,7 @@ public:
 
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   MouseType mType;
   ButtonType mButtonType;
@@ -366,7 +366,7 @@ public:
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
@@ -443,7 +443,7 @@ public:
   {
   }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   PinchGestureType mType;
 
@@ -516,7 +516,7 @@ public:
   {
   }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   TapGestureType mType;
 
@@ -591,7 +591,7 @@ public:
   explicit ScrollWheelInput(const WidgetWheelEvent& aEvent);
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   bool IsCustomizedByUserPrefs() const;
 

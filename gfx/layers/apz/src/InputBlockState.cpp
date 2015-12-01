@@ -59,7 +59,7 @@ InputBlockState::UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetA
 {
   // note that aTargetApzc MAY be null here.
   mTargetApzc = aTargetApzc;
-  mTransformToApzc = aTargetApzc ? aTargetApzc->GetTransformToThis() : gfx::Matrix4x4();
+  mTransformToApzc = aTargetApzc ? aTargetApzc->GetTransformToThis() : ScreenToParentLayerMatrix4x4();
   mOverscrollHandoffChain = (mTargetApzc ? mTargetApzc->BuildOverscrollHandoffChain() : nullptr);
 }
 
