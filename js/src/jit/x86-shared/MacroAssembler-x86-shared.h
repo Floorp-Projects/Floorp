@@ -52,46 +52,35 @@ class MacroAssemblerX86Shared : public Assembler
 
     // For Double, Float and SimdData, make the move ctors explicit so that MSVC
     // knows what to use instead of copying these data structures.
-    struct Double {
-        typedef double Pod;
-        double value;
+    template<class T>
+    struct Constant {
+        typedef T Pod;
+
+        T value;
         UsesVector uses;
 
-        explicit Double(double value) : value(value) {}
-        Double(Double&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
-        explicit Double(const Double&) = delete;
+        explicit Constant(const T& value) : value(value) {}
+        Constant(Constant<T>&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
+        explicit Constant(const Constant<T>&) = delete;
     };
 
-    // These use SystemAllocPolicy since asm.js releases memory after each
+    // Containers use SystemAllocPolicy since asm.js releases memory after each
     // function is compiled, and these need to live until after all functions
     // are compiled.
+    using Double = Constant<double>;
     Vector<Double, 0, SystemAllocPolicy> doubles_;
     typedef HashMap<double, size_t, DefaultHasher<double>, SystemAllocPolicy> DoubleMap;
     DoubleMap doubleMap_;
 
-    struct Float {
-        typedef float Pod;
-        float value;
-        UsesVector uses;
-
-        explicit Float(float value) : value(value) {}
-        Float(Float&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
-        explicit Float(const Float&) = delete;
-    };
-
+    using Float = Constant<float>;
     Vector<Float, 0, SystemAllocPolicy> floats_;
     typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
     FloatMap floatMap_;
 
-    struct SimdData {
-        typedef SimdConstant Pod;
-        SimdConstant value;
-        UsesVector uses;
-
-        explicit SimdData(const SimdConstant& v) : value(v) {}
-        SimdData(SimdData&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
+    struct SimdData : public Constant<SimdConstant> {
+        explicit SimdData(SimdConstant d) : Constant<SimdConstant>(d) {}
+        SimdData(SimdData&& d) : Constant<SimdConstant>(mozilla::Move(d)) {}
         explicit SimdData(const SimdData&) = delete;
-
         SimdConstant::Type type() const { return value.type(); }
     };
 
