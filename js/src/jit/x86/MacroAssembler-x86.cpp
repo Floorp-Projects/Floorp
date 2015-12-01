@@ -99,7 +99,7 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
     if (!dbl)
         return;
     masm.vmovsd_mr(nullptr, dest.encoding());
-    dbl->uses.append(CodeOffset(masm.size()));
+    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
 }
 
 void
@@ -109,7 +109,7 @@ MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
     if (!dbl)
         return;
     masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
-    dbl->uses.append(CodeOffset(masm.size()));
+    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
 }
 
 void
@@ -121,7 +121,7 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
     if (!flt)
         return;
     masm.vmovss_mr(nullptr, dest.encoding());
-    flt->uses.append(CodeOffset(masm.size()));
+    propagateOOM(flt->uses.append(CodeOffset(masm.size())));
 }
 
 void
@@ -131,7 +131,7 @@ MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
     if (!flt)
         return;
     masm.vaddss_mr(nullptr, dest.encoding(), dest.encoding());
-    flt->uses.append(CodeOffset(masm.size()));
+    propagateOOM(flt->uses.append(CodeOffset(masm.size())));
 }
 
 void
@@ -145,7 +145,7 @@ MacroAssemblerX86::loadConstantInt32x4(const SimdConstant& v, FloatRegister dest
         return;
     MOZ_ASSERT(i4->type() == SimdConstant::Int32x4);
     masm.vmovdqa_mr(nullptr, dest.encoding());
-    i4->uses.append(CodeOffset(masm.size()));
+    propagateOOM(i4->uses.append(CodeOffset(masm.size())));
 }
 
 void
@@ -159,7 +159,7 @@ MacroAssemblerX86::loadConstantFloat32x4(const SimdConstant& v, FloatRegister de
         return;
     MOZ_ASSERT(f4->type() == SimdConstant::Float32x4);
     masm.vmovaps_mr(nullptr, dest.encoding());
-    f4->uses.append(CodeOffset(masm.size()));
+    propagateOOM(f4->uses.append(CodeOffset(masm.size())));
 }
 
 void
