@@ -126,7 +126,7 @@ public class CrashReporter extends AppCompatActivity
         mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
         moveFile(passedMinidumpFile, mPendingMinidumpFile);
 
-        File extrasFile = new File(passedMinidumpPath.replaceAll("\.dmp", ".extra"));
+        File extrasFile = new File(passedMinidumpPath.replaceAll(".dmp", ".extra"));
         mPendingExtrasFile = new File(pendingDir, extrasFile.getName());
         moveFile(extrasFile, mPendingExtrasFile);
 
