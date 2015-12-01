@@ -106,17 +106,17 @@ struct nsFont {
   nsString languageOverride;
 
   // initialize the font with a fontlist
-  nsFont(const mozilla::FontFamilyList& aFontlist, uint8_t aStyle,
-         uint16_t aWeight, int16_t aStretch, nscoord aSize);
+  nsFont(const mozilla::FontFamilyList& aFontlist, nscoord aSize);
 
   // initialize the font with a single generic
-  nsFont(mozilla::FontFamilyType aGenericType, uint8_t aStyle,
-         uint16_t aWeight, int16_t aStretch, nscoord aSize);
+  nsFont(mozilla::FontFamilyType aGenericType, nscoord aSize);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
 
+  // leave members uninitialized
   nsFont();
+
   ~nsFont();
 
   bool operator==(const nsFont& aOther) const {
