@@ -97,8 +97,6 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
-    void divDouble(FloatRegister src, FloatRegister dest);
-
     void negateDouble(FloatRegister reg);
     void inc64(AbsoluteAddress dest);
 

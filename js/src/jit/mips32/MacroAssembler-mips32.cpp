@@ -219,12 +219,6 @@ MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegiste
 }
 
 void
-MacroAssemblerMIPSCompat::divDouble(FloatRegister src, FloatRegister dest)
-{
-    as_divd(dest, dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::negateDouble(FloatRegister reg)
 {
     as_negd(reg, reg);
