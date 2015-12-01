@@ -77,51 +77,6 @@ MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest
     as_addd(dest, dest, SecondScratchDoubleReg);
 }
 
-void
-MacroAssemblerMIPSCompat::mul64(Imm64 imm, const Register64& dest)
-{
-    // LOW32  = LOW(LOW(dest) * LOW(imm));
-    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
-    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
-    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
-
-    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
-    ma_li(ScratchRegister, Imm32(imm.value & LOW_32_MASK));
-    as_multu(dest.high, ScratchRegister);
-    as_mflo(dest.high);
-
-    // mfhi:mflo = LOW(dest) * LOW(imm);
-    as_multu(dest.low, ScratchRegister);
-
-    // HIGH(dest) += mfhi;
-    as_mfhi(ScratchRegister);
-    as_addu(dest.high, dest.high, ScratchRegister);
-
-    if (((imm.value >> 32) & LOW_32_MASK) == 5) {
-        // Optimized case for Math.random().
-
-        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
-        as_sll(ScratchRegister, dest.low, 2);
-        as_addu(ScratchRegister, ScratchRegister, dest.low);
-        as_addu(dest.high, dest.high, ScratchRegister);
-
-        // LOW(dest) = mflo;
-        as_mflo(dest.low);
-    } else {
-        // tmp = mflo
-        as_mflo(SecondScratchReg);
-
-        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
-        ma_li(ScratchRegister, Imm32((imm.value >> 32) & LOW_32_MASK));
-        as_multu(dest.low, ScratchRegister);
-        as_mflo(ScratchRegister);
-        as_addu(dest.high, dest.high, ScratchRegister);
-
-        // LOW(dest) = tmp;
-        ma_move(dest.low, SecondScratchReg);
-    }
-}
-
 static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
 
 void
