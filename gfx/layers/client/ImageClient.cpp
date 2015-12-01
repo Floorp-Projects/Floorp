@@ -192,7 +192,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
           return false;
         }
 
-        bool status = texture->AsTextureClientYCbCr()->UpdateYCbCr(*data);
+        bool status = UpdateYCbCrTextureClient(texture, *data);
         MOZ_ASSERT(status);
         if (!status) {
           return false;
@@ -203,16 +203,15 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
         if (image->GetFormat() == ImageFormat::EGLIMAGE) {
           EGLImageImage* typedImage = image->AsEGLImageImage();
-          texture = new EGLImageTextureClient(GetForwarder(),
-                                              mTextureFlags,
-                                              typedImage,
-                                              size);
+          texture = EGLImageTextureData::CreateTextureClient(
+            typedImage, size, GetForwarder(), mTextureFlags);
 #ifdef MOZ_WIDGET_ANDROID
         } else if (image->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
           SurfaceTextureImage* typedImage = image->AsSurfaceTextureImage();
-          texture = new SurfaceTextureClient(GetForwarder(), mTextureFlags,
-                                             typedImage->GetSurfaceTexture(), size,
-                                             typedImage->GetOriginPos());
+          texture = AndroidSurfaceTextureData::CreateTextureClient(
+            typedImage->GetSurfaceTexture(), size, typedImage->GetOriginPos(),
+            GetForwarder(), mTextureFlags
+          );
 #endif
         } else {
           MOZ_ASSERT(false, "Bad ImageFormat.");

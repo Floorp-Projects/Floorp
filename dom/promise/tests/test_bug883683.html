@@ -17,10 +17,10 @@
 <script type="application/javascript"><!--
 
 function runTest() {
-  [{}, {}, {}, {}, {}].reduce(Promise.reject);
+  [{}, {}, {}, {}, {}].reduce(Promise.reject.bind(Promise));
   ok(true, "No leaks with reject?");
 
-  [{}, {}, {}, {}, {}].reduce(Promise.resolve);
+  [{}, {}, {}, {}, {}].reduce(Promise.resolve.bind(Promise));
   ok(true, "No leaks with resolve?");
 
   [{}, {}, {}, {}, {}].reduce(function(a, b, c, d) { return new Promise(function(r1, r2) { throw a; }); });

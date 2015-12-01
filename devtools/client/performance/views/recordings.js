@@ -17,14 +17,14 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
     this._onNewRecording = this._onNewRecording.bind(this);
     this._onSaveButtonClick = this._onSaveButtonClick.bind(this);
-    this._onRecordingsCleared = this._onRecordingsCleared.bind(this);
+    this._onRecordingDeleted = this._onRecordingDeleted.bind(this);
     this._onRecordingExported = this._onRecordingExported.bind(this);
 
     this.emptyText = L10N.getStr("noRecordingsText");
 
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.on(EVENTS.NEW_RECORDING, this._onNewRecording);
-    PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
+    PerformanceController.on(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.on(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.addEventListener("select", this._onSelect, false);
   },
@@ -35,7 +35,7 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
   destroy: function() {
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.off(EVENTS.NEW_RECORDING, this._onNewRecording);
-    PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
+    PerformanceController.off(EVENTS.RECORDING_DELETED, this._onRecordingDeleted);
     PerformanceController.off(EVENTS.RECORDING_EXPORTED, this._onRecordingExported);
     this.widget.removeEventListener("select", this._onSelect, false);
   },
@@ -143,10 +143,11 @@ var RecordingsView = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Clears out all recordings.
+   * Clears out all non-console recordings.
    */
-  _onRecordingsCleared: function () {
-    this.empty();
+  _onRecordingDeleted: function (_, recording) {
+    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
+    this.remove(recordingItem);
   },
 
   /**

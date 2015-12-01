@@ -21,4 +21,5 @@ interface MozInterAppMessagePort : EventTarget {
   void close();
 
   attribute EventHandler onmessage;
+  attribute EventHandler onclose;
 };

@@ -34,6 +34,7 @@ else
 configure_dir = $(topsrcdir)
 endif
 
+ifndef TEST_MOZBUILD
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
@@ -41,6 +42,7 @@ $(TIERS) binaries:: CLOBBER $(configure_dir)/configure config.status backend.Rec
 ifndef JS_STANDALONE
 ifdef COMPILE_ENVIRONMENT
 $(TIERS) binaries:: $(topsrcdir)/js/src/configure js/src/config.status
+endif
 endif
 endif
 endif
@@ -81,6 +83,7 @@ config.status js/src/config.status:
 # The mach build driver will ensure the backend is up to date for partial tree
 # builds. This cleanly avoids most of the pain.
 
+ifndef TEST_MOZBUILD
 backend.RecursiveMakeBackend:
 	@echo 'Build configuration changed. Regenerating backend.'
 	$(PYTHON) config.status
@@ -91,6 +94,7 @@ Makefile: backend.RecursiveMakeBackend
 include backend.RecursiveMakeBackend.pp
 
 default:: backend.RecursiveMakeBackend
+endif
 
 install_manifests := \
   $(addprefix dist/,bin branding idl include public private sdk xpi-stage) \

@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1227781",
+    title: "Test with invalid TURN server"
+  });
+
+  var turnConfig = { iceServers: [{"username":"mozilla","credential"
+                                   :"mozilla","url":"turn:test@10.0.0.1"}] };
+  var test;
+  runNetworkTest(function (options) {
+    var exception = false;
+
+    try {
+      pc = new RTCPeerConnection(turnConfig);
+    } catch (e) {
+      info(e);
+      exception = true;
+    }
+    is(exception, true, "Exception fired");
+    ok("Success");
+    SimpleTest.finish();
+  });
+</script>
+</pre>
+</body>
+</html>

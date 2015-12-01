@@ -11,6 +11,7 @@
 #include "GLReadTexImageHelper.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
@@ -147,8 +148,8 @@ void
 AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
 {
   MutexAutoLock lock(mMutex);
-  RefPtr<BufferTextureClient> buffer = static_cast<BufferTextureClient*>(aTextureClient);
-  if (!buffer->Lock(layers::OpenMode::OPEN_READ)) {
+  TextureClientAutoLock texLock(aTextureClient, layers::OpenMode::OPEN_READ);
+  if (!texLock.Succeeded()) {
     return;
   }
 
@@ -165,16 +166,20 @@ AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
     mSurfaceForBasic = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
   }
 
-  const uint8_t* lockedBytes = buffer->GetLockedData();
-  gfx::DataSourceSurface::ScopedMap map(mSurfaceForBasic,
-                                        gfx::DataSourceSurface::MapType::WRITE);
-  if (!map.IsMapped()) {
-    buffer->Unlock();
+  MappedTextureData mapped;
+  if (!aTextureClient->BorrowMappedData(mapped)) {
     return;
   }
 
+  const uint8_t* lockedBytes = mapped.data;
+  gfx::DataSourceSurface::ScopedMap map(mSurfaceForBasic,
+                                        gfx::DataSourceSurface::MapType::WRITE);
+  if (!map.IsMapped()) {
+    return;
+  }
+
+  MOZ_ASSERT(map.GetStride() == mapped.stride);
   memcpy(map.GetData(), lockedBytes, map.GetStride() * mSurfaceForBasic->GetSize().height);
-  buffer->Unlock();
 
   if (mSurfaceForBasic->GetFormat() == gfx::SurfaceFormat::R8G8B8A8 ||
       mSurfaceForBasic->GetFormat() == gfx::SurfaceFormat::R8G8B8X8) {

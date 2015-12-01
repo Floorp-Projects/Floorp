@@ -12,40 +12,34 @@
 // Accessible cache utils
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Shutdown and removes the accessible from cache.
- */
 template <class T>
-static PLDHashOperator
-ClearCacheEntry(const void* aKey, RefPtr<T>& aAccessible, void* aUserArg)
+void
+UnbindCacheEntriesFromDocument(
+  nsRefPtrHashtable<nsPtrHashKey<const void>, T>& aCache)
 {
-  NS_ASSERTION(aAccessible, "Calling ClearCacheEntry with a nullptr pointer!");
-  if (aAccessible && !aAccessible->IsDefunct())
-    aAccessible->Shutdown();
-
-  return PL_DHASH_REMOVE;
-}
-
-template <class T>
-static PLDHashOperator
-UnbindCacheEntryFromDocument(const void* aKey, RefPtr<T>& aAccessible,
-                             void* aUserArg)
-{
-  MOZ_ASSERT(aAccessible && !aAccessible->IsDefunct());
-  aAccessible->Document()->UnbindFromDocument(aAccessible);
-
-  return PL_DHASH_REMOVE;
+  for (auto iter = aCache.Iter(); !iter.Done(); iter.Next()) {
+    T* accessible = iter.Data();
+    MOZ_ASSERT(accessible && !accessible->IsDefunct());
+    accessible->Document()->UnbindFromDocument(accessible);
+    iter.Remove();
+  }
 }
 
 /**
  * Clear the cache and shutdown the accessibles.
  */
-
 template <class T>
 static void
 ClearCache(nsRefPtrHashtable<nsPtrHashKey<const void>, T>& aCache)
 {
-  aCache.Enumerate(ClearCacheEntry<T>, nullptr);
+  for (auto iter = aCache.Iter(); !iter.Done(); iter.Next()) {
+    T* accessible = iter.Data();
+    MOZ_ASSERT(accessible);
+    if (accessible && !accessible->IsDefunct()) {
+      accessible->Shutdown();
+    }
+    iter.Remove();
+  }
 }
 
 #endif

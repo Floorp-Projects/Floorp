@@ -55,6 +55,7 @@ callback interface TestCallbackInterface {
   void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
   attribute Uint8Array uint8ArrayAttr;
+  Promise<void> receivePromise();
 };
 
 callback interface TestSingleOperationCallbackInterface {
@@ -1034,6 +1035,9 @@ dictionary Dict : ParentDict {
 
   CustomEventInit customEventInit;
   TestDictionaryTypedef dictionaryTypedef;
+
+  Promise<void> promise;
+  sequence<Promise<void>> promiseSequence;
 };
 
 dictionary ParentDict : GrandparentDict {
@@ -1161,3 +1165,7 @@ interface TestDeprecatedInterface {
   static void alsoDeprecated();
 };
 
+
+[Constructor(Promise<void> promise)]
+interface TestInterfaceWithPromiseConstructorArg {
+};
