@@ -859,6 +859,7 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
   return aCBSize - (size + aMargin);
 }
 
+// Align (or stretch) an item's margin box in its aAxis inside aCBSize.
 static bool
 AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
                  bool aSameSide, nscoord aCBSize, const nsHTMLReflowState& aRS,
@@ -949,7 +950,7 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
 
   // Set the position and size (aPos/aContentSize) for the requested alignment.
   bool didResize = false;
-  nscoord offset = 0;
+  nscoord offset = 0; // NOTE: this is the resulting frame offset (border box).
   switch (aAlignment) {
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
@@ -963,10 +964,12 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
       offset = aCBSize - (size + marginEnd);
       break;
     }
-    case NS_STYLE_ALIGN_CENTER:
-      offset = SpaceToFill(wm, aChildSize, marginStart + marginEnd,
-                           aAxis, aCBSize) / 2;
+    case NS_STYLE_ALIGN_CENTER: {
+      nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
+                                                : aChildSize.ISize(wm);
+      offset = (aCBSize - size + marginStart - marginEnd) / 2;
       break;
+    }
     case NS_STYLE_ALIGN_STRETCH: {
       MOZ_ASSERT(!hasAutoMarginStart && !hasAutoMarginEnd);
       offset = marginStart;
