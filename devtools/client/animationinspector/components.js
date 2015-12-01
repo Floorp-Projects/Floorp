@@ -36,10 +36,9 @@ const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 const TIME_GRADUATION_MIN_SPACING = 40;
 // List of playback rate presets displayed in the timeline toolbar.
 const PLAYBACK_RATES = [.1, .25, .5, 1, 2, 5, 10];
-// When the container window is resized, the timeline background gets refreshed,
-// but only after a timer, and the timer is reset if the window is continuously
-// resized.
-const TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER = 50;
+// The size of the fast-track icon (for compositor-running animations), this is
+// used to position the icon correctly.
+const FAST_TRACK_ICON_SIZE = 20;
 
 /**
  * UI component responsible for displaying a preview of the target dom node of
@@ -478,42 +477,46 @@ var TimeScale = {
   },
 
   /**
-   * Convert a startTime to a distance in %, in the current time scale.
+   * Convert a startTime to a distance in pixels, in the current time scale.
    * @param {Number} time
+   * @param {Number} containerWidth The width of the container element.
    * @return {Number}
    */
-  startTimeToDistance: function(time) {
+  startTimeToDistance: function(time, containerWidth) {
     time -= this.minStartTime;
-    return this.durationToDistance(time);
+    return this.durationToDistance(time, containerWidth);
   },
 
   /**
-   * Convert a duration to a distance in %, in the current time scale.
+   * Convert a duration to a distance in pixels, in the current time scale.
    * @param {Number} time
+   * @param {Number} containerWidth The width of the container element.
    * @return {Number}
    */
-  durationToDistance: function(duration) {
-    return duration * 100 / (this.maxEndTime - this.minStartTime);
+  durationToDistance: function(duration, containerWidth) {
+    return containerWidth * duration / (this.maxEndTime - this.minStartTime);
   },
 
   /**
-   * Convert a distance in % to a time, in the current time scale.
+   * Convert a distance in pixels to a time, in the current time scale.
    * @param {Number} distance
+   * @param {Number} containerWidth The width of the container element.
    * @return {Number}
    */
-  distanceToTime: function(distance) {
+  distanceToTime: function(distance, containerWidth) {
     return this.minStartTime +
-      ((this.maxEndTime - this.minStartTime) * distance / 100);
+      ((this.maxEndTime - this.minStartTime) * distance / containerWidth);
   },
 
   /**
-   * Convert a distance in % to a time, in the current time scale.
+   * Convert a distance in pixels to a time, in the current time scale.
    * The time will be relative to the current minimum start time.
    * @param {Number} distance
+   * @param {Number} containerWidth The width of the container element.
    * @return {Number}
    */
-  distanceToRelativeTime: function(distance) {
-    let time = this.distanceToTime(distance);
+  distanceToRelativeTime: function(distance, containerWidth) {
+    let time = this.distanceToTime(distance, containerWidth);
     return time - this.minStartTime;
   },
 
@@ -557,15 +560,12 @@ function AnimationsTimeline(inspector) {
   this.targetNodes = [];
   this.timeBlocks = [];
   this.inspector = inspector;
-
   this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
   this.onScrubberMouseDown = this.onScrubberMouseDown.bind(this);
   this.onScrubberMouseUp = this.onScrubberMouseUp.bind(this);
   this.onScrubberMouseOut = this.onScrubberMouseOut.bind(this);
   this.onScrubberMouseMove = this.onScrubberMouseMove.bind(this);
   this.onAnimationSelected = this.onAnimationSelected.bind(this);
-  this.onWindowResize = this.onWindowResize.bind(this);
-
   EventEmitter.decorate(this);
 }
 
@@ -582,13 +582,8 @@ AnimationsTimeline.prototype = {
       }
     });
 
-    let scrubberContainer = createNode({
-      parent: this.rootWrapperEl,
-      attributes: {"class": "scrubber-wrapper"}
-    });
-
     this.scrubberEl = createNode({
-      parent: scrubberContainer,
+      parent: this.rootWrapperEl,
       attributes: {
         "class": "scrubber"
       }
@@ -617,15 +612,12 @@ AnimationsTimeline.prototype = {
         "class": "animations"
       }
     });
-
-    this.win.addEventListener("resize", this.onWindowResize);
   },
 
   destroy: function() {
     this.stopAnimatingScrubber();
     this.unrender();
 
-    this.win.removeEventListener("resize", this.onWindowResize);
     this.timeHeaderEl.removeEventListener("mousedown",
       this.onScrubberMouseDown);
     this.scrubberHandleEl.removeEventListener("mousedown",
@@ -666,16 +658,6 @@ AnimationsTimeline.prototype = {
     this.destroyTargetNodes();
     this.destroyTimeBlocks();
     this.animationsEl.innerHTML = "";
-  },
-
-  onWindowResize: function() {
-    if (this.windowResizeTimer) {
-      this.win.clearTimeout(this.windowResizeTimer);
-    }
-
-    this.windowResizeTimer = this.win.setTimeout(() => {
-      this.drawHeaderAndBackground();
-    }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
   onAnimationSelected: function(e, animation) {
@@ -731,18 +713,15 @@ AnimationsTimeline.prototype = {
   moveScrubberTo: function(pageX) {
     this.stopAnimatingScrubber();
 
-    // The offset needs to be in % and relative to the timeline's area (so we
-    // subtract the scrubber's left offset, which is equal to the sidebar's
-    // width).
-    let offset = (pageX - this.timeHeaderEl.offsetLeft) * 100 /
-                 this.timeHeaderEl.offsetWidth;
+    let offset = pageX - this.scrubberEl.offsetWidth;
     if (offset < 0) {
       offset = 0;
     }
 
-    this.scrubberEl.style.left = offset + "%";
+    this.scrubberEl.style.left = offset + "px";
 
-    let time = TimeScale.distanceToRelativeTime(offset);
+    let time = TimeScale.distanceToRelativeTime(offset,
+      this.timeHeaderEl.offsetWidth);
 
     this.emit("timeline-data-changed", {
       isPaused: true,
@@ -838,8 +817,8 @@ AnimationsTimeline.prototype = {
   },
 
   startAnimatingScrubber: function(time) {
-    let x = TimeScale.startTimeToDistance(time);
-    this.scrubberEl.style.left = x + "%";
+    let x = TimeScale.startTimeToDistance(time, this.timeHeaderEl.offsetWidth);
+    this.scrubberEl.style.left = x + "px";
 
     // Only stop the scrubber if it's out of bounds or all animations have been
     // paused, but not if at least an animation is infinite.
@@ -854,7 +833,7 @@ AnimationsTimeline.prototype = {
         isPaused: !this.isAtLeastOneAnimationPlaying(),
         isMoving: false,
         isUserDrag: false,
-        time: TimeScale.distanceToRelativeTime(x)
+        time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
       });
       return;
     }
@@ -863,7 +842,7 @@ AnimationsTimeline.prototype = {
       isPaused: false,
       isMoving: true,
       isUserDrag: false,
-      time: TimeScale.distanceToRelativeTime(x)
+      time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
     });
 
     let now = this.win.performance.now();
@@ -899,15 +878,15 @@ AnimationsTimeline.prototype = {
     this.timeHeaderEl.innerHTML = "";
     let interval = findOptimalTimeInterval(scale, TIME_GRADUATION_MIN_SPACING);
     for (let i = 0; i < width; i += interval) {
-      let pos = 100 * i / width;
       createNode({
         parent: this.timeHeaderEl,
         nodeType: "span",
         attributes: {
           "class": "time-tick",
-          "style": `left:${pos}%`
+          "style": `left:${i}px`
         },
-        textContent: TimeScale.formatTime(TimeScale.distanceToRelativeTime(pos))
+        textContent: TimeScale.formatTime(
+          TimeScale.distanceToRelativeTime(i, width))
       });
     }
   }
@@ -943,6 +922,8 @@ AnimationTimeBlock.prototype = {
     this.animation = animation;
     let {state} = this.animation;
 
+    let width = this.containerEl.offsetWidth;
+
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
     // and its width is according to its duration (divided by the playbackrate).
@@ -952,10 +933,10 @@ AnimationTimeBlock.prototype = {
     let count = state.iterationCount;
     let delay = state.delay || 0;
 
-    let x = TimeScale.startTimeToDistance(start + (delay / rate));
-    let w = TimeScale.durationToDistance(duration / rate);
+    let x = TimeScale.startTimeToDistance(start + (delay / rate), width);
+    let w = TimeScale.durationToDistance(duration / rate, width);
     let iterationW = w * (count || 1);
-    let delayW = TimeScale.durationToDistance(Math.abs(delay) / rate);
+    let delayW = TimeScale.durationToDistance(Math.abs(delay) / rate, width);
 
     let iterations = createNode({
       parent: this.containerEl,
@@ -963,9 +944,9 @@ AnimationTimeBlock.prototype = {
         "class": state.type + " iterations" + (count ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
         // repeating linear-gradient.
-        "style": `left:${x}%;
-                  width:${iterationW}%;
-                  background-size:${100 / (count || 1)}% 100%;`
+        "style": `left:${x}px;
+                  width:${iterationW}px;
+                  background-size:${Math.max(w, 2)}px 100%;`
       }
     });
 
@@ -978,8 +959,11 @@ AnimationTimeBlock.prototype = {
       attributes: {
         "class": "name",
         "title": this.getTooltipText(state),
-        // Make space for the negative delay with a margin-left.
-        "style": `margin-left:${negativeDelayW}%`
+        // Position the fast-track icon with background-position, and make space
+        // for the negative delay with a margin-left.
+        "style": "background-position:" +
+                 (iterationW - FAST_TRACK_ICON_SIZE - negativeDelayW) +
+                 "px center;margin-left:" + negativeDelayW + "px"
       },
       textContent: state.name
     });
@@ -987,13 +971,14 @@ AnimationTimeBlock.prototype = {
     // Delay.
     if (delay) {
       // Negative delays need to start at 0.
-      let delayX = TimeScale.durationToDistance((delay < 0 ? 0 : delay) / rate);
+      let delayX = TimeScale.durationToDistance(
+        (delay < 0 ? 0 : delay) / rate, width);
       createNode({
         parent: iterations,
         attributes: {
           "class": "delay" + (delay < 0 ? " negative" : ""),
-          "style": `left:-${delayX}%;
-                    width:${delayW}%;`
+          "style": `left:-${delayX}px;
+                    width:${delayW}px;`
         }
       });
     }
