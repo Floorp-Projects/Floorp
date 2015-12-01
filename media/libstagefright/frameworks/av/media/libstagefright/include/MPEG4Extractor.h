@@ -41,7 +41,6 @@ struct SidxEntry {
 
 class MPEG4Extractor : public MediaExtractor {
 public:
-    // Extractor assumes ownership of "source".
     MPEG4Extractor(const sp<DataSource> &source);
 
     virtual size_t countTracks();
@@ -149,15 +148,9 @@ private:
 
     void storeEditList();
 
-    Track *findTrackByMimePrefix(const char *mimePrefix);
-
     MPEG4Extractor(const MPEG4Extractor &);
     MPEG4Extractor &operator=(const MPEG4Extractor &);
 };
-
-bool SniffMPEG4(
-        const sp<DataSource> &source, String8 *mimeType, float *confidence,
-        sp<AMessage> *);
 
 }  // namespace stagefright
 
