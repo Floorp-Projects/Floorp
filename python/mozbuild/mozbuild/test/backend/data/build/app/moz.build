@@ -1,0 +1,49 @@
+DIST_SUBDIR = 'app'
+
+EXTRA_JS_MODULES += [
+    '../foo.jsm',
+]
+
+EXTRA_JS_MODULES.child += [
+    '../bar.jsm',
+]
+
+EXTRA_PP_JS_MODULES += [
+    '../baz.jsm',
+]
+
+EXTRA_PP_JS_MODULES.child2 += [
+    '../qux.jsm',
+]
+
+FINAL_TARGET_FILES += [
+    '../foo.ini',
+]
+
+FINAL_TARGET_FILES.child += [
+    '../bar.ini',
+]
+
+FINAL_TARGET_PP_FILES += [
+    '../baz.ini',
+]
+
+FINAL_TARGET_PP_FILES.child2 += [
+    '../qux.ini',
+]
+
+EXTRA_COMPONENTS += [
+    '../components.manifest',
+    '../foo.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    '../bar.js',
+]
+
+JS_PREFERENCE_FILES += [
+    '../prefs.js',
+]
+
+DEFINES['FOO'] = 'bar'
+DEFINES['BAR'] = True

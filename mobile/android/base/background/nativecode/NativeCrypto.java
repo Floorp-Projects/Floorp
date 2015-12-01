@@ -51,7 +51,7 @@ public class NativeCrypto {
   /**
    * Wrapper to update a SHA-256 context in native code.
    */
-  public native static void sha256update(byte[] ctx, byte[] str);
+  public native static void sha256update(byte[] ctx, byte[] str, int len);
 
   /**
    * Wrapper to finalize a SHA-256 context in native code. Returns digest.

@@ -22,7 +22,7 @@ interface HTMLAnchorElement : HTMLElement {
            [SetterThrows]
            attribute DOMString rel;
            [SetterThrows, Pref="network.http.enablePerElementReferrer"]
-           attribute DOMString referrer;
+           attribute DOMString referrerPolicy;
   readonly attribute DOMTokenList relList;
            [SetterThrows]
            attribute DOMString hreflang;

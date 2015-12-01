@@ -999,7 +999,7 @@ NativeRegExpMacroAssembler::PushBacktrack(Label* label)
 {
     JitSpew(SPEW_PREFIX "PushBacktrack");
 
-    CodeOffsetLabel patchOffset = masm.movWithPatch(ImmPtr(nullptr), temp0);
+    CodeOffset patchOffset = masm.movWithPatch(ImmPtr(nullptr), temp0);
 
     MOZ_ASSERT(!label->bound());
 

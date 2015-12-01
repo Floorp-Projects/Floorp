@@ -874,7 +874,10 @@ function makeURI(aURLSpec, aCharset) {
  */
 function makeChannel(url) {
   try {
-    return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+    return NetUtil.newChannel({
+             uri: url,
+             loadUsingSystemPrincipal: true
+           });
   } catch (ex) { }
 
   return null;
@@ -1451,12 +1454,10 @@ Engine.prototype = {
 
     LOG("_initFromURIAndLoad: Downloading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.ioService.newChannelFromURI2(uri,
-                                                    null,      // aLoadingNode
-                                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                                    null,      // aTriggeringPrincipal
-                                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                                    Ci.nsIContentPolicy.TYPE_OTHER);
+    var chan = NetUtil.newChannel({
+                 uri: uri,
+                 loadUsingSystemPrincipal: true
+               });
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
       var lastModified = this._engineToUpdate.getAttr("updatelastmodified");
@@ -1466,7 +1467,7 @@ Engine.prototype = {
     this._uri = uri;
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
-    chan.asyncOpen(listener, null);
+    chan.asyncOpen2(listener);
   },
 
   /**
@@ -1521,14 +1522,12 @@ Engine.prototype = {
 
     LOG("_initFromURISync: Loading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.ioService.newChannelFromURI2(uri,
-                                                    null,      // aLoadingNode
-                                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                                    null,      // aTriggeringPrincipal
-                                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                                    Ci.nsIContentPolicy.TYPE_OTHER);
+    var chan = NetUtil.newChannel({
+                 uri: uri,
+                 loadUsingSystemPrincipal: true
+               });
 
-    var stream = chan.open();
+    var stream = chan.open2();
     var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
     var doc = parser.parseFromStream(stream, "UTF-8", stream.available(), "text/xml");
@@ -1803,12 +1802,10 @@ Engine.prototype = {
         // No use downloading the icon if the engine file is read-only
         LOG("_setIcon: Downloading icon: \"" + uri.spec +
             "\" for engine: \"" + this.name + "\"");
-        var chan = NetUtil.ioService.newChannelFromURI2(uri,
-                                                        null,      // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                                        Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
+        var chan = NetUtil.newChannel({
+                     uri: uri,
+                     loadUsingSystemPrincipal: true
+                   });
 
         let iconLoadCallback = function (aByteArray, aEngine) {
           // This callback may run after we've already set a preferred icon,
@@ -1840,7 +1837,7 @@ Engine.prototype = {
 
         var listener = new loadListener(chan, engineToSet, iconLoadCallback);
         chan.notificationCallbacks = listener;
-        chan.asyncOpen(listener, null);
+        chan.asyncOpen2(listener);
         break;
     }
   },
@@ -3527,7 +3524,7 @@ SearchService.prototype = {
 
     let sis = Cc["@mozilla.org/scriptableinputstream;1"].
                 createInstance(Ci.nsIScriptableInputStream);
-    sis.init(chan.open());
+    sis.init(chan.open2());
     this._parseListTxt(sis.read(sis.available()), uris);
     return uris;
   },

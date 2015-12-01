@@ -10,7 +10,7 @@ FINAL_TARGET_FILES += [
  'bootstrap.js'
 ]
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
   'install.rdf.in'
 ]
 

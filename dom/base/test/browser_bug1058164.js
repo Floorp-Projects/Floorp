@@ -4,69 +4,51 @@
 
 "use strict";
 
-const kTimeout = 5000; // ms
+const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
 /**
- * Frame script injected in the test browser that sends
- * messages when it sees the pagehide and pageshow events
- * with the persisted property set to true.
+ * Returns a Promise that resolves when it sees a pageshow and
+ * pagehide events in a particular order, where each event must
+ * have the persisted property set to true. Will cause a test
+ * failure to be logged if it sees an event out of order.
+ *
+ * @param browser (<xul:browser>)
+ *        The browser to expect the events from.
+ * @param expectedOrder (array)
+ *        An array of strings describing what order the pageshow
+ *        and pagehide events should be in.
+ *        Example:
+ *        ["pageshow", "pagehide", "pagehide", "pageshow"]
+ * @returns Promise
  */
-function frame_script() {
-  addEventListener("pageshow", (event) => {
-    if (event.persisted) {
-      sendAsyncMessage("test:pageshow");
-    }
-  });
-  addEventListener("pagehide", (event) => {
-    if (event.persisted) {
-      sendAsyncMessage("test:pagehide");
-    }
-  });
-}
+function prepareForVisibilityEvents(browser, expectedOrder) {
+  return new Promise((resolve) => {
+    let order = [];
 
-/**
- * Return a Promise that resolves when the browser's frame
- * script sees an event of type eventType. eventType can be
- * either "pagehide" or "pageshow". Times out after kTimeout
- * milliseconds if the event is never seen.
- */
-function prepareForPageEvent(browser, eventType) {
-  return new Promise((resolve, reject) => {
-    let mm = browser.messageManager;
+    let checkSatisfied = () => {
+      if (order.length < expectedOrder.length) {
+        // We're still waiting...
+        return;
+      } else {
+        browser.removeEventListener("pagehide", eventListener);
+        browser.removeEventListener("pageshow", eventListener);
 
-    let timeoutId = setTimeout(() => {
-      ok(false, "Timed out waiting for " + eventType)
-      reject();
-    }, kTimeout);
+        for (let i = 0; i < expectedOrder.length; ++i) {
+          is(order[i], expectedOrder[i], "Got expected event");
+        }
+        resolve();
+      }
+    };
 
-    mm.addMessageListener("test:" + eventType, function onSawEvent(message) {
-      mm.removeMessageListener("test:" + eventType, onSawEvent);
-      ok(true, "Saw " + eventType + " event in frame script.");
-      clearTimeout(timeoutId);
-      resolve();
-    });
-  });
-}
+    let eventListener = (e) => {
+      if (e.persisted) {
+        order.push(e.type);
+        checkSatisfied();
+      }
+    };
 
-/**
- * Returns a Promise that resolves when both the pagehide
- * and pageshow events have been seen from the frame script.
- */
-function prepareForPageHideAndShow(browser) {
-  return Promise.all([prepareForPageEvent(browser, "pagehide"),
-                      prepareForPageEvent(browser, "pageshow")]);
-}
-
-/**
- * Returns a Promise that resolves when the load event for
- * aWindow fires during the capture phase.
- */
-function waitForLoad(aWindow) {
-  return new Promise((resolve, reject) => {
-    aWindow.addEventListener("load", function onLoad(aEvent) {
-      aWindow.removeEventListener("load", onLoad, true);
-      resolve();
-    }, true);
+    browser.addEventListener("pagehide", eventListener);
+    browser.addEventListener("pageshow", eventListener);
   });
 }
 
@@ -76,31 +58,52 @@ function waitForLoad(aWindow) {
  * into a different window).
  */
 add_task(function* test_swap_frameloader_pagevisibility_events() {
-  // Inject our frame script into a new browser.
-  let tab = gBrowser.addTab();
+  // Load a new tab that we'll tear out...
+  let tab = gBrowser.addTab(PAGE);
   gBrowser.selectedTab = tab;
-  let mm = window.getGroupMessageManager("browsers");
-  mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
-  let browser = gBrowser.selectedBrowser;
+  let firstBrowser = tab.linkedBrowser;
+  yield BrowserTestUtils.browserLoaded(firstBrowser);
 
   // Swap the browser out to a new window
   let newWindow = gBrowser.replaceTabWithWindow(tab);
+
   // We have to wait for the window to load so we can get the selected browser
   // to listen to.
-  yield waitForLoad(newWindow);
-  let pageHideAndShowPromise = prepareForPageHideAndShow(newWindow.gBrowser.selectedBrowser);
-  // Yield waiting for the pagehide and pageshow events.
-  yield pageHideAndShowPromise;
+  yield BrowserTestUtils.waitForEvent(newWindow, "load");
+  let newWindowBrowser = newWindow.gBrowser.selectedBrowser;
 
-  // Send the browser back to its original window
+  // Wait for the expected pagehide and pageshow events on the initial browser
+  yield prepareForVisibilityEvents(newWindowBrowser, ["pagehide", "pageshow"]);
+
+  // Now let's send the browser back to the original window
+
+  // First, create a new, empty browser tab to replace the window with
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
-  browser = newWindow.gBrowser.selectedBrowser;
-  pageHideAndShowPromise = prepareForPageHideAndShow(gBrowser.selectedBrowser);
+  let emptyBrowser = newTab.linkedBrowser;
+
+  // Wait for that initial browser to show its pageshow event so that we
+  // don't confuse it with the other expected events. Note that we can't
+  // use BrowserTestUtils.waitForEvent here because we're using the
+  // e10s add-on shims in the e10s-case. I'm doing this because I couldn't
+  // find a way of sending down a frame script to the newly opened windows
+  // and tabs fast enough to attach the event handlers before they were
+  // fired.
+  yield new Promise((resolve) => {
+    emptyBrowser.addEventListener("pageshow", function onPageShow() {
+      emptyBrowser.removeEventListener("pageshow", onPageShow);
+      resolve();
+    });
+  });
+
+  // The empty tab we just added show now fire a pagehide as its replaced,
+  // and a pageshow once the swap is finished.
+  let emptyBrowserPromise =
+    prepareForVisibilityEvents(emptyBrowser, ["pagehide", "pageshow"]);
+
   gBrowser.swapBrowsersAndCloseOther(newTab, newWindow.gBrowser.selectedTab);
 
-  // Yield waiting for the pagehide and pageshow events.
-  yield pageHideAndShowPromise;
+  yield emptyBrowserPromise;
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });

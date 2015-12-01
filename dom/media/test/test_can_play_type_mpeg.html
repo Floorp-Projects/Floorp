@@ -135,6 +135,7 @@ check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||
               (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
+              (IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
               getPref("media.gstreamer.enabled") ||
               getPref("media.ffmpeg.enabled") ||
               getPref("media.apple.mp3.enabled");
