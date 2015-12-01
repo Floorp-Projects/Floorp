@@ -1295,11 +1295,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         vcvtsi2sdq(src.reg, dest);
     }
 
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        movq(imm, ScratchReg);
-        vmulsd(Operand(ScratchReg, 0), dest, dest);
-    }
-
     inline void inc64(AbsoluteAddress dest);
 
     inline void incrementInt32Value(const Address& addr);
