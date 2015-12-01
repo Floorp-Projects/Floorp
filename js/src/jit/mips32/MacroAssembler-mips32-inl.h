@@ -170,6 +170,13 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     }
 }
 
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    as_addu(dest, src, src);
+    as_addu(dest, dest, src);
+}
+
 // ===============================================================
 // Shift functions
 

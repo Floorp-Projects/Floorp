@@ -1224,11 +1224,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void clampIntToUint8(Register reg);
 
-    void mulBy3(const Register& src, const Register& dest) {
-        as_addu(dest, src, src);
-        as_addu(dest, dest, src);
-    }
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
     void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
         movePtr(imm, ScratchRegister);
