@@ -104,12 +104,10 @@ struct FloatRegister
     static FloatRegister FromCode(uint32_t) { MOZ_CRASH(); }
     bool isSingle() const { MOZ_CRASH(); }
     bool isDouble() const { MOZ_CRASH(); }
-    bool isInt32x4() const { MOZ_CRASH(); }
-    bool isFloat32x4() const { MOZ_CRASH(); }
+    bool isSimd128() const { MOZ_CRASH(); }
     FloatRegister asSingle() const { MOZ_CRASH(); }
     FloatRegister asDouble() const { MOZ_CRASH(); }
-    FloatRegister asInt32x4() const { MOZ_CRASH(); }
-    FloatRegister asFloat32x4() const { MOZ_CRASH(); }
+    FloatRegister asSimd128() const { MOZ_CRASH(); }
     Code code() const { MOZ_CRASH(); }
     Encoding encoding() const { MOZ_CRASH(); }
     const char* name() const { MOZ_CRASH(); }

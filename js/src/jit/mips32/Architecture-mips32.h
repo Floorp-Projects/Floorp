@@ -166,8 +166,7 @@ class FloatRegister : public FloatRegisterMIPSShared
 
     FloatRegister asSingle() const { return singleOverlay(); }
     FloatRegister asDouble() const { return doubleOverlay(); }
-    FloatRegister asInt32x4() const { MOZ_CRASH("NYI"); }
-    FloatRegister asFloat32x4() const { MOZ_CRASH("NYI"); }
+    FloatRegister asSimd128() const { MOZ_CRASH("NYI"); }
 
     Code code() const {
         MOZ_ASSERT(!isInvalid());
