@@ -892,12 +892,6 @@ MacroAssemblerMIPS64Compat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
-MacroAssemblerMIPS64Compat::subPtr(Register src, Register dest)
-{
-    as_dsubu(dest, dest, src);
-}
-
-void
 MacroAssemblerMIPS64Compat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -1285,27 +1279,6 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     bind(&done);
-}
-
-void
-MacroAssemblerMIPS64Compat::subPtr(Imm32 imm, const Register dest)
-{
-    ma_dsubu(dest, dest, imm);
-}
-
-void
-MacroAssemblerMIPS64Compat::subPtr(const Address& addr, const Register dest)
-{
-    loadPtr(addr, SecondScratchReg);
-    subPtr(SecondScratchReg, dest);
-}
-
-void
-MacroAssemblerMIPS64Compat::subPtr(Register src, const Address& dest)
-{
-    loadPtr(dest, SecondScratchReg);
-    subPtr(src, SecondScratchReg);
-    storePtr(SecondScratchReg, dest);
 }
 
 void
@@ -2270,7 +2243,7 @@ void
 MacroAssemblerMIPS64Compat::pushValue(ValueOperand val)
 {
     // Allocate stack slots for Value. One for each.
-    subPtr(Imm32(sizeof(Value)), StackPointer);
+    asMasm().subPtr(Imm32(sizeof(Value)), StackPointer);
     // Store Value
     storeValue(val, Address(StackPointer, 0));
 }
@@ -2378,7 +2351,7 @@ MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + ABIStackAlignment) & ~(ABIStackAlignment - 1);
-    subPtr(Imm32(size), StackPointer);
+    asMasm().subPtr(Imm32(size), StackPointer);
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 
     // Call the handler.
@@ -2681,7 +2654,7 @@ void
 MacroAssembler::reserveStack(uint32_t amount)
 {
     if (amount)
-        subPtr(Imm32(amount), StackPointer);
+        asMasm().subPtr(Imm32(amount), StackPointer);
     adjustFrame(amount);
 }
 
@@ -2697,7 +2670,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
     ma_move(scratch, StackPointer);
 
     // Force sp to be aligned
-    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
     storePtr(scratch, Address(StackPointer, 0));
 }

@@ -130,6 +130,30 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
     addq(imm, dest.reg);
 }
 
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    subq(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    subq(src, Operand(dest));
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    subq(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    subq(Operand(addr), dest);
+}
+
 // ===============================================================
 // Shift functions
 

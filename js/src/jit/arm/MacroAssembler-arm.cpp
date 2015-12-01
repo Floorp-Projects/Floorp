@@ -2586,35 +2586,6 @@ MacroAssemblerARMCompat::setStackArg(Register reg, uint32_t arg)
 }
 
 void
-MacroAssemblerARMCompat::subPtr(Imm32 imm, const Register dest)
-{
-    ma_sub(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(const Address& addr, const Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(addr, scratch);
-    ma_sub(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(Register src, Register dest)
-{
-    ma_sub(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(Register src, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(dest, scratch);
-    ma_sub(src, scratch);
-    storePtr(scratch, dest);
-}
-
-void
 MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.
