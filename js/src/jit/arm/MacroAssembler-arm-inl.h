@@ -341,6 +341,12 @@ MacroAssembler::inc64(AbsoluteAddress dest)
     ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
 }
 
+void
+MacroAssembler::neg32(Register reg)
+{
+    ma_neg(reg, reg, SetCC);
+}
+
 // ===============================================================
 // Shift functions
 
