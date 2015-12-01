@@ -6,7 +6,7 @@
 
 // Tests tabbing through attributes on a node
 
-const TEST_URL = "data:text/html;charset=utf8,<div a b c d e id='test'></div>";
+const TEST_URL = "data:text/html;charset=utf8,<div id='test' a b c d e></div>";
 
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
@@ -25,12 +25,12 @@ add_task(function*() {
 
   // Check the order of the other attributes in the DOM to the check they appear
   // correctly in the markup-view
-  let attributes = [...getNode("div").attributes].filter(attr => attr.name !== "id");
+  let attributes = (yield getAttributesFromEditor("div", inspector)).slice(1);
 
   info("Tabbing forward through attributes in edit mode");
-  for (let {name} of attributes) {
+  for (let attribute of attributes) {
     collapseSelectionAndTab(inspector);
-    checkFocusedAttribute(name, true);
+    checkFocusedAttribute(attribute, true);
   }
 
   info("Tabbing backward through attributes in edit mode");
@@ -40,8 +40,8 @@ add_task(function*() {
   let reverseAttributes = attributes.reverse();
   reverseAttributes.shift();
 
-  for (let {name} of reverseAttributes) {
+  for (let attribute of reverseAttributes) {
     collapseSelectionAndShiftTab(inspector);
-    checkFocusedAttribute(name, true);
+    checkFocusedAttribute(attribute, true);
   }
 });
