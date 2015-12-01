@@ -2251,7 +2251,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins)
 
     static const SimdConstant InvalidResult = SimdConstant::SplatX4(int32_t(-2147483648));
 
-    ScratchSimdScope scratch(masm);
+    ScratchSimd128Scope scratch(masm);
     masm.loadConstantInt32x4(InvalidResult, scratch);
     masm.packedEqualInt32x4(Operand(out), scratch);
     // TODO (bug 1156228): If we have SSE4.1, we can use PTEST here instead of
@@ -2275,7 +2275,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     FloatRegister input = ool->input();
     Register temp = ool->temp();
 
-    ScratchSimdScope scratch(masm);
+    ScratchSimd128Scope scratch(masm);
     masm.loadConstantFloat32x4(Int32MinX4, scratch);
     masm.vcmpleps(Operand(input), scratch, scratch);
     masm.vmovmskps(scratch, temp);
@@ -2402,7 +2402,7 @@ CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI* ins)
         masm.vpextrd(lane, input, output);
     } else {
         uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
-        ScratchSimdScope scratch(masm);
+        ScratchSimd128Scope scratch(masm);
         masm.shuffleInt32(mask, input, scratch);
         masm.moveLowInt32(scratch, output);
     }
@@ -2767,7 +2767,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
     // TODO Here and below, symmetric case would be more handy to avoid a move,
     // but can't be reached because operands would get swapped (bug 1084404).
     if (ins->lanesMatch(2, 3, 6, 7)) {
-        ScratchSimdScope scratch(masm);
+        ScratchSimd128Scope scratch(masm);
         if (AssemblerX86Shared::HasAVX()) {
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vmovhlps(lhs, rhsCopy, out);
@@ -2781,7 +2781,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
 
     if (ins->lanesMatch(0, 1, 4, 5)) {
         FloatRegister rhsCopy;
-        ScratchSimdScope scratch(masm);
+        ScratchSimd128Scope scratch(masm);
         if (rhs.kind() == Operand::FPREG) {
             // No need to make an actual copy, since the operand is already
             // in a register, and it won't be clobbered by the vmovlhps.
@@ -2801,7 +2801,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
 
     // TODO swapped case would be better (bug 1084404)
     if (ins->lanesMatch(4, 0, 5, 1)) {
-        ScratchSimdScope scratch(masm);
+        ScratchSimd128Scope scratch(masm);
         if (AssemblerX86Shared::HasAVX()) {
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vunpcklps(lhs, rhsCopy, out);
@@ -2820,7 +2820,7 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
 
     // TODO swapped case would be better (bug 1084404)
     if (ins->lanesMatch(6, 2, 7, 3)) {
-        ScratchSimdScope scratch(masm);
+        ScratchSimd128Scope scratch(masm);
         if (AssemblerX86Shared::HasAVX()) {
             FloatRegister rhsCopy = masm.reusedInputAlignedFloat32x4(rhs, scratch);
             masm.vunpckhps(lhs, rhsCopy, out);
@@ -2881,7 +2881,7 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
     Operand rhs = ToOperand(ins->rhs());
     MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
 
-    ScratchSimdScope scratch(masm);
+    ScratchSimd128Scope scratch(masm);
 
     MSimdBinaryComp::Operation op = ins->operation();
     switch (op) {
@@ -2968,7 +2968,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4* ins)
     Operand rhs = ToOperand(ins->rhs());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    ScratchSimdScope scratch(masm);
+    ScratchSimd128Scope scratch(masm);
 
     MSimdBinaryArith::Operation op = ins->operation();
     switch (op) {
@@ -3024,7 +3024,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
     Operand rhs = ToOperand(ins->rhs());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    ScratchSimdScope scratch(masm);
+    ScratchSimd128Scope scratch(masm);
 
     MSimdBinaryArith::Operation op = ins->operation();
     switch (op) {
@@ -3690,12 +3690,10 @@ CodeGeneratorX86Shared::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.encoding() == X86Encoding::xmm0);
     MOZ_ASSERT(ReturnDoubleReg.encoding() == X86Encoding::xmm0);
-    MOZ_ASSERT(ReturnInt32x4Reg.encoding() == X86Encoding::xmm0);
-    MOZ_ASSERT(ReturnFloat32x4Reg.encoding() == X86Encoding::xmm0);
+    MOZ_ASSERT(ReturnSimd128Reg.encoding() == X86Encoding::xmm0);
     regs->add(ReturnFloat32Reg);
     regs->add(ReturnDoubleReg);
-    regs->add(ReturnInt32x4Reg);
-    regs->add(ReturnFloat32x4Reg);
+    regs->add(ReturnSimd128Reg);
 }
 
 } // namespace jit

@@ -36,10 +36,10 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
     { }
 };
 
-struct ScratchSimdScope : public AutoFloatRegisterScope
+struct ScratchSimd128Scope : public AutoFloatRegisterScope
 {
-    explicit ScratchSimdScope(MacroAssembler& masm)
-      : AutoFloatRegisterScope(masm, ScratchSimdReg)
+    explicit ScratchSimd128Scope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchSimd128Reg)
     { }
 };
 
@@ -2207,8 +2207,8 @@ class AssemblerX86Shared : public AssemblerShared
             if (src1.kind() == Operand::FPREG &&
                 dest.aliases(FloatRegister::FromCode(src1.fpu())))
             {
-                vmovdqa(src1, ScratchSimdReg);
-                src1 = Operand(ScratchSimdReg);
+                vmovdqa(src1, ScratchSimd128Reg);
+                src1 = Operand(ScratchSimd128Reg);
             }
             vmovdqa(src0, dest);
             src0 = dest;

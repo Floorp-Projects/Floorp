@@ -1157,9 +1157,7 @@ class StoreOp
         else if (reg.isSingle())
             masm.storeFloat32(reg, dump);
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        else if (reg.isInt32x4())
-            masm.storeUnalignedInt32x4(reg, dump);
-        else if (reg.isFloat32x4())
+        else if (reg.isSimd128())
             masm.storeUnalignedFloat32x4(reg, dump);
 #endif
         else

@@ -419,12 +419,12 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         before = after;
-        loadSimd(type, 1, srcAddrZ, ScratchSimdReg);
+        loadSimd(type, 1, srcAddrZ, ScratchSimd128Reg);
         after = masm.size();
         masm.append(AsmJSHeapAccess(before, after));
 
         // Move ZW atop XY
-        masm.vmovlhps(ScratchSimdReg, out, out);
+        masm.vmovlhps(ScratchSimd128Reg, out, out);
     } else {
         uint32_t before = masm.size();
         loadSimd(type, numElems, srcAddr, out);
@@ -593,13 +593,13 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
         uint32_t after = masm.size();
         masm.append(AsmJSHeapAccess(before, after, maybeCmpOffset));
 
-        masm.vmovhlps(in, ScratchSimdReg, ScratchSimdReg);
+        masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
 
         // Store Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
         before = masm.size();
-        storeSimd(type, 1, ScratchSimdReg, dstAddrZ);
+        storeSimd(type, 1, ScratchSimd128Reg, dstAddrZ);
         after = masm.size();
         masm.append(AsmJSHeapAccess(before, after));
     } else {

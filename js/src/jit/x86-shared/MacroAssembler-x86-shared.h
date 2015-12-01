@@ -1009,7 +1009,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex srcZ(src);
         srcZ.offset += 2 * sizeof(int32_t);
 
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovq(Operand(src), dest);
         vmovd(Operand(srcZ), scratch);
         vmovlhps(scratch, dest, dest);
@@ -1018,7 +1018,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address srcZ(src);
         srcZ.offset += 2 * sizeof(int32_t);
 
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovq(Operand(src), dest);
         vmovd(Operand(srcZ), scratch);
         vmovlhps(scratch, dest, dest);
@@ -1074,7 +1074,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         vmovq(src, Operand(dest));
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         vmovd(scratch, Operand(destZ));
     }
@@ -1082,7 +1082,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         vmovq(src, Operand(dest));
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         vmovd(scratch, Operand(destZ));
     }
@@ -1145,7 +1145,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address srcZ(src);
         srcZ.offset += 2 * sizeof(float);
         vmovsd(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovss(srcZ, scratch);
         vmovlhps(scratch, dest, dest);
     }
@@ -1153,7 +1153,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex srcZ(src);
         srcZ.offset += 2 * sizeof(float);
         vmovsd(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovss(srcZ, scratch);
         vmovlhps(scratch, dest, dest);
     }
@@ -1169,7 +1169,7 @@ class MacroAssemblerX86Shared : public Assembler
         Address destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         storeDouble(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         storeFloat32(scratch, destZ);
     }
@@ -1177,7 +1177,7 @@ class MacroAssemblerX86Shared : public Assembler
         BaseIndex destZ(dest);
         destZ.offset += 2 * sizeof(int32_t);
         storeDouble(src, dest);
-        ScratchSimdScope scratch(asMasm());
+        ScratchSimd128Scope scratch(asMasm());
         vmovhlps(src, scratch, scratch);
         storeFloat32(scratch, destZ);
     }
