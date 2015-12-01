@@ -2289,44 +2289,51 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
       ComputeSizeFlags computeSizeFlags =
         isBlock ? ComputeSizeFlags::eDefault : ComputeSizeFlags::eShrinkWrap;
 
-      // Make sure legend frames with display:block and width:auto still
-      // shrink-wrap.
-      // Also shrink-wrap blocks that are orthogonal to their container.
-      if (isBlock &&
-          ((aFrameType == nsGkAtoms::legendFrame &&
-            frame->StyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
-           (aFrameType == nsGkAtoms::scrollFrame &&
-            frame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame) ||
-           (mCBReflowState &&
-            mCBReflowState->GetWritingMode().IsOrthogonalTo(mWritingMode)))) {
-        computeSizeFlags =
-          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
-      }
-
       nsIFrame* parent = frame->GetParent();
       nsIAtom* parentFrameType = parent ? parent->GetType() : nullptr;
-      if (parentFrameType == nsGkAtoms::flexContainerFrame) {
-        computeSizeFlags =
-          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
-
-        // If we're inside of a flex container that needs to measure our
-        // auto height, pass that information along to ComputeSize().
-        if (mFlags.mIsFlexContainerMeasuringHeight) {
+      if (parentFrameType == nsGkAtoms::gridContainerFrame) {
+        // Shrink-wrap grid items that will be aligned (rather than stretched)
+        // in its inline axis.
+        auto inlineAxisAlignment = wm.IsOrthogonalTo(cbwm) ?
+          mStylePosition->ComputedAlignSelf(mStyleDisplay,
+                                            frame->StyleContext()->GetParent()) :
+          mStylePosition->ComputedJustifySelf(mStyleDisplay,
+                                              frame->StyleContext()->GetParent());
+        if (inlineAxisAlignment != NS_STYLE_ALIGN_STRETCH ||
+            mStyleMargin->mMargin.GetIStartUnit(wm) == eStyleUnit_Auto ||
+            mStyleMargin->mMargin.GetIEndUnit(wm) == eStyleUnit_Auto) {
           computeSizeFlags =
-            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoHeight);
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
         }
       } else {
-        MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringHeight,
-                   "We're not in a flex container, so the flag "
-                   "'mIsFlexContainerMeasuringHeight' shouldn't be set");
+        // Make sure legend frames with display:block and width:auto still
+        // shrink-wrap.
+        // Also shrink-wrap blocks that are orthogonal to their container.
+        if (isBlock &&
+            ((aFrameType == nsGkAtoms::legendFrame &&
+              frame->StyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
+             (aFrameType == nsGkAtoms::scrollFrame &&
+              frame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame) ||
+             (mCBReflowState &&
+              mCBReflowState->GetWritingMode().IsOrthogonalTo(mWritingMode)))) {
+          computeSizeFlags =
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+        }
 
-        if (parentFrameType == nsGkAtoms::gridContainerFrame) {
-          auto justifySelf = mStylePosition->ComputedJustifySelf(mStyleDisplay,
-                               frame->StyleContext()->GetParent());
-          if (justifySelf != NS_STYLE_JUSTIFY_STRETCH) {
+        if (parentFrameType == nsGkAtoms::flexContainerFrame) {
+          computeSizeFlags =
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+
+          // If we're inside of a flex container that needs to measure our
+          // auto height, pass that information along to ComputeSize().
+          if (mFlags.mIsFlexContainerMeasuringHeight) {
             computeSizeFlags =
-              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoHeight);
           }
+        } else {
+          MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringHeight,
+                     "We're not in a flex container, so the flag "
+                     "'mIsFlexContainerMeasuringHeight' shouldn't be set");
         }
       }
 
