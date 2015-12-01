@@ -96,7 +96,7 @@ browser.jar:
 #endif
         content/browser/browser-sidebar.js            (content/browser-sidebar.js)
         content/browser/browser-social.js             (content/browser-social.js)
-*       content/browser/browser-syncui.js             (content/browser-syncui.js)
+        content/browser/browser-syncui.js             (content/browser-syncui.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 #ifdef CAN_DRAW_IN_TITLEBAR
         content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)
@@ -150,7 +150,7 @@ browser.jar:
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
         content/browser/sync/aboutSyncTabs.xul        (content/sync/aboutSyncTabs.xul)
-*       content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
+        content/browser/sync/aboutSyncTabs.js         (content/sync/aboutSyncTabs.js)
         content/browser/sync/aboutSyncTabs.css        (content/sync/aboutSyncTabs.css)
         content/browser/sync/aboutSyncTabs-bindings.xml  (content/sync/aboutSyncTabs-bindings.xml)
         content/browser/sync/setup.xul                (content/sync/setup.xul)
