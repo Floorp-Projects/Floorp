@@ -145,6 +145,12 @@ MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
     vmulsd(src, dest, dest);
 }
 
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    vdivsd(src, dest, dest);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
