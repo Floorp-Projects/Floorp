@@ -1295,8 +1295,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         vcvtsi2sdq(src.reg, dest);
     }
 
-    inline void inc64(AbsoluteAddress dest);
-
     inline void incrementInt32Value(const Address& addr);
 
     // If source is a double, load it into dest. If source is int32,

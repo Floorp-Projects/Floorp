@@ -1030,14 +1030,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
 
-    void inc64(AbsoluteAddress dest) {
-        addl(Imm32(1), Operand(dest));
-        Label noOverflow;
-        j(NonZero, &noOverflow);
-        addl(Imm32(1), Operand(dest.offset(4)));
-        bind(&noOverflow);
-    }
-
     void incrementInt32Value(const Address& addr) {
         addl(Imm32(1), payloadOf(addr));
     }
