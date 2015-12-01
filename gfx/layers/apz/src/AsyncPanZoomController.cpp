@@ -1067,7 +1067,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
 }
 
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
-                                                       const Matrix4x4& aTransformToApzc) {
+                                                       const ScreenToParentLayerMatrix4x4& aTransformToApzc) {
   APZThreadUtils::AssertOnControllerThread();
 
   nsEventStatus rv = nsEventStatus_eIgnore;
@@ -1550,12 +1550,11 @@ bool
 AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* aOut)
 {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    Matrix4x4 transformScreenToGecko = treeManagerLocal->GetScreenToApzcTransform(this) 
-                                     * treeManagerLocal->GetApzcToGeckoTransform(this);
+    ScreenToScreenMatrix4x4 transformScreenToGecko =
+        treeManagerLocal->GetScreenToApzcTransform(this)
+      * treeManagerLocal->GetApzcToGeckoTransform(this);
     
-    // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
-    // for this coordinate space and it maps the closest to LayoutDevicePoint.
-    Maybe<LayoutDeviceIntPoint> layoutPoint = UntransformTo<LayoutDevicePixel>(
+    Maybe<ScreenIntPoint> layoutPoint = UntransformTo<ScreenPixel>(
         transformScreenToGecko, aPoint);
     if (!layoutPoint) {
       return false;
@@ -1563,7 +1562,11 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
 
     { // scoped lock to access mFrameMetrics
       ReentrantMonitorAutoEnter lock(mMonitor);
-      *aOut = LayoutDevicePoint(*layoutPoint) / mFrameMetrics.GetDevPixelsPerCSSPixel();
+      // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
+      // for this coordinate space and it maps the closest to LayoutDevicePoint.
+      *aOut = LayoutDevicePoint(ViewAs<LayoutDevicePixel>(*layoutPoint,
+                  PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent))
+            / mFrameMetrics.GetDevPixelsPerCSSPixel();
     }
     return true;
   }
@@ -2047,11 +2050,11 @@ nsEventStatus AsyncPanZoomController::OnCancelTap(const TapGestureInput& aEvent)
 }
 
 
-Matrix4x4 AsyncPanZoomController::GetTransformToThis() const {
+ScreenToParentLayerMatrix4x4 AsyncPanZoomController::GetTransformToThis() const {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     return treeManagerLocal->GetScreenToApzcTransform(this);
   }
-  return Matrix4x4();
+  return ScreenToParentLayerMatrix4x4();
 }
 
 ScreenPoint AsyncPanZoomController::ToScreenCoordinates(const ParentLayerPoint& aVector,
@@ -2067,7 +2070,7 @@ ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPo
 
 bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const
 {
-  Matrix4x4 transformToThis = GetTransformToThis();
+  ScreenToParentLayerMatrix4x4 transformToThis = GetTransformToThis();
   Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(transformToThis, aPoint);
   if (!point) {
     return false;

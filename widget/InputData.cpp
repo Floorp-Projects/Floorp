@@ -72,7 +72,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
 }
 
 bool
-MouseInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+MouseInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
   Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
   if (!point) {
@@ -270,7 +270,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
 }
 
 bool
-MultiTouchInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+MultiTouchInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
   for (size_t i = 0; i < mTouches.Length(); i++) {
     Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mTouches[i].mScreenPoint);
@@ -317,7 +317,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 }
 
 bool
-PanGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+PanGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 { 
   Maybe<ParentLayerPoint> panStartPoint = UntransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
   if (!panStartPoint) {
@@ -334,7 +334,7 @@ PanGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 }
 
 bool
-PinchGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 { 
   Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mFocusPoint);
   if (!point) {
@@ -345,7 +345,7 @@ PinchGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
 }
 
 bool
-TapGestureInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+TapGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
   Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mPoint);
   if (!point) {
@@ -409,7 +409,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 }
 
 bool
-ScrollWheelInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+ScrollWheelInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
   Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
   if (!point) {
