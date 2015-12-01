@@ -61,6 +61,9 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
+  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                 nsAttrValueOrString* aValue,
+                                 bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify) override;
@@ -76,6 +79,10 @@ public:
   virtual EventStates IntrinsicState() const override;
 
   void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
+
+  virtual void OnDNSPrefetchDeferred() override;
+  virtual void OnDNSPrefetchRequested() override;
+  virtual bool HasDeferredDNSPrefetchRequest() override;
 
   // WebIDL
   bool Disabled();
@@ -166,6 +173,9 @@ protected:
   // nsGenericHTMLElement
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
+
+  bool HasDNSPrefetchRel();
+
   RefPtr<nsDOMTokenList > mRelList;
 private:
   RefPtr<ImportLoader> mImportLoader;

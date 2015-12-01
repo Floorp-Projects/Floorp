@@ -158,9 +158,7 @@ HTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsIDocument* doc = GetComposedDoc();
   if (doc) {
     doc->RegisterPendingLinkUpdate(this);
-    if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
-      nsHTMLDNSPrefetch::PrefetchLow(this);
-    }
+    TryDNSPrefetch();
   }
 
   return rv;
@@ -172,18 +170,9 @@ HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
+  CancelDNSPrefetch(HTML_ANCHOR_DNS_PREFETCH_DEFERRED,
+                    HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
 
-  // If prefetch was deferred, clear flag and move on
-  if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED))
-    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
-  // Else if prefetch was requested, clear flag and send cancellation
-  else if (HasFlag(HTML_ANCHOR_DNS_PREFETCH_REQUESTED)) {
-    UnsetFlags(HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
-    // Possible that hostname could have changed since binding, but since this
-    // covers common cases, most DNS prefetch requests will be canceled
-    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
-  }
-  
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
@@ -406,6 +395,10 @@ HTMLAnchorElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         reset = true;
       }
     }
+    if (reset) {
+      CancelDNSPrefetch(HTML_ANCHOR_DNS_PREFETCH_DEFERRED,
+                        HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+    }
   }
 
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
@@ -418,6 +411,9 @@ HTMLAnchorElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // to get updated information about the visitedness from Link.
   if (reset) {
     Link::ResetLinkState(!!aNotify, true);
+    if (IsInComposedDoc()) {
+      TryDNSPrefetch();
+    }
   }
 
   return rv;
@@ -427,6 +423,14 @@ nsresult
 HTMLAnchorElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify)
 {
+  bool href =
+    (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID);
+
+  if (href) {
+    CancelDNSPrefetch(HTML_ANCHOR_DNS_PREFETCH_DEFERRED,
+                      HTML_ANCHOR_DNS_PREFETCH_REQUESTED);
+  }
+
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
 
@@ -435,7 +439,7 @@ HTMLAnchorElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   // we will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
-  if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+  if (href) {
     Link::ResetLinkState(!!aNotify, false);
   }
 
