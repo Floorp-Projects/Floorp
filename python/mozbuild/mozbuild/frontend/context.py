@@ -1001,7 +1001,7 @@ VARIABLES = {
         break the build in subtle ways.
         """, 'misc'),
 
-    'FINAL_TARGET_FILES': (HierarchicalStringList, list,
+    'FINAL_TARGET_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the application directory.
 
         ``FINAL_TARGET_FILES`` will copy (or symlink, if the platform supports it)
@@ -1021,11 +1021,11 @@ VARIABLES = {
         disabled.
         """, None),
 
-    'FINAL_TARGET_PP_FILES': (HierarchicalStringList, list,
+    'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
-    'TESTING_FILES': (HierarchicalStringList, list,
+    'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed in the _tests directory.
 
         This works similarly to FINAL_TARGET_FILES.
