@@ -125,3 +125,6 @@ if CONFIG['GNU_CXX']:
 if CONFIG['_MSC_VER']:
     # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
     SOURCES['/mfbt/Compression.cpp'].flags += ['-wd4804']
+
+if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+    OS_LIBS += ['atomic']
