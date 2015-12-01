@@ -26,6 +26,7 @@ class DeviceManagerADB(DeviceManager):
     _haveRootShell = None
     _haveSu = None
     _suModifier = None
+    _lsModifier = None
     _useZip = False
     _logcatNeedsRoot = False
     _pollingInterval = 0.01
@@ -70,6 +71,8 @@ class DeviceManagerADB(DeviceManager):
 
         if autoconnect:
             self.connect()
+
+        self._detectLsModifier()
 
     def connect(self):
         if not self.connected:
@@ -265,7 +268,8 @@ class DeviceManagerADB(DeviceManager):
             mozfile.remove(tmpDir)
 
     def dirExists(self, remotePath):
-        data = self._runCmd(["shell", "ls", "-a", remotePath + '/'], timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", self._lsModifier, remotePath + '/'],
+                            timeout=self.short_timeout).output
 
         if len(data) == 1:
             res = data[0]
@@ -274,7 +278,8 @@ class DeviceManagerADB(DeviceManager):
         return True
 
     def fileExists(self, filepath):
-        data = self._runCmd(["shell", "ls", "-a", filepath], timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", self._lsModifier, filepath],
+                            timeout=self.short_timeout).output
         if len(data) == 1:
             foundpath = data[0].decode('utf-8').rstrip()
             if foundpath == filepath:
@@ -298,7 +303,8 @@ class DeviceManagerADB(DeviceManager):
         self._checkCmd(["shell", "dd", "if=%s" % source, "of=%s" % destination])
 
     def listFiles(self, rootdir):
-        data = self._runCmd(["shell", "ls", "-a", rootdir], timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", self._lsModifier, rootdir],
+                            timeout=self.short_timeout).output
         data[:] = [item.rstrip('\r\n') for item in data]
         if (len(data) == 1):
             if (data[0] == rootdir):
@@ -750,3 +756,18 @@ class DeviceManagerADB(DeviceManager):
             self._checkCmd(["wait-for-device"])
             if self.processInfo("adbd")[2] != "root":
                 raise DMError("We tried rebooting adbd as root, however, it failed.")
+
+    def _detectLsModifier(self):
+        if self._lsModifier is None:
+            # Check if busybox -1A is required in order to get one
+            # file per line.
+            output = self._runCmd(["shell", "ls", "-1A" "/"],
+                         timeout=self.short_timeout).output
+            output = ' '.join(output)
+            if "Unknown option '-1'. Aborting." in output:
+                self._lsModifier = "-a"
+            elif "-1A/: No such file or directory" in output:
+                self._lsModifier = "-a"
+            else:
+                self._lsModifier = "-1A"
+
