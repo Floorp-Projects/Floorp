@@ -1993,6 +1993,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_FUNCTIONTHIS:
         return jsop_functionthis();
 
+      case JSOP_GLOBALTHIS:
+        return jsop_globalthis();
+
       case JSOP_CALLEE: {
          MDefinition* callee = getCallee();
          current->push(callee);
@@ -12918,6 +12921,20 @@ IonBuilder::jsop_functionthis()
     current->push(thisObj);
 
     return resumeAfter(thisObj);
+}
+
+bool
+IonBuilder::jsop_globalthis()
+{
+    if (script()->hasNonSyntacticScope()) {
+        // Ion does not compile global scripts with a non-syntactic scope, but
+        // we can end up here when we're compiling an arrow function.
+        return abort("JSOP_GLOBALTHIS in script with non-syntactic scope");
+    }
+
+    ClonedBlockObject* globalLexical = &script()->global().lexicalScope();
+    pushConstant(globalLexical->thisValue());
+    return true;
 }
 
 bool
