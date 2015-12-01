@@ -1030,11 +1030,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
 
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        movl(imm, temp);
-        vmulsd(Operand(temp, 0), dest, dest);
-    }
-
     void inc64(AbsoluteAddress dest) {
         addl(Imm32(1), Operand(dest));
         Label noOverflow;
