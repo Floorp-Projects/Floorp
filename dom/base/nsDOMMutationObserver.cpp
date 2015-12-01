@@ -846,8 +846,7 @@ nsDOMMutationObserver::HandleMutation()
   }
   ClearPendingRecords();
 
-  mozilla::ErrorResult rv;
-  mCallback->Call(this, mutations, *this, rv);
+  mCallback->Call(this, mutations, *this);
 }
 
 class AsyncMutationHandler : public nsRunnable

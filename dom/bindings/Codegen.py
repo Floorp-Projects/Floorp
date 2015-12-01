@@ -14526,16 +14526,33 @@ class CGCallback(CGClass):
         assert args[0].name == "cx" and args[0].argType == "JSContext*"
         assert args[1].name == "aThisVal" and args[1].argType == "JS::Handle<JS::Value>"
         args = args[2:]
+
+        # Now remember which index the ErrorResult argument is at;
+        # we'll need this below.
+        assert args[-1].name == "aRv" and args[-1].argType == "ErrorResult&"
+        rvIndex = len(args) - 1
+        assert rvIndex >= 0
+
         # Record the names of all the arguments, so we can use them when we call
         # the private method.
         argnames = [arg.name for arg in args]
         argnamesWithThis = ["s.GetContext()", "thisValJS"] + argnames
         argnamesWithoutThis = ["s.GetContext()", "JS::UndefinedHandleValue"] + argnames
         # Now that we've recorded the argnames for our call to our private
-        # method, insert our optional arguments for the execution reason and for
-        # deciding whether the CallSetup should re-throw exceptions on aRv.
+        # method, insert our optional argument for the execution reason.
         args.append(Argument("const char*", "aExecutionReason",
                              "nullptr"))
+
+        # Make copies of the arg list for the two "without rv" overloads.  Note
+        # that those don't need aExceptionHandling or aCompartment arguments
+        # because those would make not sense anyway: the only sane thing to do
+        # with exceptions in the "without rv" cases is to report them.
+        argsWithoutRv = list(args)
+        argsWithoutRv.pop(rvIndex)
+        argsWithoutThisAndRv = list(argsWithoutRv)
+
+        # Add the potional argument for deciding whether the CallSetup should
+        # re-throw exceptions on aRv.
         args.append(Argument("ExceptionHandling", "aExceptionHandling",
                              "eReportExceptions"))
         # And the argument for communicating when exceptions should really be
@@ -14547,6 +14564,22 @@ class CGCallback(CGClass):
         # And now insert our template argument.
         argsWithoutThis = list(args)
         args.insert(0, Argument("const T&",  "thisVal"))
+        argsWithoutRv.insert(0, Argument("const T&",  "thisVal"))
+
+        argnamesWithoutThisAndRv = [arg.name for arg in argsWithoutThisAndRv]
+        argnamesWithoutThisAndRv.insert(rvIndex, "rv");
+        # If we just leave things like that, and have no actual arguments in the
+        # IDL, we will end up trying to call the templated "without rv" overload
+        # with "rv" as the thisVal.  That's no good.  So explicitly append the
+        # aExceptionHandling and aCompartment values we need to end up matching
+        # the signature of our non-templated "with rv" overload.
+        argnamesWithoutThisAndRv.extend(["eReportExceptions", "nullptr"])
+
+        argnamesWithoutRv = [arg.name for arg in argsWithoutRv]
+        # Note that we need to insert at rvIndex + 1, since we inserted a
+        # thisVal arg at the start.
+        argnamesWithoutRv.insert(rvIndex + 1, "rv")
+
         errorReturn = method.getDefaultRetval()
 
         setupCall = fill(
@@ -14586,6 +14619,20 @@ class CGCallback(CGClass):
             errorReturn=errorReturn,
             methodName=method.name,
             callArgs=", ".join(argnamesWithoutThis))
+        bodyWithThisWithoutRv = fill(
+            """
+            IgnoredErrorResult rv;
+            return ${methodName}(${callArgs});
+            """,
+            methodName=method.name,
+            callArgs=", ".join(argnamesWithoutRv))
+        bodyWithoutThisAndRv = fill(
+            """
+            IgnoredErrorResult rv;
+            return ${methodName}(${callArgs});
+            """,
+            methodName=method.name,
+            callArgs=", ".join(argnamesWithoutThisAndRv))
 
         return [ClassMethod(method.name, method.returnType, args,
                             bodyInHeader=True,
@@ -14594,6 +14641,13 @@ class CGCallback(CGClass):
                 ClassMethod(method.name, method.returnType, argsWithoutThis,
                             bodyInHeader=True,
                             body=bodyWithoutThis),
+                ClassMethod(method.name, method.returnType, argsWithoutRv,
+                            bodyInHeader=True,
+                            templateArgs=["typename T"],
+                            body=bodyWithThisWithoutRv),
+                ClassMethod(method.name, method.returnType, argsWithoutThisAndRv,
+                            bodyInHeader=True,
+                            body=bodyWithoutThisAndRv),
                 method]
 
     def deps(self):
