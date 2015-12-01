@@ -1104,28 +1104,13 @@ protected:
     LangGroupFontPrefs()
       : mLangGroup(nullptr)
       , mMinimumFontSize(0)
-      , mDefaultVariableFont(mozilla::eFamily_serif, NS_FONT_STYLE_NORMAL,
-                             NS_FONT_WEIGHT_NORMAL,
-                             NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultFixedFont(mozilla::eFamily_monospace, NS_FONT_STYLE_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL,
-                          NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultSerifFont(mozilla::eFamily_serif, NS_FONT_STYLE_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL,
-                          NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultSansSerifFont(mozilla::eFamily_sans_serif,
-                              NS_FONT_STYLE_NORMAL,
-                              NS_FONT_WEIGHT_NORMAL,
-                              NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultMonospaceFont(mozilla::eFamily_monospace, NS_FONT_STYLE_NORMAL,
-                              NS_FONT_WEIGHT_NORMAL,
-                              NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultCursiveFont(mozilla::eFamily_cursive, NS_FONT_STYLE_NORMAL,
-                            NS_FONT_WEIGHT_NORMAL,
-                            NS_FONT_STRETCH_NORMAL, 0)
-      , mDefaultFantasyFont(mozilla::eFamily_fantasy, NS_FONT_STYLE_NORMAL,
-                            NS_FONT_WEIGHT_NORMAL,
-                            NS_FONT_STRETCH_NORMAL, 0)
+      , mDefaultVariableFont(mozilla::eFamily_serif, 0)
+      , mDefaultFixedFont(mozilla::eFamily_monospace, 0)
+      , mDefaultSerifFont(mozilla::eFamily_serif, 0)
+      , mDefaultSansSerifFont(mozilla::eFamily_sans_serif, 0)
+      , mDefaultMonospaceFont(mozilla::eFamily_monospace, 0)
+      , mDefaultCursiveFont(mozilla::eFamily_cursive, 0)
+      , mDefaultFantasyFont(mozilla::eFamily_fantasy, 0)
     {}
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
