@@ -1551,12 +1551,13 @@ var gBrowserInit = {
           .XULBrowserWindow = null;
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = null;
   },
+};
 
-#ifdef XP_MACOSX
+if (AppConstants.platform == "macosx") {
   // nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
   // nonBrowserWindowShutdown() are used for non-browser windows in
   // macBrowserOverlay
-  nonBrowserWindowStartup: function() {
+  gBrowserInit.nonBrowserWindowStartup = function() {
     // Disable inappropriate commands / submenus
     var disabledItems = ['Browser:SavePage',
                          'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
@@ -1609,9 +1610,9 @@ var gBrowserInit = {
     }
 
     this._delayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
-  },
+  };
 
-  nonBrowserWindowDelayedStartup: function() {
+  gBrowserInit.nonBrowserWindowDelayedStartup = function() {
     this._delayedStartupTimeoutId = null;
 
     // initialise the offline listener
@@ -1626,9 +1627,9 @@ var gBrowserInit = {
 #ifdef E10S_TESTING_ONLY
     gRemoteTabsUI.init();
 #endif
-  },
+  };
 
-  nonBrowserWindowShutdown: function() {
+  gBrowserInit.nonBrowserWindowShutdown = function() {
     // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
     // just cancel the pending timeout and return;
     if (this._delayedStartupTimeoutId) {
@@ -1637,19 +1638,19 @@ var gBrowserInit = {
     }
 
     BrowserOffline.uninit();
-  },
-#endif
+  };
 }
 
 
 /* Legacy global init functions */
 var BrowserStartup        = gBrowserInit.onLoad.bind(gBrowserInit);
 var BrowserShutdown       = gBrowserInit.onUnload.bind(gBrowserInit);
-#ifdef XP_MACOSX
-var nonBrowserWindowStartup        = gBrowserInit.nonBrowserWindowStartup.bind(gBrowserInit);
-var nonBrowserWindowDelayedStartup = gBrowserInit.nonBrowserWindowDelayedStartup.bind(gBrowserInit);
-var nonBrowserWindowShutdown       = gBrowserInit.nonBrowserWindowShutdown.bind(gBrowserInit);
-#endif
+
+if (AppConstants.platform == "macosx") {
+  var nonBrowserWindowStartup        = gBrowserInit.nonBrowserWindowStartup.bind(gBrowserInit);
+  var nonBrowserWindowDelayedStartup = gBrowserInit.nonBrowserWindowDelayedStartup.bind(gBrowserInit);
+  var nonBrowserWindowShutdown       = gBrowserInit.nonBrowserWindowShutdown.bind(gBrowserInit);
+}
 
 function HandleAppCommandEvent(evt) {
   switch (evt.command) {
