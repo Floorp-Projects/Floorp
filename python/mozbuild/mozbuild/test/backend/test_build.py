@@ -29,6 +29,15 @@ BASE_SUBSTS = [
 
 
 class TestBuild(unittest.TestCase):
+    def setUp(self):
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZCONFIG', None)
+        os.environ.pop('MOZ_OBJDIR', None)
+
+    def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
     @contextmanager
     def do_test_backend(self, *backends, **kwargs):
         topobjdir = mkdtemp()
