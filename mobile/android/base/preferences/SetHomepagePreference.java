@@ -17,10 +17,22 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 public class SetHomepagePreference extends DialogPreference {
+    private static final String DEFAULT_HOMEPAGE = AboutPages.HOME;
+
     private final SharedPreferences prefs;
-    private EditText homepageTextEdit;
+
+    private RadioGroup homepageLayout;
+    private RadioButton defaultRadio;
+    private RadioButton userAddressRadio;
+    private EditText homepageEditText;
+
+    // This is the url that 1) was loaded from prefs or, 2) stored
+    // when the user pressed the "default homepage" checkbox.
+    private String storedUrl;
 
     public SetHomepagePreference(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -41,22 +53,54 @@ public class SetHomepagePreference extends DialogPreference {
     protected void onBindDialogView(final View view) {
         super.onBindDialogView(view);
 
-        homepageTextEdit = (EditText) view.findViewById(R.id.homepage_url);
-        homepageTextEdit.requestFocus();
+        homepageLayout = (RadioGroup) view.findViewById(R.id.homepage_layout);
+        defaultRadio = (RadioButton) view.findViewById(R.id.radio_default);
+        userAddressRadio = (RadioButton) view.findViewById(R.id.radio_user_address);
+        homepageEditText = (EditText) view.findViewById(R.id.edittext_user_address);
 
-        homepageTextEdit.post(new Runnable() {
+        storedUrl = prefs.getString(GeckoPreferences.PREFS_HOMEPAGE, DEFAULT_HOMEPAGE);
+
+        homepageLayout.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
-            public void run() {
-                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(homepageTextEdit, InputMethodManager.SHOW_IMPLICIT);
-                homepageTextEdit.selectAll();
+            public void onCheckedChanged(final RadioGroup radioGroup, final int checkedId) {
+                if (checkedId == R.id.radio_user_address) {
+                    homepageEditText.setVisibility(View.VISIBLE);
+                    openKeyboardAndSelectAll(getContext(), homepageEditText);
+                } else {
+                    homepageEditText.setVisibility(View.GONE);
+                }
             }
         });
+        setUIState(storedUrl);
+    }
 
-        final String url = prefs.getString(GeckoPreferences.PREFS_HOMEPAGE, AboutPages.HOME);
-        if (!AboutPages.HOME.equals(url)) {
-            homepageTextEdit.setText(url);
+    private void setUIState(final String url) {
+        if (isUrlDefaultHomepage(url)) {
+            defaultRadio.setChecked(true);
+        } else {
+            userAddressRadio.setChecked(true);
+            homepageEditText.setText(url);
         }
+    }
+
+    private boolean isUrlDefaultHomepage(final String url) {
+        return TextUtils.isEmpty(url) || DEFAULT_HOMEPAGE.equals(url);
+    }
+
+    private static void openKeyboardAndSelectAll(final Context context, final View viewToFocus) {
+        viewToFocus.requestFocus();
+        viewToFocus.post(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(viewToFocus, InputMethodManager.SHOW_IMPLICIT);
+                // android:selectAllOnFocus doesn't work for the initial focus:
+                // I'm not sure why. We manually selectAll instead.
+                if (viewToFocus instanceof EditText) {
+                    ((EditText) viewToFocus).selectAll();
+                }
+            }
+        });
     }
 
     @Override
@@ -64,16 +108,20 @@ public class SetHomepagePreference extends DialogPreference {
         super.onDialogClosed(positiveResult);
         if (positiveResult) {
             final SharedPreferences.Editor editor = prefs.edit();
-            String newValue = homepageTextEdit.getText().toString();
-            if (AboutPages.HOME.equals(newValue) || TextUtils.isEmpty(newValue)) {
+            final String homePageEditTextValue = homepageEditText.getText().toString();
+            final String newPrefValue;
+            if (homepageLayout.getCheckedRadioButtonId() == R.id.radio_default ||
+                    isUrlDefaultHomepage(homePageEditTextValue)) {
+                newPrefValue = "";
                 editor.remove(GeckoPreferences.PREFS_HOMEPAGE);
-                newValue = "";
             } else {
-                editor.putString(GeckoPreferences.PREFS_HOMEPAGE, newValue);
+                newPrefValue = homePageEditTextValue;
+                editor.putString(GeckoPreferences.PREFS_HOMEPAGE, newPrefValue);
             }
             editor.apply();
+
             if (getOnPreferenceChangeListener() != null) {
-                getOnPreferenceChangeListener().onPreferenceChange(this, newValue);
+                getOnPreferenceChangeListener().onPreferenceChange(this, newPrefValue);
             }
         }
     }

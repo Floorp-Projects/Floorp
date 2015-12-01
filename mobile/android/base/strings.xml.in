@@ -184,6 +184,9 @@
   <string name="pref_home_suggested_sites_summary">&pref_home_suggested_sites_summary;</string>
   <string name="pref_category_home_homepage">&pref_category_home_homepage;</string>
   <string name="home_homepage_title">&home_homepage_title;</string>
+  <string name="home_homepage_radio_default">&home_homepage_radio_default;</string>
+  <string name="home_homepage_radio_user_address">&home_homepage_radio_user_address;</string>
+  <string name="home_homepage_hint_user_address">&home_homepage_hint_user_address;</string>
 
   <string name="pref_header_general">&pref_header_general;</string>
   <string name="pref_header_search">&pref_header_search;</string>
