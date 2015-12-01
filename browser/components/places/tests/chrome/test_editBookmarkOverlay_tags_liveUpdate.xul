@@ -42,7 +42,7 @@
       is(children.length, aAvailableTags.length,
           "Found expected number of tags in the tags selector");
 
-      Array.forEach(children, function (aChild) {
+      Array.prototype.forEach.call(children, function (aChild) {
         let tag = aChild.getAttribute("label");
         ok(true, "Found tag '" + tag + "' in the selector");
         ok(aAvailableTags.includes(tag), "Found expected tag");
