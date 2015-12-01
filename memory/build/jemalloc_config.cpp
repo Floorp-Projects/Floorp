@@ -11,8 +11,17 @@
 #include <mozilla/Assertions.h>
 #include "mozilla/Types.h"
 
+#if defined(MOZ_NATIVE_JEMALLOC)
+MOZ_IMPORT_API int
+je_(mallctl)(const char*, void*, size_t*, void*, size_t);
+MOZ_IMPORT_API int
+je_(mallctlnametomib)(const char *name, size_t *mibp, size_t *miblenp);
+MOZ_IMPORT_API int
+je_(mallctlbymib)(const size_t *mib, size_t miblen, void *oldp, size_t *oldlenp, void *newp, size_t newlen);
+#else
 #define DLLEXPORT
 #include "jemalloc/jemalloc.h"
+#endif
 
 #ifdef XP_WIN
 #include <windows.h>
