@@ -226,73 +226,48 @@ template void
 MacroAssemblerX86Shared::atomicExchangeToTypedIntArray(Scalar::Type arrayType, const BaseIndex& mem,
                                                        Register value, Register temp, AnyRegister output);
 
+template<class T, class Map>
+T*
+MacroAssemblerX86Shared::getConstant(const typename T::Pod& value, Map& map,
+                                     Vector<T, 0, SystemAllocPolicy>& vec)
+{
+    typedef typename Map::AddPtr AddPtr;
+    if (!map.initialized()) {
+        enoughMemory_ &= map.init();
+        if (!enoughMemory_)
+            return nullptr;
+    }
+    size_t index;
+    if (AddPtr p = map.lookupForAdd(value)) {
+        index = p->value();
+    } else {
+        index = vec.length();
+        enoughMemory_ &= vec.append(T(value));
+        if (!enoughMemory_)
+            return nullptr;
+        enoughMemory_ &= map.add(p, value, index);
+        if (!enoughMemory_)
+            return nullptr;
+    }
+    return &vec[index];
+}
+
 MacroAssemblerX86Shared::Float*
 MacroAssemblerX86Shared::getFloat(float f)
 {
-    if (!floatMap_.initialized()) {
-        enoughMemory_ &= floatMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t floatIndex;
-    if (FloatMap::AddPtr p = floatMap_.lookupForAdd(f)) {
-        floatIndex = p->value();
-    } else {
-        floatIndex = floats_.length();
-        enoughMemory_ &= floats_.append(Float(f));
-        if (!enoughMemory_)
-            return nullptr;
-        enoughMemory_ &= floatMap_.add(p, f, floatIndex);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    return &floats_[floatIndex];
+    return getConstant<Float, FloatMap>(f, floatMap_, floats_);
 }
 
 MacroAssemblerX86Shared::Double*
 MacroAssemblerX86Shared::getDouble(double d)
 {
-    if (!doubleMap_.initialized()) {
-        enoughMemory_ &= doubleMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t doubleIndex;
-    if (DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d)) {
-        doubleIndex = p->value();
-    } else {
-        doubleIndex = doubles_.length();
-        enoughMemory_ &= doubles_.append(Double(d));
-        if (!enoughMemory_)
-            return nullptr;
-        enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    return &doubles_[doubleIndex];
+    return getConstant<Double, DoubleMap>(d, doubleMap_, doubles_);
 }
 
 MacroAssemblerX86Shared::SimdData*
 MacroAssemblerX86Shared::getSimdData(const SimdConstant& v)
 {
-    if (!simdMap_.initialized()) {
-        enoughMemory_ &= simdMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t index;
-    if (SimdMap::AddPtr p = simdMap_.lookupForAdd(v)) {
-        index = p->value();
-    } else {
-        index = simds_.length();
-        enoughMemory_ &= simds_.append(SimdData(v));
-        if (!enoughMemory_)
-            return nullptr;
-        enoughMemory_ &= simdMap_.add(p, v, index);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    return &simds_[index];
+    return getConstant<SimdData, SimdMap>(v, simdMap_, simds_);
 }
 
 static bool
