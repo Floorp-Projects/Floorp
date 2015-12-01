@@ -128,6 +128,16 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
     adcl(Imm32(0), dest.high);
 }
 
+void
+MacroAssembler::addConstantDouble(double d, FloatRegister dest)
+{
+    Double* dbl = getDouble(d);
+    if (!dbl)
+        return;
+    masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
+    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
+}
+
 // ===============================================================
 // Shift functions
 
@@ -165,6 +175,29 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+// Note: this function clobbers the source register.
+void
+MacroAssemblerX86::convertUInt32ToDouble(Register src, FloatRegister dest)
+{
+    // src is [0, 2^32-1]
+    subl(Imm32(0x80000000), src);
+
+    // Now src is [-2^31, 2^31-1] - int range, but not the same value.
+    convertInt32ToDouble(src, dest);
+
+    // dest is now a double with the int range.
+    // correct the double value by adding 0x80000000.
+    asMasm().addConstantDouble(2147483648.0, dest);
+}
+
+// Note: this function clobbers the source register.
+void
+MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
+{
+    convertUInt32ToDouble(src, dest);
+    convertDoubleToFloat32(dest, dest);
+}
 
 } // namespace jit
 } // namespace js

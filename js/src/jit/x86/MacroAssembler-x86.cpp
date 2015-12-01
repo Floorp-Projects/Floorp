@@ -103,16 +103,6 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 }
 
 void
-MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
-{
-    Double* dbl = getDouble(d);
-    if (!dbl)
-        return;
-    masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
-    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
-}
-
-void
 MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 {
     if (maybeInlineFloat(f, dest))
