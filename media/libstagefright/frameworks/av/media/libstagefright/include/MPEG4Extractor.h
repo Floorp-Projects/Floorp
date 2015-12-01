@@ -43,33 +43,15 @@ class MPEG4Extractor : public MediaExtractor {
 public:
     MPEG4Extractor(const sp<DataSource> &source);
 
-    virtual size_t countTracks();
-    virtual sp<MediaSource> getTrack(size_t index);
-    virtual sp<MetaData> getTrackMetaData(size_t index, uint32_t flags);
+    size_t countTracks() override;
+    sp<MediaSource> getTrack(size_t index) override;
+    sp<MetaData> getTrackMetaData(size_t index, uint32_t flags) override;
 
-    virtual sp<MetaData> getMetaData();
-    virtual uint32_t flags() const;
+    sp<MetaData> getMetaData() override;
+    uint32_t flags() const override;
 
     // for DRM
-    virtual char* getDrmTrackInfo(size_t trackID, int *len);
-
-    struct TrackExtends {
-        TrackExtends(): mVersion(0), mTrackId(0),
-                mDefaultSampleDescriptionIndex(0), mDefaultSampleDuration(0),
-                mDefaultSampleSize(0), mDefaultSampleFlags(0)
-        {
-            mFlags[0] = 0;
-            mFlags[1] = 0;
-            mFlags[2] = 0;
-        }
-        uint8_t mVersion;
-        uint8_t mFlags[3];
-        uint32_t mTrackId;
-        uint32_t mDefaultSampleDescriptionIndex;
-        uint32_t mDefaultSampleDuration;
-        uint32_t mDefaultSampleSize;
-        uint32_t mDefaultSampleFlags;
-    };
+    char* getDrmTrackInfo(size_t trackID, int *len) override;
 
 protected:
     virtual ~MPEG4Extractor();
@@ -135,12 +117,9 @@ private:
     SINF *mFirstSINF;
 
     bool mIsDrm;
-    TrackExtends mTrackExtends;
     uint32_t mDrmScheme;
 
     status_t parseDrmSINF(off64_t *offset, off64_t data_offset);
-
-    status_t parseTrackExtends(off64_t data_offset, off64_t data_size);
 
     status_t parseTrackHeader(off64_t data_offset, off64_t data_size);
 

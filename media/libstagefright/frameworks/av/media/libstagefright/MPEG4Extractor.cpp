@@ -50,9 +50,9 @@ public:
                 uint32_t timeScale,
                 const sp<SampleTable> &sampleTable);
 
-    virtual sp<MetaData> getFormat();
+    sp<MetaData> getFormat() override;
 
-    virtual nsTArray<Indice> exportIndex();
+    nsTArray<Indice> exportIndex() override;
 
 protected:
     virtual ~MPEG4Source();
@@ -62,8 +62,8 @@ private:
     uint32_t mTimescale;
     sp<SampleTable> mSampleTable;
 
-    MPEG4Source(const MPEG4Source &);
-    MPEG4Source &operator=(const MPEG4Source &);
+    MPEG4Source(const MPEG4Source &) = delete;
+    MPEG4Source &operator=(const MPEG4Source &) = delete;
 };
 
 // This custom data source wraps an existing one and satisfies requests
@@ -76,10 +76,10 @@ private:
 struct MPEG4DataSource : public DataSource {
     MPEG4DataSource(const sp<DataSource> &source);
 
-    virtual status_t initCheck() const;
-    virtual ssize_t readAt(off64_t offset, void *data, size_t size);
-    virtual status_t getSize(off64_t *size);
-    virtual uint32_t flags();
+    status_t initCheck() const override;
+    ssize_t readAt(off64_t offset, void *data, size_t size) override;
+    status_t getSize(off64_t *size) override;
+    uint32_t flags() override;
 
     status_t setCachedRange(off64_t offset, size_t size);
 
@@ -96,8 +96,8 @@ private:
 
     void clearCache();
 
-    MPEG4DataSource(const MPEG4DataSource &);
-    MPEG4DataSource &operator=(const MPEG4DataSource &);
+    MPEG4DataSource(const MPEG4DataSource &) = delete;
+    MPEG4DataSource &operator=(const MPEG4DataSource &) = delete;
 };
 
 MPEG4DataSource::MPEG4DataSource(const sp<DataSource> &source)
@@ -996,17 +996,6 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             mLastTrack->meta->setInt32(kKeyCryptoMode, defaultAlgorithmId);
             mLastTrack->meta->setInt32(kKeyCryptoDefaultIVSize, defaultIVSize);
             mLastTrack->meta->setData(kKeyCryptoKey, 'tenc', defaultKeyId, 16);
-            *offset += chunk_size;
-            break;
-        }
-
-        case FOURCC('t', 'r', 'e', 'x'):
-        {
-            status_t err;
-            if ((err = parseTrackExtends(data_offset, chunk_data_size)) != OK) {
-                return err;
-            }
-
             *offset += chunk_size;
             break;
         }
@@ -2142,27 +2131,6 @@ status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {
     if (!mLastTrack->meta->findInt64(kKeyDuration, &metaDuration) || metaDuration == 0) {
         mLastTrack->meta->setInt64(kKeyDuration, mSidxDuration);
     }
-    return OK;
-}
-
-status_t MPEG4Extractor::parseTrackExtends(
-    off64_t data_offset, off64_t data_size) {
-    if (data_size != 24) {
-        return ERROR_MALFORMED;
-    }
-    uint8_t buffer[24];
-    if (mDataSource->readAt(data_offset, buffer, 24) < 24) {
-        return ERROR_IO;
-    }
-    mTrackExtends.mVersion = buffer[0];
-    mTrackExtends.mFlags[0] = buffer[1];
-    mTrackExtends.mFlags[1] = buffer[2];
-    mTrackExtends.mFlags[2] = buffer[3];
-    mTrackExtends.mTrackId = U32_AT(&buffer[4]);
-    mTrackExtends.mDefaultSampleDescriptionIndex = U32_AT(&buffer[8]);
-    mTrackExtends.mDefaultSampleDuration = U32_AT(&buffer[12]);
-    mTrackExtends.mDefaultSampleSize = U32_AT(&buffer[16]);
-    mTrackExtends.mDefaultSampleFlags = U32_AT(&buffer[20]);
     return OK;
 }
 
