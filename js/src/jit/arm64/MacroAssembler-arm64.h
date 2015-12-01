@@ -814,10 +814,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     BufferOffset movePatchablePtr(ImmWord ptr, Register dest);
     BufferOffset movePatchablePtr(ImmPtr ptr, Register dest);
 
-    void neg32(Register reg) {
-        Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
-    }
-
     void loadPtr(wasm::SymbolicAddress address, Register dest) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch = temps.AcquireX();

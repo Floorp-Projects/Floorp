@@ -175,9 +175,6 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand& dest) {
         movl(src, dest);
     }
-    void neg32(Register reg) {
-        negl(reg);
-    }
     void test32(Register lhs, Register rhs) {
         testl(rhs, lhs);
     }

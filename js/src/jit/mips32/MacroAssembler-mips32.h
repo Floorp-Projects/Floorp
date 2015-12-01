@@ -300,9 +300,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branch(code);
     }
 
-    void neg32(Register reg) {
-        ma_negu(reg, reg);
-    }
     void negl(Register reg) {
         ma_negu(reg, reg);
     }
