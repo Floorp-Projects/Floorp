@@ -24,9 +24,7 @@
     },
 
     function() {
-      if (SpecialPowers.isMainProcess()) {
-        SpecialPowers.Cu.import("resource://gre/modules/RequestSyncService.jsm");
-      }
+      SpecialPowers.importInMainProcess("resource://gre/modules/RequestSyncService.jsm");
       runTests();
     },
 

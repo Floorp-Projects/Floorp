@@ -309,7 +309,7 @@ CanEnterBaselineJIT(JSContext* cx, HandleScript script, InterpreterFrame* osrFra
         return Method_Compiled;
 
     // Check script warm-up counter.
-    if (script->incWarmUpCounter() <= js_JitOptions.baselineWarmUpThreshold)
+    if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold)
         return Method_Skipped;
 
     // Frames can be marked as debuggee frames independently of its underlying

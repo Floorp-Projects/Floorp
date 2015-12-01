@@ -928,7 +928,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
 
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", js_CodeName[op],
+    FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", CodeName[op],
             int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
             int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
 
@@ -1024,7 +1024,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
     // Handle string concat.
     if (op == JSOP_ADD) {
         if (lhs.isString() && rhs.isString()) {
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", CodeName[op]);
             MOZ_ASSERT(ret.isString());
             ICBinaryArith_StringConcat::Compiler compiler(cx, engine);
             ICStub* strcatStub = compiler.getStub(compiler.getStubSpace(script));
@@ -1035,7 +1035,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         }
 
         if ((lhs.isString() && rhs.isObject()) || (lhs.isObject() && rhs.isString())) {
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", CodeName[op],
                     lhs.isString() ? "String" : "Object",
                     lhs.isString() ? "Object" : "String");
             MOZ_ASSERT(ret.isString());
@@ -1053,7 +1053,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         (op == JSOP_ADD || op == JSOP_SUB || op == JSOP_BITOR || op == JSOP_BITAND ||
          op == JSOP_BITXOR))
     {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", CodeName[op],
                 lhs.isBoolean() ? "Boolean" : "Int32", rhs.isBoolean() ? "Boolean" : "Int32");
         ICBinaryArith_BooleanWithInt32::Compiler compiler(cx, op, engine,
                                                           lhs.isBoolean(), rhs.isBoolean());
@@ -1084,7 +1084,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
           case JSOP_MOD: {
             // Unlink int32 stubs, it's faster to always use the double stub.
             stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(Double, Double) stub", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(Double, Double) stub", CodeName[op]);
 
             ICBinaryArith_Double::Compiler compiler(cx, op, engine);
             ICStub* doubleStub = compiler.getStub(compiler.getStubSpace(script));
@@ -1102,7 +1102,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
         bool allowDouble = ret.isDouble();
         if (allowDouble)
             stub->unlinkStubsWithKind(cx, ICStub::BinaryArith_Int32);
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32%s) stub", js_CodeName[op],
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32%s) stub", CodeName[op],
                 allowDouble ? " => Double" : "");
         ICBinaryArith_Int32::Compiler compilerInt32(cx, op, engine, allowDouble);
         ICStub* int32Stub = compilerInt32.getStub(compilerInt32.getStubSpace(script));
@@ -1120,7 +1120,7 @@ DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallbac
           case JSOP_BITOR:
           case JSOP_BITXOR:
           case JSOP_BITAND: {
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", CodeName[op],
                         lhs.isDouble() ? "Double" : "Int32",
                         lhs.isDouble() ? "Int32" : "Double");
             ICBinaryArith_DoubleWithInt32::Compiler compiler(cx, op, engine, lhs.isDouble());
@@ -1486,7 +1486,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
 
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "UnaryArith(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "UnaryArith(%s)", CodeName[op]);
 
     switch (op) {
       case JSOP_BITNOT: {
@@ -1517,7 +1517,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
     }
 
     if (val.isInt32() && res.isInt32()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32 => Int32) stub", js_CodeName[op]);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32 => Int32) stub", CodeName[op]);
         ICUnaryArith_Int32::Compiler compiler(cx, op, engine);
         ICStub* int32Stub = compiler.getStub(compiler.getStubSpace(script));
         if (!int32Stub)
@@ -1527,7 +1527,7 @@ DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback*
     }
 
     if (val.isNumber() && res.isNumber() && cx->runtime()->jitSupportsFloatingPoint) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Number => Number) stub", js_CodeName[op]);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Number => Number) stub", CodeName[op]);
 
         // Unlink int32 stubs, the double stub handles both cases and TI specializes for both.
         stub->unlinkStubsWithKind(cx, ICStub::UnaryArith_Int32);
@@ -1623,7 +1623,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
 
-    FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "Compare(%s)", CodeName[op]);
 
     // Case operations in a CONDSWITCH are performing strict equality.
     if (op == JSOP_CASE)
@@ -1689,7 +1689,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
 
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32) stub", js_CodeName[op]);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Int32, Int32) stub", CodeName[op]);
         ICCompare_Int32::Compiler compiler(cx, op, engine);
         ICStub* int32Stub = compiler.getStub(compiler.getStubSpace(script));
         if (!int32Stub)
@@ -1703,7 +1703,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
         return true;
 
     if (lhs.isNumber() && rhs.isNumber()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Number, Number) stub", js_CodeName[op]);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Number, Number) stub", CodeName[op]);
 
         // Unlink int32 stubs, it's faster to always use the double stub.
         stub->unlinkStubsWithKind(cx, ICStub::Compare_Int32);
@@ -1720,7 +1720,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     if ((lhs.isNumber() && rhs.isUndefined()) ||
         (lhs.isUndefined() && rhs.isNumber()))
     {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", CodeName[op],
                     rhs.isUndefined() ? "Number" : "Undefined",
                     rhs.isUndefined() ? "Undefined" : "Number");
         ICCompare_NumberWithUndefined::Compiler compiler(cx, op, engine, lhs.isUndefined());
@@ -1733,7 +1733,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     }
 
     if (lhs.isBoolean() && rhs.isBoolean()) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(Boolean, Boolean) stub", js_CodeName[op]);
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(Boolean, Boolean) stub", CodeName[op]);
         ICCompare_Boolean::Compiler compiler(cx, op, engine);
         ICStub* booleanStub = compiler.getStub(compiler.getStubSpace(script));
         if (!booleanStub)
@@ -1744,7 +1744,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
     }
 
     if ((lhs.isBoolean() && rhs.isInt32()) || (lhs.isInt32() && rhs.isBoolean())) {
-        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+        JitSpew(JitSpew_BaselineIC, "  Generating %s(%s, %s) stub", CodeName[op],
                     rhs.isInt32() ? "Boolean" : "Int32",
                     rhs.isInt32() ? "Int32" : "Boolean");
         ICCompare_Int32WithBoolean::Compiler compiler(cx, op, engine, lhs.isInt32());
@@ -1758,7 +1758,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
 
     if (IsEqualityOp(op)) {
         if (lhs.isString() && rhs.isString() && !stub->hasStub(ICStub::Compare_String)) {
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(String, String) stub", CodeName[op]);
             ICCompare_String::Compiler compiler(cx, op, engine);
             ICStub* stringStub = compiler.getStub(compiler.getStubSpace(script));
             if (!stringStub)
@@ -1770,7 +1770,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
 
         if (lhs.isObject() && rhs.isObject()) {
             MOZ_ASSERT(!stub->hasStub(ICStub::Compare_Object));
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(Object, Object) stub", js_CodeName[op]);
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(Object, Object) stub", CodeName[op]);
             ICCompare_Object::Compiler compiler(cx, op, engine);
             ICStub* objectStub = compiler.getStub(compiler.getStubSpace(script));
             if (!objectStub)
@@ -1785,7 +1785,7 @@ DoCompareFallback(JSContext* cx, BaselineFrame* frame, ICCompare_Fallback* stub_
             !stub->hasStub(ICStub::Compare_ObjectWithUndefined))
         {
             JitSpew(JitSpew_BaselineIC, "  Generating %s(Obj/Null/Undef, Obj/Null/Undef) stub",
-                    js_CodeName[op]);
+                    CodeName[op]);
             bool lhsIsUndefined = lhs.isNull() || lhs.isUndefined();
             bool compareWithNull = lhs.isNull() || rhs.isNull();
             ICCompare_ObjectWithUndefined::Compiler compiler(cx, op, engine,
@@ -2968,7 +2968,7 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
 
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "GetProp(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "GetProp(%s)", CodeName[op]);
 
     MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 

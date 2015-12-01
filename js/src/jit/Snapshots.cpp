@@ -552,7 +552,7 @@ SnapshotReader::spewBailingFrom() const
     if (JitSpewEnabled(JitSpew_IonBailouts)) {
         JitSpewHeader(JitSpew_IonBailouts);
         Fprinter& out = JitSpewPrinter();
-        out.printf(" bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
+        out.printf(" bailing from bytecode: %s, MIR: ", CodeName[pcOpcode_]);
         MDefinition::PrintOpcodeName(out, MDefinition::Opcode(mirOpcode_));
         out.printf(" [%u], LIR: ", mirId_);
         LInstruction::printName(out, LInstruction::Opcode(lirOpcode_));

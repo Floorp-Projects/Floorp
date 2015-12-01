@@ -1090,7 +1090,7 @@ void
 MCompare::printOpcode(GenericPrinter& out) const
 {
     MDefinition::printOpcode(out);
-    out.printf(" %s", js_CodeName[jsop()]);
+    out.printf(" %s", CodeName[jsop()]);
 }
 
 void

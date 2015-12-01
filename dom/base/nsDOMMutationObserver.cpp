@@ -759,12 +759,14 @@ nsDOMMutationObserver::GetObservingInfo(
       info.mAttributeFilter.Construct();
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
         info.mAttributeFilter.Value();
+      nsString* strings = filtersAsStrings.AppendElements(filters.Count(),
+                                                          mozilla::fallible);
+      if (!strings) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
       for (int32_t j = 0; j < filters.Count(); ++j) {
-        if (!filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]),
-                                            mozilla::fallible)) {
-          aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-          return;
-        }
+        filters[j]->ToString(strings[j]);
       }
     }
     info.mObservedNode = mr->Target();
