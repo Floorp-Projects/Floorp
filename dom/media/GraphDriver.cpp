@@ -57,6 +57,7 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
                                GraphTime aLastSwitchNextIterationStart,
                                GraphTime aLastSwitchNextIterationEnd)
 {
+  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   // We set mIterationEnd here, because the first thing a driver do when it
   // does an iteration is to update graph times, so we are in fact setting
   // mIterationStart of the next iteration by setting the end of the previous
@@ -71,6 +72,7 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
 
 void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 {
+  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   // This is the situation where `mPreviousDriver` is an AudioCallbackDriver
   // that is switching device, and the graph has found the current driver is not
   // an AudioCallbackDriver, but tries to switch to a _new_ AudioCallbackDriver
