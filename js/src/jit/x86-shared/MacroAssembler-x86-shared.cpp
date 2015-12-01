@@ -270,15 +270,32 @@ MacroAssemblerX86Shared::getSimdData(const SimdConstant& v)
     return getConstant<SimdData, SimdMap>(v, simdMap_, simds_);
 }
 
+template<class T, class Map>
 static bool
-AppendShiftedUses(const MacroAssemblerX86Shared::UsesVector& old, size_t delta,
-                  MacroAssemblerX86Shared::UsesVector* vec)
+MergeConstants(size_t delta, const Vector<T, 0, SystemAllocPolicy>& other,
+               Map& map, Vector<T, 0, SystemAllocPolicy>& vec)
 {
-    for (CodeOffset use : old) {
-        use.offsetBy(delta);
-        if (!vec->append(use))
-            return false;
+    typedef typename Map::AddPtr AddPtr;
+    if (!map.initialized() && !map.init())
+        return false;
+
+    for (const T& c : other) {
+        size_t index;
+        if (AddPtr p = map.lookupForAdd(c.value)) {
+            index = p->value();
+        } else {
+            index = vec.length();
+            if (!vec.append(T(c.value)) || !map.add(p, c.value, index))
+                return false;
+        }
+        MacroAssemblerX86Shared::UsesVector& uses = vec[index].uses;
+        for (CodeOffset use : c.uses) {
+            use.offsetBy(delta);
+            if (!uses.append(use))
+                return false;
+        }
     }
+
     return true;
 }
 
@@ -286,56 +303,14 @@ bool
 MacroAssemblerX86Shared::asmMergeWith(const MacroAssemblerX86Shared& other)
 {
     size_t sizeBefore = masm.size();
-
     if (!Assembler::asmMergeWith(other))
         return false;
-
-    if (!doubleMap_.initialized() && !doubleMap_.init())
+    if (!MergeConstants<Double, DoubleMap>(sizeBefore, other.doubles_, doubleMap_, doubles_))
         return false;
-    if (!floatMap_.initialized() && !floatMap_.init())
+    if (!MergeConstants<Float, FloatMap>(sizeBefore, other.floats_, floatMap_, floats_))
         return false;
-    if (!simdMap_.initialized() && !simdMap_.init())
+    if (!MergeConstants<SimdData, SimdMap>(sizeBefore, other.simds_, simdMap_, simds_))
         return false;
-
-    for (const Double& d : other.doubles_) {
-        size_t index;
-        if (DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d.value)) {
-            index = p->value();
-        } else {
-            index = doubles_.length();
-            if (!doubles_.append(Double(d.value)) || !doubleMap_.add(p, d.value, index))
-                return false;
-        }
-        if (!AppendShiftedUses(d.uses, sizeBefore, &doubles_[index].uses))
-            return false;
-    }
-
-    for (const Float& f : other.floats_) {
-        size_t index;
-        if (FloatMap::AddPtr p = floatMap_.lookupForAdd(f.value)) {
-            index = p->value();
-        } else {
-            index = floats_.length();
-            if (!floats_.append(Float(f.value)) || !floatMap_.add(p, f.value, index))
-                return false;
-        }
-        if (!AppendShiftedUses(f.uses, sizeBefore, &floats_[index].uses))
-            return false;
-    }
-
-    for (const SimdData& s : other.simds_) {
-        size_t index;
-        if (SimdMap::AddPtr p = simdMap_.lookupForAdd(s.value)) {
-            index = p->value();
-        } else {
-            index = simds_.length();
-            if (!simds_.append(SimdData(s.value)) || !simdMap_.add(p, s.value, index))
-                return false;
-        }
-        if (!AppendShiftedUses(s.uses, sizeBefore, &simds_[index].uses))
-            return false;
-    }
-
     return true;
 }
 
