@@ -53,6 +53,18 @@ struct ConstantSpec
 
 typedef bool (*PropertyEnabled)(JSContext* cx, JSObject* global);
 
+namespace GlobalNames {
+// The names of our possible globals.  These are the names of the actual
+// interfaces, not of the global names used to refer to them in IDL [Exposed]
+// annotations.
+static const uint32_t Window = 1u << 0;
+static const uint32_t BackstagePass = 1u << 1;
+static const uint32_t DedicatedWorkerGlobalScope = 1u << 2;
+static const uint32_t SharedWorkerGlobalScope = 1u << 3;
+static const uint32_t ServiceWorkerGlobalScope = 1u << 4;
+static const uint32_t WorkerDebuggerGlobalScope = 1u << 5;
+} // namespace GlobalNames
+
 template<typename T>
 struct Prefable {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
@@ -85,6 +97,8 @@ struct Prefable {
 
   // A boolean indicating whether this set of specs is enabled
   bool enabled;
+  // Bitmask of global names that we should not be exposed in.
+  uint32_t nonExposedGlobals;
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of
   // "enabled" is used as-is unless availableFunc overrides.
