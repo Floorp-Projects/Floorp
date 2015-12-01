@@ -986,7 +986,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, FloatRegister dest);
-    void addConstantDouble(double d, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
     void loadConstantInt32x4(const SimdConstant& v, FloatRegister dest);
     void loadConstantFloat32x4(const SimdConstant& v, FloatRegister dest);
@@ -1072,23 +1071,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToDouble(Register src, FloatRegister dest) {
-        // src is [0, 2^32-1]
-        subl(Imm32(0x80000000), src);
-
-        // Now src is [-2^31, 2^31-1] - int range, but not the same value.
-        convertInt32ToDouble(src, dest);
-
-        // dest is now a double with the int range.
-        // correct the double value by adding 0x80000000.
-        addConstantDouble(2147483648.0, dest);
-    }
+    inline void convertUInt32ToDouble(Register src, FloatRegister dest);
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToFloat32(Register src, FloatRegister dest) {
-        convertUInt32ToDouble(src, dest);
-        convertDoubleToFloat32(dest, dest);
-    }
+    inline void convertUInt32ToFloat32(Register src, FloatRegister dest);
 
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
 
