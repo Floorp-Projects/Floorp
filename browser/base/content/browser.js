@@ -1023,12 +1023,6 @@ var gBrowserInit = {
           defaultWidth = screen.availWidth * .75;
           defaultHeight = screen.availHeight * .75;
         }
-
-#if MOZ_WIDGET_GTK == 2
-        // On X, we're not currently able to account for the size of the window
-        // border.  Use 28px as a guess (titlebar + bottom window border)
-        defaultHeight -= 28;
-#endif
       }
       document.documentElement.setAttribute("width", defaultWidth);
       document.documentElement.setAttribute("height", defaultHeight);
@@ -5067,9 +5061,9 @@ function setToolbarVisibility(toolbar, isVisible, persist=true) {
   let hidingAttribute;
   if (toolbar.getAttribute("type") == "menubar") {
     hidingAttribute = "autohide";
-#ifdef MOZ_WIDGET_GTK
-    Services.prefs.setBoolPref("ui.key.menuAccessKeyFocuses", !isVisible);
-#endif
+    if (AppConstants.platform == "linux") {
+      Services.prefs.setBoolPref("ui.key.menuAccessKeyFocuses", !isVisible);
+    }
   } else {
     hidingAttribute = "collapsed";
   }
