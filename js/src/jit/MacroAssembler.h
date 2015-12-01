@@ -781,6 +781,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
 
+    inline void negateFloat(FloatRegister reg) DEFINED_ON(arm64, x86_shared);
+
     // ===============================================================
     // Shift functions
 

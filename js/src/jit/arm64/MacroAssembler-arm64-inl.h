@@ -384,6 +384,12 @@ MacroAssembler::neg32(Register reg)
     Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
 }
 
+void
+MacroAssembler::negateFloat(FloatRegister reg)
+{
+    fneg(ARMFPRegister(reg, 32), ARMFPRegister(reg, 32));
+}
+
 // ===============================================================
 // Shift functions
 
