@@ -566,10 +566,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void mulBy3(const Register& src, const Register& dest) {
-        lea(Operand(src, src, TimesTwo), dest);
-    }
-
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         cmp32(Operand(lhs), rhs);
         j(cond, label);

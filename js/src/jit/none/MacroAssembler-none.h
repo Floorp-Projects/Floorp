@@ -235,7 +235,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
     void neg32(Register) { MOZ_CRASH(); }
-    void mulBy3(Register, Register) { MOZ_CRASH(); }
 
     void negateDouble(FloatRegister) { MOZ_CRASH(); }
     void mulDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }

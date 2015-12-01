@@ -333,6 +333,14 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     Mul(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), scratch64);
 }
 
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    ARMRegister xdest(dest, 64);
+    ARMRegister xsrc(src, 64);
+    Add(xdest, xsrc, Operand(xsrc, vixl::LSL, 1));
+}
+
 // ===============================================================
 // Shift functions
 

@@ -298,6 +298,12 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     ma_mov(ScratchRegister, dest.low);
 }
 
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    as_add(dest, src, lsl(src, 1));
+}
+
 // ===============================================================
 // Shift functions
 
