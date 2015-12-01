@@ -185,8 +185,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
-    void negateDouble(FloatRegister reg);
-
     void movq(Register rs, Register rd);
 
     void computeScaledAddress(const BaseIndex& address, Register dest);

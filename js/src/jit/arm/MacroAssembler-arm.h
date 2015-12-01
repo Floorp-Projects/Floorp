@@ -97,8 +97,6 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
-    void negateDouble(FloatRegister reg);
-
     // Somewhat direct wrappers for the low-level assembler funcitons
     // bitops. Attempt to encode a virtual alu instruction using two real
     // instructions.
