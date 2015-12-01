@@ -20,31 +20,31 @@ enum nsChangeHint {
   // change was visual only (e.g., COLOR=)
   // Invalidates all descendant frames (including following
   // placeholders to out-of-flow frames).
-  nsChangeHint_RepaintFrame = 0x01,
+  nsChangeHint_RepaintFrame = 1 << 0,
 
   // For reflow, we want flags to give us arbitrary FrameNeedsReflow behavior.
   // just do a FrameNeedsReflow.
-  nsChangeHint_NeedReflow = 0x02,
+  nsChangeHint_NeedReflow = 1 << 1,
 
   // Invalidate intrinsic widths on the frame's ancestors.  Must not be set
   // without setting nsChangeHint_NeedReflow.
-  nsChangeHint_ClearAncestorIntrinsics = 0x04,
+  nsChangeHint_ClearAncestorIntrinsics = 1 << 2,
 
   // Invalidate intrinsic widths on the frame's descendants.  Must not be set
   // without also setting nsChangeHint_ClearAncestorIntrinsics.
-  nsChangeHint_ClearDescendantIntrinsics = 0x08,
+  nsChangeHint_ClearDescendantIntrinsics = 1 << 3,
 
   // Force unconditional reflow of all descendants.  Must not be set without
   // setting nsChangeHint_NeedReflow, but is independent of both the
   // Clear*Intrinsics flags.
-  nsChangeHint_NeedDirtyReflow = 0x10,
+  nsChangeHint_NeedDirtyReflow = 1 << 4,
 
   // change requires view to be updated, if there is one (e.g., clip:).
   // Updates all descendants (including following placeholders to out-of-flows).
-  nsChangeHint_SyncFrameView = 0x20,
+  nsChangeHint_SyncFrameView = 1 << 5,
 
   // The currently shown mouse cursor needs to be updated
-  nsChangeHint_UpdateCursor = 0x40,
+  nsChangeHint_UpdateCursor = 1 << 6,
 
   /**
    * Used when the computed value (a URI) of one or more of an element's
@@ -54,38 +54,38 @@ enum nsChangeHint {
    * hint results in nsSVGEffects::UpdateEffects being called on the element's
    * frame.
    */
-  nsChangeHint_UpdateEffects = 0x80,
+  nsChangeHint_UpdateEffects = 1 << 7,
 
   /**
    * Visual change only, but the change can be handled entirely by
    * updating the layer(s) for the frame.
    * Updates all descendants (including following placeholders to out-of-flows).
    */
-  nsChangeHint_UpdateOpacityLayer = 0x100,
+  nsChangeHint_UpdateOpacityLayer = 1 << 8,
   /**
    * Updates all descendants. Any placeholder descendants' out-of-flows
    * are also descendants of the transformed frame, so they're updated.
    */
-  nsChangeHint_UpdateTransformLayer = 0x200,
+  nsChangeHint_UpdateTransformLayer = 1 << 9,
 
   /**
    * Change requires frame change (e.g., display:).
    * This subsumes all the above. Reconstructs all frame descendants,
    * including following placeholders to out-of-flows.
    */
-  nsChangeHint_ReconstructFrame = 0x400,
+  nsChangeHint_ReconstructFrame = 1 << 10,
 
   /**
    * The frame's overflow area has changed. Does not update any descendant
    * frames.
    */
-  nsChangeHint_UpdateOverflow = 0x800,
+  nsChangeHint_UpdateOverflow = 1 << 11,
 
   /**
    * The overflow area of the frame and all of its descendants has changed. This
    * can happen through a text-decoration change.   
    */
-  nsChangeHint_UpdateSubtreeOverflow = 0x1000,
+  nsChangeHint_UpdateSubtreeOverflow = 1 << 12,
 
   /**
    * The frame's overflow area has changed, through a change in its transform.
@@ -95,7 +95,7 @@ enum nsChangeHint {
    * changed, see nsChangeHint_UpdateOverflow.
    * Does not update any descendant frames.
    */
-  nsChangeHint_UpdatePostTransformOverflow = 0x2000,
+  nsChangeHint_UpdatePostTransformOverflow = 1 << 13,
 
   /**
    * This frame's effect on its parent's overflow area has changed.
@@ -103,13 +103,13 @@ enum nsChangeHint {
    * changed; if those are the case, see
    * nsChangeHint_UpdatePostTransformOverflow.)
    */
-  nsChangeHint_UpdateParentOverflow = 0x4000,
+  nsChangeHint_UpdateParentOverflow = 1 << 14,
 
   /**
    * The children-only transform of an SVG frame changed, requiring the
    * overflow rects of the frame's immediate children to be updated.
    */
-  nsChangeHint_ChildrenOnlyTransform = 0x8000,
+  nsChangeHint_ChildrenOnlyTransform = 1 << 15,
 
   /**
    * The frame's offsets have changed, while its dimensions might have
@@ -121,7 +121,7 @@ enum nsChangeHint {
    * nsChangeHint_UpdateOverflow in order to get the overflow areas of
    * the ancestors updated as well.
    */
-  nsChangeHint_RecomputePosition = 0x10000,
+  nsChangeHint_RecomputePosition = 1 << 16,
 
   /**
    * Behaves like ReconstructFrame, but only if the frame has descendants
@@ -129,7 +129,7 @@ enum nsChangeHint {
    * has changed whether the frame is a container for fixed-pos or abs-pos
    * elements, but reframing is otherwise not needed.
    */
-  nsChangeHint_UpdateContainingBlock = 0x20000,
+  nsChangeHint_UpdateContainingBlock = 1 << 17,
 
   /**
    * This change hint has *no* change handling behavior.  However, it
@@ -137,19 +137,19 @@ enum nsChangeHint {
    * changes, and it's inherited by a child, that might require a reflow
    * due to the border-width change on the child.
    */
-  nsChangeHint_BorderStyleNoneChange = 0x40000,
+  nsChangeHint_BorderStyleNoneChange = 1 << 18,
 
   /**
    * SVG textPath needs to be recomputed because the path has changed.
    * This means that the glyph positions of the text need to be recomputed.
    */
-  nsChangeHint_UpdateTextPath = 0x80000,
+  nsChangeHint_UpdateTextPath = 1 << 19,
 
   /**
    * This will schedule an invalidating paint. This is useful if something
    * has changed which will be invalidated by DLBI.
    */
-  nsChangeHint_SchedulePaint = 0x100000,
+  nsChangeHint_SchedulePaint = 1 << 20,
 
   /**
    * A hint reflecting that style data changed with no change handling
@@ -165,24 +165,24 @@ enum nsChangeHint {
    * different data would be cached information that would be re-calculated
    * to the same values, such as nsStyleBorder::mSubImages.)
    */
-  nsChangeHint_NeutralChange = 0x200000,
+  nsChangeHint_NeutralChange = 1 << 21,
 
   /**
    * This will cause rendering observers to be invalidated.
    */
-  nsChangeHint_InvalidateRenderingObservers = 0x400000,
+  nsChangeHint_InvalidateRenderingObservers = 1 << 22,
 
   /**
    * Indicates that the reflow changes the size or position of the
    * element, and thus the reflow must start from at least the frame's
    * parent.
    */
-  nsChangeHint_ReflowChangesSizeOrPosition = 0x800000,
+  nsChangeHint_ReflowChangesSizeOrPosition = 1 << 23,
 
   /**
    * Indicates that the style changes the computed BSize --- e.g. 'height'.
    */
-  nsChangeHint_UpdateComputedBSize = 0x1000000,
+  nsChangeHint_UpdateComputedBSize = 1 << 24,
 
   /**
    * Indicates that the 'opacity' property changed between 1 and non-1.
@@ -192,7 +192,7 @@ enum nsChangeHint {
    * Note that we do not send this hint if the non-1 value was 0.99 or
    * greater, since in that case we send a RepaintFrame hint instead.
    */
-  nsChangeHint_UpdateUsesOpacity = 0x2000000,
+  nsChangeHint_UpdateUsesOpacity = 1 << 25,
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
