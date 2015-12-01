@@ -48,3 +48,17 @@ their language.
 <!ENTITY welcomeback2.afterlink.pageInfo2   "">
 
 <!ENTITY welcomeback2.link.pageInfo2        "learn more about what you can do.">
+
+<!-- LOCALIZATION NOTE: The following 'tabgroupsmigration' strings are for
+     the tab groups (panorama) migration page, not about:sessionrestore -->
+<!ENTITY tabgroupsmigration.tabtitle            "Migrate your other Tab Groups">
+<!ENTITY tabgroupsmigration.pagetitle           "Tab Groups are no more. Sorry.">
+<!-- LOCALIZATION NOTE (tabgroupsmigration.learnMoreLink):
+     This is inserted into tabgroupsmigration.description. -->
+<!ENTITY tabgroupsmigration.learnMoreLink       "Learn More">
+<!-- LOCALIZATION NOTE (tabgroupsmigration.description):
+     &#37;S will be replaced with a link labeled with tabgroupsmigration.learnMoreLink -->
+<!ENTITY tabgroupsmigration.description         "&brandShortName; has bookmarked all your groups, so you have not lost anything. &#37;S">
+<!ENTITY tabgroupsmigration.bookmarkbutton      "Show Bookmarked Tab Groups">
+<!ENTITY tabgroupsmigration.restoredescription  "You can also choose to restore some or all background groups into windows now:">
+

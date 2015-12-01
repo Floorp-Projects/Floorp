@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
 
+const RECOVERY_URL = "chrome://browser/content/aboutTabGroupsMigration.xhtml";
+
 
 this.TabGroupsMigrator = {
   bookmarkedGroupsPromise: null,
@@ -235,7 +237,11 @@ this.TabGroupsMigrator = {
   },
 
   _createBackgroundTabGroupRestorationPage(state, backgroundData) {
-    // TODO
+    let win = state.windows[(state.selectedWindow || 1) - 1];
+    let formdata = {id: {sessionData: JSON.stringify(backgroundData)}, url: RECOVERY_URL};
+    let newTab = { entries: [{url: RECOVERY_URL}], formdata, index: 1 };
+    // Add tab and mark it as selected:
+    win.selected = win.tabs.push(newTab);
   },
 };
 
