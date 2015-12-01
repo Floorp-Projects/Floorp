@@ -222,6 +222,8 @@ namespace mozilla {
 class VideoFrameContainer;
 class MediaDecoderStateMachine;
 
+enum class MediaEventType : int8_t;
+
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
 #ifdef GetCurrentTime
@@ -800,17 +802,7 @@ private:
   MediaEventSource<void>*
   DataArrivedEvent() override { return &mDataArrivedEvent; }
 
-  // Used to estimate rates of data passing through the decoder's channel.
-  // Records activity stopping on the channel.
-  void OnPlaybackStarted() { mPlaybackStatistics->Start(); }
-
-  // Used to estimate rates of data passing through the decoder's channel.
-  // Records activity stopping on the channel.
-  void OnPlaybackStopped()
-  {
-    mPlaybackStatistics->Stop();
-    ComputePlaybackRate();
-  }
+  void OnPlaybackEvent(MediaEventType aEvent);
 
   MediaEventProducer<void> mDataArrivedEvent;
 
@@ -933,11 +925,7 @@ protected:
   MediaEventListener mMetadataLoadedListener;
   MediaEventListener mFirstFrameLoadedListener;
 
-  MediaEventListener mOnPlaybackStart;
-  MediaEventListener mOnPlaybackStop;
-  MediaEventListener mOnPlaybackEnded;
-  MediaEventListener mOnDecodeError;
-  MediaEventListener mOnInvalidate;
+  MediaEventListener mOnPlaybackEvent;
   MediaEventListener mOnSeekingStart;
 
 protected:
@@ -1094,7 +1082,7 @@ private:
   // download has ended. Called on the main thread only. aStatus is
   // the result from OnStopRequest.
   void NotifyDownloadEnded(nsresult aStatus);
-  
+
   bool mTelemetryReported;
 };
 
