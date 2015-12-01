@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
@@ -128,7 +129,11 @@ this.TabGroupsMigrator = {
   },
 
   _createBackup(stateStr) {
-    // TODO
+    let dest = Services.dirsvc.get("Desk", Ci.nsIFile);
+    dest.append("Firefox-tabgroups-backup.json");
+    let promise = OS.File.writeAtomic(dest.path, stateStr, {encoding: "utf-8"});
+    AsyncShutdown.webWorkersShutdown.addBlocker("TabGroupsMigrator", promise);
+    return promise;
   },
 
   _bookmarkAllGroupsFromState: Task.async(function*(groupData) {
