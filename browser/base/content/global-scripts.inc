@@ -24,7 +24,9 @@
 <script type="application/javascript" src="chrome://browser/content/browser-gestureSupport.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-plugins.js"/>
+#ifdef MOZ_SAFE_BROWSING
 <script type="application/javascript" src="chrome://browser/content/browser-safebrowsing.js"/>
+#endif
 <script type="application/javascript" src="chrome://browser/content/browser-sidebar.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-syncui.js"/>
