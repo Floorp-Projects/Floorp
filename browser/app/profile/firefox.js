@@ -1608,17 +1608,13 @@ pref("browser.pocket.enabledLocales", "cs de en-GB en-US en-ZA es-ES es-MX fr hu
 
 pref("view_source.tab", true);
 
-#ifndef RELEASE_BUILD
-// Enable ServiceWorkers for Push API consumers.
-// Interception is still disabled on beta and release.
 pref("dom.serviceWorkers.enabled", true);
-
 pref("dom.serviceWorkers.interception.enabled", true);
+pref("dom.serviceWorkers.openWindow.enabled", true);
 
+#ifndef RELEASE_BUILD
 // Enable Push API.
 pref("dom.push.enabled", true);
-
-pref("dom.serviceWorkers.openWindow.enabled", true);
 #endif
 
 // These are the thumbnail width/height set in about:newtab.

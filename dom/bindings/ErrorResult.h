@@ -398,6 +398,16 @@ private:
   void operator=(const ErrorResult&) = delete;
 };
 
+// A class for use when an ErrorResult should just automatically be ignored.
+class IgnoredErrorResult : public ErrorResult
+{
+public:
+  ~IgnoredErrorResult()
+  {
+    SuppressException();
+  }
+};
+
 /******************************************************************************
  ** Macros for checking results
  ******************************************************************************/

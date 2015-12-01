@@ -55,8 +55,8 @@ struct ReciprocalMulConstants {
 struct NativeToTrackedOptimizations
 {
     // [startOffset, endOffset]
-    CodeOffsetLabel startOffset;
-    CodeOffsetLabel endOffset;
+    CodeOffset startOffset;
+    CodeOffset endOffset;
     const TrackedOptimizations* optimizations;
 };
 
@@ -83,7 +83,7 @@ class CodeGeneratorShared : public LElementVisitor
     uint32_t lastOsiPointOffset_;
     SafepointWriter safepoints_;
     Label invalidate_;
-    CodeOffsetLabel invalidateEpilogueData_;
+    CodeOffset invalidateEpilogueData_;
 
     // Label for the common return path.
     NonAssertingLabel returnLabel_;
@@ -106,13 +106,13 @@ class CodeGeneratorShared : public LElementVisitor
     Vector<PatchableBackedgeInfo, 0, SystemAllocPolicy> patchableBackedges_;
 
 #ifdef JS_TRACE_LOGGING
-    js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTraceLoggers_;
-    js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTLScripts_;
+    js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTraceLoggers_;
+    js::Vector<CodeOffset, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif
 
   public:
     struct NativeToBytecode {
-        CodeOffsetLabel nativeOffset;
+        CodeOffset nativeOffset;
         InlineScriptTree* tree;
         jsbytecode* pc;
     };

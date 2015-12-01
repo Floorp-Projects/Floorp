@@ -6597,6 +6597,7 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
     }
   }
 
+  aDocument->EnumerateSubDocuments(FlushThrottledStyles, nullptr);
   return true;
 }
 
@@ -7170,9 +7171,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       nsWeakFrame weakFrame(frame);
       {  // scope for scriptBlocker.
         nsAutoScriptBlocker scriptBlocker;
-        GetRootPresShell()->GetDocument()->
-          EnumerateSubDocuments(FlushThrottledStyles, nullptr);
+        FlushThrottledStyles(GetRootPresShell()->GetDocument(), nullptr);
       }
+
 
       if (!weakFrame.IsAlive()) {
         frame = GetNearestFrameContainingPresShell(this);
@@ -9634,7 +9635,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       }
     }
 
-    nsIntRect r1, r2;
+    LayoutDeviceIntRect r1, r2;
     nsView* v1;
     nsView* v2;
     for (nsFrameList::Enumerator e1(kids1), e2(kids2);
@@ -9679,10 +9680,11 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
             LogVerifyMessage(k1, k2, "child widgets are not matched\n");
           }
           else if (nullptr != w1) {
-            w1->GetBoundsUntyped(r1);
-            w2->GetBoundsUntyped(r2);
+            w1->GetBounds(r1);
+            w2->GetBounds(r2);
             if (!r1.IsEqualEdges(r2)) {
-              LogVerifyMessage(k1, k2, "(widget rects)", r1, r2);
+              LogVerifyMessage(k1, k2, "(widget rects)",
+                               r1.ToUnknownRect(), r2.ToUnknownRect());
             }
           }
         }
@@ -10190,9 +10192,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
 
       // We don't care about the document language or user fonts here;
       // just get a default Latin font.
-      nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL,
-                  NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
-                  nsPresContext::CSSPixelsToAppUnits(11));
+      nsFont font(eFamily_serif, nsPresContext::CSSPixelsToAppUnits(11));
       RefPtr<nsFontMetrics> fm;
       aPresContext->DeviceContext()->GetMetricsFor(font,
         nsGkAtoms::x_western, false, gfxFont::eHorizontal, nullptr,

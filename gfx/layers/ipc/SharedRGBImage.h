@@ -18,7 +18,6 @@
 namespace mozilla {
 namespace layers {
 
-class BufferTextureClient;
 class ImageClient;
 class TextureClient;
 
@@ -45,15 +44,13 @@ public:
 
   gfx::IntSize GetSize() override;
 
-  size_t GetBufferSize();
-
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
   bool Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 private:
   gfx::IntSize mSize;
   RefPtr<ImageClient> mCompositable;
-  RefPtr<BufferTextureClient> mTextureClient;
+  RefPtr<TextureClient> mTextureClient;
 };
 
 } // namespace layers

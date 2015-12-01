@@ -283,11 +283,11 @@ PopupBoxObject::GetOuterScreenRect()
   if (view) {
     nsIWidget* widget = view->GetWidget();
     if (widget) {
-      nsIntRect screenRect;
-      widget->GetScreenBoundsUntyped(screenRect);
+      LayoutDeviceIntRect screenRect;
+      widget->GetScreenBounds(screenRect);
 
       int32_t pp = menuPopupFrame->PresContext()->AppUnitsPerDevPixel();
-      rect->SetLayoutRect(ToAppUnits(screenRect, pp));
+      rect->SetLayoutRect(LayoutDeviceIntRect::ToAppUnits(screenRect, pp));
     }
   }
   return rect.forget();

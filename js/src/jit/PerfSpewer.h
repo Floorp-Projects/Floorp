@@ -87,8 +87,6 @@ class AsmJSPerfSpewer : public PerfSpewer
 void writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
                                      unsigned lineno, unsigned colIndex, const char* funcName);
 
-void writePerfSpewerAsmJSEntriesAndExits(uintptr_t base, size_t size);
-
 #endif // JS_ION_PERF
 
 } // namespace jit

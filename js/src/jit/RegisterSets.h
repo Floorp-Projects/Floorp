@@ -642,12 +642,12 @@ class AllocatableSetAccessors<RegisterSet>
 // The LiveSet accessors are used to collect a list of allocated
 // registers. Taking or adding a register should *not* consider the aliases, as
 // we care about interpreting the registers with the correct type.  For example,
-// on x64, where one float registers can be interpreted as an Int32x4, a Double,
-// or a Float, adding xmm0 as an Int32x4, does not make the register available
+// on x64, where one float registers can be interpreted as an Simd128, a Double,
+// or a Float, adding xmm0 as an Simd128, does not make the register available
 // as a Double.
 //
 //     LiveFloatRegisterSet regs;
-//     regs.add(xmm0.asInt32x4());
+//     regs.add(xmm0.asSimd128());
 //     regs.take(xmm0); // Assert!
 //
 // These accessors are useful for recording the result of a register allocator,

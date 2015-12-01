@@ -273,7 +273,7 @@ var RemoteTabViewer = {
     }.bind(this);
 
     return CloudSync().tabs.getRemoteTabs()
-                           .then(updateTabList, Promise.reject);
+                           .then(updateTabList, Promise.reject.bind(Promise));
   },
 
   adjustContextMenu: function (event) {

@@ -1,8 +1,0 @@
-# Any copyright is dedicated to the Public Domain.
-# http://creativecommons.org/publicdomain/zero/1.0/
-
-EXTRA_JS_MODULES += ['module1.js', 'module2.js']
-EXTRA_JS_MODULES.submodule += ['module3.js', 'module4.js']
-
-EXTRA_PP_JS_MODULES += ['pp-module1.js']
-EXTRA_PP_JS_MODULES.ppsub += ['pp-module2.js']

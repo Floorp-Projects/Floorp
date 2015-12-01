@@ -24,6 +24,45 @@
 
 class ClearKeyDecryptor;
 
+class CryptoMetaData {
+public:
+  CryptoMetaData() {}
+
+  explicit CryptoMetaData(const GMPEncryptedBufferMetadata* aCrypto)
+  {
+    Init(aCrypto);
+  }
+
+  void Init(const GMPEncryptedBufferMetadata* aCrypto)
+  {
+    if (!aCrypto) {
+      assert(!IsValid());
+      return;
+    }
+    Assign(mKeyId, aCrypto->KeyId(), aCrypto->KeyIdSize());
+    Assign(mIV, aCrypto->IV(), aCrypto->IVSize());
+    Assign(mClearBytes, aCrypto->ClearBytes(), aCrypto->NumSubsamples());
+    Assign(mCipherBytes, aCrypto->CipherBytes(), aCrypto->NumSubsamples());
+  }
+
+  bool IsValid() const {
+    return !mKeyId.empty() &&
+           !mIV.empty() &&
+           !mCipherBytes.empty() &&
+           !mClearBytes.empty();
+  }
+
+  size_t NumSubsamples() const {
+    assert(mClearBytes.size() == mCipherBytes.size());
+    return mClearBytes.size();
+  }
+
+  std::vector<uint8_t> mKeyId;
+  std::vector<uint8_t> mIV;
+  std::vector<uint16_t> mClearBytes;
+  std::vector<uint32_t> mCipherBytes;
+};
+
 class ClearKeyDecryptionManager : public RefCounted
 {
 private:
@@ -45,8 +84,11 @@ public:
   void ExpectKeyId(KeyId aKeyId);
   void ReleaseKeyId(KeyId aKeyId);
 
+  // Decrypts buffer *in place*.
   GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 const GMPEncryptedBufferMetadata* aMetadata);
+                 const CryptoMetaData& aMetadata);
+  GMPErr Decrypt(std::vector<uint8_t>& aBuffer,
+                 const CryptoMetaData& aMetadata);
 
   void Shutdown();
 

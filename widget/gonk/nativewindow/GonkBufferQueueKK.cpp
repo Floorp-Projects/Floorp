@@ -440,21 +440,18 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
         mSlots[buf].mFence = Fence::NO_FENCE;
     }  // end lock scope
 
-    sp<GraphicBuffer> graphicBuffer;
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
-        RefPtr<GrallocTextureClientOGL> textureClient =
-            new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
-                                        gfx::SurfaceFormat::UNKNOWN,
-                                        gfx::BackendType::NONE,
-                                        TextureFlags::DEALLOCATE_CLIENT);
-        textureClient->SetIsOpaque(true);
+
+        ISurfaceAllocator* allocator = ImageBridgeChild::GetSingleton();
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
-        bool result = textureClient->AllocateGralloc(IntSize(w, h), format, usage);
-        sp<GraphicBuffer> graphicBuffer = textureClient->GetGraphicBuffer();
-        if (!result || !graphicBuffer.get()) {
-            ALOGE("dequeueBuffer: failed to alloc gralloc buffer");
+        GrallocTextureData* texData = GrallocTextureData::Create(IntSize(w, h), format,
+                                                                 gfx::BackendType::NONE, usage,
+                                                                 allocator);
+        if (!texData) {
             return -ENOMEM;
         }
+
+        RefPtr<TextureClient> textureClient = new TextureClient(texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
 
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);
@@ -464,7 +461,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
                 return NO_INIT;
             }
 
-            mSlots[buf].mGraphicBuffer = graphicBuffer;
+            mSlots[buf].mGraphicBuffer = texData->GetGraphicBuffer();
             mSlots[buf].mTextureClient = textureClient;
             ALOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
                     mSlots[buf].mGraphicBuffer->handle);

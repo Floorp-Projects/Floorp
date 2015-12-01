@@ -125,13 +125,13 @@ public:
   } 
   nsDOMTokenList* RelList();
 
-  void SetReferrer(const nsAString& aValue, mozilla::ErrorResult& rv)
+  void SetReferrerPolicy(const nsAString& aValue, mozilla::ErrorResult& rv)
   {
-    SetHTMLAttr(nsGkAtoms::referrer, aValue, rv);
+    SetHTMLAttr(nsGkAtoms::referrerpolicy, aValue, rv);
   }
-  void GetReferrer(nsAString& aReferrer)
+  void GetReferrerPolicy(nsAString& aReferrer)
   {
-    GetHTMLAttr(nsGkAtoms::referrer, aReferrer);
+    GetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer);
   }
 
   // The Link::GetOrigin is OK for us

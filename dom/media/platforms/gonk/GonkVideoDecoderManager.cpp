@@ -374,14 +374,13 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
     aPicture.height = size.height;
 
     sp<GraphicBuffer> destBuffer =
-      static_cast<GrallocTextureClientOGL*>(textureClient.get())->GetGraphicBuffer();
+      static_cast<GrallocTextureData*>(textureClient->GetInternalData())->GetGraphicBuffer();
 
     CopyGraphicBuffer(srcBuffer, destBuffer);
   } else {
     textureClient = mNativeWindow->getTextureClientFromBuffer(srcBuffer.get());
     textureClient->SetRecycleCallback(GonkVideoDecoderManager::RecycleCallback, this);
-    GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
-    grallocClient->SetMediaBuffer(aSource);
+    static_cast<GrallocTextureData*>(textureClient->GetInternalData())->SetMediaBuffer(aSource);
   }
 
   RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
@@ -683,7 +682,7 @@ GonkVideoDecoderManager::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
   MOZ_ASSERT(aClient && !aClient->IsDead());
   GonkVideoDecoderManager* videoManager = static_cast<GonkVideoDecoderManager*>(aClosure);
-  GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
+  GrallocTextureData* client = static_cast<GrallocTextureData*>(aClient->GetInternalData());
   aClient->ClearRecycleCallback();
   FenceHandle handle = aClient->GetAndResetReleaseFenceHandle();
   videoManager->PostReleaseVideoBuffer(client->GetMediaBuffer(), handle);
