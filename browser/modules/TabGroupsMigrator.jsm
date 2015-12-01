@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 
 
 this.TabGroupsMigrator = {
+  bookmarkedGroupsPromise: null,
+
   /**
    * If this state contains tab groups, migrate the user's data. This means:
    * - make a backup of the user's data.
@@ -130,7 +132,43 @@ this.TabGroupsMigrator = {
   },
 
   _bookmarkAllGroupsFromState: Task.async(function*(groupData) {
-    // TODO
+    // First create a folder in which to put all these bookmarks:
+    this.bookmarkedGroupsPromise = PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: gBrowserBundle.GetStringFromName("tabgroups.migration.tabGroupBookmarkFolderName"),
+    }).catch(Cu.reportError);
+    let tabgroupsFolder = yield this.bookmarkedGroupsPromise;
+
+    for (let [, windowGroupMap] of groupData) {
+      let windowGroups = [... windowGroupMap.values()].sort((a, b) => {
+        if (!a.anonGroupID) {
+          return -1;
+        }
+        if (!b.anonGroupID) {
+          return 1;
+        }
+        return a.anonGroupID - b.anonGroupID;
+      });
+      for (let group of windowGroups) {
+        let groupFolder = yield PlacesUtils.bookmarks.insert({
+          parentGuid: tabgroupsFolder.guid,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          title: group.title ||
+            gBrowserBundle.formatStringFromName("tabgroups.migration.anonGroup", [group.anonGroupID], 1),
+        }).catch(Cu.reportError);
+
+        for (let tab of group.tabs) {
+          let entry = tab.entries[tab.index - 1];
+          yield PlacesUtils.bookmarks.insert({
+            parentGuid: groupFolder.guid,
+            title: tab.title || entry.title,
+            url: entry.url,
+          }).catch(Cu.reportError);
+        }
+      }
+    }
   }),
 
   _removeHiddenTabGroupsFromState(state, groupData) {
