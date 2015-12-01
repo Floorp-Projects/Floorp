@@ -19,22 +19,20 @@
     <pre id="test">
       <script class="testbody" type="text/javascript">
 
-      Cu.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource://gre/modules/NetUtil.jsm");
 
       /** Test for Bug 411966 **/
       addVisits(typedURI, function() {
         histsvc.markPageAsTyped(typedURI);
 
-        var clickedLinkChannel = ios.newChannelFromURI2(clickedLinkURI,
-                                                        null,      // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                                        Ci.nsIContentPolicy.TYPE_OTHER);
+        var clickedLinkChannel = NetUtil.newChannel({
+                                   uri: clickedLinkURI,
+                                   loadUsingSystemPrincipal: true
+                                });
         clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;
         var listener = new StreamListener(clickedLinkChannel, checkDB);
         clickedLinkChannel.notificationCallbacks = listener;
-        clickedLinkChannel.asyncOpen(listener, null);
+        clickedLinkChannel.asyncOpen2(listener);
       });
 
       SimpleTest.waitForExplicitFinish();
