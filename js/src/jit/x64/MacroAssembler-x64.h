@@ -546,10 +546,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void mulBy3(const Register& src, const Register& dest) {
         lea(Operand(src, src, TimesTwo), dest);
     }
-    void mul64(Imm64 imm, const Register64& dest) {
-        movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
-        imulq(ScratchReg, dest.reg);
-    }
 
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         if (X86Encoding::IsAddressImmediate(lhs.addr)) {
