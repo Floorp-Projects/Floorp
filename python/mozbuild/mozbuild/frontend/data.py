@@ -194,21 +194,6 @@ class Defines(BaseDefines):
 class HostDefines(BaseDefines):
     pass
 
-class Exports(ContextDerived):
-    """Context derived container object for EXPORTS, which is a
-    HierarchicalStringList.
-
-    We need an object derived from ContextDerived for use in the backend, so
-    this object fills that role. It just has a reference to the underlying
-    HierarchicalStringList, which is created when parsing EXPORTS.
-    """
-    __slots__ = ('exports', 'dist_install')
-
-    def __init__(self, context, exports, dist_install=True):
-        ContextDerived.__init__(self, context)
-        self.exports = exports
-        self.dist_install = dist_install
-
 class TestHarnessFiles(ContextDerived):
     """Sandbox container object for TEST_HARNESS_FILES,
     which is a HierarchicalStringList.
@@ -830,6 +815,19 @@ class TestingFiles(FinalTargetFiles):
     @property
     def install_target(self):
         return '_tests'
+
+
+class Exports(FinalTargetFiles):
+    """Context derived container object for EXPORTS, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing EXPORTS.
+    """
+    @property
+    def install_target(self):
+        return 'dist/include'
 
 
 class GeneratedFile(ContextDerived):
