@@ -545,7 +545,7 @@ public final class AttributeName
 //                builder.append(" | ");
 //            }
 //            builder.append("NCNAME_HTML");
-//        }            
+//        }
 //        if ((flags & NCNAME_FOREIGN) != 0) {
 //            if (builder.length() != 0) {
 //                builder.append(" | ");
@@ -683,7 +683,7 @@ public final class AttributeName
 //
 //    /**
 //     * Regenerate self
-//     * 
+//     *
 //     * @param args
 //     */
 //    public static void main(String[] args) {
@@ -990,7 +990,6 @@ public final class AttributeName
     public static final AttributeName READONLY = new AttributeName(ALL_NO_NS, SAME_LOCAL("readonly"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName SELECTED = new AttributeName(ALL_NO_NS, SAME_LOCAL("selected"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName ROWLINES = new AttributeName(ALL_NO_NS, SAME_LOCAL("rowlines"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName REFERRER = new AttributeName(ALL_NO_NS, SAME_LOCAL("referrer"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SEAMLESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("seamless"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ROWALIGN = new AttributeName(ALL_NO_NS, SAME_LOCAL("rowalign"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STRETCHY = new AttributeName(ALL_NO_NS, SAME_LOCAL("stretchy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1234,6 +1233,7 @@ public final class AttributeName
     public static final AttributeName V_MATHEMATICAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("v-mathematical"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName POINTER_EVENTS = new AttributeName(ALL_NO_NS, SAME_LOCAL("pointer-events"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName PRIMITIVEUNITS = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("primitiveunits", "primitiveUnits"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
+    public static final AttributeName REFERRERPOLICY = new AttributeName(ALL_NO_NS, SAME_LOCAL("referrerpolicy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SYSTEMLANGUAGE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("systemlanguage", "systemLanguage"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STROKE_LINECAP = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-linecap"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SUBSCRIPTSHIFT = new AttributeName(ALL_NO_NS, SAME_LOCAL("subscriptshift"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1574,7 +1574,6 @@ public final class AttributeName
     READONLY,
     SELECTED,
     ROWLINES,
-    REFERRER,
     SEAMLESS,
     ROWALIGN,
     STRETCHY,
@@ -1818,6 +1817,7 @@ public final class AttributeName
     V_MATHEMATICAL,
     POINTER_EVENTS,
     PRIMITIVEUNITS,
+    REFERRERPOLICY,
     SYSTEMLANGUAGE,
     STROKE_LINECAP,
     SUBSCRIPTSHIFT,
@@ -2159,7 +2159,6 @@ public final class AttributeName
     291557706,
     291665349,
     291804100,
-    291862420,
     292138018,
     292166446,
     292418738,
@@ -2403,6 +2402,7 @@ public final class AttributeName
     490661867,
     491574090,
     491578272,
+    492891370,
     493041952,
     493441205,
     493582844,
