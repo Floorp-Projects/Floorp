@@ -746,11 +746,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void addPtr(Imm32 imm, const AbsoluteAddress& dest) DEFINED_ON(x86, x64);
     inline void addPtr(const Address& src, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
+    inline void add64(Register64 src, Register64 dest) PER_ARCH;
+    inline void add64(Imm32 imm, Register64 dest) PER_ARCH;
+
     inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
-
-    inline void add64(Register64 src, Register64 dest) PER_ARCH;
 
     // ===============================================================
     // Shift functions

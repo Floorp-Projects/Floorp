@@ -1078,10 +1078,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
                                        Register temp, Register valueTemp, Register offsetTemp, Register maskTemp,
                                        AnyRegister output);
 
-    void add64(Imm32 imm, Register64 dest) {
-        ma_daddu(dest.reg, imm);
-    }
-
     inline void incrementInt32Value(const Address& addr);
 
     template <typename T>

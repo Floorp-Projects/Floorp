@@ -121,6 +121,13 @@ MacroAssembler::add64(Register64 src, Register64 dest)
     adcl(src.high, dest.high);
 }
 
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    addl(imm, dest.low);
+    adcl(Imm32(0), dest.high);
+}
+
 // ===============================================================
 // Shift functions
 
