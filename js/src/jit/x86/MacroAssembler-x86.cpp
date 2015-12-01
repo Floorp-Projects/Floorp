@@ -49,7 +49,7 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     // Following operation uses entire 128-bit of dest XMM register.
     // Currently higher 64-bit is free when we have access to lower 64-bit.
     MOZ_ASSERT(dest.size() == 8);
-    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Int32x4);
+    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Simd128);
 
     // Assume that src is represented as following:
     //   src      = 0x HHHHHHHH LLLLLLLL
@@ -58,11 +58,11 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     //   dest     = 0x 00000000 00000000  00000000 LLLLLLLL
     //   scratch  = 0x 00000000 00000000  00000000 HHHHHHHH
     vmovd(src.low, dest128);
-    vmovd(src.high, ScratchInt32x4Reg);
+    vmovd(src.high, ScratchSimd128Reg);
 
     // Unpack and interleave dest and scratch to dest:
     //   dest     = 0x 00000000 00000000  HHHHHHHH LLLLLLLL
-    vpunpckldq(ScratchInt32x4Reg, dest128, dest128);
+    vpunpckldq(ScratchSimd128Reg, dest128, dest128);
 
     // Unpack and interleave dest and a constant C1 to dest:
     //   C1       = 0x 00000000 00000000  45300000 43300000

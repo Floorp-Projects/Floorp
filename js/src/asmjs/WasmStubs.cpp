@@ -220,13 +220,13 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
                 masm.storeFloat32(ScratchFloat32Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType_Int32x4:
-                masm.loadUnalignedInt32x4(src, ScratchSimdReg);
-                masm.storeAlignedInt32x4(ScratchSimdReg,
+                masm.loadUnalignedInt32x4(src, ScratchSimd128Reg);
+                masm.storeAlignedInt32x4(ScratchSimd128Reg,
                                          Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType_Float32x4:
-                masm.loadUnalignedFloat32x4(src, ScratchSimdReg);
-                masm.storeAlignedFloat32x4(ScratchSimdReg,
+                masm.loadUnalignedFloat32x4(src, ScratchSimd128Reg);
+                masm.storeAlignedFloat32x4(ScratchSimd128Reg,
                                            Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               default:
@@ -268,11 +268,11 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
         break;
       case ExprType::I32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedInt32x4(ReturnInt32x4Reg, Address(argv, 0));
+        masm.storeUnalignedInt32x4(ReturnSimd128Reg, Address(argv, 0));
         break;
       case ExprType::F32x4:
         // We don't have control on argv alignment, do an unaligned access.
-        masm.storeUnalignedFloat32x4(ReturnFloat32x4Reg, Address(argv, 0));
+        masm.storeUnalignedFloat32x4(ReturnSimd128Reg, Address(argv, 0));
         break;
     }
 

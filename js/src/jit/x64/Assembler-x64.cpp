@@ -55,16 +55,11 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
       case MIRType_Int32x4:
-        // On Win64, >64 bit args need to be passed by reference, but asm.js
-        // doesn't allow passing SIMD values to FFIs. The only way to reach
-        // here is asm to asm calls, so we can break the ABI here.
-        current_ = ABIArg(FloatArgRegs[regIndex_++].asInt32x4());
-        break;
       case MIRType_Float32x4:
         // On Win64, >64 bit args need to be passed by reference, but asm.js
         // doesn't allow passing SIMD values to FFIs. The only way to reach
         // here is asm to asm calls, so we can break the ABI here.
-        current_ = ABIArg(FloatArgRegs[regIndex_++].asFloat32x4());
+        current_ = ABIArg(FloatArgRegs[regIndex_++].asSimd128());
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
@@ -101,10 +96,7 @@ ABIArgGenerator::next(MIRType type)
             stackOffset_ += Simd128DataSize;
             break;
         }
-        if (type == MIRType_Int32x4)
-            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asInt32x4());
-        else
-            current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asFloat32x4());
+        current_ = ABIArg(FloatArgRegs[floatRegIndex_++].asSimd128());
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
