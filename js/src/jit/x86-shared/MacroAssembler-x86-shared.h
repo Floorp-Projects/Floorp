@@ -49,11 +49,14 @@ class MacroAssemblerX86Shared : public Assembler
     typedef Vector<CodeOffset, 0, SystemAllocPolicy> UsesVector;
 
   protected:
+
     // For Double, Float and SimdData, make the move ctors explicit so that MSVC
     // knows what to use instead of copying these data structures.
     struct Double {
+        typedef double Pod;
         double value;
         UsesVector uses;
+
         explicit Double(double value) : value(value) {}
         Double(Double&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
         explicit Double(const Double&) = delete;
@@ -67,8 +70,10 @@ class MacroAssemblerX86Shared : public Assembler
     DoubleMap doubleMap_;
 
     struct Float {
+        typedef float Pod;
         float value;
         UsesVector uses;
+
         explicit Float(float value) : value(value) {}
         Float(Float&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
         explicit Float(const Float&) = delete;
@@ -79,17 +84,23 @@ class MacroAssemblerX86Shared : public Assembler
     FloatMap floatMap_;
 
     struct SimdData {
+        typedef SimdConstant Pod;
         SimdConstant value;
         UsesVector uses;
+
         explicit SimdData(const SimdConstant& v) : value(v) {}
         SimdData(SimdData&& other) : value(other.value), uses(mozilla::Move(other.uses)) {}
         explicit SimdData(const SimdData&) = delete;
+
         SimdConstant::Type type() const { return value.type(); }
     };
 
     Vector<SimdData, 0, SystemAllocPolicy> simds_;
     typedef HashMap<SimdConstant, size_t, SimdConstant, SystemAllocPolicy> SimdMap;
     SimdMap simdMap_;
+
+    template<class T, class Map>
+    T* getConstant(const typename T::Pod& value, Map& map, Vector<T, 0, SystemAllocPolicy>& vec);
 
     Float* getFloat(float f);
     Double* getDouble(double d);
