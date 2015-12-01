@@ -18,31 +18,26 @@
 
 using namespace mozilla;
 
-nsFont::nsFont(const FontFamilyList& aFontlist, uint8_t aStyle,
-               uint16_t aWeight, int16_t aStretch, nscoord aSize)
+nsFont::nsFont(const FontFamilyList& aFontlist, nscoord aSize)
   : fontlist(aFontlist)
 {
   Init();
-  style = aStyle;
-  weight = aWeight;
-  stretch = aStretch;
   size = aSize;
 }
 
-nsFont::nsFont(FontFamilyType aGenericType, uint8_t aStyle,
-               uint16_t aWeight, int16_t aStretch, nscoord aSize)
+nsFont::nsFont(FontFamilyType aGenericType, nscoord aSize)
   : fontlist(aGenericType)
 {
   Init();
-  style = aStyle;
-  weight = aWeight;
-  stretch = aStretch;
   size = aSize;
 }
 
 void
 nsFont::Init()
 {
+  style = NS_FONT_STYLE_NORMAL;
+  weight = NS_FONT_WEIGHT_NORMAL;
+  stretch = NS_FONT_STRETCH_NORMAL;
   systemFont = false;
   smoothing = NS_FONT_SMOOTHING_AUTO;
   sizeAdjust = -1.0f;
