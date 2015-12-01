@@ -23,10 +23,8 @@ class DeviceManagerADB(DeviceManager):
     port.
     """
 
-    _haveRootShell = None
-    _haveSu = None
-    _suModifier = None
-    _lsModifier = None
+    _haveRootShell = False
+    _haveSu = False
     _useZip = False
     _logcatNeedsRoot = False
     _pollingInterval = 0.01
@@ -72,8 +70,6 @@ class DeviceManagerADB(DeviceManager):
         if autoconnect:
             self.connect()
 
-        self._detectLsModifier()
-
     def connect(self):
         if not self.connected:
             # try to connect to the device over tcp/ip if we have a hostname
@@ -105,22 +101,17 @@ class DeviceManagerADB(DeviceManager):
         # always. :(
 
         # If requested to run as root, check that we can actually do that
-        if root:
-            if self._haveRootShell is None and self._haveSu is None:
-                self._checkForRoot()
-            if not self._haveRootShell and not self._haveSu:
-                raise DMError(
-                    "Shell command '%s' requested to run as root but root "
-                    "is not available on this device. Root your device or "
-                    "refactor the test/harness to not require root." %
-                    self._escapedCommandLine(cmd))
+        if root and not self._haveRootShell and not self._haveSu:
+            raise DMError("Shell command '%s' requested to run as root but root "
+                          "is not available on this device. Root your device or "
+                          "refactor the test/harness to not require root." %
+                          self._escapedCommandLine(cmd))
 
         # Getting the return code is more complex than you'd think because adb
         # doesn't actually return the return code from a process, so we have to
         # capture the output to get it
-        if root and self._haveSu:
-            cmdline = "su %s \"%s\"" % (self._suModifier,
-                                        self._escapedCommandLine(cmd))
+        if root and not self._haveRootShell:
+            cmdline = "su -c \"%s\"" % self._escapedCommandLine(cmd)
         else:
             cmdline = self._escapedCommandLine(cmd)
         cmdline += "; echo $?"
@@ -268,8 +259,7 @@ class DeviceManagerADB(DeviceManager):
             mozfile.remove(tmpDir)
 
     def dirExists(self, remotePath):
-        data = self._runCmd(["shell", "ls", self._lsModifier, remotePath + '/'],
-                            timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", "-a", remotePath + '/'], timeout=self.short_timeout).output
 
         if len(data) == 1:
             res = data[0]
@@ -278,8 +268,7 @@ class DeviceManagerADB(DeviceManager):
         return True
 
     def fileExists(self, filepath):
-        data = self._runCmd(["shell", "ls", self._lsModifier, filepath],
-                            timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", "-a", filepath], timeout=self.short_timeout).output
         if len(data) == 1:
             foundpath = data[0].decode('utf-8').rstrip()
             if foundpath == filepath:
@@ -303,8 +292,7 @@ class DeviceManagerADB(DeviceManager):
         self._checkCmd(["shell", "dd", "if=%s" % source, "of=%s" % destination])
 
     def listFiles(self, rootdir):
-        data = self._runCmd(["shell", "ls", self._lsModifier, rootdir],
-                            timeout=self.short_timeout).output
+        data = self._runCmd(["shell", "ls", "-a", rootdir], timeout=self.short_timeout).output
         data[:] = [item.rstrip('\r\n') for item in data]
         if (len(data) == 1):
             if (data[0] == rootdir):
@@ -316,8 +304,6 @@ class DeviceManagerADB(DeviceManager):
             if (data[0].find("Permission denied") != -1):
                 return []
             if (data[0].find("opendir failed") != -1):
-                return []
-            if (data[0].find("Device or resource busy") != -1):
                 return []
         return data
 
@@ -676,13 +662,6 @@ class DeviceManagerADB(DeviceManager):
             raise DMError("unable to connect to device")
 
     def _checkForRoot(self):
-        self._haveRootShell = False
-        self._haveSu = False
-        # If requested to attempt to run adbd as root, do so before
-        # checking whether adbs is running as root.
-        if self._runAdbAsRoot:
-            self._adb_root()
-
         # Check whether we _are_ root by default (some development boards work
         # this way, this is also the result of some relatively rare rooting
         # techniques)
@@ -694,30 +673,22 @@ class DeviceManagerADB(DeviceManager):
 
         # if root shell is not available, check if 'su' can be used to gain
         # root
-        def su_id(su_modifier, timeout):
-            proc = self._runCmd(["shell", "su", su_modifier, "id"],
-                                timeout=timeout)
+        proc = self._runCmd(["shell", "su", "-c", "id"], timeout=self.short_timeout)
 
-            # wait for response for maximum of 15 seconds, in case su
-            # prompts for a password or triggers the Android SuperUser
-            # prompt
-            start_time = time.time()
-            retcode = None
-            while (time.time() - start_time) <= 15 and retcode is None:
-                retcode = proc.poll()
-            if retcode is None: # still not terminated, kill
-                proc.kill()
+        # wait for response for maximum of 15 seconds, in case su prompts for a
+        # password or triggers the Android SuperUser prompt
+        start_time = time.time()
+        retcode = None
+        while (time.time() - start_time) <= 15 and retcode is None:
+            retcode = proc.poll()
+        if retcode is None: # still not terminated, kill
+            proc.kill()
 
-            if proc.output and 'uid=0(root)' in proc.output[0]:
-                return True
-            return False
-
-        if su_id('0', self.short_timeout):
+        if proc.output and 'uid=0(root)' in proc.output[0]:
             self._haveSu = True
-            self._suModifier = '0'
-        elif su_id('-c', self.short_timeout):
-            self._haveSu = True
-            self._suModifier = '-c'
+
+        if self._runAdbAsRoot:
+            self._adb_root()
 
     def _isUnzipAvailable(self):
         data = self._runCmd(["shell", "unzip"]).output
@@ -758,18 +729,3 @@ class DeviceManagerADB(DeviceManager):
             self._checkCmd(["wait-for-device"])
             if self.processInfo("adbd")[2] != "root":
                 raise DMError("We tried rebooting adbd as root, however, it failed.")
-
-    def _detectLsModifier(self):
-        if self._lsModifier is None:
-            # Check if busybox -1A is required in order to get one
-            # file per line.
-            output = self._runCmd(["shell", "ls", "-1A" "/"],
-                         timeout=self.short_timeout).output
-            output = ' '.join(output)
-            if "Unknown option '-1'. Aborting." in output:
-                self._lsModifier = "-a"
-            elif "-1A/: No such file or directory" in output:
-                self._lsModifier = "-a"
-            else:
-                self._lsModifier = "-1A"
-
