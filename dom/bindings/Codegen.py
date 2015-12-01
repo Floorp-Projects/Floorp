@@ -2779,7 +2779,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                 for pref, ptr in prefCacheData]
             prefCache = CGWrapper(CGIndenter(CGList(prefCacheData)),
                                   pre=("static bool sPrefCachesInited = false;\n"
-                                       "if (!sPrefCachesInited) {\n"
+                                       "if (!sPrefCachesInited && NS_IsMainThread()) {\n"
                                        "  sPrefCachesInited = true;\n"),
                                   post="}\n")
         else:
