@@ -74,7 +74,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
 bool
 MouseInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
-  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mOrigin);
   if (!point) {
     return false;
   }
@@ -273,7 +273,7 @@ bool
 MultiTouchInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
   for (size_t i = 0; i < mTouches.Length(); i++) {
-    Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mTouches[i].mScreenPoint);
+    Maybe<ParentLayerIntPoint> point = UntransformBy(aTransform, mTouches[i].mScreenPoint);
     if (!point) { 
       return false;
     }
@@ -319,13 +319,13 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 bool
 PanGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 { 
-  Maybe<ParentLayerPoint> panStartPoint = UntransformTo<ParentLayerPixel>(aTransform, mPanStartPoint);
+  Maybe<ParentLayerPoint> panStartPoint = UntransformBy(aTransform, mPanStartPoint);
   if (!panStartPoint) {
     return false;
   }
   mLocalPanStartPoint = *panStartPoint;
   
-  Maybe<ParentLayerPoint> panDisplacement = UntransformVector<ParentLayerPixel>(aTransform, mPanDisplacement, mPanStartPoint);
+  Maybe<ParentLayerPoint> panDisplacement = UntransformVector(aTransform, mPanDisplacement, mPanStartPoint);
   if (!panDisplacement) {
     return false;
   }
@@ -336,7 +336,7 @@ PanGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform
 bool
 PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 { 
-  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mFocusPoint);
+  Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mFocusPoint);
   if (!point) {
     return false;
   }
@@ -347,7 +347,7 @@ PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransfo
 bool
 TapGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
-  Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mPoint);
+  Maybe<ParentLayerIntPoint> point = UntransformBy(aTransform, mPoint);
   if (!point) {
     return false;
   }
@@ -411,7 +411,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 bool
 ScrollWheelInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 {
-  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mOrigin);
   if (!point) {
     return false;
   }
