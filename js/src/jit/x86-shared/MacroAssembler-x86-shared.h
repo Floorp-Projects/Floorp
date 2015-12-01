@@ -934,9 +934,6 @@ class MacroAssemblerX86Shared : public Assembler
     void divDouble(FloatRegister src, FloatRegister dest) {
         vdivsd(src, dest, dest);
     }
-    void addFloat32(FloatRegister src, FloatRegister dest) {
-        vaddss(src, dest, dest);
-    }
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
         vcvtss2sd(src, dest, dest);
     }

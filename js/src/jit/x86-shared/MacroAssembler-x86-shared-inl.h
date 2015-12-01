@@ -104,6 +104,12 @@ MacroAssembler::add32(Imm32 imm, const AbsoluteAddress& dest)
 }
 
 void
+MacroAssembler::addFloat32(FloatRegister src, FloatRegister dest)
+{
+    vaddss(src, dest, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     subl(src, dest);
