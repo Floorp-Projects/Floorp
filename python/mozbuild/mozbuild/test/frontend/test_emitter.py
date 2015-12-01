@@ -826,7 +826,7 @@ class TestEmitterBasic(unittest.TestCase):
 
             expected = {'install.rdf', 'main.js'}
             for f in files:
-                self.assertTrue(f in expected)
+                self.assertTrue(unicode(f) in expected)
 
     def test_missing_final_target_pp_files(self):
         """Test that FINAL_TARGET_PP_FILES with missing files throws errors."""
