@@ -400,7 +400,7 @@ ClearKeySessionManager::DoDecrypt(GMPBuffer* aBuffer,
   CK_LOGD("ClearKeySessionManager::DoDecrypt");
 
   GMPErr rv = mDecryptionManager->Decrypt(aBuffer->Data(), aBuffer->Size(),
-                                              aMetadata);
+                                          CryptoMetaData(aMetadata));
   CK_LOGD("DeDecrypt finished with code %x\n", rv);
   mCallback->Decrypted(aBuffer, rv);
 }
