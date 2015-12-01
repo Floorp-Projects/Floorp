@@ -625,8 +625,8 @@ static bool
 WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
-            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
+         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
+          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
          !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
 }
 
