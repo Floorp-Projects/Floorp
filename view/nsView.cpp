@@ -298,13 +298,13 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
 
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
-  nsIntRect newBounds;
+  LayoutDeviceIntRect newBounds;
   RefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   nsWindowType type = widget->WindowType();
 
-  nsIntRect curBounds;
-  widget->GetClientBoundsUntyped(curBounds);
+  LayoutDeviceIntRect curBounds;
+  widget->GetClientBounds(curBounds);
   bool invisiblePopup = type == eWindowType_popup &&
                         ((curBounds.IsEmpty() && mDimBounds.IsEmpty()) ||
                          mVis == nsViewVisibility_kHide);
@@ -312,7 +312,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   if (invisiblePopup) {
     // We're going to hit the early exit below, avoid calling CalcWidgetBounds.
   } else {
-    newBounds = CalcWidgetBounds(type);
+    newBounds = LayoutDeviceIntRect::FromUnknownRect(CalcWidgetBounds(type));
   }
 
   bool curVisibility = widget->IsVisible();
@@ -801,11 +801,11 @@ void nsView::List(FILE* out, int32_t aIndent) const
   fprintf(out, "%p ", (void*)this);
   if (nullptr != mWindow) {
     nscoord p2a = mViewManager->AppUnitsPerDevPixel();
-    nsIntRect rect;
-    mWindow->GetClientBoundsUntyped(rect);
-    nsRect windowBounds = ToAppUnits(rect, p2a);
-    mWindow->GetBoundsUntyped(rect);
-    nsRect nonclientBounds = ToAppUnits(rect, p2a);
+    LayoutDeviceIntRect rect;
+    mWindow->GetClientBounds(rect);
+    nsRect windowBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
+    mWindow->GetBounds(rect);
+    nsRect nonclientBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
     nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
     mWindow.get()->Release();
     int32_t Z = mWindow->GetZIndex();

@@ -256,7 +256,7 @@ class IonCache
     // Set the initial 'out-of-line' jump state of the cache. The fallbackLabel is
     // the location of the out-of-line update (slow) path.  This location will
     // be set to the exitJump of the last generated stub.
-    void setFallbackLabel(CodeOffsetLabel fallbackLabel) {
+    void setFallbackLabel(CodeOffset fallbackLabel) {
         fallbackLabel_ = fallbackLabel;
     }
 

@@ -230,8 +230,7 @@ Directory::GetPath(nsAString& aRetval) const
     // The Directory ctor removes any trailing '/'; this is the root directory.
     aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR);
   } else {
-    aRetval = Substring(mPath, 0,
-                        mPath.RFindChar(FileSystemUtils::kSeparatorChar) + 1);
+    aRetval = mPath;
   }
 }
 
@@ -242,13 +241,19 @@ Directory::GetFilesAndDirectories()
   nsString realPath;
   ErrorResult rv;
   RefPtr<GetDirectoryListingTask> task =
-    new GetDirectoryListingTask(mFileSystem, mPath, rv);
+    new GetDirectoryListingTask(mFileSystem, mPath, mFilters, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return nullptr;
   }
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
+}
+
+void
+Directory::SetContentFilters(const nsAString& aFilters)
+{
+  mFilters = aFilters;
 }
 
 FileSystemBase*

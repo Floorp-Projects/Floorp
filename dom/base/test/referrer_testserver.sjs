@@ -33,11 +33,11 @@ function createIframeTestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAt
   }
   var changeString = "";
   if (aChangingMethod === "setAttribute") {
-    changeString = `document.getElementById("myframe").setAttribute("referrer", "${aNewAttributePolicy}")`;
+    changeString = `document.getElementById("myframe").setAttribute("referrerpolicy", "${aNewAttributePolicy}")`;
   } else if (aChangingMethod === "property") {
-    changeString = `document.getElementById("myframe").referrer = "${aNewAttributePolicy}"`;
+    changeString = `document.getElementById("myframe").referrerPolicy = "${aNewAttributePolicy}"`;
   }
-  var iFrameString = `<iframe src="" id="myframe" ${aAttributePolicy ? ` referrer="${aAttributePolicy}"` : ""}>iframe</iframe>`;
+  var iFrameString = `<iframe src="" id="myframe" ${aAttributePolicy ? ` referrerpolicy="${aAttributePolicy}"` : ""}>iframe</iframe>`;
   var iframeUrl = "";
   if (aParams) {
     aParams.delete("ACTION");
@@ -69,7 +69,7 @@ function createIframeTestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAt
 
 function buildAnchorString(aMetaPolicy, aReferrerPolicy, aName, aRelString){
   if (aReferrerPolicy) {
-    return `<a href="${createTestUrl(aReferrerPolicy, 'test', aName, 'link')}" referrer="${aReferrerPolicy}" id="link" ${aRelString}>${aReferrerPolicy}</a>`;
+    return `<a href="${createTestUrl(aReferrerPolicy, 'test', aName, 'link')}" referrerpolicy="${aReferrerPolicy}" id="link" ${aRelString}>${aReferrerPolicy}</a>`;
   }
   return `<a href="${createTestUrl(aMetaPolicy, 'test', aName, 'link')}" id="link" ${aRelString}>link</a>`;
 }
@@ -78,7 +78,7 @@ function buildAreaString(aMetaPolicy, aReferrerPolicy, aName, aRelString){
   var result = `<img src="file_mozfiledataurl_img.jpg" alt="image" usemap="#imageMap">`;
   result += `<map name="imageMap">`;
   if (aReferrerPolicy) {
-    result += `<area shape="circle" coords="1,1,1" href="${createTestUrl(aReferrerPolicy, 'test', aName, 'link')}" alt="theArea" referrer="${aReferrerPolicy}" id="link" ${aRelString}>`;
+    result += `<area shape="circle" coords="1,1,1" href="${createTestUrl(aReferrerPolicy, 'test', aName, 'link')}" alt="theArea" referrerpolicy="${aReferrerPolicy}" id="link" ${aRelString}>`;
   } else {
     result += `<area shape="circle" coords="1,1,1" href="${createTestUrl(aMetaPolicy, 'test', aName, 'link')}" alt="theArea" id="link" ${aRelString}>`;
   }
@@ -95,9 +95,9 @@ function createAETestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttrib
   }
   var changeString = "";
   if (aChangingMethod === "setAttribute") {
-    changeString = `document.getElementById("link").setAttribute("referrer", "${aNewAttributePolicy}")`;
+    changeString = `document.getElementById("link").setAttribute("referrerpolicy", "${aNewAttributePolicy}")`;
   } else if (aChangingMethod === "property") {
-    changeString = `document.getElementById("link").referrer = "${aNewAttributePolicy}"`;
+    changeString = `document.getElementById("link").referrerPolicy = "${aNewAttributePolicy}"`;
   }
   var relString = "";
   if (aRel) {
@@ -138,7 +138,7 @@ function createRedirectImgTestCase(aParams, aAttributePolicy) {
           <title>Test referrer policies on redirect (img)</title>
           </head>
           <body>
-          <img id="testImg" src="${imgUrl}" ${aAttributePolicy ? ` referrer="${aAttributePolicy}"` : ""}>
+          <img id="testImg" src="${imgUrl}" ${aAttributePolicy ? ` referrerpolicy="${aAttributePolicy}"` : ""}>
           <script>
             window.addEventListener("load", function() {
               parent.postMessage("childLoadComplete", "http://mochi.test:8888");

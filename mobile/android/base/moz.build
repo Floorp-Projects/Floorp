@@ -929,4 +929,4 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-util.jar'
     ]
 
-DIST_FILES += ['package-name.txt.in']
+FINAL_TARGET_PP_FILES += ['package-name.txt.in']

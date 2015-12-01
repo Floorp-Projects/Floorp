@@ -130,6 +130,9 @@ TLTextIdIsTreeEvent(uint32_t id)
            id >= TraceLogger_Last;
 }
 
+// The maximum amount of ram memory a continuous space structure can take (in bytes).
+static const uint32_t CONTINUOUSSPACE_LIMIT = 200 * 1024 * 1024;
+
 template <class T>
 class ContinuousSpace {
     T* data_;
@@ -194,10 +197,15 @@ class ContinuousSpace {
             return true;
 
         uint32_t nCapacity = capacity_ * 2;
-        if (size_ + count > nCapacity)
+        if (size_ + count > nCapacity || nCapacity * sizeof(T) > CONTINUOUSSPACE_LIMIT) {
             nCapacity = size_ + count;
-        T* entries = (T*) js_realloc(data_, nCapacity * sizeof(T));
 
+            // Limit the size of a continuous buffer.
+            if (nCapacity * sizeof(T) > CONTINUOUSSPACE_LIMIT)
+                return false;
+        }
+
+        T* entries = (T*) js_realloc(data_, nCapacity * sizeof(T));
         if (!entries)
             return false;
 

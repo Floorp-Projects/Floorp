@@ -34,6 +34,7 @@ const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "nsBinaryStream",
                             () => CC("@mozilla.org/binaryinputstream;1",
@@ -670,13 +671,11 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn)
     }, null);
 
     let file = new nsFile(aFilename);
-    let fileChan = Services.io.newChannelFromURI2(Services.io.newFileURI(file),
-                                                  null,      // aLoadingNode
-                                                  Services.scriptSecurityManager.getSystemPrincipal(),
-                                                  null,      // aTriggeringPrincipal
-                                                  Ci.nsILoadInfo.SEC_NORMAL,
-                                                  Ci.nsIContentPolicy.TYPE_OTHER);
-    fileChan.asyncOpen(converter, null);
+    let fileChan = NetUtil.newChannel({
+                     uri: Services.io.newFileURI(file),
+                     loadUsingSystemPrincipal: true
+                   });
+    fileChan.asyncOpen2(converter);
 
   } catch (ex) {
     handleException(ex);

@@ -191,9 +191,9 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
         jit::Label* label;
         size_t labelOffset;
 
-        jit::CodeOffsetLabel patchOffset;
+        jit::CodeOffset patchOffset;
 
-        LabelPatch(jit::Label* label, jit::CodeOffsetLabel patchOffset)
+        LabelPatch(jit::Label* label, jit::CodeOffset patchOffset)
           : label(label), labelOffset(0), patchOffset(patchOffset)
         {}
     };

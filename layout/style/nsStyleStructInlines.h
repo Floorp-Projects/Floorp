@@ -138,10 +138,13 @@ nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const
 bool
 nsStyleDisplay::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
 {
+  // NOTE: Any CSS properties that influence the output of this function
+  // should have the CSS_PROPERTY_FIXPOS_CB set on them.
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
   return (IsContainPaint() || HasTransform(aContextFrame) ||
           HasPerspectiveStyle() ||
+          (mWillChangeBitField & NS_STYLE_WILL_CHANGE_FIXPOS_CB) ||
           aContextFrame->StyleSVGReset()->HasFilters()) &&
       !aContextFrame->IsSVGText();
 }

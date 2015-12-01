@@ -103,4 +103,11 @@ private:
 
 GMPMutex* GMPCreateMutex();
 
+template<typename T>
+inline void
+Assign(std::vector<T>& aVec, const T* aData, size_t aLength)
+{
+  aVec.assign(aData, aData + aLength);
+}
+
 #endif // __ClearKeyUtils_h__
