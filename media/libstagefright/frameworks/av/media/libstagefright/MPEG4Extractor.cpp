@@ -1650,7 +1650,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size);
-            if (!buffer.get()) {
+            if (!buffer.get() || !buffer->data()) {
                 return -ENOMEM;
             }
 
@@ -1922,7 +1922,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                   return ERROR_MALFORMED;
                 }
                 sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size + 1);
-                if (!buffer.get()) {
+                if (!buffer.get() || !buffer->data()) {
                     return -ENOMEM;
                 }
                 if (mDataSource->readAt(
