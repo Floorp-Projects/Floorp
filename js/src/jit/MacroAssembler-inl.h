@@ -357,6 +357,15 @@ MacroAssembler::addStackPtrTo(T t)
 
 #endif // !JS_CODEGEN_ARM64
 
+void
+MacroAssembler::bumpKey(Int32Key* key, int diff)
+{
+    if (key->isRegister())
+        add32(Imm32(diff), key->reg());
+    else
+        key->bumpConstant(diff);
+}
+
 } // namespace jit
 } // namespace js
 

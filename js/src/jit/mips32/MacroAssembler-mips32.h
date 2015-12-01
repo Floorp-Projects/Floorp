@@ -1061,18 +1061,13 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
                                        Register temp, Register valueTemp, Register offsetTemp, Register maskTemp,
                                        AnyRegister output);
 
-    void add32(Register src, Register dest);
-    void add32(Imm32 imm, Register dest);
-    void add32(Imm32 imm, const Address& dest);
     void add64(Imm32 imm, Register64 dest) {
         as_addiu(dest.low, dest.low, imm.value);
         as_sltiu(ScratchRegister, dest.low, imm.value);
         as_addu(dest.high, dest.high, ScratchRegister);
     }
 
-    void incrementInt32Value(const Address& addr) {
-        add32(Imm32(1), ToPayload(addr));
-    }
+    inline void incrementInt32Value(const Address& addr);
 
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* overflow) {
