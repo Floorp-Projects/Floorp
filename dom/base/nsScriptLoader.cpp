@@ -160,7 +160,7 @@ nsScriptLoader::~nsScriptLoader()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsScriptLoader, nsIIncrementalStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsScriptLoader, nsISupports)
 
 // Helper method for checking if the script element is an event-handler
 // This means that it has both a for-attribute and a event-attribute.
@@ -269,37 +269,6 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
   return NS_OK;
 }
 
-class ContextMediator : public nsIIncrementalStreamLoaderObserver
-{
-public:
-  explicit ContextMediator(nsScriptLoader *aScriptLoader, nsISupports *aContext)
-  : mScriptLoader(aScriptLoader)
-  , mContext(aContext) {}
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
-
-private:
-  virtual ~ContextMediator() {}
-  RefPtr<nsScriptLoader> mScriptLoader;
-  nsCOMPtr<nsISupports>  mContext;
-};
-
-NS_IMPL_ISUPPORTS(ContextMediator, nsIIncrementalStreamLoaderObserver)
-
-NS_IMETHODIMP
-ContextMediator::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                                  nsISupports* aContext,
-                                  nsresult aStatus,
-                                  uint32_t aStringLen,
-                                  const uint8_t* aString)
-{
-  // pass arguments through except for the aContext,
-  // we have to mediate and use mContext instead.
-  return mScriptLoader->OnStreamComplete(aLoader, mContext, aStatus,
-                                         aStringLen, aString);
-}
-
 nsresult
 nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                           bool aScriptFromHead)
@@ -383,10 +352,10 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
   }
 
-  RefPtr<ContextMediator> mediator = new ContextMediator(this, aRequest);
+  RefPtr<nsScriptLoadHandler> handler = new nsScriptLoadHandler(this, aRequest);
 
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
-  rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), mediator);
+  rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return channel->AsyncOpen2(loader);
@@ -1438,7 +1407,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                  nsISupports* aContext,
                                  nsresult aStatus,
@@ -1738,4 +1707,42 @@ nsScriptLoader::MaybeRemovedDeferRequests()
     return true;
   }
   return false;
+}
+
+//////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////
+
+nsScriptLoadHandler::nsScriptLoadHandler(nsScriptLoader *aScriptLoader,
+                                         nsScriptLoadRequest *aRequest)
+  : mScriptLoader(aScriptLoader),
+    mRequest(aRequest)
+{}
+
+nsScriptLoadHandler::~nsScriptLoadHandler()
+{}
+
+NS_IMPL_ISUPPORTS(nsScriptLoadHandler, nsIIncrementalStreamLoaderObserver)
+
+NS_IMETHODIMP
+nsScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
+                                       nsISupports* aContext,
+                                       uint32_t aDataLength,
+                                       const uint8_t* aData,
+                                       uint32_t *aConsumedLength)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
+                                      nsISupports* aContext,
+                                      nsresult aStatus,
+                                      uint32_t aStringLen,
+                                      const uint8_t* aString)
+{
+  // pass arguments through except for the aContext,
+  // we have to mediate and use mRequest instead.
+  return mScriptLoader->OnStreamComplete(aLoader, mRequest, aStatus,
+                                         aStringLen, aString);
 }

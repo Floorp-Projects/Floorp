@@ -8,9 +8,36 @@
 interface nsIRequest;
 interface nsIIncrementalStreamLoader;
 
-[scriptable, uuid(2143eaad-674e-4613-87f8-359d4c40f590)]
+[scriptable, uuid(07c3d2cc-5454-4618-9f4f-cd93de9504a4)]
 interface nsIIncrementalStreamLoaderObserver : nsISupports
 {
+    /**
+     * Called when new data has arrived on the stream.
+     *
+     * @param loader the stream loader that loaded the stream.
+     * @param ctxt the context parameter of the underlying channel
+     * @param dataLength the length of the new data received
+     * @param data the contents of the new data received.
+     *
+     * This method will always be called asynchronously by the
+     * nsIIncrementalStreamLoader involved, on the thread that called the
+     * loader's init() method.
+     *
+     * If the observer wants to not accumulate all or portional of the data in
+     * the internal buffer, the consumedLength shall be set to the value of
+     * the dataLength or less. By default the consumedLength value is assumed 0.
+     * The data and dataLength reflect the non-consumed data and will be
+     * accumulated if consumedLength is not set.
+     *
+     * In comparison with onStreamComplete(), the data buffer cannot be
+     * adopted if this method returns NS_SUCCESS_ADOPTED_DATA.
+     */
+    void onIncrementalData(in nsIIncrementalStreamLoader loader,
+                           in nsISupports ctxt,
+                           in unsigned long dataLength,
+                           [const,array,size_is(dataLength)] in octet data,
+                           inout unsigned long consumedLength);
+
     /**
      * Called when the entire stream has been loaded.
      *
