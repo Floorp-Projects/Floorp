@@ -70,6 +70,11 @@ add_test(function test_userDisabledNotPersisted() {
       onEnabled: (addon2) => {
         AddonManager.removeAddonListener(listener);
 
+        let profile = gProfD.clone();
+        profile.append("extensions");
+        let file = getFileForAddon(profile, addon.id);
+        Assert.ok(isManifestRegistered(file), "Manifest should be registered");
+
         Assert.equal(addon2.id, addon.id, "Changed add-on matches expected.");
         Assert.equal(addon2.userDisabled, false, "Add-on is no longer user disabled.");
         Assert.ok(addon2.isActive, "Add-on is active.");
