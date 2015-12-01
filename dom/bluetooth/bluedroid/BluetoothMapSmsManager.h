@@ -212,7 +212,6 @@ private:
   void SendReply(uint8_t aResponse);
 
   void HandleNotificationRegistration(const ObexHeaderSet& aHeader);
-  void HandleEventReport(const ObexHeaderSet& aHeader);
   void HandleSetMessageStatus(const ObexHeaderSet& aHeader);
   void HandleSmsMmsFolderListing(const ObexHeaderSet& aHeader);
   void HandleSmsMmsMsgListing(const ObexHeaderSet& aHeader);
