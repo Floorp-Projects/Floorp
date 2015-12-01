@@ -157,6 +157,17 @@ MacroAssembler::neg32(Register reg)
     negl(reg);
 }
 
+void
+MacroAssembler::negateFloat(FloatRegister reg)
+{
+    ScratchFloat32Scope scratch(*this);
+    vpcmpeqw(scratch, scratch, scratch);
+    vpsllq(Imm32(31), scratch, scratch);
+
+    // XOR the float in a float register with -0.0.
+    vxorps(scratch, reg, reg); // s ^ 0x80000000
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
