@@ -301,6 +301,12 @@ function run()
   testStyleVsStyle(win, additionalAuthor, additionalUser,
                    {AB:{rr:0, ii:1, ri:1, ir:0}, BA:{rr:0, ii:1, ri:1, ir:0}});
 
+  // Bug 1228542
+  loadAndRegisterAuthorSheet(win, getStyle('rgb(255, 0, 0)'));
+  // Avoiding security exception...
+  (new win.Function("document.open()"))();
+  (new win.Function("document.close()"))();
+
   SimpleTest.finish();
 }
 
