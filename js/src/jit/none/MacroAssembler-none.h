@@ -412,7 +412,6 @@ class MacroAssemblerNone : public Assembler
     void loadConstantDouble(double, FloatRegister) { MOZ_CRASH(); }
     void addConstantDouble(double, FloatRegister) { MOZ_CRASH(); }
     void loadConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
-    void addConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
     Condition testInt32Truthy(bool, ValueOperand) { MOZ_CRASH(); }
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
     void branchTestInt32Truthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
