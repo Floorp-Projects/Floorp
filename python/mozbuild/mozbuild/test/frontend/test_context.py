@@ -10,9 +10,10 @@ from mozunit import main
 from mozbuild.frontend.context import (
     AbsolutePath,
     Context,
-    ContextDerivedTypedRecord,
+    ContextDerivedTypedHierarchicalStringList,
     ContextDerivedTypedList,
     ContextDerivedTypedListWithItems,
+    ContextDerivedTypedRecord,
     Files,
     FUNCTIONS,
     ObjDirPath,
@@ -579,6 +580,53 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(p_path, Path(ctxt1, p_str))
             self.assertEqual(l[p_str].foo, True)
             self.assertEqual(l[p_path].foo, True)
+
+    def test_path_typed_hierarchy_list(self):
+        config = self.config
+        ctxt1 = Context(config=config)
+        ctxt1.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+        ctxt2 = Context(config=config)
+        ctxt2.push_source(mozpath.join(config.topsrcdir, 'bar', 'moz.build'))
+
+        paths = [
+            '!../bar/qux',
+            '!/qux/qux',
+            '!qux',
+            '../bar/qux',
+            '/qux/qux',
+            'qux',
+        ]
+
+        MyList = ContextDerivedTypedHierarchicalStringList(Path)
+        l = MyList(ctxt1)
+        l += paths
+        l.subdir += paths
+
+        for _, files in l.walk():
+            for p_str, p_path in zip(paths, files):
+                self.assertEqual(p_str, p_path)
+                self.assertEqual(p_path, Path(ctxt1, p_str))
+                self.assertEqual(p_path.join('foo'),
+                                 Path(ctxt1, mozpath.join(p_str, 'foo')))
+
+        l2 = MyList(ctxt2)
+        l2 += paths
+        l2.subdir += paths
+
+        for _, files in l2.walk():
+            for p_str, p_path in zip(paths, files):
+                self.assertEqual(p_str, p_path)
+                self.assertEqual(p_path, Path(ctxt2, p_str))
+
+        # Assigning with Paths from another context doesn't rebase them
+        l2 = MyList(ctxt2)
+        l2 += l
+
+        for _, files in l2.walk():
+            for p_str, p_path in zip(paths, files):
+                self.assertEqual(p_str, p_path)
+                self.assertEqual(p_path, Path(ctxt1, p_str))
+
 
 class TestTypedRecord(unittest.TestCase):
 

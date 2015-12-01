@@ -521,6 +521,30 @@ def ContextDerivedTypedRecord(*fields):
     _TypedRecord._fields = dict(fields)
     return _TypedRecord
 
+
+@memoize
+def ContextDerivedTypedHierarchicalStringList(type):
+    """Specialized HierarchicalStringList for use with ContextDerivedValue
+    types."""
+    class _TypedListWithItems(ContextDerivedValue, HierarchicalStringList):
+        __slots__ = ('_strings', '_children', '_context')
+
+        def __init__(self, context):
+            self._strings = ContextDerivedTypedList(
+                type, StrictOrderingOnAppendList)(context)
+            self._children = {}
+            self._context = context
+
+        def _get_exportvariable(self, name):
+            child = self._children.get(name)
+            if not child:
+                child = self._children[name] = _TypedListWithItems(
+                    self._context)
+            return child
+
+    return _TypedListWithItems
+
+
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
                         [('product', unicode), ('component', unicode)])
 
