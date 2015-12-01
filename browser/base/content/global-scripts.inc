@@ -28,6 +28,7 @@
 <script type="application/javascript" src="chrome://browser/content/browser-sidebar.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-syncui.js"/>
+<script type="application/javascript" src="chrome://browser/content/browser-tabsintitlebar.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-tabview.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-thumbnails.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-trackingprotection.js"/>

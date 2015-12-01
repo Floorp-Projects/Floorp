@@ -95,6 +95,11 @@ browser.jar:
         content/browser/browser-social.js             (content/browser-social.js)
 *       content/browser/browser-syncui.js             (content/browser-syncui.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
+#ifdef CAN_DRAW_IN_TITLEBAR
+        content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)
+#else
+        content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar-stub.js)
+#endif
         content/browser/browser-thumbnails.js         (content/browser-thumbnails.js)
         content/browser/browser-trackingprotection.js (content/browser-trackingprotection.js)
 *       content/browser/chatWindow.xul                (content/chatWindow.xul)
