@@ -16,7 +16,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(e5238312-2f50-4ec1-8e23-6337f3a67727)]
+[scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -266,12 +266,6 @@ interface nsISelectionController : nsISelectionDisplay
    */
     boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
     [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
-
-  /**
-   * Returns the current visibility status of the selection carets, and allows
-   * the visibility to be turned off, or on (if a selection exists).
-   */
-    attribute boolean selectionCaretsVisibility;
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \
