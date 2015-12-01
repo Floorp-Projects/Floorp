@@ -765,6 +765,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) DEFINED_ON(arm64);
+
     // ===============================================================
     // Shift functions
 
