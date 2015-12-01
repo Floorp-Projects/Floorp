@@ -27,10 +27,10 @@ const TEST_DATA = [
     tagName: "BODY",
     attrs: [
       {
-        name: "id", value: "body-id"
+        name: "class", value: "body-class"
       },
       {
-        name: "class", value: "body-class"
+        name: "id", value: "body-id"
       }
     ]
   },
@@ -46,12 +46,12 @@ const TEST_DATA = [
     tagName: "HTML",
     attrs: [
       {
-        name: "lang",
-        value: "en-US"
-      },
-      {
         name: "dir",
         value: "ltr"
+      },
+      {
+        name: "lang",
+        value: "en-US"
       }
     ]
   }
