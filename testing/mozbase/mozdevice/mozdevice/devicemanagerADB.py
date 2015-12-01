@@ -317,6 +317,8 @@ class DeviceManagerADB(DeviceManager):
                 return []
             if (data[0].find("opendir failed") != -1):
                 return []
+            if (data[0].find("Device or resource busy") != -1):
+                return []
         return data
 
     def getProcessList(self):
