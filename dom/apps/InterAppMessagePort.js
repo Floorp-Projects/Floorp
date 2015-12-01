@@ -30,7 +30,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-const kMessages = ["InterAppMessagePort:OnMessage",
+const kMessages = ["InterAppMessagePort:OnClose",
+                   "InterAppMessagePort:OnMessage",
                    "InterAppMessagePort:Shutdown"];
 
 function InterAppMessagePort() {
@@ -66,6 +67,7 @@ InterAppMessagePort.prototype = {
     this._started = false;
     this._closed = false;
     this._messageQueue = [];
+    this._deferredClose = false;
   },
 
   // WebIDL implementation for constructor.
@@ -131,6 +133,10 @@ InterAppMessagePort.prototype = {
       let message = this._messageQueue.shift();
       this._dispatchMessage(message);
     }
+
+    if (this._deferredClose) {
+      this._dispatchClose();
+    }
   },
 
   close: function() {
@@ -143,6 +149,7 @@ InterAppMessagePort.prototype = {
     }
 
     this._closed = true;
+    this._deferredClose = false;
     this._messageQueue.length = 0;
 
     // When this method called on a local port that is entangled with another
@@ -152,6 +159,8 @@ InterAppMessagePort.prototype = {
                             manifestURL: this._manifestURL });
 
     this.removeMessageListeners(kMessages);
+
+    this._dispatchClose();
   },
 
   get onmessage() {
@@ -176,6 +185,16 @@ InterAppMessagePort.prototype = {
     this.start();
   },
 
+  get onclose() {
+    if (DEBUG) debug("Getting onclose handler.");
+    return this.__DOM_IMPL__.getEventHandler("onclose");
+  },
+
+  set onclose(aHandler) {
+    if (DEBUG) debug("Setting onclose handler.");
+    this.__DOM_IMPL__.setEventHandler("onclose", aHandler);
+  },
+
   _dispatchMessage: function _dispatchMessage(aMessage) {
     let wrappedMessage = Cu.cloneInto(aMessage, this._window);
     if (DEBUG) {
@@ -186,6 +205,15 @@ InterAppMessagePort.prototype = {
     let event = new this._window
                     .MozInterAppMessageEvent("message",
                                              { data: wrappedMessage });
+    this.__DOM_IMPL__.dispatchEvent(event);
+  },
+
+  _dispatchClose() {
+    if (DEBUG) debug("_dispatchClose");
+    let event = new this._window.Event("close", {
+      bubbles: true,
+      cancelable: true
+    });
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
@@ -217,11 +245,32 @@ InterAppMessagePort.prototype = {
         this._dispatchMessage(message.message);
         break;
 
+      case "InterAppMessagePort:OnClose":
+        if (this._closed) {
+          if (DEBUG) debug("close() has been called. Drop the message.");
+          return;
+        }
+
+        // It is possible that one side of the port posts messages and calls
+        // close() before calling start() or setting the onmessage handler. In
+        // that case we need to queue the messages and defer the onclose event
+        // until the messages are delivered to the other side of the port.
+        if (!this._started) {
+          if (DEBUG) debug("Not yet called start(). Defer close notification.");
+          this._deferredClose = true;
+          return;
+        }
+
+        this._dispatchClose();
+        break;
+
       case "InterAppMessagePort:Shutdown":
         this.close();
         break;
+
       default:
-        if (DEBUG) debug("Error! Shouldn't fall into this case.");
+        dump("WARNING - Invalid InterAppMessagePort message type " +
+             aMessage.name + "\n");
         break;
     }
   }

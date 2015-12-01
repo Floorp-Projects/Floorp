@@ -6,19 +6,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifndef NO_DIST_INSTALL
-ifdef SHARED_LIBRARY
-ifdef IS_COMPONENT
-target:: $(SUBMAKEFILES) $(SHARED_LIBRARY)
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
-ifndef NO_COMPONENTS_MANIFEST
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'manifest components/components.manifest')
-	$(call py_action,buildlist,$(FINAL_TARGET)/components/components.manifest 'binary-component $(SHARED_LIBRARY)')
-endif
-endif # IS_COMPONENT
-endif # SHARED_LIBRARY
-endif # !NO_DIST_INSTALL
-
-ifndef NO_DIST_INSTALL
 
 ifneq (,$(strip $(PROGRAM)$(SIMPLE_PROGRAMS)))
 PROGRAMS_EXECUTABLES = $(SIMPLE_PROGRAMS) $(PROGRAM)
@@ -37,12 +24,10 @@ endif # LIBRARY
 
 
 ifdef SHARED_LIBRARY
-ifndef IS_COMPONENT
 SHARED_LIBRARY_FILES = $(SHARED_LIBRARY)
-SHARED_LIBRARY_DEST ?= $(FINAL_TARGET)
+SHARED_LIBRARY_DEST ?= $(FINAL_TARGET)$(if $(IS_COMPONENT),/components)
 SHARED_LIBRARY_TARGET = target
 INSTALL_TARGETS += SHARED_LIBRARY
-endif # ! IS_COMPONENT
 endif # SHARED_LIBRARY
 
 ifneq (,$(strip $(HOST_SIMPLE_PROGRAMS)$(HOST_PROGRAM)))

@@ -62,7 +62,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
   public:
     bool generate();
-    bool generateAsmJS(AsmJSFunctionLabels* labels);
+    bool generateAsmJS(AsmJSFunctionOffsets *offsets);
     bool link(JSContext* cx, CompilerConstraintList* constraints);
     bool linkSharedStubs(JSContext* cx);
 
@@ -484,14 +484,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertRangeI(const Range* r, Register input);
     void emitAssertRangeD(const Range* r, FloatRegister input, FloatRegister temp);
 
-    Vector<CodeOffsetLabel, 0, JitAllocPolicy> ionScriptLabels_;
+    Vector<CodeOffset, 0, JitAllocPolicy> ionScriptLabels_;
 
     struct SharedStub {
         ICStub::Kind kind;
         IonICEntry entry;
-        CodeOffsetLabel label;
+        CodeOffset label;
 
-        SharedStub(ICStub::Kind kind, IonICEntry entry, CodeOffsetLabel label)
+        SharedStub(ICStub::Kind kind, IonICEntry entry, CodeOffset label)
           : kind(kind), entry(entry), label(label)
         {}
     };

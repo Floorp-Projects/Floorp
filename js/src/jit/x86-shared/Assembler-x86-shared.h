@@ -36,10 +36,10 @@ struct ScratchDoubleScope : public AutoFloatRegisterScope
     { }
 };
 
-struct ScratchSimdScope : public AutoFloatRegisterScope
+struct ScratchSimd128Scope : public AutoFloatRegisterScope
 {
-    explicit ScratchSimdScope(MacroAssembler& masm)
-      : AutoFloatRegisterScope(masm, ScratchSimdReg)
+    explicit ScratchSimd128Scope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchSimd128Reg)
     { }
 };
 
@@ -262,7 +262,7 @@ class AssemblerX86Shared : public AssemblerShared
             dataRelocations_.writeUnsigned(masm.currentOffset());
         }
     }
-    void writePrebarrierOffset(CodeOffsetLabel label) {
+    void writePrebarrierOffset(CodeOffset label) {
         preBarriers_.writeUnsigned(label.offset());
     }
 
@@ -438,10 +438,10 @@ class AssemblerX86Shared : public AssemblerShared
     void nopAlign(int alignment) {
         masm.nopAlign(alignment);
     }
-    void writeCodePointer(CodeOffsetLabel* label) {
-        // A CodeOffsetLabel only has one use, bake in the "end of list" value.
+    void writeCodePointer(CodeOffset* label) {
+        // A CodeOffset only has one use, bake in the "end of list" value.
         masm.jumpTablePointer(LabelBase::INVALID_OFFSET);
-        label->use(masm.size());
+        label->bind(masm.size());
     }
     void movl(Imm32 imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.encoding());
@@ -923,8 +923,8 @@ class AssemblerX86Shared : public AssemblerShared
         }
         label->bind(dst.offset());
     }
-    void use(CodeOffsetLabel* label) {
-        label->use(currentOffset());
+    void use(CodeOffset* label) {
+        label->bind(currentOffset());
     }
     uint32_t currentOffset() {
         return masm.label().offset();
@@ -955,15 +955,15 @@ class AssemblerX86Shared : public AssemblerShared
         label->reset();
     }
 
-    static void Bind(uint8_t* raw, CodeOffsetLabel* label, const void* address) {
-        if (label->used()) {
+    static void Bind(uint8_t* raw, CodeOffset* label, const void* address) {
+        if (label->bound()) {
             intptr_t offset = label->offset();
             X86Encoding::SetPointer(raw + offset, address);
         }
     }
 
     // See Bind and X86Encoding::setPointer.
-    size_t labelToPatchOffset(CodeOffsetLabel label) {
+    size_t labelToPatchOffset(CodeOffset label) {
         return label.offset() - sizeof(void*);
     }
 
@@ -974,7 +974,7 @@ class AssemblerX86Shared : public AssemblerShared
         // Remove the size of the return address which is included in the frame.
         masm.ret_i(n.value - sizeof(void*));
     }
-    CodeOffsetLabel call(Label* label) {
+    CodeOffset call(Label* label) {
         if (label->bound()) {
             masm.linkJump(masm.call(), JmpDst(label->offset()));
         } else {
@@ -982,11 +982,11 @@ class AssemblerX86Shared : public AssemblerShared
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
-        return CodeOffsetLabel(masm.currentOffset());
+        return CodeOffset(masm.currentOffset());
     }
-    CodeOffsetLabel call(Register reg) {
+    CodeOffset call(Register reg) {
         masm.call_r(reg.encoding());
-        return CodeOffsetLabel(masm.currentOffset());
+        return CodeOffset(masm.currentOffset());
     }
     void call(const Operand& op) {
         switch (op.kind()) {
@@ -1001,8 +1001,8 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
 
-    CodeOffsetLabel callWithPatch() {
-        return CodeOffsetLabel(masm.call().offset());
+    CodeOffset callWithPatch() {
+        return CodeOffset(masm.call().offset());
     }
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
         unsigned char* code = masm.data();
@@ -1074,9 +1074,9 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    CodeOffsetLabel cmplWithPatch(Imm32 rhs, Register lhs) {
+    CodeOffset cmplWithPatch(Imm32 rhs, Register lhs) {
         masm.cmpl_i32r(rhs.value, lhs.encoding());
-        return CodeOffsetLabel(masm.currentOffset());
+        return CodeOffset(masm.currentOffset());
     }
     void cmpw(Register rhs, Register lhs) {
         masm.cmpw_rr(rhs.encoding(), lhs.encoding());
@@ -1118,9 +1118,9 @@ class AssemblerX86Shared : public AssemblerShared
     void addl(Imm32 imm, Register dest) {
         masm.addl_ir(imm.value, dest.encoding());
     }
-    CodeOffsetLabel addlWithPatch(Imm32 imm, Register dest) {
+    CodeOffset addlWithPatch(Imm32 imm, Register dest) {
         masm.addl_i32r(imm.value, dest.encoding());
-        return CodeOffsetLabel(masm.currentOffset());
+        return CodeOffset(masm.currentOffset());
     }
     void addl(Imm32 imm, const Operand& op) {
         switch (op.kind()) {
@@ -2207,8 +2207,8 @@ class AssemblerX86Shared : public AssemblerShared
             if (src1.kind() == Operand::FPREG &&
                 dest.aliases(FloatRegister::FromCode(src1.fpu())))
             {
-                vmovdqa(src1, ScratchSimdReg);
-                src1 = Operand(ScratchSimdReg);
+                vmovdqa(src1, ScratchSimd128Reg);
+                src1 = Operand(ScratchSimd128Reg);
             }
             vmovdqa(src0, dest);
             src0 = dest;

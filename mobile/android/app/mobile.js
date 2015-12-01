@@ -942,11 +942,8 @@ pref("dom.vr.enabled", true);
 
 pref("browser.tabs.showAudioPlayingIcon", true);
 
-// Enable service workers and fetch interception on non-release Fennec
-#ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
-#endif
 
 // The remote content URL where FxAccountsWebChannel messages originate.  Must use HTTPS.
 pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com");

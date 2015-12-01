@@ -1054,7 +1054,7 @@ void MediaDecoderStateMachine::StopPlayback()
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("StopPlayback()");
 
-  mOnPlaybackStop.Notify();
+  mOnPlaybackEvent.Notify(MediaEventType::PlaybackStopped);
 
   if (IsPlaying()) {
     mMediaSink->SetPlaying(false);
@@ -1087,7 +1087,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   DECODER_LOG("MaybeStartPlayback() starting playback");
-  mOnPlaybackStart.Notify();
+  mOnPlaybackEvent.Notify(MediaEventType::PlaybackStarted);
   StartMediaSink();
 
   if (!IsPlaying()) {
@@ -1892,7 +1892,7 @@ MediaDecoderStateMachine::DecodeError()
 
   // MediaDecoder::DecodeError notifies the owner, and then shuts down the state
   // machine.
-  mOnDecodeError.Notify();
+  mOnPlaybackEvent.Notify(MediaEventType::DecodeError);
 }
 
 void
@@ -2151,7 +2151,7 @@ MediaDecoderStateMachine::SeekCompleted()
 
   if (video) {
     mMediaSink->Redraw();
-    mOnInvalidate.Notify();
+    mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 }
 
@@ -2404,7 +2404,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         // Ensure readyState is updated before firing the 'ended' event.
         UpdateNextFrameStatus();
 
-        mOnPlaybackEnded.Notify();
+        mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
 
         mSentPlaybackEndedEvent = true;
 

@@ -84,9 +84,7 @@ protected:
 
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
-  static PLDHashOperator RemoveForDocumentEnumerator(const nsINode* aKey,
-                                                     bool& aEntry,
-                                                     void* aUserData);
+  void RemoveForDocument(nsIDocument* aDoc);
   bool IsEventTrusted(nsIDOMEvent *aEvent);
   // members //////////////////////////////////////////
 

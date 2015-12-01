@@ -173,17 +173,13 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
   MOZ_ASSERT(mAllowZoom == aOther.mAllowZoom,
              "expected mAllowZoom to be the same on both nsStyleFonts");
   if (mSize != aOther.mSize ||
+      mFont != aOther.mFont ||
       mLanguage != aOther.mLanguage ||
       mExplicitLanguage != aOther.mExplicitLanguage ||
       mMathVariant != aOther.mMathVariant ||
       mMathDisplay != aOther.mMathDisplay ||
       mMinFontSizeRatio != aOther.mMinFontSizeRatio) {
     return NS_STYLE_HINT_REFLOW;
-  }
-
-  nsChangeHint hint = CalcFontDifference(mFont, aOther.mFont);
-  if (hint) {
-    return hint;
   }
 
   // XXX Should any of these cause a non-nsChangeHint_NeutralChange change?
@@ -227,36 +223,6 @@ nsStyleFont::GetLanguage(nsPresContext* aPresContext)
     language = aPresContext->GetLanguageFromCharset();
   }
   return language.forget();
-}
-
-nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
-{
-  if ((aFont1.size == aFont2.size) && 
-      (aFont1.sizeAdjust == aFont2.sizeAdjust) && 
-      (aFont1.style == aFont2.style) &&
-      (aFont1.weight == aFont2.weight) &&
-      (aFont1.stretch == aFont2.stretch) &&
-      (aFont1.smoothing == aFont2.smoothing) &&
-      (aFont1.fontlist == aFont2.fontlist) &&
-      (aFont1.kerning == aFont2.kerning) &&
-      (aFont1.synthesis == aFont2.synthesis) &&
-      (aFont1.variantAlternates == aFont2.variantAlternates) &&
-      (aFont1.alternateValues == aFont2.alternateValues) &&
-      (aFont1.featureValueLookup == aFont2.featureValueLookup) &&
-      (aFont1.variantCaps == aFont2.variantCaps) &&
-      (aFont1.variantEastAsian == aFont2.variantEastAsian) &&
-      (aFont1.variantLigatures == aFont2.variantLigatures) &&
-      (aFont1.variantNumeric == aFont2.variantNumeric) &&
-      (aFont1.variantPosition == aFont2.variantPosition) &&
-      (aFont1.fontFeatureSettings == aFont2.fontFeatureSettings) &&
-      (aFont1.languageOverride == aFont2.languageOverride) &&
-      (aFont1.systemFont == aFont2.systemFont)) {
-    if ((aFont1.decorations == aFont2.decorations)) {
-      return NS_STYLE_HINT_NONE;
-    }
-    return nsChangeHint_RepaintFrame;
-  }
-  return NS_STYLE_HINT_REFLOW;
 }
 
 static bool IsFixedData(const nsStyleSides& aSides, bool aEnumOK)
@@ -2950,6 +2916,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
     } else {
       NS_UpdateHint(hint, nsChangeHint_UpdateOpacityLayer);
+      if ((mOpacity == 1.0f) != (aOther.mOpacity == 1.0f)) {
+        NS_UpdateHint(hint, nsChangeHint_UpdateUsesOpacity);
+      }
     }
   }
 
@@ -3035,12 +3004,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // test above handles relevant changes in the
   // NS_STYLE_WILL_CHANGE_TRANSFORM bit, which in turn handles frame 
   // reconstruction for changes in the containing block of 
-  // fixed-positioned elements.  Other than that, all changes to 
-  // 'will-change' can be handled by a repaint.
+  // fixed-positioned elements.
   uint8_t willChangeBitsChanged =
     mWillChangeBitField ^ aOther.mWillChangeBitField;
-  if (willChangeBitsChanged) {
+  if (willChangeBitsChanged & (NS_STYLE_WILL_CHANGE_STACKING_CONTEXT |
+                               NS_STYLE_WILL_CHANGE_SCROLL |
+                               NS_STYLE_WILL_CHANGE_OPACITY)) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
+  if (willChangeBitsChanged & NS_STYLE_WILL_CHANGE_FIXPOS_CB) {
+    NS_UpdateHint(hint, nsChangeHint_UpdateContainingBlock);
   }
 
   // Note:  Our current behavior for handling changes to the

@@ -85,11 +85,10 @@ static MOZ_CONSTEXPR_VAR Register ReturnReg = rax;
 static MOZ_CONSTEXPR_VAR Register HeapReg = r15;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Single);
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnInt32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Int32x4);
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32x4Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Float32x4);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimd128Reg = FloatRegister(X86Encoding::xmm0, FloatRegisters::Simd128);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = FloatRegister(X86Encoding::xmm15, FloatRegisters::Single);
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = FloatRegister(X86Encoding::xmm15, FloatRegisters::Double);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm15;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimd128Reg = xmm15;
 
 // Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;
@@ -315,8 +314,8 @@ class Assembler : public AssemblerX86Shared
         subq(Imm32(sizeof(double)), StackPointer);
         vmovsd(src, Address(StackPointer, 0));
     }
-    CodeOffsetLabel pushWithPatch(ImmWord word) {
-        CodeOffsetLabel label = movWithPatch(word, ScratchReg);
+    CodeOffset pushWithPatch(ImmWord word) {
+        CodeOffset label = movWithPatch(word, ScratchReg);
         push(ScratchReg);
         return label;
     }
@@ -326,11 +325,11 @@ class Assembler : public AssemblerX86Shared
         addq(Imm32(sizeof(double)), StackPointer);
     }
 
-    CodeOffsetLabel movWithPatch(ImmWord word, Register dest) {
+    CodeOffset movWithPatch(ImmWord word, Register dest) {
         masm.movq_i64r(word.value, dest.encoding());
-        return CodeOffsetLabel(masm.currentOffset());
+        return CodeOffset(masm.currentOffset());
     }
-    CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
+    CodeOffset movWithPatch(ImmPtr imm, Register dest) {
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
@@ -598,7 +597,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(AsmJSImmPtr imm, Register dest) {
         masm.movq_i64r(-1, dest.encoding());
-        append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), imm.kind()));
+        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm.kind()));
     }
     void mov(const Operand& src, Register dest) {
         movq(src, dest);
@@ -612,9 +611,9 @@ class Assembler : public AssemblerX86Shared
     void mov(Register src, Register dest) {
         movq(src, dest);
     }
-    void mov(CodeOffsetLabel* label, Register dest) {
+    void mov(CodeOffset* label, Register dest) {
         masm.movq_i64r(/* placeholder */ 0, dest.encoding());
-        label->use(masm.size());
+        label->bind(masm.size());
     }
     void xchg(Register src, Register dest) {
         xchgq(src, dest);
@@ -632,49 +631,49 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    CodeOffsetLabel loadRipRelativeInt32(Register dest) {
-        return CodeOffsetLabel(masm.movl_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeInt32(Register dest) {
+        return CodeOffset(masm.movl_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel loadRipRelativeInt64(Register dest) {
-        return CodeOffsetLabel(masm.movq_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeInt64(Register dest) {
+        return CodeOffset(masm.movq_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovsd_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeDouble(FloatRegister dest) {
+        return CodeOffset(masm.vmovsd_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel loadRipRelativeFloat32(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovss_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffset(masm.vmovss_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel loadRipRelativeInt32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovdqa_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffset(masm.vmovdqa_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel loadRipRelativeFloat32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovaps_ripr(dest.encoding()).offset());
+    CodeOffset loadRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffset(masm.vmovaps_ripr(dest.encoding()).offset());
     }
-    CodeOffsetLabel storeRipRelativeInt32(Register dest) {
-        return CodeOffsetLabel(masm.movl_rrip(dest.encoding()).offset());
+    CodeOffset storeRipRelativeInt32(Register dest) {
+        return CodeOffset(masm.movl_rrip(dest.encoding()).offset());
     }
-    CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovsd_rrip(dest.encoding()).offset());
+    CodeOffset storeRipRelativeDouble(FloatRegister dest) {
+        return CodeOffset(masm.vmovsd_rrip(dest.encoding()).offset());
     }
-    CodeOffsetLabel storeRipRelativeFloat32(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovss_rrip(dest.encoding()).offset());
+    CodeOffset storeRipRelativeFloat32(FloatRegister dest) {
+        return CodeOffset(masm.vmovss_rrip(dest.encoding()).offset());
     }
-    CodeOffsetLabel storeRipRelativeInt32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovdqa_rrip(dest.encoding()).offset());
+    CodeOffset storeRipRelativeInt32x4(FloatRegister dest) {
+        return CodeOffset(masm.vmovdqa_rrip(dest.encoding()).offset());
     }
-    CodeOffsetLabel storeRipRelativeFloat32x4(FloatRegister dest) {
-        return CodeOffsetLabel(masm.vmovaps_rrip(dest.encoding()).offset());
+    CodeOffset storeRipRelativeFloat32x4(FloatRegister dest) {
+        return CodeOffset(masm.vmovaps_rrip(dest.encoding()).offset());
     }
-    CodeOffsetLabel leaRipRelative(Register dest) {
-        return CodeOffsetLabel(masm.leaq_rip(dest.encoding()).offset());
+    CodeOffset leaRipRelative(Register dest) {
+        return CodeOffset(masm.leaq_rip(dest.encoding()).offset());
     }
 
     void loadAsmJSActivation(Register dest) {
-        CodeOffsetLabel label = loadRipRelativeInt64(dest);
+        CodeOffset label = loadRipRelativeInt64(dest);
         append(AsmJSGlobalAccess(label, AsmJSActivationGlobalDataOffset));
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
-        CodeOffsetLabel label = loadRipRelativeInt64(HeapReg);
+        CodeOffset label = loadRipRelativeInt64(HeapReg);
         append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
     }
 
@@ -770,8 +769,8 @@ class Assembler : public AssemblerX86Shared
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffsetLabel toggledCall(JitCode* target, bool enabled) {
-        CodeOffsetLabel offset(size());
+    CodeOffset toggledCall(JitCode* target, bool enabled) {
+        CodeOffset offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
         addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
         MOZ_ASSERT_IF(!oom(), size() - offset.offset() == ToggledCallSize(nullptr));

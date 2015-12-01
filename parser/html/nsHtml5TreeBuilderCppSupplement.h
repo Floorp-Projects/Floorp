@@ -128,7 +128,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           nsString* crossOrigin =
             aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
           nsString* referrerPolicy =
-            aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRER);
+            aAttributes->getValue(nsHtml5AttributeName::ATTR_REFERRERPOLICY);
           nsString* sizes =
             aAttributes->getValue(nsHtml5AttributeName::ATTR_SIZES);
           mSpeculativeLoadQueue.AppendElement()->

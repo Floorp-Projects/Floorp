@@ -1,0 +1,6 @@
+{
+  "name": "IAC publisher app",
+  "launch_path": "/index.html",
+  "package_path": "publisher.zip",
+  "type": "certified"
+}

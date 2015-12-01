@@ -166,8 +166,7 @@ function promiseEntityID(aUrl) {
   let entityID = "";
   let channel = NetUtil.newChannel({
     uri: NetUtil.newURI(aUrl),
-    loadUsingSystemPrincipal: true,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+    loadUsingSystemPrincipal: true
   });
 
   channel.asyncOpen2({

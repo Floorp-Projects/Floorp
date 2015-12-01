@@ -13,6 +13,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "GLReadTexImageHelper.h"
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/CompositorChild.h" // for CompositorChild
@@ -200,21 +201,21 @@ public:
   }
 
 protected:
-  already_AddRefed<BufferTextureClient> Create(gfx::SurfaceFormat format) {
+  already_AddRefed<TextureClient> Create(gfx::SurfaceFormat format) {
     return TextureClient::CreateForRawBufferAccess(mAllocator, format,
                                                    mSize, mBackendType,
                                                    mBaseTexFlags);
   }
 
 public:
-  already_AddRefed<BufferTextureClient> CreateB8G8R8AX8() {
+  already_AddRefed<TextureClient> CreateB8G8R8AX8() {
     gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8
                                           : gfx::SurfaceFormat::B8G8R8X8;
     return Create(format);
   }
 
-  already_AddRefed<BufferTextureClient> CreateR8G8B8AX8() {
-    RefPtr<BufferTextureClient> ret;
+  already_AddRefed<TextureClient> CreateR8G8B8AX8() {
+    RefPtr<TextureClient> ret;
 
     bool areRGBAFormatsBroken = mLayersBackend == LayersBackend::LAYERS_BASIC;
     if (!areRGBAFormatsBroken) {
@@ -242,7 +243,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
   TexClientFactory factory(allocator, src->mHasAlpha, src->mSize, backendType,
                            baseFlags, layersBackend);
 
-  RefPtr<BufferTextureClient> texClient;
+  RefPtr<TextureClient> texClient;
 
   {
     gl::ScopedReadbackFB autoReadback(src);
@@ -288,16 +289,18 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
     DebugOnly<bool> succeeded = autoLock.Succeeded();
     MOZ_ASSERT(succeeded, "texture should have locked");
 
-    uint8_t* lockedBytes = texClient->GetLockedData();
+    MappedTextureData mapped;
+    texClient->BorrowMappedData(mapped);
 
-    // ReadPixels from the current FB into lockedBits.
+    // ReadPixels from the current FB into mapped.data.
     auto width = src->mSize.width;
     auto height = src->mSize.height;
 
     {
       ScopedPackAlignment autoAlign(gl, 4);
 
-      gl->raw_fReadPixels(0, 0, width, height, readFormat, readType, lockedBytes);
+      MOZ_ASSERT(mapped.stride/4 == mapped.size.width);
+      gl->raw_fReadPixels(0, 0, width, height, readFormat, readType, mapped.data);
     }
 
     // RB_SWAPPED doesn't work with D3D11. (bug 1051010)
@@ -310,7 +313,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
         layersNeedsManualSwap)
     {
       size_t pixels = width * height;
-      uint8_t* itr = lockedBytes;
+      uint8_t* itr = mapped.data;
       for (size_t i = 0; i < pixels; i++) {
         SwapRB_R8G8B8A8(itr);
         itr += 4;

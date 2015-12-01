@@ -43,9 +43,6 @@ static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::s31, FloatR
 static constexpr Register InvalidReg = { Registers::invalid_reg };
 static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_fpreg, FloatRegisters::Single };
 
-static constexpr FloatRegister ReturnInt32x4Reg = InvalidFloatReg;
-static constexpr FloatRegister ReturnFloat32x4Reg = InvalidFloatReg;
-
 static constexpr Register OsrFrameReg = { Registers::x3 };
 static constexpr Register ArgumentsRectifierReg = { Registers::x8 };
 static constexpr Register CallTempReg0 = { Registers::x9 };
@@ -64,8 +61,8 @@ static constexpr Register ZeroRegister = { Registers::sp };
 static constexpr ARMRegister ZeroRegister64 = { Registers::sp, 64 };
 static constexpr ARMRegister ZeroRegister32 = { Registers::sp, 32 };
 
-static constexpr FloatRegister ReturnSimdReg = InvalidFloatReg;
-static constexpr FloatRegister ScratchSimdReg = InvalidFloatReg;
+static constexpr FloatRegister ReturnSimd128Reg = InvalidFloatReg;
+static constexpr FloatRegister ScratchSimd128Reg = InvalidFloatReg;
 
 // StackPointer is intentionally undefined on ARM64 to prevent misuse:
 //  using sp as a base register is only valid if sp % 16 == 0.
@@ -243,7 +240,7 @@ class Assembler : public vixl::Assembler
         }
     }
 
-    void Bind(uint8_t* rawCode, CodeOffsetLabel* label, const void* address) {
+    void Bind(uint8_t* rawCode, CodeOffset* label, const void* address) {
         *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
     }
 
@@ -262,7 +259,7 @@ class Assembler : public vixl::Assembler
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
     }
-    size_t labelToPatchOffset(CodeOffsetLabel label) {
+    size_t labelToPatchOffset(CodeOffset label) {
         return label.offset();
     }
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {

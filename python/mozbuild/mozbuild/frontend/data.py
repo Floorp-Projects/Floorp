@@ -19,6 +19,7 @@ from __future__ import absolute_import, unicode_literals
 
 from mozbuild.util import StrictOrderingOnAppendList
 from mozbuild.shellutil import quote as shell_quote
+from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
 from .context import FinalTargetValue
@@ -224,25 +225,6 @@ class TestHarnessFiles(ContextDerived):
         self.srcdir_pattern_files = srcdir_pattern_files
         self.objdir_files = objdir_files
 
-class Resources(ContextDerived):
-    """Context derived container object for RESOURCE_FILES, which is a
-    HierarchicalStringList, with an extra ``.preprocess`` property on each
-    entry.
-
-    The local defines plus anything in ACDEFINES are stored in ``defines`` as a
-    dictionary, for any files that need preprocessing.
-    """
-    __slots__ = ('resources', 'defines')
-
-    def __init__(self, context, resources, defines=None):
-        ContextDerived.__init__(self, context)
-        self.resources = resources
-        defs = {}
-        defs.update(context.config.defines)
-        if defines:
-            defs.update(defines)
-        self.defines = defs
-
 class BrandingFiles(ContextDerived):
     """Sandbox container object for BRANDING_FILES, which is a
     HierarchicalStringList.
@@ -256,16 +238,6 @@ class BrandingFiles(ContextDerived):
     def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
-
-class JsPreferenceFile(ContextDerived):
-    """Context derived container object for a Javascript preference file.
-
-    Paths are assumed to be relative to the srcdir."""
-    __slots__ = ('path')
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-        self.path = path
 
 class IPDLFile(ContextDerived):
     """Describes an individual .ipdl source file."""
@@ -680,21 +652,6 @@ class JARManifest(ContextDerived):
         self.path = path
 
 
-class JavaScriptModules(ContextDerived):
-    """Describes a JavaScript module."""
-
-    __slots__ = (
-        'modules',
-        'flavor',
-    )
-
-    def __init__(self, context, modules, flavor):
-        super(JavaScriptModules, self).__init__(context)
-
-        self.modules = modules
-        self.flavor = flavor
-
-
 class ContextWrapped(ContextDerived):
     """Generic context derived container object for a wrapped rich object.
 
@@ -848,26 +805,31 @@ class FinalTargetFiles(ContextDerived):
     """
     __slots__ = ('files', 'target')
 
-    def __init__(self, sandbox, files, target):
+    def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
-        self.target = target
 
 
-class DistFiles(ContextDerived):
-    """Sandbox container object for FINAL_TARGET_FILES, which is a
+class FinalTargetPreprocessedFiles(ContextDerived):
+    """Sandbox container object for FINAL_TARGET_PP_FILES, which is a
     HierarchicalStringList.
 
     We need an object derived from ContextDerived for use in the backend, so
     this object fills that role. It just has a reference to the underlying
-    HierarchicalStringList, which is created when parsing DIST_FILES.
+    HierarchicalStringList, which is created when parsing
+    FINAL_TARGET_PP_FILES.
     """
     __slots__ = ('files', 'target')
 
-    def __init__(self, sandbox, files, target):
+    def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
-        self.target = target
+
+
+class TestingFiles(FinalTargetFiles):
+    @property
+    def install_target(self):
+        return '_tests'
 
 
 class GeneratedFile(ContextDerived):
@@ -999,3 +961,20 @@ class AndroidExtraPackages(ContextDerived):
     def __init__(self, context, packages):
         ContextDerived.__init__(self, context)
         self.packages = packages
+
+class ChromeManifestEntry(ContextDerived):
+    """Represents a chrome.manifest entry."""
+
+    __slots__ = (
+        'entry',
+    )
+
+    def __init__(self, context, manifest_path, entry):
+        ContextDerived.__init__(self, context)
+        assert isinstance(entry, ManifestEntry)
+        self.path = mozpath.join(self.install_target, manifest_path)
+        # Ensure the entry is relative to the directory containing the
+        # manifest path.
+        entry = entry.rebase(mozpath.dirname(manifest_path))
+        # Then add the install_target to the entry base directory.
+        self.entry = entry.move(mozpath.dirname(self.path))

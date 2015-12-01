@@ -440,11 +440,7 @@ pref("media.getusermedia.aec_enabled", true);
 pref("media.getusermedia.noise_enabled", true);
 #endif
 pref("media.getusermedia.aec_extended_filter", true);
-#if defined(ANDROID)
 pref("media.getusermedia.aec_delay_agnostic", true);
-#else
-pref("media.getusermedia.aec_delay_agnostic", false);
-#endif
 pref("media.getusermedia.noise", 1);
 pref("media.getusermedia.agc_enabled", false);
 pref("media.getusermedia.agc", 1);
@@ -2387,14 +2383,6 @@ pref("layout.css.grid-template-subgrid-value.enabled", false);
 
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
-
-// Is support for CSS Ruby enabled?
-//
-// When this pref is removed, make sure that the pref callback registration
-// in nsLayoutStylesheetCache::EnsureGlobal and the invalidation of
-// mUASheet in nsLayoutStylesheetCache::DependentPrefChanged (if it's not
-// otherwise needed) are removed.
-pref("layout.css.ruby.enabled", true);
 
 // Is support for CSS display:contents enabled?
 pref("layout.css.display-contents.enabled", true);

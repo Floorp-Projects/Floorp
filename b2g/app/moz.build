@@ -74,10 +74,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
     'b2g.js',
 ]
 
-DIST_FILES += [
+FINAL_TARGET_PP_FILES += [
   'ua-update.json.in',
 ]

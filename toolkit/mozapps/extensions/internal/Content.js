@@ -19,7 +19,7 @@ const MSG_JAR_FLUSH = "AddonJarFlush";
 try {
   if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   // Propagate JAR cache flush notifications across process boundaries.
-    addMessageListener(MSG_JAR_FLUSH, function jar_flushMessageListener(message) {
+    addMessageListener(MSG_JAR_FLUSH, function(message) {
       let file = new nsIFile(message.data);
       Services.obs.notifyObservers(file, "flush-cache-entry", null);
     });

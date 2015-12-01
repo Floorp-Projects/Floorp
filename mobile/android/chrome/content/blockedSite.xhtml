@@ -23,8 +23,9 @@
 
     <script type="application/javascript"><![CDATA[
       // Error url MUST be formatted like this:
-      //   about:blocked?e=error_code&u=url
-      
+      //   about:blocked?e=error_code&u=url(&o=1)?
+      //     (o=1 when user overrides are allowed)
+
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
       // document.location.href gets the current URI off the docshell,
@@ -56,7 +57,18 @@
           url = url.slice(12);
         return url;
       }
-      
+
+      /**
+       * Check whether this warning page should be overridable or whether
+       * the "ignore warning" button should be hidden.
+       */
+      function getOverride()
+      {
+        var url = document.documentURI;
+        var match = url.match(/&o=1&/);
+        return !!match;
+      }
+
       /**
        * Attempt to get the hostname via document.location.  Fail back
        * to getURL so that we always return something meaningful.
@@ -131,10 +143,21 @@
           el.parentNode.removeChild(el);
         }
 
+        if (!getOverride()) {
+          var btn = document.getElementById("ignoreWarningButton");
+          if (btn) {
+            btn.parentNode.removeChild(btn);
+          }
+        }
+
         // Set sitename
         document.getElementById(error + "_sitename").textContent = getHostString();
         document.title = document.getElementById("errorTitleText_" + error)
                                  .innerHTML;
+
+        // Inform the test harness that we're done loading the page
+        var event = new CustomEvent("AboutBlockedLoaded");
+        document.dispatchEvent(event);
       }
     ]]></script>
   </head>
