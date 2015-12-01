@@ -5,5 +5,12 @@
 
 const constants = require('./constants');
 
-// No global actions right now, but I'm sure there will be soon.
-module.exports = {};
+// Fired when the page is being unloaded, for example when it's being
+// navigated away from.
+function unload() {
+  return {
+    type: constants.UNLOAD
+  }
+}
+
+module.exports = { unload };
