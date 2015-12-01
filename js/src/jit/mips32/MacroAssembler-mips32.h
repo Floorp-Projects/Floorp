@@ -1061,12 +1061,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
                                        Register temp, Register valueTemp, Register offsetTemp, Register maskTemp,
                                        AnyRegister output);
 
-    void add64(Imm32 imm, Register64 dest) {
-        as_addiu(dest.low, dest.low, imm.value);
-        as_sltiu(ScratchRegister, dest.low, imm.value);
-        as_addu(dest.high, dest.high, ScratchRegister);
-    }
-
     inline void incrementInt32Value(const Address& addr);
 
     template <typename T>

@@ -202,6 +202,13 @@ MacroAssembler::add64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    ma_add(imm, dest.low, SetCC);
+    ma_adc(Imm32(0), dest.high, LeaveCC);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     ma_sub(src, dest, SetCC);
