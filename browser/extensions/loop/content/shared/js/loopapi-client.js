@@ -151,7 +151,11 @@ var loop = loop || {};
           return;
         }
         gSubscriptionsMap[eventName].forEach(function(cb) {
-          cb.apply(null, message.data[1]);
+          var data = message.data[1];
+          if (!Array.isArray(data)) {
+            data = [data];
+          }
+          cb.apply(null, data);
         });
       });
     }
