@@ -779,6 +779,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void inc64(AbsoluteAddress dest) PER_ARCH;
 
+    inline void neg32(Register reg) PER_SHARED_ARCH;
+
     // ===============================================================
     // Shift functions
 

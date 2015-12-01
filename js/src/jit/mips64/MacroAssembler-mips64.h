@@ -323,10 +323,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         branch(code);
     }
 
-    void neg32(Register reg) {
-        ma_negu(reg, reg);
-    }
-
     void splitTag(Register src, Register dest) {
         ma_dsrl(dest, src, Imm32(JSVAL_TAG_SHIFT));
     }

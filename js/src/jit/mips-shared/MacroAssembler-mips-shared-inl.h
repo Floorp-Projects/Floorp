@@ -179,6 +179,12 @@ MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
     as_divd(dest, dest, src);
 }
 
+void
+MacroAssembler::neg32(Register reg)
+{
+    ma_negu(reg, reg);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
