@@ -767,6 +767,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) DEFINED_ON(arm64);
 
+    inline void mul64(Imm64 imm, const Register64& dest) PER_ARCH;
+
     // ===============================================================
     // Shift functions
 

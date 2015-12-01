@@ -162,6 +162,41 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     subl(Operand(addr), dest);
 }
 
+// Note: this function clobbers eax and edx.
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    MOZ_ASSERT(dest.low != eax && dest.low != edx);
+    MOZ_ASSERT(dest.high != eax && dest.high != edx);
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+    imull(edx, dest.high);
+
+    // edx:eax = LOW(dest) * LOW(imm);
+    movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+    movl(dest.low, eax);
+    mull(edx);
+
+    // HIGH(dest) += edx;
+    addl(edx, dest.high);
+
+    // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+    if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
+        leal(Operand(dest.low, dest.low, TimesFour), edx);
+    else
+        MOZ_CRASH("Unsupported imm");
+    addl(edx, dest.high);
+
+    // LOW(dest) = eax;
+    movl(eax, dest.low);
+}
+
 // ===============================================================
 // Shift functions
 

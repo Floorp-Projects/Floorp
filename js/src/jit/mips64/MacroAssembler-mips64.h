@@ -1242,13 +1242,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         as_daddu(dest, dest, src);
     }
 
-    void mul64(Imm64 imm, const Register64& dest) {
-        MOZ_ASSERT(dest.reg != ScratchRegister);
-        mov(ImmWord(imm.value), ScratchRegister);
-        as_dmultu(dest.reg, ScratchRegister);
-        as_mflo(dest.reg);
-    }
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
     void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
         movePtr(imm, ScratchRegister);
