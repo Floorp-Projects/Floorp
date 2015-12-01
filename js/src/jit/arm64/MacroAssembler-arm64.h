@@ -2849,14 +2849,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Add(xdest, xsrc, Operand(xsrc, vixl::LSL, 1));
     }
 
-    void mul64(Imm64 imm, const Register64& dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratch64 = temps.AcquireX();
-        MOZ_ASSERT(dest.reg != scratch64.asUnsized());
-        mov(ImmWord(imm.value), scratch64.asUnsized());
-        Mul(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), scratch64);
-    }
-
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest) {
         Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }

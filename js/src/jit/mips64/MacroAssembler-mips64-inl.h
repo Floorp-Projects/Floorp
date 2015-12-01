@@ -119,6 +119,15 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
     ma_dsubu(dest, dest, imm);
 }
 
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    MOZ_ASSERT(dest.reg != ScratchRegister);
+    mov(ImmWord(imm.value), ScratchRegister);
+    as_dmultu(dest.reg, ScratchRegister);
+    as_mflo(dest.reg);
+}
+
 // ===============================================================
 // Shift functions
 
