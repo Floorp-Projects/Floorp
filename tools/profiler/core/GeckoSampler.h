@@ -127,8 +127,6 @@ class GeckoSampler: public Sampler {
 
   void GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration);
 
-  void ProfileGathered();
-
 protected:
   // Called within a signal. This function must be reentrant
   virtual void InplaceTick(TickSample* sample);
