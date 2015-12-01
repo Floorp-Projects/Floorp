@@ -247,12 +247,6 @@ MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerARM::subDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vsub(dest, src, dest);
-}
-
-void
 MacroAssemblerARM::mulDouble(FloatRegister src, FloatRegister dest)
 {
     ma_vmul(dest, src, dest);
