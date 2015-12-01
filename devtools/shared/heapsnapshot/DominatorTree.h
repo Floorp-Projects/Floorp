@@ -52,6 +52,10 @@ public:
 
   // [Throws] NodeSize getRetainedSize(NodeId node)
   dom::Nullable<uint64_t> GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv);
+
+  // [Throws] sequence<NodeId>? getImmediatelyDominated(NodeId node);
+  void GetImmediatelyDominated(uint64_t aNodeId, dom::Nullable<nsTArray<uint64_t>>& aOutDominated,
+                               ErrorResult& aRv);
 };
 
 } // namespace devtools
