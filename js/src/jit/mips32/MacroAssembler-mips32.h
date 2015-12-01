@@ -176,7 +176,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
     void negateDouble(FloatRegister reg);
-    void inc64(AbsoluteAddress dest);
 
     void computeScaledAddress(const BaseIndex& address, Register dest);
 

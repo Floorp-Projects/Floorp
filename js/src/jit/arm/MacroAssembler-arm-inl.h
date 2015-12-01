@@ -324,6 +324,23 @@ MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
     ma_vdiv(dest, src, dest);
 }
 
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    ScratchRegisterScope scratch(*this);
+
+    ma_strd(r0, r1, EDtrAddr(sp, EDtrOffImm(-8)), PreIndex);
+
+    ma_mov(Imm32((int32_t)dest.addr), scratch);
+    ma_ldrd(EDtrAddr(scratch, EDtrOffImm(0)), r0, r1);
+
+    ma_add(Imm32(1), r0, SetCC);
+    ma_adc(Imm32(0), r1, LeaveCC);
+
+    ma_strd(r0, r1, EDtrAddr(scratch, EDtrOffImm(0)));
+    ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
+}
+
 // ===============================================================
 // Shift functions
 
