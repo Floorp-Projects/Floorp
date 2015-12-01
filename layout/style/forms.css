@@ -989,6 +989,9 @@ input[type=number]::-moz-number-wrapper {
 }
 
 input[type=number]::-moz-number-text {
+  display: block; /* Flex items must be block-level. Normally we do fixup in
+                     the style system to ensure this, but that fixup is disabled
+                     inside of form controls. So, we hardcode display here. */
   -moz-appearance: none;
   /* work around autofocus bug 939248 on initial load */
   -moz-user-modify: read-write;

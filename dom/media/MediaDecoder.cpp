@@ -615,11 +615,7 @@ MediaDecoder::Shutdown()
     mTimedMetadataListener.Disconnect();
     mMetadataLoadedListener.Disconnect();
     mFirstFrameLoadedListener.Disconnect();
-    mOnPlaybackStart.Disconnect();
-    mOnPlaybackStop.Disconnect();
-    mOnPlaybackEnded.Disconnect();
-    mOnDecodeError.Disconnect();
-    mOnInvalidate.Disconnect();
+    mOnPlaybackEvent.Disconnect();
     mOnSeekingStart.Disconnect();
   }
 
@@ -642,6 +638,29 @@ MediaDecoder::~MediaDecoder()
   MediaMemoryTracker::RemoveMediaDecoder(this);
   UnpinForSeek();
   MOZ_COUNT_DTOR(MediaDecoder);
+}
+
+void
+MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
+{
+  switch (aEvent) {
+    case MediaEventType::PlaybackStarted:
+      mPlaybackStatistics->Start();
+      break;
+    case MediaEventType::PlaybackStopped:
+      mPlaybackStatistics->Stop();
+      ComputePlaybackRate();
+      break;
+    case MediaEventType::PlaybackEnded:
+      PlaybackEnded();
+      break;
+    case MediaEventType::DecodeError:
+      DecodeError();
+      break;
+    case MediaEventType::Invalidate:
+      Invalidate();
+      break;
+  }
 }
 
 MediaResourceCallback*
@@ -705,16 +724,8 @@ MediaDecoder::SetStateMachineParameters()
   mFirstFrameLoadedListener = mDecoderStateMachine->FirstFrameLoadedEvent().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::FirstFrameLoaded);
 
-  mOnPlaybackStart = mDecoderStateMachine->OnPlaybackStart().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackStarted);
-  mOnPlaybackStop = mDecoderStateMachine->OnPlaybackStop().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackStopped);
-  mOnPlaybackEnded = mDecoderStateMachine->OnPlaybackEnded().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::PlaybackEnded);
-  mOnDecodeError = mDecoderStateMachine->OnDecodeError().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::DecodeError);
-  mOnInvalidate = mDecoderStateMachine->OnInvalidate().Connect(
-    AbstractThread::MainThread(), this, &MediaDecoder::Invalidate);
+  mOnPlaybackEvent = mDecoderStateMachine->OnPlaybackEvent().Connect(
+    AbstractThread::MainThread(), this, &MediaDecoder::OnPlaybackEvent);
   mOnSeekingStart = mDecoderStateMachine->OnSeekingStart().Connect(
     AbstractThread::MainThread(), this, &MediaDecoder::SeekingStarted);
 }

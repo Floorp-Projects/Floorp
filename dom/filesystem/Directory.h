@@ -87,6 +87,31 @@ public:
 
   // =========== End WebIDL bindings.============
 
+  /**
+   * Sets a semi-colon separated list of filters to filter-in or filter-out
+   * certain types of files when the contents of this directory are requested
+   * via a GetFilesAndDirectories() call.
+   *
+   * Currently supported keywords:
+   *
+   *   * filter-out-sensitive
+   *       This keyword filters out files or directories that we don't wish to
+   *       make available to Web content because we are concerned that there is
+   *       a risk that users may unwittingly give Web content access to them
+   *       and suffer undesirable consequences.  The details of what is
+   *       filtered out can be found in GetDirectoryListingTask::Work.
+   *
+   * In future, we will likely support filtering based on filename extensions
+   * (for example, aFilters could be "*.jpg; *.jpeg; *.gif"), but that isn't
+   * supported yet.  Once supported, files that don't match a specified
+   * extension (if any are specified) would be filtered out.  This
+   * functionality would allow us to apply the 'accept' attribute from
+   * <input type=file directory accept="..."> to the results of a directory
+   * picker operation.
+   */
+  void
+  SetContentFilters(const nsAString& aFilters);
+
   FileSystemBase*
   GetFileSystem() const;
 private:
@@ -108,6 +133,7 @@ private:
 
   RefPtr<FileSystemBase> mFileSystem;
   nsString mPath;
+  nsString mFilters;
 };
 
 } // namespace dom

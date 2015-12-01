@@ -73,6 +73,6 @@ if CONFIG['MOZ_ASAN'] and CONFIG['CLANG_CL']:
     FINAL_TARGET_FILES += [CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
 
 if CONFIG['MOZ_APP_BASENAME']:
-    DIST_FILES += ['application.ini']
+    FINAL_TARGET_PP_FILES += ['application.ini']
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
-        DIST_FILES += ['update-settings.ini']
+        FINAL_TARGET_PP_FILES += ['update-settings.ini']

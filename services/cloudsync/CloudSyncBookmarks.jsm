@@ -294,7 +294,7 @@ var RootFolder = function (rootId, rootName) {
             result.parent = guidResult;
             return Promise.resolve(result);
           },
-          Promise.reject
+          Promise.reject.bind(Promise)
         );
         promises.push(promise);
       });
@@ -310,7 +310,7 @@ var RootFolder = function (rootId, rootName) {
             result.annos = annos;
             return Promise.resolve(result);
           },
-          Promise.reject
+          Promise.reject.bind(Promise)
         );
         promises.push(promise);
       });
@@ -352,7 +352,7 @@ var RootFolder = function (rootId, rootName) {
             result.parent = guidResult;
             return Promise.resolve(result);
           },
-          Promise.reject
+          Promise.reject.bind(Promise)
         );
         promises.push(promise);
       });
@@ -559,7 +559,7 @@ var RootFolder = function (rootId, rootName) {
           continue;
         }
 
-        let promise = exists(item).then(handleSortedItem, Promise.reject);
+        let promise = exists(item).then(handleSortedItem, Promise.reject.bind(Promise));
         promises.push(promise);
       }
 
@@ -588,7 +588,7 @@ var RootFolder = function (rootId, rootName) {
           function () {
             return _createItem(root);
           },
-          Promise.reject
+          Promise.reject.bind(Promise)
         );
         let items = [].concat(root._children);
 
@@ -599,7 +599,7 @@ var RootFolder = function (rootId, rootName) {
             function () {
               return _createItem(item);
             },
-            Promise.reject
+            Promise.reject.bind(Promise)
           );
         }
         promises.push(promise);

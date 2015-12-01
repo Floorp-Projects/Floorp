@@ -49,7 +49,7 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     // Following operation uses entire 128-bit of dest XMM register.
     // Currently higher 64-bit is free when we have access to lower 64-bit.
     MOZ_ASSERT(dest.size() == 8);
-    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Int32x4);
+    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Simd128);
 
     // Assume that src is represented as following:
     //   src      = 0x HHHHHHHH LLLLLLLL
@@ -58,11 +58,11 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     //   dest     = 0x 00000000 00000000  00000000 LLLLLLLL
     //   scratch  = 0x 00000000 00000000  00000000 HHHHHHHH
     vmovd(src.low, dest128);
-    vmovd(src.high, ScratchInt32x4Reg);
+    vmovd(src.high, ScratchSimd128Reg);
 
     // Unpack and interleave dest and scratch to dest:
     //   dest     = 0x 00000000 00000000  HHHHHHHH LLLLLLLL
-    vpunpckldq(ScratchInt32x4Reg, dest128, dest128);
+    vpunpckldq(ScratchSimd128Reg, dest128, dest128);
 
     // Unpack and interleave dest and a constant C1 to dest:
     //   C1       = 0x 00000000 00000000  45300000 43300000
@@ -99,7 +99,7 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
     if (!dbl)
         return;
     masm.vmovsd_mr(nullptr, dest.encoding());
-    dbl->uses.append(CodeOffsetLabel(masm.size()));
+    dbl->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -109,7 +109,7 @@ MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
     if (!dbl)
         return;
     masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
-    dbl->uses.append(CodeOffsetLabel(masm.size()));
+    dbl->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -121,7 +121,7 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
     if (!flt)
         return;
     masm.vmovss_mr(nullptr, dest.encoding());
-    flt->uses.append(CodeOffsetLabel(masm.size()));
+    flt->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -131,7 +131,7 @@ MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
     if (!flt)
         return;
     masm.vaddss_mr(nullptr, dest.encoding(), dest.encoding());
-    flt->uses.append(CodeOffsetLabel(masm.size()));
+    flt->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -145,7 +145,7 @@ MacroAssemblerX86::loadConstantInt32x4(const SimdConstant& v, FloatRegister dest
         return;
     MOZ_ASSERT(i4->type() == SimdConstant::Int32x4);
     masm.vmovdqa_mr(nullptr, dest.encoding());
-    i4->uses.append(CodeOffsetLabel(masm.size()));
+    i4->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -159,7 +159,7 @@ MacroAssemblerX86::loadConstantFloat32x4(const SimdConstant& v, FloatRegister de
         return;
     MOZ_ASSERT(f4->type() == SimdConstant::Float32x4);
     masm.vmovaps_mr(nullptr, dest.encoding());
-    f4->uses.append(CodeOffsetLabel(masm.size()));
+    f4->uses.append(CodeOffset(masm.size()));
 }
 
 void
@@ -168,8 +168,8 @@ MacroAssemblerX86::finish()
     if (!doubles_.empty())
         masm.haltingAlign(sizeof(double));
     for (const Double& d : doubles_) {
-        CodeOffsetLabel cst(masm.currentOffset());
-        for (CodeOffsetLabel use : d.uses)
+        CodeOffset cst(masm.currentOffset());
+        for (CodeOffset use : d.uses)
             addCodeLabel(CodeLabel(use, cst));
         masm.doubleConstant(d.value);
         if (!enoughMemory_)
@@ -179,8 +179,8 @@ MacroAssemblerX86::finish()
     if (!floats_.empty())
         masm.haltingAlign(sizeof(float));
     for (const Float& f : floats_) {
-        CodeOffsetLabel cst(masm.currentOffset());
-        for (CodeOffsetLabel use : f.uses)
+        CodeOffset cst(masm.currentOffset());
+        for (CodeOffset use : f.uses)
             addCodeLabel(CodeLabel(use, cst));
         masm.floatConstant(f.value);
         if (!enoughMemory_)
@@ -191,8 +191,8 @@ MacroAssemblerX86::finish()
     if (!simds_.empty())
         masm.haltingAlign(SimdMemoryAlignment);
     for (const SimdData& v : simds_) {
-        CodeOffsetLabel cst(masm.currentOffset());
-        for (CodeOffsetLabel use : v.uses)
+        CodeOffset cst(masm.currentOffset());
+        for (CodeOffset use : v.uses)
             addCodeLabel(CodeLabel(use, cst));
         switch (v.type()) {
           case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;

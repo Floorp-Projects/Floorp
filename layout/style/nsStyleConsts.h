@@ -243,6 +243,7 @@ enum class StyleBoxSizing : uint8_t {
 #define NS_STYLE_WILL_CHANGE_TRANSFORM          (1<<1)
 #define NS_STYLE_WILL_CHANGE_SCROLL             (1<<2)
 #define NS_STYLE_WILL_CHANGE_OPACITY            (1<<3)
+#define NS_STYLE_WILL_CHANGE_FIXPOS_CB          (1<<4)
 
 // See AnimationEffectReadOnly.webidl
 // and mozilla/dom/AnimationEffectReadOnlyBinding.h
@@ -801,9 +802,9 @@ enum class FillMode : uint32_t;
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_LINE_NONE         0
-#define NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE    NS_FONT_DECORATION_UNDERLINE
-#define NS_STYLE_TEXT_DECORATION_LINE_OVERLINE     NS_FONT_DECORATION_OVERLINE
-#define NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH NS_FONT_DECORATION_LINE_THROUGH
+#define NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE    0x01
+#define NS_STYLE_TEXT_DECORATION_LINE_OVERLINE     0x02
+#define NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH 0x04
 #define NS_STYLE_TEXT_DECORATION_LINE_BLINK        0x08
 #define NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS 0x10
 // OVERRIDE_ALL does not occur in stylesheets; it only comes from HTML

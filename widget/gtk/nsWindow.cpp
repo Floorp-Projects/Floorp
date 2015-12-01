@@ -2196,10 +2196,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             if (kid && gdk_window_is_visible(gdkWin)) {
                 nsAutoTArray<nsIntRect,1> clipRects;
                 kid->GetWindowClipRegion(&clipRects);
-                nsIntRect bounds;
-                kid->GetBoundsUntyped(bounds);
+                LayoutDeviceIntRect bounds;
+                kid->GetBounds(bounds);
                 for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-                    nsIntRect r = clipRects[i] + bounds.TopLeft();
+                    nsIntRect r = clipRects[i] +
+                                  bounds.TopLeft().ToUnknownPoint();
                     region.Sub(region, r);
                 }
             }
@@ -2376,8 +2377,8 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
-    nsIntRect screenBounds;
-    GetScreenBoundsUntyped(screenBounds);
+    LayoutDeviceIntRect screenBounds;
+    GetScreenBounds(screenBounds);
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
         // This check avoids unwanted rollup on spurious configure events from
@@ -2409,7 +2410,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         return FALSE;
     }
 
-    mBounds.MoveTo(screenBounds.TopLeft());
+    mBounds.MoveTo(screenBounds.TopLeft().ToUnknownPoint());
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?

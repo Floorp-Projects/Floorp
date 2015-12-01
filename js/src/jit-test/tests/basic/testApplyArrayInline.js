@@ -70,29 +70,3 @@ catch (e) {
     assertEq(e instanceof RangeError, true);
 }
 assertEq(thrown, true);
-
-// Test that the optimization is effective.  There's the possibility
-// of some false results here, and in release builds the margins are
-// actually small.
-
-itercount *= 2;
-
-var A = Date.now();
-assertEq(f([1,2,3,4]), 6*itercount)	// Fast path because a sane array
-var AinLoop = g_inIonInLoop;
-var B = Date.now();
-assertEq(f([1,2,3]), 7*itercount);	// Fast path because a sane array, even if short
-var BinLoop = g_inIonInLoop;
-var C = Date.now();
-assertEq(f(headroom), 7*itercount);	// Slow path because length > initializedLength
-var CinLoop = g_inIonInLoop;
-var D = Date.now();
-if (AinLoop && BinLoop && CinLoop) {
-    print("No bailout: " + (B - A));
-    print("Short: " + (C - B));
-    print("Bailout: " + (D - C));
-    assertEq((D - C) >= (B - A), true);
-    assertEq((D - C) >= (C - B), true);
-} else {
-    print("Not running perf test");
-}

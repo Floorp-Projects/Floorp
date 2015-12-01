@@ -17,7 +17,6 @@
 #include "jsnum.h"
 #include "jsprf.h"
 
-#include "asmjs/AsmJSModule.h"
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
 #include "gc/Nursery.h"
@@ -1701,10 +1700,10 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
     masm.Push(Imm32(descriptor));
 
     // Call into the stubcode.
-    CodeOffsetLabel patchOffset;
+    CodeOffset patchOffset;
     IonICEntry entry(script->pcToOffset(pc), ICEntry::Kind_Op, script);
     EmitCallIC(&patchOffset, masm);
-    entry.setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
+    entry.setReturnOffset(CodeOffset(masm.currentOffset()));
 
     SharedStub sharedStub(kind, entry, patchOffset);
     masm.propagateOOM(sharedStubs_.append(sharedStub));
@@ -3989,7 +3988,7 @@ struct ScriptCountBlockState
 void
 CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated)
 {
-    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), temp);
+    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), temp);
     masm.propagateOOM(ionScriptLabels_.append(label));
 
     // If IonScript::invalidationCount_ != 0, the script has been invalidated.
@@ -7873,20 +7872,41 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateAsmJS(AsmJSFunctionLabels* labels)
+CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting asm.js code");
 
-    if (!omitOverRecursedCheck())
-        labels->overflowThunk.emplace();
+    GenerateAsmJSFunctionPrologue(masm, frameSize(), offsets);
 
-    GenerateAsmJSFunctionPrologue(masm, frameSize(), labels);
+    // Overflow checks are omitted by CodeGenerator in some cases (leaf
+    // functions with small framePushed). Perform overflow-checking after
+    // pushing framePushed to catch cases with really large frames.
+    Label onOverflow;
+    if (!omitOverRecursedCheck()) {
+        // See comment below.
+        Label* target = frameSize() > 0 ? &onOverflow : masm.asmStackOverflowLabel();
+        masm.branchPtr(Assembler::AboveOrEqual,
+                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       masm.getStackPointer(),
+                       target);
+    }
+
 
     if (!generateBody())
         return false;
 
     masm.bind(&returnLabel_);
-    GenerateAsmJSFunctionEpilogue(masm, frameSize(), labels);
+    GenerateAsmJSFunctionEpilogue(masm, frameSize(), offsets);
+
+    if (onOverflow.used()) {
+        // The stack overflow stub assumes that only sizeof(AsmJSFrame) bytes have
+        // been pushed. The overflow check occurs after incrementing by
+        // framePushed, so pop that before jumping to the overflow exit.
+        masm.bind(&onOverflow);
+        masm.addToStackPtr(Imm32(frameSize()));
+        masm.jump(masm.asmStackOverflowLabel());
+    }
+
 
 #if defined(JS_ION_PERF)
     // Note the end of the inline code and start of the OOL code.
@@ -7896,7 +7916,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionLabels* labels)
     if (!generateOutOfLineCode())
         return false;
 
-    masm.bind(&labels->endAfterOOL);
+    offsets->end = masm.currentOffset();
 
     // The only remaining work needed to compile this function is to patch the
     // switch-statement jump tables (the entries of the table need the absolute
@@ -8274,7 +8294,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 #endif
         // Patch shared stub IC loads using IC entries
         for (size_t i = 0; i < sharedStubs_.length(); i++) {
-            CodeOffsetLabel label = sharedStubs_[i].label;
+            CodeOffset label = sharedStubs_[i].label;
 
             IonICEntry& entry = ionScript->sharedStubList()[i];
             entry = sharedStubs_[i].entry;
@@ -10219,7 +10239,7 @@ CodeGenerator::visitRecompileCheck(LRecompileCheck* ins)
     }
 
     // Check if not yet recompiling.
-    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
+    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
     masm.propagateOOM(ionScriptLabels_.append(label));
     masm.branch32(Assembler::Equal,
                   Address(tmp, IonScript::offsetOfRecompiling()),

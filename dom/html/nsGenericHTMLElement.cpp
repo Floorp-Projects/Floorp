@@ -1003,7 +1003,7 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
       return aResult.ParseIntValue(aValue);
     }
 
-    if (aAttribute == nsGkAtoms::referrer) {
+    if (aAttribute == nsGkAtoms::referrerpolicy) {
       return ParseReferrerAttribute(aValue, aResult);
     }
 

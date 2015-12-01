@@ -4,9 +4,9 @@
 
 
 #include "nsRegion.h"
-#include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include "gfxUtils.h"
+#include "mozilla/ToString.h"
 
 bool nsRegion::Contains(const nsRegion& aRgn) const
 {
