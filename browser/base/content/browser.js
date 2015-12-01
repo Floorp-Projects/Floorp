@@ -104,9 +104,9 @@ var gAppInfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULAppInfo)
                   .QueryInterface(Ci.nsIXULRuntime);
 
-#ifndef XP_MACOSX
-var gEditUIVisible = true;
-#endif
+if (AppConstants.platform != "macosx") {
+  var gEditUIVisible = true;
+}
 
 [
   ["gBrowser",            "content"],
@@ -1309,12 +1309,12 @@ var gBrowserInit = {
     // unless there are downloads to be displayed.
     DownloadsButton.initializeIndicator();
 
-#ifndef XP_MACOSX
-    updateEditUIVisibility();
-    let placesContext = document.getElementById("placesContext");
-    placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
-    placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
-#endif
+    if (AppConstants.platform != "macosx") {
+      updateEditUIVisibility();
+      let placesContext = document.getElementById("placesContext");
+      placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
+      placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
+    }
 
     LightWeightThemeWebInstaller.init();
 
@@ -3967,7 +3967,9 @@ function BrowserCustomizeToolbar() {
  */
 function updateEditUIVisibility()
 {
-#ifndef XP_MACOSX
+  if (AppConstants.platform == "macosx")
+    return;
+
   let editMenuPopupState = document.getElementById("menu_EditPopup").state;
   let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
   let placesContextMenuPopupState = document.getElementById("placesContext").state;
@@ -4001,7 +4003,6 @@ function updateEditUIVisibility()
     goSetCommandEnabled("cmd_delete", true);
     goSetCommandEnabled("cmd_switchTextDirection", true);
   }
-#endif
 }
 
 /**
