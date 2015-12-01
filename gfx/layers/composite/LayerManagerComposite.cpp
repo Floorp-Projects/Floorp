@@ -308,8 +308,8 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   // Transform the newly calculated visible region into our parent's space,
   // apply our clip to it (if any), and accumulate it into |aVisibleRegion|
   // for the caller to use.
-  ParentLayerIntRegion visibleParentSpace =
-    TransformTo<ParentLayerPixel>(transform, visible);
+  ParentLayerIntRegion visibleParentSpace = TransformTo<ParentLayerPixel>(
+      ViewAs<LayerToParentLayerMatrix4x4>(transform), visible);
   if (const Maybe<ParentLayerIntRect>& clipRect = composite->GetShadowClipRect()) {
     visibleParentSpace.AndWith(*clipRect);
   }

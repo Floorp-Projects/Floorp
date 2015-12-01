@@ -202,7 +202,7 @@ GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform)
 
 static void
 TransformClipRect(Layer* aLayer,
-                  const Matrix4x4& aTransform)
+                  const ParentLayerToParentLayerMatrix4x4& aTransform)
 {
   MOZ_ASSERT(aTransform.Is2D());
   const Maybe<ParentLayerIntRect>& clipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
@@ -254,7 +254,8 @@ TranslateShadowLayer(Layer* aLayer,
   aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
-    TransformClipRect(aLayer, Matrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
+    TransformClipRect(aLayer,
+        ParentLayerToParentLayerMatrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
 
     // If a fixed- or sticky-position layer has a mask layer, that mask should
     // move along with the layer, so apply the translation to the mask layer too.
@@ -467,8 +468,9 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // transform, but |anchor| and |transformedAnchor| are in a coordinate space
   // where the local transform isn't applied yet, so apply it and then subtract
   // to get the desired translation.
-  ParentLayerPoint translation = TransformTo<ParentLayerPixel>(localTransform, transformedAnchor)
-                               - TransformTo<ParentLayerPixel>(localTransform, anchor);
+  auto localTransformTyped = ViewAs<LayerToParentLayerMatrix4x4>(localTransform);
+  ParentLayerPoint translation = TransformTo<ParentLayerPixel>(localTransformTyped, transformedAnchor)
+                               - TransformTo<ParentLayerPixel>(localTransformTyped, anchor);
 
   if (aLayer->GetIsStickyPosition()) {
     // For sticky positioned layers, the difference between the two rectangles
@@ -895,7 +897,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // frame and should not be transformed.
     if (asyncClip && !metrics.UsesContainerScrolling()) {
       MOZ_ASSERT(asyncTransform.Is2D());
-      asyncClip = Some(TransformTo<ParentLayerPixel>(asyncTransform, *asyncClip));
+      asyncClip = Some(TransformTo<ParentLayerPixel>(
+          ViewAs<ParentLayerToParentLayerMatrix4x4>(asyncTransform), *asyncClip));
     }
 
     // Combine the local clip with the ancestor scrollframe clip. This is not
@@ -1137,7 +1140,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // including the layer with the async transform. Otherwise the scrollbar
     // shifts but gets clipped and so appears to flicker.
     for (Layer* ancestor = aScrollbar; ancestor != aContent.GetLayer(); ancestor = ancestor->GetParent()) {
-      TransformClipRect(ancestor, asyncCompensation);
+      TransformClipRect(ancestor, ViewAs<ParentLayerToParentLayerMatrix4x4>(asyncCompensation));
     }
   }
   transform = transform * compensation;
