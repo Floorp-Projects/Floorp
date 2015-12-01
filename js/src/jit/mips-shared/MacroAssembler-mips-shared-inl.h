@@ -114,6 +114,12 @@ MacroAssembler::addPtr(const Address& src, Register dest)
 }
 
 void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    as_addd(dest, dest, src);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     as_subu(dest, dest, src);

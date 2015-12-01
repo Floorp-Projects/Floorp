@@ -209,6 +209,12 @@ MacroAssembler::add64(Imm32 imm, Register64 dest)
 }
 
 void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vadd(dest, src, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     ma_sub(src, dest, SetCC);
