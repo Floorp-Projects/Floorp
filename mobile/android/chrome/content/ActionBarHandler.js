@@ -4,14 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Notifications we observe.
-const NOTIFICATIONS = [
-    "ActionBar:UpdateState",
-    "TextSelection:Action",
-    "TextSelection:End",
-];
-
-const DEFER_INIT_DELAY_MS = 50; // Delay period before _init() begins.
 const PHONE_REGEX = /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/; // Are we a phone #?
 
 
@@ -26,39 +18,52 @@ var ActionBarHandler = {
     NONE: "",
   },
 
+  _nextSelectionID: 1, // Next available.
   _selectionID: null, // Unique Selection ID, assigned each time we _init().
   _actionBarActions: null, // Most-recent set of actions sent to ActionBar.
+
+  /**
+   * Receive and act on AccessibleCarets caret state-change
+   * (mozcaretstatechanged) events.
+   */
+  caretStateChangedHandler: function(e) {
+    // Close an open ActionBar, if carets no longer logically visible.
+    if (this._selectionID && !e.caretVisible) {
+      this._uninit(false);
+      return;
+    }
+
+    // Open a closed ActionBar if carets actually visible.
+    if (!this._selectionID && e.caretVisuallyVisible) {
+      this._init();
+      return;
+    }
+
+    // Else, update an open ActionBar.
+    if (this._selectionID) {
+      if ([this._targetElement, this._contentWindow] ===
+          [Services.focus.focusedElement, Services.focus.focusedWindow]) {
+        // We have the same focused window/element as before. Trigger "TextSelection:ActionbarStatus"
+        // message only if available actions differ from when last we checked.
+        this._sendActionBarActions();
+      } else {
+        // We have a new focused window/element pair.
+        this._uninit(false);
+        this._init();
+      }
+    }
+  },
 
   /**
    * ActionBarHandler notification observers.
    */
   observe: function(subject, topic, data) {
     switch (topic) {
-
-      // Gecko opens the ActionBarHandler.
-      case "ActionBar:OpenNew": {
-        // Always close, then re-open.
-        this._uninit(false);
-        this._init(data);
-        break;
-      }
-
-      // Gecko closes the ActionBarHandler.
-      case "ActionBar:Close": {
-        if (this._selectionID === data) {
-          this._uninit(false);
-        }
-        break;
-      }
-
-      // Update ActionBar when text selection changes.
-      case "ActionBar:UpdateState": {
-        this._sendActionBarActions();
-        break;
-      }
-
       // User click an ActionBar button.
       case "TextSelection:Action": {
+        if (!this._selectionID) {
+          break;
+        }
         for (let type in this.actions) {
           let action = this.actions[type];
           if (action.id == data) {
@@ -76,13 +81,15 @@ var ActionBarHandler = {
           requestId: data,
           text: this._getSelectedText(),
         });
+
+        this._uninit();
         break;
       }
 
       // User closed ActionBar by clicking "checkmark" button.
       case "TextSelection:End": {
         // End the requested selection only.
-        if (this._selectionID === JSON.parse(data).selectionID) {
+        if (this._selectionID == JSON.parse(data).selectionID) {
           this._uninit();
         }
         break;
@@ -93,22 +100,17 @@ var ActionBarHandler = {
   /**
    * Called when Gecko TouchCaret or SelectionCarets become visible.
    */
-  _init: function(actionBarID) {
+  _init: function() {
     let [element, win] = this._getSelectionTargets();
     if (!win) {
       return this.START_TOUCH_ERROR.NO_CONTENT_WINDOW;
     }
 
     // Hold the ActionBar ID provided by Gecko.
-    this._selectionID = actionBarID;
+    this._selectionID = this._nextSelectionID++;
     [this._targetElement, this._contentWindow] = [element, win];
 
-    // Add notification observers.
-    NOTIFICATIONS.forEach(notification => {
-      Services.obs.addObserver(this, notification, false);
-    });
-
-    // Open the ActionBar, send it's initial actions list.
+    // Open the ActionBar, send it's actions list.
     Messaging.sendRequest({
       type: "TextSelection:ActionbarInit",
       selectionID: this._selectionID,
@@ -150,11 +152,6 @@ var ActionBarHandler = {
     if (!this._selectionID) {
       return;
     }
-
-    // Remove notification observers.
-    NOTIFICATIONS.forEach(notification => {
-      Services.obs.removeObserver(this, notification);
-    });
 
     // Close the ActionBar.
     Messaging.sendRequest({
@@ -291,9 +288,6 @@ var ActionBarHandler = {
 
         // Close ActionBarHandler, then selectAll, and display handles.
         ActionBarHandler._getSelectAllController(element, win).selectAll();
-        ActionBarHandler._getSelectionController(element, win).
-          selectionCaretsVisibility = true;
-
         UITelemetry.addEvent("action.1", "actionbar", null, "select_all");
       },
     },
