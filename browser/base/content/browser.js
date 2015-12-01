@@ -521,13 +521,14 @@ var gPopupBlockerObserver = {
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
         var popupCount = gBrowser.selectedBrowser.blockedPopups.length;
-#ifdef XP_WIN
-        var popupButtonText = gNavigatorBundle.getString("popupWarningButton");
-        var popupButtonAccesskey = gNavigatorBundle.getString("popupWarningButton.accesskey");
-#else
-        var popupButtonText = gNavigatorBundle.getString("popupWarningButtonUnix");
-        var popupButtonAccesskey = gNavigatorBundle.getString("popupWarningButtonUnix.accesskey");
-#endif
+
+        var stringKey = AppConstants.platform == "win"
+                        ? "popupWarningButton"
+                        : "popupWarningButtonUnix";
+
+        var popupButtonText = gNavigatorBundle.getString(stringKey);
+        var popupButtonAccesskey = gNavigatorBundle.getString(stringKey + ".accesskey");
+
         var messageBase = gNavigatorBundle.getString("popupWarning.message");
         var message = PluralForm.get(popupCount, messageBase)
                                 .replace("#1", brandShortName)
@@ -1048,7 +1049,6 @@ var gBrowserInit = {
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
 
-#ifdef XP_WIN
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
         window.matchMedia("(-moz-windows-default-theme)").matches) {
       let windowFrameColor = Cu.import("resource:///modules/Windows8WindowFrameColor.jsm", {})
@@ -1071,7 +1071,6 @@ var gBrowserInit = {
         document.documentElement.setAttribute("darkwindowframe", "true");
       }
     }
-#endif
 
     ToolbarIconColor.init();
 
@@ -1794,12 +1793,11 @@ function BrowserStop() {
 }
 
 function BrowserReloadOrDuplicate(aEvent) {
-  var backgroundTabModifier = aEvent.button == 1 ||
-#ifdef XP_MACOSX
-    aEvent.metaKey;
-#else
-    aEvent.ctrlKey;
-#endif
+  let metaKeyPressed = AppConstants.platform == "macosx"
+                       ? aEvent.metaKey
+                       : aEvent.ctrlKey;
+  var backgroundTabModifier = aEvent.button == 1 || metaKeyPressed;
+
   if (aEvent.shiftKey && !backgroundTabModifier) {
     BrowserReloadSkipCache();
     return;
@@ -5200,9 +5198,6 @@ var gHomeButton = {
 
 const nodeToTooltipMap = {
   "bookmarks-menu-button": "bookmarksMenuButton.tooltip",
-#ifdef XP_MACOSX
-  "print-button": "printButton.tooltip",
-#endif
   "new-window-button": "newWindowButton.tooltip",
   "new-tab-button": "newTabButton.tooltip",
   "tabs-newtab-button": "newTabButton.tooltip",
@@ -5211,15 +5206,18 @@ const nodeToTooltipMap = {
 };
 const nodeToShortcutMap = {
   "bookmarks-menu-button": "manBookmarkKb",
-#ifdef XP_MACOSX
-  "print-button": "printKb",
-#endif
   "new-window-button": "key_newNavigator",
   "new-tab-button": "key_newNavigatorTab",
   "tabs-newtab-button": "key_newNavigatorTab",
   "fullscreen-button": "key_fullScreen",
   "downloads-button": "key_openDownloads"
 };
+
+if (AppConstants.platform == "macosx") {
+  nodeToTooltipMap["print-button"] = "printButton.tooltip";
+  nodeToShortcutMap["print-button"] = "printKb";
+}
+
 const gDynamicTooltipCache = new Map();
 function UpdateDynamicShortcutTooltipText(aTooltip) {
   let nodeId = aTooltip.triggerNode.id || aTooltip.triggerNode.getAttribute("anonid");
@@ -7670,12 +7668,8 @@ Object.defineProperty(this, "Eyedropper", {
 });
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
-#ifdef XP_WIN
   // Only show resizers on Windows 2000 and XP
-  return parseFloat(Services.sysinfo.getProperty("version")) < 6;
-#else
-  return false;
-#endif
+  return AppConstants.isPlatformAndVersionAtMost("win", "5.9");
 });
 
 var MousePosTracker = {
@@ -7798,9 +7792,8 @@ var ToolbarIconColor = {
     }
 
     let toolbarSelector = "#navigator-toolbox > toolbar:not([collapsed=true]):not(#addon-bar)";
-#ifdef XP_MACOSX
-    toolbarSelector += ":not([type=menubar])";
-#endif
+    if (AppConstants.platform == "macosx")
+      toolbarSelector += ":not([type=menubar])";
 
     // The getComputedStyle calls and setting the brighttext are separated in
     // two loops to avoid flushing layout and making it dirty repeatedly.
