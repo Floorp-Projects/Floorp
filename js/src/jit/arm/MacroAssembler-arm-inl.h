@@ -263,6 +263,12 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     ma_sub(scratch, dest);
 }
 
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vsub(dest, src, dest);
+}
+
 // ===============================================================
 // Shift functions
 

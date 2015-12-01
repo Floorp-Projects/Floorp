@@ -264,12 +264,6 @@ MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegiste
 }
 
 void
-MacroAssemblerMIPSCompat::subDouble(FloatRegister src, FloatRegister dest)
-{
-    as_subd(dest, dest, src);
-}
-
-void
 MacroAssemblerMIPSCompat::mulDouble(FloatRegister src, FloatRegister dest)
 {
     as_muld(dest, dest, src);
