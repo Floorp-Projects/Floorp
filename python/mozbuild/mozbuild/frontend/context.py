@@ -24,7 +24,6 @@ from collections import (
 )
 from mozbuild.util import (
     HierarchicalStringList,
-    HierarchicalStringListWithFlagsFactory,
     KeyedDefaultDict,
     List,
     memoize,
@@ -1192,7 +1191,7 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
-    'BRANDING_FILES': (HierarchicalStringListWithFlagsFactory({'source': unicode}), list,
+    'BRANDING_FILES': (HierarchicalStringList, list,
         """List of files to be installed into the branding directory.
 
         ``BRANDING_FILES`` will copy (or symlink, if the platform supports it)
@@ -1204,13 +1203,6 @@ VARIABLES = {
 
            BRANDING_FILES += ['foo.png']
            BRANDING_FILES.images.subdir += ['bar.png']
-
-        If the source and destination have different file names, add the
-        destination name to the list and set the ``source`` property on the
-        entry, like so::
-
-           BRANDING_FILES.dir += ['baz.png']
-           BRANDING_FILES.dir['baz.png'].source = 'quux.png'
         """, None),
 
     'SDK_LIBRARY': (bool, bool,
