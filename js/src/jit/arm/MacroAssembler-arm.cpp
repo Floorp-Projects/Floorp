@@ -1969,20 +1969,6 @@ MacroAssemblerARMCompat::add32(Imm32 imm, const Address& dest)
 }
 
 void
-MacroAssemblerARMCompat::addPtr(Register src, Register dest)
-{
-    ma_add(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(const Address& src, Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(src, scratch);
-    ma_add(scratch, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);
@@ -2652,21 +2638,6 @@ MacroAssemblerARMCompat::subPtr(Register src, const Address& dest)
     ScratchRegisterScope scratch(asMasm());
     loadPtr(dest, scratch);
     ma_sub(src, scratch);
-    storePtr(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
-{
-    ma_add(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(dest, scratch);
-    addPtr(imm, scratch);
     storePtr(scratch, dest);
 }
 

@@ -731,6 +731,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Arithmetic functions
 
+    inline void addPtr(Register src, Register dest) PER_ARCH;
+    inline void addPtr(Register src1, Register src2, Register dest) DEFINED_ON(arm64);
+    inline void addPtr(Imm32 imm, Register dest) PER_ARCH;
+    inline void addPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
+    inline void addPtr(ImmWord imm, Register dest) PER_ARCH;
+    inline void addPtr(ImmPtr imm, Register dest);
+    inline void addPtr(Imm32 imm, const Address& dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
+    inline void addPtr(Imm32 imm, const AbsoluteAddress& dest) DEFINED_ON(x86, x64);
+    inline void addPtr(const Address& src, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
+
     inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;

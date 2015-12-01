@@ -139,6 +139,41 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    ma_add(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    ma_add(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    addPtr(Imm32(imm.value), dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(dest, scratch);
+    addPtr(imm, scratch);
+    storePtr(scratch, dest);
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(src, scratch);
+    ma_add(scratch, dest, SetCC);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     ma_add(src.low, dest.low, SetCC);

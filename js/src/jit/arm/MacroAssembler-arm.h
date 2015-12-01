@@ -1199,8 +1199,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         j(cond, label);
     }
 
-    void addPtr(Register src, Register dest);
-    void addPtr(const Address& src, Register dest);
     void add64(Imm32 imm, Register64 dest) {
         ma_add(imm, dest.low, SetCC);
         ma_adc(Imm32(0), dest.high, LeaveCC);
@@ -1655,14 +1653,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void subPtr(const Address& addr, const Register dest);
     void subPtr(Register src, Register dest);
     void subPtr(Register src, const Address& dest);
-    void addPtr(Imm32 imm, const Register dest);
-    void addPtr(Imm32 imm, const Address& dest);
-    void addPtr(ImmWord imm, const Register dest) {
-        addPtr(Imm32(imm.value), dest);
-    }
-    void addPtr(ImmPtr imm, const Register dest) {
-        addPtr(ImmWord(uintptr_t(imm.value)), dest);
-    }
     void mulBy3(const Register& src, const Register& dest) {
         as_add(dest, src, lsl(src, 1));
     }

@@ -543,34 +543,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void addPtr(Register src, Register dest) {
-        addq(src, dest);
-    }
-    void addPtr(Imm32 imm, Register dest) {
-        addq(imm, dest);
-    }
-    void addPtr(Imm32 imm, const Address& dest) {
-        addq(imm, Operand(dest));
-    }
-    void addPtr(Imm32 imm, const Operand& dest) {
-        addq(imm, dest);
-    }
-    void addPtr(ImmWord imm, Register dest) {
-        ScratchRegisterScope scratch(asMasm());
-        MOZ_ASSERT(dest != scratch);
-        if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
-            addq(Imm32((int32_t)imm.value), dest);
-        } else {
-            mov(imm, scratch);
-            addq(scratch, dest);
-        }
-    }
-    void addPtr(ImmPtr imm, Register dest) {
-        addPtr(ImmWord(uintptr_t(imm.value)), dest);
-    }
-    void addPtr(const Address& src, Register dest) {
-        addq(Operand(src), dest);
-    }
     void add64(Imm32 imm, Register64 dest) {
         addq(imm, dest.reg);
     }
@@ -1351,19 +1323,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         vmulsd(Operand(ScratchReg, 0), dest, dest);
     }
 
-    void inc64(AbsoluteAddress dest) {
-        if (X86Encoding::IsAddressImmediate(dest.addr)) {
-            addPtr(Imm32(1), Operand(dest));
-        } else {
-            ScratchRegisterScope scratch(asMasm());
-            mov(ImmPtr(dest.addr), scratch);
-            addPtr(Imm32(1), Address(scratch, 0));
-        }
-    }
+    inline void inc64(AbsoluteAddress dest);
 
-    void incrementInt32Value(const Address& addr) {
-        addPtr(Imm32(1), addr);
-    }
+    inline void incrementInt32Value(const Address& addr);
 
     // If source is a double, load it into dest. If source is int32,
     // convert it to double. Else, branch to failure.
