@@ -726,7 +726,7 @@ public:
     return This();
   }
 
-  // Prefer using TransformTo<TargetUnits>(region) from UnitTransforms.h,
+  // Prefer using TransformBy(matrix, region) from UnitTransforms.h,
   // as applying the transform should typically change the unit system.
   // TODO(botond): Move this to IntRegionTyped and disable it for
   //               unit != UnknownUnits.

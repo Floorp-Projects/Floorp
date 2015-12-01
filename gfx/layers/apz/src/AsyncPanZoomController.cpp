@@ -1554,7 +1554,7 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
         treeManagerLocal->GetScreenToApzcTransform(this)
       * treeManagerLocal->GetApzcToGeckoTransform(this);
     
-    Maybe<ScreenIntPoint> layoutPoint = UntransformTo<ScreenPixel>(
+    Maybe<ScreenIntPoint> layoutPoint = UntransformBy(
         transformScreenToGecko, aPoint);
     if (!layoutPoint) {
       return false;
@@ -2059,19 +2059,19 @@ ScreenToParentLayerMatrix4x4 AsyncPanZoomController::GetTransformToThis() const 
 
 ScreenPoint AsyncPanZoomController::ToScreenCoordinates(const ParentLayerPoint& aVector,
                                                         const ParentLayerPoint& aAnchor) const {
-  return TransformVector<ScreenPixel>(GetTransformToThis().Inverse(), aVector, aAnchor);
+  return TransformVector(GetTransformToThis().Inverse(), aVector, aAnchor);
 }
 
 // TODO: figure out a good way to check the w-coordinate is positive and return the result
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoordinates(const ScreenPoint& aVector,
                                                                   const ScreenPoint& aAnchor) const {
-  return TransformVector<ParentLayerPixel>(GetTransformToThis(), aVector, aAnchor);
+  return TransformVector(GetTransformToThis(), aVector, aAnchor);
 }
 
 bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const
 {
   ScreenToParentLayerMatrix4x4 transformToThis = GetTransformToThis();
-  Maybe<ParentLayerIntPoint> point = UntransformTo<ParentLayerPixel>(transformToThis, aPoint);
+  Maybe<ParentLayerIntPoint> point = UntransformBy(transformToThis, aPoint);
   if (!point) {
     return false;
   }

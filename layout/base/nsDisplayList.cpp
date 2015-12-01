@@ -1242,7 +1242,7 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
     LayoutDeviceRect devPixelBorderBox =
       LayoutDevicePixel::FromAppUnits(borderBox, aFrame->PresContext()->AppUnitsPerDevPixel());
     LayoutDeviceRect transformedDevPixelBorderBox =
-      TransformTo<LayoutDevicePixel>(referenceFrameToRootReferenceFrame, devPixelBorderBox);
+      TransformBy(referenceFrameToRootReferenceFrame, devPixelBorderBox);
     transformedDevPixelBorderBox.Round();
     LayoutDeviceIntRect transformedDevPixelBorderBoxInt;
     if (transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {

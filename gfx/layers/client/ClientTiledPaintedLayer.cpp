@@ -60,7 +60,7 @@ ApplyParentLayerToLayerTransform(const ParentLayerToLayerMatrix4x4& aTransform,
                                  const ParentLayerRect& aParentLayerRect,
                                  const LayerRect& aClip)
 {
-  return UntransformTo<LayerPixel>(aTransform, aParentLayerRect, aClip);
+  return UntransformBy(aTransform, aParentLayerRect, aClip);
 }
 
 static LayerToParentLayerMatrix4x4

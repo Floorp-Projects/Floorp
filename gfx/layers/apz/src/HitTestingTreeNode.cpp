@@ -231,7 +231,7 @@ HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
   if (mApzc) {
     localTransform = localTransform * mApzc->GetCurrentAsyncTransformWithOverscroll();
   }
-  return UntransformTo<LayerPixel>(
+  return UntransformBy(
       ViewAs<LayerToParentLayerMatrix4x4>(localTransform).Inverse(), aPoint);
 }
 

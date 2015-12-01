@@ -753,7 +753,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // gecko space should only consist of overscroll-cancelling transforms.
         ScreenToScreenMatrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
                                                  * GetApzcToGeckoTransform(apzc);
-        Maybe<ScreenPoint> untransformedOrigin = UntransformTo<ScreenPixel>(
+        Maybe<ScreenPoint> untransformedOrigin = UntransformBy(
           transformToGecko, wheelInput.mOrigin);
 
         if (!untransformedOrigin) {
@@ -793,9 +793,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // gecko space should only consist of overscroll-cancelling transforms.
         ScreenToScreenMatrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
                                                  * GetApzcToGeckoTransform(apzc);
-        Maybe<ScreenPoint> untransformedStartPoint = UntransformTo<ScreenPixel>(
+        Maybe<ScreenPoint> untransformedStartPoint = UntransformBy(
           transformToGecko, panInput.mPanStartPoint);
-        Maybe<ScreenPoint> untransformedDisplacement = UntransformVector<ScreenPixel>(
+        Maybe<ScreenPoint> untransformedDisplacement = UntransformVector(
             transformToGecko, panInput.mPanDisplacement, panInput.mPanStartPoint);
 
         if (!untransformedStartPoint || !untransformedDisplacement) {
@@ -822,7 +822,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         ScreenToScreenMatrix4x4 outTransform = GetScreenToApzcTransform(apzc)
                                              * GetApzcToGeckoTransform(apzc);
-        Maybe<ScreenPoint> untransformedFocusPoint = UntransformTo<ScreenPixel>(
+        Maybe<ScreenPoint> untransformedFocusPoint = UntransformBy(
           outTransform, pinchInput.mFocusPoint);
 
         if (!untransformedFocusPoint) {
@@ -849,7 +849,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         ScreenToScreenMatrix4x4 outTransform = GetScreenToApzcTransform(apzc)
                                              * GetApzcToGeckoTransform(apzc);
         Maybe<ScreenIntPoint> untransformedPoint =
-          UntransformTo<ScreenPixel>(outTransform, tapInput.mPoint);
+          UntransformBy(outTransform, tapInput.mPoint);
 
         if (!untransformedPoint) {
           return result;
@@ -957,7 +957,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     
     for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
       SingleTouchData& touchData = aInput.mTouches[i];
-      Maybe<ScreenIntPoint> untransformedScreenPoint = UntransformTo<ScreenPixel>(
+      Maybe<ScreenIntPoint> untransformedScreenPoint = UntransformBy(
           outTransform, touchData.mScreenPoint);
       if (!untransformedScreenPoint) {
         return nsEventStatus_eIgnore;
@@ -1046,7 +1046,7 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
     ParentLayerToScreenMatrix4x4 transformToGecko = GetApzcToGeckoTransform(apzc);
     ScreenToScreenMatrix4x4 outTransform = transformToApzc * transformToGecko;
     Maybe<ScreenIntPoint> untransformedRefPoint =
-      UntransformTo<ScreenPixel>(outTransform, refPointAsScreen);
+      UntransformBy(outTransform, refPointAsScreen);
     if (untransformedRefPoint) {
       aEvent.refPoint = ViewAs<LayoutDevicePixel>(*untransformedRefPoint, LDIsScreen);
     }
@@ -1354,14 +1354,14 @@ TransformDisplacement(APZCTreeManager* aTreeManager,
 
   // Convert start and end points to Screen coordinates.
   ParentLayerToScreenMatrix4x4 untransformToApzc = aTreeManager->GetScreenToApzcTransform(aSource).Inverse();
-  ScreenPoint screenStart = TransformTo<ScreenPixel>(untransformToApzc, aStartPoint);
-  ScreenPoint screenEnd = TransformTo<ScreenPixel>(untransformToApzc, aEndPoint);
+  ScreenPoint screenStart = TransformBy(untransformToApzc, aStartPoint);
+  ScreenPoint screenEnd = TransformBy(untransformToApzc, aEndPoint);
 
 
   // Convert start and end points to aTarget's ParentLayer coordinates.
   ScreenToParentLayerMatrix4x4 transformToApzc = aTreeManager->GetScreenToApzcTransform(aTarget);
-  Maybe<ParentLayerPoint> startPoint = UntransformTo<ParentLayerPixel>(transformToApzc, screenStart);
-  Maybe<ParentLayerPoint> endPoint = UntransformTo<ParentLayerPixel>(transformToApzc, screenEnd);
+  Maybe<ParentLayerPoint> startPoint = UntransformBy(transformToApzc, screenStart);
+  Maybe<ParentLayerPoint> endPoint = UntransformBy(transformToApzc, screenEnd);
   if (!startPoint || !endPoint) {
     return false;
   }

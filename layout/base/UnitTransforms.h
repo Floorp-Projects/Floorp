@@ -140,35 +140,35 @@ TypedMatrix ViewAs(const gfx::Matrix4x4& aMatrix) {
 // coordinate system to another using the provided transformation matrix.
 template <typename TargetUnits, typename SourceUnits>
 static gfx::PointTyped<TargetUnits>
-TransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::PointTyped<SourceUnits>& aPoint)
 {
   return aTransform * aPoint;
 }
 template <typename TargetUnits, typename SourceUnits>
 static gfx::IntPointTyped<TargetUnits>
-TransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::IntPointTyped<SourceUnits>& aPoint)
 {
-  return RoundedToInt(TransformTo<TargetUnits>(aTransform, gfx::PointTyped<SourceUnits>(aPoint)));
+  return RoundedToInt(TransformBy(aTransform, gfx::PointTyped<SourceUnits>(aPoint)));
 }
 template <typename TargetUnits, typename SourceUnits>
 static gfx::RectTyped<TargetUnits>
-TransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::RectTyped<SourceUnits>& aRect)
 {
   return aTransform.TransformBounds(aRect);
 }
 template <typename TargetUnits, typename SourceUnits>
 static gfx::IntRectTyped<TargetUnits>
-TransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::IntRectTyped<SourceUnits>& aRect)
 {
-  return RoundedToInt(TransformTo<TargetUnits>(aTransform, gfx::RectTyped<SourceUnits>(aRect)));
+  return RoundedToInt(TransformBy(aTransform, gfx::RectTyped<SourceUnits>(aRect)));
 }
 template <typename TargetUnits, typename SourceUnits>
 static gfx::IntRegionTyped<TargetUnits>
-TransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+TransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
             const gfx::IntRegionTyped<SourceUnits>& aRegion)
 {
   return ViewAs<TargetUnits>(aRegion.ToUnknownRegion().Transform(
@@ -185,12 +185,12 @@ TransformVector(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
                 const gfx::PointTyped<SourceUnits>& aVector,
                 const gfx::PointTyped<SourceUnits>& aAnchor)
 {
-  gfx::PointTyped<TargetUnits> transformedStart = TransformTo<TargetUnits>(aTransform, aAnchor);
-  gfx::PointTyped<TargetUnits> transformedEnd = TransformTo<TargetUnits>(aTransform, aAnchor + aVector);
+  gfx::PointTyped<TargetUnits> transformedStart = TransformBy(aTransform, aAnchor);
+  gfx::PointTyped<TargetUnits> transformedEnd = TransformBy(aTransform, aAnchor + aVector);
   return transformedEnd - transformedStart;
 }
 
-// UntransformTo() and UntransformVector() are like TransformTo() and 
+// UntransformBy() and UntransformVector() are like TransformBy() and
 // TransformVector(), respectively, but are intended for cases where
 // the transformation matrix is the inverse of a 3D projection. When
 // using such transforms, the resulting Point4D is only meaningful
@@ -199,7 +199,7 @@ TransformVector(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
 // result is meaningful
 template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::PointTyped<TargetUnits>>
-UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+UntransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
               const gfx::PointTyped<SourceUnits>& aPoint)
 {
   gfx::Point4DTyped<TargetUnits> point = aTransform.ProjectPoint(aPoint);
@@ -210,7 +210,7 @@ UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
 }
 template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::IntPointTyped<TargetUnits>>
-UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+UntransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
               const gfx::IntPointTyped<SourceUnits>& aPoint)
 {
   gfx::PointTyped<SourceUnits> p = aPoint;
@@ -221,13 +221,13 @@ UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
   return Some(RoundedToInt(point.As2DPoint()));
 }
 
-// The versions of UntransformTo() that take a rectangle also take a clip,
+// The versions of UntransformBy() that take a rectangle also take a clip,
 // which represents the bounds within which the target must fall. The
 // result of the transform is intersected with this clip, and is considered
 // meaningful if the intersection is not empty.
 template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::RectTyped<TargetUnits>>
-UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+UntransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
               const gfx::RectTyped<SourceUnits>& aRect,
               const gfx::RectTyped<TargetUnits>& aClip)
 {
@@ -239,7 +239,7 @@ UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
 }
 template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::IntRectTyped<TargetUnits>>
-UntransformTo(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
+UntransformBy(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransform,
               const gfx::IntRectTyped<SourceUnits>& aRect,
               const gfx::IntRectTyped<TargetUnits>& aClip)
 {
