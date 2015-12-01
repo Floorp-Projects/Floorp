@@ -246,12 +246,6 @@ MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest)
     as_vcvt(dest, VFPRegister(scratch).sintOverlay());
 }
 
-void
-MacroAssemblerARM::negateDouble(FloatRegister reg)
-{
-    ma_vneg(reg, reg);
-}
-
 bool
 MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                            SBit s, Condition c)
