@@ -15,10 +15,22 @@ var test = Task.async(function*() {
 
   yield startRecording(panel);
 
+  let deleted = Promise.defer();
+  let deleteCount = 0;
+  function onDeleted () {
+    if (++deleteCount === 2) {
+      deleted.resolve();
+      PerformanceController.off(EVENTS.RECORDING_DELETED, onDeleted);
+    }
+  }
+
+  PerformanceController.on(EVENTS.RECORDING_DELETED, onDeleted);
+
   let stopped = Promise.all([
     once(PerformanceController, EVENTS.RECORDING_STOPPED),
-    once(PerformanceController, EVENTS.RECORDINGS_CLEARED)
+    deleted.promise
   ]);
+
   PerformanceController.clearRecordings();
   yield stopped;
 
