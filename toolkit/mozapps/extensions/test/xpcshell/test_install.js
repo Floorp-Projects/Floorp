@@ -195,8 +195,9 @@ function check_test_1(installSyncGUID) {
           do_check_eq(a1.icon64URL, uri + "icon64.png");
 
           a1.uninstall();
+          let { id, version } = a1;
           restartManager();
-          do_check_not_in_crash_annotation(a1.id, a1.version);
+          do_check_not_in_crash_annotation(id, version);
 
           do_execute_soon(run_test_2);
         }));

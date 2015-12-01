@@ -8,10 +8,14 @@ import java.util.Iterator;
 
 /**
  * Class for iterating over an IterableJarLoadingURLClassLoader's classes.
+ *
+ * This class is not thread safe: use it only from a single thread.
  */
 public class JarClassIterator implements Iterator<ClassWithOptions> {
     private IterableJarLoadingURLClassLoader mTarget;
     private Iterator<String> mTargetClassListIterator;
+
+    private ClassWithOptions lookAhead;
 
     public JarClassIterator(IterableJarLoadingURLClassLoader aTarget) {
         mTarget = aTarget;
@@ -20,11 +24,28 @@ public class JarClassIterator implements Iterator<ClassWithOptions> {
 
     @Override
     public boolean hasNext() {
-        return mTargetClassListIterator.hasNext();
+        return fillLookAheadIfPossible();
     }
 
     @Override
     public ClassWithOptions next() {
+        if (!fillLookAheadIfPossible()) {
+            throw new IllegalStateException("Failed to look ahead in next()!");
+        }
+        ClassWithOptions next = lookAhead;
+        lookAhead = null;
+        return next;
+    }
+
+    private boolean fillLookAheadIfPossible() {
+        if (lookAhead != null) {
+            return true;
+        }
+
+        if (!mTargetClassListIterator.hasNext()) {
+            return false;
+        }
+
         String className = mTargetClassListIterator.next();
         try {
             Class<?> ret = mTarget.loadClass(className);
@@ -37,22 +58,23 @@ public class JarClassIterator implements Iterator<ClassWithOptions> {
             try {
                 enclosingClass = ret.getEnclosingClass();
             } catch (IncompatibleClassChangeError e) {
-                return next();
+                return fillLookAheadIfPossible();
             }
 
             if (enclosingClass != null) {
                 // Anonymous inner class - unsupported.
                 // Or named inner class, which will be processed when we process the outer class.
-                return next();
+                return fillLookAheadIfPossible();
             }
 
-            return new ClassWithOptions(ret, ret.getSimpleName());
+            lookAhead = new ClassWithOptions(ret, ret.getSimpleName());
+            return true;
         } catch (ClassNotFoundException e) {
             System.err.println("Unable to enumerate class: " + className + ". Corrupted jar file?");
             e.printStackTrace();
             System.exit(2);
         }
-        return null;
+        return false;
     }
 
     @Override

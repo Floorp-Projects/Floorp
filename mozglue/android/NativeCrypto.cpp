@@ -96,13 +96,12 @@ extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_na
  * Helper function to invoke native SHA-256 update with JNI arguments.
  */
 extern "C" JNIEXPORT void MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update
-    (JNIEnv *env, jclass jc, jbyteArray jctx, jbyteArray jstr) {
+    (JNIEnv *env, jclass jc, jbyteArray jctx, jbyteArray jstr, jint len) {
   jbyte *str = env->GetByteArrayElements(jstr, nullptr);
-  size_t strLen = env->GetArrayLength(jstr);
 
   SHA256_CTX *shaContext = (SHA256_CTX*)env->GetByteArrayElements(jctx, nullptr);
 
-  SHA256_Update(shaContext, (void*)str, strLen);
+  SHA256_Update(shaContext, (void*)str, (size_t) len);
 
   env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
   env->ReleaseByteArrayElements(jctx, (jbyte*)shaContext, 0);

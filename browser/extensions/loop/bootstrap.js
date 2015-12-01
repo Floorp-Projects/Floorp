@@ -508,7 +508,7 @@ var WindowListener = {
         let box = gBrowser.getNotificationBox();
         let paused = false;
         let bar = box.appendNotification(
-          this._getString("infobar_screenshare_browser_message"),
+          this._getString("infobar_screenshare_browser_message2"),
           kBrowserSharingNotificationId,
           // Icon is defined in browser theme CSS.
           null,
@@ -520,7 +520,7 @@ var WindowListener = {
             callback: (event, buttonInfo, buttonNode) => {
               paused = !paused;
               bar.label = paused ? this._getString("infobar_screenshare_paused_browser_message") :
-                this._getString("infobar_screenshare_browser_message");
+                this._getString("infobar_screenshare_browser_message2");
               bar.classList.toggle("paused", paused);
               buttonNode.label = paused ? this._getString("infobar_button_resume_label") :
                 this._getString("infobar_button_pause_label");
