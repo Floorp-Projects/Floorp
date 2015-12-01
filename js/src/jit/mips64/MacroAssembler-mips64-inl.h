@@ -128,6 +128,13 @@ MacroAssembler::mul64(Imm64 imm, const Register64& dest)
     as_mflo(dest.reg);
 }
 
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    as_daddu(dest, src, src);
+    as_daddu(dest, dest, src);
+}
+
 // ===============================================================
 // Shift functions
 
