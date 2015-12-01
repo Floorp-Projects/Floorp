@@ -180,6 +180,9 @@ nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
 
 nsresult
+Convert(const BluetoothAttributeHandle& aIn, uint16_t& aOut);
+
+nsresult
 Convert(BluetoothAvrcpEvent aIn, uint8_t& aOut);
 
 nsresult
@@ -244,6 +247,9 @@ Convert(ControlPlayStatus aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothGattAuthReq aIn, int32_t& aOut);
+
+nsresult
+Convert(BluetoothGattAuthReq aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothGattWriteType aIn, int32_t& aOut);
