@@ -247,12 +247,6 @@ MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerARM::divDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vdiv(dest, src, dest);
-}
-
-void
 MacroAssemblerARM::negateDouble(FloatRegister reg)
 {
     ma_vneg(reg, reg);
