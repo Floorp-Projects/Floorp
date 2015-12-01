@@ -137,11 +137,8 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
 
   // Don't do anything special with right-mouse clicks.  They're probably clicks on context menu items.
 
-#ifdef XP_MACOSX
-  if (meta || (middle && middleUsesTabs))
-#else
-  if (ctrl || (middle && middleUsesTabs))
-#endif
+  var metaKey = AppConstants.platform == "macosx" ? meta : ctrl;
+  if (metaKey || (middle && middleUsesTabs))
     return shift ? "tabshifted" : "tab";
 
   if (alt && getBoolPref("browser.altClickSave", false))
@@ -514,13 +511,15 @@ function openAboutDialog() {
     return;
   }
 
-#ifdef XP_WIN
-  var features = "chrome,centerscreen,dependent";
-#elifdef XP_MACOSX
-  var features = "chrome,resizable=no,minimizable=no";
-#else
-  var features = "chrome,centerscreen,dependent,dialog=no";
-#endif
+  var features = "chrome,";
+  if (AppConstants.platform == "win") {
+    features += "centerscreen,dependent";
+  } else if (AppConstants.platform == "macosx") {
+    features += "resizable=no,minimizable=no";
+  } else {
+    features += "centerscreen,dependent,dialog=no";
+  }
+
   window.openDialog("chrome://browser/content/aboutDialog.xul", "", features);
 }
 
@@ -604,7 +603,6 @@ function openTroubleshootingPage()
   openUILinkIn("about:support", "tab");
 }
 
-#ifdef MOZ_SERVICES_HEALTHREPORT
 /**
  * Opens the troubleshooting information (about:support) page for this version
  * of the application.
@@ -613,7 +611,6 @@ function openHealthReport()
 {
   openUILinkIn("about:healthreport", "tab");
 }
-#endif
 
 /**
  * Opens the feedback page for this version of the application.
