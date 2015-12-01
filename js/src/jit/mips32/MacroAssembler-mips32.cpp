@@ -219,12 +219,6 @@ MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegiste
 }
 
 void
-MacroAssemblerMIPSCompat::negateDouble(FloatRegister reg)
-{
-    as_negd(reg, reg);
-}
-
-void
 MacroAssemblerMIPS::ma_li(Register dest, CodeOffset* label)
 {
     BufferOffset bo = m_buffer.nextOffset();
