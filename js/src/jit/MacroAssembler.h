@@ -777,6 +777,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void inc64(AbsoluteAddress dest) PER_ARCH;
+
     // ===============================================================
     // Shift functions
 

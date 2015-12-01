@@ -210,6 +210,16 @@ MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
     vmulsd(Operand(temp, 0), dest, dest);
 }
 
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    addl(Imm32(1), Operand(dest));
+    Label noOverflow;
+    j(NonZero, &noOverflow);
+    addl(Imm32(1), Operand(dest.offset(4)));
+    bind(&noOverflow);
+}
+
 // ===============================================================
 // Shift functions
 

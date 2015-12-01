@@ -177,6 +177,24 @@ MacroAssembler::mulBy3(Register src, Register dest)
     as_addu(dest, dest, src);
 }
 
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    ma_li(ScratchRegister, Imm32((int32_t)dest.addr));
+    as_lw(SecondScratchReg, ScratchRegister, 0);
+
+    as_addiu(SecondScratchReg, SecondScratchReg, 1);
+    as_sw(SecondScratchReg, ScratchRegister, 0);
+
+    as_sltiu(SecondScratchReg, SecondScratchReg, 1);
+    as_lw(ScratchRegister, ScratchRegister, 4);
+
+    as_addu(SecondScratchReg, ScratchRegister, SecondScratchReg);
+
+    ma_li(ScratchRegister, Imm32((int32_t)dest.addr));
+    as_sw(SecondScratchReg, ScratchRegister, 4);
+}
+
 // ===============================================================
 // Shift functions
 

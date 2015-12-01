@@ -2880,16 +2880,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Add(scratch32, scratch32, Operand(1));
         store32(scratch32.asUnsized(), addr);
     }
-    void inc64(AbsoluteAddress dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const ARMRegister scratchAddr64 = temps.AcquireX();
-        const ARMRegister scratch64 = temps.AcquireX();
-
-        Mov(scratchAddr64, uint64_t(dest.addr));
-        Ldr(scratch64, MemOperand(scratchAddr64, 0));
-        Add(scratch64, scratch64, Operand(1));
-        Str(scratch64, MemOperand(scratchAddr64, 0));
-    }
 
     void BoundsCheck(Register ptrReg, Label* onFail, vixl::CPURegister zeroMe = vixl::NoReg) {
         // use tst rather than Tst to *ensure* that a single instrution is generated.
