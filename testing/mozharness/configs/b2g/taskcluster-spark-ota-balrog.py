@@ -7,21 +7,20 @@ config = {
         'build',
         'build-symbols',
         'make-updates',
-        'prep-upload'
+        'prep-upload',
+        'submit-to-balrog'
     ],
+    "balrog_credentials_file": "balrog_credentials",
     "nightly_build": True,
     "env": {
         "GAIA_OPTIMIZE": "1",
         "B2G_UPDATER": "1",
         "LIGHTSABER": "1",
-        "DOGFOOD": "1",
         "BOWER_FLAGS": "--allow-root",
         "B2G_PATH": "%(work_dir)s",
         "GAIA_DISTRIBUTION_DIR": "%(work_dir)s/gaia/distros/spark",
-        "WGET_OPTS": "-c -q",
-        "B2G_FOTA_FULLIMG_PARTS": "/boot:boot.img /system:system.img /recovery:recovery.img"
+        "WGET_OPTS": "-c -q"
     },
-    "update_types": [ "ota", "fota", "fota:fullimg" ],
     "is_automation": True,
     "repo_remote_mappings": {
         'https://android.googlesource.com/': 'https://git.mozilla.org/external/aosp',
