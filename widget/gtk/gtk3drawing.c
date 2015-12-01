@@ -2698,20 +2698,19 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gButtonWidget));
 
-            /* Don't add this padding in HTML, otherwise the buttons will
-               become too big and stuff the layout. */
-            if (!inhtml) {
-                if (widget == MOZ_GTK_TOOLBAR_BUTTON) {
-                    gtk_style_context_save(style);
-                    gtk_style_context_add_class(style, "image-button");
-                }
-              
-                moz_gtk_add_style_padding(style, left, top, right, bottom);
-                
-                if (widget == MOZ_GTK_TOOLBAR_BUTTON)
-                    gtk_style_context_restore(style);
+            if (widget == MOZ_GTK_TOOLBAR_BUTTON) {
+                gtk_style_context_save(style);
+                gtk_style_context_add_class(style, "image-button");
             }
+              
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
+                
+            if (widget == MOZ_GTK_TOOLBAR_BUTTON)
+                gtk_style_context_restore(style);
 
+            // XXX: Subtract 1 pixel from the border to account for the added
+            // -moz-focus-inner border (Bug 1228281).
+            *left -= 1; *top -= 1; *right -= 1; *bottom -= 1;
             moz_gtk_add_style_border(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }

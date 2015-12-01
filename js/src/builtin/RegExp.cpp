@@ -812,6 +812,7 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
             return RegExpRunStatus_Error;
     } else if (reobj->needUpdateLastIndex()) {
         /* Steps 18.a-b. */
+        MOZ_ASSERT(matches && !matches->empty());
         if (!SetLastIndex(cx, reobj, (*matches)[0].limit))
             return RegExpRunStatus_Error;
     }

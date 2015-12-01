@@ -144,7 +144,7 @@ nsPlainTextSerializer::Init(uint32_t aFlags, uint32_t aWrapColumn,
   mWrapColumn = aWrapColumn;
 
   // Only create a linebreaker if we will handle wrapping.
-  if (MayWrap()) {
+  if (MayWrap() && MayBreakLines()) {
     mLineBreaker = nsContentUtils::LineBreaker();
   }
 

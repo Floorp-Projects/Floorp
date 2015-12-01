@@ -323,9 +323,11 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI,
     }
 
     bool isChrome = false, isResource = false;
+    // if the load needs to enforce CORS, then force the load to be async
     bool isSync =
-      (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome) ||
-      (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) && isResource);
+      !(aSecurityFlags & nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) &&
+      ((NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome) ||
+       (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) && isResource));
     RefPtr<nsSyncLoader> loader = new nsSyncLoader();
     return loader->LoadDocument(channel, isSync, aForceToXML,
                                 aReferrerPolicy, aResult);

@@ -23,8 +23,8 @@ import mozlog
 
 log = mozlog.unstructured.getLogger('REFTEST')
 
-class B2GDesktopReftest(RefTest):
-    build_type = "desktop"
+class MuletReftest(RefTest):
+    build_type = "mulet"
     marionette = None
 
     def __init__(self, marionette_args):
@@ -172,8 +172,6 @@ class B2GDesktopReftest(RefTest):
         # kill process to get a stack
         self.runner.stop(sig=signal.SIGABRT)
 
-class MuletReftest(B2GDesktopReftest):
-    build_type = "mulet"
 
     def _unlockScreen(self):
         self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
@@ -187,18 +185,14 @@ class MuletReftest(B2GDesktopReftest):
         Wait(self.marionette, timeout).until(expected.element_present(
             By.CSS_SELECTOR, '#homescreen[loading-state=false]'))
 
-def run_desktop_reftests(parser, options):
+def run_test_harness(parser, options):
     marionette_args = {}
     if options.marionette:
         host, port = options.marionette.split(':')
         marionette_args['host'] = host
         marionette_args['port'] = int(port)
 
-    if options.mulet:
-        reftest = MuletReftest(marionette_args)
-    else:
-        reftest = B2GDesktopReftest(marionette_args)
-
+    reftest = MuletReftest(marionette_args)
     parser.validate(options, reftest)
 
     # add a -bin suffix if b2g-bin exists, but just b2g was specified
@@ -209,7 +203,7 @@ def run_desktop_reftests(parser, options):
     if options.xrePath is None:
         options.xrePath = os.path.dirname(options.app)
 
-    if options.desktop and not options.profile:
-        raise Exception("must specify --profile when specifying --desktop")
+    if options.mulet and not options.profile:
+        raise Exception("must specify --profile when specifying --mulet")
 
     sys.exit(reftest.run_tests(options.tests, options))

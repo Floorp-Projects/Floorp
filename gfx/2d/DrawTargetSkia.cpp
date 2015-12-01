@@ -656,16 +656,20 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
 
   TempBitmap bitmap = GetBitmapForSurface(aMask);
   if (bitmap.mBitmap.colorType() == kAlpha_8_SkColorType) {
+    if (aOffset != Point(0, 0)) {
+      SkMatrix transform;
+      transform.setTranslate(SkFloatToScalar(-aOffset.x), SkFloatToScalar(-aOffset.y));
+      SkShader* matrixShader = SkShader::CreateLocalMatrixShader(paint.mPaint.getShader(), transform);
+      SkSafeUnref(paint.mPaint.setShader(matrixShader));
+    }
+
     mCanvas->drawBitmap(bitmap.mBitmap, aOffset.x, aOffset.y, &paint.mPaint);
   } else {
     SkPaint maskPaint;
     TempBitmap tmpBitmap;
-    SetPaintPattern(maskPaint, SurfacePattern(aMask, ExtendMode::CLAMP), tmpBitmap);
-
-    SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
-    transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
-    SkShader* matrixShader = SkShader::CreateLocalMatrixShader(maskPaint.getShader(), transform);
-    SkSafeUnref(maskPaint.setShader(matrixShader));
+    SetPaintPattern(maskPaint,
+                    SurfacePattern(aMask, ExtendMode::CLAMP, Matrix::Translation(aOffset)),
+                    tmpBitmap);
 
     SkLayerRasterizer::Builder builder;
     builder.addLayer(maskPaint);

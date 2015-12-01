@@ -284,7 +284,7 @@ LIRGeneratorShared::redefine(MDefinition* def, MDefinition* as)
         def->setVirtualRegister(as->virtualRegister());
 
 #ifdef DEBUG
-        if (js_JitOptions.runExtraChecks &&
+        if (JitOptions.runExtraChecks &&
             def->resultTypeSet() && as->resultTypeSet() &&
             !def->resultTypeSet()->equals(as->resultTypeSet()))
         {

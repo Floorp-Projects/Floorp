@@ -70,7 +70,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, Mac
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
 #ifdef CHECK_OSIPOINT_REGISTERS
-    checkOsiPointRegisters(js_JitOptions.checkOsiPointRegisters),
+    checkOsiPointRegisters(JitOptions.checkOsiPointRegisters),
 #endif
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
     frameInitialAdjustment_(0)
@@ -308,7 +308,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
                  nativeDelta,
                  ref.pc - script->code(),
                  pcDelta,
-                 js_CodeName[JSOp(*ref.pc)],
+                 CodeName[JSOp(*ref.pc)],
                  script->filename(), script->lineno());
 
     for (tree = tree->caller(); tree; tree = tree->caller()) {
