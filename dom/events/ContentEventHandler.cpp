@@ -1442,45 +1442,75 @@ ContentEventHandler::GetFlatTextLengthInRange(
                        const NodePosition& aEndPosition,
                        nsIContent* aRootContent,
                        uint32_t* aLength,
-                       LineBreakType aLineBreakType)
+                       LineBreakType aLineBreakType,
+                       bool aIsRemovingNode /* = false */)
 {
   if (NS_WARN_IF(!aRootContent) || NS_WARN_IF(!aStartPosition.IsValid()) ||
       NS_WARN_IF(!aEndPosition.IsValid()) || NS_WARN_IF(!aLength)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<nsRange> prev = new nsRange(aRootContent);
-  nsresult rv = aStartPosition.SetToRangeStart(prev);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  // Don't create nsContentIterator instance until it's really necessary since
+  // destroying without initializing causes unexpected NS_ASSERTION() call.
+  nsCOMPtr<nsIContentIterator> iter;
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  if (aEndPosition.OffsetIsValid()) {
-    // Offset is within node's length; set end of range to that offset
-    rv = aEndPosition.SetToRangeEnd(prev);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = iter->Init(prev);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  } else if (aEndPosition.mNode != aRootContent) {
-    // Offset is past node's length; set end of range to end of node
-    rv = aEndPosition.SetToRangeEndAfter(prev);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = iter->Init(prev);
+  // This may be called for retrieving the text of removed nodes.  Even in this
+  // case, the node thinks it's still in the tree because UnbindFromTree() will
+  // be called after here.  However, the node was already removed from the
+  // array of children of its parent.  So, be careful to handle this case.
+  if (aIsRemovingNode) {
+    DebugOnly<nsIContent*> parent = aStartPosition.mNode->GetParent();
+    MOZ_ASSERT(parent && parent->IndexOf(aStartPosition.mNode) == -1,
+      "At removing the node, the node shouldn't be in the array of children "
+      "of its parent");
+    MOZ_ASSERT(aStartPosition.mNode == aEndPosition.mNode,
+      "At removing the node, start and end node should be same");
+    MOZ_ASSERT(aStartPosition.mOffset == 0,
+      "When the node is being removed, the start offset should be 0");
+    MOZ_ASSERT(static_cast<uint32_t>(aEndPosition.mOffset) ==
+                 aEndPosition.mNode->GetChildCount(),
+      "When the node is being removed, the end offset should be child count");
+    iter = NS_NewContentIterator();
+    nsresult rv = iter->Init(aStartPosition.mNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    // Offset is past the root node; set end of range to end of root node
-    rv = iter->Init(aRootContent);
+    RefPtr<nsRange> prev = new nsRange(aRootContent);
+    nsresult rv = aStartPosition.SetToRangeStart(prev);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    if (aEndPosition.OffsetIsValid()) {
+      // Offset is within node's length; set end of range to that offset
+      rv = aEndPosition.SetToRangeEnd(prev);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      iter = NS_NewContentIterator();
+      rv = iter->Init(prev);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else if (aEndPosition.mNode != aRootContent) {
+      // Offset is past node's length; set end of range to end of node
+      rv = aEndPosition.SetToRangeEndAfter(prev);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      iter = NS_NewPreContentIterator();
+      rv = iter->Init(prev);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      // Offset is past the root node; set end of range to end of root node
+      iter = NS_NewPreContentIterator();
+      rv = iter->Init(aRootContent);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
 

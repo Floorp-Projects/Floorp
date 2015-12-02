@@ -1016,13 +1016,12 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   if (aChild->IsNodeOfType(nsINode::eTEXT)) {
     textLength = ContentEventHandler::GetNativeTextLength(aChild);
   } else {
-    uint32_t nodeLength =
-      std::max(static_cast<int32_t>(aChild->GetChildCount()), 1);
+    uint32_t nodeLength = static_cast<int32_t>(aChild->GetChildCount());
     rv = ContentEventHandler::GetFlatTextLengthInRange(
                                 NodePosition(aChild, 0),
                                 NodePosition(aChild, nodeLength),
                                 mRootContent, &textLength,
-                                LINE_BREAK_TYPE_NATIVE);
+                                LINE_BREAK_TYPE_NATIVE, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mStartOfRemovingTextRangeCache.Clear();
       return;
