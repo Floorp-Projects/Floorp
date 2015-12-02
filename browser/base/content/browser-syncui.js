@@ -77,6 +77,10 @@ var gSyncUI = {
       Services.obs.addObserver(this, topic, true);
     }, this);
 
+    // initial label for the sync buttons.
+    let broadcaster = document.getElementById("sync-status");
+    broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncnow.label"));
+
     this.updateUI();
   },
 
@@ -176,14 +180,10 @@ var gSyncUI = {
 
     this.log.debug("onActivityStart with numActive", this._numActiveSyncTasks);
     if (++this._numActiveSyncTasks == 1) {
-      let button = document.getElementById("sync-button");
-      if (button) {
-        button.setAttribute("status", "active");
-      }
-      let container = document.getElementById("PanelUI-footer-fxa");
-      if (container) {
-        container.setAttribute("syncstatus", "active");
-      }
+      let broadcaster = document.getElementById("sync-status");
+      broadcaster.setAttribute("syncstatus", "active");
+      broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncing.label"));
+      broadcaster.setAttribute("disabled", "true");
     }
     this.updateUI();
   },
@@ -203,14 +203,10 @@ var gSyncUI = {
       return; // active tasks are still ongoing...
     }
 
-    let syncButton = document.getElementById("sync-button");
-    if (syncButton) {
-      syncButton.removeAttribute("status");
-    }
-    let fxaContainer = document.getElementById("PanelUI-footer-fxa");
-    if (fxaContainer) {
-      fxaContainer.removeAttribute("syncstatus");
-    }
+    let broadcaster = document.getElementById("sync-status");
+    broadcaster.removeAttribute("syncstatus");
+    broadcaster.removeAttribute("disabled");
+    broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncnow.label"));
     this.updateUI();
   },
 
@@ -313,8 +309,8 @@ var gSyncUI = {
     gFxAccounts.openSignInAgainPage(entryPoint);
   },
 
-  /* Update the tooltip for the Sync Toolbar button and the Sync spinner in the
-     FxA hamburger area.
+  /* Update the tooltip for the sync-status broadcaster (which will update the
+     Sync Toolbar button and the Sync spinner in the FxA hamburger area.)
      If Sync is configured, the tooltip is when the last sync occurred,
      otherwise the tooltip reflects the fact that Sync needs to be
      (re-)configured.
@@ -364,16 +360,13 @@ var gSyncUI = {
     // sure it hasn't been torn down since we started.
     if (!gBrowser)
       return;
-    let syncButton = document.getElementById("sync-button");
-    let statusButton = document.getElementById("PanelUI-fxa-icon");
 
-    for (let button of [syncButton, statusButton]) {
-      if (button) {
-        if (tooltiptext) {
-          button.setAttribute("tooltiptext", tooltiptext);
-        } else {
-          button.removeAttribute("tooltiptext");
-        }
+    let broadcaster = document.getElementById("sync-status");
+    if (broadcaster) {
+      if (tooltiptext) {
+        broadcaster.setAttribute("tooltiptext", tooltiptext);
+      } else {
+        broadcaster.removeAttribute("tooltiptext");
       }
     }
   }),

@@ -128,14 +128,17 @@ add_task(function* testSyncLoginError() {
 });
 
 function checkButtonsStatus(shouldBeActive) {
-  let button = document.getElementById("sync-button");
-  let fxaContainer = document.getElementById("PanelUI-footer-fxa");
-  if (shouldBeActive) {
-    Assert.equal(button.getAttribute("status"), "active");
-    Assert.equal(fxaContainer.getAttribute("syncstatus"), "active");
-  } else {
-    Assert.ok(!button.hasAttribute("status"));
-    Assert.ok(!fxaContainer.hasAttribute("syncstatus"));
+  for (let eid of [
+    "sync-status", // the broadcaster itself.
+    "sync-button", // the main sync button which observes the broadcaster
+    "PanelUI-fxa-icon", // the sync icon in the fxa footer that observes it.
+    ]) {
+    let elt = document.getElementById(eid);
+    if (shouldBeActive) {
+      Assert.equal(elt.getAttribute("syncstatus"), "active", `${eid} should be active`);;
+    } else {
+      Assert.ok(!elt.hasAttribute("syncstatus"), `${eid} should have no status attr`);
+    }
   }
 }
 
