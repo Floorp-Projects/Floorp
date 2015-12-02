@@ -237,7 +237,7 @@ function toBeWithin (range) {
 }
 
 function searchP () {
-  return promisedEmitter(search.apply(null, Array.slice(arguments)));
+  return promisedEmitter(search.apply(null, Array.prototype.slice.call(arguments)));
 }
 
 before(exports, (name, assert, done) => resetPlaces(done));

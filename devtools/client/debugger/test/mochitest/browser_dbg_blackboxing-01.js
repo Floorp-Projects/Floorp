@@ -29,8 +29,8 @@ function testBlackBoxSource() {
   const bbButton = getBlackBoxButton(gPanel);
   ok(!bbButton.checked, "Should not be black boxed by default");
 
-  return toggleBlackBoxing(gPanel).then(aSource => {
-    ok(aSource.isBlackBoxed, "The source should be black boxed now.");
+  return toggleBlackBoxing(gPanel).then(source => {
+    ok(source.isBlackBoxed, "The source should be black boxed now.");
     ok(bbButton.checked, "The checkbox should no longer be checked.");
   });
 }

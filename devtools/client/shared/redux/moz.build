@@ -10,5 +10,5 @@ DIRS += [
 
 DevToolsModules(
     'create-store.js',
-    'reducers.js',
+    'non-react-subscriber.js',
 )

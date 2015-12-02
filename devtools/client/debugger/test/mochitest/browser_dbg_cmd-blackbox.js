@@ -22,12 +22,13 @@ function* spawnTest() {
 
   let toolbox = yield gDevTools.showToolbox(options.target, "jsdebugger");
   let panel = toolbox.getCurrentPanel();
+  let constants = panel.panelWin.require('./content/constants');
 
   yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
 
   function cmd(aTyped, aEventRepeat = 1, aOutput = "") {
     return promise.all([
-      waitForThreadEvents(panel, "blackboxchange", aEventRepeat),
+      waitForDispatch(panel, constants.BLACKBOX, aEventRepeat),
       helpers.audit(options, [{ setup: aTyped, output: aOutput, exec: {} }])
     ]);
   }

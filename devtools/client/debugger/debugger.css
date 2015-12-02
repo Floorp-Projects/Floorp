@@ -59,3 +59,11 @@
 #source-progress {
   flex: none;
 }
+
+#redux-devtools * {
+  display: block;
+}
+
+#redux-devtools span {
+  display: inline
+}
