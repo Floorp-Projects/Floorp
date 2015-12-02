@@ -400,6 +400,9 @@ public:
   // a duration until we know the start time, so we need to track it separately.
   media::NullableTimeUnit mUnadjustedMetadataEndTime;
 
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable = true;
+
   EncryptionInfo mCrypto;
 };
 
