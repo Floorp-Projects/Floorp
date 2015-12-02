@@ -53,6 +53,7 @@ using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
+using mozilla::UniquePtr;
 using JS::GenericNaN;
 
 namespace js {
@@ -3886,54 +3887,53 @@ CodeGenerator::maybeCreateScriptCounts()
     if (!GetJitContext()->runtime->profilingScripts())
         return nullptr;
 
-    IonScriptCounts* counts = nullptr;
-
-    const CompileInfo* outerInfo = &gen->info();
-    JSScript* script = outerInfo->script();
-
-    counts = js_new<IonScriptCounts>();
-    if (!counts || !counts->init(graph.numBlocks())) {
-        js_delete(counts);
+    // This test inhibits IonScriptCount creation for wasm code which is
+    // currently incompatible with wasm codegen for two reasons: (1) wasm code
+    // must be serializable and script count codegen bakes in absolute
+    // addresses, (2) wasm code does not have a JSScript with which to associate
+    // code coverage data.
+    JSScript* script = gen->info().script();
+    if (!script)
         return nullptr;
-    }
+
+    UniquePtr<IonScriptCounts> counts(js_new<IonScriptCounts>());
+    if (!counts || !counts->init(graph.numBlocks()))
+        return nullptr;
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock* block = graph.getBlock(i)->mir();
 
         uint32_t offset = 0;
         char* description = nullptr;
-        if (script) {
-            if (MResumePoint* resume = block->entryResumePoint()) {
-                // Find a PC offset in the outermost script to use. If this
-                // block is from an inlined script, find a location in the
-                // outer script to associate information about the inlining
-                // with.
-                while (resume->caller())
-                    resume = resume->caller();
-                offset = script->pcToOffset(resume->pc());
+        if (MResumePoint* resume = block->entryResumePoint()) {
+            // Find a PC offset in the outermost script to use. If this
+            // block is from an inlined script, find a location in the
+            // outer script to associate information about the inlining
+            // with.
+            while (resume->caller())
+                resume = resume->caller();
+            offset = script->pcToOffset(resume->pc());
 
-                if (block->entryResumePoint()->caller()) {
-                    // Get the filename and line number of the inner script.
-                    JSScript* innerScript = block->info().script();
-                    description = (char*) js_calloc(200);
-                    if (description) {
-                        JS_snprintf(description, 200, "%s:%" PRIuSIZE,
-                                    innerScript->filename(), innerScript->lineno());
-                    }
+            if (block->entryResumePoint()->caller()) {
+                // Get the filename and line number of the inner script.
+                JSScript* innerScript = block->info().script();
+                description = (char*) js_calloc(200);
+                if (description) {
+                    JS_snprintf(description, 200, "%s:%" PRIuSIZE,
+                                innerScript->filename(), innerScript->lineno());
                 }
             }
         }
 
-        if (!counts->block(i).init(block->id(), offset, description, block->numSuccessors())) {
-            js_delete(counts);
+        if (!counts->block(i).init(block->id(), offset, description, block->numSuccessors()))
             return nullptr;
-        }
+
         for (size_t j = 0; j < block->numSuccessors(); j++)
             counts->block(i).setSuccessor(j, skipTrivialBlocks(block->getSuccessor(j))->id());
     }
 
-    scriptCounts_ = counts;
-    return counts;
+    scriptCounts_ = counts.release();
+    return scriptCounts_;
 }
 
 // Structure for managing the state tracked for a block by script counters.
@@ -7924,14 +7924,6 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
 
     offsets->end = masm.currentOffset();
 
-    // The only remaining work needed to compile this function is to patch the
-    // switch-statement jump tables (the entries of the table need the absolute
-    // address of the cases). These table entries are accmulated as CodeLabels
-    // in the MacroAssembler's codeLabels_ list and processed all at once at in
-    // the "static-link" phase of module compilation. It is critical that there
-    // is nothing else to do after this point since the LifoAlloc memory
-    // holding the MIR graph is about to be popped and reused. In particular,
-    // every step in CodeGenerator::link must be a nop, as asserted here:
     MOZ_ASSERT(!masm.failureLabel()->used());
     MOZ_ASSERT(snapshots_.listSize() == 0);
     MOZ_ASSERT(snapshots_.RVATableSize() == 0);
@@ -7942,6 +7934,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
     MOZ_ASSERT(osiIndices_.empty());
     MOZ_ASSERT(cacheList_.empty());
     MOZ_ASSERT(safepoints_.size() == 0);
+    MOZ_ASSERT(!scriptCounts_);
     return true;
 }
 
