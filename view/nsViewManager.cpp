@@ -588,11 +588,11 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
         LayoutDeviceIntRect bounds;
         childWidget->GetBounds(bounds);
 
-        nsTArray<nsIntRect> clipRects;
+        nsTArray<LayoutDeviceIntRect> clipRects;
         childWidget->GetWindowClipRegion(&clipRects);
         for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-          nsRect rr = ToAppUnits(clipRects[i] + bounds.TopLeft().ToUnknownPoint(),
-                                 AppUnitsPerDevPixel());
+          nsRect rr = LayoutDeviceIntRect::ToAppUnits(
+            clipRects[i] + bounds.TopLeft(), AppUnitsPerDevPixel());
           children.Or(children, rr - aWidgetView->ViewToWidgetOffset());
           children.SimplifyInward(20);
         }
