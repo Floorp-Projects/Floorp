@@ -3014,6 +3014,9 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
 {
     UpdateWindowAttributes();
 
+    // We should not send an async surface if we're using direct rendering.
+    MOZ_ASSERT(!IsUsingDirectDrawing());
+
 #ifdef MOZ_X11
     {
         NS_ASSERTION(aSurface->GetType() == gfxSurfaceType::Xlib,
@@ -3248,6 +3251,10 @@ PluginInstanceChild::ShowPluginFrame()
     if (!mLayersRendering || mPendingPluginCall) {
         return false;
     }
+
+    // We should not attempt to asynchronously show the plugin if we're using
+    // direct rendering.
+    MOZ_ASSERT(!IsUsingDirectDrawing());
 
     AutoRestore<bool> pending(mPendingPluginCall);
     mPendingPluginCall = true;
@@ -3528,6 +3535,13 @@ PluginInstanceChild::AsyncShowPluginFrame(void)
         return;
     }
 
+    // When the plugin is using direct surfaces to draw, it is not driving
+    // paints via paint events - it will drive painting via its own events
+    // and/or DidComposite callbacks.
+    if (IsUsingDirectDrawing()) {
+        return;
+    }
+
     mCurrentInvalidateTask =
         NewRunnableMethod(this, &PluginInstanceChild::InvalidateRectDelayed);
     MessageLoop::current()->PostTask(FROM_HERE, mCurrentInvalidateTask);
@@ -3548,6 +3562,11 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
       return;
     }
 #endif
+
+    if (IsUsingDirectDrawing()) {
+        NS_ASSERTION(false, "Should not call InvalidateRect() in direct surface mode!");
+        return;
+    }
 
     if (mLayersRendering) {
         nsIntRect r(aInvalidRect->left, aInvalidRect->top,
