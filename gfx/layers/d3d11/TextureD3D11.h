@@ -42,7 +42,9 @@ public:
 protected:
   bool PrepareDrawTargetInLock(OpenMode aMode);
 
-  DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, bool aNeedsClear, bool aNeedsClearWhite);
+  DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                  bool aNeedsClear, bool aNeedsClearWhite,
+                  bool aIsForOutOfBandContent);
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) = 0;
 
@@ -53,6 +55,7 @@ protected:
   bool mNeedsClear;
   bool mNeedsClearWhite;
   bool mHasSynchronization;
+  bool mIsForOutOfBandContent;
 };
 
 class D3D11TextureData : public DXGITextureData
@@ -88,7 +91,8 @@ public:
 protected:
   D3D11TextureData(ID3D11Texture2D* aTexture,
                    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                   bool aNeedsClear, bool aNeedsClearWhite);
+                   bool aNeedsClear, bool aNeedsClearWhite,
+                   bool aIsForOutOfBandContent);
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
 
@@ -132,7 +136,8 @@ public:
 protected:
   D3D10TextureData(ID3D10Texture2D* aTexture,
                    gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                   bool aNeedsClear, bool aNeedsClearWhite);
+                   bool aNeedsClear, bool aNeedsClearWhite,
+                   bool aIsForOutOfBandContent);
 
   virtual void GetDXGIResource(IDXGIResource** aOutResource) override;
 

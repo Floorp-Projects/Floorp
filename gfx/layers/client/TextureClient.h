@@ -69,10 +69,15 @@ class KeepAlive;
  */
 
 enum TextureAllocationFlags {
-  ALLOC_DEFAULT = 0,
-  ALLOC_CLEAR_BUFFER = 1,
-  ALLOC_CLEAR_BUFFER_WHITE = 2,
-  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 4
+  ALLOC_DEFAULT = 0x0,
+  ALLOC_CLEAR_BUFFER = 0x1,
+  ALLOC_CLEAR_BUFFER_WHITE = 0x2,
+  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 0x4,
+
+  // Allocate the texture for out-of-band content updates. This is mostly for
+  // TextureClientD3D11, which may otherwise choose D3D10 or non-KeyedMutex
+  // surfaces when used on the main thread.
+  ALLOC_FOR_OUT_OF_BAND_CONTENT = 0x8
 };
 
 #ifdef XP_WIN
