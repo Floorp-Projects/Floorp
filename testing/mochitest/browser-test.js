@@ -588,7 +588,6 @@ Tester.prototype = {
             CustomizationTabPreloader.uninit();
             SocialFlyout.unload();
             SocialShare.uninit();
-            TabView.uninit();
           }
 
           // Destroy BackgroundPageThumbs resources.

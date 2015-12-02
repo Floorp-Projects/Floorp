@@ -5147,38 +5147,6 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "PANORAMA_INITIALIZATION_TIME_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Time it takes to initialize Panorama (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "25",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Number of groups in Panorama *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_STACKED_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "25",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Number of stacked groups in Panorama *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "PANORAMA_MEDIAN_TABS_IN_GROUPS_COUNT": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "100",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Median of tabs in groups in Panorama"
-  },
   "BROWSERPROVIDER_XUL_IMPORT_TIME": {
     "expires_in_version": "40",
     "kind": "exponential",
@@ -5314,22 +5282,6 @@
      "high": 10000000,
      "n_buckets": 10,
      "description": "Whenever the same-process MessageManager cannot be sent through sendAsyncMessage as it would cause an OOM, the size of the message content, in kb."
-  },
-  "MISBEHAVING_ADDONS_CPOW_TIME_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 1,
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time spent by an add-on performing blocking cross-process communications (ms, keyed by add-on ID, updated every 15s by default)"
-  },
-  "MISBEHAVING_ADDONS_JANK_LEVEL": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "keyed": true,
-    "description": "Longest blocking operation performed by the add-on (log2(duration in ms), keyed by add-on, updated every 15s by default)"
   },
   "SLOW_ADDON_WARNING_STATES": {
     "expires_in_version": "never",
@@ -9802,6 +9754,24 @@
     "high": "100",
     "n_buckets": "20",
     "description": "Proportion (%) of reschedulings of the main process to another CPU during the execution of code inside a JS compartment. Updated while we are measuring jank."
+  },
+  "PERF_MONITORING_SLOW_ADDON_JANK_US": {
+    "expires_in_version": "48",
+    "kind": "exponential",
+    "low": 1,
+    "high": 10000000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Contiguous time spent by an add-on blocking the main loop (microseconds, keyed by add-on ID)."
+  },
+  "PERF_MONITORING_SLOW_ADDON_CPOW_US": {
+    "expires_in_version": "48",
+    "kind": "exponential",
+    "low": 1,
+    "high": 10000000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Contiguous time spent by an add-on blocking the main loop by performing a blocking cross-process call (microseconds, keyed by add-on ID)."
   },
   "VIDEO_EME_ADOBE_INSTALL_FAILED_REASON": {
     "alert_emails": ["edwin@mozilla.com"],

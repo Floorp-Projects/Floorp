@@ -1770,7 +1770,8 @@ var SessionStoreInternal = {
     }
 
     // Default delay of 2 seconds gives enough time to catch multiple TabShow
-    // events due to changing groups in Panorama.
+    // events. This used to be due to changing groups in 'tab groups'. We
+    // might be able to get rid of this now?
     this.saveStateDelayed(aWindow);
   },
 
@@ -1782,7 +1783,8 @@ var SessionStoreInternal = {
     }
 
     // Default delay of 2 seconds gives enough time to catch multiple TabHide
-    // events due to changing groups in Panorama.
+    // events. This used to be due to changing groups in 'tab groups'. We
+    // might be able to get rid of this now?
     this.saveStateDelayed(aWindow);
   },
 
@@ -2290,10 +2292,7 @@ var SessionStoreInternal = {
         // Restore into that window - pretend it's a followup since we'll already
         // have a focused window.
         //XXXzpao This is going to merge extData together (taking what was in
-        //        winState over what is in the window already. The hack we have
-        //        in _preWindowToRestoreInto will prevent most (all?) Panorama
-        //        weirdness but we will still merge other extData.
-        //        Bug 588217 should make this go away by merging the group data.
+        //        winState over what is in the window already.
         let options = {overwriteTabs: canOverwriteTabs, isFollowUp: true};
         this.restoreWindow(windowToUse, winState, options);
       }
@@ -2501,25 +2500,10 @@ var SessionStoreInternal = {
     // the previous session's tabs to the end. This will be set if possible.
     let canOverwriteTabs = false;
 
-    // Step 1 of processing:
-    // Inspect extData for Panorama identifiers. If found, then we want to
-    // inspect further. If there is a single group, then we can use this
-    // window. If there are multiple groups then we won't use this window.
-    let groupsData = this.getWindowValue(aWindow, "tabview-groups");
-    if (groupsData) {
-      groupsData = JSON.parse(groupsData);
-
-      // If there are multiple groups, we don't want to use this window.
-      if (groupsData.totalNumber > 1)
-        return [false, false];
-    }
-
-    // Step 2 of processing:
-    // If we're still here, then the window is usable. Look at the open tabs in
-    // comparison to home pages. If all the tabs are home pages then we'll end
-    // up overwriting all of them. Otherwise we'll just close the tabs that
-    // match home pages. Tabs with the about:blank URI will always be
-    // overwritten.
+    // Look at the open tabs in comparison to home pages. If all the tabs are
+    // home pages then we'll end up overwriting all of them. Otherwise we'll
+    // just close the tabs that match home pages. Tabs with the about:blank
+    // URI will always be overwritten.
     let homePages = ["about:blank"];
     let removableTabs = [];
     let tabbrowser = aWindow.gBrowser;

@@ -62,11 +62,6 @@ body {
   display: flex;
 }
 
-#global-toolbar .label,
-#timeline-toolbar .label {
-  padding: 1px 4px;
-}
-
 /* The main animations container */
 
 #players {
@@ -96,13 +91,24 @@ body {
 
 /* Element picker, toggle-all buttons, timeline pause button, ... */
 
-#global-toolbar .devtools-button,
-#timeline-toolbar .devtools-button {
-  border-width: 0 0 0 1px;
+#global-toolbar > *,
+#timeline-toolbar > * {
   min-height: var(--toolbar-height);
+  border-width: 0 0 0 1px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#timeline-toolbar .devtools-button {
+#global-toolbar .label,
+#timeline-toolbar .label {
+  padding: 0 5px;
+  border-style: solid;
+  border-color: rgba(170, 170, 170, .5);
+}
+
+#timeline-toolbar .devtools-button,
+#timeline-toolbar .label {
   border-width: 0 1px 0 0;
 }
 

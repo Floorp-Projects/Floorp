@@ -152,10 +152,6 @@ toolbar[brighttext] #sync-button[status="active"] {
   transform: scaleX(-1);
 }
 
-#tabview-button {
-  -moz-image-region: rect(0, 648px, 18px, 630px);
-}
-
 #email-link-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 666px, 18px, 648px);
 }
@@ -350,10 +346,6 @@ toolbar[brighttext] #sync-button[status="active"] {
 
   #nav-bar-overflow-button {
     -moz-image-region: rect(0, 1224px, 36px, 1188px);
-  }
-
-  #tabview-button {
-    -moz-image-region: rect(0, 1296px, 36px, 1260px);
   }
 
   #email-link-button[cui-areatype="toolbar"] {
