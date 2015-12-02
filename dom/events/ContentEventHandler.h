@@ -107,6 +107,11 @@ public:
     {
     }
 
+    bool operator==(const NodePosition& aOther) const
+    {
+      return mNode == aOther.mNode && mOffset == aOther.mOffset;
+    }
+
     bool IsValid() const
     {
       return mNode && mOffset >= 0;
