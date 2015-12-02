@@ -19,6 +19,7 @@ CppUnitTests([
     'TestFastBernoulliTrial',
     'TestFloatingPoint',
     'TestFunction',
+    'TestInitializerList',
     'TestIntegerPrintfMacros',
     'TestIntegerRange',
     'TestJSONWriter',
