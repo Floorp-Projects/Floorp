@@ -30,12 +30,7 @@ TEST_P(DiscardFramebufferEXTTest, ExtensionEnabled)
 
     if (platform.renderer == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
-        // EXPECT_TRUE(extensionEnabled("EXT_discard_framebuffer"));
-
-        // EXT_discard_framebuffer is disabled in D3D11 ANGLE due to Chromium BUG:497445
-        // Enabling this extension (even as a no-op) causes WebGL video failures in Chromium
-        // Once this bug is fixed, we can reenable the extension.
-        EXPECT_FALSE(extensionEnabled("EXT_discard_framebuffer"));
+        EXPECT_TRUE(extensionEnabled("EXT_discard_framebuffer"));
     }
     else
     {

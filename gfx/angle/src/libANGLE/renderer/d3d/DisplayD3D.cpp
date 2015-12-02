@@ -141,9 +141,7 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
     return result;
 }
 
-DisplayD3D::DisplayD3D()
-    : mRenderer(nullptr),
-      mDevice(nullptr)
+DisplayD3D::DisplayD3D() : mRenderer(nullptr)
 {
 }
 
@@ -209,9 +207,7 @@ ImageImpl *DisplayD3D::createImage(EGLenum target,
 
 egl::Error DisplayD3D::getDevice(DeviceImpl **device)
 {
-    *device = reinterpret_cast<DeviceImpl*>(mDevice);
-    ASSERT(*device != nullptr);
-    return egl::Error(EGL_SUCCESS);
+    return mRenderer->getEGLDevice(device);
 }
 
 egl::Error DisplayD3D::createContext(const egl::Config *config, const gl::Context *shareContext, const egl::AttributeMap &attribs,
@@ -242,15 +238,11 @@ egl::Error DisplayD3D::initialize(egl::Display *display)
         return error;
     }
 
-    ASSERT(mDevice == nullptr);
-    mDevice = new DeviceD3D(mRenderer);
-
     return egl::Error(EGL_SUCCESS);
 }
 
 void DisplayD3D::terminate()
 {
-    SafeDelete(mDevice);
     SafeDelete(mRenderer);
 }
 

@@ -48,8 +48,10 @@ const std::vector<VarT> &GetShaderVariables(const std::vector<VarT> *variableLis
     return *variableList;
 }
 
+}  // anonymous namespace
+
 // true if varying x has a higher priority in packing than y
-bool CompareVarying(const sh::Varying &x, const sh::Varying &y)
+bool CompareShaderVar(const sh::ShaderVariable &x, const sh::ShaderVariable &y)
 {
     if (x.type == y.type)
     {
@@ -69,8 +71,6 @@ bool CompareVarying(const sh::Varying &x, const sh::Varying &y)
 
     return gl::VariableSortOrder(x.type) < gl::VariableSortOrder(y.type);
 }
-
-}  // anonymous namespace
 
 Shader::Data::Data(GLenum shaderType) : mShaderType(shaderType), mShaderVersion(100)
 {
@@ -170,6 +170,17 @@ int Shader::getTranslatedSourceLength() const
     return (static_cast<int>(mData.mTranslatedSource.length()) + 1);
 }
 
+int Shader::getTranslatedSourceWithDebugInfoLength() const
+{
+    const std::string &debugInfo = mImplementation->getDebugInfo();
+    if (debugInfo.empty())
+    {
+        return 0;
+    }
+
+    return (static_cast<int>(debugInfo.length()) + 1);
+}
+
 void Shader::getSourceImpl(const std::string &source, GLsizei bufSize, GLsizei *length, char *buffer)
 {
     int index = 0;
@@ -200,7 +211,7 @@ void Shader::getTranslatedSource(GLsizei bufSize, GLsizei *length, char *buffer)
 
 void Shader::getTranslatedSourceWithDebugInfo(GLsizei bufSize, GLsizei *length, char *buffer) const
 {
-    std::string debugInfo(mImplementation->getDebugInfo());
+    const std::string &debugInfo = mImplementation->getDebugInfo();
     getSourceImpl(debugInfo, bufSize, length, buffer);
 }
 
@@ -219,7 +230,9 @@ void Shader::compile(Compiler *compiler)
 
     std::stringstream sourceStream;
 
-    int additionalOptions = mImplementation->prepareSourceAndReturnOptions(&sourceStream);
+    std::string sourcePath;
+    int additionalOptions =
+        mImplementation->prepareSourceAndReturnOptions(&sourceStream, &sourcePath);
     int compileOptions    = (SH_OBJECT_CODE | SH_VARIABLES | additionalOptions);
 
     // Some targets (eg D3D11 Feature Level 9_3 and below) do not support non-constant loop indexes
@@ -231,8 +244,17 @@ void Shader::compile(Compiler *compiler)
     }
 
     std::string sourceString  = sourceStream.str();
-    const char *sourceCString = sourceString.c_str();
-    bool result               = ShCompile(compilerHandle, &sourceCString, 1, compileOptions);
+    std::vector<const char *> sourceCStrings;
+
+    if (!sourcePath.empty())
+    {
+        sourceCStrings.push_back(sourcePath.c_str());
+    }
+
+    sourceCStrings.push_back(sourceString.c_str());
+
+    bool result =
+        ShCompile(compilerHandle, &sourceCStrings[0], sourceCStrings.size(), compileOptions);
 
     if (!result)
     {
@@ -282,7 +304,7 @@ void Shader::compile(Compiler *compiler)
         ASSERT(mData.mShaderType == GL_FRAGMENT_SHADER);
 
         // TODO(jmadill): Figure out why we only sort in the FS, and if we need to.
-        std::sort(mData.mVaryings.begin(), mData.mVaryings.end(), CompareVarying);
+        std::sort(mData.mVaryings.begin(), mData.mVaryings.end(), CompareShaderVar);
         mData.mActiveOutputVariables =
             GetActiveShaderVariables(ShGetOutputVariables(compilerHandle));
     }

@@ -45,7 +45,7 @@ struct PointSpritesParams final : public RenderTestParams
     unsigned int iterations;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const PointSpritesParams &params)
+std::ostream &operator<<(std::ostream &os, const PointSpritesParams &params)
 {
     os << params.suffix().substr(1);
     return os;

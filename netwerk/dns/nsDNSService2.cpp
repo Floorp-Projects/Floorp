@@ -1041,7 +1041,7 @@ nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
     size_t n = mallocSizeOf(this);
     n += mResolver->SizeOfIncludingThis(mallocSizeOf);
-    n += mIPv4OnlyDomains.SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
+    n += mIPv4OnlyDomains.SizeOfExcludingThisIfUnshared(mallocSizeOf);
     n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
     return n;
 }

@@ -68,7 +68,7 @@ private:
 
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
 
-    nsAutoCString mSVGGlyphsDocumentURI;
+    nsCString mSVGGlyphsDocumentURI;
 };
 
 /**

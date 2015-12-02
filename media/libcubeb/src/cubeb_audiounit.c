@@ -159,7 +159,10 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   pthread_mutex_unlock(&stm->mutex);
 
   if (stm->sample_spec.mChannelsPerFrame == 2) {
-    cubeb_pan_stereo_buffer_float((float*)buf, got, panning);
+    if (stm->sample_spec.mFormatFlags & kAudioFormatFlagIsFloat)
+      cubeb_pan_stereo_buffer_float((float*)buf, got, panning);
+    else if (stm->sample_spec.mFormatFlags & kAudioFormatFlagIsSignedInteger)
+      cubeb_pan_stereo_buffer_int((short*)buf, got, panning);
   }
 
   return noErr;
@@ -399,6 +402,28 @@ audiounit_get_acceptable_latency_range(AudioValueRange * latency_range)
   return CUBEB_OK;
 }
 #endif /* !TARGET_OS_IPHONE */
+
+static AudioObjectID
+audiounit_get_default_device_id(cubeb_device_type type)
+{
+  AudioObjectPropertyAddress adr = { 0, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+  AudioDeviceID devid;
+  UInt32 size;
+
+  if (type == CUBEB_DEVICE_TYPE_OUTPUT)
+    adr.mSelector = kAudioHardwarePropertyDefaultOutputDevice;
+  else if (type == CUBEB_DEVICE_TYPE_INPUT)
+    adr.mSelector = kAudioHardwarePropertyDefaultInputDevice;
+  else
+    return kAudioObjectUnknown;
+
+  size = sizeof(AudioDeviceID);
+  if (AudioObjectGetPropertyData(kAudioObjectSystemObject, &adr, 0, NULL, &size, &devid) != noErr) {
+    return kAudioObjectUnknown;
+  }
+
+  return devid;
+}
 
 int
 audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
@@ -996,12 +1021,281 @@ int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
   return CUBEB_OK;
 }
 
+static OSStatus
+audiounit_get_devices(AudioObjectID ** devices, uint32_t * count)
+{
+  OSStatus ret;
+  UInt32 size = 0;
+  AudioObjectPropertyAddress adr = { kAudioHardwarePropertyDevices,
+                                     kAudioObjectPropertyScopeGlobal,
+                                     kAudioObjectPropertyElementMaster };
+
+  ret = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &adr, 0, NULL, &size);
+  if (ret != noErr)
+    return ret;
+
+  *count = (uint32_t)(size / sizeof(AudioObjectID));
+  if (size >= sizeof(AudioObjectID)) {
+    if (*devices != NULL) free(*devices);
+    *devices = malloc(size);
+    memset(*devices, 0, size);
+
+    ret = AudioObjectGetPropertyData(kAudioObjectSystemObject, &adr, 0, NULL, &size, (void *)*devices);
+    if (ret != noErr) {
+      free(*devices);
+      *devices = NULL;
+    }
+  } else {
+    *devices = NULL;
+  }
+
+  return ret;
+}
+
+static char *
+audiounit_strref_to_cstr_utf8(CFStringRef strref) {
+  CFIndex len, size;
+  char * ret;
+  if (strref == NULL)
+    return NULL;
+
+  len = CFStringGetLength(strref);
+  size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8);
+  ret = malloc(size);
+
+  if (!CFStringGetCString(strref, ret, size, kCFStringEncodingUTF8)) {
+    free(ret);
+    ret = NULL;
+  }
+
+  return ret;
+}
+
+static uint32_t
+audiounit_get_channel_count(AudioObjectID devid, AudioObjectPropertyScope scope)
+{
+  AudioObjectPropertyAddress adr = { 0, scope, kAudioObjectPropertyElementMaster };
+  UInt32 size = 0;
+  uint32_t i, ret = 0;
+
+  adr.mSelector = kAudioDevicePropertyStreamConfiguration;
+
+  if (AudioObjectGetPropertyDataSize(devid, &adr, 0, NULL, &size) == noErr && size > 0) {
+    AudioBufferList * list = alloca(size);
+    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, list) == noErr) {
+      for (i = 0; i < list->mNumberBuffers; i++)
+        ret += list->mBuffers[i].mNumberChannels;
+    }
+  }
+
+  return ret;
+}
+
+static void
+audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope scope,
+                                   uint32_t * min, uint32_t * max, uint32_t * def)
+{
+  AudioObjectPropertyAddress adr = { 0, scope, kAudioObjectPropertyElementMaster };
+
+  adr.mSelector = kAudioDevicePropertyNominalSampleRate;
+  if (AudioObjectHasProperty(devid, &adr)) {
+    UInt32 size = sizeof(Float64);
+    Float64 fvalue = 0.0;
+    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &fvalue) == noErr)
+      *def = fvalue;
+  }
+
+  adr.mSelector = kAudioDevicePropertyAvailableNominalSampleRates;
+  if (AudioObjectHasProperty(devid, &adr)) {
+    UInt32 size = 0;
+    AudioValueRange range;
+    if (AudioObjectGetPropertyDataSize(devid, &adr, 0, NULL, &size) == noErr) {
+      uint32_t i, count = size / sizeof(AudioValueRange);
+      AudioValueRange * ranges = malloc(size);
+      range.mMinimum = 9999999999.0;
+      range.mMaximum = 0.0;
+      if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, ranges) == noErr) {
+        for (i = 0; i < count; i++) {
+          if (ranges[i].mMaximum > range.mMaximum)
+            range.mMaximum = ranges[i].mMaximum;
+          if (ranges[i].mMinimum < range.mMinimum)
+            range.mMinimum = ranges[i].mMinimum;
+        }
+      }
+      free(ranges);
+    }
+    *max = (uint32_t)range.mMaximum;
+    *min = (uint32_t)range.mMinimum;
+  } else {
+    *min = *max = 0;
+  }
+
+}
+
+static UInt32
+audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectPropertyScope scope)
+{
+  AudioObjectPropertyAddress adr = { 0, scope, kAudioObjectPropertyElementMaster };
+  UInt32 size, dev, stream = 0, offset;
+  AudioStreamID sid[1];
+
+  adr.mSelector = kAudioDevicePropertyLatency;
+  size = sizeof(UInt32);
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &dev) != noErr)
+    dev = 0;
+
+  adr.mSelector = kAudioDevicePropertyStreams;
+  size = sizeof(sid);
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, sid) == noErr) {
+    adr.mSelector = kAudioStreamPropertyLatency;
+    size = sizeof(UInt32);
+    AudioObjectGetPropertyData(sid[0], &adr, 0, NULL, &size, &stream);
+  }
+
+  adr.mSelector = kAudioDevicePropertySafetyOffset;
+  size = sizeof(UInt32);
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &offset) != noErr)
+    offset = 0;
+
+  return dev + stream + offset;
+}
+
+static cubeb_device_info *
+audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
+{
+  AudioObjectPropertyAddress adr = { 0, 0, kAudioObjectPropertyElementMaster };
+  UInt32 size, ch, latency;
+  cubeb_device_info * ret;
+  CFStringRef str = NULL;
+  AudioValueRange range;
+
+  if (type == CUBEB_DEVICE_TYPE_OUTPUT) {
+    adr.mScope = kAudioDevicePropertyScopeOutput;
+  } else if (type == CUBEB_DEVICE_TYPE_INPUT) {
+    adr.mScope = kAudioDevicePropertyScopeInput;
+  } else {
+    return NULL;
+  }
+
+  if ((ch = audiounit_get_channel_count(devid, adr.mScope)) == 0)
+    return NULL;
+
+  ret = calloc(1, sizeof(cubeb_device_info));
+
+  size = sizeof(CFStringRef);
+  adr.mSelector = kAudioDevicePropertyDeviceUID;
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
+    ret->device_id = audiounit_strref_to_cstr_utf8(str);
+    ret->devid = (cubeb_devid)ret->device_id;
+    ret->group_id = strdup(ret->device_id);
+    CFRelease(str);
+  }
+
+  size = sizeof(CFStringRef);
+  adr.mSelector = kAudioObjectPropertyName;
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
+    UInt32 ds;
+    size = sizeof(UInt32);
+    adr.mSelector = kAudioDevicePropertyDataSource;
+    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &ds) == noErr) {
+      CFStringRef dsname;
+      AudioValueTranslation trl = { &ds, sizeof(ds), &dsname, sizeof(dsname) };
+      adr.mSelector = kAudioDevicePropertyDataSourceNameForIDCFString;
+      size = sizeof(AudioValueTranslation);
+      if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &trl) == noErr) {
+        CFStringRef fullstr = CFStringCreateWithFormat(NULL, NULL,
+            CFSTR("%@ (%@)"), str, dsname);
+        CFRelease(dsname);
+        if (fullstr != NULL) {
+          CFRelease(str);
+          str = fullstr;
+        }
+      }
+    }
+
+    ret->friendly_name = audiounit_strref_to_cstr_utf8(str);
+    CFRelease(str);
+  }
+
+  size = sizeof(CFStringRef);
+  adr.mSelector = kAudioObjectPropertyManufacturer;
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &str) == noErr && str != NULL) {
+    ret->vendor_name = audiounit_strref_to_cstr_utf8(str);
+    CFRelease(str);
+  }
+
+  ret->type = type;
+  ret->state = CUBEB_DEVICE_STATE_ENABLED;
+  ret->preferred = (devid == audiounit_get_default_device_id(type)) ?
+    CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
+
+  ret->max_channels = ch;
+  ret->format = CUBEB_DEVICE_FMT_ALL; /* CoreAudio supports All! */
+  /* kAudioFormatFlagsAudioUnitCanonical is deprecated, prefer floating point */
+  ret->default_format = CUBEB_DEVICE_FMT_F32NE;
+  audiounit_get_available_samplerate(devid, adr.mScope,
+      &ret->min_rate, &ret->max_rate, &ret->default_rate);
+
+  latency = audiounit_get_device_presentation_latency(devid, adr.mScope);
+
+  adr.mSelector = kAudioDevicePropertyBufferFrameSizeRange;
+  size = sizeof(AudioValueRange);
+  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &range) == noErr) {
+    ret->latency_lo_ms = ((latency + range.mMinimum) * 1000) / ret->default_rate;
+    ret->latency_hi_ms = ((latency + range.mMaximum) * 1000) / ret->default_rate;
+  } else {
+    ret->latency_lo_ms = 10;  /* Default to  10ms */
+    ret->latency_hi_ms = 100; /* Default to 100ms */
+  }
+
+  return ret;
+}
+
+static int
+audiounit_enumerate_devices(cubeb * context, cubeb_device_type type,
+                            cubeb_device_collection ** collection)
+{
+  AudioObjectID * hwdevs = NULL;
+  uint32_t i, hwdevcount = 0;
+  OSStatus err;
+
+  if ((err = audiounit_get_devices(&hwdevs, &hwdevcount)) != noErr)
+    return CUBEB_ERROR;
+
+  *collection = malloc(sizeof(cubeb_device_collection) +
+      sizeof(cubeb_device_info*) * (hwdevcount > 0 ? hwdevcount - 1 : 0));
+  (*collection)->count = 0;
+
+  if (hwdevcount > 0) {
+    cubeb_device_info * cur;
+
+    if (type & CUBEB_DEVICE_TYPE_OUTPUT) {
+      for (i = 0; i < hwdevcount; i++) {
+        if ((cur = audiounit_create_device_from_hwdev(hwdevs[i], CUBEB_DEVICE_TYPE_OUTPUT)) != NULL)
+          (*collection)->device[(*collection)->count++] = cur;
+      }
+    }
+
+    if (type & CUBEB_DEVICE_TYPE_INPUT) {
+      for (i = 0; i < hwdevcount; i++) {
+        if ((cur = audiounit_create_device_from_hwdev(hwdevs[i], CUBEB_DEVICE_TYPE_INPUT)) != NULL)
+          (*collection)->device[(*collection)->count++] = cur;
+      }
+    }
+  }
+
+  free(hwdevs);
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
   .get_max_channel_count = audiounit_get_max_channel_count,
   .get_min_latency = audiounit_get_min_latency,
   .get_preferred_sample_rate = audiounit_get_preferred_sample_rate,
+  .enumerate_devices = audiounit_enumerate_devices,
   .destroy = audiounit_destroy,
   .stream_init = audiounit_stream_init,
   .stream_destroy = audiounit_stream_destroy,

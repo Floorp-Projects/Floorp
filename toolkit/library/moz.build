@@ -55,6 +55,8 @@ def Libxul(name):
     if not CONFIG['JS_SHARED_LIBRARY']:
         LIBRARY_DEFINES['STATIC_EXPORTABLE_JS_API'] = True
 
+    if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+        OS_LIBS += ['atomic']
 
 Libxul('xul')
 

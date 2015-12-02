@@ -1911,7 +1911,7 @@ ReportZoneStats(const JS::ZoneStats& zStats,
                 bool anonymize,
                 size_t* gcTotalOut = nullptr)
 {
-    const nsAutoCString& pathPrefix = extras.pathPrefix;
+    const nsCString& pathPrefix = extras.pathPrefix;
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
 
     MOZ_ASSERT(!gcTotalOut == zStats.isTotals);
@@ -2223,8 +2223,8 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
     static const nsDependentCString addonPrefix("explicit/add-ons/");
 
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
-    nsAutoCString cJSPathPrefix = extras.jsPathPrefix;
-    nsAutoCString cDOMPathPrefix = extras.domPathPrefix;
+    nsAutoCString cJSPathPrefix(extras.jsPathPrefix);
+    nsAutoCString cDOMPathPrefix(extras.domPathPrefix);
     nsresult rv;
 
     MOZ_ASSERT(!gcTotalOut == cStats.isTotals);

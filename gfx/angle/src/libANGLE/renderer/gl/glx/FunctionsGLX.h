@@ -37,11 +37,14 @@ class FunctionsGLX
     PFNGETPROCPROC getProc;
 
     // GLX 1.0
+    glx::Context createContext(XVisualInfo *visual, glx::Context share, bool direct) const;
     void destroyContext(glx::Context context) const;
     Bool makeCurrent(glx::Drawable drawable, glx::Context context) const;
     void swapBuffers(glx::Drawable drawable) const;
     Bool queryExtension(int *errorBase, int *event) const;
     Bool queryVersion(int *major, int *minor) const;
+    glx::Context getCurrentContext() const;
+    glx::Drawable getCurrentDrawable() const;
     void waitX() const;
     void waitGL() const;
 
@@ -64,6 +67,12 @@ class FunctionsGLX
 
     // GLX_EXT_swap_control
     void swapIntervalEXT(glx::Drawable drawable, int interval) const;
+
+    // GLX_MESA_swap_control
+    int swapIntervalMESA(int interval) const;
+
+    // GLX_SGI_swap_control
+    int swapIntervalSGI(int interval) const;
 
   private:
     // So as to isolate GLX from angle we do not include angleutils.h and cannot

@@ -9,6 +9,7 @@
 
 #include "jswrapper.h"
 
+#include "js/GCHashTable.h"
 #include "js/UbiNode.h"
 
 namespace js {
@@ -133,9 +134,9 @@ class SavedFrame : public NativeObject {
     struct Lookup;
     struct HashPolicy;
 
-    typedef HashSet<js::ReadBarriered<SavedFrame*>,
-                    HashPolicy,
-                    SystemAllocPolicy> Set;
+    typedef GCHashSet<js::ReadBarriered<SavedFrame*>,
+                      HashPolicy,
+                      SystemAllocPolicy> Set;
 
     class AutoLookupVector;
 

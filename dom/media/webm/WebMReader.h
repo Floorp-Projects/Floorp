@@ -92,8 +92,6 @@ public:
 
   virtual media::TimeIntervals GetBuffered() override;
 
-  virtual bool IsMediaSeekable() override;
-
   // Value passed to NextPacket to determine if we are reading a video or an
   // audio packet.
   enum TrackType {

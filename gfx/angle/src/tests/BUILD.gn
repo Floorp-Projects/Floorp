@@ -40,86 +40,88 @@ test("angle_unittests") {
   ]
 }
 
-end2end_gypi = exec_script("//build/gypi_to_gn.py",
-                           [
-                             rebase_path("angle_end2end_tests.gypi"),
-                             "--replace=<(angle_path)=.",
-                           ],
-                           "scope",
-                           [ "angle_end2end_tests.gypi" ])
-
-test("angle_end2end_tests") {
-  include_dirs = [
-    "testing/gtest/include",
-    "../../src/tests",
-    "../../util",
-  ]
-
-  sources = rebase_path(end2end_gypi.angle_end2end_tests_sources, ".", "../..")
-
-  if (is_win) {
-    sources +=
-        rebase_path(end2end_gypi.angle_end2end_tests_win_sources, ".", "../..")
-  }
-
-  sources += [ "//gpu/angle_end2end_tests_main.cc" ]
-
-  configs += [
-    "//third_party/angle:internal_config",
-    "//third_party/angle:libANGLE_config",
-  ]
-
-  deps = [
-    "//base",
-    "//base/test:test_support",
-    "//testing/gmock",
-    "//testing/gtest",
-    "//third_party/angle:angle_util",
-    "//third_party/angle:libANGLE",
-    "//third_party/angle:libEGL",
-    "//third_party/angle:libGLESv2",
-    "//third_party/angle:preprocessor",
-    "//third_party/angle:translator_static",
-  ]
-}
-
-perftests_gypi = exec_script("//build/gypi_to_gn.py",
+if (is_win || is_linux || is_mac) {
+  end2end_gypi = exec_script("//build/gypi_to_gn.py",
                              [
-                               rebase_path("angle_perftests.gypi"),
+                               rebase_path("angle_end2end_tests.gypi"),
                                "--replace=<(angle_path)=.",
                              ],
                              "scope",
-                             [ "angle_perftests.gypi" ])
+                             [ "angle_end2end_tests.gypi" ])
 
-test("angle_perftests") {
-  include_dirs = [
-    "testing/gtest/include",
-    "../../src/tests",
-    "../../util",
-  ]
+  test("angle_end2end_tests") {
+    include_dirs = [
+      "testing/gtest/include",
+      "../../src/tests",
+      "../../util",
+    ]
 
-  sources = rebase_path(perftests_gypi.angle_perf_tests_sources, ".", "../..")
+    sources = rebase_path(end2end_gypi.angle_end2end_tests_sources, ".", "../..")
 
-  if (is_win) {
-    sources +=
-        rebase_path(perftests_gypi.angle_perf_tests_win_sources, ".", "../..")
+    if (is_win) {
+      sources +=
+          rebase_path(end2end_gypi.angle_end2end_tests_win_sources, ".", "../..")
+    }
+
+    sources += [ "//gpu/angle_end2end_tests_main.cc" ]
+
+    configs += [
+      "//third_party/angle:internal_config",
+      "//third_party/angle:libANGLE_config",
+    ]
+
+    deps = [
+      "//base",
+      "//base/test:test_support",
+      "//testing/gmock",
+      "//testing/gtest",
+      "//third_party/angle:angle_util",
+      "//third_party/angle:libANGLE",
+      "//third_party/angle:libEGL",
+      "//third_party/angle:libGLESv2",
+      "//third_party/angle:preprocessor",
+      "//third_party/angle:translator_static",
+    ]
   }
+}
 
-  sources += [ "//gpu/angle_perftests_main.cc" ]
+if (is_win) {
+  perftests_gypi = exec_script("//build/gypi_to_gn.py",
+                               [
+                                 rebase_path("angle_perftests.gypi"),
+                                 "--replace=<(angle_path)=.",
+                               ],
+                               "scope",
+                               [ "angle_perftests.gypi" ])
 
-  configs += [
-    "//third_party/angle:internal_config",
-    "//third_party/angle:libANGLE_config",
-  ]
+  test("angle_perftests") {
+    include_dirs = [
+      "testing/gtest/include",
+      "../../src/tests",
+      "../../util",
+    ]
 
-  deps = [
-    "//base",
-    "//base/test:test_support",
-    "//testing/gmock",
-    "//testing/gtest",
-    "//third_party/angle:angle_util",
-    "//third_party/angle:libANGLE",
-    "//third_party/angle:libEGL",
-    "//third_party/angle:libGLESv2",
-  ]
+    sources = rebase_path(perftests_gypi.angle_perf_tests_sources, ".", "../..")
+
+    sources +=
+      rebase_path(perftests_gypi.angle_perf_tests_win_sources, ".", "../..")
+
+    sources += [ "//gpu/angle_perftests_main.cc" ]
+
+    configs += [
+      "//third_party/angle:internal_config",
+      "//third_party/angle:libANGLE_config",
+    ]
+
+    deps = [
+      "//base",
+      "//base/test:test_support",
+      "//testing/gmock",
+      "//testing/gtest",
+      "//third_party/angle:angle_util",
+      "//third_party/angle:libANGLE",
+      "//third_party/angle:libEGL",
+      "//third_party/angle:libGLESv2",
+    ]
+  }
 }

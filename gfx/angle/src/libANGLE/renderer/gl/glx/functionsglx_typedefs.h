@@ -32,6 +32,8 @@ typedef Bool (*PFNGLXISDIRECTPROC) (Display *dpy, GLXContext ctx);
 typedef int (*PFNGLXGETCONFIGPROC) (Display *dpy, XVisualInfo *visual, int attrib, int *value);
 typedef GLXContext (*PFNGLXGETCURRENTCONTEXTPROC) ();
 typedef GLXDrawable (*PFNGLXGETCURRENTDRAWABLEPROC) ();
+typedef GLXContext (*PFNGLXGETCURRENTCONTEXTPROC) ();
+typedef GLXDrawable (*PFNGLXGETCURRENTDRAWABLEPROC) ();
 typedef void (*PFNGLXWAITGLPROC) ();
 typedef void (*PFNGLXWAITXPROC) ();
 typedef void (*PFNGLXUSEXFONT) (Font font, int first, int count, int list);

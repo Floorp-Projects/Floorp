@@ -486,18 +486,15 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
   } else {
     return NS_ERROR_FAILURE;
   }
+
+  {
+    ReentrantMonitorAutoEnter mon(mMonitor);
+    mInfo.mMediaSeekable = !mIsChained;
+  }
+
   *aInfo = mInfo;
 
   return NS_OK;
-}
-
-bool
-OggReader::IsMediaSeekable()
-{
-  if (mIsChained) {
-    return false;
-  }
-  return true;
 }
 
 nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {
@@ -712,7 +709,7 @@ void OggReader::SetChained(bool aIsChained) {
     ReentrantMonitorAutoEnter mon(mMonitor);
     mIsChained = aIsChained;
   }
-  mDecoder->DispatchSetMediaSeekable(false);
+  mOnMediaNotSeekable.Notify();
 }
 
 bool OggReader::ReadOggChain()

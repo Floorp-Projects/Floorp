@@ -482,7 +482,7 @@ private:
 
   // Hash record name to record data.
   nsClassHashtable<nsCStringHashKey, Record> mRecords;
-  const nsAutoCString mNodeId;
+  const nsCString mNodeId;
   const nsString mGMPName;
 };
 

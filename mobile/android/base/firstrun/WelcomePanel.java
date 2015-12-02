@@ -27,6 +27,7 @@ public class WelcomePanel extends FirstrunPanel {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
+                showBrowserHint = false;
 
                 final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
                 intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);

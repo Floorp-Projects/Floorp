@@ -1846,7 +1846,7 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   for (auto iter = mContractIDs.ConstIter(); !iter.Done(); iter.Next()) {
     // We don't measure the nsFactoryEntry data because it's owned by
     // mFactories (which is measured above).
-    n += iter.Key().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
   n += sStaticModules->ShallowSizeOfIncludingThis(aMallocSizeOf);

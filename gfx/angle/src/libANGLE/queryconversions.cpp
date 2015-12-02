@@ -8,6 +8,8 @@
 
 #include "libANGLE/queryconversions.h"
 
+#include <vector>
+
 #include "libANGLE/Context.h"
 #include "common/utilities.h"
 
@@ -101,59 +103,43 @@ void CastStateValues(Context *context, GLenum nativeType, GLenum pname,
 {
     if (nativeType == GL_INT)
     {
-        GLint *intParams = NULL;
-        intParams = new GLint[numParams];
-
-        context->getIntegerv(pname, intParams);
+        std::vector<GLint> intParams(numParams, 0);
+        context->getIntegerv(pname, intParams.data());
 
         for (unsigned int i = 0; i < numParams; ++i)
         {
             outParams[i] = CastStateValue<QueryT>(pname, intParams[i]);
         }
-
-        delete [] intParams;
     }
     else if (nativeType == GL_BOOL)
     {
-        GLboolean *boolParams = NULL;
-        boolParams = new GLboolean[numParams];
-
-        context->getBooleanv(pname, boolParams);
+        std::vector<GLboolean> boolParams(numParams, GL_FALSE);
+        context->getBooleanv(pname, boolParams.data());
 
         for (unsigned int i = 0; i < numParams; ++i)
         {
             outParams[i] = (boolParams[i] == GL_FALSE ? static_cast<QueryT>(0) : static_cast<QueryT>(1));
         }
-
-        delete [] boolParams;
     }
     else if (nativeType == GL_FLOAT)
     {
-        GLfloat *floatParams = NULL;
-        floatParams = new GLfloat[numParams];
-
-        context->getFloatv(pname, floatParams);
+        std::vector<GLfloat> floatParams(numParams, 0.0f);
+        context->getFloatv(pname, floatParams.data());
 
         for (unsigned int i = 0; i < numParams; ++i)
         {
             outParams[i] = CastStateValue<QueryT>(pname, floatParams[i]);
         }
-
-        delete [] floatParams;
     }
     else if (nativeType == GL_INT_64_ANGLEX)
     {
-        GLint64 *int64Params = NULL;
-        int64Params = new GLint64[numParams];
-
-        context->getInteger64v(pname, int64Params);
+        std::vector<GLint64> int64Params(numParams, 0);
+        context->getInteger64v(pname, int64Params.data());
 
         for (unsigned int i = 0; i < numParams; ++i)
         {
             outParams[i] = CastStateValue<QueryT>(pname, int64Params[i]);
         }
-
-        delete [] int64Params;
     }
     else UNREACHABLE();
 }

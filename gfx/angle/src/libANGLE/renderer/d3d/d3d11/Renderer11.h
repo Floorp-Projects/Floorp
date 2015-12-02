@@ -19,6 +19,7 @@
 #include "libANGLE/renderer/d3d/d3d11/DebugAnnotator11.h"
 #include "libANGLE/renderer/d3d/d3d11/InputLayoutCache.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderStateCache.h"
+#include "libANGLE/renderer/d3d/d3d11/StateManager11.h"
 
 namespace gl
 {
@@ -121,8 +122,11 @@ class Renderer11 : public RendererD3D
                                 const std::vector<GLint> &fragmentUniformBuffers) override;
 
     virtual gl::Error setRasterizerState(const gl::RasterizerState &rasterState);
-    gl::Error setBlendState(const gl::Framebuffer *framebuffer, const gl::BlendState &blendState, const gl::ColorF &blendColor,
+    gl::Error setBlendState(const gl::Framebuffer *framebuffer,
+                            const gl::BlendState &blendState,
+                            const gl::ColorF &blendColor,
                             unsigned int sampleMask) override;
+
     virtual gl::Error setDepthStencilState(const gl::DepthStencilState &depthStencilState, int stencilRef,
                                            int stencilBackRef, bool frontFaceCCW);
 
@@ -132,15 +136,17 @@ class Renderer11 : public RendererD3D
 
     virtual bool applyPrimitiveType(GLenum mode, GLsizei count, bool usesPointSize);
     gl::Error applyRenderTarget(const gl::Framebuffer *frameBuffer) override;
-    gl::Error applyShaders(gl::Program *program,
-                           const gl::Framebuffer *framebuffer,
-                           bool rasterizerDiscard,
-                           bool transformFeedbackActive) override;
-
     gl::Error applyUniforms(const ProgramD3D &programD3D,
+                            GLenum drawMode,
                             const std::vector<D3DUniform *> &uniformArray) override;
     virtual gl::Error applyVertexBuffer(const gl::State &state, GLenum mode, GLint first, GLsizei count, GLsizei instances, SourceIndexData *sourceIndexInfo);
-    virtual gl::Error applyIndexBuffer(const GLvoid *indices, gl::Buffer *elementArrayBuffer, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo, SourceIndexData *sourceIndexInfo);
+    gl::Error applyIndexBuffer(const gl::Data &data,
+                               const GLvoid *indices,
+                               GLsizei count,
+                               GLenum mode,
+                               GLenum type,
+                               TranslatedIndexData *indexInfo,
+                               SourceIndexData *sourceIndexInfo) override;
     void applyTransformFeedbackBuffers(const gl::State &state) override;
 
     virtual void markAllStateDirty();
@@ -187,14 +193,20 @@ class Renderer11 : public RendererD3D
     ProgramImpl *createProgram(const gl::Program::Data &data) override;
 
     // Shader operations
-    virtual gl::Error loadExecutable(const void *function, size_t length, ShaderType type,
-                                     const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
-                                     bool separatedOutputBuffers, ShaderExecutableD3D **outExecutable);
-    virtual gl::Error compileToExecutable(gl::InfoLog &infoLog, const std::string &shaderHLSL, ShaderType type,
-                                          const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
-                                          bool separatedOutputBuffers, const D3DCompilerWorkarounds &workarounds,
-                                          ShaderExecutableD3D **outExectuable);
-    virtual UniformStorageD3D *createUniformStorage(size_t storageSize);
+    gl::Error loadExecutable(const void *function,
+                             size_t length,
+                             ShaderType type,
+                             const std::vector<D3DVarying> &streamOutVaryings,
+                             bool separatedOutputBuffers,
+                             ShaderExecutableD3D **outExecutable) override;
+    gl::Error compileToExecutable(gl::InfoLog &infoLog,
+                                  const std::string &shaderHLSL,
+                                  ShaderType type,
+                                  const std::vector<D3DVarying> &streamOutVaryings,
+                                  bool separatedOutputBuffers,
+                                  const D3DCompilerWorkarounds &workarounds,
+                                  ShaderExecutableD3D **outExectuable) override;
+    UniformStorageD3D *createUniformStorage(size_t storageSize) override;
 
     // Image operations
     virtual ImageD3D *createImage();
@@ -237,6 +249,8 @@ class Renderer11 : public RendererD3D
     ID3D11DeviceContext1 *getDeviceContext1IfSupported() { return mDeviceContext1; };
     DXGIFactory *getDxgiFactory() { return mDxgiFactory; };
 
+    RenderStateCache &getStateCache() { return mStateCache; }
+
     Blit11 *getBlitter() { return mBlit; }
     Clear11 *getClearer() { return mClear; }
 
@@ -274,21 +288,24 @@ class Renderer11 : public RendererD3D
   protected:
     void createAnnotator() override;
     gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) override;
+    gl::Error applyShadersImpl(const gl::Data &data, GLenum drawMode) override;
+
+    egl::Error initializeEGLDevice(DeviceD3D **outDevice) override;
+
+    void syncState(const gl::State &state, const gl::State::DirtyBits &bitmask) override;
 
   private:
     gl::Error drawArraysImpl(const gl::Data &data,
                              GLenum mode,
                              GLsizei count,
-                             GLsizei instances,
-                             bool usesPointSize) override;
-    gl::Error drawElementsImpl(GLenum mode,
+                             GLsizei instances) override;
+    gl::Error drawElementsImpl(const gl::Data &data,
+                               const TranslatedIndexData &indexInfo,
+                               GLenum mode,
                                GLsizei count,
                                GLenum type,
                                const GLvoid *indices,
-                               gl::Buffer *elementArrayBuffer,
-                               const TranslatedIndexData &indexInfo,
-                               GLsizei instances,
-                               bool usesPointSize) override;
+                               GLsizei instances) override;
 
     void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap *outTextureCaps,
                       gl::Extensions *outExtensions,
@@ -296,8 +313,18 @@ class Renderer11 : public RendererD3D
 
     WorkaroundsD3D generateWorkarounds() const override;
 
-    gl::Error drawLineLoop(GLsizei count, GLenum type, const GLvoid *indices, int minIndex, gl::Buffer *elementArrayBuffer);
-    gl::Error drawTriangleFan(GLsizei count, GLenum type, const GLvoid *indices, int minIndex, gl::Buffer *elementArrayBuffer, int instances);
+    gl::Error drawLineLoop(const gl::Data &data,
+                           GLsizei count,
+                           GLenum type,
+                           const GLvoid *indices,
+                           const TranslatedIndexData *indexInfo,
+                           int instances);
+    gl::Error drawTriangleFan(const gl::Data &data,
+                              GLsizei count,
+                              GLenum type,
+                              const GLvoid *indices,
+                              int minIndex,
+                              int instances);
 
     ID3D11Texture2D *resolveMultisampledTexture(ID3D11Texture2D *source, unsigned int subresource);
     void unsetConflictingSRVs(gl::SamplerType shaderType, uintptr_t resource, const gl::ImageIndex &index);
@@ -324,6 +351,7 @@ class Renderer11 : public RendererD3D
     uintptr_t mAppliedDSV;
     bool mDepthStencilInitialized;
     bool mRenderTargetDescInitialized;
+    unsigned int mCurStencilSize;
 
     struct RenderTargetDesc
     {
@@ -383,11 +411,7 @@ class Renderer11 : public RendererD3D
     // A block of NULL pointers, cached so we don't re-allocate every draw call
     std::vector<ID3D11ShaderResourceView*> mNullSRVs;
 
-    // Currently applied blend state
-    bool mForceSetBlendState;
-    gl::BlendState mCurBlendState;
-    gl::ColorF mCurBlendColor;
-    unsigned int mCurSampleMask;
+    StateManager11 mStateManager;
 
     // Currently applied rasterizer state
     bool mForceSetRasterState;
@@ -488,6 +512,8 @@ class Renderer11 : public RendererD3D
     char mDescription[128];
     DXGIFactory *mDxgiFactory;
     ID3D11Debug *mDebug;
+
+    std::vector<GLuint> mScratchIndexDataBuffer;
 };
 
 }

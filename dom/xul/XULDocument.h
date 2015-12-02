@@ -21,6 +21,7 @@
 #include "nsIXULDocument.h"
 #include "nsScriptLoader.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIXULStore.h"
 

@@ -858,6 +858,7 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
 ANDROID_RES_DIRS += [
     '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res',
     'resources',
+    '/mobile/android/services/src/main/res',
     '!res',
 ]
 

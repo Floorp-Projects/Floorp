@@ -51,6 +51,29 @@ LinkResult ProgramGL::link(const gl::Data &data, gl::InfoLog &infoLog)
     // Reset the program state, delete the current program if one exists
     reset();
 
+    // Set the transform feedback state
+    std::vector<const GLchar *> transformFeedbackVaryings;
+    for (const auto &tfVarying : mData.getTransformFeedbackVaryingNames())
+    {
+        transformFeedbackVaryings.push_back(tfVarying.c_str());
+    }
+
+    if (transformFeedbackVaryings.empty())
+    {
+        if (mFunctions->transformFeedbackVaryings)
+        {
+            mFunctions->transformFeedbackVaryings(mProgramID, 0, nullptr,
+                                                  mData.getTransformFeedbackBufferMode());
+        }
+    }
+    else
+    {
+        ASSERT(mFunctions->transformFeedbackVaryings);
+        mFunctions->transformFeedbackVaryings(
+            mProgramID, static_cast<GLsizei>(transformFeedbackVaryings.size()),
+            &transformFeedbackVaryings[0], mData.getTransformFeedbackBufferMode());
+    }
+
     const gl::Shader *vertexShader   = mData.getAttachedVertexShader();
     const gl::Shader *fragmentShader = mData.getAttachedFragmentShader();
 

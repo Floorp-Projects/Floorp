@@ -1909,7 +1909,6 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
 
   // Set mode to PLAYBACK after reading metadata.
   mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
-  mDecoder->DispatchSetMediaSeekable(mReader->IsMediaSeekable());
   mInfo = aMetadata->mInfo;
   mMetadataTags = aMetadata->mTags.forget();
   RefPtr<MediaDecoderStateMachine> self = this;

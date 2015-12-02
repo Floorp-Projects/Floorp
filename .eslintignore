@@ -163,3 +163,6 @@ mobile/android/modules/WebappManager.jsm
 
 # Non-standard `(catch ex if ...)`
 mobile/android/components/Snippets.js
+
+# Bug 1178739: Ignore this file as a quick fix for "Illegal yield expression"
+mobile/android/modules/HomeProvider.jsm
