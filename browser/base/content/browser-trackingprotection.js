@@ -218,7 +218,7 @@ var TrackingProtection = {
     ];
 
     let panelTarget = yield UITour.getTarget(window, "trackingProtection");
-    UITour.initForBrowser(gBrowser.selectedBrowser);
+    UITour.initForBrowser(gBrowser.selectedBrowser, window);
     UITour.showInfo(window, mm, panelTarget,
                     gNavigatorBundle.getString("trackingProtection.intro.title"),
                     gNavigatorBundle.getFormattedString("trackingProtection.intro.description",
