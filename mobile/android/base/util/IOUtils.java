@@ -10,6 +10,7 @@ import android.util.Log;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Static helper class containing useful methods for manipulating IO objects.
@@ -115,5 +116,14 @@ public class IOUtils {
             if (stream != null)
                 stream.close();
         } catch (IOException e) {}
+    }
+
+    public static void copy(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[4096];
+        int len;
+
+        while ((len = in.read(buffer)) != -1) {
+            out.write(buffer, 0, len);
+        }
     }
 }
