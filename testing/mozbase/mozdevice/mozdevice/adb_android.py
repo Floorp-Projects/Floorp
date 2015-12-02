@@ -75,6 +75,7 @@ class ADBAndroid(ADBDevice):
         """
         ADBDevice.__init__(self, device=device, adb=adb,
                            adb_host=adb_host, adb_port=adb_port,
+                           test_root=test_root,
                            logger_name=logger_name, timeout=timeout,
                            verbose=verbose,
                            device_ready_retry_wait=device_ready_retry_wait,
