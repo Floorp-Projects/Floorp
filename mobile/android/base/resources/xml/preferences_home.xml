@@ -12,7 +12,9 @@
 
         <org.mozilla.gecko.preferences.SetHomepagePreference
                 android:key="android.not_a_preference.homepage"
-                android:title="@string/home_homepage_title" />
+                android:title="@string/home_homepage_title"
+                android:persistent="false"
+                android:dialogLayout="@layout/preference_set_homepage"/>
 
     </PreferenceCategory>
 
