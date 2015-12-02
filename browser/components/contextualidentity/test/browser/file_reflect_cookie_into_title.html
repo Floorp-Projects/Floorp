@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>title not set</title>
+    <script>
+      // if we have a query string, use it to set the cookie and localStorage
+      if (window.location.search.length > 0) {
+        let context_name = window.location.search.substr(1);
+        document.cookie = "userContextId=" + context_name;
+        localStorage.setItem("userContext", context_name);
+      }
+
+      // get the cookie
+      let [name, val] = document.cookie.split("=");
+
+      // set the title to reflect the cookie and local storage values we find
+      document.title = "cookie=" + val + "|"
+                       + "local=" + localStorage.getItem("userContext");
+    </script>
+  </head>
+  <body></body>
+</html>
+

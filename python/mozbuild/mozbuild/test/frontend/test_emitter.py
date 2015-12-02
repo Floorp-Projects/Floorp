@@ -251,7 +251,6 @@ class TestEmitterBasic(unittest.TestCase):
             ('mozilla/dom', ['dom1.h', 'dom2.h', 'dom3.h']),
             ('mozilla/gfx', ['gfx.h']),
             ('nspr/private', ['pprio.h', 'pprthred.h']),
-            ('overwrite', ['new.h']),
             ('vpx', ['mem.h', 'mem2.h']),
         ]
         for (expect_path, expect_headers), (actual_path, actual_headers) in \

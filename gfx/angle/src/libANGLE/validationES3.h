@@ -54,6 +54,11 @@ bool ValidateCompressedTexImage3D(Context *context,
                                   GLint border,
                                   GLsizei imageSize,
                                   const GLvoid *data);
+
+bool ValidateBindVertexArray(Context *context, GLuint array);
+bool ValidateDeleteVertexArrays(Context *context, GLsizei n);
+bool ValidateGenVertexArrays(Context *context, GLsizei n);
+bool ValidateIsVertexArray(Context *context);
 }
 
 #endif // LIBANGLE_VALIDATION_ES3_H_

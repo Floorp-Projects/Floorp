@@ -611,13 +611,6 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
             PrefetchHref(hrefVal, aContent, hasPrefetch);
           }
         }
-        if (linkTypes & nsStyleLinkElement::eDNS_PREFETCH) {
-          nsAutoString hrefVal;
-          aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            PrefetchDNS(hrefVal);
-          }
-        }
       }
     }
   }

@@ -454,6 +454,15 @@ TEST_P(UniformTestES3, TranposedMatrixArrayUniformStateQuery)
 // Check that sampler uniforms only show up one time in the list
 TEST_P(UniformTest, SamplerUniformsAppearOnce)
 {
+    int maxVertexTextureImageUnits = 0;
+    glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxVertexTextureImageUnits);
+
+    if (maxVertexTextureImageUnits == 0)
+    {
+        std::cout << "Renderer doesn't support vertex texture fetch, skipping test" << std::endl;
+        return;
+    }
+
     const std::string &vertShader =
         "attribute vec2 position;\n"
         "uniform sampler2D tex2D;\n"
@@ -492,7 +501,7 @@ TEST_P(UniformTest, SamplerUniformsAppearOnce)
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(UniformTest, ES2_D3D9(), ES2_D3D11(), ES2_OPENGL());
+ANGLE_INSTANTIATE_TEST(UniformTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3(), ES2_OPENGL());
 ANGLE_INSTANTIATE_TEST(UniformTestES3, ES3_D3D11(), ES3_OPENGL());
 
 } // namespace

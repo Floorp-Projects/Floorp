@@ -101,13 +101,6 @@ nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
-bool
-RawReader::IsMediaSeekable()
-{
-  // not used
-  return true;
-}
-
  bool RawReader::DecodeAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());

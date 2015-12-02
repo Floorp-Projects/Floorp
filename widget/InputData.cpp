@@ -376,6 +376,8 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent) :
   mDeltaY(aWheelEvent.deltaY),
   mLineOrPageDeltaX(aWheelEvent.lineOrPageDeltaX),
   mLineOrPageDeltaY(aWheelEvent.lineOrPageDeltaY),
+  mUserDeltaMultiplierX(1.0),
+  mUserDeltaMultiplierY(1.0),
   mIsMomentum(aWheelEvent.isMomentum)
 {
   mOrigin =
@@ -413,6 +415,13 @@ ScrollWheelInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
   }
   mLocalOrigin = *point;
   return true;
+}
+
+bool
+ScrollWheelInput::IsCustomizedByUserPrefs() const
+{
+  return mUserDeltaMultiplierX != 1.0 ||
+         mUserDeltaMultiplierY != 1.0;
 }
 
 } // namespace mozilla

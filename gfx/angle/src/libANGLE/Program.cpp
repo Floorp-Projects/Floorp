@@ -222,20 +222,10 @@ VariableLocation::VariableLocation(const std::string &name, unsigned int element
 {
 }
 
-LinkedVarying::LinkedVarying()
-{
-}
-
-LinkedVarying::LinkedVarying(const std::string &name, GLenum type, GLsizei size, const std::string &semanticName,
-                             unsigned int semanticIndex, unsigned int semanticIndexCount)
-    : name(name), type(type), size(size), semanticName(semanticName), semanticIndex(semanticIndex), semanticIndexCount(semanticIndexCount)
-{
-}
-
 Program::Data::Data()
     : mAttachedFragmentShader(nullptr),
       mAttachedVertexShader(nullptr),
-      mTransformFeedbackBufferMode(GL_NONE)
+      mTransformFeedbackBufferMode(GL_INTERLEAVED_ATTRIBS)
 {
 }
 
@@ -1682,7 +1672,8 @@ void Program::indexUniforms()
 
 bool Program::linkValidateInterfaceBlockFields(InfoLog &infoLog, const std::string &uniformName, const sh::InterfaceBlockField &vertexUniform, const sh::InterfaceBlockField &fragmentUniform)
 {
-    if (!linkValidateVariablesBase(infoLog, uniformName, vertexUniform, fragmentUniform, true))
+    // We don't validate precision on UBO fields. See resolution of Khronos bug 10287.
+    if (!linkValidateVariablesBase(infoLog, uniformName, vertexUniform, fragmentUniform, false))
     {
         return false;
     }
@@ -2014,6 +2005,12 @@ bool Program::linkValidateTransformFeedback(InfoLog &infoLog,
                 }
                 uniqueNames.insert(tfVaryingName);
 
+                if (varying->isArray())
+                {
+                    infoLog << "Capture of arrays is undefined and not supported.";
+                    return false;
+                }
+
                 // TODO(jmadill): Investigate implementation limits on D3D11
                 size_t componentCount = gl::VariableComponentCount(varying->type);
                 if (mData.mTransformFeedbackBufferMode == GL_SEPARATE_ATTRIBS &&
@@ -2031,10 +2028,9 @@ bool Program::linkValidateTransformFeedback(InfoLog &infoLog,
             }
         }
 
-        // TODO(jmadill): investigate if we can support capturing array elements.
         if (tfVaryingName.find('[') != std::string::npos)
         {
-            infoLog << "Capture of array elements not currently supported.";
+            infoLog << "Capture of array elements is undefined and not supported.";
             return false;
         }
 
@@ -2245,7 +2241,11 @@ Program::VectorAndSamplerCount Program::flattenUniform(const sh::ShaderVariable 
     }
 
     unsigned int elementCount          = uniform.elementCount();
-    vectorAndSamplerCount.vectorCount  = (VariableRegisterCount(uniform.type) * elementCount);
+
+    // Samplers aren't "real" uniforms, so they don't count towards register usage.
+    // Likewise, don't count "real" uniforms towards sampler count.
+    vectorAndSamplerCount.vectorCount =
+        (isSampler ? 0 : (VariableRegisterCount(uniform.type) * elementCount));
     vectorAndSamplerCount.samplerCount = (isSampler ? elementCount : 0);
 
     return vectorAndSamplerCount;

@@ -269,9 +269,21 @@ class TestHierarchicalStringList(unittest.TestCase):
             self.EXPORTS.foo += ['bar.h']
             del self.EXPORTS.foo
 
-    def test_unsorted_appends(self):
+    def test_unsorted(self):
         with self.assertRaises(UnsortedError) as ee:
             self.EXPORTS += ['foo.h', 'bar.h']
+
+        with self.assertRaises(UnsortedError) as ee:
+            self.EXPORTS.foo = ['foo.h', 'bar.h']
+
+        with self.assertRaises(UnsortedError) as ee:
+            self.EXPORTS.foo += ['foo.h', 'bar.h']
+
+    def test_reassign(self):
+        self.EXPORTS.foo = ['foo.h']
+
+        with self.assertRaises(KeyError) as ee:
+            self.EXPORTS.foo = ['bar.h']
 
     def test_walk(self):
         l = HierarchicalStringList()

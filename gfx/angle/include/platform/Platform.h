@@ -11,7 +11,24 @@
 
 #include <stdint.h>
 
-#include "../export.h"
+#if defined(_WIN32)
+#   if !defined(LIBANGLE_IMPLEMENTATION)
+#       define ANGLE_PLATFORM_EXPORT __declspec(dllimport)
+#   endif
+#elif defined(__GNUC__)
+#   if defined(LIBANGLE_IMPLEMENTATION)
+#       define ANGLE_PLATFORM_EXPORT __attribute__((visibility ("default")))
+#   endif
+#endif
+#if !defined(ANGLE_PLATFORM_EXPORT)
+#   define ANGLE_PLATFORM_EXPORT
+#endif
+
+#if defined(_WIN32)
+#   define ANGLE_APIENTRY __stdcall
+#else
+#   define ANGLE_APIENTRY
+#endif
 
 namespace angle
 {
@@ -134,13 +151,18 @@ class Platform
 
 }
 
-typedef void(*ANGLEPlatformInitializeFunc)(angle::Platform*);
-ANGLE_EXPORT void ANGLEPlatformInitialize(angle::Platform*);
+extern "C"
+{
 
-typedef void (*ANGLEPlatformShutdownFunc)();
-ANGLE_EXPORT void ANGLEPlatformShutdown();
+typedef void (ANGLE_APIENTRY *ANGLEPlatformInitializeFunc)(angle::Platform*);
+ANGLE_PLATFORM_EXPORT void ANGLE_APIENTRY ANGLEPlatformInitialize(angle::Platform*);
 
-typedef angle::Platform *(*ANGLEPlatformCurrentFunc)();
-ANGLE_EXPORT angle::Platform *ANGLEPlatformCurrent();
+typedef void (ANGLE_APIENTRY *ANGLEPlatformShutdownFunc)();
+ANGLE_PLATFORM_EXPORT void ANGLE_APIENTRY ANGLEPlatformShutdown();
+
+typedef angle::Platform *(ANGLE_APIENTRY *ANGLEPlatformCurrentFunc)();
+ANGLE_PLATFORM_EXPORT angle::Platform *ANGLE_APIENTRY ANGLEPlatformCurrent();
+
+}
 
 #endif // ANGLE_PLATFORM_H

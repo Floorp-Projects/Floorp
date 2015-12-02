@@ -232,6 +232,10 @@ public:
     return mMetadataManager.TimedMetadataEvent();
   }
 
+  MediaEventSource<void>& OnMediaNotSeekable() {
+    return mReader->OnMediaNotSeekable();
+  }
+
   MediaEventSourceExc<nsAutoPtr<MediaInfo>,
                       nsAutoPtr<MetadataTags>,
                       MediaDecoderEventVisibility>&

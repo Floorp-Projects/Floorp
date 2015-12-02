@@ -48,7 +48,8 @@ const char *g_dEQPDataSearchDirs[] =
     "../third_party/deqp/src/data",
     "deqp_support/data",
     "third_party/deqp/src/data",
-    "../../third_party/deqp/src/data"
+    "../../third_party/deqp/src/data",
+    "../../../third_party/deqp/src/data"
 };
 
 // TODO(jmadill): upstream to dEQP?

@@ -63,7 +63,7 @@ private:
   void InhibitFailed();
   void InhibitSucceeded(uint32_t aInhibitRequest);
 
-  nsAutoCString mTopic;
+  nsCString mTopic;
   DBusConnection* mConnection;
 
   DesktopEnvironment mDesktopEnvironment;

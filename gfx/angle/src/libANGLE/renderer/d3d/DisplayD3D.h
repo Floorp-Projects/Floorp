@@ -65,8 +65,6 @@ class DisplayD3D : public DisplayImpl
     egl::Display *mDisplay;
 
     rx::RendererD3D *mRenderer;
-
-    DeviceImpl *mDevice;
 };
 
 }

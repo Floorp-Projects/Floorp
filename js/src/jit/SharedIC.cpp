@@ -2552,7 +2552,7 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, HandleScript script, jsbytecod
                                                 isTemporarilyUnoptimizable);
 
     // Try handling scripted getters.
-    if (cacheableCall && isScripted && !isDOMProxy) {
+    if (cacheableCall && isScripted && !isDOMProxy && engine == ICStubCompiler::Engine::Baseline) {
         RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         MOZ_ASSERT(callee->hasScript());
 
@@ -2565,7 +2565,7 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, HandleScript script, jsbytecod
         JitSpew(JitSpew_BaselineIC, "  Generating GetProp(NativeObj/ScriptedGetter %s:%" PRIuSIZE ") stub",
                 callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
 
-        ICGetProp_CallScripted::Compiler compiler(cx, engine, monitorStub, obj, holder, callee,
+        ICGetProp_CallScripted::Compiler compiler(cx, monitorStub, obj, holder, callee,
                                                   script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
@@ -3507,6 +3507,8 @@ ICGetPropNativeDoesNotExistCompiler::generateStubCode(MacroAssembler& masm)
 bool
 ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
 {
+    MOZ_ASSERT(engine_ == Engine::Baseline);
+
     Label failure;
     Label failureLeaveStubFrame;
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));

@@ -39,11 +39,23 @@ typedef bool
                            JS::Handle<JSObject*> obj,
                            JS::AutoIdVector& props);
 
+// Returns true if aObj's global has any of the permissions named in
+// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
+// null-terminated.
 bool
 CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
+// Returns true if aObj's global has all of the permissions named in
+// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
+// null-terminated.
 bool
 CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
+
+// Returns true if the given global is of a type whose bit is set in
+// aNonExposedGlobals.
+bool
+IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
+                   uint32_t aNonExposedGlobals);
 
 struct ConstantSpec
 {
@@ -53,9 +65,35 @@ struct ConstantSpec
 
 typedef bool (*PropertyEnabled)(JSContext* cx, JSObject* global);
 
+namespace GlobalNames {
+// The names of our possible globals.  These are the names of the actual
+// interfaces, not of the global names used to refer to them in IDL [Exposed]
+// annotations.
+static const uint32_t Window = 1u << 0;
+static const uint32_t BackstagePass = 1u << 1;
+static const uint32_t DedicatedWorkerGlobalScope = 1u << 2;
+static const uint32_t SharedWorkerGlobalScope = 1u << 3;
+static const uint32_t ServiceWorkerGlobalScope = 1u << 4;
+static const uint32_t WorkerDebuggerGlobalScope = 1u << 5;
+} // namespace GlobalNames
+
 template<typename T>
 struct Prefable {
   inline bool isEnabled(JSContext* cx, JS::Handle<JSObject*> obj) const {
+    // Reading "enabled" on a worker thread is technically undefined behavior,
+    // because it's written only on main threads, with no barriers of any sort.
+    // So we want to avoid doing that.  But we don't particularly want to make
+    // expensive NS_IsMainThread calls here.
+    //
+    // The good news is that "enabled" is only written for things that have a
+    // Pref annotation, and such things can never be exposed on non-Window
+    // globals; our IDL parser enforces that.  So as long as we check our
+    // exposure set before checking "enabled" we will be ok.
+    if (nonExposedGlobals &&
+        IsNonExposedGlobal(cx, js::GetGlobalForObjectCrossCompartment(obj),
+                           nonExposedGlobals)) {
+      return false;
+    }
     if (!enabled) {
       return false;
     }
@@ -85,6 +123,8 @@ struct Prefable {
 
   // A boolean indicating whether this set of specs is enabled
   bool enabled;
+  // Bitmask of global names that we should not be exposed in.
+  uint32_t nonExposedGlobals;
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of
   // "enabled" is used as-is unless availableFunc overrides.

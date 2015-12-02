@@ -143,24 +143,6 @@ struct VariableLocation
     unsigned int index;
 };
 
-struct LinkedVarying
-{
-    LinkedVarying();
-    LinkedVarying(const std::string &name, GLenum type, GLsizei size, const std::string &semanticName,
-        unsigned int semanticIndex, unsigned int semanticIndexCount);
-
-    // Original GL name
-    std::string name;
-
-    GLenum type;
-    GLsizei size;
-
-    // DirectX semantic information
-    std::string semanticName;
-    unsigned int semanticIndex;
-    unsigned int semanticIndexCount;
-};
-
 class Program : angle::NonCopyable
 {
   public:

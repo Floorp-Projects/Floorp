@@ -185,8 +185,8 @@ private:
 
   struct InitData {
     uint32_t mPromiseId;
-    nsAutoString mOrigin;
-    nsAutoString mTopLevelOrigin;
+    nsString mOrigin;
+    nsString mTopLevelOrigin;
     nsString mGMPName;
     bool mInPrivateBrowsing;
   };
@@ -208,7 +208,7 @@ private:
     dom::SessionType mSessionType;
     uint32_t mCreateSessionToken;
     PromiseId mPromiseId;
-    nsAutoCString mInitDataType;
+    nsCString mInitDataType;
     nsTArray<uint8_t> mInitData;
   };
   // GMP thread only.
@@ -216,7 +216,7 @@ private:
 
   struct SessionOpData {
     PromiseId mPromiseId;
-    nsAutoCString mSessionId;
+    nsCString mSessionId;
   };
   // GMP thread only.
   void gmp_LoadSession(nsAutoPtr<SessionOpData> aData);
@@ -230,7 +230,7 @@ private:
 
   struct UpdateSessionData {
     PromiseId mPromiseId;
-    nsAutoCString mSessionId;
+    nsCString mSessionId;
     nsTArray<uint8_t> mResponse;
   };
   // GMP thread only.
@@ -326,7 +326,7 @@ private:
   // destructor. only use on main thread, and always nullcheck before using!
   MainThreadOnlyRawPtr<dom::MediaKeys> mKeys;
 
-  const nsAutoString mKeySystem;
+  const nsString mKeySystem;
 
   // Gecko Media Plugin thread. All interactions with the out-of-process
   // EME plugin must come from this thread.

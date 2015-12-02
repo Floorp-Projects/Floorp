@@ -394,7 +394,9 @@ Accessible::VisibilityState()
   if (frame->GetType() == nsGkAtoms::textFrame &&
       !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       frame->GetRect().IsEmpty()) {
-    nsIFrame::RenderedText text = frame->GetRenderedText();
+    nsIFrame::RenderedText text = frame->GetRenderedText(0,
+        UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
+        nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
     if (text.mString.IsEmpty()) {
       return states::INVISIBLE;
     }

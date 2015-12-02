@@ -17,11 +17,6 @@ bool compileTestShader(sh::GLenum type,
                        std::string *translatedCode,
                        std::string *infoLog)
 {
-    if (spec == SH_GLES3_SPEC || spec == SH_WEBGL2_SPEC)
-    {
-        resources->FragmentPrecisionHigh = 1;
-    }
-
     TCompiler *translator = ConstructCompiler(type, spec, output);
     if (!translator->Init(*resources))
     {

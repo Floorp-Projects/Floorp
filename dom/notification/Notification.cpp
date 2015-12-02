@@ -1161,6 +1161,7 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   AssertIsOnMainThread();
 
   if (!strcmp("alertdisablecallback", aTopic)) {
+    Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_MENU, 1);
     if (XRE_IsParentProcess()) {
       return Notification::RemovePermission(mPrincipal);
     }
@@ -1170,7 +1171,10 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
     ContentChild::GetSingleton()->SendDisableNotifications(
       IPC::Principal(mPrincipal));
     return NS_OK;
+  } else if (!strcmp("alertclickcallback", aTopic)) {
+    Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_CLICKED, 1);
   } else if (!strcmp("alertsettingscallback", aTopic)) {
+    Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_MENU, 2);
     if (XRE_IsParentProcess()) {
       return Notification::OpenSettings(mPrincipal);
     }
@@ -1182,6 +1186,11 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp("alertshow", aTopic) ||
              !strcmp("alertfinished", aTopic)) {
     Unused << NS_WARN_IF(NS_FAILED(AdjustPushQuota(aTopic)));
+
+    if (!strcmp("alertshow", aTopic)) {
+      // Record notifications actually shown (e.g. don't count if DND is on).
+      Telemetry::Accumulate(Telemetry::WEB_NOTIFICATION_SHOWN, 1);
+    }
   }
 
   return mObserver->Observe(aSubject, aTopic, aData);

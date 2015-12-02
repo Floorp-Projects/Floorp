@@ -174,7 +174,7 @@ public:
    ~nsContentShellInfo();
 
 public:
-   nsAutoString id; // The identifier of the content shell
+   nsString id; // The identifier of the content shell
    nsWeakPtr child; // content shell (weak reference to nsIDocShellTreeItem)
 };
 

@@ -44,7 +44,7 @@ struct TexSubImageParams final : public RenderTestParams
     unsigned int iterations;
 };
 
-inline std::ostream &operator<<(std::ostream &os, const TexSubImageParams &params)
+std::ostream &operator<<(std::ostream &os, const TexSubImageParams &params)
 {
     os << params.suffix().substr(1);
     return os;

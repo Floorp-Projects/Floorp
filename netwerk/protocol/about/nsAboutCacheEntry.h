@@ -60,7 +60,7 @@ private:
                    uint32_t *aWriteCount);
 
 private:
-    nsAutoCString mStorageName, mEnhanceId;
+    nsCString mStorageName, mEnhanceId;
     nsCOMPtr<nsILoadContextInfo> mLoadInfo;
     nsCOMPtr<nsIURI> mCacheURI;
 

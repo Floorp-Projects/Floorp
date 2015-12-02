@@ -209,6 +209,7 @@ private: // data
   cairo_t* mContext;
   cairo_surface_t* mSurface;
   IntSize mSize;
+  bool mTransformSingular;
 
   uint8_t* mLockedBits;
 

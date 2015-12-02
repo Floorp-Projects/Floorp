@@ -2694,6 +2694,12 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
                                        uint64_t* aOutInputBlockId,
                                        nsEventStatus* aOutApzResponse)
 {
+  // Let the widget know that the event will be sent to the child process,
+  // which will (hopefully) send a confirmation notice back to APZ.
+  // Do this even if APZ is off since we need it for swipe gesture support on
+  // OS X without APZ.
+  InputAPZContext::SetRoutedToChildProcess();
+
   if (AsyncPanZoomEnabled()) {
     if (aOutTargetGuid) {
       *aOutTargetGuid = InputAPZContext::GetTargetLayerGuid();
@@ -2715,10 +2721,6 @@ TabParent::ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
     if (aOutApzResponse) {
       *aOutApzResponse = InputAPZContext::GetApzResponse();
     }
-
-    // Let the widget know that the event will be sent to the child process,
-    // which will (hopefully) send a confirmation notice back to APZ.
-    InputAPZContext::SetRoutedToChildProcess();
   } else {
     if (aOutInputBlockId) {
       *aOutInputBlockId = 0;

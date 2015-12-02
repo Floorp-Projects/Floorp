@@ -1070,7 +1070,8 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     }
 
     // GL core feature limits
-    caps->maxElementIndex = static_cast<GLint64>(std::numeric_limits<unsigned int>::max());
+    // Reserve MAX_UINT for D3D11's primitive restart.
+    caps->maxElementIndex       = static_cast<GLint64>(std::numeric_limits<unsigned int>::max() - 1);
     caps->max3DTextureSize      = static_cast<GLuint>(GetMaximum3DTextureSize(featureLevel));
     caps->max2DTextureSize      = static_cast<GLuint>(GetMaximum2DTextureSize(featureLevel));
     caps->maxCubeMapTextureSize = static_cast<GLuint>(GetMaximumCubeMapTextureSize(featureLevel));
@@ -1208,13 +1209,14 @@ void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, cons
     extensions->shaderTextureLOD = GetShaderTextureLODSupport(featureLevel);
     extensions->fragDepth = true;
     extensions->textureUsage = true; // This could be false since it has no effect in D3D11
-    extensions->discardFramebuffer = false; // TODO: enable this once BUG:497445 is fixed (Chrome WebGL video tests fail with this extension active)
+    extensions->discardFramebuffer = true;
     extensions->translatedShaderSource = true;
     extensions->fboRenderMipmap = false;
     extensions->debugMarker = true;
     extensions->eglImage                 = true;
     extensions->unpackSubimage           = true;
     extensions->packSubimage             = true;
+    extensions->vertexArrayObject        = true;
 
     // D3D11 Feature Level 10_0+ uses SV_IsFrontFace in HLSL to emulate gl_FrontFacing.
     // D3D11 Feature Level 9_3 doesn't support SV_IsFrontFace, and has no equivalent, so can't support gl_FrontFacing.
@@ -1296,6 +1298,11 @@ void GenerateInitialTextureData(GLint internalFormat, const Renderer11DeviceCaps
         outSubresourceData->at(i).SysMemPitch = rowWidth;
         outSubresourceData->at(i).SysMemSlicePitch = imageSize;
     }
+}
+
+UINT GetPrimitiveRestartIndex()
+{
+    return std::numeric_limits<UINT>::max();
 }
 
 void SetPositionTexCoordVertex(PositionTexCoordVertex* vertex, float x, float y, float u, float v)

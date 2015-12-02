@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
  * Code below is vtt.js the JS WebVTT implementation.
  * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit 364c6b951a07306848a706d1d03c2a6ae942517d
+ * Code taken from commit 58d092419a1ee84e574ce2ba18bcbf92356fcb21
  */
 /**
  * Copyright 2013 vtt.js Contributors
@@ -726,7 +726,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   // Constructs the computed display state of the cue (a div). Places the div
   // into the overlay which should be a block level element (usually a div).
   function CueStyleBox(window, cue, styleOptions) {
-    var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
+    var isIE8 = (typeof navigator !== "undefined") &&
+      (/MSIE\s8\.0/).test(navigator.userAgent);
     var color = "rgba(255, 255, 255, 1)";
     var backgroundColor = "rgba(0, 0, 0, 0.8)";
 

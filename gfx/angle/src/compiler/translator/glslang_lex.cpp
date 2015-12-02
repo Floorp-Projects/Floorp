@@ -1055,7 +1055,7 @@ static int ES2_reserved_ES3_keyword(TParseContext *context, int token);
 static int ES2_keyword_ES3_reserved(TParseContext *context, int token);
 static int ES2_ident_ES3_keyword(TParseContext *context, int token);
 static int uint_constant(TParseContext *context);
-static int int_constant(yyscan_t yyscanner);
+static int int_constant(TParseContext *context);
 static int float_constant(yyscan_t yyscanner);
 static int floatsuffix_check(TParseContext* context);
 
@@ -1833,15 +1833,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 178:
 YY_RULE_SETUP
-{ return int_constant(yyscanner); }
+{ return int_constant(context); }
 	YY_BREAK
 case 179:
 YY_RULE_SETUP
-{ return int_constant(yyscanner); }
+{ return int_constant(context); }
 	YY_BREAK
 case 180:
 YY_RULE_SETUP
-{ return int_constant(yyscanner); }
+{ return int_constant(context); }
 	YY_BREAK
 case 181:
 YY_RULE_SETUP
@@ -3313,7 +3313,6 @@ int ES2_ident_ES3_keyword(TParseContext *context, int token)
 int uint_constant(TParseContext *context)
 {
     struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
-    yyscan_t yyscanner = (yyscan_t) context->getScanner();
 
     if (context->getShaderVersion() < 300)
     {
@@ -3322,8 +3321,8 @@ int uint_constant(TParseContext *context)
         return 0;
     }
 
-    if (!atoi_clamp(yytext, &(yylval->lex.i)))
-        yyextra->warning(*yylloc, "Integer overflow", yytext, "");
+    if (!atoi_clamp(yytext, &(yylval->lex.u)))
+        yyextra->error(*yylloc, "Integer overflow", yytext, "");
 
     return UINTCONSTANT;
 }
@@ -3352,11 +3351,18 @@ void yyerror(YYLTYPE* lloc, TParseContext* context, void *scanner, const char* r
     context->recover();
 }
 
-int int_constant(yyscan_t yyscanner) {
-    struct yyguts_t* yyg = (struct yyguts_t*) yyscanner;
+int int_constant(TParseContext *context) {
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
 
-    if (!atoi_clamp(yytext, &(yylval->lex.i)))
-        yyextra->warning(*yylloc, "Integer overflow", yytext, "");
+    unsigned int u;
+    if (!atoi_clamp(yytext, &u))
+    {
+        if (context->getShaderVersion() >= 300)
+            yyextra->error(*yylloc, "Integer overflow", yytext, "");
+        else
+            yyextra->warning(*yylloc, "Integer overflow", yytext, "");
+    }
+    yylval->lex.i = static_cast<int>(u);
     return INTCONSTANT;
 }
 

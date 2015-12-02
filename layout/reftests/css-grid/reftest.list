@@ -25,6 +25,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-abspos-items-009.html grid-abspos-items-009-ref.html
 == grid-abspos-items-010.html grid-abspos-items-010-ref.html
 == grid-abspos-items-011.html grid-abspos-items-011-ref.html
+== grid-abspos-items-012.html grid-abspos-items-012-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
@@ -79,3 +80,15 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-row-gap-003.html grid-row-gap-003-ref.html
 == grid-row-gap-004.html grid-row-gap-004-ref.html
 == grid-container-overflow-001.html grid-container-overflow-001-ref.html
+== grid-item-margin-left-auto-001.html grid-item-margin-left-auto-001-ref.html
+== grid-item-margin-left-auto-002.html grid-item-margin-left-auto-002-ref.html
+== grid-item-margin-left-auto-003.html grid-item-margin-left-auto-003-ref.html
+== grid-item-margin-left-auto-004.html grid-item-margin-left-auto-004-ref.html
+== grid-item-margin-left-right-auto-001.html grid-item-margin-left-right-auto-001-ref.html
+== grid-item-margin-left-right-auto-002.html grid-item-margin-left-right-auto-002-ref.html
+== grid-item-margin-left-right-auto-003.html grid-item-margin-left-right-auto-003-ref.html
+== grid-item-margin-left-right-auto-004.html grid-item-margin-left-right-auto-004-ref.html
+== grid-item-margin-right-auto-001.html grid-item-margin-right-auto-001-ref.html
+== grid-item-margin-right-auto-002.html grid-item-margin-right-auto-002-ref.html
+== grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003-ref.html
+== grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html

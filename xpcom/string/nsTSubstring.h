@@ -880,11 +880,6 @@ public:
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
-  size_t SizeOfExcludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf)
-  const;
-  size_t SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf)
-  const;
-
   size_t SizeOfExcludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
   size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)

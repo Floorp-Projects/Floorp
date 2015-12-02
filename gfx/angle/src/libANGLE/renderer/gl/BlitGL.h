@@ -61,7 +61,7 @@ class BlitGL : public angle::NonCopyable
 
     GLuint mBlitProgram;
 
-    GLuint mScratchTexture;
+    GLuint mScratchTextures[2];
     GLuint mScratchFBO;
 
     GLuint mVAO;

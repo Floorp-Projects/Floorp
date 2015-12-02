@@ -77,5 +77,5 @@ private:
   nsCOMPtr<nsIFile> mProfileDir;
   nsCOMPtr<nsIFile> mProfileLocalDir;
   nsCOMPtr<nsIFile> mTargetDir;
-  nsAutoString mLeafName;
+  nsString mLeafName;
 };

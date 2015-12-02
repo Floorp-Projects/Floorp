@@ -96,13 +96,6 @@ nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement)
           PrefetchHref(hrefVal, aElement, hasPrefetch);
         }
       }
-      if (linkTypes & nsStyleLinkElement::eDNS_PREFETCH) {
-        nsAutoString hrefVal;
-        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-        if (!hrefVal.IsEmpty()) {
-          PrefetchDNS(hrefVal);
-        }
-      }
     }
   }
 

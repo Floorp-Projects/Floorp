@@ -1439,4 +1439,24 @@ void GL_APIENTRY glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImag
 {
     return gl::EGLImageTargetRenderbufferStorageOES(target, image);
 }
+
+void GL_APIENTRY glBindVertexArrayOES(GLuint array)
+{
+    return gl::BindVertexArrayOES(array);
+}
+
+void GL_APIENTRY glDeleteVertexArraysOES(GLsizei n, const GLuint *arrays)
+{
+    return gl::DeleteVertexArraysOES(n, arrays);
+}
+
+void GL_APIENTRY glGenVertexArraysOES(GLsizei n, GLuint *arrays)
+{
+    return gl::GenVertexArraysOES(n, arrays);
+}
+
+GLboolean GL_APIENTRY glIsVertexArrayOES(GLuint array)
+{
+    return gl::IsVertexArrayOES(array);
+}
 }
