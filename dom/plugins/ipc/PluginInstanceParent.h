@@ -124,6 +124,9 @@ public:
     AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value) override;
 
     virtual bool
+    AnswerNPN_GetValue_PreferredDXGIAdapter(DxgiAdapterDesc* desc) override;
+
+    virtual bool
     AnswerNPN_SetValue_NPPVpluginWindow(const bool& windowed, NPError* result) override;
     virtual bool
     AnswerNPN_SetValue_NPPVpluginTransparent(const bool& transparent,

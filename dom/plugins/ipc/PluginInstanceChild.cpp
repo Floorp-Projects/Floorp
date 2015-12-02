@@ -20,8 +20,10 @@
 #include "gfxXlibSurface.h"
 #endif
 #ifdef XP_WIN
+#include "mozilla/D3DMessageUtils.h"
 #include "mozilla/gfx/SharedDIBSurface.h"
 #include "nsCrashOnException.h"
+#include "gfxWindowsPlatform.h"
 extern const wchar_t* kFlashFullscreenClass;
 using mozilla::gfx::SharedDIBSurface;
 #endif
@@ -455,6 +457,17 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         bool value = false;
         CallNPN_GetValue_SupportsAsyncDXGISurface(&value);
         *((NPBool*)aValue) = value;
+        return NPERR_NO_ERROR;
+    }
+#endif
+
+#ifdef XP_WIN
+    case NPNVpreferredDXGIAdapter: {
+        DxgiAdapterDesc desc;
+        if (!CallNPN_GetValue_PreferredDXGIAdapter(&desc)) {
+            return NPERR_GENERIC_ERROR;
+        }
+        *reinterpret_cast<DXGI_ADAPTER_DESC*>(aValue) = desc.ToDesc();
         return NPERR_NO_ERROR;
     }
 #endif
