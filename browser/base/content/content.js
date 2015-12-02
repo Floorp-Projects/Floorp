@@ -520,7 +520,9 @@ var ClickEventHandler = {
     let href, baseURI;
     node = event.target;
     while (node && !href) {
-      if (node.nodeType == content.Node.ELEMENT_NODE) {
+      if (node.nodeType == Node.ELEMENT_NODE &&
+          (node.localName == "a" ||
+           node.namespaceURI == "http://www.w3.org/1998/Math/MathML")) {
         href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
         if (href) {
           baseURI = node.ownerDocument.baseURIObject;
