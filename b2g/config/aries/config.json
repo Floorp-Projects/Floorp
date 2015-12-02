@@ -38,7 +38,6 @@
         "VARIANT": "user",
         "MOZILLA_OFFICIAL": "1",
         "MOZ_TELEMETRY_REPORTING": "1",
-        "B2G_UPDATE_CHANNEL": "nightly",
         "GAIA_KEYBOARD_LAYOUTS": "en,pt-BR,es,de,fr,pl,zh-Hans-Pinyin,zh-Hant-Zhuyin,en-Dvorak"
     },
     "b2g_manifest": "aries.xml",
