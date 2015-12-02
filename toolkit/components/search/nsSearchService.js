@@ -3090,17 +3090,29 @@ SearchService.prototype = {
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
 
-    // Clear the engines, too, so we don't stick with the stale ones.
-    this._engines = {};
-    this.__sortedEngines = null;
-    this._currentEngine = null;
-    this._defaultEngine = null;
-    this._visibleDefaultEngines = [];
-    this._metaData = {};
-    this._cacheFileJSON = null;
-
     Task.spawn(function* () {
       try {
+        if (this._batchTask) {
+          LOG("finalizing batch task");
+          let task = this._batchTask;
+          this._batchTask = null;
+          yield task.finalize();
+        }
+
+        // Clear the engines, too, so we don't stick with the stale ones.
+        this._engines = {};
+        this.__sortedEngines = null;
+        this._currentEngine = null;
+        this._defaultEngine = null;
+        this._visibleDefaultEngines = [];
+        this._metaData = {};
+        this._cacheFileJSON = null;
+
+        // Tests that want to force a synchronous re-initialization need to
+        // be notified when we are done uninitializing.
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC,
+                                     "uninit-complete");
+
         let cache = {};
         cache = yield this._asyncReadCacheFile();
         if (!gInitialized && cache.metaData)
