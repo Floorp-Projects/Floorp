@@ -19,6 +19,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -1805,6 +1806,10 @@ public class BrowserApp extends GeckoApp
                              GeckoPreferences.broadcastStumblerPref(BrowserApp.this);
                         }
                     }, oneSecondInMillis);
+                }
+
+                if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
+                    DownloadContentService.startVerification(this);
                 }
 
                 super.handleMessage(event, message);
