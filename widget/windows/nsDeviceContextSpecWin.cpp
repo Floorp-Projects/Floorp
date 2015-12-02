@@ -688,9 +688,10 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
     return NS_ERROR_OUT_OF_MEMORY;
 
   uint32_t printerInx = 0;
+  nsString* names = printers->AppendElements(numPrinters);
   while( printerInx < numPrinters ) {
     LPWSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx++);
-    printers->AppendElement(nsDependentString(name));
+    names[printerInx].Assign(name);
   }
 
   return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);

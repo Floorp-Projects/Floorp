@@ -101,6 +101,10 @@ private:
       ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
        (mFlags & nsIDocumentEncoder::OutputWrap));
   }
+  inline bool MayBreakLines()
+  {
+    return !(mFlags & nsIDocumentEncoder::OutputDisallowLineBreaking);
+  }
 
   inline bool DoOutput()
   {

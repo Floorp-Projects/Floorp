@@ -4,41 +4,34 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include "nsEscape.h"
+
+#include <mozilla/RefPtr.h>
 #include "nsString.h"
+#include "nsEscape.h"
 #include "nsUrlClassifierUtils.h"
 #include "stdlib.h"
-#include "TestHarness.h"
-
-static int gTotalTests = 0;
-static int gPassedTests = 0;
+#include "gtest/gtest.h"
 
 static char int_to_hex_digit(int32_t i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
   return static_cast<char>(((i < 10) ? (i + '0') : ((i - 10) + 'A')));
 }
 
-static void CheckEquals(nsCString & expected, nsCString & actual)
+static void CheckEquals(nsCString& expected, nsCString& actual)
 {
-  if (!(expected).Equals((actual))) {
-    fail("expected |%s| but got |%s|", (expected).get(), (actual).get());
-  } else {
-    gPassedTests++;
-  }
-  gTotalTests++;
+  ASSERT_TRUE((expected).Equals((actual)));
 }
 
 void TestUnescapeHelper(const char* in, const char* expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
-  
+
   NS_UnescapeURL(strIn.get(), strIn.Length(), esc_AlwaysCopy, out);
   CheckEquals(strExp, out);
 }
 
 // Make sure Unescape from nsEncode.h's unescape does what the server does.
-void TestUnescape()
+TEST(UrlClassifierUtils, Unescape)
 {
   // test empty string
   TestUnescapeHelper("\0", "\0");
@@ -57,13 +50,19 @@ void TestUnescape()
     allCharsAsString.Append(static_cast<char>(i));
   }
   
-  nsUrlClassifierUtils utils;
   nsCString out;
-  NS_UnescapeURL(allCharsEncoded.get(), allCharsEncoded.Length(), esc_AlwaysCopy, out);
+  NS_UnescapeURL(allCharsEncoded.get(),
+                 allCharsEncoded.Length(),
+                 esc_AlwaysCopy,
+                 out);
+
   CheckEquals(allCharsAsString, out);
   
   out.Truncate();
-  NS_UnescapeURL(allCharsEncodedLowercase.get(), allCharsEncodedLowercase.Length(), esc_AlwaysCopy, out);
+  NS_UnescapeURL(allCharsEncodedLowercase.get(),
+                 allCharsEncodedLowercase.Length(),
+                 esc_AlwaysCopy,
+                 out);
   CheckEquals(allCharsAsString, out);
 
   // Test %-related edge cases
@@ -85,13 +84,14 @@ void TestUnescape()
 void TestEncodeHelper(const char* in, const char* expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
-  utils.SpecialEncode(strIn, true, out);
+  utils->SpecialEncode(strIn, true, out);
   CheckEquals(strExp, out);
 }
 
-void TestEnc()
+TEST(UrlClassifierUtils, Enc)
 {
   // Test empty string
   TestEncodeHelper("", "");
@@ -103,9 +103,10 @@ void TestEnc()
       noenc.Append(static_cast<char>(i));
     }
   }
-  nsUrlClassifierUtils utils;
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
   nsCString out;
-  utils.SpecialEncode(noenc, false, out);
+  utils->SpecialEncode(noenc, false, out);
   CheckEquals(noenc, out);
 
   // Test that all the chars that we should encode [0,32],37,[127,255] are
@@ -120,7 +121,7 @@ void TestEnc()
   }
   
   out.Truncate();
-  utils.SpecialEncode(yesAsString, false, out);
+  utils->SpecialEncode(yesAsString, false, out);
   CheckEquals(yesExpectedString, out);
 
   TestEncodeHelper("blah//blah", "blah/blah");
@@ -129,13 +130,14 @@ void TestEnc()
 void TestCanonicalizeHelper(const char* in, const char* expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
-  utils.CanonicalizePath(strIn, out);
+  utils->CanonicalizePath(strIn, out);
   CheckEquals(strExp, out);
 }
 
-void TestCanonicalize()
+TEST(UrlClassifierUtils, Canonicalize)
 {
   // Test repeated %-decoding. Note: %25 --> %, %32 --> 2, %35 --> 5
   TestCanonicalizeHelper("%25", "%25");
@@ -159,14 +161,14 @@ void TestCanonicalize()
 void TestParseIPAddressHelper(const char *in, const char *expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
-  utils.Init();
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
-  utils.ParseIPAddress(strIn, out);
+  utils->ParseIPAddress(strIn, out);
   CheckEquals(strExp, out);
 }
 
-void TestParseIPAddress()
+TEST(UrlClassifierUtils, ParseIPAddress)
 {
   TestParseIPAddressHelper("123.123.0.0.1", "");
   TestParseIPAddressHelper("255.0.0.1", "255.0.0.1");
@@ -192,14 +194,14 @@ void TestCanonicalNumHelper(const char *in, uint32_t bytes,
                             bool allowOctal, const char *expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
-  utils.Init();
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
-  utils.CanonicalNum(strIn, bytes, allowOctal, out);
+  utils->CanonicalNum(strIn, bytes, allowOctal, out);
   CheckEquals(strExp, out);
 }
 
-void TestCanonicalNum()
+TEST(UrlClassifierUtils, CanonicalNum)
 {
   TestCanonicalNumHelper("", 1, true, "");
   TestCanonicalNumHelper("10", 0, true, "");
@@ -220,14 +222,14 @@ void TestCanonicalNum()
 void TestHostnameHelper(const char *in, const char *expected)
 {
   nsCString out, strIn(in), strExp(expected);
-  nsUrlClassifierUtils utils;
-  utils.Init();
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
-  utils.CanonicalizeHostname(strIn, out);
+  utils->CanonicalizeHostname(strIn, out);
   CheckEquals(strExp, out);
 }
 
-void TestHostname()
+TEST(UrlClassifierUtils, Hostname)
 {
   TestHostnameHelper("abcd123;[]", "abcd123;[]");
   TestHostnameHelper("abc.123", "abc.123");
@@ -251,75 +253,24 @@ void TestHostname()
   TestHostnameHelper("%00", "%00");
 }
 
-void TestLongHostname()
+TEST(UrlClassifierUtils, LongHostname)
 {
   static const int kTestSize = 1024 * 150;
   char *str = static_cast<char*>(malloc(kTestSize + 1));
   memset(str, 'x', kTestSize);
   str[kTestSize] = '\0';
 
-  nsUrlClassifierUtils utils;
-  utils.Init();
+  RefPtr<nsUrlClassifierUtils> utils = new nsUrlClassifierUtils;
+  utils->Init();
 
   nsAutoCString out;
   nsDependentCString in(str);
   PRIntervalTime clockStart = PR_IntervalNow();
-  utils.CanonicalizeHostname(in, out);
+  utils->CanonicalizeHostname(in, out);
   PRIntervalTime clockEnd = PR_IntervalNow();
 
   CheckEquals(in, out);
 
   printf("CanonicalizeHostname on long string (%dms)\n",
          PR_IntervalToMilliseconds(clockEnd - clockStart));
-}
-
-void TestFragmentSet()
-{
-  nsUrlClassifierFragmentSet set;
-  set.Init(3);
-
-  set.Put(NS_LITERAL_CSTRING("a"));
-  set.Put(NS_LITERAL_CSTRING("b"));
-  set.Put(NS_LITERAL_CSTRING("c"));
-
-  // At this point, adding a fourth element would push "a" off.
-  // Make sure that set.Has("a") moves it to the front of the list
-  set.Has(NS_LITERAL_CSTRING("a"));
-
-  // Now add a new item.  This should now push "b" off the list,
-  // but leave "a"
-  set.Put(NS_LITERAL_CSTRING("d"));
-
-  gTotalTests++;
-  if (set.Has(NS_LITERAL_CSTRING("a")))
-    gPassedTests++;
-  else
-    fail("set.Has(\"a\") failed.");
-
-  gTotalTests++;
-  if (!set.Has(NS_LITERAL_CSTRING("b")))
-    gPassedTests++;
-  else
-    fail("!set.Has(\"b\") failed.");
-}
-
-int main(int argc, char **argv)
-{
-  ScopedXPCOM xpcom("URLClassiferUtils");
-
-  TestUnescape();
-  TestEnc();
-  TestCanonicalize();
-  TestCanonicalNum();
-  TestParseIPAddress();
-  TestHostname();
-  TestLongHostname();
-  TestFragmentSet();
-
-  if (gPassedTests == gTotalTests)
-    passed(__FILE__);
-  printf("%d of %d tests passed\n", gPassedTests, gTotalTests);
-  // Non-zero return status signals test failure to build system.
-
-  return (gPassedTests != gTotalTests);
 }

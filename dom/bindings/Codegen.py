@@ -13099,12 +13099,16 @@ class CGBindingRoot(CGThing):
             d.concrete and d.proxy for d in descriptors)
 
         def descriptorHasChromeOnly(desc):
+            ctor = desc.interface.ctor()
+
             return (any(isChromeOnly(a) for a in desc.interface.members) or
                     desc.interface.getExtendedAttribute("ChromeOnly") is not None or
                     # JS-implemented interfaces with an interface object get a
-                    # chromeonly _create method.
-                    (desc.interface.isJSImplemented() and
-                     desc.interface.hasInterfaceObject()))
+                    # chromeonly _create method.  And interfaces with an
+                    # interface object might have a ChromeOnly constructor.
+                    (desc.interface.hasInterfaceObject() and
+                     (desc.interface.isJSImplemented() or
+                      (ctor and isChromeOnly(ctor)))))
 
         bindingHeaders["nsContentUtils.h"] = any(
             descriptorHasChromeOnly(d) for d in descriptors)

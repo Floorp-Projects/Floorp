@@ -355,6 +355,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   // true = wrapping should be done (OutputWrap flag)
   bool mDoWrap;
 
+  // true = we can break lines (OutputDisallowLineBreaking flag)
+  bool mAllowLineBreaking;
+
   // number of maximum column in a line, in the wrap mode
   uint32_t   mMaxColumn;
 

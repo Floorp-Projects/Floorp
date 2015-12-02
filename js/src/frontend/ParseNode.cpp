@@ -615,7 +615,7 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, Pars
         //
         if (left->isKind(kind) &&
             left->isOp(op) &&
-            (js_CodeSpec[op].format & JOF_LEFTASSOC ||
+            (CodeSpec[op].format & JOF_LEFTASSOC ||
              (kind == PNK_POW && !left->pn_parens)))
         {
             ListNode* list = &left->as<ListNode>();

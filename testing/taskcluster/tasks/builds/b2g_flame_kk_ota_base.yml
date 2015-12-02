@@ -2,12 +2,7 @@ $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
 task:
   workerType: balrog
-  scopes:
-    - 'docker-worker:feature:balrogVPNProxy'
-
   payload:
-    features:
-      balrogVPNProxy: true
     env:
       TARGET: 'flame-kk'
       DEBUG: 0

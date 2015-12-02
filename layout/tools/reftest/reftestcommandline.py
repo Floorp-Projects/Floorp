@@ -469,14 +469,8 @@ class B2GArgumentParser(ReftestArgumentsParser):
                           action="store",
                           type=str,
                           dest="profile",
-                          help="for desktop testing, the path to the "
+                          help="for mulet testing, the path to the "
                           "gaia profile to use")
-
-        self.add_argument("--desktop",
-                          action="store_true",
-                          dest="desktop",
-                          default=False,
-                          help="Run the tests on a B2G desktop build")
 
         self.add_argument("--mulet",
                           action="store_true",

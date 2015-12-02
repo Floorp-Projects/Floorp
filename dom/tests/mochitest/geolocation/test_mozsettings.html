@@ -28,9 +28,7 @@ resume_geolocationProvider(function() {
   force_prompt(true, test1);
 });
 
-if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
-}
+SpecialPowers.importInMainProcess("resource://gre/modules/SettingsRequestManager.jsm");
 
 function test1() {
   //This pushPermissions call is after pushPrefEnv call and pushPrefEnv calls follow after this
@@ -47,7 +45,7 @@ function test2() {
   toggleGeolocationSetting(false, function() {
       ok(true, "turned off geolocation via mozSettings");
       setTimeout(function() {
-	  navigator.geolocation.getCurrentPosition(successCallbackAfterMozsettingOff,
+          navigator.geolocation.getCurrentPosition(successCallbackAfterMozsettingOff,
                                                    failureCallbackAfterMozsettingOff);
         }, timeToWaitMs); // need to wait a bit for all of these async callbacks to finish
   });

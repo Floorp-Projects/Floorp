@@ -153,9 +153,10 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
       char16_t **words;
       
       result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
-      NS_ENSURE_SUCCESS(result, result); 
+      NS_ENSURE_SUCCESS(result, result);
+      nsString* suggestions = aSuggestions->AppendElements(count);
       for(i=0;i<count;i++){
-        aSuggestions->AppendElement(nsDependentString(words[i]));
+	suggestions[i].Assign(words[i]);
       }
       
       if (count)
