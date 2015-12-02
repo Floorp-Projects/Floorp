@@ -187,7 +187,8 @@ SapiService::Init()
 {
   MOZ_ASSERT(!mInitialized);
 
-  if (Preferences::GetBool("media.webspeech.synth.test")) {
+  if (Preferences::GetBool("media.webspeech.synth.test") ||
+      !Preferences::GetBool("media.webspeech.synth.enabled")) {
     // When enabled, we shouldn't add OS backend (Bug 1160844)
     return false;
   }
