@@ -77,6 +77,8 @@ public:
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
 
+  MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus() override;
+
 private:
   void DoSetMediaSourceDuration(double aDuration);
 
