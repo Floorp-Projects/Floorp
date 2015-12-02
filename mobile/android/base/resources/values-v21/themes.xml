@@ -16,6 +16,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>
         <!-- TODO (bug 1220863): Once we extend AppCompatActivity, set actionBarStyle. -->
+        <item name="android:alertDialogTheme">@style/GeckoAlertDialog</item>
     </style>
 
     <style name="GeckoPreferencesBase" parent="Gecko">
@@ -23,6 +24,10 @@
         <item name="android:windowNoTitle">false</item>
         <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
         <item name="android:actionBarTheme">@style/ActionBarThemeGeckoPreferences</item>
+    </style>
+
+    <style name="GeckoAlertDialog" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/fennec_ui_orange</item>
     </style>
 
     <style name="ActionBar.FxAccountStatusActivity" parent="@android:style/Widget.Material.ActionBar.Solid">
