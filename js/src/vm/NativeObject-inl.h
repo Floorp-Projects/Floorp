@@ -238,8 +238,6 @@ NativeObject::getDenseOrTypedArrayElement(uint32_t idx)
 {
     if (is<TypedArrayObject>())
         return as<TypedArrayObject>().getElement(idx);
-    if (is<SharedTypedArrayObject>())
-        return as<SharedTypedArrayObject>().getElement(idx);
     return getDenseElement(idx);
 }
 
