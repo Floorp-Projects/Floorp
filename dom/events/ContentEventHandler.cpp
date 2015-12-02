@@ -428,7 +428,7 @@ ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv = iter->Init(aRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -588,7 +588,7 @@ ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
 
   // baseOffset is the flattened offset of each content node.
   int32_t baseOffset = 0;
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv = iter->Init(aRange);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1470,7 +1470,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
     MOZ_ASSERT(static_cast<uint32_t>(aEndPosition.mOffset) ==
                  aEndPosition.mNode->GetChildCount(),
       "When the node is being removed, the end offset should be child count");
-    iter = NS_NewContentIterator();
+    iter = NS_NewPreContentIterator();
     nsresult rv = iter->Init(aStartPosition.mNode);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1488,7 +1488,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      iter = NS_NewContentIterator();
+      iter = NS_NewPreContentIterator();
       rv = iter->Init(prev);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
