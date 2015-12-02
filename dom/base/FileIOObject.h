@@ -80,13 +80,7 @@ protected:
 
   void StartProgressEventTimer();
   void ClearProgressEventTimer();
-
-  // This method generates and dispatches:
-  // - NotFoundError if rv is NS_ERROR_FILE_NOT_FOUND
-  // - SecurityError if NS_ERROR_FILE_ACCESS_DENIED
-  // - NotReadableError with any other rv value.
   void DispatchError(nsresult rv, nsAString& finalEvent);
-
   nsresult DispatchProgressEvent(const nsAString& aType);
 
   nsCOMPtr<nsITimer> mProgressNotifier;

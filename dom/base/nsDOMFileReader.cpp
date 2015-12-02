@@ -275,22 +275,13 @@ nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
                              nsAString& aSuccessEvent,
                              nsAString& aTerminationEvent)
 {
+
   // Make sure we drop all the objects that could hold files open now.
   nsCOMPtr<nsIAsyncInputStream> stream;
   mAsyncStream.swap(stream);
 
   RefPtr<Blob> blob;
   mBlob.swap(blob);
-
-  // In case we read a different number of bytes, we can assume that the
-  // underlying storage has changed. We should not continue.
-  if (mDataLen != mTotal) {
-    // We use NS_ERROR_FAILURE because that will dispatch a NotReadableError in
-    // FileIOObject::DispatchError.
-    DispatchError(NS_ERROR_FAILURE, aTerminationEvent);
-    FreeFileData();
-    return NS_ERROR_FAILURE;
-  }
 
   aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);
   aTerminationEvent = NS_LITERAL_STRING(LOADEND_STR);
@@ -306,12 +297,11 @@ nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
     case FILE_AS_ARRAYBUFFER: {
       AutoJSAPI jsapi;
       if (NS_WARN_IF(!jsapi.Init(mozilla::DOMEventTargetHelper::GetParentObject()))) {
-        FreeFileData();
         return NS_ERROR_FAILURE;
       }
 
       RootResultArrayBuffer();
-      mResultArrayBuffer = JS_NewArrayBufferWithContents(jsapi.cx(), mDataLen, mFileData);
+      mResultArrayBuffer = JS_NewArrayBufferWithContents(jsapi.cx(), mTotal, mFileData);
       if (!mResultArrayBuffer) {
         JS_ClearPendingException(jsapi.cx());
         rv = NS_ERROR_OUT_OF_MEMORY;
@@ -353,7 +343,8 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
   if (mDataFormat == FILE_AS_BINARY) {
     //Continuously update our binary string as data comes in
     uint32_t oldLen = mResult.Length();
-    NS_ASSERTION(mResult.Length() == mDataLen, "unexpected mResult length");
+    NS_ASSERTION(mResult.Length() == mDataLen,
+                 "unexpected mResult length");
     if (uint64_t(oldLen) + aCount > UINT32_MAX)
       return NS_ERROR_OUT_OF_MEMORY;
     char16_t *buf = nullptr;
