@@ -2583,6 +2583,12 @@ NPImageFormatToSurfaceFormat(NPImageFormat aFormat)
     }
 }
 
+static inline gfx::IntRect
+NPRectToIntRect(const NPRect& in)
+{
+    return IntRect(in.left, in.top, in.right - in.left, in.bottom - in.top);
+}
+
 NPError
 PluginInstanceChild::NPN_InitAsyncSurface(NPSize *size, NPImageFormat format,
                                           void *initData, NPAsyncSurface *surface)
@@ -2651,6 +2657,41 @@ PluginInstanceChild::NPN_InitAsyncSurface(NPSize *size, NPImageFormat format,
         mDirectBitmaps.Put(surface, holder);
         return NPERR_NO_ERROR;
     }
+#if defined(XP_WIN)
+    case NPDrawingModelAsyncWindowsDXGISurface: {
+        // Validate that the caller does not expect initial data to be set.
+        if (initData) {
+            return NPERR_INVALID_PARAM;
+        }
+
+        // Validate that we're not double-allocating a surface.
+        WindowsHandle handle = 0;
+        if (mDxgiSurfaces.Get(surface, &handle)) {
+            return NPERR_INVALID_PARAM;
+        }
+
+        NPError error = NPERR_NO_ERROR;
+        SurfaceFormat mozformat = NPImageFormatToSurfaceFormat(format);
+        if (!SendInitDXGISurface(mozformat,
+                                  IntSize(size->width, size->height),
+                                  &handle,
+                                  &error))
+        {
+            return NPERR_GENERIC_ERROR;
+        }
+        if (error != NPERR_NO_ERROR) {
+            return error;
+        }
+
+        surface->version = 0;
+        surface->size = *size;
+        surface->format = format;
+        surface->sharedHandle = reinterpret_cast<HANDLE>(handle);
+
+        mDxgiSurfaces.Put(surface, handle);
+        return NPERR_NO_ERROR;
+    }
+#endif
     default:
         MOZ_ASSERT_UNREACHABLE("unknown drawing model");
     }
@@ -2682,6 +2723,18 @@ PluginInstanceChild::NPN_FinalizeAsyncSurface(NPAsyncSurface *surface)
         mDirectBitmaps.Remove(surface);
         return NPERR_NO_ERROR;
     }
+#if defined(XP_WIN)
+    case NPDrawingModelAsyncWindowsDXGISurface: {
+        WindowsHandle handle;
+        if (!mDxgiSurfaces.Get(surface, &handle)) {
+            return NPERR_INVALID_PARAM;
+        }
+
+        SendFinalizeDXGISurface(handle);
+        mDxgiSurfaces.Remove(surface);
+        return NPERR_NO_ERROR;
+    }
+#endif
     default:
         MOZ_ASSERT_UNREACHABLE("unknown drawing model");
     }
@@ -2713,8 +2766,7 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
         }
 
         IntRect dirty = changed
-                        ? IntRect(changed->left, changed->top,
-                                  changed->right - changed->left, changed->bottom - changed->top)
+                        ? NPRectToIntRect(*changed)
                         : IntRect(IntPoint(0, 0), bitmap->mSize);
 
         // Need a holder since IPDL zaps the object for mysterious reasons.
@@ -2722,6 +2774,21 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
         SendShowDirectBitmap(shmemHolder, bitmap->mFormat, bitmap->mStride, bitmap->mSize, dirty);
         break;
     }
+#if defined(XP_WIN)
+    case NPDrawingModelAsyncWindowsDXGISurface: {
+        WindowsHandle handle;
+        if (!mDxgiSurfaces.Get(surface, &handle)) {
+            return;
+        }
+
+        IntRect dirty = changed
+                        ? NPRectToIntRect(*changed)
+                        : IntRect(IntPoint(0, 0), IntSize(surface->size.width, surface->size.height));
+
+        SendShowDirectDXGISurface(handle, dirty);
+        break;
+    }
+#endif
     default:
         MOZ_ASSERT_UNREACHABLE("unknown drawing model");
     }

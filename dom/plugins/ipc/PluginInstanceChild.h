@@ -418,6 +418,10 @@ private:
     };
     nsRefPtrHashtable<nsPtrHashKey<NPAsyncSurface>, DirectBitmap> mDirectBitmaps;
 
+#if defined(XP_WIN)
+    nsDataHashtable<nsPtrHashKey<NPAsyncSurface>, WindowsHandle> mDxgiSurfaces;
+#endif
+
     mozilla::Mutex mAsyncInvalidateMutex;
     CancelableTask *mAsyncInvalidateTask;
 

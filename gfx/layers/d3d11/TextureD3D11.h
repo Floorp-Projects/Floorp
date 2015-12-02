@@ -87,6 +87,10 @@ public:
 
   virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
 
+  D3D11TextureData* AsD3D11TextureData() override {
+    return this;
+  }
+
   ~D3D11TextureData();
 protected:
   D3D11TextureData(ID3D11Texture2D* aTexture,
