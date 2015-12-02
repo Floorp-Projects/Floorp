@@ -1,0 +1,889 @@
+{
+  "GL_ALPHA": [
+    {
+      "texFormat": "DXGI_FORMAT_A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_ALPHA16F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_ALPHA32F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_ALPHA8_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_BGR5_A1_ANGLEX": [
+    {
+      "texFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_BGRA4_ANGLEX": [
+    {
+      "texFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_BGRA8_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_BGRA_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B8G8R8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_COMPRESSED_R11_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_RG11_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_RGB8_ETC2": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_RGBA8_ETC2_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_RGBA_S3TC_DXT1_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_BC1_UNORM",
+      "srvFormat": "DXGI_FORMAT_BC1_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE": [
+    {
+      "texFormat": "DXGI_FORMAT_BC2_UNORM",
+      "srvFormat": "DXGI_FORMAT_BC2_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE": [
+    {
+      "texFormat": "DXGI_FORMAT_BC3_UNORM",
+      "srvFormat": "DXGI_FORMAT_BC3_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_COMPRESSED_RGB_S3TC_DXT1_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_BC1_UNORM",
+      "srvFormat": "DXGI_FORMAT_BC1_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_COMPRESSED_SIGNED_R11_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_SIGNED_RG11_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_SRGB8_ETC2": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_DEPTH24_STENCIL8": [
+    {
+      "texFormat": "DXGI_FORMAT_R24G8_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R24_UNORM_X8_TYPELESS",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_DEPTH32F_STENCIL8": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G8X24_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D32_FLOAT_S8X24_UINT",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_UNKNOWN",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_DEPTH_COMPONENT16": [
+    {
+      "texFormat": "DXGI_FORMAT_R16_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R16_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D16_UNORM",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_D16_UNORM",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D16_UNORM",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_DEPTH_COMPONENT24": [
+    {
+      "texFormat": "DXGI_FORMAT_R24G8_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R24_UNORM_X8_TYPELESS",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_DEPTH_COMPONENT32F": [
+    {
+      "texFormat": "DXGI_FORMAT_R32_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D32_FLOAT",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_UNKNOWN",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ],
+  "GL_DEPTH_COMPONENT32_OES": [
+    {
+      "texFormat": "DXGI_FORMAT_R24G8_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_R24_UNORM_X8_TYPELESS",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL10Plus"
+    }
+  ],
+  "GL_ETC1_RGB8_OES": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE16F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE32F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE8_ALPHA8_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE8_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE_ALPHA": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE_ALPHA16F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_LUMINANCE_ALPHA32F_EXT": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_NONE": [
+    {
+      "texFormat": "DXGI_FORMAT_UNKNOWN",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R11F_G11F_B10F": [
+    {
+      "texFormat": "DXGI_FORMAT_R11G11B10_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R11G11B10_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R11G11B10_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R16F": [
+    {
+      "texFormat": "DXGI_FORMAT_R16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R16I": [
+    {
+      "texFormat": "DXGI_FORMAT_R16_SINT",
+      "srvFormat": "DXGI_FORMAT_R16_SINT",
+      "rtvFormat": "DXGI_FORMAT_R16_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R16UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R16_UINT",
+      "srvFormat": "DXGI_FORMAT_R16_UINT",
+      "rtvFormat": "DXGI_FORMAT_R16_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R32F": [
+    {
+      "texFormat": "DXGI_FORMAT_R32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R32I": [
+    {
+      "texFormat": "DXGI_FORMAT_R32_SINT",
+      "srvFormat": "DXGI_FORMAT_R32_SINT",
+      "rtvFormat": "DXGI_FORMAT_R32_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R32UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R32_UINT",
+      "srvFormat": "DXGI_FORMAT_R32_UINT",
+      "rtvFormat": "DXGI_FORMAT_R32_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R8I": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_SINT",
+      "srvFormat": "DXGI_FORMAT_R8_SINT",
+      "rtvFormat": "DXGI_FORMAT_R8_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R8UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_UINT",
+      "srvFormat": "DXGI_FORMAT_R8_UINT",
+      "rtvFormat": "DXGI_FORMAT_R8_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_R8_SNORM": [
+    {
+      "texFormat": "DXGI_FORMAT_R8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG16F": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG16I": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16_SINT",
+      "srvFormat": "DXGI_FORMAT_R16G16_SINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG16UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16_UINT",
+      "srvFormat": "DXGI_FORMAT_R16G16_UINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG32F": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG32I": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32_SINT",
+      "srvFormat": "DXGI_FORMAT_R32G32_SINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG32UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32_UINT",
+      "srvFormat": "DXGI_FORMAT_R32G32_UINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG8I": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_SINT",
+      "srvFormat": "DXGI_FORMAT_R8G8_SINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG8UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_UINT",
+      "srvFormat": "DXGI_FORMAT_R8G8_UINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RG8_SNORM": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB10_A2": [
+    {
+      "texFormat": "DXGI_FORMAT_R10G10B10A2_UNORM",
+      "srvFormat": "DXGI_FORMAT_R10G10B10A2_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R10G10B10A2_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB10_A2UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R10G10B10A2_UINT",
+      "srvFormat": "DXGI_FORMAT_R10G10B10A2_UINT",
+      "rtvFormat": "DXGI_FORMAT_R10G10B10A2_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB16F": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB16I": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB16UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB32F": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB32I": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB32UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB565": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B5G6R5_UNORM,false>"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_B5G6R5_UNORM",
+      "srvFormat": "DXGI_FORMAT_B5G6R5_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B5G6R5_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B5G6R5_UNORM,true>"
+    }
+  ],
+  "GL_RGB5_A1": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B5G5R5A1_UNORM,false>"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_B5G5R5A1_UNORM",
+      "srvFormat": "DXGI_FORMAT_B5G5R5A1_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B5G5R5A1_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B5G5R5A1_UNORM,true>"
+    }
+  ],
+  "GL_RGB8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB8I": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB8UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB8_SNORM": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGB9_E5": [
+    {
+      "texFormat": "DXGI_FORMAT_R9G9B9E5_SHAREDEXP",
+      "srvFormat": "DXGI_FORMAT_R9G9B9E5_SHAREDEXP",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA16F": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA16I": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA16UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "srvFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "rtvFormat": "DXGI_FORMAT_R16G16B16A16_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA32F": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_FLOAT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA32I": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA32UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "srvFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "rtvFormat": "DXGI_FORMAT_R32G32B32A32_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA4": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B4G4R4A4_UNORM,false>"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_B4G4R4A4_UNORM",
+      "srvFormat": "DXGI_FORMAT_B4G4R4A4_UNORM",
+      "rtvFormat": "DXGI_FORMAT_B4G4R4A4_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "SupportsFormat<DXGI_FORMAT_B4G4R4A4_UNORM,true>"
+    }
+  ],
+  "GL_RGBA8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA8I": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_SINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA8UI": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UINT",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_RGBA8_SNORM": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_SNORM",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_SNORM",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_SRGB8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_SRGB8_ALPHA8": [
+    {
+      "texFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "srvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "rtvFormat": "DXGI_FORMAT_R8G8B8A8_UNORM_SRGB",
+      "dsvFormat": "DXGI_FORMAT_UNKNOWN",
+      "requirementsFcn": "AnyDevice"
+    }
+  ],
+  "GL_STENCIL_INDEX8": [
+    {
+      "texFormat": "DXGI_FORMAT_R24G8_TYPELESS",
+      "srvFormat": "DXGI_FORMAT_X24_TYPELESS_G8_UINT",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL10Plus"
+    },
+    {
+      "texFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "srvFormat": "DXGI_FORMAT_UNKNOWN",
+      "rtvFormat": "DXGI_FORMAT_UNKNOWN",
+      "dsvFormat": "DXGI_FORMAT_D24_UNORM_S8_UINT",
+      "requirementsFcn": "OnlyFL9_3"
+    }
+  ]
+}

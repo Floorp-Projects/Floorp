@@ -137,7 +137,7 @@ private:
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       MOZ_ASSERT(!mMirrors.Contains(aMirror));
       mMirrors.AppendElement(aMirror);
-      aMirror->OwnerThread()->Dispatch(MakeNotifier(aMirror), AbstractThread::DontAssertDispatchSuccess);
+      aMirror->OwnerThread()->DispatchStateChange(MakeNotifier(aMirror));
     }
 
     void RemoveMirror(AbstractMirror<T>* aMirror) override

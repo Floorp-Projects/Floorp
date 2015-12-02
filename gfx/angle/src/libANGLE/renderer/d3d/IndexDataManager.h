@@ -63,13 +63,21 @@ class IndexDataManager : angle::NonCopyable
     explicit IndexDataManager(BufferFactoryD3D *factory, RendererClass rendererClass);
     virtual ~IndexDataManager();
 
-    gl::Error prepareIndexData(GLenum srcType, GLsizei count, gl::Buffer *glBuffer,
-                               const GLvoid *indices, TranslatedIndexData *translated,
-                               SourceIndexData *sourceData);
+    gl::Error prepareIndexData(GLenum srcType,
+                               GLsizei count,
+                               gl::Buffer *glBuffer,
+                               const GLvoid *indices,
+                               TranslatedIndexData *translated,
+                               SourceIndexData *sourceData,
+                               bool primitiveRestartFixedIndexEnabled);
 
   private:
-    gl::Error streamIndexData(const GLvoid *data, unsigned int count, GLenum srcType,
-                              GLenum dstType, TranslatedIndexData *translated);
+    gl::Error streamIndexData(const GLvoid *data,
+                              unsigned int count,
+                              GLenum srcType,
+                              GLenum dstType,
+                              bool usePrimitiveRestartFixedIndex,
+                              TranslatedIndexData *translated);
     gl::Error getStreamingIndexBuffer(GLenum destinationIndexType,
                                       IndexBufferInterface **outBuffer);
 

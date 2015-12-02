@@ -34,7 +34,6 @@ VertexArray::VertexArray(rx::ImplFactory *factory, GLuint id, size_t maxAttribs)
       mVertexArray(factory->createVertexArray(mData)),
       mData(maxAttribs)
 {
-    ASSERT(mVertexArray != nullptr);
 }
 
 VertexArray::~VertexArray()

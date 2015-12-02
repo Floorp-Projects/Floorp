@@ -54,10 +54,9 @@ public:
 
 protected:
   virtual void NotifyDataArrivedInternal() override;
+
 public:
   layers::ImageContainer* GetImageContainer() { return mDecoder->GetImageContainer(); }
-
-  virtual bool IsMediaSeekable() override;
 
 private:
   bool HasAudio() { return mInfo.HasAudio(); }

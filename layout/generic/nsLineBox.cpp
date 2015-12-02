@@ -17,7 +17,7 @@
 #include "nsIFrameInlines.h"
 #include "nsPresArena.h"
 #include "nsPrintfCString.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 
 #ifdef DEBUG
 static int32_t ctorCount;
@@ -213,15 +213,15 @@ BreakTypeToString(uint8_t aBreakType)
 char*
 nsLineBox::StateToString(char* aBuf, int32_t aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
-              IsBlock() ? "block" : "inline",
-              IsDirty() ? "dirty" : "clean",
-              IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
-              IsImpactedByFloat() ? "impacted" : "not impacted",
-              IsLineWrapped() ? "wrapped" : "not wrapped",
-              BreakTypeToString(GetBreakTypeBefore()),
-              BreakTypeToString(GetBreakTypeAfter()),
-              mAllFlags);
+  snprintf(aBuf, aBufSize, "%s,%s,%s,%s,%s,before:%s,after:%s[0x%x]",
+           IsBlock() ? "block" : "inline",
+           IsDirty() ? "dirty" : "clean",
+           IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
+           IsImpactedByFloat() ? "impacted" : "not impacted",
+           IsLineWrapped() ? "wrapped" : "not wrapped",
+           BreakTypeToString(GetBreakTypeBefore()),
+           BreakTypeToString(GetBreakTypeAfter()),
+           mAllFlags);
   return aBuf;
 }
 

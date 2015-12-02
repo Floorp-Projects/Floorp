@@ -33,8 +33,6 @@ public:
 
   virtual media::TimeIntervals GetBuffered() override;
 
-  virtual bool IsMediaSeekable() override;
-
 private:
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
   bool LoadRIFFChunk();

@@ -52,7 +52,7 @@
         gQueue, docAcc, ObjectTraversalRule, null,
         ['Main Title', 'Lorem ipsum ',
          'dolor', ' sit amet. Integer vitae urna leo, id ',
-         'semper', ' nulla.', 'Second Section Title',
+         'semper', ' nulla. ', 'Second Section Title',
          'Sed accumsan luctus lacus, vitae mollis arcu tristique vulputate.',
          'An ', 'embedded', ' document.', 'Hide me', 'Link 1', 'Link 2',
          'Link 3', 'Hello', 'World']);
@@ -90,7 +90,7 @@
         gQueue, docAcc, ObjectTraversalRule,
         getAccessible(doc.getElementById('paragraph-1')),
         ['Lorem ipsum ', 'dolor', ' sit amet. Integer vitae urna leo, id ',
-         'semper', ' nulla.']);
+         'semper', ' nulla. ']);
 
       gQueue.push(new setModalRootInvoker(docAcc, docAcc.parent,
                                           NS_ERROR_INVALID_ARG));

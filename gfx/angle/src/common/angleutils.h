@@ -70,9 +70,9 @@ void SafeDelete(T*& resource)
 template <typename T>
 void SafeDeleteContainer(T& resource)
 {
-    for (typename T::iterator i = resource.begin(); i != resource.end(); i++)
+    for (auto &element : resource)
     {
-        SafeDelete(*i);
+        SafeDelete(element);
     }
     resource.clear();
 }

@@ -20,9 +20,9 @@
 // Return false if overflow happens.
 bool strtof_clamp(const std::string &str, float *value);
 
-// If overflow happens, clamp the value to INT_MIN or INT_MAX.
+// If overflow happens, clamp the value to UINT_MIN or UINT_MAX.
 // Return false if overflow happens.
-bool atoi_clamp(const char *str, int *value);
+bool atoi_clamp(const char *str, unsigned int *value);
 
 class TSymbolTable;
 

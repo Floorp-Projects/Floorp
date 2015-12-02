@@ -2246,7 +2246,7 @@ void GL_APIENTRY GetShaderiv(GLuint shader, GLenum pname, GLint* params)
             *params = shaderObject->getSourceLength();
             return;
           case GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE:
-            *params = shaderObject->getTranslatedSourceLength();
+            *params = shaderObject->getTranslatedSourceWithDebugInfoLength();
             return;
 
           default:

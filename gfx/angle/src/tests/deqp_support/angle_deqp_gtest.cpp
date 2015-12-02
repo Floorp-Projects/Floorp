@@ -217,8 +217,6 @@ class dEQP_EGL : public dEQPTest<2>
 };
 
 // TODO(jmadill): add different platform configs, or ability to choose platform
-#if defined(ANGLE_STANDALONE_BUILD)
-
 #define ANGLE_INSTANTIATE_DEQP_TEST_CASE(DEQP_TEST)                             \
     TEST_P(DEQP_TEST, Default) { runTest(); }                                   \
                                                                                 \
@@ -227,14 +225,6 @@ class dEQP_EGL : public dEQPTest<2>
                             {                                                   \
                                 return DEQP_TEST::GetCaseGTestName(info.param); \
                             })
-
-#else  // defined(ANGLE_STANDALONE_BUILD)
-
-#define ANGLE_INSTANTIATE_DEQP_TEST_CASE(DEQP_TEST) \
-    TEST_P(DEQP_TEST, Default) { runTest(); }       \
-    INSTANTIATE_TEST_CASE_P(, DEQP_TEST, DEQP_TEST::GetTestingRange())
-
-#endif  // defined(ANGLE_STANDALONE_BUILD)
 
 #ifdef ANGLE_DEQP_GLES2_TESTS
 ANGLE_INSTANTIATE_DEQP_TEST_CASE(dEQP_GLES2);

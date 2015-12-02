@@ -25,6 +25,8 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
+const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
+
 function runTests()
 {
   var fm = Components.classes["@mozilla.org/focus-manager;1"].
@@ -82,8 +84,19 @@ function runTests()
     if (aElement == editor) {
       var value = "";
       for (var node = aElement.firstChild; node; node = node.nextSibling) {
-        if (node.nodeType == 3) {
+        if (node.nodeType == Node.TEXT_NODE) {
           value += node.data;
+        } else if (node.nodeType == Node.ELEMENT_NODE) {
+          var tagName = node.tagName.toLowerCase();
+          switch (tagName) {
+            case "input":
+            case "textarea":
+              value += kLF;
+              break;
+            default:
+              ok(false, "Undefined tag is used in the editor: " + tagName);
+              break;
+          }
         }
       }
       return value;

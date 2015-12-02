@@ -16,6 +16,7 @@
 #include "ds/SplayTree.h"
 #include "gc/FindSCCs.h"
 #include "gc/GCRuntime.h"
+#include "js/GCHashTable.h"
 #include "js/TracingAPI.h"
 #include "vm/MallocProvider.h"
 #include "vm/TypeInference.h"
@@ -62,8 +63,16 @@ class ZoneHeapThreshold
                                           const AutoLockGC& lock);
 };
 
+struct UniqueIdGCPolicy {
+    static bool needsSweep(Cell** cell, uint64_t* value);
+};
+
 // Maps a Cell* to a unique, 64bit id.
-using UniqueIdMap = HashMap<Cell*, uint64_t, PointerHasher<Cell*, 3>, SystemAllocPolicy>;
+using UniqueIdMap = GCHashMap<Cell*,
+                              uint64_t,
+                              PointerHasher<Cell*, 3>,
+                              SystemAllocPolicy,
+                              UniqueIdGCPolicy>;
 
 extern uint64_t NextCellUniqueId(JSRuntime* rt);
 
