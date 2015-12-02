@@ -38,7 +38,7 @@ interface nsIStackFrame : nsISupports
     AUTF8String toString();
 };
 
-[scriptable, uuid(1caf1461-be1d-4b79-a552-5292b6bf3c35)]
+[scriptable, uuid(4371b5bf-6845-487f-8d9d-3f1e4a9badd2)]
 interface nsIException : nsISupports
 {
     // A custom message set by the thrower.
@@ -65,8 +65,6 @@ interface nsIException : nsISupports
 
     // A stack trace, if available.
     readonly attribute nsIStackFrame           location;
-    // An inner exception that triggered this, if available.
-    readonly attribute nsIException            inner;
 
     // Arbitary data for the implementation.
     readonly attribute nsISupports             data;
