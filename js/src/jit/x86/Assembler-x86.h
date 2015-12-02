@@ -375,6 +375,9 @@ class Assembler : public AssemblerX86Shared
     void adcl(Imm32 imm, Register dest) {
         masm.adcl_ir(imm.value, dest.encoding());
     }
+    void adcl(Register src, Register dest) {
+        masm.adcl_rr(src.encoding(), dest.encoding());
+    }
 
     void mull(Register multiplier) {
         masm.mull_r(multiplier.encoding());
