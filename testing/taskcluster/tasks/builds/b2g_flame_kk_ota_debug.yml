@@ -18,6 +18,7 @@ task:
       VARIANT: userdebug
       B2G_DEBUG: 0
       MOZHARNESS_CONFIG: b2g/taskcluster-phone-fota.py
+      B2G_UPDATE_CHANNEL: '{{b2g_update_channel}}'
   extra:
     treeherderEnv:
       - staging
