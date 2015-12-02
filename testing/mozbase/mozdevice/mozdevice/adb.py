@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from abc import ABCMeta, abstractmethod
 import os
 import posixpath
 import re
@@ -10,6 +9,8 @@ import subprocess
 import tempfile
 import time
 import traceback
+
+from abc import ABCMeta, abstractmethod
 
 
 class ADBProcess(object):
@@ -535,49 +536,58 @@ class ADBDevice(ADBCommand):
         self._have_su = False
         self._have_android_su = False
 
-        uid = 'uid=0'
-        # Is shell already running as root?
         # Catch exceptions due to the potential for segfaults
         # calling su when using an improperly rooted device.
-        try:
-            if self.shell_output("id").find(uid) != -1:
-                self._have_root_shell = True
-        except ADBError:
-            self._logger.debug("Check for root shell failed")
 
+        # Note this check to see if adbd is running is performed on
+        # the device in the state it exists in when the ADBDevice is
+        # initialized. It may be the case that it has been manipulated
+        # since its last boot and that its current state does not
+        # match the state the device will have immediately after a
+        # reboot. For example, if adb root was called manually prior
+        # to ADBDevice being initialized, then self._have_root_shell
+        # will not reflect the state of the device after it has been
+        # rebooted again. Therefore this check will need to be
+        # performed again after a reboot.
+
+        self._check_adb_root(timeout=timeout)
+
+        uid = 'uid=0'
         # Do we have a 'Superuser' sh like su?
         try:
-            if self.shell_output("su -c id").find(uid) != -1:
+            if self.shell_output("su -c id", timeout=timeout).find(uid) != -1:
                 self._have_su = True
+                self._logger.info("su -c supported")
         except ADBError:
-            self._logger.debug("Check for su failed")
+            self._logger.debug("Check for su -c failed")
 
         # Do we have Android's su?
         try:
-            if self.shell_output("su 0 id").find(uid) != -1:
+            if self.shell_output("su 0 id", timeout=timeout).find(uid) != -1:
                 self._have_android_su = True
+                self._logger.info("su 0 supported")
         except ADBError:
-            self._logger.debug("Check for Android su failed")
+            self._logger.debug("Check for su 0 failed")
 
         self._mkdir_p = None
         # Force the use of /system/bin/ls or /system/xbin/ls in case
         # there is /sbin/ls which embeds ansi escape codes to colorize
         # the output.  Detect if we are using busybox ls. We want each
         # entry on a single line and we don't want . or ..
-        if self.shell_bool("/system/bin/ls /"):
+        if self.shell_bool("/system/bin/ls /", timeout=timeout):
             self._ls = "/system/bin/ls"
-        elif self.shell_bool("/system/xbin/ls /"):
+        elif self.shell_bool("/system/xbin/ls /", timeout=timeout):
             self._ls = "/system/xbin/ls"
         else:
             raise ADBError("ADBDevice.__init__: ls not found")
         try:
-            self.shell_output("%s -1A /" % self._ls)
+            self.shell_output("%s -1A /" % self._ls, timeout=timeout)
             self._ls += " -1A"
         except ADBError:
             self._ls += " -a"
 
         # Do we have cp?
-        self._have_cp = self.shell_bool("type cp")
+        self._have_cp = self.shell_bool("type cp", timeout=timeout)
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
@@ -613,6 +623,28 @@ class ADBDevice(ADBCommand):
             return "usb:%s" % usb
 
         raise ValueError("Unable to get device serial")
+
+    def _check_adb_root(self, timeout=None):
+        self._have_root_shell = False
+        uid = 'uid=0'
+        # Is shell already running as root?
+        try:
+            if self.shell_output("id", timeout=timeout).find(uid) != -1:
+                self._have_root_shell = True
+                self._logger.info("adbd running as root")
+        except ADBError:
+            self._logger.debug("Check for root shell failed")
+
+        # Do we need to run adb root to get a root shell?
+        try:
+            if (not self._have_root_shell and
+                self.command_output(
+                    ["root"],
+                    timeout=timeout).find("cannot run as root") == -1):
+                self._have_root_shell = True
+                self._logger.info("adbd restarted as root")
+        except ADBError:
+            self._logger.debug("Check for root adbd failed")
 
 
     @staticmethod
@@ -1859,6 +1891,7 @@ class ADBDevice(ADBCommand):
         # 'wait-for-device' arguments which is an error in newer
         # versions of adb.
         self.command_output([], timeout=timeout)
+        self._check_adb_root(timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
     @abstractmethod
