@@ -50,7 +50,7 @@ VertexArrayGL::VertexArrayGL(const VertexArray::Data &data,
     mFunctions->genVertexArrays(1, &mVertexArrayID);
 
     // Set the cached vertex attribute array size
-    GLint maxVertexAttribs;
+    GLint maxVertexAttribs = 0;
     mFunctions->getIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
     mAppliedAttributes.resize(maxVertexAttribs);
 }

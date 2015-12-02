@@ -33,8 +33,6 @@ public:
 
   virtual media::TimeIntervals GetBuffered() override;
 
-  virtual bool IsMediaSeekable() override;
-
 private:
   bool ReadFromResource(uint8_t *aBuf, uint32_t aLength);
 

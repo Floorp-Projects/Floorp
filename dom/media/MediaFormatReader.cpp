@@ -65,7 +65,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(aLayersBackend)
   , mInitDone(false)
-  , mSeekable(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
   , mHardwareAccelerationDisabled(false)
@@ -324,7 +323,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     mInfo.mMetadataDuration = Some(TimeUnit::FromMicroseconds(duration));
   }
 
-  mSeekable = mDemuxer->IsSeekable();
+  mInfo.mMediaSeekable = mDemuxer->IsSeekable();
 
   if (!videoActive && !audioActive) {
     mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
@@ -1331,7 +1330,7 @@ MediaFormatReader::Seek(int64_t aTime, int64_t aUnused)
   MOZ_DIAGNOSTIC_ASSERT(mVideo.mTimeThreshold.isNothing());
   MOZ_DIAGNOSTIC_ASSERT(mAudio.mTimeThreshold.isNothing());
 
-  if (!mSeekable) {
+  if (!mInfo.mMediaSeekable) {
     LOG("Seek() END (Unseekable)");
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }

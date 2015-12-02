@@ -215,21 +215,7 @@ identifier
 variable_identifier
     : IDENTIFIER {
         // The symbol table search was done in the lexical phase
-        const TVariable *variable = context->getNamedVariable(@1, $1.string, $1.symbol);
-
-        if (variable->getType().getQualifier() == EvqConst)
-        {
-            TConstantUnion* constArray = variable->getConstPointer();
-            TType t(variable->getType());
-            $$ = context->intermediate.addConstantUnion(constArray, t, @1);
-        }
-        else
-        {
-            $$ = context->intermediate.addSymbol(variable->getUniqueId(),
-                                                 variable->getName(),
-                                                 variable->getType(),
-                                                 @1);
-        }
+        $$ = context->parseVariableIdentifier(@1, $1.string, $1.symbol);
 
         // don't delete $1.string, it's used by error recovery, and the pool
         // pop will reclaim the memory
@@ -342,7 +328,7 @@ function_call_header_with_parameters
         const TType *type = new TType($2->getType());
         $1->addParameter(TConstParameter(type));
         $$.function = $1;
-        $$.nodePair.node1 = $2;
+        $$.nodePair.node1 = context->intermediate.makeAggregate($2, @2);
     }
     | function_call_header_with_parameters COMMA assignment_expression {
         const TType *type = new TType($3->getType());
@@ -573,12 +559,7 @@ expression
         $$ = $1;
     }
     | expression COMMA assignment_expression {
-        $$ = context->intermediate.addComma($1, $3, @2);
-        if ($$ == 0) {
-            context->binaryOpError(@2, ",", $1->getCompleteString(), $3->getCompleteString());
-            context->recover();
-            $$ = $3;
-        }
+        $$ = context->addComma($1, $3, @2);
     }
     ;
 
@@ -944,12 +925,12 @@ type_qualifier
         $$.invariant = true;
     }
     | storage_qualifier {
-        if ($1.qualifier != EvqConst && !context->symbolTable.atGlobalLevel()) {
+        if ($1.qualifier != EvqConst && !context->symbolTable.atGlobalLevel())
+        {
             context->error(@1, "Local variables can only use the const storage qualifier.", getQualifierString($1.qualifier));
             context->recover();
-        } else {
-            $$.setBasic(EbtVoid, $1.qualifier, @1);
         }
+        $$.setBasic(EbtVoid, $1.qualifier, @1);
     }
     | interpolation_qualifier storage_qualifier {
         $$ = context->joinInterpolationQualifiers(@1, $1.qualifier, @2, $2.qualifier);

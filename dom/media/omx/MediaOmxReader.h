@@ -92,8 +92,6 @@ public:
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual bool IsMediaSeekable() override;
-
   virtual void SetIdle() override;
 
   virtual RefPtr<ShutdownPromise> Shutdown() override;

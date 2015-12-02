@@ -39,32 +39,53 @@ void DebugAnnotator11::beginEvent(const wchar_t *eventName)
 {
     initializeDevice();
 
-    mUserDefinedAnnotation->BeginEvent(eventName);
+    if (mUserDefinedAnnotation != nullptr)
+    {
+        mUserDefinedAnnotation->BeginEvent(eventName);
+    }
 }
 
 void DebugAnnotator11::endEvent()
 {
     initializeDevice();
 
-    mUserDefinedAnnotation->EndEvent();
+    if (mUserDefinedAnnotation != nullptr)
+    {
+        mUserDefinedAnnotation->EndEvent();
+    }
 }
 
 void DebugAnnotator11::setMarker(const wchar_t *markerName)
 {
     initializeDevice();
 
-    mUserDefinedAnnotation->SetMarker(markerName);
+    if (mUserDefinedAnnotation != nullptr)
+    {
+        mUserDefinedAnnotation->SetMarker(markerName);
+    }
 }
 
 bool DebugAnnotator11::getStatus()
 {
-    // ID3DUserDefinedAnnotation::GetStatus doesn't work with the Graphics Diagnostics tools in Visual Studio 2013.
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if (NTDDI_VERSION == NTDDI_WIN10)
+    initializeDevice();
+
+    if (mUserDefinedAnnotation != nullptr)
+    {
+        return !!(mUserDefinedAnnotation->GetStatus());
+    }
+
+    return true;  // Default if initializeDevice() failed
+#elif defined(_DEBUG)
     static bool underCapture = true;
 
-#if defined(_DEBUG) && defined(ANGLE_ENABLE_WINDOWS_STORE)
-    // In the Windows Store, we can use IDXGraphicsAnalysis. The call to GetDebugInterface1 only succeeds if the app is under capture.
+    // ID3DUserDefinedAnnotation::GetStatus doesn't work with the Graphics Diagnostics tools in
+    // Windows 8.1/Visual Studio 2013. We can use IDXGraphicsAnalysis, though.
+    // The call to GetDebugInterface1 only succeeds if the app is under capture.
     // This should only be called in DEBUG mode.
-    // If an app links against DXGIGetDebugInterface1 in release mode then it will fail Windows Store ingestion checks.
+    // If an app links against DXGIGetDebugInterface1 in release mode then it will fail Windows
+    // Store ingestion checks.
 
     // Cache the result to reduce the number of calls to DXGIGetDebugInterface1
     static bool triedIDXGraphicsAnalysis = false;
@@ -82,9 +103,16 @@ bool DebugAnnotator11::getStatus()
         SafeRelease(graphicsAnalysis);
         triedIDXGraphicsAnalysis = true;
     }
-#endif // _DEBUG && !ANGLE_ENABLE_WINDOWS_STORE
 
     return underCapture;
+#else
+    // We can't detect GetStatus() on release WinRT 8.1 builds, so always return true.
+    return true;
+#endif  // (NTDDI_VERSION == NTDDI_WIN10) or _DEBUG
+#else
+    // We can't detect GetStatus() on desktop ANGLE builds so always return true.
+    return true;
+#endif  // ANGLE_ENABLE_WINDOWS_STORE
 }
 
 void DebugAnnotator11::initializeDevice()

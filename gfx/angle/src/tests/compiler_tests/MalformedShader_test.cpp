@@ -68,6 +68,22 @@ class MalformedVertexShaderTest : public MalformedShaderTest
     }
 };
 
+class MalformedWebGL2ShaderTest : public MalformedShaderTest
+{
+  public:
+    MalformedWebGL2ShaderTest() {}
+
+  protected:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+
+        mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_WEBGL2_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
+};
+
 // This is a test for a bug that used to exist in ANGLE:
 // Calling a function with all parameters missing should not succeed.
 TEST_F(MalformedShaderTest, FunctionParameterMismatch)
@@ -914,5 +930,388 @@ TEST_F(MalformedShaderTest, ArrayValueFromFunctionParameterAsParameter)
     if (!compile(shaderString))
     {
         FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that out-of-range integer literal generates an error in ESSL 3.00.
+TEST_F(MalformedShaderTest, OutOfRangeIntegerLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision highp int;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "    my_FragColor = vec4(0x100000000);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that vector field selection from a value taken from an array constructor is accepted as a
+// constant expression.
+TEST_F(MalformedShaderTest, FieldSelectionFromVectorArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = vec2[1](vec2(0.0, 1.0))[0].x;\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that structure field selection from a value taken from an array constructor is accepted as a
+// constant expression.
+TEST_F(MalformedShaderTest, FieldSelectionFromStructArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "struct S { float member; };\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = S[1](S(0.0))[0].member;\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that a reference to a const array is accepted as a constant expression.
+TEST_F(MalformedShaderTest, ArraySymbolIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const float[2] arr = float[2](0.0, 1.0);\n"
+        "    const float f = arr[0];\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that using an array constructor in a parameter to a built-in function is accepted as a
+// constant expression.
+TEST_F(MalformedShaderTest, BuiltInFunctionAppliedToArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = sin(float[2](0.0, 1.0)[0]);\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that using an array constructor in a parameter to a built-in function is accepted as a
+// constant expression.
+TEST_F(MalformedShaderTest, BuiltInFunctionWithMultipleParametersAppliedToArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = pow(1.0, float[2](0.0, 1.0)[0]);\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that using an array constructor in a parameter to a constructor is accepted as a constant
+// expression.
+TEST_F(MalformedShaderTest, ConstructorWithMultipleParametersAppliedToArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const vec2 f = vec2(1.0, float[2](0.0, 1.0)[0]);\n"
+        "    my_FragColor = vec4(f.x);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that using an array constructor in an operand of the ternary selection operator is accepted
+// as a constant expression.
+TEST_F(MalformedShaderTest, TernaryOperatorAppliedToArrayConstructorIsConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = true ? float[2](0.0, 1.0)[0] : 1.0;\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that a ternary operator with one unevaluated non-constant operand is not a constant
+// expression.
+TEST_F(MalformedShaderTest, TernaryOperatorNonConstantOperand)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float u;\n"
+        "void main()\n"
+        "{\n"
+        "    const float f = true ? 1.0 : u;\n"
+        "    gl_FragColor = vec4(f);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that a sampler can't be used in constructor argument list
+TEST_F(MalformedShaderTest, SamplerInConstructorArguments)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform sampler2D s;\n"
+        "void main()\n"
+        "{\n"
+        "    vec2 v = vec2(0.0, s);\n"
+        "    gl_FragColor = vec4(v, 0.0, 0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that void can't be used in constructor argument list
+TEST_F(MalformedShaderTest, VoidInConstructorArguments)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void foo() {}\n"
+        "void main()\n"
+        "{\n"
+        "    vec2 v = vec2(0.0, foo());\n"
+        "    gl_FragColor = vec4(v, 0.0, 0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that a shader passing a struct into a constructor of array of structs with 1 element works.
+TEST_F(MalformedShaderTest, SingleStructArrayConstructor)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform float u;\n"
+        "struct S { float member; };\n"
+        "void main()\n"
+        "{\n"
+        "    S[1] sarr = S[1](S(u));\n"
+        "    my_FragColor = vec4(sarr[0].member);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that a shader with empty constructor parameter list is not accepted.
+TEST_F(MalformedShaderTest, EmptyArrayConstructor)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform float u;\n"
+        "const float[] f = f[]();\n"
+        "void main()\n"
+        "{\n"
+        "    my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that indexing fragment outputs with a non-constant expression is forbidden, even if ANGLE
+// is able to constant fold the index expression. ESSL 3.00 section 4.3.6.
+TEST_F(MalformedShaderTest, DynamicallyIndexedFragmentOutput)
+{
+    const std::string &shaderString =
+        "#version 300 es"
+        "precision mediump float;\n"
+        "uniform int a;\n"
+        "out vec4[2] my_FragData;\n"
+        "void main()\n"
+        "{\n"
+        "    my_FragData[true ? 0 : a] = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that indexing an interface block array with a non-constant expression is forbidden, even if
+// ANGLE is able to constant fold the index expression. ESSL 3.00 section 4.3.7.
+TEST_F(MalformedShaderTest, DynamicallyIndexedInterfaceBlock)
+{
+    const std::string &shaderString =
+        "#version 300 es"
+        "precision mediump float;\n"
+        "uniform int a;\n"
+        "uniform B\n"
+        "{\n"
+        "    vec4 f;\n"
+        "}\n"
+        "blocks[2];\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    my_FragColor = blocks[true ? 0 : a].f;\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that a shader that uses a struct definition in place of a struct constructor does not
+// compile. See GLSL ES 1.00 section 5.4.3.
+TEST_F(MalformedShaderTest, StructConstructorWithStructDefinition)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    struct s { float f; } (0.0);\n"
+        "    gl_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that indexing gl_FragData with a non-constant expression is forbidden in WebGL 2.0, even
+// when ANGLE is able to constant fold the index.
+// WebGL 2.0 spec section 'GLSL ES 1.00 Fragment Shader Output'
+TEST_F(MalformedWebGL2ShaderTest, IndexFragDataWithNonConstant)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    for (int i = 0; i < 2; ++i) {\n"
+        "        gl_FragData[true ? 0 : i] = vec4(0.0);\n"
+        "    }\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that a non-constant texture offset is not accepted for textureOffset.
+// ESSL 3.00 section 8.8
+TEST_F(MalformedShaderTest, TextureOffsetNonConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform vec3 u_texCoord;\n"
+        "uniform mediump sampler3D u_sampler;\n"
+        "uniform int x;\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = textureOffset(u_sampler, u_texCoord, ivec3(x, 3, -8));\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that a non-constant texture offset is not accepted for textureProjOffset with bias.
+// ESSL 3.00 section 8.8
+TEST_F(MalformedShaderTest, TextureProjOffsetNonConst)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform vec4 u_texCoord;\n"
+        "uniform mediump sampler3D u_sampler;\n"
+        "uniform int x;\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = textureProjOffset(u_sampler, u_texCoord, ivec3(x, 3, -8), 0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that an out-of-range texture offset is not accepted.
+// GLES 3.0.4 section 3.8.10 specifies that out-of-range offset has undefined behavior.
+TEST_F(MalformedShaderTest, TextureLodOffsetOutOfRange)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform vec3 u_texCoord;\n"
+        "uniform mediump sampler3D u_sampler;\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = textureLodOffset(u_sampler, u_texCoord, 0.0, ivec3(0, 0, 8));\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }

@@ -85,6 +85,12 @@ ANGLE_EXPORT void GL_APIENTRY PopGroupMarkerEXT();
 ANGLE_EXPORT void GL_APIENTRY EGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
 ANGLE_EXPORT void GL_APIENTRY EGLImageTargetRenderbufferStorageOES(GLenum target,
                                                                    GLeglImageOES image);
+
+// GL_OES_vertex_array_object
+ANGLE_EXPORT void GL_APIENTRY BindVertexArrayOES(GLuint array);
+ANGLE_EXPORT void GL_APIENTRY DeleteVertexArraysOES(GLsizei n, const GLuint *arrays);
+ANGLE_EXPORT void GL_APIENTRY GenVertexArraysOES(GLsizei n, GLuint *arrays);
+ANGLE_EXPORT GLboolean GL_APIENTRY IsVertexArrayOES(GLuint array);
 }
 
 #endif // LIBGLESV2_ENTRYPOINTGLES20EXT_H_

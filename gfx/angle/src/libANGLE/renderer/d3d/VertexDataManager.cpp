@@ -88,10 +88,17 @@ void VertexDataManager::hintUnmapAllResources(const std::vector<gl::VertexAttrib
     {
         gl::Buffer *buffer = translated->attribute->buffer.get();
         BufferD3D *storage = buffer ? GetImplAs<BufferD3D>(buffer) : nullptr;
-        StaticVertexBufferInterface *staticBuffer = storage ? storage->getStaticVertexBuffer() : nullptr;
+        StaticVertexBufferInterface *staticBuffer =
+            storage
+                ? storage->getStaticVertexBuffer(*translated->attribute, D3D_BUFFER_DO_NOT_CREATE)
+                : nullptr;
 
         if (staticBuffer)
         {
+            // Commit all the static vertex buffers. This fixes them in size/contents, and forces
+            // ANGLE to use a new static buffer (or recreate the static buffers) next time
+            staticBuffer->commit();
+
             staticBuffer->getVertexBuffer()->hintUnmapResource();
         }
     }
@@ -146,10 +153,14 @@ gl::Error VertexDataManager::prepareVertexData(const gl::State &state,
             {
                 mActiveEnabledAttributes.push_back(translated);
 
-                // Also invalidate static buffers that don't contain matching attributes
-                invalidateMatchingStaticData(
-                    vertexAttributes[attribIndex],
-                    state.getVertexAttribCurrentValue(static_cast<unsigned int>(attribIndex)));
+                gl::Buffer *buffer = vertexAttributes[attribIndex].buffer.get();
+                if (buffer)
+                {
+                    // Also reinitialize static buffers which didn't contain matching data
+                    // last time they were used
+                    BufferD3D *bufferImpl = GetImplAs<BufferD3D>(buffer);
+                    bufferImpl->reinitOutOfDateStaticData();
+                }
             }
             else
             {
@@ -215,26 +226,6 @@ gl::Error VertexDataManager::prepareVertexData(const gl::State &state,
     return gl::Error(GL_NO_ERROR);
 }
 
-void VertexDataManager::invalidateMatchingStaticData(const gl::VertexAttribute &attrib,
-                                                     const gl::VertexAttribCurrentValueData &currentValue) const
-{
-    gl::Buffer *buffer = attrib.buffer.get();
-
-    if (buffer)
-    {
-        BufferD3D *bufferImpl = GetImplAs<BufferD3D>(buffer);
-        StaticVertexBufferInterface *staticBuffer = bufferImpl->getStaticVertexBuffer();
-
-        if (staticBuffer &&
-            staticBuffer->getBufferSize() > 0 &&
-            !staticBuffer->lookupAttribute(attrib, NULL) &&
-            !staticBuffer->directStoragePossible(attrib, currentValue.Type))
-        {
-            bufferImpl->invalidateStaticData();
-        }
-    }
-}
-
 gl::Error VertexDataManager::reserveSpaceForAttrib(const TranslatedAttribute &translatedAttrib,
                                                    GLsizei count,
                                                    GLsizei instances) const
@@ -242,7 +233,9 @@ gl::Error VertexDataManager::reserveSpaceForAttrib(const TranslatedAttribute &tr
     const gl::VertexAttribute &attrib = *translatedAttrib.attribute;
     gl::Buffer *buffer = attrib.buffer.get();
     BufferD3D *bufferImpl = buffer ? GetImplAs<BufferD3D>(buffer) : NULL;
-    StaticVertexBufferInterface *staticBuffer = bufferImpl ? bufferImpl->getStaticVertexBuffer() : NULL;
+    StaticVertexBufferInterface *staticBuffer =
+        bufferImpl ? bufferImpl->getStaticVertexBuffer(attrib, D3D_BUFFER_CREATE_IF_NECESSARY)
+                   : NULL;
     VertexBufferInterface *vertexBuffer = staticBuffer ? staticBuffer : static_cast<VertexBufferInterface*>(mStreamingBuffer);
 
     if (!vertexBuffer->directStoragePossible(attrib, translatedAttrib.currentValueType))
@@ -291,12 +284,13 @@ gl::Error VertexDataManager::storeAttribute(TranslatedAttribute *translated,
     ASSERT(attrib.enabled);
 
     BufferD3D *storage = buffer ? GetImplAs<BufferD3D>(buffer) : NULL;
-    StaticVertexBufferInterface *staticBuffer = storage ? storage->getStaticVertexBuffer() : NULL;
+    StaticVertexBufferInterface *staticBuffer =
+        storage ? storage->getStaticVertexBuffer(attrib, D3D_BUFFER_DO_NOT_CREATE) : NULL;
     VertexBufferInterface *vertexBuffer = staticBuffer ? staticBuffer : static_cast<VertexBufferInterface*>(mStreamingBuffer);
     bool directStorage = vertexBuffer->directStoragePossible(attrib, translated->currentValueType);
 
     // Instanced vertices do not apply the 'start' offset
-    GLint firstVertexIndex = (instances > 0 && attrib.divisor > 0 ? 0 : start);
+    GLint firstVertexIndex = (attrib.divisor > 0 ? 0 : start);
 
     translated->vertexBuffer = vertexBuffer->getVertexBuffer();
 
@@ -363,7 +357,8 @@ gl::Error VertexDataManager::storeAttribute(TranslatedAttribute *translated,
             (static_cast<unsigned int>(attrib.offset) /
              static_cast<unsigned int>(ComputeVertexAttributeStride(attrib))) *
             outputElementSize;
-        unsigned int startOffset = (instances == 0 || attrib.divisor == 0) ? firstVertexIndex * outputElementSize : 0;
+        ASSERT(attrib.divisor == 0 || firstVertexIndex == 0);
+        unsigned int startOffset = firstVertexIndex * outputElementSize;
         if (streamOffset + firstElementOffset + startOffset < streamOffset)
         {
             return gl::Error(GL_OUT_OF_MEMORY);

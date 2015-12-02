@@ -23,6 +23,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIStandardURL.h"
 #include "nsIStreamLoader.h"
+#include "nsIIncrementalStreamLoader.h"
 #include "nsIURI.h"
 #include "nsIURIWithPrincipal.h"
 #include "nsIWritablePropertyBag2.h"

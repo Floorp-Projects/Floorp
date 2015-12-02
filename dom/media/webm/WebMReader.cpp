@@ -402,15 +402,11 @@ WebMReader::RetrieveWebMMetadata(MediaInfo* aInfo)
     }
   }
 
+  mInfo.mMediaSeekable = nestegg_has_cues(mContext);
+
   *aInfo = mInfo;
 
   return NS_OK;
-}
-
-bool
-WebMReader::IsMediaSeekable()
-{
-  return mContext && nestegg_has_cues(mContext);
 }
 
 bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)

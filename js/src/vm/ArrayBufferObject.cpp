@@ -1114,7 +1114,7 @@ InnerViewTable::removeViews(ArrayBufferObject* buffer)
     map.remove(p);
 }
 
-bool
+/* static */ bool
 InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views)
 {
     if (IsAboutToBeFinalizedUnbarriered(pkey))
@@ -1132,21 +1132,14 @@ InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views)
 }
 
 void
-InnerViewTable::sweep(JSRuntime* rt)
+InnerViewTable::sweep()
 {
     MOZ_ASSERT(nurseryKeys.empty());
-
-    if (!map.initialized())
-        return;
-
-    for (Map::Enum e(map); !e.empty(); e.popFront()) {
-        if (sweepEntry(&e.front().mutableKey(), e.front().value()))
-            e.removeFront();
-    }
+    map.sweep();
 }
 
 void
-InnerViewTable::sweepAfterMinorGC(JSRuntime* rt)
+InnerViewTable::sweepAfterMinorGC()
 {
     MOZ_ASSERT(needsSweepAfterMinorGC());
 
@@ -1164,7 +1157,7 @@ InnerViewTable::sweepAfterMinorGC(JSRuntime* rt)
     } else {
         // Do the required sweeping by looking at every map entry.
         nurseryKeys.clear();
-        sweep(rt);
+        sweep();
 
         nurseryKeysValid = true;
     }

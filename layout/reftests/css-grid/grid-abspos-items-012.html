@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: margin:auto on grid abs.pos. child</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107783">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#abspos">
+  <link rel="match" href="grid-abspos-items-012-ref.html">
+  <style type="text/css">
+
+div {
+  display: grid;
+  position: relative;
+  grid-template-columns: 100px;
+  grid-template-rows: 100px;
+  width: 100px;
+  height: 100px;
+  border: 1px solid;
+}
+
+span {
+  display: block;
+  position: absolute;
+  background: lime;
+  width: 20px;
+  height: 20px;
+  margin: 5px 7px 11px 13px;
+  top:0; left:0; right:0; bottom:0;
+}
+
+  </style>
+</head>
+<body>
+
+<div><span style="margin-left:auto"></span></div>
+<div><span style="margin-right:auto"></span></div>
+<div><span style="margin-left:auto; margin-right:auto"></span></div>
+<div><span style="margin-top:auto"></span></div>
+<div><span style="margin-bottom:auto"></span></div>
+<div><span style="margin-top:auto; margin-bottom:auto"></span></div>
+<div><span style="margin:auto"></span></div>
+
+</body>
+</html>

@@ -36,8 +36,6 @@ public:
   virtual void NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
                                    uint32_t aDropped) final override;
 
-  virtual void SetMediaSeekable(bool aMediaSeekable) final override;
-
   virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   virtual layers::ImageContainer* GetImageContainer() final override;
 

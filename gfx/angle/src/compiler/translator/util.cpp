@@ -20,11 +20,11 @@ bool strtof_clamp(const std::string &str, float *value)
     return success;
 }
 
-bool atoi_clamp(const char *str, int *value)
+bool atoi_clamp(const char *str, unsigned int *value)
 {
     bool success = pp::numeric_lex_int(str, value);
     if (!success)
-        *value = std::numeric_limits<int>::max();
+        *value = std::numeric_limits<unsigned int>::max();
     return success;
 }
 

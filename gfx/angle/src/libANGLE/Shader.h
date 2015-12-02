@@ -98,6 +98,7 @@ class Shader : angle::NonCopyable
     int getSourceLength() const;
     void getSource(GLsizei bufSize, GLsizei *length, char *buffer) const;
     int getTranslatedSourceLength() const;
+    int getTranslatedSourceWithDebugInfoLength() const;
     const std::string &getTranslatedSource() const { return mData.getTranslatedSource(); }
     void getTranslatedSource(GLsizei bufSize, GLsizei *length, char *buffer) const;
     void getTranslatedSourceWithDebugInfo(GLsizei bufSize, GLsizei *length, char *buffer) const;
@@ -137,6 +138,7 @@ class Shader : angle::NonCopyable
     ResourceManager *mResourceManager;
 };
 
+bool CompareShaderVar(const sh::ShaderVariable &x, const sh::ShaderVariable &y);
 }
 
 #endif   // LIBANGLE_SHADER_H_
