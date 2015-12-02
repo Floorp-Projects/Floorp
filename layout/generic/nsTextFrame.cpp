@@ -626,7 +626,7 @@ struct FlowLengthProperty {
 };
 
 int32_t nsTextFrame::GetInFlowContentLength() {
-  if (!PresContext()->BidiEnabled()) {
+  if (!(mState & NS_FRAME_IS_BIDI)) {
     return mContent->TextLength() - mContentOffset;
   }
 
@@ -638,7 +638,7 @@ int32_t nsTextFrame::GetInFlowContentLength() {
    * mContentOffset but this frame is empty, logically it might be before the
    * start of the cached flow.
    */
-  if (flowLength &&
+  if (flowLength && 
       (flowLength->mStartOffset < mContentOffset ||
        (flowLength->mStartOffset == mContentOffset && GetContentEnd() > mContentOffset)) &&
       flowLength->mEndFlowOffset > mContentOffset) {

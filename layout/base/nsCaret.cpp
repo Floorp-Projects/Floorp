@@ -115,14 +115,9 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset)
 }
 
 static bool
-IsKeyboardRTL()
+IsBidiUI()
 {
-  bool isKeyboardRTL = false;
-  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  if (bidiKeyboard) {
-    bidiKeyboard->IsLangRTL(&isKeyboardRTL);
-  }
-  return isKeyboardRTL;
+  return Preferences::GetBool("bidi.browser.ui");
 }
 
 nsCaret::nsCaret()
@@ -503,21 +498,6 @@ nsCaret::SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset)
   SchedulePaint();
 }
 
-bool
-nsCaret::IsBidiUI()
-{
-  nsIFrame* frame = nullptr;
-
-  if(Selection* selection = GetSelectionInternal()) {
-    int32_t contentOffset;
-    frame = GetFrameAndOffset(selection, mOverrideContent, mOverrideOffset,
-                              &contentOffset);
-  }
-
-  return (frame && frame->GetStateBits() & NS_FRAME_IS_BIDI) ||
-         Preferences::GetBool("bidi.browser.ui");
-}
-
 void
 nsCaret::CheckSelectionLanguageChange()
 {
@@ -525,8 +505,11 @@ nsCaret::CheckSelectionLanguageChange()
     return;
   }
 
-  bool isKeyboardRTL = IsKeyboardRTL();
-
+  bool isKeyboardRTL = false;
+  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
+  if (bidiKeyboard) {
+    bidiKeyboard->IsLangRTL(&isKeyboardRTL);
+  }
   // Call SelectionLanguageChange on every paint. Mostly it will be a noop
   // but it should be fast anyway. This guarantees we never paint the caret
   // at the wrong place.
@@ -715,9 +698,8 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
   if (theFrame->PresContext()->BidiEnabled())
   {
     // If there has been a reflow, take the caret Bidi level to be the level of the current frame
-    if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
+    if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
       aBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
-    }
 
     int32_t start;
     int32_t end;
@@ -941,22 +923,21 @@ nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
     }
   }
 
+  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
   aHookRect->SetEmpty();
-
-  Selection* selection = GetSelectionInternal();
-  if (!selection || !selection->GetFrameSelection()) {
+  if (!IsBidiUI()) {
     return;
   }
 
-  if (IsBidiUI() || IsKeyboardRTL()) {
-    // If caret level is RTL, draw the hook on the left; if LTR, to the right
+  bool isCaretRTL;
+  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
+  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
+  // keyboard direction, or the user has no right-to-left keyboard
+  // installed, so we never draw the hook.
+  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL))) {
+    // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
-    int caretBidiLevel = selection->GetFrameSelection()->GetCaretBidiLevel();
-    if (caretBidiLevel & BIDI_LEVEL_UNDEFINED) {
-      caretBidiLevel = NS_GET_EMBEDDING_LEVEL(aFrame);
-    }
-    bool isCaretRTL = caretBidiLevel % 2;
     if (isVertical) {
       bool isSidewaysLR = wm.IsVerticalLR() && !wm.IsLineInverted();
       if (isSidewaysLR) {
