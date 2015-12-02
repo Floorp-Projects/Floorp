@@ -133,11 +133,14 @@ public:
   };
 
   // Get the flatten text length in the range.
+  // @param aIsRemovingNode     Should be true only when this is called from
+  //                            nsIMutationObserver::ContentRemoved().
   static nsresult GetFlatTextLengthInRange(const NodePosition& aStartPosition,
                                            const NodePosition& aEndPosition,
                                            nsIContent* aRootContent,
                                            uint32_t* aLength,
-                                           LineBreakType aLineBreakType);
+                                           LineBreakType aLineBreakType,
+                                           bool aIsRemovingNode = false);
   // Computes the native text length between aStartOffset and aEndOffset of
   // aContent.  aContent must be a text node.
   static uint32_t GetNativeTextLength(nsIContent* aContent,
