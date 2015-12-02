@@ -8,8 +8,8 @@ ifndef MOZ_PROFILE_GENERATE
 # Signing support
 ifdef MOZ_SIGN_CMD
 ifeq (WINNT,$(OS_ARCH))
-MOZ_INTERNAL_SIGNING_FORMAT := osslsigncode
-MOZ_EXTERNAL_SIGNING_FORMAT := osslsigncode
+MOZ_INTERNAL_SIGNING_FORMAT := sha2signcode
+MOZ_EXTERNAL_SIGNING_FORMAT := sha2signcode
 SIGN_INCLUDES := \
   '*.dll' \
   '*.exe' \
