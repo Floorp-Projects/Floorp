@@ -4102,7 +4102,8 @@ SearchService.prototype = {
 
   get currentEngine() {
     this._ensureInitialized();
-    if (!this._currentEngine) {
+    let currentEngine = this._currentEngine;
+    if (!currentEngine) {
       let name = this.getGlobalAttr("current");
       let engine = this.getEngineByName(name);
       if (engine && (this.getGlobalAttr("hash") == getVerificationHash(name) ||
@@ -4110,23 +4111,32 @@ SearchService.prototype = {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
         // backup/sync their profile in custom ways.
-        this._currentEngine = engine;
+        currentEngine = engine;
       }
     }
 
-    if (!this._currentEngine || this._currentEngine.hidden)
-      this._currentEngine = this._originalDefaultEngine;
-    if (!this._currentEngine || this._currentEngine.hidden)
-      this._currentEngine = this._getSortedEngines(false)[0];
+    if (!currentEngine || currentEngine.hidden)
+      currentEngine = this._originalDefaultEngine;
+    if (!currentEngine || currentEngine.hidden)
+      currentEngine = this._getSortedEngines(false)[0];
 
-    if (!this._currentEngine) {
+    if (!currentEngine) {
       // Last resort fallback: unhide the original default engine.
-      this._currentEngine = this._originalDefaultEngine;
-      if (this._currentEngine)
-        this._currentEngine.hidden = false;
+      currentEngine = this._originalDefaultEngine;
+      if (currentEngine)
+        currentEngine.hidden = false;
     }
 
-    return this._currentEngine;
+    if (currentEngine) {
+      // If the current engine wasn't set or was hidden, we used a fallback
+      // to pick a new current engine. As soon as we return it, this new
+      // current engine will become user-visible, so we should persist it.
+      // Calling the setter achieves this, and is a no-op when we haven't
+      // actually changed the current engine.
+      this.currentEngine = currentEngine;
+    }
+
+    return currentEngine;
   },
 
   set currentEngine(val) {
