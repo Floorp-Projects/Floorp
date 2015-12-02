@@ -17,6 +17,7 @@ elif CONFIG['_MSC_VER']:
 
     '-Wall',
 
+    '-wd4464', # relative include path contains '..'
     '-wd4514', # 'function': unreferenced inline function has been removed
     '-wd4668', # warning C4668: 'X' is not defined as a preprocessor macro,
                # replacing with '0' for '#if/#elif'.
