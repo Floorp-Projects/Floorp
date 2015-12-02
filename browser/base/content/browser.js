@@ -5438,8 +5438,10 @@ var TabletModeUpdater = {
 };
 
 var gTabletModePageCounter = {
+  enabled: false,
   inc() {
-    if (!AppConstants.isPlatformAndVersionAtLeast("win", "10.0")) {
+    this.enabled = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
+    if (!this.enabled) {
       this.inc = () => {};
       return;
     }
@@ -5455,8 +5457,11 @@ var gTabletModePageCounter = {
   },
 
   finish() {
-    Services.telemetry.getKeyedHistogramById("FX_TABLETMODE_PAGE_LOAD").add("tablet", this._tabletCount);
-    Services.telemetry.getKeyedHistogramById("FX_TABLETMODE_PAGE_LOAD").add("desktop", this._desktopCount);
+    if (this.enabled) {
+      let histogram = Services.telemetry.getKeyedHistogramById("FX_TABLETMODE_PAGE_LOAD");
+      histogram.add("tablet", this._tabletCount);
+      histogram.add("desktop", this._desktopCount);
+    }
   },
 };
 
