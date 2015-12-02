@@ -2045,7 +2045,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 
 #if (MOZ_WIDGET_GTK == 2)
 static bool
-ExtractExposeRegion(nsIntRegion& aRegion, GdkEventExpose* aEvent)
+ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, GdkEventExpose* aEvent)
 {
   GdkRectangle* rects;
   gint nrects;
@@ -2058,7 +2058,7 @@ ExtractExposeRegion(nsIntRegion& aRegion, GdkEventExpose* aEvent)
   }
 
   for (GdkRectangle* r = rects; r < rects + nrects; r++) {
-      aRegion.Or(aRegion, nsIntRect(r->x, r->y, r->width, r->height));
+      aRegion.Or(aRegion, LayoutDeviceIntRect(r->x, r->y, r->width, r->height));
       LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
   }
 
@@ -2071,7 +2071,7 @@ ExtractExposeRegion(nsIntRegion& aRegion, GdkEventExpose* aEvent)
 #  error "Looks like we're including Mozilla's cairo instead of system cairo"
 # endif
 static bool
-ExtractExposeRegion(nsIntRegion& aRegion, cairo_t* cr)
+ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr)
 {
   cairo_rectangle_list_t* rects = cairo_copy_clip_rectangle_list(cr);
   if (rects->status != CAIRO_STATUS_SUCCESS) {
@@ -2081,7 +2081,7 @@ ExtractExposeRegion(nsIntRegion& aRegion, cairo_t* cr)
 
   for (int i = 0; i < rects->num_rectangles; i++)  {
       const cairo_rectangle_t& r = rects->rectangles[i];
-      aRegion.Or(aRegion, nsIntRect(r.x, r.y, r.width, r.height));
+      aRegion.Or(aRegion, LayoutDeviceIntRect(r.x, r.y, r.width, r.height));
       LOGDRAW(("\t%d %d %d %d\n", r.x, r.y, r.width, r.height));
   }
 
@@ -2115,7 +2115,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (!listener)
         return FALSE;
 
-    nsIntRegion exposeRegion;
+    LayoutDeviceIntRegion exposeRegion;
 #if (MOZ_WIDGET_GTK == 2)
     if (!ExtractExposeRegion(exposeRegion, aEvent)) {
 #else
@@ -2125,7 +2125,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     gint scale = GdkScaleFactor();
-    nsIntRegion region = exposeRegion;
+    LayoutDeviceIntRegion region = exposeRegion;
     region.ScaleRoundOut(scale, scale);
 
     ClientLayerManager *clientLayers =
@@ -2137,7 +2137,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // We need to paint to the screen even if nothing changed, since if we
         // don't have a compositing window manager, our pixels could be stale.
         clientLayers->SetNeedsComposite(true);
-        clientLayers->SendInvalidRegion(region);
+        clientLayers->SendInvalidRegion(region.ToUnknownRegion());
     }
 
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
@@ -2170,7 +2170,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     // Our bounds may have changed after calling WillPaintWindow.  Clip
     // to the new bounds here.  The region is relative to this
     // window.
-    region.And(region, nsIntRect(0, 0, mBounds.width, mBounds.height));
+    region.And(region, LayoutDeviceIntRect(0, 0, mBounds.width, mBounds.height));
 
     bool shaped = false;
     if (eTransparencyTransparent == GetTransparencyMode()) {
@@ -2194,13 +2194,12 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             GdkWindow *gdkWin = GDK_WINDOW(children->data);
             nsWindow *kid = get_window_for_gdk_window(gdkWin);
             if (kid && gdk_window_is_visible(gdkWin)) {
-                nsAutoTArray<nsIntRect,1> clipRects;
+                nsAutoTArray<LayoutDeviceIntRect,1> clipRects;
                 kid->GetWindowClipRegion(&clipRects);
                 LayoutDeviceIntRect bounds;
                 kid->GetBounds(bounds);
                 for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-                    nsIntRect r = clipRects[i] +
-                                  bounds.TopLeft().ToUnknownPoint();
+                    LayoutDeviceIntRect r = clipRects[i] + bounds.TopLeft();
                     region.Sub(region, r);
                 }
             }
@@ -2214,13 +2213,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     // If this widget uses OMTC...
     if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-        listener->PaintWindow(this, region);
+        listener->PaintWindow(this, region.ToUnknownRegion());
         listener->DidPaintWindow();
         return TRUE;
     }
 
-    RefPtr<DrawTarget> dt = GetDrawTarget(region);
-    if(!dt) {
+    RefPtr<DrawTarget> dt = GetDrawTarget(region.ToUnknownRegion());
+    if (!dt) {
         return FALSE;
     }
     RefPtr<gfxContext> ctx;
@@ -2233,10 +2232,10 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // call UpdateTranslucentWindowAlpha once. After we have dropped
         // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
         // our private interface so we can rework things to avoid this.
-        boundsRect = region.GetBounds();
+        boundsRect = region.GetBounds().ToUnknownRect();
         dt->PushClipRect(Rect(boundsRect));
     } else {
-        gfxUtils::ClipToRegion(dt, region);
+        gfxUtils::ClipToRegion(dt, region.ToUnknownRegion());
     }
 
     BufferMode layerBuffering;
@@ -2278,7 +2277,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     {
       if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
         AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-        painted = listener->PaintWindow(this, region);
+        painted = listener->PaintWindow(this, region.ToUnknownRegion());
       }
     }
 
@@ -2303,7 +2302,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-      mShmImage->Put(mXDisplay, mXWindow, region);
+      mShmImage->Put(mXDisplay, mXWindow, region.ToUnknownRegion());
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
@@ -4308,19 +4307,19 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 nsresult
-nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+nsWindow::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                               bool aIntersectWithExisting)
 {
-    const nsTArray<nsIntRect>* newRects = &aRects;
+    const nsTArray<LayoutDeviceIntRect>* newRects = &aRects;
 
-    nsAutoTArray<nsIntRect,1> intersectRects;
+    nsAutoTArray<LayoutDeviceIntRect,1> intersectRects;
     if (aIntersectWithExisting) {
-        nsAutoTArray<nsIntRect,1> existingRects;
+        nsAutoTArray<LayoutDeviceIntRect,1> existingRects;
         GetWindowClipRegion(&existingRects);
 
-        nsIntRegion existingRegion = RegionFromArray(existingRects);
-        nsIntRegion newRegion = RegionFromArray(aRects);
-        nsIntRegion intersectRegion;
+        LayoutDeviceIntRegion existingRegion = RegionFromArray(existingRects);
+        LayoutDeviceIntRegion newRegion = RegionFromArray(aRects);
+        LayoutDeviceIntRegion intersectRegion;
         intersectRegion.And(newRegion, existingRegion);
 
         // If mClipRects is null we haven't set a clip rect yet, so we
@@ -4346,7 +4345,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
 #if (MOZ_WIDGET_GTK == 2)
     GdkRegion *region = gdk_region_new(); // aborts on OOM
     for (uint32_t i = 0; i < newRects->Length(); ++i) {
-        const nsIntRect& r = newRects->ElementAt(i);
+        const LayoutDeviceIntRect& r = newRects->ElementAt(i);
         GdkRectangle rect = { r.x, r.y, r.width, r.height };
         gdk_region_union_with_rect(region, &rect);
     }
@@ -4356,7 +4355,7 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
 #else
     cairo_region_t *region = cairo_region_create();
     for (uint32_t i = 0; i < newRects->Length(); ++i) {
-        const nsIntRect& r = newRects->ElementAt(i);
+        const LayoutDeviceIntRect& r = newRects->ElementAt(i);
         cairo_rectangle_int_t rect = { r.x, r.y, r.width, r.height };
         cairo_region_union_rectangle(region, &rect);
     }
