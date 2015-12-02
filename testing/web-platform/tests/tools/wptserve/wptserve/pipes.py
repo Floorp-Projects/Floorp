@@ -313,8 +313,8 @@ class FirstWrapper(object):
             return ""
 
 
-@pipe()
-def sub(request, response):
+@pipe(opt(nullable(boolean)))
+def sub(request, response, escape_quote=False):
     """Substitute environment information about the server and request into the script.
 
     The format is a very limited template language. Substitutions are
@@ -359,12 +359,12 @@ def sub(request, response):
     """
     content = resolve_content(response)
 
-    new_content = template(request, content)
+    new_content = template(request, content, escape_quote=escape_quote)
 
     response.content = new_content
     return response
 
-def template(request, content):
+def template(request, content, escape_quote=False):
     #TODO: There basically isn't any error handling here
     tokenizer = ReplacementTokenizer()
 
@@ -406,6 +406,8 @@ def template(request, content):
                      "query": "?%s" % request.url_parts.query}
         elif field == "uuid()":
             value = str(uuid.uuid4())
+        elif field == "url_base":
+            value = request.url_base
         else:
             raise Exception("Undefined template variable %s" % field)
 
@@ -419,7 +421,7 @@ def template(request, content):
 
         #Should possibly support escaping for other contexts e.g. script
         #TODO: read the encoding of the response
-        return escape(unicode(value)).encode("utf-8")
+        return escape(unicode(value), quote=escape_quote).encode("utf-8")
 
     template_regexp = re.compile(r"{{([^}]*)}}")
     new_content, count = template_regexp.subn(config_replacement, content)
