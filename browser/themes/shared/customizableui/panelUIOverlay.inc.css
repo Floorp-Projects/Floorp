@@ -634,6 +634,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-update-status > .toolbarbutton-icon,
 #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-fxa-icon > .toolbarbutton-icon,
+#PanelUI-remotetabs-syncnow > .toolbarbutton-icon,
 #PanelUI-customize > .toolbarbutton-icon,
 #PanelUI-help > .toolbarbutton-icon,
 #PanelUI-quit > .toolbarbutton-icon {
@@ -667,11 +668,91 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://branding/content/icon16.png);
 }
 
+#PanelUI-remotetabs-syncnow,
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon {
   list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
 }
 
+.PanelUI-remotetabs-instruction-label,
+#PanelUI-remotetabs-mobile-promo {
+  margin: 15px;
+  text-align: center;
+  text-shadow: none;
+  max-width: 15em;
+  color: GrayText;
+}
+
+/* The boxes with "instructions" get extra padding for space around the
+   illustration and buttons */
+.PanelUI-remotetabs-instruction-box {
+  padding: 30px 15px 15px 15px;
+}
+
+.PanelUI-remotetabs-prefs-button {
+  -moz-appearance: none;
+  background-color: #0096dd;
+  color: white;
+  border-radius: 2px;
+  margin: 10px;
+  padding: 8px;
+  text-shadow: none;
+  min-width: 200px;
+}
+
+.PanelUI-remotetabs-prefs-button:hover,
+.PanelUI-remotetabs-prefs-button:hover:active {
+  background-color: #018acb;
+}
+
+.remotetabs-promo-link {
+  margin: 0;
+}
+
+.PanelUI-remotetabs-notabsforclient-label {
+  color: GrayText;
+  /* This margin is to line this label up with the labels in toolbarbuttons. */
+  margin-left: 28px;
+}
+
+.fxaSyncIllustration {
+  width: 180px;
+  list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
+}
+
+.PanelUI-remotetabs-prefs-button > .toolbarbutton-text {
+  /* !important to override ".cui-widget-panel toolbarbutton > .toolbarbutton-text" above. */
+  text-align: center !important;
+  text-shadow: none;
+}
+
+#PanelUI-remotetabs[mainview] { /* panel anchored to toolbar button might be too skinny */
+  min-width: 19em;
+}
+
+/* Work around bug 1224412 - these boxes will cause scrollbars to appear when
+   the panel is anchored to a toolbar button.
+*/
+#PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync,
+#PanelUI-remotetabs[mainview] #PanelUI-remotetabs-reauthsync,
+#PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
+#PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
+  min-height: 30em;
+}
+
+#PanelUI-remotetabs-tabslist > label[itemtype="client"] {
+  color: GrayText;
+}
+
+/* Collapse the non-active vboxes in the remotetabs deck to use only the
+   height the active box needs */
+#PanelUI-remotetabs-deck:not([selectedIndex="1"]) > #PanelUI-remotetabs-tabsdisabledpane,
+#PanelUI-remotetabs-deck:not([selectedIndex="2"]) > #PanelUI-remotetabs-fetching,
+#PanelUI-remotetabs-deck:not([selectedIndex="3"]) > #PanelUI-remotetabs-nodevicespane {
+  visibility: collapse;
+}
+
+#PanelUI-remotetabs-syncnow[syncstatus="active"],
 #PanelUI-fxa-icon[syncstatus="active"] {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
@@ -701,6 +782,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
+#PanelUI-remotetabs-syncnow,
 #PanelUI-customize,
 #PanelUI-help,
 #PanelUI-quit {
@@ -1070,10 +1152,19 @@ menuitem.panel-subview-footer@menuStateActive@,
   color: GrayText;
 }
 
+#PanelUI-remotetabs-tabslist > toolbarbutton,
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+@media (min-resolution: 1.1dppx) {
+  #PanelUI-remotetabs-tabslist > toolbarbutton,
+  #PanelUI-historyItems > toolbarbutton {
+    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
+  }
+}
+
+#PanelUI-remotetabs-tabslist > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
@@ -1531,10 +1622,12 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   }
 
   #PanelUI-fxa-label,
+  #PanelUI-remotetabs-syncnow,
   #PanelUI-fxa-icon {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
 
+  #PanelUI-remotetabs-syncnow[syncstatus="active"],
   #PanelUI-fxa-icon[syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
@@ -1557,6 +1650,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-fxa-label,
   #PanelUI-fxa-icon,
+  #PanelUI-remotetabs-syncnow,
   #PanelUI-customize,
   #PanelUI-help,
   #PanelUI-quit {
@@ -1566,6 +1660,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-update-status > .toolbarbutton-icon,
   #PanelUI-fxa-label > .toolbarbutton-icon,
   #PanelUI-fxa-icon > .toolbarbutton-icon,
+  #PanelUI-remotetabs-syncnow > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,
   #PanelUI-help > .toolbarbutton-icon,
   #PanelUI-quit > .toolbarbutton-icon {

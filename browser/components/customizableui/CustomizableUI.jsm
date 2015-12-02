@@ -180,6 +180,7 @@ var CustomizableUIInternal = {
 #ifndef MOZ_DEV_EDITION
       "developer-button",
 #endif
+      "sync-button",
     ];
 
 #ifdef E10S_TESTING_ONLY

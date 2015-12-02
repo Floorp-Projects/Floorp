@@ -106,6 +106,83 @@
                      oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
 
+    <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView">
+      <label value="&appMenuRemoteTabs.label;" class="panel-subview-header"/>
+      <vbox class="panel-subview-body">
+        <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
+        <!-- When Sync is ready to sync -->
+        <vbox id="PanelUI-remotetabs-main" observes="sync-syncnow-state">
+          <toolbarbutton id="PanelUI-remotetabs-syncnow"
+                         observes="sync-status"
+                         class="subviewbutton"
+                         oncommand="gSyncUI.doSync();"
+                         closemenu="none"/>
+          <menuseparator id="PanelUI-remotetabs-separator"/>
+          <deck id="PanelUI-remotetabs-deck">
+            <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
+            <vbox id="PanelUI-remotetabs-tabspane">
+              <vbox id="PanelUI-remotetabs-tabslist"
+                    notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
+                    />
+            </vbox>
+            <!-- Sync is ready to Sync but the "tabs" engine isn't enabled-->
+            <vbox id="PanelUI-remotetabs-tabsdisabledpane"
+                  class="PanelUI-remotetabs-instruction-box">
+              <hbox pack="center">
+                <image class="fxaSyncIllustration" alt=""/>
+              </hbox>
+              <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.tabsnotsyncing.label;</label>
+              <hbox pack="center">
+                <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+                               label="&appMenuRemoteTabs.openprefs.label;"
+                               oncommand="gSyncUI.openSetup();"/>
+              </hbox>
+            </vbox>
+            <!-- Sync is ready to Sync but we are still fetching the tabs to show -->
+            <vbox id="PanelUI-remotetabs-fetching">
+              <label>&appMenuRemoteTabs.fetching.label;</label>
+            </vbox>
+            <!-- Sync has only 1 (ie, this) device connected -->
+            <vbox id="PanelUI-remotetabs-nodevicespane"
+                   class="PanelUI-remotetabs-instruction-box">
+              <hbox pack="center">
+                <image class="fxaSyncIllustration" alt=""/>
+              </hbox>
+              <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.noclients.label;</label>
+              <!-- The inner HTML for PanelUI-remotetabs-mobile-promo is built at runtime -->
+              <label id="PanelUI-remotetabs-mobile-promo"/>
+            </vbox>
+          </deck>
+        </vbox>
+        <!-- When Sync is not configured -->
+        <vbox id="PanelUI-remotetabs-setupsync"
+              flex="1"
+              align="center"
+              class="PanelUI-remotetabs-instruction-box"
+              observes="sync-setup-state">
+          <image class="fxaSyncIllustration" alt=""/>
+          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
+          <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+                         label="&appMenuRemoteTabs.signin.label;"
+                         oncommand="gSyncUI.openSetup();"/>
+        </vbox>
+        <!-- When Sync needs re-authentication. This uses the exact same messaging
+             as "Sync is not configured" but remains a separate box so we get
+             the goodness of observing broadcasters to manage the hidden states -->
+        <vbox id="PanelUI-remotetabs-reauthsync"
+              flex="1"
+              align="center"
+              class="PanelUI-remotetabs-instruction-box"
+              observes="sync-reauth-state">
+          <image class="fxaSyncIllustration" alt=""/>
+          <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
+          <toolbarbutton class="PanelUI-remotetabs-prefs-button"
+                         label="&appMenuRemoteTabs.signin.label;"
+                         oncommand="gSyncUI.openSetup();"/>
+        </vbox>
+      </vbox>
+    </panelview>
+
     <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
       <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
