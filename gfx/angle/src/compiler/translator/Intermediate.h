@@ -48,13 +48,13 @@ class TIntermediate
         TIntermTyped *init, TIntermAggregate *statementList, const TSourceLoc &line);
     TIntermCase *addCase(
         TIntermTyped *condition, const TSourceLoc &line);
-    TIntermTyped *addComma(
-        TIntermTyped *left, TIntermTyped *right, const TSourceLoc &);
-    TIntermConstantUnion *addConstantUnion(
-        TConstantUnion *constantUnion, const TType &type, const TSourceLoc &line);
-    // TODO(zmo): Get rid of default value.
-    bool parseConstTree(const TSourceLoc &, TIntermNode *, TConstantUnion *,
-                        TOperator, TType, bool singleConstantParam = false);
+    TIntermTyped *addComma(TIntermTyped *left,
+                           TIntermTyped *right,
+                           const TSourceLoc &line,
+                           int shaderVersion);
+    TIntermConstantUnion *addConstantUnion(const TConstantUnion *constantUnion,
+                                           const TType &type,
+                                           const TSourceLoc &line);
     TIntermNode *addLoop(TLoopType, TIntermNode *, TIntermTyped *, TIntermTyped *,
                          TIntermNode *, const TSourceLoc &);
     TIntermBranch *addBranch(TOperator, const TSourceLoc &);

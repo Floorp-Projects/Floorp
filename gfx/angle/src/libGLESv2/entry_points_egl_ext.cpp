@@ -309,15 +309,8 @@ EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribut
     switch (attribute)
     {
       case EGL_D3D11_DEVICE_ANGLE:
-        if (!dev->getExtensions().deviceD3D || dev->getType() != EGL_D3D11_DEVICE_ANGLE)
-        {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-            return EGL_FALSE;
-        }
-        error = dev->getDevice(value);
-        break;
       case EGL_D3D9_DEVICE_ANGLE:
-        if (!dev->getExtensions().deviceD3D || dev->getType() != EGL_D3D9_DEVICE_ANGLE)
+        if (!dev->getExtensions().deviceD3D || dev->getType() != attribute)
         {
             SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
             return EGL_FALSE;

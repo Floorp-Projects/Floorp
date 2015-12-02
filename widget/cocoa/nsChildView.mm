@@ -65,6 +65,7 @@
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/BasicCompositor.h"
+#include "mozilla/layers/InputAPZContext.h"
 #include "gfxUtils.h"
 #include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
@@ -2616,6 +2617,10 @@ nsChildView::TrackScrollEventAsSwipe(const mozilla::PanGestureInput& aSwipeStart
 
   mSwipeTracker = new SwipeTracker(*this, aSwipeStartEvent,
                                    aAllowedDirections, direction);
+
+  if (!mAPZC) {
+    mCurrentPanGestureBelongsToSwipe = true;
+  }
 }
 
 void
@@ -2826,11 +2831,27 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
       event = panInput.ToWidgetWheelEvent(this);
       if (aCanTriggerSwipe) {
         SwipeInfo swipeInfo = SendMayStartSwipe(panInput);
+
+        // We're in the non-APZ case here, but we still want to know whether
+        // the event was routed to a child process, so we use InputAPZContext
+        // to get that piece of information.
+        ScrollableLayerGuid guid;
+        InputAPZContext context(guid, 0, nsEventStatus_eIgnore);
+
         event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
         DispatchEvent(&event, status);
-        if (event.TriggersSwipe()) {
-          TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
-          mCurrentPanGestureBelongsToSwipe = true;
+        if (swipeInfo.wantsSwipe) {
+          if (context.WasRoutedToChildProcess()) {
+            // We don't know whether this event can start a swipe, so we need
+            // to queue up events and wait for a call to ReportSwipeStarted.
+            mSwipeEventQueue = MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, 0);
+          } else if (event.TriggersSwipe()) {
+            TrackScrollEventAsSwipe(panInput, swipeInfo.allowedDirections);
+          }
+        }
+
+        if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == 0) {
+          mSwipeEventQueue->queuedEvents.AppendElement(panInput);
         }
         return;
       }

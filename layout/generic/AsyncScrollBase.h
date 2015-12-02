@@ -87,6 +87,19 @@ protected:
   nsSMILKeySpline mTimingFunctionY;
 };
 
+// Helper for accelerated wheel deltas. This can be called from the main thread
+// or the APZ Controller thread.
+static inline double
+ComputeAcceleratedWheelDelta(double aDelta, int32_t aCounter, int32_t aFactor)
+{
+  if (!aDelta) {
+    return aDelta;
+  }
+  return (aDelta * aCounter * double(aFactor) / 10);
+}
+
+static const uint32_t kScrollSeriesTimeoutMs = 80; // in milliseconds
+
 } // namespace mozilla
 
 #endif // mozilla_layout_AsyncScrollBase_h_

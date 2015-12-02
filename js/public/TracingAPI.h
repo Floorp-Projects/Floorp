@@ -413,6 +413,7 @@ struct DefaultGCPolicy<jsid>
 };
 
 template <> struct DefaultGCPolicy<uint32_t> : public IgnoreGCPolicy<uint32_t> {};
+template <> struct DefaultGCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
 
 template <typename T>
 struct DefaultGCPolicy<JS::Heap<T>>

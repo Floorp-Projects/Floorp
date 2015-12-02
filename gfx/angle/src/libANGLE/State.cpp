@@ -20,10 +20,28 @@ namespace gl
 {
 
 State::State()
+    : mMaxDrawBuffers(0),
+      mMaxCombinedTextureImageUnits(0),
+      mDepthClearValue(0),
+      mStencilClearValue(0),
+      mScissorTest(false),
+      mSampleCoverage(false),
+      mSampleCoverageValue(0),
+      mSampleCoverageInvert(false),
+      mStencilRef(0),
+      mStencilBackRef(0),
+      mLineWidth(0),
+      mGenerateMipmapHint(GL_NONE),
+      mFragmentShaderDerivativeHint(GL_NONE),
+      mNearZ(0),
+      mFarZ(0),
+      mReadFramebuffer(nullptr),
+      mDrawFramebuffer(nullptr),
+      mProgram(nullptr),
+      mVertexArray(nullptr),
+      mActiveSampler(0),
+      mPrimitiveRestart(false)
 {
-    mMaxDrawBuffers = 0;
-    mMaxCombinedTextureImageUnits = 0;
-
     // Initialize dirty bit masks
     // TODO(jmadill): additional ES3 state
     mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_ALIGNMENT);
@@ -1265,6 +1283,9 @@ void State::getBooleanv(GLenum pname, GLboolean *params)
       case GL_DITHER:                    *params = mBlend.dither;                 break;
       case GL_TRANSFORM_FEEDBACK_ACTIVE: *params = getCurrentTransformFeedback()->isActive() ? GL_TRUE : GL_FALSE; break;
       case GL_TRANSFORM_FEEDBACK_PAUSED: *params = getCurrentTransformFeedback()->isPaused() ? GL_TRUE : GL_FALSE; break;
+      case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+          *params = mPrimitiveRestart;
+          break;
       default:
         UNREACHABLE();
         break;
@@ -1503,6 +1524,9 @@ void State::getIntegerv(const gl::Data &data, GLenum pname, GLint *params)
         break;
       case GL_UNIFORM_BUFFER_BINDING:
         *params = mGenericUniformBuffer.id();
+        break;
+      case GL_TRANSFORM_FEEDBACK_BINDING:
+        *params = mTransformFeedback->id();
         break;
       case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
         *params = mTransformFeedback->getGenericBuffer().id();

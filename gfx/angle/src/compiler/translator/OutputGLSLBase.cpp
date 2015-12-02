@@ -89,6 +89,19 @@ void TOutputGLSLBase::writeBuiltInFunctionTriplet(
     writeTriplet(visit, preString.c_str(), ", ", ")");
 }
 
+void TOutputGLSLBase::writeLayoutQualifier(const TType &type)
+{
+    if (type.getQualifier() == EvqFragmentOut || type.getQualifier() == EvqVertexIn)
+    {
+        const TLayoutQualifier &layoutQualifier = type.getLayoutQualifier();
+        if (layoutQualifier.location >= 0)
+        {
+            TInfoSinkBase &out = objSink();
+            out << "layout(location = " << layoutQualifier.location << ") ";
+        }
+    }
+}
+
 void TOutputGLSLBase::writeVariableType(const TType &type)
 {
     TInfoSinkBase &out = objSink();
@@ -876,6 +889,7 @@ bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
         {
             const TIntermSequence &sequence = *(node->getSequence());
             const TIntermTyped *variable = sequence.front()->getAsTyped();
+            writeLayoutQualifier(variable->getType());
             writeVariableType(variable->getType());
             out << " ";
             mDeclaringVariables = true;

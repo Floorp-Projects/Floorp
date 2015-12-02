@@ -1985,7 +1985,8 @@ HyperTextAccessible::ContentToRenderedOffset(nsIFrame* aFrame, int32_t aContentO
                "Call on primary frame only");
 
   nsIFrame::RenderedText text = aFrame->GetRenderedText(aContentOffset,
-      aContentOffset + 1);
+      aContentOffset + 1, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
+      nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
   *aRenderedOffset = text.mOffsetWithinNodeRenderedText;
 
   return NS_OK;
@@ -2009,7 +2010,8 @@ HyperTextAccessible::RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRendere
                "Call on primary frame only");
 
   nsIFrame::RenderedText text = aFrame->GetRenderedText(aRenderedOffset,
-      aRenderedOffset + 1, nsIFrame::TextOffsetType::OFFSETS_IN_RENDERED_TEXT);
+      aRenderedOffset + 1, nsIFrame::TextOffsetType::OFFSETS_IN_RENDERED_TEXT,
+      nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
   *aContentOffset = text.mOffsetWithinNodeText;
 
   return NS_OK;

@@ -55,10 +55,11 @@ TName GetIndexFunctionName(const TType &type, bool write)
     return name;
 }
 
-TIntermSymbol *CreateBaseSymbol(const TType &type)
+TIntermSymbol *CreateBaseSymbol(const TType &type, TQualifier qualifier)
 {
     TIntermSymbol *symbol = new TIntermSymbol(0, "base", type);
     symbol->setInternal(true);
+    symbol->getTypePointer()->setQualifier(qualifier);
     return symbol;
 }
 
@@ -66,6 +67,7 @@ TIntermSymbol *CreateIndexSymbol()
 {
     TIntermSymbol *symbol = new TIntermSymbol(0, "index", TType(EbtInt, EbpHigh));
     symbol->setInternal(true);
+    symbol->getTypePointer()->setQualifier(EvqIn);
     return symbol;
 }
 
@@ -73,6 +75,7 @@ TIntermSymbol *CreateValueSymbol(const TType &type)
 {
     TIntermSymbol *symbol = new TIntermSymbol(0, "value", type);
     symbol->setInternal(true);
+    symbol->getTypePointer()->setQualifier(EvqIn);
     return symbol;
 }
 
@@ -85,11 +88,13 @@ TIntermConstantUnion *CreateIntConstantNode(int i)
 
 TIntermBinary *CreateIndexDirectBaseSymbolNode(const TType &indexedType,
                                                const TType &fieldType,
-                                               const int index)
+                                               const int index,
+                                               TQualifier baseQualifier)
 {
     TIntermBinary *indexNode = new TIntermBinary(EOpIndexDirect);
     indexNode->setType(fieldType);
-    indexNode->setLeft(CreateBaseSymbol(indexedType));
+    TIntermSymbol *baseSymbol = CreateBaseSymbol(indexedType, baseQualifier);
+    indexNode->setLeft(baseSymbol);
     indexNode->setRight(CreateIntConstantNode(index));
     return indexNode;
 }
@@ -203,19 +208,16 @@ TIntermAggregate *GetIndexFunctionDefinition(TType type, bool write)
     }
 
     TIntermAggregate *paramsNode = new TIntermAggregate(EOpParameters);
-    TIntermSymbol *baseParam = CreateBaseSymbol(type);
-    if (write)
-        baseParam->getTypePointer()->setQualifier(EvqInOut);
-    else
-        baseParam->getTypePointer()->setQualifier(EvqIn);
+    TQualifier baseQualifier = EvqInOut;
+    if (!write)
+        baseQualifier        = EvqIn;
+    TIntermSymbol *baseParam = CreateBaseSymbol(type, baseQualifier);
     paramsNode->getSequence()->push_back(baseParam);
     TIntermSymbol *indexParam = CreateIndexSymbol();
-    indexParam->getTypePointer()->setQualifier(EvqIn);
     paramsNode->getSequence()->push_back(indexParam);
     if (write)
     {
         TIntermSymbol *valueParam = CreateValueSymbol(fieldType);
-        valueParam->getTypePointer()->setQualifier(EvqIn);
         paramsNode->getSequence()->push_back(valueParam);
     }
     indexingFunction->getSequence()->push_back(paramsNode);
@@ -226,7 +228,8 @@ TIntermAggregate *GetIndexFunctionDefinition(TType type, bool write)
         TIntermCase *caseNode = new TIntermCase(CreateIntConstantNode(i));
         statementList->getSequence()->push_back(caseNode);
 
-        TIntermBinary *indexNode = CreateIndexDirectBaseSymbolNode(type, fieldType, i);
+        TIntermBinary *indexNode =
+            CreateIndexDirectBaseSymbolNode(type, fieldType, i, baseQualifier);
         if (write)
         {
             TIntermBinary *assignNode = CreateAssignValueSymbolNode(indexNode, fieldType);
@@ -260,9 +263,11 @@ TIntermAggregate *GetIndexFunctionDefinition(TType type, bool write)
     // Two blocks: one accesses (either reads or writes) the first element and returns,
     // the other accesses the last element.
     TIntermAggregate *useFirstBlock = new TIntermAggregate(EOpSequence);
-    TIntermAggregate *useLastBlock  = new TIntermAggregate(EOpSequence);
-    TIntermBinary *indexFirstNode   = CreateIndexDirectBaseSymbolNode(type, fieldType, 0);
-    TIntermBinary *indexLastNode = CreateIndexDirectBaseSymbolNode(type, fieldType, numCases - 1);
+    TIntermAggregate *useLastBlock = new TIntermAggregate(EOpSequence);
+    TIntermBinary *indexFirstNode =
+        CreateIndexDirectBaseSymbolNode(type, fieldType, 0, baseQualifier);
+    TIntermBinary *indexLastNode =
+        CreateIndexDirectBaseSymbolNode(type, fieldType, numCases - 1, baseQualifier);
     if (write)
     {
         TIntermBinary *assignFirstNode = CreateAssignValueSymbolNode(indexFirstNode, fieldType);

@@ -140,7 +140,7 @@ public:
 
   struct PushedGroup
   {
-    PushedGroup() : mFinalTarget(nullptr), mNeedsClipToVisibleRegion(false) {}
+    PushedGroup() : mFinalTarget(nullptr), mNeedsClipToVisibleRegion(false), mOperator(gfx::CompositionOp::OP_COUNT), mOpacity(0.0f){}
     gfxContext* mFinalTarget;
     RefPtr<gfxContext> mGroupTarget;
     nsIntRegion mVisibleRegion;

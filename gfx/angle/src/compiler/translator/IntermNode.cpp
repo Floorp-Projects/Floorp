@@ -66,73 +66,6 @@ bool ValidateMultiplication(TOperator op, const TType &left, const TType &right)
     }
 }
 
-bool CompareStructure(const TType& leftNodeType,
-                      const TConstantUnion *rightUnionArray,
-                      const TConstantUnion *leftUnionArray);
-
-bool CompareStruct(const TType &leftNodeType,
-                   const TConstantUnion *rightUnionArray,
-                   const TConstantUnion *leftUnionArray)
-{
-    const TFieldList &fields = leftNodeType.getStruct()->fields();
-
-    size_t structSize = fields.size();
-    size_t index = 0;
-
-    for (size_t j = 0; j < structSize; j++)
-    {
-        size_t size = fields[j]->type()->getObjectSize();
-        for (size_t i = 0; i < size; i++)
-        {
-            if (fields[j]->type()->getBasicType() == EbtStruct)
-            {
-                if (!CompareStructure(*fields[j]->type(),
-                                      &rightUnionArray[index],
-                                      &leftUnionArray[index]))
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (leftUnionArray[index] != rightUnionArray[index])
-                    return false;
-                index++;
-            }
-        }
-    }
-    return true;
-}
-
-bool CompareStructure(const TType &leftNodeType,
-                      const TConstantUnion *rightUnionArray,
-                      const TConstantUnion *leftUnionArray)
-{
-    if (leftNodeType.isArray())
-    {
-        TType typeWithoutArrayness = leftNodeType;
-        typeWithoutArrayness.clearArrayness();
-
-        size_t arraySize = leftNodeType.getArraySize();
-
-        for (size_t i = 0; i < arraySize; ++i)
-        {
-            size_t offset = typeWithoutArrayness.getObjectSize() * i;
-            if (!CompareStruct(typeWithoutArrayness,
-                               &rightUnionArray[offset],
-                               &leftUnionArray[offset]))
-            {
-                return false;
-            }
-        }
-    }
-    else
-    {
-        return CompareStruct(leftNodeType, rightUnionArray, leftUnionArray);
-    }
-    return true;
-}
-
 TConstantUnion *Vectorize(const TConstantUnion &constant, size_t size)
 {
     TConstantUnion *constUnion = new TConstantUnion[size];
@@ -169,7 +102,7 @@ void UndefinedConstantFoldingError(const TSourceLoc &loc, TOperator op, TBasicTy
     }
 }
 
-float VectorLength(TConstantUnion *paramArray, size_t paramArraySize)
+float VectorLength(const TConstantUnion *paramArray, size_t paramArraySize)
 {
     float result = 0.0f;
     for (size_t i = 0; i < paramArraySize; i++)
@@ -180,7 +113,9 @@ float VectorLength(TConstantUnion *paramArray, size_t paramArraySize)
     return sqrtf(result);
 }
 
-float VectorDotProduct(TConstantUnion *paramArray1, TConstantUnion *paramArray2, size_t paramArraySize)
+float VectorDotProduct(const TConstantUnion *paramArray1,
+                       const TConstantUnion *paramArray2,
+                       size_t paramArraySize)
 {
     float result = 0.0f;
     for (size_t i = 0; i < paramArraySize; i++)
@@ -188,19 +123,23 @@ float VectorDotProduct(TConstantUnion *paramArray1, TConstantUnion *paramArray2,
     return result;
 }
 
-TIntermTyped *CreateFoldedNode(TConstantUnion *constArray, const TIntermTyped *originalNode)
+TIntermTyped *CreateFoldedNode(TConstantUnion *constArray,
+                               const TIntermTyped *originalNode,
+                               TQualifier qualifier)
 {
     if (constArray == nullptr)
     {
         return nullptr;
     }
     TIntermTyped *folded = new TIntermConstantUnion(constArray, originalNode->getType());
-    folded->getTypePointer()->setQualifier(EvqConst);
+    folded->getTypePointer()->setQualifier(qualifier);
     folded->setLine(originalNode->getLine());
     return folded;
 }
 
-angle::Matrix<float> GetMatrix(TConstantUnion *paramArray, const unsigned int &rows, const unsigned int &cols)
+angle::Matrix<float> GetMatrix(const TConstantUnion *paramArray,
+                               const unsigned int &rows,
+                               const unsigned int &cols)
 {
     std::vector<float> elements;
     for (size_t i = 0; i < rows * cols; i++)
@@ -210,7 +149,7 @@ angle::Matrix<float> GetMatrix(TConstantUnion *paramArray, const unsigned int &r
     return angle::Matrix<float>(elements, rows, cols).transpose();
 }
 
-angle::Matrix<float> GetMatrix(TConstantUnion *paramArray, const unsigned int &size)
+angle::Matrix<float> GetMatrix(const TConstantUnion *paramArray, const unsigned int &size)
 {
     std::vector<float> elements;
     for (size_t i = 0; i < size * size; i++)
@@ -259,7 +198,7 @@ bool TIntermLoop::replaceChildNode(
     REPLACE_IF_IS(mInit, TIntermNode, original, replacement);
     REPLACE_IF_IS(mCond, TIntermTyped, original, replacement);
     REPLACE_IF_IS(mExpr, TIntermTyped, original, replacement);
-    REPLACE_IF_IS(mBody, TIntermNode, original, replacement);
+    REPLACE_IF_IS(mBody, TIntermAggregate, original, replacement);
     return false;
 }
 
@@ -317,6 +256,19 @@ bool TIntermAggregate::insertChildNodes(TIntermSequence::size_type position, TIn
     }
     auto it = mSequence.begin() + position;
     mSequence.insert(it, insertions.begin(), insertions.end());
+    return true;
+}
+
+bool TIntermAggregate::areChildrenConstQualified()
+{
+    for (TIntermNode *&child : mSequence)
+    {
+        TIntermTyped *typed = child->getAsTyped();
+        if (typed && typed->getQualifier() != EvqConst)
+        {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -401,12 +353,7 @@ TIntermTyped::TIntermTyped(const TIntermTyped &node) : TIntermNode(), mType(node
 
 TIntermConstantUnion::TIntermConstantUnion(const TIntermConstantUnion &node) : TIntermTyped(node)
 {
-    size_t arraySize   = mType.getObjectSize();
-    mUnionArrayPointer = new TConstantUnion[arraySize];
-    for (size_t i = 0u; i < arraySize; ++i)
-    {
-        mUnionArrayPointer[i] = node.mUnionArrayPointer[i];
-    }
+    mUnionArrayPointer = node.mUnionArrayPointer;
 }
 
 TIntermAggregate::TIntermAggregate(const TIntermAggregate &node)
@@ -587,7 +534,10 @@ void TIntermUnary::promote(const TType *funcReturnType)
         }
     }
 
-    mType.setQualifier(EvqTemporary);
+    if (mOperand->getQualifier() == EvqConst)
+        mType.setQualifier(EvqConst);
+    else
+        mType.setQualifier(EvqTemporary);
 }
 
 //
@@ -612,10 +562,12 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
         mLeft->getPrecision(), mRight->getPrecision());
     getTypePointer()->setPrecision(higherPrecision);
 
+    TQualifier resultQualifier = EvqConst;
     // Binary operations results in temporary variables unless both
     // operands are const.
     if (mLeft->getQualifier() != EvqConst || mRight->getQualifier() != EvqConst)
     {
+        resultQualifier = EvqTemporary;
         getTypePointer()->setQualifier(EvqTemporary);
     }
 
@@ -670,14 +622,15 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
             if (mLeft->isVector())
             {
                 mOp = EOpVectorTimesMatrix;
-                setType(TType(basicType, higherPrecision, EvqTemporary,
+                setType(TType(basicType, higherPrecision, resultQualifier,
                               static_cast<unsigned char>(mRight->getCols()), 1));
             }
             else
             {
                 mOp = EOpMatrixTimesScalar;
-                setType(TType(basicType, higherPrecision, EvqTemporary,
-                              static_cast<unsigned char>(mRight->getCols()), static_cast<unsigned char>(mRight->getRows())));
+                setType(TType(basicType, higherPrecision, resultQualifier,
+                              static_cast<unsigned char>(mRight->getCols()),
+                              static_cast<unsigned char>(mRight->getRows())));
             }
         }
         else if (mLeft->isMatrix() && !mRight->isMatrix())
@@ -685,7 +638,7 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
             if (mRight->isVector())
             {
                 mOp = EOpMatrixTimesVector;
-                setType(TType(basicType, higherPrecision, EvqTemporary,
+                setType(TType(basicType, higherPrecision, resultQualifier,
                               static_cast<unsigned char>(mLeft->getRows()), 1));
             }
             else
@@ -696,8 +649,9 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
         else if (mLeft->isMatrix() && mRight->isMatrix())
         {
             mOp = EOpMatrixTimesMatrix;
-            setType(TType(basicType, higherPrecision, EvqTemporary,
-                          static_cast<unsigned char>(mRight->getCols()), static_cast<unsigned char>(mLeft->getRows())));
+            setType(TType(basicType, higherPrecision, resultQualifier,
+                          static_cast<unsigned char>(mRight->getCols()),
+                          static_cast<unsigned char>(mLeft->getRows())));
         }
         else if (!mLeft->isMatrix() && !mRight->isMatrix())
         {
@@ -708,7 +662,7 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
             else if (mLeft->isVector() || mRight->isVector())
             {
                 mOp = EOpVectorTimesScalar;
-                setType(TType(basicType, higherPrecision, EvqTemporary,
+                setType(TType(basicType, higherPrecision, resultQualifier,
                               static_cast<unsigned char>(nominalSize), 1));
             }
         }
@@ -751,8 +705,9 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
         else if (mLeft->isMatrix() && mRight->isMatrix())
         {
             mOp = EOpMatrixTimesMatrixAssign;
-            setType(TType(basicType, higherPrecision, EvqTemporary,
-                          static_cast<unsigned char>(mRight->getCols()), static_cast<unsigned char>(mLeft->getRows())));
+            setType(TType(basicType, higherPrecision, resultQualifier,
+                          static_cast<unsigned char>(mRight->getCols()),
+                          static_cast<unsigned char>(mLeft->getRows())));
         }
         else if (!mLeft->isMatrix() && !mRight->isMatrix())
         {
@@ -765,7 +720,7 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
                 if (!mLeft->isVector())
                     return false;
                 mOp = EOpVectorTimesScalarAssign;
-                setType(TType(basicType, higherPrecision, EvqTemporary,
+                setType(TType(basicType, higherPrecision, resultQualifier,
                               static_cast<unsigned char>(mLeft->getNominalSize()), 1));
             }
         }
@@ -835,8 +790,9 @@ bool TIntermBinary::promote(TInfoSink &infoSink)
         {
             const int secondarySize = std::max(
                 mLeft->getSecondarySize(), mRight->getSecondarySize());
-            setType(TType(basicType, higherPrecision, EvqTemporary,
-                          static_cast<unsigned char>(nominalSize), static_cast<unsigned char>(secondarySize)));
+            setType(TType(basicType, higherPrecision, resultQualifier,
+                          static_cast<unsigned char>(nominalSize),
+                          static_cast<unsigned char>(secondarySize)));
             if (mLeft->isArray())
             {
                 ASSERT(mLeft->getArraySize() == mRight->getArraySize());
@@ -871,7 +827,14 @@ TIntermTyped *TIntermBinary::fold(TInfoSink &infoSink)
         return nullptr;
     }
     TConstantUnion *constArray = leftConstant->foldBinary(mOp, rightConstant, infoSink);
-    return CreateFoldedNode(constArray, this);
+
+    // Nodes may be constant folded without being qualified as constant.
+    TQualifier resultQualifier = EvqConst;
+    if (mLeft->getQualifier() != EvqConst || mRight->getQualifier() != EvqConst)
+    {
+        resultQualifier = EvqTemporary;
+    }
+    return CreateFoldedNode(constArray, this, resultQualifier);
 }
 
 TIntermTyped *TIntermUnary::fold(TInfoSink &infoSink)
@@ -903,7 +866,10 @@ TIntermTyped *TIntermUnary::fold(TInfoSink &infoSink)
         constArray = operandConstant->foldUnaryWithSameReturnType(mOp, infoSink);
         break;
     }
-    return CreateFoldedNode(constArray, this);
+
+    // Nodes may be constant folded without being qualified as constant.
+    TQualifier resultQualifier = mOperand->getQualifier() == EvqConst ? EvqConst : EvqTemporary;
+    return CreateFoldedNode(constArray, this, resultQualifier);
 }
 
 TIntermTyped *TIntermAggregate::fold(TInfoSink &infoSink)
@@ -916,8 +882,15 @@ TIntermTyped *TIntermAggregate::fold(TInfoSink &infoSink)
             return nullptr;
         }
     }
-    TConstantUnion *constArray = TIntermConstantUnion::FoldAggregateBuiltIn(this, infoSink);
-    return CreateFoldedNode(constArray, this);
+    TConstantUnion *constArray = nullptr;
+    if (isConstructor())
+        constArray = TIntermConstantUnion::FoldAggregateConstructor(this, infoSink);
+    else
+        constArray = TIntermConstantUnion::FoldAggregateBuiltIn(this, infoSink);
+
+    // Nodes may be constant folded without being qualified as constant.
+    TQualifier resultQualifier = areChildrenConstQualified() ? EvqConst : EvqTemporary;
+    return CreateFoldedNode(constArray, this, resultQualifier);
 }
 
 //
@@ -928,8 +901,8 @@ TIntermTyped *TIntermAggregate::fold(TInfoSink &infoSink)
 //
 TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op, TIntermConstantUnion *rightNode, TInfoSink &infoSink)
 {
-    TConstantUnion *leftArray = getUnionArrayPointer();
-    TConstantUnion *rightArray = rightNode->getUnionArrayPointer();
+    const TConstantUnion *leftArray  = getUnionArrayPointer();
+    const TConstantUnion *rightArray = rightNode->getUnionArrayPointer();
 
     if (!leftArray)
         return nullptr;
@@ -1229,19 +1202,12 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op, TIntermConstantUn
         {
             resultArray = new TConstantUnion[1];
             bool equal = true;
-            if (getType().getBasicType() == EbtStruct)
+            for (size_t i = 0; i < objectSize; i++)
             {
-                equal = CompareStructure(getType(), rightArray, leftArray);
-            }
-            else
-            {
-                for (size_t i = 0; i < objectSize; i++)
+                if (leftArray[i] != rightArray[i])
                 {
-                    if (leftArray[i] != rightArray[i])
-                    {
-                        equal = false;
-                        break;  // break out of for loop
-                    }
+                    equal = false;
+                    break;  // break out of for loop
                 }
             }
             if (op == EOpEqual)
@@ -1276,7 +1242,7 @@ TConstantUnion *TIntermConstantUnion::foldUnaryWithDifferentReturnType(TOperator
     // Do operations where the return type has a different number of components compared to the operand type.
     //
 
-    TConstantUnion *operandArray = getUnionArrayPointer();
+    const TConstantUnion *operandArray = getUnionArrayPointer();
     if (!operandArray)
         return nullptr;
 
@@ -1489,7 +1455,7 @@ TConstantUnion *TIntermConstantUnion::foldUnaryWithSameReturnType(TOperator op, 
     // Do unary operations where the return type is the same as operand type.
     //
 
-    TConstantUnion *operandArray = getUnionArrayPointer();
+    const TConstantUnion *operandArray = getUnionArrayPointer();
     if (!operandArray)
         return nullptr;
 
@@ -1936,12 +1902,112 @@ bool TIntermConstantUnion::foldFloatTypeUnary(const TConstantUnion &parameter, F
 }
 
 // static
+TConstantUnion *TIntermConstantUnion::FoldAggregateConstructor(TIntermAggregate *aggregate,
+                                                               TInfoSink &infoSink)
+{
+    ASSERT(aggregate->getSequence()->size() > 0u);
+    size_t resultSize           = aggregate->getType().getObjectSize();
+    TConstantUnion *resultArray = new TConstantUnion[resultSize];
+    TBasicType basicType        = aggregate->getBasicType();
+
+    size_t resultIndex = 0u;
+
+    if (aggregate->getSequence()->size() == 1u)
+    {
+        TIntermNode *argument                    = aggregate->getSequence()->front();
+        TIntermConstantUnion *argumentConstant   = argument->getAsConstantUnion();
+        const TConstantUnion *argumentUnionArray = argumentConstant->getUnionArrayPointer();
+        // Check the special case of constructing a matrix diagonal from a single scalar,
+        // or a vector from a single scalar.
+        if (argumentConstant->getType().getObjectSize() == 1u)
+        {
+            if (aggregate->isMatrix())
+            {
+                int resultCols = aggregate->getType().getCols();
+                int resultRows = aggregate->getType().getRows();
+                for (int col = 0; col < resultCols; ++col)
+                {
+                    for (int row = 0; row < resultRows; ++row)
+                    {
+                        if (col == row)
+                        {
+                            resultArray[resultIndex].cast(basicType, argumentUnionArray[0]);
+                        }
+                        else
+                        {
+                            resultArray[resultIndex].setFConst(0.0f);
+                        }
+                        ++resultIndex;
+                    }
+                }
+            }
+            else
+            {
+                while (resultIndex < resultSize)
+                {
+                    resultArray[resultIndex].cast(basicType, argumentUnionArray[0]);
+                    ++resultIndex;
+                }
+            }
+            ASSERT(resultIndex == resultSize);
+            return resultArray;
+        }
+        else if (aggregate->isMatrix() && argumentConstant->isMatrix())
+        {
+            // The special case of constructing a matrix from a matrix.
+            int argumentCols = argumentConstant->getType().getCols();
+            int argumentRows = argumentConstant->getType().getRows();
+            int resultCols   = aggregate->getType().getCols();
+            int resultRows = aggregate->getType().getRows();
+            for (int col = 0; col < resultCols; ++col)
+            {
+                for (int row = 0; row < resultRows; ++row)
+                {
+                    if (col < argumentCols && row < argumentRows)
+                    {
+                        resultArray[resultIndex].cast(basicType,
+                                                      argumentUnionArray[col * argumentRows + row]);
+                    }
+                    else if (col == row)
+                    {
+                        resultArray[resultIndex].setFConst(1.0f);
+                    }
+                    else
+                    {
+                        resultArray[resultIndex].setFConst(0.0f);
+                    }
+                    ++resultIndex;
+                }
+            }
+            ASSERT(resultIndex == resultSize);
+            return resultArray;
+        }
+    }
+
+    for (TIntermNode *&argument : *aggregate->getSequence())
+    {
+        TIntermConstantUnion *argumentConstant   = argument->getAsConstantUnion();
+        size_t argumentSize                      = argumentConstant->getType().getObjectSize();
+        const TConstantUnion *argumentUnionArray = argumentConstant->getUnionArrayPointer();
+        for (size_t i = 0u; i < argumentSize; ++i)
+        {
+            if (resultIndex >= resultSize)
+                break;
+            resultArray[resultIndex].cast(basicType, argumentUnionArray[i]);
+            ++resultIndex;
+        }
+    }
+    ASSERT(resultIndex == resultSize);
+    return resultArray;
+}
+
+// static
 TConstantUnion *TIntermConstantUnion::FoldAggregateBuiltIn(TIntermAggregate *aggregate, TInfoSink &infoSink)
 {
     TOperator op = aggregate->getOp();
     TIntermSequence *sequence = aggregate->getSequence();
     unsigned int paramsCount = static_cast<unsigned int>(sequence->size());
-    std::vector<TConstantUnion *> unionArrays(paramsCount);
+    std::vector<const TConstantUnion *> unionArrays(paramsCount);
     std::vector<size_t> objectSizes(paramsCount);
     size_t maxObjectSize = 0;
     TBasicType basicType = EbtVoid;
