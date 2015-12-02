@@ -8,54 +8,35 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-var gTab, gPanel, gDebugger;
-var gEditor, gSources;
-
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const queries = gDebugger.require('./content/queries');
+    const getState = gDebugger.DebuggerController.getState;
 
-    waitForSourceShown(gPanel, "code_ugly.js")
-      .then(testSourceIsUgly)
-      .then(toggleBlackBoxing.bind(null, gPanel))
-      .then(clickPrettyPrintButton)
-      .then(testSourceIsStillUgly)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-      });
+    Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, "code_ugly.js");
+
+      ok(!gEditor.getText().includes("\n    "),
+         "The source shouldn't be pretty printed yet.");
+
+      yield toggleBlackBoxing(gPanel);
+
+      // Wait a tick before clicking to make sure the frontend's blackboxchange
+      // handlers have finished.
+      yield waitForTick();
+      gDebugger.document.getElementById("pretty-print").click();
+      // Make sure the text updates
+      yield waitForTick();
+
+      const source = queries.getSelectedSource(getState());
+      const { text } = queries.getSourceText(getState(), source.actor);
+      ok(!text.includes("\n    "));
+      closeDebuggerAndFinish(gPanel);
+    });
   });
 }
-
-function testSourceIsUgly() {
-  ok(!gEditor.getText().includes("\n    "),
-     "The source shouldn't be pretty printed yet.");
-}
-
-function clickPrettyPrintButton() {
-  // Wait a tick before clicking to make sure the frontend's blackboxchange
-  // handlers have finished.
-  return new Promise(resolve => {
-    gDebugger.document.getElementById("pretty-print").click();
-    resolve();
-  });
-}
-
-function testSourceIsStillUgly() {
-  const { source } = gSources.selectedItem.attachment;
-  return gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
-    ok(!text.includes("\n    "));
-  });
-}
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gPanel = null;
-  gDebugger = null;
-  gEditor = null;
-  gSources = null;
-});

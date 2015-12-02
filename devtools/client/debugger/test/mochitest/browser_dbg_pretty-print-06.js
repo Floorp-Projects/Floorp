@@ -8,18 +8,19 @@
 const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
 const JS_URL = EXAMPLE_URL + "code_location-changes.js";
 
-var gTab, gPanel, gDebugger, gClient;
-var gEditor, gSources, gControllerSources, gPrettyPrinted;
-
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gClient = gDebugger.gClient;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
-    gControllerSources = gDebugger.DebuggerController.SourceScripts;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gClient = gDebugger.gClient;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require('./content/constants');
+    const actions = bindActionCreators(gPanel);
+    const getState = gDebugger.DebuggerController.getState;
+    let gPrettyPrinted = false;
 
     // We can't feed javascript files with syntax errors to the debugger,
     // because they will never run, thus sometimes getting gc'd before the
@@ -48,19 +49,17 @@ function test() {
       ok(gEditor.getText().includes("myFunction"),
         "The source shouldn't be pretty printed yet.");
 
-      clickPrettyPrintButton();
-
-      let { source } = gSources.selectedItem.attachment;
+      const source = queries.getSelectedSource(getState());
       try {
-        yield gControllerSources.togglePrettyPrint(source);
+        yield actions.togglePrettyPrint(source);
         ok(false, "The promise for a prettified source should be rejected!");
-      } catch ([source, error]) {
-        ok(error.includes("prettyPrintError"),
+      } catch(error) {
+        ok(error.rdpError, "Error came from a RDP request");
+        ok(error.rdpError.includes("prettyPrintError"),
           "The promise was correctly rejected with a meaningful message.");
       }
 
-      let text;
-      [source, text] = yield gControllerSources.getText(source);
+      const { text } = yield queries.getSourceText(getState(), source.actor);
       is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is still selected.");
       ok(gEditor.getText().includes("myFunction"),
@@ -75,18 +74,3 @@ function test() {
     });
   });
 }
-
-function clickPrettyPrintButton() {
-  gDebugger.document.getElementById("pretty-print").click();
-}
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gPanel = null;
-  gDebugger = null;
-  gClient = null;
-  gEditor = null;
-  gSources = null;
-  gControllerSources = null;
-  gPrettyPrinted = null;
-});

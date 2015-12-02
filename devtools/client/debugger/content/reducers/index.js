@@ -4,5 +4,13 @@
 "use strict";
 
 const eventListeners = require('./event-listeners');
+const sources = require('./sources');
+const breakpoints = require('./breakpoints');
+const asyncRequests = require('./async-requests');
 
-exports.eventListeners = eventListeners;
+module.exports = {
+  eventListeners,
+  sources,
+  breakpoints,
+  asyncRequests
+};

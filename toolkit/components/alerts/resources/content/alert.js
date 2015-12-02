@@ -276,6 +276,8 @@ function doNotDisturb() {
                          .getService(Ci.nsIAlertsService)
                          .QueryInterface(Ci.nsIAlertsDoNotDisturb);
   alertService.manualDoNotDisturb = true;
+  Services.telemetry.getHistogramById("WEB_NOTIFICATION_MENU")
+                    .add(0);
   onAlertClose();
 }
 

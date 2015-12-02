@@ -81,11 +81,17 @@ function eventSource(aProto) {
    *        times, all instances will be removed.
    */
   aProto.removeListener = function (aName, aListener) {
-    if (!this._listeners || !this._listeners[aName]) {
+    if (!this._listeners || (aListener && !this._listeners[aName])) {
       return;
     }
-    this._listeners[aName] =
-      this._listeners[aName].filter(function (l) { return l != aListener });
+
+    if (!aListener) {
+      this._listeners[aName] = [];
+    }
+    else {
+      this._listeners[aName] =
+        this._listeners[aName].filter(function (l) { return l != aListener });
+    }
   };
 
   /**

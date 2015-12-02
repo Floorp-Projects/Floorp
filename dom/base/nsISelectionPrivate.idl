@@ -28,7 +28,7 @@ template<class T> class nsTArray;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(5a82ee9a-35ce-11e4-8c3e-b7043d68ad70)]
+[scriptable, builtinclass, uuid(0c9f4f74-ee7e-4fe9-be6b-0ba856368178)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -40,12 +40,12 @@ interface nsISelectionPrivate : nsISelection
     /* startBatchChanges
        match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
     */
-    [noscript] void  startBatchChanges();
+    [noscript] void startBatchChanges();
 
     /* endBatchChanges
        match this up with startBatchChanges
     */
-    [noscript] void  endBatchChanges();
+    [noscript] void endBatchChanges();
 
     DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
