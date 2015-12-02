@@ -8,6 +8,8 @@ loader.lazyRequireGetter(this, "Services");
 loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+
 /**
  * Tries to open a Stylesheet file in the Style Editor. If the file is not found,
  * it is opened in source view instead.
@@ -55,7 +57,7 @@ exports.viewSourceInDebugger = Task.async(function *(toolbox, sourceURL, sourceL
   let { panelWin: dbg } = yield toolbox.loadTool("jsdebugger");
 
   if (!debuggerAlreadyOpen) {
-    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
+    yield dbg.DebuggerController.waitForSourcesLoaded();
   }
 
   let { DebuggerView } = dbg;
@@ -64,7 +66,11 @@ exports.viewSourceInDebugger = Task.async(function *(toolbox, sourceURL, sourceL
   let item = Sources.getItemForAttachment(a => a.source.url === sourceURL);
   if (item) {
     yield toolbox.selectTool("jsdebugger");
-    yield DebuggerView.setEditorLocation(item.attachment.source.actor, sourceLine, { noDebug: true });
+    const isLoading = dbg.DebuggerController.getState().sources.selectedSource !== item.attachment.source.actor;
+    DebuggerView.setEditorLocation(item.attachment.source.actor, sourceLine, { noDebug: true });
+    if (isLoading) {
+      yield dbg.DebuggerController.waitForSourceShown(sourceURL);
+    }
     return true;
   }
 

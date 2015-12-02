@@ -18,57 +18,82 @@
 namespace rx
 {
 
-static void ConvertIndices(GLenum sourceType, GLenum destinationType, const void *input,
-                           GLsizei count, void *output)
+namespace
 {
+
+template <typename InputT, typename DestT>
+void ConvertIndexArray(const void *input,
+                       GLenum sourceType,
+                       void *output,
+                       GLenum destinationType,
+                       GLsizei count,
+                       bool usePrimitiveRestartFixedIndex)
+{
+    const InputT *in = static_cast<const InputT *>(input);
+    DestT *out       = static_cast<DestT *>(output);
+
+    if (usePrimitiveRestartFixedIndex)
+    {
+        InputT srcRestartIndex = static_cast<InputT>(gl::GetPrimitiveRestartIndex(sourceType));
+        DestT destRestartIndex = static_cast<DestT>(gl::GetPrimitiveRestartIndex(destinationType));
+        for (GLsizei i = 0; i < count; i++)
+        {
+            out[i] = (in[i] == srcRestartIndex ? destRestartIndex : static_cast<DestT>(in[i]));
+        }
+    }
+    else
+    {
+        for (GLsizei i = 0; i < count; i++)
+        {
+            out[i] = static_cast<DestT>(in[i]);
+        }
+    }
+}
+
+void ConvertIndices(GLenum sourceType,
+                    GLenum destinationType,
+                    const void *input,
+                    GLsizei count,
+                    void *output,
+                    bool usePrimitiveRestartFixedIndex)
+{
+    if (sourceType == destinationType)
+    {
+        const gl::Type &typeInfo = gl::GetTypeInfo(destinationType);
+        memcpy(output, input, count * typeInfo.bytes);
+        return;
+    }
+
     if (sourceType == GL_UNSIGNED_BYTE)
     {
         ASSERT(destinationType == GL_UNSIGNED_SHORT);
-        const GLubyte *in = static_cast<const GLubyte*>(input);
-        GLushort *out = static_cast<GLushort*>(output);
-
-        for (GLsizei i = 0; i < count; i++)
-        {
-            out[i] = in[i];
-        }
-    }
-    else if (sourceType == GL_UNSIGNED_INT)
-    {
-        ASSERT(destinationType == GL_UNSIGNED_INT);
-        memcpy(output, input, count * sizeof(GLuint));
+        ConvertIndexArray<GLubyte, GLushort>(input, sourceType, output, destinationType, count,
+                                             usePrimitiveRestartFixedIndex);
     }
     else if (sourceType == GL_UNSIGNED_SHORT)
     {
-        if (destinationType == GL_UNSIGNED_SHORT)
-        {
-            memcpy(output, input, count * sizeof(GLushort));
-        }
-        else if (destinationType == GL_UNSIGNED_INT)
-        {
-            const GLushort *in = static_cast<const GLushort*>(input);
-            GLuint *out = static_cast<GLuint*>(output);
-
-            for (GLsizei i = 0; i < count; i++)
-            {
-                out[i] = in[i];
-            }
-        }
-        else UNREACHABLE();
+        ASSERT(destinationType == GL_UNSIGNED_INT);
+        ConvertIndexArray<GLushort, GLuint>(input, sourceType, output, destinationType, count,
+                                            usePrimitiveRestartFixedIndex);
     }
     else UNREACHABLE();
 }
 
-static gl::Error StreamInIndexBuffer(IndexBufferInterface *buffer, const GLvoid *data,
-                                     unsigned int count, GLenum srcType, GLenum dstType,
-                                     unsigned int *offset)
+gl::Error StreamInIndexBuffer(IndexBufferInterface *buffer,
+                              const GLvoid *data,
+                              unsigned int count,
+                              GLenum srcType,
+                              GLenum dstType,
+                              bool usePrimitiveRestartFixedIndex,
+                              unsigned int *offset)
 {
     const gl::Type &dstTypeInfo = gl::GetTypeInfo(dstType);
 
     if (count > (std::numeric_limits<unsigned int>::max() >> dstTypeInfo.bytesShift))
     {
         return gl::Error(GL_OUT_OF_MEMORY,
-                        "Reserving %u indices of %u bytes each exceeds the maximum buffer size.",
-                        count, dstTypeInfo.bytes);
+                         "Reserving %u indices of %u bytes each exceeds the maximum buffer size.",
+                         count, dstTypeInfo.bytes);
     }
 
     unsigned int bufferSizeRequired = count << dstTypeInfo.bytesShift;
@@ -85,7 +110,7 @@ static gl::Error StreamInIndexBuffer(IndexBufferInterface *buffer, const GLvoid 
         return error;
     }
 
-    ConvertIndices(srcType, dstType, data, count, output);
+    ConvertIndices(srcType, dstType, data, count, output, usePrimitiveRestartFixedIndex);
 
     error = buffer->unmapBuffer();
     if (error.isError())
@@ -95,6 +120,8 @@ static gl::Error StreamInIndexBuffer(IndexBufferInterface *buffer, const GLvoid 
 
     return gl::Error(GL_NO_ERROR);
 }
+
+}  // anonymous namespace
 
 IndexDataManager::IndexDataManager(BufferFactoryD3D *factory, RendererClass rendererClass)
     : mFactory(factory),
@@ -118,9 +145,13 @@ IndexDataManager::~IndexDataManager()
 // When we have a buffer with an unsupported format (subcase b) then we need to do some translation:
 // we will start by falling back to streaming, and after a while will start using a static translated
 // copy of the index buffer.
-gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::Buffer *glBuffer,
-                                             const GLvoid *indices, TranslatedIndexData *translated,
-                                             SourceIndexData *sourceData)
+gl::Error IndexDataManager::prepareIndexData(GLenum srcType,
+                                             GLsizei count,
+                                             gl::Buffer *glBuffer,
+                                             const GLvoid *indices,
+                                             TranslatedIndexData *translated,
+                                             SourceIndexData *sourceData,
+                                             bool primitiveRestartFixedIndexEnabled)
 {
     // Avoid D3D11's primitive restart index value
     // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb205124(v=vs.85).aspx
@@ -128,7 +159,13 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
         translated->indexRange.vertexIndexCount < static_cast<size_t>(count) ||
         translated->indexRange.end == gl::GetPrimitiveRestartIndex(srcType);
     bool primitiveRestartWorkaround = mRendererClass == RENDERER_D3D11 &&
+                                      !primitiveRestartFixedIndexEnabled &&
                                       hasPrimitiveRestartIndex && srcType == GL_UNSIGNED_SHORT;
+
+    // We should never have to deal with MAX_UINT indices, since we restrict it via
+    // MAX_ELEMENT_INDEX.
+    ASSERT(!(mRendererClass == RENDERER_D3D11 && !primitiveRestartFixedIndexEnabled &&
+             hasPrimitiveRestartIndex && srcType == GL_UNSIGNED_INT));
 
     const GLenum dstType = (srcType == GL_UNSIGNED_INT || primitiveRestartWorkaround) ?
                            GL_UNSIGNED_INT : GL_UNSIGNED_SHORT;
@@ -151,7 +188,8 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
     if (glBuffer == nullptr)
     {
         translated->storage = nullptr;
-        return streamIndexData(indices, count, srcType, dstType, translated);
+        return streamIndexData(indices, count, srcType, dstType, primitiveRestartFixedIndexEnabled,
+                               translated);
     }
 
     // Case 2: the indices are already in a buffer
@@ -193,7 +231,7 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
 
     if (staticBufferInitialized && !staticBufferUsable)
     {
-        buffer->invalidateStaticData();
+        buffer->invalidateStaticData(D3D_BUFFER_INVALIDATE_WHOLE_CACHE);
         staticBuffer = nullptr;
     }
 
@@ -207,7 +245,8 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
         }
         ASSERT(bufferData != nullptr);
 
-        error = streamIndexData(bufferData + offset, count, srcType, dstType, translated);
+        error = streamIndexData(bufferData + offset, count, srcType, dstType,
+                                primitiveRestartFixedIndexEnabled, translated);
         if (error.isError())
         {
             return error;
@@ -227,8 +266,8 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
 
             unsigned int convertCount =
                 static_cast<unsigned int>(buffer->getSize()) >> srcTypeInfo.bytesShift;
-            error = StreamInIndexBuffer(staticBuffer, bufferData, convertCount,
-                                        srcType, dstType, nullptr);
+            error = StreamInIndexBuffer(staticBuffer, bufferData, convertCount, srcType, dstType,
+                                        primitiveRestartFixedIndexEnabled, nullptr);
             if (error.isError())
             {
                 return error;
@@ -245,8 +284,12 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error IndexDataManager::streamIndexData(const GLvoid *data, unsigned int count, GLenum srcType,
-                                            GLenum dstType, TranslatedIndexData *translated)
+gl::Error IndexDataManager::streamIndexData(const GLvoid *data,
+                                            unsigned int count,
+                                            GLenum srcType,
+                                            GLenum dstType,
+                                            bool usePrimitiveRestartFixedIndex,
+                                            TranslatedIndexData *translated)
 {
     const gl::Type &dstTypeInfo = gl::GetTypeInfo(dstType);
 
@@ -259,7 +302,8 @@ gl::Error IndexDataManager::streamIndexData(const GLvoid *data, unsigned int cou
     ASSERT(indexBuffer != nullptr);
 
     unsigned int offset;
-    StreamInIndexBuffer(indexBuffer, data, count, srcType, dstType, &offset);
+    StreamInIndexBuffer(indexBuffer, data, count, srcType, dstType, usePrimitiveRestartFixedIndex,
+                        &offset);
 
     translated->indexBuffer = indexBuffer->getIndexBuffer();
     translated->serial = indexBuffer->getSerial();

@@ -4,6 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'async-requests.js',
+    'breakpoints.js',
     'event-listeners.js',
-    'index.js'
+    'index.js',
+    'sources.js'
 )

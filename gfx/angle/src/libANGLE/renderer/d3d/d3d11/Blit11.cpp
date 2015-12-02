@@ -213,21 +213,56 @@ D3D11_INPUT_ELEMENT_DESC quad3DLayout[] =
 
 Blit11::Blit11(Renderer11 *renderer)
     : mRenderer(renderer),
+      mResourcesInitialized(false),
       mVertexBuffer(nullptr),
       mPointSampler(nullptr),
       mLinearSampler(nullptr),
       mScissorEnabledRasterizerState(nullptr),
       mScissorDisabledRasterizerState(nullptr),
       mDepthStencilState(nullptr),
-      mQuad2DIL(quad2DLayout, ArraySize(quad2DLayout), g_VS_Passthrough2D, ArraySize(g_VS_Passthrough2D), "Blit11 2D input layout"),
+      mQuad2DIL(quad2DLayout,
+                ArraySize(quad2DLayout),
+                g_VS_Passthrough2D,
+                ArraySize(g_VS_Passthrough2D),
+                "Blit11 2D input layout"),
       mQuad2DVS(g_VS_Passthrough2D, ArraySize(g_VS_Passthrough2D), "Blit11 2D vertex shader"),
-      mDepthPS(g_PS_PassthroughDepth2D, ArraySize(g_PS_PassthroughDepth2D), "Blit11 2D depth pixel shader"),
-      mQuad3DIL(quad3DLayout, ArraySize(quad3DLayout), g_VS_Passthrough3D, ArraySize(g_VS_Passthrough3D), "Blit11 3D input layout"),
+      mDepthPS(g_PS_PassthroughDepth2D,
+               ArraySize(g_PS_PassthroughDepth2D),
+               "Blit11 2D depth pixel shader"),
+      mQuad3DIL(quad3DLayout,
+                ArraySize(quad3DLayout),
+                g_VS_Passthrough3D,
+                ArraySize(g_VS_Passthrough3D),
+                "Blit11 3D input layout"),
       mQuad3DVS(g_VS_Passthrough3D, ArraySize(g_VS_Passthrough3D), "Blit11 3D vertex shader"),
       mQuad3DGS(g_GS_Passthrough3D, ArraySize(g_GS_Passthrough3D), "Blit11 3D geometry shader"),
       mSwizzleCB(nullptr)
 {
-    TRACE_EVENT0("gpu.angle", "Blit11::Blit11");
+}
+
+Blit11::~Blit11()
+{
+    freeResources();
+
+    mQuad2DIL.release();
+    mQuad2DVS.release();
+    mDepthPS.release();
+
+    mQuad3DIL.release();
+    mQuad3DVS.release();
+    mQuad3DGS.release();
+
+    clearShaderMap();
+}
+
+gl::Error Blit11::initResources()
+{
+    if (mResourcesInitialized)
+    {
+        return gl::Error(GL_NO_ERROR);
+    }
+
+    TRACE_EVENT0("gpu.angle", "Blit11::initResources");
 
     HRESULT result;
     ID3D11Device *device = mRenderer->getDevice();
@@ -236,7 +271,7 @@ Blit11::Blit11(Renderer11 *renderer)
     vbDesc.ByteWidth =
         static_cast<unsigned int>(std::max(sizeof(d3d11::PositionLayerTexCoord3DVertex),
                                            sizeof(d3d11::PositionTexCoordVertex)) *
-                                  6 * renderer->getRendererCaps().max3DTextureSize);
+                                  6 * mRenderer->getRendererCaps().max3DTextureSize);
     vbDesc.Usage = D3D11_USAGE_DYNAMIC;
     vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -245,6 +280,12 @@ Blit11::Blit11(Renderer11 *renderer)
 
     result = device->CreateBuffer(&vbDesc, nullptr, &mVertexBuffer);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to create blit vertex buffer, HRESULT: 0x%X",
+                         result);
+    }
     d3d11::SetDebugName(mVertexBuffer, "Blit11 vertex buffer");
 
     D3D11_SAMPLER_DESC pointSamplerDesc;
@@ -264,6 +305,12 @@ Blit11::Blit11(Renderer11 *renderer)
 
     result = device->CreateSamplerState(&pointSamplerDesc, &mPointSampler);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create blit point sampler state, HRESULT: 0x%X", result);
+    }
     d3d11::SetDebugName(mPointSampler, "Blit11 point sampler");
 
     D3D11_SAMPLER_DESC linearSamplerDesc;
@@ -283,6 +330,12 @@ Blit11::Blit11(Renderer11 *renderer)
 
     result = device->CreateSamplerState(&linearSamplerDesc, &mLinearSampler);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create blit linear sampler state, HRESULT: 0x%X", result);
+    }
     d3d11::SetDebugName(mLinearSampler, "Blit11 linear sampler");
 
     // Use a rasterizer state that will not cull so that inverted quads will not be culled
@@ -300,11 +353,25 @@ Blit11::Blit11(Renderer11 *renderer)
     rasterDesc.ScissorEnable = TRUE;
     result = device->CreateRasterizerState(&rasterDesc, &mScissorEnabledRasterizerState);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create blit scissoring rasterizer state, HRESULT: 0x%X",
+                         result);
+    }
     d3d11::SetDebugName(mScissorEnabledRasterizerState, "Blit11 scissoring rasterizer state");
 
     rasterDesc.ScissorEnable = FALSE;
     result = device->CreateRasterizerState(&rasterDesc, &mScissorDisabledRasterizerState);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create blit no scissoring rasterizer state, HRESULT: 0x%X",
+                         result);
+    }
     d3d11::SetDebugName(mScissorDisabledRasterizerState, "Blit11 no scissoring rasterizer state");
 
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
@@ -325,6 +392,12 @@ Blit11::Blit11(Renderer11 *renderer)
 
     result = device->CreateDepthStencilState(&depthStencilDesc, &mDepthStencilState);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create blit depth stencil state, HRESULT: 0x%X", result);
+    }
     d3d11::SetDebugName(mDepthStencilState, "Blit11 depth stencil state");
 
     D3D11_BUFFER_DESC swizzleBufferDesc;
@@ -337,10 +410,20 @@ Blit11::Blit11(Renderer11 *renderer)
 
     result = device->CreateBuffer(&swizzleBufferDesc, nullptr, &mSwizzleCB);
     ASSERT(SUCCEEDED(result));
+    if (FAILED(result))
+    {
+        freeResources();
+        return gl::Error(GL_OUT_OF_MEMORY, "Failed to create blit swizzle buffer, HRESULT: 0x%X",
+                         result);
+    }
     d3d11::SetDebugName(mSwizzleCB, "Blit11 swizzle constant buffer");
+
+    mResourcesInitialized = true;
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-Blit11::~Blit11()
+void Blit11::freeResources()
 {
     SafeRelease(mVertexBuffer);
     SafeRelease(mPointSampler);
@@ -348,18 +431,9 @@ Blit11::~Blit11()
     SafeRelease(mScissorEnabledRasterizerState);
     SafeRelease(mScissorDisabledRasterizerState);
     SafeRelease(mDepthStencilState);
-
-    mQuad2DIL.release();
-    mQuad2DVS.release();
-    mDepthPS.release();
-
-    mQuad3DIL.release();
-    mQuad3DVS.release();
-    mQuad3DGS.release();
-
     SafeRelease(mSwizzleCB);
 
-    clearShaderMap();
+    mResourcesInitialized = false;
 }
 
 // static
@@ -521,6 +595,12 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
                                  GLenum swizzleBlue,
                                  GLenum swizzleAlpha)
 {
+    gl::Error error = initResources();
+    if (error.isError())
+    {
+        return error;
+    }
+
     HRESULT result;
     ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
 
@@ -550,7 +630,7 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
     }
 
     const Shader *shader = nullptr;
-    gl::Error error = getSwizzleShader(shaderType, sourceSRVDesc.ViewDimension, &shader);
+    error = getSwizzleShader(shaderType, sourceSRVDesc.ViewDimension, &shader);
     if (error.isError())
     {
         return error;
@@ -653,6 +733,12 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source, const gl::Box &s
                               ID3D11RenderTargetView *dest, const gl::Box &destArea, const gl::Extents &destSize,
                               const gl::Rectangle *scissor, GLenum destFormat, GLenum filter)
 {
+    gl::Error error = initResources();
+    if (error.isError())
+    {
+        return error;
+    }
+
     HRESULT result;
     ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
 
@@ -668,7 +754,7 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source, const gl::Box &s
     ShaderDimension dimension = (sourceSRVDesc.ViewDimension == D3D11_SRV_DIMENSION_TEXTURE3D) ? SHADER_3D : SHADER_2D;
 
     const Shader *shader = nullptr;
-    gl::Error error = getBlitShader(destFormat, isSigned, dimension, &shader);
+    error = getBlitShader(destFormat, isSigned, dimension, &shader);
     if (error.isError())
     {
         return error;
@@ -787,6 +873,12 @@ gl::Error Blit11::copyDepth(ID3D11ShaderResourceView *source, const gl::Box &sou
                             ID3D11DepthStencilView *dest, const gl::Box &destArea, const gl::Extents &destSize,
                             const gl::Rectangle *scissor)
 {
+    gl::Error error = initResources();
+    if (error.isError())
+    {
+        return error;
+    }
+
     HRESULT result;
     ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
 
@@ -898,6 +990,12 @@ gl::Error Blit11::copyDepthStencil(ID3D11Resource *source, unsigned int sourceSu
                                    ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
                                    const gl::Rectangle *scissor, bool stencilOnly)
 {
+    gl::Error error = initResources();
+    if (error.isError())
+    {
+        return error;
+    }
+
     ID3D11Device *device = mRenderer->getDevice();
     ID3D11DeviceContext *deviceContext = mRenderer->getDeviceContext();
 

@@ -35,8 +35,11 @@ function test() {
       .then(superGenericFileSearch)
       .then(() => ensureSourceIs(aPanel, "code_test-editor-mode"))
       .then(() => ensureCaretAt(aPanel, 1))
-      .then(() => pressKey("UP"))
-      .then(() => ensureSourceIs(aPanel, "doc_editor-mode", true))
+      .then(() => {
+        const shown = waitForSourceShown(aPanel, "doc_editor-mode");
+        pressKey("UP");
+        return shown;
+      })
       .then(() => ensureCaretAt(aPanel, 1))
       .then(() => pressKeyToHide("RETURN"))
       .then(() => ensureSourceIs(aPanel, "doc_editor-mode"))
@@ -45,8 +48,11 @@ function test() {
       .then(superAccurateFileSearch)
       .then(() => ensureSourceIs(aPanel, "doc_editor-mode"))
       .then(() => ensureCaretAt(aPanel, 1))
-      .then(() => typeText(gSearchBox, ":"))
-      .then(() => waitForSourceShown(gPanel, "code_test-editor-mode"))
+      .then(() => {
+        const shown = waitForSourceShown(gPanel, "code_test-editor-mode");
+        typeText(gSearchBox, ":");
+        return shown;
+      })
       .then(() => ensureSourceIs(aPanel, "code_test-editor-mode", true))
       .then(() => ensureCaretAt(aPanel, 1))
       .then(() => typeText(gSearchBox, "5"))

@@ -18,6 +18,7 @@ function* runTests() {
   let frames = dbgWin.DebuggerView.StackFrames;
   let toolbox = gDevTools.getToolbox(panel.target);
 
+  yield waitForSourceShown(panel, ".html");
   yield panel.addBreakpoint({ actor: getSourceActor(sources, TAB_URL), line: 16 });
   info("Breakpoint was set.");
   dbgWin.DebuggerController._target.activeTab.reload();

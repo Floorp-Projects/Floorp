@@ -694,34 +694,34 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   212,   212,   213,   216,   240,   243,   248,   253,   258,
-     263,   269,   272,   275,   278,   281,   284,   290,   298,   309,
-     313,   321,   324,   330,   334,   341,   347,   356,   364,   370,
-     377,   387,   390,   393,   396,   406,   407,   408,   409,   417,
-     418,   421,   424,   431,   432,   435,   441,   442,   446,   453,
-     454,   457,   460,   463,   469,   470,   473,   479,   480,   487,
-     488,   495,   496,   503,   504,   510,   511,   517,   518,   524,
-     525,   531,   532,   540,   541,   542,   543,   547,   548,   549,
-     553,   557,   561,   565,   572,   575,   586,   594,   602,   630,
-     636,   647,   651,   655,   659,   666,   672,   675,   682,   690,
-     711,   738,   748,   776,   781,   791,   796,   806,   809,   812,
-     815,   821,   828,   831,   835,   839,   844,   849,   856,   860,
-     864,   868,   873,   878,   882,   889,   899,   905,   908,   914,
-     920,   927,   936,   946,   954,   957,   964,   968,   972,   977,
-     985,   988,   992,   996,  1005,  1014,  1022,  1032,  1044,  1047,
-    1050,  1056,  1063,  1066,  1072,  1075,  1078,  1084,  1087,  1092,
-    1107,  1111,  1115,  1119,  1123,  1127,  1132,  1137,  1142,  1147,
-    1152,  1157,  1162,  1167,  1172,  1177,  1182,  1187,  1192,  1197,
-    1202,  1207,  1212,  1217,  1222,  1227,  1232,  1236,  1240,  1244,
-    1248,  1252,  1256,  1260,  1264,  1268,  1272,  1276,  1280,  1284,
-    1288,  1292,  1300,  1308,  1312,  1325,  1325,  1328,  1328,  1334,
-    1337,  1353,  1356,  1365,  1369,  1375,  1382,  1397,  1401,  1405,
-    1406,  1412,  1413,  1414,  1415,  1416,  1417,  1418,  1422,  1423,
-    1423,  1423,  1433,  1434,  1438,  1438,  1439,  1439,  1444,  1447,
-    1457,  1460,  1466,  1467,  1471,  1479,  1483,  1490,  1490,  1497,
-    1500,  1507,  1512,  1527,  1527,  1532,  1532,  1539,  1539,  1547,
-    1550,  1556,  1559,  1565,  1569,  1576,  1579,  1582,  1585,  1588,
-    1597,  1601,  1608,  1611,  1617,  1617
+       0,   212,   212,   213,   216,   226,   229,   234,   239,   244,
+     249,   255,   258,   261,   264,   267,   270,   276,   284,   295,
+     299,   307,   310,   316,   320,   327,   333,   342,   350,   356,
+     363,   373,   376,   379,   382,   392,   393,   394,   395,   403,
+     404,   407,   410,   417,   418,   421,   427,   428,   432,   439,
+     440,   443,   446,   449,   455,   456,   459,   465,   466,   473,
+     474,   481,   482,   489,   490,   496,   497,   503,   504,   510,
+     511,   517,   518,   526,   527,   528,   529,   533,   534,   535,
+     539,   543,   547,   551,   558,   561,   567,   575,   583,   611,
+     617,   628,   632,   636,   640,   647,   653,   656,   663,   671,
+     692,   719,   729,   757,   762,   772,   777,   787,   790,   793,
+     796,   802,   809,   812,   816,   820,   825,   830,   837,   841,
+     845,   849,   854,   859,   863,   870,   880,   886,   889,   895,
+     901,   908,   917,   927,   935,   938,   945,   949,   953,   958,
+     966,   969,   973,   977,   986,   995,  1003,  1013,  1025,  1028,
+    1031,  1037,  1044,  1047,  1053,  1056,  1059,  1065,  1068,  1073,
+    1088,  1092,  1096,  1100,  1104,  1108,  1113,  1118,  1123,  1128,
+    1133,  1138,  1143,  1148,  1153,  1158,  1163,  1168,  1173,  1178,
+    1183,  1188,  1193,  1198,  1203,  1208,  1213,  1217,  1221,  1225,
+    1229,  1233,  1237,  1241,  1245,  1249,  1253,  1257,  1261,  1265,
+    1269,  1273,  1281,  1289,  1293,  1306,  1306,  1309,  1309,  1315,
+    1318,  1334,  1337,  1346,  1350,  1356,  1363,  1378,  1382,  1386,
+    1387,  1393,  1394,  1395,  1396,  1397,  1398,  1399,  1403,  1404,
+    1404,  1404,  1414,  1415,  1419,  1419,  1420,  1420,  1425,  1428,
+    1438,  1441,  1447,  1448,  1452,  1460,  1464,  1471,  1471,  1478,
+    1481,  1488,  1493,  1508,  1508,  1513,  1513,  1520,  1520,  1528,
+    1531,  1537,  1540,  1546,  1550,  1557,  1560,  1563,  1566,  1569,
+    1578,  1582,  1589,  1592,  1598,  1598
 };
 #endif
 
@@ -2356,21 +2356,7 @@ yyreduce:
 
     {
         // The symbol table search was done in the lexical phase
-        const TVariable *variable = context->getNamedVariable((yylsp[0]), (yyvsp[0].lex).string, (yyvsp[0].lex).symbol);
-
-        if (variable->getType().getQualifier() == EvqConst)
-        {
-            TConstantUnion* constArray = variable->getConstPointer();
-            TType t(variable->getType());
-            (yyval.interm.intermTypedNode) = context->intermediate.addConstantUnion(constArray, t, (yylsp[0]));
-        }
-        else
-        {
-            (yyval.interm.intermTypedNode) = context->intermediate.addSymbol(variable->getUniqueId(),
-                                                 variable->getName(),
-                                                 variable->getType(),
-                                                 (yylsp[0]));
-        }
+        (yyval.interm.intermTypedNode) = context->parseVariableIdentifier((yylsp[0]), (yyvsp[0].lex).string, (yyvsp[0].lex).symbol);
 
         // don't delete $1.string, it's used by error recovery, and the pool
         // pop will reclaim the memory
@@ -2564,7 +2550,7 @@ yyreduce:
         const TType *type = new TType((yyvsp[0].interm.intermTypedNode)->getType());
         (yyvsp[-1].interm.function)->addParameter(TConstParameter(type));
         (yyval.interm).function = (yyvsp[-1].interm.function);
-        (yyval.interm).nodePair.node1 = (yyvsp[0].interm.intermTypedNode);
+        (yyval.interm).nodePair.node1 = context->intermediate.makeAggregate((yyvsp[0].interm.intermTypedNode), (yylsp[0]));
     }
 
     break;
@@ -3034,12 +3020,7 @@ yyreduce:
   case 85:
 
     {
-        (yyval.interm.intermTypedNode) = context->intermediate.addComma((yyvsp[-2].interm.intermTypedNode), (yyvsp[0].interm.intermTypedNode), (yylsp[-1]));
-        if ((yyval.interm.intermTypedNode) == 0) {
-            context->binaryOpError((yylsp[-1]), ",", (yyvsp[-2].interm.intermTypedNode)->getCompleteString(), (yyvsp[0].interm.intermTypedNode)->getCompleteString());
-            context->recover();
-            (yyval.interm.intermTypedNode) = (yyvsp[0].interm.intermTypedNode);
-        }
+        (yyval.interm.intermTypedNode) = context->addComma((yyvsp[-2].interm.intermTypedNode), (yyvsp[0].interm.intermTypedNode), (yylsp[-1]));
     }
 
     break;
@@ -3581,12 +3562,12 @@ yyreduce:
   case 133:
 
     {
-        if ((yyvsp[0].interm.type).qualifier != EvqConst && !context->symbolTable.atGlobalLevel()) {
+        if ((yyvsp[0].interm.type).qualifier != EvqConst && !context->symbolTable.atGlobalLevel())
+        {
             context->error((yylsp[0]), "Local variables can only use the const storage qualifier.", getQualifierString((yyvsp[0].interm.type).qualifier));
             context->recover();
-        } else {
-            (yyval.interm.type).setBasic(EbtVoid, (yyvsp[0].interm.type).qualifier, (yylsp[0]));
         }
+        (yyval.interm.type).setBasic(EbtVoid, (yyvsp[0].interm.type).qualifier, (yylsp[0]));
     }
 
     break;

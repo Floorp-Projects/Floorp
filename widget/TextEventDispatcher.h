@@ -269,7 +269,7 @@ private:
     void Clear();
 
   private:
-    nsAutoString mString;
+    nsString mString;
     RefPtr<TextRangeArray> mClauses;
     TextRange mCaret;
 

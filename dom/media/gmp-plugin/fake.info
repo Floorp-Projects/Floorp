@@ -1,5 +1,5 @@
 Name: fake
-Description: Fake GMP Plugin
+Description: Fake GMP Plugin, which deliberately uses GMP_API_DECRYPTOR_BACKWARDS_COMPAT for its decryptor.
 Version: 1.0
 APIs: decode-video[h264:broken], eme-decrypt-v7[fake]
 Libraries: dxva2.dll

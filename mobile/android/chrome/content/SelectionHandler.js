@@ -8,9 +8,8 @@
 const PHONE_NUMBER_CONTAINERS = "td,div";
 const DEFER_CLOSE_TRIGGER_MS = 125; // Grace period delay before deferred _closeSelection()
 
-// Gecko TouchCaret/SelectionCaret pref names.
-const PREF_GECKO_TOUCHCARET_ENABLED = "touchcaret.enabled";
-const PREF_GECKO_SELECTIONCARETS_ENABLED = "selectioncaret.enabled";
+// Gecko AccessibleCaret pref names.
+const PREF_GECKO_ACCESSIBLECARET_ENABLED = "layout.accessiblecaret.enabled";
 
 var SelectionHandler = {
 
@@ -43,7 +42,7 @@ var SelectionHandler = {
   SELECT_AT_POINT: 1,
 
   // Gecko TouchCaret/SelectionCaret pref values.
-  _touchCaretEnabledValue: null,
+  _accessibleCaretEnabledValue: null,
   _selectionCaretEnabledValue: null,
 
   // Keeps track of data about the dimensions of the selection. Coordinates
@@ -101,28 +100,18 @@ var SelectionHandler = {
       getService(Ci.nsIUUIDGenerator);
   },
 
-  // Are we supporting Gecko or Native touchCarets?
-  get _touchCaretEnabled() {
-    if (this._touchCaretEnabledValue == null) {
-      this._touchCaretEnabledValue = Services.prefs.getBoolPref(PREF_GECKO_TOUCHCARET_ENABLED);
-      Services.prefs.addObserver(PREF_GECKO_TOUCHCARET_ENABLED, function() {
-        SelectionHandler._touchCaretEnabledValue =
-          Services.prefs.getBoolPref(PREF_GECKO_TOUCHCARET_ENABLED);
+  // Are we supporting Accessible-core or native-Java carets?
+  get _accessibleCaretEnabled() {
+    if (this._accessibleCaretEnabledValue == null) {
+      try {
+        this._accessibleCaretEnabledValue = Services.prefs.getBoolPref(PREF_GECKO_ACCESSIBLECARET_ENABLED);
+      } catch (unused) { }
+      Services.prefs.addObserver(PREF_GECKO_ACCESSIBLECARET_ENABLED, function() {
+        SelectionHandler._accessibleCaretEnabledValue =
+          Services.prefs.getBoolPref(PREF_GECKO_ACCESSIBLECARET_ENABLED);
       }, false);
     }
-    return this._touchCaretEnabledValue;
-  },
-
-  // Are we supporting Gecko or Native selectionCarets?
-  get _selectionCaretEnabled() {
-    if (this._selectionCaretEnabledValue == null) {
-      this._selectionCaretEnabledValue = Services.prefs.getBoolPref(PREF_GECKO_SELECTIONCARETS_ENABLED);
-      Services.prefs.addObserver(PREF_GECKO_SELECTIONCARETS_ENABLED, function() {
-        SelectionHandler._selectionCaretEnabledValue =
-          Services.prefs.getBoolPref(PREF_GECKO_SELECTIONCARETS_ENABLED);
-      }, false);
-    }
-    return this._selectionCaretEnabledValue;
+    return this._accessibleCaretEnabledValue;
   },
 
   _addObservers: function sh_addObservers() {
@@ -412,8 +401,8 @@ var SelectionHandler = {
    *                   y    - The y-coordinate for SELECT_AT_POINT.
    */
   startSelection: function sh_startSelection(aElement, aOptions = { mode: SelectionHandler.SELECT_ALL }) {
-    // Disable Native touchCarets if Gecko enabled.
-    if (this._selectionCaretEnabled) {
+    // Disable Native touchCarets if Gecko AccessibleCaret enabled.
+    if (this._accessibleCaretEnabled) {
       return this.START_ERROR_SELECTIONCARETS_ENABLED;
     }
 
@@ -876,8 +865,8 @@ var SelectionHandler = {
    * @param aX, aY tap location in client coordinates.
    */
   attachCaret: function sh_attachCaret(aElement) {
-    // Disable Native attachCaret() if Gecko touchCarets are enabled.
-    if (this._touchCaretEnabled) {
+    // Disable Native touchCarets if Gecko AccessibleCaret enabled.
+    if (this._accessibleCaretEnabled) {
       return this.ATTACH_ERROR_TOUCHCARET_ENABLED;
     }
 

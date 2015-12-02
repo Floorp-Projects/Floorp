@@ -21,8 +21,6 @@ function test() {
 
     is(!!gDebugger.DebuggerController._startup, true,
       "Controller should be initialized after starting the test.");
-    is(!!gDebugger.DebuggerView._startup, true,
-      "View should be initialized after starting the test.");
 
     testPause();
   });

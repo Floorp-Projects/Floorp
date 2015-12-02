@@ -72,7 +72,7 @@ extern "C" {
       // happens when decoder init fails.
       return GMPGenericErr;
 #if defined(GMP_FAKE_SUPPORT_DECRYPT)
-    } else if (!strcmp (aApiName, GMP_API_DECRYPTOR)) {
+    } else if (!strcmp (aApiName, GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
       *aPluginApi = new FakeDecryptor(static_cast<GMPDecryptorHost*> (aHostAPI));
       return GMPNoErr;
     } else if (!strcmp (aApiName, GMP_API_ASYNC_SHUTDOWN)) {

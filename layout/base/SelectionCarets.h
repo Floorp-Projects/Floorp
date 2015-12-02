@@ -270,12 +270,6 @@ private:
 
   // Preference
   static int32_t sSelectionCaretsInflateSize;
-  static bool sSelectionCaretDetectsLongTap;
-  static bool sCaretManagesAndroidActionbar;
-  static bool sSelectionCaretObservesCompositions;
-
-  // Unique ID of current Mobile ActionBar view.
-  uint32_t mActionBarViewID;
 };
 
 } // namespace mozilla

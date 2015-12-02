@@ -4,12 +4,10 @@
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-#ifdef MOZ_SERVICES_CLOUDSYNC
-XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
-                                  "resource://gre/modules/CloudSync.jsm");
-#else
-var CloudSync = null;
-#endif
+if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
+  XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
+                                    "resource://gre/modules/CloudSync.jsm");
+}
 
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");

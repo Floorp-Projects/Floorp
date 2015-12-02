@@ -155,6 +155,37 @@ have the same multisample and accumulation buffers gives the following:
 0x03f 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
 ```
 
+Mesa Intel driver
+-----------------
+In GLX, a criterium for context and surface compatibility is that buffers
+should have the same depth, if they exist at all in the surface. This means
+that it should be possible to make a context with a D24S8 depth-stencil
+buffer to a surface without a depth-stencil buffer. This doesn't work on the
+Mesa Intel driver. The list before the workaround was the following, with
+0x020 being the fbconfig chosen for the context:
+```
+    visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+  id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+----------------------------------------------------------------------------
+0x020 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x021 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x08f 32 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x0d0 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0  0  0  0  0  0  0  0 0 None
+0x0e2 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0  0  0  0  0  0  0  0 0 None
+0x0e9 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+```
+
+After the workaround that list becomes the following:
+```
+    visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+  id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+----------------------------------------------------------------------------
+0x020 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x021 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x08f 32 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x0e9 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+```
+
 Future investigation
 --------------------
 All the non-conformant configs have a multisampled buffer, so it could be interesting
@@ -167,3 +198,4 @@ drivers and hardware.
 The drivers tested were:
  - the proprietary NVIDIA driver
  - the proprietary AMD driver
+ - the open source Intel (Broadwell) Mesa driver

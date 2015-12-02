@@ -253,7 +253,10 @@ SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
   nsLoadFlags loadFlags = 0;
   (*result)->GetLoadFlags(&loadFlags);
   (*result)->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
-  return (*result)->SetOriginalURI(uri);
+  rv = (*result)->SetOriginalURI(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return SubstituteChannel(uri, aLoadInfo, result);
 }
 
 nsresult

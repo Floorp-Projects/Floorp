@@ -28,6 +28,7 @@ namespace rx
 {
 
 class FunctionsGL;
+class TransformFeedbackGL;
 class QueryGL;
 
 class StateManagerGL final : angle::NonCopyable
@@ -42,6 +43,7 @@ class StateManagerGL final : angle::NonCopyable
     void deleteBuffer(GLuint buffer);
     void deleteFramebuffer(GLuint fbo);
     void deleteRenderbuffer(GLuint rbo);
+    void deleteTransformFeedback(GLuint transformFeedback);
     void deleteQuery(GLuint query);
 
     void useProgram(GLuint program);
@@ -54,6 +56,7 @@ class StateManagerGL final : angle::NonCopyable
     void bindSampler(size_t unit, GLuint sampler);
     void bindFramebuffer(GLenum type, GLuint framebuffer);
     void bindRenderbuffer(GLenum type, GLuint renderbuffer);
+    void bindTransformFeedback(GLenum type, GLuint transformFeedback);
     void beginQuery(GLenum type, GLuint query);
     void endQuery(GLenum type, GLuint query);
 
@@ -162,8 +165,11 @@ class StateManagerGL final : angle::NonCopyable
     std::map<GLenum, std::vector<GLuint>> mTextures;
     std::vector<GLuint> mSamplers;
 
+    GLuint mTransformFeedback;
+
     std::map<GLenum, GLuint> mQueries;
 
+    TransformFeedbackGL *mPrevDrawTransformFeedback;
     std::set<QueryGL *> mPrevDrawQueries;
     uintptr_t mPrevDrawContext;
 

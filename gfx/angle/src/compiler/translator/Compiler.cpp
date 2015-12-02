@@ -213,13 +213,11 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         ++firstSource;
     }
 
-    bool debugShaderPrecision = getResources().WEBGL_debug_shader_precision == 1;
     TIntermediate intermediate(infoSink);
-    TParseContext parseContext(symbolTable, extensionBehavior, intermediate,
-                               shaderType, shaderSpec, compileOptions, true,
-                               infoSink, debugShaderPrecision);
+    TParseContext parseContext(symbolTable, extensionBehavior, intermediate, shaderType, shaderSpec,
+                               compileOptions, true, infoSink, getResources());
 
-    parseContext.setFragmentPrecisionHigh(fragmentPrecisionHigh);
+    parseContext.setFragmentPrecisionHighOnESSL1(fragmentPrecisionHigh);
     SetGlobalParseContext(&parseContext);
 
     // We preserve symbols at the built-in level from compile-to-compile.
@@ -251,6 +249,9 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
 
         root = parseContext.getTreeRoot();
         root = intermediate.postProcess(root);
+
+        // Highp might have been auto-enabled based on shader version
+        fragmentPrecisionHigh = parseContext.getFragmentPrecisionHigh();
 
         // Disallow expressions deemed too complex.
         if (success && (compileOptions & SH_LIMIT_EXPRESSION_COMPLEXITY))

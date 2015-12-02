@@ -570,13 +570,21 @@ class HierarchicalStringList(object):
         self._set_exportvariable(name, value)
 
     def _get_exportvariable(self, name):
-        return self._children.setdefault(name, HierarchicalStringList())
+        child = self._children.get(name)
+        if not child:
+            child = self._children[name] = HierarchicalStringList()
+        return child
 
     def _set_exportvariable(self, name, value):
+        if name in self._children:
+            if value is self._get_exportvariable(name):
+                return
+            raise KeyError('global_ns', 'reassign',
+                           '<some variable>.%s' % name)
+
         exports = self._get_exportvariable(name)
-        if not isinstance(value, HierarchicalStringList):
-            exports._check_list(value)
-            exports._strings = value
+        exports._check_list(value)
+        exports._strings += value
 
     def _check_list(self, value):
         if not isinstance(value, list):
