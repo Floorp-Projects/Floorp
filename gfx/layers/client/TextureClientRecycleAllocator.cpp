@@ -80,9 +80,10 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
                                                TextureAllocationFlags aAllocFlags)
 {
   // TextureAllocationFlags is actually used only by ContentClient.
-  // This class does not handle ConteClient's TextureClient allocation.
+  // This class does not handle ContentClient's TextureClient allocation.
   MOZ_ASSERT(aAllocFlags == TextureAllocationFlags::ALLOC_DEFAULT ||
-             aAllocFlags == TextureAllocationFlags::ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
+             aAllocFlags == TextureAllocationFlags::ALLOC_DISALLOW_BUFFERTEXTURECLIENT ||
+             aAllocFlags == TextureAllocationFlags::ALLOC_FOR_OUT_OF_BAND_CONTENT);
   MOZ_ASSERT(!(aTextureFlags & TextureFlags::RECYCLE));
   aTextureFlags = aTextureFlags | TextureFlags::RECYCLE; // Set recycle flag
 
