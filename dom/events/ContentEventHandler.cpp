@@ -47,9 +47,10 @@ using namespace widget;
 //   1.1. Cases: [textNode or text[Node or textNode[
 //        When text node is start of a range, start node is the text node and
 //        start offset is any number between 0 and the length of the text.
-//   1.2. Case: [<element>
-//        When before an element node is start of a range, start node is parent
-//        of the element and start offset is the element's index in the parent.
+//   1.2. Case: [<element>:
+//        When start of an element node is start of a range, start node is
+//        parent of the element and start offset is the element's index in the
+//        parent.
 //   1.3. Case: <element/>[
 //        When after an empty element node is start of a range, start node is
 //        parent of the element and start offset is the element's index in the
@@ -71,11 +72,16 @@ using namespace widget;
 //        2.3 are handled correctly, the loop with nsContentIterator shouldn't
 //        reach the element node since the loop should've finished already at
 //        handling the last node which caused some text.
-//   2.3. Case: </element>]
-//        When after an element node is end of a range, end node is parent of
-//        the element node and end offset is the element's index in the parent
-//        + 1.
-//   2.4. Case: ]</root>
+//   2.3. Case: <element>]
+//        When a line break is caused before a non-empty element node and it's
+//        end of a range, end node is the element and end offset is 0.
+//        (i.e., including open tag of the element)
+//   2.4. Cases: <element/>]
+//        When after an empty element node is end of a range, end node is
+//        parent of the element node and end offset is the element's index in
+//        the parent + 1.  (i.e., including close tag of the element or empty
+//        element)
+//   2.5. Case: ]</root>
 //        When end of a range is out of bounds, end node is the root node and
 //        end offset is number of the children.
 //
@@ -398,12 +404,14 @@ ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
 }
 
 /* static */ uint32_t
-ContentEventHandler::GetNativeTextLengthBefore(nsIContent* aContent)
+ContentEventHandler::GetNativeTextLengthBefore(nsIContent* aContent,
+                                               nsINode* aRootNode)
 {
   if (NS_WARN_IF(aContent->IsNodeOfType(nsINode::eTEXT))) {
     return 0;
   }
-  return IsContentBR(aContent) ? GetBRLength(LINE_BREAK_TYPE_NATIVE) : 0;
+  return ShouldBreakLineBefore(aContent, aRootNode) ?
+           GetBRLength(LINE_BREAK_TYPE_NATIVE) : 0;
 }
 
 /* static inline */ uint32_t
@@ -457,6 +465,67 @@ static uint32_t ConvertToXPOffset(nsIContent* aContent, uint32_t aNativeOffset)
 #endif
 }
 
+/* static */ bool
+ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
+                                           nsINode* aRootNode)
+{
+  // We don't need to append linebreak at the start of the root element.
+  if (aContent == aRootNode) {
+    return false;
+  }
+
+  // If it's not an HTML element (including other markup language's elements),
+  // we shouldn't insert like break before that for now.  Becoming this is a
+  // problem must be edge case.  E.g., when ContentEventHandler is used with
+  // MathML or SVG elements.
+  if (!aContent->IsHTMLElement()) {
+    return false;
+  }
+
+  // If the element is <br>, we need to check if the <br> is caused by web
+  // content.  Otherwise, i.e., it's caused by internal reason of Gecko,
+  // it shouldn't be exposed as a line break to flatten text.
+  if (aContent->IsHTMLElement(nsGkAtoms::br)) {
+    return IsContentBR(aContent);
+  }
+
+  // Note that ideally, we should refer the style of the primary frame of
+  // aContent for deciding if it's an inline.  However, it's difficult
+  // IMEContentObserver to notify IME of text change caused by style change.
+  // Therefore, currently, we should check only from the tag for now.
+  // TODO: Check if the element is an unknown HTML element.
+  return !aContent->IsAnyOfHTMLElements(nsGkAtoms::a,
+                                        nsGkAtoms::abbr,
+                                        nsGkAtoms::acronym,
+                                        nsGkAtoms::b,
+                                        nsGkAtoms::bdi,
+                                        nsGkAtoms::bdo,
+                                        nsGkAtoms::big,
+                                        nsGkAtoms::cite,
+                                        nsGkAtoms::code,
+                                        nsGkAtoms::data,
+                                        nsGkAtoms::del,
+                                        nsGkAtoms::dfn,
+                                        nsGkAtoms::em,
+                                        nsGkAtoms::font,
+                                        nsGkAtoms::i,
+                                        nsGkAtoms::ins,
+                                        nsGkAtoms::kbd,
+                                        nsGkAtoms::mark,
+                                        nsGkAtoms::s,
+                                        nsGkAtoms::samp,
+                                        nsGkAtoms::small,
+                                        nsGkAtoms::span,
+                                        nsGkAtoms::strike,
+                                        nsGkAtoms::strong,
+                                        nsGkAtoms::sub,
+                                        nsGkAtoms::sup,
+                                        nsGkAtoms::time,
+                                        nsGkAtoms::tt,
+                                        nsGkAtoms::u,
+                                        nsGkAtoms::var);
+}
+
 nsresult
 ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
                                              nsAFlatString& aString,
@@ -506,7 +575,7 @@ ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
       } else {
         AppendString(aString, content);
       }
-    } else if (IsContentBR(content)) {
+    } else if (ShouldBreakLineBefore(content, mRootContent)) {
       aString.Append(char16_t('\n'));
     }
   }
@@ -626,7 +695,7 @@ ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
   }
 }
 
-/* static */ nsresult
+nsresult
 ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
                                             FontRangeArray& aFontRanges,
                                             uint32_t& aLength,
@@ -669,7 +738,7 @@ ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
                        startOffset, endOffset, aLineBreakType);
       baseOffset += GetTextLengthInRange(content, startOffset, endOffset,
                                          aLineBreakType);
-    } else if (IsContentBR(content)) {
+    } else if (ShouldBreakLineBefore(content, mRootContent)) {
       if (aFontRanges.IsEmpty()) {
         MOZ_ASSERT(baseOffset == 0);
         FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
@@ -789,7 +858,8 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
     uint32_t textLength =
       content->IsNodeOfType(nsINode::eTEXT) ?
         GetTextLength(content, aLineBreakType) :
-        (IsContentBR(content) ? GetBRLength(aLineBreakType) : 0);
+        (ShouldBreakLineBefore(content, mRootContent) ?
+           GetBRLength(aLineBreakType) : 0);
     if (!textLength) {
       continue;
     }
@@ -900,7 +970,17 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         return NS_ERROR_FAILURE;
       }
 
-      // Rule #2.3: </element>]
+      if (content->HasChildren() &&
+          ShouldBreakLineBefore(content, mRootContent)) {
+        // Rule #2.3: </element>]
+        rv = aRange->SetEnd(content, 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+
+      // Rule #2.4: <element/>]
       nsINode* endNode = content->GetParent();
       if (NS_WARN_IF(!endNode)) {
         return NS_ERROR_FAILURE;
@@ -932,7 +1012,7 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
       *aNewOffset = offset;
     }
   }
-  // Rule #2.4: ]</root>
+  // Rule #2.5: ]</root>
   rv = aRange->SetEnd(mRootContent,
                       static_cast<int32_t>(mRootContent->GetChildCount()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1612,9 +1692,38 @@ ContentEventHandler::GetFlatTextLengthInRange(
       return rv;
     }
 
-    if (aEndPosition.OffsetIsValid()) {
+    // When the end position is immediately after non-root element's open tag,
+    // we need to include a line break caused by the open tag.
+    NodePosition endPosition;
+    if (aEndPosition.mNode != aRootContent &&
+        aEndPosition.IsImmediatelyAfterOpenTag()) {
+      if (aEndPosition.mNode->HasChildren()) {
+        // When the end node has some children, move the end position to the
+        // start of its first child.
+        nsINode* firstChild = aEndPosition.mNode->GetFirstChild();
+        if (NS_WARN_IF(!firstChild)) {
+          return NS_ERROR_FAILURE;
+        }
+        endPosition = NodePosition(firstChild, 0);
+      } else {
+        // When the end node is empty, move the end position after the node.
+        nsIContent* parentContent = aEndPosition.mNode->GetParent();
+        if (NS_WARN_IF(!parentContent)) {
+          return NS_ERROR_FAILURE;
+        }
+        int32_t indexInParent = parentContent->IndexOf(aEndPosition.mNode);
+        if (NS_WARN_IF(indexInParent < 0)) {
+          return NS_ERROR_FAILURE;
+        }
+        endPosition = NodePosition(parentContent, indexInParent + 1);
+      }
+    } else {
+      endPosition = aEndPosition;
+    }
+
+    if (endPosition.OffsetIsValid()) {
       // Offset is within node's length; set end of range to that offset
-      rv = aEndPosition.SetToRangeEnd(prev);
+      rv = endPosition.SetToRangeEnd(prev);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1623,9 +1732,9 @@ ContentEventHandler::GetFlatTextLengthInRange(
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (aEndPosition.mNode != aRootContent) {
+    } else if (endPosition.mNode != aRootContent) {
       // Offset is past node's length; set end of range to end of node
-      rv = aEndPosition.SetToRangeEndAfter(prev);
+      rv = endPosition.SetToRangeEndAfter(prev);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1663,7 +1772,12 @@ ContentEventHandler::GetFlatTextLengthInRange(
       } else {
         *aLength += GetTextLength(content, aLineBreakType);
       }
-    } else if (IsContentBR(content)) {
+    } else if (ShouldBreakLineBefore(content, aRootContent)) {
+      // If the start position is start of this node but doesn't include the
+      // open tag, don't append the line break length.
+      if (node == aStartPosition.mNode && !aStartPosition.IsBeforeOpenTag()) {
+        continue;
+      }
       *aLength += GetBRLength(aLineBreakType);
     }
   }
@@ -1678,7 +1792,7 @@ ContentEventHandler::GetFlatTextLengthBefore(nsRange* aRange,
   MOZ_ASSERT(aRange);
   return GetFlatTextLengthInRange(
            NodePosition(mRootContent, 0),
-           NodePosition(aRange->GetStartParent(), aRange->StartOffset()),
+           NodePositionBefore(aRange->GetStartParent(), aRange->StartOffset()),
            mRootContent, aOffset, aLineBreakType);
 }
 
