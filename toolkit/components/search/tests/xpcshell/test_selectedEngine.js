@@ -93,6 +93,57 @@ add_task(function* test_settingToDefault() {
   do_check_eq(metadata.current, "");
 });
 
+add_task(function* test_resetToOriginalDefaultEngine() {
+  let defaultName = getDefaultEngineName();
+  do_check_eq(Services.search.currentEngine.name, defaultName);
+
+  Services.search.currentEngine =
+    Services.search.getEngineByName(kTestEngineName);
+  do_check_eq(Services.search.currentEngine.name, kTestEngineName);
+  yield promiseAfterCache();
+
+  Services.search.resetToOriginalDefaultEngine();
+  do_check_eq(Services.search.currentEngine.name, defaultName);
+  yield promiseAfterCache();
+});
+
+add_task(function* test_fallback_kept_after_restart() {
+  // Set current engine to a default engine that isn't the original default.
+  let builtInEngines = Services.search.getDefaultEngines();
+  let defaultName = getDefaultEngineName();
+  let nonDefaultBuiltInEngine;
+  for (let engine of builtInEngines) {
+    if (engine.name != defaultName) {
+      nonDefaultBuiltInEngine = engine;
+      break;
+    }
+  }
+  Services.search.currentEngine = nonDefaultBuiltInEngine;
+  do_check_eq(Services.search.currentEngine.name, nonDefaultBuiltInEngine.name);
+  yield promiseAfterCache();
+
+  // Remove that engine...
+  Services.search.removeEngine(nonDefaultBuiltInEngine);
+  // The engine being a default (built-in) one, it should be hidden
+  // rather than actually removed.
+  do_check_true(nonDefaultBuiltInEngine.hidden);
+
+  // Using the currentEngine getter should force a fallback to the
+  // original default engine.
+  do_check_eq(Services.search.currentEngine.name, defaultName);
+
+  // Restoring the default engines should unhide our built-in test
+  // engine, but not change the value of currentEngine.
+  Services.search.restoreDefaultEngines();
+  do_check_false(nonDefaultBuiltInEngine.hidden);
+  do_check_eq(Services.search.currentEngine.name, defaultName);
+  yield promiseAfterCache();
+
+  // After a restart, the currentEngine value should still be unchanged.
+  yield asyncReInit();
+  do_check_eq(Services.search.currentEngine.name, defaultName);
+});
+
 
 function run_test() {
   removeMetadata();
