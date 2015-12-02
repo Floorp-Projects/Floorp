@@ -43,6 +43,10 @@ class PCrashReporterParent;
 class CrashReporterParent;
 } // namespace dom
 
+namespace layers {
+class TextureClientRecycleAllocator;
+} // namespace layers
+
 namespace plugins {
 //-----------------------------------------------------------------------------
 
@@ -294,6 +298,8 @@ public:
 
     void InitAsyncSurrogates();
 
+    layers::TextureClientRecycleAllocator* EnsureTextureAllocator();
+
 protected:
     void NotifyFlashHang();
     void NotifyPluginCrashed();
@@ -340,6 +346,8 @@ protected:
     nsTArray<RefPtr<PluginAsyncSurrogate>> mSurrogateInstances;
     nsresult          mAsyncNewRv;
     uint32_t          mRunID;
+
+    RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocator;
 };
 
 class PluginModuleContentParent : public PluginModuleParent

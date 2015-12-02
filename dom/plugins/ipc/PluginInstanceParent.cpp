@@ -38,6 +38,10 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "gfxPrefs.h"
+#include "LayersLogging.h"
+#include "mozilla/layers/TextureWrapperImage.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 
 #ifdef XP_MACOSX
 #include "MacIOSurfaceImage.h"
@@ -117,6 +121,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mIsWhitelistedForShumway(false)
     , mWindowType(NPWindowTypeWindow)
     , mDrawingModel(kDefaultDrawingModel)
+    , mFrameID(0)
 #if defined(OS_WIN)
     , mPluginHWND(nullptr)
     , mChildPluginHWND(nullptr)
@@ -189,6 +194,9 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
 #ifdef MOZ_X11
         FinishX(DefaultXDisplay());
 #endif
+    }
+    if (IsUsingDirectDrawing() && mImageContainer) {
+        mImageContainer->ClearAllImages();
     }
 }
 
@@ -586,6 +594,111 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
 {
     mNPNIface->invalidaterect(mNPP, const_cast<NPRect*>(&rect));
     return true;
+}
+
+static inline NPRect
+IntRectToNPRect(const gfx::IntRect& rect)
+{
+    NPRect r;
+    r.left = rect.x;
+    r.top = rect.y;
+    r.right = rect.x + rect.width;
+    r.bottom = rect.y + rect.height;
+    return r;
+}
+
+bool
+PluginInstanceParent::RecvRevokeCurrentDirectSurface()
+{
+    ImageContainer *container = GetImageContainer();
+    if (!container) {
+        return true;
+    }
+
+    container->ClearAllImages();
+
+    PLUGIN_LOG_DEBUG(("   (RecvRevokeCurrentDirectSurface)"));
+    return true;
+}
+
+bool
+PluginInstanceParent::RecvShowDirectBitmap(Shmem&& buffer,
+                                           const SurfaceFormat& format,
+                                           const uint32_t& stride,
+                                           const IntSize& size,
+                                           const IntRect& dirty)
+{
+    // Validate format.
+    if (format != SurfaceFormat::B8G8R8A8 && format != SurfaceFormat::B8G8R8X8) {
+        MOZ_ASSERT_UNREACHABLE("bad format type");
+        return false;
+    }
+    if (size.width <= 0 || size.height <= 0) {
+        MOZ_ASSERT_UNREACHABLE("bad image size");
+        return false;
+    }
+    if (mDrawingModel != NPDrawingModelAsyncBitmapSurface) {
+        MOZ_ASSERT_UNREACHABLE("plugin did not set a bitmap drawing model");
+        return false;
+    }
+
+    // Validate buffer and size.
+    CheckedInt<uint32_t> nbytes = CheckedInt<uint32_t>(uint32_t(size.height)) * stride;
+    if (!nbytes.isValid() || nbytes.value() != buffer.Size<uint8_t>()) {
+        MOZ_ASSERT_UNREACHABLE("bad shmem size");
+        return false;
+    }
+
+    ImageContainer* container = GetImageContainer();
+    if (!container) {
+        return false;
+    }
+
+    RefPtr<gfx::DataSourceSurface> source =
+        gfx::Factory::CreateWrappingDataSourceSurface(buffer.get<uint8_t>(), stride, size, format);
+    if (!source) {
+        return false;
+    }
+
+    // Allocate a texture for the compositor.
+    RefPtr<TextureClientRecycleAllocator> allocator = mParent->EnsureTextureAllocator();
+    RefPtr<TextureClient> texture = allocator->CreateOrRecycle(
+        format, size, BackendSelector::Content,
+        TextureFlags::NO_FLAGS,
+        ALLOC_FOR_OUT_OF_BAND_CONTENT);
+    if (!texture) {
+        return false;
+    }
+
+    // Upload the plugin buffer.
+    {
+        TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
+        if (!autoLock.Succeeded()) {
+            return false;
+        }
+        texture->UpdateFromSurface(source);
+    }
+
+    // Wrap the texture in an image and ship it off.
+    RefPtr<TextureWrapperImage> image =
+        new TextureWrapperImage(texture, gfx::IntRect(gfx::IntPoint(0, 0), size));
+    SetCurrentImage(image);
+
+    PLUGIN_LOG_DEBUG(("   (RecvShowDirectBitmap received shmem=%p stride=%d size=%s dirty=%s)",
+        buffer.get<unsigned char>(), stride, Stringify(size).c_str(), Stringify(dirty).c_str()));
+    return true;
+}
+
+void
+PluginInstanceParent::SetCurrentImage(Image* aImage)
+{
+    MOZ_ASSERT(IsUsingDirectDrawing());
+    ImageContainer::NonOwningImage holder(aImage);
+    holder.mFrameID = ++mFrameID;
+
+    nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
+    imageList.AppendElement(holder);
+    mImageContainer->SetCurrentImages(imageList);
 }
 
 bool
@@ -999,7 +1112,11 @@ PluginInstanceParent::GetImageContainer()
     return mImageContainer;
   }
 
-  mImageContainer = LayerManager::CreateImageContainer();
+  if (IsUsingDirectDrawing()) {
+      mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
+  } else {
+      mImageContainer = LayerManager::CreateImageContainer();
+  }
   return mImageContainer;
 }
 
