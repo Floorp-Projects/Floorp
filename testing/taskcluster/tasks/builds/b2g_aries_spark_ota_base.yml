@@ -2,16 +2,13 @@ $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
 task:
   workerType: balrog
-  scopes:
-    - 'docker-worker:feature:balrogVPNProxy'
 
   payload:
-    features:
-      balrogVPNProxy: true
     env:
       TARGET: 'aries'
       DEBUG: 0
       MOZHARNESS_CONFIG: b2g/taskcluster-spark-ota.py
+      B2G_UPDATE_CHANNEL: '{{b2g_update_channel}}'
     command:
       - >
         checkout-gecko workspace &&

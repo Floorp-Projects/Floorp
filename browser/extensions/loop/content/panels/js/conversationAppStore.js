@@ -106,19 +106,19 @@ loop.store.ConversationAppStore = (function() {
      * @param {sharedActions.GetWindowData} actionData The action data
      */
     getWindowData: function(actionData) {
-      loop.request("GetConversationWindowData", actionData.windowId)
-        .then(function(windowData) {
-          if (!windowData) {
-            console.error("Failed to get the window data");
-            this.setStoreState({ windowType: "failed" });
-            return;
-          }
+      var windowData = loop.getStoredRequest(["GetConversationWindowData",
+        actionData.windowId]);
 
-          this.setStoreState({ windowType: windowData.type });
+      if (!windowData) {
+        console.error("Failed to get the window data");
+        this.setStoreState({ windowType: "failed" });
+        return;
+      }
 
-          this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
-            windowId: actionData.windowId }, windowData)));
-        }.bind(this));
+      this.setStoreState({ windowType: windowData.type });
+
+      this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
+        windowId: actionData.windowId }, windowData)));
     },
 
     /**
