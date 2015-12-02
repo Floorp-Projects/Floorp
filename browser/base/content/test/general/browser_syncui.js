@@ -53,7 +53,7 @@ function promiseObserver(topic) {
 }
 
 function checkButtonTooltips(stringPrefix) {
-  for (let butId of ["sync-button", "PanelUI-fxa-icon"]) {
+  for (let butId of ["PanelUI-remotetabs-syncnow", "PanelUI-fxa-icon"]) {
     let text = document.getElementById(butId).getAttribute("tooltiptext");
     let desc = `Text is "${text}", expecting it to start with "${stringPrefix}"`
     Assert.ok(text.startsWith(stringPrefix), desc);
@@ -89,6 +89,8 @@ add_task(function* prepare() {
   // and a notification to have the state change away from "needs setup"
   yield notifyAndPromiseUIUpdated("weave:service:login:finish");
   checkBroadcasterVisible("sync-syncnow-state");
+  // open the sync-button panel so we can check elements in that.
+  document.getElementById("sync-button").click();
 });
 
 add_task(function* testSyncNeedsVerification() {
