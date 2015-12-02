@@ -61,13 +61,13 @@ using js::frontend::IsIdentifier;
  */
 JS_STATIC_ASSERT(sizeof(uint32_t) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 
-const JSCodeSpec js_CodeSpec[] = {
+const JSCodeSpec js::CodeSpec[] = {
 #define MAKE_CODESPEC(op,val,name,token,length,nuses,ndefs,format)  {length,nuses,ndefs,format},
     FOR_EACH_OPCODE(MAKE_CODESPEC)
 #undef MAKE_CODESPEC
 };
 
-const unsigned js_NumCodeSpecs = JS_ARRAY_LENGTH(js_CodeSpec);
+const unsigned js::NumCodeSpecs = JS_ARRAY_LENGTH(CodeSpec);
 
 /*
  * Each element of the array is either a source literal associated with JS
@@ -83,7 +83,7 @@ static const char * const CodeToken[] = {
  * Array of JS bytecode names used by PC count JSON, DEBUG-only Disassemble
  * and JIT debug spew.
  */
-const char * const js_CodeName[] = {
+const char * const js::CodeName[] = {
 #define OPNAME(op, val, name, ...)  name,
     FOR_EACH_OPCODE(OPNAME)
 #undef OPNAME
@@ -97,7 +97,7 @@ size_t
 js::GetVariableBytecodeLength(jsbytecode* pc)
 {
     JSOp op = JSOp(*pc);
-    MOZ_ASSERT(js_CodeSpec[op].length == -1);
+    MOZ_ASSERT(CodeSpec[op].length == -1);
     switch (op) {
       case JSOP_TABLESWITCH: {
         /* Structure: default-jump case-low case-high case1-jump ... */
@@ -117,11 +117,11 @@ unsigned
 js::StackUses(JSScript* script, jsbytecode* pc)
 {
     JSOp op = (JSOp) *pc;
-    const JSCodeSpec& cs = js_CodeSpec[op];
+    const JSCodeSpec& cs = CodeSpec[op];
     if (cs.nuses >= 0)
         return cs.nuses;
 
-    MOZ_ASSERT(js_CodeSpec[op].nuses == -1);
+    MOZ_ASSERT(CodeSpec[op].nuses == -1);
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
@@ -140,7 +140,7 @@ unsigned
 js::StackDefs(JSScript* script, jsbytecode* pc)
 {
     JSOp op = (JSOp) *pc;
-    const JSCodeSpec& cs = js_CodeSpec[op];
+    const JSCodeSpec& cs = CodeSpec[op];
     MOZ_ASSERT(cs.ndefs >= 0);
     return cs.ndefs;
 }
@@ -820,12 +820,12 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
                              JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
         return 0;
     }
-    const JSCodeSpec* cs = &js_CodeSpec[op];
+    const JSCodeSpec* cs = &CodeSpec[op];
     ptrdiff_t len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
     if (lines)
         Sprint(sp, "%4u", PCToLineNumber(script, pc));
-    Sprint(sp, "  %s", js_CodeName[op]);
+    Sprint(sp, "  %s", CodeName[op]);
 
     switch (JOF_TYPE(cs->format)) {
       case JOF_BYTE:
@@ -1062,7 +1062,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
 
     if (const char* token = CodeToken[op]) {
         // Handle simple cases of binary and unary operators.
-        switch (js_CodeSpec[op].nuses) {
+        switch (CodeSpec[op].nuses) {
           case 2: {
             jssrcnote* sn = GetSrcNote(cx, script, pc);
             if (!sn || SN_TYPE(sn) != SRC_ASSIGNOP)
@@ -1804,7 +1804,7 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
         NumberValueToStringBuffer(cx, Int32Value(scanner.getLine()), buf);
 
         {
-            const char* name = js_CodeName[op];
+            const char* name = CodeName[op];
             AppendJSONProperty(buf, "name");
             buf.append('\"');
             buf.append(name, strlen(name));

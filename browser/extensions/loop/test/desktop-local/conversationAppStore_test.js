@@ -106,13 +106,10 @@ describe("loop.store.ConversationAppStore", function() {
       getLoopPrefStub = sandbox.stub();
       setLoopPrefStub = sandbox.stub();
 
+      loop.storedRequests = {
+        "GetConversationWindowData|42": fakeWindowData
+      };
       LoopMochaUtils.stubLoopRequest({
-        GetConversationWindowData: function(windowId) {
-          if (windowId === "42") {
-            return fakeWindowData;
-          }
-          return null;
-        },
         GetLoopPref: getLoopPrefStub,
         SetLoopPref: setLoopPrefStub
       });

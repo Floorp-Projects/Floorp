@@ -836,11 +836,6 @@ statuspanel[inactive][previoustype=overLink] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#promobox");
 }
 
-/* tabview menus */
-.tabview-menuitem {
-  max-width: 32em;
-}
-
 /* gcli */
 
 html|*#gcli-tooltip-frame,

@@ -2443,7 +2443,7 @@ void
 jit::AssertGraphCoherency(MIRGraph& graph)
 {
 #ifdef DEBUG
-    if (!js_JitOptions.checkGraphConsistency)
+    if (!JitOptions.checkGraphConsistency)
         return;
     AssertBasicGraphCoherency(graph);
     AssertReversePostorder(graph);
@@ -2530,7 +2530,7 @@ jit::AssertExtendedGraphCoherency(MIRGraph& graph)
     // are split)
 
 #ifdef DEBUG
-    if (!js_JitOptions.checkGraphConsistency)
+    if (!JitOptions.checkGraphConsistency)
         return;
 
     AssertGraphCoherency(graph);
@@ -3683,7 +3683,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
                      script->needsArgsObj(),
                      inlineScriptTree);
 
-    const OptimizationInfo* optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
+    const OptimizationInfo* optimizationInfo = IonOptimizations.get(Optimization_Normal);
 
     CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
     if (!constraints) {
@@ -3904,7 +3904,7 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
                      /* needsArgsObj = */ true,
                      inlineScriptTree);
 
-    const OptimizationInfo* optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
+    const OptimizationInfo* optimizationInfo = IonOptimizations.get(Optimization_Normal);
 
     CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
     if (!constraints) {

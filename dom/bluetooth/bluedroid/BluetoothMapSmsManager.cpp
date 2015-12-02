@@ -420,24 +420,22 @@ BluetoothMapSmsManager::ReceiveSocketData(BluetoothSocket* aSocket,
 bool
 BluetoothMapSmsManager::CompareHeaderTarget(const ObexHeaderSet& aHeader)
 {
-  if (!aHeader.Has(ObexHeaderId::Target)) {
+  const ObexHeader* header = aHeader.GetHeader(ObexHeaderId::Target);
+
+  if (!header) {
     BT_LOGR("No ObexHeaderId::Target in header");
     return false;
   }
 
-  uint8_t* targetPtr;
-  int targetLength;
-  aHeader.GetTarget(&targetPtr, &targetLength);
-
-  if (targetLength != sizeof(BluetoothUuid)) {
-    BT_LOGR("Length mismatch: %d != 16", targetLength);
+  if (header->mDataLength != sizeof(BluetoothUuid)) {
+    BT_LOGR("Length mismatch: %d != 16", header->mDataLength);
     return false;
   }
 
   for (uint8_t i = 0; i < sizeof(BluetoothUuid); i++) {
-    if (targetPtr[i] != kMapMasObexTarget.mUuid[i]) {
+    if (header->mData[i] != kMapMasObexTarget.mUuid[i]) {
       BT_LOGR("UUID mismatch: received target[%d]=0x%x != 0x%x",
-              i, targetPtr[i], kMapMasObexTarget.mUuid[i]);
+              i, header->mData[i], kMapMasObexTarget.mUuid[i]);
       return false;
     }
   }
