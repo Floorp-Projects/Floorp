@@ -1945,6 +1945,14 @@ PluginModuleParent::GetImageSize(NPP instance,
     return !i ? NS_ERROR_FAILURE : i->GetImageSize(aSize);
 }
 
+void
+PluginModuleParent::DidComposite(NPP aInstance)
+{
+    if (PluginInstanceParent* i = PluginInstanceParent::Cast(aInstance)) {
+        i->DidComposite();
+    }
+}
+
 nsresult
 PluginModuleParent::SetBackgroundUnknown(NPP instance)
 {

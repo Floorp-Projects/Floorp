@@ -146,6 +146,10 @@ parent:
     returns (nsCString value, NPError result);
   intr NPN_GetValue_DrawingModelSupport(NPNVariable model)
     returns (bool value);
+  intr NPN_GetValue_SupportsAsyncBitmapSurface()
+    returns (bool value);
+  intr NPN_GetValue_SupportsAsyncDXGISurface()
+    returns (bool value);
 
   intr NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
