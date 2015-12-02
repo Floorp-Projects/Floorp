@@ -7025,6 +7025,9 @@ bool CClosure::ArgClosure::operator()(JSContext* cx)
       size_t copySize = CType::GetSize(fninfo->mReturnType);
       MOZ_ASSERT(copySize <= rvSize);
       memcpy(result, cinfo->errResult, copySize);
+
+      // We still want to return false here, so that
+      // PrepareScriptEnvironmentAndInvoke will report the exception.
     } else {
       // Bad case: not much we can do here. The rv is already zeroed out, so we
       // just return and hope for the best.
