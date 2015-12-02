@@ -101,12 +101,24 @@ DebuggerPanel.prototype = {
 
   // DebuggerPanel API
 
-  addBreakpoint: function(aLocation, aOptions) {
-    return this._controller.Breakpoints.addBreakpoint(aLocation, aOptions);
+  addBreakpoint: function(location) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+
+    return dispatch(actions.addBreakpoint(location));
   },
 
-  removeBreakpoint: function(aLocation) {
-    return this._controller.Breakpoints.removeBreakpoint(aLocation);
+  removeBreakpoint: function(location) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+
+    return dispatch(actions.removeBreakpoint(location));
+  },
+
+  blackbox: function(source, flag) {
+    const { actions } = this.panelWin;
+    const { dispatch } =  this._controller;
+    return dispatch(actions.blackbox(source, flag))
   },
 
   handleHostChanged: function() {

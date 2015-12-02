@@ -71,7 +71,6 @@ devtools.jar:
     content/debugger/debugger-controller.js (debugger/debugger-controller.js)
     content/debugger/debugger-view.js (debugger/debugger-view.js)
     content/debugger/views/workers-view.js (debugger/views/workers-view.js)
-    content/debugger/views/sources-view.js (debugger/views/sources-view.js)
     content/debugger/views/variable-bubble-view.js (debugger/views/variable-bubble-view.js)
     content/debugger/views/watch-expressions-view.js (debugger/views/watch-expressions-view.js)
     content/debugger/views/global-search-view.js (debugger/views/global-search-view.js)

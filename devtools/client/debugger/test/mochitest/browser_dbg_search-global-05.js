@@ -97,9 +97,9 @@ function testClickLineToJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(isCaretPos(gPanel, 1, 1),
+    ok(isCaretPos(gPanel, 1, 5),
       "The editor didn't jump to the correct line (1).");
-    is(gEditor.getSelection(), "",
+    is(gEditor.getSelection(), "A",
       "The editor didn't select the correct text (1).");
     ok(getSelectedSourceURL(gSources).includes("-01.js"),
       "The currently shown source is incorrect (1).");
@@ -126,9 +126,9 @@ function testClickMatchToJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(isCaretPos(gPanel, 1, 1),
+    ok(isCaretPos(gPanel, 13, 3),
       "The editor didn't jump to the correct line (2).");
-    is(gEditor.getSelection(), "",
+    is(gEditor.getSelection(), "a",
       "The editor didn't select the correct text (2).");
     ok(getSelectedSourceURL(gSources).includes("-02.js"),
       "The currently shown source is incorrect (2).");

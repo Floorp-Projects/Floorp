@@ -279,7 +279,7 @@ PlacesTreeView.prototype = {
       return 0;
 
     // Inserting the new elements into the rows array in one shot (by
-    // Array.concat) is faster than resizing the array (by splice) on each loop
+    // Array.prototype.concat) is faster than resizing the array (by splice) on each loop
     // iteration.
     let cc = aContainer.childCount;
     let newElements = new Array(cc);

@@ -597,7 +597,8 @@ public:
   nsFrameSelection();
 
   void StartBatchChanges();
-  void EndBatchChanges();
+  void EndBatchChanges(int16_t aReason = nsISelectionListener::NO_REASON);
+
   /*unsafe*/
   nsresult DeleteFromDocument();
 
