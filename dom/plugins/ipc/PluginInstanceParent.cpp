@@ -37,6 +37,7 @@
 #include "ImageContainer.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "gfxPrefs.h"
 
 #ifdef XP_MACOSX
 #include "MacIOSurfaceImage.h"
@@ -210,6 +211,12 @@ PluginInstanceParent::Destroy()
     return retval;
 }
 
+bool
+PluginInstanceParent::IsUsingDirectDrawing()
+{
+    return IsDrawingModelDirect(mDrawingModel);
+}
+
 PBrowserStreamParent*
 PluginInstanceParent::AllocPBrowserStreamParent(const nsCString& url,
                                                 const uint32_t& length,
@@ -342,6 +349,42 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
     return true;
 }
 
+static inline bool
+AllowDirectBitmapSurfaceDrawing()
+{
+    if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+        return false;
+    }
+    return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();
+}
+
+static inline bool
+AllowDirectDXGISurfaceDrawing()
+{
+    if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+        return false;
+    }
+#if defined(XP_WIN)
+    return gfxWindowsPlatform::GetPlatform()->SupportsPluginDirectDXGIDrawing();
+#else
+    return false;
+#endif
+}
+
+bool
+PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncBitmapSurface(bool* value)
+{
+    *value = AllowDirectBitmapSurfaceDrawing();
+    return true;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value)
+{
+    *value = AllowDirectDXGISurfaceDrawing();
+    return true;
+}
+
 bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginWindow(
     const bool& windowed, NPError* result)
@@ -376,35 +419,58 @@ bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, NPError* result)
 {
+    bool allowed = false;
+
+    switch (drawingModel) {
+#if defined(XP_MACOSX)
+        case NPDrawingModelCoreAnimation:
+        case NPDrawingModelInvalidatingCoreAnimation:
+        case NPDrawingModelOpenGL:
+        case NPDrawingModelCoreGraphics:
+            allowed = true;
+            break;
+#elif defined(XP_WIN)
+        case NPDrawingModelSyncWin:
+            allowed = true;
+            break;
+        case NPDrawingModelAsyncWindowsDXGISurface:
+            allowed = AllowDirectDXGISurfaceDrawing();
+            break;
+#elif defined(MOZ_X11)
+        case NPDrawingModelSyncX:
+            allowed = true;
+            break;
+#endif
+        case NPDrawingModelAsyncBitmapSurface:
+            allowed = AllowDirectBitmapSurfaceDrawing();
+            break;
+        default:
+            allowed = false;
+            break;
+    }
+
+    if (!allowed) {
+        *result = NPERR_GENERIC_ERROR;
+        return true;
+    }
+
+    mDrawingModel = drawingModel;
+
+    int requestModel = drawingModel;
+
 #ifdef XP_MACOSX
     if (drawingModel == NPDrawingModelCoreAnimation ||
         drawingModel == NPDrawingModelInvalidatingCoreAnimation) {
         // We need to request CoreGraphics otherwise
         // the nsPluginFrame will try to draw a CALayer
         // that can not be shared across process.
-        mDrawingModel = drawingModel;
-        *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
-                                  (void*)NPDrawingModelCoreGraphics);
-    } else
-#endif
-    if (
-#if defined(XP_WIN)
-               drawingModel == NPDrawingModelSyncWin
-#elif defined(XP_MACOSX)
-               drawingModel == NPDrawingModelOpenGL ||
-               drawingModel == NPDrawingModelCoreGraphics
-#elif defined(MOZ_X11)
-               drawingModel == NPDrawingModelSyncX
-#else
-               false
-#endif
-               ) {
-        mDrawingModel = drawingModel;
-        *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
-                                      (void*)(intptr_t)drawingModel);
-    } else {
-        *result = NPERR_GENERIC_ERROR;
+        requestModel = NPDrawingModelCoreGraphics;
     }
+#endif
+
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
+                                  (void*)(intptr_t)requestModel);
+
     return true;
 }
 
@@ -728,6 +794,15 @@ PluginInstanceParent::GetImageSize(nsIntSize* aSize)
 #endif
 
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+void
+PluginInstanceParent::DidComposite()
+{
+    if (!IsUsingDirectDrawing()) {
+        return;
+    }
+    Unused << SendNPP_DidComposite();
 }
 
 #ifdef XP_MACOSX

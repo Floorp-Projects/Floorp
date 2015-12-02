@@ -295,6 +295,8 @@ public:
 
     void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut) override;
 
+    bool SupportsPluginDirectDXGIDrawing();
+
 protected:
     bool AccelerateLayersByDefault() override {
       return true;

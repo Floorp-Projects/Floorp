@@ -115,6 +115,12 @@ public:
     AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value, NPError* result) override;
 
     virtual bool
+    AnswerNPN_GetValue_SupportsAsyncBitmapSurface(bool* value) override;
+
+    virtual bool
+    AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value) override;
+
+    virtual bool
     AnswerNPN_SetValue_NPPVpluginWindow(const bool& windowed, NPError* result) override;
     virtual bool
     AnswerNPN_SetValue_NPPVpluginTransparent(const bool& transparent,
@@ -307,7 +313,9 @@ public:
                                    gfxContext** aCtx);
     nsresult EndUpdateBackground(gfxContext* aCtx,
                                  const nsIntRect& aRect);
-    void DidComposite() { Unused << SendNPP_DidComposite(); }
+    void DidComposite();
+
+    bool IsUsingDirectDrawing();
 
     virtual PluginAsyncSurrogate* GetAsyncSurrogate() override;
 
@@ -347,7 +355,7 @@ private:
     nsCString mSrcAttribute;
     bool mIsWhitelistedForShumway;
     NPWindowType mWindowType;
-    int16_t            mDrawingModel;
+    int16_t mDrawingModel;
 
     nsDataHashtable<nsPtrHashKey<NPObject>, PluginScriptableObjectParent*> mScriptableObjects;
 
