@@ -320,6 +320,15 @@ _getJavaPeer(NPP npp);
 void
 _urlredirectresponse(NPP instance, void* notifyData, NPBool allow);
 
+NPError
+_initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface);
+
+NPError
+_finalizeasyncsurface(NPP instance, NPAsyncSurface *surface);
+
+void
+_setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
+
 } /* namespace parent */
 } /* namespace plugins */
 } /* namespace mozilla */

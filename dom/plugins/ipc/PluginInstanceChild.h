@@ -261,6 +261,13 @@ public:
 
     void NPN_URLRedirectResponse(void* notifyData, NPBool allow);
 
+
+    NPError NPN_InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                 void *initData, NPAsyncSurface *surface);
+    NPError NPN_FinalizeAsyncSurface(NPAsyncSurface *surface);
+
+    void NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
+
     void DoAsyncRedraw();
 private:
     friend class PluginModuleChild;
@@ -269,7 +276,7 @@ private:
     InternalGetNPObjectForValue(NPNVariable aValue,
                                 NPObject** aObject);
 
-    bool IsAsyncDrawing();
+    bool IsUsingDirectDrawing();
 
     virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
                                       const nsIntRect& aRect) override;

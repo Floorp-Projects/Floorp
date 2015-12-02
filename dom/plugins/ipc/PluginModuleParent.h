@@ -246,6 +246,7 @@ protected:
     virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) override;
     virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
     virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) override;
+    virtual void DidComposite(NPP aInstance) override;
     virtual bool IsOOP() override { return true; }
     virtual nsresult SetBackgroundUnknown(NPP instance) override;
     virtual nsresult BeginUpdateBackground(NPP instance,
