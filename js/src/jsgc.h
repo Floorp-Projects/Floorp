@@ -69,6 +69,7 @@ enum State {
     D(JSFunction*) \
     D(ModuleObject*) \
     D(ModuleEnvironmentObject*) \
+    D(ModuleNamespaceObject*) \
     D(NestedScopeObject*) \
     D(PlainObject*) \
     D(SavedFrame*) \
