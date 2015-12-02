@@ -3007,6 +3007,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       bSize += gridReflowState.mRows.mSizes[i].mBase;
     }
     bSize += gridReflowState.mRows.SumOfGridGaps();
+    bSize = NS_CSS_MINMAX(bSize,
+                          aReflowState.ComputedMinBSize(),
+                          aReflowState.ComputedMaxBSize());
   } else {
     bSize = computedBSize;
   }
