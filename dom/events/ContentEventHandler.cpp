@@ -58,7 +58,10 @@ using namespace widget;
 //   1.4. Case: <element>[
 //        When start of a non-empty element is start of a range, start node is
 //        the element and start offset is 0.
-//   1.5. Case: [</root>
+//   1.5. Case: <root>[
+//        When start of a range is 0 and there are no nodes causing text,
+//        start node is the root node and start offset is 0.
+//   1.6. Case: [</root>
 //        When start of a range is out of bounds, start node is the root node
 //        and start offset is number of the children.
 // 2. End of range:
@@ -1001,12 +1004,31 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
   }
 
   if (!startSet) {
-    // Rule #1.5: [</root>
     MOZ_ASSERT(!mRootContent->IsNodeOfType(nsINode::eTEXT));
-    rv = aRange->SetStart(mRootContent,
-                          static_cast<int32_t>(mRootContent->GetChildCount()));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (!offset) {
+      // Rule #1.5: <root>[</root>
+      // When there are no nodes causing text, the start of the DOM range
+      // should be start of the root node since clicking on such editor (e.g.,
+      // <div contenteditable><span></span></div>) sets caret to the start of
+      // the editor (i.e., before <span> in the example).
+      rv = aRange->SetStart(mRootContent, 0);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (!aLength) {
+        rv = aRange->SetEnd(mRootContent, 0);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        return NS_OK;
+      }
+    } else {
+      // Rule #1.5: [</root>
+      rv = aRange->SetStart(mRootContent,
+                     static_cast<int32_t>(mRootContent->GetChildCount()));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
     if (aNewOffset) {
       *aNewOffset = offset;

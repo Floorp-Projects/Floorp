@@ -3117,22 +3117,22 @@ function runSetSelectionEventTest()
   synthesizeSelectionSet(0, 0);
   is(selection.anchorNode, contenteditable,
      "runSetSelectionEventTest #11 (0, 0), \"" + contenteditable.innerHTML + "\": selection anchor node should be the root node");
-  todo_is(selection.anchorOffset, 0,
+  is(selection.anchorOffset, 0,
      "runSetSelectionEventTest #11 (0, 0), \"" + contenteditable.innerHTML + "\": selection anchor offset should be 0");
   is(selection.focusNode, contenteditable,
      "runSetSelectionEventTest #11 (0, 0), \"" + contenteditable.innerHTML + "\": selection focus node should be the root node");
-  todo_is(selection.focusOffset, 0,
+  is(selection.focusOffset, 0,
      "runSetSelectionEventTest #11 (0, 0), \"" + contenteditable.innerHTML + "\": selection focus offset should be 0");
   checkSelection(0, "", "runSetSelectionEventTest #11 (0, 0), \"" + contenteditable.innerHTML + "\"");
 
   synthesizeSelectionSet(0, 1);
   is(selection.anchorNode, contenteditable,
      "runSetSelectionEventTest #11 (0, 1), \"" + contenteditable.innerHTML + "\": selection anchor node should be the root node");
-  todo_is(selection.anchorOffset, 0,
+  is(selection.anchorOffset, 0,
      "runSetSelectionEventTest #11 (0, 1), \"" + contenteditable.innerHTML + "\": selection anchor offset should be 0");
   is(selection.focusNode, contenteditable,
      "runSetSelectionEventTest #11 (0, 1), \"" + contenteditable.innerHTML + "\": selection focus node should be the root node");
-  todo_is(selection.focusOffset, contenteditable.childNodes.length,
+  is(selection.focusOffset, contenteditable.childNodes.length,
      "runSetSelectionEventTest #11 (0, 1), \"" + contenteditable.innerHTML + "\": selection focus offset should be the count of the root's children");
   checkSelection(0, "", "runSetSelectionEventTest #11 (0, 1), \"" + contenteditable.innerHTML + "\"");
 
