@@ -12,6 +12,7 @@
 #endif
 #include "VideoUtils.h"
 #include "ImageContainer.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
@@ -533,8 +534,7 @@ MediaRawData::EnsureCapacity(size_t aSize)
   if (mData && mCapacity >= sizeNeeded) {
     return true;
   }
-  nsAutoArrayPtr<uint8_t> newBuffer;
-  newBuffer = new (fallible) uint8_t[sizeNeeded];
+  auto newBuffer = MakeUniqueFallible<uint8_t[]>(sizeNeeded);
   if (!newBuffer) {
     return false;
   }
@@ -546,7 +546,7 @@ MediaRawData::EnsureCapacity(size_t aSize)
   MOZ_ASSERT(uintptr_t(newData) % (RAW_DATA_ALIGNMENT+1) == 0);
   memcpy(newData, mData, mSize);
 
-  mBuffer = newBuffer.forget();
+  mBuffer = Move(newBuffer);
   mCapacity = sizeNeeded;
   mData = newData;
 

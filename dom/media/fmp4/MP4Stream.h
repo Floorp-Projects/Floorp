@@ -13,6 +13,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace mozilla {
 
@@ -74,9 +75,15 @@ private:
     int64_t mOffset;
     size_t mCount;
 
+    CacheBlock(CacheBlock&& aOther)
+      : mOffset(aOther.mOffset)
+      , mCount(aOther.mCount)
+      , mBuffer(Move(aOther.mBuffer))
+    {}
+
     bool Init()
     {
-      mBuffer = new (fallible) char[mCount];
+      mBuffer = MakeUniqueFallible<char[]>(mCount);
       return !!mBuffer;
     }
 
@@ -87,7 +94,10 @@ private:
     }
 
   private:
-    nsAutoArrayPtr<char> mBuffer;
+    CacheBlock(const CacheBlock&) = delete;
+    CacheBlock& operator=(const CacheBlock&) = delete;
+
+    UniquePtr<char[]> mBuffer;
   };
   nsTArray<CacheBlock> mCache;
 };

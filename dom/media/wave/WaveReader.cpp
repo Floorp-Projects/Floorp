@@ -14,6 +14,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Endian.h"
+#include "mozilla/UniquePtr.h"
 #include <algorithm>
 
 using namespace mozilla::media;
@@ -191,9 +192,9 @@ bool WaveReader::DecodeAudioData()
 
   static_assert(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(char),
                 "BLOCK_SIZE too large for enumerator.");
-  nsAutoArrayPtr<char> dataBuffer(new char[static_cast<size_t>(readSize)]);
+  auto dataBuffer = MakeUnique<char[]>(static_cast<size_t>(readSize));
 
-  if (!ReadAll(dataBuffer, readSize)) {
+  if (!ReadAll(dataBuffer.get(), readSize)) {
     return false;
   }
 
@@ -406,7 +407,7 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
     if (extra > 0) {
       static_assert(UINT16_MAX + (UINT16_MAX % 2) < UINT_MAX / sizeof(char),
                     "chunkExtension array too large for iterator.");
-      nsAutoArrayPtr<char> chunkExtension(new char[extra]);
+      auto chunkExtension = MakeUnique<char[]>(extra);
       if (!ReadAll(chunkExtension.get(), extra)) {
         return false;
       }
@@ -528,7 +529,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
     return false;
   }
 
-  nsAutoArrayPtr<char> chunk(new char[aChunkSize]);
+  auto chunk = MakeUnique<char[]>(aChunkSize);
   if (!ReadAll(chunk.get(), aChunkSize)) {
     return false;
   }
@@ -652,7 +653,7 @@ WaveReader::LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
     static const int64_t MAX_CHUNK_SIZE = 1 << 16;
     static_assert(uint64_t(MAX_CHUNK_SIZE) < UINT_MAX / sizeof(char),
                   "MAX_CHUNK_SIZE too large for enumerator.");
-    nsAutoArrayPtr<char> chunk(new char[MAX_CHUNK_SIZE]);
+    auto chunk = MakeUnique<char[]>(MAX_CHUNK_SIZE);
     while (forward.value() > 0) {
       int64_t size = std::min(forward.value(), MAX_CHUNK_SIZE);
       if (!ReadAll(chunk.get(), size)) {

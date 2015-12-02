@@ -88,7 +88,7 @@ public:
   void SetCapacity(uint32_t aCapacity) {
     MOZ_ASSERT(!mBuffer, "Buffer allocated.");
     mCapacity = aCapacity;
-    mBuffer = new uint8_t[mCapacity];
+    mBuffer = MakeUnique<uint8_t[]>(mCapacity);
   }
 
   uint32_t Length() {
@@ -137,12 +137,12 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
-    amount += mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    amount += aMallocSizeOf(mBuffer.get());
     return amount;
   }
 
 private:
-  nsAutoArrayPtr<uint8_t> mBuffer;
+  UniquePtr<uint8_t[]> mBuffer;
   uint32_t mCapacity;
   uint32_t mStart;
   uint32_t mCount;
