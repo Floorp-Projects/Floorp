@@ -34,7 +34,10 @@
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-fxa-icon"
                          oncommand="gSyncUI.doSync();"
-                         closemenu="none"/>
+                         closemenu="none">
+            <observes element="sync-status" attribute="syncstatus"/>
+            <observes element="sync-status" attribute="tooltiptext"/>
+          </toolbarbutton>
         </hbox>
 
         <hbox id="PanelUI-footer-inner">

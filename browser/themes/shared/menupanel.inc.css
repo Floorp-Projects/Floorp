@@ -63,7 +63,7 @@
     -moz-image-region: rect(0px, 384px, 32px, 352px);
   }
 
-  #sync-button[cui-areatype="menu-panel"][status="active"] {
+  #sync-button[cui-areatype="menu-panel"][syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-menuPanel.png);
     -moz-image-region: rect(0px, 32px, 32px, 0px);
   }
@@ -282,7 +282,7 @@
     -moz-image-region: rect(0px, 768px, 64px, 704px);
   }
 
-  #sync-button[cui-areatype="menu-panel"][status="active"] {
+  #sync-button[cui-areatype="menu-panel"][syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-menuPanel@2x.png);
     -moz-image-region: rect(0px, 64px, 64px, 0px);
   }
