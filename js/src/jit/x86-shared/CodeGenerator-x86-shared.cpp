@@ -3366,7 +3366,6 @@ void
 CodeGeneratorX86Shared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
                                                    const T& mem, Register temp1, Register temp2, AnyRegister output)
 {
-    // Uint8Clamped is explicitly not supported here
     switch (arrayType) {
       case Scalar::Int8:
         switch (op) {
@@ -3526,7 +3525,6 @@ void
 CodeGeneratorX86Shared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
                                                     const T& mem)
 {
-    // Uint8Clamped is explicitly not supported here
     switch (arrayType) {
       case Scalar::Int8:
       case Scalar::Uint8:
