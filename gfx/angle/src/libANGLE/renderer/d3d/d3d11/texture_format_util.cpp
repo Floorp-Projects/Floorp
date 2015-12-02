@@ -10,6 +10,7 @@
 #include "libANGLE/renderer/d3d/d3d11/texture_format_util.h"
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 #include "libANGLE/renderer/d3d/loadimage.h"
+#include "libANGLE/renderer/d3d/loadimage_etc.h"
 
 namespace rx
 {
@@ -67,6 +68,7 @@ const D3D11LoadFunctionMap &BuildD3D11LoadFunctionMap()
 {
     static D3D11LoadFunctionMap map;
 
+    // clang-format off
     //                      | Internal format      | Type                             | Target DXGI Format              | Load function                       |
     InsertLoadFunction(&map, GL_RGBA8,              GL_UNSIGNED_BYTE,                  DXGI_FORMAT_R8G8B8A8_UNORM,       LoadToNative<GLubyte, 4>             );
     InsertLoadFunction(&map, GL_RGB5_A1,            GL_UNSIGNED_BYTE,                  DXGI_FORMAT_R8G8B8A8_UNORM,       LoadToNative<GLubyte, 4>             );
@@ -205,18 +207,20 @@ const D3D11LoadFunctionMap &BuildD3D11LoadFunctionMap()
     InsertLoadFunction(&map, GL_BGR5_A1_ANGLEX,         GL_UNSIGNED_BYTE,                  DXGI_FORMAT_UNKNOWN,          LoadToNative<GLubyte, 4>             );
     // Compressed formats
     // From ES 3.0.1 spec, table 3.16
-    //                      | Internal format                             | Type            | Load function                |
-    InsertLoadFunction(&map, GL_COMPRESSED_R11_EAC,                        GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_R11_EAC,                        GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_SIGNED_R11_EAC,                 GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_RG11_EAC,                       GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_SIGNED_RG11_EAC,                GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_RGB8_ETC2,                      GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_ETC2,                     GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,  GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2, GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_RGBA8_ETC2_EAC,                 GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
-    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,          GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        UnimplementedLoadFunction            );
+    //                      | Internal format                             | Type            | Target DXGI Format             | Load function
+    InsertLoadFunction(&map, GL_COMPRESSED_R11_EAC,                        GL_UNSIGNED_BYTE, DXGI_FORMAT_R8_UNORM,            LoadEACR11ToR8        );
+    InsertLoadFunction(&map, GL_COMPRESSED_SIGNED_R11_EAC,                 GL_UNSIGNED_BYTE, DXGI_FORMAT_R8_SNORM,            LoadEACR11SToR8       );
+    InsertLoadFunction(&map, GL_COMPRESSED_RG11_EAC,                       GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8_UNORM,          LoadEACRG11ToRG8      );
+    InsertLoadFunction(&map, GL_COMPRESSED_SIGNED_RG11_EAC,                GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8_SNORM,          LoadEACRG11SToRG8     );
+    InsertLoadFunction(&map, GL_COMPRESSED_RGB8_ETC2,                      GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM,      LoadETC2RGB8ToRGBA8   );
+    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_ETC2,                     GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, LoadETC2SRGB8ToRGBA8  );
+    InsertLoadFunction(&map, GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,  GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM,      LoadETC2RGB8A1ToRGBA8 );
+    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2, GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, LoadETC2SRGB8A1ToRGBA8);
+    InsertLoadFunction(&map, GL_COMPRESSED_RGBA8_ETC2_EAC,                 GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM,      LoadETC2RGBA8ToRGBA8  );
+    InsertLoadFunction(&map, GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,          GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, LoadETC2SRGBA8ToSRGBA8);
+
+    // From GL_ETC1_RGB8_OES
+    InsertLoadFunction(&map, GL_ETC1_RGB8_OES,                             GL_UNSIGNED_BYTE, DXGI_FORMAT_R8G8B8A8_UNORM,      LoadETC1RGB8ToRGBA8   );
 
     // From GL_EXT_texture_compression_dxt1
     InsertLoadFunction(&map, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,              GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        LoadCompressedToNative<4, 4,  8>     );
@@ -227,6 +231,7 @@ const D3D11LoadFunctionMap &BuildD3D11LoadFunctionMap()
 
     // From GL_ANGLE_texture_compression_dxt5
     InsertLoadFunction(&map, GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE,           GL_UNSIGNED_BYTE, DXGI_FORMAT_UNKNOWN,        LoadCompressedToNative<4, 4, 16>     );
+    // clang-format on
 
     return map;
 }

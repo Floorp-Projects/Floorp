@@ -12,9 +12,17 @@
 namespace mozilla {
 namespace dom {
 
+#define NS_HTMLUNKNOWNELEMENT_IID \
+{ 0xc09e665b, 0x3876, 0x40dd, \
+  { 0x85, 0x28, 0x44, 0xc2, 0x3f, 0xd4, 0x58, 0xf2 } }
+
 class HTMLUnknownElement final : public nsGenericHTMLElement
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTMLUNKNOWNELEMENT_IID)
+
+  NS_DECL_ISUPPORTS_INHERITED
+
   explicit HTMLUnknownElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
@@ -26,8 +34,11 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
 protected:
+  virtual ~HTMLUnknownElement() {}
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(HTMLUnknownElement, NS_HTMLUNKNOWNELEMENT_IID)
 
 } // namespace dom
 } // namespace mozilla

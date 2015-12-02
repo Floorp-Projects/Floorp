@@ -7,7 +7,6 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsNameSpaceManager.h"
-#include "prprf.h"         // For PR_snprintf()
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
@@ -326,9 +325,7 @@ nsMathMLmactionFrame::MouseClick()
     if (mChildCount > 1) {
       int32_t selection = (mSelection == mChildCount)? 1 : mSelection + 1;
       nsAutoString value;
-      char cbuf[10];
-      PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
-      value.AssignASCII(cbuf);
+      value.AppendInt(selection);
       bool notify = false; // don't yet notify the document
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 

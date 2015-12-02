@@ -190,6 +190,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
 
   DWORD seekCaps = 0;
   hr = mMediaSeeking->GetCapabilities(&seekCaps);
+  mInfo.mMediaSeekable = SUCCEEDED(hr) && (AM_SEEKING_CanSeekAbsolute & seekCaps);
 
   int64_t duration = mMP3FrameParser.GetDuration();
   if (SUCCEEDED(hr)) {
@@ -208,15 +209,6 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   *aTags = nullptr;
 
   return NS_OK;
-}
-
-bool
-DirectShowReader::IsMediaSeekable()
-{
-  DWORD seekCaps = 0;
-  HRESULT hr = mMediaSeeking->GetCapabilities(&seekCaps);
-  return ((AM_SEEKING_CanSeekAbsolute & seekCaps) ==
-          AM_SEEKING_CanSeekAbsolute);
 }
 
 inline float

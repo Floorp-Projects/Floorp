@@ -25,13 +25,11 @@ protected:
     explicit WebGLVertexArrayGL(WebGLContext* webgl);
     ~WebGLVertexArrayGL();
 
-#if defined(XP_LINUX)
     // Bug 1140459: Some drivers (including our test slaves!) don't
-    // give reasonable answers for IsRenderbuffer, maybe others.
+    // give reasonable answers for IsVertexArray, maybe others.
     //
     // So we track the `is a VAO` state ourselves.
     bool mIsVAO;
-#endif
 };
 
 } // namespace mozilla

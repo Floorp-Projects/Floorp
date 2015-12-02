@@ -636,6 +636,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   }
 
   mForwarder->RemoveTexturesIfNecessary();
+  mForwarder->RemoveCompositablesIfNecessary();
   mForwarder->SendPendingAsyncMessges();
   mPhase = PHASE_NONE;
 

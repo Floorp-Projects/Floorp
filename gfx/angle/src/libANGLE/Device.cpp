@@ -45,7 +45,10 @@ Device::~Device()
 
 Error Device::getDevice(EGLAttrib *value)
 {
-    return getImplementation()->getDevice(value);
+    void *nativeDevice = nullptr;
+    egl::Error error = getImplementation()->getDevice(&nativeDevice);
+    *value = reinterpret_cast<EGLAttrib>(nativeDevice);
+    return error;
 }
 
 EGLint Device::getType()

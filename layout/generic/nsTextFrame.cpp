@@ -4044,7 +4044,9 @@ a11y::AccType
 nsTextFrame::AccessibleType()
 {
   if (IsEmpty()) {
-    RenderedText text = GetRenderedText();
+    RenderedText text = GetRenderedText(0,
+        UINT32_MAX, TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
+        TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
     if (text.mString.IsEmpty()) {
       return a11y::eNoType;
     }
@@ -9197,7 +9199,8 @@ LineEndsInHardLineBreak(nsTextFrame* aFrame)
 nsIFrame::RenderedText
 nsTextFrame::GetRenderedText(uint32_t aStartOffset,
                              uint32_t aEndOffset,
-                             TextOffsetType aOffsetType)
+                             TextOffsetType aOffsetType,
+                             TrailingWhitespace aTrimTrailingWhitespace)
 {
   NS_ASSERTION(!GetPrevContinuation(), "Must be called on first-in-flow");
 
@@ -9225,7 +9228,8 @@ nsTextFrame::GetRenderedText(uint32_t aStartOffset,
 
     // Skip to the start of the text run, past ignored chars at start of line
     TrimmedOffsets trimmedOffsets = textFrame->GetTrimmedOffsets(textFrag,
-       textFrame->IsAtEndOfLine() && LineEndsInHardLineBreak(textFrame));
+       textFrame->IsAtEndOfLine() && LineEndsInHardLineBreak(textFrame) &&
+       aTrimTrailingWhitespace == TrailingWhitespace::TRIM_TRAILING_WHITESPACE);
     bool trimmedSignificantNewline =
         trimmedOffsets.GetEnd() < GetContentEnd() &&
         HasSignificantTerminalNewline();

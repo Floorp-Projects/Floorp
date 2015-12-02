@@ -119,8 +119,8 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
 
 RendererGL::~RendererGL()
 {
-    SafeDelete(mStateManager);
     SafeDelete(mBlitter);
+    SafeDelete(mStateManager);
 }
 
 gl::Error RendererGL::flush()
@@ -315,7 +315,8 @@ FenceSyncImpl *RendererGL::createFenceSync()
 
 TransformFeedbackImpl *RendererGL::createTransformFeedback()
 {
-    return new TransformFeedbackGL();
+    return new TransformFeedbackGL(mFunctions, mStateManager,
+                                   getRendererCaps().maxTransformFeedbackSeparateComponents);
 }
 
 SamplerImpl *RendererGL::createSampler()

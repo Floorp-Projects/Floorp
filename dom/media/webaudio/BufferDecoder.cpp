@@ -46,12 +46,6 @@ BufferDecoder::NotifyDecodedFrames(uint32_t aParsed, uint32_t aDecoded,
   // ignore
 }
 
-void
-BufferDecoder::SetMediaSeekable(bool aMediaSeekable)
-{
-  // ignore
-}
-
 VideoFrameContainer*
 BufferDecoder::GetVideoFrameContainer()
 {

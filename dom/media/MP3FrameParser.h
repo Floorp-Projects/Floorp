@@ -198,7 +198,7 @@ private:
 
   // If the MP3 has a variable bitrate, then there *should* be metadata about
   // the encoding in the first frame. We buffer the first frame here.
-  nsAutoCString mFirstFrame;
+  nsCString mFirstFrame;
 
   // While we are reading the first frame, this is the stream offset of the
   // last byte of that frame. -1 at all other times.

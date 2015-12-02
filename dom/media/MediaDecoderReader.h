@@ -239,10 +239,6 @@ public:
     return &mBuffered;
   }
 
-  // Indicates if the media is seekable.
-  // ReadMetada should be called before calling this method.
-  virtual bool IsMediaSeekable() = 0;
-
   void DispatchSetStartTime(int64_t aStartTime)
   {
     RefPtr<MediaDecoderReader> self = this;
@@ -278,6 +274,9 @@ public:
   {
     return mTimedMetadataEvent;
   }
+
+  // Notified by the OggReader during playback when chained ogg is detected.
+  MediaEventSource<void>& OnMediaNotSeekable() { return mOnMediaNotSeekable; }
 
 protected:
   virtual ~MediaDecoderReader();
@@ -368,6 +367,9 @@ protected:
 
   // Used to send TimedMetadata to the listener.
   TimedMetadataEventProducer mTimedMetadataEvent;
+
+  // Notify if this media is not seekable.
+  MediaEventProducer<void> mOnMediaNotSeekable;
 
 private:
   // Does any spinup that needs to happen on this task queue. This runs on a

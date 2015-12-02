@@ -17,33 +17,19 @@
 namespace rx
 {
 
-DeviceD3D::DeviceD3D(rx::RendererD3D *renderer)
-    : mRenderer(renderer)
+DeviceD3D::DeviceD3D(void *device, EGLint deviceType) : mDevice(device), mDeviceType(deviceType)
 {
 }
 
-egl::Error DeviceD3D::getDevice(EGLAttrib *value)
+egl::Error DeviceD3D::getDevice(void **outValue)
 {
-    *value = reinterpret_cast<EGLAttrib>(mRenderer->getD3DDevice());
-    if (*value == 0)
-    {
-        return egl::Error(EGL_BAD_DEVICE_EXT);
-    }
+    *outValue = mDevice;
     return egl::Error(EGL_SUCCESS);
 }
 
 EGLint DeviceD3D::getType()
 {
-    switch (mRenderer->getRendererClass())
-    {
-      case RENDERER_D3D11:
-        return EGL_D3D11_DEVICE_ANGLE;
-      case RENDERER_D3D9:
-        return EGL_D3D9_DEVICE_ANGLE;
-      default:
-        UNREACHABLE();
-        return EGL_NONE;
-    }
+    return mDeviceType;
 }
 
 void DeviceD3D::generateExtensions(egl::DeviceExtensions *outExtensions) const

@@ -48,12 +48,6 @@ public:
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold);
 
-  virtual bool IsMediaSeekable()
-  {
-    // not used
-    return true;
-  }
-
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
   virtual RefPtr<SeekPromise>

@@ -41,6 +41,23 @@ const std::string &Error::getMessage() const
     return *mMessage;
 }
 
+bool Error::operator==(const Error &other) const
+{
+    if (mCode != other.mCode)
+        return false;
+
+    // TODO(jmadill): Compare extended error codes instead of strings.
+    if ((mMessage == nullptr || other.mMessage == nullptr) &&
+        ((mMessage == nullptr) != (other.mMessage == nullptr)))
+        return false;
+
+    return (*mMessage == *other.mMessage);
+}
+
+bool Error::operator!=(const Error &other) const
+{
+    return !(*this == other);
+}
 }
 
 namespace egl

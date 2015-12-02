@@ -44,6 +44,7 @@
             '<(angle_path)/src/tests/gl_tests/PbufferTest.cpp',
             '<(angle_path)/src/tests/gl_tests/PBOExtensionTest.cpp',
             '<(angle_path)/src/tests/gl_tests/PointSpritesTest.cpp',
+            '<(angle_path)/src/tests/gl_tests/ProvokingVertexTest.cpp',
             '<(angle_path)/src/tests/gl_tests/OcclusionQueriesTest.cpp',
             '<(angle_path)/src/tests/gl_tests/ProgramBinaryTest.cpp',
             '<(angle_path)/src/tests/gl_tests/ReadPixelsTest.cpp',

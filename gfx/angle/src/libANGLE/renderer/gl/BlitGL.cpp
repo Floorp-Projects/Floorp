@@ -58,10 +58,14 @@ BlitGL::BlitGL(const FunctionsGL *functions,
       mWorkarounds(workarounds),
       mStateManager(stateManager),
       mBlitProgram(0),
-      mScratchTexture(0),
       mScratchFBO(0),
       mVAO(0)
 {
+    for (size_t i = 0; i < ArraySize(mScratchTextures); i++)
+    {
+        mScratchTextures[i] = 0;
+    }
+
     ASSERT(mFunctions);
     ASSERT(mStateManager);
 }
@@ -70,25 +74,28 @@ BlitGL::~BlitGL()
 {
     if (mBlitProgram != 0)
     {
-        mFunctions->deleteProgram(mBlitProgram);
+        mStateManager->deleteProgram(mBlitProgram);
         mBlitProgram = 0;
     }
 
-    if (mScratchTexture != 0)
+    for (size_t i = 0; i < ArraySize(mScratchTextures); i++)
     {
-        mFunctions->deleteTextures(1, &mScratchTexture);
-        mScratchTexture = 0;
+        if (mScratchTextures[i] != 0)
+        {
+            mStateManager->deleteTexture(mScratchTextures[i]);
+            mScratchTextures[i] = 0;
+        }
     }
 
     if (mScratchFBO != 0)
     {
-        mFunctions->deleteFramebuffers(1, &mScratchFBO);
+        mStateManager->deleteFramebuffer(mScratchFBO);
         mScratchFBO = 0;
     }
 
     if (mVAO != 0)
     {
-        mFunctions->deleteVertexArrays(1, &mVAO);
+        mStateManager->deleteVertexArray(mVAO);
         mVAO = 0;
     }
 }
@@ -129,16 +136,18 @@ gl::Error BlitGL::copySubImageToLUMAWorkaroundTexture(GLuint texture,
         return error;
     }
 
-    // Blit the framebuffer to the scratch texture
+    // Blit the framebuffer to the first scratch texture
     const FramebufferGL *sourceFramebufferGL = GetImplAs<FramebufferGL>(source);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, sourceFramebufferGL->getFramebufferID());
 
     nativegl::CopyTexImageImageFormat copyTexImageFormat = nativegl::GetCopyTexImageImageFormat(
         mFunctions, mWorkarounds, source->getImplementationColorReadFormat(),
         source->getImplementationColorReadType());
+    const gl::InternalFormat &internalFormatInfo =
+        gl::GetInternalFormatInfo(copyTexImageFormat.internalFormat);
 
     mStateManager->activeTexture(0);
-    mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTexture);
+    mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTextures[0]);
     mFunctions->copyTexImage2D(GL_TEXTURE_2D, 0, copyTexImageFormat.internalFormat, sourceArea.x,
                                sourceArea.y, sourceArea.width, sourceArea.height, 0);
 
@@ -150,15 +159,20 @@ gl::Error BlitGL::copySubImageToLUMAWorkaroundTexture(GLuint texture,
     };
     mFunctions->texParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
 
-    // Make a temporary framebuffer using the destination texture
+    // Make a temporary framebuffer using the second scratch texture to render the swizzled result
+    // to.
+    mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTextures[1]);
+    mFunctions->texImage2D(GL_TEXTURE_2D, 0, copyTexImageFormat.internalFormat, sourceArea.width,
+                           sourceArea.height, 0, internalFormatInfo.format,
+                           source->getImplementationColorReadType(), nullptr);
+
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mScratchFBO);
-    mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, texture,
-                                     static_cast<GLint>(level));
+    mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                     mScratchTextures[1], 0);
 
     // Render to the destination texture, sampling from the scratch texture
     mStateManager->useProgram(mBlitProgram);
-    mStateManager->setViewport(
-        gl::Rectangle(destOffset.x, destOffset.y, sourceArea.width, sourceArea.height));
+    mStateManager->setViewport(gl::Rectangle(0, 0, sourceArea.width, sourceArea.height));
     mStateManager->setScissorTestEnabled(false);
     mStateManager->setDepthRange(0.0f, 1.0f);
     mStateManager->setBlendEnabled(false);
@@ -170,10 +184,16 @@ gl::Error BlitGL::copySubImageToLUMAWorkaroundTexture(GLuint texture,
     mStateManager->setCullFaceEnabled(false);
     mStateManager->setPolygonOffsetFillEnabled(false);
     mStateManager->setRasterizerDiscardEnabled(false);
+    mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTextures[0]);
 
     mStateManager->bindVertexArray(mVAO, 0);
 
     mFunctions->drawArrays(GL_TRIANGLES, 0, 6);
+
+    // Finally, copy the swizzled texture to the destination texture
+    mStateManager->bindTexture(textureType, texture);
+    mFunctions->copyTexSubImage2D(target, static_cast<GLint>(level), destOffset.x, destOffset.y, 0,
+                                  0, sourceArea.width, sourceArea.height);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -256,14 +276,17 @@ gl::Error BlitGL::initializeResources()
         mFunctions->uniform1i(textureUniform, 0);
     }
 
-    if (mScratchTexture == 0)
+    for (size_t i = 0; i < ArraySize(mScratchTextures); i++)
     {
-        mFunctions->genTextures(1, &mScratchTexture);
-        mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTexture);
+        if (mScratchTextures[i] == 0)
+        {
+            mFunctions->genTextures(1, &mScratchTextures[i]);
+            mStateManager->bindTexture(GL_TEXTURE_2D, mScratchTextures[i]);
 
-        // Use nearest, non-mipmapped sampling with the scratch texture
-        mFunctions->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        mFunctions->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            // Use nearest, non-mipmapped sampling with the scratch texture
+            mFunctions->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            mFunctions->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
     }
 
     if (mScratchFBO == 0)

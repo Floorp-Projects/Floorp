@@ -611,7 +611,7 @@ size_t
 WebAudioDecodeJob::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = 0;
-  amount += mContentType.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  amount += mContentType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   if (mSuccessCallback) {
     amount += mSuccessCallback->SizeOfIncludingThis(aMallocSizeOf);
   }

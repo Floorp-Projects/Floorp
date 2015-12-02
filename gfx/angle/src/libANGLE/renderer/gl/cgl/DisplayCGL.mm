@@ -151,6 +151,10 @@ egl::ConfigSet DisplayCGL::generateConfigs() const
     // TODO(cwallez): generate more config permutations
     egl::ConfigSet configs;
 
+    const gl::Version &maxVersion = getMaxSupportedESVersion();
+    ASSERT(maxVersion >= gl::Version(2, 0));
+    bool supportsES3 = maxVersion >= gl::Version(3, 0);
+
     egl::Config config;
 
     // Native stuff
@@ -197,8 +201,8 @@ egl::ConfigSet DisplayCGL::generateConfigs() const
     config.renderTargetFormat = GL_RGBA8;
     config.depthStencilFormat = GL_DEPTH24_STENCIL8;
 
-    config.conformant     = EGL_OPENGL_ES2_BIT | EGL_OPENGL_ES3_BIT_KHR;
-    config.renderableType = EGL_OPENGL_ES2_BIT | EGL_OPENGL_ES3_BIT_KHR;
+    config.conformant     = EGL_OPENGL_ES2_BIT | (supportsES3 ? EGL_OPENGL_ES3_BIT_KHR : 0);
+    config.renderableType = config.conformant;
 
     config.matchNativePixmap = EGL_NONE;
 

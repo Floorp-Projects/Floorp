@@ -551,7 +551,8 @@ void CollectVariables::visitVariable(const TIntermSymbol *variable,
     ASSERT(blockType);
 
     interfaceBlock.name = blockType->name().c_str();
-    interfaceBlock.mappedName = TIntermTraverser::hash(variable->getSymbol(), mHashFunction).c_str();
+    interfaceBlock.mappedName =
+        TIntermTraverser::hash(blockType->name().c_str(), mHashFunction).c_str();
     interfaceBlock.instanceName = (blockType->hasInstanceName() ? blockType->instanceName().c_str() : "");
     interfaceBlock.arraySize = variable->getArraySize();
     interfaceBlock.isRowMajorLayout = (blockType->matrixPacking() == EmpRowMajor);
@@ -566,7 +567,7 @@ void CollectVariables::visitVariable(const TIntermSymbol *variable,
         const TString &fullFieldName = InterfaceBlockFieldName(*blockType, field);
         const TType &fieldType = *field.type();
 
-        GetVariableTraverser traverser(mSymbolTable);
+        NameHashingTraverser traverser(mHashFunction, mSymbolTable);
         traverser.traverse(fieldType, fullFieldName, &interfaceBlock.fields);
 
         interfaceBlock.fields.back().isRowMajorLayout = (fieldType.getLayoutQualifier().matrixPacking == EmpRowMajor);

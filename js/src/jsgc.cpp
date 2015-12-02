@@ -3662,16 +3662,16 @@ struct IsAboutToBeFinalizedFunctor {
     }
 };
 
+/* static */ bool
+UniqueIdGCPolicy::needsSweep(Cell** cell, uint64_t*)
+{
+    return DispatchTraceKindTyped(IsAboutToBeFinalizedFunctor(), (*cell)->getTraceKind(), cell);
+}
+
 void
 JS::Zone::sweepUniqueIds(js::FreeOp* fop)
 {
-    for (UniqueIdMap::Enum e(uniqueIds_); !e.empty(); e.popFront()) {
-        if (DispatchTraceKindTyped(IsAboutToBeFinalizedFunctor(), e.front().key()->getTraceKind(),
-                                   &e.front().mutableKey()))
-        {
-            e.removeFront();
-        }
-    }
+    uniqueIds_.sweep();
 }
 
 /*

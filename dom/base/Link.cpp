@@ -14,6 +14,7 @@
 
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
+#include "nsHTMLDNSPrefetch.h"
 #include "nsString.h"
 #include "mozAutoDocUpdate.h"
 
@@ -44,6 +45,31 @@ Link::ElementHasHref() const
            mElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href))
         || (!mElement->IsHTMLElement() &&
             mElement->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)));
+}
+
+void
+Link::TryDNSPrefetch()
+{
+  MOZ_ASSERT(mElement->IsInComposedDoc());
+  if (ElementHasHref() && nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
+    nsHTMLDNSPrefetch::PrefetchLow(this);
+  }
+}
+
+void
+Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
+                        nsWrapperCache::FlagsType aRequestedFlag)
+{
+  // If prefetch was deferred, clear flag and move on
+  if (mElement->HasFlag(aDeferredFlag)) {
+    mElement->UnsetFlags(aDeferredFlag);
+    // Else if prefetch was requested, clear flag and send cancellation
+  } else if (mElement->HasFlag(aRequestedFlag)) {
+    mElement->UnsetFlags(aRequestedFlag);
+    // Possible that hostname could have changed since binding, but since this
+    // covers common cases, most DNS prefetch requests will be canceled
+    nsHTMLDNSPrefetch::CancelPrefetchLow(this, NS_ERROR_ABORT);
+  }
 }
 
 void

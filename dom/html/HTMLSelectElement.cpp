@@ -225,18 +225,17 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
                                          int32_t aDepth,
                                          bool aNotify)
 {
+  MOZ_ASSERT(aDepth == 0 || aDepth == 1);
   int32_t insertIndex = aListIndex;
 
   HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
   if (optElement) {
     mOptions->InsertOptionAt(optElement, insertIndex);
     insertIndex++;
-  } else {
+  } else if (aDepth == 0) {
     // If it's at the top level, then we just found out there are non-options
     // at the top level, which will throw off the insert count
-    if (aDepth == 0) {
-      mNonOptionChildren++;
-    }
+    mNonOptionChildren++;
 
     // Deal with optgroups
     if (aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
@@ -252,7 +251,7 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
         }
       }
     }
-  }
+  } // else ignore even if optgroup; we want to ignore nested optgroups.
 
   // Deal with the selected list
   if (insertIndex - aListIndex) {
@@ -307,6 +306,7 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
                                          int32_t aDepth,
                                          bool aNotify)
 {
+  MOZ_ASSERT(aDepth == 0 || aDepth == 1);
   int32_t numRemoved = 0;
 
   HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
@@ -317,11 +317,9 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
     }
     mOptions->RemoveOptionAt(aListIndex);
     numRemoved++;
-  } else {
+  } else if (aDepth == 0) {
     // Yay, one less artifact at the top level.
-    if (aDepth == 0) {
-      mNonOptionChildren--;
-    }
+    mNonOptionChildren--;
 
     // Recurse down deeper for options
     if (mOptGroupCount && aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
@@ -341,7 +339,7 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
         }
       }
     }
-  }
+  } // else don't check for an optgroup; we want to ignore nested optgroups
 
   if (numRemoved) {
     // Tell the widget we removed the options

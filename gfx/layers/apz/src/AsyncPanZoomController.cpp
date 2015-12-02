@@ -1223,8 +1223,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case PANNING:
     case PANNING_LOCKED_X:
     case PANNING_LOCKED_Y:
-    case PANNING_LOCKED_X_SMOOTH_SCROLL:
-    case PANNING_LOCKED_Y_SMOOTH_SCROLL:
     case PINCHING:
       NS_WARNING("Received impossible touch in OnTouchStart");
       break;
@@ -1270,8 +1268,6 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
     case PANNING:
     case PANNING_LOCKED_X:
     case PANNING_LOCKED_Y:
-    case PANNING_LOCKED_X_SMOOTH_SCROLL:
-    case PANNING_LOCKED_Y_SMOOTH_SCROLL:
     case PAN_MOMENTUM:
       TrackTouch(aEvent);
       return nsEventStatus_eConsumeNoDefault;
@@ -1339,10 +1335,6 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     }
     return nsEventStatus_eIgnore;
 
-  case PANNING_LOCKED_X_SMOOTH_SCROLL:
-  case PANNING_LOCKED_Y_SMOOTH_SCROLL:
-    CancelAnimation();
-    MOZ_FALLTHROUGH;
   case PANNING:
   case PANNING_LOCKED_X:
   case PANNING_LOCKED_Y:
@@ -1612,7 +1604,18 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
   }
 
-  if (isRootContent && gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
+  // Apply user-set multipliers.
+  delta.x *= aEvent.mUserDeltaMultiplierX;
+  delta.y *= aEvent.mUserDeltaMultiplierY;
+
+  // For the conditions under which we allow system scroll overrides, see
+  // EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction
+  // and WheelTransaction::OverrideSystemScrollSpeed.
+  if (isRootContent &&
+      gfxPrefs::MouseWheelHasRootScrollDeltaOverride() &&
+      !aEvent.IsCustomizedByUserPrefs() &&
+      aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE)
+  {
     // Only apply delta multipliers if we're increasing the delta.
     double hfactor = double(gfxPrefs::MouseWheelRootHScrollDeltaFactor()) / 100;
     double vfactor = double(gfxPrefs::MouseWheelRootVScrollDeltaFactor()) / 100;
@@ -1621,6 +1624,21 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
     }
     if (hfactor > 1.0) {
       delta.y *= vfactor;
+    }
+  }
+
+  // If this is a line scroll, and this event was part of a scroll series, then
+  // it might need extra acceleration. See WheelHandlingHelper.cpp.
+  if (aEvent.mDeltaType == ScrollWheelInput::SCROLLDELTA_LINE &&
+      aEvent.mScrollSeriesNumber > 0)
+  {
+    int32_t start = gfxPrefs::MouseWheelAccelerationStart();
+    if (start >= 0 && aEvent.mScrollSeriesNumber >= uint32_t(start)) {
+      int32_t factor = gfxPrefs::MouseWheelAccelerationFactor();
+      if (factor > 0) {
+        delta.x = ComputeAcceleratedWheelDelta(delta.x, aEvent.mScrollSeriesNumber, factor);
+        delta.y = ComputeAcceleratedWheelDelta(delta.y, aEvent.mScrollSeriesNumber, factor);
+      }
     }
   }
 
@@ -2148,13 +2166,11 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     mY.SetAxisLocked(true);
     if (canScrollHorizontal) {
       SetState(PANNING_LOCKED_X);
-      overscrollHandoffChain->RequestSnapOnLock(Layer::VERTICAL);
     }
   } else if (IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
     mX.SetAxisLocked(true);
     if (canScrollVertical) {
       SetState(PANNING_LOCKED_Y);
-      overscrollHandoffChain->RequestSnapOnLock(Layer::HORIZONTAL);
     }
   } else {
     SetState(PANNING);
@@ -2167,19 +2183,6 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
 
     double angle = atan2(aPanDistance.y, aPanDistance.x); // range [-pi, pi]
     angle = fabs(angle); // range [0, pi]
-
-    {
-      // If we can scroll on both axes, we want to allow breaking axis-lock. If
-      // we can only scroll on one axis, we want to always enable entering to
-      // axis-lock.
-      ReentrantMonitorAutoEnter lock(mMonitor);
-      if (!mX.CanScroll() || !mY.CanScroll()) {
-        if (mState == PANNING) {
-          HandlePanning(angle);
-        }
-        return;
-      }
-    }
 
     float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * APZCTreeManager::GetDPI();
 
@@ -2450,20 +2453,7 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(const ParentLayerPoint
 }
 
 void AsyncPanZoomController::StartSmoothScroll(ScrollSource aSource) {
-  // Only cancel animation and change state if the user isn't pan-locked.
-  // Snapping is requested during panning if the opposing axis of an
-  // unscrollable axis is locked.
-  if (mState == PANNING_LOCKED_X) {
-    mY.SetAxisLocked(false);
-    SetState(PANNING_LOCKED_X_SMOOTH_SCROLL);
-  } else if (mState == PANNING_LOCKED_Y) {
-    mX.SetAxisLocked(false);
-    SetState(PANNING_LOCKED_Y_SMOOTH_SCROLL);
-  } else {
-    CancelAnimation();
-    SetState(SMOOTH_SCROLL);
-  }
-
+  SetState(SMOOTH_SCROLL);
   nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
   // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
   // appunits/second
@@ -2878,15 +2868,7 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       }
     } else {
       mAnimation = nullptr;
-      if (mState == PANNING_LOCKED_X_SMOOTH_SCROLL) {
-        mY.SetAxisLocked(true);
-        SetState(PANNING_LOCKED_X);
-      } else if (mState == PANNING_LOCKED_Y_SMOOTH_SCROLL) {
-        mX.SetAxisLocked(true);
-        SetState(PANNING_LOCKED_Y);
-      } else {
-        SetState(NOTHING);
-      }
+      SetState(NOTHING);
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
@@ -3255,6 +3237,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
       Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
 
+    CancelAnimation();
+
     // It's important to not send repaint requests between this
     // CopySmoothScrollInfo call and the sending of the scroll update
     // acknowledgement below, otherwise that repaint request will get rejected
@@ -3485,10 +3469,7 @@ bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
 }
 
 bool AsyncPanZoomController::IsInPanningState() const {
-  return (mState == PANNING ||
-          mState == PANNING_LOCKED_X || mState == PANNING_LOCKED_Y ||
-          mState == PANNING_LOCKED_X_SMOOTH_SCROLL ||
-          mState == PANNING_LOCKED_Y_SMOOTH_SCROLL);
+  return (mState == PANNING || mState == PANNING_LOCKED_X || mState == PANNING_LOCKED_Y);
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
@@ -3605,7 +3586,6 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 void AsyncPanZoomController::RequestSnap() {
   if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
-    ReentrantMonitorAutoEnter lock(mMonitor);
     APZC_LOG("%p requesting snap near %s\n", this,
         Stringify(mFrameMetrics.GetScrollOffset()).c_str());
     controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),

@@ -500,6 +500,10 @@ gl::Error InputLayoutCache::applyVertexBuffers(const std::vector<TranslatedAttri
             instancedPointSpritesActive ? pointSpriteVertexStride : 0;
         mCurrentVertexOffsets[nextAvailableIndex] = 0;
 
+        // Update maxDiff to include the additional point sprite vertex buffer
+        // to ensure that IASetVertexBuffers uses the correct buffer count.
+        maxDiff = std::max(maxDiff, nextAvailableIndex);
+
         if (!mPointSpriteIndexBuffer)
         {
             // Create an index buffer and set it for pointsprite rendering

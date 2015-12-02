@@ -59,7 +59,7 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       }
 
       mMoofs.AppendElement(moof);
-      mMediaRanges += moof.mRange;
+      mMediaRanges.AppendElement(moof.mRange);
       foundValidMoof = true;
     } else if (box.IsType("mdat") && !Moofs().IsEmpty()) {
       // Check if we have all our data from last moof.
@@ -67,8 +67,8 @@ MoofParser::RebuildFragmentedIndex(BoxContext& aContext)
       media::Interval<int64_t> datarange(moof.mMdatRange.mStart, moof.mMdatRange.mEnd, 0);
       media::Interval<int64_t> mdat(box.Range().mStart, box.Range().mEnd, 0);
       if (datarange.Intersects(mdat)) {
-        mMediaRanges.LastInterval() =
-          mMediaRanges.LastInterval().Span(box.Range());
+        mMediaRanges.LastElement() =
+          mMediaRanges.LastElement().Span(box.Range());
       }
     }
     mOffset = box.NextOffset();

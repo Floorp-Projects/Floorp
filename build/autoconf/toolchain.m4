@@ -224,7 +224,33 @@ if test "$GNU_CXX"; then
     elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
         AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
     fi
+
+    AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
+        ac_cv_needs_atomic,
+        AC_TRY_LINK(
+            [#include <cstdint>
+             #include <atomic>],
+            [ std::atomic<uint64_t> foo; foo = 1; ],
+            ac_cv_needs_atomic=no,
+            _SAVE_LIBS="$LIBS"
+            LIBS="$LIBS -latomic"
+            AC_TRY_LINK(
+                [#include <cstdint>
+                 #include <atomic>],
+                [ std::atomic<uint64_t> foo; foo = 1; ],
+                ac_cv_needs_atomic=yes,
+                ac_cv_needs_atomic="do not know; assuming no")
+            LIBS="$_SAVE_LIBS"
+        )
+    )
+    if test "$ac_cv_needs_atomic" = yes; then
+      MOZ_NEEDS_LIBATOMIC=1
+    else
+      MOZ_NEEDS_LIBATOMIC=
+    fi
+    AC_SUBST(MOZ_NEEDS_LIBATOMIC)
 fi
+
 if test -n "$CROSS_COMPILE"; then
     dnl When cross compile, we have no variable telling us what the host compiler is. Figure it out.
     cat > conftest.C <<EOF

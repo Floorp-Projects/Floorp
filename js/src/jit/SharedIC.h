@@ -2931,9 +2931,9 @@ class ICGetProp_CallScripted : public ICGetPropCallGetter
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, HandleObject obj,
+        Compiler(JSContext* cx, ICStub* firstMonitorStub, HandleObject obj,
                  HandleObject holder, HandleFunction getter, uint32_t pcOffset)
-          : ICGetPropCallGetter::Compiler(cx, ICStub::GetProp_CallScripted, engine,
+          : ICGetPropCallGetter::Compiler(cx, ICStub::GetProp_CallScripted, Engine::Baseline,
                                           firstMonitorStub, obj, holder,
                                           getter, pcOffset, /* outerClass = */ nullptr)
         {}

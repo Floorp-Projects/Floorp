@@ -625,9 +625,8 @@ static bool
 WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
-            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
-         !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
+         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
+          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL);
 }
 
 static bool
@@ -1090,8 +1089,17 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                          scrollMode,
                          ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
                          origin,
-                         aEvent.deltaX,
-                         aEvent.deltaY);
+                         aEvent.deltaX, aEvent.deltaY);
+
+  // We add the user multiplier as a separate field, rather than premultiplying
+  // it, because if the input is converted back to a WidgetWheelEvent, then
+  // EventStateManager would apply the delta a second time. We could in theory
+  // work around this by asking ESM to customize the event much sooner, and
+  // then save the "customizedByUserPrefs" bit on ScrollWheelInput - but for
+  // now, this seems easier.
+  EventStateManager::GetUserPrefsForWheelEvent(&aEvent,
+    &input.mUserDeltaMultiplierX,
+    &input.mUserDeltaMultiplierY);
 
   nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
   aEvent.refPoint.x = input.mOrigin.x;

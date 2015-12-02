@@ -10,6 +10,8 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
+#include "nsIFrame.h"
+#include "nsINode.h"
 #include "nsRange.h"
 
 class nsPresContext;
@@ -81,35 +83,161 @@ public:
   // FlatText means the text that is generated from DOM tree. The BR elements
   // are replaced to native linefeeds. Other elements are ignored.
 
-  // Get the offset in FlatText of the range. (also used by IMEContentObserver)
-  static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
-                                           nsINode* aNode,
-                                           int32_t aNodeOffset,
-                                           uint32_t* aOffset,
-                                           LineBreakType aLineBreakType);
-  static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
-                                           nsRange* aRange,
-                                           uint32_t* aOffset,
-                                           LineBreakType aLineBreakType);
+  // NodePosition stores a pair of node and offset in the node.
+  // When mNode is an element and mOffset is 0, the start position means after
+  // the open tag of mNode.
+  // This is useful to receive one or more sets of them instead of nsRange.
+  struct NodePosition
+  {
+    nsCOMPtr<nsINode> mNode;
+    int32_t mOffset;
+    // Only when mNode is an element node and mOffset is 0, mAfterOpenTag is
+    // referred.
+    bool mAfterOpenTag;
+
+    NodePosition()
+      : mOffset(-1)
+      , mAfterOpenTag(true)
+    {
+    }
+
+    NodePosition(nsINode* aNode, int32_t aOffset)
+      : mNode(aNode)
+      , mOffset(aOffset)
+      , mAfterOpenTag(true)
+    {
+    }
+
+    explicit NodePosition(const nsIFrame::ContentOffsets& aContentOffsets)
+      : mNode(aContentOffsets.content)
+      , mOffset(aContentOffsets.offset)
+      , mAfterOpenTag(true)
+    {
+    }
+
+  protected:
+    NodePosition(nsINode* aNode, int32_t aOffset, bool aAfterOpenTag)
+      : mNode(aNode)
+      , mOffset(aOffset)
+      , mAfterOpenTag(aAfterOpenTag)
+    {
+    }
+
+  public:
+    bool operator==(const NodePosition& aOther) const
+    {
+      return mNode == aOther.mNode &&
+             mOffset == aOther.mOffset &&
+             mAfterOpenTag == aOther.mAfterOpenTag;
+    }
+
+    bool IsValid() const
+    {
+      return mNode && mOffset >= 0;
+    }
+    bool OffsetIsValid() const
+    {
+      return IsValid() && static_cast<uint32_t>(mOffset) <= mNode->Length();
+    }
+    bool IsBeforeOpenTag() const
+    {
+      return IsValid() && mNode->IsElement() && !mOffset && !mAfterOpenTag;
+    }
+    bool IsImmediatelyAfterOpenTag() const
+    {
+      return IsValid() && mNode->IsElement() && !mOffset && mAfterOpenTag;
+    }
+    nsresult SetToRangeStart(nsRange* aRange) const
+    {
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
+      return aRange->SetStart(domNode, mOffset);
+    }
+    nsresult SetToRangeEnd(nsRange* aRange) const
+    {
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
+      return aRange->SetEnd(domNode, mOffset);
+    }
+    nsresult SetToRangeEndAfter(nsRange* aRange) const
+    {
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
+      return aRange->SetEndAfter(domNode);
+    }
+  };
+
+  // NodePositionBefore isn't good name if mNode isn't an element node nor
+  // mOffset is not 0, though, when mNode is an element node and mOffset is 0,
+  // this is treated as before the open tag of mNode.
+  struct NodePositionBefore final : public NodePosition
+  {
+    NodePositionBefore(nsINode* aNode, int32_t aOffset)
+      : NodePosition(aNode, aOffset, false)
+    {
+    }
+  };
+
+  // Get the flatten text length in the range.
+  // @param aStartPosition      Start node and offset in the node of the range.
+  // @param aEndPosition        End node and offset in the node of the range.
+  // @param aRootContent        The root content of the editor or document.
+  //                            aRootContent won't cause any text including
+  //                            line breaks.
+  // @param aLength             The result of the flatten text length of the
+  //                            range.
+  // @param aLineBreakType      Whether this computes flatten text length with
+  //                            native line breakers on the platform or
+  //                            with XP line breaker (\n).
+  // @param aIsRemovingNode     Should be true only when this is called from
+  //                            nsIMutationObserver::ContentRemoved().
+  //                            When this is true, aStartPosition.mNode should
+  //                            be the root node of removing nodes and mOffset
+  //                            should be 0 and aEndPosition.mNode should be
+  //                            same as aStartPosition.mNode and mOffset should
+  //                            be number of the children of mNode.
+  static nsresult GetFlatTextLengthInRange(const NodePosition& aStartPosition,
+                                           const NodePosition& aEndPosition,
+                                           nsIContent* aRootContent,
+                                           uint32_t* aLength,
+                                           LineBreakType aLineBreakType,
+                                           bool aIsRemovingNode = false);
   // Computes the native text length between aStartOffset and aEndOffset of
-  // aContent.  Currently, this method supports only text node or br element
-  // for aContent.
+  // aContent.  aContent must be a text node.
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aStartOffset,
                                       uint32_t aEndOffset);
-  // Get the native text length of a content node excluding any children
+  // Get the native text length of aContent.  aContent must be a text node.
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aMaxLength = UINT32_MAX);
+  // Get the native text length which is inserted before aContent.
+  // aContent should be an element.
+  static uint32_t GetNativeTextLengthBefore(nsIContent* aContent,
+                                            nsINode* aRootNode);
+
+protected:
+  // Get the text length of aContent.  aContent must be a text node.
+  static uint32_t GetTextLength(nsIContent* aContent,
+                                LineBreakType aLineBreakType,
+                                uint32_t aMaxLength = UINT32_MAX);
   // Get the text length of a given range of a content node in
   // the given line break type.
   static uint32_t GetTextLengthInRange(nsIContent* aContent,
                                        uint32_t aXPStartOffset,
                                        uint32_t aXPEndOffset,
                                        LineBreakType aLineBreakType);
-protected:
-  static uint32_t GetTextLength(nsIContent* aContent,
-                                LineBreakType aLineBreakType,
-                                uint32_t aMaxLength = UINT32_MAX);
+  // Get the contents of aRange as plain text.
+  nsresult GenerateFlatTextContent(nsRange* aRange,
+                                   nsAFlatString& aString,
+                                   LineBreakType aLineBreakType);
+  // Get the text length before the start position of aRange.
+  nsresult GetFlatTextLengthBefore(nsRange* aRange,
+                                   uint32_t* aOffset,
+                                   LineBreakType aLineBreakType);
+  // Check if we should insert a line break before aContent.
+  // This should return false only when aContent is an html element which
+  // is typically used in a paragraph like <em>.
+  static bool ShouldBreakLineBefore(nsIContent* aContent,
+                                    nsINode* aRootNode);
+  // Get the line breaker length.
+  static inline uint32_t GetBRLength(LineBreakType aLineBreakType);
   static LineBreakType GetLineBreakType(WidgetQueryContentEvent* aEvent);
   static LineBreakType GetLineBreakType(WidgetSelectionEvent* aEvent);
   static LineBreakType GetLineBreakType(bool aUseNativeLineBreak);
@@ -152,10 +280,10 @@ protected:
                                int32_t aXPStartOffset,
                                int32_t aXPEndOffset,
                                LineBreakType aLineBreakType);
-  static nsresult GenerateFlatFontRanges(nsRange* aRange,
-                                         FontRangeArray& aFontRanges,
-                                         uint32_t& aLength,
-                                         LineBreakType aLineBreakType);
+  nsresult GenerateFlatFontRanges(nsRange* aRange,
+                                  FontRangeArray& aFontRanges,
+                                  uint32_t& aLength,
+                                  LineBreakType aLineBreakType);
 };
 
 } // namespace mozilla

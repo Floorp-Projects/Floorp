@@ -10,7 +10,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -19,7 +19,9 @@
 
 #include "cubeb/cubeb.h"
 #include "common.h"
+#ifdef CUBEB_GECKO_BUILD
 #include "TestHarness.h"
+#endif
 
 #define MAX_NUM_CHANNELS 32
 
@@ -45,6 +47,8 @@ typedef struct {
 synth_state* synth_create(int num_channels, float sample_rate)
 {
   synth_state* synth = (synth_state *) malloc(sizeof(synth_state));
+  if (!synth)
+    return NULL;
   for(int i=0;i < MAX_NUM_CHANNELS;++i)
     synth->phase[i] = 0.0f;
   synth->num_channels = num_channels;
@@ -106,6 +110,12 @@ int supports_float32(const char* backend_id)
           strcmp(backend_id, "audiotrack") != 0);
 }
 
+/* The WASAPI backend only supports float. */
+int supports_int16(const char* backend_id)
+{
+  return strcmp(backend_id, "wasapi") != 0;
+}
+
 /* Some backends don't have code to deal with more than mono or stereo. */
 int supports_channel_count(const char* backend_id, int nchannels)
 {
@@ -131,6 +141,7 @@ int run_test(int num_channels, int sampling_rate, int is_float)
   backend_id = cubeb_get_backend_id(ctx);
 
   if ((is_float && !supports_float32(backend_id)) ||
+      (!is_float && !supports_int16(backend_id)) ||
       !supports_channel_count(backend_id, num_channels)) {
     /* don't treat this as a test failure. */
     goto cleanup;
@@ -168,22 +179,30 @@ cleanup:
   return r;
 }
 
-int run_panning_volume_test()
+int run_panning_volume_test(int is_float)
 {
   int r = CUBEB_OK;
 
   cubeb *ctx = NULL;
   synth_state* synth = NULL;
   cubeb_stream *stream = NULL;
+  const char * backend_id = NULL;
 
   r = cubeb_init(&ctx, "Cubeb audio test");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     goto cleanup;
   }
+  backend_id = cubeb_get_backend_id(ctx);
+
+  if ((is_float && !supports_float32(backend_id)) ||
+      (!is_float && !supports_int16(backend_id))) {
+    /* don't treat this as a test failure. */
+    goto cleanup;
+  }
 
   cubeb_stream_params params;
-  params.format = CUBEB_SAMPLE_S16NE;
+  params.format = is_float ? CUBEB_SAMPLE_FLOAT32NE : CUBEB_SAMPLE_S16NE;
   params.rate = 44100;
   params.channels = 2;
 
@@ -194,7 +213,7 @@ int run_panning_volume_test()
   }
 
   r = cubeb_stream_init(ctx, &stream, "test tone", params,
-                        100, data_cb_short, state_cb, synth);
+                        100, is_float ? data_cb_float : data_cb_short, state_cb, synth);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream: %d\n", r);
     goto cleanup;
@@ -262,9 +281,12 @@ void run_channel_rate_test()
 
 int main(int argc, char *argv[])
 {
+#ifdef CUBEB_GECKO_BUILD
   ScopedXPCOM xpcom("test_audio");
+#endif
 
-  assert(run_panning_volume_test() == CUBEB_OK);
+  assert(run_panning_volume_test(0) == CUBEB_OK);
+  assert(run_panning_volume_test(1) == CUBEB_OK);
   run_channel_rate_test();
 
   return CUBEB_OK;

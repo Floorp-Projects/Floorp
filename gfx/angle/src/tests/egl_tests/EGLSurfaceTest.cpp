@@ -381,6 +381,7 @@ TEST_F(EGLSurfaceTest, CreateWithEGLConfig5650Support)
     ASSERT_EGL_SUCCESS();
 
     GLuint program = createProgram();
+    ASSERT_NE(0u, program);
     drawWithProgram(program);
     EXPECT_GL_NO_ERROR();
     glDeleteProgram(program);
@@ -422,6 +423,7 @@ TEST_F(EGLSurfaceTest, CreateWithEGLConfig4444Support)
     ASSERT_EGL_SUCCESS();
 
     GLuint program = createProgram();
+    ASSERT_NE(0u, program);
     drawWithProgram(program);
     EXPECT_GL_NO_ERROR();
     glDeleteProgram(program);
@@ -463,6 +465,7 @@ TEST_F(EGLSurfaceTest, CreateWithEGLConfig5551Support)
     ASSERT_EGL_SUCCESS();
 
     GLuint program = createProgram();
+    ASSERT_NE(0u, program);
     drawWithProgram(program);
     EXPECT_GL_NO_ERROR();
     glDeleteProgram(program);
@@ -504,6 +507,7 @@ TEST_F(EGLSurfaceTest, CreateWithEGLConfig8880Support)
     ASSERT_EGL_SUCCESS();
 
     GLuint program = createProgram();
+    ASSERT_NE(0u, program);
     drawWithProgram(program);
     EXPECT_GL_NO_ERROR();
     glDeleteProgram(program);
