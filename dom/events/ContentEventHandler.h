@@ -92,24 +92,30 @@ public:
                                            uint32_t* aOffset,
                                            LineBreakType aLineBreakType);
   // Computes the native text length between aStartOffset and aEndOffset of
-  // aContent.  Currently, this method supports only text node or br element
-  // for aContent.
+  // aContent.  aContent must be a text node.
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aStartOffset,
                                       uint32_t aEndOffset);
-  // Get the native text length of a content node excluding any children
+  // Get the native text length of aContent.  aContent must be a text node.
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aMaxLength = UINT32_MAX);
+  // Get the native text length which is inserted before aContent.
+  // aContent should be a <br> element for now.
+  static uint32_t GetNativeTextLengthBefore(nsIContent* aContent);
+
+protected:
+  // Get the text length of aContent.  aContent must be a text node.
+  static uint32_t GetTextLength(nsIContent* aContent,
+                                LineBreakType aLineBreakType,
+                                uint32_t aMaxLength = UINT32_MAX);
   // Get the text length of a given range of a content node in
   // the given line break type.
   static uint32_t GetTextLengthInRange(nsIContent* aContent,
                                        uint32_t aXPStartOffset,
                                        uint32_t aXPEndOffset,
                                        LineBreakType aLineBreakType);
-protected:
-  static uint32_t GetTextLength(nsIContent* aContent,
-                                LineBreakType aLineBreakType,
-                                uint32_t aMaxLength = UINT32_MAX);
+  // Get the line breaker length.
+  static inline uint32_t GetBRLength(LineBreakType aLineBreakType);
   static LineBreakType GetLineBreakType(WidgetQueryContentEvent* aEvent);
   static LineBreakType GetLineBreakType(WidgetSelectionEvent* aEvent);
   static LineBreakType GetLineBreakType(bool aUseNativeLineBreak);

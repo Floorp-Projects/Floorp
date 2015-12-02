@@ -1026,16 +1026,6 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   MaybeNotifyIMEOfTextChange(data);
 }
 
-static nsIContent*
-GetContentBR(dom::Element* aElement)
-{
-  if (!aElement->IsNodeOfType(nsINode::eCONTENT)) {
-    return nullptr;
-  }
-  nsIContent* content = static_cast<nsIContent*>(aElement);
-  return content->IsHTMLElement(nsGkAtoms::br) ? content : nullptr;
-}
-
 void
 IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
                                         dom::Element* aElement,
@@ -1044,9 +1034,8 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
                                         int32_t aModType,
                                         const nsAttrValue* aNewValue)
 {
-  nsIContent *content = GetContentBR(aElement);
-  mPreAttrChangeLength = content ?
-    ContentEventHandler::GetNativeTextLength(content) : 0;
+  mPreAttrChangeLength =
+    ContentEventHandler::GetNativeTextLengthBefore(aElement);
 }
 
 void
@@ -1066,19 +1055,14 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
     return;
   }
 
-  nsIContent *content = GetContentBR(aElement);
-  if (!content) {
-    return;
-  }
-
   uint32_t postAttrChangeLength =
-    ContentEventHandler::GetNativeTextLength(content);
+    ContentEventHandler::GetNativeTextLengthBefore(aElement);
   if (postAttrChangeLength == mPreAttrChangeLength) {
     return;
   }
   uint32_t start;
   nsresult rv =
-    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, content,
+    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aElement,
                                                   0, &start,
                                                   LINE_BREAK_TYPE_NATIVE);
   NS_ENSURE_SUCCESS_VOID(rv);
