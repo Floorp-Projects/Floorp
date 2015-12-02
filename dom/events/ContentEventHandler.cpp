@@ -327,6 +327,9 @@ ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
 {
   MOZ_ASSERT(aEndOffset >= aStartOffset,
              "aEndOffset must be equals or larger than aStartOffset");
+  if (NS_WARN_IF(!aContent->IsNodeOfType(nsINode::eTEXT))) {
+    return 0;
+  }
   if (aStartOffset == aEndOffset) {
     return 0;
   }
@@ -338,11 +341,23 @@ ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
 ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
                                          uint32_t aMaxLength)
 {
+  if (NS_WARN_IF(!aContent->IsNodeOfType(nsINode::eTEXT))) {
+    return 0;
+  }
   return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aMaxLength);
 }
 
-static inline uint32_t
-GetBRLength(LineBreakType aLineBreakType)
+/* static */ uint32_t
+ContentEventHandler::GetNativeTextLengthBefore(nsIContent* aContent)
+{
+  if (NS_WARN_IF(aContent->IsNodeOfType(nsINode::eTEXT))) {
+    return 0;
+  }
+  return IsContentBR(aContent) ? GetBRLength(LINE_BREAK_TYPE_NATIVE) : 0;
+}
+
+/* static inline */ uint32_t
+ContentEventHandler::GetBRLength(LineBreakType aLineBreakType)
 {
 #if defined(XP_WIN)
   // Length of \r\n
@@ -357,29 +372,26 @@ ContentEventHandler::GetTextLength(nsIContent* aContent,
                                    LineBreakType aLineBreakType,
                                    uint32_t aMaxLength)
 {
-  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    uint32_t textLengthDifference =
+  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT));
+
+  uint32_t textLengthDifference =
 #if defined(XP_WIN)
-      // On Windows, the length of a native newline ("\r\n") is twice the length
-      // of the XP newline ("\n"), so XP length is equal to the length of the
-      // native offset plus the number of newlines encountered in the string.
-      (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ?
-        CountNewlinesInXPLength(aContent, aMaxLength) : 0;
+    // On Windows, the length of a native newline ("\r\n") is twice the length
+    // of the XP newline ("\n"), so XP length is equal to the length of the
+    // native offset plus the number of newlines encountered in the string.
+    (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ?
+      CountNewlinesInXPLength(aContent, aMaxLength) : 0;
 #else
-      // On other platforms, the native and XP newlines are the same.
-      0;
+    // On other platforms, the native and XP newlines are the same.
+    0;
 #endif
 
-    const nsTextFragment* text = aContent->GetText();
-    if (!text) {
-      return 0;
-    }
-    uint32_t length = std::min(text->GetLength(), aMaxLength);
-    return length + textLengthDifference;
-  } else if (IsContentBR(aContent)) {
-    return GetBRLength(aLineBreakType);
+  const nsTextFragment* text = aContent->GetText();
+  if (!text) {
+    return 0;
   }
-  return 0;
+  uint32_t length = std::min(text->GetLength(), aMaxLength);
+  return length + textLengthDifference;
 }
 
 static uint32_t ConvertToXPOffset(nsIContent* aContent, uint32_t aNativeOffset)
@@ -460,6 +472,8 @@ ContentEventHandler::GetTextLengthInRange(nsIContent* aContent,
                                           uint32_t aXPEndOffset,
                                           LineBreakType aLineBreakType)
 {
+  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT));
+
   return aLineBreakType == LINE_BREAK_TYPE_NATIVE ?
     GetNativeTextLength(aContent, aXPStartOffset, aXPEndOffset) :
     aXPEndOffset - aXPStartOffset;
@@ -473,6 +487,8 @@ ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
                                       int32_t aXPEndOffset,
                                       LineBreakType aLineBreakType)
 {
+  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT));
+
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     // It is a non-rendered content, create an empty range for it.
@@ -689,7 +705,10 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
     }
     nsIContent* content = static_cast<nsIContent*>(node);
 
-    uint32_t textLength = GetTextLength(content, aLineBreakType);
+    uint32_t textLength =
+      content->IsNodeOfType(nsINode::eTEXT) ?
+        GetTextLength(content, aLineBreakType) :
+        (IsContentBR(content) ? GetBRLength(aLineBreakType) : 0);
     if (!textLength) {
       continue;
     }
@@ -1443,13 +1462,7 @@ ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
         *aOffset += GetTextLength(content, aLineBreakType);
       }
     } else if (IsContentBR(content)) {
-#if defined(XP_WIN)
-      // On Windows, the length of the newline is 2.
-      *aOffset += (aLineBreakType == LINE_BREAK_TYPE_NATIVE) ? 2 : 1;
-#else
-      // On other platforms, the length of the newline is 1.
-      *aOffset += 1;
-#endif
+      *aOffset += GetBRLength(aLineBreakType);
     }
   }
   return NS_OK;
