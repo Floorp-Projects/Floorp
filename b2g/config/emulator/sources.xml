@@ -15,7 +15,7 @@
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gecko and Gaia -->
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="9fe913fa95ce1f8f0841fc7ab8fd9fec6fa1077d"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="479875e59be2676899f8cfe80c7fe7f409e966b8"/>
   <!-- Gonk-specific things and forks -->
   <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
   <project name="platform_build" path="build" remote="b2g" revision="1b0db93fb6b870b03467aff50d6419771ba0d88c">
