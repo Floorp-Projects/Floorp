@@ -11,7 +11,7 @@
 
 //------------------------------------------------------------------------
 
-class nsScreenWin : public nsBaseScreen
+class nsScreenWin final : public nsBaseScreen
 {
 public:
   nsScreenWin ( HMONITOR inScreen );
@@ -33,7 +33,10 @@ public:
   NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth);
   NS_IMETHOD GetColorDepth(int32_t* aColorDepth);
 
+  NS_IMETHOD GetContentsScaleFactor(double *aContentsScaleFactor) override;
+
 private:
+  double GetDPIScale();
 
   HMONITOR mScreen;
   uint32_t mId;
