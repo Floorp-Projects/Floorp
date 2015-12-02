@@ -1547,11 +1547,12 @@ MissingScopeKey::match(MissingScopeKey sk1, MissingScopeKey sk2)
     return sk1.frame_ == sk2.frame_ && sk1.staticScope_ == sk2.staticScope_;
 }
 
-void
-LiveScopeVal::sweep()
+bool
+LiveScopeVal::needsSweep()
 {
     if (staticScope_)
         MOZ_ALWAYS_FALSE(IsAboutToBeFinalized(&staticScope_));
+    return false;
 }
 
 // Live ScopeIter values may be added to DebugScopes::liveScopes, as
@@ -2402,16 +2403,11 @@ DebugScopes::sweep(JSRuntime* rt)
         }
     }
 
-    for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
-        e.front().value().sweep();
-
-        /*
-         * Scopes can be finalized when a debugger-synthesized ScopeObject is
-         * no longer reachable via its DebugScopeObject.
-         */
-        if (IsAboutToBeFinalized(&e.front().mutableKey()))
-            e.removeFront();
-    }
+    /*
+     * Scopes can be finalized when a debugger-synthesized ScopeObject is
+     * no longer reachable via its DebugScopeObject.
+     */
+    liveScopes.sweep();
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

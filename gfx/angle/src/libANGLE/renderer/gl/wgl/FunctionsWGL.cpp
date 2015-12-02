@@ -8,6 +8,8 @@
 
 #include "libANGLE/renderer/gl/wgl/FunctionsWGL.h"
 
+#include <algorithm>
+
 #include "common/string_utils.h"
 
 namespace rx

@@ -117,7 +117,8 @@ ShShaderOutput ShaderD3D::getCompilerOutputType() const
     return mCompilerOutputType;
 }
 
-int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStream)
+int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStream,
+                                             std::string *sourcePath)
 {
     uncompile();
 
@@ -128,10 +129,9 @@ int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStre
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
     if (gl::DebugAnnotationsActive())
     {
-        std::string sourcePath = getTempPath();
-        writeFile(sourcePath.c_str(), source.c_str(), source.length());
+        *sourcePath = getTempPath();
+        writeFile(sourcePath->c_str(), source.c_str(), source.length());
         additionalOptions |= SH_LINE_DIRECTIVES | SH_SOURCE_PATH;
-        *shaderSourceStream << sourcePath;
     }
 #endif
 
@@ -192,15 +192,11 @@ bool ShaderD3D::postTranslateCompile(gl::Compiler *compiler, std::string *infoLo
         }
     }
 
-#if ANGLE_SHADER_DEBUG_INFO == ANGLE_ENABLED
     mDebugInfo +=
-        std::string("// ") + GetShaderTypeString(mData->getShaderType()) + " SHADER BEGIN\n";
-    mDebugInfo += "\n// GLSL BEGIN\n\n" + source + "\n\n// GLSL END\n\n\n";
+        std::string("// ") + GetShaderTypeString(mData.getShaderType()) + " SHADER BEGIN\n";
+    mDebugInfo += "\n// GLSL BEGIN\n\n" + mData.getSource() + "\n\n// GLSL END\n\n\n";
     mDebugInfo += "// INITIAL HLSL BEGIN\n\n" + translatedSource + "\n// INITIAL HLSL END\n\n\n";
     // Successive steps will append more info
-#else
-    mDebugInfo += translatedSource;
-#endif
     return true;
 }
 

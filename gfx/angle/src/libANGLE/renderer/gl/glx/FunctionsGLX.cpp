@@ -35,34 +35,42 @@ static bool GetProc(PFNGETPROCPROC getProc, T *member, const char *name)
 struct FunctionsGLX::GLXFunctionTable
 {
     GLXFunctionTable()
-      : destroyContextPtr(nullptr),
-        makeCurrentPtr(nullptr),
-        swapBuffersPtr(nullptr),
-        queryExtensionPtr(nullptr),
-        queryVersionPtr(nullptr),
-        waitXPtr(nullptr),
-        waitGLPtr(nullptr),
-        queryExtensionsStringPtr(nullptr),
-        getFBConfigsPtr(nullptr),
-        chooseFBConfigPtr(nullptr),
-        getFBConfigAttribPtr(nullptr),
-        getVisualFromFBConfigPtr(nullptr),
-        createWindowPtr(nullptr),
-        destroyWindowPtr(nullptr),
-        createPbufferPtr(nullptr),
-        destroyPbufferPtr(nullptr),
-        queryDrawablePtr(nullptr),
-        createContextAttribsARBPtr(nullptr),
-        swapIntervalEXTPtr(nullptr)
+        : createContextPtr(nullptr),
+          destroyContextPtr(nullptr),
+          makeCurrentPtr(nullptr),
+          swapBuffersPtr(nullptr),
+          queryExtensionPtr(nullptr),
+          queryVersionPtr(nullptr),
+          getCurrentContextPtr(nullptr),
+          getCurrentDrawablePtr(nullptr),
+          waitXPtr(nullptr),
+          waitGLPtr(nullptr),
+          queryExtensionsStringPtr(nullptr),
+          getFBConfigsPtr(nullptr),
+          chooseFBConfigPtr(nullptr),
+          getFBConfigAttribPtr(nullptr),
+          getVisualFromFBConfigPtr(nullptr),
+          createWindowPtr(nullptr),
+          destroyWindowPtr(nullptr),
+          createPbufferPtr(nullptr),
+          destroyPbufferPtr(nullptr),
+          queryDrawablePtr(nullptr),
+          createContextAttribsARBPtr(nullptr),
+          swapIntervalEXTPtr(nullptr),
+          swapIntervalMESAPtr(nullptr),
+          swapIntervalSGIPtr(nullptr)
     {
     }
 
     // GLX 1.0
+    PFNGLXCREATECONTEXTPROC createContextPtr;
     PFNGLXDESTROYCONTEXTPROC destroyContextPtr;
     PFNGLXMAKECURRENTPROC makeCurrentPtr;
     PFNGLXSWAPBUFFERSPROC swapBuffersPtr;
     PFNGLXQUERYEXTENSIONPROC queryExtensionPtr;
     PFNGLXQUERYVERSIONPROC queryVersionPtr;
+    PFNGLXGETCURRENTCONTEXTPROC getCurrentContextPtr;
+    PFNGLXGETCURRENTDRAWABLEPROC getCurrentDrawablePtr;
     PFNGLXWAITXPROC waitXPtr;
     PFNGLXWAITGLPROC waitGLPtr;
 
@@ -85,6 +93,12 @@ struct FunctionsGLX::GLXFunctionTable
 
     // GLX_EXT_swap_control
     PFNGLXSWAPINTERVALEXTPROC swapIntervalEXTPtr;
+
+    // GLX_MESA_swap_control
+    PFNGLXSWAPINTERVALMESAPROC swapIntervalMESAPtr;
+
+    // GLX_SGI_swap_control
+    PFNGLXSWAPINTERVALSGIPROC swapIntervalSGIPtr;
 };
 
 FunctionsGLX::FunctionsGLX()
@@ -149,11 +163,14 @@ bool FunctionsGLX::initialize(Display *xDisplay, int screen, std::string *errorS
 #endif
 
     // GLX 1.0
+    GET_FNPTR_OR_ERROR(&mFnPtrs->createContextPtr, glXCreateContext);
     GET_FNPTR_OR_ERROR(&mFnPtrs->destroyContextPtr, glXDestroyContext);
     GET_FNPTR_OR_ERROR(&mFnPtrs->makeCurrentPtr, glXMakeCurrent);
     GET_FNPTR_OR_ERROR(&mFnPtrs->swapBuffersPtr, glXSwapBuffers);
     GET_FNPTR_OR_ERROR(&mFnPtrs->queryExtensionPtr, glXQueryExtension);
     GET_FNPTR_OR_ERROR(&mFnPtrs->queryVersionPtr, glXQueryVersion);
+    GET_FNPTR_OR_ERROR(&mFnPtrs->getCurrentContextPtr, glXGetCurrentContext);
+    GET_FNPTR_OR_ERROR(&mFnPtrs->getCurrentDrawablePtr, glXGetCurrentDrawable);
     GET_FNPTR_OR_ERROR(&mFnPtrs->waitXPtr, glXWaitX);
     GET_FNPTR_OR_ERROR(&mFnPtrs->waitGLPtr, glXWaitGL);
 
@@ -207,17 +224,17 @@ bool FunctionsGLX::initialize(Display *xDisplay, int screen, std::string *errorS
     {
         GET_PROC_OR_ERROR(&mFnPtrs->createContextAttribsARBPtr, glXCreateContextAttribsARB);
     }
-    else
-    {
-        mFnPtrs->createContextAttribsARBPtr = nullptr;
-    }
     if (hasExtension("GLX_EXT_swap_control"))
     {
         GET_PROC_OR_ERROR(&mFnPtrs->swapIntervalEXTPtr, glXSwapIntervalEXT);
     }
-    else
+    if (hasExtension("GLX_MESA_swap_control"))
     {
-        mFnPtrs->swapIntervalEXTPtr = nullptr;
+        GET_PROC_OR_ERROR(&mFnPtrs->swapIntervalMESAPtr, glXSwapIntervalMESA);
+    }
+    if (hasExtension("GLX_SGI_swap_control"))
+    {
+        GET_PROC_OR_ERROR(&mFnPtrs->swapIntervalSGIPtr, glXSwapIntervalSGI);
     }
 
 #undef GET_FNPTR_OR_ERROR
@@ -249,6 +266,12 @@ int FunctionsGLX::getScreen() const
 // GLX functions
 
 // GLX 1.0
+glx::Context FunctionsGLX::createContext(XVisualInfo *visual, glx::Context share, bool direct) const
+{
+    GLXContext shareCtx = reinterpret_cast<GLXContext>(share);
+    GLXContext context = mFnPtrs->createContextPtr(mXDisplay, visual, shareCtx, direct);
+    return reinterpret_cast<glx::Context>(context);
+}
 void FunctionsGLX::destroyContext(glx::Context context) const
 {
     GLXContext ctx = reinterpret_cast<GLXContext>(context);
@@ -270,6 +293,16 @@ Bool FunctionsGLX::queryExtension(int *errorBase, int *event) const
 Bool FunctionsGLX::queryVersion(int *major, int *minor) const
 {
     return mFnPtrs->queryVersionPtr(mXDisplay, major, minor);
+}
+glx::Context FunctionsGLX::getCurrentContext() const
+{
+    GLXContext context = mFnPtrs->getCurrentContextPtr();
+    return reinterpret_cast<glx::Context>(context);
+}
+glx::Drawable FunctionsGLX::getCurrentDrawable() const
+{
+    GLXDrawable drawable = mFnPtrs->getCurrentDrawablePtr();
+    return reinterpret_cast<glx::Drawable>(drawable);
 }
 void FunctionsGLX::waitX() const
 {
@@ -342,6 +375,16 @@ glx::Context FunctionsGLX::createContextAttribsARB(glx::FBConfig config, glx::Co
 void FunctionsGLX::swapIntervalEXT(glx::Drawable drawable, int intervals) const
 {
     mFnPtrs->swapIntervalEXTPtr(mXDisplay, drawable, intervals);
+}
+
+int FunctionsGLX::swapIntervalMESA(int intervals) const
+{
+    return mFnPtrs->swapIntervalMESAPtr(intervals);
+}
+
+int FunctionsGLX::swapIntervalSGI(int intervals) const
+{
+    return mFnPtrs->swapIntervalSGIPtr(intervals);
 }
 
 }

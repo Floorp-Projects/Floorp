@@ -453,7 +453,7 @@ void
 LogToBrowserConsole(const nsAString& aMsg)
 {
   if (!NS_IsMainThread()) {
-    nsAutoString msg(aMsg);
+    nsString msg(aMsg);
     nsCOMPtr<nsIRunnable> task =
       NS_NewRunnableFunction([msg]() { LogToBrowserConsole(msg); });
     NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);

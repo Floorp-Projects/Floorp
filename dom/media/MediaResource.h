@@ -451,10 +451,10 @@ protected:
   // Content-Type of the channel. This is copied from the nsIChannel when the
   // MediaResource is created. This is constant, so accessing from any thread
   // is safe.
-  const nsAutoCString mContentType;
+  const nsCString mContentType;
 
   // Copy of the url of the channel resource.
-  nsAutoCString mContentURL;
+  nsCString mContentURL;
 
   // True if SetLoadInBackground() has been called with
   // aLoadInBackground = true, i.e. when the document load event is not

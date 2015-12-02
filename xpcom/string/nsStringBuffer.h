@@ -141,12 +141,6 @@ public:
   void ToString(uint32_t aLen, nsACString& aStr, bool aMoveOwnership = false);
 
   /**
-   * This measures the size.  It should only be used if the StringBuffer is
-   * unshared.  This is checked.
-   */
-  size_t SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  /**
    * This measures the size only if the StringBuffer is unshared.
    */
   size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const;

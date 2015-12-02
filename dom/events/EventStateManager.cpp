@@ -5716,14 +5716,16 @@ EventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
          (mMultiplierY[index] != 1.0 && mMultiplierY[index] != -1.0);
 }
 
-bool
-EventStateManager::WheelPrefs::HasUserPrefsForDelta(WidgetWheelEvent* aEvent)
+void
+EventStateManager::WheelPrefs::GetUserPrefsForEvent(WidgetWheelEvent* aEvent,
+                                                    double* aOutMultiplierX,
+                                                    double* aOutMultiplierY)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
 
-  return mMultiplierX[index] != 1.0 ||
-         mMultiplierY[index] != 1.0;
+  *aOutMultiplierX = mMultiplierX[index];
+  *aOutMultiplierY = mMultiplierY[index];
 }
 
 bool
@@ -5733,10 +5735,13 @@ EventStateManager::WheelEventIsScrollAction(WidgetWheelEvent* aEvent)
          WheelPrefs::GetInstance()->ComputeActionFor(aEvent) == WheelPrefs::ACTION_SCROLL;
 }
 
-bool
-EventStateManager::WheelEventNeedsDeltaMultipliers(WidgetWheelEvent* aEvent)
+void
+EventStateManager::GetUserPrefsForWheelEvent(WidgetWheelEvent* aEvent,
+                                             double* aOutMultiplierX,
+                                             double* aOutMultiplierY)
 {
-  return WheelPrefs::GetInstance()->HasUserPrefsForDelta(aEvent);
+  WheelPrefs::GetInstance()->GetUserPrefsForEvent(
+    aEvent, aOutMultiplierX, aOutMultiplierY);
 }
 
 bool

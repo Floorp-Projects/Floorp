@@ -75,7 +75,7 @@ public:
 
   TrackID mTrackId;
 
-  nsAutoCString mMimeType;
+  nsCString mMimeType;
   int64_t mDuration;
   int64_t mMediaTime;
   CryptoTrack mCrypto;
@@ -400,6 +400,9 @@ public:
   // a duration until we know the start time, so we need to track it separately.
   media::NullableTimeUnit mUnadjustedMetadataEndTime;
 
+  // True if the media is seekable (i.e. supports random access).
+  bool mMediaSeekable = true;
+
   EncryptionInfo mCrypto;
 };
 
@@ -451,7 +454,7 @@ private:
   uint32_t mStreamSourceID;
 
 public:
-  const nsAutoCString& mMimeType;
+  const nsCString& mMimeType;
 };
 
 } // namespace mozilla

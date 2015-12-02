@@ -34,7 +34,7 @@ public:
   }
 
 private:
-  nsAutoString mRestyleHint;
+  nsString mRestyleHint;
 };
 
 } // namespace mozilla

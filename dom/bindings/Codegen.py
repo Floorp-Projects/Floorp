@@ -1906,16 +1906,26 @@ def getAvailableInTestFunc(obj):
 class MemberCondition:
     """
     An object representing the condition for a member to actually be
-    exposed.  Any of pref, func, and available can be None.  If not
-    None, they should be strings that have the pref name (for "pref")
-    or function name (for "func" and "available").
+    exposed.  Any of the arguments can be None.  If not
+    None, they should have the following types:
+
+    pref: The name of the preference.
+    func: The name of the function.
+    available: A string indicating where we should be available.
+    checkAnyPermissions: An integer index for the anypermissions_* to use.
+    checkAllPermissions: An integer index for the allpermissions_* to use.
+    nonExposedGlobals: A set of names of globals.  Can be empty, in which case
+                       it's treated the same way as None.
     """
-    def __init__(self, pref, func, available=None, checkAnyPermissions=None, checkAllPermissions=None):
+    def __init__(self, pref=None, func=None, available=None,
+                 checkAnyPermissions=None, checkAllPermissions=None,
+                 nonExposedGlobals=None):
         assert pref is None or isinstance(pref, str)
         assert func is None or isinstance(func, str)
         assert available is None or isinstance(available, str)
         assert checkAnyPermissions is None or isinstance(checkAnyPermissions, int)
         assert checkAllPermissions is None or isinstance(checkAllPermissions, int)
+        assert nonExposedGlobals is None or isinstance(nonExposedGlobals, set)
         self.pref = pref
 
         def toFuncPtr(val):
@@ -1933,11 +1943,20 @@ class MemberCondition:
         else:
             self.checkAllPermissions = "allpermissions_%i" % checkAllPermissions
 
+        if nonExposedGlobals:
+            # Nonempty set
+            self.nonExposedGlobals = " | ".join(
+                map(lambda g: "GlobalNames::%s" % g,
+                    sorted(nonExposedGlobals)))
+        else:
+            self.nonExposedGlobals = "0"
+
     def __eq__(self, other):
         return (self.pref == other.pref and self.func == other.func and
                 self.available == other.available and
                 self.checkAnyPermissions == other.checkAnyPermissions and
-                self.checkAllPermissions == other.checkAllPermissions)
+                self.checkAllPermissions == other.checkAllPermissions and
+                self.nonExposedGlobals == other.nonExposedGlobals)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -2000,13 +2019,34 @@ class PropertyDefiner:
 
     @staticmethod
     def getControllingCondition(interfaceMember, descriptor):
-        return MemberCondition(PropertyDefiner.getStringAttr(interfaceMember,
-                                                             "Pref"),
-                               PropertyDefiner.getStringAttr(interfaceMember,
-                                                             "Func"),
-                               getAvailableInTestFunc(interfaceMember),
-                               descriptor.checkAnyPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
-                               descriptor.checkAllPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
+        # We do a slightly complicated thing for exposure sets to deal nicely
+        # with the situation of an [Exposed=Window] thing on an interface
+        # exposed in workers that has a worker-specific descriptor.  In that
+        # situation, we already skip generation of the member entirely in the
+        # worker binding, and shouldn't need to check for the various worker
+        # scopes in the non-worker binding.
+        interface = descriptor.interface
+        nonExposureSet = interface.exposureSet - interfaceMember.exposureSet
+        # Skip getting the descriptor if we're just exposed everywhere or not
+        # looking at the non-worker descriptor.
+        if len(nonExposureSet) and not descriptor.workers:
+            workerProvider = descriptor.config.getDescriptorProvider(True)
+            workerDesc = workerProvider.getDescriptor(interface.identifier.name)
+            if workerDesc.workers:
+                # Just drop all the worker interface names from the
+                # nonExposureSet, since we know we'll have a mainthread global
+                # of some sort.
+                nonExposureSet.difference_update(interface.getWorkerExposureSet())
+
+        return MemberCondition(
+            PropertyDefiner.getStringAttr(interfaceMember,
+                                          "Pref"),
+            PropertyDefiner.getStringAttr(interfaceMember,
+                                          "Func"),
+            getAvailableInTestFunc(interfaceMember),
+            descriptor.checkAnyPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
+            descriptor.checkAllPermissionsIndicesForMembers.get(interfaceMember.identifier.name),
+            nonExposureSet)
 
     def generatePrefableArray(self, array, name, specFormatter, specTerminator,
                               specType, getCondition, getDataTuple, doIdArrays):
@@ -2044,7 +2084,7 @@ class PropertyDefiner:
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, %s, %s, %s, %s, &%s[%d] }'
+        prefableTemplate = '  { true, %s, %s, %s, %s, %s, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
 
         def switchToCondition(props, condition):
@@ -2056,7 +2096,8 @@ class PropertyDefiner:
                      prefCacheTemplate % (name, len(prefableSpecs))))
             # Set up pointers to the new sets of specs inside prefableSpecs
             prefableSpecs.append(prefableTemplate %
-                                 (condition.func,
+                                 (condition.nonExposedGlobals,
+                                  condition.func,
                                   condition.available,
                                   condition.checkAnyPermissions,
                                   condition.checkAllPermissions,
@@ -2075,7 +2116,7 @@ class PropertyDefiner:
             # And the actual spec
             specs.append(specFormatter(getDataTuple(member)))
         specs.append(specTerminator)
-        prefableSpecs.append("  { false, nullptr }")
+        prefableSpecs.append("  { false, 0, nullptr, nullptr, nullptr, nullptr, nullptr }")
 
         specType = "const " + specType
         arrays = fill(
@@ -2198,7 +2239,7 @@ class MethodDefiner(PropertyDefiner):
                     "methodInfo": False,
                     "length": 1,
                     "flags": "0",
-                    "condition": MemberCondition(None, condition)
+                    "condition": MemberCondition(func=condition)
                 })
                 continue
 
@@ -2252,7 +2293,7 @@ class MethodDefiner(PropertyDefiner):
                 "selfHostedName": "ArrayValues",
                 "length": 0,
                 "flags": "JSPROP_ENUMERATE",
-                "condition": MemberCondition(None, None)
+                "condition": MemberCondition()
             })
 
         # Output an @@iterator for generated iterator interfaces.  This should
@@ -2268,7 +2309,7 @@ class MethodDefiner(PropertyDefiner):
                 "selfHostedName": "IteratorIdentity",
                 "length": 0,
                 "flags": "0",
-                "condition": MemberCondition(None, None)
+                "condition": MemberCondition()
             })
 
         # Generate the maplike/setlike iterator, if one wasn't already
@@ -2341,7 +2382,7 @@ class MethodDefiner(PropertyDefiner):
                     "length": 0,
                     "flags": "JSPROP_ENUMERATE",  # readonly/permanent added
                                                   # automatically.
-                    "condition": MemberCondition(None, None)
+                    "condition": MemberCondition()
                 })
 
         if descriptor.interface.isJSImplemented():
@@ -2353,7 +2394,7 @@ class MethodDefiner(PropertyDefiner):
                         "methodInfo": False,
                         "length": 2,
                         "flags": "0",
-                        "condition": MemberCondition(None, None)
+                        "condition": MemberCondition()
                     })
             else:
                 for m in clearableCachedAttrs(descriptor):
@@ -2364,7 +2405,7 @@ class MethodDefiner(PropertyDefiner):
                         "methodInfo": False,
                         "length": "0",
                         "flags": "0",
-                        "condition": MemberCondition(None, None)
+                        "condition": MemberCondition()
                     })
 
         self.unforgeable = unforgeable

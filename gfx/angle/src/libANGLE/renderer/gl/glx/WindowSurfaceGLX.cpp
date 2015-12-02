@@ -28,11 +28,10 @@ WindowSurfaceGLX::WindowSurfaceGLX(const FunctionsGLX &glx,
       mWindow(0),
       mDisplay(display),
       mGLX(glx),
-      mGLXDisplay(*glxDisplay),
+      mGLXDisplay(glxDisplay),
       mContext(context),
       mFBConfig(fbConfig),
-      mGLXWindow(0),
-      mMaxSwapInterval(1)
+      mGLXWindow(0)
 {
 }
 
@@ -48,7 +47,7 @@ WindowSurfaceGLX::~WindowSurfaceGLX()
         XDestroyWindow(mDisplay, mWindow);
     }
 
-    mGLXDisplay.syncXCommands();
+    mGLXDisplay->syncXCommands();
 }
 
 egl::Error WindowSurfaceGLX::initialize()
@@ -95,18 +94,13 @@ egl::Error WindowSurfaceGLX::initialize()
                             0, visualInfo->depth, InputOutput, visual, attributeMask, &attributes);
     mGLXWindow = mGLX.createWindow(mFBConfig, mWindow, nullptr);
 
-    if (mGLX.hasExtension("GLX_EXT_swap_control"))
-    {
-        mGLX.queryDrawable(mGLXWindow, GLX_MAX_SWAP_INTERVAL_EXT, &mMaxSwapInterval);
-    }
-
     XMapWindow(mDisplay, mWindow);
     XFlush(mDisplay);
 
     XFree(visualInfo);
     XFreeColormap(mDisplay, colormap);
 
-    mGLXDisplay.syncXCommands();
+    mGLXDisplay->syncXCommands();
 
     return egl::Error(EGL_SUCCESS);
 }
@@ -140,6 +134,7 @@ egl::Error WindowSurfaceGLX::swap()
         mGLX.waitX();
     }
 
+    mGLXDisplay->setSwapInterval(mGLXWindow, &mSwapControl);
     mGLX.swapBuffers(mGLXWindow);
 
     return egl::Error(EGL_SUCCESS);
@@ -171,12 +166,7 @@ egl::Error WindowSurfaceGLX::releaseTexImage(EGLint buffer)
 
 void WindowSurfaceGLX::setSwapInterval(EGLint interval)
 {
-    if (mGLX.hasExtension("GLX_EXT_swap_control"))
-    {
-        // TODO(cwallez) error checking?
-        const int realInterval = std::min(interval, static_cast<int>(mMaxSwapInterval));
-        mGLX.swapIntervalEXT(mGLXWindow, realInterval);
-    }
+    mSwapControl.targetSwapInterval = interval;
 }
 
 EGLint WindowSurfaceGLX::getWidth() const

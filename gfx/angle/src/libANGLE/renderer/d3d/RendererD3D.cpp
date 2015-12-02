@@ -8,22 +8,23 @@
 
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 
-#include "common/MemoryBuffer.h"
 #include "common/debug.h"
+#include "common/MemoryBuffer.h"
 #include "common/utilities.h"
 #include "libANGLE/Display.h"
+#include "libANGLE/formatutils.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
-#include "libANGLE/ResourceManager.h"
-#include "libANGLE/State.h"
-#include "libANGLE/VertexArray.h"
-#include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
 #include "libANGLE/renderer/d3d/CompilerD3D.h"
+#include "libANGLE/renderer/d3d/DeviceD3D.h"
 #include "libANGLE/renderer/d3d/DisplayD3D.h"
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
 #include "libANGLE/renderer/d3d/SamplerD3D.h"
+#include "libANGLE/ResourceManager.h"
+#include "libANGLE/State.h"
+#include "libANGLE/VertexArray.h"
 
 namespace rx
 {
@@ -44,7 +45,8 @@ RendererD3D::RendererD3D(egl::Display *display)
       mDeviceLost(false),
       mAnnotator(nullptr),
       mScratchMemoryBufferResetCounter(0),
-      mWorkaroundsInitialized(false)
+      mWorkaroundsInitialized(false),
+      mEGLDevice(nullptr)
 {
 }
 
@@ -55,6 +57,8 @@ RendererD3D::~RendererD3D()
 
 void RendererD3D::cleanup()
 {
+    SafeDelete(mEGLDevice);
+
     mScratchMemoryBuffer.resize(0);
     for (auto &incompleteTexture : mIncompleteTextures)
     {
@@ -134,12 +138,6 @@ gl::Error RendererD3D::genericDrawElements(const gl::Data &data,
                                            GLsizei instances,
                                            const gl::IndexRange &indexRange)
 {
-    if (data.state->isPrimitiveRestartEnabled())
-    {
-        UNIMPLEMENTED();
-        return gl::Error(GL_INVALID_OPERATION, "Primitive restart not implemented");
-    }
-
     gl::Program *program = data.state->getProgram();
     ASSERT(program != nullptr);
     ProgramD3D *programD3D = GetImplAs<ProgramD3D>(program);
@@ -170,13 +168,12 @@ gl::Error RendererD3D::genericDrawElements(const gl::Data &data,
         return error;
     }
 
-    gl::VertexArray *vao = data.state->getVertexArray();
     TranslatedIndexData indexInfo;
     indexInfo.indexRange = indexRange;
 
     SourceIndexData sourceIndexInfo;
 
-    error = applyIndexBuffer(indices, vao->getElementArrayBuffer().get(), count, mode, type, &indexInfo, &sourceIndexInfo);
+    error = applyIndexBuffer(data, indices, count, mode, type, &indexInfo, &sourceIndexInfo);
     if (error.isError())
     {
         return error;
@@ -195,7 +192,7 @@ gl::Error RendererD3D::genericDrawElements(const gl::Data &data,
         return error;
     }
 
-    error = applyShaders(data);
+    error = applyShaders(data, mode);
     if (error.isError())
     {
         return error;
@@ -215,8 +212,7 @@ gl::Error RendererD3D::genericDrawElements(const gl::Data &data,
 
     if (!skipDraw(data, mode))
     {
-        error = drawElementsImpl(mode, count, type, indices, vao->getElementArrayBuffer().get(),
-                                 indexInfo, instances, usesPointSize);
+        error = drawElementsImpl(data, indexInfo, mode, count, type, indices, instances);
         if (error.isError())
         {
             return error;
@@ -270,7 +266,7 @@ gl::Error RendererD3D::genericDrawArrays(const gl::Data &data,
         return error;
     }
 
-    error = applyShaders(data);
+    error = applyShaders(data, mode);
     if (error.isError())
     {
         return error;
@@ -290,7 +286,7 @@ gl::Error RendererD3D::genericDrawArrays(const gl::Data &data,
 
     if (!skipDraw(data, mode))
     {
-        error = drawArraysImpl(data, mode, count, instances, usesPointSize);
+        error = drawArraysImpl(data, mode, count, instances);
         if (error.isError())
         {
             return error;
@@ -419,7 +415,8 @@ gl::Error RendererD3D::applyState(const gl::Data &data, GLenum drawMode)
     {
         mask = 0xFFFFFFFF;
     }
-    error = setBlendState(framebufferObject, data.state->getBlendState(), data.state->getBlendColor(), mask);
+    error = setBlendState(framebufferObject, data.state->getBlendState(),
+                          data.state->getBlendColor(), mask);
     if (error.isError())
     {
         return error;
@@ -436,21 +433,19 @@ gl::Error RendererD3D::applyState(const gl::Data &data, GLenum drawMode)
 }
 
 // Applies the shaders and shader constants to the Direct3D device
-gl::Error RendererD3D::applyShaders(const gl::Data &data)
+gl::Error RendererD3D::applyShaders(const gl::Data &data, GLenum drawMode)
 {
     gl::Program *program = data.state->getProgram();
     ProgramD3D *programD3D = GetImplAs<ProgramD3D>(program);
     programD3D->updateCachedInputLayout(*data.state);
 
-    const gl::Framebuffer *fbo = data.state->getDrawFramebuffer();
-
-    gl::Error error = applyShaders(program, fbo, data.state->getRasterizerState().rasterizerDiscard, data.state->isTransformFeedbackActiveUnpaused());
+    gl::Error error = applyShadersImpl(data, drawMode);
     if (error.isError())
     {
         return error;
     }
 
-    return programD3D->applyUniforms();
+    return programD3D->applyUniforms(drawMode);
 }
 
 // For each Direct3D sampler of either the pixel or vertex stage,
@@ -743,4 +738,16 @@ gl::DebugAnnotator *RendererD3D::getAnnotator()
     return mAnnotator;
 }
 
+egl::Error RendererD3D::getEGLDevice(DeviceImpl **device)
+{
+    egl::Error error = initializeEGLDevice(&mEGLDevice);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    *device = static_cast<DeviceImpl *>(mEGLDevice);
+
+    return egl::Error(EGL_SUCCESS);
+}
 }

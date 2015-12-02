@@ -12,12 +12,9 @@
 #include "libANGLE/histogram_macros.h"
 #include "third_party/trace_event/trace_event.h"
 
-// Definitions local to the translation unit
+#if ANGLE_APPEND_ASSEMBLY_TO_SHADER_DEBUG_INFO == ANGLE_ENABLED
 namespace
 {
-
-#if ANGLE_SHADER_DEBUG_INFO == ANGLE_ENABLED
-
 #ifdef CREATE_COMPILER_FLAG_INFO
     #undef CREATE_COMPILER_FLAG_INFO
 #endif
@@ -78,10 +75,8 @@ bool IsCompilerFlagSet(UINT mask, UINT flag)
         return isFlagSet;
     }
 }
-
-#endif
-
-}
+}  // anonymous namespace
+#endif  // ANGLE_APPEND_ASSEMBLY_TO_SHADER_DEBUG_INFO == ANGLE_ENABLED
 
 namespace rx
 {
@@ -247,8 +242,9 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
         {
             *outCompiledBlob = binary;
 
-#if ANGLE_SHADER_DEBUG_INFO == ANGLE_ENABLED
             (*outDebugInfo) += "// COMPILER INPUT HLSL BEGIN\n\n" + hlsl + "\n// COMPILER INPUT HLSL END\n";
+
+#if ANGLE_APPEND_ASSEMBLY_TO_SHADER_DEBUG_INFO == ANGLE_ENABLED
             (*outDebugInfo) += "\n\n// ASSEMBLY BEGIN\n\n";
             (*outDebugInfo) += "// Compiler configuration: " + configs[i].name + "\n// Flags:\n";
             for (size_t fIx = 0; fIx < ArraySize(CompilerFlagInfos); ++fIx)
@@ -279,7 +275,7 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
                 return error;
             }
             (*outDebugInfo) += "\n" + disassembly + "\n// ASSEMBLY END\n";
-#endif
+#endif  // ANGLE_APPEND_ASSEMBLY_TO_SHADER_DEBUG_INFO == ANGLE_ENABLED
             return gl::Error(GL_NO_ERROR);
         }
 
@@ -289,7 +285,8 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
             return gl::Error(GL_OUT_OF_MEMORY, "HLSL compiler had an unexpected failure, result: 0x%X.", result);
         }
 
-        infoLog << "Warning: D3D shader compilation failed with " << configs[i].name << " flags.";
+        infoLog << "Warning: D3D shader compilation failed with " << configs[i].name << " flags. ("
+                << profile << ")";
 
         if (i + 1 < configs.size())
         {
@@ -332,4 +329,4 @@ gl::Error HLSLCompiler::disassembleBinary(ID3DBlob *shaderBinary, std::string *d
     return gl::Error(GL_NO_ERROR);
 }
 
-}
+}  // namespace rx

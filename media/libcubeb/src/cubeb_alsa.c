@@ -963,7 +963,7 @@ alsa_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate) {
 
   /* get a pcm, disabling resampling, so we get a rate the
    * hardware/dmix/pulse/etc. supports. */
-  r = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK | SND_PCM_NO_AUTO_RESAMPLE, 0);
+  r = snd_pcm_open(&pcm, CUBEB_ALSA_PCM_NAME, SND_PCM_STREAM_PLAYBACK | SND_PCM_NO_AUTO_RESAMPLE, 0);
   if (r < 0) {
     return CUBEB_ERROR;
   }
@@ -1116,6 +1116,7 @@ static struct cubeb_ops const alsa_ops = {
   .get_max_channel_count = alsa_get_max_channel_count,
   .get_min_latency = alsa_get_min_latency,
   .get_preferred_sample_rate = alsa_get_preferred_sample_rate,
+  .enumerate_devices = NULL,
   .destroy = alsa_destroy,
   .stream_init = alsa_stream_init,
   .stream_destroy = alsa_stream_destroy,

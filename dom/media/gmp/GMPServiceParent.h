@@ -156,7 +156,7 @@ private:
     void Update(const nsCString& aPlugin, const nsCString& aInstance,
                 char aId, const nsCString& aState);
   private:
-    struct State { nsAutoCString mStateSequence; nsCString mLastStateDescription; };
+    struct State { nsCString mStateSequence; nsCString mLastStateDescription; };
     typedef nsClassHashtable<nsCStringHashKey, State> StatesByInstance;
     typedef nsClassHashtable<nsCStringHashKey, StatesByInstance> StateInstancesByPlugin;
     StateInstancesByPlugin mStates;

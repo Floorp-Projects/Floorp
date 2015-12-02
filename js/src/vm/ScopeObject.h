@@ -13,6 +13,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "gc/Barrier.h"
+#include "js/GCHashTable.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
 
@@ -1101,7 +1102,6 @@ class LiveScopeVal
     AbstractFramePtr frame_;
     RelocatablePtrObject staticScope_;
 
-    void sweep();
     static void staticAsserts();
 
   public:
@@ -1114,6 +1114,8 @@ class LiveScopeVal
     JSObject* staticScope() const { return staticScope_; }
 
     void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
+
+    bool needsSweep();
 };
 
 /*****************************************************************************/
@@ -1216,10 +1218,10 @@ class DebugScopes
      * removes scopes as they are popped). Thus, two consecutive debugger lazy
      * updates of liveScopes need only fill in the new scopes.
      */
-    typedef HashMap<ReadBarriered<ScopeObject*>,
-                    LiveScopeVal,
-                    MovableCellHasher<ReadBarriered<ScopeObject*>>,
-                    RuntimeAllocPolicy> LiveScopeMap;
+    typedef GCHashMap<ReadBarriered<ScopeObject*>,
+                      LiveScopeVal,
+                      MovableCellHasher<ReadBarriered<ScopeObject*>>,
+                      RuntimeAllocPolicy> LiveScopeMap;
     LiveScopeMap liveScopes;
     static MOZ_ALWAYS_INLINE void liveScopesPostWriteBarrier(JSRuntime* rt, LiveScopeMap* map,
                                                              ScopeObject* key);

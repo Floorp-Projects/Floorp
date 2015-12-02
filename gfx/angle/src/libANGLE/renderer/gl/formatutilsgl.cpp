@@ -227,15 +227,19 @@ static InternalFormatInfoMap BuildInternalFormatInfoMap()
     InsertFormatMapping(&map, GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,          VersionOrExts(4, 3, "GL_ARB_ES3_compatibility"), Always(), Never(), VersionOnly(3, 0), Always(), Never());
 
     // From GL_EXT_texture_compression_dxt1
-    //                       | Format                            | OpenGL texture support                     | Filter  | Render | OpenGL ES texture support                    | Filter  | Render |
-    InsertFormatMapping(&map, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,    ExtsOnly("GL_EXT_texture_compression_s3tc"), Always(), Never(), ExtsOnly("GL_EXT_texture_compression_dxt1"),   Always(), Never());
-    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,   ExtsOnly("GL_EXT_texture_compression_s3tc"), Always(), Never(), ExtsOnly("GL_EXT_texture_compression_dxt1"),   Always(), Never());
+    //                       | Format                            | OpenGL texture support                         | Filter  | Render | OpenGL ES texture support                    | Filter  | Render |
+    InsertFormatMapping(&map, GL_COMPRESSED_RGB_S3TC_DXT1_EXT,    ExtsOnly("GL_EXT_texture_compression_s3tc"),     Always(), Never(), ExtsOnly("GL_EXT_texture_compression_dxt1"),   Always(), Never());
+    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,   ExtsOnly("GL_EXT_texture_compression_s3tc"),     Always(), Never(), ExtsOnly("GL_EXT_texture_compression_dxt1"),   Always(), Never());
 
     // From GL_ANGLE_texture_compression_dxt3
-    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE, ExtsOnly("GL_EXT_texture_compression_s3tc"), Always(), Never(), ExtsOnly("GL_ANGLE_texture_compression_dxt3"), Always(), Never());
+    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE, ExtsOnly("GL_EXT_texture_compression_s3tc"),     Always(), Never(), ExtsOnly("GL_ANGLE_texture_compression_dxt3"), Always(), Never());
 
     // From GL_ANGLE_texture_compression_dxt5
-    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE, ExtsOnly("GL_EXT_texture_compression_s3tc"), Always(), Never(), ExtsOnly("GL_ANGLE_texture_compression_dxt5"), Always(), Never());
+    InsertFormatMapping(&map, GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE, ExtsOnly("GL_EXT_texture_compression_s3tc"),     Always(), Never(), ExtsOnly("GL_ANGLE_texture_compression_dxt5"), Always(), Never());
+
+    // From GL_ETC1_RGB8_OES
+    InsertFormatMapping(&map, GL_ETC1_RGB8_OES,                   VersionOrExts(4, 3, "GL_ARB_ES3_compatibility"), Always(), Never(), VersionOrExts(3, 0, "GL_ETC1_RGB8_OES"),       Always(), Never());
+
     // clang-format on
 
     return map;
@@ -372,6 +376,35 @@ static GLenum GetNativeFormat(const FunctionsGL *functions,
     return result;
 }
 
+static GLenum GetNativeCompressedFormat(const FunctionsGL *functions,
+                                        const WorkaroundsGL &workarounds,
+                                        GLenum format)
+{
+    GLenum result = format;
+
+    if (functions->standard == STANDARD_GL_DESKTOP)
+    {
+        if (format == GL_ETC1_RGB8_OES)
+        {
+            // GL_ETC1_RGB8_OES is not available in any desktop GL extension but the compression
+            // format is forwards compatible so just use the ETC2 format.
+            result = GL_COMPRESSED_RGB8_ETC2;
+        }
+    }
+
+    if (functions->isAtLeastGLES(gl::Version(3, 0)))
+    {
+        if (format == GL_ETC1_RGB8_OES)
+        {
+            // Pass GL_COMPRESSED_RGB8_ETC2 as the target format in ES3 and higher because it
+            // becomes a core format.
+            result = GL_COMPRESSED_RGB8_ETC2;
+        }
+    }
+
+    return result;
+}
+
 static GLenum GetNativeType(const FunctionsGL *functions,
                             const WorkaroundsGL &workarounds,
                             GLenum type)
@@ -429,7 +462,7 @@ CompressedTexImageFormat GetCompressedTexImageFormat(const FunctionsGL *function
                                                      GLenum internalFormat)
 {
     CompressedTexImageFormat result;
-    result.internalFormat = internalFormat;
+    result.internalFormat = GetNativeCompressedFormat(functions, workarounds, internalFormat);
     return result;
 }
 
@@ -438,7 +471,7 @@ CompressedTexSubImageFormat GetCompressedSubTexImageFormat(const FunctionsGL *fu
                                                            GLenum format)
 {
     CompressedTexSubImageFormat result;
-    result.format = format;
+    result.format = GetNativeCompressedFormat(functions, workarounds, format);
     return result;
 }
 

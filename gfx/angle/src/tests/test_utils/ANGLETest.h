@@ -98,6 +98,13 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     bool isIntel() const;
     bool isAMD() const;
     bool isNVidia() const;
+    // Note: FL9_3 is explicitly *not* considered D3D11.
+    bool isD3D11() const;
+    bool isD3D11_FL93() const;
+    // Is a D3D9-class renderer.
+    bool isD3D9() const;
+    // Is D3D9 or SM9_3 renderer.
+    bool isD3DSM3() const;
     EGLint getPlatformRenderer() const;
 
   private:

@@ -111,6 +111,11 @@ public:
 
   bool ElementHasHref() const;
 
+  void TryDNSPrefetch();
+
+  void CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
+                         nsWrapperCache::FlagsType aRequestedFlag);
+
 protected:
   virtual ~Link();
 

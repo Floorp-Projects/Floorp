@@ -3160,16 +3160,6 @@ AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
                                JS::Handle<JS::Value> aValue);
 #endif
 
-// Returns true if aObj's global has any of the permissions named in aPermissions
-// set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be null-terminated.
-bool
-CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
-
-// Returns true if aObj's global has all of the permissions named in aPermissions
-// set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be null-terminated.
-bool
-CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
-
 // This function is called by the bindings layer for methods/getters/setters
 // that are not safe to be called in prerendering mode.  It checks to make sure
 // that the |this| object is not running in a global that is in prerendering

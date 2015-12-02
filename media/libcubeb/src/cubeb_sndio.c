@@ -356,6 +356,7 @@ static struct cubeb_ops const sndio_ops = {
   .get_max_channel_count = sndio_get_max_channel_count,
   .get_min_latency = sndio_get_min_latency,
   .get_preferred_sample_rate = sndio_get_preferred_sample_rate,
+  .enumerate_devices = NULL,
   .destroy = sndio_destroy,
   .stream_init = sndio_stream_init,
   .stream_destroy = sndio_stream_destroy,

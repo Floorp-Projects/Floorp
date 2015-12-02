@@ -66,8 +66,6 @@ public:
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
 
-  virtual bool IsMediaSeekable() override;
-
 private:
   bool HasAudio() {
     return (mVorbisState != 0 && mVorbisState->mActive) ||

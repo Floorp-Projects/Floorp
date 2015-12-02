@@ -27,9 +27,11 @@
 
 namespace gl
 {
+const char *g_ExceedsMaxElementErrorMessage = "Element value exceeds maximum element index.";
+
 namespace
 {
-bool ValidateDrawAttribs(gl::Context *context, GLint primcount, GLint maxVertex)
+bool ValidateDrawAttribs(ValidationContext *context, GLint primcount, GLint maxVertex)
 {
     const gl::State &state     = context->getState();
     const gl::Program *program = state.getProgram();
@@ -1466,7 +1468,10 @@ bool ValidateCopyTexImageParametersBase(gl::Context *context, GLenum target, GLi
     return true;
 }
 
-static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsizei primcount)
+static bool ValidateDrawBase(ValidationContext *context,
+                             GLenum mode,
+                             GLsizei count,
+                             GLsizei primcount)
 {
     switch (mode)
     {
@@ -1500,10 +1505,16 @@ static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsiz
 
     if (context->getLimitations().noSeparateStencilRefsAndMasks)
     {
-        const gl::DepthStencilState &depthStencilState = state.getDepthStencilState();
-        if (depthStencilState.stencilWritemask != depthStencilState.stencilBackWritemask ||
+        const Framebuffer *framebuffer             = context->getState().getDrawFramebuffer();
+        const FramebufferAttachment *stencilBuffer = framebuffer->getStencilbuffer();
+        GLuint stencilBits                         = stencilBuffer ? stencilBuffer->getStencilSize() : 0;
+        GLuint minimumRequiredStencilMask          = (1 << stencilBits) - 1;
+        const DepthStencilState &depthStencilState = state.getDepthStencilState();
+        if ((depthStencilState.stencilWritemask & minimumRequiredStencilMask) !=
+                (depthStencilState.stencilBackWritemask & minimumRequiredStencilMask) ||
             state.getStencilRef() != state.getStencilBackRef() ||
-            depthStencilState.stencilMask != depthStencilState.stencilBackMask)
+            (depthStencilState.stencilMask & minimumRequiredStencilMask) !=
+                (depthStencilState.stencilBackMask & minimumRequiredStencilMask))
         {
             // Note: these separate values are not supported in WebGL, due to D3D's limitations. See
             // Section 6.10 of the WebGL 1.0 spec
@@ -1651,7 +1662,7 @@ bool ValidateDrawArraysInstancedANGLE(Context *context, GLenum mode, GLint first
     return ValidateDrawArraysInstanced(context, mode, first, count, primcount);
 }
 
-bool ValidateDrawElements(Context *context,
+bool ValidateDrawElements(ValidationContext *context,
                           GLenum mode,
                           GLsizei count,
                           GLenum type,
@@ -1665,7 +1676,7 @@ bool ValidateDrawElements(Context *context,
       case GL_UNSIGNED_SHORT:
         break;
       case GL_UNSIGNED_INT:
-        if (!context->getExtensions().elementIndexUint)
+          if (context->getClientVersion() < 3 && !context->getExtensions().elementIndexUint)
         {
             context->recordError(Error(GL_INVALID_ENUM));
             return false;
@@ -1754,6 +1765,15 @@ bool ValidateDrawElements(Context *context,
     else
     {
         *indexRangeOut = ComputeIndexRange(type, indices, count, state.isPrimitiveRestartEnabled());
+    }
+
+    // If we use an index greater than our maximum supported index range, return an error.
+    // The ES3 spec does not specify behaviour here, it is undefined, but ANGLE should always
+    // return an error if possible here.
+    if (static_cast<GLuint64>(indexRangeOut->end) >= context->getCaps().maxElementIndex)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION, g_ExceedsMaxElementErrorMessage));
+        return false;
     }
 
     if (!ValidateDrawAttribs(context, primcount, static_cast<GLsizei>(indexRangeOut->end)))
@@ -2162,6 +2182,43 @@ bool ValidateEGLImageTargetRenderbufferStorageOES(Context *context,
     {
         context->recordError(Error(
             GL_INVALID_OPERATION, "EGL image internal format is not supported as a renderbuffer."));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateBindVertexArrayBase(Context *context, GLuint array)
+{
+    VertexArray *vao = context->getVertexArray(array);
+
+    if (!vao)
+    {
+        // The default VAO should always exist
+        ASSERT(array != 0);
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateDeleteVertexArraysBase(Context *context, GLsizei n)
+{
+    if (n < 0)
+    {
+        context->recordError(Error(GL_INVALID_VALUE));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateGenVertexArraysBase(Context *context, GLsizei n)
+{
+    if (n < 0)
+    {
+        context->recordError(Error(GL_INVALID_VALUE));
         return false;
     }
 

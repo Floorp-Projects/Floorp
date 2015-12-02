@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+    var a = document.createElement("select");
+    var f = document.createElement("optgroup");
+    var g = document.createElement("optgroup");
+    a.appendChild(f);
+    g.appendChild(document.createElement("option"));
+    f.appendChild(g);
+    a.appendChild(document.createElement("option"));
+    document.body.appendChild(a);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

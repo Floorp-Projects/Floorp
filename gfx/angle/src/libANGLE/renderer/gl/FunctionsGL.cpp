@@ -788,13 +788,10 @@ void FunctionsGL::initialize()
     }
 
     // Check the context profile
+    profile = 0;
     if (isAtLeastGL(gl::Version(3, 2)))
     {
         getIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
-    }
-    else
-    {
-        profile = 0;
     }
 
     // clang-format off
@@ -917,6 +914,29 @@ void FunctionsGL::initialize()
     AssignGLExtensionEntryPoint(extensions, "GL_ARB_occlusion_query", loadProcAddress("glGetQueryivARB"), &getQueryiv);
     AssignGLExtensionEntryPoint(extensions, "GL_ARB_occlusion_query", loadProcAddress("glGetQueryObjectivARB"), &getQueryObjectiv);
     AssignGLExtensionEntryPoint(extensions, "GL_ARB_occlusion_query", loadProcAddress("glGetQueryObjectuivARB"), &getQueryObjectuiv);
+
+    // EXT_transform_feedback
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glBindBufferRangeEXT"), &bindBufferRange);
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glBindBufferBaseEXT"), &bindBufferBase);
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glBeginTransformFeedbackEXT"), &beginTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glEndTransformFeedbackEXT"), &endTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glTransformFeedbackVaryingsEXT"), &transformFeedbackVaryings);
+    AssignGLExtensionEntryPoint(extensions, "EXT_transform_feedback", loadProcAddress("glGetTransformFeedbackVaryingEXT"), &getTransformFeedbackVarying);
+
+    // GL_ARB_transform_feedback2
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glBindTransformFeedback"), &bindTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glDeleteTransformFeedbacks"), &deleteTransformFeedbacks);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glGenTransformFeedbacks"), &genTransformFeedbacks);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glIsTransformFeedback"), &isTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glPauseTransformFeedback"), &pauseTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glResumeTransformFeedback"), &resumeTransformFeedback);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback2", loadProcAddress("glDrawTransformFeedback"), &drawTransformFeedback);
+
+    // GL_ARB_transform_feedback3
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback3", loadProcAddress("glDrawTransformFeedbackStream"), &drawTransformFeedbackStream);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback3", loadProcAddress("glBeginQueryIndexed"), &beginQueryIndexed);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback3", loadProcAddress("glEndQueryIndexed"), &endQueryIndexed);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_transform_feedback3", loadProcAddress("glGetQueryIndexediv"), &getQueryIndexediv);
 
     // 1.0
     if (isAtLeastGL(gl::Version(1, 0)))
