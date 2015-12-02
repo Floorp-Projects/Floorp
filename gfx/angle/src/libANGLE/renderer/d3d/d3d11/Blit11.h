@@ -125,6 +125,9 @@ class Blit11 : angle::NonCopyable
         WriteVertexFunction vertexWriteFunction;
     };
 
+    gl::Error initResources();
+    void freeResources();
+
     ShaderSupport getShaderSupport(const Shader &shader);
 
     static BlitShaderType GetBlitShaderType(GLenum destinationFormat, bool isSigned, ShaderDimension dimension);
@@ -148,6 +151,7 @@ class Blit11 : angle::NonCopyable
     std::map<BlitShaderType, Shader> mBlitShaderMap;
     std::map<SwizzleShaderType, Shader> mSwizzleShaderMap;
 
+    bool mResourcesInitialized;
     ID3D11Buffer *mVertexBuffer;
     ID3D11SamplerState *mPointSampler;
     ID3D11SamplerState *mLinearSampler;

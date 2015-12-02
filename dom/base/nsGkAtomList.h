@@ -2405,3 +2405,6 @@ GK_ATOM(onboundary, "onboundary")
 #endif
 
 GK_ATOM(vr_state, "vr-state")
+
+// Contextual Identity / Containers
+GK_ATOM(usercontextid, "usercontextid")

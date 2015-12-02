@@ -582,6 +582,9 @@ public:
      mDeltaY(aDeltaY),
      mLineOrPageDeltaX(0),
      mLineOrPageDeltaY(0),
+     mScrollSeriesNumber(0),
+     mUserDeltaMultiplierX(1.0),
+     mUserDeltaMultiplierY(1.0),
      mIsMomentum(false)
   {}
 
@@ -589,6 +592,8 @@ public:
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+
+  bool IsCustomizedByUserPrefs() const;
 
   ScrollDeltaType mDeltaType;
   ScrollMode mScrollMode;
@@ -614,6 +619,14 @@ public:
   // See lineOrPageDeltaX/Y on WidgetWheelEvent.
   int32_t mLineOrPageDeltaX;
   int32_t mLineOrPageDeltaY;
+
+  // Indicates the order in which this event was added to a transaction. The
+  // first event is 1; if not a member of a transaction, this is 0.
+  uint32_t mScrollSeriesNumber;
+
+  // User-set delta multipliers.
+  double mUserDeltaMultiplierX;
+  double mUserDeltaMultiplierY;
 
   bool mIsMomentum;
 };

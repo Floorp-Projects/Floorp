@@ -49,11 +49,6 @@ public:
   RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aUnused) override;
 
-  bool IsMediaSeekable() override
-  {
-    return mSeekable;
-  }
-
 protected:
   void NotifyDataArrivedInternal() override;
 
@@ -396,9 +391,6 @@ private:
   // True if we've read the streams' metadata.
   bool mInitDone;
   MozPromiseHolder<MetadataPromise> mMetadataPromise;
-  // Accessed from multiple thread, in particular the MediaDecoderStateMachine,
-  // however the value doesn't change after reading the metadata.
-  bool mSeekable;
   bool IsEncrypted()
   {
     return mIsEncrypted;

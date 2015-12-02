@@ -238,9 +238,10 @@ nsPluginInstanceOwner::GetImageContainer()
   if (!img) {
     AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
   }
-  MOZ_ASSERT(img);
 
-  container->SetCurrentImageInTransaction(img);
+  if (img) {
+    container->SetCurrentImageInTransaction(img);
+  }
 #else
   mInstance->GetImageContainer(getter_AddRefs(container));
 #endif

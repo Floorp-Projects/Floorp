@@ -67,10 +67,10 @@ EXPORTS.mozilla = [
     'Range.h',
     'RangedArray.h',
     'RangedPtr.h',
+    'ReentrancyGuard.h',
     'RefCounted.h',
     'RefCountType.h',
     'RefPtr.h',
-    'ReentrancyGuard.h',
     'ReverseIterator.h',
     'RollingMean.h',
     'Scoped.h',
@@ -90,11 +90,11 @@ EXPORTS.mozilla = [
     'TypeTraits.h',
     'UniquePtr.h',
     'UniquePtrExtensions.h',
+    'unused.h',
     'Variant.h',
     'Vector.h',
     'WeakPtr.h',
     'XorShift128PlusRNG.h',
-    'unused.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -125,3 +125,6 @@ if CONFIG['GNU_CXX']:
 if CONFIG['_MSC_VER']:
     # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
     SOURCES['/mfbt/Compression.cpp'].flags += ['-wd4804']
+
+if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+    OS_LIBS += ['atomic']

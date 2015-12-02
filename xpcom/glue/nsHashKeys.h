@@ -97,7 +97,7 @@ public:
   // To avoid double-counting, only measure the string if it is unshared.
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+    return GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 #endif
 
@@ -152,7 +152,7 @@ public:
   // To avoid double-counting, only measure the string if it is unshared.
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+    return GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
 private:
@@ -189,7 +189,7 @@ public:
   // To avoid double-counting, only measure the string if it is unshared.
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+    return GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 #endif
 

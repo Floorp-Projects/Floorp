@@ -6,8 +6,8 @@
 
 RESOURCE_FILES.entityTables = [
     'html40Latin1.properties',
-    'html40Symbols.properties',
     'html40Special.properties',
+    'html40Symbols.properties',
     'mathml20.properties',
 ]
 

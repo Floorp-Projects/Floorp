@@ -65,6 +65,6 @@ private:
   bool mFixupCreatedAlternateURI;
   nsString mKeywordProviderName;
   nsString mKeywordAsSent;
-  nsAutoCString mOriginalInput;
+  nsCString mOriginalInput;
 };
 #endif

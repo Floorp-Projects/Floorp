@@ -7,6 +7,7 @@
 #undef NDEBUG
 #include <assert.h>
 #include <stddef.h>
+#include <stdlib.h>
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
@@ -56,6 +57,9 @@ int opensl_init(cubeb ** context, char const * context_name);
 #if defined(USE_AUDIOTRACK)
 int audiotrack_init(cubeb ** context, char const * context_name);
 #endif
+#if defined(USE_KAI)
+int kai_init(cubeb ** context, char const * context_name);
+#endif
 
 int
 validate_stream_params(cubeb_stream_params stream_params)
@@ -89,11 +93,11 @@ int
 cubeb_init(cubeb ** context, char const * context_name)
 {
   int (* init[])(cubeb **, char const *) = {
-#if defined(USE_PULSE)
-    pulse_init,
-#endif
 #if defined(USE_JACK)
     jack_init,
+#endif
+#if defined(USE_PULSE)
+    pulse_init,
 #endif
 #if defined(USE_ALSA)
     alsa_init,
@@ -121,6 +125,9 @@ cubeb_init(cubeb ** context, char const * context_name)
 #endif
 #if defined(USE_AUDIOTRACK)
     audiotrack_init,
+#endif
+#if defined(USE_KAI)
+    kai_init,
 #endif
   };
   int i;
@@ -356,3 +363,50 @@ int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
 
   return stream->context->ops->stream_register_device_changed_callback(stream, device_changed_callback);
 }
+
+int cubeb_enumerate_devices(cubeb * context,
+                            cubeb_device_type devtype,
+                            cubeb_device_collection ** collection)
+{
+  if ((devtype & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) == 0)
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  if (collection == NULL)
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  if (!context->ops->enumerate_devices)
+    return CUBEB_ERROR_NOT_SUPPORTED;
+
+  return context->ops->enumerate_devices(context, devtype, collection);
+}
+
+int cubeb_device_collection_destroy(cubeb_device_collection * collection)
+{
+  uint32_t i;
+
+  if (collection == NULL)
+    return CUBEB_ERROR_INVALID_PARAMETER;
+
+  for (i = 0; i < collection->count; i++)
+    cubeb_device_info_destroy(collection->device[i]);
+
+  free(collection);
+  return CUBEB_OK;
+}
+
+int cubeb_device_info_destroy(cubeb_device_info * info)
+{
+  free(info->device_id);
+  free(info->friendly_name);
+  free(info->group_id);
+  free(info->vendor_name);
+
+  free(info);
+  return CUBEB_OK;
+}
+
+int cubeb_register_device_collection_changed(cubeb * context,
+                                             cubeb_device_collection_changed_callback callback,
+                                             void * user_ptr)
+{
+  return CUBEB_ERROR_NOT_SUPPORTED;
+}
+

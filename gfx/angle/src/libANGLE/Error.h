@@ -35,6 +35,10 @@ class Error final
 
     const std::string &getMessage() const;
 
+    // Useful for mocking and testing
+    bool operator==(const Error &other) const;
+    bool operator!=(const Error &other) const;
+
   private:
     void createMessageString() const;
 

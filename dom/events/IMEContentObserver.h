@@ -40,6 +40,8 @@ class IMEContentObserver final : public nsISelectionListener
                                , public nsIEditorObserver
 {
 public:
+  typedef ContentEventHandler::NodePosition NodePosition;
+  typedef ContentEventHandler::NodePositionBefore NodePositionBefore;
   typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;

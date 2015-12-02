@@ -13,6 +13,7 @@
 #include "libANGLE/renderer/BufferImpl.h"
 
 #include <stdint.h>
+#include <vector>
 
 namespace rx
 {
@@ -24,6 +25,18 @@ enum D3DBufferUsage
 {
     D3D_BUFFER_USAGE_STATIC,
     D3D_BUFFER_USAGE_DYNAMIC,
+};
+
+enum D3DBufferInvalidationType
+{
+    D3D_BUFFER_INVALIDATE_WHOLE_CACHE,
+    D3D_BUFFER_INVALIDATE_DEFAULT_BUFFER_ONLY,
+};
+
+enum D3DStaticBufferCreationType
+{
+    D3D_BUFFER_CREATE_IF_NECESSARY,
+    D3D_BUFFER_DO_NOT_CREATE,
 };
 
 class BufferD3D : public BufferImpl
@@ -39,11 +52,14 @@ class BufferD3D : public BufferImpl
     virtual void markTransformFeedbackUsage() = 0;
     virtual gl::Error getData(const uint8_t **outData) = 0;
 
-    StaticVertexBufferInterface *getStaticVertexBuffer() { return mStaticVertexBuffer; }
-    StaticIndexBufferInterface *getStaticIndexBuffer() { return mStaticIndexBuffer; }
+    StaticVertexBufferInterface *getStaticVertexBuffer(const gl::VertexAttribute &attribute,
+                                                       D3DStaticBufferCreationType creationType);
+    StaticIndexBufferInterface *getStaticIndexBuffer();
 
     void initializeStaticData();
-    void invalidateStaticData();
+    void invalidateStaticData(D3DBufferInvalidationType invalidationType);
+    void reinitOutOfDateStaticData();
+
     void promoteStaticUsage(int dataSize);
 
     gl::Error getIndexRange(GLenum type,
@@ -62,6 +78,9 @@ class BufferD3D : public BufferImpl
 
     StaticVertexBufferInterface *mStaticVertexBuffer;
     StaticIndexBufferInterface *mStaticIndexBuffer;
+    std::vector<StaticVertexBufferInterface *> *mStaticBufferCache;
+    unsigned int mStaticBufferCacheTotalSize;
+    unsigned int mStaticVertexBufferOutOfDate;
     unsigned int mUnmodifiedDataUse;
     D3DBufferUsage mUsage;
 };

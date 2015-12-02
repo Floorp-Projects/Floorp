@@ -310,6 +310,8 @@ void MediaOmxReader::HandleResourceAllocated()
     mInfo.mAudio.mRate = sampleRate;
   }
 
+  mInfo.mMediaSeekable = mExtractor->flags() & MediaExtractor::CAN_SEEK;
+
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
   metadata->mTags = nullptr;
@@ -319,13 +321,6 @@ void MediaOmxReader::HandleResourceAllocated()
 #endif
 
   mMetadataPromise.Resolve(metadata, __func__);
-}
-
-bool
-MediaOmxReader::IsMediaSeekable()
-{
-  // Check the MediaExtract flag if the source is seekable.
-  return (mExtractor->flags() & MediaExtractor::CAN_SEEK);
 }
 
 bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,

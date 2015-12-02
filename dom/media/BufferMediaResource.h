@@ -135,7 +135,7 @@ private:
   uint32_t mLength;
   uint32_t mOffset;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  const nsAutoCString mContentType;
+  const nsCString mContentType;
 };
 
 } // namespace mozilla

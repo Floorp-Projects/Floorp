@@ -622,6 +622,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         HasLazyScript,
         HasNonSyntacticScope,
         HasInnerFunctions,
+        NeedsHomeObject,
+        IsDerivedClassConstructor,
     };
 
     uint32_t length, lineno, column, nslots;
@@ -761,6 +763,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             scriptBits |= (1 << HasNonSyntacticScope);
         if (script->hasInnerFunctions())
             scriptBits |= (1 << HasInnerFunctions);
+        if (script->needsHomeObject())
+            scriptBits |= (1 << NeedsHomeObject);
+        if (script->isDerivedClassConstructor())
+            scriptBits |= (1 << IsDerivedClassConstructor);
     }
 
     if (!xdr->codeUint32(&prologueLength))
@@ -901,6 +907,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             script->hasNonSyntacticScope_ = true;
         if (scriptBits & (1 << HasInnerFunctions))
             script->hasInnerFunctions_ = true;
+        if (scriptBits & (1 << NeedsHomeObject))
+            script->needsHomeObject_ = true;
+        if (scriptBits & (1 << IsDerivedClassConstructor))
+            script->isDerivedClassConstructor_ = true;
 
         if (scriptBits & (1 << IsLegacyGenerator)) {
             MOZ_ASSERT(!(scriptBits & (1 << IsStarGenerator)));

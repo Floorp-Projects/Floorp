@@ -393,11 +393,6 @@ public:
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 
-  // This is called to request that the main thread snap the scroll position
-  // to a nearby snap position if appropriate. The current scroll position is
-  // used as the final destination.
-  void RequestSnap();
-
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AsyncPanZoomController();
@@ -649,6 +644,11 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
+  // This is called to request that the main thread snap the scroll position
+  // to a nearby snap position if appropriate. The current scroll position is
+  // used as the final destination.
+  void RequestSnap();
+
   uint64_t mLayersId;
   RefPtr<CompositorParent> mCompositorParent;
   RefPtr<TaskThrottler> mPaintThrottler;
@@ -760,12 +760,6 @@ protected:
                                  the finger is lifted. */
     SMOOTH_SCROLL,            /* Smooth scrolling to destination. Used by
                                  CSSOM-View smooth scroll-behavior */
-
-    PANNING_LOCKED_X_SMOOTH_SCROLL, /* Smooth scrolling animation initiated
-                                       while simultaneously panning the frame
-                                       with the X axis locked. */
-    PANNING_LOCKED_Y_SMOOTH_SCROLL, /* as above for Y axis. */
-
     WHEEL_SCROLL              /* Smooth scrolling to a destination for a wheel event. */
   };
 

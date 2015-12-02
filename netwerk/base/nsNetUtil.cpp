@@ -45,6 +45,7 @@
 #include "nsISocketProviderService.h"
 #include "nsIStandardURL.h"
 #include "nsIStreamLoader.h"
+#include "nsIIncrementalStreamLoader.h"
 #include "nsIStreamTransportService.h"
 #include "nsStringStream.h"
 #include "nsISyncStreamListener.h"
@@ -575,6 +576,23 @@ NS_NewDownloader(nsIStreamListener   **result,
         rv = downloader->Init(observer, downloadLocation);
         if (NS_SUCCEEDED(rv)) {
             downloader.forget(result);
+        }
+    }
+    return rv;
+}
+
+nsresult
+NS_NewIncrementalStreamLoader(nsIIncrementalStreamLoader        **result,
+                              nsIIncrementalStreamLoaderObserver *observer)
+{
+    nsresult rv;
+    nsCOMPtr<nsIIncrementalStreamLoader> loader =
+        do_CreateInstance(NS_INCREMENTALSTREAMLOADER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = loader->Init(observer);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nullptr;
+            loader.swap(*result);
         }
     }
     return rv;

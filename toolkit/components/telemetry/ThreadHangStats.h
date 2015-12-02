@@ -171,7 +171,7 @@ public:
 class ThreadHangStats
 {
 private:
-  nsAutoCString mName;
+  nsCString mName;
 
 public:
   TimeHistogram mActivity;

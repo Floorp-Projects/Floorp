@@ -111,35 +111,35 @@ static gl::TextureCaps GenerateTextureFormatCaps(const FunctionsGL *functions, G
 
 static GLint QuerySingleGLInt(const FunctionsGL *functions, GLenum name)
 {
-    GLint result;
+    GLint result = 0;
     functions->getIntegerv(name, &result);
     return result;
 }
 
 static GLint QueryGLIntRange(const FunctionsGL *functions, GLenum name, size_t index)
 {
-    GLint result[2];
+    GLint result[2] = {};
     functions->getIntegerv(name, result);
     return result[index];
 }
 
 static GLint64 QuerySingleGLInt64(const FunctionsGL *functions, GLenum name)
 {
-    GLint64 result;
+    GLint64 result = 0;
     functions->getInteger64v(name, &result);
     return result;
 }
 
 static GLfloat QuerySingleGLFloat(const FunctionsGL *functions, GLenum name)
 {
-    GLfloat result;
+    GLfloat result = 0.0f;
     functions->getFloatv(name, &result);
     return result;
 }
 
 static GLfloat QueryGLFloatRange(const FunctionsGL *functions, GLenum name, size_t index)
 {
-    GLfloat result[2];
+    GLfloat result[2] = {};
     functions->getFloatv(name, result);
     return result[index];
 }
@@ -478,7 +478,8 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
     caps->maxCombinedTextureImageUnits = caps->maxVertexTextureImageUnits + caps->maxTextureImageUnits;
 
     // Table 6.34, implementation dependent transform feedback limits
-    if (functions->isAtLeastGL(gl::Version(3, 0)) || functions->hasGLExtension("GL_EXT_transform_feedback") ||
+    if (functions->isAtLeastGL(gl::Version(4, 0)) ||
+        functions->hasGLExtension("GL_ARB_transform_feedback2") ||
         functions->isAtLeastGLES(gl::Version(3, 0)))
     {
         caps->maxTransformFeedbackInterleavedComponents = QuerySingleGLInt(functions, GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS);
@@ -525,6 +526,26 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
         {
             LimitVersion(maxSupportedESVersion, gl::Version(0, 0));
         }
+    }
+
+    // Can't support ES3 without the GLSL packing builtins. We have a workaround for all
+    // desktop OpenGL versions starting from 3.3 with the bit packing extension.
+    if (!functions->isAtLeastGL(gl::Version(4, 2)) &&
+        !(functions->isAtLeastGL(gl::Version(3, 2)) &&
+          functions->hasGLExtension("GL_ARB_shader_bit_encoding")) &&
+        !functions->hasGLExtension("GL_ARB_shading_language_packing") &&
+        !functions->isAtLeastGLES(gl::Version(3, 0)))
+    {
+        LimitVersion(maxSupportedESVersion, gl::Version(2, 0));
+    }
+
+    // ES3 needs to support explicit layout location qualifiers, while it might be possible to
+    // fake them in our side, we currently don't support that.
+    if (!functions->isAtLeastGL(gl::Version(3, 3)) &&
+        !functions->hasGLExtension("GL_ARB_explicit_attrib_location") &&
+        !functions->isAtLeastGLES(gl::Version(3, 0)))
+    {
+        LimitVersion(maxSupportedESVersion, gl::Version(2, 0));
     }
 
     // Extension support
@@ -577,6 +598,9 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
     extensions->debugMarker =
         functions->isAtLeastGL(gl::Version(4, 3)) || functions->hasGLExtension("GL_KHR_debug") ||
         functions->isAtLeastGLES(gl::Version(3, 2)) || functions->hasGLESExtension("GL_KHR_debug");
+
+    // ANGLE emulates vertex array objects in its GL layer
+    extensions->vertexArrayObject = true;
 }
 
 void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workarounds)
