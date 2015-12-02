@@ -56,12 +56,12 @@ toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarke
   -moz-image-region: rect(0, 270px, 18px, 252px);
 }
 
-#sync-button[cui-areatype="toolbar"][status="active"] {
+#sync-button[cui-areatype="toolbar"][syncstatus="active"] {
   list-style-image: url("chrome://browser/skin/syncProgress-toolbar.png");
   -moz-image-region: rect(0, 18px, 18px, 0px);
 }
 
-toolbar[brighttext] #sync-button[status="active"] {
+toolbar[brighttext] #sync-button[syncstatus="active"] {
   list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
 }
 
@@ -256,12 +256,12 @@ toolbar[brighttext] #sync-button[status="active"] {
     -moz-image-region: rect(0, 540px, 36px, 504px);
   }
 
-  #sync-button[cui-areatype="toolbar"][status="active"] {
+  #sync-button[cui-areatype="toolbar"][syncstatus="active"] {
     list-style-image: url("chrome://browser/skin/syncProgress-toolbar@2x.png");
     -moz-image-region: rect(0, 36px, 36px, 0px);
   }
 
-  toolbar[brighttext] #sync-button[cui-areatype="toolbar"][status="active"] {
+  toolbar[brighttext] #sync-button[cui-areatype="toolbar"][syncstatus="active"] {
     list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted@2x.png");
   }
 

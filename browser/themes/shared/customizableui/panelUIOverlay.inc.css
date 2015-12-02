@@ -672,7 +672,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
 }
 
-#PanelUI-footer-fxa[syncstatus="active"] > #PanelUI-fxa-icon {
+#PanelUI-fxa-icon[syncstatus="active"] {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
@@ -1535,7 +1535,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
 
-  #PanelUI-footer-fxa[syncstatus="active"] > #PanelUI-fxa-icon {
+  #PanelUI-fxa-icon[syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
 
