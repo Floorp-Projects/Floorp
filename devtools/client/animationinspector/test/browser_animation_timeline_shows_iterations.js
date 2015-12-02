@@ -46,6 +46,5 @@ add_task(function*() {
 
 function getIterationCountFromBackground(el) {
   let backgroundSize = parseFloat(el.style.backgroundSize.split(" ")[0]);
-  let width = el.offsetWidth;
-  return Math.round(width / backgroundSize);
+  return Math.round(100 / backgroundSize);
 }
