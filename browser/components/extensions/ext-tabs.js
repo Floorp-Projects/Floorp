@@ -477,12 +477,32 @@ extensions.registerAPI((extension, context) => {
         let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
 
-        let options = {js: [], css: []};
+        let options = {
+          js: [],
+          css: [],
+
+          // We need to send the inner window ID to make sure we only
+          // execute the script if the window is currently navigated to
+          // the document that we expect.
+          //
+          // TODO: When we add support for callbacks, non-matching
+          // window IDs and insufficient permissions need to result in a
+          // callback with |lastError| set.
+          innerWindowID: tab.linkedBrowser.innerWindowID,
+
+          matchesHost: extension.whiteListedHosts.serialize(),
+        };
+
         if (details.code) {
           options[kind + 'Code'] = details.code;
         }
         if (details.file) {
-          options[kind].push(extension.baseURI.resolve(details.file));
+          let url = context.uri.resolve(details.file);
+          if (extension.isExtensionURL(url)) {
+            // We should really set |lastError| here, and go straight to
+            // the callback, but we don't have |lastError| yet.
+            options[kind].push(url);
+          }
         }
         if (details.allFrames) {
           options.all_frames = details.allFrames;
