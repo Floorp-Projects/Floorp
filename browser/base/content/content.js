@@ -473,6 +473,10 @@ var ClickEventHandler = {
 
   onAboutNetError: function (event, documentURI) {
     let elmId = event.originalTarget.getAttribute("id");
+    if (elmId == "returnButton") {
+      sendAsyncMessage("Browser:SSLErrorGoBack", {});
+      return;
+    }
     if (elmId != "errorTryAgain" || !/e=netOffline/.test(documentURI)) {
       return;
     }
