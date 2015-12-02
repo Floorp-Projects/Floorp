@@ -879,9 +879,7 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
     ContentEventHandler::GetFlatTextLengthInRange(
                            NodePosition(mRootContent, 0),
                            NodePosition(aContent, aInfo->mChangeStart),
-                           mRootContent,
-                           &offset,
-                           LINE_BREAK_TYPE_NATIVE);
+                           mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -918,9 +916,8 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
     mEndOfAddedTextCache.Clear();
     rv = ContentEventHandler::GetFlatTextLengthInRange(
                                 NodePosition(mRootContent, 0),
-                                NodePosition(aContainer, aStartIndex),
-                                mRootContent, &offset,
-                                LINE_BREAK_TYPE_NATIVE);
+                                NodePositionBefore(aContainer, aStartIndex),
+                                mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED((rv)))) {
       return;
     }
@@ -931,7 +928,7 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   // get offset at the end of the last added node
   uint32_t addingLength = 0;
   rv = ContentEventHandler::GetFlatTextLengthInRange(
-                              NodePosition(aContainer, aStartIndex),
+                              NodePositionBefore(aContainer, aStartIndex),
                               NodePosition(aContainer, aEndIndex),
                               mRootContent, &addingLength,
                               LINE_BREAK_TYPE_NATIVE);
@@ -995,12 +992,12 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   uint32_t offset = 0;
   nsresult rv = NS_OK;
   if (!mStartOfRemovingTextRangeCache.Match(containerNode, aIndexInContainer)) {
+    // At removing a child node of aContainer, we need the line break caused
+    // by open tag of aContainer.  Be careful when aIndexInContainer is 0.
     rv = ContentEventHandler::GetFlatTextLengthInRange(
                                 NodePosition(mRootContent, 0),
                                 NodePosition(containerNode, aIndexInContainer),
-                                mRootContent,
-                                &offset,
-                                LINE_BREAK_TYPE_NATIVE);
+                                mRootContent, &offset, LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mStartOfRemovingTextRangeCache.Clear();
       return;
@@ -1018,7 +1015,7 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   } else {
     uint32_t nodeLength = static_cast<int32_t>(aChild->GetChildCount());
     rv = ContentEventHandler::GetFlatTextLengthInRange(
-                                NodePosition(aChild, 0),
+                                NodePositionBefore(aChild, 0),
                                 NodePosition(aChild, nodeLength),
                                 mRootContent, &textLength,
                                 LINE_BREAK_TYPE_NATIVE, true);
@@ -1046,7 +1043,7 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
                                         const nsAttrValue* aNewValue)
 {
   mPreAttrChangeLength =
-    ContentEventHandler::GetNativeTextLengthBefore(aElement);
+    ContentEventHandler::GetNativeTextLengthBefore(aElement, mRootContent);
 }
 
 void
@@ -1067,17 +1064,16 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   }
 
   uint32_t postAttrChangeLength =
-    ContentEventHandler::GetNativeTextLengthBefore(aElement);
+    ContentEventHandler::GetNativeTextLengthBefore(aElement, mRootContent);
   if (postAttrChangeLength == mPreAttrChangeLength) {
     return;
   }
   uint32_t start;
   nsresult rv =
-    ContentEventHandler::GetFlatTextLengthInRange(NodePosition(mRootContent, 0),
-                                                  NodePosition(aElement, 0),
-                                                  mRootContent,
-                                                  &start,
-                                                  LINE_BREAK_TYPE_NATIVE);
+    ContentEventHandler::GetFlatTextLengthInRange(
+                           NodePosition(mRootContent, 0),
+                           NodePositionBefore(aElement, 0),
+                           mRootContent, &start, LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
