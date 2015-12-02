@@ -7,7 +7,7 @@
 #ifndef vm_TypedArrayCommon_h
 #define vm_TypedArrayCommon_h
 
-/* Utilities and common inline code for TypedArray and SharedTypedArray */
+/* Utilities and common inline code for TypedArray */
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
@@ -25,9 +25,6 @@
 #include "vm/TypedArrayObject.h"
 
 namespace js {
-
-// Definitions below are shared between TypedArrayObject and
-// SharedTypedArrayObject.
 
 // ValueIsLength happens not to be according to ES6, which mandates
 // the use of ToLength, which in turn includes ToNumber, ToInteger,
