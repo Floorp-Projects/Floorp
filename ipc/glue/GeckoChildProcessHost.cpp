@@ -545,7 +545,7 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
         nsString path;
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(appDir->GetPath(path)));
         aCmdLine.AppendLooseValue(UTF8ToWide("-appdir"));
-        std::wstring wpath = path.get();
+        std::wstring wpath(path.get());
         aCmdLine.AppendLooseValue(wpath);
 #else
         nsAutoCString path;

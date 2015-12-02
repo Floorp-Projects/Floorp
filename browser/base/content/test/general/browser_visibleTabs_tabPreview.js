@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test() {
-  // Ensure TabView has been initialized already. Otherwise it could
-  // activate at an unexpected time and show/hide tabs.
-  yield new Promise(resolve => TabView._initFrame(resolve));
-
   gPrefService.setBoolPref("browser.ctrlTab.previews", true);
 
   let [origTab] = gBrowser.visibleTabs;

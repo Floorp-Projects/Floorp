@@ -248,23 +248,6 @@ public:
     }
   }
 
-  void GetTarget(uint8_t** aRetTarget, int* aRetTargetLength) const
-  {
-    int length = mHeaders.Length();
-    *aRetTarget = nullptr;
-    *aRetTargetLength = 0;
-
-    for (int i = 0; i < length; ++i) {
-      if (mHeaders[i]->mId == ObexHeaderId::Target) {
-        uint8_t* ptr = mHeaders[i]->mData.get();
-        *aRetTarget = new uint8_t[mHeaders[i]->mDataLength];
-        memcpy(*aRetTarget, ptr, mHeaders[i]->mDataLength);
-        *aRetTargetLength = mHeaders[i]->mDataLength;
-        return;
-      }
-    }
-  }
-
   void GetAuthChallenge(nsAutoArrayPtr<uint8_t>& aRetData,
                         int* aRetDataLength) const
   {
@@ -343,16 +326,20 @@ public:
     return false;
   }
 
-  bool Has(ObexHeaderId aId) const
+  const ObexHeader* GetHeader(ObexHeaderId aId) const
   {
-    int length = mHeaders.Length();
-    for (int i = 0; i < length; ++i) {
+    for (int i = 0, length = mHeaders.Length(); i < length; ++i) {
       if (mHeaders[i]->mId == aId) {
-        return true;
+        return mHeaders[i];
       }
     }
 
-    return false;
+    return nullptr;
+  }
+
+  bool Has(ObexHeaderId aId) const
+  {
+    return !!GetHeader(aId);
   }
 
   void ClearHeaders()

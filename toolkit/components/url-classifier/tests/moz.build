@@ -14,12 +14,5 @@ TESTING_JS_MODULES += [
     'UrlClassifierTestUtils.jsm',
 ]
 
-#DEFINES['MOZILLA_INTERNAL_API'] = True
-
-# XXX Get this to work in libxul builds.
-## simple c++ tests (no xpcom)
-#CPP_UNIT_TESTS += [ \
-#    'TestUrlClassifierUtils', \
-#]
-#
-#SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['gtest']

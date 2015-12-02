@@ -40,6 +40,7 @@ EXTRA_JS_MODULES += [
     'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
+    'TabGroupsMigrator.jsm',
     'TransientPrefs.jsm',
     'WebappManager.jsm',
     'webrtcUI.jsm',

@@ -380,18 +380,6 @@ struct JSCodeSpec {
     uint32_t type() const { return JOF_TYPE(format); }
 };
 
-extern const JSCodeSpec js_CodeSpec[];
-extern const unsigned   js_NumCodeSpecs;
-extern const char       * const js_CodeName[];
-
-/* Shorthand for type from opcode. */
-
-static inline uint32_t
-JOF_OPTYPE(JSOp op)
-{
-    return JOF_TYPE(js_CodeSpec[op].format);
-}
-
 /* Silence unreferenced formal parameter warnings */
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -400,10 +388,22 @@ JOF_OPTYPE(JSOp op)
 
 namespace js {
 
+extern const JSCodeSpec CodeSpec[];
+extern const unsigned   NumCodeSpecs;
+extern const char       * const CodeName[];
+
+/* Shorthand for type from opcode. */
+
+static inline uint32_t
+JOF_OPTYPE(JSOp op)
+{
+    return JOF_TYPE(CodeSpec[op].format);
+}
+
 static inline bool
 IsJumpOpcode(JSOp op)
 {
-    uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
+    uint32_t type = JOF_TYPE(CodeSpec[op].format);
 
     /*
      * LABEL opcodes have type JOF_JUMP but are no-ops, don't treat them as
@@ -579,7 +579,7 @@ GetDecomposeLength(jsbytecode* pc, size_t len)
      * The last byte of a DECOMPOSE op stores the decomposed length.  This is a
      * constant: perhaps we should just hardcode values instead?
      */
-    MOZ_ASSERT(size_t(js_CodeSpec[*pc].length) == len);
+    MOZ_ASSERT(size_t(CodeSpec[*pc].length) == len);
     return (unsigned) pc[len - 1];
 }
 
@@ -589,8 +589,8 @@ GetBytecodeLength(jsbytecode* pc)
     JSOp op = (JSOp)*pc;
     MOZ_ASSERT(op < JSOP_LIMIT);
 
-    if (js_CodeSpec[op].length != -1)
-        return js_CodeSpec[op].length;
+    if (CodeSpec[op].length != -1)
+        return CodeSpec[op].length;
     return GetVariableBytecodeLength(pc);
 }
 
@@ -673,7 +673,7 @@ IsAliasedVarOp(JSOp op)
 inline bool
 IsGlobalOp(JSOp op)
 {
-    return js_CodeSpec[op].format & JOF_GNAME;
+    return CodeSpec[op].format & JOF_GNAME;
 }
 
 inline bool
@@ -685,14 +685,14 @@ IsEqualityOp(JSOp op)
 inline bool
 IsCheckStrictOp(JSOp op)
 {
-    return js_CodeSpec[op].format & JOF_CHECKSTRICT;
+    return CodeSpec[op].format & JOF_CHECKSTRICT;
 }
 
 #ifdef DEBUG
 inline bool
 IsCheckSloppyOp(JSOp op)
 {
-    return js_CodeSpec[op].format & JOF_CHECKSLOPPY;
+    return CodeSpec[op].format & JOF_CHECKSLOPPY;
 }
 #endif
 
@@ -754,7 +754,7 @@ IsSetElemPC(jsbytecode* pc)
 inline bool
 IsCallPC(jsbytecode* pc)
 {
-    return js_CodeSpec[*pc].format & JOF_INVOKE;
+    return CodeSpec[*pc].format & JOF_INVOKE;
 }
 
 inline bool
