@@ -2039,6 +2039,93 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
                                  JS::TrackedOutcome::ICGetPropStub_ArgumentsLength);
 }
 
+static void
+GenerateReadModuleNamespace(JSContext* cx, IonScript* ion, MacroAssembler& masm,
+                            IonCache::StubAttacher& attacher, ModuleNamespaceObject* ns,
+                            ModuleEnvironmentObject* env, Shape* shape, Register object,
+                            TypedOrValueRegister output, Label* failures)
+{
+    MOZ_ASSERT(ns);
+    MOZ_ASSERT(env);
+
+    // If we have multiple failure jumps but didn't get a label from the
+    // outside, make one ourselves.
+    Label failures_;
+    if (!failures)
+        failures = &failures_;
+
+    // Check for the specific namespace object.
+    attacher.branchNextStubOrLabel(masm, Assembler::NotEqual, object, ImmGCPtr(ns), failures);
+
+    // If we need a scratch register, use either an output register or the
+    // object register.
+    bool restoreScratch = false;
+    Register scratchReg = InvalidReg; // Quell compiler warning.
+
+    if (output.hasValue()) {
+        scratchReg = output.valueReg().scratchReg();
+    } else if (output.type() == MIRType_Double) {
+        masm.push(object);
+        scratchReg = object;
+        restoreScratch = true;
+    } else {
+        scratchReg = output.typedReg().gpr();
+    }
+
+    // Slot access.
+    Register envReg = scratchReg;
+    masm.movePtr(ImmGCPtr(env), envReg);
+    EmitLoadSlot(masm, &env->as<NativeObject>(), shape, envReg, output, scratchReg);
+
+    // Restore scratch on success.
+    if (restoreScratch)
+        masm.pop(object);
+
+    attacher.jumpRejoin(masm);
+
+    masm.bind(failures);
+    attacher.jumpNextStub(masm);
+}
+
+bool
+GetPropertyIC::tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                        HandleObject obj, HandleId id, void* returnAddr,
+                                        bool* emitted)
+{
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+    MOZ_ASSERT(outerScript->ionScript() == ion);
+
+    if (!obj->is<ModuleNamespaceObject>())
+        return true;
+
+    Rooted<ModuleNamespaceObject*> ns(cx, &obj->as<ModuleNamespaceObject>());
+
+    RootedModuleEnvironmentObject env(cx);
+    RootedShape shape(cx);
+    if (!ns->bindings().lookup(id, env.address(), shape.address()))
+        return true;
+
+    // Don't emit a stub until the target binding has been initialized.
+    if (env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+        return true;
+
+    *emitted = true;
+
+    MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
+
+    StubAttacher attacher(*this);
+
+    Label failures;
+    emitIdGuard(masm, id, &failures);
+    Label* maybeFailures = failures.used() ? &failures : nullptr;
+
+    GenerateReadModuleNamespace(cx, ion, masm, attacher, ns, env,
+                                shape, object(), output(), maybeFailures);
+    return linkAndAttachStub(cx, masm, attacher, ion, "module namespace",
+                             JS::TrackedOutcome::ICGetPropStub_ReadSlot);
+}
+
 static bool
 ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id, bool* nameOrSymbol)
 {
@@ -2084,6 +2171,9 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
             return false;
 
         void* returnAddr = GetReturnAddressToIonCode(cx);
+
+        if (!*emitted && !tryAttachModuleNamespace(cx, outerScript, ion, obj, id, returnAddr, emitted))
+            return false;
 
         if (!*emitted && !tryAttachProxy(cx, outerScript, ion, obj, id, returnAddr, emitted))
             return false;

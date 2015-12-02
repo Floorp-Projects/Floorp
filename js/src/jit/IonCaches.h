@@ -559,6 +559,9 @@ class GetPropertyIC : public IonCache
                                              IonScript* ion, HandleObject obj,
                                              HandleValue idval, bool* emitted);
 
+    bool tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                  HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
+
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
