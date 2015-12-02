@@ -4790,9 +4790,9 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   extraVisible.Inflate(appUnitsPerDevPixel, appUnitsPerDevPixel);
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
-  gfxContext* ctx = aCtx->ThebesContext();
-  gfxContextAutoDisableSubpixelAntialiasing disable(ctx,
+  DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     mDisableSubpixelAA);
+  gfxContext* ctx = aCtx->ThebesContext();
   gfxContextAutoSaveRestore save(ctx);
 
   gfxRect pixelVisible =
