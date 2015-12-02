@@ -70,6 +70,10 @@ EXPORTS.demuxer += [
     'binding/include/demuxer/TrackDemuxer.h',
 ]
 
+EXPORTS += [
+    'binding/include/mp4parse.h',
+]
+
 SOURCES += [
     'frameworks/av/media/libstagefright/foundation/hexdump.cpp',
     'frameworks/av/media/libstagefright/MetaData.cpp',
