@@ -6,6 +6,8 @@ import os
 import re
 import time
 
+from abc import ABCMeta
+
 import version_codes
 
 from adb import ADBDevice, ADBError
@@ -24,6 +26,99 @@ class ADBAndroid(ADBDevice):
        if adbdevice.process_exist("org.mozilla.fennec"):
            print "Fennec is running"
     """
+    __metaclass__ = ABCMeta
+
+    def __init__(self,
+                 device=None,
+                 adb='adb',
+                 adb_host=None,
+                 adb_port=None,
+                 test_root='',
+                 logger_name='adb',
+                 timeout=300,
+                 verbose=False,
+                 device_ready_retry_wait=20,
+                 device_ready_retry_attempts=3):
+        """Initializes the ADBAndroid object.
+
+        :param device: When a string is passed, it is interpreted as the
+            device serial number. This form is not compatible with
+            devices containing a ":" in the serial; in this case
+            ValueError will be raised.
+            When a dictionary is passed it must have one or both of
+            the keys "device_serial" and "usb". This is compatible
+            with the dictionaries in the list returned by
+            ADBHost.devices(). If the value of device_serial is a
+            valid serial not containing a ":" it will be used to
+            identify the device, otherwise the value of the usb key,
+            prefixed with "usb:" is used.
+            If None is passed and there is exactly one device attached
+            to the host, that device is used. If there is more than one
+            device attached, ValueError is raised. If no device is
+            attached the constructor will block until a device is
+            attached or the timeout is reached.
+        :type device: dict, str or None
+        :param adb_host: host of the adb server to connect to.
+        :type adb_host: str or None
+        :param adb_port: port of the adb server to connect to.
+        :type adb_port: integer or None
+        :param str logger_name: logging logger name. Defaults to 'adb'.
+        :param integer device_ready_retry_wait: number of seconds to wait
+            between attempts to check if the device is ready after a
+            reboot.
+        :param integer device_ready_retry_attempts: number of attempts when
+            checking if a device is ready.
+
+        :raises: * ADBError
+                 * ADBTimeoutError
+                 * ValueError
+        """
+        ADBDevice.__init__(self, device=device, adb=adb,
+                           adb_host=adb_host, adb_port=adb_port,
+                           logger_name=logger_name, timeout=timeout,
+                           verbose=verbose,
+                           device_ready_retry_wait=device_ready_retry_wait,
+                           device_ready_retry_attempts=device_ready_retry_attempts)
+        # https://source.android.com/devices/tech/security/selinux/index.html
+        # setenforce
+        # usage:  setenforce [ Enforcing | Permissive | 1 | 0 ]
+        # getenforce returns either Enforcing or Permissive
+
+        try:
+            self.selinux = True
+            if self.shell_output('getenforce', timeout=timeout) != 'Permissive':
+                self._logger.info('Setting SELinux Permissive Mode')
+                self.shell_output("setenforce Permissive", timeout=timeout, root=True)
+        except ADBError:
+            self.selinux = False
+
+    def reboot(self, timeout=None):
+        """Reboots the device.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError
+
+        reboot() reboots the device, issues an adb wait-for-device in order to
+        wait for the device to complete rebooting, then calls is_device_ready()
+        to determine if the device has completed booting.
+
+        If the device supports running adbd as root, adbd will be
+        restarted running as root. Then, if the device supports
+        SELinux, setenforce Permissive will be called to change
+        SELinux to permissive. This must be done after adbd is
+        restarted in order for the SELinux Permissive setting to
+        persist.
+
+        """
+        ready = ADBDevice.reboot(self, timeout=timeout)
+        self._check_adb_root(timeout=timeout)
+        return ready
 
     # Informational methods
 
@@ -99,10 +194,15 @@ class ADBAndroid(ADBDevice):
                     failure = "Device state: %s" % state
                     success = False
                 else:
-                    if self.is_dir(ready_path, timeout=timeout):
-                        self.rmdir(ready_path, timeout=timeout)
-                    self.mkdir(ready_path, timeout=timeout)
-                    self.rmdir(ready_path, timeout=timeout)
+                    if (self.selinux and
+                        self.shell_output('getenforce',
+                                          timeout=timeout) != 'Permissive'):
+                        self._logger.info('Setting SELinux Permissive Mode')
+                        self.shell_output("setenforce Permissive", timeout=timeout, root=True)
+                    if self.is_dir(ready_path, timeout=timeout, root=True):
+                        self.rmdir(ready_path, timeout=timeout, root=True)
+                    self.mkdir(ready_path, timeout=timeout, root=True)
+                    self.rmdir(ready_path, timeout=timeout, root=True)
                     # Invoke the pm list commands to see if it is up and
                     # running.
                     for pm_list_cmd in pm_list_commands:
