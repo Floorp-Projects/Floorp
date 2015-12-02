@@ -25,12 +25,25 @@
     var p = navigator.serviceWorker.register("install_event_worker.js", { scope: "./install_event" });
     return p.then(function(swr) {
       ok(reg.scope === swr.scope, "Scope for registrations should match.");
-      return new Promise(function(resolve, reject) {
+      var update_found_promise = new Promise(function(resolve, reject) {
         swr.addEventListener('updatefound', function(e) {
           ok(true, "Received onupdatefound");
           resolve();
         });
       });
+
+      var worker_activating = new Promise(function(res, reject) {
+        ok(swr.installing instanceof ServiceWorker, "There should be an installing worker if promise resolves.");
+        ok(swr.installing.state == "installing", "Installing worker's state should be 'installing'");
+        swr.installing.onstatechange = function(e) {
+          if (e.target.state == "activating") {
+            e.target.onstatechange = null;
+            res();
+          }
+        }
+      });
+
+      return Promise.all([update_found_promise, worker_activating]);
     }, function(e) {
       ok(false, "Unexpected Error in nextRegister! " + e);
     });
