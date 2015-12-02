@@ -17,7 +17,6 @@ function test() {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
-    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gTarget = gDebugger.gTarget;
     gThreadClient = gDebugger.gThreadClient;
     gResumeButton = gDebugger.document.getElementById("resume");

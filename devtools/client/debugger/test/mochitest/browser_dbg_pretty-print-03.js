@@ -7,43 +7,27 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-var gTab, gPanel, gDebugger;
-
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
 
-    waitForSourceShown(gPanel, "code_ugly.js")
-      .then(runCodeAndPause)
-      .then(() => {
-        const sourceShown = waitForSourceShown(gPanel, "code_ugly.js");
-        const caretUpdated = waitForCaretUpdated(gPanel, 7);
-        const finished = promise.all([sourceShown, caretUpdated]);
-        clickPrettyPrintButton();
-        return finished;
-      })
-      .then(resumeDebuggerThenCloseAndFinish.bind(null, gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-      });
+    Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, "code_ugly.js");
+
+      const paused = waitForPause(gDebugger.gThreadClient);
+      callInTab(gTab, "foo");
+      yield paused;
+
+      const finished = promise.all([
+        waitForSourceShown(gPanel, "code_ugly.js"),
+        waitForCaretUpdated(gPanel, 7)
+      ]);
+      gDebugger.document.getElementById("pretty-print").click();
+      yield finished;
+
+      resumeDebuggerThenCloseAndFinish(gPanel);
+    });
   });
 }
-
-function runCodeAndPause() {
-  const deferred = promise.defer();
-  once(gDebugger.gThreadClient, "paused").then(deferred.resolve);
-  callInTab(gTab, "foo");
-  return deferred.promise;
-}
-
-function clickPrettyPrintButton() {
-  gDebugger.document.getElementById("pretty-print").click();
-}
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gPanel = null;
-  gDebugger = null;
-});

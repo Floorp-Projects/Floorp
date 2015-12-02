@@ -8,48 +8,29 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-var gTab, gPanel, gDebugger;
-var gEditor, gContextMenu;
-
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
 
-    waitForSourceShown(gPanel, "code_ugly.js")
-      .then(() => {
-        const finished = waitForSourceShown(gPanel, "code_ugly.js");
-        selectContextMenuItem();
-        return finished;
-      })
-      .then(testSourceIsPretty)
-      .then(closeDebuggerAndFinish.bind(null, gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
+    Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, "code_ugly.js");
+
+      const finished = waitForSourceShown(gPanel, "code_ugly.js");
+      once(gContextMenu, "popupshown").then(() => {
+        const menuItem = gDebugger.document.getElementById("se-dbg-cMenu-prettyPrint");
+        menuItem.click();
       });
+      gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
+      yield finished;
+
+      ok(gEditor.getText().includes("\n  "),
+         "The source should be pretty printed.")
+
+      closeDebuggerAndFinish(gPanel);
+    });
   });
 }
-
-function selectContextMenuItem() {
-  once(gContextMenu, "popupshown").then(() => {
-    const menuItem = gDebugger.document.getElementById("se-dbg-cMenu-prettyPrint");
-    menuItem.click();
-  });
-  gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
-}
-
-function testSourceIsPretty() {
-  ok(gEditor.getText().includes("\n  "),
-     "The source should be pretty printed.")
-}
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gPanel = null;
-  gDebugger = null;
-  gEditor = null;
-  gContextMenu = null;
-});

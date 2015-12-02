@@ -290,9 +290,6 @@ public:
   virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
                                           int16_t aEndOffset, bool* aRetval) override;
 
-  NS_IMETHOD GetSelectionCaretsVisibility(bool* aOutVisibility) override;
-  NS_IMETHOD SetSelectionCaretsVisibility(bool aVisibility) override;
-
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
   NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE

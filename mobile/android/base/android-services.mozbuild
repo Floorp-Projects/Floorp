@@ -763,7 +763,7 @@ sync_thirdparty_java_files = [
     'org/mozilla/apache/commons/codec/StringEncoderComparator.java',
 ]
 
-sync_java_files = [
+sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozilla/gecko/' + x for x in [
     'background/BackgroundService.java',
     'background/bagheera/BagheeraClient.java',
     'background/bagheera/BagheeraRequestDelegate.java',
@@ -1169,8 +1169,8 @@ sync_java_files = [
     'tokenserver/TokenServerClientDelegate.java',
     'tokenserver/TokenServerException.java',
     'tokenserver/TokenServerToken.java',
-]
-reading_list_service_java_files = [
+]]
+reading_list_service_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozilla/gecko/' + x for x in [
     'reading/ClientMetadata.java',
     'reading/ClientReadingListRecord.java',
     'reading/FetchSpec.java',
@@ -1195,4 +1195,4 @@ reading_list_service_java_files = [
     'reading/ReadingListSyncService.java',
     'reading/ReadingListWipeDelegate.java',
     'reading/ServerReadingListRecord.java',
-]
+]]
