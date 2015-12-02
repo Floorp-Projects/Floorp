@@ -44,6 +44,6 @@ function clickPageAction(extension, win = window) {
   let pageActionId = makeWidgetId(extension.id) + "-page-action";
   let elem = win.document.getElementById(pageActionId);
 
-  EventUtils.synthesizeMouseAtCenter(elem, {}, win);
+  EventUtils.synthesizeMouse(elem, 8, 8, {}, win);
   return new Promise(SimpleTest.executeSoon);
 }

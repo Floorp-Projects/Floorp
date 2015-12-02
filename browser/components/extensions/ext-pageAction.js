@@ -20,8 +20,6 @@ function PageAction(options, extension)
   this.extension = extension;
   this.id = makeWidgetId(extension.id) + "-page-action";
 
-  this.tabManager = TabManager.for(extension);
-
   let title = extension.localize(options.default_title || "");
   let popup = extension.localize(options.default_popup || "");
   if (popup) {
@@ -140,8 +138,6 @@ PageAction.prototype = {
   handleClick(window) {
     let tab = window.gBrowser.selectedTab;
     let popup = this.tabContext.get(tab).popup;
-
-    this.tabManager.addActiveTabPermission(tab);
 
     if (popup) {
       openPanel(this.getButton(window), popup, this.extension);
