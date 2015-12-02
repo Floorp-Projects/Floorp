@@ -35,8 +35,6 @@
 
 using namespace js::jit;
 
-uint64_t ExecutableAllocator::rngSeed;
-
 size_t
 ExecutableAllocator::determinePageSize()
 {
@@ -59,7 +57,6 @@ ExecutableAllocator::computeRandomAllocationAddress()
      * bits of randomness in our selection.
      * x64: [2GiB, 4TiB), with 25 bits of randomness.
      */
-    static const unsigned chunkBits = 16;
 #ifdef JS_CPU_X64
     static const uintptr_t base = 0x0000000080000000;
     static const uintptr_t mask = 0x000003ffffff0000;
@@ -69,7 +66,14 @@ ExecutableAllocator::computeRandomAllocationAddress()
 #else
 # error "Unsupported architecture"
 #endif
-    uint64_t rand = random_next(&rngSeed, 32) << chunkBits;
+
+    if (randomNumberGenerator.isNothing()) {
+        mozilla::Array<uint64_t, 2> seed;
+        js::GenerateXorShift128PlusSeed(seed);
+        randomNumberGenerator.emplace(seed[0], seed[1]);
+    }
+
+    uint64_t rand = randomNumberGenerator.ref().next();
     return (void*) (base | (rand & mask));
 }
 
