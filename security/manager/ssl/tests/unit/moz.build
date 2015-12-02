@@ -16,6 +16,7 @@ TEST_DIRS += [
     'test_cert_trust',
     'test_cert_version',
     'test_ev_certs',
+    'test_getchain',
     'test_intermediate_basic_usage_constraints',
     'test_keysize',
     'test_keysize_ev',

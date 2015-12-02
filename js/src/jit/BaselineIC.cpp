@@ -1749,7 +1749,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "GetElem(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "GetElem(%s)", CodeName[op]);
 
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
@@ -2727,7 +2727,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
+    FallbackICSpew(cx, stub, "SetElem(%s)", CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(op == JSOP_SETELEM ||
                op == JSOP_STRICTSETELEM ||
@@ -4156,7 +4156,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
+    FallbackICSpew(cx, stub, "GetName(%s)", CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(op == JSOP_GETNAME || op == JSOP_GETGNAME);
 
@@ -4315,7 +4315,7 @@ DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stu
 {
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "BindName(%s)", js_CodeName[JSOp(*pc)]);
+    FallbackICSpew(cx, stub, "BindName(%s)", CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
 
@@ -4363,7 +4363,7 @@ DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame, ICGetIntrinsic_Fallb
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "GetIntrinsic(%s)", js_CodeName[JSOp(*pc)]);
+    FallbackICSpew(cx, stub, "GetIntrinsic(%s)", CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(op == JSOP_GETINTRINSIC);
 
@@ -4690,7 +4690,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "SetProp(%s)", CodeName[op]);
 
     MOZ_ASSERT(op == JSOP_SETPROP ||
                op == JSOP_STRICTSETPROP ||
@@ -6083,7 +6083,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
-    FallbackICSpew(cx, stub, "Call(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "Call(%s)", CodeName[op]);
 
     MOZ_ASSERT(argc == GET_ARGC(pc));
     bool constructing = (op == JSOP_NEW);
@@ -6189,7 +6189,7 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
     jsbytecode* pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     bool constructing = (op == JSOP_SPREADNEW);
-    FallbackICSpew(cx, stub, "SpreadCall(%s)", js_CodeName[op]);
+    FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName[op]);
 
     // Ensure vp array is rooted - we may GC in here.
     AutoArrayRooter vpRoot(cx, 3 + constructing, vp);

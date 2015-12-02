@@ -1392,7 +1392,7 @@ JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
                 jsbytecode* pc = entry[i].tree->script()->offsetToPC(curBc);
 #ifdef JS_JITSPEW
                 JSOp op = JSOp(*pc);
-                JitSpewCont(JitSpew_Profiling, "%s ", js_CodeName[op]);
+                JitSpewCont(JitSpew_Profiling, "%s ", CodeName[op]);
 #endif
                 curBc += GetBytecodeLength(pc);
             }

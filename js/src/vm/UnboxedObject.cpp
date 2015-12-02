@@ -1919,7 +1919,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
         return true;
 #endif
     } else {
-        if (jit::js_JitOptions.disableUnboxedObjects)
+        if (jit::JitOptions.disableUnboxedObjects)
             return true;
     }
 

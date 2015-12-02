@@ -586,7 +586,7 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32* assertion)
     MIRType type = assertion->input()->type();
     DebugOnly<bool> checkIsFloat32 = assertion->mustBeFloat32();
 
-    if (type != MIRType_Value && !js_JitOptions.eagerCompilation) {
+    if (type != MIRType_Value && !JitOptions.eagerCompilation) {
         MOZ_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
         MOZ_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }

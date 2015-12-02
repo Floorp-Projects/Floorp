@@ -15,7 +15,7 @@ if here not in sys.path:
 
 from automation import Automation
 from b2gautomation import B2GRemoteAutomation
-from b2g_desktop import run_desktop_reftests
+from runreftestmulet import run_test_harness as run_mulet
 from remotereftest import RemoteReftestResolver, ReftestServer
 from runreftest import RefTest
 import reftestcommandline
@@ -430,8 +430,8 @@ def main():
     parser = reftestcommandline.B2GArgumentParser()
     options = parser.parse_args()
 
-    if options.desktop or options.mulet:
-        return run_desktop_reftests(parser, options)
+    if options.mulet:
+        return run_mulet(parser, options)
     return run_remote_reftests(parser, options)
 
 

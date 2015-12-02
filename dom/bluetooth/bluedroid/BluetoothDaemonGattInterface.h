@@ -676,6 +676,8 @@ protected:
   class ClientScanResultInitOp;
   class ServerConnectionInitOp;
   class ServerRequestWriteInitOp;
+  class ServerCharacteristicAddedInitOp;
+  class ServerDescriptorAddedInitOp;
 
   void ClientRegisterNtf(const DaemonSocketPDUHeader& aHeader,
                                DaemonSocketPDU& aPDU);

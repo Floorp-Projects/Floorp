@@ -23,6 +23,7 @@ task:
       B2G_DEBUG: 0
       TARGET: 'nexus-4-kk'
       DEBUG: 0
+      B2G_UPDATE_CHANNEL: '{{b2g_update_channel}}'
     command:
       - >
         checkout-gecko workspace &&

@@ -1721,7 +1721,7 @@ MacroAssembler::convertValueToFloatingPoint(JSContext* cx, const Value& v, Float
         return true;
     }
 
-    MOZ_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject() || v.isSymbol());
     jump(fail);
     return true;
 }
@@ -1944,7 +1944,7 @@ MacroAssembler::convertValueToInt(JSContext* cx, const Value& v, Register output
         return true;
     }
 
-    MOZ_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject() || v.isSymbol());
 
     jump(fail);
     return true;

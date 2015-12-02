@@ -503,7 +503,7 @@ template <typename TYPESET>
 TypeScript::BytecodeTypes(JSScript* script, jsbytecode* pc, uint32_t* bytecodeMap,
                           uint32_t* hint, TYPESET* typeArray)
 {
-    MOZ_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
+    MOZ_ASSERT(CodeSpec[*pc].format & JOF_TYPESET);
     uint32_t offset = script->pcToOffset(pc);
 
     // See if this pc is the next typeset opcode after the last one looked up.

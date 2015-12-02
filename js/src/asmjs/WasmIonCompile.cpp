@@ -2936,7 +2936,7 @@ wasm::CompileFunction(CompileTask* task)
     MIRGraph graph(&results.alloc());
     CompileInfo compileInfo(func.numLocals());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
-                     js_IonOptimizations.get(Optimization_AsmJS),
+                     IonOptimizations.get(Optimization_AsmJS),
                      args.usesSignalHandlersForOOB);
 
     // Build MIR graph
