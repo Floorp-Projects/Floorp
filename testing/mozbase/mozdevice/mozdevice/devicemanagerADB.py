@@ -23,8 +23,9 @@ class DeviceManagerADB(DeviceManager):
     port.
     """
 
-    _haveRootShell = False
-    _haveSu = False
+    _haveRootShell = None
+    _haveSu = None
+    _suModifier = None
     _useZip = False
     _logcatNeedsRoot = False
     _pollingInterval = 0.01
@@ -101,17 +102,22 @@ class DeviceManagerADB(DeviceManager):
         # always. :(
 
         # If requested to run as root, check that we can actually do that
-        if root and not self._haveRootShell and not self._haveSu:
-            raise DMError("Shell command '%s' requested to run as root but root "
-                          "is not available on this device. Root your device or "
-                          "refactor the test/harness to not require root." %
-                          self._escapedCommandLine(cmd))
+        if root:
+            if self._haveRootShell is None and self._haveSu is None:
+                self._checkForRoot()
+            if not self._haveRootShell and not self._haveSu:
+                raise DMError(
+                    "Shell command '%s' requested to run as root but root "
+                    "is not available on this device. Root your device or "
+                    "refactor the test/harness to not require root." %
+                    self._escapedCommandLine(cmd))
 
         # Getting the return code is more complex than you'd think because adb
         # doesn't actually return the return code from a process, so we have to
         # capture the output to get it
-        if root and not self._haveRootShell:
-            cmdline = "su -c \"%s\"" % self._escapedCommandLine(cmd)
+        if root and self._haveSu:
+            cmdline = "su %s \"%s\"" % (self._suModifier,
+                                        self._escapedCommandLine(cmd))
         else:
             cmdline = self._escapedCommandLine(cmd)
         cmdline += "; echo $?"
@@ -662,6 +668,13 @@ class DeviceManagerADB(DeviceManager):
             raise DMError("unable to connect to device")
 
     def _checkForRoot(self):
+        self._haveRootShell = False
+        self._haveSu = False
+        # If requested to attempt to run adbd as root, do so before
+        # checking whether adbs is running as root.
+        if self._runAdbAsRoot:
+            self._adb_root()
+
         # Check whether we _are_ root by default (some development boards work
         # this way, this is also the result of some relatively rare rooting
         # techniques)
@@ -673,22 +686,30 @@ class DeviceManagerADB(DeviceManager):
 
         # if root shell is not available, check if 'su' can be used to gain
         # root
-        proc = self._runCmd(["shell", "su", "-c", "id"], timeout=self.short_timeout)
+        def su_id(su_modifier, timeout):
+            proc = self._runCmd(["shell", "su", su_modifier, "id"],
+                                timeout=timeout)
 
-        # wait for response for maximum of 15 seconds, in case su prompts for a
-        # password or triggers the Android SuperUser prompt
-        start_time = time.time()
-        retcode = None
-        while (time.time() - start_time) <= 15 and retcode is None:
-            retcode = proc.poll()
-        if retcode is None: # still not terminated, kill
-            proc.kill()
+            # wait for response for maximum of 15 seconds, in case su
+            # prompts for a password or triggers the Android SuperUser
+            # prompt
+            start_time = time.time()
+            retcode = None
+            while (time.time() - start_time) <= 15 and retcode is None:
+                retcode = proc.poll()
+            if retcode is None: # still not terminated, kill
+                proc.kill()
 
-        if proc.output and 'uid=0(root)' in proc.output[0]:
+            if proc.output and 'uid=0(root)' in proc.output[0]:
+                return True
+            return False
+
+        if su_id('0', self.short_timeout):
             self._haveSu = True
-
-        if self._runAdbAsRoot:
-            self._adb_root()
+            self._suModifier = '0'
+        elif su_id('-c', self.short_timeout):
+            self._haveSu = True
+            self._suModifier = '-c'
 
     def _isUnzipAvailable(self):
         data = self._runCmd(["shell", "unzip"]).output
