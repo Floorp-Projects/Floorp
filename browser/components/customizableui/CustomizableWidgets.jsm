@@ -251,12 +251,6 @@ const CustomizableWidgets = [
         tabsFromOtherComputers.setAttribute("hidden", true);
       }
 
-      if (PlacesUIUtils.shouldEnableTabsFromOtherComputersMenuitem()) {
-        tabsFromOtherComputers.removeAttribute("disabled");
-      } else {
-        tabsFromOtherComputers.setAttribute("disabled", true);
-      }
-
       let utils = RecentlyClosedTabsAndWindowsMenuUtils;
       let tabsFragment = utils.getTabsFragment(doc.defaultView, "toolbarbutton", true,
                                                "menuRestoreAllTabsSubview.label");

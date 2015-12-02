@@ -86,7 +86,7 @@
                        command="Tools:Sanitize"/>
         <toolbarbutton id="sync-tabs-menuitem2"
                        class="syncTabsMenuItem subviewbutton"
-                       label="&syncTabsMenu2.label;"
+                       label="&syncTabsMenu3.label;"
                        oncommand="BrowserOpenSyncTabs();"
                        disabled="true"/>
         <toolbarbutton id="appMenuRestoreLastSession"
