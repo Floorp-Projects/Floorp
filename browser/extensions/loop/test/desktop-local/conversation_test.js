@@ -57,6 +57,9 @@ describe("loop.conversation", function() {
       }),
       GetSelectedTabMetadata: function() {
         return {};
+      },
+      GetConversationWindowData: function() {
+        return {};
       }
     });
 

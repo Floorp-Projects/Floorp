@@ -19,6 +19,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
  *
  * Data is collected by "Performance Group". Typically, a Performance Group
  * is an add-on, or a frame, or the internals of the application.
+ *
+ * Generally, if you have the choice between PerformanceStats and PerformanceWatcher,
+ * you should favor PerformanceWatcher.
  */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);

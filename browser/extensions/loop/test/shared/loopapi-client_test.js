@@ -109,6 +109,50 @@ describe("loopapi-client", function() {
     });
   });
 
+  describe("loop.storeRequest", function() {
+    afterEach(function() {
+      loop.storedRequests = {};
+    });
+
+    it("should the result of a request", function() {
+      loop.storeRequest(["GetLoopPref"], true);
+
+      expect(loop.storedRequests).to.deep.equal({
+        "GetLoopPref": true
+      });
+    });
+
+    it("should the result of a request with multiple params", function() {
+      loop.storeRequest(["GetLoopPref", "enabled", "or", "not", "well",
+        "perhaps", true, 2], true);
+
+      expect(loop.storedRequests).to.deep.equal({
+        "GetLoopPref|enabled|or|not|well|perhaps|true|2": true
+      });
+    });
+  });
+
+  describe("loop.getStoredRequest", function() {
+    afterEach(function() {
+      loop.storedRequests = {};
+    });
+
+    it("should retrieve a result", function() {
+      loop.storedRequests["GetLoopPref"] = true;
+
+      expect(loop.getStoredRequest(["GetLoopPref"])).to.eql(true);
+    });
+
+    it("should return log and return null for invalid requests", function() {
+      sandbox.stub(console, "error");
+
+      expect(loop.getStoredRequest(["SomethingNeverStored"])).to.eql(null);
+      sinon.assert.calledOnce(console.error);
+      sinon.assert.calledWithExactly(console.error,
+        "This request has not been stored!", ["SomethingNeverStored"]);
+    });
+  });
+
   describe("loop.requestMulti", function() {
     it("should send a batch of messages", function() {
       var promise = loop.requestMulti(

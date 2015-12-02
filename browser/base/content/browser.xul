@@ -91,15 +91,6 @@
       <menuitem id="context_unpinTab" label="&unpinTab.label;" hidden="true"
                 accesskey="&unpinTab.accesskey;"
                 oncommand="gBrowser.unpinTab(TabContextMenu.contextTab);"/>
-      <menu id="context_tabViewMenu" label="&moveToGroup.label;"
-            accesskey="&moveToGroup.accesskey;">
-        <menupopup id="context_tabViewMenuPopup"
-                   onpopupshowing="if (event.target == this) TabView.moveToGroupPopupShowing(event);">
-          <menuseparator id="context_tabViewNamedGroups" hidden="true"/>
-          <menuitem id="context_tabViewNewGroup" label="&moveToNewGroup.label;"
-                    oncommand="TabView.moveTabTo(TabContextMenu.contextTab, null);"/>
-        </menupopup>
-      </menu>
       <menuitem id="context_openTabInWindow" label="&moveToNewWindow.label;"
                 accesskey="&moveToNewWindow.accesskey;"
                 tbattr="tabbrowser-multiple"
@@ -590,12 +581,6 @@
                      removable="false">
         <menupopup id="alltabs-popup"
                    position="after_end">
-          <menuitem id="menu_tabview"
-                    class="menuitem-iconic"
-                    key="key_tabview"
-                    label="&viewTabGroups.label;"
-                    command="Browser:ToggleTabView"
-                    observes="tabviewGroupsNumber"/>
           <menuitem id="alltabs_undoCloseTab"
                     class="menuitem-iconic"
                     key="key_undoCloseTab"
@@ -1058,12 +1043,6 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&syncToolbarButton.label;"
                      oncommand="gSyncUI.handleToolbarButton()"/>
-
-      <toolbarbutton id="tabview-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabGroupsButton.label;"
-                     command="Browser:ToggleTabView"
-                     tooltip="dynamic-shortcut-tooltip"
-                     observes="tabviewGroupsNumber"/>
     </toolbarpalette>
   </toolbox>
 
