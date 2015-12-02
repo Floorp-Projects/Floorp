@@ -11,6 +11,7 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/UniquePtr.h"
 #include "nsRect.h"
 #include "PlatformDecoderModule.h"
 #include "TimeUnits.h"
@@ -118,12 +119,12 @@ public:
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
     // 2x2 subsampled. Have the data pointers of each frame point to the
     // first plane, they'll always be zero'd memory anyway.
-    nsAutoArrayPtr<uint8_t> frame(new uint8_t[mFrameWidth * mFrameHeight]);
-    memset(frame, 0, mFrameWidth * mFrameHeight);
+    auto frame = MakeUnique<uint8_t[]>(mFrameWidth * mFrameHeight);
+    memset(frame.get(), 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 
     // Y plane.
-    buffer.mPlanes[0].mData = frame;
+    buffer.mPlanes[0].mData = frame.get();
     buffer.mPlanes[0].mStride = mFrameWidth;
     buffer.mPlanes[0].mHeight = mFrameHeight;
     buffer.mPlanes[0].mWidth = mFrameWidth;
@@ -131,7 +132,7 @@ public:
     buffer.mPlanes[0].mSkip = 0;
 
     // Cb plane.
-    buffer.mPlanes[1].mData = frame;
+    buffer.mPlanes[1].mData = frame.get();
     buffer.mPlanes[1].mStride = mFrameWidth / 2;
     buffer.mPlanes[1].mHeight = mFrameHeight / 2;
     buffer.mPlanes[1].mWidth = mFrameWidth / 2;
@@ -139,7 +140,7 @@ public:
     buffer.mPlanes[1].mSkip = 0;
 
     // Cr plane.
-    buffer.mPlanes[2].mData = frame;
+    buffer.mPlanes[2].mData = frame.get();
     buffer.mPlanes[2].mStride = mFrameWidth / 2;
     buffer.mPlanes[2].mHeight = mFrameHeight / 2;
     buffer.mPlanes[2].mWidth = mFrameWidth / 2;

@@ -127,7 +127,7 @@ TrackRunBox::fillSampleTable()
     return 0;
   }
   uint32_t len = frames.Length();
-  sample_info_table = new tbl[len];
+  sample_info_table = MakeUnique<tbl[]>(len);
   // Create sample table according to 14496-12 8.8.8.2.
   for (uint32_t i = 0; i < len; i++) {
     // Sample size.

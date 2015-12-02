@@ -69,8 +69,8 @@ size_t DynamicsCompressor::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSize
         }
     }
 
-    amount += m_sourceChannels.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_destinationChannels.SizeOfExcludingThis(aMallocSizeOf);
+    amount += aMallocSizeOf(m_sourceChannels.get());
+    amount += aMallocSizeOf(m_destinationChannels.get());
     amount += m_compressor.sizeOfExcludingThis(aMallocSizeOf);
     return amount;
 }
@@ -308,8 +308,8 @@ void DynamicsCompressor::setNumberOfChannels(unsigned numberOfChannels)
         m_postFilterPacks.AppendElement(new ZeroPoleFilterPack4());
     }
 
-    m_sourceChannels = new const float* [numberOfChannels];
-    m_destinationChannels = new float* [numberOfChannels];
+    m_sourceChannels = mozilla::MakeUnique<const float* []>(numberOfChannels);
+    m_destinationChannels = mozilla::MakeUnique<float* []>(numberOfChannels);
 
     m_compressor.setNumberOfChannels(numberOfChannels);
     m_numberOfChannels = numberOfChannels;

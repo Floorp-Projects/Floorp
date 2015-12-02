@@ -68,7 +68,7 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
   data.mYSize = gfx::IntSize(aSize.width, aSize.height);
   data.mYStride = (int32_t) (aSize.width * lumaBpp / 8.0);
   data.mCbCrStride = (int32_t) (aSize.width * chromaBpp / 8.0);
-  data.mCbChannel = frame.rwget() + aSize.height * data.mYStride;
+  data.mCbChannel = frame.get() + aSize.height * data.mYStride;
   data.mCrChannel = data.mCbChannel + aSize.height * data.mCbCrStride / 2;
   data.mCbCrSize = gfx::IntSize(aSize.width / 2, aSize.height / 2);
   data.mPicX = 0;

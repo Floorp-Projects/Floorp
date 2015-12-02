@@ -35,6 +35,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class AudioBlock;
@@ -115,8 +116,8 @@ protected:
     nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_preFilterPacks;
     nsTArray<nsAutoPtr<ZeroPoleFilterPack4> > m_postFilterPacks;
 
-    nsAutoArrayPtr<const float*> m_sourceChannels;
-    nsAutoArrayPtr<float*> m_destinationChannels;
+    mozilla::UniquePtr<const float*[]> m_sourceChannels;
+    mozilla::UniquePtr<float*[]> m_destinationChannels;
 
     void setEmphasisStageParameters(unsigned stageIndex, float gain, float normalizedFrequency /* 0 -> 1 */);
     void setEmphasisParameters(float gain, float anchorFreq, float filterStageRatio);
