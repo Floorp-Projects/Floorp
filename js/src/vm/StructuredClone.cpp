@@ -247,7 +247,6 @@ struct JSStructuredCloneReader {
     bool readTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp,
                         bool v1Read = false);
     bool readDataView(uint32_t byteLength, MutableHandleValue vp);
-    bool readSharedTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
     bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
     JSObject* readSavedFrame(uint32_t principalsTag);
@@ -307,7 +306,6 @@ struct JSStructuredCloneWriter {
     bool writeTypedArray(HandleObject obj);
     bool writeDataView(HandleObject obj);
     bool writeSharedArrayBuffer(HandleObject obj);
-    bool writeSharedTypedArray(HandleObject obj);
     bool startObject(HandleObject obj, bool* backref);
     bool startWrite(HandleValue v);
     bool traverseObject(HandleObject obj);
@@ -918,26 +916,6 @@ JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
 }
 
 bool
-JSStructuredCloneWriter::writeSharedTypedArray(HandleObject obj)
-{
-    Rooted<SharedTypedArrayObject*> tarr(context(), &CheckedUnwrap(obj)->as<SharedTypedArrayObject>());
-    JSAutoCompartment ac(context(), tarr);
-
-    if (!out.writePair(SCTAG_SHARED_TYPED_ARRAY_OBJECT, tarr->length()))
-        return false;
-    uint64_t type = tarr->type();
-    if (!out.write(type))
-        return false;
-
-    // Write out the SharedArrayBuffer tag and contents.
-    RootedValue val(context(), SharedTypedArrayObject::bufferValue(tarr));
-    if (!startWrite(val))
-        return false;
-
-    return out.write(tarr->byteOffset());
-}
-
-bool
 JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref)
 {
     /* Handle cycles in the object graph. */
@@ -1191,8 +1169,6 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return writeDataView(obj);
         } else if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
             return writeArrayBuffer(obj);
-        } else if (JS_IsSharedTypedArrayObject(obj)) {
-            return writeSharedTypedArray(obj);
         } else if (JS_IsSharedArrayBufferObject(obj)) {
             return writeSharedArrayBuffer(obj);
         } else if (cls == ESClass_Object) {
@@ -1595,74 +1571,6 @@ JSStructuredCloneReader::readDataView(uint32_t byteLength, MutableHandleValue vp
 }
 
 bool
-JSStructuredCloneReader::readSharedTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp)
-{
-    if (arrayType > Scalar::Uint8Clamped) {
-        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
-                             JSMSG_SC_BAD_SERIALIZED_DATA, "unhandled typed array element type");
-        return false;
-    }
-
-    // Push a placeholder onto the allObjs list to stand in for the typed array.
-    uint32_t placeholderIndex = allObjs.length();
-    Value dummy = UndefinedValue();
-    if (!allObjs.append(dummy))
-        return false;
-
-    // Read the ArrayBuffer object and its contents (but no properties).
-    RootedValue v(context());
-    uint32_t byteOffset;
-    if (!startRead(&v))
-        return false;
-    uint64_t n;
-    if (!in.read(&n))
-        return false;
-    byteOffset = n;
-    RootedObject buffer(context(), &v.toObject());
-    RootedObject obj(context());
-
-    switch (arrayType) {
-      case Scalar::Int8:
-        obj = JS_NewSharedInt8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Uint8:
-        obj = JS_NewSharedUint8ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Int16:
-        obj = JS_NewSharedInt16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Uint16:
-        obj = JS_NewSharedUint16ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Int32:
-        obj = JS_NewSharedInt32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Uint32:
-        obj = JS_NewSharedUint32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Float32:
-        obj = JS_NewSharedFloat32ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Float64:
-        obj = JS_NewSharedFloat64ArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      case Scalar::Uint8Clamped:
-        obj = JS_NewSharedUint8ClampedArrayWithBuffer(context(), buffer, byteOffset, nelems);
-        break;
-      default:
-        MOZ_CRASH("Can't happen: arrayType range checked above");
-    }
-
-    if (!obj)
-        return false;
-    vp.setObject(*obj);
-
-    allObjs[placeholderIndex].set(vp);
-
-    return true;
-}
-
-bool
 JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, MutableHandleValue vp)
 {
     JSObject* obj = ArrayBufferObject::create(context(), nbytes);
@@ -1860,14 +1768,6 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
       case SCTAG_DATA_VIEW_OBJECT: {
         // readDataView adds the array to allObjs.
         return readDataView(data, vp);
-      }
-
-      case SCTAG_SHARED_TYPED_ARRAY_OBJECT: {
-        // readSharedTypedArray adds the array to allObjs.
-        uint64_t arrayType;
-        if (!in.read(&arrayType))
-            return false;
-        return readSharedTypedArray(arrayType, data, vp);
       }
 
       case SCTAG_MAP_OBJECT: {

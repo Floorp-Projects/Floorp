@@ -1753,6 +1753,13 @@ function run_PointerType_tests() {
   let z = ctypes.int32_t.array(0)().address();
   do_check_eq(z.contents.length, 0);
 
+  // TODO: Somehow, somewhere we should check that:
+  //
+  //  (a) ArrayBuffer and TypedArray can be passed by pointer to a C function
+  //  (b) SharedArrayBuffer and TypedArray on SAB can NOT be passed in that
+  //      way (at least not at the moment).
+
+  // Set up conversion tests on AB, SAB, TA
   let c_arraybuffer = new ArrayBuffer(256);
   let typed_array_samples =
        [
@@ -1766,7 +1773,19 @@ function run_PointerType_tests() {
          [new Float64Array(c_arraybuffer), ctypes.float64_t]
         ];
 
-  // Check that you can convert ArrayBuffer or typed array to a C array
+  if (typeof SharedArrayBuffer !== "undefined") {
+    let c_shared_arraybuffer = new SharedArrayBuffer(256);
+    typed_array_samples.push([new Int8Array(c_shared_arraybuffer), ctypes.int8_t],
+                             [new Uint8Array(c_shared_arraybuffer), ctypes.uint8_t],
+                             [new Int16Array(c_shared_arraybuffer), ctypes.int16_t],
+                             [new Uint16Array(c_shared_arraybuffer), ctypes.uint16_t],
+                             [new Int32Array(c_shared_arraybuffer), ctypes.int32_t],
+                             [new Uint32Array(c_shared_arraybuffer), ctypes.uint32_t],
+                             [new Float32Array(c_shared_arraybuffer), ctypes.float32_t],
+                             [new Float64Array(c_shared_arraybuffer), ctypes.float64_t])
+  }
+
+  // Check that you can convert (Shared)ArrayBuffer or typed array to a C array
   for (let i = 0; i < typed_array_samples.length; ++i) {
     for (let j = 0; j < typed_array_samples.length; ++j) {
       let view = typed_array_samples[i][0];
@@ -1774,7 +1793,9 @@ function run_PointerType_tests() {
       let number_of_items = c_arraybuffer.byteLength / item_type.size;
       let array_type = item_type.array(number_of_items);
 
-      if (i != j) {
+      // Int8Array on unshared memory is interconvertible with Int8Array on
+      // shared memory, etc.
+      if (i % 8 != j % 8) {
         do_print("Checking that typed array " + (view.constructor.name) +
                  " can NOT be converted to " + item_type + " array");
         do_check_throws(function() { array_type(view); }, TypeError);
@@ -1812,7 +1833,7 @@ function run_PointerType_tests() {
     }
   }
 
-  // Check that you can't use an ArrayBuffer or a typed array as a pointer
+  // Check that you can't use a (Shared)ArrayBuffer or a typed array as a pointer
   for (let i = 0; i < typed_array_samples.length; ++i) {
     for (let j = 0; j < typed_array_samples.length; ++j) {
       let view = typed_array_samples[i][0];
