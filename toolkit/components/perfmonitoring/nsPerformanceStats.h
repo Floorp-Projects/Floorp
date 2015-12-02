@@ -17,17 +17,109 @@
 #include "nsIPerformanceStats.h"
 
 class nsPerformanceGroup;
+class nsPerformanceGroupDetails;
 
 typedef mozilla::Vector<RefPtr<js::PerformanceGroup>> JSGroupVector;
 typedef mozilla::Vector<RefPtr<nsPerformanceGroup>> GroupVector;
+
+/**
+ * A data structure for registering observers interested in
+ * performance alerts.
+ *
+ * Each performance group owns a single instance of this class.
+ * Additionally, the service owns instances designed to observe the
+ * performance alerts in all add-ons (respectively webpages).
+ */
+class nsPerformanceObservationTarget final: public nsIPerformanceObservable {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPERFORMANCEOBSERVABLE
+
+  /**
+   * `true` if this target has at least once performance observer
+   * registered, `false` otherwise.
+   */
+  bool HasObservers() const;
+
+  /**
+   * Notify all the observers that jank has happened.
+   */
+  void NotifyJankObservers(nsIPerformanceGroupDetails* source, nsIPerformanceAlert* gravity);
+
+  /**
+   * Set the details on the group being observed.
+   */
+  void SetTarget(nsPerformanceGroupDetails* details);
+
+private:
+  ~nsPerformanceObservationTarget() {}
+
+  // The observers for this target. We hold them as a vector, despite
+  // the linear removal cost, as we expect that the typical number of
+  // observers will be lower than 3, and that (un)registrations will
+  // be fairly infrequent.
+  mozilla::Vector<nsCOMPtr<nsIPerformanceObserver>> mObservers;
+
+  // Details on the group being observed. May be `nullptr`.
+  RefPtr<nsPerformanceGroupDetails> mDetails;
+};
+
+/**
+ * The base class for entries of maps from addon id/window id to
+ * performance group.
+ *
+ * Performance observers may be registered before their group is
+ * created (e.g., one may register an observer for an add-on before
+ * all its modules are loaded, or even before the add-on is loaded at
+ * all or for an observer for a webpage before all its iframes are
+ * loaded). This class serves to hold the observation target until the
+ * performance group may be created, and then to associate the
+ * observation target and the performance group.
+ */
+class nsGroupHolder {
+public:
+  nsGroupHolder()
+    : mGroup(nullptr)
+    , mPendingObservationTarget(nullptr)
+  { }
+
+  /**
+   * Get the observation target, creating it if necessary.
+   */
+  nsPerformanceObservationTarget* ObservationTarget();
+
+  /**
+   * Get the group, if it has been created.
+   *
+   * May return `null` if the group hasn't been created yet.
+   */
+  class nsPerformanceGroup* GetGroup();
+
+  /**
+   * Set the group.
+   *
+   * Once this method has been called, calling
+   * `this->ObservationTarget()` and `group->ObservationTarget()` is equivalent.
+   *
+   * Must only be called once.
+   */
+  void SetGroup(class nsPerformanceGroup*);
+private:
+  // The group. Initially `nullptr`, until we have called `SetGroup`.
+  class nsPerformanceGroup* mGroup;
+
+  // The observation target. Instantiated by the first call to
+  // `ObservationTarget()`.
+  RefPtr<nsPerformanceObservationTarget> mPendingObservationTarget;
+};
 
 /**
  * An implementation of the nsIPerformanceStatsService.
  *
  * Note that this implementation is not thread-safe.
  */
-class nsPerformanceStatsService : public nsIPerformanceStatsService,
-                                  public nsIObserver
+class nsPerformanceStatsService final : public nsIPerformanceStatsService,
+                                        public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -40,7 +132,7 @@ public:
 private:
   nsresult InitInternal();
   void Dispose();
-  virtual ~nsPerformanceStatsService();
+  ~nsPerformanceStatsService();
 
 protected:
   friend nsPerformanceGroup;
@@ -120,12 +212,11 @@ protected:
    * by add-on id. Each item is shared by all the compartments
    * that belong to the add-on.
    */
-  struct AddonIdToGroup: public nsStringHashKey {
+  struct AddonIdToGroup: public nsStringHashKey,
+                         public nsGroupHolder {
     explicit AddonIdToGroup(const nsAString* key)
       : nsStringHashKey(key)
-      , mGroup(nullptr)
     { }
-    nsPerformanceGroup* mGroup;
   };
   nsTHashtable<AddonIdToGroup> mAddonIdToGroup;
 
@@ -134,12 +225,11 @@ protected:
    * window id. Each item is shared by all the compartments that
    * belong to the window.
    */
-  struct WindowIdToGroup: public nsUint64HashKey {
+  struct WindowIdToGroup: public nsUint64HashKey,
+                          public nsGroupHolder {
     explicit WindowIdToGroup(const uint64_t* key)
       : nsUint64HashKey(key)
-      , mGroup(nullptr)
     {}
-    nsPerformanceGroup* mGroup;
   };
   nsTHashtable<WindowIdToGroup> mWindowIdToGroup;
 
@@ -282,6 +372,78 @@ protected:
    * sandbox). Note that this makes measurements noticeably slower.
    */
   bool mIsMonitoringPerCompartment;
+
+
+public:
+  /**********************************************************
+   *
+   * Letting observers register themselves to watch for performance
+   * alerts.
+   *
+   * To avoid saturating clients with alerts (or even creating loops
+   * of alerts), each alert is buffered. At the end of each iteration
+   * of the event loop, groups that have caused performance alerts
+   * are registered in a set of pending alerts, and the collection
+   * timer hasn't been started yet, it is started. Once the timer
+   * firers, we gather all the pending alerts, empty the set and
+   * dispatch to observers.
+   */
+
+  /**
+   * Clear the set of pending alerts and dispatch the pending alerts
+   * to observers.
+   */
+  void NotifyJankObservers();
+
+private:
+  /**
+   * The set of groups for which we know that an alert should be
+   * raised. This set is cleared once `mPendingAlertsCollector`
+   * fires.
+   *
+   * Invariant: no group may appear twice in this vector.
+   */
+  GroupVector mPendingAlerts;
+
+  /**
+   * A timer callback in charge of collecting the groups in
+   * `mPendingAlerts` and triggering `NotifyJankObservers` to dispatch
+   * performance alerts.
+   */
+  RefPtr<class PendingAlertsCollector> mPendingAlertsCollector;
+
+
+  /**
+   * Observation targets that are not attached to a specific group.
+   */
+  struct UniversalTargets {
+    UniversalTargets();
+    /**
+     * A target for observers interested in watching all addons.
+     */
+    RefPtr<nsPerformanceObservationTarget> mAddons;
+
+    /**
+     * A target for observers interested in watching all windows.
+     */
+    RefPtr<nsPerformanceObservationTarget> mWindows;
+  };
+  UniversalTargets mUniversalTargets;
+
+  /**
+   * The threshold, in microseconds, above which a performance group is
+   * considered "slow" and should raise performance alerts.
+   */
+  uint64_t mJankAlertThreshold;
+
+  /**
+   * A buffering delay, in milliseconds, used by the service to
+   * regroup performance alerts, before observers are actually
+   * noticed. Higher delays let the system avoid redundant
+   * notifications for the same group, and are generally better for
+   * performance.
+   */
+  uint32_t mJankAlertBufferingDelay;
 };
 
 
@@ -331,8 +493,11 @@ struct PerformanceData {
  * Identification information for an item that can hold performance
  * data.
  */
-class nsPerformanceGroupDetails {
+class nsPerformanceGroupDetails final: public nsIPerformanceGroupDetails {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPERFORMANCEGROUPDETAILS
+
   nsPerformanceGroupDetails(const nsAString& aName,
                             const nsAString& aGroupId,
                             const nsAString& aAddonId,
@@ -355,7 +520,10 @@ public:
   bool IsAddon() const;
   bool IsWindow() const;
   bool IsSystem() const;
+  bool IsContentProcess() const;
 private:
+  ~nsPerformanceGroupDetails() {}
+
   const nsString mName;
   const nsString mGroupId;
   const nsString mAddonId;
@@ -397,9 +565,7 @@ enum class PerformanceGroupScope {
  * This class is intended to be the sole implementation of
  * `js::PerformanceGroup`.
  */
-class nsPerformanceGroup final: public js::PerformanceGroup,
-                                public nsPerformanceGroupDetails
-{
+class nsPerformanceGroup final: public js::PerformanceGroup {
 public:
 
   // Ideally, we would define the enum class in nsPerformanceGroup,
@@ -455,9 +621,32 @@ public:
   GroupScope Scope() const;
 
   /**
+   * Identification details for this group.
+   */
+  nsPerformanceGroupDetails* Details() const;
+
+  /**
    * Cleanup any references.
    */
   void Dispose();
+
+  /**
+   * Set the observation target for this group.
+   *
+   * This method must be called exactly once, when the performance
+   * group is attached to its `nsGroupHolder`.
+   */
+  void SetObservationTarget(nsPerformanceObservationTarget*);
+
+
+  /**
+   * `true` if we have already noticed that a performance alert should
+   * be raised for this group but we have not dispatched it yet,
+   * `false` otherwise.
+   */
+  bool HasPendingAlert() const;
+  void SetHasPendingAlert(bool value);
+
 protected:
   nsPerformanceGroup(nsPerformanceStatsService* service,
                      const nsAString& name,
@@ -479,9 +668,14 @@ protected:
   virtual void Delete() override {
     delete this;
   }
-  virtual ~nsPerformanceGroup();
+  ~nsPerformanceGroup();
 
 private:
+  /**
+   * Identification details for this group.
+   */
+  RefPtr<nsPerformanceGroupDetails> mDetails;
+
   /**
    * The stats service. Used to perform cleanup during destruction.
    */
@@ -492,6 +686,66 @@ private:
    * should be (de)activated.
    */
   const GroupScope mScope;
+
+// Observing performance alerts.
+
+public:
+  /**
+   * The observation target, used to register observers.
+   */
+  nsPerformanceObservationTarget* ObservationTarget() const;
+
+  /**
+   * Record a jank duration.
+   *
+   * Update the highest recent jank if necessary.
+   */
+  void RecordJank(uint64_t jank);
+  uint64_t HighestRecentJank();
+
+  /**
+   * Record a CPOW duration.
+   *
+   * Update the highest recent CPOW if necessary.
+   */
+  void RecordCPOW(uint64_t cpow);
+  uint64_t HighestRecentCPOW();
+
+  /**
+   * Reset highest recent CPOW/jank to 0.
+   */
+  void ResetHighest();
+private:
+  /**
+   * The target used by observers to register for watching slow
+   * performance alerts caused by this group.
+   *
+   * May be nullptr for groups that cannot be watched (the top group).
+   */
+  RefPtr<class nsPerformanceObservationTarget> mObservationTarget;
+
+  /**
+   * The highest jank encountered since jank observers for this group
+   * were last called, in microseconds.
+   */
+  uint64_t mHighestJank;
+
+  /**
+   * The highest CPOW encountered since jank observers for this group
+   * were last called, in microseconds.
+   */
+  uint64_t mHighestCPOW;
+
+  /**
+   * `true` if this group has caused a performance alert and this alert
+   * hasn't been dispatched yet.
+   *
+   * We use this as part of the buffering of performance alerts. If
+   * the group generates several alerts several times during the
+   * buffering delay, we only wish to add the group once to the list
+   * of alerts.
+   */
+  bool mHasPendingAlert;
 };
 
 #endif

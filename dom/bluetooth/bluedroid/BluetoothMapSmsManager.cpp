@@ -324,20 +324,33 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
         return;
       }
 
-      if (pktHeaders.Has(ObexHeaderId::Type)) {
-        pktHeaders.GetContentType(type);
-        BT_LOGR("Type: %s", NS_ConvertUTF16toUTF8(type).get());
-        ReplyToPut();
+      // Multi-packet PUT request (0x02) may not contain Type header
+      if (!pktHeaders.Has(ObexHeaderId::Type)) {
+        BT_LOGR("Missing OBEX PUT request Type header");
+        SendReply(ObexResponseCode::BadRequest);
+        return;
+      }
 
-        if (type.EqualsLiteral("x-bt/MAP-NotificationRegistration")) {
-          HandleNotificationRegistration(pktHeaders);
-        } else if (type.EqualsLiteral("x-bt/MAP-event-report")) {
-          HandleEventReport(pktHeaders);
-        } else if (type.EqualsLiteral("x-bt/messageStatus")) {
-          HandleSetMessageStatus(pktHeaders);
-        } else if (type.EqualsLiteral("x-bt/message")) {
-          HandleSmsMmsPushMessage(pktHeaders);
-        }
+      pktHeaders.GetContentType(type);
+      BT_LOGR("Type: %s", NS_ConvertUTF16toUTF8(type).get());
+
+      if (type.EqualsLiteral("x-bt/MAP-NotificationRegistration")) {
+        HandleNotificationRegistration(pktHeaders);
+        ReplyToPut();
+      } else if (type.EqualsLiteral("x-bt/messageStatus")) {
+        HandleSetMessageStatus(pktHeaders);
+      } else if (type.EqualsLiteral("x-bt/message")) {
+        HandleSmsMmsPushMessage(pktHeaders);
+      } else if (type.EqualsLiteral("x-bt/MAP-messageUpdate")) {
+        /* MAP 5.9, There is no concept for Sms/Mms to update inbox. If the
+         * MSE does NOT allowed the polling of its mailbox it shall answer
+         * with a 'Not implemented' error response.
+         */
+        SendReply(ObexResponseCode::NotImplemented);
+      } else {
+        BT_LOGR("Unknown MAP PUT request type: %s",
+          NS_ConvertUTF16toUTF8(type).get());
+        SendReply(ObexResponseCode::NotImplemented);
       }
       break;
     case ObexRequestCode::Get:
@@ -363,6 +376,12 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
         return;
       }
 
+      if (!pktHeaders.Has(ObexHeaderId::Type)) {
+        BT_LOGR("Missing OBEX GET request Type header");
+        SendReply(ObexResponseCode::BadRequest);
+        return;
+      }
+
       pktHeaders.GetContentType(type);
       if (type.EqualsLiteral("x-obex/folder-listing")) {
         HandleSmsMmsFolderListing(pktHeaders);
@@ -371,8 +390,9 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
       } else if (type.EqualsLiteral("x-bt/message")) {
         HandleSmsMmsGetMessage(pktHeaders);
       } else {
-        BT_LOGR("Unknown MAP request type: %s",
+        BT_LOGR("Unknown MAP GET request type: %s",
           NS_ConvertUTF16toUTF8(type).get());
+        SendReply(ObexResponseCode::NotImplemented);
       }
       break;
     }
@@ -646,10 +666,9 @@ BluetoothMapSmsManager::ReplyToPut()
 
   // Section 3.3.3.2 "PutResponse", IrOBEX 1.2
   // [opcode:1][length:2][Headers:var]
-  uint8_t req[255];
-  int index = 3;
+  uint8_t req[kObexRespHeaderSize];
 
-  SendMasObexData(req, ObexResponseCode::Success, index);
+  SendMasObexData(req, ObexResponseCode::Success, kObexRespHeaderSize);
 }
 
 bool
@@ -826,15 +845,11 @@ BluetoothMapSmsManager::ReplyToSendMessage(
    */
   int len = aHandleId.Length();
   nsAutoArrayPtr<uint8_t> handleId(new uint8_t[(len + 1) * 2]);
-  const char16_t* handleIdPtr = aHandleId.BeginReading();
 
   for (int i = 0; i < len; i++) {
-    *(handleId + (i * 2)) = (uint8_t)(handleIdPtr[i] >> 8);
-    *(handleId + (i * 2 + 1)) = (uint8_t)handleIdPtr[i];
+    BigEndian::writeUint16(&handleId[i * 2], aHandleId[i]);
   }
-
-  *(handleId + (len * 2)) = 0x00;
-  *(handleId + (len * 2 + 1)) = 0x00;
+  BigEndian::writeUint16(&handleId[len * 2], 0);
 
   auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   int index = kObexRespHeaderSize;
@@ -1316,12 +1331,6 @@ BluetoothMapSmsManager::HandleNotificationRegistration(
 }
 
 void
-BluetoothMapSmsManager::HandleEventReport(const ObexHeaderSet& aHeader)
-{
-  // TODO: Handle event report in Bug 1211769
-}
-
-void
 BluetoothMapSmsManager::HandleSetMessageStatus(const ObexHeaderSet& aHeader)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1398,7 +1407,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   nsCString subject;
   bmsg->GetBody(subject);
   // It's possible that subject is empty, send it anyway
-  AppendNamedValue(data, "subject", subject);
+  AppendNamedValue(data, "messageBody", subject);
 
   nsTArray<RefPtr<VCard>> recipients;
   bmsg->GetRecipients(recipients);
@@ -1410,7 +1419,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
     AppendNamedValue(data, "recipient", recipient);
   }
 
-  bs->DistributeSignal(NS_LITERAL_STRING(MAP_PUSH_MESSAGE_REQ_ID),
+  bs->DistributeSignal(NS_LITERAL_STRING(MAP_SEND_MESSAGE_REQ_ID),
                        NS_LITERAL_STRING(KEY_ADAPTER), data);
 }
 
@@ -1440,9 +1449,9 @@ BluetoothMapSmsManager::SendReply(uint8_t aResponseCode)
 
   // Section 3.2 "Response Format", IrOBEX 1.2
   // [opcode:1][length:2][Headers:var]
-  uint8_t req[3];
+  uint8_t req[kObexRespHeaderSize];
 
-  SendMasObexData(req, aResponseCode, 3);
+  SendMasObexData(req, aResponseCode, kObexRespHeaderSize);
 }
 
 void

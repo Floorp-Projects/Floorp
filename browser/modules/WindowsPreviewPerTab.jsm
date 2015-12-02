@@ -435,9 +435,6 @@ function TabWindow(win) {
     this.tabbrowser.tabContainer.addEventListener(this.tabEvents[i], this, false);
   this.tabbrowser.addTabsProgressListener(this);
 
-  for (let i = 0; i < this.winEvents.length; i++)
-    this.win.addEventListener(this.winEvents[i], this, false);
-
   AeroPeek.windows.push(this);
   let tabs = this.tabbrowser.tabs;
   for (let i = 0; i < tabs.length; i++)
@@ -450,7 +447,6 @@ function TabWindow(win) {
 TabWindow.prototype = {
   _enabled: false,
   tabEvents: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
-  winEvents: ["tabviewshown", "tabviewhidden"],
 
   destroy: function () {
     this._destroying = true;
@@ -460,9 +456,6 @@ TabWindow.prototype = {
     this.tabbrowser.removeTabsProgressListener(this);
     for (let i = 0; i < this.tabEvents.length; i++)
       this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this, false);
-
-    for (let i = 0; i < this.winEvents.length; i++)
-      this.win.removeEventListener(this.winEvents[i], this, false);
 
     for (let i = 0; i < tabs.length; i++)
       this.removeTab(tabs[i]);
@@ -578,14 +571,6 @@ TabWindow.prototype = {
         break;
       case "TabMove":
         this.updateTabOrdering();
-        break;
-      case "tabviewshown":
-        this.enabled = false;
-        break;
-      case "tabviewhidden":
-        if (!AeroPeek._prefenabled)
-          return;
-        this.enabled = true;
         break;
     }
   },

@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* () {
-  // Ensure TabView has been initialized already. Otherwise it could
-  // activate at an unexpected time and show/hide tabs.
-  yield new Promise(resolve => TabView._initFrame(resolve));
-
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
 
@@ -30,13 +26,6 @@ add_task(function* () {
   // Select the test tab and only show that (and pinned)
   gBrowser.selectedTab = testTab;
   gBrowser.showOnlyTheseTabs([testTab]);
-
-  // if the tabview frame is initialized, we need to move the orignal tab to
-  // another group; otherwise, selecting a tab would make all three tabs in 
-  // the same group to display.
-  let tabViewWindow = TabView.getContentWindow();
-  if (tabViewWindow)
-    tabViewWindow.GroupItems.moveTabToGroupItem(origTab, null);
 
   visible = gBrowser.visibleTabs;
   is(visible.length, 2, "2 tabs should be visible including the pinned");
@@ -101,8 +90,5 @@ add_task(function* () {
   is(gBrowser.tabs.length, 1, "sanity check that it matches");
   is(gBrowser.selectedTab, origTab, "got the orig tab");
   is(origTab.hidden, false, "and it's not hidden -- visible!");
-
-  if (tabViewWindow)
-    tabViewWindow.GroupItems.groupItems[0].close();
 });
 

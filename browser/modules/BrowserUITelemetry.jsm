@@ -92,7 +92,6 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
     "feed-button",
     "email-link-button",
     "sync-button",
-    "tabview-button",
     "web-apps-button",
   ];
 

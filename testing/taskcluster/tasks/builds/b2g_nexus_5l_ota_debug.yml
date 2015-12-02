@@ -24,6 +24,7 @@ task:
       TARGET: 'nexus-5-l'
       DEBUG: 0
       MOZHARNESS_CONFIG: b2g/taskcluster-phone-fota.py
+      B2G_UPDATE_CHANNEL: '{{b2g_update_channel}}'
     command:
       - >
         checkout-gecko workspace &&

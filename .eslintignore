@@ -94,7 +94,7 @@ browser/extensions/loop/content/preferences/prefs.js
 # Libs we don't need to check
 browser/extensions/loop/content/panels/vendor
 browser/extensions/loop/content/shared/vendor
-browser/extensions/loop/standalone/content/libs
+browser/extensions/loop/standalone/content/vendor
 # Libs we don't need to check
 browser/extensions/loop/test/shared/vendor
 # Coverage files

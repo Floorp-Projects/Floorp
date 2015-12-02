@@ -731,9 +731,6 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
-
-        ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
-        mZoomedView = (ZoomedView) stub.inflate();
     }
 
     private void conditionallyNotifyHCEOL() {
@@ -1767,6 +1764,10 @@ public class BrowserApp extends GeckoApp
                         // Force tabs panel inflation once the initial
                         // pageload is finished.
                         ensureTabsPanelExists();
+                        if (mZoomedView == null) {
+                            ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
+                            mZoomedView = (ZoomedView) stub.inflate();
+                        }
                     }
                 });
 
