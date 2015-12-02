@@ -10,11 +10,10 @@
 #include <math.h>
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/gfx/MatrixFwd.h"
 
 namespace mozilla {
 namespace gfx {
-
-class Matrix4x4;
 
 class Quaternion
 {
