@@ -47,11 +47,9 @@ class ServiceWorker;
 class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJob;
-class ServiceWorkerRegisterJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
-class ServiceWorkerUpdateFinishCallback;
 
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
@@ -77,7 +75,11 @@ public:
 
   uint64_t mLastUpdateCheckTime;
 
-  RefPtr<ServiceWorkerRegisterJob> mUpdateJob;
+  // According to the spec, Soft Update shouldn't queue an update job
+  // if the registration queue is not empty. Because our job queue
+  // works slightly different, we use a flag to determine if the registration
+  // is already updating.
+  bool mUpdating;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -143,12 +145,6 @@ public:
 
   bool
   IsLastUpdateCheckTimeOverOneDay() const;
-
-  bool
-  IsUpdating() const;
-
-  void
-  AppendUpdateCallback(ServiceWorkerUpdateFinishCallback* aCallback);
 };
 
 class ServiceWorkerUpdateFinishCallback
@@ -366,14 +362,13 @@ public:
                              ErrorResult& aRv);
 
   void
-  SoftUpdate(nsIPrincipal* aPrincipal,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
+  Update(nsIPrincipal* aPrincipal,
+         const nsACString& aScope,
+         ServiceWorkerUpdateFinishCallback* aCallback);
 
   void
   SoftUpdate(const OriginAttributes& aOriginAttributes,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
+             const nsACString& aScope);
 
   void
   PropagateSoftUpdate(const OriginAttributes& aOriginAttributes,
@@ -481,11 +476,6 @@ private:
 
   void
   MaybeRemoveRegistrationInfo(const nsACString& aScopeKey);
-
-  void
-  SoftUpdate(const nsACString& aScopeKey,
-             const nsACString& aScope,
-             ServiceWorkerUpdateFinishCallback* aCallback = nullptr);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(const nsACString& aScopeKey,
