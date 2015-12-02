@@ -2014,7 +2014,8 @@ ContentContribution(nsIFrame*                         aChild,
 #endif
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize);
+    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize, nullptr,
+                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP);
     nsHTMLReflowMetrics childSize(childRS);
     nsReflowStatus childStatus;
     const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
