@@ -133,15 +133,21 @@ pub unsafe extern "C" fn mp4parse_get_track_info(context: *mut MediaContext, tra
     // Maybe context & track should just have a single simple is_valid() instead?
     if context.timescale.is_none() ||
         track.timescale.is_none() ||
-        track.empty_duration.is_none() ||
-        track.media_time.is_none() ||
         track.duration.is_none() ||
         track.track_id.is_none() {
             return -1;
         }
 
-    let empty_duration = media_time_to_ms(track.empty_duration.unwrap(), context.timescale.unwrap());
-    (*info).media_time = track_time_to_ms(track.media_time.unwrap(), track.timescale.unwrap()) as i64 - empty_duration as i64;
+    let empty_duration = if track.empty_duration.is_some() {
+        media_time_to_ms(track.empty_duration.unwrap(), context.timescale.unwrap())
+    } else {
+        0
+    };
+    (*info).media_time = if track.media_time.is_some() {
+        track_time_to_ms(track.media_time.unwrap(), track.timescale.unwrap()) as i64 - empty_duration as i64
+    } else {
+        0
+    };
     (*info).duration = track_time_to_ms(track.duration.unwrap(), track.timescale.unwrap());
     (*info).track_id = track.track_id.unwrap();
 
