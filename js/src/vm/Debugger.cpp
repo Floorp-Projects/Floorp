@@ -979,7 +979,7 @@ namespace {
 class MOZ_STACK_CLASS ReportExceptionClosure : public ScriptEnvironmentPreparer::Closure
 {
 public:
-    ReportExceptionClosure(RootedValue& exn)
+    explicit ReportExceptionClosure(RootedValue& exn)
         : exn_(exn)
     {
     }
