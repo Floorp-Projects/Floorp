@@ -12,6 +12,8 @@ EXTRA_JS_MODULES += [
     'AddonWatcher.jsm',
     'PerformanceStats-content.js',
     'PerformanceStats.jsm',
+    'PerformanceWatcher-content.js',
+    'PerformanceWatcher.jsm',
 ]
 
 XPIDL_SOURCES += [

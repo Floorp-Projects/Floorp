@@ -93,6 +93,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TabGroupsMigrator",
+                                  "resource:///modules/TabGroupsMigrator.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -1350,21 +1353,6 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (this._mayNeedToWarnAboutTabGroups) {
-      let haveTabGroups = false;
-      let wins = Services.wm.getEnumerator("navigator:browser");
-      while (wins.hasMoreElements()) {
-        let win = wins.getNext();
-        if (win.TabView._tabBrowserHasHiddenTabs() && win.TabView.firstUseExperienced) {
-          haveTabGroups = true;
-          break;
-        }
-      }
-      if (haveTabGroups) {
-        this._showTabGroupsDeprecationNotification();
-      }
-    }
-
 #ifdef E10S_TESTING_ONLY
     E10SUINotification.checkStatus();
 #else
@@ -1405,25 +1393,12 @@ BrowserGlue.prototype = {
   },
 #endif
 
-  _showTabGroupsDeprecationNotification() {
-    let brandShortName = gBrandBundle.GetStringFromName("brandShortName");
-    let text = gBrowserBundle.formatStringFromName("tabgroups.deprecationwarning.description",
-                                                   [brandShortName], 1);
-    let learnMore = gBrowserBundle.GetStringFromName("tabgroups.deprecationwarning.learnMore.label");
-    let learnMoreKey = gBrowserBundle.GetStringFromName("tabgroups.deprecationwarning.learnMore.accesskey");
-
-    let win = RecentWindow.getMostRecentBrowserWindow();
-    let notifyBox = win.document.getElementById("high-priority-global-notificationbox");
-    let button = {
-      label: learnMore,
-      accessKey: learnMoreKey,
-      callback: function(aNotificationBar, aButton) {
-        win.openUILinkIn("https://support.mozilla.org/kb/tab-groups-removal", "tab");
-      },
+  _maybeMigrateTabGroups() {
+    let migrationObserver = (stateAsSupportsString, topic) => {
+      Services.obs.removeObserver(migrationObserver, "sessionstore-state-read");
+      TabGroupsMigrator.migrate(stateAsSupportsString);
     };
-
-    notifyBox.appendNotification(text, "tabgroups-removal-notification", null,
-                                 notifyBox.PRIORITY_WARNING_MEDIUM, [button]);
+    Services.obs.addObserver(migrationObserver, "sessionstore-state-read", false);
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {
@@ -1933,7 +1908,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 34;
+    const UI_VERSION = 35;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -2278,9 +2253,8 @@ BrowserGlue.prototype = {
       this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
 
-    if (currentUIVersion < 34) {
-      // We'll do something once windows are open:
-      this._mayNeedToWarnAboutTabGroups = true;
+    if (currentUIVersion < 35) {
+      this._maybeMigrateTabGroups();
     }
 
     // Update the migration version.

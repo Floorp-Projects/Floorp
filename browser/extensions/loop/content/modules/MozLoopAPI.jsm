@@ -896,9 +896,10 @@ const kMessageHandlers = {
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
    */
-  SetLoopPref: function(message) {
+  SetLoopPref: function(message, reply) {
     let [prefName, value, prefType] = message.data;
     MozLoopService.setLoopPref(prefName, value, prefType);
+    reply();
   },
 
   /**
@@ -1077,7 +1078,11 @@ const LoopAPIInternal = {
 
     if (!reply) {
       reply = result => {
-        message.target.sendAsyncMessage(message.name, [seq, result]);
+        try {
+          message.target.sendAsyncMessage(message.name, [seq, result]);
+        } catch (ex) {
+          MozLoopService.log.error("Failed to send reply back to content:", ex);
+        }
       }
     }
 

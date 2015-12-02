@@ -323,7 +323,7 @@ loop.roomViews = (function(mozL10n) {
     },
 
     render: function() {
-      if (!this.props.show) {
+      if (!this.props.show || !this.props.roomData.roomUrl) {
         return null;
       }
 

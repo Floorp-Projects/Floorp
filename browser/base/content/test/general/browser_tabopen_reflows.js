@@ -29,18 +29,6 @@ const EXPECTED_REFLOWS = [
     "_handleNewTab@chrome://browser/content/tabbrowser.xml|" +
     "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
 
-  // The TabView iframe causes reflows in the parent document.
-  "iQClass_height@chrome://browser/content/tabview.js|" +
-    "GroupItem_getContentBounds@chrome://browser/content/tabview.js|" +
-    "GroupItem_shouldStack@chrome://browser/content/tabview.js|" +
-    "GroupItem_arrange@chrome://browser/content/tabview.js|" +
-    "GroupItem_add@chrome://browser/content/tabview.js|" +
-    "GroupItems_newTab@chrome://browser/content/tabview.js|" +
-    "TabItem__reconnect@chrome://browser/content/tabview.js|" +
-    "TabItem@chrome://browser/content/tabview.js|" +
-    "TabItems_link@chrome://browser/content/tabview.js|" +
-    "TabItems_init/this._eventListeners.open@chrome://browser/content/tabview.js|",
-
   // SessionStore.getWindowDimensions()
   "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +
     "ssi_updateWindowFeatures/<@resource:///modules/sessionstore/SessionStore.jsm|" +
