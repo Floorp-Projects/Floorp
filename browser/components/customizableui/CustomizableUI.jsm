@@ -53,14 +53,16 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 4;
+var kVersion = 5;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
  * bumped any time a new id is added to this. Use the button id as key, and
  * version the button is removed in as the value.  e.g. "pocket-button": 5
  */
-var ObsoleteBuiltinButtons = {};
+var ObsoleteBuiltinButtons = {
+  "loop-button": 5
+};
 
 /**
  * gPalette is a map of every widget that CustomizableUI.jsm knows about, keyed
