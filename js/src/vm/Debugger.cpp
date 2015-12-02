@@ -975,6 +975,26 @@ Debugger::unwrapPropertyDescriptor(JSContext* cx, HandleObject obj,
     return true;
 }
 
+namespace {
+class MOZ_STACK_CLASS ReportExceptionClosure : public ScriptEnvironmentPreparer::Closure
+{
+public:
+    explicit ReportExceptionClosure(RootedValue& exn)
+        : exn_(exn)
+    {
+    }
+
+    bool operator()(JSContext* cx) override
+    {
+        cx->setPendingException(exn_);
+        return false;
+    }
+
+private:
+    RootedValue& exn_;
+};
+} // anonymous namespace
+
 JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
                                         MutableHandleValue* vp, bool callHook)
@@ -993,7 +1013,31 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
         }
 
         if (cx->isExceptionPending()) {
-            JS_ReportPendingException(cx);
+            /*
+             * We want to report the pending exception, but we want to let the
+             * embedding handle it however it wants to.  So pretend like we're
+             * starting a new script execution on our current compartment (which
+             * is the debugger compartment, so reported errors won't get
+             * reported to various onerror handlers in debuggees) and as part of
+             * that "execution" simply throw our exception so the embedding can
+             * deal.
+             */
+            RootedValue exn(cx);
+            if (cx->getPendingException(&exn)) {
+                /*
+                 * Clear the exception, because
+                 * PrepareScriptEnvironmentAndInvoke will assert that we don't
+                 * have one.
+                 */
+                cx->clearPendingException();
+                ReportExceptionClosure reportExn(exn);
+                PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
+            }
+            /*
+             * And if not, or if PrepareScriptEnvironmentAndInvoke somehow left
+             * an exception on cx (which it totally shouldn't do), just give
+             * up.
+             */
             cx->clearPendingException();
         }
     }
