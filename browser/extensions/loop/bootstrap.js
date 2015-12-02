@@ -11,6 +11,7 @@ const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -783,8 +784,12 @@ function startup() {
   // Load our stylesheets.
   let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
     .getService(Components.interfaces.nsIStyleSheetService);
-  let sheets = ["chrome://loop-shared/skin/loop.css",
-                "chrome://loop/skin/platform.css"];
+  let sheets = ["chrome://loop-shared/skin/loop.css"];
+
+  if (AppConstants.platform != "linux") {
+    sheets.push("chrome://loop/skin/platform.css");
+  }
+
   for (let sheet of sheets) {
     let styleSheetURI = Services.io.newURI(sheet, null, null);
     // XXX We would love to specify AUTHOR_SHEET here and in shutdown, however
