@@ -43,7 +43,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(bc3524bd-023c-4fc8-ace1-472bc999fb12)]
+[scriptable, builtinclass, uuid(63adb599-6dc9-4746-972e-c22e9018020b)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -238,11 +238,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute nsIDOMEventTarget chromeEventHandler;
 
   /**
-    * This allows chrome to set a custom User agent on a specific docshell
-    */
-  attribute DOMString customUserAgent;
-
-  /**
    * Whether to allow plugin execution
    */
   attribute boolean allowPlugins;
@@ -255,7 +250,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Attribute stating if refresh based redirects can be allowed
    */
-  attribute boolean allowMetaRedirects;
+  attribute  boolean allowMetaRedirects;
 
   /**
    * Attribute stating if it should allow subframes (framesets/iframes) or not
