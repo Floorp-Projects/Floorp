@@ -165,21 +165,30 @@ body {
      This is done so that the background can be built dynamically from script */
   background-image: -moz-element(#time-graduations);
   background-repeat: repeat-y;
-  /* The animations are drawn 150px from the left edge so that animated nodes
-     can be displayed in a sidebar */
+  /* Make the background be 100% of the timeline area so that it resizes with
+     it*/
+  background-size: calc(100% - var(--timeline-sidebar-width)) 100%;
   background-position: var(--timeline-sidebar-width) 0;
   display: flex;
   flex-direction: column;
 }
 
+.animation-timeline .scrubber-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--timeline-sidebar-width);
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .animation-timeline .scrubber {
   position: absolute;
   height: 100%;
-  width: var(--timeline-sidebar-width);
+  width: 0;
   border-right: 1px solid red;
   box-sizing: border-box;
-  z-index: 1;
-  pointer-events: none;
 }
 
 .animation-timeline .scrubber::before {
@@ -342,6 +351,7 @@ body {
   /* Animations running on the compositor have the fast-track background image*/
   background-image: url("images/animation-fast-track.svg");
   background-repeat: no-repeat;
+  background-position: calc(100% - 5px) center;
 }
 
 .animation-timeline .animation .delay {
