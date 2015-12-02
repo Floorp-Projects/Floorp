@@ -425,7 +425,7 @@ EOF
 peep install -r requirements.txt
 
 # TC-VCS
-npm install -g taskcluster-vcs@2.3.12
+npm install -g taskcluster-vcs@2.3.18
 
 # Ninja
 cd $BUILD
