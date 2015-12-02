@@ -105,9 +105,39 @@ typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
     void **factory
 );
 
+static IDXGIAdapter1*
+FindDXGIAdapter(NPP npp, IDXGIFactory1* factory)
+{
+  DXGI_ADAPTER_DESC preferred;
+  if (NPN_GetValue(npp, NPNVpreferredDXGIAdapter, &preferred) != NPERR_NO_ERROR) {
+    return nullptr;
+  }
+
+  UINT index = 0;
+  for (;;) {
+    IDXGIAdapter1* adapter = nullptr;
+    if (FAILED(factory->EnumAdapters1(index, &adapter)) || !adapter) {
+      return nullptr;
+    }
+
+    DXGI_ADAPTER_DESC desc;
+    if (SUCCEEDED(adapter->GetDesc(&desc)) &&
+        desc.AdapterLuid.LowPart == preferred.AdapterLuid.LowPart &&
+        desc.AdapterLuid.HighPart == preferred.AdapterLuid.HighPart &&
+        desc.VendorId == preferred.VendorId &&
+        desc.DeviceId == preferred.DeviceId)
+    {
+      return adapter;
+    }
+
+    adapter->Release();
+    index++;
+  }
+}
+
 // Note: we leak modules since we need them anyway.
 bool
-setupDxgiSurfaces(InstanceData* instanceData)
+setupDxgiSurfaces(NPP npp, InstanceData* instanceData)
 {
   HMODULE dxgi = LoadLibraryA("dxgi.dll");
   if (!dxgi) {
@@ -125,9 +155,8 @@ setupDxgiSurfaces(InstanceData* instanceData)
     return false;
   }
 
-  hr = factory1->EnumAdapters1(0, &instanceData->platformData->adapter);
-  factory1->Release();
-  if (FAILED(hr) || !instanceData->platformData->adapter) {
+  instanceData->platformData->adapter = FindDXGIAdapter(npp, factory1);
+  if (!instanceData->platformData->adapter) {
     return false;
   }
 

@@ -398,6 +398,39 @@ PluginInstanceParent::AnswerNPN_GetValue_SupportsAsyncDXGISurface(bool* value)
 }
 
 bool
+PluginInstanceParent::AnswerNPN_GetValue_PreferredDXGIAdapter(DxgiAdapterDesc* aOutDesc)
+{
+    PodZero(aOutDesc);
+#ifdef XP_WIN
+    if (!AllowDirectDXGISurfaceDrawing()) {
+        return false;
+    }
+
+    ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+    if (!device) {
+        return false;
+    }
+
+    RefPtr<IDXGIDevice> dxgi;
+    if (FAILED(device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgi))) || !dxgi) {
+        return false;
+    }
+    RefPtr<IDXGIAdapter> adapter;
+    if (FAILED(dxgi->GetAdapter(getter_AddRefs(adapter))) || !adapter) {
+        return false;
+    }
+
+    DXGI_ADAPTER_DESC desc;
+    if (FAILED(adapter->GetDesc(&desc))) {
+         return false;
+    }
+
+    *aOutDesc = DxgiAdapterDesc::From(desc);
+#endif
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginWindow(
     const bool& windowed, NPError* result)
 {
