@@ -1145,29 +1145,24 @@ js::detail::IdMatchesAtom(jsid id, JSAtom* atom)
     return id == INTERNED_STRING_TO_JSID(nullptr, atom);
 }
 
-JS_FRIEND_API(void)
+JS_FRIEND_API(bool)
 js::PrepareScriptEnvironmentAndInvoke(JSRuntime* rt, HandleObject scope, ScriptEnvironmentPreparer::Closure& closure)
 {
-    if (rt->scriptEnvironmentPreparer) {
-        rt->scriptEnvironmentPreparer->invoke(scope, closure);
-        return;
-    }
+    if (rt->scriptEnvironmentPreparer)
+        return rt->scriptEnvironmentPreparer->invoke(scope, closure);
 
     MOZ_ASSERT(rt->contextList.getFirst() == rt->contextList.getLast());
     JSContext* cx = rt->contextList.getFirst();
-    MOZ_ASSERT(!cx->isExceptionPending());
     JSAutoCompartment ac(cx, scope);
     bool ok = closure(cx);
 
-    MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
-
     // NB: This does not affect Gecko, which has a prepareScriptEnvironment
     // callback.
-    if (!ok) {
+    if (JS_IsExceptionPending(cx)) {
         JS_ReportPendingException(cx);
     }
 
-    MOZ_ASSERT(!cx->isExceptionPending());
+    return ok;
 }
 
 JS_FRIEND_API(void)
