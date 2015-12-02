@@ -206,26 +206,26 @@ CompositorChild::RecvInvalidateAll()
 }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-static void CalculatePluginClip(const gfx::IntRect& aBounds,
-                                const nsTArray<gfx::IntRect>& aPluginClipRects,
-                                const nsIntPoint& aContentOffset,
-                                const nsIntRegion& aParentLayerVisibleRegion,
-                                nsTArray<gfx::IntRect>& aResult,
+static void CalculatePluginClip(const LayoutDeviceIntRect& aBounds,
+                                const nsTArray<LayoutDeviceIntRect>& aPluginClipRects,
+                                const LayoutDeviceIntPoint& aContentOffset,
+                                const LayoutDeviceIntRegion& aParentLayerVisibleRegion,
+                                nsTArray<LayoutDeviceIntRect>& aResult,
                                 LayoutDeviceIntRect& aVisibleBounds,
                                 bool& aPluginIsVisible)
 {
   aPluginIsVisible = true;
-  nsIntRegion contentVisibleRegion;
+  LayoutDeviceIntRegion contentVisibleRegion;
   // aPluginClipRects (plugin widget origin) - contains *visible* rects
   for (uint32_t idx = 0; idx < aPluginClipRects.Length(); idx++) {
-    gfx::IntRect rect = aPluginClipRects[idx];
+    LayoutDeviceIntRect rect = aPluginClipRects[idx];
     // shift to content origin
     rect.MoveBy(aBounds.x, aBounds.y);
     // accumulate visible rects
     contentVisibleRegion.OrWith(rect);
   }
   // apply layers clip (window origin)
-  nsIntRegion region = aParentLayerVisibleRegion;
+  LayoutDeviceIntRegion region = aParentLayerVisibleRegion;
   region.MoveBy(-aContentOffset.x, -aContentOffset.y);
   contentVisibleRegion.AndWith(region);
   if (contentVisibleRegion.IsEmpty()) {
@@ -234,18 +234,17 @@ static void CalculatePluginClip(const gfx::IntRect& aBounds,
   }
   // shift to plugin widget origin
   contentVisibleRegion.MoveBy(-aBounds.x, -aBounds.y);
-  nsIntRegionRectIterator iter(contentVisibleRegion);
-  for (const gfx::IntRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
+  LayoutDeviceIntRegion::RectIterator iter(contentVisibleRegion);
+  for (const LayoutDeviceIntRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
     aResult.AppendElement(*rgnRect);
-    aVisibleBounds.UnionRect(aVisibleBounds,
-                             LayoutDeviceIntRect::FromUnknownRect(*rgnRect));
+    aVisibleBounds.UnionRect(aVisibleBounds, *rgnRect);
   }
 }
 #endif
 
 bool
-CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset,
-                                                const nsIntRegion& aParentLayerVisibleRegion,
+CompositorChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
+                                                const LayoutDeviceIntRegion& aParentLayerVisibleRegion,
                                                 nsTArray<PluginWindowData>&& aPlugins)
 {
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
@@ -274,7 +273,7 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
     }
     bool isVisible = aPlugins[pluginsIdx].visible();
     if (widget && !widget->Destroyed()) {
-      gfx::IntRect bounds;
+      LayoutDeviceIntRect bounds;
       LayoutDeviceIntRect visibleBounds;
       // If the plugin is visible update it's geometry.
       if (isVisible) {
@@ -286,10 +285,11 @@ CompositorChild::RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset
                             aContentOffset.y + bounds.y,
                             bounds.width, bounds.height, false);
         NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
-        nsTArray<gfx::IntRect> rectsOut;
+        nsTArray<LayoutDeviceIntRect> rectsOut;
         // This call may change the value of isVisible
         CalculatePluginClip(bounds, aPlugins[pluginsIdx].clip(),
-                            aContentOffset, aParentLayerVisibleRegion,
+                            aContentOffset,
+                            aParentLayerVisibleRegion,
                             rectsOut, visibleBounds, isVisible);
         // content clipping region (widget origin)
         rv = widget->SetWindowClipRegion(rectsOut, false);

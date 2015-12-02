@@ -693,37 +693,37 @@ nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
 }
 
 bool
-nsBaseWidget::IsWindowClipRegionEqual(const nsTArray<nsIntRect>& aRects)
+nsBaseWidget::IsWindowClipRegionEqual(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
   return mClipRects &&
          mClipRectCount == aRects.Length() &&
-         memcmp(mClipRects.get(), aRects.Elements(), sizeof(nsIntRect)*mClipRectCount) == 0;
+         memcmp(mClipRects.get(), aRects.Elements(), sizeof(LayoutDeviceIntRect)*mClipRectCount) == 0;
 }
 
 void
-nsBaseWidget::StoreWindowClipRegion(const nsTArray<nsIntRect>& aRects)
+nsBaseWidget::StoreWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
   mClipRectCount = aRects.Length();
-  mClipRects = MakeUnique<nsIntRect[]>(mClipRectCount);
+  mClipRects = MakeUnique<LayoutDeviceIntRect[]>(mClipRectCount);
   if (mClipRects) {
-    memcpy(mClipRects.get(), aRects.Elements(), sizeof(nsIntRect)*mClipRectCount);
+    memcpy(mClipRects.get(), aRects.Elements(), sizeof(LayoutDeviceIntRect)*mClipRectCount);
   }
 }
 
 void
-nsBaseWidget::GetWindowClipRegion(nsTArray<nsIntRect>* aRects)
+nsBaseWidget::GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects)
 {
   if (mClipRects) {
     aRects->AppendElements(mClipRects.get(), mClipRectCount);
   } else {
-    aRects->AppendElement(nsIntRect(0, 0, mBounds.width, mBounds.height));
+    aRects->AppendElement(LayoutDeviceIntRect(0, 0, mBounds.width, mBounds.height));
   }
 }
 
-const nsIntRegion
-nsBaseWidget::RegionFromArray(const nsTArray<nsIntRect>& aRects)
+const LayoutDeviceIntRegion
+nsBaseWidget::RegionFromArray(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
-  nsIntRegion region;
+  LayoutDeviceIntRegion region;
   for (uint32_t i = 0; i < aRects.Length(); ++i) {
     region.Or(region, aRects[i]);
   }
@@ -731,33 +731,34 @@ nsBaseWidget::RegionFromArray(const nsTArray<nsIntRect>& aRects)
 }
 
 void
-nsBaseWidget::ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects)
+nsBaseWidget::ArrayFromRegion(const LayoutDeviceIntRegion& aRegion,
+                              nsTArray<LayoutDeviceIntRect>& aRects)
 {
-  const nsIntRect* r;
-  for (nsIntRegionRectIterator iter(aRegion); (r = iter.Next());) {
+  const LayoutDeviceIntRect* r;
+  for (LayoutDeviceIntRegion::RectIterator iter(aRegion); (r = iter.Next()); ) {
     aRects.AppendElement(*r);
   }
 }
 
 nsresult
-nsBaseWidget::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+nsBaseWidget::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                   bool aIntersectWithExisting)
 {
   if (!aIntersectWithExisting) {
     StoreWindowClipRegion(aRects);
   } else {
     // get current rects
-    nsTArray<nsIntRect> currentRects;
+    nsTArray<LayoutDeviceIntRect> currentRects;
     GetWindowClipRegion(&currentRects);
     // create region from them
-    nsIntRegion currentRegion = RegionFromArray(currentRects);
+    LayoutDeviceIntRegion currentRegion = RegionFromArray(currentRects);
     // create region from new rects
-    nsIntRegion newRegion = RegionFromArray(aRects);
+    LayoutDeviceIntRegion newRegion = RegionFromArray(aRects);
     // intersect regions
-    nsIntRegion intersection;
+    LayoutDeviceIntRegion intersection;
     intersection.And(currentRegion, newRegion);
     // create int rect array from intersection
-    nsTArray<nsIntRect> rects;
+    nsTArray<LayoutDeviceIntRect> rects;
     ArrayFromRegion(intersection, rects);
     // store
     StoreWindowClipRegion(rects);
