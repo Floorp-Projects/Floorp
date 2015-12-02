@@ -128,10 +128,7 @@ DIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   }
 
   DataSourceSurface::MappedSurface sourceMap;
-  if (!srcSurf->Map(gfx::DataSourceSurface::READ, &sourceMap)) {
-    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
-    return false;
-  }
+  srcSurf->Map(DataSourceSurface::READ, &sourceMap);
 
   for (int y = 0; y < srcSurf->GetSize().height; y++) {
     memcpy(imgSurf->Data() + imgSurf->Stride() * y,
@@ -233,9 +230,10 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* data = (uint8_t*)::MapViewOfFile(fileMapping, FILE_MAP_WRITE | FILE_MAP_READ,
-                                            0, 0, mapSize);
+                                            0, 0, aSize.width * aSize.height
+                                                  * BytesPerPixel(aFormat));
 
-  memset(data, 0x80, mapSize);
+  memset(data, 0x80, aSize.width * aSize.height * BytesPerPixel(aFormat));
 
   ::UnmapViewOfFile(fileMapping);
 
@@ -389,14 +387,6 @@ TextureHostFileMapping::~TextureHostFileMapping()
   ::CloseHandle(mFileMapping);
 }
 
-UserDataKey kFileMappingKey;
-
-static void UnmapFileData(void* aData)
-{
-  MOZ_ASSERT(aData);
-  ::UnmapViewOfFile(aData);
-}
-
 void
 TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
 {
@@ -415,14 +405,14 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   if (data) {
     RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
 
-    surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
-
     if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
       mTextureSource = nullptr;
     }
   } else {
     mTextureSource = nullptr;
   }
+
+  ::UnmapViewOfFile(data);
 }
 
 }
