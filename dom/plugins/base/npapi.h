@@ -426,6 +426,7 @@ typedef enum {
   , NPNVsupportsAsyncBitmapSurfaceBool = 2007
 #if defined(XP_WIN)
   , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2008
+  , NPNVpreferredDXGIAdapter = 2009
 #endif
 #if defined(XP_MACOSX)
 #ifndef NP_NO_CARBON

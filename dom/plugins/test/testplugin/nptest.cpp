@@ -1198,7 +1198,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 
 #if defined(XP_WIN)
     if (instanceData->asyncDrawing == AD_DXGI) {
-      if (!setupDxgiSurfaces(instanceData)) {
+      if (!setupDxgiSurfaces(instance, instanceData)) {
         return NPERR_GENERIC_ERROR;
       }
     }

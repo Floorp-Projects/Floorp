@@ -161,7 +161,7 @@ typedef struct InstanceData {
 void notifyDidPaint(InstanceData* instanceData);
 
 #if defined(XP_WIN)
-bool setupDxgiSurfaces(InstanceData* instanceData);
+bool setupDxgiSurfaces(NPP npp, InstanceData* instanceData);
 void drawDxgiBitmapColor(InstanceData* instanceData);
 #endif
 

@@ -30,6 +30,7 @@ using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMe
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using nsIntRect from "nsRect.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
 
 namespace mozilla {
 namespace plugins {
@@ -153,6 +154,8 @@ parent:
     returns (bool value);
   intr NPN_GetValue_SupportsAsyncDXGISurface()
     returns (bool value);
+  intr NPN_GetValue_PreferredDXGIAdapter()
+    returns (DxgiAdapterDesc desc);
 
   intr NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
