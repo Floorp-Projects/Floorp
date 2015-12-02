@@ -242,7 +242,7 @@ IonBuilder::spew(const char* message)
 static inline int32_t
 GetJumpOffset(jsbytecode* pc)
 {
-    MOZ_ASSERT(js_CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
+    MOZ_ASSERT(CodeSpec[JSOp(*pc)].type() == JOF_JUMP);
     return GET_JUMP_OFFSET(pc);
 }
 
@@ -639,7 +639,7 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock* entry, jsbytecode* start, jsbytecod
         if (*last == JSOP_POS)
             last = earlier;
 
-        if (js_CodeSpec[*last].format & JOF_TYPESET) {
+        if (CodeSpec[*last].format & JOF_TYPESET) {
             TemporaryTypeSet* typeSet = bytecodeTypes(last);
             if (!typeSet->empty()) {
                 MIRType type = typeSet->getKnownMIRType();
@@ -1565,7 +1565,7 @@ IonBuilder::traverseBytecode()
         }
 #endif
 
-        pc += js_CodeSpec[op].length;
+        pc += CodeSpec[op].length;
         current->updateTrackedSite(bytecodeSite(pc));
     }
 
@@ -1993,6 +1993,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_FUNCTIONTHIS:
         return jsop_functionthis();
 
+      case JSOP_GLOBALTHIS:
+        return jsop_globalthis();
+
       case JSOP_CALLEE: {
          MDefinition* callee = getCallee();
          current->push(callee);
@@ -2111,7 +2114,7 @@ IonBuilder::inspectOpcode(JSOp op)
     // thing anyways.
     trackActionableAbort("Unsupported bytecode");
 #ifdef DEBUG
-    return abort("Unsupported opcode: %s", js_CodeName[op]);
+    return abort("Unsupported opcode: %s", CodeName[op]);
 #else
     return abort("Unsupported opcode: %d", op);
 #endif
@@ -2436,7 +2439,7 @@ IonBuilder::restartLoop(CFGState state)
 {
     spew("New types at loop header, restarting loop body");
 
-    if (js_JitOptions.limitScriptSize) {
+    if (JitOptions.limitScriptSize) {
         if (++numLoopRestarts_ >= MAX_LOOP_RESTARTS)
             return ControlStatus_Abort;
     }
@@ -2922,7 +2925,7 @@ IonBuilder::processBreak(JSOp op, jssrcnote* sn)
     MOZ_ASSERT(found);
 
     setCurrent(nullptr);
-    pc += js_CodeSpec[op].length;
+    pc += CodeSpec[op].length;
     return processControlEnd();
 }
 
@@ -2959,7 +2962,7 @@ IonBuilder::processContinue(JSOp op)
     state.loop.continues = new(alloc()) DeferredEdge(current, state.loop.continues);
 
     setCurrent(nullptr);
-    pc += js_CodeSpec[op].length;
+    pc += CodeSpec[op].length;
     return processControlEnd();
 }
 
@@ -2998,7 +3001,7 @@ IonBuilder::processSwitchBreak(JSOp op)
     *breaks = new(alloc()) DeferredEdge(current, *breaks);
 
     setCurrent(nullptr);
-    pc += js_CodeSpec[op].length;
+    pc += CodeSpec[op].length;
     return processControlEnd();
 }
 
@@ -4246,7 +4249,7 @@ IonBuilder::jsop_andor(JSOp op)
 {
     MOZ_ASSERT(op == JSOP_AND || op == JSOP_OR);
 
-    jsbytecode* rhsStart = pc + js_CodeSpec[op].length;
+    jsbytecode* rhsStart = pc + CodeSpec[op].length;
     jsbytecode* joinStart = pc + GetJumpOffset(pc);
     MOZ_ASSERT(joinStart > pc);
 
@@ -4308,7 +4311,7 @@ bool
 IonBuilder::jsop_ifeq(JSOp op)
 {
     // IFEQ always has a forward offset.
-    jsbytecode* trueStart = pc + js_CodeSpec[op].length;
+    jsbytecode* trueStart = pc + CodeSpec[op].length;
     jsbytecode* falseStart = pc + GetJumpOffset(pc);
     MOZ_ASSERT(falseStart > pc);
 
@@ -4785,7 +4788,7 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
 
     // Try to emit a shared stub cache.
 
-    if (js_JitOptions.disableSharedStubs)
+    if (JitOptions.disableSharedStubs)
         return true;
 
     // The actual jsop 'jsop_pos' is not supported yet.
@@ -5266,7 +5269,7 @@ IonBuilder::makeInliningDecision(JSObject* targetArg, CallInfo& callInfo)
     // Cap the inlining depth.
 
     uint32_t maxInlineDepth;
-    if (js_JitOptions.isSmallFunction(targetScript)) {
+    if (JitOptions.isSmallFunction(targetScript)) {
         maxInlineDepth = optimizationInfo().smallFunctionMaxInlineDepth();
     } else {
         maxInlineDepth = optimizationInfo().maxInlineDepth();
@@ -7017,7 +7020,7 @@ IonBuilder::compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDef
 
     // Try to emit a shared stub cache.
 
-    if (js_JitOptions.disableSharedStubs)
+    if (JitOptions.disableSharedStubs)
         return true;
 
     if (JSOp(*pc) == JSOP_CASE)
@@ -7733,7 +7736,7 @@ IonBuilder::insertRecompileCheck()
 {
     // No need for recompile checks if this is the highest optimization level.
     OptimizationLevel curLevel = optimizationInfo().level();
-    if (js_IonOptimizations.isLastLevel(curLevel))
+    if (IonOptimizations.isLastLevel(curLevel))
         return;
 
     // Add recompile check.
@@ -7744,8 +7747,8 @@ IonBuilder::insertRecompileCheck()
 
     // Add recompile check to recompile when the warm-up count reaches the
     // threshold of the next optimization level.
-    OptimizationLevel nextLevel = js_IonOptimizations.nextLevel(curLevel);
-    const OptimizationInfo* info = js_IonOptimizations.get(nextLevel);
+    OptimizationLevel nextLevel = IonOptimizations.nextLevel(curLevel);
+    const OptimizationInfo* info = IonOptimizations.get(nextLevel);
     uint32_t warmUpThreshold = info->compilerWarmUpThreshold(topBuilder->script());
     MRecompileCheck* check = MRecompileCheck::New(alloc(), topBuilder->script(), warmUpThreshold,
                                 MRecompileCheck::RecompileCheck_OptimizationLevel);
@@ -11907,7 +11910,7 @@ IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
 
     // Try to emit a shared stub cache.
 
-    if (js_JitOptions.disableSharedStubs)
+    if (JitOptions.disableSharedStubs)
         return true;
 
     MInstruction* stub = MUnarySharedStub::New(alloc(), obj);
@@ -12918,6 +12921,20 @@ IonBuilder::jsop_functionthis()
     current->push(thisObj);
 
     return resumeAfter(thisObj);
+}
+
+bool
+IonBuilder::jsop_globalthis()
+{
+    if (script()->hasNonSyntacticScope()) {
+        // Ion does not compile global scripts with a non-syntactic scope, but
+        // we can end up here when we're compiling an arrow function.
+        return abort("JSOP_GLOBALTHIS in script with non-syntactic scope");
+    }
+
+    ClonedBlockObject* globalLexical = &script()->global().lexicalScope();
+    pushConstant(globalLexical->thisValue());
+    return true;
 }
 
 bool

@@ -122,41 +122,7 @@ class ReftestRunner(MozbuildObject):
                 path = os.path.relpath(path, os.path.join(self.topsrcdir))
             kwargs["tests"][i] = os.path.join('tests', path)
 
-        if conditions.is_b2g_desktop(self):
-            return self.run_b2g_desktop(**kwargs)
-
         return self.run_b2g_remote(b2g_home, xre_path, **kwargs)
-
-    def run_b2g_desktop(self, **kwargs):
-        if self.substs.get('ENABLE_MARIONETTE') != '1':
-            print(MARIONETTE_DISABLED % ('mochitest-b2g-desktop',
-                                         self.mozconfig['path']))
-            return 1
-
-        if not kwargs["profile"]:
-            gaia_profile = os.environ.get('GAIA_PROFILE')
-            if not gaia_profile:
-                print(GAIA_PROFILE_NOT_FOUND % 'reftest-b2g-desktop')
-                return 1
-            kwargs["profile"] = gaia_profile
-
-
-        if os.path.isfile(os.path.join(kwargs["profile"], 'extensions',
-                                       'httpd@gaiamobile.org')):
-            print(GAIA_PROFILE_IS_DEBUG % ('mochitest-b2g-desktop',
-                                           kwargs["profile"]))
-            return 1
-
-        kwargs["desktop"] = True
-        kwargs["app"] = self.get_binary_path()
-        if kwargs["oop"]:
-            options.browser_arg = '-oop'
-        if not kwargs["app"].endswith('-bin'):
-            kwargs["app"] = '%s-bin' % options.app
-        if not os.path.isfile(kwargs["app"]):
-            options.app = kwargs["app"][:-len('-bin')]
-
-        return runreftestb2g.run(**kwargs)
 
     def run_b2g_remote(self, b2g_home, xre_path, **kwargs):
         import runreftestb2g
@@ -390,14 +356,6 @@ class B2GCommands(MachCommandBase):
              conditions=[conditions.is_b2g, is_emulator],
              parser=reftestcommandline.B2GArgumentParser)
     def run_reftest_remote(self, **kwargs):
-        kwargs["suite"] = "reftest"
-        return self._run_reftest(**kwargs)
-
-    @Command('reftest-b2g-desktop', category='testing',
-             description='Run a b2g desktop reftest (b2g desktop layout and graphics correctness).',
-             conditions=[conditions.is_b2g_desktop],
-             parser=reftestcommandline.B2GArgumentParser)
-    def run_reftest_b2g_desktop(self, **kwargs):
         kwargs["suite"] = "reftest"
         return self._run_reftest(**kwargs)
 

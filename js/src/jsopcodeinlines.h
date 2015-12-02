@@ -46,9 +46,9 @@ GetUseCount(JSScript* script, unsigned offset)
 
     if (JSOp(*pc) == JSOP_PICK)
         return pc[1] + 1;
-    if (js_CodeSpec[*pc].nuses == -1)
+    if (CodeSpec[*pc].nuses == -1)
         return StackUses(script, pc);
-    return js_CodeSpec[*pc].nuses;
+    return CodeSpec[*pc].nuses;
 }
 
 static inline JSOp

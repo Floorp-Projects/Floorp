@@ -839,7 +839,7 @@ class FullParseHandler
         node->setOp(node->isOp(JSOP_GETLOCAL) ? JSOP_SETLOCAL : JSOP_SETNAME);
     }
     void maybeDespecializeSet(ParseNode* node) {
-        if (!(js_CodeSpec[node->getOp()].format & JOF_SET))
+        if (!(CodeSpec[node->getOp()].format & JOF_SET))
             node->setOp(JSOP_SETNAME);
     }
 

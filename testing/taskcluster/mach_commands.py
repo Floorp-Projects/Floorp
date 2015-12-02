@@ -34,6 +34,12 @@ DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
 
+def merge_dicts(*dicts):
+    merged_dict = {}
+    for dictionary in dicts:
+        merged_dict.update(dictionary)
+    return merged_dict
+
 def gaia_info():
     '''
     Fetch details from in tree gaia.json (which links this version of
@@ -381,7 +387,7 @@ class Graph(object):
 
         for build in job_graph:
             interactive = cmdline_interactive or build["interactive"]
-            build_parameters = dict(parameters)
+            build_parameters = merge_dicts(parameters, build['additional-parameters']);
             build_parameters['build_slugid'] = slugid()
             build_task = templates.load(build['task'], build_parameters)
 
@@ -484,7 +490,10 @@ class Graph(object):
 
             for post_build in build['post-build']:
                 # copy over the old parameters to update the template
-                post_parameters = copy.copy(build_parameters)
+                # TODO additional-parameters is currently not an option, only
+                # enabled for build tasks
+                post_parameters = merge_dicts(build_parameters,
+                                              post_build.get('additional-parameters', {}))
                 post_task = configure_dependent_task(post_build['task'],
                                                      post_parameters,
                                                      slugid(),
@@ -500,6 +509,10 @@ class Graph(object):
 
             for test in build['dependents']:
                 test = test['allowed_build_tasks'][build['task']]
+                # TODO additional-parameters is currently not an option, only
+                # enabled for build tasks
+                test_parameters = merge_dicts(build_parameters,
+                                              test.get('additional-parameters', {}))
                 test_parameters = copy.copy(build_parameters)
                 if tests_url:
                     test_parameters['tests_url'] = tests_url

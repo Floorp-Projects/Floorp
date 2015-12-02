@@ -145,8 +145,6 @@ class Operand
     Operand (const FloatRegister) { MOZ_CRASH();}
     Operand (Register, Imm32 ) { MOZ_CRASH(); }
     Operand (Register, int32_t ) { MOZ_CRASH(); }
-
-
 };
 
 class MacroAssemblerNone : public Assembler
@@ -164,6 +162,9 @@ class MacroAssemblerNone : public Assembler
 
     size_t numCodeLabels() const { MOZ_CRASH(); }
     CodeLabel codeLabel(size_t) { MOZ_CRASH(); }
+
+    void retargetWithOffset(size_t, const LabelBase*, LabelBase*) { MOZ_CRASH(); }
+    bool asmMergeWith(const MacroAssemblerNone&) { MOZ_CRASH(); }
 
     void trace(JSTracer*) { MOZ_CRASH(); }
     static void TraceJumpRelocations(JSTracer*, JitCode*, CompactBufferReader&) { MOZ_CRASH(); }
