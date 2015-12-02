@@ -1,7 +1,11 @@
 importScripts('worker-testharness.js');
 
 promise_test(function() {
-    return self.skipWaiting()
+    // wait for the worker to reach "installing" state, otherwise skipWaiting()
+    // will fail. Bug 1228277
+    return new Promise(function(res, rej) {
+      oninstall = res;
+    }).then(() => skipWaiting())
       .then(function(result) {
           assert_equals(result, undefined,
                         'Promise should be resolved with undefined');
