@@ -11,9 +11,6 @@ const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-01.html";
 var { RootActor } = require("devtools/server/actors/root");
 
 function test() {
-  let gTab, gDebuggee, gPanel, gDebugger;
-  let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
-
   RootActor.prototype.traits.noBlackBoxing = true;
   RootActor.prototype.traits.noPrettyPrinting = true;
 

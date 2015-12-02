@@ -218,6 +218,7 @@ class MachCommands(MachCommandBase):
         return self.run_process(cmd_args,
             pass_thru=True,  # Allow user to run eslint interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
+            require_unix_environment=True # eslint is not a valid Win32 binary.
         )
     def eslint_setup(self, update_only=False):
         """Ensure eslint is optimally configured.

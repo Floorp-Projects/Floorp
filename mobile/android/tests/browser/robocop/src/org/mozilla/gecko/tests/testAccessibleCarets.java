@@ -6,30 +6,26 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.GeckoEventListener;
 
-import android.os.SystemClock;
 import android.util.Log;
-import android.view.MotionEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class testSelectionCarets extends JavascriptTest implements GeckoEventListener {
-    private static final String LOGTAG = "testSelectionCarets";
 
-    private static final String LONGPRESS_EVENT = "testSelectionCarets:Longpress";
-    private static final String TAB_CHANGE_EVENT = "testSelectionCarets:TabChange";
+public class testAccessibleCarets extends JavascriptTest {
+    private static final String LOGTAG = "testAccessibleCarets";
+    private static final String TAB_CHANGE_EVENT = "testAccessibleCarets:TabChange";
 
     private final TabsListener tabsListener;
 
-    public testSelectionCarets() {
-        super("testSelectionCarets.js");
+
+    public testAccessibleCarets() {
+        super("testAccessibleCarets.js");
 
         tabsListener = new TabsListener();
     }
@@ -39,7 +35,13 @@ public class testSelectionCarets extends JavascriptTest implements GeckoEventLis
         super.setUp();
 
         Tabs.registerOnTabsChangedListener(tabsListener);
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, LONGPRESS_EVENT);
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        Tabs.unregisterOnTabsChangedListener(tabsListener);
+
+        super.tearDown();
     }
 
     @Override
@@ -50,34 +52,6 @@ public class testSelectionCarets extends JavascriptTest implements GeckoEventLis
             return;
         }
         super.testJavascript();
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        Tabs.unregisterOnTabsChangedListener(tabsListener);
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, LONGPRESS_EVENT);
-
-        super.tearDown();
-    }
-
-    /**
-     * The test script will request us to trigger Longpress AndroidGeckoEvents.
-    */
-    @Override
-    public void handleMessage(String event, final JSONObject message) {
-        switch(event) {
-            case LONGPRESS_EVENT: {
-                final long meTime = SystemClock.uptimeMillis();
-                final int meX = Math.round(message.optInt("x", 0));
-                final int meY = Math.round(message.optInt("y", 0));
-                final MotionEvent motionEvent =
-                    MotionEvent.obtain(meTime, meTime, MotionEvent.ACTION_DOWN, meX, meY, 0);
-
-                final GeckoEvent geckoEvent = GeckoEvent.createLongPressEvent(motionEvent);
-                GeckoAppShell.sendEventToGecko(geckoEvent);
-                break;
-            }
-        }
     }
 
     /**

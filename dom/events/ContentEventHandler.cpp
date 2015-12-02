@@ -1658,7 +1658,10 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
       }
     }
   }
-  mSelection->EndBatchChanges();
+
+  // Pass the eSetSelection events reason along with the BatchChange-end
+  // selection change notifications.
+  mSelection->EndBatchChangesInternal(aEvent->mReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSelection->ScrollIntoViewInternal(

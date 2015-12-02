@@ -120,11 +120,10 @@ var DevEdition = {
   }
 };
 
-#ifndef RELEASE_BUILD
 // If the DevEdition theme is going to be applied in gBrowserInit.onLoad,
 // then preload it now.  This prevents a flash of unstyled content where the
 // normal theme is applied while the DevEdition stylesheet is loading.
-if (this != Services.appShell.hiddenDOMWindow && DevEdition.isThemeCurrentlyApplied) {
+if (!AppConstants.RELEASE_BUILD &&
+    this != Services.appShell.hiddenDOMWindow && DevEdition.isThemeCurrentlyApplied) {
   DevEdition.createStyleSheet();
 }
-#endif

@@ -9,19 +9,16 @@ const { bindActionCreators } = require('devtools/client/shared/vendor/redux');
 /**
  * Functions handling the event listeners UI.
  */
-function EventListenersView(store, DebuggerController) {
+function EventListenersView(controller) {
   dumpn("EventListenersView was instantiated");
 
-  this.actions = bindActionCreators(actions, store.dispatch);
-  this.getState = () => store.getState().eventListeners;
+  this.actions = bindActionCreators(actions, controller.dispatch);
+  this.getState = () => controller.getState().eventListeners;
 
   this._onCheck = this._onCheck.bind(this);
   this._onClick = this._onClick.bind(this);
-  this._onListeners = this._onListeners.bind(this);
 
-  this.Breakpoints = DebuggerController.Breakpoints;
-  this.controller = DebuggerController;
-  this.controller.on("@redux:listeners", this._onListeners);
+  controller.onChange("event-listeners", this.renderListeners.bind(this));
 }
 
 EventListenersView.prototype = Heritage.extend(WidgetMethods, {
@@ -52,10 +49,8 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function() {
     dumpn("Destroying the EventListenersView");
 
-    this.controller.off("@redux:listeners", this._onListeners);
     this.widget.removeEventListener("check", this._onCheck, false);
     this.widget.removeEventListener("click", this._onClick, false);
-    this.controller = this.Breakpoints = null;
   },
 
   renderListeners: function(listeners) {
@@ -284,13 +279,6 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
       let newState = eventItem.attachment.checkboxState ^= 1;
       this.callMethod("checkItem", eventItem.target, newState);
     }
-  },
-
-  /**
-   * Called when listeners change.
-   */
-  _onListeners: function(_, listeners) {
-    this.renderListeners(listeners);
   },
 
   _eventCheckboxTooltip: "",

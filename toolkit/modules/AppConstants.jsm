@@ -59,6 +59,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_DATA_REPORTING:
+#ifdef MOZ_DATA_REPORTING
+  true,
+#else
+  false,
+#endif
+
   MOZ_DEVICES:
 #ifdef MOZ_DEVICES
   true,
@@ -89,6 +96,13 @@ this.AppConstants = Object.freeze({
 
   MOZ_TELEMETRY_REPORTING:
 #ifdef MOZ_TELEMETRY_REPORTING
+  true,
+#else
+  false,
+#endif
+
+  MOZ_SERVICES_CLOUDSYNC:
+#ifdef MOZ_SERVICES_CLOUDSYNC
   true,
 #else
   false,

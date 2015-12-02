@@ -59,6 +59,13 @@ protected:
     return false;
   }
 
+  // Override this in the subclass to check for special case when opening
+  // channels.
+  virtual nsresult SubstituteChannel(nsIURI* uri, nsILoadInfo* aLoadInfo, nsIChannel** result)
+  {
+    return NS_OK;
+  }
+
   nsIIOService* IOService() { return mIOService; }
 
 private:

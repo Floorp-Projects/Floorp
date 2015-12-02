@@ -5,16 +5,21 @@
 
 package org.mozilla.gecko.home;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.annotation.RobocopTarget;
+
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -25,6 +30,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
@@ -241,6 +247,15 @@ public class BrowserSearch extends HomeFragment
     @Override
     public void onHiddenChanged(boolean hidden) {
         if (!hidden) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            final boolean isPrivate = (tab != null && tab.isPrivate());
+
+            // Removes Search Suggestions Loader if in private browsing mode
+            // Loader may have been inserted when browsing in normal tab
+            if (isPrivate) {
+                getLoaderManager().destroyLoader(LOADER_ID_SUGGESTION);
+            }
+
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
         }
         super.onHiddenChanged(hidden);
@@ -458,9 +473,51 @@ public class BrowserSearch extends HomeFragment
         return url.substring(offset, chop);
     }
 
+    LinkedHashSet<String> domains = null;
+    private LinkedHashSet<String> getDomains() {
+        if (domains == null) {
+            domains = new LinkedHashSet<String>();
+            BufferedReader buf = null;
+            try {
+                buf = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.topdomains)));
+                String res = null;
+
+                do {
+                    res = buf.readLine();
+                    if (res != null) {
+                        domains.add(res);
+                    }
+                } while (res != null);
+            } catch (IOException e) {
+                Log.e(LOGTAG, "Error reading domains", e);
+            } finally {
+                if (buf != null) {
+                    try {
+                        buf.close();
+                    } catch (IOException e) { }
+                }
+            }
+        }
+        return domains;
+    }
+
+    private String searchDomains(String search) {
+        if (AppConstants.NIGHTLY_BUILD == false) {
+            return null;
+        }
+
+        for (String domain : getDomains()) {
+            if (domain.startsWith(search)) {
+                return domain;
+            }
+        }
+        return null;
+    }
+
     private String findAutocompletion(String searchTerm, Cursor c, boolean searchPath) {
         if (!c.moveToFirst()) {
-            return null;
+            // No cursor probably means no history, so let's try the fallback list.
+            return searchDomains(searchTerm);
         }
 
         final int searchLength = searchTerm.length();
@@ -522,7 +579,8 @@ public class BrowserSearch extends HomeFragment
             }
         } while (searchCount < MAX_AUTOCOMPLETE_SEARCH && c.moveToNext());
 
-        return null;
+        // If we can't find an autocompletion domain from history, let's try using the fallback list.
+        return searchDomains(searchTerm);
     }
 
     public void resetScrollState() {

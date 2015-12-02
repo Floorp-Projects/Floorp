@@ -2578,7 +2578,7 @@ TransactionItemCache.prototype = {
     return this._annotations || null;
   },
   set tags(v) {
-    this._tags = (v && Array.isArray(v) ? Array.slice(v) : null);
+    this._tags = (v && Array.isArray(v) ? Array.prototype.slice.call(v) : null);
   },
   get tags() {
     return this._tags || null;
@@ -2598,7 +2598,7 @@ function BaseTransaction()
 BaseTransaction.prototype = {
   name: null,
   set childTransactions(v) {
-    this._childTransactions = (Array.isArray(v) ? Array.slice(v) : null);
+    this._childTransactions = (Array.isArray(v) ? Array.prototype.slice.call(v) : null);
   },
   get childTransactions() {
     return this._childTransactions || null;

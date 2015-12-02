@@ -12,5 +12,6 @@ DIRS += [
 DevToolsModules(
     'constants.js',
     'globalActions.js',
+    'queries.js',
     'utils.js'
 )

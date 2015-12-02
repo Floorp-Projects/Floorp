@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test inDOMUtils::getCSSPseudoElementNames</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8">
+  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                           .getService(SpecialPowers.Ci.inIDOMUtils);
+
+  let expected = new Set([
+    ":after",
+    ":before",
+    ":first-letter",
+    ":first-line",
+    ":-moz-color-swatch",
+    ":-moz-focus-inner",
+    ":-moz-focus-outer",
+    ":-moz-list-bullet",
+    ":-moz-list-number",
+    ":-moz-math-anonymous",
+    ":-moz-meter-bar",
+    ":-moz-placeholder",
+    ":-moz-progress-bar",
+    ":-moz-range-progress",
+    ":-moz-range-thumb",
+    ":-moz-range-track",
+    ":-moz-selection",
+  ]);
+
+  let names = utils.getCSSPseudoElementNames();
+  for (let name of names) {
+    ok(expected.has(name), name + " is included");
+    expected.delete(name);
+  }
+
+  if (expected.size > 0) {
+    todo_is(expected.size, 0,
+            "ideally all pseudo-element names would be listed in this test");
+    for (let extra of expected) {
+      info("extra element: " + extra);
+    }
+  }
+
+  </script>
+</head>
+<body>
+<h1>Test inDOMUtils::getCSSPseudoElementNames</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

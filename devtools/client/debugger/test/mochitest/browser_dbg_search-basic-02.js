@@ -39,7 +39,7 @@ function test() {
 function performSimpleSearch() {
   let finished = promise.all([
     ensureSourceIs(gPanel, "-02.js"),
-    ensureCaretAt(gPanel, 1),
+    ensureCaretAt(gPanel, 6),
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FILE_SEARCH_MATCH_FOUND),
     waitForSourceShown(gPanel, "-01.js")
   ]);

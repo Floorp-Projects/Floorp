@@ -260,10 +260,6 @@ protected:
      * it's in non-user-modifiable content.
      */
     bool                  mIgnoreUserModify;
-
-    // Preference
-    static bool sSelectionCaretEnabled;
-    static bool sSelectionCaretsAffectCaret;
 };
 
 #endif //nsCaret_h__
