@@ -811,8 +811,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 252px, 36px, 234px);
   }
 
-  #sync-button@toolbarButtonPressed@:not([syncstatus="active"]) {
-    -moz-image-region: rect(18px, 270px, 36px, 252px);
+  #sync-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(18px, 792px, 36px, 774px);
   }
 
   #feed-button@toolbarButtonPressed@ {
@@ -974,8 +974,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(36px, 504px, 72px, 468px);
   }
 
-  #sync-button@toolbarButtonPressed@:not([syncstatus="active"]) {
-    -moz-image-region: rect(36px, 540px, 72px, 504px);
+  #sync-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(36px, 1584px, 72px, 1548px);
   }
 
   #feed-button@toolbarButtonPressed@ {
