@@ -1079,7 +1079,14 @@ float nsWindow::GetDPI()
 
 double nsWindow::GetDefaultScaleInternal()
 {
-  return WinUtils::LogToPhysFactor();
+  return WinUtils::LogToPhysFactor(mWnd);
+}
+
+int32_t nsWindow::LogToPhys(double aValue)
+{
+  return WinUtils::LogToPhys(::MonitorFromWindow(mWnd,
+                                                 MONITOR_DEFAULTTOPRIMARY),
+                             aValue);
 }
 
 nsWindow*
