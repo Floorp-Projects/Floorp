@@ -6932,7 +6932,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
   JSRuntime* rt = argClosure.cinfo->rt;
   RootedObject fun(rt, argClosure.cinfo->jsfnObj);
-  (void) js::PrepareScriptEnvironmentAndInvoke(rt, fun, argClosure);
+  js::PrepareScriptEnvironmentAndInvoke(rt, fun, argClosure);
 }
 
 bool CClosure::ArgClosure::operator()(JSContext* cx)
@@ -7025,11 +7025,14 @@ bool CClosure::ArgClosure::operator()(JSContext* cx)
       size_t copySize = CType::GetSize(fninfo->mReturnType);
       MOZ_ASSERT(copySize <= rvSize);
       memcpy(result, cinfo->errResult, copySize);
+
+      // We still want to return false here, so that
+      // PrepareScriptEnvironmentAndInvoke will report the exception.
     } else {
       // Bad case: not much we can do here. The rv is already zeroed out, so we
       // just return and hope for the best.
-      return false;
     }
+    return false;
   }
 
   // Small integer types must be returned as a word-sized ffi_arg. Coerce it
