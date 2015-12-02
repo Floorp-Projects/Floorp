@@ -93,9 +93,11 @@ TranslateWithoutValidation(const nsACString& sourceNS, bool isWebGL2,
 
     switch (glesslVersion) {
     case 100:
-        /* According to ARB_ES2_compatibility extension glsl
-         * should accept #version 100 for ES 2 shaders. */
-        reversionedSource.insert(versionStrStart, "#version 100\n");
+        if (!versionStrLen) {
+            /* According to ARB_ES2_compatibility extension glsl
+             * should accept #version 100 for ES 2 shaders. */
+            reversionedSource.insert(versionStrStart, "#version 100\n");
+        }
         break;
     case 300:
         reversionedSource.insert(versionStrStart, "#version 330\n");
