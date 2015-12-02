@@ -4229,9 +4229,9 @@ IsDenseElementSetInlineable(JSObject* obj, const Value& idval, ConstantOrRegiste
 static bool
 IsTypedArrayElementSetInlineable(JSObject* obj, const Value& idval, const Value& value)
 {
-    // Don't bother attaching stubs for assigning strings and objects.
+    // Don't bother attaching stubs for assigning strings, objects or symbols.
     return IsAnyTypedArray(obj) && idval.isInt32() &&
-           !value.isString() && !value.isObject();
+           !value.isString() && !value.isObject() && !value.isSymbol();
 }
 
 static void

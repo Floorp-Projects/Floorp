@@ -76,7 +76,7 @@ static bool
 SectionCB(const char* aSection, void* aClosure)
 {
   nsTArray<nsCString>* strings = static_cast<nsTArray<nsCString>*>(aClosure);
-  strings->AppendElement(nsDependentCString(aSection));
+  strings->AppendElement()->Assign(aSection);
   return true;
 }
 
@@ -104,7 +104,7 @@ static bool
 KeyCB(const char* aKey, const char* aValue, void* aClosure)
 {
   nsTArray<nsCString>* strings = static_cast<nsTArray<nsCString>*>(aClosure);
-  strings->AppendElement(nsDependentCString(aKey));
+  strings->AppendElement()->Assign(aKey);
   return true;
 }
 

@@ -2165,7 +2165,7 @@ class LCompare : public LInstructionHelper<1, 2, 0>
         return mir_->toCompare();
     }
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 };
 
@@ -2211,7 +2211,7 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
         return cmpMir_;
     }
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 };
 
@@ -2751,7 +2751,7 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     const char* extraName() const {
         if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled())
             return "ursh:BailoutsDisabled";
-        return js_CodeName[op_];
+        return CodeName[op_];
     }
 
     JSOp bitop() const {
@@ -2776,7 +2776,7 @@ class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
     }
 
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 
     static const size_t LhsInput = 0;
@@ -2805,7 +2805,7 @@ class LShiftI : public LBinaryMath<0>
     }
 
     const char* extraName() const {
-        return js_CodeName[op_];
+        return CodeName[op_];
     }
 };
 
@@ -3219,7 +3219,7 @@ class LMathD : public LBinaryMath<0>
     }
 
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 };
 
@@ -3240,7 +3240,7 @@ class LMathF: public LBinaryMath<0>
     }
 
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 };
 
@@ -3279,7 +3279,7 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
     }
 
     const char* extraName() const {
-        return js_CodeName[jsop_];
+        return CodeName[jsop_];
     }
 
     static const size_t LhsInput = 0;

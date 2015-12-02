@@ -192,12 +192,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png                (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
-  skin/classic/browser/tabview/close.png                    (tabview/close.png)
-  skin/classic/browser/tabview/edit-light.png               (tabview/edit-light.png)
-  skin/classic/browser/tabview/search.png                   (tabview/search.png)
-  skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
-  skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
-  skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
   skin/classic/browser/usercontext/personal.svg             (../shared/usercontext/personal.svg)
   skin/classic/browser/usercontext/work.svg                 (../shared/usercontext/work.svg)
   skin/classic/browser/usercontext/banking.svg              (../shared/usercontext/banking.svg)
@@ -227,7 +221,6 @@ browser.jar:
   skin/classic/browser/toolbarbutton-dropmarker@2x.png      (toolbarbutton-dropmarker-lion@2x.png)
   skin/classic/browser/lion/tabbrowser/alltabs-box-bkgnd-icon.png      (tabbrowser/alltabs-box-bkgnd-icon-lion.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon@2x.png        (tabbrowser/alltabs-box-bkgnd-icon-lion@2x.png)
-  skin/classic/browser/lion/tabview/tabview.png                        (tabview/tabview-lion.png)
   skin/classic/browser/lion/places/toolbar.png                         (places/toolbar-lion.png)
   skin/classic/browser/yosemite/Toolbar.png                            (Toolbar-yosemite.png)
   skin/classic/browser/yosemite/Toolbar@2x.png                         (Toolbar-yosemite@2x.png)
@@ -264,7 +257,6 @@ browser.jar:
 % override chrome://browser/skin/feeds/videoFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/toolbarbutton-dropmarker.png              chrome://browser/skin/lion/toolbarbutton-dropmarker.png                 os=Darwin osversion>=10.7
 % override chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png     chrome://browser/skin/lion/tabbrowser/alltabs-box-bkgnd-icon.png        os=Darwin osversion>=10.7
-% override chrome://browser/skin/tabview/tabview.png                       chrome://browser/skin/lion/tabview/tabview.png                          os=Darwin osversion>=10.7
 % override chrome://browser/skin/places/toolbar.png                        chrome://browser/skin/lion/places/toolbar.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/yosemite/Toolbar.png                              os=Darwin osversion>=10.10
 % override chrome://browser/skin/Toolbar@2x.png                            chrome://browser/skin/yosemite/Toolbar@2x.png                           os=Darwin osversion>=10.10

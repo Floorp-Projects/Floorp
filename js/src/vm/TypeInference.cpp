@@ -3212,7 +3212,7 @@ js::FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap)
     uint32_t added = 0;
     for (jsbytecode* pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
         JSOp op = JSOp(*pc);
-        if (js_CodeSpec[op].format & JOF_TYPESET) {
+        if (CodeSpec[op].format & JOF_TYPESET) {
             bytecodeMap[added++] = script->pcToOffset(pc);
             if (added == script->nTypeSets())
                 break;
@@ -3239,7 +3239,7 @@ void
 js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, const js::Value& rval)
 {
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
-    if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
+    if (!(CodeSpec[*pc].format & JOF_TYPESET))
         return;
 
     if (!script->hasBaselineScript())
@@ -4468,7 +4468,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
             fprintf(stderr, "%s", sprinter.string());
         }
 
-        if (js_CodeSpec[*pc].format & JOF_TYPESET) {
+        if (CodeSpec[*pc].format & JOF_TYPESET) {
             StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
             fprintf(stderr, "  typeset %u:", unsigned(types - typeArray()));
             types->print();

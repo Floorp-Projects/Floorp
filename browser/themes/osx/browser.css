@@ -900,10 +900,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 612px, 36px, 594px);
   }
 
-  #tabview-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(18px, 648px, 36px, 630px);
-  }
-
   #email-link-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 666px, 36px, 648px);
   }
@@ -1077,10 +1073,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #nav-bar-overflow-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 1224px, 72px, 1188px);
-  }
-
-  #tabview-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(36px, 1296px, 72px, 1260px);
   }
 
   #email-link-button@toolbarButtonPressed@ {
@@ -1434,39 +1426,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-forward.png") !important;
-}
-
-/* tabview menu item */
-
-#menu_tabview {
-  list-style-image: url(chrome://browser/skin/tabview/tabview.png);
-}
-
-#menu_tabview {
-  -moz-image-region: rect(2px, 98px, 18px, 82px);
-}
-
-#menu_tabview[groups="0"] {
-  -moz-image-region: rect(2px, 18px, 18px, 2px);
-}
-
-#menu_tabview[groups="1"] {
-  -moz-image-region: rect(2px, 38px, 18px, 22px);
-}
-
-#menu_tabview[groups="2"] {
-  -moz-image-region: rect(2px, 58px, 18px, 42px);
-}
-
-#menu_tabview[groups="3"] {
-  -moz-image-region: rect(2px, 78px, 18px, 62px);
-}
-
-/* tabview yosemite vibrancy background */
-@media (-moz-mac-yosemite-theme) {
-  #tab-view {
-    -moz-appearance: -moz-mac-vibrancy-light;
-  }
 }
 
 /* undo close tab menu item */
