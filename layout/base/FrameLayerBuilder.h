@@ -12,6 +12,7 @@
 #include "nsRegion.h"
 #include "nsIFrame.h"
 #include "DisplayItemClip.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "LayerState.h"
 #include "LayerUserData.h"
@@ -30,10 +31,6 @@ class BasicLayerManager;
 class PaintedLayer;
 class ImageLayer;
 } // namespace layers
-
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
 
 class FrameLayerBuilder;
 class LayerManagerData;
