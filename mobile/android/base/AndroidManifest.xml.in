@@ -496,6 +496,11 @@
             android:name="org.mozilla.gecko.NotificationService">
         </service>
 
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.dlc.DownloadContentService">
+        </service>
+
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_services.xml.in
