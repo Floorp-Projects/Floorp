@@ -106,10 +106,15 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
 
   // Allocate the buffer, which contains scanlines of the original image.
   // pad by 15 to handle overreads by the simd code
-  mRowBuffer = MakeUnique<uint8_t[]>(mOriginalSize.width * sizeof(uint32_t) + 15);
+  size_t bufferLen = mOriginalSize.width * sizeof(uint32_t) + 15;
+  mRowBuffer = MakeUnique<uint8_t[]>(bufferLen);
   if (MOZ_UNLIKELY(!mRowBuffer)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  // Zero buffer to keep valgrind happy.
+  memset(mRowBuffer.get(), 0, bufferLen);
+
 
   // Allocate the window, which contains horizontally downscaled scanlines. (We
   // can store scanlines which are already downscale because our downscaling
