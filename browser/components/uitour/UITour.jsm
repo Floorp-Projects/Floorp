@@ -735,13 +735,12 @@ this.UITour = {
       }
     }
 
-    this.initForBrowser(browser);
+    this.initForBrowser(browser, window);
 
     return true;
   },
 
-  initForBrowser(aBrowser) {
-    let window = aBrowser.ownerDocument.defaultView;
+  initForBrowser(aBrowser, window) {
     let gBrowser = window.gBrowser;
 
     if (gBrowser) {
