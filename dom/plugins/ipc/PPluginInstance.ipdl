@@ -23,10 +23,12 @@ using NPNVariable from "npapi.h";
 using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUtils.h";
 using gfxSurfaceType from "gfxTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using nsIntRect from "nsRect.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 
 namespace mozilla {
 namespace plugins {
@@ -179,6 +181,17 @@ parent:
     returns (NPError result);
 
   async NPN_InvalidateRect(NPRect rect);
+
+  // Clear the current plugin image.
+  sync RevokeCurrentDirectSurface();
+
+  // Set the current plugin image to the bitmap in the given shmem buffer. The
+  // format must be B8G8R8A8 or B8G8R8X8.
+  sync ShowDirectBitmap(Shmem buffer,
+                        SurfaceFormat format,
+                        uint32_t stride,
+                        IntSize size,
+                        IntRect dirty);
 
   // Give |newSurface|, containing this instance's updated pixels, to
   // the browser for compositing.  When this method returns, any surface 
