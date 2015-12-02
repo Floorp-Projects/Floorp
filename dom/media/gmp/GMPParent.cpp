@@ -868,6 +868,12 @@ GMPParent::ReadGMPMetaData()
       }
     }
 
+    // We support the current GMPDecryptor version, and the previous.
+    // We Adapt the previous to the current in the GMPContentChild.
+    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
+      cap->mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
+    }
+
     if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
       mCanDecrypt = true;
 
