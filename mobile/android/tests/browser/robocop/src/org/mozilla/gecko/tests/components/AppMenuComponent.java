@@ -31,7 +31,7 @@ import com.jayway.android.robotium.solo.Solo;
  * A class representing any interactions that take place on the app menu.
  */
 public class AppMenuComponent extends BaseComponent {
-    private static final long MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 1000L;
+    private static final long MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS = 7500L;
 
     private Boolean hasLegacyMenu = null;
 
