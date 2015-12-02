@@ -382,6 +382,10 @@ class ArrayBufferViewObject : public JSObject
 
     void neuter(void* newData);
 
+#ifdef DEBUG
+    bool isSharedMemory();
+#endif
+
     // By construction we only need unshared variants here.  See
     // comments in ArrayBufferObject.cpp.
     uint8_t* dataPointerUnshared();
@@ -564,5 +568,9 @@ InitArrayBufferClass(JSContext* cx, HandleObject obj);
 template <>
 bool
 JSObject::is<js::ArrayBufferViewObject>() const;
+
+template <>
+bool
+JSObject::is<js::ArrayBufferObjectMaybeShared>() const;
 
 #endif // vm_ArrayBufferObject_h
