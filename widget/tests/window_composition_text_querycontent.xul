@@ -3191,6 +3191,19 @@ function runSetSelectionEventTest()
   is(selection.focusOffset, 0,
      "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\": selection focus offset should be 0");
   checkSelection(0, "", "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\"");
+
+  // #16
+  contenteditable.innerHTML = "a<blink>b</blink>c";
+  synthesizeSelectionSet(0, 3);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\": selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\": selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.lastChild,
+     "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\": selection focus node should be the last text node");
+  is(selection.focusOffset, contenteditable.lastChild.wholeText.length,
+     "runSetSelectionEventTest #15 (0, 0), \"" + contenteditable.innerHTML + "\": selection focus offset should be the length of the last text node");
+  checkSelection(0, "abc", "runSetSelectionEventTest #16 (0, 3), \"" + contenteditable.innerHTML + "\"");
 }
 
 function runQueryTextContentEventTest()
@@ -3387,6 +3400,12 @@ function runQueryTextContentEventTest()
 
   result = synthesizeQueryTextContent(kLFLen*3, 1);
   is(result.text, "", "runQueryTextContentEventTest #8 (kLFLen*3, 1), \"" + contenteditable.innerHTML + "\"");
+
+  // #16
+  contenteditable.innerHTML = "a<blink>b</blink>c";
+
+  result = synthesizeQueryTextContent(0, 3);
+  is(result.text, "abc", "runQueryTextContentEventTest #16 (0, 3), \"" + contenteditable.innerHTML + "\"");
 }
 
 function runCSSTransformTest()

@@ -8,6 +8,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCaret.h"
 #include "nsCOMPtr.h"
@@ -24,6 +25,7 @@
 #include "nsIObjectFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
+#include "nsQueryObject.h"
 #include "nsRange.h"
 #include "nsTextFragment.h"
 #include "nsTextFrame.h"
@@ -496,37 +498,43 @@ ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
   // aContent for deciding if it's an inline.  However, it's difficult
   // IMEContentObserver to notify IME of text change caused by style change.
   // Therefore, currently, we should check only from the tag for now.
-  // TODO: Check if the element is an unknown HTML element.
-  return !aContent->IsAnyOfHTMLElements(nsGkAtoms::a,
-                                        nsGkAtoms::abbr,
-                                        nsGkAtoms::acronym,
-                                        nsGkAtoms::b,
-                                        nsGkAtoms::bdi,
-                                        nsGkAtoms::bdo,
-                                        nsGkAtoms::big,
-                                        nsGkAtoms::cite,
-                                        nsGkAtoms::code,
-                                        nsGkAtoms::data,
-                                        nsGkAtoms::del,
-                                        nsGkAtoms::dfn,
-                                        nsGkAtoms::em,
-                                        nsGkAtoms::font,
-                                        nsGkAtoms::i,
-                                        nsGkAtoms::ins,
-                                        nsGkAtoms::kbd,
-                                        nsGkAtoms::mark,
-                                        nsGkAtoms::s,
-                                        nsGkAtoms::samp,
-                                        nsGkAtoms::small,
-                                        nsGkAtoms::span,
-                                        nsGkAtoms::strike,
-                                        nsGkAtoms::strong,
-                                        nsGkAtoms::sub,
-                                        nsGkAtoms::sup,
-                                        nsGkAtoms::time,
-                                        nsGkAtoms::tt,
-                                        nsGkAtoms::u,
-                                        nsGkAtoms::var);
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::a,
+                                    nsGkAtoms::abbr,
+                                    nsGkAtoms::acronym,
+                                    nsGkAtoms::b,
+                                    nsGkAtoms::bdi,
+                                    nsGkAtoms::bdo,
+                                    nsGkAtoms::big,
+                                    nsGkAtoms::cite,
+                                    nsGkAtoms::code,
+                                    nsGkAtoms::data,
+                                    nsGkAtoms::del,
+                                    nsGkAtoms::dfn,
+                                    nsGkAtoms::em,
+                                    nsGkAtoms::font,
+                                    nsGkAtoms::i,
+                                    nsGkAtoms::ins,
+                                    nsGkAtoms::kbd,
+                                    nsGkAtoms::mark,
+                                    nsGkAtoms::s,
+                                    nsGkAtoms::samp,
+                                    nsGkAtoms::small,
+                                    nsGkAtoms::span,
+                                    nsGkAtoms::strike,
+                                    nsGkAtoms::strong,
+                                    nsGkAtoms::sub,
+                                    nsGkAtoms::sup,
+                                    nsGkAtoms::time,
+                                    nsGkAtoms::tt,
+                                    nsGkAtoms::u,
+                                    nsGkAtoms::var)) {
+    return false;
+  }
+
+  // If the element is unknown element, we shouldn't insert line breaks before
+  // it since unknown elements should be ignored.
+  RefPtr<HTMLUnknownElement> unknownHTMLElement = do_QueryObject(aContent);
+  return !unknownHTMLElement;
 }
 
 nsresult
