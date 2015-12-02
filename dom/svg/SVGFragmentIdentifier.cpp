@@ -12,7 +12,9 @@
 #include "nsSVGAnimatedTransformList.h"
 #include "nsCharSeparatedTokenizer.h"
 
-using namespace mozilla;
+namespace mozilla {
+
+using namespace dom;
 
 static bool
 IsMatchingParameter(const nsAString& aString, const nsAString& aParameterName)
@@ -30,16 +32,16 @@ IgnoreWhitespace(char16_t aChar)
   return false;
 }
 
-static dom::SVGViewElement*
+static SVGViewElement*
 GetViewElement(nsIDocument* aDocument, const nsAString& aId)
 {
-  dom::Element* element = aDocument->GetElementById(aId);
+  Element* element = aDocument->GetElementById(aId);
   return (element && element->IsSVGElement(nsGkAtoms::view)) ?
-            static_cast<dom::SVGViewElement*>(element) : nullptr;
+            static_cast<SVGViewElement*>(element) : nullptr;
 }
 
 void
-SVGFragmentIdentifier::SaveOldPreserveAspectRatio(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::SaveOldPreserveAspectRatio(SVGSVGElement* root)
 {
   if (root->mPreserveAspectRatio.IsExplicitlySet()) {
     root->SetPreserveAspectRatioProperty(root->mPreserveAspectRatio.GetBaseValue());
@@ -47,19 +49,19 @@ SVGFragmentIdentifier::SaveOldPreserveAspectRatio(dom::SVGSVGElement* root)
 }
 
 void 
-SVGFragmentIdentifier::RestoreOldPreserveAspectRatio(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::RestoreOldPreserveAspectRatio(SVGSVGElement* root)
 {
   const SVGPreserveAspectRatio* oldPARPtr = root->GetPreserveAspectRatioProperty();
   if (oldPARPtr) {
     root->mPreserveAspectRatio.SetBaseValue(*oldPARPtr, root);
   } else if (root->mPreserveAspectRatio.IsExplicitlySet()) {
-    mozilla::ErrorResult error;
+    ErrorResult error;
     root->RemoveAttribute(NS_LITERAL_STRING("preserveAspectRatio"), error);
   }
 }
 
 void 
-SVGFragmentIdentifier::SaveOldViewBox(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::SaveOldViewBox(SVGSVGElement* root)
 {
   if (root->mViewBox.IsExplicitlySet()) {
     root->SetViewBoxProperty(root->mViewBox.GetBaseValue());
@@ -67,39 +69,39 @@ SVGFragmentIdentifier::SaveOldViewBox(dom::SVGSVGElement* root)
 }
 
 void 
-SVGFragmentIdentifier::RestoreOldViewBox(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::RestoreOldViewBox(SVGSVGElement* root)
 {
   const nsSVGViewBoxRect* oldViewBoxPtr = root->GetViewBoxProperty();
   if (oldViewBoxPtr) {
     root->mViewBox.SetBaseValue(*oldViewBoxPtr, root);
   } else if (root->mViewBox.IsExplicitlySet()) {
-    mozilla::ErrorResult error;
+    ErrorResult error;
     root->RemoveAttribute(NS_LITERAL_STRING("viewBox"), error);
   }
 }
 
 void 
-SVGFragmentIdentifier::SaveOldZoomAndPan(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::SaveOldZoomAndPan(SVGSVGElement* root)
 {
-  if (root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
-    root->SetZoomAndPanProperty(root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].GetBaseValue());
+  if (root->mEnumAttributes[SVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
+    root->SetZoomAndPanProperty(root->mEnumAttributes[SVGSVGElement::ZOOMANDPAN].GetBaseValue());
   }
 }
 
 void
-SVGFragmentIdentifier::RestoreOldZoomAndPan(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::RestoreOldZoomAndPan(SVGSVGElement* root)
 {
   uint16_t oldZoomAndPan = root->GetZoomAndPanProperty();
   if (oldZoomAndPan != SVG_ZOOMANDPAN_UNKNOWN) {
-    root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].SetBaseValue(oldZoomAndPan, root);
-  } else if (root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
-    mozilla::ErrorResult error;
+    root->mEnumAttributes[SVGSVGElement::ZOOMANDPAN].SetBaseValue(oldZoomAndPan, root);
+  } else if (root->mEnumAttributes[SVGSVGElement::ZOOMANDPAN].IsExplicitlySet()) {
+    ErrorResult error;
     root->RemoveAttribute(NS_LITERAL_STRING("zoomAndPan"), error);
   }
 }
 
 void 
-SVGFragmentIdentifier::SaveOldTransform(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::SaveOldTransform(SVGSVGElement* root)
 {
   nsSVGAnimatedTransformList* transformList = root->GetAnimatedTransformList();
 
@@ -109,7 +111,7 @@ SVGFragmentIdentifier::SaveOldTransform(dom::SVGSVGElement* root)
 }
 
 void 
-SVGFragmentIdentifier::RestoreOldTransform(dom::SVGSVGElement* root)
+SVGFragmentIdentifier::RestoreOldTransform(SVGSVGElement* root)
 {
   const SVGTransformList* oldTransformPtr = root->GetTransformProperty();
   if (oldTransformPtr) {
@@ -117,7 +119,7 @@ SVGFragmentIdentifier::RestoreOldTransform(dom::SVGSVGElement* root)
   } else {
     nsSVGAnimatedTransformList* transformList = root->GetAnimatedTransformList();
     if (transformList && transformList->IsExplicitlySet()) {
-      mozilla::ErrorResult error;
+      ErrorResult error;
       root->RemoveAttribute(NS_LITERAL_STRING("transform"), error);
     }
   }
@@ -125,7 +127,7 @@ SVGFragmentIdentifier::RestoreOldTransform(dom::SVGSVGElement* root)
 
 bool
 SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
-                                          dom::SVGSVGElement* root)
+                                          SVGSVGElement* root)
 {
   if (!IsMatchingParameter(aViewSpec, NS_LITERAL_STRING("svgView"))) {
     return false;
@@ -192,11 +194,11 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString& aViewSpec,
       if (!valAtom) {
         return false;
       }
-      const nsSVGEnumMapping* mapping = dom::SVGSVGElement::sZoomAndPanMap;
+      const nsSVGEnumMapping* mapping = SVGSVGElement::sZoomAndPanMap;
       while (mapping->mKey) {
         if (valAtom == *(mapping->mKey)) {
           // If we've got a valid zoomAndPan value, then set it on our root element.
-          if (NS_FAILED(root->mEnumAttributes[dom::SVGSVGElement::ZOOMANDPAN].SetBaseValue(
+          if (NS_FAILED(root->mEnumAttributes[SVGSVGElement::ZOOMANDPAN].SetBaseValue(
                           mapping->mVal, root))) {
             return false;
           }
@@ -242,8 +244,8 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
   MOZ_ASSERT(aDocument->GetRootElement()->IsSVGElement(nsGkAtoms::svg),
              "expecting an SVG root element");
 
-  dom::SVGSVGElement* rootElement =
-    static_cast<dom::SVGSVGElement*>(aDocument->GetRootElement());
+  SVGSVGElement* rootElement =
+    static_cast<SVGSVGElement*>(aDocument->GetRootElement());
 
   if (!rootElement->mUseCurrentView) {
     SaveOldViewBox(rootElement);
@@ -251,7 +253,7 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
     SaveOldZoomAndPan(rootElement);
   }
 
-  const dom::SVGViewElement* viewElement = GetViewElement(aDocument, aAnchorName);
+  const SVGViewElement* viewElement = GetViewElement(aDocument, aAnchorName);
 
   if (viewElement) {
     if (!rootElement->mCurrentViewID) {
@@ -285,3 +287,5 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument* aDocument,
   }
   return false;
 }
+
+} // namespace mozilla
