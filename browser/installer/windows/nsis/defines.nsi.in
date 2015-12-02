@@ -37,7 +37,7 @@
 !define BrandFullName         "${BrandFullNameInternal}"
 
 !define CERTIFICATE_NAME      "Mozilla Corporation"
-!define CERTIFICATE_ISSUER    "DigiCert Assured ID Code Signing CA-1"
+!define CERTIFICATE_ISSUER    "DigiCert SHA2 Assured ID Code Signing CA"
 
 # LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
 # category value is ANDed together to set multiple permitted categories.
