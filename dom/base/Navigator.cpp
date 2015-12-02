@@ -2775,29 +2775,12 @@ Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue)
   aAppName.AssignLiteral("Netscape");
 }
 
-void
-Navigator::ClearUserAgentCache()
-{
-  NavigatorBinding::ClearCachedUserAgentValue(this);
-}
-
 nsresult
 Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
                         bool aIsCallerChrome,
                         nsAString& aUserAgent)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsIDocShell* docshell = aWindow->GetDocShell();
-  nsString customUserAgent;
-  if (docshell) {
-    docshell->GetCustomUserAgent(customUserAgent);
-  }
-
-  if (!customUserAgent.IsEmpty()) {
-    aUserAgent = customUserAgent;
-    return NS_OK;
-  }
 
   if (!aIsCallerChrome) {
     const nsAdoptingString& override =
