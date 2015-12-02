@@ -876,11 +876,15 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t offset = 0;
   // get offsets of change and fire notification
   nsresult rv =
-    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContent,
-                                                  aInfo->mChangeStart,
-                                                  &offset,
-                                                  LINE_BREAK_TYPE_NATIVE);
-  NS_ENSURE_SUCCESS_VOID(rv);
+    ContentEventHandler::GetFlatTextLengthInRange(
+                           NodePosition(mRootContent, 0),
+                           NodePosition(aContent, aInfo->mChangeStart),
+                           mRootContent,
+                           &offset,
+                           LINE_BREAK_TYPE_NATIVE);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   uint32_t newLength =
     ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
@@ -912,9 +916,11 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   nsresult rv = NS_OK;
   if (!mEndOfAddedTextCache.Match(aContainer, aStartIndex)) {
     mEndOfAddedTextCache.Clear();
-    rv = ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
-                                                       aStartIndex, &offset,
-                                                       LINE_BREAK_TYPE_NATIVE);
+    rv = ContentEventHandler::GetFlatTextLengthInRange(
+                                NodePosition(mRootContent, 0),
+                                NodePosition(aContainer, aStartIndex),
+                                mRootContent, &offset,
+                                LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED((rv)))) {
       return;
     }
@@ -923,11 +929,12 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   }
 
   // get offset at the end of the last added node
-  nsIContent* childAtStart = aContainer->GetChildAt(aStartIndex);
   uint32_t addingLength = 0;
-  rv = ContentEventHandler::GetFlatTextOffsetOfRange(childAtStart, aContainer,
-                                                     aEndIndex, &addingLength,
-                                                     LINE_BREAK_TYPE_NATIVE);
+  rv = ContentEventHandler::GetFlatTextLengthInRange(
+                              NodePosition(aContainer, aStartIndex),
+                              NodePosition(aContainer, aEndIndex),
+                              mRootContent, &addingLength,
+                              LINE_BREAK_TYPE_NATIVE);
   if (NS_WARN_IF(NS_FAILED((rv)))) {
     mEndOfAddedTextCache.Clear();
     return;
@@ -988,10 +995,12 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   uint32_t offset = 0;
   nsresult rv = NS_OK;
   if (!mStartOfRemovingTextRangeCache.Match(containerNode, aIndexInContainer)) {
-    rv =
-      ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, containerNode,
-                                                    aIndexInContainer, &offset,
-                                                    LINE_BREAK_TYPE_NATIVE);
+    rv = ContentEventHandler::GetFlatTextLengthInRange(
+                                NodePosition(mRootContent, 0),
+                                NodePosition(containerNode, aIndexInContainer),
+                                mRootContent,
+                                &offset,
+                                LINE_BREAK_TYPE_NATIVE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mStartOfRemovingTextRangeCache.Clear();
       return;
@@ -1003,18 +1012,21 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   }
 
   // get offset at the end of the deleted node
-  int32_t nodeLength =
-    aChild->IsNodeOfType(nsINode::eTEXT) ?
-      static_cast<int32_t>(aChild->TextLength()) :
-      std::max(static_cast<int32_t>(aChild->GetChildCount()), 1);
-  MOZ_ASSERT(nodeLength >= 0, "The node length is out of range");
   uint32_t textLength = 0;
-  rv = ContentEventHandler::GetFlatTextOffsetOfRange(aChild, aChild,
-                                                     nodeLength, &textLength,
-                                                     LINE_BREAK_TYPE_NATIVE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mStartOfRemovingTextRangeCache.Clear();
-    return;
+  if (aChild->IsNodeOfType(nsINode::eTEXT)) {
+    textLength = ContentEventHandler::GetNativeTextLength(aChild);
+  } else {
+    uint32_t nodeLength =
+      std::max(static_cast<int32_t>(aChild->GetChildCount()), 1);
+    rv = ContentEventHandler::GetFlatTextLengthInRange(
+                                NodePosition(aChild, 0),
+                                NodePosition(aChild, nodeLength),
+                                mRootContent, &textLength,
+                                LINE_BREAK_TYPE_NATIVE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mStartOfRemovingTextRangeCache.Clear();
+      return;
+    }
   }
 
   if (!textLength) {
@@ -1062,10 +1074,14 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   }
   uint32_t start;
   nsresult rv =
-    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aElement,
-                                                  0, &start,
+    ContentEventHandler::GetFlatTextLengthInRange(NodePosition(mRootContent, 0),
+                                                  NodePosition(aElement, 0),
+                                                  mRootContent,
+                                                  &start,
                                                   LINE_BREAK_TYPE_NATIVE);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   TextChangeData data(start, start + mPreAttrChangeLength,
                       start + postAttrChangeLength, causedByComposition,

@@ -407,37 +407,41 @@ static uint32_t ConvertToXPOffset(nsIContent* aContent, uint32_t aNativeOffset)
 #endif
 }
 
-static nsresult GenerateFlatTextContent(nsRange* aRange,
-                                        nsAFlatString& aString,
-                                        LineBreakType aLineBreakType)
+nsresult
+ContentEventHandler::GenerateFlatTextContent(nsRange* aRange,
+                                             nsAFlatString& aString,
+                                             LineBreakType aLineBreakType)
 {
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  iter->Init(aRange);
-
   NS_ASSERTION(aString.IsEmpty(), "aString must be empty string");
 
   nsINode* startNode = aRange->GetStartParent();
-  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   nsINode* endNode = aRange->GetEndParent();
-  NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (startNode == endNode && startNode->IsNodeOfType(nsINode::eTEXT)) {
-    nsIContent* content = static_cast<nsIContent*>(startNode);
+    nsIContent* content = startNode->AsContent();
     AppendSubString(aString, content, aRange->StartOffset(),
                     aRange->EndOffset() - aRange->StartOffset());
     ConvertToNativeNewlines(aString);
     return NS_OK;
   }
 
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsresult rv = iter->Init(aRange);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
-    if (!node) {
+    if (NS_WARN_IF(!node)) {
       break;
     }
-    if (!node->IsNodeOfType(nsINode::eCONTENT)) {
+    if (!node->IsContent()) {
       continue;
     }
-    nsIContent* content = static_cast<nsIContent*>(node);
+    nsIContent* content = node->AsContent();
 
     if (content->IsNodeOfType(nsINode::eTEXT)) {
       if (content == startNode) {
@@ -578,14 +582,18 @@ ContentEventHandler::GenerateFlatFontRanges(nsRange* aRange,
 
   nsINode* startNode = aRange->GetStartParent();
   nsINode* endNode = aRange->GetEndParent();
-  if (NS_WARN_IF(!startNode || !endNode)) {
+  if (NS_WARN_IF(!startNode) || NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
   }
 
   // baseOffset is the flattened offset of each content node.
   int32_t baseOffset = 0;
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-  for (iter->Init(aRange); !iter->IsDone(); iter->Next()) {
+  nsresult rv = iter->Init(aRange);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
     if (NS_WARN_IF(!node)) {
       break;
@@ -690,20 +698,22 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewPreContentIterator();
   nsresult rv = iter->Init(mRootContent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   uint32_t offset = 0;
   uint32_t endOffset = aOffset + aLength;
   bool startSet = false;
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
-    if (!node) {
+    if (NS_WARN_IF(!node)) {
       break;
     }
-    if (!node->IsNodeOfType(nsINode::eCONTENT)) {
+    if (!node->IsContent()) {
       continue;
     }
-    nsIContent* content = static_cast<nsIContent*>(node);
+    nsIContent* content = node->AsContent();
 
     uint32_t textLength =
       content->IsNodeOfType(nsINode::eTEXT) ?
@@ -722,25 +732,31 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
           xpOffset = ConvertToXPOffset(content, xpOffset);
         }
-      }
 
-      if (aExpandToClusterBoundaries) {
-        uint32_t oldXPOffset = xpOffset;
-        rv = ExpandToClusterBoundary(content, false, &xpOffset);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (aNewOffset) {
-          // This is correct since a cluster shouldn't include line break.
-          *aNewOffset -= (oldXPOffset - xpOffset);
+        if (aExpandToClusterBoundaries) {
+          uint32_t oldXPOffset = xpOffset;
+          rv = ExpandToClusterBoundary(content, false, &xpOffset);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          if (aNewOffset) {
+            // This is correct since a cluster shouldn't include line break.
+            *aNewOffset -= (oldXPOffset - xpOffset);
+          }
         }
       }
 
       rv = aRange->SetStart(content, int32_t(xpOffset));
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       startSet = true;
       if (aLength == 0) {
         // Ensure that the end offset and the start offset are same.
         rv = aRange->SetEnd(content, int32_t(xpOffset));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         return NS_OK;
       }
     }
@@ -754,7 +770,9 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
         }
         if (aExpandToClusterBoundaries) {
           rv = ExpandToClusterBoundary(content, true, &xpOffset);
-          NS_ENSURE_SUCCESS(rv, rv);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         }
       } else {
         // Use first position of next node, because the end node is ignored
@@ -768,7 +786,9 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
       }
 
       rv = aRange->SetEnd(endNode, int32_t(xpOffset));
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       return NS_OK;
     }
 
@@ -782,14 +802,18 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
   if (!startSet) {
     MOZ_ASSERT(!mRootContent->IsNodeOfType(nsINode::eTEXT));
     rv = aRange->SetStart(mRootContent, int32_t(mRootContent->GetChildCount()));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     if (aNewOffset) {
       *aNewOffset = offset;
     }
   }
   rv = aRange->SetEnd(mRootContent, int32_t(mRootContent->GetChildCount()));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetEnd failed");
-  return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 /* static */ LineBreakType
@@ -868,8 +892,8 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
                "The reply string must be empty");
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
-  rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange,
-                                &aEvent->mReply.mOffset, lineBreakType);
+  rv = GetFlatTextLengthBefore(mFirstSelectedRange,
+                               &aEvent->mReply.mOffset, lineBreakType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsINode> anchorNode, focusNode;
@@ -1140,8 +1164,8 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
     nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
     if (caretFrame) {
       uint32_t offset;
-      rv = GetFlatTextOffsetOfRange(mRootContent, mFirstSelectedRange, &offset,
-                                    lineBreakType);
+      rv = GetFlatTextLengthBefore(mFirstSelectedRange,
+                                   &offset, lineBreakType);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == aEvent->mInput.mOffset) {
         rv = ConvertToRootRelativeOffset(caretFrame, caretRect);
@@ -1320,8 +1344,9 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     return NS_OK;
   }
 
-  rv = GetFlatTextOffsetOfRange(mRootContent, tentativeCaretOffsets.content,
-                                tentativeCaretOffsets.offset,
+  rv = GetFlatTextLengthInRange(NodePosition(mRootContent, 0),
+                                NodePosition(tentativeCaretOffsets),
+                                mRootContent,
                                 &aEvent->mReply.mTentativeCaretOffset,
                                 GetLineBreakType(aEvent));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1344,10 +1369,13 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     textframe->GetCharacterOffsetAtFramePoint(ptInTarget);
   NS_ENSURE_TRUE(contentOffsets.content, NS_ERROR_FAILURE);
   uint32_t offset;
-  rv = GetFlatTextOffsetOfRange(mRootContent, contentOffsets.content,
-                                contentOffsets.offset, &offset,
+  rv = GetFlatTextLengthInRange(NodePosition(mRootContent, 0),
+                                NodePosition(contentOffsets),
+                                mRootContent, &offset,
                                 GetLineBreakType(aEvent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   WidgetQueryContentEvent textRect(true, eQueryTextRect, aEvent->widget);
   textRect.InitForQueryTextRect(offset, 1, aEvent->mUseNativeLineBreak);
@@ -1409,76 +1437,89 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
 }
 
 /* static */ nsresult
-ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
-                                              nsINode* aNode,
-                                              int32_t aNodeOffset,
-                                              uint32_t* aOffset,
-                                              LineBreakType aLineBreakType)
+ContentEventHandler::GetFlatTextLengthInRange(
+                       const NodePosition& aStartPosition,
+                       const NodePosition& aEndPosition,
+                       nsIContent* aRootContent,
+                       uint32_t* aLength,
+                       LineBreakType aLineBreakType)
 {
-  NS_ENSURE_STATE(aRootContent);
-  NS_ASSERTION(aOffset, "param is invalid");
-
-  RefPtr<nsRange> prev = new nsRange(aRootContent);
-  nsCOMPtr<nsIDOMNode> rootDOMNode(do_QueryInterface(aRootContent));
-  prev->SetStart(rootDOMNode, 0);
-
-  nsCOMPtr<nsIDOMNode> startDOMNode(do_QueryInterface(aNode));
-  NS_ASSERTION(startDOMNode, "startNode doesn't have nsIDOMNode");
-
-  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
-
-  if (aNode->Length() >= static_cast<uint32_t>(aNodeOffset)) {
-    // Offset is within node's length; set end of range to that offset
-    prev->SetEnd(startDOMNode, aNodeOffset);
-    iter->Init(prev);
-  } else if (aNode != static_cast<nsINode*>(aRootContent)) {
-    // Offset is past node's length; set end of range to end of node
-    prev->SetEndAfter(startDOMNode);
-    iter->Init(prev);
-  } else {
-    // Offset is past the root node; set end of range to end of root node
-    iter->Init(aRootContent);
+  if (NS_WARN_IF(!aRootContent) || NS_WARN_IF(!aStartPosition.IsValid()) ||
+      NS_WARN_IF(!aEndPosition.IsValid()) || NS_WARN_IF(!aLength)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsINode> startNode = do_QueryInterface(startDOMNode);
-  nsINode* endNode = aNode;
+  RefPtr<nsRange> prev = new nsRange(aRootContent);
+  nsresult rv = aStartPosition.SetToRangeStart(prev);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  *aOffset = 0;
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  if (aEndPosition.OffsetIsValid()) {
+    // Offset is within node's length; set end of range to that offset
+    rv = aEndPosition.SetToRangeEnd(prev);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    rv = iter->Init(prev);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else if (aEndPosition.mNode != aRootContent) {
+    // Offset is past node's length; set end of range to end of node
+    rv = aEndPosition.SetToRangeEndAfter(prev);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    rv = iter->Init(prev);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    // Offset is past the root node; set end of range to end of root node
+    rv = iter->Init(aRootContent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  *aLength = 0;
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
-    if (!node) {
+    if (NS_WARN_IF(!node)) {
       break;
     }
-    if (!node->IsNodeOfType(nsINode::eCONTENT)) {
+    if (!node->IsContent()) {
       continue;
     }
-    nsIContent* content = static_cast<nsIContent*>(node);
+    nsIContent* content = node->AsContent();
 
     if (node->IsNodeOfType(nsINode::eTEXT)) {
       // Note: our range always starts from offset 0
-      if (node == endNode) {
-        *aOffset += GetTextLength(content, aLineBreakType, aNodeOffset);
+      if (node == aEndPosition.mNode) {
+        *aLength += GetTextLength(content, aLineBreakType,
+                                  aEndPosition.mOffset);
       } else {
-        *aOffset += GetTextLength(content, aLineBreakType);
+        *aLength += GetTextLength(content, aLineBreakType);
       }
     } else if (IsContentBR(content)) {
-      *aOffset += GetBRLength(aLineBreakType);
+      *aLength += GetBRLength(aLineBreakType);
     }
   }
   return NS_OK;
 }
 
-/* static */ nsresult
-ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
-                                              nsRange* aRange,
-                                              uint32_t* aOffset,
-                                              LineBreakType aLineBreakType)
+nsresult
+ContentEventHandler::GetFlatTextLengthBefore(nsRange* aRange,
+                                             uint32_t* aOffset,
+                                             LineBreakType aLineBreakType)
 {
-  nsINode* startNode = aRange->GetStartParent();
-  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
-  int32_t startOffset = aRange->StartOffset();
-  return GetFlatTextOffsetOfRange(aRootContent, startNode, startOffset,
-                                  aOffset, aLineBreakType);
+  MOZ_ASSERT(aRange);
+  return GetFlatTextLengthInRange(
+           NodePosition(mRootContent, 0),
+           NodePosition(aRange->GetStartParent(), aRange->StartOffset()),
+           mRootContent, aOffset, aLineBreakType);
 }
 
 nsresult
