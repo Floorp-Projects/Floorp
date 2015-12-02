@@ -250,6 +250,21 @@ MediaSourceDecoder::GetDuration()
   return ExplicitDuration();
 }
 
+MediaDecoderOwner::NextFrameStatus
+MediaSourceDecoder::NextFrameBufferedStatus()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Next frame hasn't been decoded yet.
+  // Use the buffered range to consider if we have the next frame available.
+  TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
+  TimeInterval interval(currentPosition,
+                        currentPosition + media::TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED),
+                        MediaSourceDemuxer::EOS_FUZZ);
+  return GetBuffered().Contains(interval)
+    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+}
+
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 
