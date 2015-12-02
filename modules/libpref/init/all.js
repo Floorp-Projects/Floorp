@@ -1413,7 +1413,7 @@ pref("network.http.referer.XOriginPolicy", 0);
 pref("network.http.sendSecureXSiteReferrer", true);
 
 // Controls whether referrer attributes in <a>, <img>, <area>, and <iframe> are honoured
-pref("network.http.enablePerElementReferrer", false);
+pref("network.http.enablePerElementReferrer", true);
 
 // Maximum number of consecutive redirects before aborting.
 pref("network.http.redirection-limit", 20);
