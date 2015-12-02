@@ -39,6 +39,7 @@
 #include <stdio.h>
 
 #include <d3d10_1.h>
+#include <d2d1.h>
 
 using namespace std;
 
@@ -48,9 +49,11 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 struct _PlatformData {
   HWND childWindow;
+  IDXGIAdapter1 *adapter;
   ID3D10Device1 *device;
   ID3D10Texture2D *frontBuffer;
   ID3D10Texture2D *backBuffer;
+  ID2D1Factory *d2d1Factory;
 };
 
 bool
@@ -79,7 +82,190 @@ pluginInstanceInit(InstanceData* instanceData)
   instanceData->platformData->device = nullptr;
   instanceData->platformData->frontBuffer = nullptr;
   instanceData->platformData->backBuffer = nullptr;
+  instanceData->platformData->adapter = nullptr;
+  instanceData->platformData->d2d1Factory = nullptr;
   return NPERR_NO_ERROR;
+}
+
+static inline bool
+openSharedTex2D(ID3D10Device* device, HANDLE handle, ID3D10Texture2D** out)
+{
+  HRESULT hr = device->OpenSharedResource(handle, __uuidof(ID3D10Texture2D), (void**)out);
+  if (FAILED(hr) || !*out) {
+    return false;
+  }
+  return true;
+}
+
+// This is overloaded in d2d1.h so we can't use decltype().
+typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
+    D2D1_FACTORY_TYPE factoryType,
+    REFIID iid,
+    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    void **factory
+);
+
+// Note: we leak modules since we need them anyway.
+bool
+setupDxgiSurfaces(InstanceData* instanceData)
+{
+  HMODULE dxgi = LoadLibraryA("dxgi.dll");
+  if (!dxgi) {
+    return false;
+  }
+  decltype(CreateDXGIFactory1)* createDXGIFactory1 =
+    (decltype(CreateDXGIFactory1)*)GetProcAddress(dxgi, "CreateDXGIFactory1");
+  if (!createDXGIFactory1) {
+    return false;
+  }
+
+  IDXGIFactory1* factory1 = nullptr;
+  HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory1);
+  if (FAILED(hr) || !factory1) {
+    return false;
+  }
+
+  hr = factory1->EnumAdapters1(0, &instanceData->platformData->adapter);
+  factory1->Release();
+  if (FAILED(hr) || !instanceData->platformData->adapter) {
+    return false;
+  }
+
+  HMODULE d3d10 = LoadLibraryA("d3d10_1.dll");
+  if (!d3d10) {
+    return false;
+  }
+
+  decltype(D3D10CreateDevice1)* createDevice =
+    (decltype(D3D10CreateDevice1)*)GetProcAddress(d3d10, "D3D10CreateDevice1");
+  if (!createDevice) {
+    return false;
+  }
+
+
+  hr = createDevice(
+    instanceData->platformData->adapter,
+    D3D10_DRIVER_TYPE_HARDWARE, nullptr,
+    D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+      D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+    D3D10_FEATURE_LEVEL_10_1,
+    D3D10_1_SDK_VERSION, &instanceData->platformData->device);
+  if (FAILED(hr) || !instanceData->platformData->device) {
+    return false;
+  }
+
+  if (!openSharedTex2D(instanceData->platformData->device,
+                       instanceData->frontBuffer->sharedHandle,
+                       &instanceData->platformData->frontBuffer))
+  {
+    return false;
+  }
+  if (!openSharedTex2D(instanceData->platformData->device,
+                       instanceData->backBuffer->sharedHandle,
+                       &instanceData->platformData->backBuffer))
+  {
+    return false;
+  }
+
+  HMODULE d2d1 = LoadLibraryA("D2d1.dll");
+  if (!d2d1) {
+    return false;
+  }
+  auto d2d1CreateFactory = (D2D1CreateFactoryFunc)GetProcAddress(d2d1, "D2D1CreateFactory");
+  if (!d2d1CreateFactory) {
+    return false;
+  }
+
+  D2D1_FACTORY_OPTIONS options;
+  options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
+
+  hr = d2d1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
+                         __uuidof(ID2D1Factory),
+                         &options,
+                         (void**)&instanceData->platformData->d2d1Factory);
+  if (FAILED(hr) || !instanceData->platformData->d2d1Factory) {
+    return false;
+  }
+
+  return true;
+}
+
+void
+drawDxgiBitmapColor(InstanceData* instanceData)
+{
+  NPP npp = instanceData->npp;
+
+  HRESULT hr;
+
+  IDXGISurface* surface = nullptr;
+  hr = instanceData->platformData->backBuffer->QueryInterface(
+    __uuidof(IDXGISurface), (void **)&surface);
+  if (FAILED(hr) || !surface) {
+    return;
+  }
+
+  D2D1_RENDER_TARGET_PROPERTIES props =
+    D2D1::RenderTargetProperties(
+      D2D1_RENDER_TARGET_TYPE_DEFAULT,
+      D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+  ID2D1RenderTarget* target = nullptr;
+  hr = instanceData->platformData->d2d1Factory->CreateDxgiSurfaceRenderTarget(
+    surface,
+    &props,
+    &target);
+  if (FAILED(hr) || !target) {
+    surface->Release();
+    return;
+  }
+
+  IDXGIKeyedMutex* mutex = nullptr;
+  hr = instanceData->platformData->backBuffer->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&mutex);
+  if (mutex) {
+    mutex->AcquireSync(0, 0);
+  }
+
+  target->BeginDraw();
+
+  unsigned char subpixels[4];
+  memcpy(subpixels,
+         &instanceData->scriptableObject->drawColor,
+         sizeof(subpixels));
+
+  auto rect = D2D1::RectF(
+    0, 0,
+    instanceData->backBuffer->size.width,
+    instanceData->backBuffer->size.height);
+  auto color = D2D1::ColorF(
+    float(subpixels[3] * subpixels[2]) / 0xFF,
+    float(subpixels[3] * subpixels[1]) / 0xFF,
+    float(subpixels[3] * subpixels[0]) / 0xFF,
+    float(subpixels[3]) / 0xff);
+
+  ID2D1SolidColorBrush* brush = nullptr;
+  hr = target->CreateSolidColorBrush(color, &brush);
+  if (SUCCEEDED(hr) && brush) {
+    target->FillRectangle(rect, brush);
+    brush->Release();
+    brush = nullptr;
+  }
+  hr = target->EndDraw();
+
+  if (mutex) {
+    mutex->ReleaseSync(0);
+    mutex->Release();
+    mutex = nullptr;
+  }
+
+  target->Release();
+  surface->Release();
+  target = nullptr;
+  surface = nullptr;
+
+  NPN_SetCurrentAsyncSurface(npp, instanceData->backBuffer, NULL);
+  std::swap(instanceData->backBuffer, instanceData->frontBuffer);
+  std::swap(instanceData->platformData->backBuffer,
+            instanceData->platformData->frontBuffer);
 }
 
 void
@@ -92,8 +278,14 @@ pluginInstanceShutdown(InstanceData* instanceData)
   if (pd->backBuffer) {
     pd->backBuffer->Release();
   }
+  if (pd->d2d1Factory) {
+    pd->d2d1Factory->Release();
+  }
   if (pd->device) {
     pd->device->Release();
+  }
+  if (pd->adapter) {
+    pd->adapter->Release();
   }
   NPN_MemFree(instanceData->platformData);
   instanceData->platformData = 0;
