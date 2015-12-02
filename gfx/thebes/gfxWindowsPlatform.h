@@ -295,6 +295,9 @@ public:
 
     void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut) override;
 
+    bool SupportsPluginDirectBitmapDrawing() override {
+      return true;
+    }
     bool SupportsPluginDirectDXGIDrawing();
 
 protected:

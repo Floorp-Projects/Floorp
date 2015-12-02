@@ -12,7 +12,7 @@
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/PPluginSurfaceChild.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
-#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
@@ -30,6 +30,7 @@
 #include "nsRect.h"
 #include "nsTHashtable.h"
 #include "mozilla/PaintTracker.h"
+#include "mozilla/gfx/Types.h"
 
 #include <map>
 
@@ -393,6 +394,29 @@ private:
     double mContentsScaleFactor;
 #endif
     int16_t               mDrawingModel;
+
+    NPAsyncSurface* mCurrentDirectSurface;
+
+    // The surface hashtables below serve a few purposes. They let us verify
+    // and retain extra information about plugin surfaces, and they let us
+    // free shared memory that the plugin might forget to release.
+    struct DirectBitmap {
+        DirectBitmap(PluginInstanceChild* aOwner, const Shmem& shmem,
+                     const gfx::IntSize& size, uint32_t stride, SurfaceFormat format);
+
+      private:
+        ~DirectBitmap();
+
+      public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DirectBitmap);
+
+        PluginInstanceChild* mOwner;
+        Shmem mShmem;
+        gfx::SurfaceFormat mFormat;
+        gfx::IntSize mSize;
+        uint32_t mStride;
+    };
+    nsRefPtrHashtable<nsPtrHashKey<NPAsyncSurface>, DirectBitmap> mDirectBitmaps;
 
     mozilla::Mutex mAsyncInvalidateMutex;
     CancelableTask *mAsyncInvalidateTask;
