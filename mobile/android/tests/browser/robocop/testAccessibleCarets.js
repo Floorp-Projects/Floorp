@@ -9,17 +9,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-const SELECTION_CARETS_PREF = "selectioncaret.enabled";
-const TOUCH_CARET_PREF = "touchcaret.enabled";
-const TEST_URL = "http://mochi.test:8888/tests/robocop/testSelectionCarets.html";
-
-// After longpress, Gecko notifys ActionBarHandler to init then update state.
-// When it does, we'll peek over its shoulder and test status.
-const LONGPRESS_EVENT = "testSelectionCarets:Longpress";
-const STATUS_UPDATE_EVENT = "ActionBar:UpdateState";
+const ACCESSIBLECARET_PREF = "layout.accessiblecaret.enabled";
+const TEST_URL = "http://mochi.test:8888/tests/robocop/testAccessibleCarets.html";
 
 // Ensures Tabs are completely loaded, viewport and zoom constraints updated, etc.
-const TAB_CHANGE_EVENT = "testSelectionCarets:TabChange";
+const TAB_CHANGE_EVENT = "testAccessibleCarets:TabChange";
 const TAB_STOP_EVENT = "STOP";
 
 const gChromeWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -114,37 +108,29 @@ function getFirstCharPressPoint(doc, element, expected) {
  * @resolves The ActionBar status, including its target focused element, and
  *           the selected text that it sees.
  */
-function do_promiseLongPressResult(midPoint) {
-  return new Promise(resolve => {
-    let observer = (subject, topic, data) => {
-      let ActionBarHandler = gChromeWin.ActionBarHandler;
-      if (topic === STATUS_UPDATE_EVENT) {
-        let text = ActionBarHandler._getSelectedText();
-        if (text !== "") {
-          // Remove notification observer, and resolve.
-          Services.obs.removeObserver(observer, STATUS_UPDATE_EVENT);
-          resolve({
-            focusedElement: ActionBarHandler._targetElement,
-            text: text,
-          });
-        }
-      }
-    };
+function getLongPressResult(browser, midPoint) {
+  let domWinUtils = browser.contentWindow.
+    QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
-    // Add notification observer, trigger the longpress and wait.
-    Services.obs.addObserver(observer, STATUS_UPDATE_EVENT, false);
-    Messaging.sendRequestForResult({
-      type: LONGPRESS_EVENT,
-      x: midPoint.x,
-      y: midPoint.y,
-    });
-  });
+  // AccessibleCarets expect longtap between touchstart/end.
+  domWinUtils.sendTouchEventToWindow("touchstart", [0], [midPoint.x], [midPoint.y],
+                                     [1], [1], [0], [1], 1, 0);
+  domWinUtils.sendMouseEventToWindow("mouselongtap", midPoint.x, midPoint.y,
+                                     0, 1, 0);
+  domWinUtils.sendTouchEventToWindow("touchend", [0], [midPoint.x], [midPoint.y],
+                                     [1], [1], [0], [1], 1, 0);
+
+  let ActionBarHandler = gChromeWin.ActionBarHandler;
+  return { focusedElement: ActionBarHandler._targetElement,
+           text: ActionBarHandler._getSelectedText(),
+           selectionID: ActionBarHandler._selectionID,
+  };
 }
 
 /**
  * Main test method.
  */
-add_task(function* testSelectionCarets() {
+add_task(function* testAccessibleCarets() {
   // Wait to start loading our test page until after the initial browser tab is
   // completely loaded. This allows each tab to complete its layer initialization,
   // importantly, its viewport and zoomContraints info.
@@ -152,8 +138,7 @@ add_task(function* testSelectionCarets() {
   yield do_promiseTabChangeEvent(BrowserApp.selectedTab.id, TAB_STOP_EVENT);
 
   // Ensure Gecko Selection and Touch carets are enabled.
-  Services.prefs.setBoolPref(SELECTION_CARETS_PREF, true);
-  Services.prefs.setBoolPref(TOUCH_CARET_PREF, true);
+  Services.prefs.setBoolPref(ACCESSIBLECARET_PREF, true);
 
   // Load test page, wait for load completion, register cleanup.
   let browser = BrowserApp.addTab(TEST_URL).browser;
@@ -161,9 +146,8 @@ add_task(function* testSelectionCarets() {
   yield do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
 
   do_register_cleanup(function cleanup() {
-    Services.prefs.clearUserPref(SELECTION_CARETS_PREF);
-    Services.prefs.clearUserPref(TOUCH_CARET_PREF);
     BrowserApp.closeTab(tab);
+    Services.prefs.clearUserPref(ACCESSIBLECARET_PREF);
   });
 
   // References to test document elements.
@@ -192,37 +176,37 @@ add_task(function* testSelectionCarets() {
 
   // Longpress various LTR content elements. Test focused element against
   // expected, and selected text against expected.
-  let result = yield do_promiseLongPressResult(ce_LTR_midPoint);
+  let result = getLongPressResult(browser, ce_LTR_midPoint);
   is(result.focusedElement, ce_LTR_elem, "Focused element should match expected.");
   is(result.text, "Find", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(tc_LTR_midPoint);
+  result = getLongPressResult(browser, tc_LTR_midPoint);
   is(result.focusedElement, null, "No focused element is expected.");
   is(result.text, "Open", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(i_LTR_midPoint);
+  result = getLongPressResult(browser, i_LTR_midPoint);
   is(result.focusedElement, i_LTR_elem, "Focused element should match expected.");
   is(result.text, "Type", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(ta_LTR_midPoint);
+  result = getLongPressResult(browser, ta_LTR_midPoint);
   is(result.focusedElement, ta_LTR_elem, "Focused element should match expected.");
   is(result.text, "Words", "Selected text should match expected text.");
 
   // Longpress various RTL content elements. Test focused element against
   // expected, and selected text against expected.
-  result = yield do_promiseLongPressResult(ce_RTL_midPoint);
+  result = getLongPressResult(browser, ce_RTL_midPoint);
   is(result.focusedElement, ce_RTL_elem, "Focused element should match expected.");
   is(result.text, "איפה", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(tc_RTL_midPoint);
+  result = getLongPressResult(browser, tc_RTL_midPoint);
   is(result.focusedElement, null, "No focused element is expected.");
   is(result.text, "תן", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(i_RTL_midPoint);
+  result = getLongPressResult(browser, i_RTL_midPoint);
   is(result.focusedElement, i_RTL_elem, "Focused element should match expected.");
   is(result.text, "לרוץ", "Selected text should match expected text.");
 
-  result = yield do_promiseLongPressResult(ta_RTL_midPoint);
+  result = getLongPressResult(browser, ta_RTL_midPoint);
   is(result.focusedElement, ta_RTL_elem, "Focused element should match expected.");
   is(result.text, "הספר", "Selected text should match expected text.");
 

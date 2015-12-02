@@ -2,192 +2,186 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Bug 812172: Test adding and modifying conditional breakpoints (with server-side support)
+ * Test adding and modifying conditional breakpoints (with server-side support)
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
-  let gTab, gPanel, gDebugger;
-  let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
-
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
-    gBreakpoints = gDebugger.DebuggerController.Breakpoints;
-    gBreakpointsAdded = gBreakpoints._added;
-    gBreakpointsRemoving = gBreakpoints._removing;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require('./content/constants');
+    const actions = bindActionCreators(gPanel);
+    const getState = gDebugger.DebuggerController.getState;
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
-      .then(() => initialChecks())
-      .then(() => addBreakpoint1())
-      .then(() => testBreakpoint(18, false, false, undefined))
-      .then(() => addBreakpoint2())
-      .then(() => testBreakpoint(19, false, false, undefined))
-      .then(() => modBreakpoint2())
-      .then(() => testBreakpoint(19, false, true, undefined))
-      .then(() => addBreakpoint3())
-      .then(() => testBreakpoint(20, true, false, undefined))
-      .then(() => modBreakpoint3())
-      .then(() => testBreakpoint(20, true, false, "bamboocha"))
-      .then(() => addBreakpoint4())
-      .then(() => testBreakpoint(21, false, false, undefined))
-      .then(() => delBreakpoint4())
-      .then(() => setCaretPosition(18))
-      .then(() => testBreakpoint(18, false, false, undefined))
-      .then(() => setCaretPosition(19))
-      .then(() => testBreakpoint(19, false, false, undefined))
-      .then(() => setCaretPosition(20))
-      .then(() => testBreakpoint(20, true, false, "bamboocha"))
-      .then(() => setCaretPosition(17))
-      .then(() => testNoBreakpoint(17))
-      .then(() => setCaretPosition(21))
-      .then(() => testNoBreakpoint(21))
-      .then(() => clickOnBreakpoint(0))
-      .then(() => testBreakpoint(18, false, false, undefined))
-      .then(() => clickOnBreakpoint(1))
-      .then(() => testBreakpoint(19, false, false, undefined))
-      .then(() => clickOnBreakpoint(2))
-      .then(() => testBreakpoint(20, true, true, "bamboocha"))
-      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
+    function addBreakpoint1() {
+      return actions.addBreakpoint({ actor: gSources.selectedValue, line: 18 });
+    }
+
+    function addBreakpoint2() {
+      let finished = waitForDispatch(gPanel, constants.ADD_BREAKPOINT);
+      setCaretPosition(19);
+      gSources._onCmdAddBreakpoint();
+      return finished;
+    }
+
+    function modBreakpoint2() {
+      setCaretPosition(19);
+      gSources._onCmdAddConditionalBreakpoint();
+    }
+
+    function addBreakpoint3() {
+      let finished = waitForDispatch(gPanel, constants.ADD_BREAKPOINT);
+      setCaretPosition(20);
+      gSources._onCmdAddConditionalBreakpoint();
+      return finished;
+    }
+
+    function modBreakpoint3() {
+      let finished = waitForDispatch(gPanel, constants.SET_BREAKPOINT_CONDITION);
+      setCaretPosition(20);
+      gSources._onCmdAddConditionalBreakpoint();
+      typeText(gSources._cbTextbox, "bamboocha");
+      EventUtils.sendKey("RETURN", gDebugger);
+      return finished;
+    }
+
+    function addBreakpoint4() {
+      let finished = waitForDispatch(gPanel, constants.ADD_BREAKPOINT);
+      setCaretPosition(21);
+      gSources._onCmdAddBreakpoint();
+      return finished;
+    }
+
+    function delBreakpoint4() {
+      let finished = waitForDispatch(gPanel, constants.REMOVE_BREAKPOINT);
+      setCaretPosition(21);
+      gSources._onCmdAddBreakpoint();
+      return finished;
+    }
+
+    function testBreakpoint(aLine, aPopupVisible, aConditionalExpression) {
+      const source = queries.getSelectedSource(getState());
+      ok(source,
+         "There should be a selected item in the sources pane.");
+
+      const bp = queries.getBreakpoint(getState(), {
+        actor: source.actor,
+        line: aLine
       });
+      const bpItem = gSources._getBreakpoint(bp);
+      ok(bp, "There should be a breakpoint.");
+      ok(bpItem, "There should be a breakpoint in the sources pane.");
+
+      is(bp.location.actor, source.actor,
+         "The breakpoint on line " + aLine + " wasn't added on the correct source.");
+      is(bp.location.line, aLine,
+         "The breakpoint on line " + aLine + " wasn't found.");
+      is(!!bp.disabled, false,
+         "The breakpoint on line " + aLine + " should be enabled.");
+      is(gSources._conditionalPopupVisible, aPopupVisible,
+         "The breakpoint on line " + aLine + " should have a correct popup state (2).");
+      is(bp.condition, aConditionalExpression,
+         "The breakpoint on line " + aLine + " should have a correct conditional expression.");
+    }
+
+    function testNoBreakpoint(aLine) {
+      let selectedActor = gSources.selectedValue;
+      let selectedBreakpoint = gSources._selectedBreakpoint;
+
+      ok(selectedActor,
+         "There should be a selected item in the sources pane for line " + aLine + ".");
+      ok(!selectedBreakpoint,
+         "There should be no selected brekapoint in the sources pane for line " + aLine + ".");
+
+      ok(isCaretPos(gPanel, aLine),
+         "The editor caret position is not properly set.");
+    }
+
+    function setCaretPosition(aLine) {
+      gEditor.setCursor({ line: aLine - 1, ch: 0 });
+    }
+
+    function clickOnBreakpoint(aIndex) {
+      EventUtils.sendMouseEvent({ type: "click" },
+                                gDebugger.document.querySelectorAll(".dbg-breakpoint")[aIndex],
+                                gDebugger);
+    }
+
+    Task.spawn(function*() {
+      yield waitForSourceAndCaretAndScopes(gPanel, ".html", 17);
+
+      is(gDebugger.gThreadClient.state, "paused",
+         "Should only be getting stack frames while paused.");
+      is(queries.getSourceCount(getState()), 1,
+         "Found the expected number of sources.");
+      is(gEditor.getText().indexOf("ermahgerd"), 253,
+         "The correct source was loaded initially.");
+      is(gSources.selectedValue, gSources.values[0],
+         "The correct source is selected.");
+
+      is(queries.getBreakpoints(getState()).length, 0,
+         "No breakpoints currently added.");
+
+      yield addBreakpoint1();
+      testBreakpoint(18, false, undefined)
+
+      yield addBreakpoint2();
+      testBreakpoint(19, false, undefined);
+      yield modBreakpoint2();
+      testBreakpoint(19, true, undefined);
+      yield addBreakpoint3();
+      testBreakpoint(20, false, undefined);
+      yield modBreakpoint3();
+      testBreakpoint(20, false, "bamboocha");
+      yield addBreakpoint4();
+      testBreakpoint(21, false, undefined);
+      yield delBreakpoint4();
+
+      setCaretPosition(18);
+      is(gSources._selectedBreakpoint.location.line, 18,
+         "The selected breakpoint is line 18");
+      yield testBreakpoint(18, false, undefined);
+
+      setCaretPosition(19);
+      is(gSources._selectedBreakpoint.location.line, 19,
+         "The selected breakpoint is line 19");
+      yield testBreakpoint(19, false, "");
+
+      setCaretPosition(20);
+      is(gSources._selectedBreakpoint.location.line, 20,
+         "The selected breakpoint is line 20");
+      yield testBreakpoint(20, false, "bamboocha");
+
+      setCaretPosition(17);
+      yield testNoBreakpoint(17);
+
+      setCaretPosition(21);
+      yield testNoBreakpoint(21);
+
+      clickOnBreakpoint(0);
+      is(gSources._selectedBreakpoint.location.line, 18,
+         "The selected breakpoint is line 18");
+      yield testBreakpoint(18, false, undefined);
+
+      clickOnBreakpoint(1);
+      is(gSources._selectedBreakpoint.location.line, 19,
+         "The selected breakpoint is line 19");
+      yield testBreakpoint(19, false, "");
+
+      clickOnBreakpoint(2);
+      is(gSources._selectedBreakpoint.location.line, 20,
+         "The selected breakpoint is line 20");
+      testBreakpoint(20, true, "bamboocha");
+
+      resumeDebuggerThenCloseAndFinish(gPanel);
+    });
 
     callInTab(gTab, "ermahgerd");
   });
-
-  function initialChecks() {
-    is(gDebugger.gThreadClient.state, "paused",
-      "Should only be getting stack frames while paused.");
-    is(gSources.itemCount, 1,
-      "Found the expected number of sources.");
-    is(gEditor.getText().indexOf("ermahgerd"), 253,
-      "The correct source was loaded initially.");
-    is(gSources.selectedValue, gSources.values[0],
-      "The correct source is selected.");
-
-    is(gBreakpointsAdded.size, 0,
-      "No breakpoints currently added.");
-    is(gBreakpointsRemoving.size, 0,
-      "No breakpoints currently being removed.");
-    is(gEditor.getBreakpoints().length, 0,
-      "No breakpoints currently shown in the editor.");
-
-    ok(!gBreakpoints._getAdded({ actor: "foo", line: 3 }),
-      "_getAdded('foo', 3) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ actor: "bar", line: 3 }),
-      "_getRemoving('bar', 3) returns falsey.");
-  }
-
-  function addBreakpoint1() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED);
-    gPanel.addBreakpoint({ actor: gSources.selectedValue, line: 18 });
-    return finished;
-  }
-
-  function addBreakpoint2() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED);
-    setCaretPosition(19);
-    gSources._onCmdAddBreakpoint();
-    return finished;
-  }
-
-  function modBreakpoint2() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_SHOWING);
-    setCaretPosition(19);
-    gSources._onCmdAddConditionalBreakpoint();
-    return finished;
-  }
-
-  function addBreakpoint3() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED);
-    setCaretPosition(20);
-    gSources._onCmdAddConditionalBreakpoint();
-    return finished;
-  }
-
-  function modBreakpoint3() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.CONDITIONAL_BREAKPOINT_POPUP_HIDING);
-    typeText(gSources._cbTextbox, "bamboocha");
-    EventUtils.sendKey("RETURN", gDebugger);
-    return finished;
-  }
-
-  function addBreakpoint4() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED);
-    setCaretPosition(21);
-    gSources._onCmdAddBreakpoint();
-    return finished;
-  }
-
-  function delBreakpoint4() {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_REMOVED);
-    setCaretPosition(21);
-    gSources._onCmdAddBreakpoint();
-    return finished;
-  }
-
-  function testBreakpoint(aLine, aOpenPopupFlag, aPopupVisible, aConditionalExpression) {
-    let selectedActor = gSources.selectedValue;
-    let selectedBreakpoint = gSources._selectedBreakpointItem;
-
-    ok(selectedActor,
-      "There should be a selected item in the sources pane.");
-    ok(selectedBreakpoint,
-      "There should be a selected brekapoint in the sources pane.");
-
-    is(selectedBreakpoint.attachment.actor, selectedActor,
-      "The breakpoint on line " + aLine + " wasn't added on the correct source.");
-    is(selectedBreakpoint.attachment.line, aLine,
-      "The breakpoint on line " + aLine + " wasn't found.");
-    is(!!selectedBreakpoint.attachment.disabled, false,
-      "The breakpoint on line " + aLine + " should be enabled.");
-    is(!!selectedBreakpoint.attachment.openPopup, aOpenPopupFlag,
-      "The breakpoint on line " + aLine + " should have a correct popup state (1).");
-    is(gSources._conditionalPopupVisible, aPopupVisible,
-      "The breakpoint on line " + aLine + " should have a correct popup state (2).");
-
-    return gBreakpoints._getAdded(selectedBreakpoint.attachment).then(aBreakpointClient => {
-      is(aBreakpointClient.location.actor, selectedActor,
-        "The breakpoint's client url is correct");
-      is(aBreakpointClient.location.line, aLine,
-        "The breakpoint's client line is correct");
-      is(aBreakpointClient.condition, aConditionalExpression,
-        "The breakpoint on line " + aLine + " should have a correct conditional expression.");
-      is("condition" in aBreakpointClient, !!aConditionalExpression,
-        "The breakpoint on line " + aLine + " should have a correct conditional state.");
-
-      ok(isCaretPos(gPanel, aLine),
-        "The editor caret position is not properly set.");
-    });
-  }
-
-  function testNoBreakpoint(aLine) {
-    let selectedUrl = getSelectedSourceURL(gSources);
-    let selectedBreakpoint = gSources._selectedBreakpointItem;
-
-    ok(selectedUrl,
-      "There should be a selected item in the sources pane for line " + aLine + ".");
-    ok(!selectedBreakpoint,
-      "There should be no selected brekapoint in the sources pane for line " + aLine + ".");
-
-    ok(isCaretPos(gPanel, aLine),
-      "The editor caret position is not properly set.");
-  }
-
-  function setCaretPosition(aLine) {
-    gEditor.setCursor({ line: aLine - 1, ch: 0 });
-  }
-
-  function clickOnBreakpoint(aIndex) {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_CLICKED);
-    EventUtils.sendMouseEvent({ type: "click" },
-      gDebugger.document.querySelectorAll(".dbg-breakpoint")[aIndex],
-      gDebugger);
-    return finished;
-  }
 }

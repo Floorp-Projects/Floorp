@@ -7,76 +7,41 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
-var gTab, gPanel, gDebugger;
-var gEditor, gSources;
-
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
-    gTab = aTab;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
-    gSources = gDebugger.DebuggerView.Sources;
+    const gTab = aTab;
+    const gPanel = aPanel;
+    const gDebugger = gPanel.panelWin;
+    const gEditor = gDebugger.DebuggerView.editor;
+    const gSources = gDebugger.DebuggerView.Sources;
+    const queries = gDebugger.require('./content/queries');
+    const constants = gDebugger.require('./content/constants');
+    const actions = bindActionCreators(gPanel);
+    const getState = gDebugger.DebuggerController.getState;
 
-    waitForSourceShown(gPanel, "code_ugly.js")
-      .then(testSourceIsUgly)
-      .then(() => {
-        const finished = waitForSourceShown(gPanel, "code_ugly.js");
-        clickPrettyPrintButton();
-        testProgressBarShown();
-        return finished;
-      })
-      .then(testSourceIsPretty)
-      .then(testEditorShown)
-      .then(testSourceIsStillPretty)
-      .then(() => closeDebuggerAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
-      });
+    Task.spawn(function*() {
+      yield waitForSourceShown(gPanel, "code_ugly.js");
+
+      ok(!gEditor.getText().includes("\n  "),
+         "The source shouldn't be pretty printed yet.");
+
+      const finished = waitForSourceShown(gPanel, "code_ugly.js");
+      gDebugger.document.getElementById("pretty-print").click();
+      const deck = gDebugger.document.getElementById("editor-deck");
+      is(deck.selectedIndex, 2, "The progress bar should be shown");
+      yield finished;
+
+      ok(gEditor.getText().includes("\n  "),
+         "The source should be pretty printed.")
+      is(deck.selectedIndex, 0, "The editor should be shown");
+
+      const source = queries.getSelectedSource(getState());
+      const { loading, text } = queries.getSourceText(getState(), source.actor);
+      ok(!loading, "Source text is not loading");
+      ok(text.includes("\n  "),
+         "Subsequent calls to getText return the pretty printed source.");
+
+      closeDebuggerAndFinish(gPanel);
+    });
   });
 }
-
-function testSourceIsUgly() {
-  ok(!gEditor.getText().includes("\n  "),
-     "The source shouldn't be pretty printed yet.");
-}
-
-function clickPrettyPrintButton() {
-  gDebugger.document.getElementById("pretty-print").click();
-}
-
-function testProgressBarShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, 2, "The progress bar should be shown");
-}
-
-function testSourceIsPretty() {
-  ok(gEditor.getText().includes("\n  "),
-     "The source should be pretty printed.")
-}
-
-function testEditorShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, 0, "The editor should be shown");
-}
-
-function testSourceIsStillPretty() {
-  const deferred = promise.defer();
-
-  const { source } = gSources.selectedItem.attachment;
-  gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
-    ok(text.includes("\n  "),
-       "Subsequent calls to getText return the pretty printed source.");
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gPanel = null;
-  gDebugger = null;
-  gEditor = null;
-  gSources = null;
-});
