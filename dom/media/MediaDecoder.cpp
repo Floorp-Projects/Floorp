@@ -579,6 +579,9 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
   mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
+  // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
+  // depends on the download rate.
+  mWatchManager.Watch(mBuffered, &MediaDecoder::UpdateReadyState);
 
   // mLogicalPosition
   mWatchManager.Watch(mCurrentPosition, &MediaDecoder::UpdateLogicalPosition);
@@ -1526,10 +1529,6 @@ MediaDecoder::NotifyDataArrived() {
   }
 
   mDataArrivedEvent.Notify();
-
-  // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
-  // depends on the download rate.
-  UpdateReadyState();
 }
 
 // Provide access to the state machine object
