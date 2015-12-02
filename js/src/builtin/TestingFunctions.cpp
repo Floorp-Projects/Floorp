@@ -2991,14 +2991,29 @@ static bool
 SetRNGState(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "SetRNGState", 1))
+    if (!args.requireAtLeast(cx, "SetRNGState", 2))
         return false;
 
-    double seed;
-    if (!ToNumber(cx, args[0], &seed))
+    double d0;
+    if (!ToNumber(cx, args[0], &d0))
         return false;
 
-    cx->compartment()->rngState = static_cast<uint64_t>(seed) & RNG_MASK;
+    double d1;
+    if (!ToNumber(cx, args[1], &d1))
+        return false;
+
+    uint64_t seed0 = static_cast<uint64_t>(d0);
+    uint64_t seed1 = static_cast<uint64_t>(d1);
+
+    if (seed0 == 0 && seed1 == 0) {
+        JS_ReportError(cx, "RNG requires non-zero seed");
+        return false;
+    }
+
+    cx->compartment()->ensureRandomNumberGenerator();
+    cx->compartment()->randomNumberGenerator.ref().setState(seed0, seed1);
+
+    args.rval().setUndefined();
     return true;
 }
 #endif
@@ -3547,8 +3562,8 @@ gc::ZealModeHelpText),
 "  the current global is used as the default one.\n"),
 
 #ifdef DEBUG
-    JS_FN_HELP("setRNGState", SetRNGState, 1, 0,
-"setRNGState(seed)",
+    JS_FN_HELP("setRNGState", SetRNGState, 2, 0,
+"setRNGState(seed0, seed1)",
 "  Set this compartment's RNG state.\n"),
 #endif
 
