@@ -67,14 +67,6 @@ MapSECStatus(SECStatus rv)
   return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
 }
 
-#ifdef _MSC_VER
-// C4061: enumerator 'symbol' in switch of enum 'symbol' is not explicitly
-// handled.
-#define MOZ_NON_EXHAUSTIVE_SWITCH __pragma(warning(suppress:4061)) switch
-#else
-#define MOZ_NON_EXHAUSTIVE_SWITCH switch
-#endif
-
 // Alphabetical order by NSS type
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
                                           PRFileDesc,
@@ -208,7 +200,13 @@ public:
 private:
   nsresult SetLength(SECOidTag hashType)
   {
-    MOZ_NON_EXHAUSTIVE_SWITCH (hashType)
+#ifdef _MSC_VER
+#pragma warning(push)
+    // C4061: enumerator 'symbol' in switch of enum 'symbol' is not
+    // explicitly handled.
+#pragma warning(disable:4061)
+#endif
+    switch (hashType)
     {
       case SEC_OID_SHA1:   item.len = SHA1_LENGTH;   break;
       case SEC_OID_SHA256: item.len = SHA256_LENGTH; break;
@@ -217,6 +215,9 @@ private:
       default:
         return NS_ERROR_INVALID_ARG;
     }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     return NS_OK;
   }
