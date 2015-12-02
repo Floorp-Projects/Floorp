@@ -133,8 +133,6 @@ struct ServiceWorkerManager::RegistrationDataPerPrincipal
 
   // Maps scopes to job queues.
   nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
-
-  nsDataHashtable<nsCStringHashKey, bool> mSetOfScopesBeingUpdated;
 };
 
 struct ServiceWorkerManager::PendingOperation
@@ -564,14 +562,22 @@ public:
   }
 };
 
-class ContinueUpdateRunnable final : public nsRunnable
+class ContinueUpdateRunnable final : public LifeCycleEventCallback
 {
   nsMainThreadPtrHandle<nsISupports> mJob;
+  bool mScriptEvaluationResult;
 public:
   explicit ContinueUpdateRunnable(const nsMainThreadPtrHandle<nsISupports> aJob)
     : mJob(aJob)
+    , mScriptEvaluationResult(false)
   {
     AssertIsOnMainThread();
+  }
+
+  void
+  SetResult(bool aResult)
+  {
+    mScriptEvaluationResult = aResult;
   }
 
   NS_IMETHOD Run();
@@ -974,17 +980,6 @@ public:
       return Fail(NS_ERROR_FAILURE);
     }
 
-    nsAutoString cacheName;
-    // We have to create a ServiceWorker here simply to ensure there are no
-    // errors. Ideally we should just pass this worker on to ContinueInstall.
-    MOZ_ASSERT(!data->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
-    data->mSetOfScopesBeingUpdated.Put(mRegistration->mScope, true);
-
-    // Call FailScopeUpdate on main thread if the SW script load fails below.
-    nsCOMPtr<nsIRunnable> failRunnable = NS_NewRunnableMethodWithArgs
-      <StorensRefPtrPassByPtr<ServiceWorkerManager>, nsCString>
-      (this, &ServiceWorkerRegisterJob::FailScopeUpdate, swm, scopeKey);
-
     MOZ_ASSERT(!mUpdateAndInstallInfo);
     mUpdateAndInstallInfo =
       new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec,
@@ -993,27 +988,15 @@ public:
     RefPtr<ServiceWorkerJob> upcasted = this;
     nsMainThreadPtrHandle<nsISupports> handle(
         new nsMainThreadPtrHolder<nsISupports>(upcasted));
-    RefPtr<nsRunnable> callback = new ContinueUpdateRunnable(handle);
+    RefPtr<LifeCycleEventCallback> callback = new ContinueUpdateRunnable(handle);
 
     ServiceWorkerPrivate* workerPrivate =
       mUpdateAndInstallInfo->WorkerPrivate();
-    rv = workerPrivate->ContinueOnSuccessfulScriptEvaluation(callback);
+    rv = workerPrivate->CheckScriptEvaluation(callback);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return FailScopeUpdate(swm, scopeKey);
+      Fail(NS_ERROR_DOM_ABORT_ERR);
     }
-  }
-
-  void
-  FailScopeUpdate(ServiceWorkerManager* aSwm, const nsACString& aScopeKey)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aSwm);
-    ServiceWorkerManager::RegistrationDataPerPrincipal* data;
-    if (aSwm->mRegistrationInfos.Get(aScopeKey, &data)) {
-      data->mSetOfScopesBeingUpdated.Remove(aScopeKey);
-    }
-    Fail(NS_ERROR_DOM_ABORT_ERR);
   }
 
   // This MUST only be called when the job is still performing actions related
@@ -1087,41 +1070,28 @@ public:
     Fail(rv);
   }
 
-  // Public so our error handling code can continue with a successful worker.
+private:
   void
-  ContinueInstall()
+  ContinueInstall(bool aScriptEvaluationResult)
   {
     AssertIsOnMainThread();
-    // mRegistration will be null if we have already Fail()ed.
-    if (!mRegistration) {
-      return;
-    }
-
+    MOZ_ASSERT(mRegistration);
     mRegistration->mUpdating = false;
 
-    // Even if we are canceled, ensure integrity of mSetOfScopesBeingUpdated
-    // first.
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
-    nsAutoCString scopeKey;
-    nsresult rv = swm->PrincipalToScopeKey(mRegistration->mPrincipal, scopeKey);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return Fail(NS_ERROR_FAILURE);
-    }
-
-    ServiceWorkerManager::RegistrationDataPerPrincipal* data;
-    if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
-      return Fail(NS_ERROR_FAILURE);
-    }
-
-    MOZ_ASSERT(data->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
-    data->mSetOfScopesBeingUpdated.Remove(mRegistration->mScope);
     // This is effectively the end of Step 4.3 of the [[Update]] algorithm.
     // The invocation of [[Install]] is not part of the atomic block.
-
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
     if (mCanceled) {
       return Fail(NS_ERROR_DOM_ABORT_ERR);
+    }
+
+    if (NS_WARN_IF(!aScriptEvaluationResult)) {
+      ErrorResult error;
+
+      NS_ConvertUTF8toUTF16 scriptSpec(mRegistration->mScriptSpec);
+      NS_ConvertUTF8toUTF16 scope(mRegistration->mScope);
+      error.ThrowTypeError<MSG_SW_SCRIPT_THREW>(scriptSpec, scope);
+      return Fail(error);
     }
 
     // Begin [[Install]] atomic step 4.
@@ -1129,6 +1099,8 @@ public:
       mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
       mRegistration->mInstallingWorker->WorkerPrivate()->TerminateWorker();
     }
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER);
@@ -1169,7 +1141,6 @@ public:
     }
   }
 
-private:
   void
   Update()
   {
@@ -1326,7 +1297,7 @@ ContinueUpdateRunnable::Run()
   AssertIsOnMainThread();
   RefPtr<ServiceWorkerJob> job = static_cast<ServiceWorkerJob*>(mJob.get());
   RefPtr<ServiceWorkerRegisterJob> upjob = static_cast<ServiceWorkerRegisterJob*>(job.get());
-  upjob->ContinueInstall();
+  upjob->ContinueInstall(mScriptEvaluationResult);
   return NS_OK;
 }
 
@@ -2492,28 +2463,6 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
   ServiceWorkerManager::RegistrationDataPerPrincipal* data;
   if (NS_WARN_IF(!mRegistrationInfos.Get(scopeKey, &data))) {
     return;
-  }
-
-  // If this is a failure, we may need to cancel an in-progress registration.
-  if (!JSREPORT_IS_WARNING(aFlags) &&
-      data->mSetOfScopesBeingUpdated.Contains(aScope)) {
-
-    data->mSetOfScopesBeingUpdated.Remove(aScope);
-
-    ServiceWorkerJobQueue* queue = data->mJobQueues.Get(aScope);
-    MOZ_ASSERT(queue);
-
-    ServiceWorkerJob* job = queue->Peek();
-    if (job) {
-      MOZ_ASSERT(job->IsRegisterJob());
-      RefPtr<ServiceWorkerRegisterJob> regJob =
-        static_cast<ServiceWorkerRegisterJob*>(job);
-
-      ErrorResult rv;
-      NS_ConvertUTF8toUTF16 scope(aScope);
-      rv.ThrowTypeError<MSG_SW_SCRIPT_THREW>(&aWorkerURL, &scope);
-      regJob->Fail(rv);
-    }
   }
 
   // Always report any uncaught exceptions or errors to the console of
