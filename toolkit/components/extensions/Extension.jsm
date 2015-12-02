@@ -213,29 +213,6 @@ ExtensionPage.prototype = {
     return this.contentWindow;
   },
 
-  get principal() {
-    return this.contentWindow.document.nodePrincipal;
-  },
-
-  checkLoadURL(url, options = {}) {
-    let ssm = Services.scriptSecurityManager;
-
-    let flags = ssm.STANDARD;
-    if (!options.allowScript) {
-      flags |= ssm.DISALLOW_SCRIPT;
-    }
-    if (!options.allowInheritsPrincipal) {
-      flags |= ssm.DISALLOW_INHERIT_PRINCIPAL;
-    }
-
-    try {
-      ssm.checkLoadURIStrWithPrincipal(this.principal, url, flags);
-    } catch (e) {
-      return false;
-    }
-    return true;
-  },
-
   callOnClose(obj) {
     this.onClose.add(obj);
   },
@@ -883,10 +860,10 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
     let whitelist = [];
     for (let perm of permissions) {
-      if (/^\w+(\.\w+)*$/.test(perm)) {
-        this.permissions.add(perm);
-      } else {
+      if (perm.match(/:\/\//)) {
         whitelist.push(perm);
+      } else {
+        this.permissions.add(perm);
       }
     }
     this.whiteListedHosts = new MatchPattern(whitelist);
