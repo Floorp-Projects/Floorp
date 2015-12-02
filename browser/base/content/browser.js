@@ -6471,7 +6471,7 @@ function isTabEmpty(aTab) {
 }
 
 function BrowserOpenSyncTabs() {
-  switchToTabHavingURI("about:sync-tabs", true);
+  gSyncUI.openSyncedTabsPanel();
 }
 
 /**
