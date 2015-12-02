@@ -3,7 +3,7 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/"]
+      "permissions": ["tabs"]
     },
 
     background: function() {
