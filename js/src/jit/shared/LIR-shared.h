@@ -7316,37 +7316,35 @@ class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS>
 {
   public:
     LIR_HEADER(Random)
-    LRandom(const LDefinition &tempMaybeEAX, const LDefinition &tempMaybeEDX,
-            const LDefinition &temp1
+    LRandom(const LDefinition &temp0, const LDefinition &temp1,
+            const LDefinition &temp2
 #ifndef JS_PUNBOX64
-            , const LDefinition &temp2, const LDefinition &temp3
+            , const LDefinition &temp3, const LDefinition &temp4
 #endif
             )
     {
-        setTemp(0, tempMaybeEAX);
-        setTemp(1, tempMaybeEDX);
-        setTemp(2, temp1);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
 #ifndef JS_PUNBOX64
-        setTemp(3, temp2);
-        setTemp(4, temp3);
+        setTemp(3, temp3);
+        setTemp(4, temp4);
 #endif
     }
-    // On x86, following 2 methods return eax and edx necessary for mull.
-    // On others, following 2 methods return ordinary temporary registers.
-    const LDefinition* tempMaybeEAX() {
+    const LDefinition* temp0() {
         return getTemp(0);
     }
-    const LDefinition* tempMaybeEDX() {
+    const LDefinition* temp1() {
         return getTemp(1);
     }
-    const LDefinition *temp1() {
+    const LDefinition *temp2() {
         return getTemp(2);
     }
 #ifndef JS_PUNBOX64
-    const LDefinition *temp2() {
+    const LDefinition *temp3() {
         return getTemp(3);
     }
-    const LDefinition *temp3() {
+    const LDefinition *temp4() {
         return getTemp(4);
     }
 #endif
