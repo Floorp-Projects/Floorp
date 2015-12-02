@@ -40,6 +40,7 @@ namespace plugins {
 
 class PBrowserStreamParent;
 class PluginModuleParent;
+class D3D11SurfaceHolder;
 
 class PluginInstanceParent : public PPluginInstanceParent
                            , public PluginDataResolver
@@ -173,11 +174,23 @@ public:
     RecvRevokeCurrentDirectSurface() override;
 
     virtual bool
+    RecvInitDXGISurface(const gfx::SurfaceFormat& format,
+                         const gfx::IntSize& size,
+                         WindowsHandle* outHandle,
+                         NPError* outError) override;
+    virtual bool
+    RecvFinalizeDXGISurface(const WindowsHandle& handle) override;
+
+    virtual bool
     RecvShowDirectBitmap(Shmem&& buffer,
                          const gfx::SurfaceFormat& format,
                          const uint32_t& stride,
                          const gfx::IntSize& size,
                          const gfx::IntRect& dirty) override;
+
+    virtual bool
+    RecvShowDirectDXGISurface(const WindowsHandle& handle,
+                               const gfx::IntRect& rect) override;
 
     // Async rendering
     virtual bool
@@ -375,6 +388,13 @@ private:
 
     // This is used to tell the compositor that it should invalidate the ImageLayer.
     uint32_t mFrameID;
+
+#if defined(XP_WIN)
+    // Note: DXGI 1.1 surface handles are global across all processes, and are not
+    // marshaled. As long as we haven't freed a texture its handle should be valid
+    // as a unique cross-process identifier for the texture.
+    nsRefPtrHashtable<nsPtrHashKey<void>, D3D11SurfaceHolder> mD3D11Surfaces;
+#endif
 
 #if defined(OS_WIN)
 private:

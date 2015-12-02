@@ -3065,5 +3065,8 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
 bool
 gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing()
 {
-  return false;
+  if (!GetD3D11ContentDevice() || !CompositorD3D11TextureSharingWorks()) {
+    return false;
+  }
+  return true;
 }

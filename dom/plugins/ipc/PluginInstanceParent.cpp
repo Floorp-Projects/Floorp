@@ -42,6 +42,10 @@
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#if defined(XP_WIN)
+# include "mozilla/layers/D3D11ShareHandleImage.h"
+# include "mozilla/layers/TextureD3D11.h"
+#endif
 
 #ifdef XP_MACOSX
 #include "MacIOSurfaceImage.h"
@@ -622,6 +626,78 @@ PluginInstanceParent::RecvRevokeCurrentDirectSurface()
 }
 
 bool
+PluginInstanceParent::RecvInitDXGISurface(const gfx::SurfaceFormat& format,
+                                           const gfx::IntSize& size,
+                                           WindowsHandle* outHandle,
+                                           NPError* outError)
+{
+    *outHandle = 0;
+    *outError = NPERR_GENERIC_ERROR;
+
+#if defined(XP_WIN)
+    if (format != SurfaceFormat::B8G8R8A8 && format != SurfaceFormat::B8G8R8X8) {
+        *outError = NPERR_INVALID_PARAM;
+        return true;
+    }
+    if (size.width <= 0 || size.height <= 0) {
+        *outError = NPERR_INVALID_PARAM;
+        return true;
+    }
+
+    ImageContainer *container = GetImageContainer();
+    if (!container) {
+        return true;
+    }
+
+    ImageBridgeChild* forwarder = ImageBridgeChild::GetSingleton();
+    if (!forwarder) {
+        return true;
+    }
+
+    RefPtr<ID3D11Device> d3d11 = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
+    if (!d3d11) {
+        return true;
+    }
+
+    // Create the texture we'll give to the plugin process.
+    HANDLE sharedHandle = 0;
+    RefPtr<ID3D11Texture2D> back;
+    {
+        CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, size.width, size.height, 1, 1);
+        desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        if (FAILED(d3d11->CreateTexture2D(&desc, nullptr, getter_AddRefs(back))) || !back) {
+            return true;
+        }
+
+        RefPtr<IDXGIResource> resource;
+        if (FAILED(back->QueryInterface(IID_IDXGIResource, getter_AddRefs(resource))) || !resource) {
+            return true;
+        }
+        if (FAILED(resource->GetSharedHandle(&sharedHandle) || !sharedHandle)) {
+            return true;
+        }
+    }
+
+    RefPtr<D3D11SurfaceHolder> holder = new D3D11SurfaceHolder(back, format, size);
+    mD3D11Surfaces.Put(reinterpret_cast<void*>(sharedHandle), holder);
+
+    *outHandle = reinterpret_cast<uintptr_t>(sharedHandle);
+    *outError = NPERR_NO_ERROR;
+#endif
+    return true;
+}
+
+bool
+PluginInstanceParent::RecvFinalizeDXGISurface(const WindowsHandle& handle)
+{
+#if defined(XP_WIN)
+    mD3D11Surfaces.Remove(reinterpret_cast<void*>(handle));
+#endif
+    return true;
+}
+
+bool
 PluginInstanceParent::RecvShowDirectBitmap(Shmem&& buffer,
                                            const SurfaceFormat& format,
                                            const uint32_t& stride,
@@ -667,6 +743,7 @@ PluginInstanceParent::RecvShowDirectBitmap(Shmem&& buffer,
         TextureFlags::NO_FLAGS,
         ALLOC_FOR_OUT_OF_BAND_CONTENT);
     if (!texture) {
+        NS_WARNING("Could not allocate a TextureClient for plugin!");
         return false;
     }
 
@@ -699,6 +776,52 @@ PluginInstanceParent::SetCurrentImage(Image* aImage)
     nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(holder);
     mImageContainer->SetCurrentImages(imageList);
+}
+
+bool
+PluginInstanceParent::RecvShowDirectDXGISurface(const WindowsHandle& handle,
+                                                 const gfx::IntRect& dirty)
+{
+#if defined(XP_WIN)
+    RefPtr<D3D11SurfaceHolder> surface;
+    if (!mD3D11Surfaces.Get(reinterpret_cast<void*>(handle), getter_AddRefs(surface))) {
+        return false;
+    }
+    if (!surface->IsValid()) {
+        return false;
+    }
+
+    ImageContainer* container = GetImageContainer();
+    if (!container) {
+        return false;
+    }
+
+    RefPtr<TextureClientRecycleAllocator> allocator = mParent->EnsureTextureAllocator();
+    RefPtr<TextureClient> texture = allocator->CreateOrRecycle(
+        surface->GetFormat(), surface->GetSize(),
+        BackendSelector::Content,
+        TextureFlags::NO_FLAGS,
+        ALLOC_FOR_OUT_OF_BAND_CONTENT);
+    if (!texture) {
+        NS_WARNING("Could not allocate a TextureClient for plugin!");
+        return false;
+    }
+
+    surface->CopyToTextureClient(texture);
+
+    gfx::IntSize size(surface->GetSize());
+    gfx::IntRect pictureRect(gfx::IntPoint(0, 0), size);
+
+    // Wrap the texture in an image and ship it off.
+    RefPtr<TextureWrapperImage> image = new TextureWrapperImage(texture, pictureRect);
+    SetCurrentImage(image);
+
+    PLUGIN_LOG_DEBUG(("   (RecvShowDirect3D10Surface received handle=%p rect=%s)",
+        reinterpret_cast<void*>(handle), Stringify(dirty).c_str()));
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool
