@@ -175,7 +175,12 @@ class ObjectElements
         // before being copied: when setting the CONVERT_DOUBLE_ELEMENTS flag
         // the shared elements may change (from ints to doubles) without
         // making a copy first.
-        COPY_ON_WRITE               = 0x4
+        COPY_ON_WRITE               = 0x4,
+
+        // For TypedArrays only: this TypedArray's storage is mapping shared
+        // memory.  This is a static property of the TypedArray, set when it
+        // is created and never changed.
+        SHARED_MEMORY               = 0x8
     };
 
   private:
@@ -238,6 +243,14 @@ class ObjectElements
       : flags(0), initializedLength(0), capacity(capacity), length(length)
     {}
 
+    enum class SharedMemory {
+        IsShared
+    };
+
+    MOZ_CONSTEXPR ObjectElements(uint32_t capacity, uint32_t length, SharedMemory shmem)
+      : flags(SHARED_MEMORY), initializedLength(0), capacity(capacity), length(length)
+    {}
+
     HeapSlot* elements() {
         return reinterpret_cast<HeapSlot*>(uintptr_t(this) + sizeof(ObjectElements));
     }
@@ -246,6 +259,10 @@ class ObjectElements
     }
     static ObjectElements * fromElements(HeapSlot* elems) {
         return reinterpret_cast<ObjectElements*>(uintptr_t(elems) - sizeof(ObjectElements));
+    }
+
+    bool isSharedMemory() const {
+        return flags & SHARED_MEMORY;
     }
 
     HeapPtrNativeObject& ownerObject() const {
@@ -277,8 +294,13 @@ class ObjectElements
 static_assert(ObjectElements::VALUES_PER_HEADER * sizeof(HeapSlot) == sizeof(ObjectElements),
               "ObjectElements doesn't fit in the given number of slots");
 
-/* Shared singleton for objects with no elements. */
+/*
+ * Shared singletons for objects with no elements.
+ * emptyObjectElementsShared is used only for TypedArrays, when the TA
+ * maps shared memory.
+ */
 extern HeapSlot* const emptyObjectElements;
+extern HeapSlot* const emptyObjectElementsShared;
 
 struct Class;
 class GCMarker;
@@ -324,9 +346,10 @@ enum class DenseElementResult {
  * 'slots_' member is nullptr.
  *
  * Elements are indexed via the 'elements_' member. This member can point to
- * either the shared emptyObjectElements singleton, into the inline value array
- * (the address of the third value, to leave room for a ObjectElements header;
- * in this case numFixedSlots() is zero) or to a dynamically allocated array.
+ * either the shared emptyObjectElements and emptyObjectElementsShared singletons,
+ * into the inline value array (the address of the third value, to leave room
+ * for a ObjectElements header;in this case numFixedSlots() is zero) or to
+ * a dynamically allocated array.
  *
  * Slots and elements may both be non-empty. The slots may be either names or
  * indexes; no indexed property will be in both the slots and elements.
@@ -404,6 +427,10 @@ class NativeObject : public JSObject
         return getElementsHeader()->capacity;
     }
 
+    bool isSharedMemory() const {
+        return getElementsHeader()->isSharedMemory();
+    }
+
     // Update the last property, keeping the number of allocated slots in sync
     // with the object's new slot span.
     bool setLastProperty(ExclusiveContext* cx, Shape* shape);
@@ -423,6 +450,14 @@ class NativeObject : public JSObject
     // object to a native one. The object's type has already been changed, and
     // this brings the shape into sync with it.
     void setLastPropertyMakeNative(ExclusiveContext* cx, Shape* shape);
+
+    // Newly-created TypedArrays that map a SharedArrayBuffer are
+    // marked as shared by giving them an ObjectElements that has the
+    // ObjectElements::SHARED_MEMORY flag set.
+    void setIsSharedMemory() {
+        MOZ_ASSERT(elements_ == emptyObjectElements);
+        elements_ = emptyObjectElementsShared;
+    }
 
   protected:
 #ifdef DEBUG
@@ -1144,7 +1179,7 @@ class NativeObject : public JSObject
     }
 
     inline bool hasEmptyElements() const {
-        return elements_ == emptyObjectElements;
+        return elements_ == emptyObjectElements || elements_ == emptyObjectElementsShared;
     }
 
     /*
