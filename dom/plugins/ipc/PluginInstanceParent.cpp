@@ -599,6 +599,8 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
          updatedRect.right - updatedRect.left,
          updatedRect.bottom - updatedRect.top));
 
+    MOZ_ASSERT(!IsUsingDirectDrawing());
+
     // XXXjwatt rewrite to use Moz2D
     RefPtr<gfxASurface> surface;
     if (newSurface.type() == SurfaceDescriptor::TShmem) {
@@ -737,6 +739,16 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 nsresult
 PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 {
+    if (IsUsingDirectDrawing()) {
+        // Use the image container created by the most recent direct surface
+        // call, if any. We don't create one if no surfaces were presented
+        // yet.
+        ImageContainer *container = mImageContainer;
+        NS_IF_ADDREF(container);
+        *aContainer = container;
+        return NS_OK;
+    }
+
 #ifdef XP_MACOSX
     MacIOSurface* ioSurface = nullptr;
 
@@ -777,6 +789,14 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 nsresult
 PluginInstanceParent::GetImageSize(nsIntSize* aSize)
 {
+    if (IsUsingDirectDrawing()) {
+        if (!mImageContainer) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+        *aSize = mImageContainer->GetCurrentSize();
+        return NS_OK;
+    }
+
     if (mFrontSurface) {
         mozilla::gfx::IntSize size = mFrontSurface->GetSize();
         *aSize = nsIntSize(size.width, size.height);
