@@ -9,6 +9,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const XRE_OS_UPDATE_APPLY_TO_DIR = "OSUpdApplyToD"
 const UPDATE_ARCHIVE_DIR = "UpdArchD"
@@ -57,8 +58,14 @@ DirectoryProvider.prototype = {
 
   _profD: null,
 
-  getFile: function dp_getFile(prop, persistent) {
-#ifdef MOZ_WIDGET_GONK
+  getFile: function(prop, persistent) {
+    if (AppConstants.platform === "gonk") {
+      return this.getFileOnGonk(prop, persistent);
+    }
+    return this.getFileNotGonk(prop, persistent);
+  },
+
+  getFileOnGonk: function(prop, persistent) {
     let localProps = ["cachePDir", "webappsDir", "PrefD", "indexedDBPDir",
                       "permissionDBPDir", "UpdRootD"];
     if (localProps.indexOf(prop) != -1) {
@@ -97,7 +104,10 @@ DirectoryProvider.prototype = {
       // before apply, check if free space is 1.1 times of update.mar
       return this.getUpdateDir(persistent, FOTA_DIR, 1.1);
     }
-#else
+    return null;
+  },
+
+  getFileNotGonk: function(prop, persistent) {
     // In desktop builds, coreAppsDir is the same as the profile
     // directory unless otherwise specified. We just need to get the
     // path from the parent, and it is then used to build
@@ -137,7 +147,6 @@ DirectoryProvider.prototype = {
       persistent.value = true;
       return file;
     }
-#endif
     return null;
   },
 
