@@ -117,14 +117,14 @@ pub unsafe extern "C" fn mp4parse_get_track_info(context: *mut MediaContext, tra
     }
 
     let context: &mut MediaContext = &mut *context;
+    let track_index: usize = track as usize;
+    let info: &mut TrackInfo = &mut *info;
 
-    if track as usize >= context.tracks.len() {
+    if track_index >= context.tracks.len() {
         return -1;
     }
 
-    let track = &context.tracks[track as usize];
-
-    (*info).track_type = match track.track_type {
+    info.track_type = match context.tracks[track_index].track_type {
         TrackType::Video => TRACK_TYPE_H264,
         TrackType::Audio => TRACK_TYPE_AAC,
         TrackType::Unknown => return -1,
@@ -132,26 +132,28 @@ pub unsafe extern "C" fn mp4parse_get_track_info(context: *mut MediaContext, tra
 
     // Maybe context & track should just have a single simple is_valid() instead?
     if context.timescale.is_none() ||
-        track.timescale.is_none() ||
-        track.duration.is_none() ||
-        track.track_id.is_none() {
+       context.tracks[track_index].timescale.is_none() ||
+       context.tracks[track_index].duration.is_none() ||
+       context.tracks[track_index].track_id.is_none() {
             return -1;
         }
 
-    let empty_duration = if track.empty_duration.is_some() {
-        media_time_to_ms(track.empty_duration.unwrap(), context.timescale.unwrap())
-    } else {
+    std::thread::spawn(move || {
+        let track = &context.tracks[track_index];
+        let empty_duration = if track.empty_duration.is_some() {
+            media_time_to_ms(track.empty_duration.unwrap(), context.timescale.unwrap())
+        } else {
+            0
+        };
+        info.media_time = if track.media_time.is_some() {
+            track_time_to_ms(track.media_time.unwrap(), track.timescale.unwrap()) as i64 - empty_duration as i64
+        } else {
+            0
+        };
+        info.duration = track_time_to_ms(track.duration.unwrap(), track.timescale.unwrap());
+        info.track_id = track.track_id.unwrap();
         0
-    };
-    (*info).media_time = if track.media_time.is_some() {
-        track_time_to_ms(track.media_time.unwrap(), track.timescale.unwrap()) as i64 - empty_duration as i64
-    } else {
-        0
-    };
-    (*info).duration = track_time_to_ms(track.duration.unwrap(), track.timescale.unwrap());
-    (*info).track_id = track.track_id.unwrap();
-
-    0
+    }).join().unwrap_or(-1)
 }
 
 #[no_mangle]
