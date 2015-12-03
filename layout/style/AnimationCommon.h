@@ -103,14 +103,6 @@ public:
                   nsStyleContext* aStyleContext,
                   StyleAnimationValue& aComputedValue);
 
-  // For CSS properties that may be animated on a separate layer, represents
-  // a record of the corresponding layer type and change hint.
-  struct LayerAnimationRecord {
-    nsCSSProperty mProperty;
-    nsDisplayItem::Type mLayerType;
-    nsChangeHint mChangeHint;
-  };
-
   virtual bool IsAnimationManager() {
     return false;
   }
