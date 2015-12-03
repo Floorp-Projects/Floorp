@@ -361,6 +361,8 @@ DeltaModeForDeltaType(ScrollWheelInput::ScrollDeltaType aDeltaType)
   switch (aDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_LINE:
       return nsIDOMWheelEvent::DOM_DELTA_LINE;
+    case ScrollWheelInput::SCROLLDELTA_PAGE:
+      return nsIDOMWheelEvent::DOM_DELTA_PAGE;
     case ScrollWheelInput::SCROLLDELTA_PIXEL:
     default:
       return nsIDOMWheelEvent::DOM_DELTA_PIXEL;

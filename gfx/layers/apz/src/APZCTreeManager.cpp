@@ -626,7 +626,8 @@ WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
          (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
-          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL);
+          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
+          aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
 }
 
 static bool
@@ -1079,8 +1080,10 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-  if (aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
-      gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
+  if ((aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
+       aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE) &&
+      gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled())
+  {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
   }
 

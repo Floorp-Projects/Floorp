@@ -542,6 +542,7 @@ public:
     // There are three kinds of scroll delta modes in Gecko: "page", "line" and
     // "pixel". For apz, we currently only support the "line" and "pixel" modes.
     SCROLLDELTA_LINE,
+    SCROLLDELTA_PAGE,
     SCROLLDELTA_PIXEL
   };
 
@@ -551,6 +552,8 @@ public:
     switch (aDeltaMode) {
       case nsIDOMWheelEvent::DOM_DELTA_LINE:
         return SCROLLDELTA_LINE;
+      case nsIDOMWheelEvent::DOM_DELTA_PAGE:
+        return SCROLLDELTA_PAGE;
       case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
         return SCROLLDELTA_PIXEL;
       default:
