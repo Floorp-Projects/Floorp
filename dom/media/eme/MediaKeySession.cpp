@@ -209,11 +209,12 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
                                       aInitDataType, data);
 
   EME_LOG("MediaKeySession[%p,'%s'] GenerateRequest() sent, "
-          "promiseId=%d initData(base64)='%s'",
+          "promiseId=%d initData(base64)='%s' initDataType='%s'",
           this,
           NS_ConvertUTF16toUTF8(mSessionId).get(),
           pid,
-          base64InitData.get());
+          base64InitData.get(),
+          NS_ConvertUTF16toUTF8(aInitDataType).get());
 
   return promise.forget();
 }
