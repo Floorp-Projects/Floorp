@@ -10,7 +10,7 @@ const Cu = Components.utils;
 Cu.importGlobalProperties(['crypto']);
 
 this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
-                         'getEncryptionKeyParams', 'getEncryptionParams',
+                         'getCryptoParams',
                          'base64UrlDecode'];
 
 var UTF8 = new TextEncoder('utf-8');
@@ -18,8 +18,11 @@ var ENCRYPT_INFO = UTF8.encode('Content-Encoding: aesgcm128');
 var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
 var AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
 var P256DH_INFO = UTF8.encode('P-256\0');
+var ECDH_KEY = { name: 'ECDH', namedCurve: 'P-256' };
+// A default keyid with a name that won't conflict with a real keyid.
+var DEFAULT_KEYID = '';
 
-this.getEncryptionKeyParams = function(encryptKeyField) {
+function getEncryptionKeyParams(encryptKeyField) {
   if (!encryptKeyField) {
     return null;
   }
@@ -29,17 +32,48 @@ this.getEncryptionKeyParams = function(encryptKeyField) {
     if (pmap.keyid && pmap.dh) {
       m[pmap.keyid] = pmap.dh;
     }
+    if (!m[DEFAULT_KEYID] && pmap.dh) {
+      m[DEFAULT_KEYID] = pmap.dh;
+    }
     return m;
   }, {});
-};
+}
 
-this.getEncryptionParams = function(encryptField) {
+function getEncryptionParams(encryptField) {
   var p = encryptField.split(',', 1)[0];
   if (!p) {
     return null;
   }
   return p.split(';').reduce(parseHeaderFieldParams, {});
-};
+}
+
+this.getCryptoParams = function(headers) {
+  if (!headers) {
+    return null;
+  }
+
+  var requiresAuthenticationSecret = true;
+  var keymap = getEncryptionKeyParams(headers.crypto_key);
+  if (!keymap) {
+    requiresAuthenticationSecret = false;
+    keymap = getEncryptionKeyParams(headers.encryption_key);
+    if (!keymap) {
+      return null;
+    }
+  }
+  var enc = getEncryptionParams(headers.encryption);
+  if (!enc) {
+    return null;
+  }
+  var dh = keymap[enc.keyid || DEFAULT_KEYID];
+  var salt = enc.salt;
+  var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
+
+  if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
+    return null;
+  }
+  return {dh, salt, rs, auth: requiresAuthenticationSecret};
+}
 
 var parseHeaderFieldParams = (m, v) => {
   var i = v.indexOf('=');
@@ -153,13 +187,10 @@ this.PushCrypto = {
   },
 
   generateKeys() {
-    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256'},
-                                     true,
-                                     ['deriveBits'])
+    return crypto.subtle.generateKey(ECDH_KEY, true, ['deriveBits'])
       .then(cryptoKey =>
          Promise.all([
            crypto.subtle.exportKey('raw', cryptoKey.publicKey),
-           // TODO: change this when bug 1048931 lands.
            crypto.subtle.exportKey('jwk', cryptoKey.privateKey)
          ]));
   },
@@ -180,19 +211,17 @@ this.PushCrypto = {
 
     let senderKey = base64UrlDecode(aSenderPublicKey)
     return Promise.all([
-      crypto.subtle.importKey('raw', senderKey,
-                              { name: 'ECDH', namedCurve: 'P-256' },
-                              false,
-                              ['deriveBits']),
-      crypto.subtle.importKey('jwk', aPrivateKey,
-                              { name: 'ECDH', namedCurve: 'P-256' },
-                              false,
-                              ['deriveBits'])
+      crypto.subtle.importKey('raw', senderKey, ECDH_KEY,
+                              false, ['deriveBits']),
+      crypto.subtle.importKey('jwk', aPrivateKey, ECDH_KEY,
+                              false, ['deriveBits'])
     ])
-    .then(keys => crypto.subtle.deriveBits({ name: 'ECDH', public: keys[0] }, keys[1], 256))
+    .then(([appServerKey, subscriptionPrivateKey]) =>
+          crypto.subtle.deriveBits({ name: 'ECDH', public: appServerKey },
+                                   subscriptionPrivateKey, 256))
     .then(ikm => this._deriveKeyAndNonce(new Uint8Array(ikm),
                                          base64UrlDecode(aSalt),
-                                         base64UrlDecode(aPublicKey),
+                                         aPublicKey,
                                          senderKey,
                                          aAuthenticationSecret))
     .then(r =>

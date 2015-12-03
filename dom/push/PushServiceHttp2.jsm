@@ -22,8 +22,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 const {
   PushCrypto,
   concatArray,
-  getEncryptionKeyParams,
-  getEncryptionParams,
+  getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
@@ -151,37 +150,13 @@ PushChannelListener.prototype = {
     if (Components.isSuccessCode(aStatusCode) &&
         this._mainListener &&
         this._mainListener._pushService) {
-      let requiresAuthenticationSecret = true;
-
-      var keymap = encryptKeyFieldParser(aRequest, "Crypto-Key");
-      if (!keymap) {
-        // Backward compatibility: use the absence of Crypto-Key to indicate
-        // that the authentication secret isn't used.
-        requiresAuthenticationSecret = false;
-        keymap = encryptKeyFieldParser(aRequest, "Encryption-Key");
-        if (!keymap) {
-          return;
-        }
-      }
-      var enc = encryptFieldParser(aRequest);
-      if (!enc || !enc.keyid) {
-        return;
-      }
-      var dh = keymap[enc.keyid];
-      var salt = enc.salt;
-      var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
-      if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
-        return;
-      }
-
-      var msg = concatArray(this._message);
-
-      let cryptoParams = {
-        dh: dh,
-        salt: salt,
-        rs: rs,
-        auth: requiresAuthenticationSecret,
+      let headers = {
+        encryption_key: getHeaderField(aRequest, "Encryption-Key"),
+        crypto_key: getHeaderField(aRequest, "Crypto-Key"),
+        encryption: getHeaderField(aRequest, "Encryption"),
       };
+      let cryptoParams = getCryptoParams(headers);
+      let msg = concatArray(this._message);
 
       this._mainListener._pushService._pushChannelOnStop(this._mainListener.uri,
                                                          this._ackUri,
@@ -191,20 +166,9 @@ PushChannelListener.prototype = {
   }
 };
 
-function encryptKeyFieldParser(aRequest, name) {
+function getHeaderField(aRequest, name) {
   try {
-    var encryptKeyField = aRequest.getRequestHeader(name);
-    return getEncryptionKeyParams(encryptKeyField);
-  } catch(e) {
-    // getRequestHeader can throw.
-    return null;
-  }
-}
-
-function encryptFieldParser(aRequest) {
-  try {
-    var encryptField = aRequest.getRequestHeader("Encryption");
-    return getEncryptionParams(encryptField);
+    return aRequest.getRequestHeader(name);
   } catch(e) {
     // getRequestHeader can throw.
     return null;
