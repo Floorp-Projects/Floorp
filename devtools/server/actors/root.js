@@ -96,6 +96,7 @@ function RootActor(aConnection, aParameters) {
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._onWorkerListChanged = this.onWorkerListChanged.bind(this);
   this._onServiceWorkerRegistrationListChanged = this.onServiceWorkerRegistrationListChanged.bind(this);
+  this._onProcessListChanged = this.onProcessListChanged.bind(this);
   this._extraActors = {};
 
   this._globalActorPool = new ActorPool(this.conn);
@@ -419,15 +420,20 @@ RootActor.prototype = {
   },
 
   onListProcesses: function () {
-    let processes = [];
-    for (let i = 0; i < ppmm.childCount; i++) {
-      processes.push({
-        id: i, // XXX: may not be a perfect id, but process message manager doesn't expose anything...
-        parent: i == 0, // XXX Weak, but appear to be stable
-        tabCount: undefined, // TODO: exposes process message manager on frameloaders in order to compute this
-      });
+    let { processList } = this._parameters;
+    if (!processList) {
+      return { from: this.actorID, error: "noProcesses",
+               message: "This root actor has no processes." };
     }
-    return { processes: processes };
+    processList.onListChanged = this._onProcessListChanged;
+    return {
+      processes: processList.getList()
+    };
+  },
+
+  onProcessListChanged: function () {
+    this.conn.send({ from: this.actorID, type: "processListChanged" });
+    this._parameters.processList.onListChanged = null;
   },
 
   onGetProcess: function (aRequest) {
