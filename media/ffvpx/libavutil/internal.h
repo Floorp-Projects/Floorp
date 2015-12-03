@@ -39,6 +39,7 @@
 #include "timer.h"
 #include "cpu.h"
 #include "dict.h"
+#include "macros.h"
 #include "pixfmt.h"
 #include "version.h"
 
@@ -257,8 +258,65 @@ void avpriv_request_sample(void *avc,
 #endif
 
 /**
+ * Clip and convert a double value into the long long amin-amax range.
+ * This function is needed because conversion of floating point to integers when
+ * it does not fit in the integer's representation does not necessarily saturate
+ * correctly (usually converted to a cvttsd2si on x86) which saturates numbers
+ * > INT64_MAX to INT64_MIN. The standard marks such conversions as undefined
+ * behavior, allowing this sort of mathematically bogus conversions. This provides
+ * a safe alternative that is slower obviously but assures safety and better
+ * mathematical behavior.
+ * @param a value to clip
+ * @param amin minimum value of the clip range
+ * @param amax maximum value of the clip range
+ * @return clipped value
+ */
+static av_always_inline av_const int64_t ff_rint64_clip(double a, int64_t amin, int64_t amax)
+{
+    int64_t res;
+#if defined(HAVE_AV_CONFIG_H) && defined(ASSERT_LEVEL) && ASSERT_LEVEL >= 2
+    if (amin > amax) abort();
+#endif
+    // INT64_MAX+1,INT64_MIN are exactly representable as IEEE doubles
+    // do range checks first
+    if (a >=  9223372036854775808.0)
+        return amax;
+    if (a <= -9223372036854775808.0)
+        return amin;
+
+    // safe to call llrint and clip accordingly
+    res = llrint(a);
+    if (res > amax)
+        return amax;
+    if (res < amin)
+        return amin;
+    return res;
+}
+
+/**
+ * Compute 10^x for floating point values. Note: this function is by no means
+ * "correctly rounded", and is meant as a fast, reasonably accurate approximation.
+ * For instance, maximum relative error for the double precision variant is
+ * ~ 1e-13 for very small and very large values.
+ * This is ~2x faster than GNU libm's approach, which is still off by 2ulp on
+ * some inputs.
+ * @param x exponent
+ * @return 10^x
+ */
+static av_always_inline double ff_exp10(double x)
+{
+    return exp2(M_LOG2_10 * x);
+}
+
+static av_always_inline float ff_exp10f(float x)
+{
+    return exp2f(M_LOG2_10 * x);
+}
+
+/**
  * A wrapper for open() setting O_CLOEXEC.
  */
+av_warn_unused_result
 int avpriv_open(const char *filename, int flags, ...);
 
 int avpriv_set_systematic_pal2(uint32_t pal[256], enum AVPixelFormat pix_fmt);
@@ -275,10 +333,6 @@ static av_always_inline av_const int avpriv_mirror(int x, int w)
     }
     return x;
 }
-
-#if FF_API_GET_CHANNEL_LAYOUT_COMPAT
-uint64_t ff_get_channel_layout(const char *name, int compat);
-#endif
 
 void ff_check_pixfmt_descriptors(void);
 
