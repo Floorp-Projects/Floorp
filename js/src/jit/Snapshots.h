@@ -121,10 +121,24 @@ class RValueAllocation
         }
     };
 
+    struct RegisterBits {
+        uint32_t data;
+        bool operator == (const RegisterBits& other) const {
+            return data == other.data;
+        }
+        uint32_t code() const {
+            return data;
+        }
+        const char* name() const {
+            Register tmp = Register::FromCode(data);
+            return tmp.name();
+        }
+    };
+
     union Payload {
         uint32_t index;
         int32_t stackOffset;
-        Register gpr;
+        RegisterBits gpr;
         FloatRegisterBits fpu;
         JSValueType type;
     };
@@ -144,7 +158,9 @@ class RValueAllocation
     }
     static Payload payloadOfRegister(Register reg) {
         Payload p;
-        p.gpr = reg;
+        RegisterBits b;
+        b.data = reg.code();
+        p.gpr = b;
         return p;
     }
     static Payload payloadOfFloatRegister(FloatRegister reg) {
@@ -310,7 +326,8 @@ class RValueAllocation
     }
     Register reg() const {
         MOZ_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_GPR);
-        return arg1_.gpr;
+        RegisterBits b = arg1_.gpr;
+        return Register::FromCode(b.data);
     }
     FloatRegister fpuReg() const {
         MOZ_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_FPU);
@@ -332,7 +349,8 @@ class RValueAllocation
     }
     Register reg2() const {
         MOZ_ASSERT(layoutFromMode(mode()).type2 == PAYLOAD_GPR);
-        return arg2_.gpr;
+        RegisterBits b = arg2_.gpr;
+        return Register::FromCode(b.data);
     }
 
   public:
