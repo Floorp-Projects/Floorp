@@ -29,14 +29,18 @@ add_task(function* test_null_args_addPath() {
   // Check for error when passing a null first argument
   try {
     watcher.addPath(testPath, null, dummyFunc);
-  } catch (ex if ex.result == Cr.NS_ERROR_NULL_POINTER) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NULL_POINTER)
+      throw ex;
     do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 
   // Check for error when passing both null arguments
   try {
     watcher.addPath(testPath, null, null);
-  } catch (ex if ex.result == Cr.NS_ERROR_NULL_POINTER) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NULL_POINTER)
+      throw ex;
     do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 });
@@ -58,14 +62,18 @@ add_task(function* test_null_args_removePath() {
   // Check for error when passing a null first argument
   try {
     watcher.removePath(testPath, null, dummyFunc);
-  } catch (ex if ex.result == Cr.NS_ERROR_NULL_POINTER) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NULL_POINTER)
+      throw ex;
     do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 
   // Check for error when passing both null arguments
   try {
     watcher.removePath(testPath, null, null);
-  } catch (ex if ex.result == Cr.NS_ERROR_NULL_POINTER) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_NULL_POINTER)
+      throw ex;
     do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 });
