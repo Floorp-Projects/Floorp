@@ -456,7 +456,8 @@ Convert(uint8_t aIn, BluetoothStatus& aOut)
     [0x07] = STATUS_PARM_INVALID,
     [0x08] = STATUS_UNHANDLED,
     [0x09] = STATUS_AUTH_FAILURE,
-    [0x0a] = STATUS_RMT_DEV_DOWN
+    [0x0a] = STATUS_RMT_DEV_DOWN,
+    [0x0b] = STATUS_AUTH_REJECTED
   };
   if (MOZ_HAL_IPC_CONVERT_WARN_IF(
         aIn >= MOZ_ARRAY_LENGTH(sStatus), uint8_t, BluetoothStatus)) {
