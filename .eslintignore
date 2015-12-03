@@ -9,7 +9,6 @@ obj*/**
 # below.
 accessible/**
 addon-sdk/**
-b2g/**
 build/**
 caps/**
 chrome/**
@@ -54,6 +53,11 @@ widget/**
 xpcom/**
 xpfe/**
 xulrunner/**
+
+# b2g exclusions (pref files).
+b2g/app/b2g.js
+b2g/graphene/graphene.js
+b2g/locales/en-US/b2g-l10n.js
 
 # browser/ exclusions
 browser/app/**

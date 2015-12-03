@@ -39,7 +39,7 @@ HelperAppLauncherDialog.prototype = {
                                      aSuggestedFileExt,
                                      aForcePrompt) {
     // Retrieve the user's default download directory.
-    Task.spawn(function() {
+    Task.spawn(function*() {
       let file = null;
       try {
         let defaultFolder = yield Downloads.getPreferredDownloadsDirectory();
