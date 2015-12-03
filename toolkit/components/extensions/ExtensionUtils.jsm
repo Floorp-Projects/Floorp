@@ -669,7 +669,7 @@ function getMessageManager(target) {
 //
 // |context| is the extension scope.
 // |broker| is a MessageBroker used to receive and send messages.
-// |sender| is an object describing the sender (usually giving its extensionId, tabId, etc.)
+// |sender| is an object describing the sender (usually giving its extension id, tabId, etc.)
 // |filter| is a recipient filter to apply to incoming messages from the broker.
 // |delegate| is an object that must implement a few methods:
 //    getSender(context, messageManagerTarget, sender): returns a MessageSender

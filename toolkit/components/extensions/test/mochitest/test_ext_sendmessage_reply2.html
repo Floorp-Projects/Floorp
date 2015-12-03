@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript(token) {
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+
+    if (msg == "done") {
+      browser.test.notifyPass("sendmessage_reply");
+      return;
+    }
+
+    let tabId = sender.tab.id;
+    browser.tabs.sendMessage(tabId, token + "-tabMessage");
+
+    browser.test.assertEq(msg, token, "token matches");
+    sendReply(token + "-done");
+  });
+}
+
+function contentScript(token) {
+  let gotTabMessage = false;
+  let badTabMessage = false;
+  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
+    if (msg == token + "-tabMessage") {
+      gotTabMessage = true;
+    } else {
+      badTabMessage = true;
+    }
+  });
+
+  browser.runtime.sendMessage(token, function(resp) {
+    if (resp != token + "-done" || !gotTabMessage || badTabMessage) {
+      return; // test failed
+    }
+    browser.runtime.sendMessage("done");
+  });
+}
+
+function makeExtension() {
+  let token = Math.random();
+  let extensionData = {
+    background: `(${backgroundScript})(${token})`,
+    manifest: {
+      "permissions": ["tabs"],
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "js": ["content_script.js"],
+        "run_at": "document_start"
+      }]
+    },
+
+    files: {
+      "content_script.js": `(${contentScript})(${token})`,
+    },
+  };
+  return extensionData;
+};
+
+add_task(function* test_contentscript() {
+  let extension1 = ExtensionTestUtils.loadExtension(makeExtension());
+  let extension2 = ExtensionTestUtils.loadExtension(makeExtension());
+  yield Promise.all([extension1.startup(), extension2.startup()]);
+  info("extensions loaded");
+
+  let win = window.open("file_sample.html");
+
+  yield Promise.all([waitForLoad(win),
+                     extension1.awaitFinish("sendmessage_reply"),
+                     extension2.awaitFinish("sendmessage_reply")]);
+
+  win.close();
+
+  yield extension1.unload();
+  yield extension2.unload();
+  info("extensions unloaded");
+});
+</script>
+
+</body>
+</html>
