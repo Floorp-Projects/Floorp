@@ -17,7 +17,8 @@ var regexes = [
   /^loader\.lazyServiceGetter\(\w+, "(\w+)"/,
   /^XPCOMUtils\.defineLazyModuleGetter\(\w+, "(\w+)"/,
   /^loader\.lazyGetter\(\w+, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyGetter\(\w+, "(\w+)"/
+  /^XPCOMUtils\.defineLazyGetter\(\w+, "(\w+)"/,
+  /^XPCOMUtils\.defineLazyServiceGetter\(\w+, "(\w+)"/
 ];
 
 module.exports = {
