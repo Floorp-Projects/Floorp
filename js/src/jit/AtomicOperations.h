@@ -225,23 +225,35 @@ class AtomicOperations
     }
 
     template<typename T>
-    static void memcpySafeWhenRacy(SharedMem<T> dest, SharedMem<T> src, size_t nbytes) {
-        memcpySafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src.unwrap()), nbytes);
+    static void memcpySafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nbytes) {
+        memcpySafeWhenRacy(dest.template cast<void*>().unwrap(),
+                           src.template cast<void*>().unwrap(), nbytes);
     }
 
     template<typename T>
-    static void memcpySafeWhenRacy(SharedMem<T> dest, T src, size_t nbytes) {
-        memcpySafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src), nbytes);
+    static void memcpySafeWhenRacy(SharedMem<T*> dest, T* src, size_t nbytes) {
+        memcpySafeWhenRacy(dest.template cast<void*>().unwrap(), static_cast<void*>(src), nbytes);
     }
 
     template<typename T>
-    static void memcpySafeWhenRacy(T dest, SharedMem<T> src, size_t nbytes) {
-        memcpySafeWhenRacy(static_cast<void*>(dest), static_cast<void*>(src.unwrap()), nbytes);
+    static void memcpySafeWhenRacy(T* dest, SharedMem<T*> src, size_t nbytes) {
+        memcpySafeWhenRacy(static_cast<void*>(dest), src.template cast<void*>().unwrap(), nbytes);
     }
 
     template<typename T>
-    static void memmoveSafeWhenRacy(SharedMem<T> dest, SharedMem<T> src, size_t nbytes) {
-        memmoveSafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src.unwrap()), nbytes);
+    static void memmoveSafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nbytes) {
+        memmoveSafeWhenRacy(dest.template cast<void*>().unwrap(),
+                            src.template cast<void*>().unwrap(), nbytes);
+    }
+
+    template<typename T>
+    static void podCopySafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        memcpySafeWhenRacy(dest, src, nelem * sizeof(T));
+    }
+
+    template<typename T>
+    static void podMoveSafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        memmoveSafeWhenRacy(dest, src, nelem * sizeof(T));
     }
 };
 

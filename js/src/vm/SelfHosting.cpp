@@ -1091,7 +1091,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     if (!copyOfSrcData)
         return false;
 
-    jit::AtomicOperations::memcpySafeWhenRacy(copyOfSrcData.get(),
+    jit::AtomicOperations::memcpySafeWhenRacy(SharedMem<uint8_t*>::unshared(copyOfSrcData.get()),
                                               unsafeSrcCrossCompartment->viewDataEither().cast<uint8_t*>(),
                                               sourceByteLen);
 
