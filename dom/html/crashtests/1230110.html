@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+// This test case should not leak.
+function leak()
+{
+    var img = document.createElement("img");
+    var iframe = document.createElement("iframe");
+    img.appendChild(iframe);
+    document.body.appendChild(img);
+
+    document.addEventListener('Foo', function(){}, false);
+}
+</script>
+</head>
+<body onload="leak();"></body>
+</html>
