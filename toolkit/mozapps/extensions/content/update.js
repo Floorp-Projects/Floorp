@@ -131,7 +131,8 @@ var gUpdateWizard = {
     if (gMismatchPage.waiting) {
       logger.info("Dialog closed in mismatch page");
       if (gUpdateWizard.addonInstalls.size > 0) {
-        gInstallingPage.startInstalls([i for ([, i] of gUpdateWizard.addonInstalls)]);
+        gInstallingPage.startInstalls(
+          Array.from(gUpdateWizard.addonInstalls.values()));
       }
       return true;
     }
@@ -197,8 +198,8 @@ var gVersionInfoPage = {
     }
     // Fetch the add-ons that are still affected by this update,
     // excluding the hotfix add-on.
-    let idlist = [id for (id of gUpdateWizard.affectedAddonIDs)
-                     if (id != AddonManager.hotfixID)];
+    let idlist = Array.from(gUpdateWizard.affectedAddonIDs).filter(
+      a => a.id != AddonManager.hotfixID);
     if (idlist.length < 1) {
       gVersionInfoPage.onAllUpdatesFinished();
       return;
@@ -208,7 +209,7 @@ var gVersionInfoPage = {
     let fetchedAddons = yield new Promise((resolve, reject) =>
       AddonManager.getAddonsByIDs(idlist, resolve));
     // We shouldn't get nulls here, but let's be paranoid...
-    gUpdateWizard.addons = [a for (a of fetchedAddons) if (a)];
+    gUpdateWizard.addons = fetchedAddons.filter(a => a);
     if (gUpdateWizard.addons.length < 1) {
       gVersionInfoPage.onAllUpdatesFinished();
       return;
@@ -236,8 +237,8 @@ var gVersionInfoPage = {
     AddonManagerPrivate.recordSimpleMeasure("appUpdate_upgradeFailed", 0);
     AddonManagerPrivate.recordSimpleMeasure("appUpdate_upgradeDeclined", 0);
     // Filter out any add-ons that are now enabled.
-    logger.debug("VersionInfo updates finished: found " +
-         [addon.id + ":" + addon.appDisabled for (addon of gUpdateWizard.addons)].toSource());
+    let addonList = gUpdateWizard.addons.map(a => a.id + ":" + a.appDisabled);
+    logger.debug("VersionInfo updates finished: found " + addonList.toSource());
     let filteredAddons = [];
     for (let a of gUpdateWizard.addons) {
       if (a.appDisabled) {
@@ -254,7 +255,8 @@ var gVersionInfoPage = {
     if (gUpdateWizard.shuttingDown) {
       // jump directly to updating auto-update add-ons in the background
       if (gUpdateWizard.addonInstalls.size > 0) {
-        gInstallingPage.startInstalls([i for ([, i] of gUpdateWizard.addonInstalls)]);
+        let installs = Array.from(gUpdateWizard.addonInstalls.values());
+        gInstallingPage.startInstalls(installs);
       }
       return;
     }
@@ -480,8 +482,8 @@ var gInstallingPage = {
       return;
     }
 
-    logger.debug("Start installs for "
-                 + [i.existingAddon.id for (i of aInstallList)].toSource());
+    let installs = Array.from(aInstallList).map(a => a.existingAddon.id);
+    logger.debug("Start installs for " + installs.toSource());
     this._errors = [];
     this._installs = aInstallList;
     this._installing = true;

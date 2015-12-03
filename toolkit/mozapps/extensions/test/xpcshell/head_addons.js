@@ -373,7 +373,8 @@ function do_get_file_hash(aFile, aAlgorithm) {
   let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
 
   let binary = crypto.finish(false);
-  return aAlgorithm + ":" + [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
+  let hash = Array.from(binary, c => toHexString(c.charCodeAt(0)));
+  return aAlgorithm + ":" + hash.join("");
 }
 
 /**
