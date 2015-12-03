@@ -168,16 +168,12 @@ class MachCommands(MachCommandBase):
         description='Run eslint or help configure eslint for optimal development.')
     @CommandArgument('-s', '--setup', default=False, action='store_true',
         help='configure eslint for optimal development.')
-    @CommandArgument('path', nargs='?', default='.',
-        help='Path to files to lint, like "browser/components/loop" '
-            'or "mobile/android". '
-            'Defaults to the current directory if not given.')
     @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx,.xml]',
-        help='Filename extensions to lint, default: "[.js,.jsm,.jsx,.xml]".')
+        help='Filename extensions to lint, default: "[.js,.jsm,.jsx]".')
     @CommandArgument('-b', '--binary', default=None,
         help='Path to eslint binary.')
     @CommandArgument('args', nargs=argparse.REMAINDER)  # Passed through to eslint.
-    def eslint(self, setup, path, ext=None, binary=None, args=[]):
+    def eslint(self, setup, ext=None, binary=None, args=None):
         '''Run eslint.'''
 
         if setup:
@@ -195,25 +191,14 @@ class MachCommands(MachCommandBase):
             print(ESLINT_NOT_FOUND_MESSAGE)
             return 1
 
-        # The cwd below is unfortunate.  eslint --config=PATH/TO/.eslintrc works,
-        # but --ignore-path=PATH/TO/.eslintignore treats paths as relative to
-        # the current directory, rather than as relative to the location of
-        # .eslintignore (see https://github.com/eslint/eslint/issues/1382).
-        # mach commands always execute in the topsrcdir, so we could make all
-        # paths in .eslint relative to the topsrcdir, but it's not clear if
-        # that's a good choice for future eslint and IDE integrations.
-        # Unfortunately, running after chdir does not print the full path to
-        # files (convenient for opening with copy-and-paste).  In the meantime,
-        # we just print the active path.
+        self.log(logging.INFO, 'eslint', {'binary': binary, 'args': args},
+            'Running {binary}')
 
-        self.log(logging.INFO, 'eslint', {'binary': binary, 'path': path},
-            'Running {binary} in {path}')
+        args = args or ['.']
 
         cmd_args = [binary,
             '--ext', ext,  # This keeps ext as a single argument.
         ] + args
-        # Path must come after arguments.
-        cmd_args += [path]
 
         return self.run_process(cmd_args,
             pass_thru=True,  # Allow user to run eslint interactively.
