@@ -5464,7 +5464,7 @@ function handleLinkClick(event, href, linkNode) {
   if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer") &&
       linkNode) {
     let referrerAttrValue = Services.netUtils.parseAttributePolicyString(linkNode.
-                            getAttribute("referrer"));
+                            getAttribute("referrerpolicy"));
     if (referrerAttrValue != Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT) {
       referrerPolicy = referrerAttrValue;
     }
