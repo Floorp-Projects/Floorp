@@ -266,7 +266,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     Layer
   };
   void RequestRestyle(RestyleType aRestyleType);
-  void ClearIsRunningOnCompositor(nsCSSProperty aProperty);
 
 public:
   // True if this animation can be performed on the compositor thread.

@@ -552,6 +552,12 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     if (effectSet) {
       effectSet->RemoveEffect(*this);
     }
+    // Any effects not in the effect set will not be included in the set of
+    // candidate effects for running on the compositor and hence they won't
+    // have their compositor status updated so we should do that now.
+    for (bool& isRunningOnCompositor : mIsPropertyRunningOnCompositor) {
+      isRunningOnCompositor = false;
+    }
   }
 }
 

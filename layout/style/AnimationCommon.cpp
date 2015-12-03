@@ -20,6 +20,7 @@
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "RestyleManager.h"
@@ -352,9 +353,13 @@ void
 CommonAnimationManager::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
                                                    nsCSSProperty aProperty)
 {
-  AnimationCollection* collection = GetAnimationCollection(aFrame);
-  if (collection) {
-    collection->ClearIsRunningOnCompositor(aProperty);
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return;
+  }
+
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    effect->SetIsRunningOnCompositor(aProperty, false);
   }
 }
 
@@ -603,17 +608,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
   for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     mAnimations[animIdx]->ComposeStyle(mStyleRule, properties, mStyleChanging);
-  }
-}
-
-void
-AnimationCollection::ClearIsRunningOnCompositor(nsCSSProperty aProperty)
-{
-  for (Animation* anim : mAnimations) {
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-    if (effect) {
-      effect->SetIsRunningOnCompositor(aProperty, false);
-    }
   }
 }
 
