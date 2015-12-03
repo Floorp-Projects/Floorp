@@ -882,7 +882,7 @@ CacheFile::ThrowMemoryCachedData()
 
   // We cannot release all cached chunks since we need to keep preloaded chunks
   // in memory. See initialization of mPreloadChunkCount for explanation.
-  mCachedChunks.Enumerate(&CacheFile::CleanUpCachedChunks, this);
+  CleanUpCachedChunks();
 
   return NS_OK;
 }
@@ -1587,7 +1587,7 @@ CacheFile::RemoveInput(CacheFileInputStream *aInput, nsresult aStatus)
 
   // If the input didn't read all data, there might be left some preloaded
   // chunks that won't be used anymore.
-  mCachedChunks.Enumerate(&CacheFile::CleanUpCachedChunks, this);
+  CleanUpCachedChunks();
 
   Telemetry::Accumulate(Telemetry::NETWORK_CACHE_V2_INPUT_STREAM_STATUS,
                         StatusToTelemetryEnum(aStatus));
@@ -1895,23 +1895,24 @@ CacheFile::FailUpdateListeners(
   return PL_DHASH_NEXT;
 }
 
-PLDHashOperator
-CacheFile::CleanUpCachedChunks(const uint32_t& aIdx,
-                               RefPtr<CacheFileChunk>& aChunk,
-                               void* aClosure)
+void
+CacheFile::CleanUpCachedChunks()
 {
-  CacheFile *file = static_cast<CacheFile*>(aClosure);
+  for (auto iter = mCachedChunks.Iter(); !iter.Done(); iter.Next()) {
+    uint32_t idx = iter.Key();
+    const RefPtr<CacheFileChunk>& chunk = iter.Data();
 
-  LOG(("CacheFile::CleanUpCachedChunks() [this=%p, idx=%u, chunk=%p]", file,
-       aIdx, aChunk.get()));
+    LOG(("CacheFile::CleanUpCachedChunks() [this=%p, idx=%u, chunk=%p]", this,
+         idx, chunk.get()));
 
-  if (file->MustKeepCachedChunk(aIdx)) {
-    LOG(("CacheFile::CleanUpCachedChunks() - Keeping chunk"));
-    return PL_DHASH_NEXT;
+    if (MustKeepCachedChunk(idx)) {
+      LOG(("CacheFile::CleanUpCachedChunks() - Keeping chunk"));
+      continue;
+    }
+
+    LOG(("CacheFile::CleanUpCachedChunks() - Removing chunk"));
+    iter.Remove();
   }
-
-  LOG(("CacheFile::CleanUpCachedChunks() - Removing chunk"));
-  return PL_DHASH_REMOVE;
 }
 
 nsresult
