@@ -233,7 +233,7 @@ function fileContents(path) {
   });
 }
 
-add_task(function test_FileAppender() {
+add_task(function* test_FileAppender() {
   // This directory does not exist yet
   let dir = OS.Path.join(do_get_profile().path, "test_Log");
   do_check_false(yield OS.File.exists(dir));
@@ -287,7 +287,7 @@ add_task(function test_FileAppender() {
               "test.FileAppender\tINFO\t5\n");
 });
 
-add_task(function test_BoundedFileAppender() {
+add_task(function* test_BoundedFileAppender() {
   let dir = OS.Path.join(do_get_profile().path, "test_Log");
 
   if (!(yield OS.File.exists(dir))) {
@@ -338,7 +338,7 @@ add_task(function test_BoundedFileAppender() {
 /*
  * Test parameter formatting.
  */
-add_task(function log_message_with_params() {
+add_task(function* log_message_with_params() {
   let formatter = new Log.BasicFormatter();
 
   function formatMessage(text, params) {
@@ -487,7 +487,7 @@ add_task(function log_message_with_params() {
  * with the object argument as parameters. This makes the log useful when the
  * caller does "catch(err) {logger.error(err)}"
  */
-add_task(function test_log_err_only() {
+add_task(function* test_log_err_only() {
   let log = Log.repository.getLogger("error.only");
   let testFormatter = { format: msg => msg };
   let appender = new MockAppender(testFormatter);
@@ -513,7 +513,7 @@ add_task(function test_log_err_only() {
 /*
  * Test logStructured() messages through basic formatter.
  */
-add_task(function test_structured_basic() {
+add_task(function* test_structured_basic() {
   let log = Log.repository.getLogger("test.logger");
   let appender = new MockAppender(new Log.BasicFormatter());
 
@@ -538,7 +538,7 @@ add_task(function test_structured_basic() {
 /*
  * Test that all the basic logger methods pass the message and params through to the appender.
  */
-add_task(function log_message_with_params() {
+add_task(function* log_message_with_params() {
   let log = Log.repository.getLogger("error.logger");
   let testFormatter = { format: msg => msg };
   let appender = new MockAppender(testFormatter);
@@ -562,7 +562,7 @@ add_task(function log_message_with_params() {
 /*
  * Check that we format JS Errors reasonably.
  */
-add_task(function format_errors() {
+add_task(function* format_errors() {
   let pFormat = new Log.ParameterFormatter();
 
   // Test that subclasses of Error are recognized as errors.
