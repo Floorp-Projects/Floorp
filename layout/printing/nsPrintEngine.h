@@ -224,9 +224,7 @@ protected:
                                                    nsIFrame*&      aSeqFrame,
                                                    int32_t&        aCount);
 
-  static nsresult FindSelectionBoundsWithList(nsPresContext* aPresContext,
-                                              nsRenderingContext& aRC,
-                                              nsFrameList::Enumerator& aChildFrames,
+  static nsresult FindSelectionBoundsWithList(nsFrameList::Enumerator& aChildFrames,
                                               nsIFrame *      aParentFrame,
                                               nsRect&         aRect,
                                               nsIFrame *&     aStartFrame,
@@ -234,20 +232,14 @@ protected:
                                               nsIFrame *&     aEndFrame,
                                               nsRect&         aEndRect);
 
-  static nsresult FindSelectionBounds(nsPresContext* aPresContext,
-                                      nsRenderingContext& aRC,
-                                      nsIFrame *      aParentFrame,
+  static nsresult FindSelectionBounds(nsIFrame *      aParentFrame,
                                       nsRect&         aRect,
                                       nsIFrame *&     aStartFrame,
                                       nsRect&         aStartRect,
                                       nsIFrame *&     aEndFrame,
                                       nsRect&         aEndRect);
 
-  static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
-                                           nsPresContext*        aPresContext,
-                                           nsRenderingContext&   aRC,
-                                           nsISelection*         aSelection,
-                                           nsIPageSequenceFrame* aPageSeqFrame,
+  static nsresult GetPageRangeForSelection(nsIPageSequenceFrame* aPageSeqFrame,
                                            nsIFrame**            aStartFrame,
                                            int32_t&              aStartPageNum,
                                            nsRect&               aStartRect,

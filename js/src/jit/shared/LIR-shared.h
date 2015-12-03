@@ -1156,12 +1156,12 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
     Label* interruptExit_;
-    const CallSiteDesc& funcDesc_;
+    const wasm::CallSiteDesc& funcDesc_;
 
   public:
     LIR_HEADER(AsmJSInterruptCheck);
 
-    LAsmJSInterruptCheck(Label* interruptExit, const CallSiteDesc& funcDesc)
+    LAsmJSInterruptCheck(Label* interruptExit, const wasm::CallSiteDesc& funcDesc)
       : interruptExit_(interruptExit), funcDesc_(funcDesc)
     {
     }
@@ -1173,7 +1173,7 @@ class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
     Label* interruptExit() const {
         return interruptExit_;
     }
-    const CallSiteDesc& funcDesc() const {
+    const wasm::CallSiteDesc& funcDesc() const {
         return funcDesc_;
     }
 };
@@ -6523,6 +6523,24 @@ class LGuardClass : public LInstructionHelper<0, 1, 1>
     }
 };
 
+// Guard against the sharedness of a TypedArray's memory.
+class LGuardSharedTypedArray : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardSharedTypedArray)
+
+    LGuardSharedTypedArray(const LAllocation& in, const LDefinition& temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const MGuardSharedTypedArray* mir() const {
+        return mir_->toGuardSharedTypedArray();
+    }
+    const LDefinition* tempInt() {
+        return getTemp(0);
+    }
+};
+
 class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
 {
   public:
@@ -7316,37 +7334,35 @@ class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS>
 {
   public:
     LIR_HEADER(Random)
-    LRandom(const LDefinition &tempMaybeEAX, const LDefinition &tempMaybeEDX,
-            const LDefinition &temp1
+    LRandom(const LDefinition &temp0, const LDefinition &temp1,
+            const LDefinition &temp2
 #ifndef JS_PUNBOX64
-            , const LDefinition &temp2, const LDefinition &temp3
+            , const LDefinition &temp3, const LDefinition &temp4
 #endif
             )
     {
-        setTemp(0, tempMaybeEAX);
-        setTemp(1, tempMaybeEDX);
-        setTemp(2, temp1);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
 #ifndef JS_PUNBOX64
-        setTemp(3, temp2);
-        setTemp(4, temp3);
+        setTemp(3, temp3);
+        setTemp(4, temp4);
 #endif
     }
-    // On x86, following 2 methods return eax and edx necessary for mull.
-    // On others, following 2 methods return ordinary temporary registers.
-    const LDefinition* tempMaybeEAX() {
+    const LDefinition* temp0() {
         return getTemp(0);
     }
-    const LDefinition* tempMaybeEDX() {
+    const LDefinition* temp1() {
         return getTemp(1);
     }
-    const LDefinition *temp1() {
+    const LDefinition *temp2() {
         return getTemp(2);
     }
 #ifndef JS_PUNBOX64
-    const LDefinition *temp2() {
+    const LDefinition *temp3() {
         return getTemp(3);
     }
-    const LDefinition *temp3() {
+    const LDefinition *temp4() {
         return getTemp(4);
     }
 #endif

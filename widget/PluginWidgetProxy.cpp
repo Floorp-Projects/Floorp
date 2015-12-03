@@ -47,9 +47,9 @@ PluginWidgetProxy::~PluginWidgetProxy()
 }
 
 NS_IMETHODIMP
-PluginWidgetProxy::Create(nsIWidget*        aParent,
-                          nsNativeWidget    aNativeParent,
-                          const nsIntRect&  aRect,
+PluginWidgetProxy::Create(nsIWidget* aParent,
+                          nsNativeWidget aNativeParent,
+                          const LayoutDeviceIntRect& aRect,
                           nsWidgetInitData* aInitData)
 {
   ENSURE_CHANNEL;
@@ -64,7 +64,7 @@ PluginWidgetProxy::Create(nsIWidget*        aParent,
 
   BaseCreate(aParent, aRect, aInitData);
 
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
   mEnabled = true;
   mVisible = true;
 

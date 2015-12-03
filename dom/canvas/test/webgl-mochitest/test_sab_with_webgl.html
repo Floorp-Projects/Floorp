@@ -21,7 +21,7 @@ function RGBAToString(arr) {
 
 function TestScreenColor(gl, r, g, b, a) {
   var arr = new SharedArrayBuffer(4);
-  var view = new SharedUint8Array(arr);
+  var view = new Uint8Array(arr);
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, view);
 
   var err = gl.getError();
@@ -64,10 +64,6 @@ function TestScreenColor(gl, r, g, b, a) {
     todo(false, 'SharedArrayBuffer is unavailable.');
     return;
   }
-  if (SharedFloat32Array === 'undefined') {
-    todo(false, 'SharedFloat32Array is unavailable.');
-    return;
-  }
 
   var vs = gl.createShader(gl.VERTEX_SHADER);
   gl.shaderSource(vs, "attribute vec2 aVertCoord; void main(void) { gl_Position = vec4(aVertCoord, 0.0, 1.0); }");
@@ -99,7 +95,7 @@ function TestScreenColor(gl, r, g, b, a) {
 
   // Test gl.bufferData(), gl.bufferSubData() and gl.readPixels() APIs with SAB as input.
   var arr = new SharedArrayBuffer(8*4);
-  var view = new SharedFloat32Array(arr);
+  var view = new Float32Array(arr);
   view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
   var vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
@@ -123,7 +119,7 @@ function TestScreenColor(gl, r, g, b, a) {
   var height = 4;
   var numChannels = 4;
   var sab = new SharedArrayBuffer(width * height * numChannels);
-  var data = new SharedUint8Array(sab);
+  var data = new Uint8Array(sab);
   for (var i = 0; i < data.length; ++i) {
     data[i] = i;
   }
@@ -151,13 +147,9 @@ function TestScreenColor(gl, r, g, b, a) {
     todo(false, 'SharedArrayBuffer is unavailable.');
     return;
   }
-  if (SharedFloat32Array === 'undefined') {
-    todo(false, 'SharedFloat32Array is unavailable.');
-    return;
-  }
 
   var arr = new SharedArrayBuffer(8*4);
-  var view = new SharedFloat32Array(arr);
+  var view = new Float32Array(arr);
   view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
   var vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
@@ -165,7 +157,7 @@ function TestScreenColor(gl, r, g, b, a) {
 
   var arr2 = new SharedArrayBuffer(8*4);
   gl.getBufferSubData(gl.ARRAY_BUFFER, 0, arr2);
-  var view2 = new SharedFloat32Array(arr2);
+  var view2 = new Float32Array(arr2);
   var equal = true;
   for(var i = 0; i < 8; ++i) {
     if (view[i] != view2[i]) equal = false;
@@ -180,7 +172,7 @@ function TestScreenColor(gl, r, g, b, a) {
   var depth = 4;
   var numChannels = 4;
   var sab = new SharedArrayBuffer(width * height * depth* numChannels);
-  var data = new SharedUint8Array(sab);
+  var data = new Uint8Array(sab);
   for (var i = 0; i < data.length; ++i) {
     data[i] = i;
   }

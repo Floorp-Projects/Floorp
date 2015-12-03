@@ -238,10 +238,16 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
 
   // We get the rest of the properties recursively starting from the Debugger.Object
   // that wraps the first property
-  for (let prop of properties) {
-    prop = prop.trim();
+  for (let i = 0; i < properties.length; i++) {
+    let prop = properties[i].trim();
     if (!prop) {
       return null;
+    }
+
+    // Special case for 'this' since it's not part of the global's properties
+    // but we want autocompletion to work properly for it
+    if (prop === "this" && obj === aDbgObject && i === 0) {
+      continue;
     }
 
     if (/\[\d+\]$/.test(prop)) {
@@ -263,7 +269,15 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
     return getMatchedProps(obj, matchProp);
   }
 
-  return getMatchedPropsInDbgObject(obj, matchProp);
+  let matchedProps = getMatchedPropsInDbgObject(obj, matchProp);
+  if (properties.length !== 0 || obj !== aDbgObject) {
+    let thisInd = matchedProps.matches.indexOf("this");
+    if (thisInd > -1) {
+      matchedProps.matches.splice(thisInd, 1)
+    }
+  }
+
+  return matchedProps;
 }
 
 /**
@@ -482,7 +496,17 @@ var DebuggerObjectSupport = {
 
   getProperties: function(aObj)
   {
-    return aObj.getOwnPropertyNames();
+    let names = aObj.getOwnPropertyNames();
+    // Include 'this' in results (in sorted order).  It will be removed
+    // in all cases except for the first property request on the global, but
+    // it needs to be added now so it can be filtered based on string input.
+    for (let i = 0; i < names.length; i++) {
+      if (i === names.length - 1 || names[i+1] > "this") {
+        names.splice(i+1, 0, "this");
+        break;
+      }
+    }
+    return names;
   },
 
   getProperty: function(aObj, aName, aRootObj)

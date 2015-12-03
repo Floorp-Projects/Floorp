@@ -346,13 +346,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean MOZ_ANDROID_NATIVE_ACCOUNT_UI =
-//#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-    true;
-//#else
-    false;
-//#endif
-
     /**
      * Target CPU architecture: "armeabi-v7a", "x86, "mips", ..
      */

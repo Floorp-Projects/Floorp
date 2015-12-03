@@ -24,7 +24,6 @@ from collections import (
 )
 from mozbuild.util import (
     HierarchicalStringList,
-    HierarchicalStringListWithFlagsFactory,
     KeyedDefaultDict,
     List,
     memoize,
@@ -521,6 +520,30 @@ def ContextDerivedTypedRecord(*fields):
     _TypedRecord._fields = dict(fields)
     return _TypedRecord
 
+
+@memoize
+def ContextDerivedTypedHierarchicalStringList(type):
+    """Specialized HierarchicalStringList for use with ContextDerivedValue
+    types."""
+    class _TypedListWithItems(ContextDerivedValue, HierarchicalStringList):
+        __slots__ = ('_strings', '_children', '_context')
+
+        def __init__(self, context):
+            self._strings = ContextDerivedTypedList(
+                type, StrictOrderingOnAppendList)(context)
+            self._children = {}
+            self._context = context
+
+        def _get_exportvariable(self, name):
+            child = self._children.get(name)
+            if not child:
+                child = self._children[name] = _TypedListWithItems(
+                    self._context)
+            return child
+
+    return _TypedListWithItems
+
+
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
                         [('product', unicode), ('component', unicode)])
 
@@ -977,7 +1000,7 @@ VARIABLES = {
         break the build in subtle ways.
         """, 'misc'),
 
-    'FINAL_TARGET_FILES': (HierarchicalStringList, list,
+    'FINAL_TARGET_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the application directory.
 
         ``FINAL_TARGET_FILES`` will copy (or symlink, if the platform supports it)
@@ -997,11 +1020,11 @@ VARIABLES = {
         disabled.
         """, None),
 
-    'FINAL_TARGET_PP_FILES': (HierarchicalStringList, list,
+    'FINAL_TARGET_PP_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """Like ``FINAL_TARGET_FILES``, with preprocessing.
         """, 'libs'),
 
-    'TESTING_FILES': (HierarchicalStringList, list,
+    'TESTING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed in the _tests directory.
 
         This works similarly to FINAL_TARGET_FILES.
@@ -1168,7 +1191,7 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
-    'BRANDING_FILES': (HierarchicalStringListWithFlagsFactory({'source': unicode}), list,
+    'BRANDING_FILES': (HierarchicalStringList, list,
         """List of files to be installed into the branding directory.
 
         ``BRANDING_FILES`` will copy (or symlink, if the platform supports it)
@@ -1180,13 +1203,6 @@ VARIABLES = {
 
            BRANDING_FILES += ['foo.png']
            BRANDING_FILES.images.subdir += ['bar.png']
-
-        If the source and destination have different file names, add the
-        destination name to the list and set the ``source`` property on the
-        entry, like so::
-
-           BRANDING_FILES.dir += ['baz.png']
-           BRANDING_FILES.dir['baz.png'].source = 'quux.png'
         """, None),
 
     'SDK_LIBRARY': (bool, bool,

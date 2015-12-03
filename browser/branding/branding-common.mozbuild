@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JS_PREFERENCE_FILES += [
-    'pref/firefox-branding.js',
+    '/%s/pref/firefox-branding.js' % CONFIG['MOZ_BRANDING_DIRECTORY'],
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':

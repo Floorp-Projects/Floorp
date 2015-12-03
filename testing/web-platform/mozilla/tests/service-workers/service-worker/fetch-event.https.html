@@ -69,6 +69,41 @@ async_test(function(t) {
   }, 'Service Worker responds to fetch event with the referrer URL');
 
 async_test(function(t) {
+    var scope = 'resources/simple.html?clientId';
+    var frame;
+    var initial_client_id;
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() { return with_iframe(scope); })
+      .then(function(f) {
+          frame = f;
+          assert_equals(
+            frame.contentDocument.body.textContent.substr(0, 15),
+            'Client ID Found',
+            'Service Worker should respond to fetch with a client id');
+          initial_client_id = frame.contentDocument.body.textContent.substr(17);
+          return frame.contentWindow.fetch('resources/other.html?clientId');
+        })
+      .then(function(response) { return response.text(); })
+      .then(function(response_text) {
+          var new_client_id = response_text.substr(17);
+          assert_equals(
+            response_text.substr(0, 15),
+            'Client ID Found',
+            'Service Worker should respond to fetch with an existing client id');
+          assert_equals(
+            initial_client_id,
+            new_client_id,
+            'Service Worker should observe the correct client ID for a controlled document');
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Service Worker responds to fetch event with an existing client id');
+
+async_test(function(t) {
     var scope = 'resources/simple.html?ignore';
     service_worker_unregister_and_register(t, worker, scope)
       .then(function(reg) {

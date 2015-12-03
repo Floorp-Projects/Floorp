@@ -579,6 +579,9 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
   mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
+  // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
+  // depends on the download rate.
+  mWatchManager.Watch(mBuffered, &MediaDecoder::UpdateReadyState);
 
   // mLogicalPosition
   mWatchManager.Watch(mCurrentPosition, &MediaDecoder::UpdateLogicalPosition);
@@ -1526,10 +1529,6 @@ MediaDecoder::NotifyDataArrived() {
   }
 
   mDataArrivedEvent.Notify();
-
-  // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
-  // depends on the download rate.
-  UpdateReadyState();
 }
 
 // Provide access to the state machine object
@@ -1815,6 +1814,21 @@ MediaDecoder::RemoveMediaTracks()
   }
 
   mMediaTracksConstructed = false;
+}
+
+MediaDecoderOwner::NextFrameStatus
+MediaDecoder::NextFrameBufferedStatus()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Next frame hasn't been decoded yet.
+  // Use the buffered range to consider if we have the next frame available.
+  media::TimeUnit currentPosition =
+    media::TimeUnit::FromMicroseconds(CurrentPosition());
+  media::TimeInterval interval(currentPosition,
+                               currentPosition + media::TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
+  return GetBuffered().Contains(interval)
+    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
 
 MediaMemoryTracker::MediaMemoryTracker()

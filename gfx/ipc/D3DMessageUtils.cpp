@@ -23,6 +23,12 @@ DxgiAdapterDesc::From(const DXGI_ADAPTER_DESC& aDesc)
 {
   return reinterpret_cast<const DxgiAdapterDesc&>(aDesc);
 }
+
+const DXGI_ADAPTER_DESC&
+DxgiAdapterDesc::ToDesc() const
+{
+  return reinterpret_cast<const DXGI_ADAPTER_DESC&>(*this);
+}
 #endif
 
 namespace IPC {

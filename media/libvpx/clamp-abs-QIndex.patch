@@ -1,0 +1,31 @@
+# HG changeset patch
+# User Gerald Squelart <gsquelart@mozilla.com>
+# Parent  a2eeff55028dc78e98a16e1d8840d77378f37408
+Bug 1224361 - Clamp QIndex also in abs-value mode - r=rillian
+
+diff --git a/media/libvpx/vp8/decoder/decodeframe.c b/media/libvpx/vp8/decoder/decodeframe.c
+--- a/media/libvpx/vp8/decoder/decodeframe.c
++++ b/media/libvpx/vp8/decoder/decodeframe.c
+@@ -66,20 +66,19 @@ void vp8_mb_init_dequantizer(VP8D_COMP *
+     if (xd->segmentation_enabled)
+     {
+         /* Abs Value */
+         if (xd->mb_segement_abs_delta == SEGMENT_ABSDATA)
+             QIndex = xd->segment_feature_data[MB_LVL_ALT_Q][mbmi->segment_id];
+ 
+         /* Delta Value */
+         else
+-        {
+             QIndex = pc->base_qindex + xd->segment_feature_data[MB_LVL_ALT_Q][mbmi->segment_id];
+-            QIndex = (QIndex >= 0) ? ((QIndex <= MAXQ) ? QIndex : MAXQ) : 0;    /* Clamp to valid range */
+-        }
++
++        QIndex = (QIndex >= 0) ? ((QIndex <= MAXQ) ? QIndex : MAXQ) : 0;    /* Clamp to valid range */
+     }
+     else
+         QIndex = pc->base_qindex;
+ 
+     /* Set up the macroblock dequant constants */
+     xd->dequant_y1_dc[0] = 1;
+     xd->dequant_y1[0] = pc->Y1dequant[QIndex][0];
+     xd->dequant_y2[0] = pc->Y2dequant[QIndex][0];

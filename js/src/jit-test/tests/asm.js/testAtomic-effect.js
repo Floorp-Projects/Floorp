@@ -7,7 +7,7 @@ load(libdir + "asm.js");
 var code = `
     "use asm";
 
-    var HEAP32 = new stdlib.SharedInt32Array(heap);
+    var HEAP32 = new stdlib.Int32Array(heap);
     var add = stdlib.Atomics.add;
     var load = stdlib.Atomics.load;
     var _emscripten_asm_const_int=ffi._emscripten_asm_const_int;

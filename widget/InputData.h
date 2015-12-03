@@ -13,6 +13,7 @@
 #include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/gfx/MatrixFwd.h"
 
 template<class E> struct already_AddRefed;
 class nsIWidget;
@@ -22,10 +23,6 @@ namespace mozilla {
 namespace dom {
 class Touch;
 } // namespace dom
-
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
 
 enum InputType
 {
@@ -245,7 +242,7 @@ public:
   // and rotation angle.
   explicit MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
@@ -287,7 +284,7 @@ public:
 
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   MouseType mType;
   ButtonType mButtonType;
@@ -369,7 +366,7 @@ public:
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
@@ -446,7 +443,7 @@ public:
   {
   }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   PinchGestureType mType;
 
@@ -519,7 +516,7 @@ public:
   {
   }
 
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   TapGestureType mType;
 
@@ -542,6 +539,7 @@ public:
     // There are three kinds of scroll delta modes in Gecko: "page", "line" and
     // "pixel". For apz, we currently only support the "line" and "pixel" modes.
     SCROLLDELTA_LINE,
+    SCROLLDELTA_PAGE,
     SCROLLDELTA_PIXEL
   };
 
@@ -551,6 +549,8 @@ public:
     switch (aDeltaMode) {
       case nsIDOMWheelEvent::DOM_DELTA_LINE:
         return SCROLLDELTA_LINE;
+      case nsIDOMWheelEvent::DOM_DELTA_PAGE:
+        return SCROLLDELTA_PAGE;
       case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
         return SCROLLDELTA_PIXEL;
       default:
@@ -591,7 +591,7 @@ public:
   explicit ScrollWheelInput(const WidgetWheelEvent& aEvent);
 
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
-  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+  bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
 
   bool IsCustomizedByUserPrefs() const;
 

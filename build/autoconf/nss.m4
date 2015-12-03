@@ -85,7 +85,7 @@ AC_ARG_WITH(nss-exec-prefix,
 	fi
 
 
-	AC_SUBST(NSS_CFLAGS)
+	AC_SUBST_LIST(NSS_CFLAGS)
 	AC_SUBST_LIST(NSS_LIBS)
 
 ])

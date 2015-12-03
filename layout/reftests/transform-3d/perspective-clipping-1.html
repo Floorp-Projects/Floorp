@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>#inner should not be clipped</title>
+
+<style>
+
+body {
+  margin: 0;
+  background: red;
+}
+
+#perspective {
+  perspective: 300px;
+  perspective-origin: top left;
+}
+
+#inner {
+  height: 100vh;
+  transform-origin: top left;
+  transform: translateZ(-300px) scale(2);
+  z-index: 2;
+  background: lime;
+  border: 1px solid lime;
+  box-sizing: border-box;
+}
+
+</style>
+
+<div id="perspective">
+  <div id="inner"></div>
+</div>

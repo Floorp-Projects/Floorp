@@ -10,8 +10,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentTask",
 const REFERRER_URL_BASE = "/browser/browser/base/content/test/referrer/";
 const REFERRER_POLICYSERVER_URL =
   "test1.example.com" + REFERRER_URL_BASE + "file_referrer_policyserver.sjs";
+const REFERRER_POLICYSERVER_URL_ATTRIBUTE =
+  "test1.example.com" + REFERRER_URL_BASE + "file_referrer_policyserver_attr.sjs";
+
+SpecialPowers.pushPrefEnv({"set": [['network.http.enablePerElementReferrer', true]]});
 
 var gTestWindow = null;
+var rounds = 0;
 
 // We test that the UI code propagates three pieces of state - the referrer URI
 // itself, the referrer policy, and the triggering principal. After that, we
@@ -49,20 +54,21 @@ var _referrerTests = [
     rel: "noreferrer",
     result: ""  // rel=noreferrer trumps meta-referrer
   },
-  // 3. Origin-when-cross-origin policy - this depends on the triggering
+  // 3. XXX: using no-referrer here until we support all attribute values (bug 1178337)
+  //    Origin-when-cross-origin policy - this depends on the triggering
   //    principal.  We expect full referrer for same-origin requests,
   //    and origin referrer for cross-origin requests.
   {
     fromScheme: "https://",
     toScheme: "https://",
-    policy: "origin-when-cross-origin",
-    result: "https://test1.example.com/browser"  // same origin
+    policy: "no-referrer",
+    result: ""  // same origin https://test1.example.com/browser
   },
   {
     fromScheme: "http://",
     toScheme: "https://",
-    policy: "origin-when-cross-origin",
-    result: "http://test1.example.com"  // cross origin
+    policy: "no-referrer",
+    result: ""  // cross origin http://test1.example.com
   },
 ];
 
@@ -191,7 +197,9 @@ function doContextMenuCommand(aWindow, aMenu, aItemId) {
  */
 function referrerTestCaseLoaded(aTestNumber) {
   let test = getReferrerTest(aTestNumber);
-  let url = test.fromScheme + REFERRER_POLICYSERVER_URL +
+  let server = rounds == 0 ? REFERRER_POLICYSERVER_URL :
+                             REFERRER_POLICYSERVER_URL_ATTRIBUTE;
+  let url = test.fromScheme + server +
             "?scheme=" + escape(test.toScheme) +
             "&policy=" + escape(test.policy || "") +
             "&rel=" + escape(test.rel || "");
@@ -224,6 +232,12 @@ function checkReferrerAndStartNextTest(aTestNumber, aNewWindow, aNewTab,
     // Move on to the next test.  Or finish if we're done.
     var nextTestNumber = aTestNumber + 1;
     if (getReferrerTest(nextTestNumber)) {
+      referrerTestCaseLoaded(nextTestNumber).then(function() {
+        aStartTestCase(nextTestNumber);
+      });
+    } else if (rounds == 0) {
+      nextTestNumber = 0;
+      rounds = 1;
       referrerTestCaseLoaded(nextTestNumber).then(function() {
         aStartTestCase(nextTestNumber);
       });

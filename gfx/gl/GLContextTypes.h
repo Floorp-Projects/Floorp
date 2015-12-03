@@ -52,6 +52,8 @@ enum class CreateContextFlags : int8_t {
     FORCE_ENABLE_HARDWARE = 1 << 1,
     /* Don't force discrete GPU to be used (if applicable) */
     ALLOW_OFFLINE_RENDERER =  1 << 2,
+    // Ask for ES3 if possible
+    PREFER_ES3 = 1 << 3,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

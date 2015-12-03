@@ -103,9 +103,9 @@ class SharedArrayRawBuffer
  * SharedArrayBufferObject (or really the underlying memory) /is
  * racy/: more than one worker can access the memory at the same time.
  *
- * A SharedTypedArrayObject (a view) references a SharedArrayBuffer
+ * A TypedArrayObject (a view) references a SharedArrayBuffer
  * and keeps it alive.  The SharedArrayBuffer does /not/ reference its
- * views, nor do the views reference each other in any way.
+ * views.
  */
 class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
@@ -166,6 +166,7 @@ private:
 
 bool IsSharedArrayBuffer(HandleValue v);
 bool IsSharedArrayBuffer(HandleObject o);
+bool IsSharedArrayBuffer(JSObject* o);
 
 SharedArrayBufferObject& AsSharedArrayBuffer(HandleObject o);
 

@@ -177,7 +177,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Exception)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Exception)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -188,7 +187,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Exception)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mThrownJSVal.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -248,7 +246,7 @@ Exception::Exception(const nsACString& aMessage,
     }
   }
 
-  Initialize(aMessage, aResult, aName, location, aData, nullptr);
+  Initialize(aMessage, aResult, aName, location, aData);
 }
 
 Exception::Exception()
@@ -400,17 +398,6 @@ Exception::GetData(nsISupports** aData)
 }
 
 NS_IMETHODIMP
-Exception::GetInner(nsIException** aException)
-{
-  NS_ENSURE_ARG_POINTER(aException);
-  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIException> inner = mInner;
-  inner.forget(aException);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Exception::ToString(nsACString& _retval)
 {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -454,7 +441,7 @@ Exception::ToString(nsACString& _retval)
 NS_IMETHODIMP
 Exception::Initialize(const nsACString& aMessage, nsresult aResult,
                       const nsACString& aName, nsIStackFrame *aLocation,
-                      nsISupports *aData, nsIException *aInner)
+                      nsISupports *aData)
 {
   NS_ENSURE_FALSE(mInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -474,7 +461,6 @@ Exception::Initialize(const nsACString& aMessage, nsresult aResult,
   }
 
   mData = aData;
-  mInner = aInner;
 
   mInitialized = true;
   return NS_OK;
@@ -541,13 +527,6 @@ Exception::GetLocation() const
 {
   nsCOMPtr<nsIStackFrame> location = mLocation;
   return location.forget();
-}
-
-already_AddRefed<nsISupports>
-Exception::GetInner() const
-{
-  nsCOMPtr<nsIException> inner = mInner;
-  return inner.forget();
 }
 
 already_AddRefed<nsISupports>
@@ -622,25 +601,6 @@ DOMException::ToString(nsACString& aReturn)
     "[Exception... \"%s\"  code: \"%d\" nsresult: \"0x%x (%s)\"  location: \"%s\"]";
 
   nsAutoCString location;
-
-  if (mInner) {
-    nsString filename;
-    mInner->GetFilename(filename);
-
-    if (!filename.IsEmpty()) {
-      uint32_t line_nr = 0;
-
-      mInner->GetLineNumber(&line_nr);
-
-      char *temp = PR_smprintf("%s Line: %d",
-                               NS_ConvertUTF16toUTF8(filename).get(),
-                               line_nr);
-      if (temp) {
-        location.Assign(temp);
-        PR_smprintf_free(temp);
-      }
-    }
-  }
 
   if (location.IsEmpty()) {
     location = defaultLocation;

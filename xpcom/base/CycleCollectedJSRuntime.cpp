@@ -67,6 +67,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "js/Debug.h"
+#include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"

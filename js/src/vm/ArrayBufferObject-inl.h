@@ -19,7 +19,7 @@
 namespace js {
 
 inline SharedMem<uint8_t*>
-ArrayBufferObjectMaybeShared::dataPointerMaybeShared()
+ArrayBufferObjectMaybeShared::dataPointerEither()
 {
     ArrayBufferObjectMaybeShared* buf = this;
     if (buf->is<ArrayBufferObject>())

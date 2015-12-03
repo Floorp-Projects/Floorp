@@ -93,7 +93,8 @@ MarionetteServer.prototype.driverFactory = function(emulator) {
     Services.io.offline = false;
   }
 
-  return new GeckoDriver(appName, device, emulator);
+  let stopSignal = () => this.stop();
+  return new GeckoDriver(appName, device, stopSignal, emulator);
 };
 
 MarionetteServer.prototype.start = function() {
@@ -129,20 +130,17 @@ MarionetteServer.prototype.onSocketAccepted = function(
   let transport = new DebuggerTransport(input, output);
   let connId = "conn" + this.nextConnId++;
 
-  let stopSignal = () => this.stop();
-  let dispatcher = new Dispatcher(connId, transport, this.driverFactory, stopSignal);
+  let dispatcher = new Dispatcher(connId, transport, this.driverFactory.bind(this));
   dispatcher.onclose = this.onConnectionClosed.bind(this);
   this.conns[connId] = dispatcher;
 
   logger.info(`Accepted connection ${connId} from ${clientSocket.host}:${clientSocket.port}`);
-
-  // Create a root actor for the connection and send the hello packet
   dispatcher.sayHello();
   transport.ready();
 };
 
 MarionetteServer.prototype.onConnectionClosed = function(conn) {
-  let id = conn.id;
+  let id = conn.connId;
   delete this.conns[id];
   logger.info(`Closed connection ${id}`);
 };

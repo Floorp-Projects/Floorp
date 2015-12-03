@@ -2805,6 +2805,73 @@ class ICGetProp_TypedObject : public ICMonitoredStub
     };
 };
 
+class ICGetProp_ModuleNamespace : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrModuleNamespaceObject namespace_;
+    HeapPtrModuleEnvironmentObject environment_;
+    uint32_t offset_;
+
+    ICGetProp_ModuleNamespace(JitCode* stubCode, ICStub* firstMonitorStub,
+                              HandleModuleNamespaceObject ns, HandleModuleEnvironmentObject env,
+                              uint32_t offset)
+      : ICMonitoredStub(ICStub::GetProp_ModuleNamespace, stubCode, firstMonitorStub),
+        namespace_(ns), environment_(env), offset_(offset)
+    {
+        (void) offset_; // Silence clang warning.
+    }
+
+  public:
+    HeapPtrModuleNamespaceObject& getNamespace() {
+        return namespace_;
+    }
+    HeapPtrModuleEnvironmentObject& environment() {
+        return environment_;
+    }
+
+    static size_t offsetOfNamespace() {
+        return offsetof(ICGetProp_ModuleNamespace, namespace_);
+    }
+    static size_t offsetOfEnvironment() {
+        return offsetof(ICGetProp_ModuleNamespace, environment_);
+    }
+    static size_t offsetOfOffset() {
+        return offsetof(ICGetProp_ModuleNamespace, offset_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        ICStub* firstMonitorStub_;
+        RootedModuleNamespaceObject namespace_;
+        RootedModuleEnvironmentObject environment_;
+        bool isFixedSlot_;
+        uint32_t offset_;
+
+        bool generateStubCode(MacroAssembler& masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(engine_) |
+                  (static_cast<int32_t>(kind) << 1) |
+                  (static_cast<int32_t>(isFixedSlot_) << 17);
+        }
+
+      public:
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
+                 HandleModuleNamespaceObject ns, HandleModuleEnvironmentObject env, bool isFixedSlot,
+                 uint32_t offset)
+          : ICStubCompiler(cx, ICStub::GetProp_ModuleNamespace, engine),
+            firstMonitorStub_(firstMonitorStub),
+            namespace_(cx, ns), environment_(cx, env), isFixedSlot_(isFixedSlot), offset_(offset)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICGetProp_ModuleNamespace>(space, getStubCode(), firstMonitorStub_,
+                                                      namespace_, environment_, offset_);
+        }
+    };
+};
+
 class ICGetPropCallGetter : public ICMonitoredStub
 {
     friend class ICStubSpace;

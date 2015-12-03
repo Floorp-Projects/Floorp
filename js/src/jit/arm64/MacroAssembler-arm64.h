@@ -776,9 +776,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void movePtr(ImmPtr imm, Register dest) {
         Mov(ARMRegister(dest, 64), int64_t(imm.value));
     }
-    void movePtr(AsmJSImmPtr imm, Register dest) {
+    void movePtr(wasm::SymbolicAddress imm, Register dest) {
         BufferOffset off = movePatchablePtr(ImmWord(0xffffffffffffffffULL), dest);
-        append(AsmJSAbsoluteLink(CodeOffset(off.getOffset()), imm.kind()));
+        append(AsmJSAbsoluteLink(CodeOffset(off.getOffset()), imm));
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         BufferOffset load = movePatchablePtr(ImmPtr(imm.value), dest);
@@ -794,7 +794,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void mov(ImmPtr imm, Register dest) {
         movePtr(imm, dest);
     }
-    void mov(AsmJSImmPtr imm, Register dest) {
+    void mov(wasm::SymbolicAddress imm, Register dest) {
         movePtr(imm, dest);
     }
     void mov(Register src, Register dest) {
@@ -818,10 +818,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
     }
 
-    void loadPtr(AsmJSAbsoluteAddress address, Register dest) {
+    void loadPtr(wasm::SymbolicAddress address, Register dest) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch = temps.AcquireX();
-        movePtr(AsmJSImmPtr(address.kind()), scratch.asUnsized());
+        movePtr(address, scratch.asUnsized());
         Ldr(ARMRegister(dest, 64), MemOperand(scratch));
     }
     void loadPtr(AbsoluteAddress address, Register dest) {
@@ -1513,10 +1513,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         movePtr(ImmPtr(lhs.addr), scratch);
         branch32(cond, Address(scratch, 0), rhs, label);
     }
-    void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label* label) {
+    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
         vixl::UseScratchRegisterScope temps(this);
         const Register scratch = temps.AcquireX().asUnsized();
-        movePtr(AsmJSImmPtr(lhs.kind()), scratch);
+        movePtr(lhs, scratch);
         branch32(cond, Address(scratch, 0), rhs, label);
     }
     void branch32(Condition cond, BaseIndex lhs, Imm32 rhs, Label* label) {
@@ -1604,7 +1604,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return jumpWithPatch(label, cond);
     }
 
-    void branchPtr(Condition cond, AsmJSAbsoluteAddress lhs, Register rhs, Label* label) {
+    void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label) {
         vixl::UseScratchRegisterScope temps(this);
         const Register scratch = temps.AcquireX().asUnsized();
         MOZ_ASSERT(scratch != rhs);
@@ -2579,11 +2579,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
-    void appendCallSite(const CallSiteDesc& desc) {
+    void appendCallSite(const wasm::CallSiteDesc& desc) {
         MOZ_CRASH("appendCallSite");
     }
 
-    void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
+    void callExit(wasm::SymbolicAddress imm, uint32_t stackArgBytes) {
         MOZ_CRASH("callExit");
     }
 
@@ -3063,11 +3063,11 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void loadAsmJSActivation(Register dest) {
-        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
+        loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
-        loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
-        loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias + 8), HeapLenReg);
+        loadPtr(Address(GlobalReg, wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
+        loadPtr(Address(GlobalReg, wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias + 8), HeapLenReg);
     }
 
     // Overwrites the payload bits of a dest register containing a Value.

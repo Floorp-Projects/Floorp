@@ -23,10 +23,14 @@ using NPNVariable from "npapi.h";
 using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUtils.h";
 using gfxSurfaceType from "gfxTypes.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/2D.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using nsIntRect from "nsRect.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
 
 namespace mozilla {
 namespace plugins {
@@ -146,6 +150,12 @@ parent:
     returns (nsCString value, NPError result);
   intr NPN_GetValue_DrawingModelSupport(NPNVariable model)
     returns (bool value);
+  intr NPN_GetValue_SupportsAsyncBitmapSurface()
+    returns (bool value);
+  intr NPN_GetValue_SupportsAsyncDXGISurface()
+    returns (bool value);
+  intr NPN_GetValue_PreferredDXGIAdapter()
+    returns (DxgiAdapterDesc desc);
 
   intr NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
@@ -176,8 +186,32 @@ parent:
 
   async NPN_InvalidateRect(NPRect rect);
 
+  // Clear the current plugin image.
+  sync RevokeCurrentDirectSurface();
+
+  // Create a new DXGI shared surface with the given format and size. The
+  // returned handle, on success, can be opened as an ID3D10Texture2D or
+  // ID3D11Texture2D on a corresponding device.
+  sync InitDXGISurface(SurfaceFormat format, IntSize size)
+    returns (WindowsHandle handle, NPError result);
+
+  // Destroy a surface previously allocated with InitDXGISurface().
+  sync FinalizeDXGISurface(WindowsHandle handle);
+
+  // Set the current plugin image to the bitmap in the given shmem buffer. The
+  // format must be B8G8R8A8 or B8G8R8X8.
+  sync ShowDirectBitmap(Shmem buffer,
+                        SurfaceFormat format,
+                        uint32_t stride,
+                        IntSize size,
+                        IntRect dirty);
+
+  // Set the current plugin image to the DXGI surface in |handle|.
+  sync ShowDirectDXGISurface(WindowsHandle handle,
+                              IntRect dirty);
+
   // Give |newSurface|, containing this instance's updated pixels, to
-  // the browser for compositing.  When this method returns, any surface 
+  // the browser for compositing.  When this method returns, any surface
   // previously passed to Show may be destroyed.
   //
   // @param rect - actually updated rectangle, comparing to prevSurface content

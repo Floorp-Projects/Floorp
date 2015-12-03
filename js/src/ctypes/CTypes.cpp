@@ -3085,7 +3085,9 @@ ImplicitConvert(JSContext* cx,
       void* ptr;
       {
           JS::AutoCheckCannotGC nogc;
-          ptr = JS_GetArrayBufferData(valObj, nogc);
+          bool isShared;
+          ptr = JS_GetArrayBufferData(valObj, &isShared, nogc);
+          MOZ_ASSERT(!isShared); // Because ArrayBuffer
       }
       if (!ptr) {
         return ConvError(cx, targetType, val, convType, funObj, argIndex,
@@ -3093,6 +3095,12 @@ ImplicitConvert(JSContext* cx,
       }
       *static_cast<void**>(buffer) = ptr;
       break;
+    } else if (val.isObject() && JS_IsSharedArrayBufferObject(valObj)) {
+      // CTypes has not yet opted in to allowing shared memory pointers
+      // to escape.  Exporting a pointer to the shared buffer without
+      // indicating sharedness would expose client code to races.
+      return ConvError(cx, targetType, val, convType, funObj, argIndex,
+                       arrObj, arrIndex);
     } else if (val.isObject() && JS_IsArrayBufferViewObject(valObj)) {
       // Same as ArrayBuffer, above, though note that this will take the
       // offset of the view into account.
@@ -3107,7 +3115,14 @@ ImplicitConvert(JSContext* cx,
       void* ptr;
       {
           JS::AutoCheckCannotGC nogc;
-          ptr = JS_GetArrayBufferViewData(valObj, nogc);
+          bool isShared;
+          ptr = JS_GetArrayBufferViewData(valObj, &isShared, nogc);
+          if (isShared) {
+              // Opt out of shared memory, for now.  Exporting a
+              // pointer to the shared buffer without indicating
+              // sharedness would expose client code to races.
+              ptr = nullptr;
+          }
       }
       if (!ptr) {
         return ConvError(cx, targetType, val, convType, funObj, argIndex,
@@ -3220,10 +3235,12 @@ ImplicitConvert(JSContext* cx,
         }
 
         memcpy(buffer, intermediate.get(), arraySize);
-      } else if (cls == ESClass_ArrayBuffer) {
+      } else if (cls == ESClass_ArrayBuffer || cls == ESClass_SharedArrayBuffer) {
         // Check that array is consistent with type, then
         // copy the array.
-        uint32_t sourceLength = JS_GetArrayBufferByteLength(valObj);
+        const bool bufferShared = cls == ESClass_SharedArrayBuffer;
+        uint32_t sourceLength = bufferShared ? JS_GetSharedArrayBufferByteLength(valObj)
+            : JS_GetArrayBufferByteLength(valObj);
         size_t elementSize = CType::GetSize(baseType);
         size_t arraySize = elementSize * targetLength;
         if (arraySize != size_t(sourceLength)) {
@@ -3231,12 +3248,20 @@ ImplicitConvert(JSContext* cx,
           return ArrayLengthMismatch(cx, arraySize, targetType,
                                      size_t(sourceLength), val, convType);
         }
+        SharedMem<void*> target = SharedMem<void*>::unshared(buffer);
         JS::AutoCheckCannotGC nogc;
-        memcpy(buffer, JS_GetArrayBufferData(valObj, nogc), sourceLength);
+        bool isShared;
+        SharedMem<void*> src =
+            (bufferShared ?
+             SharedMem<void*>::shared(JS_GetSharedArrayBufferData(valObj, &isShared, nogc)) :
+             SharedMem<void*>::unshared(JS_GetArrayBufferData(valObj, &isShared, nogc)));
+        MOZ_ASSERT(isShared == bufferShared);
+        jit::AtomicOperations::memcpySafeWhenRacy(target, src, sourceLength);
         break;
       } else if (JS_IsTypedArrayObject(valObj)) {
         // Check that array is consistent with type, then
-        // copy the array.
+        // copy the array.  It is OK to copy from shared to unshared
+        // or vice versa.
         if (!CanConvertTypedArrayItemTo(baseType, valObj, cx)) {
           return ConvError(cx, targetType, val, convType, funObj, argIndex,
                            arrObj, arrIndex);
@@ -3250,8 +3275,12 @@ ImplicitConvert(JSContext* cx,
           return ArrayLengthMismatch(cx, arraySize, targetType,
                                      size_t(sourceLength), val, convType);
         }
+        SharedMem<void*> target = SharedMem<void*>::unshared(buffer);
         JS::AutoCheckCannotGC nogc;
-        memcpy(buffer, JS_GetArrayBufferViewData(valObj, nogc), sourceLength);
+        bool isShared;
+        SharedMem<void*> src =
+            SharedMem<void*>::shared(JS_GetArrayBufferViewData(valObj, &isShared, nogc));
+        jit::AtomicOperations::memcpySafeWhenRacy(target, src, sourceLength);
         break;
       } else {
         // Don't implicitly convert to string. Users can implicitly convert

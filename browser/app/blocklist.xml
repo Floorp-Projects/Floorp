@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1447879967000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1449088954000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -121,6 +121,12 @@
                     </versionRange>
                     <prefs>
                   <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1058" id="amo-validator-bypass@example.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i140" id="mozillahmpg@mozilla.org">
@@ -449,7 +455,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i1056" id="{82AF8DCA-6DE9-405D-BD5E-43525BDAD38A}">
-                        <versionRange  minVersion="0" maxVersion="7.5.0.9082" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="43.0a1" maxVersion="*" />
                           </targetApplication>
@@ -463,7 +469,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i461" id="{8E9E3331-D360-4f87-8803-52DE43566502}">
+      <emItem  blockID="i748" id="{32da2f20-827d-40aa-a3b4-2fc4a294352e}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -2386,7 +2392,7 @@
                   <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
-      <emItem  blockID="i748" id="{32da2f20-827d-40aa-a3b4-2fc4a294352e}">
+      <emItem  blockID="i461" id="{8E9E3331-D360-4f87-8803-52DE43566502}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -3308,6 +3314,30 @@
       <pluginItem  blockID="p1055">
                   <match name="filename" exp="DirectorShockwave\.plugin" />                      <versionRange  minVersion="0" maxVersion="12.2.0.162" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/shockwave/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1059">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                      <versionRange  minVersion="Java 7 Update 81" maxVersion="Java 7 Update 90" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1060">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                      <versionRange  minVersion="Java 8 Update 46" maxVersion="Java 8 Update 64" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1061">
+      <match name="name" exp="Java\(TM\) Platform SE 7 U(8[1-9]|90)(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1062">
+      <match name="name" exp="Java\(TM\) Platform SE 8 U(4[6-9]|5\d|6[0-4])(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1063">
+      <match name="name" exp="Java(\(TM\))? Plug-in 10\.(8[1-9]|90)(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1064">
+      <match name="name" exp="Java(\(TM\))? Plug-in 11\.(4[6-9]|5\d|6[0-4])(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
           </pluginItem>
     </pluginItems>
 

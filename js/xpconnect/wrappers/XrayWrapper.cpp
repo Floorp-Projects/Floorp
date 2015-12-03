@@ -8,6 +8,7 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
+#include "nsContentUtils.h"
 #include "nsIControllers.h"
 #include "nsDependentString.h"
 #include "nsIScriptError.h"

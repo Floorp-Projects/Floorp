@@ -60,11 +60,9 @@ JS_PREFERENCE_PP_FILES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     BRANDING_FILES += [
-        'app.ico',
         'document.ico',
         'xulrunner.ico',
     ]
-    BRANDING_FILES['app.ico'].source = 'xulrunner.ico'
 
 if CONFIG['MOZ_WIDGET_GTK']:
     BRANDING_FILES += [

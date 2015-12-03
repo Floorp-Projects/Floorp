@@ -660,17 +660,19 @@ private:
 };
 
 
-class gfxContextAutoDisableSubpixelAntialiasing {
+class DrawTargetAutoDisableSubpixelAntialiasing {
 public:
-    gfxContextAutoDisableSubpixelAntialiasing(gfxContext *aContext, bool aDisable)
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
+    DrawTargetAutoDisableSubpixelAntialiasing(DrawTarget *aDT, bool aDisable)
     {
         if (aDisable) {
-            mDT = aContext->GetDrawTarget();
+            mDT = aDT;
             mSubpixelAntialiasingEnabled = mDT->GetPermitSubpixelAA();
             mDT->SetPermitSubpixelAA(false);
         }
     }
-    ~gfxContextAutoDisableSubpixelAntialiasing()
+    ~DrawTargetAutoDisableSubpixelAntialiasing()
     {
         if (mDT) {
             mDT->SetPermitSubpixelAA(mSubpixelAntialiasingEnabled);
@@ -678,7 +680,7 @@ public:
     }
 
 private:
-    RefPtr<mozilla::gfx::DrawTarget> mDT;
+    RefPtr<DrawTarget> mDT;
     bool mSubpixelAntialiasingEnabled;
 };
 

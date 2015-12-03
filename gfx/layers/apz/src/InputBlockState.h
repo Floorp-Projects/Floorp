@@ -61,7 +61,7 @@ protected:
   // Used to transform events from global screen space to |mTargetApzc|'s
   // screen space. It's cached at the beginning of the input block so that
   // all events in the block are in the same coordinate space.
-  gfx::Matrix4x4 mTransformToApzc;
+  ScreenToParentLayerMatrix4x4 mTransformToApzc;
 };
 
 /**

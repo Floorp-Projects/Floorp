@@ -11,7 +11,7 @@
 //               all platforms
 // Bug 1141121 - immediate operand in atomic operations on x86/x64
 
-if (!(this.Atomics && this.SharedArrayBuffer && this.SharedInt8Array))
+if (!(this.Atomics && this.SharedArrayBuffer))
     quit(0);
 
 var sum = 0;
@@ -86,7 +86,7 @@ function g4(ia, k) {
 function mod(stdlib, ffi, heap) {
     "use asm";
 
-    var i8a = new stdlib.SharedInt8Array(heap);
+    var i8a = new stdlib.Int8Array(heap);
     var add = stdlib.Atomics.add;
     var sum = 0;
 
@@ -105,7 +105,7 @@ function mod(stdlib, ffi, heap) {
     return {f3:f3, g3:g3};
 }
 
-var i8a = new SharedInt8Array(65536);
+var i8a = new Int8Array(new SharedArrayBuffer(65536));
 var { f3, g3 } = mod(this, {}, i8a.buffer);
 for ( var i=0 ; i < 10000 ; i++ ) {
     f(i8a, i % 10);

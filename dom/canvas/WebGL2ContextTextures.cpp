@@ -45,7 +45,7 @@ void
 WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth, GLint border,
                           GLenum unpackFormat, GLenum unpackType,
-                          const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView)
+                          const dom::Nullable<dom::ArrayBufferView>& maybeView)
 {
     const char funcName[] = "texImage3D";
     const uint8_t funcDims = 3;
@@ -71,7 +71,7 @@ void
 WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                              GLint yOffset, GLint zOffset, GLsizei width, GLsizei height,
                              GLsizei depth, GLenum unpackFormat, GLenum unpackType,
-                             const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
+                             const dom::Nullable<dom::ArrayBufferView>& maybeView,
                              ErrorResult& /*out_rv*/)
 {
     const char funcName[] = "texSubImage3D";
@@ -143,7 +143,7 @@ void
 WebGL2Context::CompressedTexImage3D(GLenum rawTexImageTarget, GLint level,
                                     GLenum internalFormat, GLsizei width, GLsizei height,
                                     GLsizei depth, GLint border,
-                                    const dom::ArrayBufferViewOrSharedArrayBufferView& view)
+                                    const dom::ArrayBufferView& view)
 {
     const char funcName[] = "compressedTexImage3D";
     const uint8_t funcDims = 3;
@@ -165,7 +165,7 @@ WebGL2Context::CompressedTexSubImage3D(GLenum rawTexImageTarget, GLint level,
                                        GLint xOffset, GLint yOffset, GLint zOffset,
                                        GLsizei width, GLsizei height, GLsizei depth,
                                        GLenum sizedUnpackFormat,
-                                       const dom::ArrayBufferViewOrSharedArrayBufferView& view)
+                                       const dom::ArrayBufferView& view)
 {
     const char funcName[] = "compressedTexSubImage3D";
     const uint8_t funcDims = 3;

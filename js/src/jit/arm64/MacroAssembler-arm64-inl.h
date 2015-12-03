@@ -124,6 +124,12 @@ MacroAssembler::or64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::xor64(Register64 src, Register64 dest)
+{
+    xorPtr(src.reg, dest.reg);
+}
+
+void
 MacroAssembler::xor32(Imm32 imm, Register dest)
 {
     Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
@@ -143,6 +149,12 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 
 // ===============================================================
 // Arithmetic functions
+
+void
+MacroAssembler::add64(Register64 src, Register64 dest)
+{
+    addPtr(src.reg, dest.reg);
+}
 
 void
 MacroAssembler::sub32(Imm32 imm, Register dest)

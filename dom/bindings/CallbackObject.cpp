@@ -190,12 +190,8 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   // And now we're ready to go.
   mCx = cx;
 
-  // Make sure the JS engine doesn't report exceptions we want to re-throw
-  if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
-      mExceptionHandling == eRethrowExceptions) {
-    mSavedJSContextOptions = JS::ContextOptionsRef(cx);
-    JS::ContextOptionsRef(cx).setDontReportUncaught(true);
-  }
+  // Make sure the JS engine doesn't report exceptions we want to re-throw.
+  mAutoEntryScript->TakeOwnershipOfErrorReporting();
 }
 
 bool
@@ -253,18 +249,18 @@ CallbackObject::CallSetup::~CallSetup()
   // Now, if we have a JSContext, report any pending errors on it, unless we
   // were told to re-throw them.
   if (mCx) {
-    bool needToDealWithException = JS_IsExceptionPending(mCx);
+    bool needToDealWithException = mAutoEntryScript->HasException();
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
-      // Restore the old context options
-      JS::ContextOptionsRef(mCx) = mSavedJSContextOptions;
       mErrorResult.MightThrowJSException();
+      MOZ_ASSERT(mAutoEntryScript->OwnsErrorReporting());
       if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
-        if (JS_GetPendingException(mCx, &exn) &&
+        if (mAutoEntryScript->PeekException(&exn) &&
             ShouldRethrowException(exn)) {
+          mAutoEntryScript->ClearException();
+          MOZ_ASSERT(!mAutoEntryScript->HasException());
           mErrorResult.ThrowJSException(mCx, exn);
-          JS_ClearPendingException(mCx);
           needToDealWithException = false;
         }
       }
@@ -272,7 +268,7 @@ CallbackObject::CallSetup::~CallSetup()
 
     if (needToDealWithException) {
       // Either we're supposed to report our exceptions, or we're supposed to
-      // re-throw them but we failed to JS_GetPendingException.  Either way,
+      // re-throw them but we failed to get the exception value.  Either way,
       // just report the pending exception, if any.
       //
       // We don't use nsJSUtils::ReportPendingException here because all it
@@ -283,7 +279,9 @@ CallbackObject::CallSetup::~CallSetup()
       // screw up our compartment, which is exactly what we do not want.
       //
       // XXXbz FIXME: bug 979525 means we don't always JS_SaveFrameChain here,
-      // so we need to go ahead and do that.
+      // so we need to go ahead and do that.  This is also the reason we don't
+      // just rely on ~AutoJSAPI reporting the exception for us.  I think if we
+      // didn't need to JS_SaveFrameChain here, we could just rely on that.
       JS::Rooted<JSObject*> oldGlobal(mCx, JS::CurrentGlobalOrNull(mCx));
       MOZ_ASSERT(oldGlobal, "How can we not have a global here??");
       bool saved = JS_SaveFrameChain(mCx);
@@ -294,7 +292,10 @@ CallbackObject::CallSetup::~CallSetup()
         MOZ_ASSERT(!JS::DescribeScriptedCaller(mCx),
                    "Our comment above about JS_SaveFrameChain having been "
                    "called is a lie?");
-        JS_ReportPendingException(mCx);
+        // Note that we don't JS_ReportPendingException here because we want to
+        // go through our AutoEntryScript's reporting mechanism instead, since
+        // it currently owns error reporting.
+        mAutoEntryScript->ReportException();
       }
       if (saved) {
         JS_RestoreFrameChain(mCx);

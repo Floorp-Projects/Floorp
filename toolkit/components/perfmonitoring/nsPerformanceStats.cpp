@@ -11,6 +11,7 @@
 #include "nsServiceManagerUtils.h"
 
 #include "nsCOMArray.h"
+#include "nsContentUtils.h"
 #include "nsIMutableArray.h"
 #include "nsReadableUtils.h"
 

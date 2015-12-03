@@ -275,7 +275,13 @@ nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLand
   RefPtr<mozilla::SharedBuffer> samples;
   {
     JS::AutoCheckCannotGC nogc;
-    samples = makeSamples(JS_GetInt16ArrayData(tsrc, nogc), dataLen);
+    bool isShared;
+    int16_t* data = JS_GetInt16ArrayData(tsrc, &isShared, nogc);
+    if (isShared) {
+      // Must opt in to using shared data.
+      return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
+    samples = makeSamples(data, dataLen);
   }
   SendAudioImpl(samples, dataLen);
 

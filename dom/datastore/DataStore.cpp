@@ -13,6 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "AccessCheck.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {

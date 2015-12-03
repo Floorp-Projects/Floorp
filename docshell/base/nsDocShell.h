@@ -273,6 +273,11 @@ public:
 
   mozilla::DocShellOriginAttributes GetOriginAttributes();
 
+  void GetInterceptedDocumentId(nsAString& aId)
+  {
+    aId = mInterceptedDocumentId;
+  }
+
 private:
   // An observed docshell wrapper is created when recording markers is enabled.
   mozilla::UniquePtr<mozilla::ObservedDocShell> mObserved;
@@ -1013,6 +1018,8 @@ protected:
   // The packageId for a signed packaged iff this docShell is created
   // for a signed package.
   nsString mSignedPkg;
+
+  nsString mInterceptedDocumentId;
 
 private:
   nsCString mForcedCharset;

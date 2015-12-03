@@ -55,10 +55,10 @@ public:
     return nullptr;
   }
 
-  NS_IMETHOD              Create(nsIWidget *aParent,
+  NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
-                                 const IntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr) override { return NS_OK; }
+                                 const LayoutDeviceIntRect& aRect,
+                                 nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
   NS_IMETHOD              Show(bool aState) override { return NS_OK; }
   virtual bool            IsVisible() const override { return true; }
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
@@ -72,7 +72,7 @@ public:
   virtual bool            IsEnabled() const override { return true; }
   NS_IMETHOD              SetFocus(bool aRaise) override { return NS_OK; }
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
-  NS_IMETHOD              Invalidate(const IntRect &aRect) override { return NS_OK; }
+  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect) override { return NS_OK; }
   NS_IMETHOD              SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,

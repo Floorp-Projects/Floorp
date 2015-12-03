@@ -107,6 +107,7 @@ class FetchEvent final : public ExtendableEvent
   RefPtr<Request> mRequest;
   nsCString mScriptSpec;
   nsCString mPreventDefaultScriptSpec;
+  nsString mClientId;
   uint32_t mPreventDefaultLineNumber;
   uint32_t mPreventDefaultColumnNumber;
   bool mIsReload;
@@ -147,6 +148,12 @@ public:
   GetRequest_() const
   {
     return mRequest;
+  }
+
+  void
+  GetClientId(nsAString& aClientId) const
+  {
+    aClientId = mClientId;
   }
 
   bool
