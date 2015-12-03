@@ -40,6 +40,7 @@ DevToolsModules(
     'performance.js',
     'preference.js',
     'pretty-print-worker.js',
+    'process.js',
     'profiler.js',
     'promises.js',
     'root.js',
