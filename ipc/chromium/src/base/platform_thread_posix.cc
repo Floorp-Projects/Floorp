@@ -14,9 +14,6 @@
 #elif defined(OS_LINUX)
 #include <sys/syscall.h>
 #include <sys/prctl.h>
-#elif defined(OS_FREEBSD) && !defined(__GLIBC__)
-#include <sys/param.h>
-#include <sys/thr.h>
 #endif
 
 #if !defined(OS_MACOSX)
@@ -61,13 +58,7 @@ PlatformThreadId PlatformThread::CurrentId() {
 #elif defined(OS_DRAGONFLY)
   return lwp_gettid();
 #elif defined(OS_FREEBSD)
-#  if __FreeBSD_version > 900030
-    return pthread_getthreadid_np();
-#  else
-    long lwpid;
-    thr_self(&lwpid);
-    return lwpid;
-#  endif
+  return pthread_getthreadid_np();
 #endif
 }
 
