@@ -18,7 +18,6 @@
 #endif
 #ifdef MOZ_WEBM
 #include "WebMDecoder.h"
-#include "WebMReader.h"
 #include "WebMDemuxer.h"
 #endif
 #ifdef MOZ_RAW
@@ -677,9 +676,8 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMSupportedType(aType)) {
-    decoderReader = Preferences::GetBool("media.format-reader.webm", true) ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()))) :
-      new WebMReader(aDecoder);
+    decoderReader =
+      new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
 #endif
 #ifdef MOZ_DIRECTSHOW
