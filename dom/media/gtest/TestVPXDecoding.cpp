@@ -66,25 +66,36 @@ ParseIVFConfig(nsTArray<uint8_t>& data, vpx_codec_dec_cfg_t& config)
   return codec;
 }
 
+struct TestFileData {
+  const char* mFilename;
+  vpx_codec_err_t mDecodeResult;
+};
+static const TestFileData testFiles[] = {
+  { "test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME }
+};
+
 TEST(libvpx, test_case_1224363)
 {
-  nsTArray<uint8_t> data;
-  ReadVPXFile("test_case_1224363.vp8.ivf", data);
+  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
+    nsTArray<uint8_t> data;
+    ReadVPXFile(testFiles[test].mFilename, data);
+    ASSERT_GT(data.Length(), 0u);
 
-  vpx_codec_dec_cfg_t config;
-  vpx_codec_iface_t* dx = ParseIVFConfig(data, config);
-  ASSERT_TRUE(dx);
-  config.threads = 2;
+    vpx_codec_dec_cfg_t config;
+    vpx_codec_iface_t* dx = ParseIVFConfig(data, config);
+    ASSERT_TRUE(dx);
+    config.threads = 2;
 
-  vpx_codec_ctx_t ctx;
-  PodZero(&ctx);
-  vpx_codec_err_t r = vpx_codec_dec_init(&ctx, dx, &config, 0);
-  ASSERT_EQ(VPX_CODEC_OK, r);
+    vpx_codec_ctx_t ctx;
+    PodZero(&ctx);
+    vpx_codec_err_t r = vpx_codec_dec_init(&ctx, dx, &config, 0);
+    ASSERT_EQ(VPX_CODEC_OK, r);
 
-  r = vpx_codec_decode(&ctx, data.Elements(), data.Length(), nullptr, 0);
-  // This test case is known to be corrupt.
-  EXPECT_EQ(VPX_CODEC_CORRUPT_FRAME, r);
+    r = vpx_codec_decode(&ctx, data.Elements(), data.Length(), nullptr, 0);
+    // This test case is known to be corrupt.
+    EXPECT_EQ(testFiles[test].mDecodeResult, r);
 
-  r = vpx_codec_destroy(&ctx);
-  EXPECT_EQ(VPX_CODEC_OK, r);
+    r = vpx_codec_destroy(&ctx);
+    EXPECT_EQ(VPX_CODEC_OK, r);
+  }
 }
