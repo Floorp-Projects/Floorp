@@ -220,7 +220,7 @@ bool MetaData::findData(uint32_t key, uint32_t *type,
 }
 
 MetaData::typed_data::typed_data()
-    : mType(0),
+    : mType(TYPE_NONE),
       mSize(0) {
 }
 
@@ -231,17 +231,19 @@ MetaData::typed_data::~typed_data() {
 MetaData::typed_data::typed_data(const typed_data &from)
     : mType(from.mType),
       mSize(0) {
-    allocateStorage(from.mSize);
-    memcpy(storage(), from.storage(), mSize);
+    if (allocateStorage(from.mSize)) {
+        memcpy(storage(), from.storage(), mSize);
+    }
 }
 
 MetaData::typed_data &MetaData::typed_data::operator=(
         const MetaData::typed_data &from) {
     if (this != &from) {
         clear();
-        mType = from.mType;
-        allocateStorage(from.mSize);
-        memcpy(storage(), from.storage(), mSize);
+        if (allocateStorage(from.mSize)) {
+            mType = from.mType;
+            memcpy(storage(), from.storage(), mSize);
+        }
     }
 
     return *this;
@@ -250,16 +252,17 @@ MetaData::typed_data &MetaData::typed_data::operator=(
 void MetaData::typed_data::clear() {
     freeStorage();
 
-    mType = 0;
+    mType = TYPE_NONE;
 }
 
 void MetaData::typed_data::setData(
         uint32_t type, const void *data, size_t size) {
     clear();
 
-    mType = type;
-    allocateStorage(size);
-    memcpy(storage(), data, size);
+    if (allocateStorage(size)) {
+        mType = type;
+        memcpy(storage(), data, size);
+    }
 }
 
 void MetaData::typed_data::getData(
@@ -269,14 +272,22 @@ void MetaData::typed_data::getData(
     *data = storage();
 }
 
-void MetaData::typed_data::allocateStorage(size_t size) {
+bool MetaData::typed_data::allocateStorage(size_t size) {
+    // Update mSize now, as it is needed by usesReservoir() below.
+    // (mSize will be reset if the allocation fails further below.)
     mSize = size;
 
     if (usesReservoir()) {
-        return;
+        return true;
     }
 
     u.ext_data = malloc(mSize);
+    if (!u.ext_data) {
+      mType = TYPE_NONE;
+      mSize = 0;
+      return false;
+    }
+    return true;
 }
 
 void MetaData::typed_data::freeStorage() {
