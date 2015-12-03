@@ -22,8 +22,7 @@ const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
 const {
   PushCrypto,
   base64UrlDecode,
-  getEncryptionKeyParams,
-  getEncryptionParams,
+  getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
@@ -58,32 +57,6 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
     prefix: "PushServiceWebSocket",
   });
 });
-
-function getCryptoParams(headers) {
-  if (!headers) {
-    return null;
-  }
-  var requiresAuthenticationSecret = true;
-  var keymap = getEncryptionKeyParams(headers.crypto_key);
-  if (!keymap) {
-    requiresAuthenticationSecret = false;
-    keymap = getEncryptionKeyParams(headers.encryption_key);
-    if (!keymap) {
-      return null;
-    }
-  }
-  var enc = getEncryptionParams(headers.encryption);
-  if (!enc || !enc.keyid) {
-    return null;
-  }
-  var dh = keymap[enc.keyid];
-  var salt = enc.salt;
-  var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
-  if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
-    return null;
-  }
-  return {dh, salt, rs, auth: requiresAuthenticationSecret};
-}
 
 /**
  * A proxy between the PushService and the WebSocket. The listener is used so
