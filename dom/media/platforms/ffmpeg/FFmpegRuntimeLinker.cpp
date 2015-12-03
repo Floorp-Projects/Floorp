@@ -57,7 +57,6 @@ static unsigned (*avcodec_version)() = nullptr;
 #define AV_FUNC(func, ver) decltype(func)* func;
 #endif
 #include "FFmpegFunctionList.h"
-#undef LIBAVCODEC_ALLVERSION
 #undef AV_FUNC
 
 static PRLibrary*
@@ -190,9 +189,9 @@ FFmpegRuntimeLinker::CreateDecoderModule()
 #ifndef XP_WIN
     case 53: module = FFmpegDecoderModule<53>::Create(); break;
     case 54: module = FFmpegDecoderModule<54>::Create(); break;
-#endif
     case 55:
     case 56: module = FFmpegDecoderModule<55>::Create(); break;
+#endif
     case 57: module = FFmpegDecoderModule<57>::Create(); break;
     default: module = nullptr;
   }
@@ -227,4 +226,5 @@ FFmpegRuntimeLinker::GetVersion(uint32_t& aMajor, uint32_t& aMinor, uint32_t& aM
   return true;
 }
 
+#undef LIBAVCODEC_ALLVERSION
 } // namespace mozilla
