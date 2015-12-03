@@ -220,7 +220,7 @@ var inactiveAddonIds = [
 
 // Make sure the addons in the list are not installed
 function* check_addons_uninstalled(aAddonList) {
-  let foundList = yield promise_addons_by_ids([addon.id for (addon of aAddonList)]);
+  let foundList = yield promise_addons_by_ids(aAddonList.map(a => a.id));
   for (let i = 0; i < aAddonList.length; i++) {
     ok(!foundList[i], "Addon " + aAddonList[i].id + " is not installed");
   }
