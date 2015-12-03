@@ -71,7 +71,7 @@ this.DownloadImport.prototype = {
    *           the DownloadList)
    */
   import: function () {
-    return Task.spawn(function task_DI_import() {
+    return Task.spawn(function* task_DI_import() {
       let connection = yield Sqlite.openConnection({ path: this.path });
 
       try {

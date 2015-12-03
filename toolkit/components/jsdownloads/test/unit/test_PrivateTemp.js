@@ -9,7 +9,7 @@
  * The temporary directory downloads saves to, should be only readable
  * for the current user.
  */
-add_task(function test_private_temp() {
+add_task(function* test_private_temp() {
 
   let download = yield promiseStartExternalHelperAppServiceDownload(
                                                          httpUrl("empty.txt"));

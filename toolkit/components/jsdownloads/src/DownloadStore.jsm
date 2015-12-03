@@ -103,11 +103,14 @@ this.DownloadStore.prototype = {
    */
   load: function DS_load()
   {
-    return Task.spawn(function task_DS_load() {
+    return Task.spawn(function* task_DS_load() {
       let bytes;
       try {
         bytes = yield OS.File.read(this.path);
-      } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+      } catch (ex) {
+        if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+          throw ex;
+        }
         // If the file does not exist, there are no downloads to load.
         return;
       }
@@ -153,7 +156,7 @@ this.DownloadStore.prototype = {
    */
   save: function DS_save()
   {
-    return Task.spawn(function task_DS_save() {
+    return Task.spawn(function* task_DS_save() {
       let downloads = yield this.list.getAll();
 
       // Take a static snapshot of the current state of all the downloads.
@@ -188,8 +191,11 @@ this.DownloadStore.prototype = {
         // Remove the file if there are no downloads to save at all.
         try {
           yield OS.File.remove(this.path);
-        } catch (ex if ex instanceof OS.File.Error &&
-                 (ex.becauseNoSuchFile || ex.becauseAccessDenied)) {
+        } catch (ex) {
+          if (!(ex instanceof OS.File.Error) ||
+              !(ex.becauseNoSuchFile || ex.becauseAccessDenied)) {
+            throw ex;
+          }
           // On Windows, we may get an access denied error instead of a no such
           // file error if the file existed before, and was recently deleted.
         }
