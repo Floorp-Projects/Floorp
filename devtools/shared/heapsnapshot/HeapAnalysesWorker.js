@@ -13,7 +13,11 @@
 importScripts("resource://gre/modules/workers/require.js");
 importScripts("resource://devtools/shared/worker/helper.js");
 const { censusReportToCensusTreeNode } = require("resource://devtools/shared/heapsnapshot/census-tree-node.js");
+const DominatorTreeNode = require("resource://devtools/shared/heapsnapshot/DominatorTreeNode.js");
 const CensusUtils = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
+
+const DEFAULT_START_INDEX = 0;
+const DEFAULT_MAX_COUNT = 50;
 
 // The set of HeapSnapshot instances this worker has read into memory. Keyed by
 // snapshot file path.
@@ -86,7 +90,92 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
 /**
  * @see HeapAnalysesClient.prototype.getCreationTime
  */
-workerHelper.createTask(self, "getCreationTime", (snapshotFilePath) => {
+workerHelper.createTask(self, "getCreationTime", snapshotFilePath => {
   let snapshot = snapshots[snapshotFilePath];
   return snapshot ? snapshot.creationTime : null;
+});
+
+/**
+ * The set of `DominatorTree`s that have been computed, mapped by their id (aka
+ * the index into this array).
+ *
+ * @see /dom/webidl/DominatorTree.webidl
+ */
+const dominatorTrees = [];
+
+/**
+ * @see HeapAnalysesClient.prototype.computeDominatorTree
+ */
+workerHelper.createTask(self, "computeDominatorTree", snapshotFilePath => {
+  const snapshot = snapshots[snapshotFilePath];
+  if (!snapshot) {
+    throw new Error(`No known heap snapshot for '${snapshotFilePath}'`);
+  }
+
+  const id = dominatorTrees.length;
+  dominatorTrees.push(snapshot.computeDominatorTree());
+  return id;
+});
+
+/**
+ * @see HeapAnalysesClient.prototype.getDominatorTree
+ */
+workerHelper.createTask(self, "getDominatorTree", request => {
+  const {
+    dominatorTreeId,
+    maxDepth,
+    maxSiblings
+  } = request;
+
+  if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
+    throw new Error(
+      `There does not exist a DominatorTree with the id ${dominatorTreeId}`);
+  }
+
+  return DominatorTreeNode.partialTraversal(dominatorTrees[dominatorTreeId],
+                                            maxDepth,
+                                            maxSiblings);
+});
+
+/**
+ * @see HeapAnalysesClient.prototype.getImmediatelyDominated
+ */
+workerHelper.createTask(self, "getImmediatelyDominated", request => {
+  const {
+    dominatorTreeId,
+    nodeId,
+    startIndex,
+    maxCount
+  } = request;
+
+  if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
+    throw new Error(
+      `There does not exist a DominatorTree with the id ${dominatorTreeId}`);
+  }
+
+  const dominatorTree = dominatorTrees[dominatorTreeId];
+  const childIds = dominatorTree.getImmediatelyDominated(nodeId);
+  if (!childIds) {
+    throw new Error(`${nodeId} is not a node id in the dominator tree`);
+  }
+
+  const start = startIndex || DEFAULT_START_INDEX;
+  const count = maxCount || DEFAULT_MAX_COUNT;
+  const end = start + count;
+
+  const nodes = childIds
+    .slice(start, end)
+    .map(id => {
+      const size = dominatorTree.getRetainedSize(id);
+      const node = new DominatorTreeNode(id, size);
+      node.parentId = nodeId;
+      // DominatorTree.getImmediatelyDominated will always return non-null here
+      // because we got the id directly from the dominator tree.
+      node.moreChildrenAvailable = dominatorTree.getImmediatelyDominated(id).length > 0;
+      return node;
+    });
+
+  const moreChildrenAvailable = childIds.length > end;
+
+  return { nodes, moreChildrenAvailable };
 });
