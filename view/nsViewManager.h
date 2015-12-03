@@ -28,6 +28,7 @@ public:
   friend class nsView;
 
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+  typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -346,7 +347,7 @@ private:
   void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, const nsIntRegion& aRegion);
+  void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
 
   // Utilities
 
@@ -380,7 +381,7 @@ private:
   bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
 
   void WillPaintWindow(nsIWidget* aWidget);
-  bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion);
+  bool PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion);
   void DidPaintWindow();
 
   // Call this when you need to let the viewmanager know that it now has

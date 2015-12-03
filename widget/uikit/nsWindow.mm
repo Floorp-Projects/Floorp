@@ -282,7 +282,7 @@ private:
   mGeckoChild->GetBounds(geckoBounds);
   LayoutDeviceIntRegion region(geckoBounds);
 
-  mGeckoChild->PaintWindow(region.ToUnknownRegion());
+  mGeckoChild->PaintWindow(region);
 }
 
 // Called asynchronously after setNeedsDisplay in order to avoid entering the
@@ -344,10 +344,11 @@ private:
 
   CGContextSaveGState(aContext);
 
-  nsIntRegion region = nsIntRect(NSToIntRound(aRect.origin.x * scale),
-                                 NSToIntRound(aRect.origin.y * scale),
-                                 NSToIntRound(aRect.size.width * scale),
-                                 NSToIntRound(aRect.size.height * scale));
+  LayoutDeviceIntRegion region =
+    LayoutDeviceIntRect(NSToIntRound(aRect.origin.x * scale),
+                        NSToIntRound(aRect.origin.y * scale),
+                        NSToIntRound(aRect.size.width * scale),
+                        NSToIntRound(aRect.size.height * scale));
 
   // Create Cairo objects.
   RefPtr<gfxQuartzSurface> targetSurface;
@@ -376,10 +377,10 @@ private:
   }
 
   // Set up the clip region.
-  nsIntRegionRectIterator iter(region);
+  LayoutDeviceIntRegion::RectIterator iter(region);
   targetContext->NewPath();
   for (;;) {
-    const nsIntRect* r = iter.Next();
+    const LayoutDeviceIntRect* r = iter.Next();
     if (!r)
       break;
     targetContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
@@ -730,7 +731,7 @@ void nsWindow::WillPaintWindow()
   }
 }
 
-bool nsWindow::PaintWindow(nsIntRegion aRegion)
+bool nsWindow::PaintWindow(LayoutDeviceIntRegion aRegion)
 {
   if (!mWidgetListener)
     return false;

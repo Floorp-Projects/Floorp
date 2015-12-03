@@ -406,8 +406,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
           {
             AutoLayerManagerSetup
-                setupLayerManager(this, thebesContext, doubleBuffering);
-            result = listener->PaintWindow(this, region);
+              setupLayerManager(this, thebesContext, doubleBuffering);
+            result = listener->PaintWindow(
+              this, LayoutDeviceIntRegion::FromUnknownRegion(region));
           }
 
 #ifdef MOZ_XUL
@@ -514,7 +515,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
-        result = listener->PaintWindow(this, region);
+        result = listener->PaintWindow(
+          this, LayoutDeviceIntRegion::FromUnknownRegion(region));
         break;
       default:
         NS_ERROR("Unknown layers backend used!");
