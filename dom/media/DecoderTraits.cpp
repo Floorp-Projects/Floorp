@@ -171,6 +171,15 @@ DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
   return false;
 }
 
+/* static */ bool
+DecoderTraits::IsWebMAudioType(const nsACString& aType)
+{
+#ifdef MOZ_WEBM
+  return aType.EqualsASCII("audio/webm");
+#endif
+  return false;
+}
+
 #ifdef MOZ_GSTREAMER
 static bool
 IsGStreamerSupportedType(const nsACString& aMimeType)
