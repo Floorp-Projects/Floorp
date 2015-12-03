@@ -254,8 +254,9 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     Matrix4x4 inverse = transform;
     if (inverse.Invert()) {
       Maybe<LayerRect> insideClipFloat =
-        UntransformTo<LayerPixel>(inverse, ParentLayerRect(*outsideClip),
-                                  LayerRect::MaxIntRect());
+        UntransformBy(ViewAs<ParentLayerToLayerMatrix4x4>(inverse),
+                      ParentLayerRect(*outsideClip),
+                      LayerRect::MaxIntRect());
       if (insideClipFloat) {
         insideClipFloat->RoundOut();
         LayerIntRect insideClipInt;
