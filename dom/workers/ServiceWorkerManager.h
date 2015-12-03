@@ -16,6 +16,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -360,6 +361,7 @@ public:
   already_AddRefed<nsIRunnable>
   PrepareFetchEvent(const PrincipalOriginAttributes& aOriginAttributes,
                     nsIDocument* aDoc,
+                    const nsAString& aDocumentIdForTopLevelNavigation,
                     nsIInterceptedChannel* aChannel,
                     bool aIsReload,
                     bool aIsSubresourceLoad,
@@ -434,10 +436,16 @@ public:
               uint32_t aFlags,
               JSExnType aExnType);
 
+  UniquePtr<ServiceWorkerClientInfo>
+  GetClient(nsIPrincipal* aPrincipal,
+            const nsAString& aClientId,
+            ErrorResult& aRv);
+
   void
   GetAllClients(nsIPrincipal* aPrincipal,
                 const nsCString& aScope,
-                nsTArray<ServiceWorkerClientInfo>& aControlledDocuments);
+                bool aIncludeUncontrolled,
+                nsTArray<ServiceWorkerClientInfo>& aDocuments);
 
   void
   MaybeClaimClient(nsIDocument* aDocument,
@@ -522,7 +530,8 @@ private:
 
   void
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
-                            nsIDocument* aDoc);
+                            nsIDocument* aDoc,
+                            const nsAString& aDocumentId);
 
   void
   StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);

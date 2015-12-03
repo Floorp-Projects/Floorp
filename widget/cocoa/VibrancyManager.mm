@@ -11,7 +11,8 @@
 using namespace mozilla;
 
 void
-VibrancyManager::UpdateVibrantRegion(VibrancyType aType, const nsIntRegion& aRegion)
+VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
+                                     const LayoutDeviceIntRegion& aRegion)
 {
   auto& vr = *mVibrantRegions.LookupOrAdd(uint32_t(aType));
   if (vr.region == aRegion) {
@@ -27,12 +28,12 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType, const nsIntRegion& aReg
   vr.effectViews.SwapElements(viewsToRecycle);
   // vr.effectViews is now empty.
 
-  nsIntRegionRectIterator iter(aRegion);
-  const nsIntRect* iterRect = nullptr;
+  LayoutDeviceIntRegion::RectIterator iter(aRegion);
+  const LayoutDeviceIntRect* iterRect = nullptr;
   for (size_t i = 0; (iterRect = iter.Next()) || i < viewsToRecycle.Length(); ++i) {
     if (iterRect) {
       NSView* view = nil;
-      NSRect rect = mCoordinateConverter.UntypedDevPixelsToCocoaPoints(*iterRect);
+      NSRect rect = mCoordinateConverter.DevPixelsToCocoaPoints(*iterRect);
       if (i < viewsToRecycle.Length()) {
         view = viewsToRecycle[i];
         [view setFrame:rect];
@@ -70,9 +71,9 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
 {
   [[NSColor clearColor] set];
 
-  nsIntRegionRectIterator iter(aVibrantRegion.region);
-  while (const nsIntRect* rect = iter.Next()) {
-    NSRectFill(mCoordinateConverter.UntypedDevPixelsToCocoaPoints(*rect));
+  LayoutDeviceIntRegion::RectIterator iter(aVibrantRegion.region);
+  while (const LayoutDeviceIntRect* rect = iter.Next()) {
+    NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(*rect));
   }
 }
 

@@ -83,6 +83,9 @@ if CONFIG['MOZ_RUST']:
     SOURCES += [
         'binding/MP4Metadata.rs',
     ]
+    EXPORTS += [
+        'binding/include/mp4parse.h',
+    ]
 
 UNIFIED_SOURCES += [
     'binding/Adts.cpp',

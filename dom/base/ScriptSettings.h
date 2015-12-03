@@ -291,6 +291,14 @@ public:
   // into the current compartment.
   bool StealException(JS::MutableHandle<JS::Value> aVal);
 
+  // Peek the current exception from the JS engine, without stealing it.
+  // Callers must ensure that HasException() is true, and that cx() is in a
+  // non-null compartment.
+  //
+  // Note that this fails if and only if we OOM while wrapping the exception
+  // into the current compartment.
+  bool PeekException(JS::MutableHandle<JS::Value> aVal);
+
   void ClearException() {
     MOZ_ASSERT_IF(NS_IsMainThread(), CxPusherIsStackTop());
     JS_ClearPendingException(cx());

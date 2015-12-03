@@ -7,6 +7,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "AbstractMediaDecoder.h"
 #include "SoftwareWebMVideoDecoder.h"
+#include "nsContentUtils.h"
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"

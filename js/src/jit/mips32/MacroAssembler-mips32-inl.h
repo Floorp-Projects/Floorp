@@ -57,6 +57,13 @@ MacroAssembler::or64(Register64 src, Register64 dest)
 }
 
 void
+MacroAssembler::xor64(Register64 src, Register64 dest)
+{
+    ma_xor(dest.low, src.low);
+    ma_xor(dest.high, src.high);
+}
+
+void
 MacroAssembler::xorPtr(Register src, Register dest)
 {
     ma_xor(dest, src);

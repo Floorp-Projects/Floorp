@@ -30,6 +30,9 @@ public:
   explicit ServiceWorkerClients(ServiceWorkerGlobalScope* aWorkerScope);
 
   already_AddRefed<Promise>
+  Get(const nsAString& aClientId, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
   MatchAll(const ClientQueryOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise>

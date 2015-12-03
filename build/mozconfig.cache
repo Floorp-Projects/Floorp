@@ -12,7 +12,7 @@ $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.j
 EOF
 
 bucket=
-if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET"; then
+if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
     case "${branch}" in
     try)
         case "${master}" in

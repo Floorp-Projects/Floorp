@@ -186,7 +186,6 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
 // const dom::ArrayBuffer&
 // const dom::SharedArrayBuffer&
 // const dom::ArrayBufferView&
-// const dom::SharedArrayBufferView&
 template<typename BufferT>
 void
 WebGLContext::BufferDataT(GLenum target,
@@ -205,7 +204,7 @@ WebGLContext::BufferDataT(GLenum target,
 
     // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
     // is like intptr_t.
-    if (!CheckedInt<GLsizeiptr>(data.Length()).isValid())
+    if (!CheckedInt<GLsizeiptr>(data.LengthAllowShared()).isValid())
         return ErrorOutOfMemory("bufferData: bad size");
 
     if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
@@ -219,15 +218,17 @@ WebGLContext::BufferDataT(GLenum target,
     MakeContextCurrent();
     InvalidateBufferFetching();
 
-    GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
+    // Warning: Possibly shared memory.  See bug 1225033.
+    GLenum error = CheckedBufferData(target, data.LengthAllowShared(), data.DataAllowShared(), usage);
 
     if (error) {
         GenerateWarning("bufferData generated error %s", ErrorName(error));
         return;
     }
 
-    boundBuffer->SetByteLength(data.Length());
-    if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length()))
+    boundBuffer->SetByteLength(data.LengthAllowShared());
+    // Warning: Possibly shared memory.  See bug 1225033.
+    if (!boundBuffer->ElementArrayCacheBufferData(data.DataAllowShared(), data.LengthAllowShared()))
         return ErrorOutOfMemory("bufferData: out of memory");
 }
 
@@ -258,18 +259,10 @@ WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& data,
     BufferDataT(target, data, usage);
 }
 
-void
-WebGLContext::BufferData(GLenum target, const dom::SharedArrayBufferView& data,
-                         GLenum usage)
-{
-    BufferDataT(target, data, usage);
-}
-
 // BufferT may be one of
 // const dom::ArrayBuffer&
 // const dom::SharedArrayBuffer&
 // const dom::ArrayBufferView&
-// const dom::SharedArrayBufferView&
 template<typename BufferT>
 void
 WebGLContext::BufferSubDataT(GLenum target,
@@ -294,7 +287,7 @@ WebGLContext::BufferSubDataT(GLenum target,
     data.ComputeLengthAndData();
 
     CheckedInt<WebGLsizeiptr> checked_neededByteLength =
-        CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
+        CheckedInt<WebGLsizeiptr>(byteOffset) + data.LengthAllowShared();
 
     if (!checked_neededByteLength.isValid()) {
         ErrorInvalidValue("bufferSubData: Integer overflow computing the needed"
@@ -310,11 +303,13 @@ WebGLContext::BufferSubDataT(GLenum target,
         return;
     }
 
-    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(),
-                                                data.Length());
+    // Warning: Possibly shared memory.  See bug 1225033.
+    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.DataAllowShared(),
+                                                data.LengthAllowShared());
 
     MakeContextCurrent();
-    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
+    // Warning: Possibly shared memory.  See bug 1225033.
+    gl->fBufferSubData(target, byteOffset, data.LengthAllowShared(), data.DataAllowShared());
 }
 
 void
@@ -338,13 +333,6 @@ WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
 void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const dom::ArrayBufferView& data)
-{
-    BufferSubDataT(target, byteOffset, data);
-}
-
-void
-WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                            const dom::SharedArrayBufferView& data)
 {
     BufferSubDataT(target, byteOffset, data);
 }

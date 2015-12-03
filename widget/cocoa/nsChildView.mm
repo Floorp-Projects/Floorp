@@ -465,10 +465,10 @@ nsChildView::ReleaseTitlebarCGContext()
   }
 }
 
-nsresult nsChildView::Create(nsIWidget *aParent,
+nsresult nsChildView::Create(nsIWidget* aParent,
                              nsNativeWidget aNativeParent,
-                             const nsIntRect &aRect,
-                             nsWidgetInitData *aInitData)
+                             const LayoutDeviceIntRect& aRect,
+                             nsWidgetInitData* aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -493,7 +493,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
     gChildViewMethodsSwizzled = true;
   }
 
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
@@ -1354,7 +1354,7 @@ static void blinkRgn(RgnHandle rgn)
 #endif
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1367,10 +1367,10 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
   if ([NSView focusView]) {
     // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
     // don't lose it.
-    [mView setNeedsPendingDisplayInRect:UntypedDevPixelsToCocoaPoints(aRect)];
+    [mView setNeedsPendingDisplayInRect:DevPixelsToCocoaPoints(aRect)];
   }
   else {
-    [mView setNeedsDisplayInRect:UntypedDevPixelsToCocoaPoints(aRect)];
+    [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
   }
 
   return NS_OK;
@@ -2405,7 +2405,7 @@ FindFirstRectOfType(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
   for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
     const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
     if (g.mType == aThemeGeometryType) {
-      return LayoutDeviceIntRect::FromUnknownRect(g.mRect);
+      return g.mRect;
     }
   }
   return LayoutDeviceIntRect();
@@ -2446,11 +2446,11 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   [win placeFullScreenButton:[mView convertRect:DevPixelsToCocoaPoints(fullScreenButtonRect) toView:nil]];
 }
 
-static nsIntRegion
+static LayoutDeviceIntRegion
 GatherThemeGeometryRegion(const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
                           nsITheme::ThemeGeometryType aThemeGeometryType)
 {
-  nsIntRegion region;
+  LayoutDeviceIntRegion region;
   for (size_t i = 0; i < aThemeGeometries.Length(); ++i) {
     const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
     if (g.mType == aThemeGeometryType) {
@@ -2489,17 +2489,17 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
     return;
   }
 
-  nsIntRegion sheetRegion =
+  LayoutDeviceIntRegion sheetRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeSheet);
-  nsIntRegion vibrantLightRegion =
+  LayoutDeviceIntRegion vibrantLightRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeVibrancyLight);
-  nsIntRegion vibrantDarkRegion =
+  LayoutDeviceIntRegion vibrantDarkRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeVibrancyDark);
-  nsIntRegion menuRegion =
+  LayoutDeviceIntRegion menuRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeMenu);
-  nsIntRegion tooltipRegion =
+  LayoutDeviceIntRegion tooltipRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeTooltip);
-  nsIntRegion highlightedMenuItemRegion =
+  LayoutDeviceIntRegion highlightedMenuItemRegion =
     GatherThemeGeometryRegion(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeHighlightedMenuItem);
 
   MakeRegionsNonOverlapping(sheetRegion, vibrantLightRegion, vibrantDarkRegion,
@@ -2713,12 +2713,10 @@ nsChildView::DoRemoteComposition(const LayoutDeviceIntRect& aRenderRect)
 }
 
 void
-nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
+nsChildView::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion)
 {
-  LayoutDeviceIntRegion region =
-    LayoutDeviceIntRegion::FromUnknownRegion(aRegion);
-  if (mDraggableRegion != region) {
-    mDraggableRegion = region;
+  if (mDraggableRegion != aRegion) {
+    mDraggableRegion = aRegion;
     [(ChildView*)mView updateWindowDraggableState];
   }
 }

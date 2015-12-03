@@ -27,6 +27,7 @@ struct DxgiAdapterDesc
     LUID AdapterLuid;
 
     static const DxgiAdapterDesc& From(const DXGI_ADAPTER_DESC& aDesc);
+    const DXGI_ADAPTER_DESC& ToDesc() const;
 #endif
 
     bool operator ==(const DxgiAdapterDesc& aOther) const;

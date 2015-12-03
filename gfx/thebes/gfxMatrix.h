@@ -10,12 +10,7 @@
 #include "gfxTypes.h"
 #include "gfxRect.h"
 #include "mozilla/Attributes.h"
-
-namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
-} // namespace mozilla
+#include "mozilla/gfx/MatrixFwd.h"
 
 // XX - I don't think this class should use gfxFloat at all,
 // but should use 'double' and be called gfxDoubleMatrix;

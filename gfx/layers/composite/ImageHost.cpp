@@ -20,9 +20,6 @@
 #define BIAS_TIME_MS 1.0
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
 
 using namespace gfx;
 

@@ -989,8 +989,8 @@ SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp)
 bool
 SavedStacks::init()
 {
-    uint64_t seed[2];
-    random_generateSeed(seed, mozilla::ArrayLength(seed));
+    mozilla::Array<uint64_t, 2> seed;
+    GenerateXorShift128PlusSeed(seed);
     bernoulli.setRandomState(seed[0], seed[1]);
 
     if (!pcLocationMap.init())

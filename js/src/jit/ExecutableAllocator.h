@@ -28,6 +28,9 @@
 #ifndef jit_ExecutableAllocator_h
 #define jit_ExecutableAllocator_h
 
+#include "mozilla/Maybe.h"
+#include "mozilla/XorShift128PlusRNG.h"
+
 #include <limits>
 #include <stddef.h> // for ptrdiff_t
 
@@ -183,6 +186,10 @@ class ExecutableAllocator
     typedef void (*DestroyCallback)(void* addr, size_t size);
     DestroyCallback destroyCallback;
 
+#ifdef XP_WIN
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
+#endif
+
   public:
     enum ProtectionSetting { Writable, Executable };
 
@@ -263,9 +270,6 @@ class ExecutableAllocator
   private:
     static size_t pageSize;
     static size_t largeAllocSize;
-#ifdef XP_WIN
-    static uint64_t rngSeed;
-#endif
 
     static const size_t OVERSIZE_ALLOCATION = size_t(-1);
 

@@ -15,6 +15,7 @@
 #include "nsPrintfCString.h"
 #include "nsRegionFwd.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/CheckedInt.h"
 
 class gfxASurface;
 class gfxDrawable;
@@ -352,6 +353,19 @@ NextPowerOfTwo(int aNumber)
     aNumber |= aNumber >> 16;
     return ++aNumber;
 #endif
+}
+
+/**
+ * Performs a checked multiply of the given width, height, and bytes-per-pixel
+ * values.
+ */
+static inline CheckedInt<uint32_t>
+SafeBytesForBitmap(uint32_t aWidth, uint32_t aHeight, unsigned aBytesPerPixel)
+{
+  MOZ_ASSERT(aBytesPerPixel > 0);
+  CheckedInt<uint32_t> width = uint32_t(aWidth);
+  CheckedInt<uint32_t> height = uint32_t(aHeight);
+  return width * height * aBytesPerPixel;
 }
 
 } // namespace gfx

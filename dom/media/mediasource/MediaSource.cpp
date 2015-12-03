@@ -90,7 +90,7 @@ IsTypeSupported(const nsAString& aType)
   nsAutoString mimeType;
   nsresult rv = parser.GetType(mimeType);
   if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
   NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
 
@@ -106,7 +106,7 @@ IsTypeSupported(const nsAString& aType)
         if (hasCodecs &&
             DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
                                                codecs) == CANPLAY_NO) {
-          return NS_ERROR_DOM_INVALID_STATE_ERR;
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         return NS_OK;
       } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
@@ -117,7 +117,7 @@ IsTypeSupported(const nsAString& aType)
         if (hasCodecs &&
             DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
                                                codecs) == CANPLAY_NO) {
-          return NS_ERROR_DOM_INVALID_STATE_ERR;
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         return NS_OK;
       }

@@ -14,7 +14,6 @@
 #include "js/Value.h"
 #include "vm/ScopeObject.h"
 #include "vm/SharedArrayObject.h"
-#include "vm/SharedTypedArrayObject.h"
 #include "vm/Symbol.h"
 
 namespace js {

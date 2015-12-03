@@ -310,7 +310,7 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap* ins)
                       ? Operand(HeapReg, mir->offset())
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir))
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
                                                     masm.asmOnOutOfBoundsLabel());
@@ -330,7 +330,7 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap* ins)
         uint32_t after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/true, type, 2, srcAddr,
                                     *ins->output()->output());
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
 
         // Load Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
@@ -340,8 +340,8 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap* ins)
         after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/true, type, 1, srcAddrZ,
                                     LFloatReg(ScratchSimd128Reg));
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw,
-                                    AsmJSHeapAccess::NoLengthCheck, 8));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw,
+                                     wasm::HeapAccess::NoLengthCheck, 8));
 
         // Move ZW atop XY
         masm.vmovlhps(ScratchSimd128Reg, out, out);
@@ -350,10 +350,10 @@ CodeGeneratorX64::emitSimdLoad(LAsmJSLoadHeap* ins)
         loadSimd(type, numElems, srcAddr, out);
         uint32_t after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/true, type, numElems, srcAddr, *ins->output()->output());
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
     }
 
-    if (maybeCmpOffset != AsmJSHeapAccess::NoLengthCheck)
+    if (maybeCmpOffset != wasm::HeapAccess::NoLengthCheck)
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
 }
 
@@ -374,7 +374,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 
     memoryBarrier(mir->barrierBefore());
     OutOfLineLoadTypedArrayOutOfBounds* ool = nullptr;
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
         Label* jumpTo = nullptr;
         if (mir->isAtomicAccess()) {
@@ -410,7 +410,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         masm.bind(ool->rejoin());
     }
     memoryBarrier(mir->barrierAfter());
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::CarryOn, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::CarryOn, maybeCmpOffset));
 }
 
 void
@@ -465,7 +465,7 @@ CodeGeneratorX64::emitSimdStore(LAsmJSStoreHeap* ins)
                       ? Operand(HeapReg, mir->offset())
                       : Operand(HeapReg, ToRegister(ptr), TimesOne, mir->offset());
 
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir))
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
                                                     masm.asmOnOutOfBoundsLabel());
@@ -481,7 +481,7 @@ CodeGeneratorX64::emitSimdStore(LAsmJSStoreHeap* ins)
 
         // It's possible that the Z could be out of bounds when the XY is in
         // bounds. To avoid storing the XY before the exception is thrown, we
-        // store the Z first, and record its offset in the AsmJSHeapAccess so
+        // store the Z first, and record its offset in the HeapAccess so
         // that the signal handler knows to check the bounds of the full
         // access, rather than just the Z.
         masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
@@ -490,23 +490,23 @@ CodeGeneratorX64::emitSimdStore(LAsmJSStoreHeap* ins)
         uint32_t after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/false, type, 1, dstAddrZ,
                                     LFloatReg(ScratchSimd128Reg));
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset, 8));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset, 8));
 
         // Store XY
         before = after;
         storeSimd(type, 2, in, dstAddr);
         after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/false, type, 2, dstAddr, *ins->value());
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw));
     } else {
         uint32_t before = masm.size();
         storeSimd(type, numElems, in, dstAddr);
         uint32_t after = masm.size();
         verifyHeapAccessDisassembly(before, after, /*isLoad=*/false, type, numElems, dstAddr, *ins->value());
-        masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+        masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
     }
 
-    if (maybeCmpOffset != AsmJSHeapAccess::NoLengthCheck)
+    if (maybeCmpOffset != wasm::HeapAccess::NoLengthCheck)
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
 }
 
@@ -527,7 +527,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 
     memoryBarrier(mir->barrierBefore());
     Label* rejoin = nullptr;
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
         Label* jumpTo = nullptr;
         if (mir->isAtomicAccess())
@@ -578,7 +578,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         masm.bind(rejoin);
     }
     memoryBarrier(mir->barrierAfter());
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::CarryOn, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::CarryOn, maybeCmpOffset));
 }
 
 void
@@ -598,7 +598,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     // Note that we can't use
     // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
     // since signal-handler bounds checking is not yet implemented for atomic accesses.
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(-mir->endOffset())).offset();
         masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
@@ -613,7 +613,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     MOZ_ASSERT(mir->offset() == 0,
                "The AsmJS signal handler doesn't yet support emulating "
                "atomic accesses in the case of a fault from an unwrapped offset");
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
 }
 
 void
@@ -633,7 +633,7 @@ CodeGeneratorX64::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
     // Note that we can't use
     // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
     // since signal-handler bounds checking is not yet implemented for atomic accesses.
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ToRegister(ptr), Imm32(-mir->endOffset())).offset();
         masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
@@ -647,7 +647,7 @@ CodeGeneratorX64::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
     MOZ_ASSERT(mir->offset() == 0,
                "The AsmJS signal handler doesn't yet support emulating "
                "atomic accesses in the case of a fault from an unwrapped offset");
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
 }
 
 void
@@ -668,7 +668,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     // Note that we can't use
     // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
     // since signal-handler bounds checking is not yet implemented for atomic accesses.
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
         masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
@@ -692,7 +692,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     MOZ_ASSERT(mir->offset() == 0,
                "The AsmJS signal handler doesn't yet support emulating "
                "atomic accesses in the case of a fault from an unwrapped offset");
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
 }
 
 void
@@ -712,7 +712,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     // Note that we can't use
     // needsAsmJSBoundsCheckBranch/emitAsmJSBoundsCheckBranch/cleanupAfterAsmJSBoundsCheckBranch
     // since signal-handler bounds checking is not yet implemented for atomic accesses.
-    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-mir->endOffset())).offset();
         masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
@@ -726,7 +726,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     MOZ_ASSERT(mir->offset() == 0,
                "The AsmJS signal handler doesn't yet support emulating "
                "atomic accesses in the case of a fault from an unwrapped offset");
-    masm.append(AsmJSHeapAccess(before, AsmJSHeapAccess::Throw, maybeCmpOffset));
+    masm.append(wasm::HeapAccess(before, wasm::HeapAccess::Throw, maybeCmpOffset));
 }
 
 void

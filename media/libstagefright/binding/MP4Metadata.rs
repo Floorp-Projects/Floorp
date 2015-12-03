@@ -1046,11 +1046,13 @@ fn skip<T: BufRead>(src: &mut T, bytes: usize) -> Result<usize> {
 }
 
 fn media_time_to_ms(time: MediaScaledTime, scale: MediaTimeScale) -> u64 {
+    assert!(scale.0 != 0);
     time.0 * 1000000 / scale.0
 }
 
 fn track_time_to_ms(time: TrackScaledTime, scale: TrackTimeScale) -> u64 {
     assert!(time.1 == scale.1);
+    assert!(scale.0 != 0);
     time.0 * 1000000 / scale.0
 }
 

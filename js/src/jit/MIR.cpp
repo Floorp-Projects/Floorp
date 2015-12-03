@@ -4752,7 +4752,7 @@ MAsmJSUnsignedToFloat32::foldsTo(TempAllocator& alloc)
 }
 
 MAsmJSCall*
-MAsmJSCall::New(TempAllocator& alloc, const CallSiteDesc& desc, Callee callee,
+MAsmJSCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee callee,
                 const Args& args, MIRType resultType, size_t spIncrement)
 {
     MAsmJSCall* call = new(alloc) MAsmJSCall(desc, callee, spIncrement);
@@ -4962,9 +4962,6 @@ jit::ElementAccessIsAnyTypedArray(CompilerConstraintList* constraints,
         return false;
 
     *arrayType = types->getTypedArrayType(constraints);
-    if (*arrayType != Scalar::MaxTypedArrayViewType)
-        return true;
-    *arrayType = types->getSharedTypedArrayType(constraints);
     return *arrayType != Scalar::MaxTypedArrayViewType;
 }
 

@@ -603,9 +603,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branch32(cond, Address(scratch, 0), rhs, label);
         }
     }
-    void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label* label) {
+    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
         ScratchRegisterScope scratch(asMasm());
-        mov(AsmJSImmPtr(lhs.kind()), scratch);
+        mov(lhs, scratch);
         branch32(cond, Address(scratch, 0), rhs, label);
     }
     void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
@@ -648,10 +648,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branchPtr(cond, Operand(scratch, 0x0), ptr, label);
         }
     }
-    void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label* label) {
+    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
         ScratchRegisterScope scratch(asMasm());
         MOZ_ASSERT(ptr != scratch);
-        mov(AsmJSImmPtr(addr.kind()), scratch);
+        mov(addr, scratch);
         branchPtr(cond, Operand(scratch, 0x0), ptr, label);
     }
 
@@ -724,7 +724,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmPtr imm, Register dest) {
         mov(imm, dest);
     }
-    void movePtr(AsmJSImmPtr imm, Register dest) {
+    void movePtr(wasm::SymbolicAddress imm, Register dest) {
         mov(imm, dest);
     }
     void movePtr(ImmGCPtr imm, Register dest) {

@@ -12,12 +12,13 @@
 #include "nsStringStream.h"
 #include "nsIStreamListener.h"
 #include "nsCRT.h"
-#include "nsAutoPtr.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 
 #include "ParseFTPList.h"
 #include <algorithm>
+
+#include "mozilla/UniquePtrExtensions.h"
 
 //
 // Log module for FTP dir listing stream converter logging...
@@ -85,10 +86,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     NS_ENSURE_SUCCESS(rv, rv);
     streamLen = (uint32_t)std::min(streamLen64, uint64_t(UINT32_MAX - 1));
 
-    nsAutoArrayPtr<char> buffer(new char[streamLen + 1]);
+    auto buffer = MakeUniqueFallible<char[]>(streamLen + 1);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = inStr->Read(buffer, streamLen, &read);
+    rv = inStr->Read(buffer.get(), streamLen, &read);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // the dir listings are ascii text, null terminate this sucker.
@@ -99,19 +100,19 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     if (!mBuffer.IsEmpty()) {
         // we have data left over from a previous OnDataAvailable() call.
         // combine the buffers so we don't lose any data.
-        mBuffer.Append(buffer);
+        mBuffer.Append(buffer.get());
 
-        buffer = new char[mBuffer.Length()+1];
+        buffer = MakeUniqueFallible<char[]>(mBuffer.Length()+1);
         NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
-        strncpy(buffer, mBuffer.get(), mBuffer.Length()+1);
+        strncpy(buffer.get(), mBuffer.get(), mBuffer.Length()+1);
         mBuffer.Truncate();
     }
 
 #ifndef DEBUG_dougt
     MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get()) );
 #else
-    printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
+    printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get());
 #endif // DEBUG_dougt
 
     nsAutoCString indexFormat;
@@ -127,7 +128,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         mSentHeading = true;
     }
 
-    char *line = buffer;
+    char *line = buffer.get();
     line = DigestBufferLines(line, indexFormat);
 
 #ifndef DEBUG_dougt

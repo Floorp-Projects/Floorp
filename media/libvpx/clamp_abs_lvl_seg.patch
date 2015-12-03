@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Gerald Squelart <gsquelart@mozilla.com>
+# Parent  b9e641a34c2fb9e6f3d3a02200bc2d800b6ca168
+Bug 1224363 - Clamp seg_lvl also in abs-value mode - r=rillian
+
+Even when the segment feature data is in absolute mode, it is still read as a
+6-bit value with an added sign, so it could have values between -63 and +63.
+Later, this signed value is used without checks as a filter level, which is
+used to access an entry in an array of size MAX_LOOP_FILTER+1=64.
+
+This patch just extends the existing clamping (that was done only to relative-
+mode data) to absolute mode data, before it is blindly 'memset' in
+lfi->lvl[seg][0], which was where the out-of-bound filter_value was read in
+subsequent vp8_loop_filter_row_simple.
+
+diff --git a/media/libvpx/vp8/common/loopfilter.c b/media/libvpx/vp8/common/loopfilter.c
+--- a/media/libvpx/vp8/common/loopfilter.c
++++ b/media/libvpx/vp8/common/loopfilter.c
+@@ -136,18 +136,18 @@ void vp8_loop_filter_frame_init(VP8_COMM
+             /* Abs value */
+             if (mbd->mb_segement_abs_delta == SEGMENT_ABSDATA)
+             {
+                 lvl_seg = mbd->segment_feature_data[MB_LVL_ALT_LF][seg];
+             }
+             else  /* Delta Value */
+             {
+                 lvl_seg += mbd->segment_feature_data[MB_LVL_ALT_LF][seg];
+-                lvl_seg = (lvl_seg > 0) ? ((lvl_seg > 63) ? 63: lvl_seg) : 0;
+             }
++            lvl_seg = (lvl_seg > 0) ? ((lvl_seg > 63) ? 63: lvl_seg) : 0;
+         }
+ 
+         if (!mbd->mode_ref_lf_delta_enabled)
+         {
+             /* we could get rid of this if we assume that deltas are set to
+              * zero when not in use; encoder always uses deltas
+              */
+             memset(lfi->lvl[seg][0], lvl_seg, 4 * 4 );

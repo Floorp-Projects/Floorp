@@ -18,7 +18,6 @@ class WebGLVertexArrayObject;
 namespace dom {
 class OwningUnsignedLongOrUint32ArrayOrBoolean;
 class OwningWebGLBufferOrLongLong;
-class ArrayBufferViewOrSharedArrayBufferView;
 } // namespace dom
 
 class WebGL2Context
@@ -97,11 +96,11 @@ public:
     void TexImage3D(GLenum target, GLint level, GLenum internalFormat, GLsizei width,
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType,
-                    const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& pixels);
+                    const dom::Nullable<dom::ArrayBufferView>& pixels);
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
                        GLenum unpackFormat, GLenum unpackType,
-                       const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& pixels,
+                       const dom::Nullable<dom::ArrayBufferView>& pixels,
                        ErrorResult& out_rv);
     void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                        GLint zOffset, GLenum unpackFormat, GLenum unpackType,
@@ -126,11 +125,11 @@ public:
     void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLsizei depth,
                               GLint border,
-                              const dom::ArrayBufferViewOrSharedArrayBufferView& data);
+                              const dom::ArrayBufferView& data);
     void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
                                  GLint zOffset, GLsizei width, GLsizei height,
                                  GLsizei depth, GLenum sizedUnpackFormat,
-                                 const dom::ArrayBufferViewOrSharedArrayBufferView& data);
+                                 const dom::ArrayBufferView& data);
 
 
     // -------------------------------------------------------------------------

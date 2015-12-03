@@ -26,7 +26,7 @@ enum nsPluginTagType {
 
 // Do not make this interface scriptable, because the virtual functions in C++
 // blocks will make script call the wrong functions.
-[uuid(518e7465-e1bc-4490-a30e-0ba9d791aaa8)]
+[uuid(7d65452e-c167-4cba-a0e3-ddc61bdde8c3)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -101,6 +101,10 @@ interface nsIPluginInstanceOwner : nsISupports
 %{C++
   virtual NPBool  ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                double *destX, double *destY, NPCoordinateSpace destSpace) = 0;
+  virtual NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                   void *initData, NPAsyncSurface *surface) = 0;
+  virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface) = 0;
+  virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) = 0;
 %}
 
   void setEventModel(in int32_t eventModel);

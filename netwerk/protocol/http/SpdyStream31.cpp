@@ -77,8 +77,8 @@ SpdyStream31::SpdyStream31(nsAHttpTransaction *httpTransaction,
   mRemoteWindow = spdySession->GetServerInitialStreamWindow();
   mLocalWindow = spdySession->PushAllowance();
 
-  mTxInlineFrame = new uint8_t[mTxInlineFrameSize];
-  mDecompressBuffer = new char[mDecompressBufferSize];
+  mTxInlineFrame = MakeUnique<uint8_t[]>(mTxInlineFrameSize);
+  mDecompressBuffer = MakeUnique<char[]>(mDecompressBufferSize);
 }
 
 SpdyStream31::~SpdyStream31()
@@ -381,11 +381,11 @@ SpdyStream31::GenerateSynFrame()
   // 4 to 7 are length and flags, we'll fill that in later
 
   uint32_t networkOrderID = PR_htonl(mStreamID);
-  memcpy(mTxInlineFrame + 8, &networkOrderID, 4);
+  memcpy(&mTxInlineFrame[8], &networkOrderID, 4);
 
   // this is the associated-to field, which is not used sending
   // from the client in the http binding
-  memset (mTxInlineFrame + 12, 0, 4);
+  memset (&mTxInlineFrame[12], 0, 4);
 
   // Priority flags are the E0 mask of byte 16.
   // 0 is highest priority, 7 is lowest.
@@ -737,7 +737,7 @@ SpdyStream31::TransmitFrame(const char *buf,
       mTxStreamFrameSize < SpdySession31::kDefaultBufferSize &&
       mTxInlineFrameUsed + mTxStreamFrameSize < mTxInlineFrameSize) {
     LOG3(("Coalesce Transmit"));
-    memcpy (mTxInlineFrame + mTxInlineFrameUsed,
+    memcpy (&mTxInlineFrame[mTxInlineFrameUsed],
             buf, mTxStreamFrameSize);
     if (countUsed)
       *countUsed += mTxStreamFrameSize;
@@ -1388,7 +1388,7 @@ SpdyStream31::ExecuteCompress(uint32_t flushMode)
       avail = mTxInlineFrameSize - mTxInlineFrameUsed;
     }
 
-    mZlib->next_out = mTxInlineFrame + mTxInlineFrameUsed;
+    mZlib->next_out = &mTxInlineFrame[mTxInlineFrameUsed];
     mZlib->avail_out = avail;
     deflate(mZlib, flushMode);
     mTxInlineFrameUsed += avail - mZlib->avail_out;

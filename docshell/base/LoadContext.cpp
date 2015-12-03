@@ -7,7 +7,34 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
+#include "nsContentUtils.h"
+#include "xpcpublic.h"
 
+bool
+nsILoadContext::GetOriginAttributes(mozilla::DocShellOriginAttributes& aAttrs)
+{
+  mozilla::dom::AutoJSAPI jsapi;
+  bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
+  NS_ENSURE_TRUE(ok, false);
+  JS::Rooted<JS::Value> v(jsapi.cx());
+  nsresult rv = GetOriginAttributes(&v);
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(v.isObject(), false);
+  JS::Rooted<JSObject*> obj(jsapi.cx(), &v.toObject());
+
+  // If we're JS-implemented, the object will be left in a different (System-Principaled)
+  // scope, so we may need to enter its compartment.
+  MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)));
+  JSAutoCompartment ac(jsapi.cx(), obj);
+
+  mozilla::DocShellOriginAttributes attrs;
+  ok = attrs.Init(jsapi.cx(), v);
+  NS_ENSURE_TRUE(ok, false);
+  aAttrs = attrs;
+  return true;
+}
+  
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)

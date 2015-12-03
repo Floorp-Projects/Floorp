@@ -607,7 +607,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   if (!leftOver.IsEmpty()) {
     const nsRect* r;
     for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
-      nsIntRect bounds = ViewToWidget(aWidgetView, *r);
+      LayoutDeviceIntRect bounds = ViewToWidget(aWidgetView, *r);
       widget->Invalidate(bounds);
     }
   }
@@ -1063,7 +1063,8 @@ nsViewManager::GetRootWidget(nsIWidget **aWidget)
   *aWidget = nullptr;
 }
 
-nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
+LayoutDeviceIntRect
+nsViewManager::ViewToWidget(nsView* aView, const nsRect& aRect) const
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
 
@@ -1071,7 +1072,8 @@ nsIntRect nsViewManager::ViewToWidget(nsView *aView, const nsRect &aRect) const
   nsRect rect = aRect + aView->ViewToWidgetOffset();
 
   // finally, convert to device coordinates.
-  return rect.ToOutsidePixels(AppUnitsPerDevPixel());
+  return LayoutDeviceIntRect::FromUnknownRect(
+    rect.ToOutsidePixels(AppUnitsPerDevPixel()));
 }
 
 void

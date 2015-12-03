@@ -38,6 +38,8 @@ public:
   NS_DECL_NSICLASSINFO
   NS_DECL_NSIIPCSERIALIZABLEURI
 
+  NS_IMETHOD SetScheme(const nsACString &aProtocol) override;
+
   // Override CloneInternal() and EqualsInternal()
   virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
                                  nsIURI** aClone) override;
