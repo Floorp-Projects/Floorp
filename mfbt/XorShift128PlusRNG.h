@@ -10,11 +10,10 @@
 #define mozilla_XorShift128Plus_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 
-#include <math.h>
-#include <memory.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 namespace mozilla {
 namespace non_crypto {
@@ -79,10 +78,10 @@ class XorShift128PlusRNG {
      * is the width of the bitfield in the in-memory format, so we must add one
      * to get the mantissa's range.
      */
-    static const int kMantissaBits =
+    static MOZ_CONSTEXPR_VAR int kMantissaBits =
       mozilla::FloatingPoint<double>::kExponentShift + 1;
-    uint64_t mantissa = next() & ((1ULL << kMantissaBits) - 1);
-    return ldexp(static_cast<double>(mantissa), -kMantissaBits);
+    uint64_t mantissa = next() & ((UINT64_C(1) << kMantissaBits) - 1);
+    return double(mantissa) / (UINT64_C(1) << kMantissaBits);
   }
 
   /*
