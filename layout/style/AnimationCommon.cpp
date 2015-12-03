@@ -236,9 +236,10 @@ CommonAnimationManager::ExtractComputedValueForTransition(
 }
 
 AnimationCollection*
-CommonAnimationManager::GetAnimations(dom::Element *aElement,
-                                      nsCSSPseudoElements::Type aPseudoType,
-                                      bool aCreateIfNeeded)
+CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
+                                               nsCSSPseudoElements::Type
+                                                 aPseudoType,
+                                               bool aCreateIfNeeded)
 {
   if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
     // Early return for the most common case.
@@ -318,7 +319,7 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
   }
 
   AnimationCollection* collection =
-    GetAnimations(aElement, aPseudoType, false);
+    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
   if (!collection) {
     return nullptr;
   }
