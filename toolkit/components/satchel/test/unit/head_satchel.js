@@ -43,7 +43,7 @@ function searchEntries(terms, params, iter) {
                                       handleError: function (error) {
                                         do_throw("Error occurred searching form history: " + error);
                                       },
-                                      handleCompletion: function (reason) { if (!reason) iter.send(results); }
+                                      handleCompletion: function (reason) { if (!reason) iter.next(results); }
                                     });
 }
 

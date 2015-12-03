@@ -93,7 +93,7 @@ function promiseCountEntries(name, value, checkFn)
   return deferred.promise;
 }
 
-add_task(function ()
+add_task(function* ()
 {
   let oldSupportsDeletedTable = FormHistory._supportsDeletedTable;
   FormHistory._supportsDeletedTable = true;

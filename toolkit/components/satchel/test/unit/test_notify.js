@@ -46,7 +46,7 @@ function next_test()
   testIterator.next();
 }
 
-function run_test_steps() {
+function* run_test_steps() {
 
 try {
 
