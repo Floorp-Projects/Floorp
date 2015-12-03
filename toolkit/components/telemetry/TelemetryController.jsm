@@ -739,6 +739,7 @@ var Impl = {
       try {
         // TODO: This should probably happen after all the delayed init here.
         this._initialized = true;
+        TelemetryEnvironment.delayedInit();
 
         yield TelemetrySend.setup(this._testMode);
 
