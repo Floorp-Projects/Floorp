@@ -73,7 +73,11 @@ var modules = {
     uri: "chrome://browser/content/aboutLogins.xhtml",
     privileged: true
   },
-}
+  accounts: {
+    uri: "chrome://browser/content/aboutAccounts.xhtml",
+    privileged: true
+  },
+};
 
 if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
   modules['healthreport'] = {
@@ -84,12 +88,6 @@ if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
 if (AppConstants.MOZ_DEVICES) {
   modules['devices'] = {
     uri: "chrome://browser/content/aboutDevices.xhtml",
-    privileged: true
-  };
-}
-if (!AppConstants.MOZ_ANDROID_NATIVE_ACCOUNT_UI) {
-  modules['accounts'] = {
-    uri: "chrome://browser/content/aboutAccounts.xhtml",
     privileged: true
   };
 }

@@ -5,31 +5,5 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
   <color name="fxaccount_textColor">#424f59</color>
-  <color name="fxaccount_textColorSubdued">#8a9ba8</color>
-
-  <color name="fxaccount_linkified_textColor">#8a9ba8</color>
-  <color name="fxaccount_linkified_textColorLink">#0095dd</color>
-  <color name="fxaccount_linkified_textColorLinkSubdued">#8a9ba8</color>
-
-  <color name="fxaccount_error">#d63920</color>
-
   <color name="fxaccount_error_preference_backgroundcolor">#fad4d2</color>
-
-  <color name="fxaccount_button_textColor">#ffffff</color>
-  <color name="fxaccount_button_background_active">#0095dd</color>
-  <color name="fxaccount_button_background_hit">#0088cc</color>
-  <color name="fxaccount_button_background_inactive">#8a9ba8</color>
-  <color name="fxaccount_input_textColor">#424f59</color>
-  <color name="fxaccount_input_textColor_pressed">#424f59</color>
-  <color name="fxaccount_input_textColor_inactive">#8a9ba8</color>
-  <color name="fxaccount_input_textColorHint">#8a9ba8</color>
-  <color name="fxaccount_link_textColor">#0095dd</color>
-  <color name="fxaccount_link_textColor_pressed">#0088cc</color>
-  <color name="fxaccount_link_textColor_inactive">#8a9ba8</color>
-  <color name="fxaccount_input_borderActive">#0095dd</color>
-  <color name="fxaccount_input_borderInactive">#8a9ba8</color>
-  <color name="fxaccount_password_show_textcolor">#8a9ba8</color>
-  <color name="fxaccount_password_show_backgroundcolor">#ffffff</color>
-  <color name="fxaccount_password_hide_textcolor">#ffffff</color>
-  <color name="fxaccount_password_hide_backgroundcolor">#8a9ba8</color>
 </resources>

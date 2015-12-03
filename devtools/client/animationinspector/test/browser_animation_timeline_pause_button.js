@@ -64,7 +64,7 @@ add_task(function*() {
        "animation to complete");
   yield selectNode(".negative-delay", inspector);
   yield reloadTab(inspector);
-  yield waitForOutOfBoundScrubber(timeline);
+  yield waitForScrubberStopped(timeline);
 
   ok(btn.classList.contains("paused"),
      "The button is in paused state once finite animations are done");
@@ -90,5 +90,16 @@ function waitForOutOfBoundScrubber({win, scrubberEl}) {
       }
     }
     check();
+  });
+}
+
+function waitForScrubberStopped(timeline) {
+  return new Promise(resolve => {
+    timeline.on("timeline-data-changed", function onTimelineData(e, {isMoving}) {
+      if (!isMoving) {
+        timeline.off("timeline-data-changed", onTimelineData);
+        resolve();
+      }
+    });
   });
 }

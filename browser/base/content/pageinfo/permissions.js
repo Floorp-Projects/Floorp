@@ -297,14 +297,13 @@ function initPluginsRow() {
     }
   }
 
-  let entries = [{name: item[1], permission: item[0]} for (item of permissionMap)];
+  let entries = Array.from(permissionMap, item => ({ name: item[1], permission: item[0] }));
+
   entries.sort(function(a, b) {
     return a.name < b.name ? -1 : (a.name == b.name ? 0 : 1);
   });
 
-  let permissionEntries = [
-    fillInPluginPermissionTemplate(p.name, p.permission) for (p of entries)
-  ];
+  let permissionEntries = entries.map(p => fillInPluginPermissionTemplate(p.name, p.permission));
 
   let permPluginsRow = document.getElementById("perm-plugins-row");
   clearPluginPermissionTemplate();
