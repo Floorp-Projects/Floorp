@@ -335,9 +335,6 @@ public:
     }
   }
 
-  static void LogAsyncAnimationFailure(nsCString& aMessage,
-                                       const nsIContent* aContent = nullptr);
-
   dom::Element *mElement;
 
   // the atom we use in mElement's prop table (must be a static atom,
