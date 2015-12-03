@@ -122,7 +122,10 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
   if (!content) {
     return nullptr;
   }
-  nsIAtom* animProp;
+
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+
   if (aFrame->IsGeneratedContentFrame()) {
     nsIFrame* parent = aFrame->GetParent();
     if (parent->IsGeneratedContentFrame()) {
@@ -130,9 +133,9 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
     }
     nsIAtom* name = content->NodeInfo()->NameAtom();
     if (name == nsGkAtoms::mozgeneratedcontentbefore) {
-      animProp = GetAnimationsBeforeAtom();
+      pseudoType = nsCSSPseudoElements::ePseudo_before;
     } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
-      animProp = GetAnimationsAfterAtom();
+      pseudoType = nsCSSPseudoElements::ePseudo_after;
     } else {
       return nullptr;
     }
@@ -144,10 +147,14 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
     if (!content->MayHaveAnimations()) {
       return nullptr;
     }
-    animProp = GetAnimationsAtom();
   }
 
-  return static_cast<AnimationCollection*>(content->GetProperty(animProp));
+  if (!content->IsElement()) {
+    return nullptr;
+  }
+
+  return GetAnimationCollection(content->AsElement(), pseudoType,
+                                false /* aCreateIfNeeded */);
 }
 
 nsRestyleHint
