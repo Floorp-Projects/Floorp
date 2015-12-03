@@ -1,3 +1,5 @@
+"use strict";
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,8 +19,7 @@ var {
 // EventManager-like class specifically for WebRequest. Inherits from
 // SingletonEventManager. Takes care of converting |details| parameter
 // when invoking listeners.
-function WebRequestEventManager(context, eventName)
-{
+function WebRequestEventManager(context, eventName) {
   let name = `webRequest.${eventName}`;
   let register = (callback, filter, info) => {
     let listener = data => {

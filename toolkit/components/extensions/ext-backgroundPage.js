@@ -1,3 +1,5 @@
+"use strict";
+
 var { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -6,8 +8,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 var backgroundPagesMap = new WeakMap();
 
 // Responsible for the background_page section of the manifest.
-function BackgroundPage(options, extension)
-{
+function BackgroundPage(options, extension) {
   this.extension = extension;
   this.scripts = options.scripts || [];
   this.page = options.page || null;
@@ -90,6 +91,7 @@ BackgroundPage.prototype = {
   },
 };
 
+/* eslint-disable mozilla/balanced-listeners */
 extensions.on("manifest_background", (type, directive, extension, manifest) => {
   let bgPage = new BackgroundPage(manifest.background, extension);
   bgPage.build();
@@ -102,6 +104,7 @@ extensions.on("shutdown", (type, extension) => {
     backgroundPagesMap.delete(extension);
   }
 });
+/* eslint-enable mozilla/balanced-listeners */
 
 extensions.registerAPI((extension, context) => {
   return {
