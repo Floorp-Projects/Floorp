@@ -21,7 +21,7 @@ OptimizationInfos IonOptimizations;
 void
 OptimizationInfo::initNormalOptimizationInfo()
 {
-    level_ = Optimization_Normal;
+    level_ = OptimizationLevel::Normal;
 
     eaa_ = true;
     edgeCaseAnalysis_ = true;
@@ -62,7 +62,7 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     initNormalOptimizationInfo();
 
     ama_ = true;
-    level_ = Optimization_AsmJS;
+    level_ = OptimizationLevel::AsmJS;
     eagerSimdUnbox_ = false;           // AsmJS has no boxing / unboxing.
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
@@ -110,14 +110,14 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
 
 OptimizationInfos::OptimizationInfos()
 {
-    infos_[Optimization_Normal - 1].initNormalOptimizationInfo();
-    infos_[Optimization_AsmJS - 1].initAsmjsOptimizationInfo();
+    infos_[OptimizationLevel::Normal].initNormalOptimizationInfo();
+    infos_[OptimizationLevel::AsmJS].initAsmjsOptimizationInfo();
 
 #ifdef DEBUG
     OptimizationLevel level = firstLevel();
     while (!isLastLevel(level)) {
         OptimizationLevel next = nextLevel(level);
-        MOZ_ASSERT(level < next);
+        MOZ_ASSERT_IF(level != OptimizationLevel::DontCompile, level < next);
         level = next;
     }
 #endif
@@ -128,29 +128,31 @@ OptimizationInfos::nextLevel(OptimizationLevel level) const
 {
     MOZ_ASSERT(!isLastLevel(level));
     switch (level) {
-      case Optimization_DontCompile:
-        return Optimization_Normal;
-      default:
-        MOZ_CRASH("Unknown optimization level.");
+      case OptimizationLevel::DontCompile:
+        return OptimizationLevel::Normal;
+      case OptimizationLevel::Normal:
+      case OptimizationLevel::AsmJS:
+      case OptimizationLevel::Count:;
     }
+    MOZ_CRASH("Unknown optimization level.");
 }
 
 OptimizationLevel
 OptimizationInfos::firstLevel() const
 {
-    return nextLevel(Optimization_DontCompile);
+    return nextLevel(OptimizationLevel::DontCompile);
 }
 
 bool
 OptimizationInfos::isLastLevel(OptimizationLevel level) const
 {
-    return level == Optimization_Normal;
+    return level == OptimizationLevel::Normal;
 }
 
 OptimizationLevel
 OptimizationInfos::levelForScript(JSScript* script, jsbytecode* pc) const
 {
-    OptimizationLevel prev = Optimization_DontCompile;
+    OptimizationLevel prev = OptimizationLevel::DontCompile;
 
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);

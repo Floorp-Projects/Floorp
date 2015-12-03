@@ -7,6 +7,8 @@
 #ifndef jit_IonOptimizationLevels_h
 #define jit_IonOptimizationLevels_h
 
+#include "mozilla/EnumeratedArray.h"
+
 #include "jsbytecode.h"
 #include "jstypes.h"
 
@@ -16,12 +18,12 @@
 namespace js {
 namespace jit {
 
-enum OptimizationLevel
+enum class OptimizationLevel : uint8_t
 {
-    Optimization_DontCompile,
-    Optimization_Normal,
-    Optimization_AsmJS,
-    Optimization_Count
+    Normal,
+    AsmJS,
+    Count,
+    DontCompile
 };
 
 #ifdef JS_JITSPEW
@@ -29,15 +31,15 @@ inline const char*
 OptimizationLevelString(OptimizationLevel level)
 {
     switch (level) {
-      case Optimization_DontCompile:
+      case OptimizationLevel::DontCompile:
         return "Optimization_DontCompile";
-      case Optimization_Normal:
+      case OptimizationLevel::Normal:
         return "Optimization_Normal";
-      case Optimization_AsmJS:
+      case OptimizationLevel::AsmJS:
         return "Optimization_AsmJS";
-      default:
-        MOZ_CRASH("Invalid OptimizationLevel");
+      case OptimizationLevel::Count:;
     }
+    MOZ_CRASH("Invalid OptimizationLevel");
 }
 #endif
 
@@ -266,16 +268,13 @@ class OptimizationInfo
 class OptimizationInfos
 {
   private:
-    OptimizationInfo infos_[Optimization_Count - 1];
+    mozilla::EnumeratedArray<OptimizationLevel, OptimizationLevel::Count, OptimizationInfo> infos_;
 
   public:
     OptimizationInfos();
 
     const OptimizationInfo* get(OptimizationLevel level) const {
-        MOZ_ASSERT(level < Optimization_Count);
-        MOZ_ASSERT(level != Optimization_DontCompile);
-
-        return &infos_[level - 1];
+        return &infos_[level];
     }
 
     OptimizationLevel nextLevel(OptimizationLevel level) const;
