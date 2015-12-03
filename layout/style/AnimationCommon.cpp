@@ -456,14 +456,8 @@ AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
     const KeyframeEffectReadOnly* effect = anim->GetEffect();
     MOZ_ASSERT(effect, "A playing animation should have an effect");
 
-    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
-         propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = effect->Properties()[propIdx];
-      if (!KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
-            aFrame,
-            prop.mProperty)) {
-        return false;
-      }
+    if (effect->ShouldBlockCompositorAnimations(aFrame)) {
+      return false;
     }
   }
 
