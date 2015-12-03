@@ -68,7 +68,10 @@ this.FileUtils = {
     if (shouldCreate) {
       try {
         dir.create(Ci.nsIFile.DIRECTORY_TYPE, this.PERMS_DIRECTORY);
-      } catch (ex if ex.result == Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+          throw ex;
+        }
         // Ignore the exception due to a directory that already exists.
       }
     }
