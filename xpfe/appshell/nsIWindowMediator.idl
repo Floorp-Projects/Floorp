@@ -191,3 +191,15 @@ interface nsIWindowMediator: nsISupports
     */
   void removeListener(in nsIWindowMediatorListener aListener);
 };
+
+// XXXcatalinb: This should be merged to nsIWindowMediator. Using this
+// to avoid UUID change in aurora.
+[scriptable, uuid(88b54988-7f3c-40d2-a625-7e42a9c196c2)]
+interface nsIWindowMediator_44 : nsIWindowMediator
+{
+  /**
+   * Same as getMostRecentWindow, but ignores private browsing
+   * windows.
+   */
+  nsIDOMWindow getMostRecentNonPBWindow(in wstring aWindowType);
+};
