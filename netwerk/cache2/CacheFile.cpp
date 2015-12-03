@@ -547,7 +547,25 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
         mMetadata->SetHandle(mHandle);
 
         // Write all cached chunks, otherwise they may stay unwritten.
-        mCachedChunks.Enumerate(&CacheFile::WriteAllCachedChunks, this);
+        for (auto iter = mCachedChunks.Iter(); !iter.Done(); iter.Next()) {
+          uint32_t idx = iter.Key();
+          const RefPtr<CacheFileChunk>& chunk = iter.Data();
+
+          LOG(("CacheFile::OnFileOpened() - write [this=%p, idx=%u, chunk=%p]",
+               this, idx, chunk.get()));
+
+          mChunks.Put(idx, chunk);
+          chunk->mFile = this;
+          chunk->mActiveChunk = true;
+
+          MOZ_ASSERT(chunk->IsReady());
+
+          // This would be cleaner if we had an nsRefPtr constructor that took
+          // a RefPtr<Derived>.
+          ReleaseOutsideLock(RefPtr<nsISupports>(chunk));
+
+          iter.Remove();
+        }
 
         return NS_OK;
       }
@@ -1714,8 +1732,29 @@ CacheFile::NotifyListenersAboutOutputRemoval()
   AssertOwnsLock();
 
   // First fail all chunk listeners that wait for non-existent chunk
-  mChunkListeners.Enumerate(&CacheFile::FailListenersIfNonExistentChunk,
-                            this);
+  for (auto iter = mChunkListeners.Iter(); !iter.Done(); iter.Next()) {
+    uint32_t idx = iter.Key();
+    nsAutoPtr<ChunkListeners>& listeners = iter.Data();
+
+    LOG(("CacheFile::NotifyListenersAboutOutputRemoval() - fail "
+         "[this=%p, idx=%u]", this, idx));
+
+    RefPtr<CacheFileChunk> chunk;
+    mChunks.Get(idx, getter_AddRefs(chunk));
+    if (chunk) {
+      MOZ_ASSERT(!chunk->IsReady());
+      continue;
+    }
+
+    for (uint32_t i = 0 ; i < listeners->mItems.Length() ; i++) {
+      ChunkListenerItem *item = listeners->mItems[i];
+      NotifyChunkListener(item->mCallback, item->mTarget,
+                          NS_ERROR_NOT_AVAILABLE, idx, nullptr);
+      delete item;
+    }
+
+    iter.Remove();
+  }
 
   // Fail all update listeners
   mChunks.Enumerate(&CacheFile::FailUpdateListeners, this);
@@ -1837,57 +1876,6 @@ CacheFile::PostWriteTimer()
   LOG(("CacheFile::PostWriteTimer() [this=%p]", this));
 
   CacheFileIOManager::ScheduleMetadataWrite(this);
-}
-
-PLDHashOperator
-CacheFile::WriteAllCachedChunks(const uint32_t& aIdx,
-                                RefPtr<CacheFileChunk>& aChunk,
-                                void* aClosure)
-{
-  CacheFile *file = static_cast<CacheFile*>(aClosure);
-
-  LOG(("CacheFile::WriteAllCachedChunks() [this=%p, idx=%u, chunk=%p]",
-       file, aIdx, aChunk.get()));
-
-  file->mChunks.Put(aIdx, aChunk);
-  aChunk->mFile = file;
-  aChunk->mActiveChunk = true;
-
-  MOZ_ASSERT(aChunk->IsReady());
-
-  // this would be cleaner if we had an nsRefPtr constructor
-  // that took a RefPtr<Derived>
-  file->ReleaseOutsideLock(RefPtr<nsISupports>(aChunk));
-
-  return PL_DHASH_REMOVE;
-}
-
-PLDHashOperator
-CacheFile::FailListenersIfNonExistentChunk(
-  const uint32_t& aIdx,
-  nsAutoPtr<ChunkListeners>& aListeners,
-  void* aClosure)
-{
-  CacheFile *file = static_cast<CacheFile*>(aClosure);
-
-  LOG(("CacheFile::FailListenersIfNonExistentChunk() [this=%p, idx=%u]",
-       file, aIdx));
-
-  RefPtr<CacheFileChunk> chunk;
-  file->mChunks.Get(aIdx, getter_AddRefs(chunk));
-  if (chunk) {
-    MOZ_ASSERT(!chunk->IsReady());
-    return PL_DHASH_NEXT;
-  }
-
-  for (uint32_t i = 0 ; i < aListeners->mItems.Length() ; i++) {
-    ChunkListenerItem *item = aListeners->mItems[i];
-    file->NotifyChunkListener(item->mCallback, item->mTarget,
-                              NS_ERROR_NOT_AVAILABLE, aIdx, nullptr);
-    delete item;
-  }
-
-  return PL_DHASH_REMOVE;
 }
 
 PLDHashOperator
