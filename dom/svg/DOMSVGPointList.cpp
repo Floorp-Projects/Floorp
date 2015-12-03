@@ -321,6 +321,7 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
   if (AnimListMirrorsBaseList()) {
     DOMSVGPointList *animVal =
       GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+    MOZ_ASSERT(animVal, "animVal must be a valid pointer");
     if (!animVal->mItems.SetCapacity(
           animVal->mItems.Length() + 1, fallible)) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
