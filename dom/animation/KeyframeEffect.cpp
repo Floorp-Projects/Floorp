@@ -9,6 +9,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
@@ -55,7 +56,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
   aRetVal.mEndTime
     = std::max(aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay, 0.0);
-  aRetVal.mLocalTime = dom::AnimationUtils::TimeDurationToDouble(aLocalTime);
+  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
   if (!aRetVal.mProgress.IsNull()) {
     // Convert the returned currentIteration into Infinity if we set
@@ -1990,7 +1991,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       nsCString message;
       message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
         "transforms is not supported.  See bug 779598");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -2004,7 +2005,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       message.AppendLiteral("Gecko bug: Async animation of "
         "'backface-visibility: hidden' transforms is not supported."
         "  See bug 1186204.");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -2013,7 +2014,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       nsCString message;
       message.AppendLiteral("Gecko bug: Async 'transform' animations of "
         "aFrames with SVG transforms is not supported.  See bug 779599");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -2034,8 +2035,7 @@ KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
       message.AppendLiteral("Performance warning: Async animation of "
         "'transform' or 'opacity' not possible due to animation of geometric"
         "properties on the same element");
-      AnimationCollection::LogAsyncAnimationFailure(message,
-                                                    aFrame->GetContent());
+      AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
     }
     return false;
   }

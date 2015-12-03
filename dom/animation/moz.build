@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'Animation.cpp',
     'AnimationEffectReadOnly.cpp',
     'AnimationTimeline.cpp',
+    'AnimationUtils.cpp',
     'ComputedTimingFunction.cpp',
     'DocumentTimeline.cpp',
     'EffectSet.cpp',

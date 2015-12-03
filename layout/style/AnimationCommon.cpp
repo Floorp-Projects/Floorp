@@ -20,6 +20,7 @@
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -438,7 +439,7 @@ AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animations are disabled");
-      LogAsyncAnimationFailure(message);
+      AnimationUtils::LogAsyncAnimationFailure(message);
     }
     return false;
   }
@@ -522,26 +523,6 @@ AnimationCollection::GetElementToRestyle() const
     return nullptr;
   }
   return pseudoFrame->GetContent()->AsElement();
-}
-
-/* static */ void
-AnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
-                                                     const nsIContent* aContent)
-{
-  if (aContent) {
-    aMessage.AppendLiteral(" [");
-    aMessage.Append(nsAtomCString(aContent->NodeInfo()->NameAtom()));
-
-    nsIAtom* id = aContent->GetID();
-    if (id) {
-      aMessage.AppendLiteral(" with id '");
-      aMessage.Append(nsAtomCString(aContent->GetID()));
-      aMessage.Append('\'');
-    }
-    aMessage.Append(']');
-  }
-  aMessage.Append('\n');
-  printf_stderr("%s", aMessage.get());
 }
 
 /*static*/ void
