@@ -251,6 +251,8 @@ public class testGeckoProfile extends PixelTest {
     }
 
     // Tries to remove a profile from Gecko profile. Verifies that it's removed from profiles.ini and its directory is deleted.
+    // TODO: Reconsider profile removal. Firefox would not normally remove a
+    // profile. Outstanding tasks may still try to access files in the profile.
     private void removeProfile(GeckoProfile profile, boolean inProfilesIni) {
         findInProfilesIni(profile, inProfilesIni);
         File dir = profile.getDir();
