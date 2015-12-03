@@ -7,8 +7,17 @@ const constructors = [
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
-];
+    Float64Array ];
+
+if (typeof SharedArrayBuffer != "undefined")
+    constructors.push(sharedConstructor(Int8Array),
+		      sharedConstructor(Uint8Array),
+		      sharedConstructor(Int16Array),
+		      sharedConstructor(Uint16Array),
+		      sharedConstructor(Int32Array),
+		      sharedConstructor(Uint32Array),
+		      sharedConstructor(Float32Array),
+		      sharedConstructor(Float64Array));
 
 for (var constructor of constructors) {
     assertDeepEq(constructor.prototype.reverse.length, 0);
@@ -24,7 +33,7 @@ for (var constructor of constructors) {
     assertDeepEq(new constructor([.1, .2, .3]).reverse(), new constructor([.3, .2, .1]));
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var reverse = newGlobal()[constructor.name].prototype.reverse;
         assertDeepEq(reverse.call(new constructor([3, 2, 1])), new constructor([1, 2, 3]));
     }

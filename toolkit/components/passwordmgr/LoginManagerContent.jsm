@@ -1149,41 +1149,30 @@ var LoginManagerContent = {
 };
 
 var LoginUtils = {
-  /*
-   * _getPasswordOrigin
-   *
+  /**
    * Get the parts of the URL we want for identification.
+   * Strip out things like the userPass portion
    */
-  _getPasswordOrigin : function (uriString, allowJS) {
+  _getPasswordOrigin(uriString, allowJS) {
     var realm = "";
     try {
       var uri = Services.io.newURI(uriString, null, null);
 
       if (allowJS && uri.scheme == "javascript")
-        return "javascript:"
+        return "javascript:";
 
-      realm = uri.scheme + "://" + uri.host;
-
-      // If the URI explicitly specified a port, only include it when
-      // it's not the default. (We never want "http://foo.com:80")
-      var port = uri.port;
-      if (port != -1) {
-        var handler = Services.io.getProtocolHandler(uri.scheme);
-        if (port != handler.defaultPort)
-          realm += ":" + port;
-      }
-
+      realm = uri.scheme + "://" + uri.hostPort;
     } catch (e) {
       // bug 159484 - disallow url types that don't support a hostPort.
       // (although we handle "javascript:..." as a special case above.)
-      log("Couldn't parse origin for", uriString);
+      log("Couldn't parse origin for", uriString, e);
       realm = null;
     }
 
     return realm;
   },
 
-  _getActionOrigin : function (form) {
+  _getActionOrigin(form) {
     var uriString = form.action;
 
     // A blank or missing action submits to where it came from.

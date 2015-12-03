@@ -32,6 +32,8 @@ function BrowserAction(options, extension)
   this.id = makeWidgetId(extension.id) + "-browser-action";
   this.widget = null;
 
+  this.tabManager = TabManager.for(extension);
+
   let title = extension.localize(options.default_title || "");
   let popup = extension.localize(options.default_popup || "");
   if (popup) {
@@ -74,6 +76,7 @@ BrowserAction.prototype = {
         node.addEventListener("command", event => {
           let tab = tabbrowser.selectedTab;
           let popup = this.getProperty(tab, "popup");
+          this.tabManager.addActiveTabPermission(tab);
           if (popup) {
             this.togglePopup(node, popup);
           } else {

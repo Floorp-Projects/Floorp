@@ -563,7 +563,7 @@ MacroAssembler::call(const Address& addr)
 }
 
 void
-MacroAssembler::call(AsmJSImmPtr target)
+MacroAssembler::call(wasm::SymbolicAddress target)
 {
     mov(target, eax);
     Assembler::call(eax);

@@ -194,7 +194,7 @@ class VisualStudioBackend(CommonBackend):
                 if not config:
                     break
 
-                args = config.substs.get(v, '').split()
+                args = config.substs.get(v, [])
 
                 for i, arg in enumerate(args):
                     if arg.startswith('-I'):

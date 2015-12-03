@@ -69,10 +69,15 @@ class KeepAlive;
  */
 
 enum TextureAllocationFlags {
-  ALLOC_DEFAULT = 0,
-  ALLOC_CLEAR_BUFFER = 1,
-  ALLOC_CLEAR_BUFFER_WHITE = 2,
-  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 4
+  ALLOC_DEFAULT = 0x0,
+  ALLOC_CLEAR_BUFFER = 0x1,
+  ALLOC_CLEAR_BUFFER_WHITE = 0x2,
+  ALLOC_DISALLOW_BUFFERTEXTURECLIENT = 0x4,
+
+  // Allocate the texture for out-of-band content updates. This is mostly for
+  // TextureClientD3D11, which may otherwise choose D3D10 or non-KeyedMutex
+  // surfaces when used on the main thread.
+  ALLOC_FOR_OUT_OF_BAND_CONTENT = 0x8
 };
 
 #ifdef XP_WIN
@@ -164,6 +169,10 @@ struct MappedYCbCrTextureData {
   }
 };
 
+#ifdef XP_WIN
+class D3D11TextureData;
+#endif
+
 class TextureData {
 public:
   TextureData() { MOZ_COUNT_CTOR(TextureData); }
@@ -215,6 +224,12 @@ public:
   virtual void SyncWithObject(SyncObject* aFence) {};
 
   virtual TextureFlags GetTextureFlags() const { return TextureFlags::NO_FLAGS; }
+
+#ifdef XP_WIN
+  virtual D3D11TextureData* AsD3D11TextureData() {
+    return nullptr;
+  }
+#endif
 };
 
 /**
@@ -529,9 +544,9 @@ public:
    * Track how much of this texture is wasted.
    * For example we might allocate a 256x256 tile but only use 10x10.
    */
-   void SetWaste(int aWasteArea) {
-     mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
-   }
+  void SetWaste(int aWasteArea) {
+    mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
+  }
 
   /**
    * This sets the readback sink that this texture is to use. This will
@@ -546,8 +561,8 @@ public:
 
   ISurfaceAllocator* GetAllocator() { return mAllocator; }
 
-   TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
-   void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
+  TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
+  void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
 
   /// If you add new code that uses this method, you are probably doing something wrong.
   TextureData* GetInternalData() { return mData; }

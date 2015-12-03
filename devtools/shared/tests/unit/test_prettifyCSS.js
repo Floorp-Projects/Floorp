@@ -7,7 +7,6 @@
 
 const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 
-
 const TESTS = [
   { name: "simple test",
     input: "div { font-family:'Arial Black', Arial, sans-serif; }",
@@ -29,7 +28,6 @@ const TESTS = [
   { name: "minified with trailing newline",
     input: "\nbody{background:white;}div{font-size:4em;color:red}span{color:green;}\n",
     expected: [
-      "",
       "body {",
       "\tbackground:white;",
       "}",
@@ -43,6 +41,14 @@ const TESTS = [
     ]
   },
 
+  { name: "leading whitespace",
+    input: "\n    div{color: red;}",
+    expected: [
+      "div {",
+      "\tcolor: red;",
+      "}"
+    ]
+  },
 ];
 
 function run_test() {

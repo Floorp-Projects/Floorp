@@ -633,6 +633,11 @@ public:
     // devices. Currently this is only used on Windows.
     virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);
 
+    // Plugin async drawing support.
+    virtual bool SupportsPluginDirectBitmapDrawing() {
+      return false;
+    }
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();

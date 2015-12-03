@@ -33,6 +33,11 @@ class ServiceWorkerClientInfo final
 public:
   explicit ServiceWorkerClientInfo(nsIDocument* aDoc);
 
+  const nsString& ClientId() const
+  {
+    return mClientId;
+  }
+
 private:
   nsString mClientId;
   uint64_t mWindowId;

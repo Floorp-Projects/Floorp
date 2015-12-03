@@ -22,6 +22,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptSecurityManager.h"

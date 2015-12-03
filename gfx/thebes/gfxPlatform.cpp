@@ -1116,6 +1116,16 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
     return false;
   }
 
+#ifdef USE_SKIA_GPU
+ // Skia content rendering doesn't support GPU acceleration, so we can't
+ // use the same backend if the current backend is accelerated.
+ if ((aTarget->GetType() == DrawTargetType::HARDWARE_RASTER)
+     && (aTarget->GetBackendType() ==  BackendType::SKIA))
+ {
+  return false;
+ }
+#endif
+
   return SupportsAzureContentForType(aTarget->GetBackendType());
 }
 

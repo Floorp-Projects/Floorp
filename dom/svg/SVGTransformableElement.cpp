@@ -90,34 +90,12 @@ SVGTransformableElement::IsEventAttributeName(nsIAtom* aName)
 // nsSVGElement overrides
 
 gfxMatrix
-SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                                                  TransformTypes aWhich) const
+SVGTransformableElement::PrependLocalTransformsTo(
+  const gfxMatrix &aMatrix,
+  SVGTransformTypes aWhich) const
 {
-  gfxMatrix result(aMatrix);
-
-  if (aWhich == eChildToUserSpace) {
-    // We don't have anything to prepend.
-    // eChildToUserSpace is not the common case, which is why we return
-    // 'result' to benefit from NRVO rather than returning aMatrix before
-    // creating 'result'.
-    return result;
-  }
-
-  MOZ_ASSERT(aWhich == eAllTransforms || aWhich == eUserSpaceToParent,
-             "Unknown TransformTypes");
-
-  // animateMotion's resulting transform is supposed to apply *on top of*
-  // any transformations from the |transform| attribute. So since we're
-  // PRE-multiplying, we need to apply the animateMotion transform *first*.
-  if (mAnimateMotionTransform) {
-    result.PreMultiply(ThebesMatrix(*mAnimateMotionTransform));
-  }
-
-  if (mTransforms) {
-    result.PreMultiply(mTransforms->GetAnimValue().GetConsolidationMatrix());
-  }
-
-  return result;
+  return SVGContentUtils::PrependLocalTransformsTo(
+    aMatrix, aWhich, mAnimateMotionTransform, mTransforms);
 }
 
 const gfx::Matrix*

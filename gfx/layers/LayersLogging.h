@@ -7,6 +7,7 @@
 #define GFX_LAYERSLOGGING_H
 
 #include "FrameMetrics.h"               // for FrameMetrics, etc
+#include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, etc
 #include "mozilla/gfx/Types.h"          // for Filter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
@@ -17,7 +18,6 @@
 
 namespace mozilla {
 namespace gfx {
-class Matrix4x4;
 template <class units, class F> struct RectTyped;
 } // namespace gfx
 

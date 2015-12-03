@@ -122,7 +122,7 @@ nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
     gfxMatrix tm = aTransform;
     if (kid->GetContent()->IsSVGElement()) {
       tm = static_cast<nsSVGElement*>(kid->GetContent())->
-             PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
+             PrependLocalTransformsTo(tm, eUserSpaceToParent);
     }
     nsSVGUtils::PaintFrameWithEffects(kid, aContext, tm, aDirtyRect);
   }
@@ -145,9 +145,9 @@ nsSVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint)
     gfxPoint point = aPoint;
     gfxMatrix m =
       static_cast<const nsSVGElement*>(mContent)->
-        PrependLocalTransformsTo(gfxMatrix(), nsSVGElement::eChildToUserSpace);
+        PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
     m = static_cast<const nsSVGElement*>(kid->GetContent())->
-          PrependLocalTransformsTo(m, nsSVGElement::eUserSpaceToParent);
+          PrependLocalTransformsTo(m, eUserSpaceToParent);
     if (!m.IsIdentity()) {
       if (!m.Invert()) {
         return nullptr;

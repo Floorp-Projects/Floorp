@@ -5,7 +5,7 @@ load(libdir + "asserts.js");
 
 function m(stdlib, ffi, heap) {
     "use asm";
-    var HEAP32 = new stdlib.SharedInt32Array(heap);
+    var HEAP32 = new stdlib.Int32Array(heap);
     var add = stdlib.Atomics.add;
     var load = stdlib.Atomics.load;
     function add_sharedEv(i1) {

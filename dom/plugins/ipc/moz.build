@@ -107,6 +107,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'PluginUtilsOSX.mm',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    UNIFIED_SOURCES += [
+        'D3D11SurfaceHolder.cpp',
+    ]
+
 IPDL_SOURCES += [
     'PBrowserStream.ipdl',
     'PluginTypes.ipdlh',

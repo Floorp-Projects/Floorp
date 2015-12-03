@@ -734,11 +734,10 @@ js::math_pow(JSContext* cx, unsigned argc, Value* vp)
     return math_pow_handle(cx, args.get(0), args.get(1), args.rval());
 }
 
-void
-js::random_generateSeed(uint64_t* seedBuffer, size_t length)
+static void
+GenerateSeed(uint64_t* seedBuffer, size_t length)
 {
-    if (length == 0)
-        return;
+    MOZ_ASSERT(length > 0);
 
 #if defined(XP_WIN)
     /*
@@ -813,48 +812,34 @@ js::random_generateSeed(uint64_t* seedBuffer, size_t length)
 #endif
 }
 
-/*
- * Math.random() support, lifted from java.util.Random.java.
- */
 void
-js::random_initState(uint64_t* rngState)
+js::GenerateXorShift128PlusSeed(mozilla::Array<uint64_t, 2>& seed)
 {
-    /* Our PRNG only uses 48 bits, so squeeze our entropy into those bits. */
-    uint64_t seed;
-    random_generateSeed(&seed, 1);
-    seed ^= (seed >> 16);
-    *rngState = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
+    // XorShift128PlusRNG must be initialized with a non-zero seed.
+    do {
+        GenerateSeed(seed.begin(), mozilla::ArrayLength(seed));
+    } while (seed[0] == 0 && seed[1] == 0);
 }
 
-uint64_t
-js::random_next(uint64_t* rngState, int bits)
+void
+JSCompartment::ensureRandomNumberGenerator()
 {
-    MOZ_ASSERT((*rngState & 0xffff000000000000ULL) == 0, "Bad rngState");
-    MOZ_ASSERT(bits > 0 && bits <= RNG_STATE_WIDTH, "bits is out of range");
-
-    if (*rngState == 0) {
-        random_initState(rngState);
+    if (randomNumberGenerator.isNothing()) {
+        mozilla::Array<uint64_t, 2> seed;
+        GenerateXorShift128PlusSeed(seed);
+        randomNumberGenerator.emplace(seed[0], seed[1]);
     }
-
-    uint64_t nextstate = *rngState * RNG_MULTIPLIER;
-    nextstate += RNG_ADDEND;
-    nextstate &= RNG_MASK;
-    *rngState = nextstate;
-    return nextstate >> (RNG_STATE_WIDTH - bits);
-}
-
-double
-js::math_random_no_outparam(JSContext* cx)
-{
-    /* Calculate random without memory traffic, for use in the JITs. */
-    return random_nextDouble(&cx->compartment()->rngState);
 }
 
 bool
 js::math_random(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    double z = random_nextDouble(&cx->compartment()->rngState);
+
+    JSCompartment* comp = cx->compartment();
+    comp->ensureRandomNumberGenerator();
+
+    double z = comp->randomNumberGenerator.ref().nextDouble();
     args.rval().setDouble(z);
     return true;
 }

@@ -10,6 +10,7 @@
 // https://www.rfc-editor.org/rfc/rfc7540.txt
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAHttpTransaction.h"
 #include "nsISupportsPriority.h"
 
@@ -266,7 +267,7 @@ private:
 
   // The InlineFrame and associated data is used for composing control
   // frames and data frame headers.
-  nsAutoArrayPtr<uint8_t>      mTxInlineFrame;
+  UniquePtr<uint8_t[]>         mTxInlineFrame;
   uint32_t                     mTxInlineFrameSize;
   uint32_t                     mTxInlineFrameUsed;
 

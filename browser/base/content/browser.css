@@ -1136,6 +1136,7 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
+  #PanelUI-remotetabs-tabslist > toolbarbutton > .toolbarbutton-icon,
   #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
   #PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
   #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {

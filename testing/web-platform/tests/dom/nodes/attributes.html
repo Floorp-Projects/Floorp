@@ -394,4 +394,38 @@ test(function() {
   el.removeAttribute("foo")
   assert_equals(attr.ownerElement, null)
 }, "Attribute loses its owner when removed")
+
+test(function() {
+  var el = document.createElement("div");
+  el.setAttribute("foo", "bar");
+  assert_equals(el.getAttributeNames().length, 1);
+  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+  assert_equals(el.getAttributeNames()[0], "foo");
+
+  el.removeAttribute("foo");
+  assert_equals(el.getAttributeNames().length, 0);
+
+  el.setAttribute("foo", "bar");
+  el.setAttributeNS("", "FOO", "bar");
+  el.setAttributeNS("dummy1", "foo", "bar");
+  el.setAttributeNS("dummy2", "dummy:foo", "bar");
+  assert_equals(el.getAttributeNames().length, 4);
+  assert_equals(el.getAttributeNames()[0], "foo");
+  assert_equals(el.getAttributeNames()[1], "FOO");
+  assert_equals(el.getAttributeNames()[2], "foo");
+  assert_equals(el.getAttributeNames()[3], "dummy:foo");
+  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+  assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
+  assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
+  assert_equals(el.getAttributeNames()[3], el.attributes[3].name);
+
+  el.removeAttributeNS("", "FOO");
+  assert_equals(el.getAttributeNames().length, 3);
+  assert_equals(el.getAttributeNames()[0], "foo");
+  assert_equals(el.getAttributeNames()[1], "foo");
+  assert_equals(el.getAttributeNames()[2], "dummy:foo");
+  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+  assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
+  assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
+}, "getAttributeNames tests");
 </script>

@@ -250,6 +250,14 @@ nsPluginInstanceOwner::GetImageContainer()
 }
 
 void
+nsPluginInstanceOwner::DidComposite()
+{
+  if (mInstance) {
+    mInstance->DidComposite();
+  }
+}
+
+void
 nsPluginInstanceOwner::SetBackgroundUnknown()
 {
   if (mInstance) {
@@ -600,9 +608,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // Windowed plugins should not be calling NPN_InvalidateRect, but
   // Silverlight does and expects it to "work"
   if (mWidget) {
-    mWidget->Invalidate(nsIntRect(invalidRect->left, invalidRect->top,
-                                  invalidRect->right - invalidRect->left,
-                                  invalidRect->bottom - invalidRect->top));
+    mWidget->Invalidate(
+      LayoutDeviceIntRect(invalidRect->left, invalidRect->top,
+                          invalidRect->right - invalidRect->left,
+                          invalidRect->bottom - invalidRect->top));
     return NS_OK;
   }
 #endif
@@ -1034,6 +1043,21 @@ NPBool nsPluginInstanceOwner::ConvertPoint(double sourceX, double sourceY, NPCoo
 #else
   return false;
 #endif
+}
+
+NPError nsPluginInstanceOwner::InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                                void *initData, NPAsyncSurface *surface)
+{
+  return NPERR_INCOMPATIBLE_VERSION_ERROR;
+}
+
+NPError nsPluginInstanceOwner::FinalizeAsyncSurface(NPAsyncSurface *)
+{
+  return NPERR_INCOMPATIBLE_VERSION_ERROR;
+}
+
+void nsPluginInstanceOwner::SetCurrentAsyncSurface(NPAsyncSurface *, NPRect*)
+{
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
@@ -2937,8 +2961,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       initData.mUnicode = false;
       initData.clipChildren = true;
       initData.clipSiblings = true;
-      rv = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                           &initData);
+      rv = mWidget->Create(parentWidget.get(), nullptr,
+                           LayoutDeviceIntRect(0, 0, 0, 0), &initData);
       if (NS_FAILED(rv)) {
         mWidget->Destroy();
         mWidget = nullptr;

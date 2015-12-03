@@ -308,9 +308,9 @@ nsBaseWidget::~nsBaseWidget()
 // Basic create.
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::BaseCreate(nsIWidget *aParent,
-                              const nsIntRect &aRect,
-                              nsWidgetInitData *aInitData)
+void nsBaseWidget::BaseCreate(nsIWidget* aParent,
+                              const LayoutDeviceIntRect& aRect,
+                              nsWidgetInitData* aInitData)
 {
   static bool gDisableNativeThemeCached = false;
   if (!gDisableNativeThemeCached) {
@@ -355,9 +355,9 @@ void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 }
 
 already_AddRefed<nsIWidget>
-nsBaseWidget::CreateChild(const nsIntRect  &aRect,
-                          nsWidgetInitData *aInitData,
-                          bool             aForceUseIWidgetParent)
+nsBaseWidget::CreateChild(const LayoutDeviceIntRect& aRect,
+                          nsWidgetInitData* aInitData,
+                          bool aForceUseIWidgetParent)
 {
   nsIWidget* parent = this;
   nsNativeWidget nativeParent = nullptr;
@@ -2977,11 +2977,11 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 }
 //////////////////////////////////////////////////////////////
 /* static */ void
-nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
-                                   nsIWidget *           aWidget,
-                                   const nsIntRect *     aRect,
-                                   const nsAutoCString & aWidgetName,
-                                   int32_t               aWindowID)
+nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut,
+                                   nsIWidget* aWidget,
+                                   const LayoutDeviceIntRect* aRect,
+                                   const nsAutoCString& aWidgetName,
+                                   int32_t aWindowID)
 {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))
     return;
@@ -2996,23 +2996,17 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
           aWidgetName.get(),
           aWindowID);
 
-  if (aRect)
-  {
+  if (aRect) {
     fprintf(aFileOut,
             " rect=%3d,%-3d %3d,%-3d",
-            aRect->x,
-            aRect->y,
-            aRect->width,
-            aRect->height);
-  }
-  else
-  {
+            aRect->x, aRect->y, aRect->width, aRect->height);
+  } else {
     fprintf(aFileOut,
             " rect=%-15s",
             "none");
   }
 
-  fprintf(aFileOut,"\n");
+  fprintf(aFileOut, "\n");
 }
 //////////////////////////////////////////////////////////////
 

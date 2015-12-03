@@ -4,15 +4,18 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 // Copied from nsILookAndFeel.h, see comments on eMetric_AlertNotificationOrigin
 const NS_ALERT_HORIZONTAL = 1;
 const NS_ALERT_LEFT = 2;
 const NS_ALERT_TOP = 4;
 
-const WINDOW_MARGIN = 10;
+const WINDOW_MARGIN = AppConstants.platform == "win" ? 0 : 10;
 const BODY_TEXT_LIMIT = 200;
+const WINDOW_SHADOW_SPREAD = AppConstants.platform == "win" ? 10 : 0;
 
-Cu.import("resource://gre/modules/Services.jsm");
 
 var gOrigin = 0; // Default value: alert from bottom right.
 var gReplacedWindow = null;
@@ -217,9 +220,9 @@ function moveWindowToEnd() {
     let alertWindow = windows.getNext();
     if (alertWindow != window) {
       if (gOrigin & NS_ALERT_TOP) {
-        y = Math.max(y, alertWindow.screenY + alertWindow.outerHeight);
+        y = Math.max(y, alertWindow.screenY + alertWindow.outerHeight - WINDOW_SHADOW_SPREAD);
       } else {
-        y = Math.min(y, alertWindow.screenY - window.outerHeight);
+        y = Math.min(y, alertWindow.screenY - window.outerHeight + WINDOW_SHADOW_SPREAD);
       }
     }
   }
@@ -234,7 +237,7 @@ function moveWindowToEnd() {
 function onAlertBeforeUnload() {
   if (!gIsReplaced) {
     // Move other alert windows to fill the gap left by closing alert.
-    let heightDelta = window.outerHeight + WINDOW_MARGIN;
+    let heightDelta = window.outerHeight + WINDOW_MARGIN - WINDOW_SHADOW_SPREAD;
     let windows = Services.wm.getEnumerator("alert:alert");
     while (windows.hasMoreElements()) {
       let alertWindow = windows.getNext();

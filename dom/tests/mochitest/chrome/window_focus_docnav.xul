@@ -7,10 +7,11 @@
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-<textbox id="textbox"/>
+<textbox id="textbox1"/>
+<textbox id="textbox2"/>
 
 <panel id="panel" onpopupshown="runTests(this, 1);"
-                  onpopuphidden="done()">
+                  onpopuphidden="noChildrenTest()">
   <textbox id="p1textbox" value="Popup1"/>
 </panel>
 <panel id="panel2" onpopupshown="runTests(this, 2);" onpopuphidden="document.getElementById('panel').hidePopup()">
@@ -27,6 +28,27 @@ var fm = Components.classes["@mozilla.org/focus-manager;1"].
 
 function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
 function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+function noChildrenTest()
+{
+  // Remove the browser element and test navigation when there are no other documents.
+  // The focus should move or stay on the first focusable element.
+  let browser = document.getElementById("browser");
+  browser.parentNode.removeChild(browser);
+
+  let textbox1 = document.getElementById("textbox1");
+  let textbox2 = document.getElementById("textbox2");
+
+  textbox2.focus();
+  next(window, textbox1.inputField, "Focus forward when no child documents");
+  next(window, textbox1.inputField, "Focus forward again when no child documents");
+
+  textbox2.focus();
+  previous(window, textbox1.inputField, "Focus backward when no child documents");
+  previous(window, textbox1.inputField, "Focus backward again when no child documents");
+
+  done();
+}
 
 function done()
 {
@@ -81,7 +103,7 @@ function runTests(panel, popupCount)
     previous(window, document.getElementById("p1textbox").inputField, "First back from popup 1 with " + popupCount);
   }
 
-  previous(window, document.getElementById("textbox").inputField, "First back with " + popupCount);
+  previous(window, document.getElementById("textbox1").inputField, "First back with " + popupCount);
 
   if (panel == document.getElementById("panel"))
     document.getElementById("panel2").openPopup(null, "after_start", 100, 20);

@@ -53,7 +53,7 @@ function promiseObserver(topic) {
 }
 
 function checkButtonTooltips(stringPrefix) {
-  for (let butId of ["sync-button", "PanelUI-fxa-icon"]) {
+  for (let butId of ["PanelUI-remotetabs-syncnow", "PanelUI-fxa-icon"]) {
     let text = document.getElementById(butId).getAttribute("tooltiptext");
     let desc = `Text is "${text}", expecting it to start with "${stringPrefix}"`
     Assert.ok(text.startsWith(stringPrefix), desc);
@@ -89,6 +89,8 @@ add_task(function* prepare() {
   // and a notification to have the state change away from "needs setup"
   yield notifyAndPromiseUIUpdated("weave:service:login:finish");
   checkBroadcasterVisible("sync-syncnow-state");
+  // open the sync-button panel so we can check elements in that.
+  document.getElementById("sync-button").click();
 });
 
 add_task(function* testSyncNeedsVerification() {
@@ -128,14 +130,17 @@ add_task(function* testSyncLoginError() {
 });
 
 function checkButtonsStatus(shouldBeActive) {
-  let button = document.getElementById("sync-button");
-  let fxaContainer = document.getElementById("PanelUI-footer-fxa");
-  if (shouldBeActive) {
-    Assert.equal(button.getAttribute("status"), "active");
-    Assert.equal(fxaContainer.getAttribute("syncstatus"), "active");
-  } else {
-    Assert.ok(!button.hasAttribute("status"));
-    Assert.ok(!fxaContainer.hasAttribute("syncstatus"));
+  for (let eid of [
+    "sync-status", // the broadcaster itself.
+    "sync-button", // the main sync button which observes the broadcaster
+    "PanelUI-fxa-icon", // the sync icon in the fxa footer that observes it.
+    ]) {
+    let elt = document.getElementById(eid);
+    if (shouldBeActive) {
+      Assert.equal(elt.getAttribute("syncstatus"), "active", `${eid} should be active`);;
+    } else {
+      Assert.ok(!elt.hasAttribute("syncstatus"), `${eid} should have no status attr`);
+    }
   }
 }
 

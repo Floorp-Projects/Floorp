@@ -16,7 +16,7 @@ marionette.jar:
   content/EventUtils.js  (EventUtils.js)
   content/ChromeUtils.js  (ChromeUtils.js)
   content/error.js (error.js)
-  content/command.js (command.js)
+  content/message.js (message.js)
   content/dispatcher.js (dispatcher.js)
   content/emulator.js (emulator.js)
   content/modal.js (modal.js)

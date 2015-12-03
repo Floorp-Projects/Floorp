@@ -1,3 +1,4 @@
+Can't find hash in builtin certs for Chrome nickname GoogleG2, inserting GOOGLE_PIN_GoogleG2
 Can't find hash in builtin certs for Chrome nickname RapidSSL, inserting GOOGLE_PIN_RapidSSL
 Can't find hash in builtin certs for Chrome nickname VeriSignClass4_G3, inserting GOOGLE_PIN_VeriSignClass4_G3
 Can't find hash in builtin certs for Chrome nickname Entrust_SSL, inserting GOOGLE_PIN_Entrust_SSL
@@ -7,6 +8,8 @@ Can't find hash in builtin certs for Chrome nickname GoDaddySecure, inserting GO
 Can't find hash in builtin certs for Chrome nickname ThawtePremiumServer, inserting GOOGLE_PIN_ThawtePremiumServer
 Can't find hash in builtin certs for Chrome nickname SymantecClass3EVG3, inserting GOOGLE_PIN_SymantecClass3EVG3
 Can't find hash in builtin certs for Chrome nickname DigiCertECCSecureServerCA, inserting GOOGLE_PIN_DigiCertECCSecureServerCA
+Can't find hash in builtin certs for Chrome nickname LetsEncryptAuthorityX1, inserting GOOGLE_PIN_LetsEncryptAuthorityX1
+Can't find hash in builtin certs for Chrome nickname LetsEncryptAuthorityX2, inserting GOOGLE_PIN_LetsEncryptAuthorityX2
 Writing pinset test
 Writing pinset google
 Writing pinset tor

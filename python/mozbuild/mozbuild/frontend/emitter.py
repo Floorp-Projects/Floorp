@@ -674,11 +674,11 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == 'res':
                     has_resources = True
                 for f in files:
-                    path = os.path.join(context.srcdir, f)
+                    path = f.full_path
                     if not os.path.exists(path):
                         raise SandboxValidationError(
                             'File listed in %s does not exist: %s'
-                            % (var, f), context)
+                            % (var, path), context)
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory

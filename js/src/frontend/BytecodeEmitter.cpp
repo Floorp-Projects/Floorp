@@ -5433,9 +5433,9 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn)
     ParseNode* forHeadExpr = forHead ? forHead->pn_kid3 : nullptr;
     ParseNode* forBody = pn ? pn->pn_right : nullptr;
 
-    ParseNode* pn1 = forHead ? forHead->pn_kid1 : nullptr;
+    ParseNode* loopDecl = forHead ? forHead->pn_kid1 : nullptr;
     bool letDecl = false;
-    if (pn1 && !emitForInOrOfVariables(pn1, &letDecl))
+    if (loopDecl && !emitForInOrOfVariables(loopDecl, &letDecl))
         return false;
 
     if (type == StmtType::FOR_OF_LOOP) {
@@ -5458,7 +5458,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn)
     // assigned to is a plain assignment.
     StmtInfoBCE letStmt(cx);
     if (letDecl) {
-        if (!enterBlockScope(&letStmt, pn1->pn_objbox, JSOP_UNDEFINED, 0))
+        if (!enterBlockScope(&letStmt, loopDecl->pn_objbox, JSOP_UNDEFINED, 0))
             return false;
     }
 
@@ -5580,9 +5580,9 @@ BytecodeEmitter::emitForIn(ParseNode* pn)
     ParseNode* forHead = pn->pn_left;
     ParseNode* forBody = pn->pn_right;
 
-    ParseNode* pn1 = forHead->pn_kid1;
+    ParseNode* loopDecl = forHead->pn_kid1;
     bool letDecl = false;
-    if (pn1 && !emitForInOrOfVariables(pn1, &letDecl))
+    if (loopDecl && !emitForInOrOfVariables(loopDecl, &letDecl))
         return false;
 
     /* Compile the object expression to the right of 'in'. */
@@ -5608,7 +5608,7 @@ BytecodeEmitter::emitForIn(ParseNode* pn)
     // assigned to is a plain assignment.
     StmtInfoBCE letStmt(cx);
     if (letDecl) {
-        if (!enterBlockScope(&letStmt, pn1->pn_objbox, JSOP_UNDEFINED, 0))
+        if (!enterBlockScope(&letStmt, loopDecl->pn_objbox, JSOP_UNDEFINED, 0))
             return false;
     }
 

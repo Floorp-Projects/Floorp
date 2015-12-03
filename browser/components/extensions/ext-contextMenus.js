@@ -43,8 +43,11 @@ var menuBuilder = {
     for (let [ext, menuItemMap] of contextMenuMap) {
       let parentMap = new Map();
       let topLevelItems = new Set();
-      for (let [id, item] of menuItemMap) {
-        dump(id + " : " + item + "\n");
+      for (let entry of menuItemMap) {
+        // We need a closure over |item|, and we don't currently get a
+        // fresh binding per loop if we declare it in the loop head.
+        let [id, item] = entry;
+
         if (item.enabledForContext(contextData)) {
           let element;
           if (item.isMenu) {
@@ -79,15 +82,13 @@ var menuBuilder = {
             topLevelItems.add(element);
           }
 
-          if (item.onclick) {
-            function clickHandlerForItem(item) {
-              return event => {
-                let clickData = item.getClickData(contextData, event);
-                runSafe(item.extContext, item.onclick, clickData);
-              }
+          element.addEventListener("command", event => {
+            item.tabManager.addActiveTabPermission();
+            if (item.onclick) {
+              let clickData = item.getClickData(contextData, event);
+              runSafe(item.extContext, item.onclick, clickData);
             }
-            element.addEventListener("command", clickHandlerForItem(item));
-          }
+          });
         }
       }
       if (topLevelItems.size > 1) {
@@ -165,6 +166,8 @@ function MenuItem(extension, extContext, createProperties)
 {
   this.extension = extension;
   this.extContext = extContext;
+
+  this.tabManager = TabManager.for(extension);
 
   this.init(createProperties);
 }

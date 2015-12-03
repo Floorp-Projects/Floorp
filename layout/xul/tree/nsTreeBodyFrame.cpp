@@ -2802,8 +2802,8 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override
   {
-    gfxContext* ctx = aCtx->ThebesContext();
-    gfxContextAutoDisableSubpixelAntialiasing disable(ctx, mDisableSubpixelAA);
+    DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
+                                                      mDisableSubpixelAA);
 
     DrawResult result = static_cast<nsTreeBodyFrame*>(mFrame)
       ->PaintTreeBody(*aCtx, mVisibleRect, ToReferenceFrame());

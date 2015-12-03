@@ -974,7 +974,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label* label) {
         branchPtr(cond, lhs, ImmWord(uintptr_t(imm.value)), label);
     }
-    void branchPtr(Condition cond, Register lhs, AsmJSImmPtr imm, Label* label) {
+    void branchPtr(Condition cond, Register lhs, wasm::SymbolicAddress imm, Label* label) {
         ScratchRegisterScope scratch(asMasm());
         movePtr(imm, scratch);
         branchPtr(cond, lhs, scratch, label);
@@ -1033,7 +1033,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(scratch, ptr);
         ma_b(label, cond);
     }
-    void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label* label) {
+    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
         ScratchRegisterScope scratch(asMasm());
         loadPtr(addr, scratch);
         ma_cmp(scratch, ptr);
@@ -1051,7 +1051,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_cmp(scratch2, rhs);
         ma_b(label, cond);
     }
-    void branch32(Condition cond, AsmJSAbsoluteAddress addr, Imm32 imm, Label* label) {
+    void branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, Label* label) {
         ScratchRegisterScope scratch(asMasm());
         loadPtr(addr, scratch);
         ma_cmp(scratch, imm);
@@ -1213,7 +1213,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
     void movePtr(ImmPtr imm, Register dest);
-    void movePtr(AsmJSImmPtr imm, Register dest);
+    void movePtr(wasm::SymbolicAddress imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
     void move64(Register64 src, Register64 dest) {
         move32(src.low, dest.low);
@@ -1243,7 +1243,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadPtr(const Address& address, Register dest);
     void loadPtr(const BaseIndex& src, Register dest);
     void loadPtr(AbsoluteAddress address, Register dest);
-    void loadPtr(AsmJSAbsoluteAddress address, Register dest);
+    void loadPtr(wasm::SymbolicAddress address, Register dest);
 
     void loadPrivate(const Address& address, Register dest);
 
@@ -1822,10 +1822,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label);
 
     void loadAsmJSActivation(Register dest) {
-        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
+        loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
-        loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
+        loadPtr(Address(GlobalReg, wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
     }
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);

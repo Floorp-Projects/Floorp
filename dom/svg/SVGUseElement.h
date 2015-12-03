@@ -60,8 +60,9 @@ public:
   void DestroyAnonymousContent();
 
   // nsSVGElement specializations:
-  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const override;
+  virtual gfxMatrix PrependLocalTransformsTo(
+    const gfxMatrix &aMatrix,
+    SVGTransformTypes aWhich = eAllTransforms) const override;
   virtual bool HasValidDimensions() const override;
 
   // nsIContent interface

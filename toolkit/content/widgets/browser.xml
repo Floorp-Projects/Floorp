@@ -420,6 +420,22 @@
         ]]></getter>
       </property>
 
+      <property name="innerWindowID" readonly="true">
+        <getter><![CDATA[
+          try {
+            return this.contentWindow
+                       .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                       .currentInnerWindowID;
+          } catch (e) {
+            if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+              throw e;
+            }
+            return null;
+          }
+        ]]></getter>
+      </property>
+
       <field name="_lastSearchString">null</field>
       <field name="_lastSearchHighlight">false</field>
 
@@ -1181,6 +1197,7 @@
               "_fullZoom",
               "_textZoom",
               "_isSyntheticDocument",
+              "_innerWindowID",
             ]);
           }
 

@@ -12,13 +12,8 @@
 #include "nsRect.h"
 #include "mozilla/gfx/BaseMargin.h"
 #include "mozilla/gfx/BaseRect.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/Assertions.h"
-
-namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namepsace gfx
-} // namespace mozilla
 
 struct gfxQuad;
 
