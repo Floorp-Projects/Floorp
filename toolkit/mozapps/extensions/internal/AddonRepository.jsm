@@ -1601,34 +1601,34 @@ var AddonDatabase = {
              schema < DB_MIN_JSON_SCHEMA) {
            throw new Error("Invalid schema value.");
          }
-       } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
-         logger.debug("No " + FILE_DATABASE + " found.");
+       } catch (e) {
+         if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+           logger.debug("No " + FILE_DATABASE + " found.");
 
-         // Create a blank addons.json file
-         this._saveDBToDisk();
+           // Create a blank addons.json file
+           this._saveDBToDisk();
 
-         let dbSchema = 0;
-         try {
-           dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA);
-         } catch (e) {}
+           let dbSchema = 0;
+           try {
+             dbSchema = Services.prefs.getIntPref(PREF_GETADDONS_DB_SCHEMA);
+           } catch (e) {}
 
-         if (dbSchema < DB_MIN_JSON_SCHEMA) {
-           let results = yield new Promise((resolve, reject) => {
-             AddonRepository_SQLiteMigrator.migrate(resolve);
-           });
+           if (dbSchema < DB_MIN_JSON_SCHEMA) {
+             let results = yield new Promise((resolve, reject) => {
+               AddonRepository_SQLiteMigrator.migrate(resolve);
+             });
 
-           if (results.length) {
-             yield this._insertAddons(results);
+             if (results.length) {
+               yield this._insertAddons(results);
+             }
+
            }
 
            Services.prefs.setIntPref(PREF_GETADDONS_DB_SCHEMA, DB_SCHEMA);
+         } else {
+           logger.error("Malformed " + FILE_DATABASE + ": " + e);
+           this.databaseOk = false;
          }
-
-         return this.DB;
-       } catch (e) {
-         logger.error("Malformed " + FILE_DATABASE + ": " + e);
-         this.databaseOk = false;
-
          return this.DB;
        }
 

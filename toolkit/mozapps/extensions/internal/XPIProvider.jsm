@@ -886,7 +886,9 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
     try {
       return getProp(path, type);
     }
-    catch (e if !(e instanceof SyntaxError)) {
+    catch (e) {
+      if (e instanceof SyntaxError)
+        throw e;
       return defValue;
     }
   }
@@ -1804,7 +1806,9 @@ function removeAsync(aFile) {
       else
         yield OS.File.remove(aFile.path);
     }
-    catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+    catch (e) {
+      if (!(e instanceof OS.File.Error) || ! e.becauseNoSuchFile)
+        throw e;
       // The file has already gone away
       return;
     }
@@ -3200,7 +3204,9 @@ this.XPIProvider = {
         try {
           isDir = stageDirEntry.isDirectory();
         }
-        catch (e if e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+        catch (e) {
+          if (e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+            throw e;
           // If the file has already gone away then don't worry about it, this
           // can happen on OSX where the resource fork is automatically moved
           // with the data fork for the file. See bug 733436.

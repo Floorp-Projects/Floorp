@@ -1133,7 +1133,9 @@ function promiseSetExtensionModifiedTime(aPath, aTime) {
     try {
       let iterator = new OS.File.DirectoryIterator(aPath);
       entries = yield iterator.nextBatch();
-    } catch (ex if ex instanceof OS.File.Error) {
+    } catch (ex) {
+      if (!(ex instanceof OS.File.Error))
+        throw ex;
       return;
     } finally {
       if (iterator) {
