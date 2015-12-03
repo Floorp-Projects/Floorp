@@ -378,13 +378,6 @@ public:
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
-  // Returns true if there is an animation that has yet to finish.
-  bool HasCurrentAnimations() const;
-  // Returns true if there is an animation of any of the specified properties
-  // that has yet to finish.
-  bool HasCurrentAnimationsForProperties(const nsCSSProperty* aProperties,
-                                         size_t aPropertyCount) const;
-
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;
 
