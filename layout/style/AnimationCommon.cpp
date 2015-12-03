@@ -101,21 +101,6 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
   return static_cast<AnimationCollection*>(content->GetProperty(animProp));
 }
 
-AnimationCollection*
-CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
-                                                   nsCSSProperty aProperty)
-{
-  AnimationCollection* collection = GetAnimationCollection(aFrame);
-  if (!collection ||
-      !collection->HasCurrentAnimationOfProperty(aProperty) ||
-      !collection->CanPerformOnCompositorThread(aFrame)) {
-    return nullptr;
-  }
-
-  // This animation can be done on the compositor.
-  return collection;
-}
-
 nsRestyleHint
 CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
@@ -430,52 +415,6 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
   fprintf_stderr(out, "%s", str.get());
 }
 #endif
-
-bool
-AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
-{
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animations are disabled");
-      AnimationUtils::LogAsyncAnimationFailure(message);
-    }
-    return false;
-  }
-
-  if (aFrame->RefusedAsyncAnimation()) {
-    return false;
-  }
-
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const Animation* anim = mAnimations[animIdx];
-    if (!anim->IsPlaying()) {
-      continue;
-    }
-
-    const KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect, "A playing animation should have an effect");
-
-    if (effect->ShouldBlockCompositorAnimations(aFrame)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool
-AnimationCollection::HasCurrentAnimationOfProperty(nsCSSProperty
-                                                     aProperty) const
-{
-  for (Animation* animation : mAnimations) {
-    if (animation->HasCurrentEffect() &&
-        animation->GetEffect()->HasAnimationOfProperty(aProperty)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /*static*/ nsString
 AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
