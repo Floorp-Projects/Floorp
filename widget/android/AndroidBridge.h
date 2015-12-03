@@ -206,7 +206,8 @@ public:
                                const nsAString& aAlertText,
                                const nsAString& aAlertData,
                                nsIObserver *aAlertListener,
-                               const nsAString& aAlertName);
+                               const nsAString& aAlertName,
+                               nsIPrincipal* aPrincipal);
 
     int GetDPI();
     int GetScreenDepth();
