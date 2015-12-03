@@ -146,6 +146,16 @@ class SharedOps
         js::jit::AtomicOperations::memmoveSafeWhenRacy(dest, src, size);
     }
 
+    template<typename T>
+    static void podCopy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        js::jit::AtomicOperations::podCopySafeWhenRacy(dest, src, nelem);
+    }
+
+    template<typename T>
+    static void podMove(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        js::jit::AtomicOperations::podMoveSafeWhenRacy(dest, src, nelem);
+    }
+
     static SharedMem<void*> extract(TypedArrayObject* obj) {
         return obj->viewDataEither();
     }
@@ -172,6 +182,16 @@ class UnsharedOps
     template<typename T>
     static void memmove(SharedMem<T*> dest, SharedMem<T*> src, size_t size) {
         ::memmove(dest.unwrapUnshared(), src.unwrapUnshared(), size);
+    }
+
+    template<typename T>
+    static void podCopy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        mozilla::PodCopy(dest.unwrapUnshared(), src.unwrapUnshared(), nelem);
+    }
+
+    template<typename T>
+    static void podMove(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
+        mozilla::PodMove(dest.unwrapUnshared(), src.unwrapUnshared(), nelem);
     }
 
     static SharedMem<void*> extract(TypedArrayObject* obj) {
@@ -212,7 +232,7 @@ class ElementSpecific
         uint32_t count = AnyTypedArrayLength(source);
 
         if (AnyTypedArrayType(source) == target->type()) {
-            Ops::memcpy(dest.template cast<void*>(), AnyTypedArrayViewData(source), count*sizeof(T));
+            Ops::podCopy(dest, AnyTypedArrayViewData(source).template cast<T*>(), count);
             return true;
         }
 
@@ -359,7 +379,7 @@ class ElementSpecific
         uint32_t len = source->length();
 
         if (source->type() == target->type()) {
-            Ops::memmove(dest, AnyTypedArrayViewData(source).template cast<T*>(), len*sizeof(T));
+            Ops::podMove(dest, AnyTypedArrayViewData(source).template cast<T*>(), len);
             return true;
         }
 
