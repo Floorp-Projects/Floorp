@@ -213,6 +213,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to start a browser tab share.
+     */
+    StartBrowserShare: Action.define("startBrowserShare", {
+    }),
+
+    /**
      * Used to end a screen share.
      */
     EndScreenShare: Action.define("endScreenShare", {

@@ -258,6 +258,7 @@ loop.store.ActiveRoomStore = (function() {
         "remoteVideoStatus",
         "videoDimensionsChanged",
         "startScreenShare",
+        "startBrowserShare",
         "endScreenShare",
         "updateSocialShareInfo",
         "connectionStatus",
@@ -947,6 +948,15 @@ loop.store.ActiveRoomStore = (function() {
       } else {
         this._sdkDriver.startScreenShare(options);
       }
+    },
+
+    /**
+     * Initiates a browser tab sharing publisher.
+     *
+     * @param {sharedActions.StartBrowserShare} actionData
+     */
+    startBrowserShare: function(actionData) {
+      this.startScreenShare({ type: "browser" });
     },
 
     /**
