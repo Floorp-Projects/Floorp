@@ -276,7 +276,7 @@ private:
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
   // constructor immediately after the task queue is created.
-  void InitializationTask();
+  void InitializationTask(MediaDecoder* aDecoder);
 
   void SetDormant(bool aDormant);
 
@@ -676,6 +676,10 @@ private:
   // causing the decoder to be destroyed. This is accessed on the decode,
   // state machine, audio and main threads.
   RefPtr<MediaDecoder> mDecoder;
+  void* const mDecoderID;
+  const RefPtr<FrameStatistics> mFrameStats;
+  const RefPtr<VideoFrameContainer> mVideoFrameContainer;
+  const dom::AudioChannel mAudioChannel;
 
   // Task queue for running the state machine.
   RefPtr<TaskQueue> mTaskQueue;
