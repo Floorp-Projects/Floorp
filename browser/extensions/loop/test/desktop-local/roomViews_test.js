@@ -437,6 +437,15 @@ describe("loop.roomViews", function() {
 
           expectActionDispatched(component);
         });
+
+      it("should dispatch a `StartBrowserShare` action when the SESSION_CONNECTED state is entered", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
+        var component = mountTestComponent();
+
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
+
+        expectActionDispatched("startBrowserShare");
+      });
     });
 
     describe("#render", function() {

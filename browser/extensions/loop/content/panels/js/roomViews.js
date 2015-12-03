@@ -622,6 +622,12 @@ loop.roomViews = (function(mozL10n) {
           })
         }));
       }
+
+      // Automatically start sharing a tab now we're ready to share.
+      if (this.state.roomState !== ROOM_STATES.SESSION_CONNECTED &&
+          nextState.roomState === ROOM_STATES.SESSION_CONNECTED) {
+        this.props.dispatcher.dispatch(new sharedActions.StartBrowserShare());
+      }
     },
 
     /**
