@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
   function doTest() {
     var t = new TestInterfaceJS();
     /* Async parent frames from pushPrefEnv don't show up in e10s.  */
-    var isE10S = !SpecialPowers.isMainProcess();
+    var isE10S = !SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser");
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = location.href;
     var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:121:1
