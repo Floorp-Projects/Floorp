@@ -51,7 +51,7 @@ function promiseStartDownload(aSourceUrl) {
  * @rejects JavaScript exception.
  */
 function promiseStartDownload_tryToKeepPartialData() {
-  return Task.spawn(function () {
+  return Task.spawn(function* () {
     mustInterruptResponses();
 
     // Start a new download and configure it to keep partially downloaded data.
@@ -74,7 +74,7 @@ function promiseStartDownload_tryToKeepPartialData() {
     yield promiseDownloadMidway(download);
     yield promisePartFileReady(download);
 
-    throw new Task.Result(download);
+    return download;
   });
 }
 
@@ -88,7 +88,7 @@ function promiseStartDownload_tryToKeepPartialData() {
  * @rejects JavaScript exception.
  */
 function promisePartFileReady(aDownload) {
-  return Task.spawn(function () {
+  return Task.spawn(function* () {
     // We don't have control over the file output code in BackgroundFileSaver.
     // After we receive the download progress notification, we may only check
     // that the ".part" file has been created, while its size cannot be
@@ -97,7 +97,10 @@ function promisePartFileReady(aDownload) {
       do {
         yield promiseTimeout(50);
       } while (!(yield OS.File.exists(aDownload.target.partFilePath)));
-    } catch (ex if ex instanceof OS.File.Error) {
+    } catch (ex) {
+      if (!(ex instanceof OS.File.Error)) {
+        throw ex;
+      }
       // This indicates that the file has been created and cannot be accessed.
       // The specific error might vary with the platform.
       do_print("Expected exception while checking existence: " + ex.toString());
@@ -135,7 +138,7 @@ var promiseVerifyTarget = Task.async(function* (downloadTarget,
  * The download is started by constructing the simplest Download object with
  * the "copy" saver, or using the legacy nsITransfer interface.
  */
-add_task(function test_basic()
+add_task(function* test_basic()
 {
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
 
@@ -176,7 +179,7 @@ add_task(function test_basic()
  * that the file is saved correctly.  When testing DownloadLegacySaver, the
  * download is executed using the nsIExternalHelperAppService component.
  */
-add_task(function test_basic_tryToKeepPartialData()
+add_task(function* test_basic_tryToKeepPartialData()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
   continueResponses();
@@ -191,7 +194,7 @@ add_task(function test_basic_tryToKeepPartialData()
 /**
  * Tests the permissions of the final target file once the download finished.
  */
-add_task(function test_unix_permissions()
+add_task(function* test_unix_permissions()
 {
   // This test is only executed on some Desktop systems.
   if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux" &&
@@ -254,7 +257,7 @@ add_task(function test_unix_permissions()
 /**
  * Checks the referrer for downloads.
  */
-add_task(function test_referrer()
+add_task(function* test_referrer()
 {
   let sourcePath = "/test_referrer.txt";
   let sourceUrl = httpUrl("test_referrer.txt");
@@ -301,7 +304,7 @@ add_task(function test_referrer()
 /**
  * Checks initial and final state and progress for a successful download.
  */
-add_task(function test_initial_final_state()
+add_task(function* test_initial_final_state()
 {
   let download;
   if (!gUseLegacySaver) {
@@ -339,7 +342,7 @@ add_task(function test_initial_final_state()
 /**
  * Checks the notification of the final download state.
  */
-add_task(function test_final_state_notified()
+add_task(function* test_final_state_notified()
 {
   mustInterruptResponses();
 
@@ -368,7 +371,7 @@ add_task(function test_final_state_notified()
 /**
  * Checks intermediate progress for a successful download.
  */
-add_task(function test_intermediate_progress()
+add_task(function* test_intermediate_progress()
 {
   mustInterruptResponses();
 
@@ -397,7 +400,7 @@ add_task(function test_intermediate_progress()
 /**
  * Downloads a file with a "Content-Length" of 0 and checks the progress.
  */
-add_task(function test_empty_progress()
+add_task(function* test_empty_progress()
 {
   let download = yield promiseStartDownload(httpUrl("empty.txt"));
   yield promiseDownloadStopped(download);
@@ -420,7 +423,7 @@ add_task(function test_empty_progress()
  * Downloads a file with a "Content-Length" of 0 with the tryToKeepPartialData
  * property set, and ensures that the file is saved correctly.
  */
-add_task(function test_empty_progress_tryToKeepPartialData()
+add_task(function* test_empty_progress_tryToKeepPartialData()
 {
   // Start a new download and configure it to keep partially downloaded data.
   let download;
@@ -453,7 +456,7 @@ add_task(function test_empty_progress_tryToKeepPartialData()
 /**
  * Downloads an empty file with no "Content-Length" and checks the progress.
  */
-add_task(function test_empty_noprogress()
+add_task(function* test_empty_noprogress()
 {
   let sourcePath = "/test_empty_noprogress.txt";
   let sourceUrl = httpUrl("test_empty_noprogress.txt");
@@ -530,7 +533,7 @@ add_task(function test_empty_noprogress()
 /**
  * Calls the "start" method two times before the download is finished.
  */
-add_task(function test_start_twice()
+add_task(function* test_start_twice()
 {
   mustInterruptResponses();
 
@@ -567,7 +570,7 @@ add_task(function test_start_twice()
 /**
  * Cancels a download and verifies that its state is reported correctly.
  */
-add_task(function test_cancel_midway()
+add_task(function* test_cancel_midway()
 {
   mustInterruptResponses();
 
@@ -633,7 +636,10 @@ add_task(function test_cancel_midway()
     try {
       yield promiseAttempt;
       do_throw("The download should have been canceled.");
-    } catch (ex if ex instanceof Downloads.Error) {
+    } catch (ex) {
+      if (!(ex instanceof Downloads.Error)) {
+        throw ex;
+      }
       do_check_false(ex.becauseSourceFailed);
       do_check_false(ex.becauseTargetFailed);
     }
@@ -644,7 +650,7 @@ add_task(function test_cancel_midway()
  * Cancels a download while keeping partially downloaded data, and verifies that
  * both the target file and the ".part" file are deleted.
  */
-add_task(function test_cancel_midway_tryToKeepPartialData()
+add_task(function* test_cancel_midway_tryToKeepPartialData()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
 
@@ -665,7 +671,7 @@ add_task(function test_cancel_midway_tryToKeepPartialData()
 /**
  * Cancels a download right after starting it.
  */
-add_task(function test_cancel_immediately()
+add_task(function* test_cancel_immediately()
 {
   mustInterruptResponses();
 
@@ -683,7 +689,10 @@ add_task(function test_cancel_immediately()
   try {
     yield promiseAttempt;
     do_throw("The download should have been canceled.");
-  } catch (ex if ex instanceof Downloads.Error) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error)) {
+      throw ex;
+    }
     do_check_false(ex.becauseSourceFailed);
     do_check_false(ex.becauseTargetFailed);
   }
@@ -701,7 +710,7 @@ add_task(function test_cancel_immediately()
 /**
  * Cancels and restarts a download sequentially.
  */
-add_task(function test_cancel_midway_restart()
+add_task(function* test_cancel_midway_restart()
 {
   mustInterruptResponses();
 
@@ -743,7 +752,7 @@ add_task(function test_cancel_midway_restart()
 /**
  * Cancels a download and restarts it from where it stopped.
  */
-add_task(function test_cancel_midway_restart_tryToKeepPartialData()
+add_task(function* test_cancel_midway_restart_tryToKeepPartialData()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
@@ -797,7 +806,7 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData()
  * Cancels a download while keeping partially downloaded data, then removes the
  * data and restarts the download from the beginning.
  */
-add_task(function test_cancel_midway_restart_removePartialData()
+add_task(function* test_cancel_midway_restart_removePartialData()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
@@ -831,7 +840,7 @@ add_task(function test_cancel_midway_restart_removePartialData()
  * data and restarts the download from the beginning without keeping the partial
  * data anymore.
  */
-add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
+add_task(function* test_cancel_midway_restart_tryToKeepPartialData_false()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
   yield download.cancel();
@@ -884,7 +893,7 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
 /**
  * Cancels a download right after starting it, then restarts it immediately.
  */
-add_task(function test_cancel_immediately_restart_immediately()
+add_task(function* test_cancel_immediately_restart_immediately()
 {
   mustInterruptResponses();
 
@@ -918,7 +927,10 @@ add_task(function test_cancel_immediately_restart_immediately()
     // fact, this could be a valid outcome, because the cancellation request may
     // not have been processed in time before the download finished.
     do_print("The download should have been canceled.");
-  } catch (ex if ex instanceof Downloads.Error) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error)) {
+      throw ex;
+    }
     do_check_false(ex.becauseSourceFailed);
     do_check_false(ex.becauseTargetFailed);
   }
@@ -936,7 +948,7 @@ add_task(function test_cancel_immediately_restart_immediately()
 /**
  * Cancels a download midway, then restarts it immediately.
  */
-add_task(function test_cancel_midway_restart_immediately()
+add_task(function* test_cancel_midway_restart_immediately()
 {
   mustInterruptResponses();
 
@@ -966,7 +978,10 @@ add_task(function test_cancel_midway_restart_immediately()
   try {
     yield promiseAttempt;
     do_throw("The download should have been canceled.");
-  } catch (ex if ex instanceof Downloads.Error) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error)) {
+      throw ex;
+    }
     do_check_false(ex.becauseSourceFailed);
     do_check_false(ex.becauseTargetFailed);
   }
@@ -984,7 +999,7 @@ add_task(function test_cancel_midway_restart_immediately()
 /**
  * Calls the "cancel" method on a successful download.
  */
-add_task(function test_cancel_successful()
+add_task(function* test_cancel_successful()
 {
   let download = yield promiseStartDownload();
   yield promiseDownloadStopped(download);
@@ -1003,7 +1018,7 @@ add_task(function test_cancel_successful()
 /**
  * Calls the "cancel" method two times in a row.
  */
-add_task(function test_cancel_twice()
+add_task(function* test_cancel_twice()
 {
   mustInterruptResponses();
 
@@ -1019,7 +1034,10 @@ add_task(function test_cancel_twice()
   try {
     yield promiseAttempt;
     do_throw("The download should have been canceled.");
-  } catch (ex if ex instanceof Downloads.Error) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error)) {
+      throw ex;
+    }
     do_check_false(ex.becauseSourceFailed);
     do_check_false(ex.becauseTargetFailed);
   }
@@ -1039,7 +1057,7 @@ add_task(function test_cancel_twice()
 /**
  * Checks the "refresh" method for succeeded downloads.
  */
-add_task(function test_refresh_succeeded()
+add_task(function* test_refresh_succeeded()
 {
   let download = yield promiseStartDownload();
   yield promiseDownloadStopped(download);
@@ -1064,7 +1082,7 @@ add_task(function test_refresh_succeeded()
 /**
  * Checks that a download cannot be restarted after the "finalize" method.
  */
-add_task(function test_finalize()
+add_task(function* test_finalize()
 {
   mustInterruptResponses();
 
@@ -1090,7 +1108,7 @@ add_task(function test_finalize()
 /**
  * Checks that the "finalize" method can remove partially downloaded data.
  */
-add_task(function test_finalize_tryToKeepPartialData()
+add_task(function* test_finalize_tryToKeepPartialData()
 {
   // Check finalization without removing partial data.
   let download = yield promiseStartDownload_tryToKeepPartialData();
@@ -1113,7 +1131,7 @@ add_task(function test_finalize_tryToKeepPartialData()
 /**
  * Checks that whenSucceeded returns a promise that is resolved after a restart.
  */
-add_task(function test_whenSucceeded_after_restart()
+add_task(function* test_whenSucceeded_after_restart()
 {
   mustInterruptResponses();
 
@@ -1154,7 +1172,7 @@ add_task(function test_whenSucceeded_after_restart()
 /**
  * Ensures download error details are reported on network failures.
  */
-add_task(function test_error_source()
+add_task(function* test_error_source()
 {
   let serverSocket = startFakeServer();
   try {
@@ -1179,7 +1197,10 @@ add_task(function test_error_source()
         yield promiseDownloadStopped(download);
       }
       do_throw("The download should have failed.");
-    } catch (ex if ex instanceof Downloads.Error && ex.becauseSourceFailed) {
+    } catch (ex) {
+      if (!(ex instanceof Downloads.Error) || !ex.becauseSourceFailed) {
+        throw ex;
+      }
       // A specific error object is thrown when reading from the source fails.
     }
 
@@ -1202,7 +1223,7 @@ add_task(function test_error_source()
  * Ensures a download error is reported when receiving less bytes than what was
  * specified in the Content-Length header.
  */
-add_task(function test_error_source_partial()
+add_task(function* test_error_source_partial()
 {
   let sourceUrl = httpUrl("shorter-than-content-length-http-1-1.txt");
 
@@ -1233,7 +1254,10 @@ add_task(function test_error_source_partial()
       yield promiseDownloadStopped(download);
     }
     do_throw("The download should have failed.");
-  } catch (ex if ex instanceof Downloads.Error && ex.becauseSourceFailed) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseSourceFailed) {
+      throw ex;
+    }
     // A specific error object is thrown when reading from the source fails.
   }
 
@@ -1253,7 +1277,7 @@ add_task(function test_error_source_partial()
 /**
  * Ensures download error details are reported on local writing failures.
  */
-add_task(function test_error_target()
+add_task(function* test_error_target()
 {
   // Create a file without write access permissions before downloading.
   let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
@@ -1279,7 +1303,10 @@ add_task(function test_error_target()
         yield promiseDownloadStopped(download);
       }
       do_throw("The download should have failed.");
-    } catch (ex if ex instanceof Downloads.Error && ex.becauseTargetFailed) {
+    } catch (ex) {
+      if (!(ex instanceof Downloads.Error) || !ex.becauseTargetFailed) {
+        throw ex;
+      }
       // A specific error object is thrown when writing to the target fails.
     }
 
@@ -1301,7 +1328,7 @@ add_task(function test_error_target()
 /**
  * Restarts a failed download.
  */
-add_task(function test_error_restart()
+add_task(function* test_error_restart()
 {
   let download;
 
@@ -1323,7 +1350,10 @@ add_task(function test_error_restart()
     }
     yield promiseDownloadStopped(download);
     do_throw("The download should have failed.");
-  } catch (ex if ex instanceof Downloads.Error && ex.becauseTargetFailed) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseTargetFailed) {
+      throw ex;
+    }
     // A specific error object is thrown when writing to the target fails.
   } finally {
     // Restore the default permissions to allow deleting the file on Windows.
@@ -1353,7 +1383,7 @@ add_task(function test_error_restart()
 /**
  * Executes download in both public and private modes.
  */
-add_task(function test_public_and_private()
+add_task(function* test_public_and_private()
 {
   let sourcePath = "/test_public_and_private.txt";
   let sourceUrl = httpUrl("test_public_and_private.txt");
@@ -1410,7 +1440,7 @@ add_task(function test_public_and_private()
 /**
  * Checks the startTime gets updated even after a restart.
  */
-add_task(function test_cancel_immediately_restart_and_check_startTime()
+add_task(function* test_cancel_immediately_restart_and_check_startTime()
 {
   let download = yield promiseStartDownload();
 
@@ -1430,7 +1460,7 @@ add_task(function test_cancel_immediately_restart_and_check_startTime()
 /**
  * Executes download with content-encoding.
  */
-add_task(function test_with_content_encoding()
+add_task(function* test_with_content_encoding()
 {
   let sourcePath = "/test_with_content_encoding.txt";
   let sourceUrl = httpUrl("test_with_content_encoding.txt");
@@ -1466,7 +1496,7 @@ add_task(function test_with_content_encoding()
 /**
  * Checks that the file is not decoded if the extension matches the encoding.
  */
-add_task(function test_with_content_encoding_ignore_extension()
+add_task(function* test_with_content_encoding_ignore_extension()
 {
   let sourcePath = "/test_with_content_encoding_ignore_extension.gz";
   let sourceUrl = httpUrl("test_with_content_encoding_ignore_extension.gz");
@@ -1505,7 +1535,7 @@ add_task(function test_with_content_encoding_ignore_extension()
 /**
  * Cancels and restarts a download sequentially with content-encoding.
  */
-add_task(function test_cancel_midway_restart_with_content_encoding()
+add_task(function* test_cancel_midway_restart_with_content_encoding()
 {
   mustInterruptResponses();
 
@@ -1543,7 +1573,7 @@ add_task(function test_cancel_midway_restart_with_content_encoding()
 /**
  * Download with parental controls enabled.
  */
-add_task(function test_blocked_parental_controls()
+add_task(function* test_blocked_parental_controls()
 {
   function cleanup() {
     DownloadIntegration.shouldBlockInTest = false;
@@ -1567,7 +1597,10 @@ add_task(function test_blocked_parental_controls()
       yield promiseDownloadStopped(download);
     }
     do_throw("The download should have blocked.");
-  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
+      throw ex;
+    }
     do_check_true(ex.becauseBlockedByParentalControls);
     do_check_true(download.error.becauseBlockedByParentalControls);
   }
@@ -1582,7 +1615,7 @@ add_task(function test_blocked_parental_controls()
  * Test a download that will be blocked by Windows parental controls by
  * resulting in an HTTP status code of 450.
  */
-add_task(function test_blocked_parental_controls_httpstatus450()
+add_task(function* test_blocked_parental_controls_httpstatus450()
 {
   let download;
   try {
@@ -1595,7 +1628,10 @@ add_task(function test_blocked_parental_controls_httpstatus450()
       yield promiseDownloadStopped(download);
     }
     do_throw("The download should have blocked.");
-  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
+      throw ex;
+    }
     do_check_true(ex.becauseBlockedByParentalControls);
     do_check_true(download.error.becauseBlockedByParentalControls);
     do_check_true(download.stopped);
@@ -1609,7 +1645,7 @@ add_task(function test_blocked_parental_controls_httpstatus450()
  * DownloadLegacySaver can only retrieve the hash when
  * nsIExternalHelperAppService is invoked.
  */
-add_task(function test_getSha256Hash()
+add_task(function* test_getSha256Hash()
 {
   if (!gUseLegacySaver) {
     let download = yield promiseStartDownload(httpUrl("source.txt"));
@@ -1658,7 +1694,10 @@ var promiseBlockedDownload = Task.async(function* (options) {
 
     yield promiseDownloadStopped(download);
     do_throw("The download should have blocked.");
-  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+  } catch (ex) {
+    if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
+      throw ex;
+    }
     do_check_true(ex.becauseBlockedByReputationCheck);
     do_check_true(download.error.becauseBlockedByReputationCheck);
   }
@@ -1675,7 +1714,7 @@ var promiseBlockedDownload = Task.async(function* (options) {
  * Checks that application reputation blocks the download and the target file
  * does not exist.
  */
-add_task(function test_blocked_applicationReputation()
+add_task(function* test_blocked_applicationReputation()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: false,
@@ -1695,7 +1734,7 @@ add_task(function test_blocked_applicationReputation()
  * Checks that application reputation blocks the download but maintains the
  * blocked data, which will be deleted when the block is confirmed.
  */
-add_task(function test_blocked_applicationReputation_confirmBlock()
+add_task(function* test_blocked_applicationReputation_confirmBlock()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: true,
@@ -1722,7 +1761,7 @@ add_task(function test_blocked_applicationReputation_confirmBlock()
  * Checks that application reputation blocks the download but maintains the
  * blocked data, which will be used to complete the download when unblocking.
  */
-add_task(function test_blocked_applicationReputation_unblock()
+add_task(function* test_blocked_applicationReputation_unblock()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: true,
@@ -1752,7 +1791,7 @@ add_task(function test_blocked_applicationReputation_unblock()
 /**
  * Check that calling cancel on a blocked download will not cause errors
  */
-add_task(function test_blocked_applicationReputation_cancel()
+add_task(function* test_blocked_applicationReputation_cancel()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: true,
@@ -1773,7 +1812,7 @@ add_task(function test_blocked_applicationReputation_cancel()
 /**
  * Checks that unblock and confirmBlock cannot race on a blocked download
  */
-add_task(function test_blocked_applicationReputation_decisionRace()
+add_task(function* test_blocked_applicationReputation_decisionRace()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: true,
@@ -1826,7 +1865,7 @@ add_task(function test_blocked_applicationReputation_decisionRace()
  * Checks that unblocking a blocked download fails if the blocked data has been
  * removed.
  */
-add_task(function test_blocked_applicationReputation_unblock()
+add_task(function* test_blocked_applicationReputation_unblock()
 {
   let download = yield promiseBlockedDownload({
     keepPartialData: true,
@@ -1856,7 +1895,7 @@ add_task(function test_blocked_applicationReputation_unblock()
 /**
  * download.showContainingDirectory() action
  */
-add_task(function test_showContainingDirectory() {
+add_task(function* test_showContainingDirectory() {
   DownloadIntegration._deferTestShowDir = Promise.defer();
 
   let targetPath = getTempFile(TEST_TARGET_FILE_NAME).path;
@@ -1869,7 +1908,10 @@ add_task(function test_showContainingDirectory() {
   try {
     yield download.showContainingDirectory();
     do_throw("Should have failed because of an invalid path.");
-  } catch (ex if ex instanceof Components.Exception) {
+  } catch (ex) {
+    if (!(ex instanceof Components.Exception)) {
+      throw ex;
+    }
     // Invalid paths on Windows are reported with NS_ERROR_FAILURE,
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
     let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
@@ -1892,7 +1934,7 @@ add_task(function test_showContainingDirectory() {
 /**
  * download.launch() action
  */
-add_task(function test_launch() {
+add_task(function* test_launch() {
   let customLauncher = getTempFile("app-launcher");
 
   // Test both with and without setting a custom application.
@@ -1950,7 +1992,7 @@ add_task(function test_launch() {
 /**
  * Test passing an invalid path as the launcherPath property.
  */
-add_task(function test_launcherPath_invalid() {
+add_task(function* test_launcherPath_invalid() {
   let download = yield Downloads.createDownload({
     source: { url: httpUrl("source.txt") },
     target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
@@ -1963,7 +2005,10 @@ add_task(function test_launcherPath_invalid() {
     download.launch();
     result = yield DownloadIntegration._deferTestOpenFile.promise;
     do_throw("Can't launch file with invalid custom launcher")
-  } catch (ex if ex instanceof Components.Exception) {
+  } catch (ex) {
+    if (!(ex instanceof Components.Exception)) {
+      throw ex;
+    }
     // Invalid paths on Windows are reported with NS_ERROR_FAILURE,
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
     let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
@@ -1976,7 +2021,7 @@ add_task(function test_launcherPath_invalid() {
  * Tests that download.launch() is automatically called after
  * the download finishes if download.launchWhenSucceeded = true
  */
-add_task(function test_launchWhenSucceeded() {
+add_task(function* test_launchWhenSucceeded() {
   let customLauncher = getTempFile("app-launcher");
 
   // Test both with and without setting a custom application.
@@ -2018,7 +2063,7 @@ add_task(function test_launchWhenSucceeded() {
 /**
  * Tests that the proper content type is set for a normal download.
  */
-add_task(function test_contentType() {
+add_task(function* test_contentType() {
   let download = yield promiseStartDownload(httpUrl("source.txt"));
   yield promiseDownloadStopped(download);
 
@@ -2029,7 +2074,7 @@ add_task(function test_contentType() {
  * Tests that the serialization/deserialization of the startTime Date
  * object works correctly.
  */
-add_task(function test_toSerializable_startTime()
+add_task(function* test_toSerializable_startTime()
 {
   let download1 = yield promiseStartDownload(httpUrl("source.txt"));
   yield promiseDownloadStopped(download1);
@@ -2049,7 +2094,7 @@ add_task(function test_toSerializable_startTime()
  * DownloadPlatform::DownloadDone. While there is no test to verify the
  * specific behaviours, this at least ensures that there is no error or crash.
  */
-add_task(function test_platform_integration()
+add_task(function* test_platform_integration()
 {
   let downloadFiles = [];
   let oldDeviceStorageEnabled = false;
@@ -2120,7 +2165,7 @@ add_task(function test_platform_integration()
 /**
  * Checks that downloads are added to browsing history when they start.
  */
-add_task(function test_history()
+add_task(function* test_history()
 {
   mustInterruptResponses();
 
@@ -2150,7 +2195,7 @@ add_task(function test_history()
  * Checks that downloads started by nsIHelperAppService are added to the
  * browsing history when they start.
  */
-add_task(function test_history_tryToKeepPartialData()
+add_task(function* test_history_tryToKeepPartialData()
 {
   // We will wait for the visit to be notified during the download.
   yield PlacesTestUtils.clearHistory();
@@ -2179,7 +2224,7 @@ add_task(function test_history_tryToKeepPartialData()
  * Tests that the temp download files are removed on exit and exiting private
  * mode after they have been launched.
  */
-add_task(function test_launchWhenSucceeded_deleteTempFileOnExit() {
+add_task(function* test_launchWhenSucceeded_deleteTempFileOnExit() {
   const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
 
   let customLauncherPath = getTempFile("app-launcher").path;

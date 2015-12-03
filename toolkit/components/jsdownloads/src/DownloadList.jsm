@@ -233,7 +233,7 @@ this.DownloadList.prototype = {
    *        additional filter.
    */
   removeFinished: function DL_removeFinished(aFilterFn) {
-    Task.spawn(function() {
+    Task.spawn(function* () {
       let list = yield this.getAll();
       for (let download of list) {
         // Remove downloads that have been canceled, even if the cancellation
