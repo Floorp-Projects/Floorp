@@ -2022,9 +2022,6 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
 {
   nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.LookupOrAdd(aOwner);
 
-  MOZ_ASSERT(aOwner, "aOwner must be a valid pointer");
-  MOZ_ASSERT(aOwner->Elm(), "aOwner->Elm() must be a valid pointer");
-
   IDRefsIterator iter(this, aOwner->Elm(), nsGkAtoms::aria_owns);
   Accessible* child = nullptr;
 
