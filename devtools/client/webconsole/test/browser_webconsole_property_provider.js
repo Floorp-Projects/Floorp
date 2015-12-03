@@ -21,7 +21,7 @@ function testPropertyProvider({browser}) {
   let tmp = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
   tmp.addDebuggerToGlobal(tmp);
   let dbg = new tmp.Debugger();
-  let dbgWindow = dbg.makeGlobalObjectReference(content);
+  let dbgWindow = dbg.addDebuggee(content);
 
   let completion = JSPropertyProvider(dbgWindow, null, "thisIsNotDefined");
   is(completion.matches.length, 0, "no match for 'thisIsNotDefined");
@@ -41,5 +41,6 @@ function testPropertyProvider({browser}) {
   ok(matches[0] == "location", "the first match is 'location'");
   ok(matches[1] == "locationbar", "the second match is 'locationbar'");
 
+  dbg.removeDebuggee(content);
   finishTest();
 }
