@@ -152,7 +152,7 @@ private:
 
   void ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
-  virtual gfx::IntSize GetWidgetSize() const override
+  virtual LayoutDeviceIntSize GetWidgetSize() const override
   {
     return mSize;
   }
@@ -169,7 +169,7 @@ private:
   RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D9> mCurrentRT;
 
-  gfx::IntSize mSize;
+  LayoutDeviceIntSize mSize;
 
   uint32_t mDeviceResetCount;
   uint32_t mFailedResetAttempts;

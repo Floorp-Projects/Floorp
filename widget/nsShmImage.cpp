@@ -46,7 +46,7 @@ TrapShmError(Display* aDisplay, XErrorEvent* aEvent)
 #endif
 
 already_AddRefed<nsShmImage>
-nsShmImage::Create(const IntSize& aSize,
+nsShmImage::Create(const LayoutDeviceIntSize& aSize,
                    Display* aDisplay, Visual* aVisual, unsigned int aDepth)
 {
     RefPtr<nsShmImage> shm = new nsShmImage();
@@ -128,20 +128,22 @@ nsShmImage::CreateDrawTarget()
 {
   return gfxPlatform::GetPlatform()->CreateDrawTargetForData(
     static_cast<unsigned char*>(mSegment->memory()),
-    mSize,
+    mSize.ToUnknownSize(),
     mImage->bytes_per_line,
     mFormat);
 }
 
 #ifdef MOZ_WIDGET_GTK
 void
-nsShmImage::Put(Display* aDisplay, Drawable aWindow, const nsIntRegion& aRegion)
+nsShmImage::Put(Display* aDisplay, Drawable aWindow,
+                const LayoutDeviceIntRegion& aRegion)
 {
     GC gc = XCreateGC(aDisplay, aWindow, 0, nullptr);
-    nsIntRegion bounded;
-    bounded.And(aRegion, nsIntRect(0, 0, mImage->width, mImage->height));
-    nsIntRegionRectIterator iter(bounded);
-    for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
+    LayoutDeviceIntRegion bounded;
+    bounded.And(aRegion,
+                LayoutDeviceIntRect(0, 0, mImage->width, mImage->height));
+    LayoutDeviceIntRegion::RectIterator iter(bounded);
+    for (const LayoutDeviceIntRect *r = iter.Next(); r; r = iter.Next()) {
         XShmPutImage(aDisplay, aWindow, gc, mImage,
                      r->x, r->y,
                      r->x, r->y,
@@ -180,7 +182,7 @@ nsShmImage::Put(QWindow* aWindow, QRect& aRect)
 #endif
 
 already_AddRefed<DrawTarget>
-nsShmImage::EnsureShmImage(const IntSize& aSize,
+nsShmImage::EnsureShmImage(const LayoutDeviceIntSize& aSize,
                            Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                            RefPtr<nsShmImage>& aImage)
 {
