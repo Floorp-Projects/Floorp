@@ -154,7 +154,7 @@ PlacesTreeView.prototype = {
     // A node is removed form the view either if it has no parent or if its
     // root-ancestor is not the root node (in which case that's the node
     // for which nodeRemoved was called).
-    let ancestors = [x for (x of PlacesUtils.nodeAncestors(aNode))];
+    let ancestors = Array.from(PlacesUtils.nodeAncestors(aNode));
     if (ancestors.length == 0 ||
         ancestors[ancestors.length - 1] != this._rootNode) {
       throw new Error("Removed node passed to _getRowForNode");
