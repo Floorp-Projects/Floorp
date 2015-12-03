@@ -510,9 +510,10 @@ status_t MPEG4Extractor::readMetaData() {
     uint64_t psshsize = 0;
     for (size_t i = 0; i < mPssh.Length(); i++) {
         psshsize += 20 + mPssh[i].datalen;
-    }
-    if (psshsize > kMAX_ALLOCATION) {
-        return ERROR_MALFORMED;
+        if (mPssh[i].datalen > kMAX_ALLOCATION - 20 ||
+            psshsize > kMAX_ALLOCATION) {
+            return ERROR_MALFORMED;
+        }
     }
     if (psshsize) {
         char *buf = (char*)malloc(psshsize);
