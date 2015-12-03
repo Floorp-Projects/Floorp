@@ -1713,7 +1713,7 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
     if (relAttr == nsGkAtoms::aria_owns) {
       nsTArray<nsIContent*>* children = mARIAOwnsHash.Get(aRelProvider);
       if (children) {
-        nsTArray<Accessible*> containers;
+        nsTArray<RefPtr<Accessible> > containers;
 
         // Remove ARIA owned elements from where they belonged.
         RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aRelProvider);
@@ -1757,7 +1757,9 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
         // Reinserted previously ARIA owned elements into the tree
         // (restore a DOM-like order).
         for (uint32_t idx = 0; idx < containers.Length(); idx++) {
-          UpdateTreeOnInsertion(containers[idx]);
+          if (containers[idx]->IsInDocument()) {
+            UpdateTreeOnInsertion(containers[idx]);
+          }
         }
       }
     }
