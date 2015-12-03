@@ -2108,7 +2108,7 @@ IonCompile(JSContext* cx, JSScript* script,
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
-    MOZ_ASSERT(optimizationLevel > Optimization_DontCompile);
+    MOZ_ASSERT(optimizationLevel != OptimizationLevel::DontCompile);
 
     // Make sure the script's canonical function isn't lazy. We can't de-lazify
     // it in a helper thread.
@@ -2396,7 +2396,7 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
 
     bool recompile = false;
     OptimizationLevel optimizationLevel = GetOptimizationLevel(script, osrPc);
-    if (optimizationLevel == Optimization_DontCompile)
+    if (optimizationLevel == OptimizationLevel::DontCompile)
         return Method_Skipped;
 
     if (script->hasIonScript()) {
