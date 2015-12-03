@@ -12,7 +12,7 @@ function isRedThumbnailFuzz(r, g, b, expectedR, expectedB, expectedG, aFuzz)
 }
 
 // Test for black borders caused by scrollbars.
-function runTests() {
+function* runTests() {
   // Create a tab with a page with a red background and scrollbars.
   yield addTab(URL);
   yield captureAndCheckColor(255, 0, 0, "we have a red thumbnail");

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function runTests() {
+function* runTests() {
   // Visit the test page in the browser and tell it to set a cookie.
   let url = bgTestPageURL({ setGreenCookie: true });
   let tab = gBrowser.loadOneTab(url, { inBackground: false });

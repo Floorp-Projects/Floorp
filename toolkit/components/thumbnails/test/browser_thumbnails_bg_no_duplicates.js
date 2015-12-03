@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function runTests() {
+function* runTests() {
   let url = "http://example.com/1";
   ok(!thumbnailExists(url), "Thumbnail file should not already exist.");
   let numCallbacks = 0;
