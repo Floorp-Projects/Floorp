@@ -186,6 +186,7 @@ CamerasParent::DispatchToVideoCaptureThread(nsRunnable *event)
 void
 CamerasParent::StopVideoCapture()
 {
+  LOG((__PRETTY_FUNCTION__));
   // We are called from the main thread (xpcom-shutdown) or
   // from PBackground (when the Actor shuts down).
   // Shut down the WebRTC stack (on the capture thread)
@@ -407,6 +408,7 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
 void
 CamerasParent::CloseEngines()
 {
+  LOG((__PRETTY_FUNCTION__));
   if (!mWebRTCAlive) {
     return;
   }
@@ -700,10 +702,12 @@ CamerasParent::RecvReleaseCaptureDevice(const int& aCapEngine,
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error, numdev]() -> nsresult {
           if (self->IsShuttingDown()) {
+            LOG(("In Shutdown, not Releasing"));
             return NS_ERROR_FAILURE;
           }
           if (error) {
             Unused << self->SendReplyFailure();
+            LOG(("Failed to free device nr %d", numdev));
             return NS_ERROR_FAILURE;
           } else {
             Unused << self->SendReplySuccess();
