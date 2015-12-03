@@ -36,6 +36,7 @@ public final class HardwareUtils {
     private static volatile boolean sIsLargeTablet;
     private static volatile boolean sIsSmallTablet;
     private static volatile boolean sIsTelevision;
+    private static volatile boolean sHasMenuButton;
 
     private HardwareUtils() {
     }
@@ -50,16 +51,23 @@ public final class HardwareUtils {
         // Pre-populate common flags from the context.
         final int screenLayoutSize = context.getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK;
         if (Build.VERSION.SDK_INT >= 11) {
+            sHasMenuButton = false;
             if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_XLARGE) {
                 sIsLargeTablet = true;
             } else if (screenLayoutSize == Configuration.SCREENLAYOUT_SIZE_LARGE) {
                 sIsSmallTablet = true;
             }
-            if (Build.VERSION.SDK_INT >= 16) {
-                if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
-                    sIsTelevision = true;
+            if (Build.VERSION.SDK_INT >= 14) {
+                sHasMenuButton = ViewConfiguration.get(context).hasPermanentMenuKey();
+
+                if (Build.VERSION.SDK_INT >= 16) {
+                    if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEVISION)) {
+                        sIsTelevision = true;
+                    }
                 }
             }
+        } else {
+            sHasMenuButton = true;
         }
 
         sInited = true;
@@ -79,6 +87,10 @@ public final class HardwareUtils {
 
     public static boolean isTelevision() {
         return sIsTelevision;
+    }
+
+    public static boolean hasMenuButton() {
+        return sHasMenuButton;
     }
 
     public static int getMemSize() {
