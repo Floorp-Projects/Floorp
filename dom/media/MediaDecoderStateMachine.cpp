@@ -2123,22 +2123,17 @@ MediaDecoderStateMachine::SeekCompleted()
     newCurrentTime = video ? video->mTime : seekTime;
   }
 
-  if (mDecodingFirstFrame) {
-    // We were resuming from dormant, or initiated a seek early.
-    // We can fire loadeddata now.
-    FinishDecodeFirstFrame();
-  }
-
   // Change state to DECODING or COMPLETED now. SeekingStopped will
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING
   // if we need to seek again.
 
   bool isLiveStream = mResource->IsLiveStream();
+  State nextState;
   if (mPendingSeek.Exists()) {
     // A new seek target came in while we were processing the old one. No rest
     // for the seeking.
     DECODER_LOG("A new seek came along while we were finishing the old one - staying in SEEKING");
-    SetState(DECODER_STATE_SEEKING);
+    nextState = DECODER_STATE_SEEKING;
   } else if (GetMediaTime() == Duration().ToMicroseconds() && !isLiveStream) {
     // Seeked to end of media, move to COMPLETED state. Note we don't do
     // this when playing a live stream, since the end of media will advance
@@ -2146,11 +2141,26 @@ MediaDecoderStateMachine::SeekCompleted()
     DECODER_LOG("Changed state from SEEKING (to %lld) to COMPLETED", seekTime);
     // Explicitly set our state so we don't decode further, and so
     // we report playback ended to the media element.
-    SetState(DECODER_STATE_COMPLETED);
-    DispatchDecodeTasksIfNeeded();
+    nextState = DECODER_STATE_COMPLETED;
   } else {
     DECODER_LOG("Changed state from SEEKING (to %lld) to DECODING", seekTime);
+    nextState = DECODER_STATE_DECODING;
+  }
+
+  // We want to resolve the seek request prior finishing the first frame
+  // to ensure that the seeked event is fired prior loadeded.
+  mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+
+  if (mDecodingFirstFrame) {
+    // We were resuming from dormant, or initiated a seek early.
+    // We can fire loadeddata now.
+    FinishDecodeFirstFrame();
+  }
+
+  if (nextState == DECODER_STATE_DECODING) {
     StartDecoding();
+  } else {
+    SetState(nextState);
   }
 
   // Ensure timestamps are up to date.
@@ -2164,7 +2174,6 @@ MediaDecoderStateMachine::SeekCompleted()
   // if we need to buffer after the seek.
   mQuickBuffering = false;
 
-  mCurrentSeek.Resolve(mState == DECODER_STATE_COMPLETED, __func__);
   ScheduleStateMachine();
 
   if (video) {
