@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     # 'TestMP4Reader.cpp', disabled so we can turn check tests back on (bug 1175752)
     'TestTrackEncoder.cpp',
     'TestVideoSegment.cpp',
+    'TestVPXDecoding.cpp',
     'TestWebMBuffered.cpp',
 ]
 
@@ -50,6 +51,7 @@ TEST_HARNESS_FILES.gtest += [
     'short-zero-in-moov.mp4',
     'small-shot.mp3',
     'test.webm',
+    'test_case_1224363.vp8.ivf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
