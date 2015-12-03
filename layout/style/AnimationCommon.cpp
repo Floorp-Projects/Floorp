@@ -675,36 +675,6 @@ AnimationCollection::UpdateCheckGeneration(
     aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
-bool
-AnimationCollection::HasCurrentAnimations() const
-{
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    if (mAnimations[animIdx]->HasCurrentEffect()) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool
-AnimationCollection::HasCurrentAnimationsForProperties(
-                              const nsCSSProperty* aProperties,
-                              size_t aPropertyCount) const
-{
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const Animation& anim = *mAnimations[animIdx];
-    const KeyframeEffectReadOnly* effect = anim.GetEffect();
-    if (effect &&
-        effect->IsCurrent() &&
-        effect->HasAnimationOfProperties(aProperties, aPropertyCount)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 nsPresContext*
 OwningElementRef::GetRenderedPresContext() const
 {
