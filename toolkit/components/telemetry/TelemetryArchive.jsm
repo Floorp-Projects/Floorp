@@ -99,11 +99,11 @@ var TelemetryArchiveImpl = {
   },
 
   _buildArchivedPingList: function(archivedPingsMap) {
-    let list = [for (p of archivedPingsMap) {
+    let list = Array.from(archivedPingsMap, p => ({
       id: p[0],
       timestampCreated: p[1].timestampCreated,
       type: p[1].type,
-    }];
+    }));
 
     list.sort((a, b) => a.timestampCreated - b.timestampCreated);
 
