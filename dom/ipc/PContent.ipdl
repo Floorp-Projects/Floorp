@@ -852,7 +852,7 @@ parent:
     async VisitURI(URIParams uri, OptionalURIParams referrer, uint32_t flags);
     async SetURITitle(URIParams uri, nsString title);
 
-    async LoadURIExternal(URIParams uri);
+    async LoadURIExternal(URIParams uri, PBrowser windowContext);
 
     // PrefService message
     sync ReadPrefsArray() returns (PrefSetting[] prefs);
