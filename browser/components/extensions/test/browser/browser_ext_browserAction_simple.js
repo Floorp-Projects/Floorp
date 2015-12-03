@@ -1,9 +1,13 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
-        "default_popup": "popup.html"
-      }
+        "default_popup": "popup.html",
+      },
     },
 
     files: {
@@ -16,7 +20,7 @@ add_task(function* () {
 
       "popup.js": function() {
         browser.runtime.sendMessage("from-popup");
-      }
+      },
     },
 
     background: function() {
@@ -36,7 +40,7 @@ add_task(function* () {
   for (let i = 0; i < 3; i++) {
     let evt = new CustomEvent("command", {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     node.dispatchEvent(evt);
 

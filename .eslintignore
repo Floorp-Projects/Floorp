@@ -197,7 +197,7 @@ toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/search/nsSearchService.js
 toolkit/components/url-classifier/**
 toolkit/components/urlformatter/nsURLFormatter.js
-toolkit/identity/FirefoxAccounts.jsm 
+toolkit/identity/FirefoxAccounts.jsm
 toolkit/modules/AppConstants.jsm
 toolkit/modules/SessionRecorder.jsm
 toolkit/mozapps/downloads/nsHelperAppDlg.js

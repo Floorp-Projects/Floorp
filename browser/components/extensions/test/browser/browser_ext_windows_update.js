@@ -1,10 +1,14 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
-  function promiseWaitForFocus(aWindow) {
-    return new Promise(function(aResolve, aReject) {
+  function promiseWaitForFocus(window) {
+    return new Promise(resolve => {
       waitForFocus(function() {
-        ok(Services.focus.activeWindow === aWindow, "correct window focused");
-        aResolve();
-      }, aWindow);
+        ok(Services.focus.activeWindow === window, "correct window focused");
+        resolve();
+      }, window);
     });
   }
 
@@ -16,7 +20,7 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["windows"]
+      "permissions": ["windows"],
     },
 
     background: function() {
@@ -35,7 +39,6 @@ add_task(function* () {
         browser.windows.update(wins[0].id, {focused: true}, function() {
           browser.test.sendMessage("check");
         });
-
       });
     },
   });

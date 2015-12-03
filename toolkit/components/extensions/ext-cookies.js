@@ -1,3 +1,5 @@
+"use strict";
+
 const { interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -18,8 +20,8 @@ function convert(cookie) {
     secure: cookie.isSecure,
     httpOnly: cookie.isHttpOnly,
     session: cookie.isSession,
-    storeId: DEFAULT_STORE
-  }
+    storeId: DEFAULT_STORE,
+  };
 
   if (!cookie.isSession) {
     result.expirationDate = cookie.expiry;
@@ -80,7 +82,7 @@ function* query(allDetails, allowed) {
 
     // "Restricts the retrieved cookies to those that would match the given URL."
     if ("url" in details) {
-      var uri = Services.io.newURI(details.url, null, null);
+      let uri = Services.io.newURI(details.url, null, null);
 
       if (!domainMatches(uri.host)) {
         return false;
@@ -222,7 +224,7 @@ extensions.registerPrivilegedAPI("cookies", (extension, context) => {
             runSafe(context, callback, {
               url: details.url,
               name: details.name,
-              storeId: DEFAULT_STORE
+              storeId: DEFAULT_STORE,
             });
           }
           // Todo: could there be multiple per subdomain?
@@ -243,7 +245,7 @@ extensions.registerPrivilegedAPI("cookies", (extension, context) => {
         let observer = (subject, topic, data) => {
           let notify = (removed, cookie, cause) => {
             fire({removed, cookie: convert(cookie.QueryInterface(Ci.nsICookie2)), cause});
-          }
+          };
 
           // We do our best effort here to map the incompatible states.
           switch (data) {

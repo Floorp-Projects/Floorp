@@ -1,3 +1,5 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
@@ -10,6 +12,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+/* globals aboutNewTabService */
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
@@ -20,8 +24,7 @@ var {
 
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
-function getSender(context, target, sender)
-{
+function getSender(context, target, sender) {
   // The message was sent from a content script to a <browser> element.
   // We can just get the |tab| from |target|.
   if (target instanceof Ci.nsIDOMXULElement) {
@@ -33,20 +36,19 @@ function getSender(context, target, sender)
     let tab = tabbrowser.getTabForBrowser(target);
 
     sender.tab = TabManager.convert(context.extension, tab);
-  } else {
+  } else if ("tabId" in sender) {
     // The message came from an ExtensionPage. In that case, it should
     // include a tabId property (which is filled in by the page-open
     // listener below).
-    if ("tabId" in sender) {
-      sender.tab = TabManager.convert(context.extension, TabManager.getTab(sender.tabId));
-      delete sender.tabId;
-    }
+    sender.tab = TabManager.convert(context.extension, TabManager.getTab(sender.tabId));
+    delete sender.tabId;
   }
 }
 
 // WeakMap[ExtensionPage -> {tab, parentWindow}]
 var pageDataMap = new WeakMap();
 
+/* eslint-disable mozilla/balanced-listeners */
 // This listener fires whenever an extension page opens in a tab
 // (either initiated by the extension or the user). Its job is to fill
 // in some tab-specific details and keep data around about the
@@ -95,15 +97,15 @@ extensions.on("fill-browser-data", (type, browser, data, result) => {
 
   data.tabId = tabId;
 });
+/* eslint-enable mozilla/balanced-listeners */
 
-global.currentWindow = function(context)
-{
+global.currentWindow = function(context) {
   let pageData = pageDataMap.get(context);
   if (pageData) {
     return pageData.parentWindow;
   }
   return WindowManager.topWindow;
-}
+};
 
 // TODO: activeTab permission
 
@@ -211,7 +213,7 @@ extensions.registerAPI((extension, context) => {
             let tabId = TabManager.getId(tab);
             let [needed, changeInfo] = sanitize(extension, {
               status: webProgress.isLoadingDocument ? "loading" : "complete",
-              url: locationURI.spec
+              url: locationURI.spec,
             });
             if (needed) {
               fire(tabId, changeInfo, TabManager.convert(extension, tab));
@@ -389,7 +391,7 @@ extensions.registerAPI((extension, context) => {
       getAllInWindow: function(...args) {
         let window, callback;
         if (args.length == 1) {
-          callbacks = args[0];
+          callback = args[0];
         } else {
           window = WindowManager.getWindow(args[0]);
           callback = args[1];
@@ -435,10 +437,8 @@ extensions.registerAPI((extension, context) => {
               if (currentWindow(context) != window) {
                 return false;
               }
-            } else {
-              if (queryInfo.windowId != tab.windowId) {
-                return false;
-              }
+            } else if (queryInfo.windowId != tab.windowId) {
+              return false;
             }
           }
 
@@ -495,7 +495,7 @@ extensions.registerAPI((extension, context) => {
         }
 
         if (details.code) {
-          options[kind + 'Code'] = details.code;
+          options[kind + "Code"] = details.code;
         }
         if (details.file) {
           let url = context.uri.resolve(details.file);
@@ -522,17 +522,17 @@ extensions.registerAPI((extension, context) => {
 
       executeScript: function(...args) {
         if (args.length == 1) {
-          self.tabs._execute(undefined, args[0], 'js', undefined);
+          self.tabs._execute(undefined, args[0], "js", undefined);
         } else {
-          self.tabs._execute(args[0], args[1], 'js', args[2]);
+          self.tabs._execute(args[0], args[1], "js", args[2]);
         }
       },
 
-      insertCss: function(tabId, details, callback) {
+      insertCss: function(...args) {
         if (args.length == 1) {
-          self.tabs._execute(undefined, args[0], 'css', undefined);
+          self.tabs._execute(undefined, args[0], "css", undefined);
         } else {
-          self.tabs._execute(args[0], args[1], 'css', args[2]);
+          self.tabs._execute(args[0], args[1], "css", args[2]);
         }
       },
 
