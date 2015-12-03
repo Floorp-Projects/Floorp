@@ -232,7 +232,7 @@ function* check_addons_uninstalled(aAddonList) {
 // Add-ons that have updates available should not update if they were disabled before
 // For this test, addon8 became disabled during update and addon9 was previously disabled,
 // so addon8 should update and addon9 should not
-add_task(function cancel_during_repopulate() {
+add_task(function* cancel_during_repopulate() {
   let a5, a8, a9, a10;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -297,7 +297,7 @@ add_task(function cancel_during_repopulate() {
 // calls in gVersionInfoPage_onPageShow() to complete
 // For this test, both addon8 and addon9 were disabled by this update, but addon8
 // is set to not auto-update, so only addon9 should update in the background
-add_task(function cancel_during_findUpdates() {
+add_task(function* cancel_during_findUpdates() {
   let a5, a8, a9;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -357,7 +357,7 @@ add_task(function cancel_during_findUpdates() {
 // to continue updating in the background and cancels any other updates
 // Same conditions as the previous test - addon8 and addon9 have updates available,
 // addon8 is set to not auto-update so only addon9 should become compatible
-add_task(function cancel_mismatch() {
+add_task(function* cancel_mismatch() {
   let a3, a5, a7, a8, a9;
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
@@ -416,7 +416,7 @@ add_task(function cancel_mismatch() {
 
 // Cancelling during the 'mismatch' screen with only add-ons that have
 // no updates available
-add_task(function cancel_mismatch_no_updates() {
+add_task(function* cancel_mismatch_no_updates() {
   let a3, a5, a6
 
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);

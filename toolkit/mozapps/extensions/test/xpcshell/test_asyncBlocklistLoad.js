@@ -6,7 +6,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function () {
+add_task(function* () {
   let blocklist = AM_Cc["@mozilla.org/extensions/blocklist;1"].
                   getService().wrappedJSObject;
   let scope = Components.utils.import("resource://gre/modules/osfile.jsm");
