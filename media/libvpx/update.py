@@ -594,6 +594,8 @@ def apply_patches():
     os.system("patch -p1 < vp9_filter_restore_aligment.patch")
     # Patch win32 vpx_once.
     os.system("patch -p3 < vpx_once.patch")
+    # Bug 1224363 - Clamp seg_lvl also in abs-value mode.
+    os.system("patch -p3 < clamp_abs_lvl_seg.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
