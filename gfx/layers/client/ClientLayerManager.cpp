@@ -717,24 +717,6 @@ ClientLayerManager::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
 }
 
 void
-ClientLayerManager::ReturnTextureClientDeferred(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReturnTextureClientDeferred(&aClient);
-}
-
-void
-ClientLayerManager::ReturnTextureClient(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReturnTextureClient(&aClient);
-}
-
-void
-ClientLayerManager::ReportClientLost(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReportClientLost();
-}
-
-void
 ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   if (mDestroyed) {

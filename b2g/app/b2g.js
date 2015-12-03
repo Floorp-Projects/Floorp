@@ -1087,6 +1087,9 @@ pref("identity.fxaccounts.enabled", true);
 // Mobile Identity API.
 pref("services.mobileid.server.uri", "https://msisdn.services.mozilla.com");
 
+pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
+pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
+
 // Enable mapped array buffer.
 #ifndef XP_WIN
 pref("dom.mapped_arraybuffer.enabled", true);

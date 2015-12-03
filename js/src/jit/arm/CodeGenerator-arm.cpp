@@ -1742,7 +1742,6 @@ CodeGeneratorARM::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType
     MOZ_ASSERT(flagTemp != InvalidReg);
     MOZ_ASSERT_IF(arrayType == Scalar::Uint32, outTemp != InvalidReg);
 
-    // Uint8Clamped is explicitly not supported here
     switch (arrayType) {
       case Scalar::Int8:
         switch (op) {
@@ -1908,7 +1907,6 @@ CodeGeneratorARM::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType
 {
     MOZ_ASSERT(flagTemp != InvalidReg);
 
-    // Uint8Clamped is explicitly not supported here
     switch (arrayType) {
       case Scalar::Int8:
       case Scalar::Uint8:

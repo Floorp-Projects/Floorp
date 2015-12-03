@@ -85,6 +85,9 @@ private:
     unsigned m_periodicWaveSize;
     unsigned m_numberOfRanges;
     float m_centsPerRange;
+    unsigned m_numberOfComponents;
+    nsAutoPtr<AudioFloatArray> m_realComponents;
+    nsAutoPtr<AudioFloatArray> m_imagComponents;
 
     // The lowest frequency (in Hertz) where playback will include all of the
     // partials.  Playing back lower than this frequency will gradually lose
@@ -101,8 +104,10 @@ private:
 
     unsigned numberOfPartialsForRange(unsigned rangeIndex) const;
 
-    // Creates tables based on numberOfComponents Fourier coefficients.
-    void createBandLimitedTables(const float* real, const float* imag, unsigned numberOfComponents);
+    // Creates table for specified index based on fundamental frequency.
+    void createBandLimitedTables(float fundamentalFrequency, unsigned rangeIndex);
+    float m_lowestRequestedFundamentalFrequency;
+    float m_normalizationScale;
     nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
 };
 
