@@ -18,106 +18,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:label="@string/sync_app_name"
-            android:clearTaskOnLaunch="true"
-            android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity"
-            android:configChanges="locale|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-            <!-- Adding a launcher will make this activity appear on the
-                 Apps screen, which we only want when testing. -->
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            </intent-filter>
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_GET_STARTED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity"
-            android:configChanges="locale|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivity"
-            android:configChanges="locale|layoutDirection"
-            android:noHistory="true"
-            android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_CONFIRM_ACCOUNT"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountSignInActivity"
-            android:configChanges="locale|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountVerifiedAccountActivity"
-            android:configChanges="locale|layoutDirection"
-            android:noHistory="true"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
-            android:configChanges="locale|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_UPDATE_CREDENTIALS"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity"
-            android:configChanges="locale|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-#ifdef MOZ_ANDROID_NATIVE_ACCOUNT_UI
-            <intent-filter>
-                <action android:name="@ANDROID_PACKAGE_NAME@.ACTION_FXA_FINISH_MIGRATING"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-#endif
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountMigrationFinishedActivity"
-            android:configChanges="locale|layoutDirection"
-            android:noHistory="true"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
-            android:theme="@style/FxAccountTheme"
-            android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountNotAllowedActivity"
-            android:configChanges="locale|layoutDirection"
-            android:noHistory="true"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
         <receiver
             android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedReceiver"
             android:permission="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE">
@@ -134,7 +34,6 @@
             </intent-filter>
         </receiver>
 
-#ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
         <activity
             android:exported="false"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivityWeb">
@@ -170,4 +69,3 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
-#endif
