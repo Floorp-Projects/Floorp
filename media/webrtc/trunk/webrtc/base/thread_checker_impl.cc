@@ -40,18 +40,18 @@ PlatformThreadId CurrentThreadId() {
 #elif defined(WEBRTC_ANDROID)
   ret = gettid();
 #elif defined(__NetBSD__)
-  return _lwp_self();
+  ret = _lwp_self();
 #elif defined(__DragonFly__)
-  return lwp_gettid();
+  ret = lwp_gettid();
 #elif defined(__OpenBSD__)
-  return reinterpret_cast<uintptr_t> (pthread_self());
+  ret = reinterpret_cast<uintptr_t> (pthread_self());
 #elif defined(__FreeBSD__)
 #if __FreeBSD_version > 900030
-    return pthread_getthreadid_np();
+    ret = pthread_getthreadid_np();
 #else
     long lwpid;
     thr_self(&lwpid);
-    return lwpid;
+    ret = lwpid;
 #endif
 #else
   // Default implementation for nacl and solaris.
