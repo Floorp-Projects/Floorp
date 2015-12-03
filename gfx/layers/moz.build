@@ -177,6 +177,7 @@ EXPORTS.mozilla.layers += [
     'opengl/TextureHostOGL.h',
     'PersistentBufferProvider.h',
     'RenderTrace.h',
+    'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
     'YCbCrImageDataSerializer.h',
 ]
@@ -348,6 +349,7 @@ UNIFIED_SOURCES += [
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
+    'TextureWrapperImage.cpp',
     'YCbCrImageDataSerializer.cpp',
 ]
 

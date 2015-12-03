@@ -141,8 +141,8 @@ void vp8_loop_filter_frame_init(VP8_COMMON *cm,
             else  /* Delta Value */
             {
                 lvl_seg += mbd->segment_feature_data[MB_LVL_ALT_LF][seg];
-                lvl_seg = (lvl_seg > 0) ? ((lvl_seg > 63) ? 63: lvl_seg) : 0;
             }
+            lvl_seg = (lvl_seg > 0) ? ((lvl_seg > 63) ? 63: lvl_seg) : 0;
         }
 
         if (!mbd->mode_ref_lf_delta_enabled)

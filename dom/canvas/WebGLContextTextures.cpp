@@ -315,7 +315,7 @@ void
 WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                          GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
                          GLenum unpackType,
-                         const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
+                         const dom::Nullable<dom::ArrayBufferView>& maybeView,
                          ErrorResult&)
 {
     const char funcName[] = "texImage2D";
@@ -394,7 +394,7 @@ void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLsizei width, GLsizei height,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
+                            const dom::Nullable<dom::ArrayBufferView>& maybeView,
                             ErrorResult&)
 {
     const char funcName[] = "texSubImage2D";
@@ -471,7 +471,7 @@ void
 WebGLContext::CompressedTexImage2D(GLenum rawTexImageTarget, GLint level,
                                    GLenum internalFormat, GLsizei width, GLsizei height,
                                    GLint border,
-                                   const dom::ArrayBufferViewOrSharedArrayBufferView& view)
+                                   const dom::ArrayBufferView& view)
 {
     const char funcName[] = "compressedTexImage2D";
     const uint8_t funcDims = 2;
@@ -494,7 +494,7 @@ void
 WebGLContext::CompressedTexSubImage2D(GLenum rawTexImageTarget, GLint level,
                                       GLint xOffset, GLint yOffset, GLsizei width,
                                       GLsizei height, GLenum sizedUnpackFormat,
-                                      const dom::ArrayBufferViewOrSharedArrayBufferView& view)
+                                      const dom::ArrayBufferView& view)
 {
     const char funcName[] = "compressedTexSubImage2D";
     const uint8_t funcDims = 2;

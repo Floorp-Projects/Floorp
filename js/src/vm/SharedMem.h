@@ -133,6 +133,10 @@ class SharedMem
         MOZ_ASSERT(sharedness_ == IsUnshared);
         return ptr_;
     }
+
+    uintptr_t unwrapValue() const {
+        return reinterpret_cast<uintptr_t>(ptr_);
+    }
 };
 
 template<typename T>

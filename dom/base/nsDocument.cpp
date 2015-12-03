@@ -240,6 +240,7 @@
 #include "mozilla/dom/BoxObject.h"
 #include "gfxVR.h"
 #include "gfxPrefs.h"
+#include "nsISupportsPrimitives.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 
@@ -1644,6 +1645,11 @@ nsDocument::~nsDocument()
   mImageTracker.Clear();
 
   mPlugins.Clear();
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->RemoveObserver(this, "service-worker-get-client");
+  }
 }
 
 NS_INTERFACE_TABLE_HEAD(nsDocument)
@@ -2044,6 +2050,11 @@ nsDocument::Init()
   mScriptLoader = new nsScriptLoader(this);
 
   mozilla::HoldJSObjects(this);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->AddObserver(this, "service-worker-get-client", /* ownsWeak */ true);
+  }
 
   return NS_OK;
 }
@@ -4619,7 +4630,10 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
     nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
     if (swm) {
-      swm->MaybeStartControlling(this);
+      nsAutoString documentId;
+      static_cast<nsDocShell*>(docShell.get())->GetInterceptedDocumentId(documentId);
+
+      swm->MaybeStartControlling(this, documentId);
       mMaybeServiceWorkerControlled = true;
     }
   }
@@ -12202,6 +12216,16 @@ nsDocument::Observe(nsISupports *aSubject,
       // We don't want to style the chrome window, only app ones.
       OnAppThemeChanged();
     }
+  } else if (strcmp("service-worker-get-client", aTopic) == 0) {
+    nsAutoString clientId;
+    GetOrCreateId(clientId);
+    if (!clientId.IsEmpty() && clientId.Equals(aData)) {
+      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_QueryInterface(aSubject);
+      if (ifptr) {
+        ifptr->SetData(static_cast<nsIDocument*>(this));
+        ifptr->SetDataIID(&NS_GET_IID(nsIDocument));
+      }
+    }
   }
   return NS_OK;
 }
@@ -13053,33 +13077,45 @@ nsIDocument::CreateHTMLElement(nsIAtom* aTag)
   return element.forget();
 }
 
+/* static */
 nsresult
-nsIDocument::GetId(nsAString& aId)
+nsIDocument::GenerateDocumentId(nsAString& aId)
+{
+  nsID id;
+  nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
+  char buffer[NSID_LENGTH];
+  id.ToProvidedString(buffer);
+  NS_ConvertASCIItoUTF16 uuid(buffer);
+
+  // Remove {} and the null terminator
+  aId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
+  return NS_OK;
+}
+
+nsresult
+nsIDocument::GetOrCreateId(nsAString& aId)
 {
   if (mId.IsEmpty()) {
-    nsresult rv;
-    nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    nsresult rv = GenerateDocumentId(mId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    nsID id;
-    rv = uuidgen->GenerateUUIDInPlace(&id);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
-    char buffer[NSID_LENGTH];
-    id.ToProvidedString(buffer);
-    NS_ConvertASCIItoUTF16 uuid(buffer);
-
-    // Remove {} and the null terminator
-    mId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
   }
 
   aId = mId;
   return NS_OK;
+}
+
+void
+nsIDocument::SetId(const nsAString& aId)
+{
+  MOZ_ASSERT(mId.IsEmpty(), "Cannot set the document ID after we have one");
+  mId = aId;
 }
 
 bool

@@ -256,6 +256,12 @@ CompileCompartment::addressOfEnumerators()
     return &compartment()->enumerators;
 }
 
+const void*
+CompileCompartment::addressOfRandomNumberGenerator()
+{
+    return compartment()->randomNumberGenerator.ptr();
+}
+
 const JitCompartment*
 CompileCompartment::jitCompartment()
 {

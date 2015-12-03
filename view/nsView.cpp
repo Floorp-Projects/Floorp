@@ -214,7 +214,7 @@ bool nsView::IsEffectivelyVisible()
   return true;
 }
 
-nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
+LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 {
   int32_t p2a = mViewManager->AppUnitsPerDevPixel();
 
@@ -238,7 +238,8 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
   }
 
   // Compute widget bounds in device pixels
-  nsIntRect newBounds = viewBounds.ToNearestPixels(p2a);
+  LayoutDeviceIntRect newBounds =
+    LayoutDeviceIntRect::FromUnknownRect(viewBounds.ToNearestPixels(p2a));
 
 #if defined(XP_MACOSX) || (MOZ_WIDGET_GTK == 3)
   // cocoa and GTK round widget coordinates to the nearest global "display
@@ -248,7 +249,7 @@ nsIntRect nsView::CalcWidgetBounds(nsWindowType aType)
   uint32_t round;
   if (aType == eWindowType_popup && widget &&
       ((round = widget->RoundsWidgetCoordinatesTo()) > 1)) {
-    nsIntSize pixelRoundedSize = newBounds.Size();
+    LayoutDeviceIntSize pixelRoundedSize = newBounds.Size();
     // round the top left and bottom right to the nearest round pixel
     newBounds.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.x, p2a) / round) * round;
     newBounds.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(viewBounds.y, p2a) / round) * round;
@@ -312,7 +313,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   if (invisiblePopup) {
     // We're going to hit the early exit below, avoid calling CalcWidgetBounds.
   } else {
-    newBounds = LayoutDeviceIntRect::FromUnknownRect(CalcWidgetBounds(type));
+    newBounds = CalcWidgetBounds(type);
   }
 
   bool curVisibility = widget->IsVisible();
@@ -575,7 +576,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData *aWidgetInitData,
     (!initDataPassedIn && GetParent() &&
      GetParent()->GetViewManager() != mViewManager);
 
-  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
+  LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   nsIWidget* parentWidget =
     GetParent() ? GetParent()->GetNearestWidget(nullptr) : nullptr;
@@ -610,7 +611,7 @@ nsresult nsView::CreateWidgetForParent(nsIWidget* aParentWidget,
   DefaultWidgetInitData defaultInitData;
   aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
 
-  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
+  LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   mWindow = aParentWidget->CreateChild(trect, aWidgetInitData);
   if (!mWindow) {
@@ -632,7 +633,7 @@ nsresult nsView::CreateWidgetForPopup(nsWidgetInitData *aWidgetInitData,
   MOZ_ASSERT(aWidgetInitData->mWindowType == eWindowType_popup,
              "Use one of the other CreateWidget methods");
 
-  nsIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
+  LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   // XXX/cjones: having these two separate creation cases seems ... um
   // ... unnecessary, but it's the way the old code did it.  Please

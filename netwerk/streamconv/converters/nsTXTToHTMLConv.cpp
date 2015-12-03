@@ -10,6 +10,8 @@
 #include "nsIChannel.h"
 #include <algorithm>
 
+#include "mozilla/UniquePtrExtensions.h"
+
 #define TOKEN_DELIMITERS MOZ_UTF16("\t\r\n ")
 
 // nsISupports methods
@@ -133,18 +135,18 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
     nsresult rv = NS_OK;
     nsString pushBuffer;
     uint32_t amtRead = 0;
-    nsAutoArrayPtr<char> buffer(new char[aCount+1]);
+    auto buffer = MakeUniqueFallible<char[]>(aCount+1);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     do {
         uint32_t read = 0;
         // XXX readSegments, to avoid the first copy?
-        rv = aInStream->Read(buffer, aCount-amtRead, &read);
+        rv = aInStream->Read(buffer.get(), aCount-amtRead, &read);
         if (NS_FAILED(rv)) return rv;
 
         buffer[read] = '\0';
         // XXX charsets?? non-latin1 characters?? utf-16??
-        AppendASCIItoUTF16(buffer, mBuffer);
+        AppendASCIItoUTF16(buffer.get(), mBuffer);
         amtRead += read;
 
         int32_t front = -1, back = -1, tokenLoc = -1, cursor = 0;

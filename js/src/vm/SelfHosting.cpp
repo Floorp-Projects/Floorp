@@ -30,6 +30,7 @@
 #include "builtin/TypedObject.h"
 #include "builtin/WeakSetObject.h"
 #include "gc/Marking.h"
+#include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/Date.h"
 #include "vm/Compression.h"
@@ -711,7 +712,7 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
                "don't call this method if copying no elements, because then "
                "the not-neutered requirement is wrong");
 
-    if (tarray->hasBuffer() && tarray->buffer()->isNeutered()) {
+    if (tarray->isNeutered() && tarray->hasBuffer()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
     }
@@ -740,8 +741,8 @@ intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
     }
 #endif
 
-    uint8_t* data = static_cast<uint8_t*>(tarray->viewData());
-    PodMove(&data[byteDest], &data[byteSrc], byteSize);
+    SharedMem<uint8_t*> data = tarray->viewDataEither().cast<uint8_t*>();
+    jit::AtomicOperations::memmoveSafeWhenRacy(data + byteDest, data + byteSrc, byteSize);
 
     args.rval().setUndefined();
     return true;
@@ -793,7 +794,7 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 4);
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
-    MOZ_ASSERT(!target->hasBuffer() || !target->buffer()->isNeutered(),
+    MOZ_ASSERT(!target->hasBuffer() || !target->isNeutered(),
                "something should have defended against a neutered target");
 
     // As directed by |DangerouslyUnwrapTypedArray|, sigil this pointer and all
@@ -814,7 +815,7 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 12-13.
     if (unsafeTypedArrayCrossCompartment->hasBuffer() &&
-        unsafeTypedArrayCrossCompartment->buffer()->isNeutered())
+        unsafeTypedArrayCrossCompartment->isNeutered())
     {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
@@ -837,11 +838,11 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
     Scalar::Type unsafeSrcTypeCrossCompartment = unsafeTypedArrayCrossCompartment->type();
 
     size_t targetElementSize = TypedArrayElemSize(targetType);
-    uint8_t* targetData =
-        static_cast<uint8_t*>(target->viewData()) + targetOffset * targetElementSize;
+    SharedMem<uint8_t*> targetData =
+        target->viewDataEither().cast<uint8_t*>() + targetOffset * targetElementSize;
 
-    uint8_t* unsafeSrcDataCrossCompartment =
-        static_cast<uint8_t*>(unsafeTypedArrayCrossCompartment->viewData());
+    SharedMem<uint8_t*> unsafeSrcDataCrossCompartment =
+        unsafeTypedArrayCrossCompartment->viewDataEither().cast<uint8_t*>();
 
     uint32_t unsafeSrcElementSizeCrossCompartment =
         TypedArrayElemSize(unsafeSrcTypeCrossCompartment);
@@ -858,7 +859,9 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
     // pointers directly could give an incorrect answer.)  If this occurs,
     // the %TypedArray%.prototype.set operation is completely finished.
     if (targetType == unsafeSrcTypeCrossCompartment) {
-        PodMove(targetData, unsafeSrcDataCrossCompartment, unsafeSrcByteLengthCrossCompartment);
+        jit::AtomicOperations::memmoveSafeWhenRacy(targetData,
+                                                   unsafeSrcDataCrossCompartment,
+                                                   unsafeSrcByteLengthCrossCompartment);
         args.rval().setInt32(JS_SETTYPEDARRAY_SAME_TYPE);
         return true;
     }
@@ -867,15 +870,19 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
     // whether such copying must take care not to overlap, so that self-hosted
     // code may correctly perform the copying.
 
-    uint8_t* unsafeSrcDataLimitCrossCompartment =
+    SharedMem<uint8_t*> unsafeSrcDataLimitCrossCompartment =
         unsafeSrcDataCrossCompartment + unsafeSrcByteLengthCrossCompartment;
-    uint8_t* targetDataLimit =
-        static_cast<uint8_t*>(target->viewData()) + targetLength * targetElementSize;
+    SharedMem<uint8_t*> targetDataLimit =
+        target->viewDataEither().cast<uint8_t*>() + targetLength * targetElementSize;
 
     // Step 24 test (but not steps 24a-d -- the caller handles those).
     bool overlap =
-        IsInRange(targetData, unsafeSrcDataCrossCompartment, unsafeSrcDataLimitCrossCompartment) ||
-        IsInRange(unsafeSrcDataCrossCompartment, targetData, targetDataLimit);
+        IsInRange(targetData.unwrap(/*safe - used for ptr value*/),
+                  unsafeSrcDataCrossCompartment.unwrap(/*safe - ditto*/),
+                  unsafeSrcDataLimitCrossCompartment.unwrap(/*safe - ditto*/)) ||
+        IsInRange(unsafeSrcDataCrossCompartment.unwrap(/*safe - ditto*/),
+                  targetData.unwrap(/*safe - ditto*/),
+                  targetDataLimit.unwrap(/*safe - ditto*/));
 
     args.rval().setInt32(overlap ? JS_SETTYPEDARRAY_OVERLAPPING : JS_SETTYPEDARRAY_DISJOINT);
     return true;
@@ -883,61 +890,65 @@ intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp)
 
 template <typename From, typename To>
 static void
-CopyValues(To* dest, const From* src, uint32_t count)
+CopyValues(SharedMem<To*> dest, SharedMem<From*> src, uint32_t count)
 {
 #ifdef DEBUG
-    void* destVoid = static_cast<void*>(dest);
-    void* destVoidEnd = static_cast<void*>(dest + count);
-    const void* srcVoid = static_cast<const void*>(src);
-    const void* srcVoidEnd = static_cast<const void*>(src + count);
+    void* destVoid = dest.template cast<void*>().unwrap(/*safe - used for ptr value*/);
+    void* destVoidEnd = (dest + count).template cast<void*>().unwrap(/*safe - ditto*/);
+    const void* srcVoid = src.template cast<void*>().unwrap(/*safe - ditto*/);
+    const void* srcVoidEnd = (src + count).template cast<void*>().unwrap(/*safe - ditto*/);
     MOZ_ASSERT(!IsInRange(destVoid, srcVoid, srcVoidEnd));
     MOZ_ASSERT(!IsInRange(srcVoid, destVoid, destVoidEnd));
 #endif
 
-    for (; count > 0; count--)
-        *dest++ = To(*src++);
+    using namespace jit;
+
+    for (; count > 0; count--) {
+        AtomicOperations::storeSafeWhenRacy(dest++,
+                                            To(AtomicOperations::loadSafeWhenRacy(src++)));
+    }
 }
 
 struct DisjointElements
 {
     template <typename To>
     static void
-    copy(To* dest, const void* src, Scalar::Type fromType, uint32_t count) {
+    copy(SharedMem<To*> dest, SharedMem<void*> src, Scalar::Type fromType, uint32_t count) {
         switch (fromType) {
           case Scalar::Int8:
-            CopyValues(dest, static_cast<const int8_t*>(src), count);
+            CopyValues(dest, src.cast<int8_t*>(), count);
             return;
 
           case Scalar::Uint8:
-            CopyValues(dest, static_cast<const uint8_t*>(src), count);
+            CopyValues(dest, src.cast<uint8_t*>(), count);
             return;
 
           case Scalar::Int16:
-            CopyValues(dest, static_cast<const int16_t*>(src), count);
+            CopyValues(dest, src.cast<int16_t*>(), count);
             return;
 
           case Scalar::Uint16:
-            CopyValues(dest, static_cast<const uint16_t*>(src), count);
+            CopyValues(dest, src.cast<uint16_t*>(), count);
             return;
 
           case Scalar::Int32:
-            CopyValues(dest, static_cast<const int32_t*>(src), count);
+            CopyValues(dest, src.cast<int32_t*>(), count);
             return;
 
           case Scalar::Uint32:
-            CopyValues(dest, static_cast<const uint32_t*>(src), count);
+            CopyValues(dest, src.cast<uint32_t*>(), count);
             return;
 
           case Scalar::Float32:
-            CopyValues(dest, static_cast<const float*>(src), count);
+            CopyValues(dest, src.cast<float*>(), count);
             return;
 
           case Scalar::Float64:
-            CopyValues(dest, static_cast<const double*>(src), count);
+            CopyValues(dest, src.cast<double*>(), count);
             return;
 
           case Scalar::Uint8Clamped:
-            CopyValues(dest, static_cast<const uint8_clamped*>(src), count);
+            CopyValues(dest, src.cast<uint8_clamped*>(), count);
             return;
 
           default:
@@ -947,65 +958,55 @@ struct DisjointElements
 };
 
 static void
-CopyToDisjointArray(TypedArrayObject* target, uint32_t targetOffset, const void* src,
+CopyToDisjointArray(TypedArrayObject* target, uint32_t targetOffset, SharedMem<void*> src,
                     Scalar::Type srcType, uint32_t count)
 {
     Scalar::Type destType = target->type();
-    void* dest =
-        static_cast<uint8_t*>(target->viewData()) + targetOffset * TypedArrayElemSize(destType);
+    SharedMem<uint8_t*> dest = target->viewDataEither().cast<uint8_t*>() + targetOffset * TypedArrayElemSize(destType);
 
     switch (destType) {
       case Scalar::Int8: {
-        int8_t* dst = reinterpret_cast<int8_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<int8_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Uint8: {
-        uint8_t* dst = reinterpret_cast<uint8_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<uint8_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Int16: {
-        int16_t* dst = reinterpret_cast<int16_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<int16_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Uint16: {
-        uint16_t* dst = reinterpret_cast<uint16_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<uint16_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Int32: {
-        int32_t* dst = reinterpret_cast<int32_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<int32_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Uint32: {
-        uint32_t* dst = reinterpret_cast<uint32_t*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<uint32_t*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Float32: {
-        float* dst = reinterpret_cast<float*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<float*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Float64: {
-        double* dst = reinterpret_cast<double*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<double*>(), src, srcType, count);
         break;
       }
 
       case Scalar::Uint8Clamped: {
-        uint8_clamped* dst = reinterpret_cast<uint8_clamped*>(dest);
-        DisjointElements::copy(dst, src, srcType, count);
+        DisjointElements::copy(dest.cast<uint8_clamped*>(), src, srcType, count);
         break;
       }
 
@@ -1024,11 +1025,12 @@ js::SetDisjointTypedElements(TypedArrayObject* target, uint32_t targetOffset,
 {
     Scalar::Type unsafeSrcTypeCrossCompartment = unsafeSrcCrossCompartment->type();
 
-    const void* unsafeSrcDataCrossCompartment = unsafeSrcCrossCompartment->viewData();
+    SharedMem<void*> unsafeSrcDataCrossCompartment = unsafeSrcCrossCompartment->viewDataEither();
     uint32_t count = unsafeSrcCrossCompartment->length();
 
     CopyToDisjointArray(target, targetOffset,
-                        unsafeSrcDataCrossCompartment, unsafeSrcTypeCrossCompartment, count);
+                        unsafeSrcDataCrossCompartment,
+                        unsafeSrcTypeCrossCompartment, count);
 }
 
 static bool
@@ -1038,7 +1040,7 @@ intrinsic_SetDisjointTypedElements(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
-    MOZ_ASSERT(!target->hasBuffer() || !target->buffer()->isNeutered(),
+    MOZ_ASSERT(!target->hasBuffer() || !target->isNeutered(),
                "a neutered typed array has no elements to set, so "
                "it's nonsensical to be setting them");
 
@@ -1064,7 +1066,7 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 3);
 
     Rooted<TypedArrayObject*> target(cx, &args[0].toObject().as<TypedArrayObject>());
-    MOZ_ASSERT(!target->hasBuffer() || !target->buffer()->isNeutered(),
+    MOZ_ASSERT(!target->hasBuffer() || !target->isNeutered(),
                "shouldn't be setting elements if neutered");
 
     uint32_t targetOffset = uint32_t(args[1].toInt32());
@@ -1085,17 +1087,15 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     Scalar::Type unsafeSrcTypeCrossCompartment = unsafeSrcCrossCompartment->type();
     size_t sourceByteLen = count * TypedArrayElemSize(unsafeSrcTypeCrossCompartment);
 
-    const void* unsafeSrcDataCrossCompartment = unsafeSrcCrossCompartment->viewData();
-
     auto copyOfSrcData = target->zone()->make_pod_array<uint8_t>(sourceByteLen);
     if (!copyOfSrcData)
         return false;
 
-    mozilla::PodCopy(copyOfSrcData.get(),
-                     static_cast<const uint8_t*>(unsafeSrcDataCrossCompartment),
-                     sourceByteLen);
+    jit::AtomicOperations::memcpySafeWhenRacy(copyOfSrcData.get(),
+                                              unsafeSrcCrossCompartment->viewDataEither().cast<uint8_t*>(),
+                                              sourceByteLen);
 
-    CopyToDisjointArray(target, targetOffset, copyOfSrcData.get(),
+    CopyToDisjointArray(target, targetOffset, SharedMem<void*>::unshared(copyOfSrcData.get()),
                         unsafeSrcTypeCrossCompartment, count);
 
     args.rval().setUndefined();
@@ -1537,6 +1537,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsArrayBuffer",
           intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0),
+    JS_FN("IsSharedArrayBuffer",
+          intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0),
 
     JS_INLINABLE_FN("IsTypedArray",
                     intrinsic_IsInstanceOfBuiltin<TypedArrayObject>,    1,0,

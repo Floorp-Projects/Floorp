@@ -395,7 +395,6 @@ class GetPropertyIC : public IonCache
     bool monitoredResult_ : 1;
     bool allowDoubleResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
-    bool hasSharedTypedArrayLengthStub_ : 1;
     bool hasMappedArgumentsLengthStub_ : 1;
     bool hasUnmappedArgumentsLengthStub_ : 1;
     bool hasMappedArgumentsElementStub_ : 1;
@@ -420,7 +419,6 @@ class GetPropertyIC : public IonCache
         monitoredResult_(monitoredResult),
         allowDoubleResult_(allowDoubleResult),
         hasTypedArrayLengthStub_(false),
-        hasSharedTypedArrayLengthStub_(false),
         hasMappedArgumentsLengthStub_(false),
         hasUnmappedArgumentsLengthStub_(false),
         hasMappedArgumentsElementStub_(false),
@@ -446,8 +444,8 @@ class GetPropertyIC : public IonCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
-    bool hasAnyTypedArrayLengthStub(HandleObject obj) const {
-        return obj->is<TypedArrayObject>() ? hasTypedArrayLengthStub_ : hasSharedTypedArrayLengthStub_;
+    bool hasTypedArrayLengthStub(HandleObject obj) const {
+        return hasTypedArrayLengthStub_;
     }
     bool hasArgumentsLengthStub(bool mapped) const {
         return mapped ? hasMappedArgumentsLengthStub_ : hasUnmappedArgumentsLengthStub_;
@@ -468,13 +466,9 @@ class GetPropertyIC : public IonCache
     }
 
     void setHasTypedArrayLengthStub(HandleObject obj) {
-        if (obj->is<TypedArrayObject>()) {
-            MOZ_ASSERT(!hasTypedArrayLengthStub_);
-            hasTypedArrayLengthStub_ = true;
-        } else {
-            MOZ_ASSERT(!hasSharedTypedArrayLengthStub_);
-            hasSharedTypedArrayLengthStub_ = true;
-        }
+        MOZ_ASSERT(obj->is<TypedArrayObject>());
+        MOZ_ASSERT(!hasTypedArrayLengthStub_);
+        hasTypedArrayLengthStub_ = true;
     }
 
     void setLocationInfo(size_t locationsIndex, size_t numLocations) {
@@ -558,6 +552,9 @@ class GetPropertyIC : public IonCache
     bool tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
                                              IonScript* ion, HandleObject obj,
                                              HandleValue idval, bool* emitted);
+
+    bool tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                  HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);

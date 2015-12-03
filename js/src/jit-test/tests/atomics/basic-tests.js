@@ -369,7 +369,7 @@ function exchangeLoop(ta) {
 }
 
 function adHocExchange() {
-    var a = new SharedInt8Array(16)
+    var a = new Int8Array(new SharedArrayBuffer(16));
     for ( var i=0 ; i < a.length ; i++ )
 	a[i] = 255;
     assertEq(exchangeLoop(a), -100000);
@@ -425,8 +425,8 @@ function runTests() {
     var sab = new SharedArrayBuffer(4096);
 
     // Test that two arrays created on the same storage alias
-    var t1 = new SharedInt8Array(sab);
-    var t2 = new SharedUint16Array(sab);
+    var t1 = new Int8Array(sab);
+    var t2 = new Uint16Array(sab);
 
     assertEq(t1[0], 0);
     assertEq(t2[0], 0);
@@ -438,13 +438,13 @@ function runTests() {
     t1[0] = 0;
 
     // Test that invoking as Atomics.whatever() works, on correct arguments.
-    CLONE(testMethod)(new SharedInt8Array(sab), 0, 42, 4095);
-    CLONE(testMethod)(new SharedUint8Array(sab), 0, 42, 4095);
-    CLONE(testMethod)(new SharedUint8ClampedArray(sab), 0, 42, 4095);
-    CLONE(testMethod)(new SharedInt16Array(sab), 0, 42, 2047);
-    CLONE(testMethod)(new SharedUint16Array(sab), 0, 42, 2047);
-    CLONE(testMethod)(new SharedInt32Array(sab), 0, 42, 1023);
-    CLONE(testMethod)(new SharedUint32Array(sab), 0, 42, 1023);
+    CLONE(testMethod)(new Int8Array(sab), 0, 42, 4095);
+    CLONE(testMethod)(new Uint8Array(sab), 0, 42, 4095);
+    CLONE(testMethod)(new Uint8ClampedArray(sab), 0, 42, 4095);
+    CLONE(testMethod)(new Int16Array(sab), 0, 42, 2047);
+    CLONE(testMethod)(new Uint16Array(sab), 0, 42, 2047);
+    CLONE(testMethod)(new Int32Array(sab), 0, 42, 1023);
+    CLONE(testMethod)(new Uint32Array(sab), 0, 42, 1023);
 
     // Test that invoking as v = Atomics.whatever; v() works, on correct arguments.
     gAtomics_compareExchange = Atomics.compareExchange;
@@ -458,17 +458,17 @@ function runTests() {
     gAtomics_or = Atomics.or;
     gAtomics_xor = Atomics.xor;
 
-    CLONE(testFunction)(new SharedInt8Array(sab), 0, 42, 4095);
-    CLONE(testFunction)(new SharedUint8Array(sab), 0, 42, 4095);
-    CLONE(testFunction)(new SharedUint8ClampedArray(sab), 0, 42, 4095);
-    CLONE(testFunction)(new SharedInt16Array(sab), 0, 42, 2047);
-    CLONE(testFunction)(new SharedUint16Array(sab), 0, 42, 2047);
-    CLONE(testFunction)(new SharedInt32Array(sab), 0, 42, 1023);
-    CLONE(testFunction)(new SharedUint32Array(sab), 0, 42, 1023);
+    CLONE(testFunction)(new Int8Array(sab), 0, 42, 4095);
+    CLONE(testFunction)(new Uint8Array(sab), 0, 42, 4095);
+    CLONE(testFunction)(new Uint8ClampedArray(sab), 0, 42, 4095);
+    CLONE(testFunction)(new Int16Array(sab), 0, 42, 2047);
+    CLONE(testFunction)(new Uint16Array(sab), 0, 42, 2047);
+    CLONE(testFunction)(new Int32Array(sab), 0, 42, 1023);
+    CLONE(testFunction)(new Uint32Array(sab), 0, 42, 1023);
 
     // Test various range and type conditions
-    var v8 = new SharedInt8Array(sab);
-    var v32 = new SharedInt32Array(sab);
+    var v8 = new Int8Array(sab);
+    var v32 = new Int32Array(sab);
 
     CLONE(testTypeCAS)(v8);
     CLONE(testTypeCAS)(v32);
@@ -492,10 +492,10 @@ function runTests() {
     CLONE(testRangeCAS)(v32);
 
     // Test extreme values
-    testInt8Extremes(new SharedInt8Array(sab));
-    testUint8Extremes(new SharedUint8Array(sab));
-    testInt16Extremes(new SharedInt16Array(sab));
-    testUint32(new SharedUint32Array(sab));
+    testInt8Extremes(new Int8Array(sab));
+    testUint8Extremes(new Uint8Array(sab));
+    testInt16Extremes(new Int16Array(sab));
+    testUint32(new Uint32Array(sab));
 
     // Misc ad-hoc tests
     adHocExchange();
@@ -504,5 +504,5 @@ function runTests() {
     testIsLockFree();
 }
 
-if (this.Atomics && this.SharedArrayBuffer && this.SharedInt32Array)
+if (this.Atomics && this.SharedArrayBuffer)
     runTests();
