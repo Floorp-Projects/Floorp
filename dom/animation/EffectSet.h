@@ -45,6 +45,7 @@ public:
 
   static EffectSet* GetEffectSet(dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
+  static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
                                          nsCSSPseudoElements::Type aPseudoType);
 
