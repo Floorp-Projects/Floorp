@@ -1191,7 +1191,7 @@ MediaManager::SelectSettings(
     sources.Clear();
     const char* badConstraint = nullptr;
 
-    if (IsOn(aConstraints.mVideo)) {
+    if (videos.Length() && IsOn(aConstraints.mVideo)) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
           GetInvariant(aConstraints.mVideo), videos);
       for (auto& video : videos) {
