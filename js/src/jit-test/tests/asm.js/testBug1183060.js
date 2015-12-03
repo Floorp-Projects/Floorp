@@ -8,7 +8,7 @@ function loadModule_uint16(stdlib, foreign, heap) {
     var atomic_and = stdlib.Atomics.and;
     var atomic_or = stdlib.Atomics.or;
     var atomic_xor = stdlib.Atomics.xor;
-    var i16a = new stdlib.SharedUint16Array(heap);
+    var i16a = new stdlib.Uint16Array(heap);
     function do_add_i(i) {
 	i = i|0;
 	var v = 0;
@@ -43,7 +43,7 @@ function loadModule_uint16(stdlib, foreign, heap) {
 
 function test_uint16(heap) {
     var i16m = loadModule_uint16(this, {}, heap);
-    var size = SharedUint16Array.BYTES_PER_ELEMENT;
+    var size = Uint16Array.BYTES_PER_ELEMENT;
     i16m.add_i(size*40)
     i16m.sub_i(size*40)
     i16m.and_i(size*40)

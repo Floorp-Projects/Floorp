@@ -47,6 +47,7 @@
 #include "SpdyZlibReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsIParentalControlsService.h"
+#include "nsPIDOMWindow.h"
 #include "nsINetworkLinkService.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsServiceManagerUtils.h"

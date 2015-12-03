@@ -52,6 +52,7 @@ namespace jit {
     _(GetProp_DOMProxyShadowed)                  \
     _(GetProp_ArgumentsLength)                   \
     _(GetProp_ArgumentsCallee)                   \
+    _(GetProp_ModuleNamespace)                   \
     _(GetProp_Generic)                           \
                                                  \
 

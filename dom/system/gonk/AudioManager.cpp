@@ -42,6 +42,7 @@
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/SettingChangeNotificationBinding.h"

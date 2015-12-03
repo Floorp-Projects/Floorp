@@ -2,11 +2,9 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 BRANDING_FILES += [
-    'app.ico',
     'bar.ico',
     'sub/quux.png',
 ]
-BRANDING_FILES['app.ico'].source = 'bar.ico'
 
 BRANDING_FILES.icons += [
     'foo.ico',

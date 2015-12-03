@@ -173,7 +173,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mWindow->SetWidgetListener(this);
   mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
                   nullptr,                            // Native parent widget
-                  r.ToUnknownRect(),                  // Widget dimensions
+                  r,                                  // Widget dimensions
                   &widgetInitData);                   // Widget initialization data
   mWindow->GetClientBounds(r);
   // Match the default background color of content. Important on windows

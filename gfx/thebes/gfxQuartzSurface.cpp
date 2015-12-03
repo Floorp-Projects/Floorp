@@ -163,12 +163,6 @@ gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
     return result.forget();
 }
 
-CGContextRef
-gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
-{
-    return cairo_quartz_get_cg_context_with_clip(ctx->GetCairo());
-}
-
 already_AddRefed<gfxImageSurface> gfxQuartzSurface::GetAsImageSurface()
 {
     cairo_surface_t *surface = cairo_quartz_surface_get_image(mSurface);

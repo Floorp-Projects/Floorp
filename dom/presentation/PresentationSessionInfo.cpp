@@ -12,6 +12,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsIFrameLoader.h"
 #include "nsIMutableArray.h"

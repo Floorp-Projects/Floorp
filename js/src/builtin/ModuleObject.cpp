@@ -285,6 +285,7 @@ ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
     RootedValue priv(cx, ObjectValue(*module));
     ProxyOptions options;
     options.setLazyProto(true);
+    options.setSingleton(true);
     RootedObject object(cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
     if (!object)
         return nullptr;

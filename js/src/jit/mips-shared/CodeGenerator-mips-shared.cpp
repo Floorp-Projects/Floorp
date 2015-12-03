@@ -1655,10 +1655,10 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     // Offset is out of range. Load default values.
     if (isFloat) {
         if (size == 32)
-            masm.loadFloat32(Address(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.loadFloat32(Address(GlobalReg, wasm::NaN32GlobalDataOffset - AsmJSGlobalRegBias),
                              ToFloatRegister(out));
         else
-            masm.loadDouble(Address(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.loadDouble(Address(GlobalReg, wasm::NaN64GlobalDataOffset - AsmJSGlobalRegBias),
                             ToFloatRegister(out));
     } else {
         if (mir->isAtomicAccess())
@@ -1669,7 +1669,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     masm.bind(&done);
 
     memoryBarrier(mir->barrierAfter());
-    masm.append(AsmJSHeapAccess(bo.getOffset()));
+    masm.append(wasm::HeapAccess(bo.getOffset()));
 }
 
 void
@@ -1754,7 +1754,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     masm.bind(&done);
 
     memoryBarrier(mir->barrierAfter());
-    masm.append(AsmJSHeapAccess(bo.getOffset()));
+    masm.append(wasm::HeapAccess(bo.getOffset()));
 }
 
 void
@@ -1784,7 +1784,7 @@ CodeGeneratorMIPSShared::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap
                                         valueTemp, offsetTemp, maskTemp,
                                         ToAnyRegister(ins->output()));
     if (mir->needsBoundsCheck())
-        masm.append(AsmJSHeapAccess(maybeCmpOffset));
+        masm.append(wasm::HeapAccess(maybeCmpOffset));
 }
 
 void
@@ -1811,7 +1811,7 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* 
                                        srcAddr, value, InvalidReg, valueTemp,
                                        offsetTemp, maskTemp, ToAnyRegister(ins->output()));
     if (mir->needsBoundsCheck())
-        masm.append(AsmJSHeapAccess(maybeCmpOffset));
+        masm.append(wasm::HeapAccess(maybeCmpOffset));
 }
 
 void
@@ -1849,7 +1849,7 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
                                    valueTemp, offsetTemp, maskTemp,
                                    ToAnyRegister(ins->output()));
     if (mir->needsBoundsCheck())
-        masm.append(AsmJSHeapAccess(maybeCmpOffset));
+        masm.append(wasm::HeapAccess(maybeCmpOffset));
 }
 
 void
@@ -1885,7 +1885,7 @@ CodeGeneratorMIPSShared::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHea
                                    valueTemp, offsetTemp, maskTemp);
 
     if (mir->needsBoundsCheck())
-        masm.append(AsmJSHeapAccess(maybeCmpOffset));
+        masm.append(wasm::HeapAccess(maybeCmpOffset));
 }
 
 void

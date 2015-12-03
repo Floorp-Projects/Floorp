@@ -10,11 +10,10 @@
 #define mozilla_XorShift128Plus_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 
-#include <math.h>
-#include <memory.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 namespace mozilla {
 namespace non_crypto {
@@ -52,6 +51,12 @@ class XorShift128PlusRNG {
 
   /* Return a pseudo-random 64-bit number. */
   uint64_t next() {
+    /*
+     * The offsetOfState*() methods below are provided so that exceedingly-rare
+     * callers that want to observe or poke at RNG state in C++ type-system-
+     * ignoring means can do so. Don't change the next() or nextDouble()
+     * algorithms without altering code that uses offsetOfState*()!
+     */
     uint64_t s1 = mState[0];
     const uint64_t s0 = mState[1];
     mState[0] = s0;
@@ -73,10 +78,10 @@ class XorShift128PlusRNG {
      * is the width of the bitfield in the in-memory format, so we must add one
      * to get the mantissa's range.
      */
-    static const int kMantissaBits =
+    static MOZ_CONSTEXPR_VAR int kMantissaBits =
       mozilla::FloatingPoint<double>::kExponentShift + 1;
-    uint64_t mantissa = next() & ((1ULL << kMantissaBits) - 1);
-    return ldexp(static_cast<double>(mantissa), -kMantissaBits);
+    uint64_t mantissa = next() & ((UINT64_C(1) << kMantissaBits) - 1);
+    return double(mantissa) / (UINT64_C(1) << kMantissaBits);
   }
 
   /*
@@ -88,6 +93,13 @@ class XorShift128PlusRNG {
     MOZ_ASSERT(aState0 || aState1);
     mState[0] = aState0;
     mState[1] = aState1;
+  }
+
+  static size_t offsetOfState0() {
+    return offsetof(XorShift128PlusRNG, mState[0]);
+  }
+  static size_t offsetOfState1() {
+    return offsetof(XorShift128PlusRNG, mState[1]);
   }
 };
 

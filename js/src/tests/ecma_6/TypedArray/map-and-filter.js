@@ -7,8 +7,17 @@ const constructors = [
     Int32Array,
     Uint32Array,
     Float32Array,
-    Float64Array
-];
+    Float64Array ];
+
+if (typeof SharedArrayBuffer != "undefined")
+    constructors.push(sharedConstructor(Int8Array),
+		      sharedConstructor(Uint8Array),
+		      sharedConstructor(Int16Array),
+		      sharedConstructor(Uint16Array),
+		      sharedConstructor(Int32Array),
+		      sharedConstructor(Uint32Array),
+		      sharedConstructor(Float32Array),
+		      sharedConstructor(Float64Array));
 
 // Tests for TypedArray#map.
 for (var constructor of constructors) {
@@ -111,7 +120,7 @@ for (var constructor of constructors) {
     });
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var map = newGlobal()[constructor.name].prototype.map;
         var sum = 0;
         assertDeepEq(map.call(new constructor([1, 2, 3]), v => sum += v), new constructor([1,3,6]));
@@ -235,7 +244,7 @@ for (var constructor of constructors) {
     });
 
     // Called from other globals.
-    if (typeof newGlobal === "function") {
+    if (typeof newGlobal === "function" && !isSharedConstructor(constructor)) {
         var filter = newGlobal()[constructor.name].prototype.filter;
         var sum = 0;
         assertDeepEq(filter.call(new constructor([1, 2, 3]), v => {sum += v; return true}),

@@ -37,6 +37,7 @@ fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) ==
 == backface-visibility-1c.html about:blank
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,251) == backface-visibility-2.html backface-visibility-2-ref.html
 == backface-visibility-3.html backface-visibility-3-ref.html
+== perspective-clipping-1.html perspective-clipping-1-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
 random-if(Android&&AndroidVersion==17) == perspective-origin-1b.html perspective-origin-1a.html
 fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-origin-2-ref.html # subpixel AA, bug 732568

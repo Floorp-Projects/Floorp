@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "nsHttpRequestHead.h"
 #include "nsISchedulingContext.h"
 #include "nsString.h"
@@ -90,7 +91,7 @@ private:
   SpdyPushedStream31 *mPushStream;
   bool mIsDone;
 
-  nsAutoArrayPtr<char> mBufferedHTTP1;
+  UniquePtr<char[]> mBufferedHTTP1;
   uint32_t mBufferedHTTP1Size;
   uint32_t mBufferedHTTP1Used;
   uint32_t mBufferedHTTP1Consumed;

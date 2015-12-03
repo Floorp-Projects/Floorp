@@ -54,23 +54,22 @@ if CONFIG['MOZ_BUILD_APP'] == 'browser':
     ]
 
 if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:
-    tools_dir = TOPSRCDIR + '/tools/rb/'
-    FINAL_TARGET_FILES += [tools_dir + 'fix_stack_using_bpsyms.py']
+    FINAL_TARGET_FILES += ['/tools/rb/fix_stack_using_bpsyms.py']
     if CONFIG['OS_ARCH'] == 'Darwin':
-        FINAL_TARGET_FILES += [tools_dir + 'fix_macosx_stack.py']
+        FINAL_TARGET_FILES += ['/tools/rb/fix_macosx_stack.py']
     if CONFIG['OS_ARCH'] == 'Linux':
-        FINAL_TARGET_FILES += [tools_dir + 'fix_linux_stack.py']
+        FINAL_TARGET_FILES += ['/tools/rb/fix_linux_stack.py']
 
 if CONFIG['MOZ_DMD']:
-    FINAL_TARGET_FILES += [TOPSRCDIR + '/memory/replace/dmd/dmd.py']
+    FINAL_TARGET_FILES += ['/memory/replace/dmd/dmd.py']
 
 # Put a useful .gdbinit in the bin directory, to be picked up automatically
 # by GDB when we debug executables there.
-FINAL_TARGET_FILES += [TOPSRCDIR + '/.gdbinit']
+FINAL_TARGET_FILES += ['/.gdbinit']
 
 # Install the clang-cl runtime library for ASAN next to the binaries we produce.
 if CONFIG['MOZ_ASAN'] and CONFIG['CLANG_CL']:
-    FINAL_TARGET_FILES += [CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
+    FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
 
 if CONFIG['MOZ_APP_BASENAME']:
     FINAL_TARGET_PP_FILES += ['application.ini']
