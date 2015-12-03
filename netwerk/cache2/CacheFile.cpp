@@ -1757,7 +1757,15 @@ CacheFile::NotifyListenersAboutOutputRemoval()
   }
 
   // Fail all update listeners
-  mChunks.Enumerate(&CacheFile::FailUpdateListeners, this);
+  for (auto iter = mChunks.Iter(); !iter.Done(); iter.Next()) {
+    const RefPtr<CacheFileChunk>& chunk = iter.Data();
+    LOG(("CacheFile::NotifyListenersAboutOutputRemoval() - fail2 "
+         "[this=%p, idx=%u]", this, iter.Key()));
+
+    if (chunk->IsReady()) {
+      chunk->NotifyUpdateListeners();
+    }
+  }
 }
 
 bool
@@ -1876,23 +1884,6 @@ CacheFile::PostWriteTimer()
   LOG(("CacheFile::PostWriteTimer() [this=%p]", this));
 
   CacheFileIOManager::ScheduleMetadataWrite(this);
-}
-
-PLDHashOperator
-CacheFile::FailUpdateListeners(
-  const uint32_t& aIdx,
-  RefPtr<CacheFileChunk>& aChunk,
-  void* aClosure)
-{
-  CacheFile *file = static_cast<CacheFile*>(aClosure);
-  LOG(("CacheFile::FailUpdateListeners() [this=%p, idx=%u]",
-       file, aIdx));
-
-  if (aChunk->IsReady()) {
-    aChunk->NotifyUpdateListeners();
-  }
-
-  return PL_DHASH_NEXT;
 }
 
 void
