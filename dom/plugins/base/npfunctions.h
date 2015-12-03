@@ -92,6 +92,9 @@ typedef NPBool       (*NPN_ConvertPointPtr)(NPP instance, double sourceX, double
 typedef NPBool       (*NPN_HandleEventPtr)(NPP instance, void *event, NPBool handled);
 typedef NPBool       (*NPN_UnfocusInstancePtr)(NPP instance, NPFocusDirection direction);
 typedef void         (*NPN_URLRedirectResponsePtr)(NPP instance, void* notifyData, NPBool allow);
+typedef NPError      (*NPN_InitAsyncSurfacePtr)(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface);
+typedef NPError      (*NPN_FinalizeAsyncSurfacePtr)(NPP instance, NPAsyncSurface *surface);
+typedef void         (*NPN_SetCurrentAsyncSurfacePtr)(NPP instance, NPAsyncSurface *surface, NPRect *changed);
 
 typedef void         (*NPN_DummyPtr)(void);
 
@@ -178,9 +181,9 @@ typedef struct _NPNetscapeFuncs {
   NPN_HandleEventPtr handleevent;
   NPN_UnfocusInstancePtr unfocusinstance;
   NPN_URLRedirectResponsePtr urlredirectresponse;
-  NPN_DummyPtr initasyncsurfaceOBSOLETE;
-  NPN_DummyPtr finalizeasyncsurfaceOBSOLETE;
-  NPN_DummyPtr setcurrentasyncsurfaceOBSOLETE;
+  NPN_InitAsyncSurfacePtr initasyncsurface;
+  NPN_FinalizeAsyncSurfacePtr finalizeasyncsurface;
+  NPN_SetCurrentAsyncSurfacePtr setcurrentasyncsurface;
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX

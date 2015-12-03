@@ -315,6 +315,7 @@ private:
   ShutdownScriptLoader(JSContext* aCx,
                        WorkerPrivate* aWorkerPrivate,
                        bool aResult,
+                       nsresult aLoadResult,
                        bool aMutedError);
 
   void LogExceptionToConsole(JSContext* aCx,
@@ -1792,16 +1793,25 @@ ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (mLastIndex == loadInfos.Length() - 1) {
     // All done. If anything failed then return false.
     bool result = true;
+    nsresult loadResult = NS_OK;
     bool mutedError = false;
     for (uint32_t index = 0; index < loadInfos.Length(); index++) {
       if (!loadInfos[index].mExecutionResult) {
-        mutedError = loadInfos[index].mMutedErrorFlag.valueOr(true);
+        mutedError = mutedError || loadInfos[index].mMutedErrorFlag.valueOr(true);
+        loadResult = loadInfos[index].mLoadResult;
         result = false;
-        break;
+
+        // If we have more than one loadInfos and one of them fails, the others
+        // are marked as NS_BINDING_ABORTED, but what we want to report is the
+        // error result of the 'real' failing one.
+        if (loadInfos[index].mLoadResult != NS_BINDING_ABORTED) {
+          loadResult = loadInfos[index].mLoadResult;
+          break;
+        }
       }
     }
 
-    ShutdownScriptLoader(aCx, aWorkerPrivate, result, mutedError);
+    ShutdownScriptLoader(aCx, aWorkerPrivate, result, loadResult, mutedError);
   }
 }
 
@@ -1810,7 +1820,7 @@ ScriptExecutorRunnable::Cancel()
 {
   if (mLastIndex == mScriptLoader.mLoadInfos.Length() - 1) {
     ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate,
-                         false, false);
+                         false, NS_OK, false);
   }
   return MainThreadWorkerSyncRunnable::Cancel();
 }
@@ -1819,6 +1829,7 @@ void
 ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
                                              WorkerPrivate* aWorkerPrivate,
                                              bool aResult,
+                                             nsresult aLoadResult,
                                              bool aMutedError)
 {
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
@@ -1833,6 +1844,8 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     if (aMutedError && JS_IsExceptionPending(aCx)) {
       LogExceptionToConsole(aCx, aWorkerPrivate);
       mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
+    } else if (NS_FAILED(aLoadResult)) {
+      mScriptLoader.mRv.Throw(aLoadResult);
     } else {
       mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     }

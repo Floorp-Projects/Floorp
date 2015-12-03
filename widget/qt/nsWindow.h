@@ -84,10 +84,10 @@ public:
     //
     // nsIWidget
     //
-    NS_IMETHOD Create(nsIWidget        *aParent,
-                      nsNativeWidget   aNativeParent,
-                      const nsIntRect  &aRect,
-                      nsWidgetInitData *aInitData);
+    NS_IMETHOD Create(nsIWidget* aParent,
+                      nsNativeWidget aNativeParent,
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData);
     NS_IMETHOD Destroy(void);
 
     NS_IMETHOD Show(bool aState);
@@ -110,7 +110,7 @@ public:
     virtual bool IsEnabled() const;
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
-    NS_IMETHOD         Invalidate(const nsIntRect &aRect);
+    NS_IMETHOD         Invalidate(const LayoutDeviceIntRect& aRect);
     virtual void*      GetNativeData(uint32_t aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetCursor(nsCursor aCursor);

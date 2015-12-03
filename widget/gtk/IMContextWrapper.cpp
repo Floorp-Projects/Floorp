@@ -1870,8 +1870,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     // Compute the caret position in the IM owner window.
     LayoutDeviceIntRect rect = charRect.mReply.mRect + root - owner;
     rect.width = 0;
-    GdkRectangle area = rootWindow->DevicePixelsToGdkRectRoundOut(
-                            rect.ToUnknownRect());
+    GdkRectangle area = rootWindow->DevicePixelsToGdkRectRoundOut(rect);
 
     gtk_im_context_set_cursor_location(aContext, &area);
 }

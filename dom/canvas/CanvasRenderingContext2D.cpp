@@ -5208,7 +5208,9 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   }
 
   JS::AutoCheckCannotGC nogc;
-  uint8_t* data = JS_GetUint8ClampedArrayData(darray, nogc);
+  bool isShared;
+  uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
+  MOZ_ASSERT(!isShared);        // Should not happen, data was created above
   if (!readback) {
     src = data;
     srcStride = aWidth * 4;

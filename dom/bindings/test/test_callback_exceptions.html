@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for ...</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+promise_test(function(t) {
+  var iterator = document.createNodeIterator(document, NodeFilter.SHOW_ALL, JSON.parse);
+  return promise_rejects(t, new SyntaxError,
+                         Promise.resolve().then(iterator.nextNode.bind(iterator)));
+}, "Trying to use JSON.parse as filter should throw a catchable SyntaxError exception even when the filter is invoked async");
+
+promise_test(function(t) {
+  return promise_rejects(t, new SyntaxError, Promise.resolve('{').then(JSON.parse));
+}, "Trying to use JSON.parse as a promise callback should allow the next promise to handle the resulting exception.");
+</script>

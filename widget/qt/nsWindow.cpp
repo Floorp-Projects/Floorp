@@ -133,10 +133,10 @@ nsWindow::~nsWindow()
 }
 
 nsresult
-nsWindow::Create(nsIWidget        *aParent,
-                 nsNativeWidget    aNativeParent,
-                 const nsIntRect  &aRect,
-                 nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget* aParent,
+                 nsNativeWidget aNativeParent,
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     // only set the base parent if we're not going to be a dialog or a
     // toplevel
@@ -151,7 +151,7 @@ nsWindow::Create(nsIWidget        *aParent,
     mParent = (nsWindow *)aParent;
 
     // save our bounds
-    mBounds = aRect;
+    mBounds = aRect.ToUnknownRect();
 
     // find native parent
     MozQWidget *parent = nullptr;
@@ -617,10 +617,10 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigura
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     LOGDRAW(("Invalidate (rect) [%p,%p]: %d %d %d %d\n", (void *)this,
-             (void*)mWidget,aRect.x, aRect.y, aRect.width, aRect.height));
+             (void*)mWidget, aRect.x, aRect.y, aRect.width, aRect.height));
 
     if (!mWidget) {
         return NS_OK;

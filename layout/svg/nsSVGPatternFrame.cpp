@@ -407,7 +407,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
       gfxMatrix tm = *(patternWithChildren->mCTM);
       if (kid->GetContent()->IsSVGElement()) {
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
-              PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
+               PrependLocalTransformsTo(tm, eUserSpaceToParent);
       }
       nsSVGUtils::PaintFrameWithEffects(kid, *gfx, tm);
     }

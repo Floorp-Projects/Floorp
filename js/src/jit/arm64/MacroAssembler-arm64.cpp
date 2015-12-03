@@ -540,7 +540,7 @@ MacroAssembler::call(ImmPtr imm)
 }
 
 void
-MacroAssembler::call(AsmJSImmPtr imm)
+MacroAssembler::call(wasm::SymbolicAddress imm)
 {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();

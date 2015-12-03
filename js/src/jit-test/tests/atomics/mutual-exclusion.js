@@ -39,7 +39,7 @@ const sab = new SharedArrayBuffer(sabLength);
 
 setSharedArrayBuffer(sab);
 
-const iab = new SharedInt32Array(sab);
+const iab = new Int32Array(sab);
 
 function testRun(limit) {
     console.log("Limit = " + limit);
@@ -47,7 +47,7 @@ function testRun(limit) {
     // Fork off workers to hammer on memory.
     for ( var i=0 ; i < numWorkers ; i++ ) {
         evalInWorker(`
-                     const iab = new SharedInt32Array(getSharedArrayBuffer());
+                     const iab = new Int32Array(getSharedArrayBuffer());
                      const v = 1 << (8 * ${i});
                      for ( var i=0 ; i < ${limit} ; i++ ) {
                          for ( var k=0 ; k < ${iterCount} ; k++ ) {

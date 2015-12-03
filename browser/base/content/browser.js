@@ -2663,6 +2663,7 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.addMessageListener("Browser:OverrideWeakCrypto", this);
+    mm.addMessageListener("Browser:SSLErrorGoBack", this);
   },
 
   uninit: function () {
@@ -2674,6 +2675,7 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.removeMessageListener("Browser:OverrideWeakCrypto", this);
+    mm.removeMessageListener("Browser:SSLErrorGoBack", this);
   },
 
   handleEvent: function (event) {
@@ -2737,6 +2739,9 @@ var BrowserOnClick = {
         weakCryptoOverride.addWeakCryptoOverride(
           msg.data.location.hostname,
           PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
+      break;
+      case "Browser:SSLErrorGoBack":
+        goBackFromErrorPage();
       break;
     }
   },
@@ -5462,7 +5467,7 @@ function handleLinkClick(event, href, linkNode) {
   if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer") &&
       linkNode) {
     let referrerAttrValue = Services.netUtils.parseAttributePolicyString(linkNode.
-                            getAttribute("referrer"));
+                            getAttribute("referrerpolicy"));
     if (referrerAttrValue != Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT) {
       referrerPolicy = referrerAttrValue;
     }

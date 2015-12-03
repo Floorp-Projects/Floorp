@@ -4703,16 +4703,6 @@ fi
 AC_SUBST(MOZ_ENABLE_LIBPROXY)
 
 dnl ========================================================
-dnl = GNOME component (mozgnome)
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK"
-then
-    MOZ_ENABLE_GNOME_COMPONENT=1
-fi
-AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
-
-dnl ========================================================
 dnl = libgnomeui support module
 dnl ========================================================
 
@@ -8833,11 +8823,11 @@ AC_SUBST(MOZ_NATIVE_JPEG)
 AC_SUBST(MOZ_NATIVE_PNG)
 AC_SUBST(MOZ_NATIVE_BZ2)
 
-AC_SUBST(MOZ_JPEG_CFLAGS)
+AC_SUBST_LIST(MOZ_JPEG_CFLAGS)
 AC_SUBST_LIST(MOZ_JPEG_LIBS)
 AC_SUBST_LIST(MOZ_BZ2_CFLAGS)
 AC_SUBST_LIST(MOZ_BZ2_LIBS)
-AC_SUBST(MOZ_PNG_CFLAGS)
+AC_SUBST_LIST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)
 
 if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
@@ -8854,10 +8844,8 @@ if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_B2G_LOADER"; then
 fi
 AC_SUBST(MOZ_B2G_LOADER)
 
-AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(MOZ_NATIVE_NSPR)
 
-AC_SUBST(NSS_CFLAGS)
 AC_SUBST(MOZ_NATIVE_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
 

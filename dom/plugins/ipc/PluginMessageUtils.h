@@ -220,6 +220,15 @@ inline void AssertPluginThread()
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
 void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
 
+inline bool IsDrawingModelDirect(int16_t aModel)
+{
+    return aModel == NPDrawingModelAsyncBitmapSurface
+#if defined(XP_WIN)
+           || aModel == NPDrawingModelAsyncWindowsDXGISurface
+#endif
+           ;
+}
+
 // in NPAPI, char* == nullptr is sometimes meaningful.  the following is
 // helper code for dealing with nullable nsCString's
 inline nsCString

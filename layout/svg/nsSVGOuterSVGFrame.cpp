@@ -982,8 +982,7 @@ nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfx::Matrix *aTransform) c
     // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
     gfxMatrix identity;
     *aTransform = gfx::ToMatrix(
-      content->PrependLocalTransformsTo(identity,
-                                        nsSVGElement::eChildToUserSpace));
+      content->PrependLocalTransformsTo(identity, eChildToUserSpace));
   }
 
   return hasTransform;

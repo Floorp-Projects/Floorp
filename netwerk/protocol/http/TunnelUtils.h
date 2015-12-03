@@ -8,6 +8,7 @@
 #define mozilla_net_TLSFilterTransaction_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAHttpTransaction.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -157,7 +158,7 @@ private:
   RefPtr<NudgeTunnelCallback> mNudgeCallback;
 
   // buffered network output, after encryption
-  nsAutoArrayPtr<char> mEncryptedText;
+  UniquePtr<char[]> mEncryptedText;
   uint32_t mEncryptedTextUsed;
   uint32_t mEncryptedTextSize;
 
@@ -218,12 +219,12 @@ private:
   nsAHttpConnection    *mSession;
   nsAHttpSegmentReader *mSegmentReader;
 
-  nsAutoArrayPtr<char> mInputData;
+  UniquePtr<char[]>   mInputData;
   uint32_t             mInputDataSize;
   uint32_t             mInputDataUsed;
   uint32_t             mInputDataOffset;
 
-  nsAutoArrayPtr<char> mOutputData;
+  UniquePtr<char[]>    mOutputData;
   uint32_t             mOutputDataSize;
   uint32_t             mOutputDataUsed;
   uint32_t             mOutputDataOffset;

@@ -719,6 +719,7 @@ private:
   }
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
+  virtual MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus();
 
 protected:
   virtual ~MediaDecoder();
@@ -791,6 +792,11 @@ protected:
 
   // Media data resource.
   RefPtr<MediaResource> mResource;
+
+  // Amount of buffered data ahead of current time required to consider that
+  // the next frame is available.
+  // An arbitrary value of 250ms is used.
+  static const int DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED = 250000;
 
 private:
   // Called when the metadata from the media file has been loaded by the

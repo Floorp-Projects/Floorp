@@ -19,7 +19,8 @@ function dprint(s) {
 // Tests the SharedArrayBuffer mailbox in the shell.
 // Tests the futex functionality in the shell.
 
-var mem = new SharedInt32Array(3);
+var sab = new SharedArrayBuffer(12);
+var mem = new Int32Array(sab);
 
 // SharedArrayBuffer mailbox tests
 
@@ -30,7 +31,7 @@ assertEq(getSharedArrayBuffer() == null, false);       // And then the mbx is no
 
 var v = getSharedArrayBuffer();
 assertEq(v.byteLength, mem.buffer.byteLength); // Looks like what we put in?
-var w = new SharedInt32Array(v);
+var w = new Int32Array(v);
 mem[0] = 314159;
 assertEq(w[0], 314159);		// Shares memory (locally) with what we put in?
 mem[0] = 0;
@@ -52,7 +53,6 @@ assertThrowsInstanceOf(() => setSharedArrayBuffer({x:10, y:20}), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer([1,2]), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(new ArrayBuffer(10)), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(new Int32Array(10)), Error);
-assertThrowsInstanceOf(() => setSharedArrayBuffer(new SharedInt32Array(10)), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(false), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(3.14), Error);
 assertThrowsInstanceOf(() => setSharedArrayBuffer(mem), Error);
@@ -76,7 +76,7 @@ if (helperThreadCount() === 0) {
 }
 
 evalInWorker(`
-var mem = new SharedInt32Array(getSharedArrayBuffer());
+var mem = new Int32Array(getSharedArrayBuffer());
 function dprint(s) {
     if (mem[2]) print(s);
 }

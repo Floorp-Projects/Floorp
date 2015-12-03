@@ -40,6 +40,7 @@
 
 #include "jsatominlines.h"
 
+#include "vm/ArrayBufferObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -63,19 +64,14 @@ using JS::ToUint32;
  * the subclasses.
  */
 
-TypedArrayLayout TypedArrayObject::layout_(false, // shared
-                                           true,  // neuterable
-                                           &TypedArrayObject::classes[0],
-                                           &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]);
-
 /* static */ int
-TypedArrayLayout::lengthOffset()
+TypedArrayObject::lengthOffset()
 {
     return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
 }
 
 /* static */ int
-TypedArrayLayout::dataOffset()
+TypedArrayObject::dataOffset()
 {
     return NativeObject::getPrivateDataOffset(DATA_SLOT);
 }
@@ -83,8 +79,9 @@ TypedArrayLayout::dataOffset()
 void
 TypedArrayObject::neuter(void* newData)
 {
-    setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(0));
-    setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(0));
+    MOZ_ASSERT(!isSharedMemory());
+    setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
+    setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
 }
 
@@ -97,7 +94,7 @@ TypedArrayObject::is(HandleValue v)
 /* static */ bool
 TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarray)
 {
-    if (tarray->buffer())
+    if (tarray->hasBuffer())
         return true;
 
     Rooted<ArrayBufferObject*> buffer(cx, ArrayBufferObject::create(cx, tarray->byteLength()));
@@ -107,10 +104,11 @@ TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarra
     if (!buffer->addView(cx, tarray))
         return false;
 
-    memcpy(buffer->dataPointer(), tarray->viewData(), tarray->byteLength());
+    // tarray is not shared, because if it were it would have a buffer.
+    memcpy(buffer->dataPointer(), tarray->viewDataUnshared(), tarray->byteLength());
     tarray->setPrivate(buffer->dataPointer());
 
-    tarray->setSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*buffer));
+    tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*buffer));
 
     // Notify compiled jit code that the base pointer has moved.
     MarkObjectStateChange(cx, tarray);
@@ -181,13 +179,6 @@ static inline JSObject*
 NewArray(JSContext* cx, uint32_t nelements);
 
 namespace {
-
-// Note, this template can probably be merged in part with the one in
-// SharedTypedArrayObject.cpp once our implementation of
-// TypedArrayObject is closer to ES6: at the moment, our
-// implementation does not process construction arguments in
-// standards-compliant ways, at least, and a larger rewrite around the
-// prototype hierarchy is also coming.
 
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject
@@ -334,7 +325,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeInstance(JSContext* cx, Handle<ArrayBufferObject*> buffer, uint32_t byteOffset, uint32_t len,
+    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer, uint32_t byteOffset, uint32_t len,
                  HandleObject proto)
     {
         MOZ_ASSERT_IF(!buffer, byteOffset == 0);
@@ -352,41 +343,54 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return nullptr;
 
-        obj->setSlot(TypedArrayLayout::BUFFER_SLOT, ObjectOrNullValue(buffer));
+        bool isSharedMemory = buffer && IsSharedArrayBuffer(buffer.get());
+
+        obj->setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectOrNullValue(buffer));
+        // This is invariant.  Self-hosting code that sets BUFFER_SLOT
+        // (if it does) must maintain it, should it need to.
+        if (isSharedMemory)
+            obj->setIsSharedMemory();
 
         if (buffer) {
-            obj->initPrivate(buffer->dataPointer() + byteOffset);
+            obj->initViewData(buffer->dataPointerEither() + byteOffset);
 
             // If the buffer is for an inline typed object, the data pointer
             // may be in the nursery, so include a barrier to make sure this
             // object is updated if that typed object moves.
-            if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(buffer->dataPointer()))
+            if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(buffer->dataPointerEither())) {
+                MOZ_ASSERT(!isSharedMemory);
                 cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+            }
         } else {
             void* data = obj->fixedData(FIXED_DATA_START);
             obj->initPrivate(data);
             memset(data, 0, len * sizeof(NativeType));
         }
 
-        obj->setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(len));
-        obj->setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(byteOffset));
+        obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
+        obj->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
 
 #ifdef DEBUG
         if (buffer) {
             uint32_t arrayByteLength = obj->byteLength();
             uint32_t arrayByteOffset = obj->byteOffset();
             uint32_t bufferByteLength = buffer->byteLength();
-            MOZ_ASSERT_IF(!buffer->isNeutered(), buffer->dataPointer() <= obj->viewData());
+            // Unwraps are safe: both are for the pointer value.
+            if (IsArrayBuffer(buffer.get())) {
+                MOZ_ASSERT_IF(!AsArrayBuffer(buffer.get()).isNeutered(),
+                              buffer->dataPointerEither().unwrap(/*safe*/) <= obj->viewDataEither().unwrap(/*safe*/));
+            }
             MOZ_ASSERT(bufferByteLength - arrayByteOffset >= arrayByteLength);
             MOZ_ASSERT(arrayByteOffset <= bufferByteLength);
         }
 
         // Verify that the private slot is at the expected place
-        MOZ_ASSERT(obj->numFixedSlots() == TypedArrayLayout::DATA_SLOT);
+        MOZ_ASSERT(obj->numFixedSlots() == TypedArrayObject::DATA_SLOT);
 #endif
 
-        if (buffer) {
-            if (!buffer->addView(cx, obj))
+        // ArrayBufferObjects track their views to support neutering.
+        if (buffer && buffer->is<ArrayBufferObject>()) {
+            if (!buffer->as<ArrayBufferObject>().addView(cx, obj))
                 return nullptr;
         }
 
@@ -394,7 +398,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeInstance(JSContext* cx, Handle<ArrayBufferObject*> buffer,
+    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer,
                  uint32_t byteOffset, uint32_t len)
     {
         RootedObject proto(cx, nullptr);
@@ -448,7 +452,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
          * Note that offset and length will be ignored.  Note that a
          * shared array's values are copied here.
          */
-        if (!UncheckedUnwrap(dataObj)->is<ArrayBufferObject>())
+        if (!UncheckedUnwrap(dataObj)->is<ArrayBufferObjectMaybeShared>())
             return fromArray(cx, dataObj);
 
         /* (ArrayBuffer, [byteOffset, [length]]) */
@@ -491,12 +495,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         ESClassValue cls;
         if (!GetBuiltinClass(cx, bufobj, &cls))
             return nullptr;
-        if (cls != ESClass_ArrayBuffer) {
+        if (cls != ESClass_ArrayBuffer && cls != ESClass_SharedArrayBuffer) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return nullptr;
         }
 
-        MOZ_ASSERT(IsArrayBuffer(bufobj) || bufobj->is<ProxyObject>());
+        MOZ_ASSERT(IsArrayBuffer(bufobj) || IsSharedArrayBuffer(bufobj) || bufobj->is<ProxyObject>());
         if (bufobj->is<ProxyObject>()) {
             /*
              * Normally, NonGenericMethodGuard handles the case of transparent
@@ -514,7 +518,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 JS_ReportError(cx, "Permission denied to access object");
                 return nullptr;
             }
-            if (IsArrayBuffer(wrapped)) {
+            if (IsArrayBuffer(wrapped) || IsSharedArrayBuffer(wrapped)) {
                 /*
                  * And for even more fun, the new view's prototype should be
                  * set to the origin compartment's prototype object, not the
@@ -549,12 +553,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             }
         }
 
-        if (!IsArrayBuffer(bufobj)) {
+        if (!IsArrayBuffer(bufobj) && !IsSharedArrayBuffer(bufobj)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return nullptr; // must be arrayBuffer
         }
 
-        Rooted<ArrayBufferObject*> buffer(cx, &AsArrayBuffer(bufobj));
+        Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
+        if (IsArrayBuffer(bufobj))
+            buffer = static_cast<ArrayBufferObjectMaybeShared*>(&AsArrayBuffer(bufobj));
+        else
+            buffer = static_cast<ArrayBufferObjectMaybeShared*>(&AsSharedArrayBuffer(bufobj));
 
         if (byteOffset > buffer->byteLength() || byteOffset % sizeof(NativeType) != 0) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -630,14 +638,14 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     {
         TypedArrayObject& tarray = obj->as<TypedArrayObject>();
         MOZ_ASSERT(index < tarray.length());
-        return static_cast<const NativeType*>(tarray.viewData())[index];
+        return jit::AtomicOperations::loadSafeWhenRacy(tarray.viewDataEither().cast<NativeType*>() + index);
     }
 
     static void
     setIndex(TypedArrayObject& tarray, uint32_t index, NativeType val)
     {
         MOZ_ASSERT(index < tarray.length());
-        static_cast<NativeType*>(tarray.viewData())[index] = val;
+        jit::AtomicOperations::storeSafeWhenRacy(tarray.viewDataEither().cast<NativeType*>() + index, val);
     }
 
     static Value getIndexValue(JSObject* tarray, uint32_t index);
@@ -969,6 +977,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     MOZ_ASSERT(byteOffset <= INT32_MAX);
     MOZ_ASSERT(byteLength <= INT32_MAX);
     MOZ_ASSERT(byteOffset + byteLength < UINT32_MAX);
+    MOZ_ASSERT(!arrayBuffer || !arrayBuffer->is<SharedArrayBufferObject>());
 
     RootedObject proto(cx, protoArg);
     RootedObject obj(cx);
@@ -1002,9 +1011,9 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     MOZ_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     DataViewObject& dvobj = obj->as<DataViewObject>();
-    dvobj.setFixedSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    dvobj.setFixedSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(byteLength));
-    dvobj.setFixedSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    dvobj.setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    dvobj.setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(byteLength));
+    dvobj.setFixedSlot(TypedArrayObject::BUFFER_SLOT, ObjectValue(*arrayBuffer));
     dvobj.initPrivate(arrayBuffer->dataPointer() + byteOffset);
 
     // Include a barrier if the data view's data pointer is in the nursery, as
@@ -1013,7 +1022,7 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
         cx->runtime()->gc.storeBuffer.putWholeCell(obj);
 
     // Verify that the private slot is at the expected place
-    MOZ_ASSERT(dvobj.numFixedSlots() == TypedArrayLayout::DATA_SLOT);
+    MOZ_ASSERT(dvobj.numFixedSlots() == TypedArrayObject::DATA_SLOT);
 
     if (!arrayBuffer->addView(cx, &dvobj))
         return nullptr;
@@ -1746,6 +1755,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
 #define IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Name, ExternalType, InternalType)              \
   JS_FRIEND_API(JSObject*) JS_GetObjectAs ## Name ## Array(JSObject* obj,                  \
                                                             uint32_t* length,               \
+                                                            bool* isShared,                 \
                                                             ExternalType** data)            \
   {                                                                                         \
       if (!(obj = CheckedUnwrap(obj)))                                                      \
@@ -1757,7 +1767,8 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
                                                                                             \
       TypedArrayObject* tarr = &obj->as<TypedArrayObject>();                                \
       *length = tarr->length();                                                             \
-      *data = static_cast<ExternalType*>(tarr->viewData());                                \
+      *isShared = tarr->isSharedMemory();                                                         \
+      *data = static_cast<ExternalType*>(tarr->viewDataEither().unwrap(/*safe - caller sees isShared flag*/)); \
                                                                                             \
       return obj;                                                                           \
   }
@@ -1787,7 +1798,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 #define IMPL_TYPED_ARRAY_CLASS(_typedArray)                                    \
 {                                                                              \
     #_typedArray,                                                              \
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |             \
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |             \
     JSCLASS_HAS_PRIVATE |                                                      \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
     JSCLASS_DELAY_METADATA_CALLBACK,                                           \
@@ -1881,14 +1892,14 @@ TypedArrayObject::isOriginalLengthGetter(Native native)
 const Class DataViewObject::protoClass = {
     "DataViewPrototype",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView)
 };
 
 const Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -2009,8 +2020,8 @@ DataViewObject::initClass(JSContext* cx)
 void
 DataViewObject::neuter(void* newData)
 {
-    setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(0));
-    setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(0));
+    setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
+    setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
 }
 
@@ -2141,8 +2152,6 @@ js::DefineTypedArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
 
         if (obj->is<TypedArrayObject>())
             TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-        else
-            SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
     }
 
     // Step xii.
@@ -2185,6 +2194,15 @@ JS_GetTypedArrayByteLength(JSObject* obj)
     return obj->as<TypedArrayObject>().byteLength();
 }
 
+JS_FRIEND_API(bool)
+JS_GetTypedArraySharedness(JSObject* obj)
+{
+    obj = CheckedUnwrap(obj);
+    if (!obj)
+        return false;
+    return obj->as<TypedArrayObject>().isSharedMemory();
+}
+
 JS_FRIEND_API(js::Scalar::Type)
 JS_GetArrayBufferViewType(JSObject* obj)
 {
@@ -2199,115 +2217,112 @@ JS_GetArrayBufferViewType(JSObject* obj)
     MOZ_CRASH("invalid ArrayBufferView type");
 }
 
-JS_FRIEND_API(js::Scalar::Type)
-JS_GetSharedArrayBufferViewType(JSObject* obj)
-{
-    obj = CheckedUnwrap(obj);
-    if (!obj)
-        return Scalar::MaxTypedArrayViewType;
-
-    if (obj->is<SharedTypedArrayObject>())
-        return obj->as<SharedTypedArrayObject>().type();
-    MOZ_CRASH("invalid SharedArrayBufferView type");
-}
-
 JS_FRIEND_API(int8_t*)
-JS_GetInt8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetInt8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Int8);
-    return static_cast<int8_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<int8_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isShared*/));
 }
 
 JS_FRIEND_API(uint8_t*)
-JS_GetUint8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetUint8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Uint8);
-    return static_cast<uint8_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<uint8_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(uint8_t*)
-JS_GetUint8ClampedArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetUint8ClampedArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Uint8Clamped);
-    return static_cast<uint8_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<uint8_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(int16_t*)
-JS_GetInt16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetInt16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Int16);
-    return static_cast<int16_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<int16_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(uint16_t*)
-JS_GetUint16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetUint16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Uint16);
-    return static_cast<uint16_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<uint16_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(int32_t*)
-JS_GetInt32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetInt32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Int32);
-    return static_cast<int32_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<int32_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(uint32_t*)
-JS_GetUint32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetUint32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Uint32);
-    return static_cast<uint32_t*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<uint32_t*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(float*)
-JS_GetFloat32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetFloat32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Float32);
-    return static_cast<float*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<float*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(double*)
-JS_GetFloat64ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetFloat64ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
     TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
     MOZ_ASSERT((int32_t) tarr->type() == Scalar::Float64);
-    return static_cast<double*>(tarr->viewData());
+    *isSharedMemory = tarr->isSharedMemory();
+    return static_cast<double*>(tarr->viewDataEither().unwrap(/*safe - caller sees isSharedMemory*/));
 }
 
 JS_FRIEND_API(bool)

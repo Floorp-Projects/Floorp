@@ -2589,6 +2589,9 @@ pref("dom.ipc.plugins.asyncInit.enabled", false);
 pref("dom.ipc.plugins.asyncInit.enabled", true);
 #endif
 
+// Allow the AsyncDrawing mode to be used for plugins.
+pref("dom.ipc.plugins.asyncdrawing.enabled", false);
+
 pref("dom.ipc.processCount", 1);
 
 // Enable caching of Moz2D Path objects for SVG geometry elements

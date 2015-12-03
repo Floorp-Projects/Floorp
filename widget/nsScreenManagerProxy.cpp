@@ -8,6 +8,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsScreenManagerProxy.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsIAppShell.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"

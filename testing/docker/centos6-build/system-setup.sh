@@ -66,6 +66,8 @@ install GConf2-devel.i686
 install GConf2-devel.x86_64
 install GConf2.i686
 install GConf2.x86_64
+install gdk-pixbuf2-devel.i686
+install gdk-pixbuf2-devel.x86_64
 install glib2-devel.i686
 install glib2-devel.x86_64
 install glib2.i686
@@ -423,7 +425,7 @@ EOF
 peep install -r requirements.txt
 
 # TC-VCS
-npm install -g taskcluster-vcs@2.3.12
+npm install -g taskcluster-vcs@2.3.18
 
 # Ninja
 cd $BUILD

@@ -132,6 +132,10 @@ public:
     // maximum number of fonts to substitute for a generic
     uint32_t MaxGenericSubstitions();
 
+    bool SupportsPluginDirectBitmapDrawing() override {
+      return true;
+    }
+
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 

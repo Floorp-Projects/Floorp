@@ -86,7 +86,7 @@ public:
               uint32_t flags, Screen *screen, Visual *visual);
 
 private:
-    bool DrawDirect(gfxContext *ctx, mozilla::gfx::IntSize bounds,
+    bool DrawDirect(mozilla::gfx::DrawTarget* aDT, mozilla::gfx::IntSize bounds,
                     uint32_t flags, Screen *screen, Visual *visual);
 
     bool DrawCairo(cairo_t* cr, mozilla::gfx::IntSize size,

@@ -67,7 +67,7 @@ interface nsIServiceWorkerManagerListener : nsISupports
   void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
 };
 
-[scriptable, builtinclass, uuid(c945e2e6-30c2-48e6-a282-e69de0c7ebb1)]
+[scriptable, builtinclass, uuid(a03f2b64-7aaf-423a-97b0-e1f733cce0f6)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -106,7 +106,7 @@ interface nsIServiceWorkerManager : nsISupports
    *
    * This MUST only be called once per document!
    */
-  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc);
+  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc, in DOMString aDocumentId);
 
   /**
    * Documents that have called MaybeStartControlling() should call this when

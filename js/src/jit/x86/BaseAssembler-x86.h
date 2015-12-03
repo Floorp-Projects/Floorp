@@ -40,6 +40,12 @@ class BaseAssemblerX86 : public BaseAssembler
         }
     }
 
+    void adcl_rr(RegisterID src, RegisterID dst)
+    {
+        spew("adcl       %s, %s", GPReg32Name(src), GPReg32Name(dst));
+        m_formatter.oneByteOp(OP_ADC_GvEv, src, dst);
+    }
+
     using BaseAssembler::andl_im;
     void andl_im(int32_t imm, const void* addr)
     {

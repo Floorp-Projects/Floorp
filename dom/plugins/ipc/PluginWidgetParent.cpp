@@ -118,8 +118,8 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
   initData.mUnicode = false;
   initData.clipChildren = true;
   initData.clipSiblings = true;
-  *aResult = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                             &initData);
+  *aResult = mWidget->Create(parentWidget.get(), nullptr,
+                             LayoutDeviceIntRect(0, 0, 0, 0), &initData);
   if (NS_FAILED(*aResult)) {
     KillWidget();
     // This should never fail, abort.

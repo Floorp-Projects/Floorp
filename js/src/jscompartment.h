@@ -7,8 +7,10 @@
 #ifndef jscompartment_h
 #define jscompartment_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
+#include "mozilla/XorShift128PlusRNG.h"
 
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
@@ -592,12 +594,11 @@ struct JSCompartment
 
     js::DtoaCache dtoaCache;
 
-    /* Random number generator state, used by jsmath.cpp. */
-    uint64_t rngState;
+    // Random number generator for Math.random().
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
 
-    static size_t offsetOfRngState() {
-        return offsetof(JSCompartment, rngState);
-    }
+    // Initialize randomNumberGenerator if needed.
+    void ensureRandomNumberGenerator();
 
   private:
     JSCompartment* thisForCtor() { return this; }

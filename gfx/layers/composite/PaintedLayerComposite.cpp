@@ -125,7 +125,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
 
 
   RenderWithAllMasks(this, compositor, aClipRect,
-                     [&](EffectChain& effectChain, const Rect& clipRect) {
+                     [&](EffectChain& effectChain, const gfx::Rect& clipRect) {
     mBuffer->SetPaintWillResample(MayResample());
 
     mBuffer->Composite(this, effectChain,

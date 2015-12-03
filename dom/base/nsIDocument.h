@@ -806,7 +806,9 @@ public:
     return mAnonymousContents;
   }
 
-  nsresult GetId(nsAString& aId);
+  static nsresult GenerateDocumentId(nsAString& aId);
+  nsresult GetOrCreateId(nsAString& aId);
+  void SetId(const nsAString& aId);
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;

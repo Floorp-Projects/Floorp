@@ -19,6 +19,7 @@
 #ifndef asmjs_AsmJSModule_h
 #define asmjs_AsmJSModule_h
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
@@ -29,21 +30,16 @@
 #include "asmjs/AsmJSValidate.h"
 #include "asmjs/Wasm.h"
 #include "builtin/SIMD.h"
-#include "gc/Marking.h"
-#include "jit/IonTypes.h"
-#include "jit/MacroAssembler.h"
+#include "gc/Tracer.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
-#include "jit/RegisterSets.h"
-#include "jit/shared/Assembler-shared.h"
 #include "vm/TypedArrayObject.h"
 
 namespace js {
 
 namespace frontend { class TokenStream; }
-
-using JS::GenericNaN;
+namespace jit { struct BaselineScript; class MacroAssembler; }
 
 // The asm.js spec recognizes this set of builtin Math functions.
 enum AsmJSMathBuiltinFunction
@@ -476,7 +472,7 @@ class AsmJSModule
         CodeRange() {}
         CodeRange(Kind kind, AsmJSOffsets offsets);
         CodeRange(Kind kind, AsmJSProfilingOffsets offsets);
-        CodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets);
+        CodeRange(wasm::Builtin builtin, AsmJSProfilingOffsets offsets);
         CodeRange(uint32_t lineNumber, AsmJSFunctionOffsets offsets);
 
         Kind kind() const { return Kind(u.kind_); }
@@ -537,9 +533,9 @@ class AsmJSModule
             profilingReturn_ += offset;
             end_ += offset;
         }
-        AsmJSExit::BuiltinKind thunkTarget() const {
+        wasm::Builtin thunkTarget() const {
             MOZ_ASSERT(isThunk());
-            return AsmJSExit::BuiltinKind(u.thunk.target_);
+            return wasm::Builtin(u.thunk.target_);
         }
     };
 
@@ -598,27 +594,6 @@ class AsmJSModule
     };
 #endif
 
-#if defined(JS_ION_PERF)
-    struct ProfiledBlocksFunction : public ProfiledFunction
-    {
-        unsigned endInlineCodeOffset;
-        jit::BasicBlocksVector blocks;
-
-        ProfiledBlocksFunction(PropertyName* name, unsigned start, unsigned endInline, unsigned end,
-                               jit::BasicBlocksVector& blocksVector)
-          : ProfiledFunction(name, start, end), endInlineCodeOffset(endInline),
-            blocks(mozilla::Move(blocksVector))
-        {
-            MOZ_ASSERT(name->isTenured());
-        }
-
-        ProfiledBlocksFunction(ProfiledBlocksFunction&& copy)
-          : ProfiledFunction(copy.name, copy.pod.startCodeOffset, copy.pod.endCodeOffset),
-            endInlineCodeOffset(copy.endInlineCodeOffset), blocks(mozilla::Move(copy.blocks))
-        { }
-    };
-#endif
-
     struct RelativeLink
     {
         enum Kind
@@ -657,22 +632,17 @@ class AsmJSModule
 
     typedef Vector<RelativeLink, 0, SystemAllocPolicy> RelativeLinkVector;
 
+    typedef mozilla::EnumeratedArray<wasm::Builtin,
+                                     wasm::Builtin::Limit,
+                                     uint32_t> BuiltinThunkOffsetArray;
+
     typedef Vector<uint32_t, 0, SystemAllocPolicy> OffsetVector;
+    typedef mozilla::EnumeratedArray<wasm::SymbolicAddress,
+                                     wasm::SymbolicAddress::Limit,
+                                     OffsetVector> OffsetVectorArray;
 
-    class AbsoluteLinkArray
+    struct AbsoluteLinkArray : public OffsetVectorArray
     {
-        OffsetVector array_[jit::AsmJSImm_Limit];
-
-      public:
-        OffsetVector& operator[](size_t i) {
-            MOZ_ASSERT(i < jit::AsmJSImm_Limit);
-            return array_[i];
-        }
-        const OffsetVector& operator[](size_t i) const {
-            MOZ_ASSERT(i < jit::AsmJSImm_Limit);
-            return array_[i];
-        }
-
         size_t serializedSize() const;
         uint8_t* serialize(uint8_t* cursor) const;
         const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);
@@ -717,6 +687,7 @@ class AsmJSModule
         struct Pod {
             uint32_t interruptExitOffset;
             uint32_t outOfBoundsExitOffset;
+            BuiltinThunkOffsetArray builtinThunkOffsets;
         } pod;
 
         RelativeLinkVector relativeLinks;
@@ -759,12 +730,11 @@ class AsmJSModule
     Vector<Global,                 0, SystemAllocPolicy> globals_;
     Vector<Exit,                   0, SystemAllocPolicy> exits_;
     Vector<ExportedFunction,       0, SystemAllocPolicy> exports_;
-    Vector<jit::CallSite,          0, SystemAllocPolicy> callSites_;
+    Vector<wasm::CallSite,         0, SystemAllocPolicy> callSites_;
     Vector<CodeRange,              0, SystemAllocPolicy> codeRanges_;
-    Vector<uint32_t,               0, SystemAllocPolicy> builtinThunkOffsets_;
     Vector<Name,                   0, SystemAllocPolicy> names_;
     Vector<ProfilingLabel,         0, SystemAllocPolicy> profilingLabels_;
-    Vector<jit::AsmJSHeapAccess,   0, SystemAllocPolicy> heapAccesses_;
+    Vector<wasm::HeapAccess,       0, SystemAllocPolicy> heapAccesses_;
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     Vector<ProfiledFunction,       0, SystemAllocPolicy> profiledFunctions_;
 #endif
@@ -1070,9 +1040,10 @@ class AsmJSModule
         codeRange.initNameIndex(names_.length());
         return names_.append(name) && codeRanges_.append(codeRange);
     }
-    bool addBuiltinThunkCodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets) {
-        return builtinThunkOffsets_.append(offsets.begin) &&
-               codeRanges_.append(CodeRange(builtin, offsets));
+    bool addBuiltinThunkCodeRange(wasm::Builtin builtin, AsmJSProfilingOffsets offsets) {
+        MOZ_ASSERT(staticLinkData_.pod.builtinThunkOffsets[builtin] == 0);
+        staticLinkData_.pod.builtinThunkOffsets[builtin] = offsets.begin;
+        return codeRanges_.append(CodeRange(builtin, offsets));
     }
     bool addExit(wasm::MallocSig&& sig, unsigned ffiIndex, unsigned* exitIndex) {
         MOZ_ASSERT(!isFinished());
@@ -1227,7 +1198,7 @@ class AsmJSModule
 
     // Lookup a callsite by the return pc (from the callee to the caller).
     // Return null if no callsite was found.
-    const jit::CallSite* lookupCallSite(void* returnAddress) const;
+    const wasm::CallSite* lookupCallSite(void* returnAddress) const;
 
     // Lookup the name the code range containing the given pc. Return null if no
     // code range was found.
@@ -1235,7 +1206,7 @@ class AsmJSModule
 
     // Lookup a heap access site by the pc which performs the access. Return
     // null if no heap access was found.
-    const jit::AsmJSHeapAccess* lookupHeapAccess(void* pc) const;
+    const wasm::HeapAccess* lookupHeapAccess(void* pc) const;
 
     // The global data section is placed after the executable code (i.e., at
     // offset codeBytes_) in the module's linear allocation. The global data
@@ -1250,22 +1221,22 @@ class AsmJSModule
         return codeBase() + offsetOfGlobalData();
     }
     static void assertGlobalDataOffsets() {
-        static_assert(jit::AsmJSActivationGlobalDataOffset == 0,
-                     "global data goes first");
-        static_assert(jit::AsmJSHeapGlobalDataOffset == jit::AsmJSActivationGlobalDataOffset + sizeof(void*),
-                      "then an AsmJSActivation*");
-        static_assert(jit::AsmJSNaN64GlobalDataOffset == jit::AsmJSHeapGlobalDataOffset + sizeof(uint8_t*),
-                      "then a pointer to the heap");
-        static_assert(jit::AsmJSNaN32GlobalDataOffset == jit::AsmJSNaN64GlobalDataOffset + sizeof(double),
-                      "then a 32-bit NaN");
-        static_assert(sInitialGlobalDataBytes == jit::AsmJSNaN32GlobalDataOffset + sizeof(float),
+        static_assert(wasm::ActivationGlobalDataOffset == 0,
+                      "an AsmJSActivation* data goes first");
+        static_assert(wasm::HeapGlobalDataOffset == wasm::ActivationGlobalDataOffset + sizeof(void*),
+                      "then a pointer to the heap*");
+        static_assert(wasm::NaN64GlobalDataOffset == wasm::HeapGlobalDataOffset + sizeof(uint8_t*),
                       "then a 64-bit NaN");
+        static_assert(wasm::NaN32GlobalDataOffset == wasm::NaN64GlobalDataOffset + sizeof(double),
+                      "then a 32-bit NaN");
+        static_assert(sInitialGlobalDataBytes == wasm::NaN32GlobalDataOffset + sizeof(float),
+                      "then all the normal global data (globals, exits, func-ptr-tables)");
     }
-    static const uint32_t sInitialGlobalDataBytes = jit::AsmJSNaN32GlobalDataOffset + sizeof(float);
+    static const uint32_t sInitialGlobalDataBytes = wasm::NaN32GlobalDataOffset + sizeof(float);
 
     AsmJSActivation*& activation() const {
         MOZ_ASSERT(isFinished());
-        return *(AsmJSActivation**)(globalData() + jit::AsmJSActivationGlobalDataOffset);
+        return *(AsmJSActivation**)(globalData() + wasm::ActivationGlobalDataOffset);
     }
     bool active() const {
         return activation() != nullptr;
@@ -1275,7 +1246,7 @@ class AsmJSModule
     // Generally you want to use maybeHeap(), not heapDatum().
     uint8_t*& heapDatum() const {
         MOZ_ASSERT(isFinished());
-        return *(uint8_t**)(globalData() + jit::AsmJSHeapGlobalDataOffset);
+        return *(uint8_t**)(globalData() + wasm::HeapGlobalDataOffset);
     }
   public:
 

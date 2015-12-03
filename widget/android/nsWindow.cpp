@@ -525,10 +525,10 @@ nsWindow::IsTopLevel()
 }
 
 NS_IMETHODIMP
-nsWindow::Create(nsIWidget *aParent,
+nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
-                 const nsIntRect &aRect,
-                 nsWidgetInitData *aInitData)
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent, aRect.x, aRect.y, aRect.width, aRect.height);
     nsWindow *parent = (nsWindow*) aParent;
@@ -540,7 +540,7 @@ nsWindow::Create(nsIWidget *aParent,
         }
     }
 
-    mBounds = aRect;
+    mBounds = aRect.ToUnknownRect();
 
     // for toplevel windows, bounds are fixed to full screen size
     if (!parent) {
@@ -550,7 +550,8 @@ nsWindow::Create(nsIWidget *aParent,
         mBounds.height = gAndroidBounds.height;
     }
 
-    BaseCreate(nullptr, mBounds, aInitData);
+    BaseCreate(nullptr, LayoutDeviceIntRect::FromUnknownRect(mBounds),
+               aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 
@@ -871,7 +872,7 @@ nsWindow::IsEnabled() const
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     return NS_OK;
 }
@@ -2605,7 +2606,8 @@ nsWindow::GetIMEUpdatePreference()
 }
 
 void
-nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
+nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
+                             LayoutDeviceIntRect aRect)
 {
     GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client) {

@@ -79,6 +79,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   if (aFlags & DUMMY_PARENT_REFLOW_STATE) {
     mFlags.mDummyParentReflowState = true;
   }
+  if (aFlags & COMPUTE_SIZE_SHRINK_WRAP) {
+    mFlags.mShrinkWrap = true;
+  }
 
   if (!(aFlags & CALLER_WILL_INIT)) {
     Init(aPresContext);
@@ -219,6 +222,7 @@ nsHTMLReflowState::nsHTMLReflowState(
   mFlags.mIsColumnBalancing = false;
   mFlags.mIsFlexContainerMeasuringHeight = false;
   mFlags.mDummyParentReflowState = false;
+  mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
 
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = (aParentReflowState.mPercentBSizeObserver &&
@@ -1588,6 +1592,10 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
   typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
   ComputeSizeFlags computeSizeFlags = ComputeSizeFlags::eDefault;
+  if (mFlags.mShrinkWrap) {
+    computeSizeFlags =
+      ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+  }
   if (wm.IsOrthogonalTo(cbwm)) {
     if (bStartIsAuto || bEndIsAuto) {
       computeSizeFlags =
@@ -2288,6 +2296,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
       typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
       ComputeSizeFlags computeSizeFlags =
         isBlock ? ComputeSizeFlags::eDefault : ComputeSizeFlags::eShrinkWrap;
+      if (mFlags.mShrinkWrap) {
+        computeSizeFlags =
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+      }
 
       nsIFrame* parent = frame->GetParent();
       nsIAtom* parentFrameType = parent ? parent->GetType() : nullptr;

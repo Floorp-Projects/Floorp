@@ -2308,10 +2308,10 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
   mD3D11ContentDevice->SetExceptionMode(0);
 
   RefPtr<ID3D10Multithread> multi;
-  mD3D11ContentDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
-  multi->SetMultithreadProtected(TRUE);
-
-  Factory::SetDirect3D11Device(mD3D11ContentDevice);
+  hr = mD3D11ContentDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+  if (SUCCEEDED(hr) && multi) {
+    multi->SetMultithreadProtected(TRUE);
+  }
   return FeatureStatus::Available;
 }
 
@@ -2379,6 +2379,8 @@ gfxWindowsPlatform::InitializeDevices()
 
   // First, initialize D3D11. If this succeeds we attempt to use Direct2D.
   InitializeD3D11();
+
+  // Initialize Direct2D.
   if (mD3D11Status == FeatureStatus::Available) {
     InitializeD2D();
   }
@@ -2498,6 +2500,11 @@ gfxWindowsPlatform::InitializeD3D11()
       DisableD3D11AfterCrash();
       return;
     }
+  }
+
+  if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::Crashed) {
+    DisableD3D11AfterCrash();
+    return;
   }
 
   // We leak these everywhere and we need them our entire runtime anyway, let's
@@ -2642,15 +2649,14 @@ gfxWindowsPlatform::InitializeD2D1()
     return;
   }
 
-  mD2D1Status = AttemptD3D11ContentDeviceCreation();
-  if (IsFeatureStatusFailure(mD2D1Status)) {
-    if (mD2D1Status == FeatureStatus::Crashed) {
-      DisableD3D11AfterCrash();
-    }
+  if (!mD3D11ContentDevice) {
+    mD2D1Status = FeatureStatus::Failed;
     return;
   }
 
-  MOZ_ASSERT(mD2D1Status == FeatureStatus::Available);
+  mD2D1Status = FeatureStatus::Available;
+  Factory::SetDirect3D11Device(mD3D11ContentDevice);
+
   d2d1_1.SetSuccessful();
 }
 
@@ -3060,4 +3066,13 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
     }
     aOut->adapter() = DxgiAdapterDesc::From(desc);
   }
+}
+
+bool
+gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing()
+{
+  if (!GetD3D11ContentDevice() || !CompositorD3D11TextureSharingWorks()) {
+    return false;
+  }
+  return true;
 }

@@ -25,6 +25,7 @@
 #include "nsStyledElement.h"
 #include "nsSVGClass.h"
 #include "nsIDOMSVGElement.h"
+#include "SVGContentUtils.h"
 
 class nsSVGAngle;
 class nsSVGBoolean;
@@ -139,11 +140,6 @@ public:
   // nullptr for outer <svg> or SVG without an <svg> parent (invalid SVG).
   mozilla::dom::SVGSVGElement* GetCtx() const;
 
-  enum TransformTypes {
-     eAllTransforms
-    ,eUserSpaceToParent
-    ,eChildToUserSpace
-  };
   /**
    * Returns aMatrix pre-multiplied by (explicit or implicit) transforms that
    * are introduced by attributes on this element.
@@ -167,8 +163,8 @@ public:
    * 'x'/'y' attributes, and any transform due to a 'viewBox' attribute, but
    * does not include any transforms due to the 'transform' attribute.
    */
-  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const;
+  virtual gfxMatrix PrependLocalTransformsTo(
+    const gfxMatrix &aMatrix, SVGTransformTypes aWhich = eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that

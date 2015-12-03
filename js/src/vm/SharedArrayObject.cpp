@@ -205,7 +205,7 @@ SharedArrayBufferObject::fun_isView(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(args.get(0).isObject() &&
-                           JS_IsSharedTypedArrayObject(&args.get(0).toObject()));
+                           JS_IsTypedArrayObject(&args.get(0).toObject()));
     return true;
 }
 
@@ -387,6 +387,12 @@ js::IsSharedArrayBuffer(HandleObject o)
     return o->is<SharedArrayBufferObject>();
 }
 
+bool
+js::IsSharedArrayBuffer(JSObject* o)
+{
+    return o->is<SharedArrayBufferObject>();
+}
+
 SharedArrayBufferObject&
 js::AsSharedArrayBuffer(HandleObject obj)
 {
@@ -394,20 +400,27 @@ js::AsSharedArrayBuffer(HandleObject obj)
     return obj->as<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API(void)
-js::GetSharedArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+JS_FRIEND_API(uint32_t)
+JS_GetSharedArrayBufferByteLength(JSObject* obj)
 {
-    MOZ_ASSERT(obj->is<SharedTypedArrayObject>());
-    *length = obj->as<SharedTypedArrayObject>().byteLength();
-    *data = static_cast<uint8_t*>(obj->as<SharedTypedArrayObject>().viewDataShared().unwrap(/*safe - caller knows*/));
+    obj = CheckedUnwrap(obj);
+    return obj ? obj->as<SharedArrayBufferObject>().byteLength() : 0;
 }
 
 JS_FRIEND_API(void)
-js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
+js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data)
 {
     MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
     *length = obj->as<SharedArrayBufferObject>().byteLength();
     *data = obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(/*safe - caller knows*/);
+    *isSharedMemory = true;
+}
+
+JS_FRIEND_API(JSObject*)
+JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes)
+{
+    MOZ_ASSERT(nbytes <= INT32_MAX);
+    return SharedArrayBufferObject::New(cx, nbytes);
 }
 
 JS_FRIEND_API(bool)
@@ -418,10 +431,11 @@ JS_IsSharedArrayBufferObject(JSObject* obj)
 }
 
 JS_FRIEND_API(uint8_t*)
-JS_GetSharedArrayBufferData(JSObject* obj, const JS::AutoCheckCannotGC&)
+JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
+    *isSharedMemory = true;
     return obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(/*safe - caller knows*/);
 }

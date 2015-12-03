@@ -11,6 +11,7 @@ EXPORTS += [
     'nsSVGElement.h',
     'nsSVGFeatures.h',
     'SVGAttrValueWrapper.h',
+    'SVGContentUtils.h',
     'SVGPreserveAspectRatio.h',
     'SVGStringList.h',
 ]
