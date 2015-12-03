@@ -26,8 +26,9 @@ using class mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
 using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using CSSSize from "Units.h";
-using LayoutDeviceIntRect from "Units.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::ScreenIntPoint from "Units.h";
 using ScreenIntSize from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
@@ -490,11 +491,11 @@ parent:
                                      uint64_t aObserverId);
     SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                TouchPointerState aPointerState,
-                               IntPoint aPointerScreenPoint,
+                               ScreenIntPoint aPointerScreenPoint,
                                double aPointerPressure,
                                uint32_t aPointerOrientation,
                                uint64_t aObserverId);
-    SynthesizeNativeTouchTap(IntPoint aPointerScreenPoint,
+    SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
                              bool aLongTap,
                              uint64_t aObserverId);
     ClearNativeTouchSequence(uint64_t aObserverId);
