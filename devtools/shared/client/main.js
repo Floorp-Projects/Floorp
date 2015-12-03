@@ -243,6 +243,9 @@ const DebuggerClient = exports.DebuggerClient = function (aTransport)
  *        response, and the return value is considered the new response that
  *        will be passed to the callback. The |this| context is the instance of
  *        the client object we are defining a method for.
+ * @return Request
+ *         The `Request` object that is a Promise object and resolves once
+ *         we receive the response. (See request method for more details)
  */
 DebuggerClient.requester = function (aPacketSkeleton,
                                      { telemetry, before, after }) {
@@ -276,7 +279,7 @@ DebuggerClient.requester = function (aPacketSkeleton,
       outgoingPacket = before.call(this, outgoingPacket);
     }
 
-    this.request(outgoingPacket, DevToolsUtils.makeInfallible((aResponse) => {
+    return this.request(outgoingPacket, DevToolsUtils.makeInfallible((aResponse) => {
       if (after) {
         let { from } = aResponse;
         aResponse = after.call(this, aResponse);
