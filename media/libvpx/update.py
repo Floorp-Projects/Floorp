@@ -596,6 +596,8 @@ def apply_patches():
     os.system("patch -p3 < vpx_once.patch")
     # Bug 1224363 - Clamp seg_lvl also in abs-value mode.
     os.system("patch -p3 < clamp_abs_lvl_seg.patch")
+    # Bug 1224361 - Clamp QIndex also in abs-value mode.
+    os.system("patch -p3 < clamp-abs-QIndex.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
