@@ -1488,7 +1488,7 @@ void nsChildView::WillPaintWindow()
   }
 }
 
-bool nsChildView::PaintWindow(nsIntRegion aRegion)
+bool nsChildView::PaintWindow(LayoutDeviceIntRegion aRegion)
 {
   nsCOMPtr<nsIWidget> widget = GetWidgetForListenerEvents();
 
@@ -3756,10 +3756,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BufferMode::BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region.ToUnknownRegion());
+    painted = mGeckoChild->PaintWindow(region);
   } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     // We only need this so that we actually get DidPaintWindow fired
-    painted = mGeckoChild->PaintWindow(region.ToUnknownRegion());
+    painted = mGeckoChild->PaintWindow(region);
   }
 
   targetContext = nullptr;
@@ -3830,7 +3830,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->GetBounds(geckoBounds);
   LayoutDeviceIntRegion region(geckoBounds);
 
-  mGeckoChild->PaintWindow(region.ToUnknownRegion());
+  mGeckoChild->PaintWindow(region);
 
   // Force OpenGL to refresh the very first time we draw. This works around a
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.

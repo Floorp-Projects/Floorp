@@ -2213,7 +2213,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     // If this widget uses OMTC...
     if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-        listener->PaintWindow(this, region.ToUnknownRegion());
+        listener->PaintWindow(this, region);
         listener->DidPaintWindow();
         return TRUE;
     }
@@ -2277,7 +2277,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     {
       if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
         AutoLayerManagerSetup setupLayerManager(this, ctx, layerBuffering);
-        painted = listener->PaintWindow(this, region.ToUnknownRegion());
+        painted = listener->PaintWindow(this, region);
       }
     }
 

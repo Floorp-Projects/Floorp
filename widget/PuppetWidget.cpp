@@ -999,7 +999,7 @@ PuppetWidget::Paint()
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
                                               BufferMode::BUFFER_NONE);
-      GetCurrentWidgetListener()->PaintWindow(this, region.ToUnknownRegion());
+      GetCurrentWidgetListener()->PaintWindow(this, region);
       if (mTabChild) {
         mTabChild->NotifyPainted();
       }
