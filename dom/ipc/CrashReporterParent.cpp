@@ -103,7 +103,9 @@ CrashReporterParent::GenerateCrashReportForMinidump(nsIFile* minidump,
 {
     if (!CrashReporter::GetIDFromMinidump(minidump, mChildDumpID))
         return false;
-    return GenerateChildData(processNotes);
+    bool result = GenerateChildData(processNotes);
+    FinalizeChildData();
+    return result;
 }
 
 bool
@@ -149,8 +151,6 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
     if (!ret) {
         NS_WARNING("problem appending child data to .extra");
     }
-
-    FinalizeChildData();
     return ret;
 }
 
