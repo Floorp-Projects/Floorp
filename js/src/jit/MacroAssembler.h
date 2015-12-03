@@ -151,8 +151,10 @@
 # define DEFINED_ON_RESULT_define
 # define DEFINED_ON_RESULT_        = delete
 
-# define DEFINED_ON_DISPATCH_RESULT(Result)     \
-    DEFINED_ON_RESULT_ ## Result
+# define DEFINED_ON_DISPATCH_RESULT_2(Macro, Result) \
+    Macro ## Result
+# define DEFINED_ON_DISPATCH_RESULT(...)     \
+    DEFINED_ON_DISPATCH_RESULT_2(DEFINED_ON_RESULT_, __VA_ARGS__)
 
 // We need to let the evaluation of MOZ_FOR_EACH terminates.
 # define DEFINED_ON_EXPAND_ARCH_RESULTS_3(ParenResult)  \
@@ -498,13 +500,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void call(ImmWord imm) PER_SHARED_ARCH;
     // Call a target native function, which is neither traceable nor movable.
     void call(ImmPtr imm) PER_SHARED_ARCH;
-    void call(AsmJSImmPtr imm) PER_SHARED_ARCH;
+    void call(wasm::SymbolicAddress imm) PER_SHARED_ARCH;
     // Call a target JitCode, which must be traceable, and may be movable.
     void call(JitCode* c) PER_SHARED_ARCH;
 
-    inline void call(const CallSiteDesc& desc, const Register reg);
-    inline void call(const CallSiteDesc& desc, Label* label);
-    inline void call(const CallSiteDesc& desc, AsmJSInternalCallee callee);
+    inline void call(const wasm::CallSiteDesc& desc, const Register reg);
+    inline void call(const wasm::CallSiteDesc& desc, Label* label);
+    inline void call(const wasm::CallSiteDesc& desc, AsmJSInternalCallee callee);
 
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
@@ -553,7 +555,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABINoProfiler(void* fun, MoveOp::Type result);
-    void callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result);
+    void callWithABINoProfiler(wasm::SymbolicAddress imm, MoveOp::Type result);
     void callWithABINoProfiler(Register fun, MoveOp::Type result) PER_ARCH;
     void callWithABINoProfiler(const Address& fun, MoveOp::Type result) PER_ARCH;
 
@@ -718,6 +720,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
     inline void or64(Register64 src, Register64 dest) PER_ARCH;
+    inline void xor64(Register64 src, Register64 dest) PER_ARCH;
 
     inline void xor32(Register src, Register dest) DEFINED_ON(x86_shared);
     inline void xor32(Imm32 imm, Register dest) PER_SHARED_ARCH;
@@ -731,6 +734,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
+
+    inline void add64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm, arm64, mips64);
 
     // ===============================================================
     // Shift functions

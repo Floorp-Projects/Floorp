@@ -1353,7 +1353,18 @@ CheckTargetAndPopulate(const nsXPTType& type,
     }
 
     JS::AutoCheckCannotGC nogc;
-    memcpy(*output, JS_GetArrayBufferViewData(tArr, nogc), byteSize);
+    bool isShared;
+    void* buf = JS_GetArrayBufferViewData(tArr, &isShared, nogc);
+
+    // Require opting in to shared memory - a future project.
+    if (isShared) {
+        if (pErr)
+            *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
+
+        return false;
+    }
+
+    memcpy(*output, buf, byteSize);
     return true;
 }
 

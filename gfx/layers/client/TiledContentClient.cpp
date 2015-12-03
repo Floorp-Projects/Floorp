@@ -1400,13 +1400,14 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
  */
 static Maybe<LayerRect>
 GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
-                                   const Matrix4x4& aTransformToCompBounds,
+                                   const LayerToParentLayerMatrix4x4& aTransformToCompBounds,
                                    const ViewTransform& aAPZTransform,
                                    const LayerRect& aClip)
 {
-  Matrix4x4 transform = aTransformToCompBounds * Matrix4x4(aAPZTransform);
+  LayerToParentLayerMatrix4x4 transform = aTransformToCompBounds *
+      ViewAs<ParentLayerToParentLayerMatrix4x4>(aAPZTransform);
 
-  return UntransformTo<LayerPixel>(transform.Inverse(),
+  return UntransformBy(transform.Inverse(),
     aScrollAncestor.Metrics().GetCompositionBounds(), aClip);
 }
 

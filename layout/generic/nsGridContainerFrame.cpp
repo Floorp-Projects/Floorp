@@ -1534,15 +1534,12 @@ nsGridContainerFrame::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
     // Find the first gap in the current row that's at least 'extent' wide.
     // ('gap' tracks how wide the current column gap is.)
     for (uint32_t j = candidate, gap = 0; j < len && gap < extent; ++j) {
-      ++gap; // tentative, but we may reset it below if a column is occupied
-      if (cellsInRow[j].mIsOccupied) {
-        // Optimization: skip as many occupied cells as we can.
-        do {
-          ++j;
-        } while (j < len && cellsInRow[j].mIsOccupied);
-        candidate = j;
-        gap = 0;
+      if (!cellsInRow[j].mIsOccupied) {
+        ++gap;
+        continue;
       }
+      candidate = j + 1;
+      gap = 0;
     }
     if (lastCandidate < candidate && i != iStart) {
       // Couldn't fit 'extent' tracks at 'lastCandidate' here so we must
@@ -2014,7 +2011,8 @@ ContentContribution(nsIFrame*                         aChild,
 #endif
     // XXX this will give mostly correct results for now (until bug 1174569).
     LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize);
+    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize, nullptr,
+                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP);
     nsHTMLReflowMetrics childSize(childRS);
     nsReflowStatus childStatus;
     const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -3006,6 +3004,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       bSize += gridReflowState.mRows.mSizes[i].mBase;
     }
     bSize += gridReflowState.mRows.SumOfGridGaps();
+    bSize = NS_CSS_MINMAX(bSize,
+                          aReflowState.ComputedMinBSize(),
+                          aReflowState.ComputedMaxBSize());
   } else {
     bSize = computedBSize;
   }

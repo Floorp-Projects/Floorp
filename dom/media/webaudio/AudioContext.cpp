@@ -34,6 +34,7 @@
 #include "MediaStreamAudioDestinationNode.h"
 #include "MediaStreamAudioSourceNode.h"
 #include "MediaStreamGraph.h"
+#include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -571,6 +572,12 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   }
 
   aBuffer.ComputeLengthAndData();
+
+  if (aBuffer.IsShared()) {
+    // Throw if the object is mapping shared memory (must opt in).
+    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(NS_LITERAL_STRING("Argument of AudioContext.decodeAudioData"));
+    return nullptr;
+  }
 
   // Neuter the array buffer
   size_t length = aBuffer.Length();

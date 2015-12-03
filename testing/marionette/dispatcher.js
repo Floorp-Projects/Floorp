@@ -4,23 +4,21 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-Cu.import("chrome://marionette/content/command.js");
+Cu.import("chrome://marionette/content/driver.js");
 Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/driver.js");
+Cu.import("chrome://marionette/content/message.js");
 
 this.EXPORTED_SYMBOLS = ["Dispatcher"];
 
-const PROTOCOL_VERSION = 2;
+const PROTOCOL_VERSION = 3;
 
 const logger = Log.repository.getLogger("Marionette");
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 /**
  * Manages a Marionette connection, and dispatches packets received to
@@ -33,116 +31,138 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerat
  * @param {function(Emulator): GeckoDriver} driverFactory
  *     A factory function that takes an Emulator as argument and produces
  *     a GeckoDriver.
- * @param {function()} stopSignal
- *     Signal to stop the Marionette server.
  */
-this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
-  this.id = connId;
+this.Dispatcher = function(connId, transport, driverFactory) {
+  this.connId = connId;
   this.conn = transport;
+
+  // transport hooks are Dispatcher#onPacket
+  // and Dispatcher#onClosed
+  this.conn.hooks = this;
 
   // callback for when connection is closed
   this.onclose = null;
 
-  // transport hooks are Dispatcher.prototype.onPacket
-  // and Dispatcher.prototype.onClosed
-  this.conn.hooks = this;
+  // last received/sent message ID
+  this.lastId = 0;
 
-  this.emulator = new Emulator(msg => this.send(msg, -1));
+  this.emulator = new Emulator(this.sendEmulator.bind(this));
   this.driver = driverFactory(this.emulator);
-  this.commandProcessor = new CommandProcessor(this.driver);
 
-  this.stopSignal_ = stopSignal;
-};
-
-/**
- * Debugger transport callback that dispatches the request.
- * Request handlers defined in this.requests take presedence
- * over those defined in this.driver.commands.
- */
-Dispatcher.prototype.onPacket = function(packet) {
-  if (logger.level <= Log.Level.Debug) {
-    logger.debug(this.id + " -> " + JSON.stringify(packet));
-  }
-
-  if (this.requests && this.requests[packet.name]) {
-    this.requests[packet.name].bind(this)(packet);
-  } else {
-    let id = this.beginNewCommand();
-    let send = this.send.bind(this);
-    this.commandProcessor.execute(packet, send, id);
-  }
+  // lookup of commands sent by server to client by message ID
+  this.commands_ = new Map();
 };
 
 /**
  * Debugger transport callback that cleans up
  * after a connection is closed.
  */
-Dispatcher.prototype.onClosed = function(status) {
+Dispatcher.prototype.onClosed = function(reason) {
   this.driver.sessionTearDown();
   if (this.onclose) {
     this.onclose(this);
   }
 };
 
-// Dispatcher specific command handlers:
+/**
+ * Callback that receives data packets from the client.
+ *
+ * If the message is a Response, we look up the command previously issued
+ * to the client and run its callback, if any.  In case of a Command,
+ * the corresponding is executed.
+ *
+ * @param {Array.<number, number, ?, ?>} data
+ *     A four element array where the elements, in sequence, signifies
+ *     message type, message ID, method name or error, and parameters
+ *     or result.
+ */
+Dispatcher.prototype.onPacket = function(data) {
+  let msg = Message.fromMsg(data);
+  msg.origin = MessageOrigin.Client;
+  this.log_(msg);
 
-Dispatcher.prototype.emulatorCmdResult = function(msg) {
-  switch (this.driver.context) {
-    case Context.CONTENT:
-      this.driver.sendAsync("emulatorCmdResult", msg);
-      break;
-    case Context.CHROME:
-      let cb = this.emulator.popCallback(msg.id);
-      if (!cb) {
-        return;
-      }
-      cb.result(msg);
-      break;
+  if (msg instanceof Response) {
+    let cmd = this.commands_.get(msg.id);
+    this.commands_.delete(msg.id);
+    cmd.onresponse(msg);
+  } else if (msg instanceof Command) {
+    this.lastId = msg.id;
+    this.execute(msg);
   }
 };
 
 /**
- * Quits Firefox with the provided flags and tears down the current
- * session.
+ * Executes a WebDriver command and sends back a response when it has
+ * finished executing.
+ *
+ * Commands implemented in GeckoDriver and registered in its
+ * {@code GeckoDriver.commands} attribute.  The return values from
+ * commands are expected to be Promises.  If the resolved value of said
+ * promise is not an object, the response body will be wrapped in an object
+ * under a "value" field.
+ *
+ * If the command implementation sends the response itself by calling
+ * {@code resp.send()}, the response is guaranteed to not be sent twice.
+ *
+ * Errors thrown in commands are marshaled and sent back, and if they
+ * are not WebDriverError instances, they are additionally propagated and
+ * reported to {@code Components.utils.reportError}.
+ *
+ * @param {Command} cmd
+ *     The requested command to execute.
  */
-Dispatcher.prototype.quitApplication = function(msg) {
-  let id = this.beginNewCommand();
+Dispatcher.prototype.execute = function(cmd) {
+  let resp = new Response(cmd.id, this.send.bind(this));
+  let sendResponse = () => resp.sendConditionally(resp => !resp.sent);
+  let sendError = resp.sendError.bind(resp);
 
-  if (this.driver.appName != "Firefox") {
-    this.sendError(new WebDriverError("In app initiated quit only supported in Firefox"));
-    return;
-  }
+  let req = Task.spawn(function*() {
+    let fn = this.driver.commands[cmd.name];
+    if (typeof fn == "undefined") {
+      throw new UnknownCommandError(cmd.name);
+    }
 
-  let flags = Ci.nsIAppStartup.eAttemptQuit;
-  for (let k of msg.parameters.flags) {
-    flags |= Ci.nsIAppStartup[k];
-  }
+    let rv = yield fn.bind(this.driver)(cmd, resp);
 
-  this.stopSignal_();
-  this.sendOk(id);
+    if (typeof rv != "undefined") {
+      if (typeof rv != "object") {
+        resp.body = {value: rv};
+      } else {
+        resp.body = rv;
+      }
+    }
+  }.bind(this));
 
-  this.driver.sessionTearDown();
-  Services.startup.quit(flags);
-};
-
-// Convenience methods:
-
-Dispatcher.prototype.sayHello = function() {
-  let id = this.beginNewCommand();
-  let whatHo = {
-    applicationType: "gecko",
-    marionetteProtocol: PROTOCOL_VERSION,
-  };
-  this.send(whatHo, id);
-};
-
-Dispatcher.prototype.sendOk = function(cmdId) {
-  this.send({}, cmdId);
+  req.then(sendResponse, sendError).catch(error.report);
 };
 
 Dispatcher.prototype.sendError = function(err, cmdId) {
   let resp = new Response(cmdId, this.send.bind(this));
   resp.sendError(err);
+};
+
+// Convenience methods:
+
+/**
+ * When a client connects we send across a JSON Object defining the
+ * protocol level.
+ *
+ * This is the only message sent by Marionette that does not follow
+ * the regular message format.
+ */
+Dispatcher.prototype.sayHello = function() {
+  let whatHo = {
+    applicationType: "gecko",
+    marionetteProtocol: PROTOCOL_VERSION,
+  };
+  this.sendRaw(whatHo);
+};
+
+Dispatcher.prototype.sendEmulator = function(name, params, resCb, errCb) {
+  let cmd = new Command(++this.lastId, name, params);
+  cmd.onresult = resCb;
+  cmd.onerror = errCb;
+  this.send(cmd);
 };
 
 /**
@@ -156,83 +176,69 @@ Dispatcher.prototype.sendError = function(err, cmdId) {
  * correct order, emulator callbacks are more transparent and can be sent
  * at any time.  These callbacks won't change the current command state.
  *
- * @param {Object} payload
- *     The payload to send.
- * @param {UUID} cmdId
- *     The unique identifier for this payload.  {@code -1} signifies
- *     that it's an emulator callback.
+ * @param {Command,Response} msg
+ *     The command or response to send.
  */
-Dispatcher.prototype.send = function(payload, cmdId) {
-  if (emulator.isCallback(cmdId)) {
-    this.sendToEmulator(payload);
-  } else {
-    this.sendToClient(payload, cmdId);
-    this.commandId = null;
+Dispatcher.prototype.send = function(msg) {
+  msg.origin = MessageOrigin.Server;
+  if (msg instanceof Command) {
+    this.commands_.set(msg.id, msg);
+    this.sendToEmulator(msg);
+  } else if (msg instanceof Response) {
+    this.sendToClient(msg);
   }
 };
 
 // Low-level methods:
 
 /**
- * Send message to emulator over the debugger transport socket.
- * Notably this skips out-of-sync command checks.
- */
-Dispatcher.prototype.sendToEmulator = function(payload) {
-  this.sendRaw("emulator", payload);
-};
-
-/**
- * Send given payload as-is to the connected client over the debugger
- * transport socket.
+ * Send command to emulator over the debugger transport socket.
  *
- * If {@code cmdId} evaluates to false, the current command state isn't
- * set, or the response is out-of-sync, a warning is logged and this
- * routine will return (no-op).
+ * @param {Command} cmd
+ *     The command to issue to the emulator.
  */
-Dispatcher.prototype.sendToClient = function(payload, cmdId) {
-  if (!cmdId) {
-    logger.warn("Got response with no command ID");
-    return;
-  } else if (this.commandId === null) {
-    logger.warn(`No current command, ignoring response: ${payload.toSource}`);
-    return;
-  } else if (this.isOutOfSync(cmdId)) {
-    logger.warn(`Ignoring out-of-sync response with command ID: ${cmdId}`);
-    return;
-  }
-  this.driver.responseCompleted();
-  this.sendRaw("client", payload);
+Dispatcher.prototype.sendToEmulator = function(cmd) {
+  this.sendMessage(cmd);
 };
 
 /**
- * Sends payload as-is over debugger transport socket to client,
- * and logs it.
+ * Send given response to the client over the debugger transport socket.
+ *
+ * @param {Response} resp
+ *     The response to send back to the client.
  */
-Dispatcher.prototype.sendRaw = function(dest, payload) {
-  if (logger.level <= Log.Level.Debug) {
-    logger.debug(this.id + " " + dest + " <- " + JSON.stringify(payload));
-  }
+Dispatcher.prototype.sendToClient = function(resp) {
+  this.driver.responseCompleted();
+  this.sendMessage(resp);
+};
+
+/**
+ * Marshal message to the Marionette message format and send it.
+ *
+ * @param {Command,Response} msg
+ *     The message to send.
+ */
+Dispatcher.prototype.sendMessage = function(msg) {
+  this.log_(msg);
+  let payload = msg.toMsg();
+  this.sendRaw(payload);
+};
+
+/**
+ * Send the given payload over the debugger transport socket to the
+ * connected client.
+ *
+ * @param {Object} payload
+ *     The payload to ship.
+ */
+Dispatcher.prototype.sendRaw = function(payload) {
   this.conn.send(payload);
 };
 
-/**
- * Begins a new command by generating a unique identifier and assigning
- * it to the current command state {@code Dispatcher.prototype.commandId}.
- *
- * @return {UUID}
- *     The generated unique identifier for the current command.
- */
-Dispatcher.prototype.beginNewCommand = function() {
-  let uuid = uuidGen.generateUUID().toString();
-  this.commandId = uuid;
-  return uuid;
-};
-
-Dispatcher.prototype.isOutOfSync = function(cmdId) {
-  return this.commandId !== cmdId;
-};
-
-Dispatcher.prototype.requests = {
-  emulatorCmdResult: Dispatcher.prototype.emulatorCmdResult,
-  quitApplication: Dispatcher.prototype.quitApplication
+Dispatcher.prototype.log_ = function(msg) {
+  if (logger.level > Log.Level.Debug) {
+    return;
+  }
+  let a = (msg.origin == MessageOrigin.Client ? " -> " : " <- ");
+  logger.debug(this.connId + a + msg);
 };

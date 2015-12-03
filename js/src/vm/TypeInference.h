@@ -718,11 +718,19 @@ class TemporaryTypeSet : public TypeSet
      */
     bool getCommonPrototype(CompilerConstraintList* constraints, JSObject** proto);
 
-    /* Get the typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
-    Scalar::Type getTypedArrayType(CompilerConstraintList* constraints);
+    /* Whether the buffer mapped by a TypedArray is shared memory or not */
+    enum TypedArraySharedness {
+        UnknownSharedness=1,    // We can't determine sharedness
+        KnownShared,            // We know for sure the buffer is shared
+        KnownUnshared           // We know for sure the buffer is unshared
+    };
 
-    /* Get the shared typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
-    Scalar::Type getSharedTypedArrayType(CompilerConstraintList* constraints);
+    /* Get the typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType.
+     * If there is such a common type and sharedness is not nullptr then
+     * *sharedness is set to what we know about the sharedness of the memory.
+     */
+    Scalar::Type getTypedArrayType(CompilerConstraintList* constraints,
+                                   TypedArraySharedness* sharedness = nullptr);
 
     /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
     bool isDOMClass(CompilerConstraintList* constraints);
@@ -764,6 +772,10 @@ class TemporaryTypeSet : public TypeSet
      * objects in this type set.
      */
     DoubleConversion convertDoubleElements(CompilerConstraintList* constraints);
+
+  private:
+    void getTypedArraySharedness(CompilerConstraintList* constraints,
+                                 TypedArraySharedness* sharedness);
 };
 
 bool

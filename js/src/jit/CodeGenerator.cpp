@@ -53,6 +53,7 @@ using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
+using mozilla::UniquePtr;
 using JS::GenericNaN;
 
 namespace js {
@@ -3886,54 +3887,53 @@ CodeGenerator::maybeCreateScriptCounts()
     if (!GetJitContext()->runtime->profilingScripts())
         return nullptr;
 
-    IonScriptCounts* counts = nullptr;
-
-    const CompileInfo* outerInfo = &gen->info();
-    JSScript* script = outerInfo->script();
-
-    counts = js_new<IonScriptCounts>();
-    if (!counts || !counts->init(graph.numBlocks())) {
-        js_delete(counts);
+    // This test inhibits IonScriptCount creation for wasm code which is
+    // currently incompatible with wasm codegen for two reasons: (1) wasm code
+    // must be serializable and script count codegen bakes in absolute
+    // addresses, (2) wasm code does not have a JSScript with which to associate
+    // code coverage data.
+    JSScript* script = gen->info().script();
+    if (!script)
         return nullptr;
-    }
+
+    UniquePtr<IonScriptCounts> counts(js_new<IonScriptCounts>());
+    if (!counts || !counts->init(graph.numBlocks()))
+        return nullptr;
 
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock* block = graph.getBlock(i)->mir();
 
         uint32_t offset = 0;
         char* description = nullptr;
-        if (script) {
-            if (MResumePoint* resume = block->entryResumePoint()) {
-                // Find a PC offset in the outermost script to use. If this
-                // block is from an inlined script, find a location in the
-                // outer script to associate information about the inlining
-                // with.
-                while (resume->caller())
-                    resume = resume->caller();
-                offset = script->pcToOffset(resume->pc());
+        if (MResumePoint* resume = block->entryResumePoint()) {
+            // Find a PC offset in the outermost script to use. If this
+            // block is from an inlined script, find a location in the
+            // outer script to associate information about the inlining
+            // with.
+            while (resume->caller())
+                resume = resume->caller();
+            offset = script->pcToOffset(resume->pc());
 
-                if (block->entryResumePoint()->caller()) {
-                    // Get the filename and line number of the inner script.
-                    JSScript* innerScript = block->info().script();
-                    description = (char*) js_calloc(200);
-                    if (description) {
-                        JS_snprintf(description, 200, "%s:%" PRIuSIZE,
-                                    innerScript->filename(), innerScript->lineno());
-                    }
+            if (block->entryResumePoint()->caller()) {
+                // Get the filename and line number of the inner script.
+                JSScript* innerScript = block->info().script();
+                description = (char*) js_calloc(200);
+                if (description) {
+                    JS_snprintf(description, 200, "%s:%" PRIuSIZE,
+                                innerScript->filename(), innerScript->lineno());
                 }
             }
         }
 
-        if (!counts->block(i).init(block->id(), offset, description, block->numSuccessors())) {
-            js_delete(counts);
+        if (!counts->block(i).init(block->id(), offset, description, block->numSuccessors()))
             return nullptr;
-        }
+
         for (size_t j = 0; j < block->numSuccessors(); j++)
             counts->block(i).setSuccessor(j, skipTrivialBlocks(block->getSuccessor(j))->id());
     }
 
-    scriptCounts_ = counts;
-    return counts;
+    scriptCounts_ = counts.release();
+    return scriptCounts_;
 }
 
 // Structure for managing the state tracked for a block by script counters.
@@ -5242,7 +5242,7 @@ CodeGenerator::visitTypedArrayLength(LTypedArrayLength* lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), out);
+    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
 }
 
 void
@@ -5250,7 +5250,7 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements* lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
 }
 
 void
@@ -5553,7 +5553,7 @@ CodeGenerator::visitModD(LModD* ins)
     masm.passABIArg(rhs, MoveOp::DOUBLE);
 
     if (gen->compilingAsmJS())
-        masm.callWithABI(AsmJSImm_ModD, MoveOp::DOUBLE);
+        masm.callWithABI(wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
 }
@@ -7510,6 +7510,21 @@ CodeGenerator::visitCallIteratorStart(LCallIteratorStart* lir)
 }
 
 void
+CodeGenerator::branchIfNotEmptyObjectElements(Register obj, Label* target)
+{
+    Label emptyObj;
+    masm.branchPtr(Assembler::Equal,
+                   Address(obj, NativeObject::offsetOfElements()),
+                   ImmPtr(js::emptyObjectElements),
+                   &emptyObj);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(obj, NativeObject::offsetOfElements()),
+                   ImmPtr(js::emptyObjectElementsShared),
+                   target);
+    masm.bind(&emptyObj);
+}
+
+void
 CodeGenerator::visitIteratorStart(LIteratorStart* lir)
 {
     const Register obj = ToRegister(lir->object());
@@ -7552,10 +7567,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
 
         // Ensure the object does not have any elements. The presence of dense
         // elements is not captured by the shape tests above.
-        masm.branchPtr(Assembler::NotEqual,
-                       Address(obj, NativeObject::offsetOfElements()),
-                       ImmPtr(js::emptyObjectElements),
-                       ool->entry());
+        branchIfNotEmptyObjectElements(obj, ool->entry());
         masm.jump(&guardDone);
 
         masm.bind(&shapeMismatch);
@@ -7563,10 +7575,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
         masm.branchPtr(Assembler::NotEqual, groupAddr, temp1, ool->entry());
         masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), temp1);
         masm.branchTestPtr(Assembler::Zero, temp1, temp1, &noExpando);
-        masm.branchPtr(Assembler::NotEqual,
-                       Address(temp1, NativeObject::offsetOfElements()),
-                       ImmPtr(js::emptyObjectElements),
-                       ool->entry());
+        branchIfNotEmptyObjectElements(temp1, ool->entry());
         masm.loadObjShape(temp1, temp1);
         masm.bind(&noExpando);
         masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, ool->entry());
@@ -7578,10 +7587,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
     // have the delegate flag set). Also check for the absence of dense elements.
     Address prototypeShapeAddr(temp2, sizeof(ReceiverGuard) + offsetof(ReceiverGuard, shape));
     masm.loadObjProto(obj, temp1);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(temp1, NativeObject::offsetOfElements()),
-                   ImmPtr(js::emptyObjectElements),
-                   ool->entry());
+    branchIfNotEmptyObjectElements(temp1, ool->entry());
     masm.loadObjShape(temp1, temp1);
     masm.branchPtr(Assembler::NotEqual, prototypeShapeAddr, temp1, ool->entry());
 
@@ -7886,7 +7892,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
         // See comment below.
         Label* target = frameSize() > 0 ? &onOverflow : masm.asmStackOverflowLabel();
         masm.branchPtr(Assembler::AboveOrEqual,
-                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       wasm::SymbolicAddress::StackLimit,
                        masm.getStackPointer(),
                        target);
     }
@@ -7918,14 +7924,6 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
 
     offsets->end = masm.currentOffset();
 
-    // The only remaining work needed to compile this function is to patch the
-    // switch-statement jump tables (the entries of the table need the absolute
-    // address of the cases). These table entries are accmulated as CodeLabels
-    // in the MacroAssembler's codeLabels_ list and processed all at once at in
-    // the "static-link" phase of module compilation. It is critical that there
-    // is nothing else to do after this point since the LifoAlloc memory
-    // holding the MIR graph is about to be popped and reused. In particular,
-    // every step in CodeGenerator::link must be a nop, as asserted here:
     MOZ_ASSERT(!masm.failureLabel()->used());
     MOZ_ASSERT(snapshots_.listSize() == 0);
     MOZ_ASSERT(snapshots_.RVATableSize() == 0);
@@ -7936,6 +7934,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
     MOZ_ASSERT(osiIndices_.empty());
     MOZ_ASSERT(cacheList_.empty());
     MOZ_ASSERT(safepoints_.size() == 0);
+    MOZ_ASSERT(!scriptCounts_);
     return true;
 }
 
@@ -9313,7 +9312,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
     // Load the length.
     Register scratch = out.scratchReg();
     Int32Key key = ToInt32Key(lir->index());
-    masm.unboxInt32(Address(object, TypedArrayLayout::lengthOffset()), scratch);
+    masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
 
     // Load undefined unless length > key.
     Label inbounds, done;
@@ -9323,7 +9322,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
 
     // Load the elements vector.
     masm.bind(&inbounds);
-    masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), scratch);
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
 
     Scalar::Type arrayType = lir->mir()->arrayType();
     int width = Scalar::byteSize(arrayType);
@@ -9445,6 +9444,20 @@ CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir)
         masm.bind(&Lfailed);
     masm.move32(Imm32(0), output);
     masm.bind(&Ldone);
+}
+
+void
+CodeGenerator::visitGuardSharedTypedArray(LGuardSharedTypedArray* guard)
+{
+    Register obj = ToRegister(guard->input());
+    Register tmp = ToRegister(guard->tempInt());
+
+    // The shared-memory flag is a bit in the ObjectElements header
+    // that is set if the TypedArray is mapping a SharedArrayBuffer.
+    // The flag is set at construction and does not change subsequently.
+    masm.loadPtr(Address(obj, TypedArrayObject::offsetOfElements()), tmp);
+    masm.load32(Address(tmp, ObjectElements::offsetOfFlags()), tmp);
+    bailoutTest32(Assembler::Zero, tmp, Imm32(ObjectElements::SHARED_MEMORY), guard->snapshot());
 }
 
 void
@@ -10197,8 +10210,10 @@ void
 CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
 {
     Label rejoin;
-    masm.branch32(Assembler::Equal, AsmJSAbsoluteAddress(AsmJSImm_RuntimeInterruptUint32),
-                  Imm32(0), &rejoin);
+    masm.branch32(Assembler::Equal,
+                  wasm::SymbolicAddress::RuntimeInterruptUint32,
+                  Imm32(0),
+                  &rejoin);
     {
         uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
                                                    ABIStackAlignment);
@@ -10344,127 +10359,74 @@ CodeGenerator::visitCheckReturn(LCheckReturn* ins)
     masm.bind(&noChecks);
 }
 
-// Out-of-line math_random_no_outparam call for LRandom.
-class OutOfLineRandom : public OutOfLineCodeBase<CodeGenerator>
-{
-    LRandom* lir_;
-
-  public:
-    explicit OutOfLineRandom(LRandom* lir)
-      : lir_(lir)
-    { }
-
-    void accept(CodeGenerator* codegen) {
-        codegen->visitOutOfLineRandom(this);
-    }
-
-    LRandom* lir() const {
-        return lir_;
-    }
-};
-
-static const uint64_t RNG_HIGH_MASK = (0xFFFFFFFFFFFFFFFFULL >>
-                                       (RNG_STATE_WIDTH - RNG_HIGH_BITS)) << RNG_LOW_BITS;
-static const double RNG_DSCALE_INV = 1 / RNG_DSCALE;
-
 void
 CodeGenerator::visitRandom(LRandom* ins)
 {
+    using mozilla::non_crypto::XorShift128PlusRNG;
+
     FloatRegister output = ToFloatRegister(ins->output());
-    Register JSCompartmentReg = ToRegister(ins->temp1());
+    Register tempReg = ToRegister(ins->temp0());
+
 #ifdef JS_PUNBOX64
-    Register64 rngStateReg = Register64(ToRegister(ins->tempMaybeEAX()));
-    Register64 highReg = Register64(ToRegister(ins->tempMaybeEDX()));
+    Register64 s0Reg(ToRegister(ins->temp1()));
+    Register64 s1Reg(ToRegister(ins->temp2()));
 #else
-    Register64 rngStateReg = Register64(ToRegister(ins->temp2()), ToRegister(ins->temp3()));
-    Register64 highReg = Register64(ToRegister(ins->tempMaybeEAX()), ToRegister(ins->tempMaybeEDX()));
-#endif
-    // tempReg is used only on x86.
-    Register tempReg = ToRegister(ins->tempMaybeEAX());
-
-    // rngState = cx->compartment()->rngState;
-    masm.loadJSContext(JSCompartmentReg);
-    masm.loadPtr(Address(JSCompartmentReg, JSContext::offsetOfCompartment()), JSCompartmentReg);
-    masm.load64(Address(JSCompartmentReg, JSCompartment::offsetOfRngState()), rngStateReg);
-
-    // if rngState == 0, escape from inlined code and call
-    // math_random_no_outparam.
-    OutOfLineRandom* ool = new(alloc()) OutOfLineRandom(ins);
-    addOutOfLineCode(ool, ins->mir());
-    masm.branchTest64(Assembler::Zero, rngStateReg, rngStateReg, tempReg, ool->entry());
-
-    // rngState = rngState * RNG_MULTIPLIER;
-    masm.mul64(Imm64(RNG_MULTIPLIER), rngStateReg);
-
-    // rngState += RNG_ADDEND;
-    masm.add64(Imm32(RNG_ADDEND), rngStateReg);
-
-    // rngState &= RNG_MASK;
-    masm.and64(Imm64(RNG_MASK), rngStateReg);
-
-    // if rngState == 0, escape from inlined code and call
-    // math_random_no_outparam.
-    masm.branchTest64(Assembler::Zero, rngStateReg, rngStateReg, tempReg, ool->entry());
-
-    // high = (rngState >> (RNG_STATE_WIDTH - RNG_HIGH_BITS)) << RNG_LOW_BITS;
-    masm.move64(rngStateReg, highReg);
-    masm.lshift64(Imm32(RNG_LOW_BITS - (RNG_STATE_WIDTH - RNG_HIGH_BITS)), highReg);
-    masm.and64(Imm64(RNG_HIGH_MASK), highReg);
-#ifdef JS_CODEGEN_X86
-    // eax and edx are overwritten by mul64 on x86.
-    masm.push64(highReg);
+    Register64 s0Reg(ToRegister(ins->temp1()), ToRegister(ins->temp2()));
+    Register64 s1Reg(ToRegister(ins->temp3()), ToRegister(ins->temp4()));
 #endif
 
-    // rngState = rngState * RNG_MULTIPLIER;
-    masm.mul64(Imm64(RNG_MULTIPLIER), rngStateReg);
+    const void* rng = gen->compartment->addressOfRandomNumberGenerator();
+    masm.movePtr(ImmPtr(rng), tempReg);
 
-    // rngState += RNG_ADDEND;
-    masm.add64(Imm32(RNG_ADDEND), rngStateReg);
+    static_assert(sizeof(XorShift128PlusRNG) == 2 * sizeof(uint64_t),
+                  "Code below assumes XorShift128PlusRNG contains two uint64_t values");
 
-    // rngState &= RNG_MASK;
-    masm.and64(Imm64(RNG_MASK), rngStateReg);
+    Address state0Addr(tempReg, XorShift128PlusRNG::offsetOfState0());
+    Address state1Addr(tempReg, XorShift128PlusRNG::offsetOfState1());
 
-    // cx->compartment()->rngState = rngState;
-    masm.store64(rngStateReg, Address(JSCompartmentReg, JSCompartment::offsetOfRngState()));
+    // uint64_t s1 = mState[0];
+    masm.load64(state0Addr, s1Reg);
 
-    // low = rngState >> (RNG_STATE_WIDTH - RNG_LOW_BITS);
-    const Register64& lowReg = rngStateReg;
-    masm.rshift64(Imm32(RNG_STATE_WIDTH - RNG_LOW_BITS), lowReg);
+    // s1 ^= s1 << 23;
+    masm.move64(s1Reg, s0Reg);
+    masm.lshift64(Imm32(23), s1Reg);
+    masm.xor64(s0Reg, s1Reg);
 
-    // output = double(high | low);
-#ifdef JS_CODEGEN_X86
-    masm.pop64(highReg);
-#endif
-    masm.or64(highReg, lowReg);
-    masm.convertUInt64ToDouble(lowReg, tempReg, output);
+    // s1 ^= s1 >> 17
+    masm.move64(s1Reg, s0Reg);
+    masm.rshift64(Imm32(17), s1Reg);
+    masm.xor64(s0Reg, s1Reg);
 
-    // output = output * RNG_DSCALE_INV;
-    masm.mulDoublePtr(ImmPtr(&RNG_DSCALE_INV), tempReg, output);
+    // const uint64_t s0 = mState[1];
+    masm.load64(state1Addr, s0Reg);
 
-    masm.bind(ool->rejoin());
-}
+    // mState[0] = s0;
+    masm.store64(s0Reg, state0Addr);
 
-void
-CodeGenerator::visitOutOfLineRandom(OutOfLineRandom* ool)
-{
-    LRandom* ins = ool->lir();
-    Register temp1 = ToRegister(ins->tempMaybeEAX());
-    Register temp2 = ToRegister(ins->tempMaybeEDX());
-    MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+    // s1 ^= s0
+    masm.xor64(s0Reg, s1Reg);
 
-    LiveRegisterSet regs;
-    setReturnDoubleRegs(&regs);
-    saveVolatile(regs);
+    // s1 ^= s0 >> 26
+    masm.rshift64(Imm32(26), s0Reg);
+    masm.xor64(s0Reg, s1Reg);
 
-    masm.loadJSContext(temp1);
+    // mState[1] = s1
+    masm.store64(s1Reg, state1Addr);
 
-    masm.setupUnalignedABICall(temp2);
-    masm.passABIArg(temp1);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, math_random_no_outparam), MoveOp::DOUBLE);
+    // s1 += mState[0]
+    masm.load64(state0Addr, s0Reg);
+    masm.add64(s0Reg, s1Reg);
 
-    restoreVolatile(regs);
+    // See comment in XorShift128PlusRNG::nextDouble().
+    static const int MantissaBits = FloatingPoint<double>::kExponentShift + 1;
+    static const double ScaleInv = double(1) / (1ULL << MantissaBits);
 
-    masm.jump(ool->rejoin());
+    masm.and64(Imm64((1ULL << MantissaBits) - 1), s1Reg);
+
+    masm.convertUInt64ToDouble(s1Reg, tempReg, output);
+
+    // output *= ScaleInv
+    masm.mulDoublePtr(ImmPtr(&ScaleInv), tempReg, output);
 }
 
 } // namespace jit

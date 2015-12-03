@@ -9,6 +9,7 @@
 #include "Units.h"                      // for ScreenPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for Float
@@ -110,7 +111,6 @@ class nsIWidget;
 namespace mozilla {
 namespace gfx {
 class Matrix;
-class Matrix4x4;
 class DrawTarget;
 } // namespace gfx
 

@@ -69,13 +69,13 @@ enum State {
     D(JSFunction*) \
     D(ModuleObject*) \
     D(ModuleEnvironmentObject*) \
+    D(ModuleNamespaceObject*) \
     D(NestedScopeObject*) \
     D(PlainObject*) \
     D(SavedFrame*) \
     D(ScopeObject*) \
     D(ScriptSourceObject*) \
     D(SharedArrayBufferObject*) \
-    D(SharedTypedArrayObject*) \
     D(ImportEntryObject*) \
     D(ExportEntryObject*) \
     D(JSScript*) \

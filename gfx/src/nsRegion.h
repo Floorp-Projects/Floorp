@@ -21,12 +21,7 @@
 #include "nsStringGlue.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 #include "mozilla/Move.h"               // for mozilla::Move
-
-namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
-} // namespace mozilla
+#include "mozilla/gfx/MatrixFwd.h"      // for mozilla::gfx::Matrix4x4
 
 #include "pixman.h"
 
@@ -731,7 +726,7 @@ public:
     return This();
   }
 
-  // Prefer using TransformTo<TargetUnits>(region) from UnitTransforms.h,
+  // Prefer using TransformBy(matrix, region) from UnitTransforms.h,
   // as applying the transform should typically change the unit system.
   // TODO(botond): Move this to IntRegionTyped and disable it for
   //               unit != UnknownUnits.

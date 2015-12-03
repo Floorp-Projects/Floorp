@@ -2019,7 +2019,7 @@ MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
+MacroAssemblerARMCompat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
     RelocStyle rs;
     if (HasMOVWT())
@@ -2027,7 +2027,7 @@ MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
     else
         rs = L_LDR;
 
-    append(AsmJSAbsoluteLink(CodeOffset(currentOffset()), imm.kind()));
+    append(AsmJSAbsoluteLink(CodeOffset(currentOffset()), imm));
     ma_movPatchable(Imm32(-1), dest, Always, rs);
 }
 
@@ -2189,10 +2189,10 @@ MacroAssemblerARMCompat::loadPtr(AbsoluteAddress address, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::loadPtr(AsmJSAbsoluteAddress address, Register dest)
+MacroAssemblerARMCompat::loadPtr(wasm::SymbolicAddress address, Register dest)
 {
     MOZ_ASSERT(dest != pc); // Use dest as a scratch register.
-    movePtr(AsmJSImmPtr(address.kind()), dest);
+    movePtr(address, dest);
     loadPtr(Address(dest, 0), dest);
 }
 
@@ -5116,7 +5116,7 @@ MacroAssembler::call(ImmPtr imm)
 }
 
 void
-MacroAssembler::call(AsmJSImmPtr imm)
+MacroAssembler::call(wasm::SymbolicAddress imm)
 {
     movePtr(imm, CallReg);
     call(CallReg);

@@ -3560,7 +3560,7 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
      * Typed arrays in the nursery may have a lazily allocated buffer, make
      * sure there is room for the array's fixed data when moving the array.
      */
-    if (is<TypedArrayObject>() && !as<TypedArrayObject>().buffer()) {
+    if (is<TypedArrayObject>() && !as<TypedArrayObject>().hasBuffer()) {
         size_t nbytes = as<TypedArrayObject>().byteLength();
         return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
     }

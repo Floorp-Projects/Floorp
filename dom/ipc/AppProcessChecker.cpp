@@ -14,6 +14,7 @@
 #include "nsIPrincipal.h"
 #include "nsPrintfCString.h"
 #include "nsIURI.h"
+#include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "TabParent.h"

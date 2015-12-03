@@ -1492,6 +1492,9 @@ AecCore* WebRtcAec_CreateAec() {
     return NULL;
   }
 
+  // set the mem with 0 in order to prevent garbage data
+  memset(aec, 0, sizeof(*aec));
+
   aec->nearFrBuf = WebRtc_CreateBuffer(FRAME_LEN + PART_LEN, sizeof(float));
   if (!aec->nearFrBuf) {
     WebRtcAec_FreeAec(aec);

@@ -92,10 +92,10 @@ public:
   using nsWindowBase::DispatchPluginEvent;
 
   // nsIWidget interface
-  NS_IMETHOD              Create(nsIWidget *aParent,
+  NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
-                                 const nsIntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr);
+                                 const LayoutDeviceIntRect& aRect,
+                                 nsWidgetInitData* aInitData = nullptr);
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget *aNewParent);
   virtual nsIWidget*      GetParent(void);
@@ -136,7 +136,7 @@ public:
   NS_IMETHOD              Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
-  NS_IMETHOD              Invalidate(const nsIntRect & aRect);
+  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect);
   virtual void*           GetNativeData(uint32_t aDataType);
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType);
@@ -191,7 +191,7 @@ public:
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
-  virtual void            UpdateOpaqueRegion(const nsIntRegion& aOpaqueRegion);
+  virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion);
 #endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference();
   NS_IMETHOD              GetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
@@ -199,7 +199,7 @@ public:
   void                    SetDrawsInTitlebar(bool aState);
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override;
-  virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) override;
+  virtual void            UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   virtual uint32_t        GetMaxTouchPoints() const override;
@@ -533,7 +533,7 @@ protected:
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
   // Draggable titlebar region maintained by UpdateWindowDraggingRegion
-  nsIntRegion mDraggableRegion;
+  LayoutDeviceIntRegion mDraggableRegion;
 
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook

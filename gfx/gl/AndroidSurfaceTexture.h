@@ -13,16 +13,11 @@
 #include "gfxPlatform.h"
 #include "GLDefs.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/Monitor.h"
 
 #include "SurfaceTexture.h"
 #include "AndroidNativeWindow.h"
-
-namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
-}
 
 namespace mozilla {
 namespace gl {

@@ -1682,7 +1682,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     if (!mGdkWindow)
         return NS_OK;
@@ -2451,12 +2451,14 @@ nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
     // of toplevels.)
     if (mBounds.width < size.width) {
         GdkRectangle rect = DevicePixelsToGdkRectRoundOut(
-            { mBounds.width, 0, size.width - mBounds.width, size.height });
+            LayoutDeviceIntRect(mBounds.width, 0,
+                                size.width - mBounds.width, size.height));
         gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
     }
     if (mBounds.height < size.height) {
         GdkRectangle rect = DevicePixelsToGdkRectRoundOut(
-            { 0, mBounds.height, size.width, size.height - mBounds.height });
+            LayoutDeviceIntRect(0, mBounds.height,
+                                size.width, size.height - mBounds.height));
         gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
     }
 
@@ -3498,10 +3500,10 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
 }
 
 nsresult
-nsWindow::Create(nsIWidget        *aParent,
-                 nsNativeWidget    aNativeParent,
-                 const nsIntRect  &aRect,
-                 nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget* aParent,
+                 nsNativeWidget aNativeParent,
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     // only set the base parent if we're going to be a dialog or a
     // toplevel
@@ -3531,7 +3533,7 @@ nsWindow::Create(nsIWidget        *aParent,
     CommonCreate(aParent, listenForResizes);
 
     // save our bounds
-    mBounds = aRect;
+    mBounds = aRect.ToUnknownRect();
     ConstrainSize(&mBounds.width, &mBounds.height);
 
     // figure out our parent window
@@ -6680,7 +6682,7 @@ nsWindow::DevicePixelsToGdkPointRoundDown(nsIntPoint point) {
 }
 
 GdkRectangle
-nsWindow::DevicePixelsToGdkRectRoundOut(nsIntRect rect) {
+nsWindow::DevicePixelsToGdkRectRoundOut(LayoutDeviceIntRect rect) {
     gint scale = GdkScaleFactor();
     int x = rect.x / scale;
     int y = rect.y / scale;

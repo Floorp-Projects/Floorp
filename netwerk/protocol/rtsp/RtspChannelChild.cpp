@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
 #include "RtspChannelChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsServiceManagerUtils.h"

@@ -935,19 +935,17 @@ class RecursiveMakeBackend(CommonBackend):
     def _walk_hierarchy(self, obj, element, namespace=''):
         """Walks the ``HierarchicalStringList`` ``element`` in the context of
         the mozbuild object ``obj`` as though by ``element.walk()``, but yield
-        three-tuple containing the following:
+        tuple containing the following:
 
         - ``source`` - The path to the source file named by the current string
         - ``dest``   - The relative path, including the namespace, of the
                        destination file.
-        - ``flags``  - A dictionary of flags associated with the current string,
-                       or None if there is no such dictionary.
         """
         for path, strings in element.walk():
             for s in strings:
                 source = mozpath.normpath(mozpath.join(obj.srcdir, s))
                 dest = mozpath.join(namespace, path, mozpath.basename(s))
-                yield source, dest, strings.flags_for(s)
+                yield source, dest
 
     def _process_defines(self, obj, backend_file, which='DEFINES'):
         """Output the DEFINES rules to the given backend file."""
@@ -964,7 +962,7 @@ class RecursiveMakeBackend(CommonBackend):
         if not obj.dist_install:
             return
 
-        for source, dest, _ in self._walk_hierarchy(obj, exports):
+        for source, dest in self._walk_hierarchy(obj, exports):
             self._install_manifests['dist_include'].add_symlink(source, dest)
 
             if not os.path.exists(source):
@@ -992,9 +990,7 @@ INSTALL_TARGETS += %(prefix)s
                           for f in files) })
 
     def _process_branding_files(self, obj, files, backend_file):
-        for source, dest, flags in self._walk_hierarchy(obj, files):
-            if flags and flags.source:
-                source = mozpath.normpath(mozpath.join(obj.srcdir, flags.source))
+        for source, dest in self._walk_hierarchy(obj, files):
             if not os.path.exists(source):
                 raise Exception('File listed in BRANDING_FILES does not exist: %s' % source)
 
@@ -1316,20 +1312,20 @@ INSTALL_TARGETS += %(prefix)s
         else:
             raise Exception("Cannot install to " + target)
 
-        for path, strings in files.walk():
-            for f in strings:
-                source = mozpath.normpath(os.path.join(obj.srcdir, f))
+        for path, files in files.walk():
+            for f in files:
                 dest = mozpath.join(reltarget, path, mozpath.basename(f))
-                install_manifest.add_symlink(source, dest)
+                install_manifest.add_symlink(f.full_path, dest)
 
     def _process_final_target_pp_files(self, obj, files, backend_file):
         # We'd like to install these via manifests as preprocessed files.
         # But they currently depend on non-standard flags being added via
         # some Makefiles, so for now we just pass them through to the
         # underlying Makefile.in.
-        for i, (path, strings) in enumerate(files.walk()):
-            for f in strings:
-                backend_file.write('DIST_FILES_%d += %s\n' % (i, f))
+        for i, (path, files) in enumerate(files.walk()):
+            for f in files:
+                backend_file.write('DIST_FILES_%d += %s\n' % (
+                    i, self._pretty_path(f, backend_file)))
             backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
                                % (i, mozpath.join(obj.install_target, path)))
             backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)

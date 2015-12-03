@@ -654,6 +654,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled)
     gl::CreateContextFlags flags = gl::CreateContextFlags::NONE;
     if (forceEnabled) flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
     if (!IsWebGL2())  flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+    if (IsWebGL2())   flags |= gl::CreateContextFlags::PREFER_ES3;
 
     const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
 

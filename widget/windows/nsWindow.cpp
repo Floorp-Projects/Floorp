@@ -490,10 +490,10 @@ ShouldCacheTitleBarInfo(nsWindowType aWindowType, nsBorderStyle aBorderStyle)
 
 // Create the proper widget
 nsresult
-nsWindow::Create(nsIWidget *aParent,
+nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
-                 const nsIntRect &aRect,
-                 nsWidgetInitData *aInitData)
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
   nsWidgetInitData defaultInitData;
   if (!aInitData)
@@ -507,7 +507,7 @@ nsWindow::Create(nsIWidget *aParent,
                           nullptr : aParent;
 
   mIsTopWidgetWindow = (nullptr == baseParent);
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
@@ -2653,7 +2653,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(true)->SetWindowTranslucencyInner(aMode);
 }
 
-void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
+void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)
 {
   if (!HasGlass() || GetParent())
     return;
@@ -2679,7 +2679,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
     LayoutDeviceIntRect largest =
-      LayoutDeviceIntRegion::FromUnknownRegion(aOpaqueRegion).GetLargestRectangle(pluginBounds);
+      aOpaqueRegion.GetLargestRectangle(pluginBounds);
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyBottomHeight = clientBounds.height - largest.YMost();
@@ -2709,7 +2709,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 **************************************************************/
 
 void
-nsWindow::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
+nsWindow::UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion)
 {
   if (mDraggableRegion != aRegion) {
     mDraggableRegion = aRegion;
@@ -2849,10 +2849,9 @@ NS_METHOD nsWindow::Invalidate(bool aEraseBackground,
 }
 
 // Invalidate this component visible area
-NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect)
+NS_METHOD nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
-  if (mWnd)
-  {
+  if (mWnd) {
 #ifdef WIDGET_DEBUG_OUTPUT
     debug_DumpInvalidate(stdout,
                          this,
@@ -3758,7 +3757,7 @@ nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
   if (!IsWin10OrLater()) {
     for (size_t i = 0; i < aThemeGeometries.Length(); i++) {
       if (aThemeGeometries[i].mType == nsNativeThemeWin::eThemeGeometryTypeWindowButtons) {
-        nsIntRect bounds = aThemeGeometries[i].mRect;
+        LayoutDeviceIntRect bounds = aThemeGeometries[i].mRect;
         clearRegion.Or(clearRegion, nsIntRect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height() - 2.0));
         clearRegion.Or(clearRegion, nsIntRect(bounds.X() + 1.0, bounds.YMost() - 2.0, bounds.Width() - 1.0, 1.0));
         clearRegion.Or(clearRegion, nsIntRect(bounds.X() + 2.0, bounds.YMost() - 1.0, bounds.Width() - 3.0, 1.0));
@@ -6542,11 +6541,11 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         // XXX - Workaround for Bug 587508. This will invalidate the part of the
         // plugin window that might be touched by moving content somehow. The
         // underlying problem should be found and fixed!
-        nsIntRegion r;
-        r.Sub(bounds.ToUnknownRect(), configuration.mBounds.ToUnknownRect());
+        LayoutDeviceIntRegion r;
+        r.Sub(bounds, configuration.mBounds);
         r.MoveBy(-bounds.x,
                  -bounds.y);
-        nsIntRect toInvalidate = r.GetBounds();
+        LayoutDeviceIntRect toInvalidate = r.GetBounds();
 
         WinUtils::InvalidatePluginAsWorkaround(w, toInvalidate);
       }

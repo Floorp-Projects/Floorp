@@ -107,7 +107,7 @@ Create(JSContext* cx)
 
 template<typename T,
          JSObject * CreateViewType(JSContext* cx),
-         JSObject * GetObjectAs(JSObject* obj, uint32_t* length, T** data),
+         JSObject * GetObjectAs(JSObject* obj, uint32_t* length, bool* isSharedMemory, T** data),
          js::Scalar::Type ExpectedType,
          uint32_t ExpectedLength,
          uint32_t ExpectedByteLength>
@@ -124,12 +124,15 @@ bool TestViewType(JSContext* cx)
 
     {
         JS::AutoCheckCannotGC nogc;
-        T* data1 = static_cast<T*>(JS_GetArrayBufferViewData(obj, nogc));
+        bool shared1;
+        T* data1 = static_cast<T*>(JS_GetArrayBufferViewData(obj, &shared1, nogc));
 
         T* data2;
+        bool shared2;
         uint32_t len;
-        CHECK(obj == GetObjectAs(obj, &len, &data2));
+        CHECK(obj == GetObjectAs(obj, &len, &shared2, &data2));
         CHECK(data1 == data2);
+        CHECK(shared1 == shared2);
         CHECK(len == ExpectedLength);
     }
 
