@@ -1151,8 +1151,9 @@ MacroAssembler::callWithPatch()
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    BufferOffset li(callerOffset - 6 * sizeof(uint32_t));
-    Assembler::UpdateLoad64Value(editSrc(li), calleeOffset);
+    BufferOffset li(callerOffset - Assembler::PatchWrite_NearCallSize());
+    Assembler::PatchInstructionImmediate((uint8_t*)editSrc(li),
+                                         PatchedImmPtr((const void*)calleeOffset));
 }
 
 void
