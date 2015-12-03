@@ -37,6 +37,14 @@
 #define AV_VERSION(a, b, c) AV_VERSION_DOT(a, b, c)
 
 /**
+ * Extract version components from the full ::AV_VERSION_INT int as returned
+ * by functions like ::avformat_version() and ::avcodec_version()
+ */
+#define AV_VERSION_MAJOR(a) ((a) >> 16)
+#define AV_VERSION_MINOR(a) (((a) & 0x00FF00) >> 8)
+#define AV_VERSION_MICRO(a) ((a) & 0xFF)
+
+/**
  * @}
  */
 
@@ -55,8 +63,8 @@
  * @{
  */
 
-#define LIBAVUTIL_VERSION_MAJOR  54
-#define LIBAVUTIL_VERSION_MINOR  31
+#define LIBAVUTIL_VERSION_MAJOR  55
+#define LIBAVUTIL_VERSION_MINOR  12
 #define LIBAVUTIL_VERSION_MICRO 100
 
 #define LIBAVUTIL_VERSION_INT   AV_VERSION_INT(LIBAVUTIL_VERSION_MAJOR, \
@@ -84,62 +92,34 @@
  * @{
  */
 
-#ifndef FF_API_OLD_AVOPTIONS
-#define FF_API_OLD_AVOPTIONS            (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_PIX_FMT
-#define FF_API_PIX_FMT                  (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_CONTEXT_SIZE
-#define FF_API_CONTEXT_SIZE             (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_PIX_FMT_DESC
-#define FF_API_PIX_FMT_DESC             (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_AV_REVERSE
-#define FF_API_AV_REVERSE               (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_AUDIOCONVERT
-#define FF_API_AUDIOCONVERT             (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_CPU_FLAG_MMX2
-#define FF_API_CPU_FLAG_MMX2            (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_LLS_PRIVATE
-#define FF_API_LLS_PRIVATE              (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_AVFRAME_LAVC
-#define FF_API_AVFRAME_LAVC             (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
 #ifndef FF_API_VDPAU
-#define FF_API_VDPAU                    (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_GET_CHANNEL_LAYOUT_COMPAT
-#define FF_API_GET_CHANNEL_LAYOUT_COMPAT (LIBAVUTIL_VERSION_MAJOR < 55)
+#define FF_API_VDPAU                    (LIBAVUTIL_VERSION_MAJOR < 56)
 #endif
 #ifndef FF_API_XVMC
-#define FF_API_XVMC                     (LIBAVUTIL_VERSION_MAJOR < 55)
+#define FF_API_XVMC                     (LIBAVUTIL_VERSION_MAJOR < 56)
 #endif
 #ifndef FF_API_OPT_TYPE_METADATA
-#define FF_API_OPT_TYPE_METADATA        (LIBAVUTIL_VERSION_MAJOR < 55)
+#define FF_API_OPT_TYPE_METADATA        (LIBAVUTIL_VERSION_MAJOR < 56)
 #endif
 #ifndef FF_API_DLOG
-#define FF_API_DLOG                     (LIBAVUTIL_VERSION_MAJOR < 55)
-#endif
-#ifndef FF_API_HMAC
-#define FF_API_HMAC                     (LIBAVUTIL_VERSION_MAJOR < 55)
+#define FF_API_DLOG                     (LIBAVUTIL_VERSION_MAJOR < 56)
 #endif
 #ifndef FF_API_VAAPI
 #define FF_API_VAAPI                    (LIBAVUTIL_VERSION_MAJOR < 56)
 #endif
+#ifndef FF_API_FRAME_QP
+#define FF_API_FRAME_QP                 (LIBAVUTIL_VERSION_MAJOR < 56)
+#endif
+#ifndef FF_API_PLUS1_MINUS1
+#define FF_API_PLUS1_MINUS1             (LIBAVUTIL_VERSION_MAJOR < 56)
+#endif
+#ifndef FF_API_ERROR_FRAME
+#define FF_API_ERROR_FRAME              (LIBAVUTIL_VERSION_MAJOR < 56)
+#endif
+#ifndef FF_API_CRC_BIG_TABLE
+#define FF_API_CRC_BIG_TABLE            (LIBAVUTIL_VERSION_MAJOR < 56)
+#endif
 
-#ifndef FF_CONST_AVUTIL55
-#if LIBAVUTIL_VERSION_MAJOR >= 55
-#define FF_CONST_AVUTIL55 const
-#else
-#define FF_CONST_AVUTIL55
-#endif
-#endif
 
 /**
  * @}
