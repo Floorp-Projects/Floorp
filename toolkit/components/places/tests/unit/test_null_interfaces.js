@@ -48,7 +48,7 @@ function run_test()
     }
 
     do_print(`Generating an array of functions to test service: ${s}`);
-    for (let n of [i for (i in s) if (okName(i))].sort()) {
+    for (let n of Object.keys(s).filter(i => okName(i)).sort()) {
       do_print(`\nTesting ${iface} function with null args: ${n}`);
 
       let func = s[n];
@@ -84,11 +84,6 @@ function run_test()
 
           do_print("Moving on to the next test..");
           tryAgain = false;
-        }
-        catch(ex) {
-          do_print("Caught some unexpected exception.. dumping");
-          do_print([[i, ex[i]] for (i in ex)].join("\n"));
-          throw ex;
         }
       }
     }
