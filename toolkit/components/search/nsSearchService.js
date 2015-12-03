@@ -3090,17 +3090,29 @@ SearchService.prototype = {
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
 
-    // Clear the engines, too, so we don't stick with the stale ones.
-    this._engines = {};
-    this.__sortedEngines = null;
-    this._currentEngine = null;
-    this._defaultEngine = null;
-    this._visibleDefaultEngines = [];
-    this._metaData = {};
-    this._cacheFileJSON = null;
-
     Task.spawn(function* () {
       try {
+        if (this._batchTask) {
+          LOG("finalizing batch task");
+          let task = this._batchTask;
+          this._batchTask = null;
+          yield task.finalize();
+        }
+
+        // Clear the engines, too, so we don't stick with the stale ones.
+        this._engines = {};
+        this.__sortedEngines = null;
+        this._currentEngine = null;
+        this._defaultEngine = null;
+        this._visibleDefaultEngines = [];
+        this._metaData = {};
+        this._cacheFileJSON = null;
+
+        // Tests that want to force a synchronous re-initialization need to
+        // be notified when we are done uninitializing.
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC,
+                                     "uninit-complete");
+
         let cache = {};
         cache = yield this._asyncReadCacheFile();
         if (!gInitialized && cache.metaData)
@@ -4102,7 +4114,8 @@ SearchService.prototype = {
 
   get currentEngine() {
     this._ensureInitialized();
-    if (!this._currentEngine) {
+    let currentEngine = this._currentEngine;
+    if (!currentEngine) {
       let name = this.getGlobalAttr("current");
       let engine = this.getEngineByName(name);
       if (engine && (this.getGlobalAttr("hash") == getVerificationHash(name) ||
@@ -4110,23 +4123,32 @@ SearchService.prototype = {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
         // backup/sync their profile in custom ways.
-        this._currentEngine = engine;
+        currentEngine = engine;
       }
     }
 
-    if (!this._currentEngine || this._currentEngine.hidden)
-      this._currentEngine = this._originalDefaultEngine;
-    if (!this._currentEngine || this._currentEngine.hidden)
-      this._currentEngine = this._getSortedEngines(false)[0];
+    if (!currentEngine || currentEngine.hidden)
+      currentEngine = this._originalDefaultEngine;
+    if (!currentEngine || currentEngine.hidden)
+      currentEngine = this._getSortedEngines(false)[0];
 
-    if (!this._currentEngine) {
+    if (!currentEngine) {
       // Last resort fallback: unhide the original default engine.
-      this._currentEngine = this._originalDefaultEngine;
-      if (this._currentEngine)
-        this._currentEngine.hidden = false;
+      currentEngine = this._originalDefaultEngine;
+      if (currentEngine)
+        currentEngine.hidden = false;
     }
 
-    return this._currentEngine;
+    if (currentEngine) {
+      // If the current engine wasn't set or was hidden, we used a fallback
+      // to pick a new current engine. As soon as we return it, this new
+      // current engine will become user-visible, so we should persist it.
+      // Calling the setter achieves this, and is a no-op when we haven't
+      // actually changed the current engine.
+      this.currentEngine = currentEngine;
+    }
+
+    return currentEngine;
   },
 
   set currentEngine(val) {

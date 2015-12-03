@@ -78,7 +78,9 @@ add_task(function* gatherGroupDataTest() {
 });
 
 add_task(function* bookmarkingTest() {
-  let groupInfo = TabGroupsMigrator._gatherGroupData(TEST_STATES.TWO_GROUPS);
+  let stateClone = JSON.parse(JSON.stringify(TEST_STATES.TWO_GROUPS));
+  let groupInfo = TabGroupsMigrator._gatherGroupData(stateClone);
+  let removedGroups = TabGroupsMigrator._removeHiddenTabGroupsFromState(stateClone, groupInfo);
   yield TabGroupsMigrator._bookmarkAllGroupsFromState(groupInfo);
   let bmCounter = 0;
   let bmParents = {};

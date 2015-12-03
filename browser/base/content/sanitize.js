@@ -450,7 +450,7 @@ Sanitizer.prototype = {
       {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
-        Task.spawn(function () {
+        Task.spawn(function*() {
           let filterByTime = null;
           if (this.range) {
             // Convert microseconds back to milliseconds for date comparisons.

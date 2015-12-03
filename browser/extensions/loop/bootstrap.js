@@ -11,6 +11,7 @@ const kPrefBrowserSharingInfoBar = "browserSharing.showInfoBar";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
@@ -39,7 +40,8 @@ var WindowListener = {
     var LoopUI = {
       /**
        * @var {XULWidgetSingleWrapper} toolbarButton Getter for the Loop toolbarbutton
-       *                                             instance for this window.
+       *                                             instance for this window. This should
+       *                                             not be used in the hidden window.
        */
       get toolbarButton() {
         delete this.toolbarButton;
@@ -262,18 +264,10 @@ var WindowListener = {
       },
 
       /**
-       * Triggers the initialization of the loop service.  Called by
-       * delayedStartup.
+       * Triggers the initialization of the loop service if necessary.
+       * Also adds appropraite observers for the UI.
        */
       init: function() {
-        // Cleanup when the window unloads.
-        window.addEventListener("unload", () => {
-          this.uninit();
-        });
-
-        // Add observer notifications before the service is initialized
-        Services.obs.addObserver(this, "loop-status-changed", false);
-
         // This is a promise for test purposes, but we don't want to be logging
         // expected errors to the console, so we catch them here.
         this.MozLoopService.initialize().catch(ex => {
@@ -283,11 +277,21 @@ var WindowListener = {
             console.error(ex);
           }
         });
-        this.updateToolbarState();
-      },
 
-      uninit: function() {
-        Services.obs.removeObserver(this, "loop-status-changed");
+        // Don't do the rest if this is for the hidden window - we don't
+        // have a toolbar there.
+        if (window == Services.appShell.hiddenDOMWindow) {
+          return;
+        }
+
+        // Cleanup when the window unloads.
+        window.addEventListener("unload", () => {
+          Services.obs.removeObserver(this, "loop-status-changed");
+        });
+
+        Services.obs.addObserver(this, "loop-status-changed", false);
+
+        this.updateToolbarState();
       },
 
       // Implements nsIObserver
@@ -299,7 +303,8 @@ var WindowListener = {
       },
 
       /**
-       * Updates the toolbar/menu-button state to reflect Loop status.
+       * Updates the toolbar/menu-button state to reflect Loop status. This should
+       * not be called from the hidden window.
        *
        * @param {string} [aReason] Some states are only shown if
        *                           a related reason is provided.
@@ -351,7 +356,8 @@ var WindowListener = {
       },
 
       /**
-       * Updates the tootltiptext to reflect Loop status.
+       * Updates the tootltiptext to reflect Loop status. This should not be called
+       * from the hidden window.
        *
        * @param {string} [mozL10nId] l10n ID that refelct the current
        *                           Loop status.
@@ -758,15 +764,17 @@ function startup() {
   createLoopButton();
 
   // Attach to hidden window (for OS X).
-  try {
-    WindowListener.setupBrowserUI(Services.appShell.hiddenDOMWindow);
-  } catch (ex) {
-    // Hidden window didn't exist, so wait until startup is done.
-    let topic = "browser-delayed-startup-finished";
-    Services.obs.addObserver(function observer() {
-      Services.obs.removeObserver(observer, topic);
+  if (AppConstants.platform == "macosx") {
+    try {
       WindowListener.setupBrowserUI(Services.appShell.hiddenDOMWindow);
-    }, topic, false);
+    } catch (ex) {
+      // Hidden window didn't exist, so wait until startup is done.
+      let topic = "browser-delayed-startup-finished";
+      Services.obs.addObserver(function observer() {
+        Services.obs.removeObserver(observer, topic);
+        WindowListener.setupBrowserUI(Services.appShell.hiddenDOMWindow);
+      }, topic, false);
+    }
   }
 
   // Attach to existing browser windows, for modifying UI.
@@ -783,8 +791,12 @@ function startup() {
   // Load our stylesheets.
   let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
     .getService(Components.interfaces.nsIStyleSheetService);
-  let sheets = ["chrome://loop-shared/skin/loop.css",
-                "chrome://loop/skin/platform.css"];
+  let sheets = ["chrome://loop-shared/skin/loop.css"];
+
+  if (AppConstants.platform != "linux") {
+    sheets.push("chrome://loop/skin/platform.css");
+  }
+
   for (let sheet of sheets) {
     let styleSheetURI = Services.io.newURI(sheet, null, null);
     // XXX We would love to specify AUTHOR_SHEET here and in shutdown, however
@@ -809,7 +821,9 @@ function shutdown() {
   });
 
   // Detach from hidden window (for OS X).
-  WindowListener.tearDownBrowserUI(Services.appShell.hiddenDOMWindow);
+  if (AppConstants.platform == "macosx") {
+    WindowListener.tearDownBrowserUI(Services.appShell.hiddenDOMWindow);
+  }
 
   // Detach from browser windows.
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
