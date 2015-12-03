@@ -62,7 +62,7 @@ using namespace mozilla::media;
 #undef VERBOSE_LOG
 
 #define LOG(m, l, x, ...) \
-  MOZ_LOG(m, l, ("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__))
+  MOZ_LOG(m, l, ("Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
 #define DECODER_LOG(x, ...) \
   LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
 #define VERBOSE_LOG(x, ...) \
@@ -74,7 +74,7 @@ using namespace mozilla::media;
 // when __VA_ARGS__ expands to nothing. This is a workaround for it.
 #define DECODER_WARN_HELPER(a, b) NS_WARNING b
 #define DECODER_WARN(x, ...) \
-  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__).get()))
+  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -200,6 +200,10 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
   mDecoder(aDecoder),
+  mDecoderID(aDecoder),
+  mFrameStats(&aDecoder->GetFrameStatistics()),
+  mVideoFrameContainer(aDecoder->GetVideoFrameContainer()),
+  mAudioChannel(aDecoder->GetAudioChannel()),
   mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                            /* aSupportsTailDispatch = */ true)),
   mWatchManager(this, mTaskQueue),
@@ -280,7 +284,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   // Dispatch initialization that needs to happen on that task queue.
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::InitializationTask);
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<RefPtr<MediaDecoder>>(
+    this, &MediaDecoderStateMachine::InitializationTask, aDecoder);
   mTaskQueue->Dispatch(r.forget());
 
   InitVideoQueuePrefs();
@@ -307,7 +312,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
 #ifdef MOZ_EME
-  mCDMProxyPromise.Begin(mDecoder->RequestCDMProxy()->Then(
+  mCDMProxyPromise.Begin(aDecoder->RequestCDMProxy()->Then(
     OwnerThread(), __func__, this,
     &MediaDecoderStateMachine::OnCDMProxyReady,
     &MediaDecoderStateMachine::OnCDMProxyNotReady));
@@ -327,25 +332,25 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
 }
 
 void
-MediaDecoderStateMachine::InitializationTask()
+MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(OnTaskQueue());
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
-  mEstimatedDuration.Connect(mDecoder->CanonicalEstimatedDuration());
-  mExplicitDuration.Connect(mDecoder->CanonicalExplicitDuration());
-  mPlayState.Connect(mDecoder->CanonicalPlayState());
-  mNextPlayState.Connect(mDecoder->CanonicalNextPlayState());
-  mLogicallySeeking.Connect(mDecoder->CanonicalLogicallySeeking());
-  mVolume.Connect(mDecoder->CanonicalVolume());
-  mLogicalPlaybackRate.Connect(mDecoder->CanonicalPlaybackRate());
-  mPreservesPitch.Connect(mDecoder->CanonicalPreservesPitch());
-  mSameOriginMedia.Connect(mDecoder->CanonicalSameOriginMedia());
-  mPlaybackBytesPerSecond.Connect(mDecoder->CanonicalPlaybackBytesPerSecond());
-  mPlaybackRateReliable.Connect(mDecoder->CanonicalPlaybackRateReliable());
-  mDecoderPosition.Connect(mDecoder->CanonicalDecoderPosition());
-  mMediaSeekable.Connect(mDecoder->CanonicalMediaSeekable());
+  mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
+  mExplicitDuration.Connect(aDecoder->CanonicalExplicitDuration());
+  mPlayState.Connect(aDecoder->CanonicalPlayState());
+  mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
+  mLogicallySeeking.Connect(aDecoder->CanonicalLogicallySeeking());
+  mVolume.Connect(aDecoder->CanonicalVolume());
+  mLogicalPlaybackRate.Connect(aDecoder->CanonicalPlaybackRate());
+  mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
+  mSameOriginMedia.Connect(aDecoder->CanonicalSameOriginMedia());
+  mPlaybackBytesPerSecond.Connect(aDecoder->CanonicalPlaybackBytesPerSecond());
+  mPlaybackRateReliable.Connect(aDecoder->CanonicalPlaybackRateReliable());
+  mDecoderPosition.Connect(aDecoder->CanonicalDecoderPosition());
+  mMediaSeekable.Connect(aDecoder->CanonicalMediaSeekable());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
@@ -375,7 +380,7 @@ MediaDecoderStateMachine::CreateAudioSink()
     MOZ_ASSERT(self->OnTaskQueue());
     return new DecodedAudioDataSink(
       self->mAudioQueue, self->GetMediaTime(),
-      self->mInfo.mAudio, self->mDecoder->GetAudioChannel());
+      self->mInfo.mAudio, self->mAudioChannel);
   };
   return new AudioSinkWrapper(mTaskQueue, audioSinkCreator);
 }
@@ -391,8 +396,8 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
 
   RefPtr<media::MediaSink> mediaSink =
     new VideoSink(mTaskQueue, audioSink, mVideoQueue,
-                  mDecoder->GetVideoFrameContainer(), mRealTime,
-                  mDecoder->GetFrameStatistics(),
+                  mVideoFrameContainer, mRealTime,
+                  *mFrameStats,
                   sVideoQueueSendToCompositorSize);
   return mediaSink.forget();
 }
@@ -2469,7 +2474,7 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
 
   // Update corrupt-frames statistics
   if (aData->mImage && !aData->mImage->IsValid()) {
-    FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
+    FrameStatistics& frameStats = *mFrameStats;
     frameStats.NotifyCorruptFrame();
     // If more than 10% of the last 30 frames have been corrupted, then try disabling
     // hardware acceleration. We use 10 as the corrupt value because RollingMean<>

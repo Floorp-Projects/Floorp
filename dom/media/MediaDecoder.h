@@ -700,7 +700,7 @@ private:
   MediaStatistics GetStatistics();
 
   // Return the frame decode/paint related statistics.
-  FrameStatistics& GetFrameStatistics() { return mFrameStats; }
+  FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
@@ -866,7 +866,7 @@ protected:
   MediaDecoderOwner* const mOwner;
 
   // Counters related to decode and presentation of frames.
-  FrameStatistics mFrameStats;
+  const RefPtr<FrameStatistics> mFrameStats;
 
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
 
