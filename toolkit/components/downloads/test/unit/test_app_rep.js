@@ -159,7 +159,9 @@ add_test(function test_nullCallback() {
       fileSize: 12,
     }, null);
     do_throw("Callback cannot be null");
-  } catch (ex if ex.result == Cr.NS_ERROR_INVALID_POINTER) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_INVALID_POINTER)
+      throw ex;
     // We don't even increment the count here, because there's no callback.
     check_telemetry(counts.total, counts.shouldBlock, counts.listCounts);
     run_next_test();

@@ -17,11 +17,8 @@ EXTRA_PP_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'DownloadLastDir.jsm',
     'DownloadPaths.jsm',
-    'DownloadUtils.jsm',
-]
-
-EXTRA_PP_JS_MODULES += [
     'DownloadTaskbarProgress.jsm',
+    'DownloadUtils.jsm',
 ]
 
 JAR_MANIFESTS += ['jar.mn']

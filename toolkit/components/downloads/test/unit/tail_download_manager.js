@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination functions common to all tests
 
-add_task(function test_common_terminate()
+add_task(function* test_common_terminate()
 {
   // Stop the HTTP server.  We must do this inside a task in "tail.js" until the
   // xpcshell testing framework supports asynchronous termination functions.

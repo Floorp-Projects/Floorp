@@ -433,7 +433,7 @@ this.Download.prototype = {
 
     // Now that we stored the promise in the download object, we can start the
     // task that will actually execute the download.
-    deferAttempt.resolve(Task.spawn(function task_D_start() {
+    deferAttempt.resolve(Task.spawn(function* task_D_start() {
       // Wait upon any pending operation before restarting.
       if (this._promiseCanceled) {
         yield this._promiseCanceled;
@@ -845,7 +845,7 @@ this.Download.prototype = {
       this._promiseRemovePartialData = promiseRemovePartialData;
 
       deferRemovePartialData.resolve(
-        Task.spawn(function task_D_removePartialData() {
+        Task.spawn(function* task_D_removePartialData() {
           try {
             // Wait upon any pending cancellation request.
             if (this._promiseCanceled) {
@@ -908,7 +908,7 @@ this.Download.prototype = {
    */
   refresh: function ()
   {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       if (!this.stopped || this._finalized) {
         return;
       }
@@ -942,7 +942,10 @@ this.Download.prototype = {
             this.progress = Math.floor(this.currentBytes /
                                            this.totalBytes * 100);
           }
-        } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+        } catch (ex) {
+          if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+            throw ex;
+          }
           // Ignore the result if the state has changed meanwhile.
           if (!this.stopped || this._finalized) {
             return;
@@ -1709,8 +1712,11 @@ this.DownloadSaver.prototype = {
       gDownloadHistory.addDownload(sourceUri, referrerUri, startPRTime,
                                    targetUri);
     }
-    catch(ex if ex instanceof Components.Exception &&
-                ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+    catch(ex) {
+      if (!(ex instanceof Components.Exception) ||
+          ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw ex;
+      }
       //
       // Under normal operation the download history service may not
       // be available. We don't want all downloads that are public to fail
@@ -1840,7 +1846,7 @@ this.DownloadCopySaver.prototype = {
     let partFilePath = download.target.partFilePath;
     let keepPartialData = download.tryToKeepPartialData;
 
-    return Task.spawn(function task_DCS_execute() {
+    return Task.spawn(function* task_DCS_execute() {
       // Add the download to history the first time it is started in this
       // session.  If the download is restarted in a different session, a new
       // history visit will be added.  We do this just to avoid the complexity
@@ -1860,7 +1866,10 @@ this.DownloadCopySaver.prototype = {
         // If the file already exists, don't delete its contents yet.
         let file = yield OS.File.open(targetPath, { write: true });
         yield file.close();
-      } catch (ex if ex instanceof OS.File.Error) {
+      } catch (ex) {
+        if (!(ex instanceof OS.File.Error)) {
+          throw ex;
+        }
         // Throw a DownloadError indicating that the operation failed because of
         // the target file.  We cannot translate this into a specific result
         // code, but we preserve the original message using the toString method.
@@ -1930,8 +1939,11 @@ this.DownloadCopySaver.prototype = {
               channel.resumeAt(stat.size, this.entityID);
               resumeAttempted = true;
               resumeFromBytes = stat.size;
-            } catch (ex if ex instanceof OS.File.Error &&
-                           ex.becauseNoSuchFile) { }
+            } catch (ex) {
+              if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+                throw ex;
+              }
+            }
           }
 
           channel.notificationCallbacks = {
@@ -2000,8 +2012,11 @@ this.DownloadCopySaver.prototype = {
                   try {
                     // If reading the ID succeeds, the source is resumable.
                     this.entityID = aRequest.entityID;
-                  } catch (ex if ex instanceof Components.Exception &&
-                                 ex.result == Cr.NS_ERROR_NOT_RESUMABLE) {
+                  } catch (ex) {
+                    if (!(ex instanceof Components.Exception) ||
+                        ex.result != Cr.NS_ERROR_NOT_RESUMABLE) {
+                      throw ex;
+                    }
                     keepPartialData = false;
                   }
                 } else {
@@ -2152,11 +2167,15 @@ this.DownloadCopySaver.prototype = {
    */
   removePartialData: function ()
   {
-    return Task.spawn(function task_DCS_removePartialData() {
+    return Task.spawn(function* task_DCS_removePartialData() {
       if (this.download.target.partFilePath) {
         try {
           yield OS.File.remove(this.download.target.partFilePath);
-        } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) { }
+        } catch (ex) {
+          if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+            throw ex;
+          }
+        }
       }
     }.bind(this));
   },
@@ -2334,8 +2353,12 @@ this.DownloadLegacySaver.prototype = {
       try {
         // If reading the ID succeeds, the source is resumable.
         this.entityID = aRequest.entityID;
-      } catch (ex if ex instanceof Components.Exception &&
-                     ex.result == Cr.NS_ERROR_NOT_RESUMABLE) { }
+      } catch (ex) {
+        if (!(ex instanceof Components.Exception) ||
+            ex.result != Cr.NS_ERROR_NOT_RESUMABLE) {
+          throw ex;
+        }
+      }
     }
 
     // For legacy downloads, we must update the referrer at this time.
@@ -2411,7 +2434,7 @@ this.DownloadLegacySaver.prototype = {
 
     this.setProgressBytesFn = aSetProgressBytesFn;
 
-    return Task.spawn(function task_DLS_execute() {
+    return Task.spawn(function* task_DLS_execute() {
       try {
         // Wait for the component that executes the download to finish.
         yield this.deferExecuted.promise;
@@ -2441,7 +2464,11 @@ this.DownloadLegacySaver.prototype = {
             let file = yield OS.File.open(this.download.target.path,
                                           { create: true });
             yield file.close();
-          } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) { }
+          } catch (ex) {
+            if (!(ex instanceof OS.File.Error) || !ex.becauseExists) {
+              throw ex;
+            }
+          }
         }
 
         yield this._checkReputationAndMove();
@@ -2623,7 +2650,7 @@ this.DownloadPDFSaver.prototype = {
    */
   execute: function (aSetProgressBytesFn, aSetPropertiesFn)
   {
-    return Task.spawn(function task_DCS_execute() {
+    return Task.spawn(function* task_DCS_execute() {
       if (!this.download.source.windowRef) {
         throw new DownloadError({
           message: "PDF saver must be passed an open window, and cannot be restarted.",
