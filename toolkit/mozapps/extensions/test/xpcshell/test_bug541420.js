@@ -29,7 +29,7 @@ function run_test() {
       // only tests if the file is an application so it is better to just check the
       // raw permission bits
       if (!("nsIWindowsRegKey" in Components.interfaces))
-        do_check_true((file.permissions & 0100) == 0100);
+        do_check_true((file.permissions & 0o100) == 0o100);
 
       do_execute_soon(do_test_finished);
     });
