@@ -43,15 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <locale.h>
 #include <stdlib.h>
 #include <wchar.h>
-#if defined(DARWIN)
+#if defined(DARWIN) || defined(__FreeBSD__)
 #define HAVE_XLOCALE
-#endif
-
-#ifdef __FreeBSD__
-#include <osreldate.h>
-# if __FreeBSD_version > 900505
-#  define HAVE_XLOCALE
-# endif
 #endif
 
 #ifdef HAVE_XLOCALE
