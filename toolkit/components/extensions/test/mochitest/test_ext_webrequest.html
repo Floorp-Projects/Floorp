@@ -172,11 +172,11 @@ function backgroundScript()
     }
   }
 
-  browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking"]);
-  browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: ["<all_urls>"]});
-  browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
-  browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
+  browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: "<all_urls>"}, ["blocking"]);
+  browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: "<all_urls>"}, ["blocking"]);
+  browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: "<all_urls>"});
+  browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: "<all_urls>"});
+  browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: "<all_urls>"});
 
   function onTestMessage()
   {
@@ -208,11 +208,6 @@ function* test_once()
     var value = resourceTypes[key];
     is(key, value.toUpperCase());
   }
-
-  // Check a few Firefox-specific types.
-  is(resourceTypes.XBL, "xbl", "XBL resource type supported");
-  is(resourceTypes.FONT, "font", "Font resource type supported");
-  is(resourceTypes.WEBSOCKET, "websocket", "Websocket resource type supported");
 
   yield new Promise(resolve => { setTimeout(resolve, 0); });
 

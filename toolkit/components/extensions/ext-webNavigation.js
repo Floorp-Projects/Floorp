@@ -59,7 +59,7 @@ function WebNavigationEventManager(context, eventName)
 
 WebNavigationEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
-extensions.registerSchemaAPI("webNavigation", "webNavigation", (extension, context) => {
+extensions.registerPrivilegedAPI("webNavigation", (extension, context) => {
   return {
     webNavigation: {
       onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
