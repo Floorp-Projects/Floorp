@@ -8,13 +8,13 @@ function run_test() {
 
 var tests = [
 
-  function nonexistent() {
+  function* nonexistent() {
     yield setGlobal("foo", 1);
     yield cps.removeAllDomainsSince(0, null, makeCallback());
     yield getGlobalOK(["foo"], 1);
   },
 
-  function domainsAll() {
+  function* domainsAll() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -35,7 +35,7 @@ var tests = [
     yield getOK(["b.com", "bar"], undefined);
   },
 
-  function domainsWithDate() {
+  function* domainsWithDate() {
     yield setWithDate("a.com", "foobar", 0, 0);
     yield setWithDate("a.com", "foo", 1, 1000);
     yield setWithDate("a.com", "bar", 2, 4000);
@@ -55,7 +55,7 @@ var tests = [
     ]);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -83,12 +83,12 @@ var tests = [
     yield getOK(["b.com", "foo"], undefined);
   },
 
-  function erroneous() {
+  function* erroneous() {
     do_check_throws(() => cps.removeAllDomainsSince(null, "bogus"));
     yield true;
   },
 
-  function invalidateCache() {
+  function* invalidateCache() {
     yield setWithDate("a.com", "foobar", 0, 0);
     yield setWithDate("a.com", "foo", 1, 1000);
     yield setWithDate("a.com", "bar", 2, 4000);
