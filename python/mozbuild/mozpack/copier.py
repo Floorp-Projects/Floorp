@@ -331,41 +331,50 @@ class FileCopier(FileRegistry):
                 os.umask(umask)
                 os.chmod(d, 0777 & ~umask)
 
-        # While we have remove_unaccounted, it doesn't apply to empty
-        # directories because it wouldn't make sense: an empty directory
-        # is empty, so removing it should have no effect.
-        existing_dirs = set()
-        existing_files = set()
-        for root, dirs, files in os.walk(destination):
-            # We need to perform the same symlink detection as above. os.walk()
-            # doesn't follow symlinks into directories by default, so we need
-            # to check dirs (we can't wait for root).
-            if have_symlinks:
-                filtered = []
-                for d in dirs:
-                    full = os.path.join(root, d)
-                    st = os.lstat(full)
-                    if stat.S_ISLNK(st.st_mode):
-                        # This directory symlink is not a required
-                        # directory: any such symlink would have been
-                        # removed and a directory created above.
-                        if remove_all_directory_symlinks:
-                            os.remove(full)
-                            result.removed_files.add(os.path.normpath(full))
+        if isinstance(remove_unaccounted, FileRegistry):
+            existing_files = set(os.path.normpath(os.path.join(destination, p))
+                                 for p in remove_unaccounted.paths())
+            existing_dirs = set(os.path.normpath(os.path.join(destination, p))
+                                for p in remove_unaccounted
+                                         .required_directories())
+            existing_dirs |= {os.path.normpath(destination)}
+        else:
+            # While we have remove_unaccounted, it doesn't apply to empty
+            # directories because it wouldn't make sense: an empty directory
+            # is empty, so removing it should have no effect.
+            existing_dirs = set()
+            existing_files = set()
+            for root, dirs, files in os.walk(destination):
+                # We need to perform the same symlink detection as above.
+                # os.walk() doesn't follow symlinks into directories by
+                # default, so we need to check dirs (we can't wait for root).
+                if have_symlinks:
+                    filtered = []
+                    for d in dirs:
+                        full = os.path.join(root, d)
+                        st = os.lstat(full)
+                        if stat.S_ISLNK(st.st_mode):
+                            # This directory symlink is not a required
+                            # directory: any such symlink would have been
+                            # removed and a directory created above.
+                            if remove_all_directory_symlinks:
+                                os.remove(full)
+                                result.removed_files.add(
+                                    os.path.normpath(full))
+                            else:
+                                existing_files.add(os.path.normpath(full))
                         else:
-                            existing_files.add(os.path.normpath(full))
-                    else:
-                        filtered.append(d)
+                            filtered.append(d)
 
-                dirs[:] = filtered
+                    dirs[:] = filtered
 
-            existing_dirs.add(os.path.normpath(root))
+                existing_dirs.add(os.path.normpath(root))
 
-            for d in dirs:
-                existing_dirs.add(os.path.normpath(os.path.join(root, d)))
+                for d in dirs:
+                    existing_dirs.add(os.path.normpath(os.path.join(root, d)))
 
-            for f in files:
-                existing_files.add(os.path.normpath(os.path.join(root, f)))
+                for f in files:
+                    existing_files.add(os.path.normpath(os.path.join(root, f)))
 
         # Now we reconcile the state of the world against what we want.
 
@@ -420,10 +429,25 @@ class FileCopier(FileRegistry):
 
         # Remove empty directories that aren't required.
         for d in sorted(remove_dirs, key=len, reverse=True):
-            # Permissions may not allow deletion. So ensure write access is
-            # in place before attempting delete.
-            os.chmod(d, 0700)
-            os.rmdir(d)
+            try:
+                try:
+                    os.rmdir(d)
+                except OSError as e:
+                    if e.errno in (errno.EPERM, errno.EACCES):
+                        # Permissions may not allow deletion. So ensure write
+                        # access is in place before attempting to rmdir again.
+                        os.chmod(d, 0700)
+                        os.rmdir(d)
+                    else:
+                        raise
+            except OSError as e:
+                # If remove_unaccounted is a # FileRegistry, then we have a
+                # list of directories that may not be empty, so ignore rmdir
+                # ENOTEMPTY errors for them.
+                if (isinstance(remove_unaccounted, FileRegistry) and
+                        e.errno == errno.ENOTEMPTY):
+                    continue
+                raise
             result.removed_directories.add(d)
 
         return result
