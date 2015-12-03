@@ -38,10 +38,10 @@ class nsShmImage {
 public:
     static bool UseShm();
     static already_AddRefed<nsShmImage>
-        Create(const mozilla::gfx::IntSize& aSize,
+        Create(const mozilla::LayoutDeviceIntSize& aSize,
                Display* aDisplay, Visual* aVisual, unsigned int aDepth);
     static already_AddRefed<mozilla::gfx::DrawTarget>
-        EnsureShmImage(const mozilla::gfx::IntSize& aSize,
+        EnsureShmImage(const mozilla::LayoutDeviceIntSize& aSize,
                        Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                        RefPtr<nsShmImage>& aImage);
 
@@ -60,12 +60,13 @@ public:
     already_AddRefed<mozilla::gfx::DrawTarget> CreateDrawTarget();
 
 #ifdef MOZ_WIDGET_GTK
-    void Put(Display* aDisplay, Drawable aWindow, const nsIntRegion& aRegion);
+    void Put(Display* aDisplay, Drawable aWindow,
+             const LayoutDeviceIntRegion& aRegion);
 #elif defined(MOZ_WIDGET_QT)
     void Put(QWindow* aWindow, QRect& aRect);
 #endif
 
-    mozilla::gfx::IntSize Size() const { return mSize; }
+    mozilla::LayoutDeviceIntSize Size() const { return mSize; }
 
 private:
     nsShmImage()
@@ -79,7 +80,7 @@ private:
     XImage*                      mImage;
     Display*                     mDisplay;
     XShmSegmentInfo              mInfo;
-    mozilla::gfx::IntSize        mSize;
+    mozilla::LayoutDeviceIntSize mSize;
     mozilla::gfx::SurfaceFormat  mFormat;
     bool                         mXAttached;
 };

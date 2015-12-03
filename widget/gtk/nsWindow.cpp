@@ -2228,7 +2228,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
-    RefPtr<DrawTarget> dt = GetDrawTarget(region.ToUnknownRegion());
+    RefPtr<DrawTarget> dt = GetDrawTarget(region);
     if (!dt) {
         return FALSE;
     }
@@ -2312,7 +2312,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-      mShmImage->Put(mXDisplay, mXWindow, region.ToUnknownRegion());
+      mShmImage->Put(mXDisplay, mXWindow, region);
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
@@ -6462,14 +6462,14 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 #endif
 
 already_AddRefed<DrawTarget>
-nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
+nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion)
 {
   if (!mGdkWindow) {
     return nullptr;
   }
 
-  nsIntRect bounds = aRegion.GetBounds();
-  IntSize size(bounds.XMost(), bounds.YMost());
+  LayoutDeviceIntRect bounds = aRegion.GetBounds();
+  LayoutDeviceIntSize size(bounds.XMost(), bounds.YMost());
   if (size.width <= 0 || size.height <= 0) {
     return nullptr;
   }
@@ -6480,12 +6480,11 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
 #  ifdef MOZ_HAVE_SHMIMAGE
   if (nsShmImage::UseShm()) {
     dt = nsShmImage::EnsureShmImage(size,
-                                    mXDisplay, mXVisual, mXDepth,
-                                    mShmImage);
+                                    mXDisplay, mXVisual, mXDepth, mShmImage);
   }
 #  endif  // MOZ_HAVE_SHMIMAGE
   if (!dt) {
-    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
+    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size.ToUnknownSize());
     if (!surf->CairoStatus()) {
       dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
     }
@@ -6496,13 +6495,14 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
 }
 
 already_AddRefed<DrawTarget>
-nsWindow::StartRemoteDrawingInRegion(nsIntRegion& aInvalidRegion)
+nsWindow::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion)
 {
   return GetDrawTarget(aInvalidRegion);
 }
 
 void
-nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget, nsIntRegion& aInvalidRegion)
+nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
+                                   LayoutDeviceIntRegion& aInvalidRegion)
 {
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE

@@ -171,7 +171,7 @@ private:
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
   void PaintToTarget();
 
-  virtual gfx::IntSize GetWidgetSize() const override { return mSize; }
+  virtual LayoutDeviceIntSize GetWidgetSize() const override { return mSize; }
 
   RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<ID3D11Device> mDevice;
@@ -183,7 +183,7 @@ private:
 
   nsIWidget* mWidget;
 
-  gfx::IntSize mSize;
+  LayoutDeviceIntSize mSize;
 
   HWND mHwnd;
 
