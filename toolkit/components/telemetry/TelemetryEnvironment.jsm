@@ -65,6 +65,10 @@ this.TelemetryEnvironment = {
     return getGlobal().onInitialized();
   },
 
+  delayedInit: function() {
+    return getGlobal().delayedInit();
+  },
+
   registerChangeListener: function(name, listener) {
     return getGlobal().registerChangeListener(name, listener);
   },
@@ -664,6 +668,7 @@ function EnvironmentCache() {
   this._log.trace("constructor");
 
   this._shutdown = false;
+  this._delayedInitFinished = false;
 
   // A map of listeners that will be called on environment changes.
   this._changeListeners = new Map();
@@ -738,6 +743,13 @@ EnvironmentCache.prototype = {
       return this._initTask;
     }
     return Promise.resolve(this.currentEnvironment);
+  },
+
+  /**
+   * This gets called when the delayed init completes.
+   */
+  delayedInit: function() {
+    this._delayedInitFinished = true;
   },
 
   /**
@@ -1304,6 +1316,7 @@ EnvironmentCache.prototype = {
     // We are already skipping change events in _checkChanges if there is a pending change task running.
     let now = Policy.now();
     if (this._lastEnvironmentChangeDate &&
+        this._delayedInitFinished &&
         (CHANGE_THROTTLE_INTERVAL_MS >=
          (now.getTime() - this._lastEnvironmentChangeDate.getTime()))) {
       this._log.trace("_onEnvironmentChange - throttling changes, now: " + now +
@@ -1311,7 +1324,9 @@ EnvironmentCache.prototype = {
       return;
     }
 
-    this._lastEnvironmentChangeDate = now;
+    if(this._delayedInitFinished) {
+      this._lastEnvironmentChangeDate = now;
+    }
 
     for (let [name, listener] of this._changeListeners) {
       try {
