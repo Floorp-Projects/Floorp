@@ -17,7 +17,6 @@
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/AnimationUtils.h"
