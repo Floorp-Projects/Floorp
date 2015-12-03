@@ -28,7 +28,7 @@ toolkit.jar:
    content/global/aboutwebrtc/aboutWebrtc.css   (aboutwebrtc/aboutWebrtc.css)
    content/global/aboutwebrtc/aboutWebrtc.js    (aboutwebrtc/aboutWebrtc.js)
    content/global/aboutwebrtc/aboutWebrtc.xhtml (aboutwebrtc/aboutWebrtc.xhtml)
-*  content/global/aboutSupport.js
+   content/global/aboutSupport.js
 *  content/global/aboutSupport.xhtml
    content/global/aboutTelemetry.js
    content/global/aboutTelemetry.xhtml
@@ -41,7 +41,7 @@ toolkit.jar:
 *+  content/global/buildconfig.html
 *  content/global/contentAreaUtils.js
    content/global/customizeToolbar.css
-*  content/global/customizeToolbar.js
+   content/global/customizeToolbar.js
    content/global/customizeToolbar.xul
    content/global/devicestorage.properties
    content/global/editMenuOverlay.js
@@ -50,7 +50,7 @@ toolkit.jar:
 *+ content/global/finddialog.xul
    content/global/findUtils.js
    content/global/filepicker.properties
-*+ content/global/globalOverlay.js
++  content/global/globalOverlay.js
 +  content/global/mozilla.xhtml
    content/global/nsDragAndDrop.js
    content/global/process-content.js
