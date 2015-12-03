@@ -26,7 +26,15 @@ add_task(function* testSyncButtonFunctionality() {
 
   let syncButton = document.getElementById("sync-button");
   ok(syncButton, "The Sync button was added to the Panel Menu");
+  // click the button - the panel should open.
   syncButton.click();
+  let syncPanel = document.getElementById("PanelUI-remotetabs");
+  ok(syncPanel.getAttribute("current"), "Sync Panel is in view");
+
+  // Find and click the "setup" button.
+  let syncNowButton = document.getElementById("PanelUI-remotetabs-syncnow");
+  syncNowButton.click();
+
   info("The sync button was clicked");
 
   yield waitForCondition(() => syncWasCalled);

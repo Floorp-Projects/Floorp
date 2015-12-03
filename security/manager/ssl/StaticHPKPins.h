@@ -131,6 +131,18 @@ static const char kGOOGLE_PIN_GTECyberTrustGlobalRootFingerprint[] =
 static const char kGOOGLE_PIN_GoDaddySecureFingerprint[] =
   "MrZLZnJ6IGPkBm87lYywqu5Xal7O/ZUzmbuIdHMdlYc=";
 
+/* GOOGLE_PIN_GoogleG2 */
+static const char kGOOGLE_PIN_GoogleG2Fingerprint[] =
+  "7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=";
+
+/* GOOGLE_PIN_LetsEncryptAuthorityX1 */
+static const char kGOOGLE_PIN_LetsEncryptAuthorityX1Fingerprint[] =
+  "YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=";
+
+/* GOOGLE_PIN_LetsEncryptAuthorityX2 */
+static const char kGOOGLE_PIN_LetsEncryptAuthorityX2Fingerprint[] =
+  "sRHdihwgkaib1P1gxX8HFszlD+7/gTfNvuAybgLPNis=";
+
 /* GOOGLE_PIN_RapidSSL */
 static const char kGOOGLE_PIN_RapidSSLFingerprint[] =
   "lT09gPUeQfbYrlxRtpsHrjDblj9Rpz+u7ajfCrg4qDM=";
@@ -203,10 +215,6 @@ static const char kGo_Daddy_Root_Certificate_Authority___G2Fingerprint[] =
 static const char kGoogleBackup2048Fingerprint[] =
   "vq7OyjSnqOco9nyMCDGdy77eijM=";
 
-/* GoogleG2 */
-static const char kGoogleG2Fingerprint[] =
-  "Q9rWMO5T+KmAym79hfRqo3mQ4Oo=";
-
 /* Network Solutions Certificate Authority */
 static const char kNetwork_Solutions_Certificate_AuthorityFingerprint[] =
   "MtGA7THJNVieydu7ciEjuIO1/C3BD5/KOpXXfhv8tTQ=";
@@ -245,7 +253,7 @@ static const char kTC_TrustCenter_Class_3_CA_IIFingerprint[] =
 
 /* TestSPKI */
 static const char kTestSPKIFingerprint[] =
-  "AAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 /* Tor1 */
 static const char kTor1Fingerprint[] =
@@ -477,21 +485,20 @@ static const StaticPinset kPinset_mozilla_test = {
 };
 
 /* Chrome static pinsets */
-static const char* kPinset_test_sha1_Data[] = {
+static const char* kPinset_test_sha256_Data[] = {
   kTestSPKIFingerprint,
 };
-static const StaticFingerprints kPinset_test_sha1 = {
-  sizeof(kPinset_test_sha1_Data) / sizeof(const char*),
-  kPinset_test_sha1_Data
+static const StaticFingerprints kPinset_test_sha256 = {
+  sizeof(kPinset_test_sha256_Data) / sizeof(const char*),
+  kPinset_test_sha256_Data
 };
 
 static const StaticPinset kPinset_test = {
-  &kPinset_test_sha1,
-  nullptr
+  nullptr,
+  &kPinset_test_sha256
 };
 
 static const char* kPinset_google_sha1_Data[] = {
-  kGoogleG2Fingerprint,
   kGoogleBackup2048Fingerprint,
 };
 static const StaticFingerprints kPinset_google_sha1 = {
@@ -500,6 +507,7 @@ static const StaticFingerprints kPinset_google_sha1 = {
 };
 
 static const char* kPinset_google_sha256_Data[] = {
+  kGOOGLE_PIN_GoogleG2Fingerprint,
   kGeoTrust_Global_CAFingerprint,
 };
 static const StaticFingerprints kPinset_google_sha256 = {
@@ -524,7 +532,9 @@ static const StaticFingerprints kPinset_tor_sha1 = {
 
 static const char* kPinset_tor_sha256_Data[] = {
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
+  kGOOGLE_PIN_LetsEncryptAuthorityX1Fingerprint,
   kGOOGLE_PIN_RapidSSLFingerprint,
+  kGOOGLE_PIN_LetsEncryptAuthorityX2Fingerprint,
 };
 static const StaticFingerprints kPinset_tor_sha256 = {
   sizeof(kPinset_tor_sha256_Data) / sizeof(const char*),
@@ -1217,4 +1227,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1456573188846000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1457563757796000);

@@ -32,14 +32,15 @@ add_task(function*() {
   info("Make sure graduations are evenly distributed and show the right times");
   [...headerEl.querySelectorAll(".time-tick")].forEach((tick, i) => {
     let left = parseFloat(tick.style.left);
-    is(Math.round(left), Math.round(i * interval),
+    let expectedPos = i * interval * 100 / width;
+    is(Math.round(left), Math.round(expectedPos),
       "Graduation " + i + " is positioned correctly");
 
     // Note that the distancetoRelativeTime and formatTime functions are tested
     // separately in xpcshell test test_timeScale.js, so we assume that they
     // work here.
     let formattedTime = TimeScale.formatTime(
-      TimeScale.distanceToRelativeTime(i * interval, width));
+      TimeScale.distanceToRelativeTime(expectedPos, width));
     is(tick.textContent, formattedTime,
       "Graduation " + i + " has the right text content");
   });

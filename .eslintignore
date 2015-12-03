@@ -57,7 +57,11 @@ xulrunner/**
 
 # browser/ exclusions
 browser/app/**
-browser/base/**
+browser/base/content/browser-social.js
+browser/base/content/nsContextMenu.js
+browser/base/content/sanitizeDialog.js
+browser/base/content/test/**
+browser/base/content/newtab/**
 browser/components/customizableui/**
 browser/components/downloads/**
 browser/components/feeds/**

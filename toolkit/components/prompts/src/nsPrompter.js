@@ -204,21 +204,11 @@ var PromptUtilsTemp = {
         authInfo.password = password;
     },
 
-    // Copied from login manager
+    /**
+     * Strip out things like userPass and path for display.
+     */
     getFormattedHostname : function (uri) {
-        let scheme = uri.scheme;
-        let hostname = scheme + "://" + uri.host;
-
-        // If the URI explicitly specified a port, only include it when
-        // it's not the default. (We never want "http://foo.com:80")
-        let port = uri.port;
-        if (port != -1) {
-            let handler = Services.io.getProtocolHandler(scheme);
-            if (port != handler.defaultPort)
-                hostname += ":" + port;
-        }
-
-        return hostname;
+        return uri.scheme + "://" + uri.hostPort;
     },
 
     // Copied from login manager

@@ -361,13 +361,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             } else if (action.type == "keyword") {
               url = action.params.url;
             } else if (action.type == "searchengine") {
-              let engine = Services.search.getEngineByName(action.params.engineName);
-              let query = action.params.searchSuggestion ||
-                          action.params.searchQuery;
-              let submission = engine.getSubmission(query, null, "keyword");
-
-              url = submission.uri.spec;
-              postData = submission.postData;
+              [url, postData] = this._parseAndRecordSearchEngineAction(action);
             } else if (action.type == "visiturl") {
               url = action.params.url;
             }
@@ -452,6 +446,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               }
             }
           }
+        ]]></body>
+      </method>
+
+      <method name="_parseAndRecordSearchEngineAction">
+        <parameter name="action"/>
+        <body><![CDATA[
+          let engine =
+            Services.search.getEngineByName(action.params.engineName);
+          BrowserSearch.recordSearchInHealthReport(engine, "urlbar");
+          let query = action.params.searchSuggestion ||
+                      action.params.searchQuery;
+          let submission = engine.getSubmission(query, null, "keyword");
+          return [submission.uri.spec, submission.postData];
         ]]></body>
       </method>
 
@@ -1455,12 +1462,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   break;
                 }
                 case "searchengine": {
-                  let engine = Services.search.getEngineByName(action.params.engineName);
-                  let query = action.params.searchSuggestion ||
-                              action.params.searchQuery;
-                  let submission = engine.getSubmission(query, null, "keyword");
-                  url = submission.uri.spec;
-                  options.postData = submission.postData;
+                  [url, options.postData] =
+                    this._parseAndRecordSearchEngineAction(action);
                   break;
                 }
                 default: {

@@ -8,7 +8,6 @@
      Changes to preferences should be mirrored to preferences_general.xml. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:title="@string/pref_category_general"
                   android:enabled="false">
 
@@ -40,16 +39,6 @@
                         android:title="@string/pref_open_external_urls_privately_title"
                         android:summary="@string/pref_open_external_urls_privately_summary"
                         android:defaultValue="false" />
-
-    <org.mozilla.gecko.preferences.PrivateDataPreference
-            android:key="android.not_a_preference.privacy.clear"
-            android:title="@string/pref_clear_private_data_now"
-            android:persistent="true"
-            android:positiveButtonText="@string/button_clear_data"
-            gecko:entries="@array/pref_private_data_entries"
-            gecko:entryValues="@array/pref_private_data_values"
-            gecko:entryKeys="@array/pref_private_data_keys"
-            gecko:initialValues="@array/pref_private_data_defaults" />
 
 </PreferenceScreen>
 

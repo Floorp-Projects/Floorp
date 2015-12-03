@@ -235,6 +235,7 @@ RemoteWebProgressManager.prototype = {
         this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
         this._browser._contentPrincipal = json.principal;
         this._browser._isSyntheticDocument = json.synthetic;
+        this._browser._innerWindowID = json.innerWindowID;
       }
 
       this._callProgressListeners("onLocationChange", webProgress, request, location, flags);
