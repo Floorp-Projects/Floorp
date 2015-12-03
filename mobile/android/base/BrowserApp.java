@@ -3027,6 +3027,7 @@ public class BrowserApp extends GeckoApp
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
+        bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
         bookmark.setTitle(resolveBookmarkTitleID(tab.isBookmark()));
 
         reader.setEnabled(isAboutReader || !AboutPages.isAboutPage(tab.getURL()));
@@ -3034,13 +3035,8 @@ public class BrowserApp extends GeckoApp
         reader.setCheckable(true);
         final boolean isPageInReadingList = tab.isInReadingList();
         reader.setChecked(isPageInReadingList);
+        reader.setIcon(resolveReadingListIconID(isPageInReadingList));
         reader.setTitle(resolveReadingListTitleID(isPageInReadingList));
-
-        if (Versions.feature11Plus) {
-            // We don't use icons on GB builds so not resolving icons might conserve resources.
-            bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
-            reader.setIcon(resolveReadingListIconID(isPageInReadingList));
-        }
 
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
@@ -3233,19 +3229,13 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
+                    item.setIcon(resolveBookmarkIconID(false));
                     item.setTitle(resolveBookmarkTitleID(false));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveBookmarkIconID(false));
-                    }
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
+                    item.setIcon(resolveBookmarkIconID(true));
                     item.setTitle(resolveBookmarkTitleID(true));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveBookmarkIconID(true));
-                    }
                 }
             }
             return true;
@@ -3257,19 +3247,13 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "reading_list");
                     tab.removeFromReadingList();
+                    item.setIcon(resolveReadingListIconID(false));
                     item.setTitle(resolveReadingListTitleID(false));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveReadingListIconID(false));
-                    }
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "reading_list");
                     tab.addToReadingList();
+                    item.setIcon(resolveReadingListIconID(true));
                     item.setTitle(resolveReadingListTitleID(true));
-                    if (Versions.feature11Plus) {
-                        // We don't use icons on GB builds so not resolving icons might conserve resources.
-                        item.setIcon(resolveReadingListIconID(true));
-                    }
                 }
             }
             return true;

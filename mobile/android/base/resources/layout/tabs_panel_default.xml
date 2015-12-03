@@ -53,7 +53,8 @@
                          style="@style/UrlBar.ImageButton"
                          android:layout_width="@dimen/tabs_panel_button_width"
                          android:background="@drawable/action_bar_button_inverse"
-                         android:contentDescription="@string/menu">
+                         android:contentDescription="@string/menu"
+                         android:visibility="gone">
 
                 <ImageButton
                         style="@style/UrlBar.ImageButton"
