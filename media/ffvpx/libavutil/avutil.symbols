@@ -44,7 +44,6 @@ av_cpu_count
 av_crc
 av_crc_get_table
 av_crc_init
-av_ctz
 av_d2q
 av_d2str
 av_default_get_category
@@ -144,8 +143,6 @@ av_get_channel_name
 av_get_colorspace_name
 av_get_cpu_flags
 av_get_default_channel_layout
-av_get_double
-av_get_int
 av_get_known_color_name
 av_get_media_type_string
 av_get_packed_sample_fmt
@@ -156,12 +153,10 @@ av_get_pix_fmt_loss
 av_get_pix_fmt_name
 av_get_pix_fmt_string
 av_get_planar_sample_fmt
-av_get_q
 av_get_sample_fmt
 av_get_sample_fmt_name
 av_get_sample_fmt_string
 av_get_standard_channel_layout
-av_get_string
 av_get_time_base_q
 av_get_token
 av_gettime
@@ -180,10 +175,6 @@ av_image_fill_pointers
 av_image_get_buffer_size
 av_image_get_linesize
 av_int_list_length_for_size
-av_isdigit
-av_isgraph
-av_isspace
-av_isxdigit
 av_log
 av_log2
 av_log2_16bit
@@ -203,7 +194,6 @@ av_memcpy_backptr
 av_memdup
 av_mul_q
 av_nearer_q
-av_next_option
 av_opt_child_class_next
 av_opt_child_next
 av_opt_copy
@@ -264,7 +254,6 @@ av_pix_fmt_count_planes
 av_pix_fmt_desc_get
 av_pix_fmt_desc_get_id
 av_pix_fmt_desc_next
-av_pix_fmt_descriptors
 av_pix_fmt_get_chroma_sub_sample
 av_pix_fmt_swap_endianness
 av_pixelutils_get_sad_fn
@@ -281,7 +270,6 @@ av_rescale_delta
 av_rescale_q
 av_rescale_q_rnd
 av_rescale_rnd
-av_reverse
 av_sample_fmt_is_planar
 av_samples_alloc
 av_samples_alloc_array_and_samples
@@ -290,11 +278,7 @@ av_samples_fill_arrays
 av_samples_get_buffer_size
 av_samples_set_silence
 av_set_cpu_flags_mask
-av_set_double
-av_set_int
 av_set_options_string
-av_set_q
-av_set_string3
 av_small_strptime
 av_strcasecmp
 av_strdup
@@ -335,7 +319,6 @@ av_vlog
 av_write_image_line
 avpriv_alloc_fixed_dsp
 avpriv_float_dsp_alloc
-avpriv_float_dsp_init
 avpriv_frame_get_metadatap
 avpriv_get_gamma_from_trc
 avpriv_init_lls
