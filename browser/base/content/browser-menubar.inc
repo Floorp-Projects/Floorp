@@ -367,9 +367,9 @@
                 <menuseparator id="sanitizeSeparator"/>
                 <menuitem id="sync-tabs-menuitem"
                           class="syncTabsMenuItem"
-                          label="&syncTabsMenu2.label;"
+                          label="&syncTabsMenu3.label;"
                           oncommand="BrowserOpenSyncTabs();"
-                          disabled="true"/>
+                          hidden="true"/>
                 <menuitem id="historyRestoreLastSession"
                           label="&historyRestoreLastSession.label;"
                           command="Browser:RestoreLastSession"/>

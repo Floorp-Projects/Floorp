@@ -8481,13 +8481,6 @@ if test -n "$MOZ_DEVICES"; then
   AC_DEFINE(MOZ_DEVICES)
 fi
 
-dnl Build Fennec Android native UI to manage accounts.  This will go away as
-dnl Fennec transitions to web UI to manage accounts.
-AC_SUBST(MOZ_ANDROID_NATIVE_ACCOUNT_UI)
-if test -n "$MOZ_ANDROID_NATIVE_ACCOUNT_UI"; then
-  AC_DEFINE(MOZ_ANDROID_NATIVE_ACCOUNT_UI)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=

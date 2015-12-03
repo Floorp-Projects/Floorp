@@ -2,18 +2,37 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:paddingLeft="20dp"
-              android:paddingRight="20dp"
-              android:orientation="vertical">
-
-    <EditText
-            android:id="@+id/homepage_url"
-            android:layout_width="fill_parent"
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/homepage_layout"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="textUri"
-            android:layout_marginTop="8dp" />
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:orientation="vertical">
 
-</LinearLayout>
+    <RadioButton android:id="@+id/radio_default"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_marginTop="8dp"
+                 android:text="@string/home_homepage_radio_default"
+                 android:textColor="@color/text_and_tabs_tray_grey"/>
+
+    <RadioButton android:id="@+id/radio_user_address"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_marginTop="8dp"
+                 android:text="@string/home_homepage_radio_user_address"
+                 android:textColor="@color/text_and_tabs_tray_grey"/>
+
+    <!-- RadioGroup is a LinearLayout under the hood, so including this View is fine.
+         The visibility changes with RadioButton state so we hide it to start. -->
+    <EditText android:id="@+id/edittext_user_address"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="8dp"
+              android:inputType="textUri"
+              android:hint="@string/home_homepage_hint_user_address"
+              android:textColorHint="@color/disabled_grey"
+              android:visibility="gone"/>
+
+</RadioGroup>

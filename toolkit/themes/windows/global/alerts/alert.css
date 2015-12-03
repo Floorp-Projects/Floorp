@@ -13,6 +13,7 @@
 #alertNotification {
   -moz-appearance: none;
   background: transparent;
+  padding: 10px;
 }
 
 #alertBox {
@@ -20,6 +21,7 @@
   border-radius: 1px;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.59);
 }
 
 .alertCloseButton {
