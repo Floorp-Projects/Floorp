@@ -69,7 +69,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
                 ColorUtils.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
 
         menuButtonMarginView = findViewById(R.id.menu_margin);
-        if (menuButtonMarginView != null) {
+        if (menuButtonMarginView != null && !HardwareUtils.hasMenuButton()) {
             menuButtonMarginView.setVisibility(View.VISIBLE);
         }
     }
