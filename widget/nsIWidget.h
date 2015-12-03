@@ -337,6 +337,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
     typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
     typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
+    typedef mozilla::ScreenIntPoint ScreenIntPoint;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -1643,7 +1644,7 @@ class nsIWidget : public nsISupports {
      */
     virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                                 TouchPointerState aPointerState,
-                                                nsIntPoint aPointerScreenPoint,
+                                                ScreenIntPoint aPointerScreenPoint,
                                                 double aPointerPressure,
                                                 uint32_t aPointerOrientation,
                                                 nsIObserver* aObserver) = 0;
@@ -1656,7 +1657,7 @@ class nsIWidget : public nsISupports {
      * @param aObserver The observer that will get notified once the events
      * have been dispatched.
      */
-    virtual nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+    virtual nsresult SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
                                               bool aLongTap,
                                               nsIObserver* aObserver);
 
@@ -1692,7 +1693,7 @@ private:
   class LongTapInfo
   {
   public:
-    LongTapInfo(int32_t aPointerId, nsIntPoint& aPoint,
+    LongTapInfo(int32_t aPointerId, ScreenIntPoint& aPoint,
                 mozilla::TimeDuration aDuration,
                 nsIObserver* aObserver) :
       mPointerId(aPointerId),
@@ -1704,7 +1705,7 @@ private:
     }
 
     int32_t mPointerId;
-    nsIntPoint mPosition;
+    ScreenIntPoint mPosition;
     mozilla::TimeDuration mDuration;
     nsCOMPtr<nsIObserver> mObserver;
     mozilla::TimeStamp mStamp;
