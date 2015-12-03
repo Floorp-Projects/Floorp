@@ -6,6 +6,11 @@
 
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+
 this.EXPORTED_SYMBOLS = ["MatchPattern"];
 
 /* globals MatchPattern */
@@ -31,32 +36,32 @@ function globToRegexp(pat, allowQuestion) {
 // https://developer.chrome.com/extensions/match_patterns
 function SingleMatchPattern(pat) {
   if (pat == "<all_urls>") {
-    this.scheme = PERMITTED_SCHEMES;
+    this.schemes = PERMITTED_SCHEMES;
     this.host = "*";
     this.path = new RegExp(".*");
   } else if (!pat) {
-    this.scheme = [];
+    this.schemes = [];
   } else {
     let re = new RegExp("^(http|https|file|ftp|app|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+|)(/.*)$");
     let match = re.exec(pat);
     if (!match) {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
-      this.scheme = [];
+      this.schemes = [];
       return;
     }
 
     if (match[1] == "*") {
-      this.scheme = ["http", "https"];
+      this.schemes = ["http", "https"];
     } else {
-      this.scheme = [match[1]];
+      this.schemes = [match[1]];
     }
     this.host = match[2];
     this.path = globToRegexp(match[3], false);
 
     // We allow the host to be empty for file URLs.
-    if (this.host == "" && this.scheme[0] != "file") {
+    if (this.host == "" && this.schemes[0] != "file") {
       Cu.reportError(`Invalid match pattern: '${pat}'`);
-      this.scheme = [];
+      this.schemes = [];
       return;
     }
   }
@@ -64,7 +69,7 @@ function SingleMatchPattern(pat) {
 
 SingleMatchPattern.prototype = {
   matches(uri, ignorePath = false) {
-    if (this.scheme.indexOf(uri.scheme) == -1) {
+    if (!this.schemes.includes(uri.scheme)) {
       return false;
     }
 
@@ -117,6 +122,48 @@ MatchPattern.prototype = {
         return true;
       }
     }
+    return false;
+  },
+
+  // Checks that this match pattern grants access to read the given
+  // cookie. |cookie| should be an |nsICookie2| instance.
+  matchesCookie(cookie) {
+    // First check for simple matches.
+    let secureURI = NetUtil.newURI(`https://${cookie.rawHost}/`);
+    if (this.matchesIgnoringPath(secureURI)) {
+      return true;
+    }
+
+    let plainURI = NetUtil.newURI(`http://${cookie.rawHost}/`);
+    if (!cookie.isSecure && this.matchesIgnoringPath(plainURI)) {
+      return true;
+    }
+
+    if (!cookie.isDomain) {
+      return false;
+    }
+
+    // Things get tricker for domain cookies. The extension needs to be able
+    // to read any cookies that could be read any host it has permissions
+    // for. This means that our normal host matching checks won't work,
+    // since the pattern "*://*.foo.example.com/" doesn't match ".example.com",
+    // but it does match "bar.foo.example.com", which can read cookies
+    // with the domain ".example.com".
+    //
+    // So, instead, we need to manually check our filters, and accept any
+    // with hosts that end with our cookie's host.
+
+    let { host, isSecure } = cookie;
+
+    for (let matcher of this.matchers) {
+      let schemes = matcher.schemes;
+      if (schemes.includes("https") || (!isSecure && schemes.includes("http"))) {
+        if (matcher.host.endsWith(host)) {
+          return true;
+        }
+      }
+    }
+
     return false;
   },
 
