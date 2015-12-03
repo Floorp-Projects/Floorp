@@ -4,21 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-  <dimen name="fxaccount_stroke_width">1dp</dimen>
-  <dimen name="fxaccount_corner_radius">3dp</dimen>
-
-  <!-- The amount of horizontal padding that appears inside the email,
-       password, etc input fields. -->
-  <dimen name="fxaccount_input_padding_horizontal">10dp</dimen>
-  <!-- And the amount of vertical padding that appears inside input
-       fields. -->
-  <dimen name="fxaccount_input_padding_vertical">10dp</dimen>
-
-  <!-- The amount of horizontal padding that appears around the show/hide
-       password button.  Vertical padding is provided by the adjacent input
-       field. -->
-  <dimen name="fxaccount_show_password_padding_horizontal">8dp</dimen>
-
   <!-- Preference fragment padding, bottom -->
   <dimen name="preference_fragment_padding_bottom">0dp</dimen>
   <!-- Preference fragment padding, sides -->

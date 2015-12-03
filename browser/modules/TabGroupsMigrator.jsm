@@ -162,7 +162,7 @@ this.TabGroupsMigrator = {
         let groupFolder = yield PlacesUtils.bookmarks.insert({
           parentGuid: tabgroupsFolder.guid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          title: group.title ||
+          title: group.tabGroupsMigrationTitle ||
             gBrowserBundle.formatStringFromName("tabgroups.migration.anonGroup", [group.anonGroupID], 1),
         }).catch(Cu.reportError);
 

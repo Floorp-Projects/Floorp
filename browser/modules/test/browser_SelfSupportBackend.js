@@ -146,6 +146,29 @@ add_task(function* test_selfSupport() {
     uitourAPI.ping(resolve);
   });
   yield pingPromise;
+  info("Ping succeeded");
+
+  let observePromise = ContentTask.spawn(selfSupportBrowser, null, function* checkObserve() {
+    yield new Promise(resolve => {
+      let win = Cu.waiveXrays(content);
+      win.Mozilla.UITour.observe((event, data) => {
+        if (event != "Heartbeat:Engaged") {
+          return;
+        }
+        is(data.flowId, "myFlowID", "Check flowId");
+        ok(!!data.timestamp, "Check timestamp");
+        resolve(data);
+      }, () => {});
+    });
+  });
+
+  info("Notifying Heartbeat:Engaged");
+  UITour.notify("Heartbeat:Engaged", {
+    flowId: "myFlowID",
+    timestamp: Date.now(),
+  });
+  yield observePromise;
+  info("Observed in the hidden frame");
 
   // Close SelfSupport from content.
   contentWindow.close();

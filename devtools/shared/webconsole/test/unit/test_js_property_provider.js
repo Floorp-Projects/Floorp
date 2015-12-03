@@ -33,8 +33,8 @@ function run_test() {
   Components.utils.evalInSandbox(testObject, sandbox);
   Components.utils.evalInSandbox(testHyphenated, sandbox);
 
-  let results = JSPropertyProvider(dbgObject, null, "testArray[0].");
   do_print("Test that suggestions are given for 'foo[n]' where n is an integer.");
+  let results = JSPropertyProvider(dbgObject, null, "testArray[0].");
   test_has_result(results, "propA");
 
   do_print("Test that suggestions are given for multidimensional arrays.");
@@ -48,6 +48,18 @@ function run_test() {
   do_print("Test that suggestions are given for literal arrays with newlines.");
   results = JSPropertyProvider(dbgObject, null, "[1,2,3,\n4\n].");
   test_has_result(results, "indexOf");
+
+  do_print("Test that suggestions are given for 'this'");
+  results = JSPropertyProvider(dbgObject, null, "t");
+  test_has_result(results, "this");
+
+  do_print("Test that suggestions are given for 'this.'");
+  results = JSPropertyProvider(dbgObject, null, "this.");
+  test_has_result(results, "testObject");
+
+  do_print("Test that no suggestions are given for 'this.this'");
+  results = JSPropertyProvider(dbgObject, null, "this.this");
+  test_has_no_results(results);
 
   do_print("Test that suggestions are given for literal strings.");
   results = JSPropertyProvider(dbgObject, null, "'foo'.");

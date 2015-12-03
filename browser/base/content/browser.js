@@ -4461,8 +4461,11 @@ var XULBrowserWindow = {
 
       try {
         gCrashReporter.annotateCrashReport("URL", uri.spec);
-      } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
+      } catch (ex) {
         // Don't make noise when the crash reporter is built but not enabled.
+        if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED) {
+          throw ex;
+        }
       }
     }
   },
@@ -6476,7 +6479,7 @@ function isTabEmpty(aTab) {
 }
 
 function BrowserOpenSyncTabs() {
-  switchToTabHavingURI("about:sync-tabs", true);
+  gSyncUI.openSyncedTabsPanel();
 }
 
 /**

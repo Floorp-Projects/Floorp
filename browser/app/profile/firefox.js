@@ -1471,6 +1471,11 @@ pref("identity.fxaccounts.profile_image.enabled", true);
 // Token server used by the FxA Sync identity.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
+// URLs for promo links to mobile browsers. Note that consumers are expected to
+// append a value for utm_campaign.
+pref("identity.mobilepromo.android", "https://www.mozilla.org/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=");
+pref("identity.mobilepromo.ios", "https://www.mozilla.org/firefox/ios/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=");
+
 // Migrate any existing Firefox Account data from the default profile to the
 // Developer Edition profile.
 #ifdef MOZ_DEV_EDITION
