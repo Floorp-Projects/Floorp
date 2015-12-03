@@ -257,6 +257,14 @@ public:
 
   void SetNextPaintSyncId(int32_t aSyncId);
 
+  class DidCompositeObserver {
+  public:
+    virtual void DidComposite() = 0;
+  };
+
+  void AddDidCompositeObserver(DidCompositeObserver* aObserver);
+  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
+
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
@@ -350,6 +358,8 @@ private:
   nsAutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
   nsAutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
   mozilla::TimeStamp mTransactionStart;
+
+  nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
   RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
 };

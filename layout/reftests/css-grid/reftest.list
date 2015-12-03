@@ -44,6 +44,7 @@ pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-spars
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
 == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+== grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
 fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
 == grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
 == grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
@@ -92,3 +93,4 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-item-margin-right-auto-002.html grid-item-margin-right-auto-002-ref.html
 == grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003-ref.html
 == grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html
+== grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001-ref.html

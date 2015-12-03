@@ -319,7 +319,7 @@ nsHttp::IsPermanentRedirect(uint32_t httpStatus)
 
 
 template<typename T> void
-localEnsureBuffer(nsAutoArrayPtr<T> &buf, uint32_t newSize,
+localEnsureBuffer(UniquePtr<T[]> &buf, uint32_t newSize,
              uint32_t preserve, uint32_t &objSize)
 {
   if (objSize >= newSize)
@@ -332,20 +332,20 @@ localEnsureBuffer(nsAutoArrayPtr<T> &buf, uint32_t newSize,
   objSize = (newSize + 2048 + 4095) & ~4095;
 
   static_assert(sizeof(T) == 1, "sizeof(T) must be 1");
-  nsAutoArrayPtr<T> tmp(new T[objSize]);
+  auto tmp = MakeUnique<T[]>(objSize);
   if (preserve) {
-    memcpy(tmp, buf, preserve);
+    memcpy(tmp.get(), buf.get(), preserve);
   }
-  buf = tmp;
+  buf = Move(tmp);
 }
 
-void EnsureBuffer(nsAutoArrayPtr<char> &buf, uint32_t newSize,
+void EnsureBuffer(UniquePtr<char[]> &buf, uint32_t newSize,
                   uint32_t preserve, uint32_t &objSize)
 {
     localEnsureBuffer<char> (buf, newSize, preserve, objSize);
 }
 
-void EnsureBuffer(nsAutoArrayPtr<uint8_t> &buf, uint32_t newSize,
+void EnsureBuffer(UniquePtr<uint8_t[]> &buf, uint32_t newSize,
                   uint32_t preserve, uint32_t &objSize)
 {
     localEnsureBuffer<uint8_t> (buf, newSize, preserve, objSize);

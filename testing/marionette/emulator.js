@@ -4,18 +4,14 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci} = Components;
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-this.EXPORTED_SYMBOLS = ["emulator", "Emulator", "EmulatorCallback"];
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-this.emulator = {};
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-/**
- * Determines if command ID is an emulator callback.
- */
-this.emulator.isCallback = function(cmdId) {
-  return cmdId < 0;
-};
+const logger = Log.repository.getLogger("Marionette");
+
+this.EXPORTED_SYMBOLS = ["Emulator"];
 
 /**
  * Represents the connection between Marionette and the emulator it's
@@ -26,97 +22,90 @@ this.emulator.isCallback = function(cmdId) {
  * which is stored in cbs.  They are later retreived by their unique ID
  * using popCallback.
  *
- * @param {function(Object)} sendFn
+ * @param {function(Object)} sendToEmulatorFn
  *     Callback function that sends a message to the emulator.
+ * @param {function(Object)} sendToEmulatorFn
+ *     Callback function that sends a message asynchronously to the
+ *     current listener.
  */
-this.Emulator = function(sendFn) {
-  this.send = sendFn;
-  this.cbs = [];
+this.Emulator = function(sendToEmulatorFn) {
+  this.sendToEmulator = sendToEmulatorFn;
 };
 
 /**
- * Pops a callback off the stack if found.  Otherwise this is a no-op.
+ * Instruct the client to run an Android emulator command.
  *
- * @param {number} id
- *     Unique ID associated with the callback.
- *
- * @return {?function(Object)}
- *     Callback function that takes an emulator response message as
- *     an argument.
+ * @param {string} cmd
+ *     The command to run.
+ * @param {function(?)} resCb
+ *     Callback on a result response from the emulator.
+ * @param {function(?)} errCb
+ *     Callback on an error in running the command.
  */
-Emulator.prototype.popCallback = function(id) {
-  let f, fi;
-  for (let i = 0; i < this.cbs.length; ++i) {
-    if (this.cbs[i].id == id) {
-      f = this.cbs[i];
-      fi = i;
-    }
-  }
-
-  if (!f) {
-    return null;
-  }
-
-  this.cbs.splice(fi, 1);
-  return f;
+Emulator.prototype.command = function(cmd, resCb, errCb) {
+  assertDefined(cmd, "runEmulatorCmd");
+  this.sendToEmulator(
+      "runEmulatorCmd", {emulator_cmd: cmd}, resCb, errCb);
 };
 
 /**
- * Pushes callback on to the stack.
+ * Instruct the client to execute Android emulator shell arguments.
  *
- * @param {function(Object)} cb
- *     Callback function that takes an emulator response message as
- *     an argument.
+ * @param {Array.<string>} args
+ *     The shell instruction for the emulator to execute.
+ * @param {function(?)} resCb
+ *     Callback on a result response from the emulator.
+ * @param {function(?)} errCb
+ *     Callback on an error in executing the shell arguments.
  */
-Emulator.prototype.pushCallback = function(cb) {
-  cb.send_ = this.sendFn;
-  this.cbs.push(cb);
+Emulator.prototype.shell = function(args, resCb, errCb) {
+  assertDefined(args, "runEmulatorShell");
+  this.sendToEmulator(
+      "runEmulatorShell", {emulator_shell: args}, resCb, errCb);
 };
 
-/**
- * Encapsulates a callback to the emulator and provides an execution
- * environment for them.
- *
- * Each callback is assigned a unique identifier, id, that can be used
- * to retrieve them from Emulator's stack using popCallback.
- *
- * The onresult event listener is triggered when a result arrives on
- * the callback.
- *
- * The onerror event listener is triggered when an error occurs during
- * the execution of that callback.
- */
-this.EmulatorCallback = function() {
-  this.id = uuidGen.generateUUID().toString();
-  this.onresult = null;
-  this.onerror = null;
-  this.send_ = null;
-};
+Emulator.prototype.processMessage = function(msg) {
+  let resCb = this.resultCallback(msg.json.id);
+  let errCb = this.errorCallback(msg.json.id);
 
-EmulatorCallback.prototype.command = function(cmd, cb) {
-  this.onresult = cb;
-  this.send_({emulator_cmd: cmd, id: this.id});
-};
+  switch (msg.name) {
+    case "Marionette:runEmulatorCmd":
+      this.command(msg.json.command, resCb, errCb);
+      break;
 
-EmulatorCallback.prototype.shell = function(args, cb) {
-  this.onresult = cb;
-  this.send_({emulator_shell: args, id: this.id});
-};
-
-EmulatorCallback.prototype.result = function(msg) {
-  if (this.send_ === null) {
-    throw new TypeError(
-      "EmulatorCallback must be registered with Emulator to fire");
+    case "Marionette:runEmulatorShell":
+      this.shell(msg.json.arguments, resCb, errCb);
+      break;
   }
+};
 
+Emulator.prototype.resultCallback = function(msgId) {
+  return res => this.sendResult({result: res, id: msgId});
+};
+
+Emulator.prototype.errorCallback = function(msgId) {
+  return err => this.sendResult({error: err, id: msgId});
+};
+
+Emulator.prototype.sendResult = function(msg) {
+  // sendToListener set explicitly in GeckoDriver's ctor
+  this.sendToListener("emulatorCmdResult", msg);
+};
+
+/** Receives IPC messages from the listener. */
+Emulator.prototype.receiveMessage = function(msg) {
   try {
-    if (!this.onresult) {
-      return;
-    }
-    this.onresult(msg.result);
+    this.processMessage(msg);
   } catch (e) {
-    if (this.onerror) {
-      this.onerror(e);
-    }
+    this.sendResult({error: `${e.name}: ${e.message}`, id: msg.json.id});
   }
 };
+
+Emulator.prototype.QueryInterface = XPCOMUtils.generateQI(
+    [Ci.nsIMessageListener, Ci.nsISupportsWeakReference]);
+
+function assertDefined(arg, action) {
+  if (typeof arg == "undefined") {
+    throw new TypeError("Not enough arguments to " + action);
+  }
+}

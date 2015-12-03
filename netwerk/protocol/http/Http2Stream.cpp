@@ -80,7 +80,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   mServerReceiveWindow = session->GetServerInitialStreamWindow();
   mClientReceiveWindow = session->PushAllowance();
 
-  mTxInlineFrame = new uint8_t[mTxInlineFrameSize];
+  mTxInlineFrame = MakeUnique<uint8_t[]>(mTxInlineFrameSize);
 
   PR_STATIC_ASSERT(nsISupportsPriority::PRIORITY_LOWEST <= kNormalPriority);
 
@@ -858,8 +858,7 @@ Http2Stream::TransmitFrame(const char *buf,
       mTxStreamFrameSize < Http2Session::kDefaultBufferSize &&
       mTxInlineFrameUsed + mTxStreamFrameSize < mTxInlineFrameSize) {
     LOG3(("Coalesce Transmit"));
-    memcpy (mTxInlineFrame + mTxInlineFrameUsed,
-            buf, mTxStreamFrameSize);
+    memcpy (&mTxInlineFrame[mTxInlineFrameUsed], buf, mTxStreamFrameSize);
     if (countUsed)
       *countUsed += mTxStreamFrameSize;
     mTxInlineFrameUsed += mTxStreamFrameSize;

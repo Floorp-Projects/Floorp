@@ -546,6 +546,16 @@ Element::GetClassList(nsISupports** aClassList)
   NS_ADDREF(*aClassList = ClassList());
 }
 
+void
+Element::GetAttributeNames(nsTArray<nsString>& aResult)
+{
+  uint32_t count = mAttrsAndChildren.AttrCount();
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
+    name->GetQualifiedName(*aResult.AppendElement());
+  }
+}
+
 already_AddRefed<nsIHTMLCollection>
 Element::GetElementsByTagName(const nsAString& aLocalName)
 {

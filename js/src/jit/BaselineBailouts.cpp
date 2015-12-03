@@ -1895,6 +1895,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
       case Bailout_NonSymbolInput:
       case Bailout_NonSimdInt32x4Input:
       case Bailout_NonSimdFloat32x4Input:
+      case Bailout_NonSharedTypedArrayInput:
       case Bailout_InitialState:
       case Bailout_Debugger:
       case Bailout_UninitializedThis:

@@ -975,9 +975,9 @@ MacroAssemblerMIPS64Compat::movePtr(ImmPtr imm, Register dest)
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 void
-MacroAssemblerMIPS64Compat::movePtr(AsmJSImmPtr imm, Register dest)
+MacroAssemblerMIPS64Compat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
-    append(AsmJSAbsoluteLink(CodeOffset(nextOffset().getOffset()), imm.kind()));
+    append(AsmJSAbsoluteLink(CodeOffset(nextOffset().getOffset()), imm));
     ma_liPatchable(dest, ImmWord(-1));
 }
 
@@ -1049,9 +1049,9 @@ MacroAssemblerMIPS64Compat::load32(AbsoluteAddress address, Register dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::load32(AsmJSAbsoluteAddress address, Register dest)
+MacroAssemblerMIPS64Compat::load32(wasm::SymbolicAddress address, Register dest)
 {
-    movePtr(AsmJSImmPtr(address.kind()), ScratchRegister);
+    movePtr(address, ScratchRegister);
     load32(Address(ScratchRegister, 0), dest);
 }
 
@@ -1075,9 +1075,9 @@ MacroAssemblerMIPS64Compat::loadPtr(AbsoluteAddress address, Register dest)
 }
 
 void
-MacroAssemblerMIPS64Compat::loadPtr(AsmJSAbsoluteAddress address, Register dest)
+MacroAssemblerMIPS64Compat::loadPtr(wasm::SymbolicAddress address, Register dest)
 {
-    movePtr(AsmJSImmPtr(address.kind()), ScratchRegister);
+    movePtr(address, ScratchRegister);
     loadPtr(Address(ScratchRegister, 0), dest);
 }
 

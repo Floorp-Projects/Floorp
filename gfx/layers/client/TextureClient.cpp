@@ -10,9 +10,11 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Atomics.h"
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
+#include "mozilla/layers/AsyncTransactionTracker.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
@@ -27,6 +29,7 @@
 #include "gfxUtils.h"                   // for gfxUtils::GetAsLZ4Base64Str
 #include "IPDLActor.h"
 #include "BufferTexture.h"
+#include "gfxPrefs.h"
 
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
@@ -711,7 +714,8 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
 #ifdef XP_WIN
   if (parentBackend == LayersBackend::LAYERS_D3D11 &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
-       moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
+       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
+       !!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize)
   {

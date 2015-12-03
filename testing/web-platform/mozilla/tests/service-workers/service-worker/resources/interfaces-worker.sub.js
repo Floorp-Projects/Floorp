@@ -84,11 +84,17 @@ test(function() {
       new FetchEvent('FetchEvent').bubbles,
       false, 'Default FetchEvent.bubbles should be false');
     assert_equals(
+      new FetchEvent('FetchEvent').clientId,
+      null, 'Default FetchEvent.clientId should be null');
+    assert_equals(
       new FetchEvent('FetchEvent').isReload,
       false, 'Default FetchEvent.isReload should be false');
     assert_equals(
       new FetchEvent('FetchEvent', {cancelable: false}).cancelable,
       false, 'FetchEvent.cancelable should be false');
+    assert_equals(
+      new FetchEvent('FetchEvent', {clientId : 'test-client-id'}).clientId, 'test-client-id',
+      'FetchEvent.clientId with option {clientId : "test-client-id"} should be "test-client-id"');
     assert_equals(
       new FetchEvent('FetchEvent', {isReload : true}).isReload, true,
       'FetchEvent.isReload with option {isReload : true} should be true');

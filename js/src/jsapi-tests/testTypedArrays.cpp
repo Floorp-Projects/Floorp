@@ -36,8 +36,10 @@ BEGIN_TEST(testTypedArrays)
 
     {
         JS::AutoCheckCannotGC nogc;
+        bool isShared;
         CHECK_EQUAL(JS_GetArrayBufferByteLength(buffer), nbytes);
-        memset(JS_GetArrayBufferData(buffer, nogc), 1, nbytes);
+        memset(JS_GetArrayBufferData(buffer, &isShared, nogc), 1, nbytes);
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
     }
 
     ok = ok &&
@@ -56,7 +58,7 @@ BEGIN_TEST(testTypedArrays)
 
 template<JSObject* Create(JSContext*, uint32_t),
          typename Element,
-         Element* GetData(JSObject*, const JS::AutoCheckCannotGC&)>
+         Element* GetData(JSObject*, bool* isShared, const JS::AutoCheckCannotGC&)>
 bool
 TestPlainTypedArray(JSContext* cx)
 {
@@ -78,7 +80,9 @@ TestPlainTypedArray(JSContext* cx)
     {
         JS::AutoCheckCannotGC nogc;
         Element* data;
-        CHECK(data = GetData(array, nogc));
+        bool isShared;
+        CHECK(data = GetData(array, &isShared, nogc));
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         *data = 13;
     }
     RootedValue v(cx);
@@ -91,7 +95,7 @@ TestPlainTypedArray(JSContext* cx)
 template<JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, uint32_t, int32_t),
          JSObject* CreateFromArray(JSContext*, JS::HandleObject),
          typename Element,
-         Element* GetData(JSObject*, const JS::AutoCheckCannotGC&)>
+         Element* GetData(JSObject*, bool*, const JS::AutoCheckCannotGC&)>
 bool
 TestArrayFromBuffer(JSContext* cx)
 {
@@ -100,7 +104,9 @@ TestArrayFromBuffer(JSContext* cx)
     RootedObject buffer(cx, JS_NewArrayBuffer(cx, nbytes));
     {
         JS::AutoCheckCannotGC nogc;
-        memset(JS_GetArrayBufferData(buffer, nogc), 1, nbytes);
+        bool isShared;
+        memset(JS_GetArrayBufferData(buffer, &isShared, nogc), 1, nbytes);
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
     }
 
     {
@@ -112,15 +118,21 @@ TestArrayFromBuffer(JSContext* cx)
     CHECK_EQUAL(JS_GetTypedArrayLength(array), elts);
     CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(array), nbytes);
-    CHECK_EQUAL(JS_GetArrayBufferViewBuffer(cx, array), (JSObject*) buffer);
+    {
+        bool isShared;
+        CHECK_EQUAL(JS_GetArrayBufferViewBuffer(cx, array, &isShared), (JSObject*) buffer);
+    }
 
     {
         JS::AutoCheckCannotGC nogc;
         Element* data;
-        CHECK(data = GetData(array, nogc));
-        CHECK_EQUAL((void*) data, (void*) JS_GetArrayBufferData(buffer, nogc));
+        bool isShared;
+        CHECK(data = GetData(array, &isShared, nogc));
+        CHECK_EQUAL((void*) data, (void*) JS_GetArrayBufferData(buffer, &isShared, nogc));
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
 
-        CHECK_EQUAL(*reinterpret_cast<uint8_t*>(JS_GetArrayBufferData(buffer, nogc)), 1u);
+        CHECK_EQUAL(*reinterpret_cast<uint8_t*>(JS_GetArrayBufferData(buffer, &isShared, nogc)), 1u);
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         CHECK_EQUAL(*reinterpret_cast<uint8_t*>(data), 1u);
     }
 
@@ -145,7 +157,9 @@ TestArrayFromBuffer(JSContext* cx)
     {
         JS::AutoCheckCannotGC nogc;
         Element* data;
-        CHECK(data = GetData(array, nogc));
+        bool isShared;
+        CHECK(data = GetData(array, &isShared, nogc));
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[0]));
     }
 
@@ -158,7 +172,9 @@ TestArrayFromBuffer(JSContext* cx)
     {
         JS::AutoCheckCannotGC nogc;
         Element* data;
-        CHECK(data = GetData(array, nogc));
+        bool isShared;
+        CHECK(data = GetData(array, &isShared, nogc));
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[elts / 2]));
     }
 
@@ -171,7 +187,9 @@ TestArrayFromBuffer(JSContext* cx)
     {
         JS::AutoCheckCannotGC nogc;
         Element* data;
-        CHECK(data = GetData(array, nogc));
+        bool isShared;
+        CHECK(data = GetData(array, &isShared, nogc));
+        MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[elts - 1]));
     }
 

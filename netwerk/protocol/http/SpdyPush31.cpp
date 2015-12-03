@@ -183,7 +183,7 @@ SpdyPush31TransactionBuffer::SpdyPush31TransactionBuffer()
   , mBufferedHTTP1Used(0)
   , mBufferedHTTP1Consumed(0)
 {
-  mBufferedHTTP1 = new char[mBufferedHTTP1Size];
+  mBufferedHTTP1 = MakeUnique<char[]>(mBufferedHTTP1Size);
 }
 
 SpdyPush31TransactionBuffer::~SpdyPush31TransactionBuffer()
@@ -274,7 +274,7 @@ SpdyPush31TransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
   }
 
   count = std::min(count, mBufferedHTTP1Size - mBufferedHTTP1Used);
-  nsresult rv = writer->OnWriteSegment(mBufferedHTTP1 + mBufferedHTTP1Used,
+  nsresult rv = writer->OnWriteSegment(&mBufferedHTTP1[mBufferedHTTP1Used],
                                        count, countWritten);
   if (NS_SUCCEEDED(rv)) {
     mBufferedHTTP1Used += *countWritten;
@@ -361,7 +361,7 @@ SpdyPush31TransactionBuffer::GetBufferedData(char *buf,
 {
   *countWritten = std::min(count, static_cast<uint32_t>(Available()));
   if (*countWritten) {
-    memcpy(buf, mBufferedHTTP1 + mBufferedHTTP1Consumed, *countWritten);
+    memcpy(buf, &mBufferedHTTP1[mBufferedHTTP1Consumed], *countWritten);
     mBufferedHTTP1Consumed += *countWritten;
   }
 

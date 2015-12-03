@@ -279,7 +279,7 @@ public:
    * Handler for events which should not be intercepted by the touch listener.
    */
   nsEventStatus HandleInputEvent(const InputData& aEvent,
-                                 const Matrix4x4& aTransformToApzc);
+                                 const ScreenToParentLayerMatrix4x4& aTransformToApzc);
 
   /**
    * Handler for gesture events.
@@ -355,7 +355,7 @@ public:
    * To respect the lock ordering, mMonitor must NOT be held when calling
    * this function (since this function acquires the tree lock).
    */
-  Matrix4x4 GetTransformToThis() const;
+  ScreenToParentLayerMatrix4x4 GetTransformToThis() const;
 
   /**
    * Convert the vector |aVector|, rooted at the point |aAnchor|, from

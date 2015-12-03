@@ -19,9 +19,6 @@
 #endif
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
 
 namespace layers {
 

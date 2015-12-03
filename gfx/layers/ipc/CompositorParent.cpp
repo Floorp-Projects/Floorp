@@ -1850,10 +1850,9 @@ void
 CompositorParent::DidComposite(TimeStamp& aCompositeStart,
                                TimeStamp& aCompositeEnd)
 {
-  if (mPendingTransaction) {
-    Unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
-    mPendingTransaction = 0;
-  }
+  Unused << SendDidComposite(0, mPendingTransaction, aCompositeStart, aCompositeEnd);
+  mPendingTransaction = 0;
+
   if (mLayerManager) {
     nsTArray<ImageCompositeNotification> notifications;
     mLayerManager->ExtractImageCompositeNotifications(&notifications);
@@ -2175,8 +2174,7 @@ CrossProcessCompositorParent::DidComposite(uint64_t aId,
                                            TimeStamp& aCompositeEnd)
 {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
-  LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree;
-  if (layerTree && layerTree->GetPendingTransactionId()) {
+  if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
     Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
   }

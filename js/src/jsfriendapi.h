@@ -1590,25 +1590,6 @@ JS_NewFloat32Array(JSContext* cx, uint32_t nelements);
 extern JS_FRIEND_API(JSObject*)
 JS_NewFloat64Array(JSContext* cx, uint32_t nelements);
 
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt8Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint8Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint8ClampedArray(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt16Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint16Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt32Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint32Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedFloat32Array(JSContext* cx, uint32_t nelements);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedFloat64Array(JSContext* cx, uint32_t nelements);
-
 /*
  * Create a new typed array and copy in values from the given object. The
  * object is used as if it were an array; that is, the new array (if
@@ -1637,9 +1618,10 @@ extern JS_FRIEND_API(JSObject*)
 JS_NewFloat64ArrayFromArray(JSContext* cx, JS::HandleObject array);
 
 /*
- * Create a new typed array using the given ArrayBuffer for storage.  The
- * length value is optional; if -1 is passed, enough elements to use up the
- * remainder of the byte array is used as the default value.
+ * Create a new typed array using the given ArrayBuffer or
+ * SharedArrayBuffer for storage.  The length value is optional; if -1
+ * is passed, enough elements to use up the remainder of the byte
+ * array is used as the default value.
  */
 
 extern JS_FRIEND_API(JSObject*)
@@ -1670,37 +1652,6 @@ extern JS_FRIEND_API(JSObject*)
 JS_NewFloat64ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
                              uint32_t byteOffset, int32_t length);
 
-// As for the above, passing length==(uint32_t)-1 signifies "up to the
-// end of the buffer".
-
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt8ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint8ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                 uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint8ClampedArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                        uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt16ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                 uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint16ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                  uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedInt32ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                 uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedUint32ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                  uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedFloat32ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                   uint32_t byteOffset, uint32_t length);
-extern JS_FRIEND_API(JSObject*)
-JS_NewSharedFloat64ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
-                                   uint32_t byteOffset, uint32_t length);
-
 /**
  * Create a new SharedArrayBuffer with the given byte length.
  */
@@ -1721,12 +1672,6 @@ JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes);
  */
 extern JS_FRIEND_API(bool)
 JS_IsTypedArrayObject(JSObject* obj);
-
-/**
- * Ditto for JS_GetSharedTypedArray* APIs.
- */
-extern JS_FRIEND_API(bool)
-JS_IsSharedTypedArrayObject(JSObject* obj);
 
 /**
  * Check whether obj supports JS_GetArrayBufferView* APIs. Note that this may
@@ -1761,24 +1706,16 @@ JS_IsFloat32Array(JSObject* obj);
 extern JS_FRIEND_API(bool)
 JS_IsFloat64Array(JSObject* obj);
 
+/**
+ * Return the isShared flag of a typed array, which denotes whether
+ * the underlying buffer is a SharedArrayBuffer.
+ *
+ * |obj| must have passed a JS_IsTypedArrayObject/JS_Is*Array test, or somehow
+ * be known that it would pass such a test: it is a typed array or a wrapper of
+ * a typed array, and the unwrapping will succeed.
+ */
 extern JS_FRIEND_API(bool)
-JS_IsSharedInt8Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedUint8Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedUint8ClampedArray(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedInt16Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedUint16Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedInt32Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedUint32Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedFloat32Array(JSObject* obj);
-extern JS_FRIEND_API(bool)
-JS_IsSharedFloat64Array(JSObject* obj);
+JS_GetTypedArraySharedness(JSObject* obj);
 
 /*
  * Test for specific typed array types (ArrayBufferView subtypes) and return
@@ -1813,29 +1750,7 @@ extern JS_FRIEND_API(JSObject*)
 UnwrapArrayBufferView(JSObject* obj);
 
 extern JS_FRIEND_API(JSObject*)
-UnwrapSharedInt8Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedUint8Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedUint8ClampedArray(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedInt16Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedUint16Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedInt32Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedUint32Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedFloat32Array(JSObject* obj);
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedFloat64Array(JSObject* obj);
-
-extern JS_FRIEND_API(JSObject*)
 UnwrapSharedArrayBuffer(JSObject* obj);
-
-extern JS_FRIEND_API(JSObject*)
-UnwrapSharedArrayBufferView(JSObject* obj);
 
 
 namespace detail {
@@ -1850,32 +1765,18 @@ extern JS_FRIEND_DATA(const Class* const) Uint32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float64ArrayClassPtr;
 
-extern JS_FRIEND_DATA(const Class* const) SharedInt8ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedUint8ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedUint8ClampedArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedInt16ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedUint16ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedInt32ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedUint32ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedFloat32ArrayClassPtr;
-extern JS_FRIEND_DATA(const Class* const) SharedFloat64ArrayClassPtr;
-
 const size_t TypedArrayLengthSlot = 1;
 
 } // namespace detail
 
-/*
- * Test for specific typed array types (ArrayBufferView subtypes) and return
- * the unwrapped object if so, else nullptr.  Never throws.
- */
-
 #define JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Type, type) \
 inline void \
-Get ## Type ## ArrayLengthAndData(JSObject* obj, uint32_t* length, type** data) \
+Get ## Type ## ArrayLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, type** data) \
 { \
     MOZ_ASSERT(GetObjectClass(obj) == detail::Type ## ArrayClassPtr); \
-    const JS::Value& slot = GetReservedSlot(obj, detail::TypedArrayLengthSlot); \
-    *length = mozilla::AssertedCast<uint32_t>(slot.toInt32()); \
+    const JS::Value& lenSlot = GetReservedSlot(obj, detail::TypedArrayLengthSlot); \
+    *length = mozilla::AssertedCast<uint32_t>(lenSlot.toInt32()); \
+    *isSharedMemory = JS_GetTypedArraySharedness(obj); \
     *data = static_cast<type*>(GetObjectPrivate(obj)); \
 }
 
@@ -1889,35 +1790,32 @@ JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Uint32, uint32_t)
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float32, float)
 JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(Float64, double)
 
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedInt8, int8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedUint8, uint8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedUint8Clamped, uint8_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedInt16, int16_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedUint16, uint16_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedInt32, int32_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedUint32, uint32_t)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedFloat32, float)
-JS_DEFINE_DATA_AND_LENGTH_ACCESSOR(SharedFloat64, double)
-
 #undef JS_DEFINE_DATA_AND_LENGTH_ACCESSOR
 
 // This one isn't inlined because it's rather tricky (by dint of having to deal
 // with a dozen-plus classes and varying slot layouts.
 extern JS_FRIEND_API(void)
-GetArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data);
-
-extern JS_FRIEND_API(void)
-GetSharedArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data);
+GetArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
 
 // This one isn't inlined because there are a bunch of different ArrayBuffer
 // classes that would have to be individually handled here.
+//
+// There is an isShared out argument for API consistency (eases use from DOM).
+// It will always be set to false.
 extern JS_FRIEND_API(void)
-GetArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data);
+GetArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
 
+// Ditto for SharedArrayBuffer.
+//
+// There is an isShared out argument for API consistency (eases use from DOM).
+// It will always be set to true.
 extern JS_FRIEND_API(void)
-GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data);
+GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
 
 } // namespace js
+
+JS_FRIEND_API(uint8_t*)
+JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /*
  * Unwrap Typed arrays all at once. Return nullptr without throwing if the
@@ -1925,25 +1823,29 @@ GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t** dat
  * object on success, filling both outparameters.
  */
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsInt8Array(JSObject* obj, uint32_t* length, int8_t** data);
+JS_GetObjectAsInt8Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, int8_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsUint8Array(JSObject* obj, uint32_t* length, uint8_t** data);
+JS_GetObjectAsUint8Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsUint8ClampedArray(JSObject* obj, uint32_t* length, uint8_t** data);
+JS_GetObjectAsUint8ClampedArray(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsInt16Array(JSObject* obj, uint32_t* length, int16_t** data);
+JS_GetObjectAsInt16Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, int16_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsUint16Array(JSObject* obj, uint32_t* length, uint16_t** data);
+JS_GetObjectAsUint16Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint16_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsInt32Array(JSObject* obj, uint32_t* length, int32_t** data);
+JS_GetObjectAsInt32Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, int32_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsUint32Array(JSObject* obj, uint32_t* length, uint32_t** data);
+JS_GetObjectAsUint32Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint32_t** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsFloat32Array(JSObject* obj, uint32_t* length, float** data);
+JS_GetObjectAsFloat32Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, float** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsFloat64Array(JSObject* obj, uint32_t* length, double** data);
+JS_GetObjectAsFloat64Array(JSObject* obj, uint32_t* length, bool* isSharedMemory, double** data);
 extern JS_FRIEND_API(JSObject*)
-JS_GetObjectAsArrayBufferView(JSObject* obj, uint32_t* length, uint8_t** data);
+JS_GetObjectAsArrayBufferView(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data);
+
+/*
+ * Unwrap an ArrayBuffer, return nullptr if it's a different type.
+ */
 extern JS_FRIEND_API(JSObject*)
 JS_GetObjectAsArrayBuffer(JSObject* obj, uint32_t* length, uint8_t** data);
 
@@ -1982,6 +1884,9 @@ JS_IsSharedArrayBufferObject(JSObject* obj);
 extern JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject* obj);
 
+extern JS_FRIEND_API(uint32_t)
+JS_GetSharedArrayBufferByteLength(JSObject* obj);
+
 /**
  * Return true if the arrayBuffer contains any data. This will return false for
  * ArrayBuffer.prototype and neutered ArrayBuffers.
@@ -1992,6 +1897,23 @@ JS_GetArrayBufferByteLength(JSObject* obj);
  */
 extern JS_FRIEND_API(bool)
 JS_ArrayBufferHasData(JSObject* obj);
+
+/**
+ * Return a pointer to the start of the data referenced by a typed array. The
+ * data is still owned by the typed array, and should not be modified on
+ * another thread. Furthermore, the pointer can become invalid on GC (if the
+ * data is small and fits inside the array's GC header), so callers must take
+ * care not to hold on across anything that could GC.
+ *
+ * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
+ * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
+ * ArrayBuffer, and the unwrapping will succeed.
+ *
+ * *isSharedMemory will be set to false, the argument is present to simplify
+ * its use from code that also interacts with SharedArrayBuffer.
+ */
+extern JS_FRIEND_API(uint8_t*)
+JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
  * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
@@ -2056,64 +1978,45 @@ JS_GetArrayBufferViewByteLength(JSObject* obj);
  * |obj| must have passed a JS_Is*Array test, or somehow be known that it would
  * pass such a test: it is a typed array or a wrapper of a typed array, and the
  * unwrapping will succeed.
+ *
+ * *isSharedMemory will be set to true if the typed array maps a
+ * SharedArrayBuffer, otherwise to false.
  */
 
-extern JS_FRIEND_API(uint8_t*)
-JS_GetArrayBufferData(JSObject* obj, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int8_t*)
-JS_GetInt8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetInt8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t*)
-JS_GetUint8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetUint8ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint8_t*)
-JS_GetUint8ClampedArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetUint8ClampedArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int16_t*)
-JS_GetInt16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetInt16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint16_t*)
-JS_GetUint16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetUint16ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(int32_t*)
-JS_GetInt32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetInt32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(uint32_t*)
-JS_GetUint32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetUint32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(float*)
-JS_GetFloat32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetFloat32ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 extern JS_FRIEND_API(double*)
-JS_GetFloat64ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-
-extern JS_FRIEND_API(uint8_t*)
-JS_GetSharedArrayBufferData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(int8_t*)
-JS_GetSharedInt8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(uint8_t*)
-JS_GetSharedUint8ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(uint8_t*)
-JS_GetSharedUint8ClampedArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(int16_t*)
-JS_GetSharedInt16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(uint16_t*)
-JS_GetSharedUint16ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(int32_t*)
-JS_GetSharedInt32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(uint32_t*)
-JS_GetSharedUint32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(float*)
-JS_GetSharedFloat32ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
-extern JS_FRIEND_API(double*)
-JS_GetSharedFloat64ArrayData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetFloat64ArrayData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
  * Same as above, but for any kind of ArrayBufferView. Prefer the type-specific
  * versions when possible.
  */
 extern JS_FRIEND_API(void*)
-JS_GetArrayBufferViewData(JSObject* obj, const JS::AutoCheckCannotGC&);
+JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&);
 
 /**
- * Return the ArrayBuffer underlying an ArrayBufferView. If the buffer has been
- * neutered, this will still return the neutered buffer. |obj| must be an
- * object that would return true for JS_IsArrayBufferViewObject().
+ * Return the ArrayBuffer or SharedArrayBuffer underlying an
+ * ArrayBufferView. If the buffer has been neutered, this will still
+ * return the neutered buffer. |obj| must be an object that would
+ * return true for JS_IsArrayBufferViewObject().
  */
 extern JS_FRIEND_API(JSObject*)
-JS_GetArrayBufferViewBuffer(JSContext* cx, JS::HandleObject obj);
+JS_GetArrayBufferViewBuffer(JSContext* cx, JS::HandleObject obj, bool* isSharedMemory);
 
 typedef enum {
     ChangeData,

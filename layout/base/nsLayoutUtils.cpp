@@ -890,10 +890,11 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     // Turns out we can't really compute it. Oops. We still should return
-    // something sane. Note that although we can apply the multiplier on the
-    // base rect here, we can't tile-align or clamp the rect without a frame.
+    // something sane. Note that since we can't clamp the rect without a
+    // frame, we don't apply the multiplier either as it can cause the result
+    // to leak outside the scrollable area.
     NS_WARNING("Attempting to get a displayport from a content with no primary frame!");
-    return ApplyRectMultiplier(base, aMultiplier);
+    return base;
   }
 
   bool isRoot = false;
@@ -903,7 +904,7 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
     if (!frame) {
       // If there is no root scrollframe, just exit.
-      return ApplyRectMultiplier(base, aMultiplier);
+      return base;
     }
 
     isRoot = true;
@@ -3438,11 +3439,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       nsRegion opaqueRegion;
       opaqueRegion.And(builder.GetWindowExcludeGlassRegion(), builder.GetWindowOpaqueRegion());
       widget->UpdateOpaqueRegion(
-        opaqueRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+        LayoutDeviceIntRegion::FromUnknownRegion(
+          opaqueRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel())));
 
-      const nsIntRegion& draggingRegion =
-        builder.GetWindowDraggingRegion().ToUnknownRegion();
-      widget->UpdateWindowDraggingRegion(draggingRegion);
+      widget->UpdateWindowDraggingRegion(builder.GetWindowDraggingRegion());
     }
   }
 

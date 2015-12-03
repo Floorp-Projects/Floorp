@@ -9,7 +9,6 @@
 
   skin/classic/browser/aboutCertError.css                      (../shared/aboutCertError.css)
   skin/classic/browser/aboutNetError.css                       (../shared/aboutNetError.css)
-  skin/classic/browser/aboutNetError_alert.svg                 (../shared/aboutNetError_alert.svg)
 * skin/classic/browser/aboutProviderDirectory.css              (../shared/aboutProviderDirectory.css)
 * skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutSocialError.css                    (../shared/aboutSocialError.css)

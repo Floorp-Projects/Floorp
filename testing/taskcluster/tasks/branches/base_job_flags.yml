@@ -109,7 +109,7 @@ flags:
     - mochitest
     - mochitest-media
     - mochitest-oop
-    - mochitest-webgl
+    #- mochitest-webgl -- disabled per bug 1227637 / bug 1220658
     - mozmill
     - reftest
     - reftest-ipc

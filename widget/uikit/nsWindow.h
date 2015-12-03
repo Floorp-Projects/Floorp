@@ -30,10 +30,10 @@ public:
     // nsIWidget
     //
 
-    NS_IMETHOD Create(nsIWidget *aParent,
+    NS_IMETHOD Create(nsIWidget* aParent,
                       nsNativeWidget aNativeParent,
-                      const nsIntRect &aRect,
-                      nsWidgetInitData *aInitData = nullptr) override;
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData = nullptr) override;
     NS_IMETHOD Destroy() override;
     NS_IMETHOD Show(bool aState) override;
     NS_IMETHOD              Enable(bool aState) override {
@@ -81,7 +81,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD Invalidate(const nsIntRect &aRect) override;
+    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;

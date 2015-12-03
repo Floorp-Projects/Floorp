@@ -115,6 +115,7 @@ class CompileCompartment
     CompileRuntime* runtime();
 
     const void* addressOfEnumerators();
+    const void* addressOfRandomNumberGenerator();
 
     const JitCompartment* jitCompartment();
 

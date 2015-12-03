@@ -599,7 +599,7 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const AsmJSHeapAccess* heapAccess, const AsmJSModule& module)
+                  const HeapAccess* heapAccess, const AsmJSModule& module)
 {
     MOZ_RELEASE_ASSERT(module.containsFunctionPC(pc));
     MOZ_RELEASE_ASSERT(module.usesSignalHandlersForOOB());
@@ -785,7 +785,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     }
 
-    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -915,7 +915,7 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
         return false;
     }
 
-    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -1125,7 +1125,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     }
 
-    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 

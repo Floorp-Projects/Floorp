@@ -114,7 +114,7 @@ var handleContentContextMenu = function (event) {
   // the document wide referrer
   if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer")) {
     let referrerAttrValue = Services.netUtils.parseAttributePolicyString(event.target.
-                            getAttribute("referrer"));
+                            getAttribute("referrerpolicy"));
     if (referrerAttrValue !== Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT) {
       referrerPolicy = referrerAttrValue;
     }
@@ -389,7 +389,7 @@ var ClickEventHandler = {
     if (Services.prefs.getBoolPref("network.http.enablePerElementReferrer") &&
         node) {
       let referrerAttrValue = Services.netUtils.parseAttributePolicyString(node.
-                              getAttribute("referrer"));
+                              getAttribute("referrerpolicy"));
       if (referrerAttrValue !== Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT) {
         referrerPolicy = referrerAttrValue;
       }
@@ -473,6 +473,10 @@ var ClickEventHandler = {
 
   onAboutNetError: function (event, documentURI) {
     let elmId = event.originalTarget.getAttribute("id");
+    if (elmId == "returnButton") {
+      sendAsyncMessage("Browser:SSLErrorGoBack", {});
+      return;
+    }
     if (elmId != "errorTryAgain" || !/e=netOffline/.test(documentURI)) {
       return;
     }

@@ -243,6 +243,14 @@ IntRectTyped<units> RoundedOut(const RectTyped<units>& aRect)
 }
 
 template<class units>
+IntRectTyped<units> TruncatedToInt(const RectTyped<units>& aRect) {
+  return IntRectTyped<units>(int32_t(aRect.x),
+                             int32_t(aRect.y),
+                             int32_t(aRect.width),
+                             int32_t(aRect.height));
+}
+
+template<class units>
 RectTyped<units> IntRectToRect(const IntRectTyped<units>& aRect)
 {
   return RectTyped<units>(aRect.x, aRect.y, aRect.width, aRect.height);

@@ -163,7 +163,11 @@ MozNDEFRecord::GetAsURI(nsAString& aRetVal)
   }
 
   JS::AutoCheckCannotGC nogc;
-  uint8_t* typeData = JS_GetUint8ArrayData(mType, nogc);
+  bool isShared = false;
+  uint8_t* typeData = JS_GetUint8ArrayData(mType, &isShared, nogc);
+  if (isShared) {
+    return;                     // Must opt in to shared memory
+  }
   const char* uVal = RTDValues::strings[static_cast<uint32_t>(RTD::U)].value;
   if (typeData[0] != uVal[0]) {
     return;
@@ -171,7 +175,10 @@ MozNDEFRecord::GetAsURI(nsAString& aRetVal)
 
   uint32_t payloadLen;
   uint8_t* payloadData;
-  js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &payloadData);
+  js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &isShared, &payloadData);
+  if (isShared) {
+    return;                     // Must opt in to shared memory
+  }
   uint8_t id = payloadData[0];
   if (id >= static_cast<uint8_t>(WellKnownURIPrefix::EndGuard_)) {
     return;
@@ -188,16 +195,26 @@ MozNDEFRecord::WriteStructuredClone(JSContext* aCx, JSStructuredCloneWriter* aWr
 {
   uint8_t* dummy;
   uint32_t typeLen = 0, idLen = 0, payloadLen = 0;
+  bool isShared;
   if (mType) {
-    js::GetUint8ArrayLengthAndData(mType, &typeLen, &dummy);
+    js::GetUint8ArrayLengthAndData(mType, &typeLen, &isShared, &dummy);
+    if (isShared) {
+      return false;             // Must opt in to shared memory
+    }
   }
 
   if (mId) {
-    js::GetUint8ArrayLengthAndData(mId, &idLen, &dummy);
+    js::GetUint8ArrayLengthAndData(mId, &idLen, &isShared, &dummy);
+    if (isShared) {
+      return false;             // Must opt in to shared memory
+    }
   }
 
   if (mPayload) {
-    js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &dummy);
+    js::GetUint8ArrayLengthAndData(mPayload, &payloadLen, &isShared, &dummy);
+    if (isShared) {
+      return false;             // Must opt in to shared memory
+    }
   }
 
   return JS_WriteUint32Pair(aWriter, static_cast<uint32_t>(mTnf), typeLen) &&
@@ -322,7 +339,9 @@ MozNDEFRecord::InitPayload(JSContext* aCx, const nsAString& aUri)
   mPayload = Uint8Array::Create(aCx, this, uri.Length() + 1);
 
   JS::AutoCheckCannotGC nogc;
-  uint8_t* data = JS_GetUint8ArrayData(mPayload, nogc);
+  bool isShared = false;
+  uint8_t* data = JS_GetUint8ArrayData(mPayload, &isShared, nogc);
+  MOZ_ASSERT(!isShared);         // Created as unshared above
   data[0] = id;
   memcpy(&data[1], reinterpret_cast<const uint8_t*>(uri.Data()), uri.Length());
   IncSizeForPayload(uri.Length() + 1);

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGIOService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
 #include "nsIStringEnumerator.h"
@@ -69,7 +69,7 @@ NS_IMETHODIMP
 nsGIOMimeApp::Launch(const nsACString& aUri)
 {
   GList uris = { 0 };
-  PromiseFlatCString flatUri(aUri);
+  nsPromiseFlatCString flatUri(aUri);
   uris.data = const_cast<char*>(flatUri.get());
 
   GError *error = nullptr;

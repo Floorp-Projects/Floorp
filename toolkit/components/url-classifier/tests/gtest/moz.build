@@ -9,6 +9,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    'TestChunkSet.cpp',
     'TestUrlClassifierUtils.cpp',
 ]
 

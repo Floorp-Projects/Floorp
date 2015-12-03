@@ -488,6 +488,9 @@ WebGLElementArrayCache::BufferSubData(size_t pos, const void* ptr,
     if (!updateByteLength)
         return true;
 
+    // Note, using memcpy on shared racy data is not well-defined, this
+    // will need to use safe-for-races operations when those become available.
+    // See bug 1225033.
     if (ptr)
         memcpy(mBytes.Elements() + pos, ptr, updateByteLength);
     else

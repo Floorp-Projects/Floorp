@@ -111,10 +111,8 @@ MP4Metadata::~MP4Metadata()
 }
 
 #ifdef MOZ_RUST_MP4PARSE
-#include "mp4parse.h"
-
 // Helper to test the rust parser on a data source.
-static bool try_rust(RefPtr<Stream> aSource)
+static bool try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource, int32_t* aCount)
 {
   static LazyLogModule sLog("MP4Metadata");
   int64_t length;
@@ -131,10 +129,8 @@ static bool try_rust(RefPtr<Stream> aSource)
     MOZ_LOG(sLog, LogLevel::Warning, ("Error copying mp4 data"));
     return false;
   }
-  auto context = mp4parse_new();
-  int32_t tracks = mp4parse_read(context, buffer.data(), bytes_read);
-  mp4parse_free(context);
-  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %d tracks", int(tracks)));
+  *aCount = mp4parse_read(aRustState.get(), buffer.data(), bytes_read);
+  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %d tracks", int(*aCount)));
   return true;
 }
 #endif
@@ -144,7 +140,9 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
 #ifdef MOZ_RUST_MP4PARSE
   // Try in rust first.
-  bool rust_mp4parse_success = try_rust(mSource);
+  mRustState.reset(mp4parse_new());
+  int32_t rust_tracks = 0;
+  bool rust_mp4parse_success = try_rust(mRustState, mSource, &rust_tracks);
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
                         rust_mp4parse_success);
 #endif
@@ -174,6 +172,35 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
         break;
     }
   }
+#ifdef MOZ_RUST_MP4PARSE
+  uint32_t rust_total = 0;
+  const char* rust_track_type = nullptr;
+  if (rust_mp4parse_success && rust_tracks > 0) {
+    for (int32_t i = 0; i < rust_tracks; ++i) {
+      mp4parse_track_info track_info;
+      int32_t r = mp4parse_get_track_info(mRustState.get(), i, &track_info);
+      switch (aType) {
+      case mozilla::TrackInfo::kAudioTrack:
+        rust_track_type = "audio";
+        if (r == 0 && track_info.track_type == MP4PARSE_TRACK_TYPE_AAC) {
+          rust_total += 1;
+        }
+        break;
+      case mozilla::TrackInfo::kVideoTrack:
+        rust_track_type = "video";
+        if (r == 0 && track_info.track_type == MP4PARSE_TRACK_TYPE_H264) {
+          rust_total += 1;
+        }
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  static LazyLogModule sLog("MP4Metadata");
+  MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=%u rust=%u",
+                                 rust_track_type, total, rust_total));
+#endif
   return total;
 }
 

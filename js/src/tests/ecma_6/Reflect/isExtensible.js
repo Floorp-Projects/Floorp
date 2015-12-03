@@ -14,6 +14,9 @@ var someObjects = [
     Object(Symbol("table")),
     new Proxy({}, {})
 ];
+if (typeof SharedArrayBuffer != "undefined")
+  someObjects.push(new Uint8Array(new SharedArrayBuffer(64)));
+
 for (var obj of someObjects) {
     assertEq(Reflect.isExtensible(obj), true);
     assertEq(Reflect.preventExtensions(obj), true);

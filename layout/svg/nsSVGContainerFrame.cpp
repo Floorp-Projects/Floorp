@@ -235,8 +235,9 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
     if ((transformList && transformList->HasTransform()) ||
         content->GetAnimateMotionTransform()) {
       if (aOwnTransform) {
-        *aOwnTransform = gfx::ToMatrix(content->PrependLocalTransformsTo(gfxMatrix(),
-                                    nsSVGElement::eUserSpaceToParent));
+        *aOwnTransform = gfx::ToMatrix(
+                           content->PrependLocalTransformsTo(
+                             gfxMatrix(), eUserSpaceToParent));
       }
       foundTransform = true;
     }
@@ -266,8 +267,7 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
   gfxMatrix matrix = aTransform;
   if (GetContent()->IsSVGElement()) { // must check before cast
     matrix = static_cast<const nsSVGElement*>(GetContent())->
-               PrependLocalTransformsTo(matrix,
-                                        nsSVGElement::eChildToUserSpace);
+               PrependLocalTransformsTo(matrix, eChildToUserSpace);
     if (matrix.IsSingular()) {
       return NS_OK;
     }
@@ -284,8 +284,7 @@ nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
       if (!element->HasValidDimensions()) {
         continue; // nothing to paint for kid
       }
-      m = element->
-            PrependLocalTransformsTo(m, nsSVGElement::eUserSpaceToParent);
+      m = element->PrependLocalTransformsTo(m, eUserSpaceToParent);
       if (m.IsSingular()) {
         continue;
       }

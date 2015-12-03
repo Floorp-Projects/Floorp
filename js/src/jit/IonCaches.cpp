@@ -37,7 +37,6 @@ using namespace js::jit;
 using mozilla::tl::FloorLog2;
 
 typedef Rooted<TypedArrayObject*> RootedTypedArrayObject;
-typedef Rooted<SharedTypedArrayObject*> RootedSharedTypedArrayObject;
 
 void
 CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)
@@ -1208,8 +1207,7 @@ GenerateUnboxedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAt
 // caches the stub code must distinguish between the two cases.
 static void
 GenerateTypedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
-                         const TypedArrayLayout& layout, Register object, TypedOrValueRegister output,
-                         Label* failures)
+                         Register object, TypedOrValueRegister output, Label* failures)
 {
     Register tmpReg;
     if (output.hasValue()) {
@@ -1222,14 +1220,14 @@ GenerateTypedArrayLength(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
 
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(object, tmpReg);
-    masm.branchPtr(Assembler::Below, tmpReg, ImmPtr(layout.addressOfFirstClass()),
+    masm.branchPtr(Assembler::Below, tmpReg, ImmPtr(&TypedArrayObject::classes[0]),
                    failures);
     masm.branchPtr(Assembler::AboveOrEqual, tmpReg,
-                   ImmPtr(layout.addressOfMaxClass()),
+                   ImmPtr(&TypedArrayObject::classes[Scalar::MaxTypedArrayViewType]),
                    failures);
 
     // Load length.
-    masm.loadTypedOrValue(Address(object, TypedArrayLayout::lengthOffset()), output);
+    masm.loadTypedOrValue(Address(object, TypedArrayObject::lengthOffset()), output);
 
     /* Success. */
     attacher.jumpRejoin(masm);
@@ -1624,7 +1622,7 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript
     if (!JSID_IS_ATOM(id, cx->names().length))
         return true;
 
-    if (hasAnyTypedArrayLengthStub(obj))
+    if (hasTypedArrayLengthStub(obj))
         return true;
 
     if (output().type() != MIRType_Value && output().type() != MIRType_Int32) {
@@ -1644,8 +1642,7 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript
     Label failures;
     emitIdGuard(masm, id, &failures);
 
-    GenerateTypedArrayLength(cx, masm, attacher, AnyTypedArrayLayout(obj), object(), output(),
-                             &failures);
+    GenerateTypedArrayLength(cx, masm, attacher, object(), output(), &failures);
 
     setHasTypedArrayLengthStub(obj);
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array length",
@@ -2039,6 +2036,93 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
                                  JS::TrackedOutcome::ICGetPropStub_ArgumentsLength);
 }
 
+static void
+GenerateReadModuleNamespace(JSContext* cx, IonScript* ion, MacroAssembler& masm,
+                            IonCache::StubAttacher& attacher, ModuleNamespaceObject* ns,
+                            ModuleEnvironmentObject* env, Shape* shape, Register object,
+                            TypedOrValueRegister output, Label* failures)
+{
+    MOZ_ASSERT(ns);
+    MOZ_ASSERT(env);
+
+    // If we have multiple failure jumps but didn't get a label from the
+    // outside, make one ourselves.
+    Label failures_;
+    if (!failures)
+        failures = &failures_;
+
+    // Check for the specific namespace object.
+    attacher.branchNextStubOrLabel(masm, Assembler::NotEqual, object, ImmGCPtr(ns), failures);
+
+    // If we need a scratch register, use either an output register or the
+    // object register.
+    bool restoreScratch = false;
+    Register scratchReg = InvalidReg; // Quell compiler warning.
+
+    if (output.hasValue()) {
+        scratchReg = output.valueReg().scratchReg();
+    } else if (output.type() == MIRType_Double) {
+        masm.push(object);
+        scratchReg = object;
+        restoreScratch = true;
+    } else {
+        scratchReg = output.typedReg().gpr();
+    }
+
+    // Slot access.
+    Register envReg = scratchReg;
+    masm.movePtr(ImmGCPtr(env), envReg);
+    EmitLoadSlot(masm, &env->as<NativeObject>(), shape, envReg, output, scratchReg);
+
+    // Restore scratch on success.
+    if (restoreScratch)
+        masm.pop(object);
+
+    attacher.jumpRejoin(masm);
+
+    masm.bind(failures);
+    attacher.jumpNextStub(masm);
+}
+
+bool
+GetPropertyIC::tryAttachModuleNamespace(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                        HandleObject obj, HandleId id, void* returnAddr,
+                                        bool* emitted)
+{
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+    MOZ_ASSERT(outerScript->ionScript() == ion);
+
+    if (!obj->is<ModuleNamespaceObject>())
+        return true;
+
+    Rooted<ModuleNamespaceObject*> ns(cx, &obj->as<ModuleNamespaceObject>());
+
+    RootedModuleEnvironmentObject env(cx);
+    RootedShape shape(cx);
+    if (!ns->bindings().lookup(id, env.address(), shape.address()))
+        return true;
+
+    // Don't emit a stub until the target binding has been initialized.
+    if (env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+        return true;
+
+    *emitted = true;
+
+    MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
+
+    StubAttacher attacher(*this);
+
+    Label failures;
+    emitIdGuard(masm, id, &failures);
+    Label* maybeFailures = failures.used() ? &failures : nullptr;
+
+    GenerateReadModuleNamespace(cx, ion, masm, attacher, ns, env,
+                                shape, object(), output(), maybeFailures);
+    return linkAndAttachStub(cx, masm, attacher, ion, "module namespace",
+                             JS::TrackedOutcome::ICGetPropStub_ReadSlot);
+}
+
 static bool
 ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id, bool* nameOrSymbol)
 {
@@ -2084,6 +2168,9 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
             return false;
 
         void* returnAddr = GetReturnAddressToIonCode(cx);
+
+        if (!*emitted && !tryAttachModuleNamespace(cx, outerScript, ion, obj, id, returnAddr, emitted))
+            return false;
 
         if (!*emitted && !tryAttachProxy(cx, outerScript, ion, obj, id, returnAddr, emitted))
             return false;
@@ -2197,7 +2284,6 @@ GetPropertyIC::reset(ReprotectCode reprotect)
 {
     IonCache::reset(reprotect);
     hasTypedArrayLengthStub_ = false;
-    hasSharedTypedArrayLengthStub_ = false;
     hasMappedArgumentsLengthStub_ = false;
     hasUnmappedArgumentsLengthStub_ = false;
     hasMappedArgumentsElementStub_ = false;
@@ -4003,7 +4089,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
 
     if (IsAnyTypedArray(array)) {
         // Guard on the initialized length.
-        Address length(object, TypedArrayLayout::lengthOffset());
+        Address length(object, TypedArrayObject::lengthOffset());
         masm.branch32(Assembler::BelowOrEqual, length, indexReg, &failures);
 
         // Save the object register on the stack in case of failure.
@@ -4011,7 +4097,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
         masm.push(object);
 
         // Load elements vector.
-        masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), elementReg);
+        masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elementReg);
 
         // Load the value. We use an invalid register because the destination
         // register is necessary a non double register.
@@ -4452,13 +4538,13 @@ GenerateSetTypedArrayElement(JSContext* cx, MacroAssembler& masm, IonCache::Stub
     }
 
     // Guard on the length.
-    Address length(object, TypedArrayLayout::lengthOffset());
+    Address length(object, TypedArrayObject::lengthOffset());
     masm.unboxInt32(length, temp);
     masm.branch32(Assembler::BelowOrEqual, temp, indexReg, &done);
 
     // Load the elements vector.
     Register elements = temp;
-    masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), elements);
+    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elements);
 
     // Set the value.
     Scalar::Type arrayType = AnyTypedArrayType(tarr);
