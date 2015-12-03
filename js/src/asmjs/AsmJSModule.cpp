@@ -1799,12 +1799,9 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         MOZ_CRASH();
         void* callee = nullptr;
         (void)callerRetAddr;
-#elif defined(JS_CODEGEN_MIPS32)
-        Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
-        void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
-#elif defined(JS_CODEGEN_MIPS64)
-        Instruction* instr = (Instruction*)(callerRetAddr - 6 * sizeof(uint32_t));
-        void* callee = (void*)Assembler::ExtractLoad64Value(instr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        uint8_t* instr = callerRetAddr - Assembler::PatchWrite_NearCallSize();
+        void* callee = (void*)Assembler::ExtractInstructionImmediate(instr);
 #elif defined(JS_CODEGEN_NONE)
         MOZ_CRASH();
         void* callee = nullptr;
@@ -1829,13 +1826,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 #elif defined(JS_CODEGEN_ARM64)
         (void)newCallee;
         MOZ_CRASH();
-#elif defined(JS_CODEGEN_MIPS32)
-        Assembler::WriteLuiOriInstructions(instr, instr->next(),
-                                           ScratchRegister, (uint32_t)newCallee);
-        instr[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
-#elif defined(JS_CODEGEN_MIPS64)
-        Assembler::WriteLoad64Instructions(instr, ScratchRegister, (uint64_t)newCallee);
-        instr[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        Assembler::PatchInstructionImmediate(instr, PatchedImmPtr(newCallee));
 #elif defined(JS_CODEGEN_NONE)
         MOZ_CRASH();
 #else
