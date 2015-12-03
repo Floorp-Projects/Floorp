@@ -55,6 +55,7 @@
 #include "nsCanvasFrame.h"
 #include "StickyScrollContainer.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -528,13 +529,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
                                                                aProperty);
   presContext->AnimationManager()->ClearIsRunningOnCompositor(aFrame,
                                                               aProperty);
-  AnimationCollection* transitions =
-    presContext->TransitionManager()->GetAnimationsForCompositor(aFrame,
-                                                                 aProperty);
-  AnimationCollection* animations =
-    presContext->AnimationManager()->GetAnimationsForCompositor(aFrame,
-                                                                aProperty);
-  if (!animations && !transitions) {
+  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
+    EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
+  if (compositorAnimations.IsEmpty()) {
     return;
   }
 
@@ -590,17 +587,8 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     data = null_t();
   }
 
-  // When both are running, animations override transitions.  We want
-  // to add the ones that override last.
-  if (transitions) {
-    AddAnimationsForProperty(aFrame, aProperty, transitions->mAnimations,
-                             aLayer, data, pending);
-  }
-
-  if (animations) {
-    AddAnimationsForProperty(aFrame, aProperty, animations->mAnimations,
-                             aLayer, data, pending);
-  }
+  AddAnimationsForProperty(aFrame, aProperty, compositorAnimations,
+                           aLayer, data, pending);
 }
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
