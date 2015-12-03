@@ -257,7 +257,6 @@ loop.store.ActiveRoomStore = (function() {
         "mediaStreamDestroyed",
         "remoteVideoStatus",
         "videoDimensionsChanged",
-        "startScreenShare",
         "startBrowserShare",
         "endScreenShare",
         "updateSocialShareInfo",
@@ -921,11 +920,11 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
-     * Initiates a screen sharing publisher.
+     * Initiates a browser tab sharing publisher.
      *
-     * @param {sharedActions.StartScreenShare} actionData
+     * @param {sharedActions.StartBrowserShare} actionData
      */
-    startScreenShare: function(actionData) {
+    startBrowserShare: function(actionData) {
       // For the unit test we already set the state here, instead of indirectly
       // via an action, because actions are queued thus depending on the
       // asynchronous nature of `loop.request`.
@@ -935,28 +934,16 @@ loop.store.ActiveRoomStore = (function() {
       }));
 
       var options = {
-        videoSource: actionData.type
+        videoSource: "browser"
       };
-      if (options.videoSource === "browser") {
-        this._browserSharingListener = this._handleSwitchBrowserShare.bind(this);
+      this._browserSharingListener = this._handleSwitchBrowserShare.bind(this);
 
-        // Set up a listener for watching screen shares. This will get notified
-        // with the first windowId when it is added, so we start off the sharing
-        // from within the listener.
-        loop.request("AddBrowserSharingListener").then(this._browserSharingListener);
-        loop.subscribe("BrowserSwitch", this._browserSharingListener);
-      } else {
-        this._sdkDriver.startScreenShare(options);
-      }
-    },
-
-    /**
-     * Initiates a browser tab sharing publisher.
-     *
-     * @param {sharedActions.StartBrowserShare} actionData
-     */
-    startBrowserShare: function(actionData) {
-      this.startScreenShare({ type: "browser" });
+      // Set up a listener for watching screen shares. This will get notified
+      // with the first windowId when it is added, so we start off the sharing
+      // from within the listener.
+      loop.request("AddBrowserSharingListener", this.getStoreState().windowId)
+        .then(this._browserSharingListener);
+      loop.subscribe("BrowserSwitch", this._browserSharingListener);
     },
 
     /**

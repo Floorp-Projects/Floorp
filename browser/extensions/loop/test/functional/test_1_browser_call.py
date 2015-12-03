@@ -186,12 +186,6 @@ class Test1BrowserCall(MarionetteTestCase):
         self.switch_to_chatbox()
         self.check_received_message("test2")
 
-    def local_enable_screenshare(self):
-        self.switch_to_chatbox()
-        button = self.marionette.find_element(By.CLASS_NAME, "btn-screen-share")
-
-        button.click()
-
     def standalone_check_remote_screenshare(self):
         self.switch_to_standalone()
         self.check_video(".screen-share-video")
@@ -293,10 +287,8 @@ class Test1BrowserCall(MarionetteTestCase):
         # the start time
         self.local_check_media_start_time_initialized()
 
-        # XXX To enable this, we either need to navigate the permissions prompt
-        # or have a route where we don't need the permissions prompt.
-        # self.local_enable_screenshare()
-        # self.standalone_check_remote_screenshare()
+        # Check that screenshare was automatically started
+        self.standalone_check_remote_screenshare()
 
         # We hangup on the remote (standalone) side, because this also leaves
         # the local chatbox with the local publishing media still connected,
