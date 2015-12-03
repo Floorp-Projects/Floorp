@@ -2548,8 +2548,17 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(LayerManager* aManager,
     return false;
   }
 
-  // We currently can't handle tiled or partial backgrounds.
-  if (!state.mDestArea.IsEqualEdges(state.mFillArea)) {
+  // We currently can't handle tiled backgrounds.
+  if (!state.mDestArea.Contains(state.mFillArea)) {
+    return false;
+  }
+
+  // For 'contain' and 'cover', we allow any pixel of the image to be sampled
+  // because there isn't going to be any spriting/atlasing going on.
+  bool allowPartialImages =
+    (layer.mSize.mWidthType == nsStyleBackground::Size::eContain ||
+     layer.mSize.mWidthType == nsStyleBackground::Size::eCover);
+  if (!allowPartialImages && !state.mFillArea.Contains(state.mDestArea)) {
     return false;
   }
 
