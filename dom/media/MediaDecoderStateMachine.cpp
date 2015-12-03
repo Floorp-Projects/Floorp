@@ -199,7 +199,6 @@ static void InitVideoQueuePrefs() {
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
-  mDecoder(aDecoder),
   mDecoderID(aDecoder),
   mFrameStats(&aDecoder->GetFrameStatistics()),
   mVideoFrameContainer(aDecoder->GetVideoFrameContainer()),
@@ -1304,7 +1303,8 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
   }
 }
 
-void MediaDecoderStateMachine::Shutdown()
+RefPtr<ShutdownPromise>
+MediaDecoderStateMachine::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -1335,13 +1335,16 @@ void MediaDecoderStateMachine::Shutdown()
     mStartTimeRendezvous->Destroy();
   }
 
+  DECODER_LOG("Shutdown started");
+
   // Put a task in the decode queue to shutdown the reader.
   // the queue to spin down.
-  InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__, &MediaDecoderReader::Shutdown)
+  return InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                     &MediaDecoderReader::Shutdown)
     ->Then(OwnerThread(), __func__, this,
            &MediaDecoderStateMachine::FinishShutdown,
-           &MediaDecoderStateMachine::FinishShutdown);
-  DECODER_LOG("Shutdown started");
+           &MediaDecoderStateMachine::FinishShutdown)
+    ->CompletionPromise();
 }
 
 void MediaDecoderStateMachine::StartDecoding()
@@ -2159,40 +2162,15 @@ MediaDecoderStateMachine::SeekCompleted()
   }
 }
 
-class DecoderDisposer
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecoderDisposer)
-  DecoderDisposer(MediaDecoder* aDecoder, MediaDecoderStateMachine* aStateMachine)
-    : mDecoder(aDecoder), mStateMachine(aStateMachine) {}
-
-  void OnTaskQueueShutdown()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mStateMachine);
-    MOZ_ASSERT(mDecoder);
-    mStateMachine->BreakCycles();
-    mDecoder->BreakCycles();
-    mStateMachine = nullptr;
-    mDecoder = nullptr;
-  }
-
-private:
-  virtual ~DecoderDisposer() {}
-  RefPtr<MediaDecoder> mDecoder;
-  RefPtr<MediaDecoderStateMachine> mStateMachine;
-};
-
-void
-MediaDecoderStateMachine::DispatchShutdown()
+RefPtr<ShutdownPromise>
+MediaDecoderStateMachine::BeginShutdown()
 {
   mStreamSink->BeginShutdown();
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
-  OwnerThread()->Dispatch(runnable.forget());
+  return InvokeAsync(OwnerThread(), this, __func__,
+                     &MediaDecoderStateMachine::Shutdown);
 }
 
-void
+RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2233,25 +2211,8 @@ MediaDecoderStateMachine::FinishShutdown()
 
   MOZ_ASSERT(mState == DECODER_STATE_SHUTDOWN,
              "How did we escape from the shutdown state?");
-  // We must daisy-chain these events to destroy the decoder. We must
-  // destroy the decoder on the main thread, but we can't destroy the
-  // decoder while this thread holds the decoder monitor. We can't
-  // dispatch an event to the main thread to destroy the decoder from
-  // here, as the event may run before the dispatch returns, and we
-  // hold the decoder monitor here. We also want to guarantee that the
-  // state machine is destroyed on the main thread, and so the
-  // event runner running this function (which holds a reference to the
-  // state machine) needs to finish and be released in order to allow
-  // that. So we dispatch an event to run after this event runner has
-  // finished and released its monitor/references. That event then will
-  // dispatch an event to the main thread to release the decoder and
-  // state machine.
   DECODER_LOG("Shutting down state machine task queue");
-  RefPtr<DecoderDisposer> disposer = new DecoderDisposer(mDecoder, this);
-  OwnerThread()->BeginShutdown()->Then(AbstractThread::MainThread(), __func__,
-                                       disposer.get(),
-                                       &DecoderDisposer::OnTaskQueueShutdown,
-                                       &DecoderDisposer::OnTaskQueueShutdown);
+  return OwnerThread()->BeginShutdown();
 }
 
 nsresult MediaDecoderStateMachine::RunStateMachine()
