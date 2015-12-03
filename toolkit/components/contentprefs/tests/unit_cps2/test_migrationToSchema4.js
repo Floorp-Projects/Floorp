@@ -55,7 +55,7 @@ function run_test() {
 // the fact that we ContentPrefService constructor is run only once per test file
 // and so migration will be run only once.
 var tests = [
-  function testMigration() {
+  function* testMigration() {
     // Test migrated db content.
     schemaVersionIs(4);
     let dbExpectedState = [
