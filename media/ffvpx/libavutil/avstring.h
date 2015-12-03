@@ -203,17 +203,27 @@ char *av_strtok(char *s, const char *delim, char **saveptr);
 /**
  * Locale-independent conversion of ASCII isdigit.
  */
-av_const int av_isdigit(int c);
+static inline av_const int av_isdigit(int c)
+{
+    return c >= '0' && c <= '9';
+}
 
 /**
  * Locale-independent conversion of ASCII isgraph.
  */
-av_const int av_isgraph(int c);
+static inline av_const int av_isgraph(int c)
+{
+    return c > 32 && c < 127;
+}
 
 /**
  * Locale-independent conversion of ASCII isspace.
  */
-av_const int av_isspace(int c);
+static inline av_const int av_isspace(int c)
+{
+    return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' ||
+           c == '\v';
+}
 
 /**
  * Locale-independent conversion of ASCII characters to uppercase.
@@ -238,7 +248,11 @@ static inline av_const int av_tolower(int c)
 /**
  * Locale-independent conversion of ASCII isxdigit.
  */
-av_const int av_isxdigit(int c);
+static inline av_const int av_isxdigit(int c)
+{
+    c = av_tolower(c);
+    return av_isdigit(c) || (c >= 'a' && c <= 'f');
+}
 
 /**
  * Locale-independent case-insensitive compare.
@@ -300,14 +314,14 @@ enum AVEscapeMode {
  * characters lists, except it is guaranteed to use the exact same list
  * of whitespace characters as the rest of libavutil.
  */
-#define AV_ESCAPE_FLAG_WHITESPACE 0x01
+#define AV_ESCAPE_FLAG_WHITESPACE (1 << 0)
 
 /**
  * Escape only specified special characters.
  * Without this flag, escape also any characters that may be considered
  * special by av_get_token(), such as the single quote.
  */
-#define AV_ESCAPE_FLAG_STRICT 0x02
+#define AV_ESCAPE_FLAG_STRICT (1 << 1)
 
 /**
  * Escape string in src, and put the escaped string in an allocated
@@ -325,6 +339,7 @@ enum AVEscapeMode {
  * @return the length of the allocated string, or a negative error code in case of error
  * @see av_bprint_escape()
  */
+av_warn_unused_result
 int av_escape(char **dst, const char *src, const char *special_chars,
               enum AVEscapeMode mode, int flags);
 
@@ -364,6 +379,7 @@ int av_escape(char **dst, const char *src, const char *special_chars,
  * @return >= 0 in case a sequence was successfully read, a negative
  * value in case of invalid sequence
  */
+av_warn_unused_result
 int av_utf8_decode(int32_t *codep, const uint8_t **bufp, const uint8_t *buf_end,
                    unsigned int flags);
 
