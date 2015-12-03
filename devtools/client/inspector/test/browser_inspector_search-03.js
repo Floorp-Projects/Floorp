@@ -160,6 +160,39 @@ var TEST_DATA = [
   {
     key: "VK_BACK_SPACE",
     suggestions: []
+  },
+  {
+    key: "p",
+    suggestions: [
+      {label: "p"},
+      {label: "#p1"},
+      {label: "#p2"},
+      {label: "#p3"}
+    ]
+  },
+  {
+    key: "[", suggestions: []
+  },
+  {
+    key: "i", suggestions: []
+  },
+  {
+    key: "d", suggestions: []
+  },
+  {
+    key: "*", suggestions: []
+  },
+  {
+    key: "=", suggestions: []
+  },
+  {
+    key: "p", suggestions: []
+  },
+  {
+    key: "]",
+    suggestions: [
+      {label: "p[id*=p]"}
+    ]
   }
 ];
 
