@@ -20,6 +20,7 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Compression.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
@@ -51,11 +52,13 @@ using namespace js::wasm;
 using namespace js::frontend;
 using mozilla::BinarySearch;
 using mozilla::Compression::LZ4;
+using mozilla::MakeEnumeratedRange;
 using mozilla::MallocSizeOf;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::PodZero;
 using mozilla::Swap;
+using JS::GenericNaN;
 
 static uint8_t*
 AllocateExecutableMemory(ExclusiveContext* cx, size_t bytes)
@@ -165,7 +168,6 @@ AsmJSModule::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* asmJSModuleCode,
                         exports_.sizeOfExcludingThis(mallocSizeOf) +
                         callSites_.sizeOfExcludingThis(mallocSizeOf) +
                         codeRanges_.sizeOfExcludingThis(mallocSizeOf) +
-                        builtinThunkOffsets_.sizeOfExcludingThis(mallocSizeOf) +
                         names_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -240,14 +242,14 @@ AsmJSModule::lookupCodeRange(void* pc) const
 
 struct HeapAccessOffset
 {
-    const AsmJSHeapAccessVector& accesses;
-    explicit HeapAccessOffset(const AsmJSHeapAccessVector& accesses) : accesses(accesses) {}
+    const HeapAccessVector& accesses;
+    explicit HeapAccessOffset(const HeapAccessVector& accesses) : accesses(accesses) {}
     uintptr_t operator[](size_t index) const {
         return accesses[index].insnOffset();
     }
 };
 
-const AsmJSHeapAccess*
+const HeapAccess*
 AsmJSModule::lookupHeapAccess(void* pc) const
 {
     MOZ_ASSERT(isFinished());
@@ -309,7 +311,7 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     MOZ_ASSERT(!masm.hasSelfReference());
 
     // Heap-access metadata used for link-time patching and fault-handling.
-    heapAccesses_ = masm.extractAsmJSHeapAccesses();
+    heapAccesses_ = masm.extractHeapAccesses();
 
     // Call-site metadata used for stack unwinding.
     const CallSiteAndTargetVector& callSites = masm.callSites();
@@ -603,97 +605,97 @@ RedirectCall(void* fun, ABIFunctionType type)
 }
 
 static void*
-AddressOf(AsmJSImmKind kind, ExclusiveContext* cx)
+AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
 {
-    switch (kind) {
-      case AsmJSImm_Runtime:
+    switch (imm) {
+      case SymbolicAddress::Runtime:
         return cx->runtimeAddressForJit();
-      case AsmJSImm_RuntimeInterruptUint32:
+      case SymbolicAddress::RuntimeInterruptUint32:
         return cx->runtimeAddressOfInterruptUint32();
-      case AsmJSImm_StackLimit:
+      case SymbolicAddress::StackLimit:
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
-      case AsmJSImm_ReportOverRecursed:
+      case SymbolicAddress::ReportOverRecursed:
         return RedirectCall(FuncCast(AsmJSReportOverRecursed), Args_General0);
-      case AsmJSImm_OnDetached:
+      case SymbolicAddress::OnDetached:
         return RedirectCall(FuncCast(OnDetached), Args_General0);
-      case AsmJSImm_OnOutOfBounds:
+      case SymbolicAddress::OnOutOfBounds:
         return RedirectCall(FuncCast(OnOutOfBounds), Args_General0);
-      case AsmJSImm_OnImpreciseConversion:
+      case SymbolicAddress::OnImpreciseConversion:
         return RedirectCall(FuncCast(OnImpreciseConversion), Args_General0);
-      case AsmJSImm_HandleExecutionInterrupt:
+      case SymbolicAddress::HandleExecutionInterrupt:
         return RedirectCall(FuncCast(AsmJSHandleExecutionInterrupt), Args_General0);
-      case AsmJSImm_InvokeFromAsmJS_Ignore:
+      case SymbolicAddress::InvokeFromAsmJS_Ignore:
         return RedirectCall(FuncCast(InvokeFromAsmJS_Ignore), Args_General3);
-      case AsmJSImm_InvokeFromAsmJS_ToInt32:
+      case SymbolicAddress::InvokeFromAsmJS_ToInt32:
         return RedirectCall(FuncCast(InvokeFromAsmJS_ToInt32), Args_General3);
-      case AsmJSImm_InvokeFromAsmJS_ToNumber:
+      case SymbolicAddress::InvokeFromAsmJS_ToNumber:
         return RedirectCall(FuncCast(InvokeFromAsmJS_ToNumber), Args_General3);
-      case AsmJSImm_CoerceInPlace_ToInt32:
+      case SymbolicAddress::CoerceInPlace_ToInt32:
         return RedirectCall(FuncCast(CoerceInPlace_ToInt32), Args_General1);
-      case AsmJSImm_CoerceInPlace_ToNumber:
+      case SymbolicAddress::CoerceInPlace_ToNumber:
         return RedirectCall(FuncCast(CoerceInPlace_ToNumber), Args_General1);
-      case AsmJSImm_ToInt32:
+      case SymbolicAddress::ToInt32:
         return RedirectCall(FuncCast<int32_t (double)>(JS::ToInt32), Args_Int_Double);
 #if defined(JS_CODEGEN_ARM)
-      case AsmJSImm_aeabi_idivmod:
+      case SymbolicAddress::aeabi_idivmod:
         return RedirectCall(FuncCast(__aeabi_idivmod), Args_General2);
-      case AsmJSImm_aeabi_uidivmod:
+      case SymbolicAddress::aeabi_uidivmod:
         return RedirectCall(FuncCast(__aeabi_uidivmod), Args_General2);
-      case AsmJSImm_AtomicCmpXchg:
+      case SymbolicAddress::AtomicCmpXchg:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t, int32_t)>(js::atomics_cmpxchg_asm_callout), Args_General4);
-      case AsmJSImm_AtomicXchg:
+      case SymbolicAddress::AtomicXchg:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_xchg_asm_callout), Args_General3);
-      case AsmJSImm_AtomicFetchAdd:
+      case SymbolicAddress::AtomicFetchAdd:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_add_asm_callout), Args_General3);
-      case AsmJSImm_AtomicFetchSub:
+      case SymbolicAddress::AtomicFetchSub:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_sub_asm_callout), Args_General3);
-      case AsmJSImm_AtomicFetchAnd:
+      case SymbolicAddress::AtomicFetchAnd:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_and_asm_callout), Args_General3);
-      case AsmJSImm_AtomicFetchOr:
+      case SymbolicAddress::AtomicFetchOr:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_or_asm_callout), Args_General3);
-      case AsmJSImm_AtomicFetchXor:
+      case SymbolicAddress::AtomicFetchXor:
         return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_xor_asm_callout), Args_General3);
 #endif
-      case AsmJSImm_ModD:
+      case SymbolicAddress::ModD:
         return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
-      case AsmJSImm_SinD:
+      case SymbolicAddress::SinD:
 #ifdef _WIN64
         // Workaround a VS 2013 sin issue, see math_sin_uncached.
         return RedirectCall(FuncCast<double (double)>(js::math_sin_uncached), Args_Double_Double);
 #else
         return RedirectCall(FuncCast<double (double)>(sin), Args_Double_Double);
 #endif
-      case AsmJSImm_CosD:
+      case SymbolicAddress::CosD:
         return RedirectCall(FuncCast<double (double)>(cos), Args_Double_Double);
-      case AsmJSImm_TanD:
+      case SymbolicAddress::TanD:
         return RedirectCall(FuncCast<double (double)>(tan), Args_Double_Double);
-      case AsmJSImm_ASinD:
+      case SymbolicAddress::ASinD:
         return RedirectCall(FuncCast<double (double)>(asin), Args_Double_Double);
-      case AsmJSImm_ACosD:
+      case SymbolicAddress::ACosD:
         return RedirectCall(FuncCast<double (double)>(acos), Args_Double_Double);
-      case AsmJSImm_ATanD:
+      case SymbolicAddress::ATanD:
         return RedirectCall(FuncCast<double (double)>(atan), Args_Double_Double);
-      case AsmJSImm_CeilD:
+      case SymbolicAddress::CeilD:
         return RedirectCall(FuncCast<double (double)>(ceil), Args_Double_Double);
-      case AsmJSImm_CeilF:
+      case SymbolicAddress::CeilF:
         return RedirectCall(FuncCast<float (float)>(ceilf), Args_Float32_Float32);
-      case AsmJSImm_FloorD:
+      case SymbolicAddress::FloorD:
         return RedirectCall(FuncCast<double (double)>(floor), Args_Double_Double);
-      case AsmJSImm_FloorF:
+      case SymbolicAddress::FloorF:
         return RedirectCall(FuncCast<float (float)>(floorf), Args_Float32_Float32);
-      case AsmJSImm_ExpD:
+      case SymbolicAddress::ExpD:
         return RedirectCall(FuncCast<double (double)>(exp), Args_Double_Double);
-      case AsmJSImm_LogD:
+      case SymbolicAddress::LogD:
         return RedirectCall(FuncCast<double (double)>(log), Args_Double_Double);
-      case AsmJSImm_PowD:
+      case SymbolicAddress::PowD:
         return RedirectCall(FuncCast(ecmaPow), Args_Double_DoubleDouble);
-      case AsmJSImm_ATan2D:
+      case SymbolicAddress::ATan2D:
         return RedirectCall(FuncCast(ecmaAtan2), Args_Double_DoubleDouble);
-      case AsmJSImm_Limit:
+      case SymbolicAddress::Limit:
         break;
     }
 
-    MOZ_CRASH("Bad AsmJSImmKind");
+    MOZ_CRASH("Bad SymbolicAddress");
 }
 
 void
@@ -730,8 +732,7 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
             Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
-    for (size_t immIndex = 0; immIndex < AsmJSImm_Limit; immIndex++) {
-        AsmJSImmKind imm = AsmJSImmKind(immIndex);
+    for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
         const OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
             uint8_t* patchAt = code_ + offsets[i];
@@ -739,11 +740,11 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
 
             // Builtin calls are another case where, when profiling is enabled,
             // we must point to the profiling entry.
-            AsmJSExit::BuiltinKind builtin;
-            if (profilingEnabled_ && ImmKindIsBuiltin(imm, &builtin)) {
+            Builtin builtin;
+            if (profilingEnabled_ && ImmediateIsBuiltin(imm, &builtin)) {
                 const CodeRange* codeRange = lookupCodeRange(patchAt);
                 if (codeRange->isFunction())
-                    target = code_ + builtinThunkOffsets_[builtin];
+                    target = code_ + staticLinkData_.pod.builtinThunkOffsets[builtin];
             }
 
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
@@ -754,8 +755,8 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
 
     // Initialize global data segment
 
-    *(double*)(globalData() + AsmJSNaN64GlobalDataOffset) = GenericNaN();
-    *(float*)(globalData() + AsmJSNaN32GlobalDataOffset) = GenericNaN();
+    *(double*)(globalData() + NaN64GlobalDataOffset) = GenericNaN();
+    *(float*)(globalData() + NaN32GlobalDataOffset) = GenericNaN();
 
     for (size_t tableIndex = 0; tableIndex < staticLinkData_.funcPtrTables.length(); tableIndex++) {
         FuncPtrTable& funcPtrTable = staticLinkData_.funcPtrTables[tableIndex];
@@ -791,7 +792,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext* cx)
     uint8_t* heapOffset = heap->dataPointerEither().unwrap(/*safe - used for value*/);
     uint32_t heapLength = heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-        const jit::AsmJSHeapAccess& access = heapAccesses_[i];
+        const HeapAccess& access = heapAccesses_[i];
         // An access is out-of-bounds iff
         //      ptr + offset + data-type-byte-size > heapLength
         // i.e. ptr > heapLength - data-type-byte-size - offset.
@@ -814,7 +815,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext* cx)
     // CodeGeneratorX64::visitAsmJS{Load,Store,CompareExchange,Exchange,AtomicBinop}Heap)
     uint32_t heapLength = heap->byteLength();
     for (size_t i = 0; i < heapAccesses_.length(); i++) {
-        const jit::AsmJSHeapAccess& access = heapAccesses_[i];
+        const HeapAccess& access = heapAccesses_[i];
         // See comment above for x86 codegen.
         if (access.hasLengthCheck())
             X86Encoding::AddInt32(access.patchLengthAt(code_), heapLength);
@@ -837,7 +838,7 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared* maybePrevBu
         uint8_t* ptrBase = maybePrevBuffer->dataPointerEither().unwrap(/*safe - used for value*/);
         uint32_t heapLength = maybePrevBuffer->byteLength();
         for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-            const jit::AsmJSHeapAccess& access = heapAccesses_[i];
+            const HeapAccess& access = heapAccesses_[i];
             // Subtract the heap length back out, leaving the raw displacement in place.
             if (access.hasLengthCheck())
                 X86Encoding::AddInt32(access.patchLengthAt(code_), -heapLength);
@@ -851,7 +852,7 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared* maybePrevBu
     if (maybePrevBuffer) {
         uint32_t heapLength = maybePrevBuffer->byteLength();
         for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-            const jit::AsmJSHeapAccess& access = heapAccesses_[i];
+            const HeapAccess& access = heapAccesses_[i];
             // See comment above for x86 codegen.
             if (access.hasLengthCheck())
                 X86Encoding::AddInt32(access.patchLengthAt(code_), -heapLength);
@@ -871,14 +872,14 @@ AsmJSModule::restoreToInitialState(ArrayBufferObjectMaybeShared* maybePrevBuffer
 #ifdef DEBUG
     // Put the absolute links back to -1 so PatchDataWithValueCheck assertions
     // in staticallyLink are valid.
-    for (size_t imm = 0; imm < AsmJSImm_Limit; imm++) {
-        void* callee = AddressOf(AsmJSImmKind(imm), cx);
+    for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
+        void* callee = AddressOf(imm, cx);
 
         // If we are in profiling mode, calls to builtins will have been patched
         // by setProfilingEnabled to be calls to thunks.
-        AsmJSExit::BuiltinKind builtin;
-        void* profilingCallee = profilingEnabled_ && ImmKindIsBuiltin(AsmJSImmKind(imm), &builtin)
-                                ? prevCode + builtinThunkOffsets_[builtin]
+        Builtin builtin;
+        void* profilingCallee = profilingEnabled_ && ImmediateIsBuiltin(imm, &builtin)
+                                ? prevCode + staticLinkData_.pod.builtinThunkOffsets[builtin]
                                 : nullptr;
 
         const AsmJSModule::OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
@@ -932,8 +933,8 @@ AsmJSModule::detachHeap(JSContext* cx)
     // Even if this->active(), to reach here, the activation must have called
     // out via an FFI stub. FFI stubs check if heapDatum() is null on reentry
     // and throw an exception if so.
-    MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_JitFFI ||
-                            activation()->exitReason() == AsmJSExit::Reason_SlowFFI);
+    MOZ_ASSERT_IF(active(), activation()->exitReason().kind() == ExitReason::Jit ||
+                            activation()->exitReason().kind() == ExitReason::Slow);
 
     AutoMutateCode amc(cx, *this, "AsmJSModule::detachHeap");
     restoreHeapToInitialState(maybeHeap_);
@@ -1409,7 +1410,7 @@ AsmJSModule::CodeRange::CodeRange(Kind kind, AsmJSProfilingOffsets offsets)
     MOZ_ASSERT(u.kind_ == JitFFI || u.kind_ == SlowFFI || u.kind_ == Interrupt);
 }
 
-AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets)
+AsmJSModule::CodeRange::CodeRange(Builtin builtin, AsmJSProfilingOffsets offsets)
   : nameIndex_(0),
     lineNumber_(0),
     begin_(offsets.begin),
@@ -1418,7 +1419,7 @@ AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfiling
 {
     PodZero(&u);  // zero padding for Valgrind
     u.kind_ = Thunk;
-    u.thunk.target_ = builtin;
+    u.thunk.target_ = uint16_t(builtin);
 
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
@@ -1453,24 +1454,24 @@ size_t
 AsmJSModule::AbsoluteLinkArray::serializedSize() const
 {
     size_t size = 0;
-    for (size_t i = 0; i < AsmJSImm_Limit; i++)
-        size += SerializedPodVectorSize(array_[i]);
+    for (const OffsetVector& offsets : *this)
+        size += SerializedPodVectorSize(offsets);
     return size;
 }
 
 uint8_t*
 AsmJSModule::AbsoluteLinkArray::serialize(uint8_t* cursor) const
 {
-    for (size_t i = 0; i < AsmJSImm_Limit; i++)
-        cursor = SerializePodVector(cursor, array_[i]);
+    for (const OffsetVector& offsets : *this)
+        cursor = SerializePodVector(cursor, offsets);
     return cursor;
 }
 
 const uint8_t*
 AsmJSModule::AbsoluteLinkArray::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    for (size_t i = 0; i < AsmJSImm_Limit; i++) {
-        cursor = DeserializePodVector(cx, cursor, &array_[i]);
+    for (OffsetVector& offsets : *this) {
+        cursor = DeserializePodVector(cx, cursor, &offsets);
         if (!cursor)
             return nullptr;
     }
@@ -1480,8 +1481,8 @@ AsmJSModule::AbsoluteLinkArray::deserialize(ExclusiveContext* cx, const uint8_t*
 bool
 AsmJSModule::AbsoluteLinkArray::clone(ExclusiveContext* cx, AbsoluteLinkArray* out) const
 {
-    for (size_t i = 0; i < AsmJSImm_Limit; i++) {
-        if (!ClonePodVector(cx, array_[i], &out->array_[i]))
+    for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
+        if (!ClonePodVector(cx, (*this)[imm], &(*out)[imm]))
             return false;
     }
     return true;
@@ -1491,8 +1492,8 @@ size_t
 AsmJSModule::AbsoluteLinkArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t size = 0;
-    for (size_t i = 0; i < AsmJSImm_Limit; i++)
-        size += array_[i].sizeOfExcludingThis(mallocSizeOf);
+    for (const OffsetVector& offsets : *this)
+        size += offsets.sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
 
@@ -1596,7 +1597,6 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(callSites_) +
            SerializedPodVectorSize(codeRanges_) +
-           SerializedPodVectorSize(builtinThunkOffsets_) +
            SerializedVectorSize(names_) +
            SerializedPodVectorSize(heapAccesses_) +
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1623,7 +1623,6 @@ AsmJSModule::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, callSites_);
     cursor = SerializePodVector(cursor, codeRanges_);
-    cursor = SerializePodVector(cursor, builtinThunkOffsets_);
     cursor = SerializeVector(cursor, names_);
     cursor = SerializePodVector(cursor, heapAccesses_);
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1651,7 +1650,6 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites_)) &&
     (cursor = DeserializePodVector(cx, cursor, &codeRanges_)) &&
-    (cursor = DeserializePodVector(cx, cursor, &builtinThunkOffsets_)) &&
     (cursor = DeserializeVector(cx, cursor, &names_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
@@ -1693,7 +1691,6 @@ AsmJSModule::clone(JSContext* cx, ScopedJSDeletePtr<AsmJSModule>* moduleOut) con
         !CloneVector(cx, exports_, &out.exports_) ||
         !ClonePodVector(cx, callSites_, &out.callSites_) ||
         !ClonePodVector(cx, codeRanges_, &out.codeRanges_) ||
-        !ClonePodVector(cx, builtinThunkOffsets_, &out.builtinThunkOffsets_) ||
         !CloneVector(cx, names_, &out.names_) ||
         !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
         !staticLinkData_.clone(cx, &out.staticLinkData_))
@@ -1934,11 +1931,11 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
     // Replace all calls to builtins with calls to profiling thunks that push a
     // frame pointer. Since exit unwinding always starts at the caller of fp,
     // this avoids losing the innermost asm.js function.
-    for (unsigned builtin = 0; builtin < AsmJSExit::Builtin_Limit; builtin++) {
-        AsmJSImmKind imm = BuiltinToImmKind(AsmJSExit::BuiltinKind(builtin));
-        const AsmJSModule::OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
-        void* from = AddressOf(AsmJSImmKind(imm), nullptr);
-        void* to = code_ + builtinThunkOffsets_[builtin];
+    for (auto builtin : MakeEnumeratedRange(Builtin::Limit)) {
+        auto imm = BuiltinToImmediate(builtin);
+        const OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
+        void* from = AddressOf(imm, nullptr);
+        void* to = code_ + staticLinkData_.pod.builtinThunkOffsets[builtin];
         if (!enabled)
             Swap(from, to);
         for (size_t j = 0; j < offsets.length(); j++) {

@@ -5553,7 +5553,7 @@ CodeGenerator::visitModD(LModD* ins)
     masm.passABIArg(rhs, MoveOp::DOUBLE);
 
     if (gen->compilingAsmJS())
-        masm.callWithABI(AsmJSImm_ModD, MoveOp::DOUBLE);
+        masm.callWithABI(wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
 }
@@ -7892,7 +7892,7 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
         // See comment below.
         Label* target = frameSize() > 0 ? &onOverflow : masm.asmStackOverflowLabel();
         masm.branchPtr(Assembler::AboveOrEqual,
-                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
+                       wasm::SymbolicAddress::StackLimit,
                        masm.getStackPointer(),
                        target);
     }
@@ -10210,8 +10210,10 @@ void
 CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
 {
     Label rejoin;
-    masm.branch32(Assembler::Equal, AsmJSAbsoluteAddress(AsmJSImm_RuntimeInterruptUint32),
-                  Imm32(0), &rejoin);
+    masm.branch32(Assembler::Equal,
+                  wasm::SymbolicAddress::RuntimeInterruptUint32,
+                  Imm32(0),
+                  &rejoin);
     {
         uint32_t stackFixup = ComputeByteAlignment(masm.framePushed() + sizeof(AsmJSFrame),
                                                    ABIStackAlignment);

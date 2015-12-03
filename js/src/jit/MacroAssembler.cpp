@@ -2521,7 +2521,7 @@ MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result)
 }
 
 void
-MacroAssembler::callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result)
+MacroAssembler::callWithABINoProfiler(wasm::SymbolicAddress imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust, /* callFromAsmJS = */ true);

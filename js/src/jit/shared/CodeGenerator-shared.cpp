@@ -1466,7 +1466,7 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool)
     masm.setupUnalignedABICall(dest);
     masm.passABIArg(src, MoveOp::DOUBLE);
     if (gen->compilingAsmJS())
-        masm.callWithABI(AsmJSImm_ToInt32);
+        masm.callWithABI(wasm::SymbolicAddress::ToInt32);
     else
         masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
     masm.storeCallResult(dest);
@@ -1520,7 +1520,7 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
         masm.call(mir->desc(), ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         break;
       case MAsmJSCall::Callee::Builtin:
-        masm.call(AsmJSImmPtr(callee.builtin()));
+        masm.call(BuiltinToImmediate(callee.builtin()));
         break;
     }
 
