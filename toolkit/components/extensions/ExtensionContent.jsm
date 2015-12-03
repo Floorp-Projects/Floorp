@@ -247,8 +247,12 @@ function ExtensionContext(extensionId, contentWindow) {
 
   let url = contentWindow.location.href;
   let broker = ExtensionContent.getBroker(mm);
-  this.messenger = new Messenger(this, broker, {id: extensionId, frameId, url},
-                                 {id: extensionId, frameId}, delegate);
+  // The |sender| parameter is passed directly to the extension.
+  let sender = {id: this.extension.uuid, frameId, url};
+  // Properties in |filter| must match those in the |recipient|
+  // parameter of sendMessage.
+  let filter = {extensionId, frameId};
+  this.messenger = new Messenger(this, broker, sender, filter, delegate);
 
   let chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
 
