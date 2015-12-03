@@ -199,9 +199,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should remove the sharing listener", function() {
       // Setup the listener.
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now simulate room failure.
       store.roomFailure(new sharedActions.RoomFailure({
@@ -1257,9 +1255,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should remove the sharing listener", function() {
       // Setup the listener.
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now simulate connection failure.
       store.connectionFailure(connectionFailureAction);
@@ -1539,15 +1535,13 @@ describe("loop.store.ActiveRoomStore", function() {
     });
   });
 
-  describe("#startScreenShare", function() {
+  describe("#startBrowserShare", function() {
     afterEach(function() {
       store.endScreenShare();
     });
 
     it("should set the state to 'pending'", function() {
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "window"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,
@@ -1556,29 +1550,14 @@ describe("loop.store.ActiveRoomStore", function() {
         }));
     });
 
-    it("should invoke the SDK driver with the correct options for window sharing", function() {
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "window"
-      }));
-
-      sinon.assert.calledOnce(fakeSdkDriver.startScreenShare);
-      sinon.assert.calledWith(fakeSdkDriver.startScreenShare, {
-        videoSource: "window"
-      });
-    });
-
     it("should add a browser sharing listener for tab sharing", function() {
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       sinon.assert.calledOnce(requestStubs.AddBrowserSharingListener);
     });
 
     it("should invoke the SDK driver with the correct options for tab sharing", function() {
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       sinon.assert.calledOnce(fakeSdkDriver.startScreenShare);
       sinon.assert.calledWith(fakeSdkDriver.startScreenShare, {
@@ -1593,9 +1572,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
   describe("Screen share Events", function() {
     beforeEach(function() {
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       store.setStoreState({
         screenSharingState: SCREEN_SHARE_STATES.ACTIVE
@@ -1652,9 +1629,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should remove the sharing listener", function() {
       // Setup the listener.
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now stop the screen share.
       store.endScreenShare();
@@ -1807,9 +1782,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should remove the sharing listener", function() {
       // Setup the listener.
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now unload the window.
       store.windowUnload();
@@ -1864,9 +1837,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should remove the sharing listener", function() {
       // Setup the listener.
-      store.startScreenShare(new sharedActions.StartScreenShare({
-        type: "browser"
-      }));
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now leave the room.
       store.leaveRoom();

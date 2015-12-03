@@ -400,10 +400,8 @@ describe("loop.roomViews", function() {
       expect(muteBtn.classList.contains("muted")).eql(true);
     });
 
-    it("should dispatch a `StartScreenShare` action when sharing is not active and the screen share button is pressed", function() {
+    it("should dispatch a `SetMute` action when the mute button is pressed", function() {
       view = mountTestComponent();
-
-      view.setState({ screenSharingState: SCREEN_SHARE_STATES.INACTIVE });
 
       var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 

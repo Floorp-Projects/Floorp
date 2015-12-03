@@ -7,7 +7,6 @@ loop.roomViews = (function(mozL10n) {
   "use strict";
 
   var ROOM_STATES = loop.store.ROOM_STATES;
-  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
@@ -773,11 +772,6 @@ loop.roomViews = (function(mozL10n) {
         this.setTitle(roomTitle);
       }
 
-      var screenShareData = {
-        state: this.state.screenSharingState || SCREEN_SHARE_STATES.INACTIVE,
-        visible: true
-      };
-
       var shouldRenderInvitationOverlay = this._shouldRenderInvitationOverlay();
       var shouldRenderEditContextView = this.state.showEditContext;
       var roomData = this.props.roomStore.getStoreState("activeRoom");
@@ -833,7 +827,6 @@ loop.roomViews = (function(mozL10n) {
                   dispatcher={this.props.dispatcher}
                   hangup={this.leaveRoom}
                   publishStream={this.publishStream}
-                  screenShare={screenShareData}
                   settingsMenuItems={settingsMenuItems}
                   show={!shouldRenderEditContextView}
                   showHangup={this.props.chatWindowDetached}
