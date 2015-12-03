@@ -13,6 +13,9 @@
 //------------------------------------------------------------------------------
 
 module.exports = {
+  processors: {
+    ".xml": require("../lib/processors/xbl-bindings"),
+  },
   rules: {
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
     "components-imports": require("../lib/rules/components-imports"),
