@@ -32,6 +32,7 @@
 #include "nsIdleService.h"
 #include "nsIObserverService.h"
 #include "nsAppShell.h"
+#include "nsProxyRelease.h"
 #include "nsTArray.h"
 #include "pixelflinger/format.h"
 #include "nsIDisplayInfo.h"
@@ -457,7 +458,7 @@ nsScreenGonk::GetGLContext()
 }
 
 static void
-UpdateMirroringWidgetSync(RefPtr<nsScreenGonk>&& aScreen, nsWindow* aWindow)
+UpdateMirroringWidgetSync(nsMainThreadPtrHandle<nsScreenGonk>&& aScreen, nsWindow* aWindow)
 {
     MOZ_ASSERT(CompositorParent::IsInCompositorThread());
     already_AddRefed<nsWindow> window(aWindow);
@@ -484,10 +485,12 @@ nsScreenGonk::EnableMirroring()
     MOZ_ASSERT(static_cast<nsWindow*>(window)->GetScreen() == this);
 
     // Update mMirroringWidget on compositor thread
+    nsMainThreadPtrHandle<nsScreenGonk> primary =
+      nsMainThreadPtrHandle<nsScreenGonk>(new nsMainThreadPtrHolder<nsScreenGonk>(primaryScreen, false));
     CompositorParent::CompositorLoop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(&UpdateMirroringWidgetSync,
-                            primaryScreen,
+                            primary,
                             window.forget().take()));
 
     mIsMirroring = true;
@@ -508,10 +511,12 @@ nsScreenGonk::DisableMirroring()
     NS_ENSURE_TRUE(ret, false);
 
     // Update mMirroringWidget on compositor thread
+    nsMainThreadPtrHandle<nsScreenGonk> primary =
+      nsMainThreadPtrHandle<nsScreenGonk>(new nsMainThreadPtrHolder<nsScreenGonk>(primaryScreen, false));
     CompositorParent::CompositorLoop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(&UpdateMirroringWidgetSync,
-                            primaryScreen,
+                            primary,
                             nullptr));
     return true;
 }
