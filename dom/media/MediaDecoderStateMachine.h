@@ -167,7 +167,7 @@ public:
   // Set/Unset dormant state.
   void DispatchSetDormant(bool aDormant);
 
-  void DispatchShutdown();
+  RefPtr<ShutdownPromise> BeginShutdown();
 
   void DispatchStartBuffering()
   {
@@ -218,14 +218,13 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  // Drop reference to decoder.  Only called during shutdown dance.
+  // Drop reference to mReader and mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
     if (mReader) {
       mReader->BreakCycles();
     }
     mResource = nullptr;
-    mDecoder = nullptr;
   }
 
   TimedMetadataEventSource& TimedMetadataEvent() {
@@ -284,9 +283,9 @@ private:
 
   RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 
-  void Shutdown();
+  RefPtr<ShutdownPromise> Shutdown();
 
-  void FinishShutdown();
+  RefPtr<ShutdownPromise> FinishShutdown();
 
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if
@@ -666,16 +665,6 @@ private:
 
   void AdjustAudioThresholds();
 
-  // The decoder object that created this state machine. The state machine
-  // holds a strong reference to the decoder to ensure that the decoder stays
-  // alive once media element has started the decoder shutdown process, and has
-  // dropped its reference to the decoder. This enables the state machine to
-  // keep using the decoder's monitor until the state machine has finished
-  // shutting down, without fear of the monitor being destroyed. After
-  // shutting down, the state machine will then release this reference,
-  // causing the decoder to be destroyed. This is accessed on the decode,
-  // state machine, audio and main threads.
-  RefPtr<MediaDecoder> mDecoder;
   void* const mDecoderID;
   const RefPtr<FrameStatistics> mFrameStats;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
