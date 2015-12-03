@@ -72,7 +72,9 @@ exports.items = [
         return;
       }
 
+      let onceMessagesCleared = panel.hud.jsterm.once("messages-cleared");
       panel.hud.jsterm.clearOutput();
+      return onceMessagesCleared;
     }
   },
   {
