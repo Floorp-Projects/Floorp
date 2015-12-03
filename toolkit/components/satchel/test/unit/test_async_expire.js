@@ -48,7 +48,7 @@ function next_test()
   iter.next();
 }
 
-function tests()
+function* tests()
 {
   Services.obs.addObserver(TestObserver, "satchel-storage-changed", true);
 

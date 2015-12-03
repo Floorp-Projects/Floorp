@@ -24,7 +24,7 @@ function next_test()
   iter.next();
 }
 
-function tests()
+function* tests()
 {
   try {
   var testnum = 0;
