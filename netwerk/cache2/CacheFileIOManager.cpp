@@ -320,7 +320,7 @@ CacheFileHandles::HandleHashKey::SizeOfExcludingThis(mozilla::MallocSizeOf mallo
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
   size_t n = 0;
-  n += mallocSizeOf(mHash);
+  n += mallocSizeOf(mHash.get());
   for (uint32_t i = 0; i < mHandles.Length(); ++i) {
     n += mHandles[i]->SizeOfIncludingThis(mallocSizeOf);
   }

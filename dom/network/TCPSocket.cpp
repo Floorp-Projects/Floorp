@@ -14,6 +14,7 @@
 #include "mozilla/dom/TCPSocketEvent.h"
 #include "mozilla/dom/TCPSocketEventBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsContentUtils.h"
 #include "nsIArrayBufferInputStream.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"

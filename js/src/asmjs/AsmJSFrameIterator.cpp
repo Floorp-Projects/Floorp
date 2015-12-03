@@ -166,7 +166,7 @@ PushRetAddr(MacroAssembler& masm)
 // pointer so that AsmJSProfilingFrameIterator can walk the stack at any pc in
 // generated code.
 static void
-GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                           AsmJSProfilingOffsets* offsets, Label* maybeEntry = nullptr)
 {
 #if !defined (JS_CODEGEN_ARM)
@@ -204,8 +204,10 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
         MOZ_ASSERT_IF(!masm.oom(), StoredFP == masm.currentOffset() - offsets->begin);
     }
 
-    if (reason != AsmJSExit::None)
-        masm.store32_NoSecondScratch(Imm32(reason), Address(scratch, AsmJSActivation::offsetOfExitReason()));
+    if (reason.kind() != ExitReason::None) {
+        masm.store32_NoSecondScratch(Imm32(reason.pack()),
+                                     Address(scratch, AsmJSActivation::offsetOfPackedExitReason()));
+    }
 
 #if defined(JS_CODEGEN_ARM)
     masm.setSecondScratchReg(lr);
@@ -217,7 +219,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 
 // Generate the inverse of GenerateProfilingPrologue.
 static void
-GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                           AsmJSProfilingOffsets* offsets)
 {
     Register scratch = ABIArgGenerator::NonReturn_VolatileReg0;
@@ -231,8 +233,10 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 
     masm.loadAsmJSActivation(scratch);
 
-    if (reason != AsmJSExit::None)
-        masm.store32(Imm32(AsmJSExit::None), Address(scratch, AsmJSActivation::offsetOfExitReason()));
+    if (reason.kind() != ExitReason::None) {
+        masm.store32(Imm32(ExitReason::None),
+                     Address(scratch, AsmJSActivation::offsetOfPackedExitReason()));
+    }
 
     // AsmJSProfilingFrameIterator assumes fixed offsets of the last few
     // instructions from profilingReturn, so AutoForbidPools to ensure that
@@ -282,7 +286,7 @@ js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
 
     masm.haltingAlign(CodeAlignment);
 
-    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, offsets);
+    GenerateProfilingPrologue(masm, framePushed, ExitReason::None, offsets);
     Label body;
     masm.jump(&body);
 
@@ -353,11 +357,11 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
 
     // Profiling epilogue:
     offsets->profilingEpilogue = masm.currentOffset();
-    GenerateProfilingEpilogue(masm, framePushed, AsmJSExit::None, offsets);
+    GenerateProfilingEpilogue(masm, framePushed, ExitReason::None, offsets);
 }
 
 void
-js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                               AsmJSProfilingOffsets* offsets, Label* maybeEntry)
 {
     masm.haltingAlign(CodeAlignment);
@@ -366,7 +370,7 @@ js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSE
 }
 
 void
-js::GenerateAsmJSExitEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+js::GenerateAsmJSExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                               AsmJSProfilingOffsets* offsets)
 {
     // Inverse of GenerateAsmJSExitPrologue:
@@ -383,7 +387,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
     callerFP_(nullptr),
     callerPC_(nullptr),
     stackAddress_(nullptr),
-    exitReason_(AsmJSExit::None),
+    exitReason_(ExitReason::None),
     codeRange_(nullptr)
 {
     // If profiling hasn't been enabled for this module, then CallerFPFromFP
@@ -475,8 +479,8 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation& activation)
     // without setting an exit reason, the reason will be None and this means
     // the code was asynchronously interrupted.
     exitReason_ = activation.exitReason();
-    if (exitReason_ == AsmJSExit::None)
-        exitReason_ = AsmJSExit::Interrupt;
+    if (exitReason_.kind() == ExitReason::None)
+        exitReason_ = ExitReason::Interrupt;
 
     MOZ_ASSERT(!done());
 }
@@ -488,7 +492,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
   : module_(&activation.module()),
     callerFP_(nullptr),
     callerPC_(nullptr),
-    exitReason_(AsmJSExit::None),
+    exitReason_(ExitReason::None),
     codeRange_(nullptr)
 {
     // If profiling hasn't been enabled for this module, then CallerFPFromFP
@@ -603,9 +607,9 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
 void
 AsmJSProfilingFrameIterator::operator++()
 {
-    if (exitReason_ != AsmJSExit::None) {
+    if (exitReason_.kind() != ExitReason::None) {
         MOZ_ASSERT(codeRange_);
-        exitReason_ = AsmJSExit::None;
+        exitReason_ = ExitReason::None;
         MOZ_ASSERT(!done());
         return;
     }
@@ -644,42 +648,42 @@ AsmJSProfilingFrameIterator::operator++()
 }
 
 static const char*
-BuiltinToName(AsmJSExit::BuiltinKind builtin)
+BuiltinToName(Builtin builtin)
 {
     // Note: this label is regexp-matched by
     // devtools/client/profiler/cleopatra/js/parserWorker.js.
 
     switch (builtin) {
-      case AsmJSExit::Builtin_ToInt32:   return "ToInt32 (in asm.js)";
+      case Builtin::ToInt32:         return "ToInt32 (in asm.js)";
 #if defined(JS_CODEGEN_ARM)
-      case AsmJSExit::Builtin_IDivMod:   return "software idivmod (in asm.js)";
-      case AsmJSExit::Builtin_UDivMod:   return "software uidivmod (in asm.js)";
-      case AsmJSExit::Builtin_AtomicCmpXchg:  return "Atomics.compareExchange (in asm.js)";
-      case AsmJSExit::Builtin_AtomicXchg:     return "Atomics.exchange (in asm.js)";
-      case AsmJSExit::Builtin_AtomicFetchAdd: return "Atomics.add (in asm.js)";
-      case AsmJSExit::Builtin_AtomicFetchSub: return "Atomics.sub (in asm.js)";
-      case AsmJSExit::Builtin_AtomicFetchAnd: return "Atomics.and (in asm.js)";
-      case AsmJSExit::Builtin_AtomicFetchOr:  return "Atomics.or (in asm.js)";
-      case AsmJSExit::Builtin_AtomicFetchXor: return "Atomics.xor (in asm.js)";
+      case Builtin::aeabi_idivmod:   return "software idivmod (in asm.js)";
+      case Builtin::aeabi_uidivmod:  return "software uidivmod (in asm.js)";
+      case Builtin::AtomicCmpXchg:   return "Atomics.compareExchange (in asm.js)";
+      case Builtin::AtomicXchg:      return "Atomics.exchange (in asm.js)";
+      case Builtin::AtomicFetchAdd:  return "Atomics.add (in asm.js)";
+      case Builtin::AtomicFetchSub:  return "Atomics.sub (in asm.js)";
+      case Builtin::AtomicFetchAnd:  return "Atomics.and (in asm.js)";
+      case Builtin::AtomicFetchOr:   return "Atomics.or (in asm.js)";
+      case Builtin::AtomicFetchXor:  return "Atomics.xor (in asm.js)";
 #endif
-      case AsmJSExit::Builtin_ModD:      return "fmod (in asm.js)";
-      case AsmJSExit::Builtin_SinD:      return "Math.sin (in asm.js)";
-      case AsmJSExit::Builtin_CosD:      return "Math.cos (in asm.js)";
-      case AsmJSExit::Builtin_TanD:      return "Math.tan (in asm.js)";
-      case AsmJSExit::Builtin_ASinD:     return "Math.asin (in asm.js)";
-      case AsmJSExit::Builtin_ACosD:     return "Math.acos (in asm.js)";
-      case AsmJSExit::Builtin_ATanD:     return "Math.atan (in asm.js)";
-      case AsmJSExit::Builtin_CeilD:
-      case AsmJSExit::Builtin_CeilF:     return "Math.ceil (in asm.js)";
-      case AsmJSExit::Builtin_FloorD:
-      case AsmJSExit::Builtin_FloorF:    return "Math.floor (in asm.js)";
-      case AsmJSExit::Builtin_ExpD:      return "Math.exp (in asm.js)";
-      case AsmJSExit::Builtin_LogD:      return "Math.log (in asm.js)";
-      case AsmJSExit::Builtin_PowD:      return "Math.pow (in asm.js)";
-      case AsmJSExit::Builtin_ATan2D:    return "Math.atan2 (in asm.js)";
-      case AsmJSExit::Builtin_Limit:     break;
+      case Builtin::ModD:    return "fmod (in asm.js)";
+      case Builtin::SinD:    return "Math.sin (in asm.js)";
+      case Builtin::CosD:    return "Math.cos (in asm.js)";
+      case Builtin::TanD:    return "Math.tan (in asm.js)";
+      case Builtin::ASinD:   return "Math.asin (in asm.js)";
+      case Builtin::ACosD:   return "Math.acos (in asm.js)";
+      case Builtin::ATanD:   return "Math.atan (in asm.js)";
+      case Builtin::CeilD:
+      case Builtin::CeilF:   return "Math.ceil (in asm.js)";
+      case Builtin::FloorD:
+      case Builtin::FloorF:  return "Math.floor (in asm.js)";
+      case Builtin::ExpD:    return "Math.exp (in asm.js)";
+      case Builtin::LogD:    return "Math.log (in asm.js)";
+      case Builtin::PowD:    return "Math.pow (in asm.js)";
+      case Builtin::ATan2D:  return "Math.atan2 (in asm.js)";
+      case Builtin::Limit:   break;
     }
-    MOZ_CRASH("Bad builtin kind");
+    MOZ_CRASH("symbolic immediate not a builtin");
 }
 
 const char*
@@ -696,17 +700,17 @@ AsmJSProfilingFrameIterator::label() const
     const char* slowFFIDescription = "slow FFI trampoline (in asm.js)";
     const char* interruptDescription = "interrupt due to out-of-bounds or long execution (in asm.js)";
 
-    switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
-      case AsmJSExit::Reason_None:
+    switch (exitReason_.kind()) {
+      case ExitReason::None:
         break;
-      case AsmJSExit::Reason_JitFFI:
+      case ExitReason::Jit:
         return jitFFIDescription;
-      case AsmJSExit::Reason_SlowFFI:
+      case ExitReason::Slow:
         return slowFFIDescription;
-      case AsmJSExit::Reason_Interrupt:
+      case ExitReason::Interrupt:
         return interruptDescription;
-      case AsmJSExit::Reason_Builtin:
-        return BuiltinToName(AsmJSExit::ExtractBuiltinKind(exitReason_));
+      case ExitReason::Builtin:
+        return BuiltinToName(exitReason_.builtin());
     }
 
     auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
@@ -720,5 +724,5 @@ AsmJSProfilingFrameIterator::label() const
       case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
     }
 
-    MOZ_CRASH("Bad exit kind");
+    MOZ_CRASH("bad code range kind");
 }

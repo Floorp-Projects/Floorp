@@ -27,6 +27,7 @@ class nsStyleCoord;
 class nsSVGElement;
 
 namespace mozilla {
+class nsSVGAnimatedTransformList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGPreserveAspectRatio;
 namespace dom {
@@ -40,6 +41,35 @@ class Matrix;
 } // namespace mozilla
 
 #define SVG_ZERO_LENGTH_PATH_FIX_FACTOR 512
+
+/**
+ * SVGTransformTypes controls the transforms that PrependLocalTransformsTo
+ * applies.
+ *
+ * If aWhich is eAllTransforms, then all the transforms from the coordinate
+ * space established by this element for its children to the coordinate
+ * space established by this element's parent element for this element, are
+ * included.
+ *
+ * If aWhich is eUserSpaceToParent, then only the transforms from this
+ * element's userspace to the coordinate space established by its parent is
+ * included. This includes any transforms introduced by the 'transform'
+ * attribute, transform animations and animateMotion, but not any offsets
+ * due to e.g. 'x'/'y' attributes, or any transform due to a 'viewBox'
+ * attribute. (SVG userspace is defined to be the coordinate space in which
+ * coordinates on an element apply.)
+ *
+ * If aWhich is eChildToUserSpace, then only the transforms from the
+ * coordinate space established by this element for its childre to this
+ * elements userspace are included. This includes any offsets due to e.g.
+ * 'x'/'y' attributes, and any transform due to a 'viewBox' attribute, but
+ * does not include any transforms due to the 'transform' attribute.
+ */
+enum SVGTransformTypes {
+   eAllTransforms,
+   eUserSpaceToParent,
+   eChildToUserSpace
+};
 
 inline bool
 IsSVGWhitespace(char aChar)
@@ -349,6 +379,17 @@ public:
    *  to have no corners: circle or ellipse
    */
   static bool ShapeTypeHasNoCorners(const nsIContent* aContent);
+
+  /**
+   *  Prepends an element's local transforms to the transform matrix.
+   *  This is a helper for nsSVGElement::PrependLocalTransformsTo.
+   *  Any callers probably really want to call that method instead of this one.
+   */
+  static gfxMatrix PrependLocalTransformsTo(
+    const gfxMatrix &aMatrix,
+    SVGTransformTypes aWhich,
+    const Matrix* aAnimateMotionTransform,
+    const mozilla::nsSVGAnimatedTransformList* aTransforms);
 };
 
 #endif

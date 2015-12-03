@@ -110,6 +110,24 @@ error.stringify = function(err) {
 };
 
 /**
+ * Marshal an Error to a JSON structure.
+ *
+ * @param {Error} err
+ *     The Error to serialise.
+ *
+ * @return {Object.<string, Object>}
+ *     JSON structure with the keys "error", "message", and "stacktrace".
+ */
+error.toJson = function(err) {
+  let json = {
+    error: err.status,
+    message: err.message || null,
+    stacktrace: err.stack || null,
+  };
+  return json;
+};
+
+/**
  * WebDriverError is the prototypal parent of all WebDriver errors.
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
@@ -216,7 +234,7 @@ this.NoAlertOpenError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "NoAlertOpenError";
   this.status = "no such alert";
-}
+};
 NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
 
 this.NoSuchElementError = function(msg) {

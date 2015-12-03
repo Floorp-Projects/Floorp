@@ -216,8 +216,10 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
-      *aOwnTransform = gfx::ToMatrix(content->PrependLocalTransformsTo(gfxMatrix(),
-                                  nsSVGElement::eUserSpaceToParent));
+      *aOwnTransform = gfx::ToMatrix(
+                         content->PrependLocalTransformsTo(
+                           gfxMatrix(),
+                           eUserSpaceToParent));
     }
     foundTransform = true;
   }

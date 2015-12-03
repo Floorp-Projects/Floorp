@@ -17,6 +17,7 @@
 #include "AudioContext.h"
 #include "AudioBuffer.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"

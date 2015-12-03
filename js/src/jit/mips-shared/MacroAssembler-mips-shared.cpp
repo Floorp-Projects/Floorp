@@ -1156,7 +1156,7 @@ MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 }
 
 void
-MacroAssembler::call(AsmJSImmPtr target)
+MacroAssembler::call(wasm::SymbolicAddress target)
 {
     movePtr(target, CallReg);
     call(CallReg);

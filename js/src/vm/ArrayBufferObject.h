@@ -33,32 +33,26 @@ class ArrayBufferViewObject;
 //       - Int8ArrayObject
 //       - Uint8ArrayObject
 //       - ...
-//   - SharedTypedArrayObject (declared in vm/SharedTypedArrayObject.h)
-//     - SharedTypedArrayObjectTemplate
-//       - SharedInt8ArrayObject
-//       - SharedUint8ArrayObject
-//       - ...
 // - JSObject
 //   - ArrayBufferViewObject
 //   - TypedObject (declared in builtin/TypedObject.h)
 //
-// Note that |TypedArrayObjectTemplate| and |SharedTypedArrayObjectTemplate| are
-// just implementation details that make implementing their various subclasses easier.
+// Note that |TypedArrayObjectTemplate| is just an implementation
+// detail that makes implementing its various subclasses easier.
 //
 // ArrayBufferObject and SharedArrayBufferObject are unrelated data types:
 // the racy memory of the latter cannot substitute for the non-racy memory of
 // the former; the non-racy memory of the former cannot be used with the atomics;
-// the former can be neutered and the latter not; and they have different
-// method suites.  Hence they have been separated completely.
+// the former can be neutered and the latter not.  Hence they have been separated
+// completely.
 //
-// Most APIs will only accept ArrayBufferObject.  ArrayBufferObjectMaybeShared exists
-// as a join point to allow APIs that can take or use either, notably AsmJS.
+// Most APIs will only accept ArrayBufferObject.  ArrayBufferObjectMaybeShared
+// exists as a join point to allow APIs that can take or use either, notably AsmJS.
 //
-// As ArrayBufferObject and SharedArrayBufferObject are separated, so are the
-// TypedArray hierarchies below the two.  However, the TypedArrays have the
-// same layout (see TypedArrayObject.h), so there is little code duplication.
+// In contrast with the separation of ArrayBufferObject and
+// SharedArrayBufferObject, the TypedArray types can map either.
 //
-// The possible data ownership and reference relationships with array buffers
+// The possible data ownership and reference relationships with ArrayBuffers
 // and related classes are enumerated below. These are the possible locations
 // for typed data:
 //
@@ -86,7 +80,7 @@ class ArrayBufferObjectMaybeShared : public NativeObject
         return AnyArrayBufferByteLength(this);
     }
 
-    inline SharedMem<uint8_t*> dataPointerMaybeShared();
+    inline SharedMem<uint8_t*> dataPointerEither();
 };
 
 /*
@@ -384,12 +378,18 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 class ArrayBufferViewObject : public JSObject
 {
   public:
-    static ArrayBufferObject* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
+    static ArrayBufferObjectMaybeShared* bufferObject(JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
     void neuter(void* newData);
 
-    uint8_t* dataPointer();
-    void setDataPointer(uint8_t* data);
+#ifdef DEBUG
+    bool isSharedMemory();
+#endif
+
+    // By construction we only need unshared variants here.  See
+    // comments in ArrayBufferObject.cpp.
+    uint8_t* dataPointerUnshared();
+    void setDataPointerUnshared(uint8_t* data);
 
     static void trace(JSTracer* trc, JSObject* obj);
 };
@@ -568,5 +568,9 @@ InitArrayBufferClass(JSContext* cx, HandleObject obj);
 template <>
 bool
 JSObject::is<js::ArrayBufferViewObject>() const;
+
+template <>
+bool
+JSObject::is<js::ArrayBufferObjectMaybeShared>() const;
 
 #endif // vm_ArrayBufferObject_h

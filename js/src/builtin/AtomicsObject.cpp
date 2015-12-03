@@ -58,7 +58,6 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
-#include "vm/SharedTypedArrayObject.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 
@@ -87,19 +86,20 @@ ReportOutOfRange(JSContext* cx)
 
 static bool
 GetSharedTypedArray(JSContext* cx, HandleValue v,
-                    MutableHandle<SharedTypedArrayObject*> viewp)
+                    MutableHandle<TypedArrayObject*> viewp)
 {
     if (!v.isObject())
         return ReportBadArrayType(cx);
-    if (!v.toObject().is<SharedTypedArrayObject>())
+    if (!v.toObject().is<TypedArrayObject>())
         return ReportBadArrayType(cx);
-    viewp.set(&v.toObject().as<SharedTypedArrayObject>());
+    viewp.set(&v.toObject().as<TypedArrayObject>());
+    if (!viewp->isSharedMemory())
+        return ReportBadArrayType(cx);
     return true;
 }
 
 static bool
-GetSharedTypedArrayIndex(JSContext* cx, HandleValue v, Handle<SharedTypedArrayObject*> view,
-                         uint32_t* offset)
+GetTypedArrayIndex(JSContext* cx, HandleValue v, Handle<TypedArrayObject*> view, uint32_t* offset)
 {
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, v, &id))
@@ -191,11 +191,11 @@ js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp)
     HandleValue newv = args.get(3);
     MutableHandleValue r = args.rval();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t oldCandidate;
     if (!ToInt32(cx, oldv, &oldCandidate))
@@ -226,11 +226,11 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
     HandleValue idxv = args.get(1);
     MutableHandleValue r = args.rval();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
 
     SharedMem<void*> viewData = view->viewDataShared();
@@ -343,11 +343,11 @@ ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp)
     HandleValue valv = args.get(2);
     MutableHandleValue r = args.rval();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t numberValue;
     if (!ToInt32(cx, valv, &numberValue))
@@ -384,11 +384,11 @@ static bool
 AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv,
              MutableHandleValue r)
 {
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t numberValue;
     if (!ToInt32(cx, valv, &numberValue))
@@ -783,13 +783,13 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
 
     JSRuntime* rt = cx->runtime();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     int32_t value;
     if (!ToInt32(cx, valv, &value))
@@ -816,7 +816,7 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    Rooted<SharedArrayBufferObject*> sab(cx, &view->buffer()->as<SharedArrayBufferObject>());
+    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
     SharedArrayRawBuffer* sarb = sab->rawBufferObject();
 
     FutexWaiter w(offset, rt);
@@ -855,13 +855,13 @@ js::atomics_futexWake(JSContext* cx, unsigned argc, Value* vp)
     HandleValue countv = args.get(2);
     MutableHandleValue r = args.rval();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset;
-    if (!GetSharedTypedArrayIndex(cx, idxv, view, &offset))
+    if (!GetTypedArrayIndex(cx, idxv, view, &offset))
         return false;
     double count;
     if (!ToInteger(cx, countv, &count))
@@ -871,7 +871,7 @@ js::atomics_futexWake(JSContext* cx, unsigned argc, Value* vp)
 
     AutoLockFutexAPI lock;
 
-    Rooted<SharedArrayBufferObject*> sab(cx, &view->buffer()->as<SharedArrayBufferObject>());
+    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
     SharedArrayRawBuffer* sarb = sab->rawBufferObject();
     int32_t woken = 0;
 
@@ -904,13 +904,13 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     HandleValue idx2v = args.get(4);
     MutableHandleValue r = args.rval();
 
-    Rooted<SharedTypedArrayObject*> view(cx, nullptr);
+    Rooted<TypedArrayObject*> view(cx, nullptr);
     if (!GetSharedTypedArray(cx, objv, &view))
         return false;
     if (view->type() != Scalar::Int32)
         return ReportBadArrayType(cx);
     uint32_t offset1;
-    if (!GetSharedTypedArrayIndex(cx, idx1v, view, &offset1))
+    if (!GetTypedArrayIndex(cx, idx1v, view, &offset1))
         return false;
     double count;
     if (!ToInteger(cx, countv, &count))
@@ -921,7 +921,7 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
     if (!ToInt32(cx, valv, &value))
         return false;
     uint32_t offset2;
-    if (!GetSharedTypedArrayIndex(cx, idx2v, view, &offset2))
+    if (!GetTypedArrayIndex(cx, idx2v, view, &offset2))
         return false;
 
     AutoLockFutexAPI lock;
@@ -932,7 +932,7 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    Rooted<SharedArrayBufferObject*> sab(cx, &view->buffer()->as<SharedArrayBufferObject>());
+    Rooted<SharedArrayBufferObject*> sab(cx, view->bufferShared());
     SharedArrayRawBuffer* sarb = sab->rawBufferObject();
 
     // Walk the list of waiters looking for those waiting on offset1.

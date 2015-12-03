@@ -757,7 +757,7 @@ class FunctionCompiler
         return callPrivate(MAsmJSCall::Callee(ptrFun), call, ret, def);
     }
 
-    bool builtinCall(AsmJSImmKind builtin, const Call& call, ValType type, MDefinition** def)
+    bool builtinCall(Builtin builtin, const Call& call, ValType type, MDefinition** def)
     {
         return callPrivate(MAsmJSCall::Callee(builtin), call, ToExprType(type), def);
     }
@@ -1628,7 +1628,7 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
 
     f.finishCallArgs(&call);
 
-    AsmJSImmKind callee = f32 == F32::Ceil ? AsmJSImm_CeilF : AsmJSImm_FloorF;
+    Builtin callee = f32 == F32::Ceil ? Builtin::CeilF : Builtin::FloorF;
     return f.builtinCall(callee, call, ValType::F32, def);
 }
 
@@ -1651,20 +1651,20 @@ EmitMathBuiltinCall(FunctionCompiler& f, F64 f64, MDefinition** def)
             return false;
     }
 
-    AsmJSImmKind callee;
+    Builtin callee;
     switch (f64) {
-      case F64::Ceil:  callee = AsmJSImm_CeilD; break;
-      case F64::Floor: callee = AsmJSImm_FloorD; break;
-      case F64::Sin:   callee = AsmJSImm_SinD; break;
-      case F64::Cos:   callee = AsmJSImm_CosD; break;
-      case F64::Tan:   callee = AsmJSImm_TanD; break;
-      case F64::Asin:  callee = AsmJSImm_ASinD; break;
-      case F64::Acos:  callee = AsmJSImm_ACosD; break;
-      case F64::Atan:  callee = AsmJSImm_ATanD; break;
-      case F64::Exp:   callee = AsmJSImm_ExpD; break;
-      case F64::Log:   callee = AsmJSImm_LogD; break;
-      case F64::Pow:   callee = AsmJSImm_PowD; break;
-      case F64::Atan2: callee = AsmJSImm_ATan2D; break;
+      case F64::Ceil:  callee = Builtin::CeilD; break;
+      case F64::Floor: callee = Builtin::FloorD; break;
+      case F64::Sin:   callee = Builtin::SinD; break;
+      case F64::Cos:   callee = Builtin::CosD; break;
+      case F64::Tan:   callee = Builtin::TanD; break;
+      case F64::Asin:  callee = Builtin::ASinD; break;
+      case F64::Acos:  callee = Builtin::ACosD; break;
+      case F64::Atan:  callee = Builtin::ATanD; break;
+      case F64::Exp:   callee = Builtin::ExpD; break;
+      case F64::Log:   callee = Builtin::LogD; break;
+      case F64::Pow:   callee = Builtin::PowD; break;
+      case F64::Atan2: callee = Builtin::ATan2D; break;
       default: MOZ_CRASH("unexpected double math builtin callee");
     }
 

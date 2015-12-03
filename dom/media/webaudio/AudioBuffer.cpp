@@ -119,7 +119,9 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
       // AudioBuffer, to be returned by the next call to getChannelData."
       const float* data = mSharedChannels->GetData(i);
       JS::AutoCheckCannotGC nogc;
-      mozilla::PodCopy(JS_GetFloat32ArrayData(array, nogc), data, mLength);
+      bool isShared;
+      mozilla::PodCopy(JS_GetFloat32ArrayData(array, &isShared, nogc), data, mLength);
+      MOZ_ASSERT(!isShared); // Was created as unshared above
     }
     mJSChannels[i] = array;
   }
@@ -154,7 +156,11 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
       return;
     }
 
-    sourceData = JS_GetFloat32ArrayData(channelArray, nogc);
+    bool isShared = false;
+    sourceData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
+    // The sourceData arrays should all have originated in
+    // RestoreJSChannelData, where they are created unshared.
+    MOZ_ASSERT(!isShared);
   } else if (mSharedChannels) {
     sourceData = mSharedChannels->GetData(aChannelNumber);
   }
@@ -195,8 +201,12 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
     return;
   }
 
-  PodMove(JS_GetFloat32ArrayData(channelArray, nogc) + aStartInChannel,
-          aSource.Data(), length);
+  bool isShared = false;
+  float* channelData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
+  // The channelData arrays should all have originated in
+  // RestoreJSChannelData, where they are created unshared.
+  MOZ_ASSERT(!isShared);
+  PodMove(channelData + aStartInChannel, aSource.Data(), length);
 }
 
 void
@@ -242,8 +252,14 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
     new ThreadSharedFloatArrayBufferList(mJSChannels.Length());
   for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
     JS::Rooted<JSObject*> arrayBufferView(aJSContext, mJSChannels[i]);
+    bool isSharedMemory;
     JS::Rooted<JSObject*> arrayBuffer(aJSContext,
-                                      JS_GetArrayBufferViewBuffer(aJSContext, arrayBufferView));
+                                      JS_GetArrayBufferViewBuffer(aJSContext,
+                                                                  arrayBufferView,
+                                                                  &isSharedMemory));
+    // The channel data arrays should all have originated in
+    // RestoreJSChannelData, where they are created unshared.
+    MOZ_ASSERT(!isSharedMemory);
     auto stolenData = arrayBuffer
       ? static_cast<float*>(JS_StealArrayBufferContents(aJSContext,
                                                         arrayBuffer))

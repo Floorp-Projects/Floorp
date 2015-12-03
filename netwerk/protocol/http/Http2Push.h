@@ -14,6 +14,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "nsHttpRequestHead.h"
 #include "nsILoadGroup.h"
 #include "nsISchedulingContext.h"
@@ -114,7 +115,7 @@ private:
   Http2PushedStream *mPushStream;
   bool mIsDone;
 
-  nsAutoArrayPtr<char> mBufferedHTTP1;
+  UniquePtr<char[]> mBufferedHTTP1;
   uint32_t mBufferedHTTP1Size;
   uint32_t mBufferedHTTP1Used;
   uint32_t mBufferedHTTP1Consumed;

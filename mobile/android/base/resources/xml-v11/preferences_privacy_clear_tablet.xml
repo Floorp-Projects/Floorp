@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+- License, v. 2.0. If a copy of the MPL was not distributed with this
+- file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto">
+    <org.mozilla.gecko.preferences.PrivateDataPreference
+        android:key="android.not_a_preference.privacy.clear"
+        android:title="@string/pref_clear_private_data_now_tablet"
+        android:persistent="true"
+        android:positiveButtonText="@string/button_clear_data"
+        gecko:entries="@array/pref_private_data_entries"
+        gecko:entryValues="@array/pref_private_data_values"
+        gecko:entryKeys="@array/pref_private_data_keys"
+        gecko:initialValues="@array/pref_private_data_defaults" />
+</PreferenceScreen>

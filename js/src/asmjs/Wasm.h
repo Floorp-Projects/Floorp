@@ -165,7 +165,7 @@ ToMIRType(ExprType et)
 // lifetime since they own the memory. The latter Sig objects must not outlive
 // the associated LifoAlloc mark/release interval (which is currently the
 // duration of module validation+compilation). Thus, long-lived objects like
-// AsmJSModule must use malloced allocation.
+// WasmModule must use malloced allocation.
 
 template <class AllocPolicy>
 class Sig
@@ -245,6 +245,328 @@ class LifoSig : public Sig<LifoAllocPolicy<Fallible>>
         return new (mem) LifoSig(Move(args), src.ret());
     }
 };
+
+// While the frame-pointer chain allows the stack to be unwound without
+// metadata, Error.stack still needs to know the line/column of every call in
+// the chain. A CallSiteDesc describes a single callsite to which CallSite adds
+// the metadata necessary to walk up to the next frame. Lastly CallSiteAndTarget
+// adds the function index of the callee.
+
+class CallSiteDesc
+{
+    uint32_t line_;
+    uint32_t column_ : 31;
+    uint32_t kind_ : 1;
+  public:
+    enum Kind {
+        Relative,  // pc-relative call
+        Register   // call *register
+    };
+    CallSiteDesc() {}
+    explicit CallSiteDesc(Kind kind)
+      : line_(0), column_(0), kind_(kind)
+    {}
+    CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
+      : line_(line), column_(column), kind_(kind)
+    {
+        MOZ_ASSERT(column_ == column, "column must fit in 31 bits");
+    }
+    uint32_t line() const { return line_; }
+    uint32_t column() const { return column_; }
+    Kind kind() const { return Kind(kind_); }
+};
+
+class CallSite : public CallSiteDesc
+{
+    uint32_t returnAddressOffset_;
+    uint32_t stackDepth_;
+
+  public:
+    CallSite() {}
+
+    CallSite(CallSiteDesc desc, uint32_t returnAddressOffset, uint32_t stackDepth)
+      : CallSiteDesc(desc),
+        returnAddressOffset_(returnAddressOffset),
+        stackDepth_(stackDepth)
+    { }
+
+    void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
+    void offsetReturnAddressBy(int32_t o) { returnAddressOffset_ += o; }
+    uint32_t returnAddressOffset() const { return returnAddressOffset_; }
+
+    // The stackDepth measures the amount of stack space pushed since the
+    // function was called. In particular, this includes the pushed return
+    // address on all archs (whether or not the call instruction pushes the
+    // return address (x86/x64) or the prologue does (ARM/MIPS)).
+    uint32_t stackDepth() const { return stackDepth_; }
+};
+
+class CallSiteAndTarget : public CallSite
+{
+    uint32_t targetIndex_;
+
+  public:
+    CallSiteAndTarget(CallSite cs, uint32_t targetIndex)
+      : CallSite(cs), targetIndex_(targetIndex)
+    { }
+
+    static const uint32_t NOT_INTERNAL = UINT32_MAX;
+
+    bool isInternal() const { return targetIndex_ != NOT_INTERNAL; }
+    uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
+};
+
+typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
+typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
+
+// Summarizes a heap access made by wasm code that needs to be patched later
+// and/or looked up by the wasm signal handlers. Different architectures need
+// to know different things (x64: offset and length, ARM: where to patch in
+// heap length, x86: where to patch in heap length and base).
+
+#if defined(JS_CODEGEN_X86)
+class HeapAccess
+{
+    uint32_t insnOffset_;
+    uint8_t opLength_;  // the length of the load/store instruction
+    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
+
+  public:
+    HeapAccess() = default;
+    static const uint32_t NoLengthCheck = UINT32_MAX;
+
+    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
+    // cmpDelta_ is zero indicating that there is no length to patch.
+    HeapAccess(uint32_t insnOffset, uint32_t after, uint32_t cmp = NoLengthCheck) {
+        mozilla::PodZero(this);  // zero padding for Valgrind
+        insnOffset_ = insnOffset;
+        opLength_ = after - insnOffset;
+        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
+    }
+
+    uint32_t insnOffset() const { return insnOffset_; }
+    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
+    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
+    void* patchHeapPtrImmAt(uint8_t* code) const { return code + (insnOffset_ + opLength_); }
+    bool hasLengthCheck() const { return cmpDelta_ > 0; }
+    void* patchLengthAt(uint8_t* code) const {
+        MOZ_ASSERT(hasLengthCheck());
+        return code + (insnOffset_ - cmpDelta_);
+    }
+};
+#elif defined(JS_CODEGEN_X64)
+class HeapAccess
+{
+  public:
+    enum WhatToDoOnOOB {
+        CarryOn, // loads return undefined, stores do nothing.
+        Throw    // throw a RangeError
+    };
+
+  private:
+    uint32_t insnOffset_;
+    uint8_t offsetWithinWholeSimdVector_; // if is this e.g. the Z of an XYZ
+    bool throwOnOOB_;                     // should we throw on OOB?
+    uint8_t cmpDelta_;                    // the number of bytes from the cmp to the load/store instruction
+
+  public:
+    HeapAccess() = default;
+    static const uint32_t NoLengthCheck = UINT32_MAX;
+
+    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
+    // cmpDelta_ is zero indicating that there is no length to patch.
+    HeapAccess(uint32_t insnOffset, WhatToDoOnOOB oob,
+               uint32_t cmp = NoLengthCheck,
+               uint32_t offsetWithinWholeSimdVector = 0)
+    {
+        mozilla::PodZero(this);  // zero padding for Valgrind
+        insnOffset_ = insnOffset;
+        offsetWithinWholeSimdVector_ = offsetWithinWholeSimdVector;
+        throwOnOOB_ = oob == Throw;
+        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
+        MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector);
+    }
+
+    uint32_t insnOffset() const { return insnOffset_; }
+    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
+    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
+    bool throwOnOOB() const { return throwOnOOB_; }
+    uint32_t offsetWithinWholeSimdVector() const { return offsetWithinWholeSimdVector_; }
+    bool hasLengthCheck() const { return cmpDelta_ > 0; }
+    void* patchLengthAt(uint8_t* code) const {
+        MOZ_ASSERT(hasLengthCheck());
+        return code + (insnOffset_ - cmpDelta_);
+    }
+};
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+class HeapAccess
+{
+    uint32_t insnOffset_;
+  public:
+    HeapAccess() = default;
+    explicit HeapAccess(uint32_t insnOffset) : insnOffset_(insnOffset) {}
+    uint32_t insnOffset() const { return insnOffset_; }
+    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
+    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
+};
+#elif defined(JS_CODEGEN_NONE)
+class HeapAccess { };
+#endif
+
+typedef Vector<HeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
+
+// A wasm::Builtin represents a function implemented by the engine that is
+// called directly from wasm code and should show up in the callstack.
+
+enum class Builtin : uint16_t
+{
+    ToInt32,
+#if defined(JS_CODEGEN_ARM)
+    aeabi_idivmod,
+    aeabi_uidivmod,
+    AtomicCmpXchg,
+    AtomicXchg,
+    AtomicFetchAdd,
+    AtomicFetchSub,
+    AtomicFetchAnd,
+    AtomicFetchOr,
+    AtomicFetchXor,
+#endif
+    ModD,
+    SinD,
+    CosD,
+    TanD,
+    ASinD,
+    ACosD,
+    ATanD,
+    CeilD,
+    CeilF,
+    FloorD,
+    FloorF,
+    ExpD,
+    LogD,
+    PowD,
+    ATan2D,
+    Limit
+};
+
+// A wasm::SymbolicAddress represents a pointer to a well-known function or
+// object that is embedded in wasm code. Since wasm code is serialized and
+// later deserialized into a different address space, symbolic addresses must be
+// used for *all* pointers into the address space. The MacroAssembler records a
+// list of all SymbolicAddresses and the offsets of their use in the code for
+// later patching during static linking.
+
+enum class SymbolicAddress
+{
+    ToInt32         = unsigned(Builtin::ToInt32),
+#if defined(JS_CODEGEN_ARM)
+    aeabi_idivmod   = unsigned(Builtin::aeabi_idivmod),
+    aeabi_uidivmod  = unsigned(Builtin::aeabi_uidivmod),
+    AtomicCmpXchg   = unsigned(Builtin::AtomicCmpXchg),
+    AtomicXchg      = unsigned(Builtin::AtomicXchg),
+    AtomicFetchAdd  = unsigned(Builtin::AtomicFetchAdd),
+    AtomicFetchSub  = unsigned(Builtin::AtomicFetchSub),
+    AtomicFetchAnd  = unsigned(Builtin::AtomicFetchAnd),
+    AtomicFetchOr   = unsigned(Builtin::AtomicFetchOr),
+    AtomicFetchXor  = unsigned(Builtin::AtomicFetchXor),
+#endif
+    ModD            = unsigned(Builtin::ModD),
+    SinD            = unsigned(Builtin::SinD),
+    CosD            = unsigned(Builtin::CosD),
+    TanD            = unsigned(Builtin::TanD),
+    ASinD           = unsigned(Builtin::ASinD),
+    ACosD           = unsigned(Builtin::ACosD),
+    ATanD           = unsigned(Builtin::ATanD),
+    CeilD           = unsigned(Builtin::CeilD),
+    CeilF           = unsigned(Builtin::CeilF),
+    FloorD          = unsigned(Builtin::FloorD),
+    FloorF          = unsigned(Builtin::FloorF),
+    ExpD            = unsigned(Builtin::ExpD),
+    LogD            = unsigned(Builtin::LogD),
+    PowD            = unsigned(Builtin::PowD),
+    ATan2D          = unsigned(Builtin::ATan2D),
+    Runtime,
+    RuntimeInterruptUint32,
+    StackLimit,
+    ReportOverRecursed,
+    OnDetached,
+    OnOutOfBounds,
+    OnImpreciseConversion,
+    HandleExecutionInterrupt,
+    InvokeFromAsmJS_Ignore,
+    InvokeFromAsmJS_ToInt32,
+    InvokeFromAsmJS_ToNumber,
+    CoerceInPlace_ToInt32,
+    CoerceInPlace_ToNumber,
+    Limit
+};
+
+static inline SymbolicAddress
+BuiltinToImmediate(Builtin b)
+{
+    return SymbolicAddress(b);
+}
+
+static inline bool
+ImmediateIsBuiltin(SymbolicAddress imm, Builtin* builtin)
+{
+    if (uint32_t(imm) < uint32_t(Builtin::Limit)) {
+        *builtin = Builtin(imm);
+        return true;
+    }
+    return false;
+}
+
+// An ExitReason describes the possible reasons for leaving compiled wasm code
+// or the state of not having left compiled wasm code (ExitReason::None).
+
+class ExitReason
+{
+  public:
+    // List of reasons for execution leaving compiled wasm code (or None, if
+    // control hasn't exited).
+    enum Kind
+    {
+        None,       // default state, the pc is in wasm code
+        Jit,        // fast-path exit to JIT code
+        Slow,       // general case exit to C++ Invoke
+        Interrupt,  // executing an interrupt callback
+        Builtin     // calling into a builtin (native) function
+    };
+
+  private:
+    Kind kind_;
+    wasm::Builtin builtin_;
+
+  public:
+    ExitReason() = default;
+    MOZ_IMPLICIT ExitReason(Kind kind) : kind_(kind) { MOZ_ASSERT(kind != Builtin); }
+    MOZ_IMPLICIT ExitReason(wasm::Builtin builtin) : kind_(Builtin), builtin_(builtin) {}
+    Kind kind() const { return kind_; }
+    wasm::Builtin builtin() const { MOZ_ASSERT(kind_ == Builtin); return builtin_; }
+
+    uint32_t pack() const {
+        static_assert(sizeof(wasm::Builtin) == 2, "fits");
+        return uint16_t(kind_) | (uint16_t(builtin_) << 16);
+    }
+    static ExitReason unpack(uint32_t u32) {
+        static_assert(sizeof(wasm::Builtin) == 2, "fits");
+        ExitReason r;
+        r.kind_ = Kind(uint16_t(u32));
+        r.builtin_ = wasm::Builtin(uint16_t(u32 >> 16));
+        return r;
+    }
+};
+
+// A hoisting of constants that would otherwise require #including WasmModule.h
+// everywhere. Values are asserted in WasmModule.h.
+
+static const unsigned ActivationGlobalDataOffset = 0;
+static const unsigned HeapGlobalDataOffset = sizeof(void*);
+static const unsigned NaN64GlobalDataOffset = 2 * sizeof(void*);
+static const unsigned NaN32GlobalDataOffset = 2 * sizeof(void*) + sizeof(double);
 
 } // namespace wasm
 } // namespace js

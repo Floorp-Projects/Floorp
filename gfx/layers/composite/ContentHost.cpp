@@ -18,9 +18,6 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-} // namespace gfx
 using namespace gfx;
 
 namespace layers {

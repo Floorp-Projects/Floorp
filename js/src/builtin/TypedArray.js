@@ -655,7 +655,7 @@ function ViewedArrayBufferIfReified(tarray) {
     assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
 
     var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
-    assert(buf === null || (IsObject(buf) && IsArrayBuffer(buf)),
+    assert(buf === null || (IsObject(buf) && (IsArrayBuffer(buf) || IsSharedArrayBuffer(buf))),
            "unexpected value in buffer slot");
     return buf;
 }
@@ -666,8 +666,17 @@ function IsDetachedBuffer(buffer) {
     if (buffer === null)
         return false;
 
-    assert(IsArrayBuffer(buffer),
+    assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
            "non-ArrayBuffer passed to IsDetachedBuffer");
+
+    // Typed arrays whose buffers map shared memory can't have been neutered.
+    //
+    // This check is more expensive than desirable, but IsDetachedBuffer is
+    // only hot for non-shared memory in SetFromNonTypedArray, so there is an
+    // optimization in place there to avoid incurring the cost here.  An
+    // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
+    if (IsSharedArrayBuffer(buffer))
+	return false;
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
     return (flags & JS_ARRAYBUFFER_NEUTERED_FLAG) !== 0;
@@ -694,6 +703,11 @@ function SetFromNonTypedArray(target, array, targetOffset, targetLength, targetB
     // Step 22.
     var k = 0;
 
+    // Optimization: if the buffer is shared then it is not detachable
+    // and also not inline, so avoid checking overhead inside the loop in
+    // that case.
+    var isShared = targetBuffer !== null && IsSharedArrayBuffer(targetBuffer);
+
     // Steps 12-15, 21, 23-24.
     while (targetOffset < limitOffset) {
         // Steps 24a-c.
@@ -701,13 +715,15 @@ function SetFromNonTypedArray(target, array, targetOffset, targetLength, targetB
 
         // Step 24d.  This explicit check will be unnecessary when we implement
         // throw-on-getting/setting-element-in-detached-buffer semantics.
-        if (targetBuffer === null) {
-            // A typed array previously using inline storage may acquire a
-            // buffer, so we must check with the source.
-            targetBuffer = ViewedArrayBufferIfReified(target);
-        }
-        if (IsDetachedBuffer(targetBuffer))
-            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+	if (!isShared) {
+            if (targetBuffer === null) {
+		// A typed array previously using inline storage may acquire a
+		// buffer, so we must check with the source.
+		targetBuffer = ViewedArrayBufferIfReified(target);
+            }
+            if (IsDetachedBuffer(targetBuffer))
+		ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+	}
 
         // Step 24e.
         target[targetOffset] = kNumber;

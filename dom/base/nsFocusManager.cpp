@@ -2827,6 +2827,11 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
         return FocusFirst(root, aNextContent);
       }
 
+      // Once we have hit the top-level and have iterated to the end again, we
+      // just want to break out next time we hit this spot to prevent infinite
+      // iteration.
+      mayFocusRoot = true;
+
       // reset the tab index and start again from the beginning or end
       startContent = rootContent;
       tabIndex = forward ? 1 : 0;

@@ -584,6 +584,20 @@ DialogValueHolder::Get(nsIPrincipal* aSubject, nsIVariant** aResult)
   return NS_OK;
 }
 
+void
+DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
+                       nsIPrincipal* aSubject,
+                       JS::MutableHandle<JS::Value> aResult,
+                       mozilla::ErrorResult& aError)
+{
+  if (aSubject->Subsumes(mOrigin)) {
+    aError = nsContentUtils::XPConnect()->VariantToJS(aCx, aScope,
+                                                      mValue, aResult);
+  } else {
+    aResult.setUndefined();
+  }
+}
+
 namespace mozilla {
 namespace dom {
 extern uint64_t

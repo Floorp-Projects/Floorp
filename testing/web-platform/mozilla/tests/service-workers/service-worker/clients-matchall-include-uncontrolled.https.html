@@ -28,10 +28,10 @@ var expected_without_include_uncontrolled = [
 
 var expected_with_include_uncontrolled = [
     /* visibilityState, focused, url, frameType */
+    ['visible', true, location.href, 'top-level'],
     ['visible', false, new URL(scope + '#1', location).toString(), 'nested'],
     ['visible', true, new URL(scope + '#2', location).toString(), 'nested'],
-    ['visible', false, new URL(base_url, location).toString(), 'nested'],
-    ['visible', true, location.href, 'top-level']
+    ['visible', false, new URL(base_url, location).toString(), 'nested']
 ];
 
 function test_matchall(frame, expected, query_options) {
@@ -42,9 +42,13 @@ function test_matchall(frame, expected, query_options) {
   return new Promise(function(resolve, reject) {
     var channel = new MessageChannel();
     channel.port1.onmessage = function(e) {
-      assert_equals(e.data.length, expected.length);
-      for (var i = 0; i < e.data.length; i++)
-        assert_array_equals(e.data[i], expected[i]);
+      // Ignore hidden clients which may be coming from background tabs.
+      var data = e.data.filter(function(info) {
+        return info[0] == 'visible';
+      });
+      assert_equals(data.length, expected.length);
+      for (var i = 0; i < data.length; i++)
+        assert_array_equals(data[i], expected[i]);
       resolve(frame);
     };
     frame.contentWindow.navigator.serviceWorker.controller.postMessage(

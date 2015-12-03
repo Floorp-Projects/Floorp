@@ -28,6 +28,7 @@ enum OneByteOpcodeID {
     OP_OR_EAXIv                     = 0x0D,
     OP_2BYTE_ESCAPE                 = 0x0F,
     OP_NOP_0F                       = 0x0F,
+    OP_ADC_GvEv                     = 0x13,
     OP_NOP_1F                       = 0x1F,
     OP_AND_EbGb                     = 0x20,
     OP_AND_EvGv                     = 0x21,

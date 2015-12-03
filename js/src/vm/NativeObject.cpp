@@ -37,6 +37,13 @@ static const ObjectElements emptyElementsHeader(0, 0);
 HeapSlot* const js::emptyObjectElements =
     reinterpret_cast<HeapSlot*>(uintptr_t(&emptyElementsHeader) + sizeof(ObjectElements));
 
+static const ObjectElements emptyElementsHeaderShared(0, 0, ObjectElements::SharedMemory::IsShared);
+
+/* Objects with no elements share one empty set of elements. */
+HeapSlot* const js::emptyObjectElementsShared =
+    reinterpret_cast<HeapSlot*>(uintptr_t(&emptyElementsHeaderShared) + sizeof(ObjectElements));
+
+
 #ifdef DEBUG
 
 bool
@@ -56,7 +63,8 @@ ObjectElements::ConvertElementsToDoubles(JSContext* cx, uintptr_t elementsPtr)
      * elements converted to doubles, and arrays never have empty elements.
      */
     HeapSlot* elementsHeapPtr = (HeapSlot*) elementsPtr;
-    MOZ_ASSERT(elementsHeapPtr != emptyObjectElements);
+    MOZ_ASSERT(elementsHeapPtr != emptyObjectElements &&
+               elementsHeapPtr != emptyObjectElementsShared);
 
     ObjectElements* header = ObjectElements::fromElements(elementsHeapPtr);
     MOZ_ASSERT(!header->shouldConvertDoubleElements());
@@ -2188,8 +2196,6 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
         if (index < len) {
             if (obj->is<TypedArrayObject>())
                 TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-            else
-                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
         }
         return result.succeed();
     }

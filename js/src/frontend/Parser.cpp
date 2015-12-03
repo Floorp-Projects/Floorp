@@ -5370,9 +5370,6 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
                 if (parseDecl) {
                     bool constDecl = tt == TOK_CONST;
                     isForDecl = true;
-                    blockObj = StaticBlockObject::create(context);
-                    if (!blockObj)
-                        return null();
 
                     // Initialize the enclosing scope manually for the call to
                     // |variables| below.

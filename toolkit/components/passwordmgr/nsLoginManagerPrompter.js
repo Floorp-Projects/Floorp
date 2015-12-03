@@ -1567,35 +1567,21 @@ LoginManagerPrompter.prototype = {
   },
 
 
-  /*
-   * _getFormattedHostname
-   *
+  /**
    * The aURI parameter may either be a string uri, or an nsIURI instance.
    *
    * Returns the hostname to use in a nsILoginInfo object (for example,
    * "http://example.com").
    */
   _getFormattedHostname : function (aURI) {
-    var uri;
+    let uri;
     if (aURI instanceof Ci.nsIURI) {
       uri = aURI;
     } else {
       uri = Services.io.newURI(aURI, null, null);
     }
-    var scheme = uri.scheme;
 
-    var hostname = scheme + "://" + uri.host;
-
-    // If the URI explicitly specified a port, only include it when
-    // it's not the default. (We never want "http://foo.com:80")
-    var port = uri.port;
-    if (port != -1) {
-      var handler = Services.io.getProtocolHandler(scheme);
-      if (port != handler.defaultPort)
-        hostname += ":" + port;
-    }
-
-    return hostname;
+    return uri.scheme + "://" + uri.hostPort;
   },
 
 
