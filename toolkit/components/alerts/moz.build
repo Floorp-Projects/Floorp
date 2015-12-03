@@ -16,7 +16,13 @@ EXPORTS += [
     'nsAlertsUtils.h',
 ]
 
+EXPORTS.mozilla += [
+    'AlertNotification.h',
+    'AlertNotificationIPCSerializer.h',
+]
+
 UNIFIED_SOURCES += [
+    'AlertNotification.cpp',
     'nsAlertsService.cpp',
     'nsAlertsUtils.cpp',
     'nsXULAlerts.cpp',

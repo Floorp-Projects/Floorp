@@ -8,6 +8,91 @@
 
 interface nsIPrincipal;
 
+%{C++
+#define ALERT_NOTIFICATION_CONTRACTID "@mozilla.org/alert-notification;1"
+%}
+
+[scriptable, uuid(b26b4a67-81b0-4270-8311-1e00a097ef92)]
+interface nsIAlertNotification : nsISupports
+{
+  /** Initializes an alert notification. */
+  void init([optional] in AString name,
+            [optional] in AString imageURL,
+            [optional] in AString title,
+            [optional] in AString text,
+            [optional] in boolean textClickable,
+            [optional] in AString cookie,
+            [optional] in AString dir,
+            [optional] in AString lang,
+            [optional] in AString data,
+            [optional] in nsIPrincipal principal,
+            [optional] in boolean inPrivateBrowsing);
+
+  /**
+   * The name of the notification. This is currently only used on Android and
+   * OS X. On Android, the name is hashed and used as a notification ID.
+   * Notifications will replace previous notifications with the same name.
+   */
+  readonly attribute AString name;
+
+  /**
+   * A URL identifying the image to put in the alert. The OS X backend limits
+   * the amount of time it will wait for the image to load to six seconds. After
+   * that time, the alert will show without an image.
+   */
+  readonly attribute AString imageURL;
+
+  /** The title for the alert. */
+  readonly attribute AString title;
+
+  /** The contents of the alert. */
+  readonly attribute AString text;
+
+  /**
+   * Controls the click behavior. If true, the alert listener will be notified
+   * when the user clicks on the alert.
+   */
+  readonly attribute boolean textClickable;
+
+  /**
+   * An opaque cookie that will be passed to the alert listener for each
+   * callback.
+   */
+  readonly attribute AString cookie;
+
+  /**
+   * Bidi override for the title and contents. Valid values are "auto", "ltr",
+   * or "rtl". Ignored if the backend doesn't support localization.
+   */
+  readonly attribute AString dir;
+
+  /**
+   * Language of the title and text. Ignored if the backend doesn't support
+   * localization.
+   */
+  readonly attribute AString lang;
+
+  /**
+   * A Base64-encoded structured clone buffer containing data associated with
+   * this alert. Only used for web notifications. Chrome callers should use a
+   * cookie instead.
+   */
+  readonly attribute AString data;
+
+  /**
+   * The principal of the page that created the alert. Used for IPC security
+   * checks, and to determine whether the alert should show the source string
+   * and action buttons.
+   */
+  readonly attribute nsIPrincipal principal;
+
+  /**
+   * Controls the image loading behavior. If true, the image URL will be loaded
+   * in private browsing mode.
+   */
+  readonly attribute boolean inPrivateBrowsing;
+};
+
 [scriptable, uuid(9d0284bf-db40-42da-8f0d-c2769dbde7aa)]
 interface nsIAlertsService : nsISupports
 {
