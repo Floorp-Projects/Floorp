@@ -172,8 +172,8 @@ class MachCommands(MachCommandBase):
         help='Path to files to lint, like "browser/components/loop" '
             'or "mobile/android". '
             'Defaults to the current directory if not given.')
-    @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx]',
-        help='Filename extensions to lint, default: "[.js,.jsm,.jsx]".')
+    @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx,.xml]',
+        help='Filename extensions to lint, default: "[.js,.jsm,.jsx,.xml]".')
     @CommandArgument('-b', '--binary', default=None,
         help='Path to eslint binary.')
     @CommandArgument('args', nargs=argparse.REMAINDER)  # Passed through to eslint.
