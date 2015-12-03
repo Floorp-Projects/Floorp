@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+var htmlAudio = new Audio(URL.createObjectURL(new window.MediaSource()));
+
+(new window.AudioContext("ringer")).createMediaElementSource(htmlAudio);
+(new window.AudioContext("alarm")).createMediaElementSource(htmlAudio);
+
+</script>
+</head>
+</html>
