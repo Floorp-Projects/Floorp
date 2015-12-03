@@ -6,6 +6,8 @@
 
 const EXPORTED_SYMBOLS = ["WebRequest"];
 
+/* exported WebRequest */
+
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
@@ -37,7 +39,7 @@ function parseExtra(extra, allowed) {
   if (extra) {
     for (let ex of extra) {
       if (allowed.indexOf(ex) == -1) {
-        throw `Invalid option ${ex}`;
+        throw new Error(`Invalid option ${ex}`);
       }
     }
   }
@@ -81,7 +83,7 @@ var ContentPolicyManager = {
           windowId: msg.data.windowId,
           parentWindowId: msg.data.parentWindowId,
           type: msg.data.type,
-          browser: browser
+          browser: browser,
         });
       } catch (e) {
         Cu.reportError(e);
@@ -122,8 +124,7 @@ var ContentPolicyManager = {
 };
 ContentPolicyManager.init();
 
-function StartStopListener(manager, loadContext)
-{
+function StartStopListener(manager, loadContext) {
   this.manager = manager;
   this.loadContext = loadContext;
   this.orig = null;
@@ -147,7 +148,7 @@ StartStopListener.prototype = {
 
   onDataAvailable(...args) {
     return this.orig.onDataAvailable(...args);
-  }
+  },
 };
 
 var HttpObserverManager = {
@@ -308,7 +309,7 @@ var HttpObserverManager = {
       }
       if (opts.requestHeaders && result.requestHeaders) {
         // Start by clearing everything.
-        for (let {name, value} of requestHeaders) {
+        for (let {name} of requestHeaders) {
           channel.setRequestHeader(name, "", false);
         }
 
@@ -318,7 +319,7 @@ var HttpObserverManager = {
       }
       if (opts.responseHeaders && result.responseHeaders) {
         // Start by clearing everything.
-        for (let {name, value} of responseHeaders) {
+        for (let {name} of responseHeaders) {
           channel.setResponseHeader(name, "", false);
         }
 
@@ -372,7 +373,7 @@ var onBeforeRequest = {
 
   removeListener(callback) {
     ContentPolicyManager.removeListener(callback);
-  }
+  },
 };
 
 var onBeforeSendHeaders = {
@@ -384,7 +385,7 @@ var onBeforeSendHeaders = {
 
   removeListener(callback) {
     HttpObserverManager.removeListener("modify", callback);
-  }
+  },
 };
 
 var onSendHeaders = {
@@ -396,7 +397,7 @@ var onSendHeaders = {
 
   removeListener(callback) {
     HttpObserverManager.removeListener("afterModify", callback);
-  }
+  },
 };
 
 var onHeadersReceived = {
@@ -408,7 +409,7 @@ var onHeadersReceived = {
 
   removeListener(callback) {
     HttpObserverManager.removeListener("headersReceived", callback);
-  }
+  },
 };
 
 var onResponseStarted = {
@@ -420,7 +421,7 @@ var onResponseStarted = {
 
   removeListener(callback) {
     HttpObserverManager.removeListener("onStart", callback);
-  }
+  },
 };
 
 var onCompleted = {
@@ -432,7 +433,7 @@ var onCompleted = {
 
   removeListener(callback) {
     HttpObserverManager.removeListener("onStop", callback);
-  }
+  },
 };
 
 var WebRequest = {

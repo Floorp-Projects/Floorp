@@ -70,15 +70,15 @@ var Frames = {
 
   receiveMessage({name, data}) {
     switch (name) {
-    case "Extension:TopWindowID":
-      // FIXME: Need to handle the case where the content process
-      // crashes. Right now we leak its top window IDs.
-      this.topWindowIds.add(data.windowId);
-      break;
+      case "Extension:TopWindowID":
+        // FIXME: Need to handle the case where the content process
+        // crashes. Right now we leak its top window IDs.
+        this.topWindowIds.add(data.windowId);
+        break;
 
-    case "Extension:RemoveTopWindowID":
-      this.topWindowIds.delete(data.windowId);
-      break;
+      case "Extension:RemoveTopWindowID":
+        this.topWindowIds.delete(data.windowId);
+        break;
     }
   },
 };
@@ -161,7 +161,7 @@ var Service = {
     }
 
     let path = uri.path;
-    if (path.length > 0 && path[0] == '/') {
+    if (path.length > 0 && path[0] == "/") {
       path = path.substr(1);
     }
     return extension.webAccessibleResources.has(path);

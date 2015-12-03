@@ -1,0 +1,12 @@
+{
+  "extends": "../../components/extensions/.eslintrc",
+
+  "globals": {
+    "addEventListener": false,
+    "addMessageListener": false,
+    "removeEventListener": false,
+    "sendAsyncMessage": false,
+
+    "initialProcessData": true,
+  },
+}

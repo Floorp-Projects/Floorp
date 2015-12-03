@@ -1,3 +1,5 @@
+"use strict";
+
 extensions.registerPrivilegedAPI("idle", (extension, context) => {
   return {
     idle: {

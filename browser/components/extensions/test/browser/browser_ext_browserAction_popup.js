@@ -20,11 +20,11 @@ add_task(function* testPageActionPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "background": {
-        "page": "data/background.html"
+        "page": "data/background.html",
       },
       "browser_action": {
-        "default_popup": "popup-a.html"
-      }
+        "default_popup": "popup-a.html",
+      },
     },
 
     files: {
@@ -41,7 +41,8 @@ add_task(function* testPageActionPopup() {
       "data/background.html": `<script src="background.js"></script>`,
 
       "data/background.js": function() {
-        var tests = [
+        let sendClick;
+        let tests = [
           () => {
             sendClick({ expectEvent: false, expectPopup: "a" });
           },
@@ -68,11 +69,11 @@ add_task(function* testPageActionPopup() {
           },
         ];
 
-        var expect = {};
-        function sendClick({ expectEvent, expectPopup }) {
+        let expect = {};
+        sendClick = ({ expectEvent, expectPopup }) => {
           expect = { event: expectEvent, popup: expectPopup };
           browser.test.sendMessage("send-click");
-        }
+        };
 
         browser.runtime.onMessage.addListener(msg => {
           if (expect.popup) {
@@ -103,7 +104,7 @@ add_task(function* testPageActionPopup() {
           }
 
           if (tests.length) {
-            var test = tests.shift();
+            let test = tests.shift();
             test();
           } else {
             browser.test.notifyPass("browseraction-tests-done");
