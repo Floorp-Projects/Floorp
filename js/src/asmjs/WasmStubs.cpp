@@ -19,6 +19,7 @@
 #include "asmjs/WasmStubs.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EnumeratedRange.h"
 
 #include "asmjs/AsmJSModule.h"
 
@@ -29,6 +30,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::ArrayLength;
+using mozilla::MakeEnumeratedRange;
 
 typedef Vector<MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
@@ -302,68 +304,70 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
 //     preserve the argument registers (going in) and the return register
 //     (coming out) and preserve non-volatile registers.
 static bool
-GenerateBuiltinThunk(MacroAssembler& masm, AsmJSModule& module, AsmJSExit::BuiltinKind builtin)
+GenerateBuiltinThunk(MacroAssembler& masm, AsmJSModule& module, Builtin builtin)
 {
     MIRTypeVector args;
     switch (builtin) {
-      case AsmJSExit::Builtin_ToInt32:
+      case Builtin::ToInt32:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         break;
 #if defined(JS_CODEGEN_ARM)
-      case AsmJSExit::Builtin_IDivMod:
-      case AsmJSExit::Builtin_UDivMod:
+      case Builtin::aeabi_idivmod:
+      case Builtin::aeabi_uidivmod:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         break;
-      case AsmJSExit::Builtin_AtomicCmpXchg:
+      case Builtin::AtomicCmpXchg:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         break;
-      case AsmJSExit::Builtin_AtomicXchg:
-      case AsmJSExit::Builtin_AtomicFetchAdd:
-      case AsmJSExit::Builtin_AtomicFetchSub:
-      case AsmJSExit::Builtin_AtomicFetchAnd:
-      case AsmJSExit::Builtin_AtomicFetchOr:
-      case AsmJSExit::Builtin_AtomicFetchXor:
+      case Builtin::AtomicXchg:
+      case Builtin::AtomicFetchAdd:
+      case Builtin::AtomicFetchSub:
+      case Builtin::AtomicFetchAnd:
+      case Builtin::AtomicFetchOr:
+      case Builtin::AtomicFetchXor:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
         break;
 #endif
-      case AsmJSExit::Builtin_SinD:
-      case AsmJSExit::Builtin_CosD:
-      case AsmJSExit::Builtin_TanD:
-      case AsmJSExit::Builtin_ASinD:
-      case AsmJSExit::Builtin_ACosD:
-      case AsmJSExit::Builtin_ATanD:
-      case AsmJSExit::Builtin_CeilD:
-      case AsmJSExit::Builtin_FloorD:
-      case AsmJSExit::Builtin_ExpD:
-      case AsmJSExit::Builtin_LogD:
+      case Builtin::SinD:
+      case Builtin::CosD:
+      case Builtin::TanD:
+      case Builtin::ASinD:
+      case Builtin::ACosD:
+      case Builtin::ATanD:
+      case Builtin::CeilD:
+      case Builtin::FloorD:
+      case Builtin::ExpD:
+      case Builtin::LogD:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
         break;
-      case AsmJSExit::Builtin_ModD:
-      case AsmJSExit::Builtin_PowD:
-      case AsmJSExit::Builtin_ATan2D:
+      case Builtin::ModD:
+      case Builtin::PowD:
+      case Builtin::ATan2D:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
         MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
         break;
-      case AsmJSExit::Builtin_CeilF:
-      case AsmJSExit::Builtin_FloorF:
+      case Builtin::CeilF:
+      case Builtin::FloorF:
         MOZ_ALWAYS_TRUE(args.append(MIRType_Float32));
         break;
-      case AsmJSExit::Builtin_Limit:
+      case Builtin::Limit:
         MOZ_CRASH("Bad builtin");
     }
 
-    MOZ_ASSERT(masm.framePushed() == 0);
+    MOZ_ASSERT(args.length() <= 4);
+    static_assert(MIRTypeVector::InlineLength >= 4, "infallibility of append");
 
+    MOZ_ASSERT(masm.framePushed() == 0);
     uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
     AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::Builtin(builtin), &offsets);
+    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason(builtin), &offsets);
 
     for (ABIArgMIRTypeIter i(args); !i.done(); i++) {
         if (i->kind() != ABIArg::Stack)
@@ -386,9 +390,9 @@ GenerateBuiltinThunk(MacroAssembler& masm, AsmJSModule& module, AsmJSExit::Built
     }
 
     AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(BuiltinToImmKind(builtin));
+    masm.call(BuiltinToImmediate(builtin));
 
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Builtin(builtin), &offsets);
+    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason(builtin), &offsets);
 
     if (masm.oom())
         return false;
@@ -452,7 +456,7 @@ CheckForHeapDetachment(MacroAssembler& masm, const AsmJSModule& module, Register
     AssertStackAlignment(masm, ABIStackAlignment);
 #if defined(JS_CODEGEN_X86)
     CodeOffset offset = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
-    masm.append(AsmJSGlobalAccess(offset, AsmJSHeapGlobalDataOffset));
+    masm.append(AsmJSGlobalAccess(offset, HeapGlobalDataOffset));
     masm.branchTestPtr(Assembler::Zero, scratch, scratch, onDetached);
 #else
     masm.branchTestPtr(Assembler::Zero, HeapReg, HeapReg, onDetached);
@@ -486,7 +490,7 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
     AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::SlowFFI, &offsets);
+    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason::Slow, &offsets);
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
@@ -526,11 +530,11 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
     AssertStackAlignment(masm, ABIStackAlignment);
     switch (exit.sig().ret()) {
       case ExprType::Void:
-        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore));
+        masm.call(SymbolicAddress::InvokeFromAsmJS_Ignore);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case ExprType::I32:
-        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToInt32));
+        masm.call(SymbolicAddress::InvokeFromAsmJS_ToInt32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
@@ -539,7 +543,7 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
       case ExprType::F32:
         MOZ_CRASH("Float32 shouldn't be returned from a FFI");
       case ExprType::F64:
-        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber));
+        masm.call(SymbolicAddress::InvokeFromAsmJS_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
@@ -553,7 +557,7 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
     masm.loadAsmJSHeapRegisterFromGlobalData();
     CheckForHeapDetachment(masm, module, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
 
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::SlowFFI, &offsets);
+    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason::Slow, &offsets);
 
     if (masm.oom())
         return false;
@@ -593,7 +597,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
                               sizeOfRetAddr;
 
     AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, ionFramePushed, AsmJSExit::JitFFI, &offsets);
+    GenerateAsmJSExitPrologue(masm, ionFramePushed, ExitReason::Jit, &offsets);
 
     // 1. Descriptor
     size_t argOffset = 0;
@@ -739,7 +743,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
         size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
         size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
 
-        masm.movePtr(AsmJSImmPtr(AsmJSImm_Runtime), reg0);
+        masm.movePtr(SymbolicAddress::Runtime, reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
 
         //   rt->jitTop = prevJitTop_;
@@ -807,7 +811,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     masm.loadAsmJSHeapRegisterFromGlobalData();
     CheckForHeapDetachment(masm, module, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
 
-    GenerateAsmJSExitEpilogue(masm, masm.framePushed(), AsmJSExit::JitFFI, &offsets);
+    GenerateAsmJSExitEpilogue(masm, masm.framePushed(), ExitReason::Jit, &offsets);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -840,12 +844,12 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
         AssertStackAlignment(masm, ABIStackAlignment);
         switch (exit.sig().ret()) {
           case ExprType::I32:
-            masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32));
+            masm.call(SymbolicAddress::CoerceInPlace_ToInt32);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
             masm.unboxInt32(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnReg);
             break;
           case ExprType::F64:
-            masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber));
+            masm.call(SymbolicAddress::CoerceInPlace_ToNumber);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
             masm.loadDouble(Address(masm.getStackPointer(), offsetToCoerceArgv), ReturnDoubleReg);
             break;
@@ -882,7 +886,7 @@ GenerateOnDetachedExit(MacroAssembler& masm, AsmJSModule& module, Label* onDetac
 
     // For now, OnDetached always throws (see OnDetached comment).
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImmPtr(AsmJSImm_OnDetached));
+    masm.call(SymbolicAddress::OnDetached);
     masm.jump(throwLabel);
 
     if (masm.oom())
@@ -919,7 +923,7 @@ GenerateStackOverflowExit(MacroAssembler& masm, AsmJSModule& module, Label* thro
 
     // No need to restore the stack; the throw stub pops everything.
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
+    masm.call(SymbolicAddress::ReportOverRecursed);
     masm.jump(throwLabel);
 
     if (masm.oom())
@@ -939,14 +943,14 @@ GenerateSyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thro
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, ShadowStackSpace);
 
     AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::Interrupt, &offsets,
+    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason::Interrupt, &offsets,
                               masm.asmSyncInterruptLabel());
 
     AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
+    masm.call(SymbolicAddress::HandleExecutionInterrupt);
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::Interrupt, &offsets);
+    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason::Interrupt, &offsets);
 
     if (masm.oom())
         return false;
@@ -972,7 +976,7 @@ GenerateConversionErrorExit(MacroAssembler& masm, AsmJSModule& module, Label* th
 
     // OnOutOfBounds always throws.
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImm_OnImpreciseConversion);
+    masm.call(SymbolicAddress::OnImpreciseConversion);
     masm.jump(throwLabel);
 
     if (masm.oom())
@@ -1000,7 +1004,7 @@ GenerateOutOfBoundsExit(MacroAssembler& masm, AsmJSModule& module, Label* throwL
 
     // OnOutOfBounds always throws.
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImm_OnOutOfBounds);
+    masm.call(SymbolicAddress::OnOutOfBounds);
     masm.jump(throwLabel);
 
     if (masm.oom())
@@ -1055,7 +1059,7 @@ GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thr
         masm.subFromStackPtr(Imm32(ShadowStackSpace));
 
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImmPtr(AsmJSImm_HandleExecutionInterrupt));
+    masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
@@ -1091,7 +1095,7 @@ GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thr
     masm.subFromStackPtr(Imm32(4 * sizeof(intptr_t)));
 
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImm_HandleExecutionInterrupt);
+    masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
     masm.addToStackPtr(Imm32(4 * sizeof(intptr_t)));
 
@@ -1136,7 +1140,7 @@ GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thr
                                         FloatRegisterSet(FloatRegisters::AllDoubleMask)));
 
     masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImm_HandleExecutionInterrupt);
+    masm.call(SymbolicAddress::HandleExecutionInterrupt);
 
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
@@ -1226,8 +1230,8 @@ wasm::GenerateStubs(MacroAssembler& masm, AsmJSModule& module, const FuncOffsetV
             return false;
     }
 
-    for (unsigned i = 0; i < AsmJSExit::Builtin_Limit; i++) {
-        if (!GenerateBuiltinThunk(masm, module, AsmJSExit::BuiltinKind(i)))
+    for (auto builtin : MakeEnumeratedRange(Builtin::Limit)) {
+        if (!GenerateBuiltinThunk(masm, module, builtin))
             return false;
     }
 

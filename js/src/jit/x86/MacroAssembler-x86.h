@@ -643,7 +643,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmp32(Operand(lhs), rhs);
         j(cond, label);
     }
-    void branch32(Condition cond, AsmJSAbsoluteAddress lhs, Imm32 rhs, Label* label) {
+    void branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, Label* label) {
         cmpl(rhs, lhs);
         j(cond, label);
     }
@@ -656,8 +656,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    // Specialization for AsmJSAbsoluteAddress.
-    void branchPtr(Condition cond, AsmJSAbsoluteAddress lhs, Register ptr, Label* label) {
+    void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register ptr, Label* label) {
         cmpl(ptr, lhs);
         j(cond, label);
     }
@@ -746,7 +745,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void movePtr(ImmPtr imm, Register dest) {
         movl(imm, dest);
     }
-    void movePtr(AsmJSImmPtr imm, Register dest) {
+    void movePtr(wasm::SymbolicAddress imm, Register dest) {
         mov(imm, dest);
     }
     void movePtr(ImmGCPtr imm, Register dest) {
