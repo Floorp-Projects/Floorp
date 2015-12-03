@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -377,44 +378,51 @@ nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
          presContext->TransitionManager()->GetAnimationsForCompositor(aFrame, aProperty);
 }
 
-bool
-nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
-                                             nsCSSProperty aProperty)
+template<typename TestType>
+static bool
+HasMatchingCurrentAnimations(const nsIFrame* aFrame, TestType&& aTest)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  AnimationCollection* collection =
-    presContext->AnimationManager()->GetAnimationCollection(aFrame);
-  if (collection &&
-      collection->HasCurrentAnimationOfProperty(aProperty)) {
-    return true;
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return false;
   }
-  collection =
-    presContext->TransitionManager()->GetAnimationCollection(aFrame);
-  if (collection &&
-      collection->HasCurrentAnimationOfProperty(aProperty)) {
-    return true;
+
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    if (!effect->IsCurrent()) {
+      continue;
+    }
+
+    if (aTest(*effect)) {
+      return true;
+    }
   }
+
   return false;
 }
 
 bool
-nsLayoutUtils::HasCurrentAnimations(const nsIFrame* aFrame)
+nsLayoutUtils::HasCurrentAnimationOfProperty(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  AnimationCollection* collection =
-    presContext->AnimationManager()->GetAnimationCollection(aFrame);
-  return collection &&
-         collection->HasCurrentAnimations();
+  return HasMatchingCurrentAnimations(aFrame,
+    [&aProperty](KeyframeEffectReadOnly& aEffect)
+    {
+      return aEffect.HasAnimationOfProperty(aProperty);
+    }
+  );
 }
 
 bool
 nsLayoutUtils::HasCurrentTransitions(const nsIFrame* aFrame)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  AnimationCollection* collection =
-    presContext->TransitionManager()->GetAnimationCollection(aFrame);
-  return collection &&
-         collection->HasCurrentAnimations();
+  return HasMatchingCurrentAnimations(aFrame,
+    [](KeyframeEffectReadOnly& aEffect)
+    {
+      // Since |aEffect| is current, it must have an associated Animation
+      // so we don't need to null-check the result of GetAnimation().
+      return aEffect.GetAnimation()->AsCSSTransition();
+    }
+  );
 }
 
 bool
@@ -422,22 +430,12 @@ nsLayoutUtils::HasCurrentAnimationsForProperties(const nsIFrame* aFrame,
                                                  const nsCSSProperty* aProperties,
                                                  size_t aPropertyCount)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  AnimationCollection* collection =
-    presContext->AnimationManager()->GetAnimationCollection(aFrame);
-  if (collection &&
-      collection->HasCurrentAnimationsForProperties(aProperties,
-                                                    aPropertyCount)) {
-    return true;
-  }
-  collection =
-    presContext->TransitionManager()->GetAnimationCollection(aFrame);
-  if (collection &&
-      collection->HasCurrentAnimationsForProperties(aProperties,
-                                                    aPropertyCount)) {
-    return true;
-  }
-  return false;
+  return HasMatchingCurrentAnimations(aFrame,
+    [&aProperties, &aPropertyCount](KeyframeEffectReadOnly& aEffect)
+    {
+      return aEffect.HasAnimationOfProperties(aProperties, aPropertyCount);
+    }
+  );
 }
 
 static float
