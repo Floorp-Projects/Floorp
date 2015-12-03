@@ -41,8 +41,6 @@ endif
 endif
 endif # WINNT
 
-include_deps = $(eval $(if $(2),,-)include $(1))
-
 ifndef INCLUDED_AUTOCONF_MK
 default::
 else

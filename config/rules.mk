@@ -1296,7 +1296,7 @@ ifneq (,$(filter-out all chrome default export realchrome clean clobber clobber_
 MDDEPEND_FILES		:= $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(addsuffix .pp,$(notdir $(sort $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)))))))
 
 ifneq (,$(MDDEPEND_FILES))
-$(call include_deps,$(MDDEPEND_FILES))
+-include $(MDDEPEND_FILES)
 endif
 
 endif
@@ -1304,7 +1304,7 @@ endif
 MDDEPEND_FILES		:= $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(EXTRA_MDDEPEND_FILES))))
 
 ifneq (,$(MDDEPEND_FILES))
-$(call include_deps,$(MDDEPEND_FILES))
+-include $(MDDEPEND_FILES)
 endif
 
 #############################################################################
@@ -1483,7 +1483,7 @@ $(foreach file,$(PP_TARGETS_ALL_RESULTS), \
 MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(addsuffix .pp,$(notdir $(PP_TARGETS_ALL_RESULTS))))))
 
 ifneq (,$(MDDEPEND_FILES))
-$(call include_deps,$(MDDEPEND_FILES))
+-include $(MDDEPEND_FILES)
 endif
 
 endif
