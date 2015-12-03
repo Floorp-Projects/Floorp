@@ -102,10 +102,13 @@ ClearKeySessionManager::CreateSession(uint32_t aCreateSessionToken,
   CK_LOGD("ClearKeySessionManager::CreateSession type:%s", aInitDataType);
 
   string initDataType(aInitDataType, aInitDataType + aInitDataTypeSize);
-  // initDataType must be "cenc" or "keyids".
-  if (initDataType != "cenc" && initDataType != "keyids") {
+  // initDataType must be "cenc", "keyids", or "webm".
+  if (initDataType != "cenc" &&
+      initDataType != "keyids" &&
+      initDataType != "webm") {
+    string message = "'" + initDataType + "' is an initDataType unsupported by ClearKey";
     mCallback->RejectPromise(aPromiseId, kGMPNotSupportedError,
-                             nullptr /* message */, 0 /* messageLen */);
+                             message.c_str(), message.size());
     return;
   }
 

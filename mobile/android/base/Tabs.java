@@ -31,6 +31,7 @@ import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.ContentObserver;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
@@ -89,7 +90,11 @@ public class Tabs implements GeckoEventListener {
 
         @Override
         public void run() {
-            db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
+            try {
+                db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
+            } catch(SQLiteException e) {
+                Log.w(LOGTAG, "Error persisting local tabs", e);
+            }
         }
     };
 

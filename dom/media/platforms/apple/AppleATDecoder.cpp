@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "AppleATDecoder.h"
 #include "mozilla/Logging.h"
+#include "mozilla/UniquePtr.h"
 
 extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -211,8 +212,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   const uint32_t maxDecodedSamples = MAX_AUDIO_FRAMES * channels;
 
   // Descriptions for _decompressed_ audio packets. ignored.
-  nsAutoArrayPtr<AudioStreamPacketDescription>
-    packets(new AudioStreamPacketDescription[MAX_AUDIO_FRAMES]);
+  auto packets = MakeUnique<AudioStreamPacketDescription[]>(MAX_AUDIO_FRAMES);
 
   // This API insists on having packets spoon-fed to it from a callback.
   // This structure exists only to pass our state.
@@ -220,7 +220,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     { channels, (UInt32)aSample->Size(), aSample->Data() };
 
   // Decompressed audio buffer
-  nsAutoArrayPtr<AudioDataValue> decoded(new AudioDataValue[maxDecodedSamples]);
+  auto decoded = MakeUnique<AudioDataValue[]>(maxDecodedSamples);
 
   do {
     AudioBufferList decBuffer;
@@ -328,14 +328,13 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
     return NS_OK;
   }
   size_t listCount = formatListSize / sizeof(AudioFormatListItem);
-  nsAutoArrayPtr<AudioFormatListItem> formatList(
-    new AudioFormatListItem[listCount]);
+  auto formatList = MakeUnique<AudioFormatListItem[]>(listCount);
 
   rv = AudioFormatGetProperty(kAudioFormatProperty_FormatList,
                               sizeof(formatInfo),
                               &formatInfo,
                               &formatListSize,
-                              formatList);
+                              formatList.get());
   if (rv) {
     return NS_OK;
   }
@@ -348,7 +347,7 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
   UInt32 indexSize = sizeof(itemIndex);
   rv = AudioFormatGetProperty(kAudioFormatProperty_FirstPlayableFormatFromList,
                               formatListSize,
-                              formatList,
+                              formatList.get(),
                               &indexSize,
                               &itemIndex);
   if (rv) {
@@ -438,9 +437,9 @@ _MetadataCallback(void* aAppleATDecoder,
       decoder->mFileStreamError = true;
       return;
     }
-    nsAutoArrayPtr<uint8_t> data(new uint8_t[size]);
+    auto data = MakeUnique<uint8_t[]>(size);
     rv = AudioFileStreamGetProperty(aStream, aProperty,
-                                    &size, data);
+                                    &size, data.get());
     if (rv) {
       LOG("Couldn't get property '%s' (%s)",
           FourCC2Str(aProperty), FourCC2Str(rv));

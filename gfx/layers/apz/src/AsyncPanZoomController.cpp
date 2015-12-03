@@ -1919,6 +1919,19 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
 
   mX.EndTouch(aEvent.mTime);
   mY.EndTouch(aEvent.mTime);
+
+  // Drop any velocity on axes where we don't have room to scroll anyways
+  // (in this APZC, or an APZC further in the handoff chain).
+  // This ensures that we don't enlarge the display port unnecessarily.
+  RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
+    CurrentPanGestureBlock()->GetOverscrollHandoffChain();
+  if (!overscrollHandoffChain->CanScrollInDirection(this, Layer::HORIZONTAL)) {
+    mX.SetVelocity(0);
+  }
+  if (!overscrollHandoffChain->CanScrollInDirection(this, Layer::VERTICAL)) {
+    mY.SetVelocity(0);
+  }
+
   SetState(NOTHING);
   RequestContentRepaint();
 

@@ -58,6 +58,7 @@ patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1172609-icu-fix.d
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1172609-timezone-recreateDefault.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1198952-workaround-make-3.82-bug.diff
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/icu-release-56-1-flagparser-fix.patch
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-1228227-libc++-gcc_hidden.diff
 
 # NOTE: If you're updating this script for a new ICU version, you have to rerun
 # js/src/tests/ecma_6/String/make-normalize-generateddata-input.py for any

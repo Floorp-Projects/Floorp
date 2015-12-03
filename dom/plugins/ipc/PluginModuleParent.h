@@ -456,8 +456,10 @@ class PluginModuleChromeParent
     void OnExitedSyncSend() override;
 
 #ifdef  MOZ_ENABLE_PROFILER_SPS
-    void GatherAsyncProfile(mozilla::ProfileGatherer* aGatherer);
+    void GatherAsyncProfile();
     void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
+    void StartProfiler(nsIProfilerStartParams* aParams);
+    void StopProfiler();
 #endif
 
     virtual bool
