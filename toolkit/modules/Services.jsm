@@ -24,9 +24,11 @@ XPCOMUtils.defineLazyGetter(Services, "appinfo", function () {
                   .getService(Ci.nsIXULRuntime);
   try {
     appinfo.QueryInterface(Ci.nsIXULAppInfo);
-  } catch (ex if ex instanceof Components.Exception &&
-                 ex.result == Cr.NS_NOINTERFACE) {
+  } catch (ex) {
     // Not all applications implement nsIXULAppInfo (e.g. xpcshell doesn't).
+    if (!(ex instanceof Components.Exception) || ex.result != Cr.NS_NOINTERFACE) {
+      throw ex;
+    }
   }
   return appinfo;
 });

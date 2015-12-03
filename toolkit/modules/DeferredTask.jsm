@@ -277,7 +277,7 @@ this.DeferredTask.prototype = {
     this._armed = false;
     this._runningPromise = runningDeferred.promise;
 
-    runningDeferred.resolve(Task.spawn(function () {
+    runningDeferred.resolve(Task.spawn(function* () {
       // Execute the provided function asynchronously.
       yield Task.spawn(this._taskFn).then(null, Cu.reportError);
 
