@@ -13081,14 +13081,8 @@ nsIDocument::CreateHTMLElement(nsIAtom* aTag)
 nsresult
 nsIDocument::GenerateDocumentId(nsAString& aId)
 {
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsID id;
-  rv = uuidgen->GenerateUUIDInPlace(&id);
+  nsresult rv = nsContentUtils::GenerateUUIDInPlace(id);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
