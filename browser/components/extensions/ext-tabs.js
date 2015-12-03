@@ -107,7 +107,7 @@ global.currentWindow = function(context)
 
 // TODO: activeTab permission
 
-extensions.registerSchemaAPI("tabs", null, (extension, context) => {
+extensions.registerAPI((extension, context) => {
   let self = {
     tabs: {
       onActivated: new WindowEventManager(context, "tabs.onActivated", "TabSelect", (fire, event) => {
@@ -294,7 +294,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
           }
         }
 
-        let window = createProperties.windowId !== null ?
+        let window = "windowId" in createProperties ?
           WindowManager.getWindow(createProperties.windowId) :
           WindowManager.topWindow;
         if (!window.gBrowser) {
@@ -326,27 +326,34 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
       },
 
-      update: function(tabId, updateProperties, callback) {
-        let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
+      update: function(...args) {
+        let tabId, updateProperties, callback;
+        if (args.length == 1) {
+          updateProperties = args[0];
+        } else {
+          [tabId, updateProperties, callback] = args;
+        }
+
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
         let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-        if (updateProperties.url !== null) {
+        if ("url" in updateProperties) {
           tab.linkedBrowser.loadURI(updateProperties.url);
         }
-        if (updateProperties.active !== null) {
+        if ("active" in updateProperties) {
           if (updateProperties.active) {
             tabbrowser.selectedTab = tab;
           } else {
             // Not sure what to do here? Which tab should we select?
           }
         }
-        if (updateProperties.pinned !== null) {
+        if ("pinned" in updateProperties) {
           if (updateProperties.pinned) {
             tabbrowser.pinTab(tab);
           } else {
             tabbrowser.unpinTab(tab);
           }
         }
-        // FIXME: highlighted/selected, muted, openerTabId
+        // FIXME: highlighted/selected, openerTabId
 
         if (callback) {
           runSafe(context, callback, TabManager.convert(extension, tab));
@@ -354,7 +361,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       },
 
       reload: function(tabId, reloadProperties, callback) {
-        let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
         if (reloadProperties && reloadProperties.bypassCache) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
@@ -379,39 +386,51 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         runSafe(context, callback, tab);
       },
 
-      getAllInWindow: function(windowId, callback) {
-        if (windowId === null) {
-          windowId = WindowManager.topWindow.windowId;
+      getAllInWindow: function(...args) {
+        let window, callback;
+        if (args.length == 1) {
+          callbacks = args[0];
+        } else {
+          window = WindowManager.getWindow(args[0]);
+          callback = args[1];
         }
 
-        return self.tabs.query({windowId}, callback);
+        if (!window) {
+          window = WindowManager.topWindow;
+        }
+
+        return self.tabs.query({windowId: WindowManager.getId(window)}, callback);
       },
 
       query: function(queryInfo, callback) {
+        if (!queryInfo) {
+          queryInfo = {};
+        }
+
         let pattern = null;
-        if (queryInfo.url !== null) {
+        if (queryInfo.url) {
           pattern = new MatchPattern(queryInfo.url);
         }
 
         function matches(window, tab) {
           let props = ["active", "pinned", "highlighted", "status", "title", "index"];
           for (let prop of props) {
-            if (queryInfo[prop] !== null && queryInfo[prop] != tab[prop]) {
+            if (prop in queryInfo && queryInfo[prop] != tab[prop]) {
               return false;
             }
           }
 
           let lastFocused = window == WindowManager.topWindow;
-          if (queryInfo.lastFocusedWindow !== null && queryInfo.lastFocusedWindow != lastFocused) {
+          if ("lastFocusedWindow" in queryInfo && queryInfo.lastFocusedWindow != lastFocused) {
             return false;
           }
 
           let windowType = WindowManager.windowType(window);
-          if (queryInfo.windowType !== null && queryInfo.windowType != windowType) {
+          if ("windowType" in queryInfo && queryInfo.windowType != windowType) {
             return false;
           }
 
-          if (queryInfo.windowId !== null) {
+          if ("windowId" in queryInfo) {
             if (queryInfo.windowId == WindowManager.WINDOW_ID_CURRENT) {
               if (currentWindow(context) != window) {
                 return false;
@@ -423,7 +442,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             }
           }
 
-          if (queryInfo.currentWindow !== null) {
+          if ("currentWindow" in queryInfo) {
             let eq = window == currentWindow(context);
             if (queryInfo.currentWindow != eq) {
               return false;
@@ -455,14 +474,14 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       },
 
       _execute: function(tabId, details, kind, callback) {
-        let tab = tabId !== null ? TabManager.getTab(tabId) : TabManager.activeTab;
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
         let mm = tab.linkedBrowser.messageManager;
 
         let options = {js: [], css: []};
-        if (details.code !== null) {
+        if (details.code) {
           options[kind + 'Code'] = details.code;
         }
-        if (details.file !== null) {
+        if (details.file) {
           options[kind].push(extension.baseURI.resolve(details.file));
         }
         if (details.allFrames) {
@@ -471,7 +490,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         if (details.matchAboutBlank) {
           options.match_about_blank = details.matchAboutBlank;
         }
-        if (details.runAt !== null) {
+        if (details.runAt) {
           options.run_at = details.runAt;
         }
         mm.sendAsyncMessage("Extension:Execute",
@@ -480,24 +499,29 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         // TODO: Call the callback with the result (which is what???).
       },
 
-      executeScript: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, 'js', callback);
+      executeScript: function(...args) {
+        if (args.length == 1) {
+          self.tabs._execute(undefined, args[0], 'js', undefined);
+        } else {
+          self.tabs._execute(args[0], args[1], 'js', args[2]);
+        }
       },
 
       insertCss: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, 'css', callback);
+        if (args.length == 1) {
+          self.tabs._execute(undefined, args[0], 'css', undefined);
+        } else {
+          self.tabs._execute(args[0], args[1], 'css', args[2]);
+        }
       },
 
       connect: function(tabId, connectInfo) {
         let tab = TabManager.getTab(tabId);
         let mm = tab.linkedBrowser.messageManager;
 
-        let name = "";
-        if (connectInfo && connectInfo.name !== null) {
-          name = connectInfo.name;
-        }
+        let name = connectInfo.name || "";
         let recipient = {extensionId: extension.id};
-        if (connectInfo && connectInfo.frameId !== null) {
+        if ("frameId" in connectInfo) {
           recipient.frameId = connectInfo.frameId;
         }
         return context.messenger.connect(mm, name, recipient);
@@ -512,7 +536,7 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         let mm = tab.linkedBrowser.messageManager;
 
         let recipient = {extensionId: extension.id};
-        if (options && options.frameId !== null) {
+        if (options && "frameId" in options) {
           recipient.frameId = options.frameId;
         }
         return context.messenger.sendMessage(mm, message, recipient, responseCallback);

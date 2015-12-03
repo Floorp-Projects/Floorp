@@ -365,7 +365,6 @@ global.WindowManager = {
   _windows: new WeakMap(),
   _nextId: 0,
 
-  // Note: These must match the values in windows.json.
   WINDOW_ID_NONE: -1,
   WINDOW_ID_CURRENT: -2,
 

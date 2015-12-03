@@ -92,9 +92,32 @@ function WebRequestEventManager(context, eventName)
 
 WebRequestEventManager.prototype = Object.create(SingletonEventManager.prototype);
 
-extensions.registerSchemaAPI("webRequest", "webRequest", (extension, context) => {
+extensions.registerPrivilegedAPI("webRequest", (extension, context) => {
   return {
     webRequest: {
+      ResourceType: {
+        MAIN_FRAME: "main_frame",
+        SUB_FRAME: "sub_frame",
+        STYLESHEET: "stylesheet",
+        SCRIPT: "script",
+        IMAGE: "image",
+        OBJECT: "object",
+        OBJECT_SUBREQUEST: "object_subrequest",
+        XMLHTTPREQUEST: "xmlhttprequest",
+        XBL: "xbl",
+        XSLT: "xslt",
+        PING: "ping",
+        BEACON: "beacon",
+        XML_DTD: "xml_dtd",
+        FONT: "font",
+        MEDIA: "media",
+        WEBSOCKET: "websocket",
+        CSP_REPORT: "csp_report",
+        IMAGESET: "imageset",
+        WEB_MANIFEST: "web_manifest",
+        OTHER: "other",
+      },
+
       onBeforeRequest: new WebRequestEventManager(context, "onBeforeRequest").api(),
       onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
       onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
