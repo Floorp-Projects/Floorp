@@ -95,7 +95,7 @@ TracedRunnable::TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj)
   , mOriginalObj(Move(aOriginalObj))
 {
   Init();
-  LogVirtualTablePtr(mTaskId, mSourceEventId, *(int**)(aOriginalObj));
+  LogVirtualTablePtr(mTaskId, mSourceEventId, reinterpret_cast<uintptr_t*>(mOriginalObj.get()));
 }
 
 TracedRunnable::~TracedRunnable()
@@ -122,7 +122,7 @@ TracedTask::TracedTask(Task* aOriginalObj)
   , mOriginalObj(aOriginalObj)
 {
   Init();
-  LogVirtualTablePtr(mTaskId, mSourceEventId, *(int**)(aOriginalObj));
+  LogVirtualTablePtr(mTaskId, mSourceEventId, reinterpret_cast<uintptr_t*>(aOriginalObj));
 }
 
 TracedTask::~TracedTask()
