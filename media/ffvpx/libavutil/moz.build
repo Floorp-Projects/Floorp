@@ -60,7 +60,7 @@ if CONFIG['_MSC_VER']:
             '../compat/msvcrt/snprintf.c'
         ]
 
-SYMBOLS_FILE =  'avutil-54.symbols'
+SYMBOLS_FILE =  'avutil.symbols'
 NO_VISIBILITY_FLAGS = True
 
 OS_LIBS += CONFIG['REALTIME_LIBS']
