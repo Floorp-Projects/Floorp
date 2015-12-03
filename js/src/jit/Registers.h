@@ -36,6 +36,12 @@ struct Register {
     typedef Codes::SetType SetType;
 
     Codes::Encoding reg_;
+    MOZ_CONSTEXPR Register()
+        : reg_(Encoding(0))
+    { }
+    MOZ_CONSTEXPR Register(Encoding r)
+        : reg_(r)
+    { }
     static Register FromCode(Code i) {
         MOZ_ASSERT(i < Registers::Total);
         Register r = { Encoding(i) };

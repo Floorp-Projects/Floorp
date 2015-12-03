@@ -298,7 +298,7 @@ RValueAllocation::readPayload(CompactBufferReader& reader, PayloadType type,
         p->stackOffset = reader.readSigned();
         break;
       case PAYLOAD_GPR:
-        p->gpr = Register::FromCode(reader.readByte());
+        p->gpr.data = reader.readByte();
         break;
       case PAYLOAD_FPU:
         p->fpu.data = reader.readByte();
