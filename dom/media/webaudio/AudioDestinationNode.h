@@ -61,7 +61,6 @@ public:
   void OfflineShutdown();
 
   AudioChannel MozAudioChannelType() const;
-  void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
   virtual void NotifyMainThreadStreamFinished() override;
   void FireOfflineCompletionEvent();
@@ -91,6 +90,7 @@ protected:
   virtual ~AudioDestinationNode();
 
 private:
+  void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
   bool CheckAudioChannelPermissions(AudioChannel aValue);
 
   void SetCanPlay(float aVolume, bool aMuted);
