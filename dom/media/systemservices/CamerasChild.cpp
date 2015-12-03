@@ -131,7 +131,6 @@ public:
   }
 
   CamerasChild* GetCamerasChild() {
-    MOZ_ASSERT(mCamerasChild);
     return mCamerasChild;
   }
 
@@ -140,8 +139,8 @@ private:
 };
 
 static CamerasChild*
-Cameras() {
-  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+GetCamerasChild() {
+  CamerasSingleton::Mutex().AssertCurrentThreadOwns();
   if (!CamerasSingleton::Child()) {
     MOZ_ASSERT(!NS_IsMainThread(), "Should not be on the main Thread");
     if (!gCamerasChildLog) {
@@ -169,7 +168,9 @@ Cameras() {
     sr->DispatchToThread(CamerasSingleton::Thread());
     CamerasSingleton::Child() = runnable->GetCamerasChild();
   }
-  MOZ_ASSERT(CamerasSingleton::Child());
+  if (!CamerasSingleton::Child()) {
+    LOG(("Failed to set up CamerasChild, are we in shutdown?"));
+  }
   return CamerasSingleton::Child();
 }
 
@@ -197,7 +198,13 @@ CamerasChild::RecvReplySuccess(void)
 
 int NumberOfCapabilities(CaptureEngine aCapEngine, const char* deviceUniqueIdUTF8)
 {
-  return Cameras()->NumberOfCapabilities(aCapEngine, deviceUniqueIdUTF8);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->NumberOfCapabilities(aCapEngine, deviceUniqueIdUTF8);
+  } else {
+    return 0;
+  }
 }
 
 bool
@@ -216,10 +223,8 @@ bool
 CamerasChild::DispatchToParent(nsIRunnable* aRunnable,
                                MonitorAutoLock& aMonitor)
 {
-  {
-    OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-    CamerasSingleton::Thread()->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
-  }
+  CamerasSingleton::Mutex().AssertCurrentThreadOwns();
+  CamerasSingleton::Thread()->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
   // We can't see if the send worked, so we need to be able to bail
   // out on shutdown (when it failed and we won't get a reply).
   if (!mIPCIsAlive) {
@@ -267,7 +272,13 @@ CamerasChild::NumberOfCapabilities(CaptureEngine aCapEngine,
 
 int NumberOfCaptureDevices(CaptureEngine aCapEngine)
 {
-  return Cameras()->NumberOfCaptureDevices(aCapEngine);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->NumberOfCaptureDevices(aCapEngine);
+  } else {
+    return 0;
+  }
 }
 
 int
@@ -307,10 +318,16 @@ int GetCaptureCapability(CaptureEngine aCapEngine, const char* unique_idUTF8,
                          const unsigned int capability_number,
                          webrtc::CaptureCapability& capability)
 {
-  return Cameras()->GetCaptureCapability(aCapEngine,
-                                         unique_idUTF8,
-                                         capability_number,
-                                         capability);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->GetCaptureCapability(aCapEngine,
+                                       unique_idUTF8,
+                                       capability_number,
+                                       capability);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -362,12 +379,18 @@ int GetCaptureDevice(CaptureEngine aCapEngine,
                      char* unique_idUTF8,
                      const unsigned int unique_idUTF8Length)
 {
-  return Cameras()->GetCaptureDevice(aCapEngine,
-                                     list_number,
-                                     device_nameUTF8,
-                                     device_nameUTF8Length,
-                                     unique_idUTF8,
-                                     unique_idUTF8Length);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->GetCaptureDevice(aCapEngine,
+                                   list_number,
+                                   device_nameUTF8,
+                                   device_nameUTF8Length,
+                                   unique_idUTF8,
+                                   unique_idUTF8Length);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -416,10 +439,16 @@ int AllocateCaptureDevice(CaptureEngine aCapEngine,
                           const unsigned int unique_idUTF8Length,
                           int& capture_id)
 {
-  return Cameras()->AllocateCaptureDevice(aCapEngine,
-                                          unique_idUTF8,
-                                          unique_idUTF8Length,
-                                          capture_id);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->AllocateCaptureDevice(aCapEngine,
+                                        unique_idUTF8,
+                                        unique_idUTF8Length,
+                                        capture_id);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -463,7 +492,13 @@ CamerasChild::RecvReplyAllocateCaptureDevice(const int& numdev)
 
 int ReleaseCaptureDevice(CaptureEngine aCapEngine, const int capture_id)
 {
-  return Cameras()->ReleaseCaptureDevice(aCapEngine, capture_id);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->ReleaseCaptureDevice(aCapEngine, capture_id);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -516,10 +551,16 @@ int StartCapture(CaptureEngine aCapEngine,
                  webrtc::CaptureCapability& webrtcCaps,
                  webrtc::ExternalRenderer* cb)
 {
-  return Cameras()->StartCapture(aCapEngine,
-                                 capture_id,
-                                 webrtcCaps,
-                                 cb);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->StartCapture(aCapEngine,
+                               capture_id,
+                               webrtcCaps,
+                               cb);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -554,7 +595,13 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
 
 int StopCapture(CaptureEngine aCapEngine, const int capture_id)
 {
-  return Cameras()->StopCapture(aCapEngine, capture_id);
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  CamerasChild* child = GetCamerasChild();
+  if (child) {
+    return child->StopCapture(aCapEngine, capture_id);
+  } else {
+    return -1;
+  }
 }
 
 int
@@ -580,16 +627,14 @@ CamerasChild::StopCapture(CaptureEngine aCapEngine, const int capture_id)
 void
 Shutdown(void)
 {
-  {
-    OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
-    if (!CamerasSingleton::Child()) {
-      // We don't want to cause everything to get fired up if we're
-      // really already shut down.
-      LOG(("Shutdown when already shut down"));
-      return;
-    }
+  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+  if (!CamerasSingleton::Child()) {
+    // We don't want to cause everything to get fired up if we're
+    // really already shut down.
+    LOG(("Shutdown when already shut down"));
+    return;
   }
-  Cameras()->Shutdown();
+  GetCamerasChild()->Shutdown();
 }
 
 class ShutdownRunnable : public nsRunnable {
@@ -622,7 +667,6 @@ CamerasChild::Shutdown()
     monitor.NotifyAll();
   }
 
-  OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
   if (CamerasSingleton::Thread()) {
     LOG(("Dispatching actor deletion"));
     // Delete the parent actor.
@@ -719,7 +763,10 @@ CamerasChild::~CamerasChild()
 {
   LOG(("~CamerasChild: %p", this));
 
-  Shutdown();
+  {
+    OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
+    Shutdown();
+  }
 
   MOZ_COUNT_DTOR(CamerasChild);
 }
