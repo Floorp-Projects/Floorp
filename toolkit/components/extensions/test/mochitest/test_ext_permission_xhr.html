@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* test_simple() {
+  function runTests(cx, assertTrue, finish) {
+    function run(shouldFail, finish) {
+      function passListener() {
+        assertTrue(true, `${cx} pass listener`);
+        finish();
+      }
+
+      function failListener() {
+        assertTrue(false, `${cx} fail listener`);
+        finish();
+      }
+
+      var req = new XMLHttpRequest();
+      if (shouldFail) {
+        req.addEventListener("load", failListener);
+        req.addEventListener("error", passListener);
+        req.open("GET", "http://example.org/example.txt");
+      } else {
+        req.addEventListener("load", passListener);
+        req.addEventListener("error", failListener);
+        req.open("GET", "http://example.com/example.txt");
+      }
+      req.send();
+    }
+
+    run(true, function() {
+      run(false, finish);
+    });
+  }
+
+  function background(runTests) {
+    browser.runtime.onMessage.addListener(([msg, ...args]) => {
+      if (msg == "assertTrue") {
+        browser.test.assertTrue(...args);
+      } else {
+        browser.test.sendMessage(msg, ...args);
+      }
+    });
+
+    runTests("bg", browser.test.assertTrue.bind(browser.test), () => {
+      browser.test.notifyPass("permission_xhr");
+    });
+  }
+
+  let extensionData = {
+    background: `(${background})(${runTests})`,
+    manifest: {
+      permissions: ["http://example.com/"],
+      content_scripts: [{
+        "matches": ["http://mochi.test/*/file_permission_xhr.html"],
+        "js": ["content.js"],
+      }],
+    },
+    files: {
+      "content.js": "new " + function(runTests) {
+        function assertTrue(...args) {
+          browser.runtime.sendMessage(["assertTrue", ...args]);
+        }
+        runTests("content", assertTrue, () => {
+          window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
+
+          window.addEventListener("message", function rcv(event) {
+            if (event.data === "test") {
+              return;
+            }
+            window.removeEventListener("message", rcv, false);
+            browser.runtime.sendMessage(["assertTrue", event.data, "content page can't use XHR"]);
+            browser.runtime.sendMessage(["content-script-finished"]);
+          }, false);
+          window.postMessage("test", "*");
+        });
+      } + `(${runTests})`,
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  let win = window.open("file_permission_xhr.html");
+  yield extension.awaitMessage("content-script-finished");
+  win.close();
+
+  yield extension.awaitFinish("permission_xhr");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
