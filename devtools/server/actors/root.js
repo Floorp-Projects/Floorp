@@ -207,6 +207,9 @@ RootActor.prototype = {
     if (this._parameters.addonList) {
       this._parameters.addonList.onListChanged = null;
     }
+    if (this._parameters.workerList) {
+      this._parameters.workerList.onListChanged = null;
+    }
     if (typeof this._parameters.onShutdown === 'function') {
       this._parameters.onShutdown();
     }
