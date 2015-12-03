@@ -679,8 +679,9 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
   // Prefer the native windowing system's provided window size for the viewport.
-  IntSize viewportSize = mGLContext->GetTargetSize().valueOr(mWidgetSize);
-  if (viewportSize != mWidgetSize) {
+  IntSize viewportSize =
+    mGLContext->GetTargetSize().valueOr(mWidgetSize.ToUnknownSize());
+  if (viewportSize != mWidgetSize.ToUnknownSize()) {
     mGLContext->fScissor(0, 0, viewportSize.width, viewportSize.height);
   }
 
