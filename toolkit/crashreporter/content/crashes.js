@@ -139,7 +139,10 @@ var clearReports = Task.async(function*() {
           yield OS.File.remove(aEntry.path);
         }
       }));
-    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+    } catch (e) {
+      if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
+        throw e;
+      }
     } finally {
       iterator.close();
     }

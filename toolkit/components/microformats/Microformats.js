@@ -9,7 +9,7 @@ this.Microformats = {
   list: [],
   /* Custom iterator so that microformats can be enumerated as */
   /* for (i in Microformats) */
-  __iterator__: function () {
+  __iterator__: function* () {
     for (let i=0; i < this.list.length; i++) {
       yield this.list[i];
     }
