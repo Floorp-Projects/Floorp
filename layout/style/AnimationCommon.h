@@ -73,11 +73,6 @@ public:
   // elements.
   void AddStyleUpdatesTo(RestyleTracker& aTracker);
 
-  AnimationCollection*
-  GetAnimations(dom::Element *aElement,
-                nsCSSPseudoElements::Type aPseudoType,
-                bool aCreateIfNeeded);
-
   // Returns true if aContent or any of its ancestors has an animation
   // or transition.
   static bool ContentOrAncestorHasAnimation(nsIContent* aContent) {
@@ -120,7 +115,14 @@ protected:
   virtual nsIAtom* GetAnimationsAfterAtom() = 0;
 
 public:
-  // Given the frame aFrame with possibly animated content, finds its
+  // Get (and optionally create) the collection of animations managed
+  // by this class for the given |aElement| and |aPseudoType|.
+  AnimationCollection*
+  GetAnimationCollection(dom::Element *aElement,
+                         nsCSSPseudoElements::Type aPseudoType,
+                         bool aCreateIfNeeded);
+
+  // Given the frame |aFrame| with possibly animated content, finds its
   // associated collection of animations. If it is a generated content
   // frame, it may examine the parent frame to search for such animations.
   AnimationCollection*
