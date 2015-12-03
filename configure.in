@@ -7386,7 +7386,7 @@ MOZ_ARG_ENABLE_BOOL(tasktracer,
 [  --enable-tasktracer       Set compile flags necessary for using TaskTracer],
     MOZ_TASK_TRACER=1,
     MOZ_TASK_TRACER= )
-if test "$MOZ_WIDGET_TOOLKIT" = "gonk" -a -n "$MOZ_TASK_TRACER"; then
+if test -n "$MOZ_TASK_TRACER"; then
     AC_DEFINE(MOZ_TASK_TRACER)
     AC_SUBST(MOZ_TASK_TRACER)
 fi
