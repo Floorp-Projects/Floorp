@@ -67,6 +67,55 @@ CommonAnimationManager::RemoveAllElementCollections()
 }
 
 AnimationCollection*
+CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
+                                               nsCSSPseudoElements::Type
+                                                 aPseudoType,
+                                               bool aCreateIfNeeded)
+{
+  if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
+    // Early return for the most common case.
+    return nullptr;
+  }
+
+  nsIAtom *propName;
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    propName = GetAnimationsAtom();
+  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+    propName = GetAnimationsBeforeAtom();
+  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+    propName = GetAnimationsAfterAtom();
+  } else {
+    NS_ASSERTION(!aCreateIfNeeded,
+                 "should never try to create transitions for pseudo "
+                 "other than :before or :after");
+    return nullptr;
+  }
+  AnimationCollection* collection =
+    static_cast<AnimationCollection*>(aElement->GetProperty(propName));
+  if (!collection && aCreateIfNeeded) {
+    // FIXME: Consider arena-allocating?
+    collection = new AnimationCollection(aElement, propName, this);
+    nsresult rv =
+      aElement->SetProperty(propName, collection,
+                            &AnimationCollection::PropertyDtor, false);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SetProperty failed");
+      // The collection must be destroyed via PropertyDtor, otherwise
+      // mCalledPropertyDtor assertion is triggered in destructor.
+      AnimationCollection::PropertyDtor(aElement, propName, collection, nullptr);
+      return nullptr;
+    }
+    if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      aElement->SetMayHaveAnimations();
+    }
+
+    AddElementCollection(collection);
+  }
+
+  return collection;
+}
+
+AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
 {
   nsIContent* content = aFrame->GetContent();
@@ -233,55 +282,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
                                StyleAnimationValue::eUnit_Visibility);
   }
   return result;
-}
-
-AnimationCollection*
-CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
-                                               nsCSSPseudoElements::Type
-                                                 aPseudoType,
-                                               bool aCreateIfNeeded)
-{
-  if (!aCreateIfNeeded && mElementCollections.isEmpty()) {
-    // Early return for the most common case.
-    return nullptr;
-  }
-
-  nsIAtom *propName;
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    propName = GetAnimationsAtom();
-  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
-    propName = GetAnimationsBeforeAtom();
-  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-    propName = GetAnimationsAfterAtom();
-  } else {
-    NS_ASSERTION(!aCreateIfNeeded,
-                 "should never try to create transitions for pseudo "
-                 "other than :before or :after");
-    return nullptr;
-  }
-  AnimationCollection* collection =
-    static_cast<AnimationCollection*>(aElement->GetProperty(propName));
-  if (!collection && aCreateIfNeeded) {
-    // FIXME: Consider arena-allocating?
-    collection = new AnimationCollection(aElement, propName, this);
-    nsresult rv =
-      aElement->SetProperty(propName, collection,
-                            &AnimationCollection::PropertyDtor, false);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SetProperty failed");
-      // The collection must be destroyed via PropertyDtor, otherwise
-      // mCalledPropertyDtor assertion is triggered in destructor.
-      AnimationCollection::PropertyDtor(aElement, propName, collection, nullptr);
-      return nullptr;
-    }
-    if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-      aElement->SetMayHaveAnimations();
-    }
-
-    AddElementCollection(collection);
-  }
-
-  return collection;
 }
 
 void
