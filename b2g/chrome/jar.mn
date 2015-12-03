@@ -9,9 +9,9 @@ chrome.jar:
 % content b2g %content/
 
   content/arrow.svg                     (content/arrow.svg)
-* content/settings.js                   (content/settings.js)
+  content/settings.js                   (content/settings.js)
 * content/shell.html                    (content/shell.html)
-* content/shell.js                      (content/shell.js)
+  content/shell.js                      (content/shell.js)
   content/shell_remote.html             (content/shell_remote.html)
   content/shell_remote.js               (content/shell_remote.js)
 * content/shell.css                     (content/shell.css)
@@ -20,7 +20,7 @@ chrome.jar:
 #ifdef MOZ_WIDGET_GONK
   content/devtools/adb.js               (content/devtools/adb.js)
 #endif
-* content/devtools/debugger.js          (content/devtools/debugger.js)
+  content/devtools/debugger.js          (content/devtools/debugger.js)
   content/devtools/hud.js               (content/devtools/hud.js)
 #ifndef MOZ_WIDGET_GONK
   content/desktop.css                   (content/desktop.css)
