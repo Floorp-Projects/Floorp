@@ -71,7 +71,8 @@ struct TestFileData {
   vpx_codec_err_t mDecodeResult;
 };
 static const TestFileData testFiles[] = {
-  { "test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME }
+  { "test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME },
+  { "test_case_1224369.vp8.ivf", VPX_CODEC_CORRUPT_FRAME }
 };
 
 TEST(libvpx, test_case_1224363)
