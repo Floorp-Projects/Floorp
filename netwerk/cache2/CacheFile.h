@@ -169,10 +169,6 @@ private:
   void WriteMetadataIfNeededLocked(bool aFireAndForget = false);
   void PostWriteTimer();
 
-  static PLDHashOperator FailUpdateListeners(const uint32_t& aIdx,
-                                             RefPtr<CacheFileChunk>& aChunk,
-                                             void* aClosure);
-
   void CleanUpCachedChunks();
 
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
