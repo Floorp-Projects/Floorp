@@ -500,13 +500,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void call(ImmWord imm) PER_SHARED_ARCH;
     // Call a target native function, which is neither traceable nor movable.
     void call(ImmPtr imm) PER_SHARED_ARCH;
-    void call(AsmJSImmPtr imm) PER_SHARED_ARCH;
+    void call(wasm::SymbolicAddress imm) PER_SHARED_ARCH;
     // Call a target JitCode, which must be traceable, and may be movable.
     void call(JitCode* c) PER_SHARED_ARCH;
 
-    inline void call(const CallSiteDesc& desc, const Register reg);
-    inline void call(const CallSiteDesc& desc, Label* label);
-    inline void call(const CallSiteDesc& desc, AsmJSInternalCallee callee);
+    inline void call(const wasm::CallSiteDesc& desc, const Register reg);
+    inline void call(const wasm::CallSiteDesc& desc, Label* label);
+    inline void call(const wasm::CallSiteDesc& desc, AsmJSInternalCallee callee);
 
     CodeOffset callWithPatch() PER_SHARED_ARCH;
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) PER_SHARED_ARCH;
@@ -555,7 +555,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABINoProfiler(void* fun, MoveOp::Type result);
-    void callWithABINoProfiler(AsmJSImmPtr imm, MoveOp::Type result);
+    void callWithABINoProfiler(wasm::SymbolicAddress imm, MoveOp::Type result);
     void callWithABINoProfiler(Register fun, MoveOp::Type result) PER_ARCH;
     void callWithABINoProfiler(const Address& fun, MoveOp::Type result) PER_ARCH;
 

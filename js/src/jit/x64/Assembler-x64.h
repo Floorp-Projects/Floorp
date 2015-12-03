@@ -595,9 +595,9 @@ class Assembler : public AssemblerX86Shared
     void mov(ImmPtr imm, Register dest) {
         movq(imm, dest);
     }
-    void mov(AsmJSImmPtr imm, Register dest) {
+    void mov(wasm::SymbolicAddress imm, Register dest) {
         masm.movq_i64r(-1, dest.encoding());
-        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm.kind()));
+        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm));
     }
     void mov(const Operand& src, Register dest) {
         movq(src, dest);
@@ -670,11 +670,11 @@ class Assembler : public AssemblerX86Shared
 
     void loadAsmJSActivation(Register dest) {
         CodeOffset label = loadRipRelativeInt64(dest);
-        append(AsmJSGlobalAccess(label, AsmJSActivationGlobalDataOffset));
+        append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
         CodeOffset label = loadRipRelativeInt64(HeapReg);
-        append(AsmJSGlobalAccess(label, AsmJSHeapGlobalDataOffset));
+        append(AsmJSGlobalAccess(label, wasm::HeapGlobalDataOffset));
     }
 
     void cmpq(Register rhs, Register lhs) {

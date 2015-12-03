@@ -1744,7 +1744,7 @@ AsmJSActivation::AsmJSActivation(JSContext* cx, AsmJSModule& module)
     entrySP_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),
-    exitReason_(AsmJSExit::None)
+    packedExitReason_(wasm::ExitReason(wasm::ExitReason::None).pack())
 {
     (void) entrySP_;  // squelch GCC warning
 

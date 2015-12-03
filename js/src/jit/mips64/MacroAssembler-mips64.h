@@ -603,7 +603,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label* label) {
         ma_b(lhs, imm, label, cond);
     }
-    void branchPtr(Condition cond, Register lhs, AsmJSImmPtr imm, Label* label) {
+    void branchPtr(Condition cond, Register lhs, wasm::SymbolicAddress imm, Label* label) {
         movePtr(imm, SecondScratchReg);
         ma_b(lhs, SecondScratchReg, label, cond);
     }
@@ -666,7 +666,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         loadPtr(addr, SecondScratchReg);
         ma_b(SecondScratchReg, ptr, label, cond);
     }
-    void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label* label) {
+    void branchPtr(Condition cond, wasm::SymbolicAddress addr, Register ptr, Label* label) {
         loadPtr(addr, SecondScratchReg);
         ma_b(SecondScratchReg, ptr, label, cond);
     }
@@ -678,7 +678,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         load32(lhs, SecondScratchReg);
         ma_b(SecondScratchReg, rhs, label, cond);
     }
-    void branch32(Condition cond, AsmJSAbsoluteAddress addr, Imm32 imm, Label* label) {
+    void branch32(Condition cond, wasm::SymbolicAddress addr, Imm32 imm, Label* label) {
         load32(addr, SecondScratchReg);
         ma_b(SecondScratchReg, imm, label, cond);
     }
@@ -1139,7 +1139,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
     void movePtr(ImmPtr imm, Register dest);
-    void movePtr(AsmJSImmPtr imm, Register dest);
+    void movePtr(wasm::SymbolicAddress imm, Register dest);
     void movePtr(ImmGCPtr imm, Register dest);
 
     void load8SignExtend(const Address& address, Register dest);
@@ -1157,7 +1157,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void load32(const Address& address, Register dest);
     void load32(const BaseIndex& address, Register dest);
     void load32(AbsoluteAddress address, Register dest);
-    void load32(AsmJSAbsoluteAddress address, Register dest);
+    void load32(wasm::SymbolicAddress address, Register dest);
     void load64(const Address& address, Register64 dest) {
         loadPtr(address, dest.reg);
     }
@@ -1165,7 +1165,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadPtr(const Address& address, Register dest);
     void loadPtr(const BaseIndex& src, Register dest);
     void loadPtr(AbsoluteAddress address, Register dest);
-    void loadPtr(AsmJSAbsoluteAddress address, Register dest);
+    void loadPtr(wasm::SymbolicAddress address, Register dest);
 
     void loadPrivate(const Address& address, Register dest);
 
@@ -1365,11 +1365,11 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
                                     Label* label);
 
     void loadAsmJSActivation(Register dest) {
-        loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
+        loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
-        MOZ_ASSERT(Imm16::IsInSignedRange(AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias));
-        loadPtr(Address(GlobalReg, AsmJSHeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
+        MOZ_ASSERT(Imm16::IsInSignedRange(wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias));
+        loadPtr(Address(GlobalReg, wasm::HeapGlobalDataOffset - AsmJSGlobalRegBias), HeapReg);
     }
 
     // Instrumentation for entering and leaving the profiler.

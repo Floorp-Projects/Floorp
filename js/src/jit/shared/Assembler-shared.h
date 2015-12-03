@@ -151,8 +151,8 @@ struct ImmPtr
 
     explicit ImmPtr(const void* value) : value(const_cast<void*>(value))
     {
-        // To make code serialization-safe, asm.js compilation should only
-        // compile pointer immediates using AsmJSImmPtr.
+        // To make code serialization-safe, wasm compilation should only
+        // compile pointer immediates using a SymbolicAddress.
         MOZ_ASSERT(!IsCompilingAsmJS());
     }
 
@@ -649,80 +649,6 @@ class CodeLocationLabel
     }
 };
 
-// While the frame-pointer chain allows the stack to be unwound without
-// metadata, Error.stack still needs to know the line/column of every call in
-// the chain. A CallSiteDesc describes the line/column of a single callsite.
-// A CallSiteDesc is created by callers of MacroAssembler.
-class CallSiteDesc
-{
-    uint32_t line_;
-    uint32_t column_ : 31;
-    uint32_t kind_ : 1;
-  public:
-    enum Kind {
-        Relative,  // pc-relative call
-        Register   // call *register
-    };
-    CallSiteDesc() {}
-    explicit CallSiteDesc(Kind kind)
-      : line_(0), column_(0), kind_(kind)
-    {}
-    CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
-      : line_(line), column_(column), kind_(kind)
-    {
-        MOZ_ASSERT(column_ == column, "column must fit in 31 bits");
-    }
-    uint32_t line() const { return line_; }
-    uint32_t column() const { return column_; }
-    Kind kind() const { return Kind(kind_); }
-};
-
-// Adds to CallSiteDesc the metadata necessary to walk the stack given an
-// initial stack-pointer.
-class CallSite : public CallSiteDesc
-{
-    uint32_t returnAddressOffset_;
-    uint32_t stackDepth_;
-
-  public:
-    CallSite() {}
-
-    CallSite(CallSiteDesc desc, uint32_t returnAddressOffset, uint32_t stackDepth)
-      : CallSiteDesc(desc),
-        returnAddressOffset_(returnAddressOffset),
-        stackDepth_(stackDepth)
-    { }
-
-    void setReturnAddressOffset(uint32_t r) { returnAddressOffset_ = r; }
-    void offsetReturnAddressBy(int32_t o) { returnAddressOffset_ += o; }
-    uint32_t returnAddressOffset() const { return returnAddressOffset_; }
-
-    // The stackDepth measures the amount of stack space pushed since the
-    // function was called. In particular, this includes the pushed return
-    // address on all archs (whether or not the call instruction pushes the
-    // return address (x86/x64) or the prologue does (ARM/MIPS)).
-    uint32_t stackDepth() const { return stackDepth_; }
-};
-
-typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
-
-class CallSiteAndTarget : public CallSite
-{
-    uint32_t targetIndex_;
-
-  public:
-    explicit CallSiteAndTarget(CallSite cs, uint32_t targetIndex)
-      : CallSite(cs), targetIndex_(targetIndex)
-    { }
-
-    static const uint32_t NOT_INTERNAL = UINT32_MAX;
-
-    bool isInternal() const { return targetIndex_ != NOT_INTERNAL; }
-    uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
-};
-
-typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
-
 // As an invariant across architectures, within asm.js code:
 //   $sp % AsmJSStackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % AsmJSStackAlignment
 // Thus, AsmJSFrame represents the bytes pushed after the call (which occurred
@@ -743,103 +669,6 @@ struct AsmJSFrame
 static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
 static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
 
-// A hoisting of constants that would otherwise require #including AsmJSModule.h
-// everywhere. Values are asserted in AsmJSModule.h.
-static const unsigned AsmJSActivationGlobalDataOffset = 0;
-static const unsigned AsmJSHeapGlobalDataOffset = sizeof(void*);
-static const unsigned AsmJSNaN64GlobalDataOffset = 2 * sizeof(void*);
-static const unsigned AsmJSNaN32GlobalDataOffset = 2 * sizeof(void*) + sizeof(double);
-
-// Summarizes a heap access made by asm.js code that needs to be patched later
-// and/or looked up by the asm.js signal handlers. Different architectures need
-// to know different things (x64: offset and length, ARM: where to patch in
-// heap length, x86: where to patch in heap length and base) hence the massive
-// #ifdefery.
-class AsmJSHeapAccess
-{
-#if defined(JS_CODEGEN_X64)
-  public:
-    enum WhatToDoOnOOB {
-        CarryOn, // loads return undefined, stores do nothing.
-        Throw    // throw a RangeError
-    };
-#endif
-
-  private:
-    uint32_t insnOffset_;
-#if defined(JS_CODEGEN_X86)
-    uint8_t opLength_;  // the length of the load/store instruction
-#endif
-#if defined(JS_CODEGEN_X64)
-    uint8_t offsetWithinWholeSimdVector_; // if is this e.g. the Z of an XYZ
-    bool throwOnOOB_;   // should we throw on OOB?
-#endif
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
-#endif
-
-    JS_STATIC_ASSERT(AnyRegister::Total < UINT8_MAX);
-
-  public:
-    AsmJSHeapAccess() {}
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    static const uint32_t NoLengthCheck = UINT32_MAX;
-#endif
-
-#if defined(JS_CODEGEN_X86)
-    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
-    // cmpDelta_ is zero indicating that there is no length to patch.
-    AsmJSHeapAccess(uint32_t insnOffset, uint32_t after, uint32_t cmp = NoLengthCheck)
-    {
-        mozilla::PodZero(this);  // zero padding for Valgrind
-        insnOffset_ = insnOffset;
-        opLength_ = after - insnOffset;
-        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
-    }
-#elif defined(JS_CODEGEN_X64)
-    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
-    // cmpDelta_ is zero indicating that there is no length to patch.
-    AsmJSHeapAccess(uint32_t insnOffset, WhatToDoOnOOB oob,
-                    uint32_t cmp = NoLengthCheck,
-                    uint32_t offsetWithinWholeSimdVector = 0)
-    {
-        mozilla::PodZero(this);  // zero padding for Valgrind
-        insnOffset_ = insnOffset;
-        offsetWithinWholeSimdVector_ = offsetWithinWholeSimdVector;
-        throwOnOOB_ = oob == Throw;
-        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
-        MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector);
-    }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    explicit AsmJSHeapAccess(uint32_t insnOffset)
-    {
-        mozilla::PodZero(this);  // zero padding for Valgrind
-        insnOffset_ = insnOffset;
-    }
-#endif
-
-    uint32_t insnOffset() const { return insnOffset_; }
-    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
-    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
-#if defined(JS_CODEGEN_X86)
-    void* patchHeapPtrImmAt(uint8_t* code) const { return code + (insnOffset_ + opLength_); }
-#endif
-#if defined(JS_CODEGEN_X64)
-    bool throwOnOOB() const { return throwOnOOB_; }
-    uint32_t offsetWithinWholeSimdVector() const { return offsetWithinWholeSimdVector_; }
-#endif
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    bool hasLengthCheck() const { return cmpDelta_ > 0; }
-    void* patchLengthAt(uint8_t* code) const {
-        MOZ_ASSERT(hasLengthCheck());
-        return code + (insnOffset_ - cmpDelta_);
-    }
-#endif
-};
-
-typedef Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> AsmJSHeapAccessVector;
-
 struct AsmJSGlobalAccess
 {
     CodeOffset patchAt;
@@ -850,100 +679,16 @@ struct AsmJSGlobalAccess
     {}
 };
 
-// Describes the intended pointee of an immediate to be embedded in asm.js
-// code. By representing the pointee as a symbolic enum, the pointee can be
-// patched after deserialization when the address of global things has changed.
-enum AsmJSImmKind
-{
-    AsmJSImm_ToInt32         = AsmJSExit::Builtin_ToInt32,
-#if defined(JS_CODEGEN_ARM)
-    AsmJSImm_aeabi_idivmod   = AsmJSExit::Builtin_IDivMod,
-    AsmJSImm_aeabi_uidivmod  = AsmJSExit::Builtin_UDivMod,
-    AsmJSImm_AtomicCmpXchg   = AsmJSExit::Builtin_AtomicCmpXchg,
-    AsmJSImm_AtomicXchg      = AsmJSExit::Builtin_AtomicXchg,
-    AsmJSImm_AtomicFetchAdd  = AsmJSExit::Builtin_AtomicFetchAdd,
-    AsmJSImm_AtomicFetchSub  = AsmJSExit::Builtin_AtomicFetchSub,
-    AsmJSImm_AtomicFetchAnd  = AsmJSExit::Builtin_AtomicFetchAnd,
-    AsmJSImm_AtomicFetchOr   = AsmJSExit::Builtin_AtomicFetchOr,
-    AsmJSImm_AtomicFetchXor  = AsmJSExit::Builtin_AtomicFetchXor,
-#endif
-    AsmJSImm_ModD            = AsmJSExit::Builtin_ModD,
-    AsmJSImm_SinD            = AsmJSExit::Builtin_SinD,
-    AsmJSImm_CosD            = AsmJSExit::Builtin_CosD,
-    AsmJSImm_TanD            = AsmJSExit::Builtin_TanD,
-    AsmJSImm_ASinD           = AsmJSExit::Builtin_ASinD,
-    AsmJSImm_ACosD           = AsmJSExit::Builtin_ACosD,
-    AsmJSImm_ATanD           = AsmJSExit::Builtin_ATanD,
-    AsmJSImm_CeilD           = AsmJSExit::Builtin_CeilD,
-    AsmJSImm_CeilF           = AsmJSExit::Builtin_CeilF,
-    AsmJSImm_FloorD          = AsmJSExit::Builtin_FloorD,
-    AsmJSImm_FloorF          = AsmJSExit::Builtin_FloorF,
-    AsmJSImm_ExpD            = AsmJSExit::Builtin_ExpD,
-    AsmJSImm_LogD            = AsmJSExit::Builtin_LogD,
-    AsmJSImm_PowD            = AsmJSExit::Builtin_PowD,
-    AsmJSImm_ATan2D          = AsmJSExit::Builtin_ATan2D,
-    AsmJSImm_Runtime,
-    AsmJSImm_RuntimeInterruptUint32,
-    AsmJSImm_StackLimit,
-    AsmJSImm_ReportOverRecursed,
-    AsmJSImm_OnDetached,
-    AsmJSImm_OnOutOfBounds,
-    AsmJSImm_OnImpreciseConversion,
-    AsmJSImm_HandleExecutionInterrupt,
-    AsmJSImm_InvokeFromAsmJS_Ignore,
-    AsmJSImm_InvokeFromAsmJS_ToInt32,
-    AsmJSImm_InvokeFromAsmJS_ToNumber,
-    AsmJSImm_CoerceInPlace_ToInt32,
-    AsmJSImm_CoerceInPlace_ToNumber,
-    AsmJSImm_Limit
-};
-
-static inline AsmJSImmKind
-BuiltinToImmKind(AsmJSExit::BuiltinKind builtin)
-{
-    return AsmJSImmKind(builtin);
-}
-
-static inline bool
-ImmKindIsBuiltin(AsmJSImmKind imm, AsmJSExit::BuiltinKind* builtin)
-{
-    if (unsigned(imm) >= unsigned(AsmJSExit::Builtin_Limit))
-        return false;
-    *builtin = AsmJSExit::BuiltinKind(imm);
-    return true;
-}
-
-// Pointer to be embedded as an immediate in asm.js code.
-class AsmJSImmPtr
-{
-    AsmJSImmKind kind_;
-  public:
-    AsmJSImmKind kind() const { return kind_; }
-    // This needs to be MOZ_IMPLICIT in order to make MacroAssember::CallWithABINoProfiling compile.
-    MOZ_IMPLICIT AsmJSImmPtr(AsmJSImmKind kind) : kind_(kind) { MOZ_ASSERT(IsCompilingAsmJS()); }
-    AsmJSImmPtr() {}
-};
-
-// Pointer to be embedded as an immediate that is loaded/stored from by an
-// instruction in asm.js code.
-class AsmJSAbsoluteAddress
-{
-    AsmJSImmKind kind_;
-  public:
-    AsmJSImmKind kind() const { return kind_; }
-    explicit AsmJSAbsoluteAddress(AsmJSImmKind kind) : kind_(kind) { MOZ_ASSERT(IsCompilingAsmJS()); }
-    AsmJSAbsoluteAddress() {}
-};
-
 // Represents an instruction to be patched and the intended pointee. These
 // links are accumulated in the MacroAssembler, but patching is done outside
 // the MacroAssembler (in AsmJSModule::staticallyLink).
 struct AsmJSAbsoluteLink
 {
-    AsmJSAbsoluteLink(CodeOffset patchAt, AsmJSImmKind target)
+    AsmJSAbsoluteLink(CodeOffset patchAt, wasm::SymbolicAddress target)
       : patchAt(patchAt), target(target) {}
+
     CodeOffset patchAt;
-    AsmJSImmKind target;
+    wasm::SymbolicAddress target;
 };
 
 // Represents a call from an asm.js function to another asm.js function,
@@ -963,8 +708,8 @@ struct AsmJSInternalCallee
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {
-    CallSiteAndTargetVector callsites_;
-    Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> asmJSHeapAccesses_;
+    wasm::CallSiteAndTargetVector callsites_;
+    wasm::HeapAccessVector heapAccesses_;
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
     Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
 
@@ -996,18 +741,18 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    void append(const CallSiteDesc& desc, CodeOffset label, size_t framePushed,
-                uint32_t targetIndex = CallSiteAndTarget::NOT_INTERNAL)
+    void append(const wasm::CallSiteDesc& desc, CodeOffset label, size_t framePushed,
+                uint32_t targetIndex = wasm::CallSiteAndTarget::NOT_INTERNAL)
     {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
-        CallSite callsite(desc, label.offset(), framePushed + sizeof(AsmJSFrame));
-        enoughMemory_ &= callsites_.append(CallSiteAndTarget(callsite, targetIndex));
+        wasm::CallSite callsite(desc, label.offset(), framePushed + sizeof(AsmJSFrame));
+        enoughMemory_ &= callsites_.append(wasm::CallSiteAndTarget(callsite, targetIndex));
     }
-    CallSiteAndTargetVector& callSites() { return callsites_; }
+    wasm::CallSiteAndTargetVector& callSites() { return callsites_; }
 
-    void append(AsmJSHeapAccess access) { enoughMemory_ &= asmJSHeapAccesses_.append(access); }
-    AsmJSHeapAccessVector&& extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
+    void append(wasm::HeapAccess access) { enoughMemory_ &= heapAccesses_.append(access); }
+    wasm::HeapAccessVector&& extractHeapAccesses() { return Move(heapAccesses_); }
 
     void append(AsmJSGlobalAccess access) { enoughMemory_ &= asmJSGlobalAccesses_.append(access); }
     size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
@@ -1037,10 +782,10 @@ class AssemblerShared
         for (; i < callsites_.length(); i++)
             callsites_[i].offsetReturnAddressBy(delta);
 
-        i = asmJSHeapAccesses_.length();
-        enoughMemory_ &= asmJSHeapAccesses_.appendAll(other.asmJSHeapAccesses_);
-        for (; i < asmJSHeapAccesses_.length(); i++)
-            asmJSHeapAccesses_[i].offsetInsnOffsetBy(delta);
+        i = heapAccesses_.length();
+        enoughMemory_ &= heapAccesses_.appendAll(other.heapAccesses_);
+        for (; i < heapAccesses_.length(); i++)
+            heapAccesses_[i].offsetInsnOffsetBy(delta);
 
         i = asmJSGlobalAccesses_.length();
         enoughMemory_ &= asmJSGlobalAccesses_.appendAll(other.asmJSGlobalAccesses_);
