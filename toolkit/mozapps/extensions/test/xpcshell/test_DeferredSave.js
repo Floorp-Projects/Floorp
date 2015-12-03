@@ -147,7 +147,7 @@ function run_test() {
 }
 
 // Modify set data once, ask for save, make sure it saves cleanly
-add_task(function test_basic_save_succeeds() {
+add_task(function* test_basic_save_succeeds() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let data = "Test 1 Data";
@@ -159,7 +159,7 @@ add_task(function test_basic_save_succeeds() {
 
 // Two saves called during the same event loop, both with callbacks
 // Make sure we save only the second version of the data
-add_task(function test_two_saves() {
+add_task(function* test_two_saves() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let firstCallback_happened = false;
@@ -182,7 +182,7 @@ add_task(function test_two_saves() {
 
 // Two saves called with a delay in between, both with callbacks
 // Make sure we save the second version of the data
-add_task(function test_two_saves_delay() {
+add_task(function* test_two_saves_delay() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstCallback_happened = false;
@@ -219,7 +219,7 @@ add_task(function test_two_saves_delay() {
 // Test case where OS.File immediately reports an error when the write begins
 // Also check that the "error" getter correctly returns the error
 // Then do a write that succeeds, and make sure the error is cleared
-add_task(function test_error_immediate() {
+add_task(function* test_error_immediate() {
   let tester = DeferredSaveTester();
   let testError = new Error("Forced failure");
   function writeFail(aTester) {
@@ -243,7 +243,7 @@ add_task(function test_error_immediate() {
 // Save one set of changes, then while the write is in progress, modify the
 // data two more times. Test that we re-write the dirty data exactly once
 // after the first write succeeds
-add_task(function dirty_while_writing() {
+add_task(function* dirty_while_writing() {
   let tester = DeferredSaveTester();
   let firstData = "First data";
   let secondData = "Second data";
@@ -317,7 +317,7 @@ function write_then_disable(aTester) {
 
 // Flush tests. First, do an ordinary clean save and then call flush;
 // there should not be another save
-add_task(function flush_after_save() {
+add_task(function* flush_after_save() {
   setQuickMockTimer();
   let tester = DeferredSaveTester();
   let dataToSave = "Flush after save";
@@ -328,7 +328,7 @@ add_task(function flush_after_save() {
 });
 
 // Flush while a write is in progress, but the in-memory data is clean
-add_task(function flush_during_write() {
+add_task(function* flush_during_write() {
   let tester = DeferredSaveTester();
   let dataToSave = "Flush during write";
   let firstCallback_happened = false;
@@ -361,7 +361,7 @@ add_task(function flush_during_write() {
 // Flush while dirty but write not in progress
 // The data written should be the value at the time
 // flush() is called, even if it is changed later
-add_task(function flush_while_dirty() {
+add_task(function* flush_while_dirty() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "Flush while dirty, valid data";
@@ -397,7 +397,7 @@ add_task(function flush_while_dirty() {
 // then flush, then modify the data again
 // Data for the second write should be taken at the time
 // flush() is called, even if it is modified later
-add_task(function flush_writing_dirty() {
+add_task(function* flush_writing_dirty() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "Flush first pass data";
@@ -463,7 +463,7 @@ function badDataProvider() {
 
 // Handle cases where data provider throws
 // First, throws during a normal save
-add_task(function data_throw() {
+add_task(function* data_throw() {
   setQuickMockTimer();
   badDataError = expectedDataError;
   let tester = DeferredSaveTester(badDataProvider);
@@ -473,7 +473,7 @@ add_task(function data_throw() {
 });
 
 // Now, throws during flush
-add_task(function data_throw_during_flush() {
+add_task(function* data_throw_during_flush() {
   badDataError = expectedDataError;
   let tester = DeferredSaveTester(badDataProvider);
   let firstCallback_happened = false;
@@ -508,7 +508,7 @@ add_task(function data_throw_during_flush() {
 // actually restart timer for delayed write
 // write completes
 // delayed timer goes off, throws error because DeferredSave has been torn down
-add_task(function delay_flush_race() {
+add_task(function* delay_flush_race() {
   let timerPromise = setPromiseMockTimer();
   let tester = DeferredSaveTester();
   let firstData = "First save";

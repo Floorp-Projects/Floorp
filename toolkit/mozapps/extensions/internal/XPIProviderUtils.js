@@ -214,7 +214,7 @@ function asyncMap(aObjects, aMethod, aCallback) {
  * @param  aStatement
  *         The statement to execute
  */
-function resultRows(aStatement) {
+function* resultRows(aStatement) {
   try {
     while (stepStatement(aStatement))
       yield aStatement.row;
@@ -947,7 +947,7 @@ this.XPIDatabase = {
 
       let reqCount = 0;
       let props = [];
-      for (let row in resultRows(stmt)) {
+      for (let row of resultRows(stmt)) {
         if (REQUIRED.indexOf(row.name) != -1) {
           reqCount++;
           props.push(row.name);
@@ -967,7 +967,7 @@ this.XPIDatabase = {
       stmt.finalize();
 
       stmt = aConnection.createStatement("SELECT " + props.join(",") + " FROM addon");
-      for (let row in resultRows(stmt)) {
+      for (let row of resultRows(stmt)) {
         if (!(row.location in migrateData))
           migrateData[row.location] = {};
         let addonData = {
@@ -994,7 +994,7 @@ this.XPIDatabase = {
         for (let id in migrateData[location]) {
           taStmt.params.internal_id = migrateData[location][id].internal_id;
           delete migrateData[location][id].internal_id;
-          for (let row in resultRows(taStmt)) {
+          for (let row of resultRows(taStmt)) {
             migrateData[location][id].targetApplications.push({
               id: row.id,
               minVersion: row.minVersion,
