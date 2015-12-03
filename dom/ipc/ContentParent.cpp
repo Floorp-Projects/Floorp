@@ -148,6 +148,7 @@
 #include "nsISystemMessagesInternal.h"
 #include "nsITimer.h"
 #include "nsIURIFixup.h"
+#include "nsIWindowMediator.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
 #include "nsIDOMChromeWindow.h"
@@ -5388,6 +5389,34 @@ ContentParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumen
   return true;
 }
 
+static already_AddRefed<nsPIDOMWindow>
+FindMostRecentOpenWindow()
+{
+    nsCOMPtr<nsIWindowMediator> windowMediator =
+        do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+    windowMediator->GetEnumerator(MOZ_UTF16("navigator:browser"),
+                                  getter_AddRefs(windowEnumerator));
+
+    nsCOMPtr<nsPIDOMWindow> latest;
+
+    bool hasMore = false;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->HasMoreElements(&hasMore)));
+    while (hasMore) {
+        nsCOMPtr<nsISupports> item;
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->GetNext(getter_AddRefs(item))));
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(item);
+
+        if (window && !window->Closed()) {
+            latest = window;
+        }
+
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->HasMoreElements(&hasMore)));
+    }
+
+    return latest.forget();
+}
+
 bool
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
@@ -5461,7 +5490,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     // If we haven't found a chrome window to open in, just use the most recently
     // opened one.
     if (!parent) {
-        parent = nsContentUtils::GetMostRecentNonPBWindow();
+        parent = FindMostRecentOpenWindow();
         if (NS_WARN_IF(!parent)) {
             *aResult = NS_ERROR_FAILURE;
             return true;
