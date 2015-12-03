@@ -98,7 +98,7 @@ const PingServer = {
 
   promiseNextPings: function(count) {
     return this.promiseNextRequests(count).then(requests => {
-      return [for (req of requests) decodeRequestPayload(req)];
+      return Array.from(requests, decodeRequestPayload);
     });
   },
 };
@@ -148,7 +148,10 @@ function wrapWithExceptionHandler(f) {
   function wrapper(...args) {
     try {
       f(...args);
-    } catch (ex if typeof(ex) == 'object') {
+    } catch (ex) {
+      if (typeof(ex) != 'object') {
+        throw ex;
+      }
       dump("Caught exception: " + ex.message + "\n");
       dump(ex.stack);
       do_test_finished();
