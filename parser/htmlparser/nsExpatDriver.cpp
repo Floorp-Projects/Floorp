@@ -29,6 +29,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
+#include "nsNullPrincipal.h"
 
 #include "mozilla/Logging.h"
 
@@ -789,14 +790,21 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
     NS_ASSERTION(mSink == nsCOMPtr<nsIExpatSink>(do_QueryInterface(mOriginalSink)),
                  "In nsExpatDriver::OpenInputStreamFromExternalDTD: "
                  "mOriginalSink not the same object as mSink?");
-    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIPrincipal> loadingPrincipal;
     if (mOriginalSink) {
+      nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(mOriginalSink->GetTarget());
+      if (doc) {
+        loadingPrincipal = doc->NodePrincipal();
+      }
     }
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    if (!loadingPrincipal) {
+      loadingPrincipal = nsNullPrincipal::Create();
+      NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
+    }
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
-                       doc,
+                       loadingPrincipal,
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
                        nsILoadInfo::SEC_ALLOW_CHROME,
                        nsIContentPolicy::TYPE_DTD);

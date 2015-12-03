@@ -379,7 +379,7 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
     mPinCount(0),
     mCurrentMode(MODE_PLAYBACK),
     mMetadataInPartialBlockBuffer(false),
-    mPartialBlockBuffer(new int64_t[BLOCK_SIZE/sizeof(int64_t)])
+    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t)))
 {
 }
 
@@ -393,7 +393,7 @@ size_t MediaCacheStream::SizeOfExcludingThis(
   size += mReadaheadBlocks.SizeOfExcludingThis(aMallocSizeOf);
   size += mMetadataBlocks.SizeOfExcludingThis(aMallocSizeOf);
   size += mPlayedBlocks.SizeOfExcludingThis(aMallocSizeOf);
-  size += mPartialBlockBuffer.SizeOfExcludingThis(aMallocSizeOf);
+  size += aMallocSizeOf(mPartialBlockBuffer.get());
 
   return size;
 }
@@ -1842,7 +1842,7 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
     // Write back the partial block
     memset(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset, 0,
            BLOCK_SIZE - blockOffset);
-    gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer,
+    gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer.get(),
         mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
   }
 

@@ -139,13 +139,6 @@ CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidat
                                                               oldval, newval);
         return oldval;
       }
-      case Scalar::Uint8Clamped: {
-        uint8_t oldval = ClampIntForUint8Array(oldCandidate);
-        uint8_t newval = ClampIntForUint8Array(newCandidate);
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<uint8_t*>() + offset,
-                                                              oldval, newval);
-        return oldval;
-      }
       case Scalar::Int16: {
         int16_t oldval = (int16_t)oldCandidate;
         int16_t newval = (int16_t)newCandidate;
@@ -235,8 +228,7 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
 
     SharedMem<void*> viewData = view->viewDataShared();
     switch (view->type()) {
-      case Scalar::Uint8:
-      case Scalar::Uint8Clamped: {
+      case Scalar::Uint8: {
         uint8_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
         r.setInt32(v);
         return true;
@@ -297,11 +289,6 @@ ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, SharedMem<void*> vie
       }
       case Scalar::Uint8: {
         uint8_t value = (uint8_t)numberValue;
-        INT_OP(viewData.cast<uint8_t*>() + offset, value);
-        return value;
-      }
-      case Scalar::Uint8Clamped: {
-        uint8_t value = ClampIntForUint8Array(numberValue);
         INT_OP(viewData.cast<uint8_t*>() + offset, value);
         return value;
       }
@@ -404,26 +391,6 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
       case Scalar::Uint8: {
         uint8_t v = (uint8_t)numberValue;
         r.setInt32(T::operate(viewData.cast<uint8_t*>() + offset, v));
-        return true;
-      }
-      case Scalar::Uint8Clamped: {
-        // Spec says:
-        //  - clamp the input value
-        //  - perform the operation
-        //  - clamp the result
-        //  - store the result
-        // This requires a CAS loop.
-        int32_t value = ClampIntForUint8Array(numberValue);
-        SharedMem<uint8_t*> loc = viewData.cast<uint8_t*>() + offset;
-        for (;;) {
-            uint8_t old = jit::AtomicOperations::loadSafeWhenRacy(loc);
-            uint8_t result = (uint8_t)ClampIntForUint8Array(T::perform(old, value));
-            uint8_t tmp = jit::AtomicOperations::compareExchangeSeqCst(loc, old, result);
-            if (tmp == old) {
-                r.setInt32(old);
-                break;
-            }
-        }
         return true;
       }
       case Scalar::Int16: {

@@ -274,21 +274,22 @@ Assembler::bind(InstImm* inst, uintptr_t branch, uintptr_t target)
     }
 
     if (BOffImm16::IsInRange(offset)) {
+#ifdef _MIPS_ARCH_LOONGSON3A
+        // Don't skip trailing nops can imporve performance
+        // on Loongson3 platform.
+        bool skipNops = false;
+#else
+        bool skipNops = (inst[0].encode() != inst_bgezal.encode() &&
+                         inst[0].encode() != inst_beq.encode());
+#endif
+
         inst[0].setBOffImm16(BOffImm16(offset));
         inst[1].makeNop();
 
-        // Don't skip trailing nops can imporve performance
-        // on Loongson3 platform.
-#ifndef _MIPS_ARCH_LOONGSON3A
-        bool conditional = (inst[0].encode() != inst_bgezal.encode() &&
-                            inst[0].encode() != inst_beq.encode());
-
-        // Skip the trailing nops in conditional branches.
-        if (conditional) {
+        if (skipNops) {
             inst[2] = InstImm(op_regimm, zero, rt_bgez, BOffImm16(5 * sizeof(uint32_t))).encode();
             // There are 4 nops after this
         }
-#endif
         return;
     }
 

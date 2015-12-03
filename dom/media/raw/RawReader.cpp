@@ -10,6 +10,7 @@
 #include "VideoUtils.h"
 #include "nsISeekableStream.h"
 #include "gfx2DGlue.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace mozilla;
 using namespace mozilla::media;
@@ -138,7 +139,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   int64_t currentFrameTime = USECS_PER_S * mCurrentFrame / mFrameRate;
   uint32_t length = mFrameSize - sizeof(RawPacketHeader);
 
-  nsAutoArrayPtr<uint8_t> buffer(new uint8_t[length]);
+  auto buffer = MakeUnique<uint8_t[]>(length);
 
   // We're always decoding one frame when called
   while(true) {
@@ -151,7 +152,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
       return false;
     }
 
-    if (!ReadFromResource(buffer, length)) {
+    if (!ReadFromResource(buffer.get(), length)) {
       return false;
     }
 
@@ -165,7 +166,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   }
 
   VideoData::YCbCrBuffer b;
-  b.mPlanes[0].mData = buffer;
+  b.mPlanes[0].mData = buffer.get();
   b.mPlanes[0].mStride = mMetadata.frameWidth * mMetadata.lumaChannelBpp / 8.0;
   b.mPlanes[0].mHeight = mMetadata.frameHeight;
   b.mPlanes[0].mWidth = mMetadata.frameWidth;
@@ -173,7 +174,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   uint32_t cbcrStride = mMetadata.frameWidth * mMetadata.chromaChannelBpp / 8.0;
 
-  b.mPlanes[1].mData = buffer + mMetadata.frameHeight * b.mPlanes[0].mStride;
+  b.mPlanes[1].mData = buffer.get() + mMetadata.frameHeight * b.mPlanes[0].mStride;
   b.mPlanes[1].mStride = cbcrStride;
   b.mPlanes[1].mHeight = mMetadata.frameHeight / 2;
   b.mPlanes[1].mWidth = mMetadata.frameWidth / 2;

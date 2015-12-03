@@ -410,51 +410,17 @@ class CGDOMJSClass(CGThing):
         return ""
 
     def define(self):
-        traceHook = 'nullptr'
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         objectMovedHook = OBJECT_MOVED_HOOK_NAME if self.descriptor.wrapperCache else 'nullptr'
         slotCount = INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
-        classExtensionAndObjectOps = fill(
-            """
-            {
-              false,   /* isWrappedNative */
-              nullptr, /* weakmapKeyDelegateOp */
-              ${objectMoved} /* objectMovedOp */
-            },
-            JS_NULL_OBJECT_OPS
-            """,
-            objectMoved=objectMovedHook)
         if self.descriptor.isGlobal():
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS)"
             traceHook = "JS_GlobalObjectTraceHook"
             reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
-            if self.descriptor.interface.identifier.name == "Window":
-                classExtensionAndObjectOps = fill(
-                    """
-                    {
-                      false,   /* isWrappedNative */
-                      nullptr, /* weakmapKeyDelegateOp */
-                      ${objectMoved} /* objectMovedOp */
-                    },
-                    {
-                      nullptr, /* lookupProperty */
-                      nullptr, /* defineProperty */
-                      nullptr, /* hasProperty */
-                      nullptr, /* getProperty */
-                      nullptr, /* setProperty */
-                      nullptr, /* getOwnPropertyDescriptor */
-                      nullptr, /* deleteProperty */
-                      nullptr, /* watch */
-                      nullptr, /* unwatch */
-                      nullptr, /* getElements */
-                      nullptr, /* enumerate */
-                      nullptr, /* funToString */
-                    }
-                    """,
-                    objectMoved=objectMovedHook)
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
+            traceHook = 'nullptr'
             reservedSlots = slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
             resolveHook = RESOLVE_HOOK_NAME
@@ -487,7 +453,12 @@ class CGDOMJSClass(CGThing):
                 nullptr,               /* construct */
                 ${trace}, /* trace */
                 JS_NULL_CLASS_SPEC,
-                $*{classExtensionAndObjectOps}
+                {
+                  false,   /* isWrappedNative */
+                  nullptr, /* weakmapKeyDelegateOp */
+                  ${objectMoved} /* objectMovedOp */
+                },
+                JS_NULL_OBJECT_OPS
               },
               $*{descriptor}
             };
@@ -505,7 +476,7 @@ class CGDOMJSClass(CGThing):
             finalize=FINALIZE_HOOK_NAME,
             call=callHook,
             trace=traceHook,
-            classExtensionAndObjectOps=classExtensionAndObjectOps,
+            objectMoved=objectMovedHook,
             descriptor=DOMClass(self.descriptor),
             instanceReservedSlots=INSTANCE_RESERVED_SLOTS,
             reservedSlots=reservedSlots,

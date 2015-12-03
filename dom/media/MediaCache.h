@@ -12,6 +12,7 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "Intervals.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIPrincipal;
 
@@ -510,7 +511,7 @@ private:
   // Use int64_t so that the data is well-aligned.
   // Heap allocate this buffer since the exact power-of-2 will cause allocation
   // slop when combined with the rest of the object members.
-  nsAutoArrayPtr<int64_t> mPartialBlockBuffer;
+  UniquePtr<int64_t[]> mPartialBlockBuffer;
 };
 
 } // namespace mozilla

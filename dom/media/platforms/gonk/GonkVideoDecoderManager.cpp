@@ -669,8 +669,7 @@ GonkVideoDecoderManager::GetColorConverterBuffer(int32_t aWidth, int32_t aHeight
   size_t yuv420p_v_size = yuv420p_u_size;
   size_t yuv420p_size = yuv420p_y_size + yuv420p_u_size + yuv420p_v_size;
   if (mColorConverterBufferSize != yuv420p_size) {
-    mColorConverterBuffer = nullptr; // release the previous buffer first
-    mColorConverterBuffer = new uint8_t[yuv420p_size];
+    mColorConverterBuffer = MakeUnique<uint8_t[]>(yuv420p_size);
     mColorConverterBufferSize = yuv420p_size;
   }
   return mColorConverterBuffer.get();

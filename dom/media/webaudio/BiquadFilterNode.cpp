@@ -12,6 +12,7 @@
 #include "WebAudioUtils.h"
 #include "blink/Biquad.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/UniquePtr.h"
 #include "AudioParamTimeline.h"
 
 namespace mozilla {
@@ -316,7 +317,7 @@ BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
     return;
   }
 
-  nsAutoArrayPtr<float> frequencies(new float[length]);
+  auto frequencies = MakeUnique<float[]>(length);
   float* frequencyHz = aFrequencyHz.Data();
   const double nyquist = Context()->SampleRate() * 0.5;
 
@@ -338,7 +339,7 @@ BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
 
   WebCore::Biquad biquad;
   SetParamsOnBiquad(biquad, Context()->SampleRate(), mType, freq, q, gain, detune);
-  biquad.getFrequencyResponse(int(length), frequencies, aMagResponse.Data(), aPhaseResponse.Data());
+  biquad.getFrequencyResponse(int(length), frequencies.get(), aMagResponse.Data(), aPhaseResponse.Data());
 }
 
 } // namespace dom

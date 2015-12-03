@@ -247,6 +247,8 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
     mozilla::tasktracer::StartLogging();
   }
 #endif
+
+  mGatherer = new mozilla::ProfileGatherer(this);
 }
 
 GeckoSampler::~GeckoSampler()
@@ -279,6 +281,10 @@ GeckoSampler::~GeckoSampler()
 #if defined(XP_WIN)
   delete mIntelPowerGadget;
 #endif
+
+  // Cancel any in-flight async profile gatherering
+  // requests
+  mGatherer->Cancel();
 }
 
 void GeckoSampler::HandleSaveRequest()
@@ -404,6 +410,14 @@ JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
   }
   return &val.toObject();
 }
+
+void GeckoSampler::GetGatherer(nsISupports** aRetVal)
+{
+  if (!aRetVal || NS_WARN_IF(!mGatherer)) {
+    return;
+  }
+  NS_ADDREF(*aRetVal = mGatherer);
+}
 #endif
 
 UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)
@@ -416,17 +430,11 @@ UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)
 void GeckoSampler::ToJSObjectAsync(double aSinceTime,
                                   mozilla::dom::Promise* aPromise)
 {
-  if (NS_WARN_IF(mGatherer)) {
+  if (NS_WARN_IF(!mGatherer)) {
     return;
   }
 
-  mGatherer = new mozilla::ProfileGatherer(this, aSinceTime, aPromise);
-  mGatherer->Start();
-}
-
-void GeckoSampler::ProfileGathered()
-{
-  mGatherer = nullptr;
+  mGatherer->Start(aSinceTime, aPromise);
 }
 
 struct SubprocessClosure {

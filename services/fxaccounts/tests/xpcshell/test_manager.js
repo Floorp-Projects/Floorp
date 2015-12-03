@@ -102,6 +102,7 @@ FxAccountsManager._fxAccounts = {
   _error: 'error',
   _assertion: 'assertion',
   _keys: 'keys',
+  _profile: 'aprofile',
   _signedInUser: null,
 
   _reset: function() {
@@ -137,6 +138,13 @@ FxAccountsManager._fxAccounts = {
     let deferred = Promise.defer();
     this._reject ? deferred.reject(this._error)
                  : deferred.resolve(this._signedInUser);
+    return deferred.promise;
+  },
+
+  getSignedInUserProfile: function() {
+    let deferred = Promise.defer();
+    this._reject ? deferred.reject(this._error)
+                 : deferred.resolve(this._profile);
     return deferred.promise;
   },
 
@@ -636,11 +644,13 @@ add_test(function(test_getAssertion_refresh_auth_no_refresh) {
 
 add_test(function(test_getAccount_existing_verified_session) {
   do_print("= getAccount, existing verified session =");
+  FxAccountsManager._activeSession = null;
   FxAccountsManager.getAccount().then(
     result => {
-      do_check_false(FxAccountsManager._fxAccounts._getSignedInUserCalled);
+      do_check_true(FxAccountsManager._fxAccounts._getSignedInUserCalled);
       do_check_eq(result.email, FxAccountsManager._user.email);
       do_check_eq(result.verified, FxAccountsManager._user.verified);
+      do_check_eq(result.profile, "aprofile");
       run_next_test();
     },
     error => {
