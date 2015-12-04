@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
@@ -27,14 +28,14 @@ XPCOMUtils.defineLazyGetter(this, "permMgr", function() {
            .getService(Ci.nsIPermissionManager);
 });
 
-#ifdef MOZ_WIDGET_GONK
-XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
-  Cu.import("resource://gre/modules/systemlibs.js");
-  return libcutils;
-});
-#else
-this.libcutils = null;
-#endif
+if (AppConstants.platform === "gonk") {
+  XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
+    Cu.import("resource://gre/modules/systemlibs.js");
+    return libcutils;
+  });
+} else {
+  this.libcutils = null;
+}
 
 const DEBUG = false;
 

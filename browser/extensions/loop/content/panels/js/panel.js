@@ -380,9 +380,9 @@ loop.panel = (function(_, mozL10n) {
       var roomUrl = this.props.roomUrls && this.props.roomUrls[0];
       if (roomUrl && roomUrl.location) {
         return this._renderIcon(roomUrl);
-      } else {
-        return this._renderDefaultIcon();
       }
+
+      return this._renderDefaultIcon();
     }
   });
 
