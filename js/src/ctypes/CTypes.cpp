@@ -6932,7 +6932,12 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
   JSRuntime* rt = argClosure.cinfo->rt;
   RootedObject fun(rt, argClosure.cinfo->jsfnObj);
-  js::PrepareScriptEnvironmentAndInvoke(rt, fun, argClosure);
+
+  // Arbitrarily choose a cx in which to run this code. This is bad, as
+  // JSContexts are stateful and have options. The hope is to eliminate
+  // JSContexts (see bug 650361).
+  js::PrepareScriptEnvironmentAndInvoke(rt->contextList.getFirst(), fun,
+                                        argClosure);
 }
 
 bool CClosure::ArgClosure::operator()(JSContext* cx)
