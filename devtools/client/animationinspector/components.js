@@ -1346,3 +1346,4 @@ function getFormattedAnimationTitle({state}) {
 function getCssPropertyName(jsPropertyName) {
   return jsPropertyName.replace(/[A-Z]/g, "-$&").toLowerCase();
 }
+exports.getCssPropertyName = getCssPropertyName;

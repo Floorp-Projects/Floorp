@@ -16,35 +16,24 @@ add_task(function*() {
   ok(!selected.length, "There are no animations selected by default");
 
   info("Click on the first animation, expect the right event and right class");
-  let animation0 = yield clickToChangeSelection(timeline, 0);
+  let animation0 = yield clickOnAnimation(panel, 0);
   is(animation0, timeline.animations[0],
      "The selected event was emitted with the right animation");
   ok(isTimeBlockSelected(timeline, 0),
      "The time block has the right selected class");
 
   info("Click on the second animation, expect it to be selected too");
-  let animation1 = yield clickToChangeSelection(timeline, 1);
+  let animation1 = yield clickOnAnimation(panel, 1);
   is(animation1, timeline.animations[1],
      "The selected event was emitted with the right animation");
   ok(isTimeBlockSelected(timeline, 1),
      "The second time block has the right selected class");
 
   info("Click again on the first animation and check if it unselects");
-  yield clickToChangeSelection(timeline, 0, true);
+  yield clickOnAnimation(panel, 0, true);
   ok(!isTimeBlockSelected(timeline, 0),
      "The first time block has been unselected");
 });
-
-function* clickToChangeSelection(timeline, index, isUnselect) {
-  info("Click on animation " + index + " in the timeline");
-  let onSelectionChanged = timeline.once(isUnselect
-                                         ? "animation-unselected"
-                                         : "animation-selected");
-  let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
-  EventUtils.sendMouseEvent({type: "click"}, timeBlock,
-                            timeBlock.ownerDocument.defaultView);
-  return yield onSelectionChanged;
-}
 
 function isTimeBlockSelected(timeline, index) {
   let animation = timeline.rootWrapperEl.querySelectorAll(".animation")[index];
