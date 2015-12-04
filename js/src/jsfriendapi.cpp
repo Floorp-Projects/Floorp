@@ -1146,16 +1146,15 @@ js::detail::IdMatchesAtom(jsid id, JSAtom* atom)
 }
 
 JS_FRIEND_API(void)
-js::PrepareScriptEnvironmentAndInvoke(JSRuntime* rt, HandleObject scope, ScriptEnvironmentPreparer::Closure& closure)
+js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject scope, ScriptEnvironmentPreparer::Closure& closure)
 {
-    if (rt->scriptEnvironmentPreparer) {
-        rt->scriptEnvironmentPreparer->invoke(scope, closure);
+    MOZ_ASSERT(!cx->isExceptionPending());
+
+    if (cx->runtime()->scriptEnvironmentPreparer) {
+        cx->runtime()->scriptEnvironmentPreparer->invoke(scope, closure);
         return;
     }
 
-    MOZ_ASSERT(rt->contextList.getFirst() == rt->contextList.getLast());
-    JSContext* cx = rt->contextList.getFirst();
-    MOZ_ASSERT(!cx->isExceptionPending());
     JSAutoCompartment ac(cx, scope);
     bool ok = closure(cx);
 
