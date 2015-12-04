@@ -118,7 +118,8 @@ class TPSTestRunner(object):
                  mobile=False,
                  rlock=None,
                  resultfile='tps_result.json',
-                 testfile=None):
+                 testfile=None,
+                 stop_on_error=False):
         self.binary = binary
         self.config = config if config else {}
         self.debug = debug
@@ -129,6 +130,7 @@ class TPSTestRunner(object):
         self.rlock = rlock
         self.resultfile = resultfile
         self.testfile = testfile
+        self.stop_on_error = stop_on_error
 
         self.addonversion = None
         self.branch = None
@@ -453,6 +455,9 @@ class TPSTestRunner(object):
                 self.numpassed += 1
             else:
                 self.numfailed += 1
+                if self.stop_on_error:
+                    print '\nTest failed with --stop-on-error specified; not running any more tests.\n'
+                    break
 
         self.mozhttpd.stop()
 
