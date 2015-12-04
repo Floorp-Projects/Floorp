@@ -1586,7 +1586,7 @@ pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/fi
 // Enable Contextual Identity Containers
 pref("privacy.userContext.enabled", false);
 
-#ifndef RELEASE_BUILD
+#ifdef NIGHTLY_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
 // us to change everybody to true in the future, when desired.
