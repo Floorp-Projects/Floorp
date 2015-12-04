@@ -2632,6 +2632,7 @@ BluetoothServiceBluedroid::BackendErrorNotification(bool aCrashed)
    * Reset following profile manager states for unexpected backend crash.
    * - HFP: connection state and audio state
    * - A2DP: connection state
+   * - HID: connection state
    */
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   NS_ENSURE_TRUE_VOID(hfp);
@@ -2639,6 +2640,9 @@ BluetoothServiceBluedroid::BackendErrorNotification(bool aCrashed)
   BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
   NS_ENSURE_TRUE_VOID(a2dp);
   a2dp->HandleBackendError();
+  BluetoothHidManager* hid = BluetoothHidManager::Get();
+  NS_ENSURE_TRUE_VOID(hid);
+  hid->HandleBackendError();
 
   mIsRestart = true;
   BT_LOGR("Recovery step2: stop bluetooth");
