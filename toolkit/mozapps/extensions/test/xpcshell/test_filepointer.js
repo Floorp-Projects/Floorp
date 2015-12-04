@@ -40,7 +40,7 @@ var addon2 = {
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
 const sourceDir = gProfD.clone();
 sourceDir.append("source");

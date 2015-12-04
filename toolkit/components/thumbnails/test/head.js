@@ -55,17 +55,18 @@ var TestRunner = {
    *               iterator.
    */
   next: function (aValue) {
-    try {
-      let value = TestRunner._iter.send(aValue);
-      if (value && typeof value.then == "function") {
-        value.then(result => {
-          next(result);
-        }, error => {
-          ok(false, error + "\n" + error.stack);
-        });
-      }
-    } catch (e if e instanceof StopIteration) {
+    let { done, value } = TestRunner._iter.next(aValue);
+    if (done) {
       finish();
+      return;
+    }
+
+    if (value && typeof value.then == "function") {
+      value.then(result => {
+        next(result);
+      }, error => {
+        ok(false, error + "\n" + error.stack);
+      });
     }
   }
 };

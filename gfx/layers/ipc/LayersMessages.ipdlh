@@ -36,6 +36,7 @@ using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerRect from "Units.h";
 using mozilla::LayerIntRegion from "Units.h";
 using mozilla::ParentLayerIntRect from "Units.h";
+using mozilla::LayoutDeviceIntRect from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
@@ -280,8 +281,8 @@ struct LayerAttributes {
 // See nsIWidget Configurations
 struct PluginWindowData {
   uintptr_t windowId;
-  IntRect[] clip;
-  IntRect bounds;
+  LayoutDeviceIntRect[] clip;
+  LayoutDeviceIntRect bounds;
   bool visible;
 };
 

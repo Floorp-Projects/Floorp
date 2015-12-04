@@ -1335,19 +1335,10 @@ RestyleManager::AttributeChanged(Element* aElement,
 /* static */ uint64_t
 RestyleManager::GetMaxAnimationGenerationForFrame(nsIFrame* aFrame)
 {
-  nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsElement()) {
-    return 0;
-  }
-
-  nsCSSPseudoElements::Type pseudoType =
-    aFrame->StyleContext()->GetPseudoType();
   AnimationCollection* transitions =
-    aFrame->PresContext()->TransitionManager()->GetAnimations(
-      content->AsElement(), pseudoType, false /* don't create */);
+    aFrame->PresContext()->TransitionManager()->GetAnimationCollection(aFrame);
   AnimationCollection* animations =
-    aFrame->PresContext()->AnimationManager()->GetAnimations(
-      content->AsElement(), pseudoType, false /* don't create */);
+    aFrame->PresContext()->AnimationManager()->GetAnimationCollection(aFrame);
 
   return std::max(transitions ? transitions->mAnimationGeneration : 0,
                   animations ? animations->mAnimationGeneration : 0);

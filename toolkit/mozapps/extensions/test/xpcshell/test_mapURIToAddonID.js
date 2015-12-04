@@ -267,11 +267,12 @@ function run_test_invalidarg() {
       AddonManager.mapURIToAddonID(test);
       throw new Error("Shouldn't be able to map the URI in question");
     }
-    catch (ex if ex.result) {
-      do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
-    }
     catch (ex) {
-      do_throw(ex);
+      if (ex.result) {
+        do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+      } else {
+        do_throw(ex);
+      }
     }
   }
 

@@ -96,7 +96,7 @@ add_task(function* test_submitted_dumps() {
   entries = yield m.submittedDumps();
   Assert.equal(entries.length, COUNT + 1, "hr- in filename detected.");
 
-  let gotIDs = new Set([e.id for (e of entries)]);
+  let gotIDs = new Set(entries.map(e => e.id));
   Assert.ok(gotIDs.has(hrID));
 });
 

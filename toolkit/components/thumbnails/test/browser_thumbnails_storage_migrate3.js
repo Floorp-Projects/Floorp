@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDirSvc",
  * This means copying existing thumbnails from the roaming to the local profile
  * directory and should just apply to Linux.
  */
-function runTests() {
+function* runTests() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                  .getService(Ci.nsIProperties);
 

@@ -106,7 +106,7 @@ add_task(function* test_archivedPings() {
   }
 
   // Check loading the archived pings.
-  let ids = [for (p of PINGS) p.id];
+  let ids = PINGS.map(p => p.id);
   let checkLoadingPings = Task.async(function*() {
     for (let data of PINGS) {
       let ping = yield TelemetryArchive.promiseArchivedPingById(data.id);

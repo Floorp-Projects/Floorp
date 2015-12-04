@@ -99,7 +99,7 @@ this.MatchPattern = function(pat)
   } else if (pat instanceof String || typeof(pat) == "string") {
     this.matchers = [new SingleMatchPattern(pat)];
   } else {
-    this.matchers = [for (p of pat) new SingleMatchPattern(p)];
+    this.matchers = pat.map(p => new SingleMatchPattern(p));
   }
 }
 

@@ -91,7 +91,7 @@ MediaKeySession::GetError() const
 void
 MediaKeySession::GetKeySystem(nsString& aOutKeySystem) const
 {
-  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
+  aOutKeySystem.Assign(mKeySystem);
 }
 
 void

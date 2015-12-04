@@ -60,7 +60,7 @@ CodeGeneratorMIPS64::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
     MTableSwitch* mir = ool->mir();
 
     masm.haltingAlign(sizeof(void*));
-    masm.bind(ool->jumpLabel()->src());
+    masm.bind(ool->jumpLabel()->target());
     masm.addCodeLabel(*ool->jumpLabel());
 
     for (size_t i = 0; i < mir->numCases(); i++) {
@@ -72,11 +72,11 @@ CodeGeneratorMIPS64::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
         // must be patched after codegen is finished. Each table entry uses 8
         // instructions (4 for load address, 2 for branch, and 2 padding).
         CodeLabel cl;
-        masm.ma_li(ScratchRegister, cl.dest());
+        masm.ma_li(ScratchRegister, cl.patchAt());
         masm.branch(ScratchRegister);
         masm.as_nop();
         masm.as_nop();
-        cl.src()->bind(caseoffset);
+        cl.target()->bind(caseoffset);
         masm.addCodeLabel(cl);
     }
 }
@@ -102,7 +102,7 @@ CodeGeneratorMIPS64::emitTableSwitchDispatch(MTableSwitch* mir, Register index,
     addOutOfLineCode(ool, mir);
 
     // Compute the position where a pointer to the right case stands.
-    masm.ma_li(address, ool->jumpLabel()->dest());
+    masm.ma_li(address, ool->jumpLabel()->patchAt());
     // index = size of table entry * index.
     // See CodeGeneratorMIPS64::visitOutOfLineTableSwitch
     masm.lshiftPtr(Imm32(5), index);

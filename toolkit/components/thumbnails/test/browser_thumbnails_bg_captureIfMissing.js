@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function runTests() {
+function* runTests() {
   let numNotifications = 0;
   function observe(subject, topic, data) {
     is(topic, "page-thumbnail:create", "got expected topic");

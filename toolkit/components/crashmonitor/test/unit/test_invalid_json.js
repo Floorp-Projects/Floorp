@@ -6,7 +6,7 @@
 /**
  * Test with sessionCheckpoints.json containing invalid JSON data
  */
-add_task(function test_invalid_file() {
+add_task(function* test_invalid_file() {
   // Write bogus data to checkpoint file
   let data = "[}";
   yield OS.File.writeAtomic(sessionCheckpointsPath, data,

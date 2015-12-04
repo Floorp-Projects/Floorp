@@ -61,7 +61,7 @@ var check_addon = Task.async(function*(aAddon, aVersion) {
 });
 
 // Install version 1 then upgrade to version 2 with the manager open
-add_task(function() {
+add_task(function*() {
   yield install_addon("browser_bug596336_1");
   let [aAddon] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org"]);
   yield check_addon(aAddon, "1.0");
@@ -79,7 +79,7 @@ add_task(function() {
 
 // Install version 1 mark it as disabled then upgrade to version 2 with the
 // manager open
-add_task(function() {
+add_task(function*() {
   yield install_addon("browser_bug596336_1");
   let [aAddon] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org"]);
   aAddon.userDisabled = true;
@@ -98,7 +98,7 @@ add_task(function() {
 
 // Install version 1 click the remove button and then upgrade to version 2 with
 // the manager open
-add_task(function() {
+add_task(function*() {
   yield install_addon("browser_bug596336_1");
   let [aAddon] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org"]);
   yield check_addon(aAddon, "1.0");
@@ -126,7 +126,7 @@ add_task(function() {
 
 // Install version 1, disable it, click the remove button and then upgrade to
 // version 2 with the manager open
-add_task(function() {
+add_task(function*() {
   yield install_addon("browser_bug596336_1");
   let [aAddon] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org"]);
   aAddon.userDisabled = true;

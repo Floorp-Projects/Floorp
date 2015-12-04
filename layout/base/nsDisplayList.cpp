@@ -54,6 +54,8 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 #include "StickyScrollContainer.h"
+#include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -527,13 +529,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
                                                                aProperty);
   presContext->AnimationManager()->ClearIsRunningOnCompositor(aFrame,
                                                               aProperty);
-  AnimationCollection* transitions =
-    presContext->TransitionManager()->GetAnimationsForCompositor(aFrame,
-                                                                 aProperty);
-  AnimationCollection* animations =
-    presContext->AnimationManager()->GetAnimationsForCompositor(aFrame,
-                                                                aProperty);
-  if (!animations && !transitions) {
+  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
+    EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
+  if (compositorAnimations.IsEmpty()) {
     return;
   }
 
@@ -589,17 +587,8 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     data = null_t();
   }
 
-  // When both are running, animations override transitions.  We want
-  // to add the ones that override last.
-  if (transitions) {
-    AddAnimationsForProperty(aFrame, aProperty, transitions->mAnimations,
-                             aLayer, data, pending);
-  }
-
-  if (animations) {
-    AddAnimationsForProperty(aFrame, aProperty, animations->mAnimations,
-                             aLayer, data, pending);
-  }
+  AddAnimationsForProperty(aFrame, aProperty, compositorAnimations,
+                           aLayer, data, pending);
 }
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
@@ -2548,8 +2537,17 @@ nsDisplayBackgroundImage::CanOptimizeToImageLayer(LayerManager* aManager,
     return false;
   }
 
-  // We currently can't handle tiled or partial backgrounds.
-  if (!state.mDestArea.IsEqualEdges(state.mFillArea)) {
+  // We currently can't handle tiled backgrounds.
+  if (!state.mDestArea.Contains(state.mFillArea)) {
+    return false;
+  }
+
+  // For 'contain' and 'cover', we allow any pixel of the image to be sampled
+  // because there isn't going to be any spriting/atlasing going on.
+  bool allowPartialImages =
+    (layer.mSize.mWidthType == nsStyleBackground::Size::eContain ||
+     layer.mSize.mWidthType == nsStyleBackground::Size::eCover);
+  if (!allowPartialImages && !state.mFillArea.Contains(state.mDestArea)) {
     return false;
   }
 
@@ -5389,8 +5387,7 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
   if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
     nsCString message;
     message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    AnimationCollection::LogAsyncAnimationFailure(message,
-                                                  Frame()->GetContent());
+    AnimationUtils::LogAsyncAnimationFailure(message, Frame()->GetContent());
   }
   return false;
 }
@@ -5441,8 +5438,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     if (aLogAnimations) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      AnimationCollection::LogAsyncAnimationFailure(message,
-                                                    aFrame->GetContent());
+      AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
     }
     return false;
   }
@@ -5481,8 +5477,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendLiteral(") is larger than the max allowable value (");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
     message.Append(')');
-    AnimationCollection::LogAsyncAnimationFailure(message,
-                                                  aFrame->GetContent());
+    AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
   }
   return false;
 }

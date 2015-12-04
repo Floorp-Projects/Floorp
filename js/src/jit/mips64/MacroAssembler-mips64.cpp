@@ -273,14 +273,11 @@ MacroAssemblerMIPS64Compat::movq(Register rs, Register rd)
 }
 
 void
-MacroAssemblerMIPS64::ma_li(Register dest, AbsoluteLabel* label)
+MacroAssemblerMIPS64::ma_li(Register dest, CodeOffset* label)
 {
-    MOZ_ASSERT(!label->bound());
-    // Thread the patch list through the unpatched address word in the
-    // instruction stream.
     BufferOffset bo = m_buffer.nextOffset();
-    ma_liPatchable(dest, ImmWord(label->prev()));
-    label->setPrev(bo.getOffset());
+    ma_liPatchable(dest, ImmWord(/* placeholder */ 0));
+    label->bind(bo.getOffset());
 }
 
 void

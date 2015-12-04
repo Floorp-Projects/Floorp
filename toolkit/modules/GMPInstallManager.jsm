@@ -109,7 +109,7 @@ GMPInstallManager.prototype = {
         this._deferred.resolve([]);
       }
       else {
-        this._deferred.resolve([for (a of addons) new GMPAddon(a)]);
+        this._deferred.resolve(addons.map(a => new GMPAddon(a)));
       }
       delete this._deferred;
     }, (ex) => {

@@ -19,6 +19,8 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDeviceIntRegion from "Units.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 
@@ -65,8 +67,8 @@ child:
    * application on the widgets. Used on Windows and Linux in managing
    * plugin widgets.
    */
-  async UpdatePluginConfigurations(IntPoint aContentOffset,
-                                   nsIntRegion aVisibleRegion,
+  async UpdatePluginConfigurations(LayoutDeviceIntPoint aContentOffset,
+                                   LayoutDeviceIntRegion aVisibleRegion,
                                    PluginWindowData[] aPlugins);
 
   /**

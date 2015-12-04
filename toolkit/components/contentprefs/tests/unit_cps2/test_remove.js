@@ -8,7 +8,7 @@ function run_test() {
 
 var tests = [
 
-  function nonexistent() {
+  function* nonexistent() {
     yield set("a.com", "foo", 1);
     yield setGlobal("foo", 2);
 
@@ -45,7 +45,7 @@ var tests = [
     yield getGlobalOK(["foo"], 2);
   },
 
-  function isomorphicDomains() {
+  function* isomorphicDomains() {
     yield set("a.com", "foo", 1);
     yield cps.removeByDomainAndName("a.com", "foo", null, makeCallback());
     yield dbOK([]);
@@ -58,7 +58,7 @@ var tests = [
     yield getOK(["a.com", "foo"], undefined);
   },
 
-  function names() {
+  function* names() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -103,7 +103,7 @@ var tests = [
     yield getGlobalOK(["bar"], undefined);
   },
 
-  function subdomains() {
+  function* subdomains() {
     yield set("a.com", "foo", 1);
     yield set("b.a.com", "foo", 2);
     yield cps.removeByDomainAndName("a.com", "foo", null, makeCallback());
@@ -138,7 +138,7 @@ var tests = [
     yield getSubdomainsOK(["b.a.com", "foo"], []);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -176,7 +176,7 @@ var tests = [
     yield getOK(["b.com", "bar"], 7);
   },
 
-  function erroneous() {
+  function* erroneous() {
     do_check_throws(() => cps.removeByDomainAndName(null, "foo", null));
     do_check_throws(() => cps.removeByDomainAndName("", "foo", null));
     do_check_throws(() => cps.removeByDomainAndName("a.com", "foo", null,
@@ -192,7 +192,7 @@ var tests = [
     yield true;
   },
 
-  function removeByDomainAndName_invalidateCache() {
+  function* removeByDomainAndName_invalidateCache() {
     yield set("a.com", "foo", 1);
     getCachedOK(["a.com", "foo"], true, 1);
     cps.removeByDomainAndName("a.com", "foo", null, makeCallback());
@@ -200,7 +200,7 @@ var tests = [
     yield;
   },
 
-  function removeBySubdomainAndName_invalidateCache() {
+  function* removeBySubdomainAndName_invalidateCache() {
     yield set("a.com", "foo", 1);
     yield set("b.a.com", "foo", 2);
     getCachedSubdomainsOK(["a.com", "foo"], [
@@ -212,7 +212,7 @@ var tests = [
     yield;
   },
 
-  function removeGlobal_invalidateCache() {
+  function* removeGlobal_invalidateCache() {
     yield setGlobal("foo", 1);
     getCachedGlobalOK(["foo"], true, 1);
     cps.removeGlobal("foo", null, makeCallback());

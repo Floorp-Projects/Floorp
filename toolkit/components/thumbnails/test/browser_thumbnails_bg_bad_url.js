@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function runTests() {
+function* runTests() {
   let url = "invalid-protocol://ffggfsdfsdf/";
   ok(!thumbnailExists(url), "Thumbnail should not be cached already.");
   let numCalls = 0;

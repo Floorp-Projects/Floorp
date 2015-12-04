@@ -16,12 +16,12 @@
 #include "Logging.h"
 #include "Tools.h"
 #include <algorithm>
-#include "mozilla/Constants.h"
 #include "FilterNodeSoftware.h"
 
 #include "FilterNodeD2D1.h"
 #include "ExtendInputEffectD2D1.h"
 
+#include <cmath>
 #include <dwrite.h>
 
 // decltype is not usable for overloaded functions.

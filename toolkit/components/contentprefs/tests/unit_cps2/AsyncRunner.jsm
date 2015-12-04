@@ -24,23 +24,20 @@ AsyncRunner.prototype = {
     this._iteratorQueue.push(iter);
   },
 
-  next: function AR_next(/* ... */) {
+  next: function AR_next(arg) {
     if (!this._iteratorQueue.length) {
       this.destroy();
       this._callbacks.done();
       return;
     }
 
-    // send() discards all arguments after the first, so there's no choice here
-    // but to send only one argument to the yielder.
-    let args = [arguments.length <= 1 ? arguments[0] : Array.slice(arguments)];
     try {
-      var val = this._iteratorQueue[0].send.apply(this._iteratorQueue[0], args);
-    }
-    catch (err if err instanceof StopIteration) {
-      this._iteratorQueue.shift();
-      this.next();
-      return;
+      var { done, value } = this._iteratorQueue[0].next(arg);
+      if (done) {
+        this._iteratorQueue.shift();
+        this.next();
+        return;
+      }
     }
     catch (err) {
       this._callbacks.error(err);
@@ -48,9 +45,9 @@ AsyncRunner.prototype = {
 
     // val is truthy => call next
     // val is an iterator => prepend it to the queue and start on it
-    if (val) {
-      if (typeof(val) != "boolean")
-        this._iteratorQueue.unshift(val);
+    if (value) {
+      if (typeof(value) != "boolean")
+        this._iteratorQueue.unshift(value);
       this.next();
     }
   },

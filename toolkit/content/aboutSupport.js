@@ -52,8 +52,10 @@ var snapshotFormatters = {
     $("safemode-box").textContent = data.safeMode;
   },
 
-#ifdef MOZ_CRASHREPORTER
   crashes: function crashes(data) {
+    if (!AppConstants.MOZ_CRASHREPORTER)
+      return;
+
     let strings = stringBundle();
     let daysRange = Troubleshoot.kMaxCrashAge / (24 * 60 * 60 * 1000);
     $("crashes-title").textContent =
@@ -117,7 +119,6 @@ var snapshotFormatters = {
       ]);
     }));
   },
-#endif
 
   extensions: function extensions(data) {
     $.append($("extensions-tbody"), data.map(function (extension) {
@@ -373,8 +374,10 @@ var snapshotFormatters = {
     $("prefs-user-js-section").className = "";
   },
 
-#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sandbox: function sandbox(data) {
+    if (AppConstants.platform != "linux" || !AppConstants.MOZ_SANDBOX)
+      return;
+
     let strings = stringBundle();
     let tbody = $("sandbox-tbody");
     for (let key in data) {
@@ -389,7 +392,6 @@ var snapshotFormatters = {
       ]));
     }
   },
-#endif
 };
 
 var $ = document.getElementById.bind(document);
@@ -470,15 +472,15 @@ function copyRawDataToClipboard(button) {
       Cc["@mozilla.org/widget/clipboard;1"].
         getService(Ci.nsIClipboard).
         setData(transferable, null, Ci.nsIClipboard.kGlobalClipboard);
-#ifdef ANDROID
-      // Present a toast notification.
-      let message = {
-        type: "Toast:Show",
-        message: stringBundle().GetStringFromName("rawDataCopied"),
-        duration: "short"
-      };
-      Services.androidBridge.handleGeckoMessage(message);
-#endif
+      if (AppConstants.platform == "android") {
+        // Present a toast notification.
+        let message = {
+          type: "Toast:Show",
+          message: stringBundle().GetStringFromName("rawDataCopied"),
+          duration: "short"
+        };
+        Services.androidBridge.handleGeckoMessage(message);
+      }
     });
   }
   catch (err) {
@@ -524,15 +526,15 @@ function copyContentsToClipboard() {
                     .getService(Ci.nsIClipboard);
   clipboard.setData(transferable, null, clipboard.kGlobalClipboard);
 
-#ifdef ANDROID
-  // Present a toast notification.
-  let message = {
-    type: "Toast:Show",
-    message: stringBundle().GetStringFromName("textCopied"),
-    duration: "short"
-  };
-  Services.androidBridge.handleGeckoMessage(message);
-#endif
+  if (AppConstants.platform == "android") {
+    // Present a toast notification.
+    let message = {
+      type: "Toast:Show",
+      message: stringBundle().GetStringFromName("textCopied"),
+      duration: "short"
+    };
+    Services.androidBridge.handleGeckoMessage(message);
+  }
 }
 
 // Return the plain text representation of an element.  Do a little bit
@@ -542,9 +544,9 @@ function createTextForElement(elem) {
   let text = serializer.serialize(elem);
 
   // Actual CR/LF pairs are needed for some Windows text editors.
-#ifdef XP_WIN
-  text = text.replace(/\n/g, "\r\n");
-#endif
+  if (AppConstants.platform == "win") {
+    text = text.replace(/\n/g, "\r\n");
+  }
 
   return text;
 }

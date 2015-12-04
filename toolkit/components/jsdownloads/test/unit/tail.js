@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Termination functions common to all tests
 
-add_task(function test_common_terminate()
+add_task(function* test_common_terminate()
 {
   // Ensure all the pending HTTP requests have a chance to finish.
   continueResponses();

@@ -1108,7 +1108,7 @@ var Impl = {
   },
 
   getChildPayloads: function getChildPayloads() {
-    return [for (child of this._childTelemetry) child.payload];
+    return this._childTelemetry.map(child => child.payload);
   },
 
   /**
