@@ -429,10 +429,8 @@ class nsIWidget : public nsISupports {
                       const DesktopIntRect& aRect,
                       nsWidgetInitData* aInitData = nullptr)
     {
-        // GetDefaultScaleInternal() here is a placeholder, to be replaced by
-        // GetDesktopToDeviceScale in a later patch
-        mozilla::DesktopToLayoutDeviceScale scale(GetDefaultScaleInternal());
-        LayoutDeviceIntRect devPixRect = RoundedToInt(aRect * scale);
+        LayoutDeviceIntRect devPixRect =
+          RoundedToInt(aRect * GetDesktopToDeviceScale());
         return Create(aParent, aNativeParent, devPixRect, aInitData);
     }
 
@@ -545,6 +543,13 @@ class nsIWidget : public nsISupports {
      * the number of device pixels per inch.
      */
     virtual float GetDPI() = 0;
+
+    /**
+     * Return the scaling factor between device pixels and the platform-
+     * dependent "desktop pixels" used to manage window positions on a
+     * potentially multi-screen, mixed-resolution desktop.
+     */
+    virtual mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() = 0;
 
     /**
      * Returns the CompositorVsyncDispatcher associated with this widget
@@ -858,7 +863,7 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**
-     * Get this widget's outside dimensions in global coordinates. This
+     * Get this widget's outside dimensions in device coordinates. This
      * includes any title bar on the window.
      *
      * @param aRect   On return it holds the  x, y, width and height of
@@ -878,7 +883,7 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
+    NS_IMETHOD GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -889,7 +894,7 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
+    NS_IMETHOD GetClientBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**
      * Get the non-client area dimensions of the window.
