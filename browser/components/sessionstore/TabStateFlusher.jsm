@@ -37,9 +37,19 @@ this.TabStateFlusher = Object.freeze({
 
   /**
    * Resolves the flush request with the given flush ID.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser for which the flush is being resolved.
+   * @param flushID (int)
+   *        The ID of the flush that was sent to the browser.
+   * @param success (bool, optional)
+   *        Whether or not the flush succeeded.
+   * @param message (string, optional)
+   *        An error message that will be sent to the Console in the
+   *        event that a flush failed.
    */
-  resolve(browser, flushID) {
-    TabStateFlusherInternal.resolve(browser, flushID);
+  resolve(browser, flushID, success=true, message="") {
+    TabStateFlusherInternal.resolve(browser, flushID, success, message);
   },
 
   /**
@@ -47,9 +57,17 @@ this.TabStateFlusher = Object.freeze({
    * used when the content process crashed or the final update message was
    * seen. In those cases we can't guarantee to ever hear back from the frame
    * script so we just resolve all requests instead of discarding them.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser for which all flushes are being resolved.
+   * @param success (bool, optional)
+   *        Whether or not the flushes succeeded.
+   * @param message (string, optional)
+   *        An error message that will be sent to the Console in the
+   *        event that the flushes failed.
    */
-  resolveAll(browser) {
-    TabStateFlusherInternal.resolveAll(browser);
+  resolveAll(browser, success=true, message="") {
+    TabStateFlusherInternal.resolveAll(browser, success, message);
   }
 });
 
@@ -95,8 +113,18 @@ var TabStateFlusherInternal = {
 
   /**
    * Resolves the flush request with the given flush ID.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser for which the flush is being resolved.
+   * @param flushID (int)
+   *        The ID of the flush that was sent to the browser.
+   * @param success (bool, optional)
+   *        Whether or not the flush succeeded.
+   * @param message (string, optional)
+   *        An error message that will be sent to the Console in the
+   *        event that a flush failed.
    */
-  resolve(browser, flushID) {
+  resolve(browser, flushID, success=true, message="") {
     // Nothing to do if there are no pending flushes for the given browser.
     if (!this._requests.has(browser.permanentKey)) {
       return;
@@ -108,10 +136,14 @@ var TabStateFlusherInternal = {
       return;
     }
 
+    if (!success) {
+      Cu.reportError("Failed to flush browser: " + message);
+    }
+
     // Resolve the request with the given id.
     let resolve = perBrowserRequests.get(flushID);
     perBrowserRequests.delete(flushID);
-    resolve();
+    resolve(success);
   },
 
   /**
@@ -119,8 +151,16 @@ var TabStateFlusherInternal = {
    * used when the content process crashed or the final update message was
    * seen. In those cases we can't guarantee to ever hear back from the frame
    * script so we just resolve all requests instead of discarding them.
+   *
+   * @param browser (<xul:browser>)
+   *        The browser for which all flushes are being resolved.
+   * @param success (bool, optional)
+   *        Whether or not the flushes succeeded.
+   * @param message (string, optional)
+   *        An error message that will be sent to the Console in the
+   *        event that the flushes failed.
    */
-  resolveAll(browser) {
+  resolveAll(browser, success=true, message="") {
     // Nothing to do if there are no pending flushes for the given browser.
     if (!this._requests.has(browser.permanentKey)) {
       return;
@@ -129,9 +169,13 @@ var TabStateFlusherInternal = {
     // Retrieve active requests for given browser.
     let perBrowserRequests = this._requests.get(browser.permanentKey);
 
+    if (!success) {
+      Cu.reportError("Failed to flush browser: " + message);
+    }
+
     // Resolve all requests.
     for (let resolve of perBrowserRequests.values()) {
-      resolve();
+      resolve(success);
     }
 
     // Clear active requests.

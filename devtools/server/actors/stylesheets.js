@@ -483,6 +483,30 @@ var StyleSheetActor = protocol.ActorClass({
   },
 
   /**
+   * Test whether all the rules in this sheet have associated source.
+   * @return {Boolean} true if all the rules have source; false if
+   *         some rule was created via CSSOM.
+   */
+  allRulesHaveSource: function() {
+    let rules;
+    try {
+      rules = this.rawSheet.cssRules;
+    } catch (e) {
+      // sheet isn't loaded yet
+      return true;
+    }
+
+    for (let i = 0; i < rules.length; i++) {
+      let rule = rules[i];
+      if (DOMUtils.getRelativeRuleLine(rule) === 0) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
    * Get the raw stylesheet's cssRules once the sheet has been loaded.
    *
    * @return {Promise}

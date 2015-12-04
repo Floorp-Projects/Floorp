@@ -27,7 +27,7 @@ exports.TargetListComponent = React.createClass({
       return React.createElement(TargetComponent, { client, target });
     });
     return (
-      React.createElement("div", { className: "targets" },
+      React.createElement("div", { id: this.props.id, className: "targets" },
         React.createElement("h4", null, this.props.name),
         targets.length > 0 ? targets :
           React.createElement("p", null, Strings.GetStringFromName("nothing"))

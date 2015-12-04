@@ -64,15 +64,19 @@ var AboutDebugging = {
     document.querySelector(".category[value=" + category + "]")
       .setAttribute("selected", "true");
     location.hash = "#" + category;
+
+    if (category == "addons") {
+      React.render(React.createElement(AddonsComponent, { client: this.client }),
+        document.querySelector("#addons"));
+    } else if (category == "workers") {
+      React.render(React.createElement(WorkersComponent, { client: this.client }),
+        document.querySelector("#workers"));
+    }
   },
 
   init() {
     let telemetry = this._telemetry = new Telemetry();
     telemetry.toolOpened("aboutdebugging");
-
-    // Show the first available tab.
-    this.showTab();
-    window.addEventListener("hashchange", () => this.showTab());
 
     // Link checkboxes to prefs.
     let elements = document.querySelectorAll("input[type=checkbox][data-pref]");
@@ -99,13 +103,12 @@ var AboutDebugging = {
       DebuggerServer.addBrowserActors();
     }
     DebuggerServer.allowChromeProcess = true;
-    let client = new DebuggerClient(DebuggerServer.connectPipe());
+    this.client = new DebuggerClient(DebuggerServer.connectPipe());
 
-    client.connect(() => {
-      React.render(React.createElement(AddonsComponent, { client }),
-        document.querySelector("#addons"));
-      React.render(React.createElement(WorkersComponent, { client }),
-        document.querySelector("#workers"));
+    this.client.connect(() => {
+      // Show the first available tab.
+      this.showTab();
+      window.addEventListener("hashchange", () => this.showTab());
     });
   },
 
@@ -144,6 +147,9 @@ var AboutDebugging = {
 
     React.unmountComponentAtNode(document.querySelector("#addons"));
     React.unmountComponentAtNode(document.querySelector("#workers"));
+
+    this.client.close();
+    this.client = null;
   },
 };
 
