@@ -215,24 +215,23 @@ nsPlaceholderFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 
 #ifdef DEBUG
 static void
-PaintDebugPlaceholder(nsIFrame* aFrame, nsRenderingContext* aCtx,
+PaintDebugPlaceholder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                       const nsRect& aDirtyRect, nsPoint aPt)
 {
   ColorPattern cyan(ToDeviceColor(Color(0.f, 1.f, 1.f, 1.f)));
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(-5);
   nsRect r(aPt.x + x, aPt.y,
            nsPresContext::CSSPixelsToAppUnits(13),
            nsPresContext::CSSPixelsToAppUnits(3));
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
 
   nscoord y = nsPresContext::CSSPixelsToAppUnits(-10);
   r = nsRect(aPt.x, aPt.y + y,
              nsPresContext::CSSPixelsToAppUnits(3),
              nsPresContext::CSSPixelsToAppUnits(10));
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), cyan);
 }
 #endif // DEBUG
 
