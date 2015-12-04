@@ -48,6 +48,7 @@ FINAL_LIBRARY = 'xul'
 DevToolsModules(
     'census-tree-node.js',
     'CensusUtils.js',
+    'DominatorTreeNode.js',
     'HeapAnalysesClient.js',
     'HeapAnalysesWorker.js',
     'HeapSnapshotFileUtils.js',

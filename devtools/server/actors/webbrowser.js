@@ -24,6 +24,7 @@ loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/ac
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
 loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActorList", "devtools/server/actors/worker", true);
+loader.lazyRequireGetter(this, "ProcessActorList", "devtools/server/actors/process", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -132,6 +133,7 @@ function createRootActor(aConnection)
                          addonList: new BrowserAddonList(aConnection),
                          workerList: new WorkerActorList({}),
                          serviceWorkerRegistrationList: new ServiceWorkerRegistrationActorList(),
+                         processList: new ProcessActorList(),
                          globalActorFactories: DebuggerServer.globalActorFactories,
                          onShutdown: sendShutdownEvent
                        });

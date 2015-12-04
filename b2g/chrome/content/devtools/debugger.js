@@ -219,11 +219,11 @@ var RemoteDebugger = {
       return root;
     };
 
-#ifdef MOZ_WIDGET_GONK
-    DebuggerServer.on("connectionchange", function() {
-      AdbController.updateState();
-    });
-#endif
+    if (isGonk) {
+      DebuggerServer.on("connectionchange", function() {
+        AdbController.updateState();
+      });
+    }
   }
 };
 
@@ -373,9 +373,7 @@ var WiFiRemoteDebugger = {
            e + "\n" + e.stack + "\n");
     }
 
-#ifdef MOZ_WIDGET_GONK
-    AdbController.setRemoteDebuggerState(value != "disabled");
-#endif
+    isGonk && AdbController.setRemoteDebuggerState(value != "disabled");
   });
 
   SettingsListener.observe("devtools.remote.wifi.enabled", false,

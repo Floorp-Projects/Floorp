@@ -160,7 +160,7 @@ interface nsIAsyncShutdownBarrier: nsISupports {
 /**
  * A service that allows registering shutdown-time dependencies.
  */
-[scriptable, uuid(10f51032-dcc9-4732-bec0-c0b7d6596622)]
+[scriptable, uuid(db365c78-c860-4e64-9a63-25b73f89a016)]
 interface nsIAsyncShutdownService: nsISupports {
   /**
    * Create a new barrier.
@@ -186,6 +186,11 @@ interface nsIAsyncShutdownService: nsISupports {
    * Barrier for notification profile-change-teardown.
    */
   readonly attribute nsIAsyncShutdownClient profileChangeTeardown;
+
+  /**
+   * Barrier for notification quit-application-granted.
+   */
+  readonly attribute nsIAsyncShutdownClient quitApplicationGranted;
 
   /**
    * Barrier for notification profile-before-change2.

@@ -117,7 +117,7 @@ devtools.jar:
     content/commandline/commandline.css (commandline/commandline.css)
     content/commandline/commandlineoutput.xhtml (commandline/commandlineoutput.xhtml)
     content/commandline/commandlinetooltip.xhtml (commandline/commandlinetooltip.xhtml)
-*   content/framework/toolbox-window.xul (framework/toolbox-window.xul)
+    content/framework/toolbox-window.xul (framework/toolbox-window.xul)
     content/framework/toolbox-options.xul (framework/toolbox-options.xul)
     content/framework/toolbox-options.js (framework/toolbox-options.js)
     content/framework/toolbox.xul (framework/toolbox.xul)

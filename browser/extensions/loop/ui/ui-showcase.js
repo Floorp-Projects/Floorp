@@ -38,7 +38,6 @@
   var ROOM_STATES = loop.store.ROOM_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
-  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   // Local helpers
   function returnTrue() {
@@ -743,7 +742,6 @@
                                        dispatcher: dispatcher, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       screenShare: { state: SCREEN_SHARE_STATES.INACTIVE, visible: true}, 
                                        settingsMenuItems: [{ id: "feedback" }], 
                                        show: true, 
                                        video: { enabled: true, visible: true}})
@@ -751,14 +749,13 @@
               ), 
               React.createElement(FramedExample, {dashed: true, 
                              height: 56, 
-                             summary: "Video muted, Screen share pending", 
+                             summary: "Video muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
                   React.createElement(ConversationToolbar, {audio: { enabled: true, visible: true}, 
                                        dispatcher: dispatcher, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       screenShare: { state: SCREEN_SHARE_STATES.PENDING, visible: true}, 
                                        settingsMenuItems: [{ id: "feedback" }], 
                                        show: true, 
                                        video: { enabled: false, visible: true}})
@@ -766,14 +763,13 @@
               ), 
               React.createElement(FramedExample, {dashed: true, 
                              height: 56, 
-                             summary: "Audio muted, Screen share active", 
+                             summary: "Audio muted", 
                              width: 300}, 
                 React.createElement("div", {className: "fx-embedded"}, 
                   React.createElement(ConversationToolbar, {audio: { enabled: false, visible: true}, 
                                        dispatcher: dispatcher, 
                                        hangup: noop, 
                                        publishStream: noop, 
-                                       screenShare: { state: SCREEN_SHARE_STATES.ACTIVE, visible: true}, 
                                        settingsMenuItems: [{ id: "feedback" }], 
                                        show: true, 
                                        video: { enabled: true, visible: true}})

@@ -10,6 +10,8 @@ const promise = require("promise");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 
+loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+
 /* A host should always allow this much space for the page to be displayed.
  * There is also a min-height on the browser, but we still don't want to set
  * frame.height to be larger than that, since it can cause problems with
@@ -283,6 +285,15 @@ WindowHost.prototype = {
     let frameLoad = () => {
       win.removeEventListener("load", frameLoad, true);
       win.focus();
+
+      let key;
+      if (system.constants.platform === "macosx") {
+        key = win.document.getElementById("toolbox-key-toggle-osx");
+      } else {
+        key = win.document.getElementById("toolbox-key-toggle");
+      }
+      key.removeAttribute("disabled");
+
       this.frame = win.document.getElementById("toolbox-iframe");
       this.emit("ready", this.frame);
 
