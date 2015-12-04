@@ -43,6 +43,16 @@ add_task(function*() {
       ]
     },
     {
+      cssValue: "hue-rotate(420.2deg)",
+      expected: [
+        {
+          label: "hue-rotate",
+          value: "420.2",
+          unit: "deg"
+        }
+      ]
+    },
+    {
       cssValue: "url(example.svg)",
       expected: [
         {
