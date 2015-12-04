@@ -3269,14 +3269,16 @@ CSS_PROP_SHORTHAND(
     text-emphasis,
     text_emphasis,
     TextEmphasis,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.text-emphasis.enabled")
 CSS_PROP_TEXT(
     text-emphasis-color,
     text_emphasis_color,
     TextEmphasisColor,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.text-emphasis.enabled",
     VARIANT_HC,
     nullptr,
@@ -3287,7 +3289,8 @@ CSS_PROP_TEXT(
     text_emphasis_position,
     TextEmphasisPosition,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.text-emphasis.enabled",
     0,
     kTextEmphasisPositionKTable,
@@ -3298,7 +3301,8 @@ CSS_PROP_TEXT(
     text_emphasis_style,
     TextEmphasisStyle,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
     "layout.css.text-emphasis.enabled",
     0,
     nullptr,
