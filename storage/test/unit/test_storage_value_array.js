@@ -8,14 +8,14 @@ function setup()
 {
   getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT," +
                                           "number REAL, nuller NULL, blobber BLOB");
-  
+
   var stmt = createStatement("INSERT INTO test (name, number, blobber) " +
                              "VALUES (?1, ?2, ?3)");
   stmt.bindByIndex(0, "foo");
   stmt.bindByIndex(1, 2.34);
   stmt.bindBlobByIndex(2, [], 0);
   stmt.execute();
-  
+
   stmt.bindByIndex(0, "");
   stmt.bindByIndex(1, 1.23);
   stmt.bindBlobByIndex(2, [1, 2], 2);
@@ -30,7 +30,7 @@ function test_getIsNull_for_null()
   var stmt = createStatement("SELECT nuller, blobber FROM test WHERE id = ?1");
   stmt.bindByIndex(0, 1);
   do_check_true(stmt.executeStep());
-  
+
   do_check_true(stmt.getIsNull(0)); // null field
   do_check_true(stmt.getIsNull(1)); // data is null if size is 0
   stmt.reset();
@@ -202,9 +202,10 @@ function run_test()
 {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
-    
+  }
+
   cleanup();
 }
 

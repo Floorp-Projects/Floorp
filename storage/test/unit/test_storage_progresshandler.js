@@ -11,9 +11,9 @@ function setup()
   msc.beginTransaction();
 
   var stmt = createStatement("INSERT INTO handler_tests (id, num) VALUES(?1, ?2)");
-  for(var i = 0; i < 100; ++i) {
+  for (let i = 0; i < 100; ++i) {
     stmt.bindByIndex(0, i);
-    stmt.bindByIndex(1, Math.floor(Math.random()*1000));
+    stmt.bindByIndex(1, Math.floor(Math.random() * 1000));
     stmt.execute();
   }
   stmt.reset();
@@ -25,7 +25,7 @@ var testProgressHandler = {
   calls: 0,
   abort: false,
 
-  onProgress: function(comm) {
+  onProgress(comm) {
     ++this.calls;
     return this.abort;
   }
@@ -59,7 +59,9 @@ function test_handler_call()
   // Some long-executing request
   var stmt = createStatement(
     "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2");
-  while(stmt.executeStep());
+  while (stmt.executeStep()) {
+    // Do nothing.
+  }
   do_check_true(testProgressHandler.calls > 0);
   stmt.finalize();
 }
@@ -75,7 +77,9 @@ function test_handler_abort()
 
   const SQLITE_INTERRUPT = 9;
   try {
-    while(stmt.executeStep());
+    while (stmt.executeStep()) {
+      // Do nothing.
+    }
     do_throw("We shouldn't get here!");
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_ABORT, e.result);

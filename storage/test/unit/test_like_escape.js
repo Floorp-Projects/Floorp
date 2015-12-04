@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const LATIN1_AE = "\xc6";
-const LATIN1_ae = "\xe6"; 
+const LATIN1_ae = "\xe6";
 
 function setup()
 {
@@ -19,7 +19,7 @@ function setup()
   stmt.execute();
   stmt.finalize();
 }
-    
+
 function test_escape_for_like_ascii()
 {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
@@ -27,7 +27,7 @@ function test_escape_for_like_ascii()
   // verify that we escaped / _ and %
   do_check_eq(paramForLike, "oo//bar/_baz/%20chees");
   // prepend and append with % for "contains"
-  stmt.bindByIndex(0, "%" + paramForLike + "%"); 
+  stmt.bindByIndex(0, "%" + paramForLike + "%");
   stmt.executeStep();
   do_check_eq("foo/bar_baz%20cheese", stmt.getString(0));
   stmt.finalize();
@@ -52,8 +52,9 @@ function run_test()
 {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
-    
+  }
+
   cleanup();
 }

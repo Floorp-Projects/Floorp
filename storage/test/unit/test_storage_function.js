@@ -11,7 +11,7 @@ function setup()
   getOpenedDatabase().createTable("function_tests", "id INTEGER PRIMARY KEY");
 
   var stmt = createStatement("INSERT INTO function_tests (id) VALUES(?1)");
-  for(var i = 0; i < testNums.length; ++i) {
+  for (let i = 0; i < testNums.length; ++i) {
     stmt.bindByIndex(0, testNums[i]);
     stmt.execute();
   }
@@ -22,7 +22,7 @@ function setup()
 var testSquareFunction = {
   calls: 0,
 
-  onFunctionCall: function(val) {
+  onFunctionCall(val) {
     ++this.calls;
     return val.getInt32(0) * val.getInt32(0);
   }
@@ -62,7 +62,9 @@ function test_function_aliases()
 function test_function_call()
 {
   var stmt = createStatement("SELECT test_square(id) FROM function_tests");
-  while(stmt.executeStep());
+  while (stmt.executeStep()) {
+    // Do nothing.
+  }
   do_check_eq(testNums.length, testSquareFunction.calls);
   testSquareFunction.calls = 0;
   stmt.finalize();
@@ -72,7 +74,7 @@ function test_function_result()
 {
   var stmt = createStatement("SELECT test_square(42) FROM function_tests");
   stmt.executeStep();
-  do_check_eq(42*42, stmt.getInt32(0));
+  do_check_eq(42 * 42, stmt.getInt32(0));
   testSquareFunction.calls = 0;
   stmt.finalize();
 }

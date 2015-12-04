@@ -16,6 +16,8 @@ do_get_profile();
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties);
 
+var gDBConn = null;
+
 function getTestDB()
 {
   var db = dirSvc.get("ProfD", Ci.nsIFile);
@@ -53,7 +55,7 @@ function cleanup()
   print("*** Storage Tests: Trying to remove file!");
   var dbFile = getTestDB();
   if (dbFile.exists())
-    try { dbFile.remove(false); } catch(e) { /* stupid windows box */ }
+    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
 }
 
 /**
@@ -66,7 +68,7 @@ function asyncCleanup()
 
   // close the connection
   print("*** Storage Tests: Trying to asyncClose!");
-  getOpenedDatabase().asyncClose(function() { closed = true; });
+  getOpenedDatabase().asyncClose(function () { closed = true; });
 
   let curThread = Components.classes["@mozilla.org/thread-manager;1"]
                             .getService().currentThread;
@@ -81,15 +83,13 @@ function asyncCleanup()
   print("*** Storage Tests: Trying to remove file!");
   var dbFile = getTestDB();
   if (dbFile.exists())
-    try { dbFile.remove(false); } catch(e) { /* stupid windows box */ }
+    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
 }
 
 function getService()
 {
   return Cc["@mozilla.org/storage/service;1"].getService(Ci.mozIStorageService);
 }
-
-var gDBConn = null;
 
 /**
  * Get a connection to the test database.  Creates and caches the connection
@@ -169,7 +169,7 @@ function expectError(aErrorCode, aFunction)
   try {
     aFunction();
   }
-  catch(e) {
+  catch (e) {
     if (e.result != aErrorCode) {
       do_throw("Got an exception, but the result code was not the expected " +
                "one.  Expected " + aErrorCode + ", got " + e.result);
@@ -208,7 +208,7 @@ function verifyQuery(aSQLString, aBind, aResults)
         do_check_eq(stmt.VALUE_TYPE_NULL, valType);
         do_check_true(stmt.getIsNull(iCol));
       }
-      else if (typeof(expectedVal) == "number") {
+      else if (typeof expectedVal == "number") {
         if (Math.floor(expectedVal) == expectedVal) {
           do_check_eq(stmt.VALUE_TYPE_INTEGER, valType);
           do_check_eq(expectedVal, stmt.getInt32(iCol));
@@ -218,7 +218,7 @@ function verifyQuery(aSQLString, aBind, aResults)
           do_check_eq(expectedVal, stmt.getDouble(iCol));
         }
       }
-      else if (typeof(expectedVal) == "string") {
+      else if (typeof expectedVal == "string") {
         do_check_eq(stmt.VALUE_TYPE_TEXT, valType);
         do_check_eq(expectedVal, stmt.getUTF8String(iCol));
       }

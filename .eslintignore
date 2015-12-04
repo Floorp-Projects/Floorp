@@ -42,7 +42,6 @@ rdf/**
 security/**
 services/**
 startupcache/**
-storage/**
 testing/**
 tools/**
 uriloader/**
