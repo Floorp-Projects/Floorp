@@ -12,8 +12,7 @@ const TEXT = "this is test text";
 const REAL = 3.23;
 const BLOB = [1, 2];
 
-function test_create_and_add()
-{
+add_test(function test_create_and_add() {
   getOpenedDatabase().executeSimpleSQL(
     "CREATE TABLE test (" +
       "id INTEGER, " +
@@ -96,10 +95,9 @@ function test_create_and_add()
   });
   stmts[0].finalize();
   stmts[1].finalize();
-}
+});
 
-function test_multiple_bindings_on_statements()
-{
+add_test(function test_multiple_bindings_on_statements() {
   // This tests to make sure that we pass all the statements multiply bound
   // parameters when we call executeAsync.
   const AMOUNT_TO_ADD = 5;
@@ -176,10 +174,9 @@ function test_multiple_bindings_on_statements()
     }
   });
   stmts.forEach(stmt => stmt.finalize());
-}
+});
 
-function test_asyncClose_does_not_complete_before_statements()
-{
+add_test(function test_asyncClose_does_not_complete_before_statements() {
   let stmt = createStatement("SELECT * FROM sqlite_master");
   let executed = false;
   stmt.executeAsync({
@@ -210,19 +207,17 @@ function test_asyncClose_does_not_complete_before_statements()
     gDBConn = null;
     run_next_test();
   });
-}
+});
 
-function test_asyncClose_does_not_throw_no_callback()
-{
+add_test(function test_asyncClose_does_not_throw_no_callback() {
   getOpenedDatabase().asyncClose();
 
   // Reset gDBConn so that later tests will get a new connection object.
   gDBConn = null;
   run_next_test();
-}
+});
 
-function test_double_asyncClose_throws()
-{
+add_test(function test_double_asyncClose_throws() {
   let conn = getOpenedDatabase();
   conn.asyncClose();
   try {
@@ -230,28 +225,18 @@ function test_double_asyncClose_throws()
     do_throw("should have thrown");
     // There is a small race condition here, which can cause either of
     // Cr.NS_ERROR_NOT_INITIALIZED or Cr.NS_ERROR_UNEXPECTED to be thrown.
-  } catch (e if "result" in e && e.result == Cr.NS_ERROR_NOT_INITIALIZED) {
-    do_print("NS_ERROR_NOT_INITIALIZED");
-  } catch (e if "result" in e && e.result == Cr.NS_ERROR_UNEXPECTED) {
-    do_print("NS_ERROR_UNEXPECTED");
   } catch (e) {
+    if ("result" in e && e.result == Cr.NS_ERROR_NOT_INITIALIZED) {
+      do_print("NS_ERROR_NOT_INITIALIZED");
+    } else if ("result" in e && e.result == Cr.NS_ERROR_UNEXPECTED) {
+      do_print("NS_ERROR_UNEXPECTED");
+    }
   }
 
   // Reset gDBConn so that later tests will get a new connection object.
   gDBConn = null;
   run_next_test();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Test Runner
-
-[
-  test_create_and_add,
-  test_multiple_bindings_on_statements,
-  test_asyncClose_does_not_complete_before_statements,
-  test_asyncClose_does_not_throw_no_callback,
-  test_double_asyncClose_throws,
-].forEach(add_test);
+});
 
 function run_test()
 {
