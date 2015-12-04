@@ -181,11 +181,11 @@ public:
 
   /**
    * Returns TextComposition instance for the event.
-   *
-   * @param aGUIEvent Should be a composition event which is being dispatched.
    */
   static already_AddRefed<TextComposition>
-    GetTextCompositionFor(WidgetGUIEvent* aGUIEvent);
+    GetTextCompositionFor(const WidgetKeyboardEvent* aKeyboardEvent);
+  static already_AddRefed<TextComposition>
+    GetTextCompositionFor(const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what
