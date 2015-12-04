@@ -694,6 +694,7 @@ public:
   DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
   virtual ~DrawTarget() {}
 
+  virtual bool IsValid() const { return true; };
   virtual DrawTargetType GetType() const = 0;
 
   virtual BackendType GetBackendType() const = 0;
