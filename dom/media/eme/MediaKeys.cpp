@@ -125,7 +125,7 @@ MediaKeys::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 MediaKeys::GetKeySystem(nsString& aOutKeySystem) const
 {
-  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
+  aOutKeySystem.Assign(mKeySystem);
 }
 
 already_AddRefed<DetailedPromise>

@@ -50,8 +50,10 @@ var inputTests = [
   // 4
   {
     input: "new Boolean(false)",
-    output: "false",
+    output: "Boolean { false }",
+    printOutput: "false",
     inspectable: true,
+    variablesViewLabel: "Boolean { false }"
   },
 
   // 5
@@ -83,20 +85,42 @@ var inputTests = [
   // 8
   {
     input: "new Number(43)",
-    output: "43",
+    output: "Number { 43 }",
+    printOutput: "43",
     inspectable: true,
+    variablesViewLabel: "Number { 43 }"
   },
 
   // 9
   {
     input: "new String('hello')",
-    output: 'String [ "h", "e", "l", "l", "o" ]',
+    output: /String { "hello", 6 more.* }/,
     printOutput: "hello",
     inspectable: true,
-    variablesViewLabel: "String[5]"
+    variablesViewLabel: "String"
   },
 
-  // 9
+  // 10
+  {
+    input: "(function () { var s = new String('hello'); s.whatever = 23; " +
+           " return s;})()",
+    output: /String { "hello", whatever: 23, 6 more.* }/,
+    printOutput: "hello",
+    inspectable: true,
+    variablesViewLabel: "String"
+  },
+
+  // 11
+  {
+    input: "(function () { var s = new String('hello'); s[8] = 'x'; " +
+           " return s;})()",
+    output: /String { "hello", 8: "x", 6 more.* }/,
+    printOutput: "hello",
+    inspectable: true,
+    variablesViewLabel: "String"
+  },
+
+  // 12
   {
     // XXX: Can't test fulfilled and rejected promises, because promises get
     // settled on the next tick of the event loop.
@@ -107,7 +131,7 @@ var inputTests = [
     variablesViewLabel: "Promise"
   },
 
-  // 10
+  // 13
   {
     input: "(function () { var p = new Promise(function () {}); " +
            "p.foo = 1; return p; }())",
@@ -117,7 +141,7 @@ var inputTests = [
     variablesViewLabel: "Promise"
   },
 
-  // 11
+  // 14
   {
     input: "new Object({1: 'this\\nis\\nsupposed\\nto\\nbe\\na\\nvery" +
            "\\nlong\\nstring\\n,shown\\non\\na\\nsingle\\nline', " +

@@ -45,6 +45,10 @@ var gCurrentEpoch = 0;
 // A bound to the size of data to store for DOM Storage.
 const DOM_STORAGE_MAX_CHARS = 10000000; // 10M characters
 
+// This pref controls whether or not we send updates to the parent on a timeout
+// or not, and should only be used for tests or debugging.
+const TIMEOUT_DISABLED_PREF = "browser.sessionstore.debug.no_auto_updates";
+
 /**
  * Returns a lazy function that will evaluate the given
  * function |fn| only once and cache its return value.
@@ -665,6 +669,54 @@ var MessageQueue = {
   _timeout: null,
 
   /**
+   * Whether or not sending batched messages on a timer is disabled. This should
+   * only be used for debugging or testing. If you need to access this value,
+   * you should probably use the timeoutDisabled getter.
+   */
+  _timeoutDisabled: false,
+
+  /**
+   * True if batched messages are not being fired on a timer. This should only
+   * ever be true when debugging or during tests.
+   */
+  get timeoutDisabled() {
+    return this._timeoutDisabled;
+  },
+
+  /**
+   * Disables sending batched messages on a timer. Also cancels any pending
+   * timers.
+   */
+  set timeoutDisabled(val) {
+    this._timeoutDisabled = val;
+
+    if (!val && this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = null;
+    }
+
+    return val;
+  },
+
+  init() {
+    this.timeoutDisabled =
+      Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
+
+    Services.prefs.addObserver(TIMEOUT_DISABLED_PREF, this, false);
+  },
+
+  uninit() {
+    Services.prefs.removeObserver(TIMEOUT_DISABLED_PREF, this);
+  },
+
+  observe(subject, topic, data) {
+    if (topic == TIMEOUT_DISABLED_PREF) {
+      this.timeoutDisabled =
+        Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
+    }
+  },
+
+  /**
    * Pushes a given |value| onto the queue. The given |key| represents the type
    * of data that is stored and can override data that has been queued before
    * but has not been sent to the parent process, yet.
@@ -679,7 +731,7 @@ var MessageQueue = {
     this._data.set(key, createLazy(fn));
     this._lastUpdated.set(key, this._id);
 
-    if (!this._timeout) {
+    if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
       this._timeout = setTimeout(() => this.send(), this.BATCH_DELAY_MS);
     }
@@ -799,6 +851,7 @@ SessionStorageListener.init();
 ScrollPositionListener.init();
 DocShellCapabilitiesListener.init();
 PrivacyListener.init();
+MessageQueue.init();
 
 function handleRevivedTab() {
   if (!content) {
@@ -840,6 +893,7 @@ addEventListener("unload", () => {
   PageStyleListener.uninit();
   SessionStorageListener.uninit();
   SessionHistoryListener.uninit();
+  MessageQueue.uninit();
 
   // Remove progress listeners.
   gContentRestore.resetRestore();

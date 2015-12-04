@@ -96,6 +96,12 @@ ARCHIVE_FILES = {
             'pattern': '**',
             'dest': 'tps/tests',
         },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing/web-platform/tests/tools/wptserve',
+            'pattern': '**',
+            'dest': 'tools/wptserve',
+        },
     ],
     'cppunittest': [
         {

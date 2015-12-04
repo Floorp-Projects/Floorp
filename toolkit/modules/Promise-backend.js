@@ -236,8 +236,7 @@ var PendingErrors = {
   flush: function() {
     // Since we are going to modify the map while walking it,
     // let's copying the keys first.
-    let keys = [key for (key of this._map.keys())];
-    for (let key of keys) {
+    for (let key of Array.from(this._map.keys())) {
       this.report(key);
     }
   },

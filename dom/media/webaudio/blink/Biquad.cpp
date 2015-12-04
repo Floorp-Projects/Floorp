@@ -26,16 +26,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// For M_PI
-// VS2015 requires <math.h> to be used; <cmath> doesn't seem to honor
-// _USE_MATH_DEFINES.
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #include "Biquad.h"
 
 #include <float.h>
 #include <algorithm>
+#include <math.h>
 
 namespace WebCore {
 

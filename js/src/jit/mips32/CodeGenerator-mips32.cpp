@@ -62,7 +62,7 @@ CodeGeneratorMIPS::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
     MTableSwitch* mir = ool->mir();
 
     masm.haltingAlign(sizeof(void*));
-    masm.bind(ool->jumpLabel()->src());
+    masm.bind(ool->jumpLabel()->target());
     masm.addCodeLabel(*ool->jumpLabel());
 
     for (size_t i = 0; i < mir->numCases(); i++) {
@@ -73,9 +73,9 @@ CodeGeneratorMIPS::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
         // The entries of the jump table need to be absolute addresses and thus
         // must be patched after codegen is finished.
         CodeLabel cl;
-        masm.ma_li(ScratchRegister, cl.dest());
+        masm.ma_li(ScratchRegister, cl.patchAt());
         masm.branch(ScratchRegister);
-        cl.src()->bind(caseoffset);
+        cl.target()->bind(caseoffset);
         masm.addCodeLabel(cl);
     }
 }
@@ -101,7 +101,7 @@ CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch* mir, Register index,
     addOutOfLineCode(ool, mir);
 
     // Compute the position where a pointer to the right case stands.
-    masm.ma_li(address, ool->jumpLabel()->dest());
+    masm.ma_li(address, ool->jumpLabel()->patchAt());
     masm.lshiftPtr(Imm32(4), index);
     masm.addPtr(index, address);
 

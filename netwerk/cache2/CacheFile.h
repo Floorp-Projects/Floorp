@@ -169,22 +169,7 @@ private:
   void WriteMetadataIfNeededLocked(bool aFireAndForget = false);
   void PostWriteTimer();
 
-  static PLDHashOperator WriteAllCachedChunks(const uint32_t& aIdx,
-                                              RefPtr<CacheFileChunk>& aChunk,
-                                              void* aClosure);
-
-  static PLDHashOperator FailListenersIfNonExistentChunk(
-                           const uint32_t& aIdx,
-                           nsAutoPtr<mozilla::net::ChunkListeners>& aListeners,
-                           void* aClosure);
-
-  static PLDHashOperator FailUpdateListeners(const uint32_t& aIdx,
-                                             RefPtr<CacheFileChunk>& aChunk,
-                                             void* aClosure);
-
-  static PLDHashOperator CleanUpCachedChunks(const uint32_t& aIdx,
-                                             RefPtr<CacheFileChunk>& aChunk,
-                                             void* aClosure);
+  void CleanUpCachedChunks();
 
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
 

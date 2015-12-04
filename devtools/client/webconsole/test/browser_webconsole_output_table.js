@@ -124,8 +124,8 @@ const TEST_DATA = [
   {
     command: "console.table(weakset)",
     data: [
-      { _value: "String[7]" },
-      { _value: "String[7]" },
+      { _value: "String" },
+      { _value: "String" },
     ],
     columns: { _index: "(iteration index)", _value: "Values" },
     couldBeOutOfOrder: true,
@@ -133,8 +133,8 @@ const TEST_DATA = [
   {
     command: "console.table(weakmap)",
     data: [
-      { _key: "String[7]", _value: "\"oh no\"" },
-      { _key: "String[7]", _value: "23" },
+      { _key: "String", _value: "\"oh no\"" },
+      { _key: "String", _value: "23" },
     ],
     columns: { _index: "(iteration index)", _key: "Key", _value: "Values" },
     couldBeOutOfOrder: true,

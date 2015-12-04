@@ -365,6 +365,13 @@ WebGLTexture::ValidateTexImageSpecification(const char* funcName, TexImageTarget
         return false;
     }
 
+    if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP &&
+        width != height)
+    {
+        mContext->ErrorInvalidValue("%s: Cube map images must be square.", funcName);
+        return false;
+    }
+
     /* GLES 3.0.4, p133-134:
      * GL_MAX_TEXTURE_SIZE is *not* the max allowed texture size. Rather, it is the
      * max (width/height) size guaranteed not to generate an INVALID_VALUE for too-large

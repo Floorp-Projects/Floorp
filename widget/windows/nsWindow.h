@@ -453,7 +453,7 @@ protected:
    */
   void                    StopFlashing();
   static bool             IsTopLevelMouseExit(HWND aWnd);
-  virtual nsresult        SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+  virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                               bool aIntersectWithExisting) override;
   nsIntRegion             GetRegionToPaint(bool aForceFullRepaint, 
                                            PAINTSTRUCT ps, HDC aDC);

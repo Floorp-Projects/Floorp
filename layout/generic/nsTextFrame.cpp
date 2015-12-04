@@ -52,6 +52,7 @@
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
 #include "nsStyleUtil.h"
+#include "nsRubyFrame.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -5155,6 +5156,19 @@ GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics
                           ctx, appUnitsPerDevUnit, flags, nullptr);
 }
 
+static nsRubyFrame*
+FindRubyAncestor(nsTextFrame* aFrame)
+{
+  for (nsIFrame* frame = aFrame->GetParent();
+       frame && frame->IsFrameOfType(nsIFrame::eLineParticipant);
+       frame = frame->GetParent()) {
+    if (frame->GetType() == nsGkAtoms::rubyFrame) {
+      return static_cast<nsRubyFrame*>(frame);
+    }
+  }
+  return nullptr;
+}
+
 nsRect
 nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
 {
@@ -5188,14 +5202,18 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
   nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
     baseFontMetrics->MaxAscent() + fm->MaxDescent() :
     baseFontMetrics->MaxDescent() + fm->MaxAscent();
-  // XXX emphasis marks should be drawn outside ruby, see bug 1224013.
+  nscoord startLeading = 0;
+  nscoord endLeading = 0;
+  if (nsRubyFrame* ruby = FindRubyAncestor(this)) {
+    ruby->GetBlockLeadings(startLeading, endLeading);
+  }
   if (side == eLogicalSideBStart) {
-    info->baselineOffset = -absOffset;
-    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM);
+    info->baselineOffset = -absOffset - startLeading;
+    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM) - startLeading;
   } else {
     MOZ_ASSERT(side == eLogicalSideBEnd);
-    info->baselineOffset = absOffset;
-    overflowRect.BStart(aWM) = frameSize.BSize(aWM);
+    info->baselineOffset = absOffset + endLeading;
+    overflowRect.BStart(aWM) = frameSize.BSize(aWM) + endLeading;
   }
 
   Properties().Set(EmphasisMarkProperty(), info);
@@ -6200,6 +6218,7 @@ void
 nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
                                uint32_t aOffset, uint32_t aLength,
+                               const nscolor* aDecorationOverrideColor,
                                PropertyProvider& aProvider)
 {
   auto info = static_cast<const EmphasisMarkInfo*>(
@@ -6209,8 +6228,8 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     return;
   }
 
-  nscolor color = nsLayoutUtils::
-    GetColor(this, eCSSProperty_text_emphasis_color);
+  nscolor color = aDecorationOverrideColor ? *aDecorationOverrideColor :
+    nsLayoutUtils::GetColor(this, eCSSProperty_text_emphasis_color);
   aContext->SetColor(Color::FromABGR(color));
   gfxPoint pt(aTextBaselinePt);
   if (!aWM.IsVertical()) {
@@ -6729,7 +6748,8 @@ nsTextFrame::DrawTextRunAndDecorations(
                 aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
     // Emphasis marks
-    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength, aProvider);
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength,
+                      aDecorationOverrideColor, aProvider);
 
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {

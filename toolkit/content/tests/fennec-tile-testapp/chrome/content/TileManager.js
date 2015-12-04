@@ -944,7 +944,7 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
 };
 
 TileManager.CrawlIterator.prototype = {
-  __iterator__: function() {
+  __iterator__: function*() {
     while (true) {
       let tile = this.next();
       if (!tile) break;
