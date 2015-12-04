@@ -16,12 +16,12 @@
 
 #include "GonkGPSGeolocationProvider.h"
 
+#include <cmath>
 #include <pthread.h>
 #include <hardware/gps.h>
 
 #include "GeolocationUtil.h"
 #include "mozstumbler/MozStumbler.h"
-#include "mozilla/Constants.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"

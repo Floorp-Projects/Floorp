@@ -146,6 +146,7 @@ UNIFIED_SOURCES += [
     'Matrix.cpp',
     'Path.cpp',
     'PathCairo.cpp',
+    'PathHelpers.cpp',
     'PathRecording.cpp',
     'Quaternion.cpp',
     'RecordedEvent.cpp',
@@ -154,10 +155,6 @@ UNIFIED_SOURCES += [
     'ScaledFontCairo.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
-]
-
-SOURCES += [
-    'PathHelpers.cpp', # Uses _USE_MATH_DEFINES
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

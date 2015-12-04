@@ -556,6 +556,8 @@ child:
 
     LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
+    OpenURI(URIParams uri, uint32_t flags);
+
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
     UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,

@@ -48,7 +48,7 @@ public:
 #endif
   virtual nsTransparencyMode GetTransparencyMode() override
   { return eTransparencyOpaque; }
-  virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) override;
+  virtual void GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) override;
 
 public:
   /**

@@ -107,20 +107,15 @@ promise_test(function(t) {
 
   return animation.ready.then(t.step_func(function() {
     animation.finish();
-    // We need to wait for two frames here to ensure isRunningOnCompositor
-    // flag is cleared. The first frame is for waking root refresh driver up,
-    // the second one is for clearing the flag.
-    // In most cases root refresh driver has been dormant because there is
-    // nothing to do for the root refresh driver (e.g. nothing change on
-    // chrome window). In the first frame document's refresh driver wakes the
-    // root refresh driver up as a result of animation's style changes.
-    // In the second frame the root refresh driver clears the flag as a
-    // result of a paint.
-    return waitForAnimationFrames(2);
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' immediately after animation.finish() is called');
+    // Check that we don't set the flag back again on the next tick.
+    return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
-       + ' when animation.finish() is called');
+       + ' on the next tick after animation.finish() is called');
   }));
 }, 'isRunningOnCompositor is false when the animation.finish() is called');
 
@@ -130,15 +125,15 @@ promise_test(function(t) {
 
   return animation.ready.then(t.step_func(function() {
     animation.currentTime = 100000; // 100s
-    // We need to wait for up to two frames here to ensure the "is running on
-    // compositor" flag is cleared.
-    // See the description in the 'isRunningOnCompositor is false when the
-    // animation.finish() is called' test for the rationale.
-    return waitForAnimationFrames(2);
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' immediately after manually seeking the animation to the end');
+    // Check that we don't set the flag back again on the next tick.
+    return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
-       + ' when manually seeking the animation to the end');
+       + ' on the next tick after manually seeking the animation to the end');
   }));
 }, 'isRunningOnCompositor is false when manually seeking the animation to ' +
    'the end');
@@ -149,15 +144,15 @@ promise_test(function(t) {
 
   return animation.ready.then(t.step_func(function() {
     animation.cancel();
-    // We need to wait for up to two frames here to ensure the "is running on
-    // compositor" flag is cleared.
-    // See the description in the 'isRunningOnCompositor is false when the
-    // animation.finish() is called' test for the rationale.
-    return waitForAnimationFrames(2);
+    assert_equals(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
+       + ' immediately after animation.cancel() is called');
+    // Check that we don't set the flag back again on the next tick.
+    return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(animation.isRunningOnCompositor, false,
        'Animation reports that it is NOT running on the compositor'
-       + ' when animation.cancel() is called');
+       + ' on the next tick after animation.cancel() is called');
   }));
 }, 'isRunningOnCompositor is false when animation.cancel() is called');
 

@@ -510,6 +510,14 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   if (ShouldSkip(aSkipToNextKeyframe, timeThreshold)) {
     // Cancel any pending demux request.
     mVideo.mDemuxRequest.DisconnectIfExists();
+
+    // I think it's still possible for an output to have been sent from the decoder
+    // and is currently sitting in our event queue waiting to be processed. The following
+    // flush won't clear it, and when we return to the event loop it'll be added to our
+    // output queue and be used.
+    // This code will count that as dropped, which was the intent, but not quite true.
+    mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
+
     Flush(TrackInfo::kVideoTrack);
     RefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
     SkipVideoDemuxToNextKeyFrame(timeThreshold);

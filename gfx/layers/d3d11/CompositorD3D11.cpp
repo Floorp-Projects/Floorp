@@ -1231,7 +1231,12 @@ CompositorD3D11::VerifyBufferSize()
     return true;
   }
 
+  ID3D11RenderTargetView* view = nullptr;
+  mContext->OMSetRenderTargets(1, &view, nullptr);
+
   if (mDefaultRT) {
+    RefPtr<ID3D11RenderTargetView> rtView = mDefaultRT->mRTView;
+
     // Make sure the texture, which belongs to the swapchain, is destroyed
     // before resizing the swapchain.
     if (mCurrentRT == mDefaultRT) {
@@ -1239,11 +1244,27 @@ CompositorD3D11::VerifyBufferSize()
     }
     MOZ_ASSERT(mDefaultRT->hasOneRef());
     mDefaultRT = nullptr;
+
+    RefPtr<ID3D11Resource> resource;
+    rtView->GetResource(getter_AddRefs(resource));
+
+    ULONG newRefCnt = rtView.forget().take()->Release();
+
+    if (newRefCnt > 0) {
+      gfxCriticalError() << "mRTView not destroyed on final release!";
+    }
+
+    newRefCnt = resource.forget().take()->Release();
+
+    if (newRefCnt > 0) {
+      gfxCriticalError() << "Unexpecting lingering references to backbuffer!";
+    }
+
+    hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+                                   DXGI_FORMAT_B8G8R8A8_UNORM,
+                                   0);
   }
 
-  hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
-                                 DXGI_FORMAT_B8G8R8A8_UNORM,
-                                 0);
   mVerifyBuffersFailed = FAILED(hr);
   if (mVerifyBuffersFailed) {
     gfxCriticalNote << "D3D11 swap resize buffers failed " << hexa(hr) << " on " << mSize;

@@ -88,6 +88,18 @@ AssemblerMIPSShared::finish()
     isFinished = true;
 }
 
+bool
+AssemblerMIPSShared::asmMergeWith(const AssemblerMIPSShared& other)
+{
+    if (!AssemblerShared::asmMergeWith(size(), other))
+        return false;
+    for (size_t i = 0; i < other.numLongJumps(); i++) {
+        size_t off = other.longJumps_[i];
+        addLongJump(BufferOffset(size() + off));
+    }
+    return m_buffer.appendBuffer(other.m_buffer);
+}
+
 uint32_t
 AssemblerMIPSShared::actualIndex(uint32_t idx_) const
 {
@@ -126,7 +138,7 @@ AssemblerMIPSShared::processCodeLabels(uint8_t* rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        Bind(rawCode, label.dest(), rawCode + label.src()->offset());
+        Bind(rawCode, label.patchAt(), rawCode + label.target()->offset());
     }
 }
 
@@ -1348,6 +1360,28 @@ AssemblerMIPSShared::retarget(Label* label, Label* target)
         }
     }
     label->reset();
+}
+
+void
+AssemblerMIPSShared::retargetWithOffset(size_t baseOffset, const LabelBase* label, Label* target)
+{
+    if (!label->used())
+        return;
+
+    MOZ_ASSERT(!target->bound());
+    int32_t next;
+    BufferOffset labelBranchOffset(label->offset() + baseOffset);
+    do {
+        Instruction* inst = editSrc(labelBranchOffset);
+        int32_t prev = target->use(labelBranchOffset.getOffset());
+
+        MOZ_RELEASE_ASSERT(prev == Label::INVALID_OFFSET || unsigned(prev) < size());
+
+        next = inst[1].encode();
+        inst[1].setData(prev);
+
+        labelBranchOffset = BufferOffset(next + baseOffset);
+    } while (next != LabelBase::INVALID_OFFSET);
 }
 
 void dbg_break() {}

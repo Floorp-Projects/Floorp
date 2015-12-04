@@ -73,11 +73,6 @@ public:
   // elements.
   void AddStyleUpdatesTo(RestyleTracker& aTracker);
 
-  AnimationCollection*
-  GetAnimations(dom::Element *aElement,
-                nsCSSPseudoElements::Type aPseudoType,
-                bool aCreateIfNeeded);
-
   // Returns true if aContent or any of its ancestors has an animation
   // or transition.
   static bool ContentOrAncestorHasAnimation(nsIContent* aContent) {
@@ -103,14 +98,6 @@ public:
                   nsStyleContext* aStyleContext,
                   StyleAnimationValue& aComputedValue);
 
-  // For CSS properties that may be animated on a separate layer, represents
-  // a record of the corresponding layer type and change hint.
-  struct LayerAnimationRecord {
-    nsCSSProperty mProperty;
-    nsDisplayItem::Type mLayerType;
-    nsChangeHint mChangeHint;
-  };
-
   virtual bool IsAnimationManager() {
     return false;
   }
@@ -128,18 +115,14 @@ protected:
   virtual nsIAtom* GetAnimationsAfterAtom() = 0;
 
 public:
-  // Return an AnimationCollection* if we have an animation for
-  // the frame aFrame that can be performed on the compositor thread (as
-  // defined by AnimationCollection::CanPerformOnCompositorThread).
-  //
-  // Note that this does not test whether the frame's layer uses
-  // off-main-thread compositing, although it does check whether
-  // off-main-thread compositing is enabled as a whole.
+  // Get (and optionally create) the collection of animations managed
+  // by this class for the given |aElement| and |aPseudoType|.
   AnimationCollection*
-  GetAnimationsForCompositor(const nsIFrame* aFrame,
-                             nsCSSProperty aProperty);
+  GetAnimationCollection(dom::Element *aElement,
+                         nsCSSPseudoElements::Type aPseudoType,
+                         bool aCreateIfNeeded);
 
-  // Given the frame aFrame with possibly animated content, finds its
+  // Given the frame |aFrame| with possibly animated content, finds its
   // associated collection of animations. If it is a generated content
   // frame, it may examine the parent frame to search for such animations.
   AnimationCollection*
@@ -266,7 +249,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     Layer
   };
   void RequestRestyle(RestyleType aRestyleType);
-  void ClearIsRunningOnCompositor(nsCSSProperty aProperty);
 
 public:
   // True if this animation can be performed on the compositor thread.
@@ -336,9 +318,6 @@ public:
     }
   }
 
-  static void LogAsyncAnimationFailure(nsCString& aMessage,
-                                       const nsIContent* aContent = nullptr);
-
   dom::Element *mElement;
 
   // the atom we use in mElement's prop table (must be a static atom,
@@ -377,13 +356,6 @@ public:
   uint64_t mCheckGeneration;
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
-
-  // Returns true if there is an animation that has yet to finish.
-  bool HasCurrentAnimations() const;
-  // Returns true if there is an animation of any of the specified properties
-  // that has yet to finish.
-  bool HasCurrentAnimationsForProperties(const nsCSSProperty* aProperties,
-                                         size_t aPropertyCount) const;
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;

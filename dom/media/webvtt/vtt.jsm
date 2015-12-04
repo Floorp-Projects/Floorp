@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
  * Code below is vtt.js the JS WebVTT implementation.
  * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit 58d092419a1ee84e574ce2ba18bcbf92356fcb21
+ * Code taken from commit b89bfd06cd788a68c67e03f44561afe833db0849
  */
 /**
  * Copyright 2013 vtt.js Contributors
@@ -836,7 +836,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   // compute things with such as if it overlaps or intersects with another Element.
   // Can initialize it with either a StyleBox or another BoxPosition.
   function BoxPosition(obj) {
-    var isIE8 = (/MSIE\s8\.0/).test(navigator.userAgent);
+    var isIE8 = (typeof navigator !== "undefined") &&
+      (/MSIE\s8\.0/).test(navigator.userAgent);
 
     // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
     // was passed in and we need to copy the results of 'getBoundingClientRect'

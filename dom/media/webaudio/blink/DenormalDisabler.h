@@ -25,7 +25,6 @@
 #ifndef DenormalDisabler_h
 #define DenormalDisabler_h
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <float.h>
 

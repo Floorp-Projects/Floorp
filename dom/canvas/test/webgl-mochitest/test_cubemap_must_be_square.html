@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv='content-type' content='text/html; charset=utf-8'/>
+
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  <script src='webgl-util.js'></script>
+</head>
+
+<body>
+<script>
+'use strict';
+
+(function() {
+  var c = document.createElement('canvas');
+  var gl = c.getContext('webgl');
+
+  ok(!gl.getError(), 'No error before.');
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_CUBE_MAP, tex);
+  gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, 4, 3, 0, gl.RGBA,
+                gl.UNSIGNED_BYTE, null);
+
+  var err = gl.getError();
+  ok(err == gl.INVALID_VALUE,
+     'Should be INVALID_VALUE (0x501) after, was 0x' + err.toString(16) + '.');
+})();
+
+ok(true, 'Test complete.');
+
+</script>
+</body>
+</html>

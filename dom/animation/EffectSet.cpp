@@ -42,6 +42,42 @@ EffectSet::GetEffectSet(dom::Element* aElement,
 }
 
 /* static */ EffectSet*
+EffectSet::GetEffectSet(const nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return nullptr;
+  }
+
+  nsIAtom* propName;
+  if (aFrame->IsGeneratedContentFrame()) {
+    nsIFrame* parent = aFrame->GetParent();
+    if (parent->IsGeneratedContentFrame()) {
+      return nullptr;
+    }
+    nsIAtom* name = content->NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+      propName = nsGkAtoms::animationEffectsForBeforeProperty;
+    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+      propName = nsGkAtoms::animationEffectsForAfterProperty;
+    } else {
+      return nullptr;
+    }
+    content = content->GetParent();
+    if (!content) {
+      return nullptr;
+    }
+  } else {
+    if (!content->MayHaveAnimations()) {
+      return nullptr;
+    }
+    propName = nsGkAtoms::animationEffectsProperty;
+  }
+
+  return static_cast<EffectSet*>(content->GetProperty(propName));
+}
+
+/* static */ EffectSet*
 EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
                                 nsCSSPseudoElements::Type aPseudoType)
 {
