@@ -32,7 +32,8 @@ public:
   nsTArray<RefPtr<BlobImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
 
   already_AddRefed<Blob> GetBlobInternal(nsISupports* aParent,
-                                         const nsACString& aContentType);
+                                         const nsACString& aContentType,
+                                         ErrorResult& aRv);
 
 protected:
   bool ExpandBufferSize(uint64_t aSize)
