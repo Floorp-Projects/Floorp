@@ -1,7 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
-
 // This file tests SQLITE_FCNTL_CHUNK_SIZE behaves as expected
 
 function run_sql(d, sql) {
@@ -10,8 +6,7 @@ function run_sql(d, sql) {
   stmt.finalize();
 }
 
-function new_file(name)
-{
+function new_file(name) {
   var file = dirSvc.get("ProfD", Ci.nsIFile);
   file.append(name);
   return file;
@@ -21,14 +16,16 @@ function get_size(name) {
   return new_file(name).fileSize
 }
 
-function run_test()
-{
+function run_test() {
   const filename = "chunked.sqlite";
   const CHUNK_SIZE = 512 * 1024;
   var d = getDatabase(new_file(filename));
   try {
     d.setGrowthIncrement(CHUNK_SIZE, "");
-  } catch (e if e.result == Cr.NS_ERROR_FILE_TOO_BIG) {
+  } catch (e) {
+    if (e.result != Cr.NS_ERROR_FILE_TOO_BIG) {
+      throw e;
+    }
     print("Too little free space to set CHUNK_SIZE!");
     return;
   }
