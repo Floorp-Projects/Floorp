@@ -41,19 +41,17 @@ add_test(function test_create_and_add() {
   stmts[1].bindBlobByIndex(3, BLOB, BLOB.length);
 
   getOpenedDatabase().executeAsync(stmts, stmts.length, {
-    handleResult: function(aResultSet)
-    {
-      dump("handleResult("+aResultSet+")\n");
+    handleResult: function (aResultSet) {
+      dump("handleResult(" + aResultSet + ")\n");
       do_throw("unexpected results obtained!");
     },
-    handleError: function(aError)
+    handleError: function (aError)
     {
-      dump("handleError("+aError.result+")\n");
+      dump("handleError(" + aError.result + ")\n");
       do_throw("unexpected error!");
     },
-    handleCompletion: function(aReason)
-    {
-      dump("handleCompletion("+aReason+")\n");
+    handleCompletion: function (aReason) {
+      dump("handleCompletion(" + aReason + ")\n");
       do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
 
       // Check that the result is in the table
@@ -143,18 +141,15 @@ add_test(function test_multiple_bindings_on_statements() {
 
   // Execute asynchronously.
   getOpenedDatabase().executeAsync(stmts, stmts.length, {
-    handleResult: function(aResultSet)
-    {
+    handleResult: function (aResultSet) {
       do_throw("Unexpected call to handleResult!");
     },
-    handleError: function(aError)
-    {
+    handleError: function (aError) {
       print("Error code " + aError.result + " with message '" +
             aError.message + "' returned.");
       do_throw("Unexpected error!");
     },
-    handleCompletion: function(aReason)
-    {
+    handleCompletion: function (aReason) {
       print("handleCompletion(" + aReason +
             ") for test_multiple_bindings_on_statements");
       do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
@@ -180,17 +175,13 @@ add_test(function test_asyncClose_does_not_complete_before_statements() {
   let stmt = createStatement("SELECT * FROM sqlite_master");
   let executed = false;
   stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-    },
-    handleError: function(aError)
-    {
+    handleResult(aResultSet) {},
+    handleError(aError) {
       print("Error code " + aError.result + " with message '" +
             aError.message + "' returned.");
       do_throw("Unexpected error!");
     },
-    handleCompletion: function(aReason)
-    {
+    handleCompletion(aReason) {
       print("handleCompletion(" + aReason +
             ") for test_asyncClose_does_not_complete_before_statements");
       do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
@@ -199,7 +190,7 @@ add_test(function test_asyncClose_does_not_complete_before_statements() {
   });
   stmt.finalize();
 
-  getOpenedDatabase().asyncClose(function() {
+  getOpenedDatabase().asyncClose(function () {
     // Ensure that the statement executed to completion.
     do_check_true(executed);
 
@@ -238,8 +229,7 @@ add_test(function test_double_asyncClose_throws() {
   run_next_test();
 });
 
-function run_test()
-{
+function run_test() {
   cleanup();
   run_next_test();
 }

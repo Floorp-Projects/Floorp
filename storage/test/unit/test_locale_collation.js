@@ -140,21 +140,21 @@ function localeCompare(aCollation)
   var strength;
 
   switch (aCollation) {
-  case "locale":
-    strength = Ci.nsICollation.kCollationCaseInSensitive;
-    break;
-  case "locale_case_sensitive":
-    strength = Ci.nsICollation.kCollationAccentInsenstive;
-    break;
-  case "locale_accent_sensitive":
-    strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
-    break;
-  case "locale_case_accent_sensitive":
-    strength = Ci.nsICollation.kCollationCaseSensitive;
-    break;
-  default:
-    do_throw("Error in test: unknown collation '" + aCollation + "'");
-    break;
+    case "locale":
+      strength = Ci.nsICollation.kCollationCaseInSensitive;
+      break;
+    case "locale_case_sensitive":
+      strength = Ci.nsICollation.kCollationAccentInsenstive;
+      break;
+    case "locale_accent_sensitive":
+      strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
+      break;
+    case "locale_case_accent_sensitive":
+      strength = Ci.nsICollation.kCollationCaseSensitive;
+      break;
+    default:
+      do_throw("Error in test: unknown collation '" + aCollation + "'");
+      break;
   }
   return function (aStr1, aStr2) {
     return gLocaleCollation.compareString(strength, aStr1, aStr2);
@@ -180,8 +180,9 @@ function readTestData()
 
   let line = {};
   let lines = [];
-  while (istream.readLine(line))
-    lines.push(line.value); 
+  while (istream.readLine(line)) {
+    lines.push(line.value);
+  }
   istream.close();
 
   return lines;

@@ -9,7 +9,7 @@
 
 function asyncClone(db, readOnly) {
   let deferred = Promise.defer();
-  db.asyncClone(readOnly, function(status, db2) {
+  db.asyncClone(readOnly, function (status, db2) {
     if (Components.isSuccessCode(status)) {
       deferred.resolve(db2);
     } else {
@@ -21,7 +21,7 @@ function asyncClone(db, readOnly) {
 
 function asyncClose(db) {
   let deferred = Promise.defer();
-  db.asyncClose(function(status) {
+  db.asyncClose(function (status) {
     if (Components.isSuccessCode(status)) {
       deferred.resolve();
     } else {
@@ -41,7 +41,7 @@ function openAsyncDatabase(file, options) {
       properties.setProperty(k, options[k]);
     }
   }
-  getService().openAsyncDatabase(file, properties, function(status, db) {
+  getService().openAsyncDatabase(file, properties, function (status, db) {
     if (Components.isSuccessCode(status)) {
       deferred.resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
     } else {
@@ -54,15 +54,15 @@ function openAsyncDatabase(file, options) {
 function executeAsync(statement, onResult) {
   let deferred = Promise.defer();
   statement.executeAsync({
-    handleError: function(error) {
+    handleError: function (error) {
       deferred.reject(error);
     },
-    handleResult: function(result) {
+    handleResult: function (result) {
       if (onResult) {
         onResult(result);
       }
     },
-    handleCompletion: function(result) {
+    handleCompletion: function (result) {
       deferred.resolve(result);
     }
   });
@@ -163,7 +163,11 @@ add_task(function* test_attach_createTable_tableExists_indexExists() {
 
   msc.executeSimpleSQL("DETACH DATABASE sample");
   msc2.close();
-  try { file.remove(false); } catch(e) { }
+  try {
+    file.remove(false);
+  } catch (e) {
+    // Do nothing.
+  }
 });
 
 add_task(function* test_lastInsertRowID() {
@@ -237,18 +241,22 @@ add_task(function* test_set_schemaVersion_negative() {
   do_check_eq(version, msc.schemaVersion);
 });
 
-add_task(function* test_createTable(){
+add_task(function* test_createTable() {
   var temp = getTestDB().parent;
   temp.append("test_db_table");
   try {
     var con = getService().openDatabase(temp);
-    con.createTable("a","");
+    con.createTable("a", "");
   } catch (e) {
-    if (temp.exists()) try {
-      temp.remove(false);
-    } catch (e2) {}
-    do_check_true(e.result==Cr.NS_ERROR_NOT_INITIALIZED ||
-                  e.result==Cr.NS_ERROR_FAILURE);
+    if (temp.exists()) {
+      try {
+        temp.remove(false);
+      } catch (e2) {
+        // Do nothing.
+      }
+    }
+    do_check_true(e.result == Cr.NS_ERROR_NOT_INITIALIZED ||
+                  e.result == Cr.NS_ERROR_FAILURE);
   } finally {
     if (con) {
       con.close();
@@ -275,8 +283,7 @@ add_task(function* test_close_does_not_spin_event_loop() {
   // spin when close is called.
   let event = {
     ran: false,
-    run: function()
-    {
+    run() {
       this.ran = true;
     },
   };
@@ -356,7 +363,7 @@ add_task(function* test_close_fails_with_async_statement_ran() {
   }
   finally {
     // Clean up after ourselves.
-    db.asyncClose(function() {
+    db.asyncClose(function () {
       // Reset gDBConn so that later tests will get a new connection object.
       gDBConn = null;
       deferred.resolve();
@@ -413,13 +420,12 @@ function* standardAsyncTest(promisedDB, name, shouldInit = false) {
   do_print("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function(result) {
+  yield executeAsync(stmt, function (results) {
     do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
+    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == name) {
         found = true;
-      break;
+        break;
       }
     }
   });
@@ -484,13 +490,12 @@ add_task(function* test_async_open_with_shared_cache() {
   do_print("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function(result) {
+  yield executeAsync(stmt, function (results) {
     do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
+    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "clockworker") {
         found = true;
-      break;
+        break;
       }
     }
   });
@@ -537,13 +542,12 @@ add_task(function* test_clone_no_optional_param_async() {
   do_print("Extracting data from clone db");
   stmt = adb2.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function(result) {
+  yield executeAsync(stmt, function (results) {
     do_print("Data has been extracted");
-
-    for (let row = result.getNextRow(); row != null; row = result.getNextRow()) {
+    for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "yoric") {
         found = true;
-      break;
+        break;
       }
     }
   });
@@ -606,7 +610,7 @@ add_task(function* test_close_clone_fails() {
     "openDatabase",
     "openUnsharedDatabase",
   ];
-  calls.forEach(function(methodName) {
+  calls.forEach(function (methodName) {
     let db = getService()[methodName](getTestDB());
     db.close();
     expectError(Cr.NS_ERROR_NOT_INITIALIZED, () => db.clone());
@@ -629,9 +633,9 @@ add_task(function* test_clone_copies_functions() {
     "createFunction",
     "createAggregateFunction",
   ];
-  calls.forEach(function(methodName) {
-    [true, false].forEach(function(readOnly) {
-      functionMethods.forEach(function(functionMethod) {
+  calls.forEach(function (methodName) {
+    [true, false].forEach(function (readOnly) {
+      functionMethods.forEach(function (functionMethod) {
         let db1 = getService()[methodName](getTestDB());
         // Create a function for db1.
         db1[functionMethod](FUNC_NAME, 1, {
@@ -658,10 +662,10 @@ add_task(function* test_clone_copies_overridden_functions() {
     this.called = false;
   }
   test_func.prototype = {
-    onFunctionCall: function() {
+    onFunctionCall() {
       this.called = true;
     },
-    onStep: function() {
+    onStep() {
       this.called = true;
     },
     onFinal: () => 0,
@@ -675,9 +679,9 @@ add_task(function* test_clone_copies_overridden_functions() {
     "createFunction",
     "createAggregateFunction",
   ];
-  calls.forEach(function(methodName) {
-    [true, false].forEach(function(readOnly) {
-      functionMethods.forEach(function(functionMethod) {
+  calls.forEach(function (methodName) {
+    [true, false].forEach(function (readOnly) {
+      functionMethods.forEach(function (functionMethod) {
         let db1 = getService()[methodName](getTestDB());
         // Create a function for db1.
         let func = new test_func();
