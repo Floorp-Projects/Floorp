@@ -1,0 +1,20 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_unittest.yml'
+task:
+  payload:
+    command:
+      - --e10s
+  metadata:
+    name: '[TC] Linux64 reftest e10s {{chunk}}'
+    description: Reftest e10s run {{chunk}}
+  extra:
+    chunks:
+      total: 2
+    suite:
+      name: reftest
+      flavor: reftest
+    treeherder:
+      groupName: Desktop reftest
+      groupSymbol: tc-R-e10s
+      symbol: R-e10s{{chunk}}

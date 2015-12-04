@@ -1,0 +1,19 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/luciddream_unittest.py'
+      MOZHARNESS_CONFIG: >
+        mozharness/configs/luciddream/linux_config.py
+  metadata:
+    name: '[TC] Linux64 luciddream'
+    description: Luciddream run
+  extra:
+    treeherder:
+      symbol: Ld
