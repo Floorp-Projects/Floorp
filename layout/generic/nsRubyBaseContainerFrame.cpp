@@ -323,9 +323,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     textContainers[i]->MoveOverflowToChildList();
   }
 
-  // Clear leadings
-  mBStartLeading = mBEndLeading = 0;
-
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
                         aReflowState.AvailableBSize());

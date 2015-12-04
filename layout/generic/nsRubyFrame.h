@@ -45,6 +45,12 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
+  void GetBlockLeadings(nscoord& aStartLeading, nscoord& aEndLeading)
+  {
+    aStartLeading = mBStartLeading;
+    aEndLeading = mBEndLeading;
+  }
+
 protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
@@ -57,6 +63,11 @@ protected:
                      nsReflowStatus& aStatus);
 
   nsRubyBaseContainerFrame* PullOneSegment(ContinuationTraversingState& aState);
+
+  // The leading required to put the annotations.
+  // They are not initialized until the first reflow.
+  nscoord mBStartLeading;
+  nscoord mBEndLeading;
 };
 
 #endif /* nsRubyFrame_h___ */
