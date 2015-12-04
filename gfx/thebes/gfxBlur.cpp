@@ -1047,7 +1047,7 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
   dstInner.Deflate(Margin(slice));
 
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
-  if (srcOuter.IsEqualInterior(srcInner)) {
+  if (dstOuter.Size() == srcOuter.Size()) {
     destDrawTarget->DrawSurface(minInsetBlur, dstOuter, srcOuter);
   } else {
     DrawBoxShadows(*destDrawTarget, minInsetBlur,
