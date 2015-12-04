@@ -409,6 +409,19 @@ function testIsLockFree() {
     assertEq(Atomics.isLockFree(12), false);
 }
 
+function testUint8Clamped(sab) {
+    var ta = new Uint8ClampedArray(sab);
+    var thrown = false;
+    try {
+	CLONE(testMethod)(ta, 0);
+    }
+    catch (e) {
+	thrown = true;
+	assertEq(e instanceof TypeError, true);
+    }
+    assertEq(thrown, true);
+}
+
 function isLittleEndian() {
     var xxx = new ArrayBuffer(2);
     var xxa = new Int16Array(xxx);
@@ -440,7 +453,6 @@ function runTests() {
     // Test that invoking as Atomics.whatever() works, on correct arguments.
     CLONE(testMethod)(new Int8Array(sab), 0, 42, 4095);
     CLONE(testMethod)(new Uint8Array(sab), 0, 42, 4095);
-    CLONE(testMethod)(new Uint8ClampedArray(sab), 0, 42, 4095);
     CLONE(testMethod)(new Int16Array(sab), 0, 42, 2047);
     CLONE(testMethod)(new Uint16Array(sab), 0, 42, 2047);
     CLONE(testMethod)(new Int32Array(sab), 0, 42, 1023);
@@ -460,7 +472,6 @@ function runTests() {
 
     CLONE(testFunction)(new Int8Array(sab), 0, 42, 4095);
     CLONE(testFunction)(new Uint8Array(sab), 0, 42, 4095);
-    CLONE(testFunction)(new Uint8ClampedArray(sab), 0, 42, 4095);
     CLONE(testFunction)(new Int16Array(sab), 0, 42, 2047);
     CLONE(testFunction)(new Uint16Array(sab), 0, 42, 2047);
     CLONE(testFunction)(new Int32Array(sab), 0, 42, 1023);
@@ -496,6 +507,9 @@ function runTests() {
     testUint8Extremes(new Uint8Array(sab));
     testInt16Extremes(new Int16Array(sab));
     testUint32(new Uint32Array(sab));
+
+    // Test that Uint8ClampedArray is not accepted.
+    testUint8Clamped(sab);
 
     // Misc ad-hoc tests
     adHocExchange();

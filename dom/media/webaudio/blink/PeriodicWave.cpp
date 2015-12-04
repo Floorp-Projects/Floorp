@@ -29,6 +29,7 @@
 #include "PeriodicWave.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include "mozilla/FFTBlock.h"
 
 const unsigned MinPeriodicWaveSize = 4096; // This must be a power of two.
@@ -51,7 +52,19 @@ PeriodicWave::create(float sampleRate,
     if (isGood) {
         RefPtr<PeriodicWave> periodicWave =
             new PeriodicWave(sampleRate, numberOfComponents);
-        periodicWave->createBandLimitedTables(real, imag, numberOfComponents);
+
+        // Limit the number of components used to those for frequencies below the
+        // Nyquist of the fixed length inverse FFT.
+        size_t halfSize = periodicWave->m_periodicWaveSize / 2;
+        numberOfComponents = std::min(numberOfComponents, halfSize);
+        periodicWave->m_numberOfComponents = numberOfComponents;
+        periodicWave->m_realComponents = new AudioFloatArray(numberOfComponents);
+        periodicWave->m_imagComponents = new AudioFloatArray(numberOfComponents);
+        memcpy(periodicWave->m_realComponents->Elements(), real,
+               numberOfComponents * sizeof(float));
+        memcpy(periodicWave->m_imagComponents->Elements(), imag,
+               numberOfComponents * sizeof(float));
+
         return periodicWave.forget();
     }
     return nullptr;
@@ -96,6 +109,7 @@ PeriodicWave::createTriangle(float sampleRate)
 PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     : m_sampleRate(sampleRate)
     , m_centsPerRange(CentsPerRange)
+    , m_lowestRequestedFundamentalFrequency(std::numeric_limits<float>::max())
 {
     float nyquist = 0.5 * m_sampleRate;
 
@@ -107,6 +121,7 @@ PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     }
 
     m_numberOfRanges = (unsigned)(3.0f*logf(m_periodicWaveSize)/logf(2.0f));
+    m_bandLimitedTables.SetLength(m_numberOfRanges);
     m_lowestFundamentalFrequency = nyquist / maxNumberOfPartials();
     m_rateScale = m_periodicWaveSize / m_sampleRate;
 }
@@ -127,9 +142,21 @@ size_t PeriodicWave::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 
 void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, float* &lowerWaveData, float* &higherWaveData, float& tableInterpolationFactor)
 {
+
     // Negative frequencies are allowed, in which case we alias
     // to the positive frequency.
     fundamentalFrequency = fabsf(fundamentalFrequency);
+
+    if (fundamentalFrequency < m_lowestRequestedFundamentalFrequency) {
+        for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
+            m_bandLimitedTables[rangeIndex] = 0;
+        }
+
+        // We need to create the first table to determine the normalization
+        // constant.
+        createBandLimitedTables(fundamentalFrequency, 0);
+        m_lowestRequestedFundamentalFrequency = fundamentalFrequency;
+    }
 
     // Calculate the pitch range.
     float ratio = fundamentalFrequency > 0 ? fundamentalFrequency / m_lowestFundamentalFrequency : 0.5;
@@ -148,6 +175,12 @@ void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, f
     // So the lower table data will have a larger range index.
     unsigned rangeIndex1 = static_cast<unsigned>(pitchRange);
     unsigned rangeIndex2 = rangeIndex1 < m_numberOfRanges - 1 ? rangeIndex1 + 1 : rangeIndex1;
+
+    if (!m_bandLimitedTables[rangeIndex1].get())
+        createBandLimitedTables(fundamentalFrequency, rangeIndex1);
+
+    if (!m_bandLimitedTables[rangeIndex2].get())
+        createBandLimitedTables(fundamentalFrequency, rangeIndex2);
 
     lowerWaveData = m_bandLimitedTables[rangeIndex2]->Elements();
     higherWaveData = m_bandLimitedTables[rangeIndex1]->Elements();
@@ -179,66 +212,64 @@ unsigned PeriodicWave::numberOfPartialsForRange(unsigned rangeIndex) const
 // One table is created for each range for non-aliasing playback
 // at different playback rates. Thus, higher ranges have more
 // high-frequency partials culled out.
-void PeriodicWave::createBandLimitedTables(const float* realData, const float* imagData, unsigned numberOfComponents)
+void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
+                                           unsigned rangeIndex)
 {
-    float normalizationScale = 1;
-
     unsigned fftSize = m_periodicWaveSize;
-    unsigned halfSize = fftSize / 2;
     unsigned i;
 
-    // Limit the number of components used to those for frequencies below the
-    // Nyquist of the fixed length inverse FFT.
-    numberOfComponents = std::min(numberOfComponents, halfSize);
+    const float *realData = m_realComponents->Elements();
+    const float *imagData = m_imagComponents->Elements();
 
-    m_bandLimitedTables.SetCapacity(m_numberOfRanges);
+    // This FFTBlock is used to cull partials (represented by frequency bins).
+    FFTBlock frame(fftSize);
 
-    for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
-        // This FFTBlock is used to cull partials (represented by frequency bins).
-        FFTBlock frame(fftSize);
+    // Find the starting bin where we should start culling the aliasing
+    // partials for this pitch range.  We need to clear out the highest
+    // frequencies to band-limit the waveform.
+    unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
+    // Also limit to the number of components that are provided.
+    numberOfPartials = std::min(numberOfPartials, m_numberOfComponents - 1);
 
-        // Find the starting bin where we should start culling the aliasing
-        // partials for this pitch range.  We need to clear out the highest
-        // frequencies to band-limit the waveform.
-        unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
-        // Also limit to the number of components that are provided.
-        numberOfPartials = std::min(numberOfPartials, numberOfComponents - 1);
+    // Limit number of partials to those below Nyquist frequency
+    float nyquist = 0.5 * m_sampleRate;
+    numberOfPartials = std::min(numberOfPartials,
+                                (unsigned)(nyquist / fundamentalFrequency));
 
-        // Copy from loaded frequency data and generate complex conjugate
-        // because of the way the inverse FFT is defined.
-        // The coefficients of higher partials remain zero, as initialized in
-        // the FFTBlock constructor.
-        for (i = 0; i < numberOfPartials + 1; ++i) {
-            frame.RealData(i) = realData[i];
-            frame.ImagData(i) = -imagData[i];
-        }
-
-        // Clear any DC-offset.
-        frame.RealData(0) = 0;
-        // Clear value which has no effect.
-        frame.ImagData(0) = 0;
-
-        // Create the band-limited table.
-        AlignedAudioFloatArray* table = new AlignedAudioFloatArray(m_periodicWaveSize);
-        m_bandLimitedTables.AppendElement(table);
-
-        // Apply an inverse FFT to generate the time-domain table data.
-        float* data = m_bandLimitedTables[rangeIndex]->Elements();
-        frame.GetInverseWithoutScaling(data);
-
-        // For the first range (which has the highest power), calculate
-        // its peak value then compute normalization scale.
-        if (!rangeIndex) {
-            float maxValue;
-            maxValue = AudioBufferPeakValue(data, m_periodicWaveSize);
-
-            if (maxValue)
-                normalizationScale = 1.0f / maxValue;
-        }
-
-        // Apply normalization scale.
-        AudioBufferInPlaceScale(data, normalizationScale, m_periodicWaveSize);
+    // Copy from loaded frequency data and generate complex conjugate
+    // because of the way the inverse FFT is defined.
+    // The coefficients of higher partials remain zero, as initialized in
+    // the FFTBlock constructor.
+    for (i = 0; i < numberOfPartials + 1; ++i) {
+        frame.RealData(i) = realData[i];
+        frame.ImagData(i) = -imagData[i];
     }
+
+    // Clear any DC-offset.
+    frame.RealData(0) = 0;
+    // Clear value which has no effect.
+    frame.ImagData(0) = 0;
+
+    // Create the band-limited table.
+    AlignedAudioFloatArray* table = new AlignedAudioFloatArray(m_periodicWaveSize);
+    m_bandLimitedTables[rangeIndex] = table;
+
+    // Apply an inverse FFT to generate the time-domain table data.
+    float* data = m_bandLimitedTables[rangeIndex]->Elements();
+    frame.GetInverseWithoutScaling(data);
+
+    // For the first range (which has the highest power), calculate
+    // its peak value then compute normalization scale.
+    if (!rangeIndex) {
+        float maxValue;
+        maxValue = AudioBufferPeakValue(data, m_periodicWaveSize);
+
+        if (maxValue)
+            m_normalizationScale = 1.0f / maxValue;
+    }
+
+    // Apply normalization scale.
+    AudioBufferInPlaceScale(data, m_normalizationScale, m_periodicWaveSize);
 }
 
 void PeriodicWave::generateBasicWaveform(OscillatorType shape)
@@ -247,10 +278,11 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
     unsigned fftSize = periodicWaveSize();
     unsigned halfSize = fftSize / 2;
 
-    AudioFloatArray real(halfSize);
-    AudioFloatArray imag(halfSize);
-    float* realP = real.Elements();
-    float* imagP = imag.Elements();
+    m_numberOfComponents = halfSize;
+    m_realComponents = new AudioFloatArray(halfSize);
+    m_imagComponents = new AudioFloatArray(halfSize);
+    float* realP = m_realComponents->Elements();
+    float* imagP = m_imagComponents->Elements();
 
     // Clear DC and imag value which is ignored.
     realP[0] = 0;
@@ -305,8 +337,6 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
         realP[n] = a;
         imagP[n] = b;
     }
-
-    createBandLimitedTables(realP, imagP, halfSize);
 }
 
 } // namespace WebCore

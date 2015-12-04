@@ -81,6 +81,11 @@ txMozillaTextOutput::endDocument(nsresult aResult)
     nsresult rv = mTextParent->AppendChildTo(text, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // This should really be handled by nsIDocument::EndLoad
+    MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
+               nsIDocument::READYSTATE_LOADING, "Bad readyState");
+    mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);
+
     if (NS_SUCCEEDED(aResult)) {
         nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
         if (observer) {
@@ -134,6 +139,10 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     nsresult rv = NS_NewXMLDocument(getter_AddRefs(mDocument),
                                     aLoadedAsData);
     NS_ENSURE_SUCCESS(rv, rv);
+    // This should really be handled by nsIDocument::BeginLoad
+    MOZ_ASSERT(mDocument->GetReadyStateEnum() ==
+               nsIDocument::READYSTATE_UNINITIALIZED, "Bad readyState");
+    mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
     nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
     NS_ENSURE_STATE(source);
     bool hasHadScriptObject = false;

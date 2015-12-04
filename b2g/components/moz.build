@@ -44,13 +44,13 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 if CONFIG['MOZ_B2G'] and not CONFIG['MOZ_B2GDROID']:
-    EXTRA_PP_COMPONENTS += [
+    EXTRA_COMPONENTS += [
         'DirectoryProvider.js',
         'RecoveryService.js',
     ]
 
 if CONFIG['MOZ_UPDATER']:
-    EXTRA_PP_COMPONENTS += [
+    EXTRA_COMPONENTS += [
         'UpdatePrompt.js',
     ]
 
@@ -64,6 +64,7 @@ EXTRA_JS_MODULES += [
     'ErrorPage.jsm',
     'Frames.jsm',
     'FxAccountsMgmtService.jsm',
+    'KillSwitchMain.jsm',
     'LogCapture.jsm',
     'LogParser.jsm',
     'LogShake.jsm',
@@ -75,10 +76,6 @@ EXTRA_JS_MODULES += [
     'SystemAppProxy.jsm',
     'TelURIParser.jsm',
     'WebappsUpdater.jsm',
-]
-
-EXTRA_PP_JS_MODULES += [
-    'KillSwitchMain.jsm'
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':

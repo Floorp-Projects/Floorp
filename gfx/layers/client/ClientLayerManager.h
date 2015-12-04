@@ -123,11 +123,6 @@ public:
 
   TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
 
-  /// Utility methods for managing texture clients.
-  void ReturnTextureClientDeferred(TextureClient& aClient);
-  void ReturnTextureClient(TextureClient& aClient);
-  void ReportClientLost(TextureClient& aClient);
-
   /**
    * Pass through call to the forwarder for nsPresContext's
    * CollectPluginGeometryUpdates. Passes widget configuration information
