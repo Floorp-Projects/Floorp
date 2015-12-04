@@ -50,8 +50,10 @@ describe("loop.store.RoomStore", function() {
         };
       },
       CopyString: sinon.stub(),
-      GetLoopPref: function(pref) {
-        return pref;
+      GetLoopPref: function(prefName) {
+        if (prefName === "debug.dispatcher") {
+          return false;
+        }
       },
       NotifyUITour: function() {},
       "Rooms:Create": sinon.stub().returns({ roomToken: "fakeToken" }),
