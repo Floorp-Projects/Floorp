@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 interface nsIVariant;
 
-[builtinclass, uuid(55fa3a13-4812-45a7-98b7-3be6cec2df43)]
-interface nsIDOMCustomEvent : nsIDOMEvent
+[builtinclass, uuid(5be16b03-36f9-4ca8-b2c5-0daadf3cd1b3)]
+interface nsIDOMCustomEvent : nsISupports
 {
 
   readonly attribute nsIVariant detail;
