@@ -9,17 +9,19 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/Nullable.h"
+#include "nsStringFwd.h"
+
+class nsIContent;
 
 namespace mozilla {
-namespace dom {
 
 class AnimationUtils
 {
 public:
-  static Nullable<double>
-    TimeDurationToDouble(const Nullable<TimeDuration>& aTime)
+  static dom::Nullable<double>
+    TimeDurationToDouble(const dom::Nullable<TimeDuration>& aTime)
   {
-    Nullable<double> result;
+    dom::Nullable<double> result;
 
     if (!aTime.IsNull()) {
       result.SetValue(aTime.Value().ToMilliseconds());
@@ -28,10 +30,10 @@ public:
     return result;
   }
 
-  static Nullable<TimeDuration>
-    DoubleToTimeDuration(const Nullable<double>& aTime)
+  static dom::Nullable<TimeDuration>
+    DoubleToTimeDuration(const dom::Nullable<double>& aTime)
   {
-    Nullable<TimeDuration> result;
+    dom::Nullable<TimeDuration> result;
 
     if (!aTime.IsNull()) {
       result.SetValue(TimeDuration::FromMilliseconds(aTime.Value()));
@@ -39,9 +41,11 @@ public:
 
     return result;
   }
+
+  static void LogAsyncAnimationFailure(nsCString& aMessage,
+                                       const nsIContent* aContent = nullptr);
 };
 
-} // namespace dom
 } // namespace mozilla
 
 #endif

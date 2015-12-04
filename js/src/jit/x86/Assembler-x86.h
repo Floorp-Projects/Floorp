@@ -61,7 +61,9 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg4 = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = edx;
 
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
-static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
+// Use "const" instead of MOZ_CONSTEXPR_VAR here to work around a bug
+// of VS2015 Update 1. See bug 1229604.
+static const Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 

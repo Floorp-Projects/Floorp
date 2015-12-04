@@ -8,7 +8,6 @@
 #define MOZILLA_SVGCONTENTUTILS_H
 
 // include math.h to pick up definition of M_ maths defines e.g. M_PI
-#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include "mozilla/gfx/2D.h" // for StrokeOptions

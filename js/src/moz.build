@@ -641,6 +641,8 @@ if CONFIG['_MSC_VER']:
     # Parser<SyntaxParseHandler> definition, see bug 1167030.
     CXXFLAGS += ['-wd4661']
     CXXFLAGS += ['-we4067', '-we4258', '-we4275']
+    CXXFLAGS += ['-wd4146'] # FIXME: unary minus operator applied to unsigned type (bug 1229189)
+    CXXFLAGS += ['-wd4273'] # FIXME: inconsistent dll linkage (bug 1229666)
 
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
@@ -668,9 +670,6 @@ if CONFIG['OS_ARCH'] == 'SunOS':
 CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 LOCAL_INCLUDES += CONFIG['MOZ_ICU_INCLUDES']
-
-if not CONFIG['GNU_CXX']:
-    ALLOW_COMPILER_WARNINGS = True
 
 NO_EXPAND_LIBS = True
 

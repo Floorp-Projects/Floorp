@@ -304,7 +304,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     aElement = aElement->GetParent()->AsElement();
   }
 
-  AnimationCollection* collection = GetAnimations(aElement, pseudoType, false);
+  AnimationCollection* collection =
+    GetAnimationCollection(aElement, pseudoType, false /* aCreateIfNeeded */);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
@@ -703,7 +704,9 @@ nsTransitionManager::ConsiderStartingTransition(
 
   if (!aElementTransitions) {
     aElementTransitions =
-      GetAnimations(aElement, aNewStyleContext->GetPseudoType(), true);
+      GetAnimationCollection(aElement,
+                             aNewStyleContext->GetPseudoType(),
+                             true /* aCreateIfNeeded */);
     if (!aElementTransitions) {
       NS_WARNING("allocating CommonAnimationManager failed");
       return;
@@ -743,7 +746,8 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                  aPseudoType,
                                                nsStyleContext* aNewStyleContext)
 {
-  AnimationCollection* collection = GetAnimations(aElement, aPseudoType, false);
+  AnimationCollection* collection =
+    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
   if (!collection) {
     return;
   }
@@ -796,8 +800,9 @@ nsTransitionManager::UpdateCascadeResultsWithTransitions(
                        AnimationCollection* aTransitions)
 {
   AnimationCollection* animations = mPresContext->AnimationManager()->
-      GetAnimations(aTransitions->mElement,
-                    aTransitions->PseudoElementType(), false);
+      GetAnimationCollection(aTransitions->mElement,
+                             aTransitions->PseudoElementType(),
+                             false /* aCreateIfNeeded */);
   UpdateCascadeResults(aTransitions, animations);
 }
 
@@ -806,8 +811,9 @@ nsTransitionManager::UpdateCascadeResultsWithAnimations(
                        AnimationCollection* aAnimations)
 {
   AnimationCollection* transitions = mPresContext->TransitionManager()->
-      GetAnimations(aAnimations->mElement,
-                    aAnimations->PseudoElementType(), false);
+      GetAnimationCollection(aAnimations->mElement,
+                             aAnimations->PseudoElementType(),
+                             false /* aCreateIfNeeded */);
   UpdateCascadeResults(transitions, aAnimations);
 }
 
@@ -820,8 +826,9 @@ nsTransitionManager::UpdateCascadeResultsWithAnimationsToBeDestroyed(
   // information that may now be incorrect.
   AnimationCollection* transitions =
     mPresContext->TransitionManager()->
-      GetAnimations(aAnimations->mElement,
-                    aAnimations->PseudoElementType(), false);
+      GetAnimationCollection(aAnimations->mElement,
+                             aAnimations->PseudoElementType(),
+                             false /* aCreateIfNeeded */);
   UpdateCascadeResults(transitions, nullptr);
 }
 

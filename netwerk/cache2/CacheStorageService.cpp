@@ -1134,21 +1134,6 @@ void CacheStorageService::ForceEntryValidFor(nsACString &aCacheEntryKey,
   mForcedValidEntries.Put(aCacheEntryKey, validUntil);
 }
 
-namespace {
-
-PLDHashOperator PruneForcedValidEntries(
-  const nsACString& aKey, TimeStamp& aTimeStamp, void* aClosure)
-{
-  TimeStamp* now = static_cast<TimeStamp*>(aClosure);
-  if (aTimeStamp < *now) {
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 // Cleans out the old entries in mForcedValidEntries
 void CacheStorageService::ForcedValidEntriesPrune(TimeStamp &now)
 {
@@ -1157,7 +1142,11 @@ void CacheStorageService::ForcedValidEntriesPrune(TimeStamp &now)
   if (now < dontPruneUntil)
     return;
 
-  mForcedValidEntries.Enumerate(PruneForcedValidEntries, &now);
+  for (auto iter = mForcedValidEntries.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.Data() < now) {
+      iter.Remove();
+    }
+  }
   dontPruneUntil = now + oneMinute;
 }
 
@@ -1937,21 +1926,6 @@ bool TelemetryEntryKey(CacheEntry const* entry, nsAutoCString& key)
   return true;
 }
 
-PLDHashOperator PrunePurgeTimeStamps(
-  const nsACString& aKey, TimeStamp& aTimeStamp, void* aClosure)
-{
-  TimeStamp* now = static_cast<TimeStamp*>(aClosure);
-  static TimeDuration const fifteenMinutes = TimeDuration::FromSeconds(900);
-
-  if (*now - aTimeStamp > fifteenMinutes) {
-    // We are not interested in resurrection of entries after 15 minutes
-    // of time.  This is also the limit for the telemetry.
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 } // namespace
 
 void
@@ -1962,7 +1936,14 @@ CacheStorageService::TelemetryPrune(TimeStamp &now)
   if (now < dontPruneUntil)
     return;
 
-  mPurgeTimeStamps.Enumerate(PrunePurgeTimeStamps, &now);
+  static TimeDuration const fifteenMinutes = TimeDuration::FromSeconds(900);
+  for (auto iter = mPurgeTimeStamps.Iter(); !iter.Done(); iter.Next()) {
+    if (now - iter.Data() > fifteenMinutes) {
+      // We are not interested in resurrection of entries after 15 minutes
+      // of time.  This is also the limit for the telemetry.
+      iter.Remove();
+    }
+  }
   dontPruneUntil = now + oneMinute;
 }
 

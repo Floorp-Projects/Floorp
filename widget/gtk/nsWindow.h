@@ -150,7 +150,7 @@ public:
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            bool aDoCapture) override;
     NS_IMETHOD         GetAttention(int32_t aCycleCount) override;
-    virtual nsresult   SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+    virtual nsresult   SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                            bool aIntersectWithExisting) override;
     virtual bool       HasPendingInputEvent() override;
 

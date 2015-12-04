@@ -124,7 +124,7 @@ class Assembler : public AssemblerMIPSShared
     using AssemblerMIPSShared::bind;
 
     void bind(RepatchLabel* label);
-    void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address);
+    void Bind(uint8_t* rawCode, CodeOffset* label, const void* address);
 
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);

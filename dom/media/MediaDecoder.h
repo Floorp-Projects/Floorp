@@ -636,9 +636,6 @@ private:
   // position.
   int64_t GetDownloadPosition();
 
-  // Drop reference to state machine.  Only called during shutdown dance.
-  virtual void BreakCycles();
-
   // Notifies the element that decoding has failed.
   void DecodeError();
 
@@ -700,7 +697,7 @@ private:
   MediaStatistics GetStatistics();
 
   // Return the frame decode/paint related statistics.
-  FrameStatistics& GetFrameStatistics() { return mFrameStats; }
+  FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
   // Increments the parsed and decoded frame counters by the passed in counts.
   // Can be called on any thread.
@@ -815,6 +812,8 @@ private:
     SetMediaSeekable(false);
   }
 
+  void FinishShutdown();
+
   MediaEventProducer<void> mDataArrivedEvent;
 
   // The state machine object for handling the decoding. It is safe to
@@ -866,7 +865,7 @@ protected:
   MediaDecoderOwner* const mOwner;
 
   // Counters related to decode and presentation of frames.
-  FrameStatistics mFrameStats;
+  const RefPtr<FrameStatistics> mFrameStats;
 
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
 

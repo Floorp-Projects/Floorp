@@ -481,7 +481,7 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
     const nsIWidget::Configuration& configuration = aConfigurations[idx];
     mPluginWindowData.AppendElement(PluginWindowData(configuration.mWindowID,
                                                      configuration.mClipRegion,
-                                                     configuration.mBounds.ToUnknownRect(),
+                                                     configuration.mBounds,
                                                      configuration.mVisible));
   }
 }

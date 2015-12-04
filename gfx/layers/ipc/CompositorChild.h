@@ -85,8 +85,8 @@ public:
   RecvOverfill(const uint32_t &aOverfill) override;
 
   virtual bool
-  RecvUpdatePluginConfigurations(const nsIntPoint& aContentOffset,
-                                 const nsIntRegion& aVisibleRegion,
+  RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
+                                 const LayoutDeviceIntRegion& aVisibleRegion,
                                  nsTArray<PluginWindowData>&& aPlugins) override;
 
   virtual bool

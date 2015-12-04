@@ -985,7 +985,7 @@ class nsIWidget : public nsISupports {
         uintptr_t mWindowID; // e10s specific, the unique plugin port id
         bool mVisible; // e10s specific, widget visibility
         LayoutDeviceIntRect mBounds;
-        nsTArray<nsIntRect> mClipRegion;
+        nsTArray<LayoutDeviceIntRect> mClipRegion;
     };
 
     /**
@@ -1005,7 +1005,7 @@ class nsIWidget : public nsISupports {
      * moved in that order.
      */
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) = 0;
-    virtual nsresult SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+    virtual nsresult SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                          bool aIntersectWithExisting) = 0;
 
     /**
@@ -1013,7 +1013,7 @@ class nsIWidget : public nsISupports {
      * region. If this widget is not clipped, appends a single rectangle
      * (0, 0, bounds.width, bounds.height).
      */
-    virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) = 0;
+    virtual void GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) = 0;
 
     /**
      * Register or unregister native plugin widgets which receive Configuration

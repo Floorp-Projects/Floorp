@@ -18,6 +18,7 @@
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"
 #include "XiphExtradata.h"
+#include "prprf.h"
 
 #include <algorithm>
 #include <stdint.h>

@@ -1425,7 +1425,7 @@ NS_METHOD nsWindow::Move(double aX, double aY)
     if (IsPlugin() &&
         (!mLayerManager || mLayerManager->GetBackendType() == LayersBackend::LAYERS_D3D9) &&
         mClipRects &&
-        (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(nsIntRect(0, 0, mBounds.width, mBounds.height)))) {
+        (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(LayoutDeviceIntRect(0, 0, mBounds.width, mBounds.height)))) {
       flags |= SWP_NOCOPYBITS;
     }
     VERIFY(::SetWindowPos(mWnd, nullptr, x, y, 0, 0, flags));
@@ -6557,7 +6557,7 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 }
 
 static HRGN
-CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
+CreateHRGNFromArray(const nsTArray<LayoutDeviceIntRect>& aRects)
 {
   int32_t size = sizeof(RGNDATAHEADER) + sizeof(RECT)*aRects.Length();
   nsAutoTArray<uint8_t,100> buf;
@@ -6567,9 +6567,9 @@ CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
   data->rdh.dwSize = sizeof(data->rdh);
   data->rdh.iType = RDH_RECTANGLES;
   data->rdh.nCount = aRects.Length();
-  nsIntRect bounds;
+  LayoutDeviceIntRect bounds;
   for (uint32_t i = 0; i < aRects.Length(); ++i) {
-    const nsIntRect& r = aRects[i];
+    const LayoutDeviceIntRect& r = aRects[i];
     bounds.UnionRect(bounds, r);
     ::SetRect(&rects[i], r.x, r.y, r.XMost(), r.YMost());
   }
@@ -6578,7 +6578,7 @@ CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
 }
 
 nsresult
-nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+nsWindow::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                               bool aIntersectWithExisting)
 {
   if (IsWindowClipRegionEqual(aRects)) {
