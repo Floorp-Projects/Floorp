@@ -898,7 +898,11 @@ pref("browser.readinglist.enabled", true);
 pref("toolkit.telemetry.unified", false);
 
 // Unified AccessibleCarets (touch-caret and selection-carets).
+#ifdef NIGHTLY_BUILD
+pref("layout.accessiblecaret.enabled", true);
+#else
 pref("layout.accessiblecaret.enabled", false);
+#endif
 // Android generates long tap (mouse) events.
 pref("layout.accessiblecaret.use_long_tap_injector", false);
 

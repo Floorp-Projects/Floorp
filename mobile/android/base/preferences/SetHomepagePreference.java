@@ -36,10 +36,6 @@ public class SetHomepagePreference extends DialogPreference {
 
     public SetHomepagePreference(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-
-        setPersistent(false);
-        setDialogLayoutResource(R.layout.preference_set_homepage);
-
         prefs = GeckoSharedPrefs.forProfile(context);
     }
 

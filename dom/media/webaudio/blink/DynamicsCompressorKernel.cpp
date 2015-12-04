@@ -40,6 +40,7 @@ using namespace std;
 using namespace mozilla::dom; // for WebAudioUtils
 using mozilla::IsInfinite;
 using mozilla::IsNaN;
+using mozilla::MakeUnique;
 
 namespace WebCore {
 
@@ -78,7 +79,7 @@ size_t DynamicsCompressorKernel::sizeOfExcludingThis(mozilla::MallocSizeOf aMall
     size_t amount = 0;
     amount += m_preDelayBuffers.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (size_t i = 0; i < m_preDelayBuffers.Length(); i++) {
-        amount += m_preDelayBuffers[i].SizeOfExcludingThis(aMallocSizeOf);
+        amount += aMallocSizeOf(m_preDelayBuffers[i].get());
     }
 
     return amount;
@@ -91,7 +92,7 @@ void DynamicsCompressorKernel::setNumberOfChannels(unsigned numberOfChannels)
 
     m_preDelayBuffers.Clear();
     for (unsigned i = 0; i < numberOfChannels; ++i)
-        m_preDelayBuffers.AppendElement(new float[MaxPreDelayFrames]);
+      m_preDelayBuffers.AppendElement(MakeUnique<float[]>(MaxPreDelayFrames));
 }
 
 void DynamicsCompressorKernel::setPreDelayTime(float preDelayTime)
@@ -104,7 +105,7 @@ void DynamicsCompressorKernel::setPreDelayTime(float preDelayTime)
     if (m_lastPreDelayFrames != preDelayFrames) {
         m_lastPreDelayFrames = preDelayFrames;
         for (unsigned i = 0; i < m_preDelayBuffers.Length(); ++i)
-            memset(m_preDelayBuffers[i], 0, sizeof(float) * MaxPreDelayFrames);
+	  memset(m_preDelayBuffers[i].get(), 0, sizeof(float) * MaxPreDelayFrames);
 
         m_preDelayReadIndex = 0;
         m_preDelayWriteIndex = preDelayFrames;
@@ -387,7 +388,7 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
 
                 // Predelay signal, computing compression amount from un-delayed version.
                 for (unsigned i = 0; i < numberOfChannels; ++i) {
-                    float* delayBuffer = m_preDelayBuffers[i];
+                    float* delayBuffer = m_preDelayBuffers[i].get();
                     float undelayedSource = sourceChannels[i][frameIndex];
                     delayBuffer[preDelayWriteIndex] = undelayedSource;
 
@@ -453,7 +454,7 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
 
                 // Apply final gain.
                 for (unsigned i = 0; i < numberOfChannels; ++i) {
-                    float* delayBuffer = m_preDelayBuffers[i];
+                    float* delayBuffer = m_preDelayBuffers[i].get();
                     destinationChannels[i][frameIndex] = delayBuffer[preDelayReadIndex] * totalGain;
                 }
 
@@ -479,7 +480,7 @@ void DynamicsCompressorKernel::reset()
 
     // Predelay section.
     for (unsigned i = 0; i < m_preDelayBuffers.Length(); ++i)
-        memset(m_preDelayBuffers[i], 0, sizeof(float) * MaxPreDelayFrames);
+        memset(m_preDelayBuffers[i].get(), 0, sizeof(float) * MaxPreDelayFrames);
 
     m_preDelayReadIndex = 0;
     m_preDelayWriteIndex = DefaultPreDelayFrames;

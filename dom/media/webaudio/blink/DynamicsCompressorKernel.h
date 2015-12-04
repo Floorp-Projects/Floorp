@@ -32,6 +32,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 namespace WebCore {
 
@@ -89,7 +90,7 @@ protected:
     unsigned m_lastPreDelayFrames;
     void setPreDelayTime(float);
 
-    nsTArray<nsAutoArrayPtr<float> > m_preDelayBuffers;
+    nsTArray<mozilla::UniquePtr<float[]>> m_preDelayBuffers;
     int m_preDelayReadIndex;
     int m_preDelayWriteIndex;
 

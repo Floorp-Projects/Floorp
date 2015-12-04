@@ -390,19 +390,20 @@ SelectorAutocompleter.prototype = {
     let items = [];
 
     for (let [value, /*count*/, state] of list) {
-      // for cases like 'div ' or 'div >' or 'div+'
       if (query.match(/[\s>+]$/)) {
+        // for cases like 'div ' or 'div >' or 'div+'
         value = query + value;
-      }
-      // for cases like 'div #a' or 'div .a' or 'div > d' and likewise
-      else if (query.match(/[\s>+][\.#a-zA-Z][^\s>+\.#]*$/)) {
-        let lastPart = query.match(/[\s>+][\.#a-zA-Z][^>\s+\.#]*$/)[0];
+      } else if (query.match(/[\s>+][\.#a-zA-Z][^\s>+\.#\[]*$/)) {
+        // for cases like 'div #a' or 'div .a' or 'div > d' and likewise
+        let lastPart = query.match(/[\s>+][\.#a-zA-Z][^\s>+\.#\[]*$/)[0];
         value = query.slice(0, -1 * lastPart.length + 1) + value;
-      }
-      // for cases like 'div.class' or '#foo.bar' and likewise
-      else if (query.match(/[a-zA-Z][#\.][^#\.\s+>]*$/)) {
-        let lastPart = query.match(/[a-zA-Z][#\.][^#\.\s>+]*$/)[0];
+      } else if (query.match(/[a-zA-Z][#\.][^#\.\s+>]*$/)) {
+        // for cases like 'div.class' or '#foo.bar' and likewise
+        let lastPart = query.match(/[a-zA-Z][#\.][^#\.\s+>]*$/)[0];
         value = query.slice(0, -1 * lastPart.length + 1) + value;
+      } else if (query.match(/[a-zA-Z]\[[^\]]*\]?$/)) {
+        // for cases like 'div[foo=bar]' and likewise
+        value = query;
       }
 
       let item = {
@@ -456,6 +457,13 @@ SelectorAutocompleter.prototype = {
     let query = this.searchBox.value;
     let state = this.state;
     let firstPart = "";
+
+    if (query.endsWith("*")) {
+      // Hide the popup if the query ends with * because we don't want to
+      // suggest all nodes.
+      this.hidePopup();
+      return;
+    }
 
     if (state === this.States.TAG) {
       // gets the tag that is being completed. For ex. 'div.foo > s' returns 's',

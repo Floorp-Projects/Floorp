@@ -31,7 +31,7 @@ const MAX_CONCURRENT_TAB_RESTORES = 3;
 // global notifications observed
 const OBSERVING = [
   "browser-window-before-show", "domwindowclosed",
-  "quit-application-requested", "browser-lastwindow-close-granted",
+  "quit-application-granted", "browser-lastwindow-close-granted",
   "quit-application", "browser:purge-session-history",
   "browser:purge-domain-data",
   "idle-daily",
@@ -180,6 +180,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource:///modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
   "resource://gre/modules/ViewSourceBrowser.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm");
 
 /**
  * |true| if we are in debug mode, |false| otherwise.
@@ -627,8 +629,8 @@ var SessionStoreInternal = {
       case "domwindowclosed": // catch closed windows
         this.onClose(aSubject);
         break;
-      case "quit-application-requested":
-        this.onQuitApplicationRequested();
+      case "quit-application-granted":
+        this.onQuitApplicationGranted();
         break;
       case "browser-lastwindow-close-granted":
         this.onLastWindowCloseGranted();
@@ -837,6 +839,7 @@ var SessionStoreInternal = {
         break;
       case "SessionStore:error":
         this.reportInternalError(data);
+        TabStateFlusher.resolveAll(browser, false, "Received error from the content process");
         break;
       default:
         throw new Error(`received unknown message '${aMessage.name}'`);
@@ -1210,6 +1213,10 @@ var SessionStoreInternal = {
 
     var tabbrowser = aWindow.gBrowser;
 
+    // The tabbrowser binding will go away once the window is closed,
+    // so we'll hold a reference to the browsers in the closure here.
+    let browsers = tabbrowser.browsers;
+
     TAB_EVENTS.forEach(function(aEvent) {
       tabbrowser.tabContainer.removeEventListener(aEvent, this, true);
     }, this);
@@ -1281,10 +1288,6 @@ var SessionStoreInternal = {
         this.maybeSaveClosedWindow(winData, isLastWindow);
       }
 
-      // The tabbrowser binding will go away once the window is closed,
-      // so we'll hold a reference to the browsers in the closure here.
-      let browsers = tabbrowser.browsers;
-
       TabStateFlusher.flushWindow(aWindow).then(() => {
         // At this point, aWindow is closed! You should probably not try to
         // access any DOM elements from aWindow within this callback unless
@@ -1310,13 +1313,13 @@ var SessionStoreInternal = {
 
         // Update the tabs data now that we've got the most
         // recent information.
-        this.cleanUpWindow(aWindow, winData);
+        this.cleanUpWindow(aWindow, winData, browsers);
 
         // save the state without this window to disk
         this.saveStateDelayed();
       });
     } else {
-      this.cleanUpWindow(aWindow, winData);
+      this.cleanUpWindow(aWindow, winData, browsers);
     }
 
     for (let i = 0; i < tabbrowser.tabs.length; i++) {
@@ -1336,7 +1339,13 @@ var SessionStoreInternal = {
    *        DyingWindowCache in case anybody is still holding a
    *        reference to it.
    */
-  cleanUpWindow(aWindow, winData) {
+  cleanUpWindow(aWindow, winData, browsers) {
+    // Any leftover TabStateFlusher Promises need to be resolved now,
+    // since we're about to remove the message listeners.
+    for (let browser of browsers) {
+      TabStateFlusher.resolveAll(browser);
+    }
+
     // Cache the window state until it is completely gone.
     DyingWindowCache.set(aWindow, winData);
 
@@ -1395,23 +1404,76 @@ var SessionStoreInternal = {
   },
 
   /**
-   * On quit application requested
+   * On quit application granted
    */
-  onQuitApplicationRequested: function ssi_onQuitApplicationRequested() {
-    // get a current snapshot of all windows
-    this._forEachBrowserWindow(function(aWindow) {
-      // Flush all data queued in the content script to not lose it when
-      // shutting down.
-      TabState.flushWindow(aWindow);
-      this._collectWindowData(aWindow);
+  onQuitApplicationGranted: function ssi_onQuitApplicationGranted() {
+    // Collect an initial snapshot of window data before we do the flush
+    this._forEachBrowserWindow((win) => {
+      this._collectWindowData(win);
     });
-    // we must cache this because _getMostRecentBrowserWindow will always
-    // return null by the time quit-application occurs
+
+    // Now add an AsyncShutdown blocker that'll spin the event loop
+    // until the windows have all been flushed.
+
+    // This progress object will track the state of async window flushing
+    // and will help us debug things that go wrong with our AsyncShutdown
+    // blocker.
+    let progress = { total: -1, current: -1 };
+
+    // We're going down! Switch state so that we treat closing windows and
+    // tabs correctly.
+    RunState.setQuitting();
+
+    AsyncShutdown.quitApplicationGranted.addBlocker(
+      "SessionStore: flushing all windows",
+      this.flushAllWindowsAsync(progress),
+      () => progress);
+  },
+
+  /**
+   * An async Task that iterates all open browser windows and flushes
+   * any outstanding messages from their tabs. This will also close
+   * all of the currently open windows while we wait for the flushes
+   * to complete.
+   *
+   * @param progress (Object)
+   *        Optional progress object that will be updated as async
+   *        window flushing progresses. flushAllWindowsSync will
+   *        write to the following properties:
+   *
+   *        total (int):
+   *          The total number of windows to be flushed.
+   *        current (int):
+   *          The current window that we're waiting for a flush on.
+   *
+   * @return Promise
+   */
+  flushAllWindowsAsync: Task.async(function*(progress={}) {
+    let windowPromises = [];
+    // We collect flush promises and close each window immediately so that
+    // the user can't start changing any window state while we're waiting
+    // for the flushes to finish.
+    this._forEachBrowserWindow((win) => {
+      windowPromises.push(TabStateFlusher.flushWindow(win));
+      win.close();
+    });
+
+    progress.total = windowPromises.length;
+
+    // We'll iterate through the Promise array, yielding each one, so as to
+    // provide useful progress information to AsyncShutdown.
+    for (let i = 0; i < windowPromises.length; ++i) {
+      progress.current = i;
+      yield windowPromises[i];
+    };
+
+    // We must cache this because _getMostRecentBrowserWindow will always
+    // return null by the time quit-application occurs.
     var activeWindow = this._getMostRecentBrowserWindow();
     if (activeWindow)
       this.activeWindowSSiCache = activeWindow.__SSi || "";
     DirtyWindows.clear();
-  },
+  }),
 
   /**
    * On last browser window close
