@@ -1653,7 +1653,7 @@ MatchNumericComparator(JSContext* cx, const Value& v)
         return Match_None;
 
     JSFunction* fun = &obj.as<JSFunction>();
-    if (!fun->isInterpreted())
+    if (!fun->isInterpreted() || fun->isClassConstructor())
         return Match_None;
 
     JSScript* script = fun->getOrCreateScript(cx);
