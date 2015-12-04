@@ -14,7 +14,7 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const {PageThumbsExpiration} = tmp;
 
-function runTests() {
+function* runTests() {
   // Create dummy URLs.
   let dummyURLs = [];
   for (let i = 0; i < EXPIRATION_MIN_CHUNK_SIZE + 10; i++) {
@@ -58,12 +58,12 @@ function runTests() {
 
   // Expire thumbnails and expect 10 remaining.
   yield expireThumbnails([]);
-  let remainingURLs = [u for (u of dummyURLs) if (thumbnailExists(u))];
+  let remainingURLs = dummyURLs.filter(thumbnailExists);
   is(remainingURLs.length, 10, "10 dummy thumbnails remaining");
 
   // Expire thumbnails again. All should be gone by now.
   yield expireThumbnails([]);
-  remainingURLs = [u for (u of remainingURLs) if (thumbnailExists(u))];
+  remainingURLs = remainingURLs.filter(thumbnailExists);
   is(remainingURLs.length, 0, "no dummy thumbnails remaining");
 }
 

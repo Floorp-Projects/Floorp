@@ -9,7 +9,7 @@ var gManagerWindow;
 var gCategoryUtilities;
 var gProvider;
 
-add_task(function test() {
+add_task(function* test() {
   gProvider = new MockProvider();
 
   gProvider.createAddons([{

@@ -8,12 +8,12 @@ function run_test() {
 
 var tests = [
 
-  function get_nonexistent() {
+  function* get_nonexistent() {
     yield getOK(["a.com", "foo"], undefined);
     yield getGlobalOK(["foo"], undefined);
   },
 
-  function isomorphicDomains() {
+  function* isomorphicDomains() {
     yield set("a.com", "foo", 1);
     yield dbOK([
       ["a.com", "foo", 1],
@@ -29,7 +29,7 @@ var tests = [
     yield getOK(["http://a.com/yeah", "foo"], 2, "a.com");
   },
 
-  function names() {
+  function* names() {
     yield set("a.com", "foo", 1);
     yield dbOK([
       ["a.com", "foo", 1],
@@ -67,7 +67,7 @@ var tests = [
     yield getGlobalOK(["bar"], 4);
   },
 
-  function subdomains() {
+  function* subdomains() {
     yield set("a.com", "foo", 1);
     yield set("b.a.com", "foo", 2);
     yield dbOK([
@@ -78,7 +78,7 @@ var tests = [
     yield getOK(["b.a.com", "foo"], 2);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -108,7 +108,7 @@ var tests = [
     yield getOK(["b.com", "foo"], 5);
   },
 
-  function set_erroneous() {
+  function* set_erroneous() {
     do_check_throws(() => cps.set(null, "foo", 1, null));
     do_check_throws(() => cps.set("", "foo", 1, null));
     do_check_throws(() => cps.set("a.com", "", 1, null));
@@ -122,7 +122,7 @@ var tests = [
     yield true;
   },
 
-  function get_erroneous() {
+  function* get_erroneous() {
     do_check_throws(() => cps.getByDomainAndName(null, "foo", null, {}));
     do_check_throws(() => cps.getByDomainAndName("", "foo", null, {}));
     do_check_throws(() => cps.getByDomainAndName("a.com", "", null, {}));
@@ -134,7 +134,7 @@ var tests = [
     yield true;
   },
 
-  function set_invalidateCache() {
+  function* set_invalidateCache() {
     // (1) Set a pref and wait for it to finish.
     yield set("a.com", "foo", 1);
 
@@ -169,7 +169,7 @@ var tests = [
     yield;
   },
 
-  function get_nameOnly() {
+  function* get_nameOnly() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield set("b.com", "foo", 3);
@@ -191,7 +191,7 @@ var tests = [
     ]);
   },
 
-  function setSetsCurrentDate() {
+  function* setSetsCurrentDate() {
     // Because Date.now() is not guaranteed to be monotonically increasing
     // we just do here rough sanity check with one minute tolerance.
     const MINUTE = 60 * 1000;

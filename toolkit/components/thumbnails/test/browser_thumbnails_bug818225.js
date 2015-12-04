@@ -5,7 +5,7 @@ const URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/" +
             "test/background_red.html?" + Date.now();
 
 // Test PageThumbs API function getThumbnailPath
-function runTests() {
+function* runTests() {
 
   let path = PageThumbs.getThumbnailPath(URL);
   yield testIfExists(path, false, "Thumbnail file does not exist");

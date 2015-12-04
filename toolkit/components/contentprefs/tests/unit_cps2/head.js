@@ -62,7 +62,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
   });
 
   tests.forEach(function (test) {
-    function gen() {
+    function* gen() {
       do_print("Running " + test.name);
       yield test();
       yield reset();
@@ -196,7 +196,7 @@ function prefOK(actual, expected, strict) {
     equal(actual.value, expected.value);
 }
 
-function getOK(args, expectedVal, expectedGroup, strict) {
+function* getOK(args, expectedVal, expectedGroup, strict) {
   if (args.length == 2)
     args.push(undefined);
   let expectedPrefs = expectedVal === undefined ? [] :
@@ -206,7 +206,7 @@ function getOK(args, expectedVal, expectedGroup, strict) {
   yield getOKEx("getByDomainAndName", args, expectedPrefs, strict);
 }
 
-function getSubdomainsOK(args, expectedGroupValPairs) {
+function* getSubdomainsOK(args, expectedGroupValPairs) {
   if (args.length == 2)
     args.push(undefined);
   let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
@@ -215,7 +215,7 @@ function getSubdomainsOK(args, expectedGroupValPairs) {
   yield getOKEx("getBySubdomainAndName", args, expectedPrefs);
 }
 
-function getGlobalOK(args, expectedVal) {
+function* getGlobalOK(args, expectedVal) {
   if (args.length == 1)
     args.push(undefined);
   let expectedPrefs = expectedVal === undefined ? [] :
@@ -223,7 +223,7 @@ function getGlobalOK(args, expectedVal) {
   yield getOKEx("getGlobal", args, expectedPrefs);
 }
 
-function getOKEx(methodName, args, expectedPrefs, strict, context) {
+function* getOKEx(methodName, args, expectedPrefs, strict, context) {
   let actualPrefs = [];
   args.push(makeCallback({
     handleResult: pref => actualPrefs.push(pref)

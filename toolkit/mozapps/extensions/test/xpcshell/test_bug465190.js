@@ -5,7 +5,7 @@
 
 var installLocation = gProfD.clone();
 installLocation.append("baddir");
-installLocation.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
+installLocation.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o664);
 
 var dirProvider2 = {
   getFile: function(prop, persistent) {

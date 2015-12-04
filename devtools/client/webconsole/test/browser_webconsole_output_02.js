@@ -158,7 +158,7 @@ var inputTests = [
   {
     input: "window.weakset",
     // Need a regexp because the order may vary.
-    output: new RegExp("WeakSet \\[ (String\\[7\\], <head>|<head>, String\\[7\\]) \\]"),
+    output: new RegExp("WeakSet \\[ (String, <head>|<head>, String) \\]"),
     printOutput: "[object WeakSet]",
     inspectable: true,
     variablesViewLabel: "WeakSet[2]",
@@ -168,7 +168,7 @@ var inputTests = [
   {
     input: "window.weakmap",
     // Need a regexp because the order may vary.
-    output: new RegExp("WeakMap { (String\\[7\\]: 23, HTMLCollection\\[2\\]: Object|HTMLCollection\\[2\\]: Object, String\\[7\\]: 23) }"),
+    output: new RegExp("WeakMap { (String: 23, HTMLCollection\\[2\\]: Object|HTMLCollection\\[2\\]: Object, String: 23) }"),
     printOutput: "[object WeakMap]",
     inspectable: true,
     variablesViewLabel: "WeakMap[2]",

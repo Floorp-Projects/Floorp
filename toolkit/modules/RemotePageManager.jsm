@@ -465,7 +465,7 @@ var RemotePageManagerInternal = {
 
   // A listener is requesting the list of currently registered urls
   initListener: function({ target: messageManager }) {
-    messageManager.sendAsyncMessage("RemotePage:Register", { urls: [u for (u of this.pages.keys())] })
+    messageManager.sendAsyncMessage("RemotePage:Register", { urls: Array.from(this.pages.keys()) })
   },
 
   // A remote page has been created and a port is ready in the content side

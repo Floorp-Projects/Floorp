@@ -57,7 +57,7 @@ add_task(function* test_constructor() {
   Assert.ok(s instanceof CrashStore);
 });
 
-add_task(function test_add_crash() {
+add_task(function* test_add_crash() {
   let s = yield getStore();
 
   Assert.equal(s.crashesCount, 0);
@@ -79,7 +79,7 @@ add_task(function test_add_crash() {
   Assert.equal(s.crashesCount, 2);
 });
 
-add_task(function test_reset() {
+add_task(function* test_reset() {
   let s = yield getStore();
 
   Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "id1", DUMMY_DATE));
@@ -88,7 +88,7 @@ add_task(function test_reset() {
   Assert.equal(s.crashes.length, 0);
 });
 
-add_task(function test_save_load() {
+add_task(function* test_save_load() {
   let s = yield getStore();
 
   yield s.save();
@@ -120,7 +120,7 @@ add_task(function test_save_load() {
   Assert.equal(submission.result, SUBMISSION_RESULT_OK);
 });
 
-add_task(function test_corrupt_json() {
+add_task(function* test_corrupt_json() {
   let s = yield getStore();
 
   let buffer = new TextEncoder().encode("{bad: json-file");

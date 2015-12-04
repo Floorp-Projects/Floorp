@@ -3377,6 +3377,54 @@ Widgets.ObjectRenderers.add({
   }
 }); // Widgets.ObjectRenderers.byClass.Promise
 
+/*
+ * A renderer used for wrapped primitive objects.
+ */
+
+function WrappedPrimitiveRenderer() {
+  let { ownProperties, safeGetterValues } = this.objectActor.preview || {};
+  if ((!ownProperties && !safeGetterValues) || this.options.concise) {
+    this._renderConciseObject();
+    return;
+  }
+
+  this._renderObjectPrefix();
+
+  let elem =
+      this.message._renderValueGrip(this.objectActor.preview.wrappedValue);
+  this.element.appendChild(elem);
+
+  this._renderObjectProperties(this.element, true);
+  this._renderObjectSuffix();
+}
+
+/**
+ * The widget used for displaying Boolean previews.
+ */
+Widgets.ObjectRenderers.add({
+  byClass: "Boolean",
+
+  render: WrappedPrimitiveRenderer,
+});
+
+/**
+ * The widget used for displaying Number previews.
+ */
+Widgets.ObjectRenderers.add({
+  byClass: "Number",
+
+  render: WrappedPrimitiveRenderer,
+});
+
+/**
+ * The widget used for displaying String previews.
+ */
+Widgets.ObjectRenderers.add({
+  byClass: "String",
+
+  render: WrappedPrimitiveRenderer,
+});
+
 /**
  * The widget used for displaying generic JS object previews.
  */

@@ -532,7 +532,7 @@ function promiseNewList(aIsPrivate)
  */
 function promiseVerifyContents(aPath, aExpectedContents)
 {
-  return Task.spawn(function() {
+  return Task.spawn(function* () {
     let file = new FileUtils.File(aPath);
 
     if (!(yield OS.File.exists(aPath))) {

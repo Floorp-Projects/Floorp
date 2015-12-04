@@ -172,7 +172,7 @@ this.Downloads = {
   getList: function (aType)
   {
     if (!this._promiseListsInitialized) {
-      this._promiseListsInitialized = Task.spawn(function () {
+      this._promiseListsInitialized = Task.spawn(function* () {
         let publicList = new DownloadList();
         let privateList = new DownloadList();
         let combinedList = new DownloadCombinedList(publicList, privateList);
