@@ -32,6 +32,45 @@ protected:
   RefPtr<TextureClient> mTextureClient;
 };
 
+class DefaultTextureClientAllocationHelper : public ITextureClientAllocationHelper
+{
+public:
+  DefaultTextureClientAllocationHelper(TextureClientRecycleAllocator* aAllocator,
+                                       gfx::SurfaceFormat aFormat,
+                                       gfx::IntSize aSize,
+                                       BackendSelector aSelector,
+                                       TextureFlags aTextureFlags,
+                                       TextureAllocationFlags aAllocationFlags)
+    : ITextureClientAllocationHelper(aFormat,
+                                     aSize,
+                                     aSelector,
+                                     aTextureFlags,
+                                     aAllocationFlags)
+    , mAllocator(aAllocator)
+  {}
+
+  bool IsCompatible(TextureClient* aTextureClient) override
+  {
+    if (aTextureClient->GetFormat() != mFormat ||
+        aTextureClient->GetSize() != mSize) {
+      return false;
+    }
+    return true;
+  }
+
+  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override
+  {
+    return mAllocator->Allocate(mFormat,
+                                mSize,
+                                mSelector,
+                                mTextureFlags,
+                                mAllocationFlags);
+  }
+
+protected:
+  TextureClientRecycleAllocator* mAllocator;
+};
+
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForwarder* aAllocator)
   : mSurfaceAllocator(aAllocator)
   , mMaxPooledSize(kMaxPooledSized)
@@ -79,13 +118,25 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
                                                TextureFlags aTextureFlags,
                                                TextureAllocationFlags aAllocFlags)
 {
+  MOZ_ASSERT(!(aTextureFlags & TextureFlags::RECYCLE));
+  DefaultTextureClientAllocationHelper helper(this,
+                                              aFormat,
+                                              aSize,
+                                              aSelector,
+                                              aTextureFlags,
+                                              aAllocFlags);
+  return CreateOrRecycle(helper);
+}
+
+already_AddRefed<TextureClient>
+TextureClientRecycleAllocator::CreateOrRecycle(ITextureClientAllocationHelper& aHelper)
+{
   // TextureAllocationFlags is actually used only by ContentClient.
   // This class does not handle ContentClient's TextureClient allocation.
-  MOZ_ASSERT(aAllocFlags == TextureAllocationFlags::ALLOC_DEFAULT ||
-             aAllocFlags == TextureAllocationFlags::ALLOC_DISALLOW_BUFFERTEXTURECLIENT ||
-             aAllocFlags == TextureAllocationFlags::ALLOC_FOR_OUT_OF_BAND_CONTENT);
-  MOZ_ASSERT(!(aTextureFlags & TextureFlags::RECYCLE));
-  aTextureFlags = aTextureFlags | TextureFlags::RECYCLE; // Set recycle flag
+  MOZ_ASSERT(aHelper.mAllocationFlags == TextureAllocationFlags::ALLOC_DEFAULT ||
+             aHelper.mAllocationFlags == TextureAllocationFlags::ALLOC_DISALLOW_BUFFERTEXTURECLIENT ||
+             aHelper.mAllocationFlags == TextureAllocationFlags::ALLOC_FOR_OUT_OF_BAND_CONTENT);
+  MOZ_ASSERT(aHelper.mTextureFlags & TextureFlags::RECYCLE);
 
   RefPtr<TextureClientHolder> textureHolder;
 
@@ -96,14 +147,13 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
       mPooledClients.pop();
       Task* task = nullptr;
       // If a pooled TextureClient is not compatible, release it.
-      if (textureHolder->GetTextureClient()->GetFormat() != aFormat ||
-          textureHolder->GetTextureClient()->GetSize() != aSize) {
+      if (!aHelper.IsCompatible(textureHolder->GetTextureClient())) {
         // Release TextureClient.
         task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
       } else {
-        task = new TextureClientRecycleTask(textureHolder->GetTextureClient(), aTextureFlags);
+        task = new TextureClientRecycleTask(textureHolder->GetTextureClient(), aHelper.mTextureFlags);
       }
       mSurfaceAllocator->GetMessageLoop()->PostTask(FROM_HERE, task);
     }
@@ -111,7 +161,7 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
 
   if (!textureHolder) {
     // Allocate new TextureClient
-    RefPtr<TextureClient> texture = Allocate(aFormat, aSize, aSelector, aTextureFlags, aAllocFlags);
+    RefPtr<TextureClient> texture = aHelper.Allocate(mSurfaceAllocator);
     if (!texture) {
       return nullptr;
     }
