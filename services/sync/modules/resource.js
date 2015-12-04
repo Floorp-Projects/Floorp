@@ -13,7 +13,6 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
@@ -149,9 +148,16 @@ AsyncResource.prototype = {
   // to obtain a request channel.
   //
   _createRequest: function Res__createRequest(method) {
-    let channel = NetUtil.newChannel({uri: this.spec, loadUsingSystemPrincipal: true})
-                         .QueryInterface(Ci.nsIRequest)
-                         .QueryInterface(Ci.nsIHttpChannel);
+    let channel = Services.io.newChannel2(this.spec,
+                                          null,
+                                          null,
+                                          null,      // aLoadingNode
+                                          Services.scriptSecurityManager.getSystemPrincipal(),
+                                          null,      // aTriggeringPrincipal
+                                          Ci.nsILoadInfo.SEC_NORMAL,
+                                          Ci.nsIContentPolicy.TYPE_OTHER)
+                          .QueryInterface(Ci.nsIRequest)
+                          .QueryInterface(Ci.nsIHttpChannel);
 
     channel.loadFlags |= DEFAULT_LOAD_FLAGS;
 
@@ -224,9 +230,9 @@ AsyncResource.prototype = {
                                        this._log, this.ABORT_TIMEOUT);
     channel.requestMethod = action;
     try {
-      channel.asyncOpen2(listener);
+      channel.asyncOpen(listener, null);
     } catch (ex) {
-      // asyncOpen2 can throw in a bunch of cases -- e.g., a forbidden port.
+      // asyncOpen can throw in a bunch of cases -- e.g., a forbidden port.
       this._log.warn("Caught an error in asyncOpen: " + CommonUtils.exceptionStr(ex));
       CommonUtils.nextTick(callback.bind(this, ex));
     }
