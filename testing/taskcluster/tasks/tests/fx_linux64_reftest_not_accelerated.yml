@@ -4,14 +4,14 @@ $inherits:
 task:
   metadata:
     name: '[TC] Linux64 reftest {{chunk}}'
-    description: Reftest run {{chunk}}
+    description: Reftest not accelerated run {{chunk}}
   extra:
     chunks:
-      total: 4
+      total: 2
     suite:
       name: reftest
-      flavor: reftest
+      flavor: reftest-no-accel
     treeherder:
-      groupName: Desktop reftest
+      groupName: Desktop reftest not accelerated
       groupSymbol: tc-R
-      symbol: R{{chunk}}
+      symbol: Ru{{chunk}}

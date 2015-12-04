@@ -1,0 +1,18 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_unittest.yml'
+task:
+  payload:
+    command:
+      - --e10s
+  metadata:
+    name: '[TC] Linux64 crashtest e10s'
+    description: Crashtest e10s run
+  extra:
+    suite:
+      name: reftest
+      flavor: crashtest
+    treeherder:
+      groupName: Desktop crashtest e10s
+      groupSymbol: tc-R-e10s
+      symbol: C

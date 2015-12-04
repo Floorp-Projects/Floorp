@@ -2,12 +2,15 @@
 $inherits:
   from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
+  payload:
+    command:
+      - --e10s
   scopes:
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   metadata:
-    name: '[TC] Linux64 mochitest-browser-chrome M(bc{{chunk}})'
-    description: Mochitest browser-chrome run {{chunk}}
+    name: '[TC] Linux64 mochitest-browser-chrome e10s M(bc{{chunk}})'
+    description: Mochitest browser-chrome e10s run {{chunk}}
   payload:
     capabilities:
       devices:
@@ -21,6 +24,6 @@ task:
       flavor: browser-chrome-chunked
     treeherder:
       groupName: Desktop mochitests
-      groupSymbol: tc-M
+      groupSymbol: tc-M-e10s
       symbol: bc{{chunk}}
 
