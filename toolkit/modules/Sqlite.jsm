@@ -769,13 +769,15 @@ ConnectionData.prototype = Object.freeze({
 
           try {
             onRow(row);
-          } catch (e if e instanceof StopIteration) {
-            userCancelled = true;
-            pending.cancel();
-            break;
-          } catch (ex) {
+          } catch (e) {
+            if (e instanceof StopIteration) {
+              userCancelled = true;
+              pending.cancel();
+              break;
+            }
+
             self._log.warn("Exception when calling onRow callback: " +
-                           CommonUtils.exceptionStr(ex));
+                           CommonUtils.exceptionStr(e));
           }
         }
       },
@@ -811,7 +813,7 @@ ConnectionData.prototype = Object.freeze({
             break;
 
           case Ci.mozIStorageStatementCallback.REASON_ERROR:
-            let error = new Error("Error(s) encountered during statement execution: " + [error.message for (error of errors)].join(", "));
+            let error = new Error("Error(s) encountered during statement execution: " + errors.map(e => e.message).join(", "));
             error.errors = errors;
             deferred.reject(error);
             break;

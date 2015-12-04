@@ -1,7 +1,6 @@
-# -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -21,6 +20,7 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
@@ -257,18 +257,18 @@ function openDownload(aDownload)
       dontAsk = !pref.getBoolPref(PREF_BDM_ALERTONEXEOPEN);
     } catch (e) { }
 
-#ifdef XP_WIN
-    // On Vista and above, we rely on native security prompting for
-    // downloaded content unless it's disabled.
-    try {
-      var sysInfo = Cc["@mozilla.org/system-info;1"].
-                    getService(Ci.nsIPropertyBag2);
-      if (parseFloat(sysInfo.getProperty("version")) >= 6 &&
-          pref.getBoolPref(PREF_BDM_SCANWHENDONE)) {
-        dontAsk = true;
-      }
-    } catch (ex) { }
-#endif
+    if (AppConstants.platform == "win") {
+      // On Vista and above, we rely on native security prompting for
+      // downloaded content unless it's disabled.
+      try {
+        var sysInfo = Cc["@mozilla.org/system-info;1"].
+                      getService(Ci.nsIPropertyBag2);
+        if (parseFloat(sysInfo.getProperty("version")) >= 6 &&
+            pref.getBoolPref(PREF_BDM_SCANWHENDONE)) {
+          dontAsk = true;
+        }
+      } catch (ex) { }
+    }
 
     if (!dontAsk) {
       var strings = document.getElementById("downloadStrings");
@@ -486,11 +486,10 @@ var gDownloadObserver = {
         removeFromView(dl);
         break;
       case "browser-lastwindow-close-granted":
-#ifndef XP_MACOSX
-        if (gDownloadManager.activeDownloadCount == 0) {
+        if (AppConstants.platform != "macosx" &&
+            gDownloadManager.activeDownloadCount == 0) {
           setTimeout(gCloseDownloadManager, 0);
         }
-#endif
         break;
     }
   }

@@ -24,7 +24,7 @@ function check_event(event, id, data)
   }
 }
 
-function run_test()
+function* run_test()
 {
   yield TelemetrySession.setup();
 
