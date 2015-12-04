@@ -2,22 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NS_KEYMODULE_H_
-#define _NS_KEYMODULE_H_
+#ifndef nsKeyModule_h
+#define nsKeyModule_h
 
-#include "mozilla/Attributes.h"
+#include "ScopedNSSTypes.h"
 #include "nsIKeyModule.h"
 #include "nsNSSShutDown.h"
 #include "pk11pub.h"
 
-/* eae599aa-ecef-49c6-a8af-6ddcc6feb484 */
 #define NS_KEYMODULEOBJECT_CID   \
-{ 0xeae599aa, 0xecef, 0x49c6, {0xa8, 0xaf, 0x6d, 0xdc, 0xc6, 0xfe, 0xb4, 0x84} }
+{ 0x9d383ddd, 0x6856, 0x4187, {0x84, 0x85, 0xf3, 0x61, 0x95, 0xb2, 0x9a, 0x0e} }
 #define NS_KEYMODULEOBJECT_CONTRACTID "@mozilla.org/security/keyobject;1"
 
-/* a39e0e9d-e567-41e3-b12c-5df67f18174d */
 #define NS_KEYMODULEOBJECTFACTORY_CID   \
-{ 0xa39e0e9d, 0xe567, 0x41e3, {0xb1, 0x2c, 0x5d, 0xf6, 0x7f, 0x18, 0x17, 0x4d} }
+{ 0x2a35dd47, 0xb026, 0x4e8d, {0xb6, 0xb7, 0x57, 0x40, 0xf6, 0x1a, 0xb9, 0x02} }
 #define NS_KEYMODULEOBJECTFACTORY_CONTRACTID \
 "@mozilla.org/security/keyobjectfactory;1"
 
@@ -32,18 +30,11 @@ public:
 
 private:
   ~nsKeyObject();
-  
+
   // Disallow copy constructor
   nsKeyObject(nsKeyObject&);
 
-  // 0 if not yet set, otherwise one of the nsIKeyObject::*KEY values
-  uint32_t mKeyType;
-  
-  // A union of our possible key types
-  PK11SymKey* mSymKey;
-  SECKEYPrivateKey* mPrivateKey;
-  SECKEYPublicKey* mPublicKey;
-
+  ScopedPK11SymKey mSymKey;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
@@ -69,4 +60,4 @@ private:
   virtual void virtualDestroyNSSReference() override {}
 };
 
-#endif // _NS_KEYMODULE_H_
+#endif // nsKeyModule_h
