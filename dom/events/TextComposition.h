@@ -415,6 +415,7 @@ public:
   index_type IndexOf(nsPresContext* aPresContext);
   index_type IndexOf(nsPresContext* aPresContext, nsINode* aNode);
 
+  TextComposition* GetCompositionFor(nsPresContext* aPresContext);
   TextComposition* GetCompositionFor(nsPresContext* aPresContext,
                                      nsINode* aNode);
   TextComposition* GetCompositionInContent(nsPresContext* aPresContext,
