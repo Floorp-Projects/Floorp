@@ -147,7 +147,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             'balrog_credentials_file': 'oauth.txt',
             'build_resources_path': '%(abs_obj_dir)s/.mozbuild/build_resources.json',
             'virtualenv_modules': [
-                'requests==2.2.1',
+                'requests==2.8.1',
             ],
             'virtualenv_path': 'venv',
         }
