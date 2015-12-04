@@ -10,6 +10,10 @@ removeEventListener (and does the same for on/off).
 ``components-imports`` adds the filename of imported files e.g.
 ``Cu.import("some/path/Blah.jsm")`` adds Blah to the global scope.
 
+``import-globals-from`` When the "import-globals-from <path>" comment is found
+in a file, then all globals from the file at <path> will be imported in the
+current scope.
+
 ``import-headjs-globals`` imports globals from head.js and from any files that
 should be imported by head.js (as far as we can correctly resolve the path).
 
@@ -47,6 +51,7 @@ Example configuration::
    "rules": {
      "mozilla/balanced-listeners": 2,
      "mozilla/components-imports": 1,
+     "mozilla/import-globals-from": 1,
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
      "mozilla/var-only-at-top-level": 1,
@@ -58,6 +63,7 @@ Example configuration::
 
    balanced-listeners
    components-imports
+   import-globals-from
    import-headjs-globals
    mark-test-function-used
    no-aArgs
