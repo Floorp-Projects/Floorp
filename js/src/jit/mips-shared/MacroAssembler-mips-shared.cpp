@@ -1212,9 +1212,9 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 {
     CodeLabel cl;
 
-    ma_li(scratch, cl.dest());
+    ma_li(scratch, cl.patchAt());
     Push(scratch);
-    bind(cl.src());
+    bind(cl.target());
     uint32_t retAddr = currentOffset();
 
     addCodeLabel(cl);

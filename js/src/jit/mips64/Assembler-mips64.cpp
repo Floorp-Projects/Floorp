@@ -234,18 +234,13 @@ Assembler::trace(JSTracer* trc)
 }
 
 void
-Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
+Assembler::Bind(uint8_t* rawCode, CodeOffset* label, const void* address)
 {
-    if (label->used()) {
-        int64_t src = label->offset();
-        do {
-            Instruction* inst = (Instruction*) (rawCode + src);
-            uint64_t next = Assembler::ExtractLoad64Value(inst);
-            Assembler::UpdateLoad64Value(inst, (uint64_t)address);
-            src = next;
-        } while (src != AbsoluteLabel::INVALID_OFFSET);
+    if (label->bound()) {
+        intptr_t offset = label->offset();
+        Instruction* inst = (Instruction*) (rawCode + offset);
+        Assembler::UpdateLoad64Value(inst, (uint64_t)address);
     }
-    label->bind();
 }
 
 void
