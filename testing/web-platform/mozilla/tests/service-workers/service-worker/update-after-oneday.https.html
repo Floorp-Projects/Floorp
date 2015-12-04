@@ -40,6 +40,7 @@ promise_test(function(t) {
           return wait_for_update(t, registration);
        })
        .then(function() {
+          frame.remove();
           return service_worker_unregister_and_done(t, scope);
        })
   }, 'Update should be triggered after a functional event when last update time is over 24 hours');
