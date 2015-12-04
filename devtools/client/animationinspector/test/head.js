@@ -324,98 +324,6 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
   return promise.resolve();
 }
 
-function onceNextPlayerRefresh(player) {
-  let onRefresh = promise.defer();
-  player.once(player.AUTO_REFRESH_EVENT, onRefresh.resolve);
-  return onRefresh.promise;
-}
-
-/**
- * Simulate a click on the playPause button of a playerWidget.
- */
-var togglePlayPauseButton = Task.async(function*(widget) {
-  let nextState = widget.player.state.playState === "running"
-                  ? "paused"
-                  : "running";
-
-  // Note that instead of simulating a real event here, the callback is just
-  // called. This is better because the callback returns a promise, so we know
-  // when the player is paused, and we don't really care to test that simulating
-  // a DOM event actually works.
-  let onClicked = widget.onPlayPauseBtnClick();
-
-  // Verify that the button's state is changed immediately, even if it will be
-  // changed anyway with the next auto-refresh.
-  ok(widget.el.classList.contains(nextState),
-    "The button's state was changed in the UI before the request was sent");
-
-  yield onClicked;
-
-  // Wait until the state changes.
-  yield waitForPlayState(widget.player, nextState);
-});
-
-/**
- * Wait for a player's auto-refresh events and stop when a condition becomes
- * truthy.
- * @param {AnimationPlayerFront} player
- * @param {Function} conditionCheck Will be called over and over again when the
- * player state changes, passing the state as argument. This method must return
- * a truthy value to stop waiting.
- * @param {String} desc If provided, this will be logged with info(...) every
- * time the state is refreshed, until the condition passes.
- * @return {Promise} Resolves when the condition passes.
- */
-var waitForStateCondition = Task.async(function*(player, conditionCheck, desc="") {
-  if (desc) {
-    desc = "(" + desc + ")";
-  }
-  info("Waiting for a player's auto-refresh event " + desc);
-  let def = promise.defer();
-  player.on(player.AUTO_REFRESH_EVENT, function onNewState() {
-    info("State refreshed, checking condition ... " + desc);
-    if (conditionCheck(player.state)) {
-      player.off(player.AUTO_REFRESH_EVENT, onNewState);
-      def.resolve();
-    }
-  });
-  return def.promise;
-});
-
-/**
- * Wait for a player's auto-refresh events and stop when the playState is the
- * provided string.
- * @param {AnimationPlayerFront} player
- * @param {String} playState The playState to expect.
- * @return {Promise} Resolves when the playState has changed to the expected
- * value.
- */
-function waitForPlayState(player, playState) {
-  return waitForStateCondition(player, state => {
-    return state.playState === playState;
-  }, "Waiting for animation to be " + playState);
-}
-
-/**
- * Wait for the player's auto-refresh events until the animation is paused.
- * When done, check its currentTime.
- * @param {PlayerWidget} widget.
- * @param {Numer} time.
- * @return {Promise} Resolves when the animation is paused and tests have ran.
- */
-var checkPausedAt = Task.async(function*(widget, time) {
-  info("Wait for the next auto-refresh");
-
-  yield waitForStateCondition(widget.player, state => {
-    return state.playState === "paused" && state.currentTime === time;
-  }, "Waiting for animation to pause at " + time + "ms");
-
-  ok(widget.el.classList.contains("paused"), "The widget is in paused mode");
-  is(widget.player.state.currentTime, time,
-    "The player front's currentTime was set to " + time);
-  is(widget.currentTimeEl.value, time, "The input's value was set to " + time);
-});
-
 /**
  * Get the current playState of an animation player on a given node.
  */
@@ -555,4 +463,62 @@ function disableHighlighter(toolbox) {
     destroy: () => {},
     traits: {}
   };
+}
+
+/**
+ * Click on an animation in the timeline to select/unselect it.
+ * @param {AnimationsPanel} panel The panel instance.
+ * @param {Number} index The index of the animation to click on.
+ * @param {Boolean} shouldClose Set to true if clicking should close the
+ * animation.
+ * @return {Promise} resolves to the animation whose state has changed.
+ */
+function* clickOnAnimation(panel, index, shouldClose) {
+  let timeline = panel.animationsTimelineComponent;
+
+  // Expect a selection event.
+  let onSelectionChanged = timeline.once(shouldClose
+                                         ? "animation-unselected"
+                                         : "animation-selected");
+
+  // If we're opening the animation, also wait for the keyframes-retrieved
+  // event.
+  let onReady = shouldClose
+                ? Promise.resolve()
+                : timeline.details[index].once("keyframes-retrieved");
+
+  info("Click on animation " + index + " in the timeline");
+  let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
+  EventUtils.sendMouseEvent({type: "click"}, timeBlock,
+                            timeBlock.ownerDocument.defaultView);
+
+  yield onReady;
+  return yield onSelectionChanged;
+}
+
+/**
+ * Get an instance of the Keyframes component from the timeline.
+ * @param {AnimationsPanel} panel The panel instance.
+ * @param {Number} animationIndex The index of the animation in the timeline.
+ * @param {String} propertyName The name of the animated property.
+ * @return {Keyframes} The Keyframes component instance.
+ */
+function getKeyframeComponent(panel, animationIndex, propertyName) {
+  let timeline = panel.animationsTimelineComponent;
+  let detailsComponent = timeline.details[animationIndex];
+  return detailsComponent.keyframeComponents
+                         .find(c => c.propertyName === propertyName);
+}
+
+/**
+ * Get a keyframe element from the timeline.
+ * @param {AnimationsPanel} panel The panel instance.
+ * @param {Number} animationIndex The index of the animation in the timeline.
+ * @param {String} propertyName The name of the animated property.
+ * @param {Index} keyframeIndex The index of the keyframe.
+ * @return {DOMNode} The keyframe element.
+ */
+function getKeyframeEl(panel, animationIndex, propertyName, keyframeIndex) {
+  let keyframeComponent = getKeyframeComponent(panel, animationIndex, propertyName);
+  return keyframeComponent.keyframesEl.querySelectorAll(".frame")[keyframeIndex];
 }
