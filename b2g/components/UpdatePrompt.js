@@ -13,6 +13,7 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebappsUpdater.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const VERBOSE = 1;
 var log =
@@ -399,30 +400,30 @@ UpdatePrompt.prototype = {
       return;
     }
 
-#ifdef MOZ_B2G_RIL
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    let pinReq = window.navigator.mozIccManager.getCardLock("pin");
-    pinReq.onsuccess = function(e) {
-      if (e.target.result.enabled) {
-        // The SIM is pin locked. Don't use a fallback timer. This means that
-        // the user has to press Install to apply the update. If we use the
-        // timer, and the timer reboots the phone, then the phone will be
-        // unusable until the SIM is unlocked.
-        log("SIM is pin locked. Not starting fallback timer.");
-      } else {
-        // This means that no pin lock is enabled, so we go ahead and start
-        // the fallback timer.
+    if (AppConstants.MOZ_B2G_RIL) {
+      let window = Services.wm.getMostRecentWindow("navigator:browser");
+      let pinReq = window.navigator.mozIccManager.getCardLock("pin");
+      pinReq.onsuccess = function(e) {
+        if (e.target.result.enabled) {
+          // The SIM is pin locked. Don't use a fallback timer. This means that
+          // the user has to press Install to apply the update. If we use the
+          // timer, and the timer reboots the phone, then the phone will be
+          // unusable until the SIM is unlocked.
+          log("SIM is pin locked. Not starting fallback timer.");
+        } else {
+          // This means that no pin lock is enabled, so we go ahead and start
+          // the fallback timer.
+          this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
+        }
+      }.bind(this);
+      pinReq.onerror = function(e) {
         this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
-      }
-    }.bind(this);
-    pinReq.onerror = function(e) {
+      }.bind(this);
+    } else {
+      // Schedule a fallback timeout in case the UI is unable to respond or show
+      // a prompt for some reason.
       this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
-    }.bind(this);
-#else
-    // Schedule a fallback timeout in case the UI is unable to respond or show
-    // a prompt for some reason.
-    this._applyPromptTimer = this.createTimer(this.applyPromptTimeout);
-#endif
+    }
   },
 
   _copyProperties: ["appVersion", "buildID", "detailsURL", "displayVersion",
@@ -553,16 +554,16 @@ UpdatePrompt.prototype = {
     log("Update downloaded, restarting to apply it");
 
     let callbackAfterSet = function() {
-#ifndef MOZ_WIDGET_GONK
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                       .getService(Ci.nsIAppStartup);
-      appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
-#else
-      // NB: on Gonk, we rely on the system process manager to restart us.
-      let pmService = Cc["@mozilla.org/power/powermanagerservice;1"]
-                      .getService(Ci.nsIPowerManagerService);
-      pmService.restart();
-#endif
+      if (AppConstants.platform !== "gonk") {
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                         .getService(Ci.nsIAppStartup);
+        appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
+      } else {
+        // NB: on Gonk, we rely on the system process manager to restart us.
+        let pmService = Cc["@mozilla.org/power/powermanagerservice;1"]
+                        .getService(Ci.nsIPowerManagerService);
+        pmService.restart();
+      }
     }
 
     if (useSettings()) {

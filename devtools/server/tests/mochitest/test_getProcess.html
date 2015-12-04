@@ -28,21 +28,15 @@ window.onload = function() {
     "set": [
       // Always log packets when running tests.
       ["devtools.debugger.log", true],
-      ["dom.mozBrowserFramesEnabled", true]
+      // Enabled mozbrowser frame to support remote=true
+      ["dom.mozBrowserFramesEnabled", true],
+      // Allows creating a branch new process when creation the iframe
+      ["dom.ipc.processCount", 10],
     ]
   }, runTests);
 }
 
 function runTests() {
-  // Create a remote iframe with a message manager
-  let iframe = document.createElement("iframe");
-  iframe.mozbrowser = true;
-  iframe.setAttribute("remote", "true");
-  iframe.setAttribute("src", "data:text/html,foo");
-  document.body.appendChild(iframe);
-
-  let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-
   // Instantiate a minimal server
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
@@ -52,13 +46,41 @@ function runTests() {
     DebuggerServer.addBrowserActors();
   }
 
-  function firstClient() {
+  let client, iframe, processCount;
+
+  function connect() {
     // Fake a first connection to the content process
     let transport = DebuggerServer.connectPipe();
-    let client = new DebuggerClient(transport);
-    client.connect(() => {
+    client = new DebuggerClient(transport);
+    client.connect(listProcess);
+  }
+
+  function listProcess() {
+    // Call listProcesses in order to start receiving new process notifications
+    client.addListener("processListChanged", function listener() {
+      client.removeListener("processListChanged", listener);
+      ok(true, "Received processListChanged event");
+      getProcess();
+    });
+    client.mainRoot.listProcesses(response => {
+      processCount = response.processes.length;
+      // Create a remote iframe to spawn a new process
+      createRemoteIframe();
+    });
+  }
+
+  function createRemoteIframe() {
+    iframe = document.createElement("iframe");
+    iframe.mozbrowser = true;
+    iframe.setAttribute("remote", "true");
+    iframe.setAttribute("src", "data:text/html,foo");
+    document.body.appendChild(iframe);
+  }
+
+  function getProcess() {
     client.mainRoot.listProcesses(response => {
       ok(response.processes.length >= 2, "Got at least the parent process and one child");
+      is(response.processes.length, processCount+1 , "Got one additional process on the second call to listProcesses");
 
       // Connect to the first content processe available
       let content = response.processes.filter(p => (!p.parent))[0];
@@ -75,21 +97,21 @@ function runTests() {
           text: "var a = 42; a"
         }, function (response) {
           ok(response.result, 42, "console.eval worked");
-
-          client.close(cleanup);
+          cleanup();
         });
       });
-    });
     });
   }
 
   function cleanup() {
-    DebuggerServer.destroy();
-    iframe.remove();
-    SimpleTest.finish()
+    client.close(function () {
+      DebuggerServer.destroy();
+      iframe.remove();
+      SimpleTest.finish()
+    });
   }
 
-  firstClient();
+  connect();
 }
 
 </script>

@@ -14,6 +14,8 @@ loader.lazyRequireGetter(this, "TargetListComponent",
   "devtools/client/aboutdebugging/components/target-list", true);
 loader.lazyRequireGetter(this, "Services");
 
+loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
+
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
@@ -32,12 +34,16 @@ exports.WorkersComponent = React.createClass({
   },
 
   componentDidMount() {
-    this.props.client.addListener("workerListChanged", this.update);
+    let client = this.props.client;
+    client.addListener("workerListChanged", this.update);
+    client.addListener("processListChanged", this.update);
     this.update();
   },
 
   componentWillUnmount() {
-    this.props.client.removeListener("workerListChanged", this.update);
+    let client = this.props.client;
+    client.removeListener("processListChanged", this.update);
+    client.removeListener("workerListChanged", this.update);
   },
 
   render() {
@@ -45,22 +51,23 @@ exports.WorkersComponent = React.createClass({
     let workers = this.state.workers;
     return React.createElement("div", { className: "inverted-icons" },
       React.createElement(TargetListComponent, {
+        id: "service-workers",
         name: Strings.GetStringFromName("serviceWorkers"),
         targets: workers.service, client }),
       React.createElement(TargetListComponent, {
+        id: "shared-workers",
         name: Strings.GetStringFromName("sharedWorkers"),
         targets: workers.shared, client }),
       React.createElement(TargetListComponent, {
+        id: "other-workers",
         name: Strings.GetStringFromName("otherWorkers"),
         targets: workers.other, client })
     );
   },
 
   update() {
-    let client = this.props.client;
     let workers = this.getInitialState().workers;
-    client.mainRoot.listWorkers(response => {
-      let forms = response.workers;
+    this.getWorkerForms().then(forms => {
       forms.forEach(form => {
         let worker = {
           name: form.url,
@@ -83,5 +90,29 @@ exports.WorkersComponent = React.createClass({
       });
       this.setState({ workers });
     });
-  }
+  },
+
+  getWorkerForms: Task.async(function*() {
+    let client = this.props.client;
+
+    // List workers from the Parent process
+    let result = yield client.mainRoot.listWorkers();
+    let forms = result.workers;
+
+    // And then from the Child processes
+    let { processes } = yield client.mainRoot.listProcesses();
+    for (let process of processes) {
+      // Ignore parent process
+      if (process.parent) {
+        continue;
+      }
+      let { form } = yield client.getProcess(process.id);
+      let processActor = form.actor;
+      let { workers } = yield client.request({to: processActor,
+                                              type: "listWorkers"});
+      forms = forms.concat(workers);
+    }
+
+    return forms;
+  }),
 });

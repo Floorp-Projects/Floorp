@@ -51,7 +51,11 @@ add_task(function*() {
 
   // Attempt to flush. This should fail.
   let promiseFlushed = TabStateFlusher.flush(browser);
-  promiseFlushed.then(() => {throw new Error("Flush should have failed")});
+  promiseFlushed.then((success) => {
+    if (success) {
+      throw new Error("Flush should have failed")
+    }
+  });
 
   // The frame script should report an error.
   yield promiseReported;

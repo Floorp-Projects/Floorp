@@ -129,6 +129,13 @@ module.exports = {
     variable.eslintExplicitGlobal = false;
     variable.writeable = true;
     variables.push(variable);
+
+    // Since eslint 1.10.3, scope variables are now duplicated in the scope.set
+    // map, so we need to store them there too if it exists.
+    // See https://groups.google.com/forum/#!msg/eslint/Y4_oHMWwP-o/5S57U8jXd8kJ
+    if (scope.set) {
+      scope.set.set(name, variable);
+    }
   },
 
   /**
