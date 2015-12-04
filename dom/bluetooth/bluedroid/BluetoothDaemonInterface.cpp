@@ -14,6 +14,7 @@
 #include "BluetoothDaemonGattInterface.h"
 #include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
+#include "BluetoothDaemonHidInterface.h"
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
 #include "mozilla/Hal.h"
@@ -80,6 +81,7 @@ class BluetoothDaemonProtocol final
   , public BluetoothDaemonA2dpModule
   , public BluetoothDaemonAvrcpModule
   , public BluetoothDaemonGattModule
+  , public BluetoothDaemonHidModule
 {
 public:
   BluetoothDaemonProtocol();
@@ -124,6 +126,9 @@ private:
   void HandleGattSvc(const DaemonSocketPDUHeader& aHeader,
                      DaemonSocketPDU& aPDU,
                      DaemonSocketResultHandler* aRes);
+  void HandleHidSvc(const DaemonSocketPDUHeader& aHeader,
+                    DaemonSocketPDU& aPDU,
+                    DaemonSocketResultHandler* aRes);
 
   DaemonSocket* mConnection;
   nsTArray<RefPtr<DaemonSocketResultHandler>> mResQ;
@@ -216,6 +221,14 @@ BluetoothDaemonProtocol::HandleGattSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleHidSvc(
+  const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
+  DaemonSocketResultHandler* aRes)
+{
+  BluetoothDaemonHidModule::HandleSvc(aHeader, aPDU, aRes);
+}
+
+void
 BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
@@ -227,7 +240,8 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
       &BluetoothDaemonProtocol::HandleCoreSvc,
     [BluetoothDaemonSocketModule::SERVICE_ID] =
       &BluetoothDaemonProtocol::HandleSocketSvc,
-    [0x03] = nullptr, // HID host
+    [BluetoothDaemonHidModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleHidSvc,
     [0x04] = nullptr, // PAN
     [BluetoothDaemonHandsfreeModule::SERVICE_ID] =
       &BluetoothDaemonProtocol::HandleHandsfreeSvc,
@@ -632,6 +646,18 @@ BluetoothDaemonInterface::GetBluetoothGattInterface()
   mGattInterface = new BluetoothDaemonGattInterface(mProtocol);
 
   return mGattInterface;
+}
+
+BluetoothHidInterface*
+BluetoothDaemonInterface::GetBluetoothHidInterface()
+{
+  if (mHidInterface) {
+    return mHidInterface;
+  }
+
+  mHidInterface = new BluetoothDaemonHidInterface(mProtocol);
+
+  return mHidInterface;
 }
 
 // |DaemonSocketConsumer|, |ListenSocketConsumer|
