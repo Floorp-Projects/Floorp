@@ -13,14 +13,7 @@ const { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {}
 
 this.EXPORTED_SYMBOLS = ["init"];
 
-var started = false;
-
 function init(msg) {
-  if (started) {
-    return;
-  }
-  started = true;
-
   // Init a custom, invisible DebuggerServer, in order to not pollute
   // the debugger with all devtools modules, nor break the debugger itself with using it
   // in the same process.
@@ -61,6 +54,5 @@ function init(msg) {
     mm.removeMessageListener("debug:content-process-destroy", onDestroy);
 
     DebuggerServer.destroy();
-    started = false;
   });
 }

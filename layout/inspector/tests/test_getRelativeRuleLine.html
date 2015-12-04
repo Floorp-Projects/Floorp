@@ -34,10 +34,12 @@
     { sheetNo: 1, ruleNo: 0, lineNo: 2, columnNo: 15 },
     { sheetNo: 1, ruleNo: 1, lineNo: 8, columnNo: 5 },
     { sheetNo: 2, ruleNo: 0, lineNo: 1, columnNo: 1 },
+    { sheetNo: 2, ruleNo: 1, lineNo: 0, columnNo: 1 },
     { sheetNo: 3, ruleNo: 0, lineNo: 5, columnNo: 6 },
   ];
 
   function doTest() {
+    document.styleSheets[2].insertRule("body{}", 1);
     for (let test of tests) {
       let sheet = document.styleSheets[test.sheetNo];
       let rule = sheet.cssRules[test.ruleNo];

@@ -1154,6 +1154,11 @@ var StyleRuleActor = protocol.ActorClass({
     // about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
     return !!(this._parentSheet &&
+              // If a rule does not have source, then it has been
+              // modified via CSSOM; and we should fall back to
+              // non-authored editing.
+              // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
+              this.sheetActor.allRulesHaveSource() &&
               this._parentSheet.href !== "about:PreferenceStyleSheet");
   },
 
