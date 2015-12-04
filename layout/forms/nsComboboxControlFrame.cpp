@@ -1557,8 +1557,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplaySelectionOverlay(aBuilder, aLists.Content());
 }
 
-void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget,
-                                        nsPoint aPt)
+void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt)
 {
   /* Do we need to do anything? */
   EventStates eventStates = mContent->AsElement()->State();
