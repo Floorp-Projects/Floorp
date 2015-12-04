@@ -6218,6 +6218,7 @@ void
 nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
                                uint32_t aOffset, uint32_t aLength,
+                               const nscolor* aDecorationOverrideColor,
                                PropertyProvider& aProvider)
 {
   auto info = static_cast<const EmphasisMarkInfo*>(
@@ -6227,8 +6228,8 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     return;
   }
 
-  nscolor color = nsLayoutUtils::
-    GetColor(this, eCSSProperty_text_emphasis_color);
+  nscolor color = aDecorationOverrideColor ? *aDecorationOverrideColor :
+    nsLayoutUtils::GetColor(this, eCSSProperty_text_emphasis_color);
   aContext->SetColor(Color::FromABGR(color));
   gfxPoint pt(aTextBaselinePt);
   if (!aWM.IsVertical()) {
@@ -6747,7 +6748,8 @@ nsTextFrame::DrawTextRunAndDecorations(
                 aAdvanceWidth, aDrawSoftHyphen, aContextPaint, aCallbacks);
 
     // Emphasis marks
-    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength, aProvider);
+    DrawEmphasisMarks(aCtx, wm, aTextBaselinePt, aOffset, aLength,
+                      aDecorationOverrideColor, aProvider);
 
     // Line-throughs
     for (uint32_t i = aDecorations.mStrikes.Length(); i-- > 0; ) {
