@@ -5,7 +5,7 @@
 
 interface NamedNodeMap {
   getter Attr? getNamedItem(DOMString name);
-  [Throws]
+  [Throws, BinaryName="setNamedItemNS"]
   Attr? setNamedItem(Attr arg);
   [Throws]
   Attr removeNamedItem(DOMString name);
