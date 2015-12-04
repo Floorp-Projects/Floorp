@@ -2027,7 +2027,7 @@ public:
      *
      * @return the constraints in device pixels
      */
-    virtual const SizeConstraints& GetSizeConstraints() const = 0;
+    virtual const SizeConstraints GetSizeConstraints() = 0;
 
     /**
      * If this is owned by a TabChild, return that.  Otherwise return
