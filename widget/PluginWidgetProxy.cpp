@@ -109,7 +109,7 @@ PluginWidgetProxy::Destroy()
 }
 
 void
-PluginWidgetProxy::GetWindowClipRegion(nsTArray<nsIntRect>* aRects)
+PluginWidgetProxy::GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects)
 {
   if (mClipRects && mClipRectCount) {
     aRects->AppendElements(mClipRects.get(), mClipRectCount);

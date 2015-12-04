@@ -12,7 +12,6 @@
 <script class="testbody" type="text/javascript">
 
 const CLEARKEY_ID = 'org.w3.clearkey';
-const CLEARKEY_VERSION = '1';
 const SUPPORTED_LABEL = "pass label";
 
 function ValidateConfig(name, expected, observed) {
@@ -51,7 +50,7 @@ function Test(test) {
     p.then(
       function(keySystemAccess) {
         ok(test.shouldPass, name + " passed and was expected to " + (test.shouldPass ? "pass" : "fail"));
-        is(keySystemAccess.keySystem, CLEARKEY_ID + "." + CLEARKEY_VERSION, "CDM version should be in MediaKeySystemAccess.keySystem");
+        is(keySystemAccess.keySystem, CLEARKEY_ID, "CDM keySystem should be in MediaKeySystemAccess.keySystem");
         ValidateConfig(name, test.expectedConfig, keySystemAccess.getConfiguration());
         resolve();
       },

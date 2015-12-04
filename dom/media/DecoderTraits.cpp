@@ -154,32 +154,28 @@ IsWaveType(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WEBM
-static const char* const gWebMTypes[3] = {
-  "video/webm",
-  "audio/webm",
-  nullptr
-};
-
-static char const *const gWebMCodecs[7] = {
-  "vp8",
-  "vp8.0",
-  "vp9",
-  "vp9.0",
-  "vorbis",
-  "opus",
-  nullptr
-};
+static bool
+IsWebMSupportedType(const nsACString& aType,
+                    const nsAString& aCodecs = EmptyString())
+{
+  return WebMDecoder::CanHandleMediaType(aType, aCodecs);
+}
 #endif
 
 /* static */ bool
 DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
 {
 #ifdef MOZ_WEBM
-  if (!MediaDecoder::IsWebMEnabled()) {
-    return false;
-  }
+  return IsWebMSupportedType(aType);
+#endif
+  return false;
+}
 
-  return CodecListContains(gWebMTypes, aType);
+/* static */ bool
+DecoderTraits::IsWebMAudioType(const nsACString& aType)
+{
+#ifdef MOZ_WEBM
+  return aType.EqualsASCII("audio/webm");
 #endif
   return false;
 }
@@ -395,7 +391,13 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
 #endif
 #if !defined(MOZ_OMX_WEBM_DECODER)
   if (IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
-    codecList = gWebMCodecs;
+    if (IsWebMSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
+      return CANPLAY_YES;
+    } else {
+      // We can only reach this position if a particular codec was requested,
+      // webm is supported and working: the codec must be invalid.
+      return CANPLAY_NO;
+    }
   }
 #endif
 #ifdef MOZ_FMP4
@@ -601,10 +603,12 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     return decoder.forget();
   }
 #endif
-  if (DecoderTraits::IsWebMTypeAndEnabled(aType)) {
+#ifdef MOZ_WEBM
+  if (IsWebMSupportedType(aType)) {
     decoder = new WebMDecoder(aOwner);
     return decoder.forget();
   }
+#endif
 #ifdef MOZ_DIRECTSHOW
   // Note: DirectShow should come before WMF, so that we prefer DirectShow's
   // MP3 support over WMF's.
@@ -671,11 +675,13 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-  if (IsWebMTypeAndEnabled(aType)) {
+#ifdef MOZ_WEBM
+  if (IsWebMSupportedType(aType)) {
     decoderReader = Preferences::GetBool("media.format-reader.webm", true) ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()))) :
       new WebMReader(aDecoder);
   } else
+#endif
 #ifdef MOZ_DIRECTSHOW
   if (IsDirectShowSupportedType(aType)) {
     decoderReader = new DirectShowReader(aDecoder);
@@ -706,7 +712,9 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (IsOmxSupportedType(aType) &&
      !IsB2GSupportOnlyType(aType)) ||
 #endif
-    IsWebMTypeAndEnabled(aType) ||
+#ifdef MOZ_WEBM
+    IsWebMSupportedType(aType) ||
+#endif
 #ifdef MOZ_GSTREAMER
     IsGStreamerSupportedType(aType) ||
 #endif

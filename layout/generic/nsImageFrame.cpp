@@ -756,22 +756,15 @@ nsImageFrame::MaybeDecodeForPredictedSize()
 nsRect
 nsImageFrame::PredictedDestRect(const nsRect& aFrameContentBox)
 {
-  // What is the rect painted by the image?  It's the image's "dest rect" (the
-  // rect where a full copy of the image is mapped), clipped to the container's
-  // content box.  So, we intersect those rects.
-
   // Note: To get the "dest rect", we have to provide the "constraint rect"
   // (which is the content-box, with the effects of fragmentation undone).
   nsRect constraintRect(aFrameContentBox.TopLeft(), mComputedSize);
   constraintRect.y -= GetContinuationOffset();
 
-  const nsRect destRect =
-    nsLayoutUtils::ComputeObjectDestRect(constraintRect,
-                                         mIntrinsicSize,
-                                         mIntrinsicRatio,
-                                         StylePosition());
-
-  return destRect.Intersect(aFrameContentBox);
+  return nsLayoutUtils::ComputeObjectDestRect(constraintRect,
+                                              mIntrinsicSize,
+                                              mIntrinsicRatio,
+                                              StylePosition());
 }
 
 void
@@ -1644,7 +1637,8 @@ nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap)
 {
   if (mImage && mImage->IsOpaque()) {
-    return nsRegion(GetDestRect(aSnap));
+    const nsRect frameContentBox = GetBounds(aSnap);
+    return GetDestRect().Intersect(frameContentBox);
   }
   return nsRegion();
 }

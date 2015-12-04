@@ -1012,7 +1012,9 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(uri);
+    nsCOMPtr<nsITabChild> tabChild(do_GetInterface(aWindowContext));
+    mozilla::dom::ContentChild::GetSingleton()->
+      SendLoadURIExternal(uri, static_cast<dom::TabChild*>(tabChild.get()));
     return NS_OK;
   }
 

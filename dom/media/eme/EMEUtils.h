@@ -56,11 +56,6 @@ bool ParseKeySystem(const nsAString& aKeySystem,
                     nsAString& aOutKeySystem,
                     int32_t& aOutMinCDMVersion);
 
-void
-ConstructKeySystem(const nsAString& aKeySystem,
-                   const nsAString& aCDMVersion,
-                   nsAString& aOutKeySystem);
-
 // Helper function to extract a copy of data coming in from JS in an
 // (ArrayBuffer or ArrayBufferView) IDL typed function argument.
 //

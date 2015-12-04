@@ -302,6 +302,10 @@ public:
         return mVersionString.get();
     }
 
+    inline uint32_t ShadingLanguageVersion() const {
+        return mShadingLanguageVersion;
+    }
+
     GLVendor Vendor() const {
         return mVendor;
     }
@@ -345,6 +349,8 @@ protected:
     uint32_t mVersion;
     nsCString mVersionString;
     ContextProfile mProfile;
+
+    uint32_t mShadingLanguageVersion;
 
     GLVendor mVendor;
     GLRenderer mRenderer;

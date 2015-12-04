@@ -2206,14 +2206,7 @@ public:
                                             nsCSSProperty aProperty);
 
   /**
-   * Returns true if the frame has any current animations.
-   * A current animation is any animation that has not yet finished playing
-   * including paused animations.
-   */
-  static bool HasCurrentAnimations(const nsIFrame* aFrame);
-
-  /**
-   * Returns true if the frame has any current transitions.
+   * Returns true if the frame has any current CSS transitions.
    * A current transition is any transition that has not yet finished playing
    * including paused transitions.
    */

@@ -154,6 +154,8 @@ ES3FormatCombinationSet BuildES3FormatSet()
     InsertES3FormatCombo(&set, GL_SRGB8,              GL_SRGB_EXT,       GL_UNSIGNED_BYTE                  );
 
     // From GL_OES_texture_float
+    InsertES3FormatCombo(&set, GL_RGBA,               GL_RGBA,            GL_FLOAT                         );
+    InsertES3FormatCombo(&set, GL_RGB,                GL_RGB,             GL_FLOAT                         );
     InsertES3FormatCombo(&set, GL_LUMINANCE_ALPHA,    GL_LUMINANCE_ALPHA, GL_FLOAT                         );
     InsertES3FormatCombo(&set, GL_LUMINANCE,          GL_LUMINANCE,       GL_FLOAT                         );
     InsertES3FormatCombo(&set, GL_ALPHA,              GL_ALPHA,           GL_FLOAT                         );

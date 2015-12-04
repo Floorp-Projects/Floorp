@@ -301,6 +301,8 @@ public:
     virtual bool RecvLoadURL(const nsCString& aURI,
                              const BrowserConfiguration& aConfiguration,
                              const ShowInfo& aInfo) override;
+    virtual bool RecvOpenURI(const URIParams& aURI,
+                             const uint32_t& aFlags) override;
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          override;

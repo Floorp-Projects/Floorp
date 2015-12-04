@@ -59,7 +59,7 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared
     using MacroAssemblerMIPSShared::ma_cmp_set;
     using MacroAssemblerMIPSShared::ma_subTestOverflow;
 
-    void ma_li(Register dest, AbsoluteLabel* label);
+    void ma_li(Register dest, CodeOffset* label);
     void ma_li(Register dest, ImmWord imm);
     void ma_liPatchable(Register dest, ImmPtr imm);
     void ma_liPatchable(Register dest, ImmWord imm, LiFlags flags = Li48);

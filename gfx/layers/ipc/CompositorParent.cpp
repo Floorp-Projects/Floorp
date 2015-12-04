@@ -2147,9 +2147,10 @@ CompositorParent::UpdatePluginWindowState(uint64_t aId)
         }
         mPluginsLayerOffset = offset;
         mPluginsLayerVisibleRegion = visibleRegion;
-        Unused <<
-          lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
-                                                      lts.mPluginData);
+        Unused << lts.mParent->SendUpdatePluginConfigurations(
+          LayoutDeviceIntPoint::FromUnknownPoint(offset),
+          LayoutDeviceIntRegion::FromUnknownRegion(visibleRegion),
+          lts.mPluginData);
         lts.mUpdatedPluginDataAvailable = false;
         PLUGINS_LOG("[%" PRIu64 "] updated", aId);
       } else {

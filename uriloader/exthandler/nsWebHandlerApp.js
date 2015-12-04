@@ -80,6 +80,19 @@ nsWebHandlerApp.prototype = {
     
     // if we have a window context, use the URI loader to load there
     if (aWindowContext) {
+      try {
+        // getInterface throws if the object doesn't implement the given
+        // interface, so this try/catch statement is more of an if.
+        // If aWindowContext refers to a remote docshell, send the load
+        // request to the correct process.
+        aWindowContext.getInterface(Ci.nsIRemoteWindowContext)
+                      .openURI(uriToSend, Ci.nsIURILoader.IS_CONTENT_PREFERRED);
+        return;
+      } catch (e) {
+        if (e.result != Cr.NS_NOINTERFACE) {
+          throw e;
+        }
+      }
 
       // create a channel from this URI
       var channel = ioService.newChannelFromURI2(uriToSend,
