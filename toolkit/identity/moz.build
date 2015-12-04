@@ -18,7 +18,6 @@ SOURCES += [
 ]
 
 EXTRA_JS_MODULES.identity += [
-    'FirefoxAccounts.jsm',
     'Identity.jsm',
     'IdentityProvider.jsm',
     'IdentityStore.jsm',
@@ -28,6 +27,10 @@ EXTRA_JS_MODULES.identity += [
     'MinimalIdentity.jsm',
     'RelyingParty.jsm',
     'Sandbox.jsm',
+]
+
+EXTRA_PP_JS_MODULES.identity += [
+    'FirefoxAccounts.jsm',
 ]
 
 FINAL_LIBRARY = 'xul'
