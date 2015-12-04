@@ -32,6 +32,10 @@ const OPEN_CLOSE_BODY = {
   "(": ")",
 };
 
+function hasArrayIndex(str) {
+  return /\[\d+\]$/.test(str);
+}
+
 /**
  * Analyses a given string to find the last statement that is interesting for
  * later completion.
@@ -223,13 +227,26 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
   let matchProp = properties.pop().trimLeft();
   let obj = aDbgObject;
 
-  // The first property must be found in the environment if the debugger is
-  // paused.
-  if (anEnvironment) {
-    if (properties.length == 0) {
-      return getMatchedPropsInEnvironment(anEnvironment, matchProp);
-    }
-    obj = getVariableInEnvironment(anEnvironment, properties.shift());
+  // The first property must be found in the environment of the paused debugger
+  // or of the global lexical scope.
+  let env = anEnvironment || obj.asEnvironment();
+
+  if (properties.length === 0) {
+    return getMatchedPropsInEnvironment(env, matchProp);
+  }
+
+  let firstProp = properties.shift().trim();
+  if (firstProp === "this") {
+    // Special case for 'this' - try to get the Object from the Environment.
+    // No problem if it throws, we will just not autocomplete.
+    try {
+      obj = env.object;
+    } catch(e) { }
+  }
+  else if (hasArrayIndex(firstProp)) {
+    obj = getArrayMemberProperty(null, env, firstProp);
+  } else {
+    obj = getVariableInEnvironment(env, firstProp);
   }
 
   if (!isObjectUsable(obj)) {
@@ -244,16 +261,10 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
       return null;
     }
 
-    // Special case for 'this' since it's not part of the global's properties
-    // but we want autocompletion to work properly for it
-    if (prop === "this" && obj === aDbgObject && i === 0) {
-      continue;
-    }
-
-    if (/\[\d+\]$/.test(prop)) {
+    if (hasArrayIndex(prop)) {
       // The property to autocomplete is a member of array. For example
       // list[i][j]..[n]. Traverse the array to get the actual element.
-      obj = getArrayMemberProperty(obj, prop);
+      obj = getArrayMemberProperty(obj, null, prop);
     }
     else {
       obj = DevToolsUtils.getProperty(obj, prop);
@@ -269,15 +280,7 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
     return getMatchedProps(obj, matchProp);
   }
 
-  let matchedProps = getMatchedPropsInDbgObject(obj, matchProp);
-  if (properties.length !== 0 || obj !== aDbgObject) {
-    let thisInd = matchedProps.matches.indexOf("this");
-    if (thisInd > -1) {
-      matchedProps.matches.splice(thisInd, 1)
-    }
-  }
-
-  return matchedProps;
+  return getMatchedPropsInDbgObject(obj, matchProp);
 }
 
 /**
@@ -285,19 +288,27 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
  * aProp='list[0][1]' the element at [0][1] of aObj.list is returned.
  *
  * @param object aObj
- *        The object to operate on.
+ *        The object to operate on. Should be null if aEnv is passed.
+ * @param object aEnv
+ *        The Environment to operate in. Should be null if aObj is passed.
  * @param string aProp
  *        The property to return.
  * @return null or Object
  *         Returns null if the property couldn't be located. Otherwise the array
  *         member identified by aProp.
  */
-function getArrayMemberProperty(aObj, aProp)
+function getArrayMemberProperty(aObj, aEnv, aProp)
 {
   // First get the array.
   let obj = aObj;
   let propWithoutIndices = aProp.substr(0, aProp.indexOf("["));
-  obj = DevToolsUtils.getProperty(obj, propWithoutIndices);
+
+  if (aEnv) {
+    obj = getVariableInEnvironment(aEnv, propWithoutIndices);
+  } else {
+    obj = DevToolsUtils.getProperty(obj, propWithoutIndices);
+  }
+
   if (!isObjectUsable(obj)) {
     return null;
   }
@@ -496,17 +507,7 @@ var DebuggerObjectSupport = {
 
   getProperties: function(aObj)
   {
-    let names = aObj.getOwnPropertyNames();
-    // Include 'this' in results (in sorted order).  It will be removed
-    // in all cases except for the first property request on the global, but
-    // it needs to be added now so it can be filtered based on string input.
-    for (let i = 0; i < names.length; i++) {
-      if (i === names.length - 1 || names[i+1] > "this") {
-        names.splice(i+1, 0, "this");
-        break;
-      }
-    }
-    return names;
+    return aObj.getOwnPropertyNames();
   },
 
   getProperty: function(aObj, aName, aRootObj)
@@ -527,13 +528,29 @@ var DebuggerEnvironmentSupport = {
 
   getProperties: function(aObj)
   {
-    return aObj.names();
+    let names = aObj.names();
+
+    // Include 'this' in results (in sorted order)
+    for (let i = 0; i < names.length; i++) {
+      if (i === names.length - 1 || names[i+1] > "this") {
+        names.splice(i+1, 0, "this");
+        break;
+      }
+    }
+
+    return names;
   },
 
   getProperty: function(aObj, aName)
   {
-    // TODO: we should use getVariableDescriptor() here - bug 725815.
-    let result = aObj.getVariable(aName);
+    let result;
+    // Try/catch since aName can be anything, and getVariable throws if
+    // it's not a valid ECMAScript identifier name
+    try {
+      // TODO: we should use getVariableDescriptor() here - bug 725815.
+      result = aObj.getVariable(aName);
+    } catch(e) { }
+
     // FIXME: Need actual UI, bug 941287.
     if (result === undefined || result.optimizedOut || result.missingArguments) {
       return null;
@@ -545,3 +562,5 @@ var DebuggerEnvironmentSupport = {
 
 exports.JSPropertyProvider = DevToolsUtils.makeInfallible(JSPropertyProvider);
 
+// Export a version that will throw (for tests)
+exports.FallibleJSPropertyProvider = JSPropertyProvider;

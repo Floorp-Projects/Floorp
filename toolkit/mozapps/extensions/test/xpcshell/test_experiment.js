@@ -111,7 +111,7 @@ add_task(function* test_userDisabledNotPersisted() {
   BootstrapMonitor.checkAddonNotStarted(ID);
 });
 
-add_task(function test_checkCompatibility() {
+add_task(function* test_checkCompatibility() {
   if (gIsNightly)
     Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
   else

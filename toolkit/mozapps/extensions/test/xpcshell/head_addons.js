@@ -373,7 +373,8 @@ function do_get_file_hash(aFile, aAlgorithm) {
   let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
 
   let binary = crypto.finish(false);
-  return aAlgorithm + ":" + [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
+  let hash = Array.from(binary, c => toHexString(c.charCodeAt(0)));
+  return aAlgorithm + ":" + hash.join("");
 }
 
 /**
@@ -1132,7 +1133,9 @@ function promiseSetExtensionModifiedTime(aPath, aTime) {
     try {
       let iterator = new OS.File.DirectoryIterator(aPath);
       entries = yield iterator.nextBatch();
-    } catch (ex if ex instanceof OS.File.Error) {
+    } catch (ex) {
+      if (!(ex instanceof OS.File.Error))
+        throw ex;
       return;
     } finally {
       if (iterator) {

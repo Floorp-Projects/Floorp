@@ -10,7 +10,7 @@ const FINAL_URL = "http://mochi.test:8888/browser/toolkit/components/" +
 /**
  * These tests ensure that we save and provide thumbnails for redirecting sites.
  */
-function runTests() {
+function* runTests() {
   dontExpireThumbnailURLs([URL, FINAL_URL]);
 
   // Kick off history by loading a tab first or the test fails in single mode.

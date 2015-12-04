@@ -4,9 +4,12 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AdjustConstants;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
@@ -155,6 +158,10 @@ public class GeckoApplication extends Application
         GeckoService.register();
 
         super.onCreate();
+
+        if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
+            DownloadContentService.startStudy(this);
+        }
     }
 
     public boolean isApplicationInBackground() {

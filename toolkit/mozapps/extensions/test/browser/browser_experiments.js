@@ -331,7 +331,7 @@ add_task(function* testActivateExperiment() {
   is_element_visible(el, "Experiment info is visible on experiment tab.");
 });
 
-add_task(function testDeactivateExperiment() {
+add_task(function* testDeactivateExperiment() {
   if (!gExperiments) {
     return;
   }
@@ -379,7 +379,7 @@ add_task(function testDeactivateExperiment() {
   is_element_hidden(el, "Preferences button is not visible.");
 });
 
-add_task(function testActivateRealExperiments() {
+add_task(function* testActivateRealExperiments() {
   if (!gExperiments) {
     info("Skipping experiments test because that feature isn't available.");
     return;
@@ -532,7 +532,7 @@ add_task(function testActivateRealExperiments() {
   }
 });
 
-add_task(function testDetailView() {
+add_task(function* testDetailView() {
   if (!gExperiments) {
     info("Skipping experiments test because that feature isn't available.");
     return;

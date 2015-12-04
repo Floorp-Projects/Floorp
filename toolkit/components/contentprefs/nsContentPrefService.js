@@ -1070,7 +1070,9 @@ ContentPrefService.prototype = {
       }
       // If the connection isn't ready after we open the database, that means
       // the database has been corrupted, so we back it up and then recreate it.
-      catch (e if e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
+      catch (e) {
+        if (e.result != Cr.NS_ERROR_FILE_CORRUPTED)
+          throw e;
         dbConnection = this._dbBackUpAndRecreate(dbService, dbFile,
                                                  dbConnection);
       }

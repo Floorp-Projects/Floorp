@@ -25,7 +25,7 @@ function consoleOpened(HUD) {
 
   let jsterm = HUD.jsterm;
   let win = content.wrappedJSObject;
-  let dbgWindow = dbg.makeGlobalObjectReference(win);
+  let dbgWindow = dbg.addDebuggee(content);
   let container = win._container;
 
   // Make sure autocomplete does not walk through iterators and generators.
@@ -62,6 +62,7 @@ function consoleOpened(HUD) {
   ok(completion, "matches available for window._container");
   ok(completion.matches.length, "matches available for window (length)");
 
+  dbg.removeDebuggee(content);
   jsterm.clearOutput();
 
   jsterm.execute("window._container", (msg) => {

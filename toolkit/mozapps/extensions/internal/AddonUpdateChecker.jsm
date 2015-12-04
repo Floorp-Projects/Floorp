@@ -645,7 +645,9 @@ UpdateParser.prototype = {
         let json = JSON.parse(request.responseText);
 
         parser = () => parseJSONManifest(this.id, this.updateKey, request, json);
-      } catch (e if e instanceof SyntaxError) {
+      } catch (e) {
+        if (!(e instanceof SyntaxError))
+          throw e;
         let domParser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
         let xml = domParser.parseFromString(request.responseText, "text/xml");
 

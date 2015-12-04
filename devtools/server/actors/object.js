@@ -876,52 +876,16 @@ PropertyIteratorActor.prototype.requestTypes = {
  * information for the debugger object, or true otherwise.
  */
 DebuggerServer.ObjectActorPreviewers = {
-  String: [function({obj, hooks}, grip) {
-    let result = genericObjectPreviewer("String", String, obj, hooks);
-    let length = DevToolsUtils.getProperty(obj, "length");
-
-    if (!result || typeof length != "number") {
-      return false;
-    }
-
-    grip.preview = {
-      kind: "ArrayLike",
-      length: length
-    };
-
-    if (hooks.getGripDepth() > 1) {
-      return true;
-    }
-
-    let items = grip.preview.items = [];
-
-    const max = Math.min(result.value.length, OBJECT_PREVIEW_MAX_ITEMS);
-    for (let i = 0; i < max; i++) {
-      let value = hooks.createValueGrip(result.value[i]);
-      items.push(value);
-    }
-
-    return true;
+  String: [function(objectActor, grip) {
+    return wrappedPrimitivePreviewer("String", String, objectActor, grip);
   }],
 
-  Boolean: [function({obj, hooks}, grip) {
-    let result = genericObjectPreviewer("Boolean", Boolean, obj, hooks);
-    if (result) {
-      grip.preview = result;
-      return true;
-    }
-
-    return false;
+  Boolean: [function(objectActor, grip) {
+    return wrappedPrimitivePreviewer("Boolean", Boolean, objectActor, grip);
   }],
 
-  Number: [function({obj, hooks}, grip) {
-    let result = genericObjectPreviewer("Number", Number, obj, hooks);
-    if (result) {
-      grip.preview = result;
-      return true;
-    }
-
-    return false;
+  Number: [function(objectActor, grip) {
+    return wrappedPrimitivePreviewer("Number", Number, objectActor, grip);
   }],
 
   Function: [function({obj, hooks}, grip) {
@@ -1218,25 +1182,25 @@ DebuggerServer.ObjectActorPreviewers = {
 };
 
 /**
- * Generic previewer for "simple" classes like String, Number and Boolean.
+ * Generic previewer for classes wrapping primitives, like String,
+ * Number and Boolean.
  *
  * @param string className
  *        Class name to expect.
  * @param object classObj
  *        The class to expect, eg. String. The valueOf() method of the class is
  *        invoked on the given object.
- * @param Debugger.Object obj
- *        The debugger object we need to preview.
- * @param object hooks
- *        The thread actor to use to create a value grip.
- * @return object|null
- *         An object with one property, "value", which holds the value grip that
- *         represents the given object. Null is returned if we cant preview the
- *         object.
+ * @param ObjectActor objectActor
+ *        The object actor
+ * @param Object grip
+ *        The result grip to fill in
+ * @return Booolean true if the object was handled, false otherwise
  */
-function genericObjectPreviewer(className, classObj, obj, hooks) {
+function wrappedPrimitivePreviewer(className, classObj, objectActor, grip) {
+  let {obj, hooks} = objectActor;
+
   if (!obj.proto || obj.proto.class != className) {
-    return null;
+    return false;
   }
 
   let raw = obj.unsafeDereference();
@@ -1245,15 +1209,78 @@ function genericObjectPreviewer(className, classObj, obj, hooks) {
     v = classObj.prototype.valueOf.call(raw);
   } catch (ex) {
     // valueOf() can throw if the raw JS object is "misbehaved".
-    return null;
+    return false;
   }
 
-  if (v !== null) {
-    v = hooks.createValueGrip(makeDebuggeeValueIfNeeded(obj, v));
-    return { value: v };
+  if (v === null) {
+    return false;
   }
 
-  return null;
+  let canHandle = GenericObject(objectActor, grip, className === "String");
+  if (!canHandle) {
+    return false;
+  }
+
+  grip.preview.wrappedValue =
+    hooks.createValueGrip(makeDebuggeeValueIfNeeded(obj, v));
+  return true;
+}
+
+function GenericObject(objectActor, grip, specialStringBehavior = false) {
+  let {obj, hooks} = objectActor;
+  if (grip.preview || grip.displayString || hooks.getGripDepth() > 1) {
+    return false;
+  }
+
+  let i = 0, names = [];
+  let preview = grip.preview = {
+    kind: "Object",
+    ownProperties: Object.create(null),
+  };
+
+  try {
+    names = obj.getOwnPropertyNames();
+  } catch (ex) {
+    // Calling getOwnPropertyNames() on some wrapped native prototypes is not
+    // allowed: "cannot modify properties of a WrappedNative". See bug 952093.
+  }
+
+  preview.ownPropertiesLength = names.length;
+
+  let length;
+  if (specialStringBehavior) {
+    length = DevToolsUtils.getProperty(obj, "length");
+    if (typeof length != "number") {
+      specialStringBehavior = false;
+    }
+  }
+
+  for (let name of names) {
+    if (specialStringBehavior && /^[0-9]+$/.test(name)) {
+      let num = parseInt(name, 10);
+      if (num.toString() === name && num >= 0 && num < length) {
+        continue;
+      }
+    }
+
+    let desc = objectActor._propertyDescriptor(name, true);
+    if (!desc) {
+      continue;
+    }
+
+    preview.ownProperties[name] = desc;
+    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+      break;
+    }
+  }
+
+  if (i < OBJECT_PREVIEW_MAX_ITEMS) {
+    preview.safeGetterValues = objectActor._findSafeGetterValues(
+      Object.keys(preview.ownProperties),
+      OBJECT_PREVIEW_MAX_ITEMS - i);
+  }
+
+  return true;
 }
 
 // Preview functions that do not rely on the object class.
@@ -1622,47 +1649,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     return true;
   },
 
-  function GenericObject(objectActor, grip) {
-    let {obj, hooks} = objectActor;
-    if (grip.preview || grip.displayString || hooks.getGripDepth() > 1) {
-      return false;
-    }
-
-    let i = 0, names = [];
-    let preview = grip.preview = {
-      kind: "Object",
-      ownProperties: Object.create(null),
-    };
-
-    try {
-      names = obj.getOwnPropertyNames();
-    } catch (ex) {
-      // Calling getOwnPropertyNames() on some wrapped native prototypes is not
-      // allowed: "cannot modify properties of a WrappedNative". See bug 952093.
-    }
-
-    preview.ownPropertiesLength = names.length;
-
-    for (let name of names) {
-      let desc = objectActor._propertyDescriptor(name, true);
-      if (!desc) {
-        continue;
-      }
-
-      preview.ownProperties[name] = desc;
-      if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
-        break;
-      }
-    }
-
-    if (i < OBJECT_PREVIEW_MAX_ITEMS) {
-      preview.safeGetterValues = objectActor._findSafeGetterValues(
-                                    Object.keys(preview.ownProperties),
-                                    OBJECT_PREVIEW_MAX_ITEMS - i);
-    }
-
-    return true;
-  },
+  GenericObject,
 ];
 
 /**

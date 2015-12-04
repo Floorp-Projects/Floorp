@@ -13,9 +13,9 @@ deps = ['httplib2 == 0.7.3',
         'mozinfo == 0.7',
         'mozinstall == 1.10',
         'mozprocess == 0.19',
-        'mozprofile == 0.21',
+        'mozprofile == 0.27',
         'mozrunner == 6.0',
-        'mozversion == 0.6',
+        'mozversion == 1.4',
        ]
 
 # we only support python 2.6+ right now
