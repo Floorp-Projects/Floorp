@@ -7,7 +7,6 @@ var worker_url = 'resources/empty-worker.js';
 
 async_test(function(t) {
     var scope = 'resources/scope/re-register-resolves-to-new-value';
-    var iframe;
     var registration;
 
     service_worker_unregister_and_register(t, worker_url, scope)
@@ -86,6 +85,7 @@ async_test(function(t) {
               iframe.contentWindow.navigator.serviceWorker.controller,
               controller,
               'the worker from the first registration is the controller');
+          iframe.remove();
           service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));
@@ -121,6 +121,7 @@ async_test(function(t) {
           assert_not_equals(
               frame.contentWindow.navigator.serviceWorker.controller, null,
               'document should have a controller');
+          frame.remove();
           service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));
