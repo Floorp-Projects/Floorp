@@ -803,6 +803,36 @@ var NetworkHelper = {
     let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
     aStore.set(aUrl, uri);
     return uri;
+  },
+
+  /**
+   * Returns extension for file URLs (e.g. 'json').
+   * Not everyURL has an extension and this method works as follows:
+   * 1) Remove query string
+   * 2) Get part after the last slash (a file name)
+   * 3) Look for the last dot (an extension)
+   */
+  getFileExtension: function(aUrl) {
+    if (!aUrl) {
+      return;
+    }
+
+    // Remove query string from the URL if any.
+    let queryString = aUrl.indexOf("?");
+    if (queryString != -1) {
+      aUrl = aUrl.substr(0, queryString);
+    }
+
+    // Look for the part after last slash
+    var lastSlash = aUrl.lastIndexOf("/");
+    var fileName = aUrl.substr(lastSlash + 1);
+    if (!fileName) {
+      return;
+    }
+
+    // Now get the file extension.
+    var lastDot = fileName.lastIndexOf(".");
+    return fileName.substr(lastDot + 1);
   }
 };
 
