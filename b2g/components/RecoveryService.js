@@ -54,9 +54,9 @@ if (isGonk) {
     };
   })();
 
-  const gFactoryResetFile = "__post_reset_cmd__";
-
 }
+
+const gFactoryResetFile = "__post_reset_cmd__";
 
 function RecoveryService() {}
 
