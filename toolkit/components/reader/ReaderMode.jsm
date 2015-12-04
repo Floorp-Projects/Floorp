@@ -255,9 +255,7 @@ this.ReaderMode = {
     try {
       let array = yield OS.File.read(path);
       return JSON.parse(new TextDecoder().decode(array));
-    } catch (e) {
-      if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
-        throw e;
+    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
       return null;
     }
   }),

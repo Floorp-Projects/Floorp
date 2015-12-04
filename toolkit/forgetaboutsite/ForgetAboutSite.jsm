@@ -125,11 +125,7 @@ this.ForgetAboutSite = {
     }
     // XXXehsan: is there a better way to do this rather than this
     // hacky comparison?
-    catch (ex) {
-      if (ex.message.indexOf("User canceled Master Password entry") == -1) {
-        throw ex;
-      }
-    }
+    catch (ex if ex.message.indexOf("User canceled Master Password entry") != -1) { }
 
     // Clear any "do not save for this site" for this domain
     let disabledHosts = lm.getAllDisabledHosts();
