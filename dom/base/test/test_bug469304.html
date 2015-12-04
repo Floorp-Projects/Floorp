@@ -27,17 +27,17 @@ function testGetAttribute() {
   document.body.setAttributeNode(a1);
   document.body.setAttributeNode(a2);
   var log = document.getElementById("log");
-  is(document.body.getAttribute('aa'), null, "Attribute has the localName AA and not aa.");
-  is(document.body.getAttribute('AA'), null, "Attribute has the localName AA and not aa.");
-  is(document.body.getAttributeNS("", "aa"), null, "Attribute should have localName AA.");
-  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Attribute should have value UPPERCASE!");
+  is(document.body.getAttribute('aa'), "lowercase", "First attribute should have localname aa (1).");
+  is(document.body.getAttribute('AA'), "lowercase", "First attribute should have localname aa (2).");
+  is(document.body.getAttributeNS("", "aa"), "lowercase", "First attribute should have localName aa (3).");
+  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Second attribute should have value UPPERCASE!");
 
   var s = "";
   for (var i = 0; i < document.body.attributes.length; ++i) {
     s += document.body.attributes[i].nodeName + "=" +
          document.body.attributes[i].nodeValue;
   }
-  is(s, "AA=UPPERCASE", "Wrong attribute!");
+  is(s, "aa=lowercaseAA=UPPERCASE", "Wrong attribute!");
 
   is(document.body.getAttributeNode("aa"), document.body.getAttributeNode("AA"),
      "Wrong node!");
@@ -45,9 +45,9 @@ function testGetAttribute() {
   document.body.getAttributeNodeNS("", "AA").nodeValue = "FOO";
   is(document.body.getAttributeNS("", "AA"), "FOO", "Wrong value!");
 
-  document.body.removeAttributeNode(document.body.getAttributeNodeNS("", "AA"));
-  ok(!document.body.getAttributeNode("AA"), "Should not have attribute node!");
-  ok(!document.body.getAttributeNode("aa"), "Should not have attribute node!");
+  document.body.removeAttributeNode(document.body.getAttributeNodeNS("", "aa"));
+  ok(!document.body.getAttributeNode("AA"), "Should not have attribute node! (1)");
+  ok(!document.body.getAttributeNode("aa"), "Should not have attribute node! (2)");
 
   is(a2.nodeValue, "FOO", "Wrong value!");
   a2.nodeValue = "UPPERCASE";
