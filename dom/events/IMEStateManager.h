@@ -183,9 +183,15 @@ public:
    * Returns TextComposition instance for the event.
    */
   static already_AddRefed<TextComposition>
-    GetTextCompositionFor(const WidgetKeyboardEvent* aKeyboardEvent);
-  static already_AddRefed<TextComposition>
     GetTextCompositionFor(const WidgetCompositionEvent* aCompositionEvent);
+
+  /**
+   * Returns TextComposition instance for the pres context.
+   * Be aware, even if another pres context which shares native IME context with
+   * specified pres context has composition, this returns nullptr.
+   */
+  static already_AddRefed<TextComposition>
+    GetTextCompositionFor(nsPresContext* aPresContext);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what

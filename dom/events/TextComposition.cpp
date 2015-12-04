@@ -711,6 +711,16 @@ TextCompositionArray::GetCompositionFor(
 }
 
 TextComposition*
+TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext)
+{
+  index_type i = IndexOf(aPresContext);
+  if (i == NoIndex) {
+    return nullptr;
+  }
+  return ElementAt(i);
+}
+
+TextComposition*
 TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext,
                                            nsINode* aNode)
 {
