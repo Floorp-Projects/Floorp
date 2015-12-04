@@ -52,7 +52,6 @@
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
 #include "nsStyleUtil.h"
-#include "nsRubyBaseContainerFrame.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -5156,19 +5155,6 @@ GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics
                           ctx, appUnitsPerDevUnit, flags, nullptr);
 }
 
-static nsRubyBaseContainerFrame*
-FindRubyBaseContainerAncestor(nsTextFrame* aFrame)
-{
-  for (nsIFrame* frame = aFrame->GetParent();
-       frame && frame->IsFrameOfType(nsIFrame::eLineParticipant);
-       frame = frame->GetParent()) {
-    if (frame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
-      return static_cast<nsRubyBaseContainerFrame*>(frame);
-    }
-  }
-  return nullptr;
-}
-
 nsRect
 nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
 {
@@ -5202,18 +5188,14 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
   nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
     baseFontMetrics->MaxAscent() + fm->MaxDescent() :
     baseFontMetrics->MaxDescent() + fm->MaxAscent();
-  nscoord startLeading = 0;
-  nscoord endLeading = 0;
-  if (nsRubyBaseContainerFrame* rbc = FindRubyBaseContainerAncestor(this)) {
-    rbc->GetBlockLeadings(&startLeading, &endLeading);
-  }
+  // XXX emphasis marks should be drawn outside ruby, see bug 1224013.
   if (side == eLogicalSideBStart) {
-    info->baselineOffset = -absOffset - startLeading;
-    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM) - startLeading;
+    info->baselineOffset = -absOffset;
+    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM);
   } else {
     MOZ_ASSERT(side == eLogicalSideBEnd);
-    info->baselineOffset = absOffset + endLeading;
-    overflowRect.BStart(aWM) = frameSize.BSize(aWM) + endLeading;
+    info->baselineOffset = absOffset;
+    overflowRect.BStart(aWM) = frameSize.BSize(aWM);
   }
 
   Properties().Set(EmphasisMarkProperty(), info);

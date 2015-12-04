@@ -25,7 +25,7 @@
 #include "nsTextFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsBidiPresUtils.h"
-#include "nsRubyBaseContainerFrame.h"
+#include "nsRubyFrame.h"
 #include "nsRubyTextFrame.h"
 #include "RubyUtils.h"
 #include <algorithm>
@@ -1685,13 +1685,13 @@ nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
   MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
   nscoord requiredStartLeading = 0;
   nscoord requiredEndLeading = 0;
-  if (spanFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
+  if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
     // We may need to extend leadings here for ruby annotations as
     // required by section Line Spacing in the CSS Ruby spec.
     // See http://dev.w3.org/csswg/css-ruby/#line-height
-    auto rbc = static_cast<nsRubyBaseContainerFrame*>(spanFrame);
+    auto rubyFrame = static_cast<nsRubyFrame*>(spanFrame);
     nscoord startLeading, endLeading;
-    rbc->GetBlockLeadings(&startLeading, &endLeading);
+    rubyFrame->GetBlockLeadings(startLeading, endLeading);
     requiredStartLeading += startLeading;
     requiredEndLeading += endLeading;
   }
@@ -2322,31 +2322,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           -nsLayoutUtils::GetCenteredFontBaseline(fm, minimumLineBSize,
                                                   lineWM.IsLineInverted());
         nscoord blockEnd = blockStart + minimumLineBSize;
-
-        if (mStyleText->HasTextEmphasis()) {
-          nscoord fontMaxHeight = fm->MaxHeight();
-          nscoord emphasisHeight = fontMaxHeight / 2;
-          nscoord delta = fontMaxHeight + emphasisHeight - minimumLineBSize;
-          if (delta > 0) {
-            if (minimumLineBSize < fontMaxHeight) {
-              // If the leadings are negative, fill them first.
-              nscoord ascent = fm->MaxAscent();
-              nscoord descent = fm->MaxDescent();
-              if (lineWM.IsLineInverted()) {
-                Swap(ascent, descent);
-              }
-              blockStart = -ascent;
-              blockEnd = descent;
-              delta = emphasisHeight;
-            }
-            LogicalSide side = mStyleText->TextEmphasisSide(lineWM);
-            if (side == eLogicalSideBStart) {
-              blockStart -= delta;
-            } else {
-              blockEnd += delta;
-            }
-          }
-        }
 
         if (blockStart < minBCoord) minBCoord = blockStart;
         if (blockEnd > maxBCoord) maxBCoord = blockEnd;
