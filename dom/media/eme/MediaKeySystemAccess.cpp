@@ -80,7 +80,7 @@ MediaKeySystemAccess::GetParentObject() const
 void
 MediaKeySystemAccess::GetKeySystem(nsString& aOutKeySystem) const
 {
-  ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
+  aOutKeySystem.Assign(mKeySystem);
 }
 
 void
