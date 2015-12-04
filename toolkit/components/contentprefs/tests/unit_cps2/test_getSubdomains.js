@@ -8,17 +8,17 @@ function run_test() {
 
 var tests = [
 
-  function get_nonexistent() {
+  function* get_nonexistent() {
     yield getSubdomainsOK(["a.com", "foo"], []);
   },
 
-  function isomorphicDomains() {
+  function* isomorphicDomains() {
     yield set("a.com", "foo", 1);
     yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
     yield getSubdomainsOK(["http://a.com/huh", "foo"], [["a.com", 1]]);
   },
 
-  function names() {
+  function* names() {
     yield set("a.com", "foo", 1);
     yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1]]);
 
@@ -31,14 +31,14 @@ var tests = [
     yield getSubdomainsOK(["a.com", "bar"], [["a.com", 2]]);
   },
 
-  function subdomains() {
+  function* subdomains() {
     yield set("a.com", "foo", 1);
     yield set("b.a.com", "foo", 2);
     yield getSubdomainsOK(["a.com", "foo"], [["a.com", 1], ["b.a.com", 2]]);
     yield getSubdomainsOK(["b.a.com", "foo"], [["b.a.com", 2]]);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -57,7 +57,7 @@ var tests = [
     yield getSubdomainsOK(["b.com", "foo"], [["b.com", 5]]);
   },
 
-  function erroneous() {
+  function* erroneous() {
     do_check_throws(() => cps.getBySubdomainAndName(null, "foo", null, {}));
     do_check_throws(() => cps.getBySubdomainAndName("", "foo", null, {}));
     do_check_throws(() => cps.getBySubdomainAndName("a.com", "", null, {}));

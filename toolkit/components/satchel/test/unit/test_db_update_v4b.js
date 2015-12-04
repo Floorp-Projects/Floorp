@@ -13,7 +13,7 @@ function run_test()
   iter.next();
 }
 
-function next_test()
+function* next_test()
 {
   try {
 

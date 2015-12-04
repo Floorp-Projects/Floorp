@@ -71,7 +71,7 @@ var addon5 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-add_task(function() {
+add_task(function*() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 

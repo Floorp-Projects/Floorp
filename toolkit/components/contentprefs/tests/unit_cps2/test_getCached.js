@@ -8,19 +8,19 @@ function run_test() {
 
 var tests = [
 
-  function nonexistent() {
+  function* nonexistent() {
     getCachedOK(["a.com", "foo"], false, undefined);
     getCachedGlobalOK(["foo"], false, undefined);
     yield true;
   },
 
-  function isomorphicDomains() {
+  function* isomorphicDomains() {
     yield set("a.com", "foo", 1);
     getCachedOK(["a.com", "foo"], true, 1);
     getCachedOK(["http://a.com/huh", "foo"], true, 1, "a.com");
   },
 
-  function names() {
+  function* names() {
     yield set("a.com", "foo", 1);
     getCachedOK(["a.com", "foo"], true, 1);
 
@@ -40,14 +40,14 @@ var tests = [
     getCachedGlobalOK(["bar"], true, 4);
   },
 
-  function subdomains() {
+  function* subdomains() {
     yield set("a.com", "foo", 1);
     yield set("b.a.com", "foo", 2);
     getCachedOK(["a.com", "foo"], true, 1);
     getCachedOK(["b.a.com", "foo"], true, 2);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -70,7 +70,7 @@ var tests = [
     getCachedOK(["b.com", "foo"], true, 5);
   },
 
-  function erroneous() {
+  function* erroneous() {
     do_check_throws(() => cps.getCachedByDomainAndName(null, "foo", null));
     do_check_throws(() => cps.getCachedByDomainAndName("", "foo", null));
     do_check_throws(() => cps.getCachedByDomainAndName("a.com", "", null));
@@ -80,7 +80,7 @@ var tests = [
     yield true;
   },
 
-  function casts() {
+  function* casts() {
     // SQLite casts booleans to integers.  This makes sure the values stored in
     // the cache are the same as the casted values in the database.
 
