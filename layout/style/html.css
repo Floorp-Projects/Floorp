@@ -818,10 +818,8 @@ rtc, rt {
   font-variant-east-asian: ruby;
 %endif
 }
-@supports (text-emphasis: none) {
-  rtc, rt {
-    text-emphasis: none;
-  }
+rtc, rt {
+  text-emphasis: none;
 }
 rtc:lang(zh), rt:lang(zh) {
   ruby-align: center;
