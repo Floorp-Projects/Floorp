@@ -107,6 +107,15 @@ skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-proper
 == text-emphasis-position-property-006g.html text-emphasis-position-property-006-ref.html
 # END tests from support/generate-text-emphasis-position-property-tests.py
 
+# START tests from support/generate-text-emphasis-ruby-tests.py
+== text-emphasis-ruby-001.html text-emphasis-ruby-001-ref.html
+== text-emphasis-ruby-002.html text-emphasis-ruby-002-ref.html
+== text-emphasis-ruby-003.html text-emphasis-ruby-003-ref.html
+== text-emphasis-ruby-003a.html text-emphasis-ruby-003-ref.html
+== text-emphasis-ruby-004.html text-emphasis-ruby-004-ref.html
+== text-emphasis-ruby-004a.html text-emphasis-ruby-004-ref.html
+# END tests from support/generate-text-emphasis-ruby-tests.py
+
 # text-emphasis line height
 # START tests from support/generate-text-emphasis-line-height-tests.py
 == text-emphasis-line-height-001a.html text-emphasis-line-height-001-ref.html
