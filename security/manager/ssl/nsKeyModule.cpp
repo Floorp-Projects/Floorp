@@ -21,11 +21,22 @@ nsKeyObject::nsKeyObject()
 
 nsKeyObject::~nsKeyObject()
 {
-  CleanUp();
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
 }
 
 void
-nsKeyObject::CleanUp()
+nsKeyObject::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void
+nsKeyObject::destructorSafeDestroyNSSReference()
 {
   switch (mKeyType) {
     case nsIKeyObject::SYM_KEY:
@@ -53,8 +64,13 @@ nsKeyObject::CleanUp()
 NS_IMETHODIMP
 nsKeyObject::InitKey(int16_t aAlgorithm, void * aKey)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // Clear previous key data if it exists
-  CleanUp();
+  destructorSafeDestroyNSSReference();
 
   switch (aAlgorithm) {
     case nsIKeyObject::RC4:
@@ -85,6 +101,11 @@ nsKeyObject::InitKey(int16_t aAlgorithm, void * aKey)
 NS_IMETHODIMP
 nsKeyObject::GetKeyObj(void * *_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (mKeyType == 0)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -145,6 +166,11 @@ NS_IMETHODIMP
 nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString & aKey,
                                   nsIKeyObject **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   CK_MECHANISM_TYPE cipherMech;
   CK_ATTRIBUTE_TYPE cipherOperation;
   switch (aAlgorithm)
