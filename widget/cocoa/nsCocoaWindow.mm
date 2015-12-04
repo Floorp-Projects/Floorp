@@ -291,8 +291,9 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent,
     }
     // now we can convert newBounds to device pixels for the window we created,
     // as the child view expects a rect expressed in the dev pix of its parent
-    DesktopToLayoutDeviceScale scale(BackingScaleFactor());
-    return CreatePopupContentView(RoundedToInt(newBounds * scale));
+    LayoutDeviceIntRect devRect =
+      RoundedToInt(newBounds * GetDesktopToDeviceScale());
+    return CreatePopupContentView(devRect);
   }
 
   mIsAnimationSuppressed = aInitData->mIsAnimationSuppressed;
@@ -307,8 +308,8 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent,
                                const LayoutDeviceIntRect& aRect,
                                nsWidgetInitData* aInitData)
 {
-  DesktopToLayoutDeviceScale scale(GetDefaultScaleInternal());
-  DesktopIntRect desktopRect = RoundedToInt(aRect / scale);
+  DesktopIntRect desktopRect =
+    RoundedToInt(aRect / GetDesktopToDeviceScale());
   return Create(aParent, aNativeParent, desktopRect, aInitData);
 }
 

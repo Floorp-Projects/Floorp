@@ -324,6 +324,10 @@ public:
     virtual double          GetDefaultScaleInternal() override;
     virtual int32_t         RoundsWidgetCoordinatesTo() override;
 
+    mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
+      return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
+    }
+
     NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
 
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
