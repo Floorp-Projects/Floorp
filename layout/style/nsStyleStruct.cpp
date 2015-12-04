@@ -3640,15 +3640,10 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
            nsChangeHint_RepaintFrame;
   }
 
-  if (!AreShadowArraysEqual(mTextShadow, aOther.mTextShadow)) {
-    return nsChangeHint_UpdateSubtreeOverflow |
-           nsChangeHint_SchedulePaint |
-           nsChangeHint_RepaintFrame;
-  }
-
-  if (mTextEmphasisStyle != aOther.mTextEmphasisStyle ||
+  if (!AreShadowArraysEqual(mTextShadow, aOther.mTextShadow) ||
+      mTextEmphasisStyle != aOther.mTextEmphasisStyle ||
       mTextEmphasisStyleString != aOther.mTextEmphasisStyleString) {
-    return nsChangeHint_UpdateOverflow |
+    return nsChangeHint_UpdateSubtreeOverflow |
            nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }
