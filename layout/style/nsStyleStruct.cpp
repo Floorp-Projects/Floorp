@@ -3632,18 +3632,16 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       (mTabSize != aOther.mTabSize))
     return NS_STYLE_HINT_REFLOW;
 
-  if (HasTextEmphasis() != aOther.HasTextEmphasis() ||
-      (HasTextEmphasis() &&
-       mTextEmphasisPosition != aOther.mTextEmphasisPosition)) {
-    // Text emphasis position change could affect line height calculation.
-    return nsChangeHint_AllReflowHints |
+  if (!AreShadowArraysEqual(mTextShadow, aOther.mTextShadow)) {
+    return nsChangeHint_UpdateSubtreeOverflow |
+           nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }
 
-  if (!AreShadowArraysEqual(mTextShadow, aOther.mTextShadow) ||
+  if (mTextEmphasisPosition != aOther.mTextEmphasisPosition ||
       mTextEmphasisStyle != aOther.mTextEmphasisStyle ||
       mTextEmphasisStyleString != aOther.mTextEmphasisStyleString) {
-    return nsChangeHint_UpdateSubtreeOverflow |
+    return nsChangeHint_UpdateOverflow |
            nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
   }
@@ -3657,10 +3655,6 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       mTextEmphasisColor != aOther.mTextEmphasisColor) {
     return nsChangeHint_SchedulePaint |
            nsChangeHint_RepaintFrame;
-  }
-
-  if (mTextEmphasisPosition != aOther.mTextEmphasisPosition) {
-    return nsChangeHint_NeutralChange;
   }
 
   return NS_STYLE_HINT_NONE;
