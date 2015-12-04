@@ -93,16 +93,20 @@ public:
   Constructor(const mozilla::dom::GlobalObject& aGlobal,
               const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
               mozilla::ErrorResult& aRv);
-  void Append(const nsAString& aName, const nsAString& aValue);
+  void Append(const nsAString& aName, const nsAString& aValue,
+              mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, Blob& aBlob,
-              const mozilla::dom::Optional<nsAString>& aFilename);
+              const mozilla::dom::Optional<nsAString>& aFilename,
+              mozilla::ErrorResult& aRv);
   void Delete(const nsAString& aName);
   void Get(const nsAString& aName, mozilla::dom::Nullable<OwningFileOrUSVString>& aOutValue);
   void GetAll(const nsAString& aName, nsTArray<OwningFileOrUSVString>& aValues);
   bool Has(const nsAString& aName);
   void Set(const nsAString& aName, Blob& aBlob,
-           const mozilla::dom::Optional<nsAString>& aFilename);
-  void Set(const nsAString& aName, const nsAString& aValue);
+           const mozilla::dom::Optional<nsAString>& aFilename,
+           mozilla::ErrorResult& aRv);
+  void Set(const nsAString& aName, const nsAString& aValue,
+           mozilla::ErrorResult& aRv);
 
   uint32_t GetIterableLength() const;
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
