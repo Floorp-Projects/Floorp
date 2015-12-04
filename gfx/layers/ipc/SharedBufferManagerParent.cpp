@@ -279,7 +279,7 @@ void SharedBufferManagerParent::DropGrallocBufferSync(SharedBufferManagerParent*
 /*static*/
 void SharedBufferManagerParent::DropGrallocBuffer(ProcessId id, mozilla::layers::SurfaceDescriptor aDesc)
 {
-  if (aDesc.type() != SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
+  if (aDesc.type() != SurfaceDescriptor::TSurfaceDescriptorGralloc) {
     return;
   }
 
@@ -312,8 +312,8 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   int64_t key = -1;
   MaybeMagicGrallocBufferHandle handle;
-  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
-    handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
+  if (aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+    handle = aDesc.get_SurfaceDescriptorGralloc().buffer();
   } else {
     return;
   }

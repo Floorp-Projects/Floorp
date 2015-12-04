@@ -134,7 +134,7 @@ GrallocTextureData::Forget(ISurfaceAllocator* aAllocator)
 bool
 GrallocTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  aOutDescriptor = NewSurfaceDescriptorGralloc(mGrallocHandle, gfx::IsOpaque(mFormat));
+  aOutDescriptor = SurfaceDescriptorGralloc(mGrallocHandle, gfx::IsOpaque(mFormat));
   return true;
 }
 
