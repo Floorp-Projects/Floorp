@@ -904,13 +904,17 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     MOZ_ASSERT(!isMutable);
   }
 
+  ErrorResult rv;
   RefPtr<BlobImpl> blobImpl;
   if (!hasRecursed && aMetadata.IsFile()) {
-    blobImpl =
-      new MultipartBlobImpl(blobImpls, aMetadata.mName, aMetadata.mContentType);
+    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mName,
+                                         aMetadata.mContentType, rv);
   } else {
-    blobImpl =
-      new MultipartBlobImpl(blobImpls, aMetadata.mContentType);
+    blobImpl = MultipartBlobImpl::Create(blobImpls, aMetadata.mContentType, rv);
+  }
+
+  if (NS_WARN_IF(rv.Failed())) {
+    return nullptr;
   }
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
