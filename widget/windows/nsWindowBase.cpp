@@ -105,6 +105,16 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint
   return true;
 }
 
+void nsWindowBase::ChangedDPI()
+{
+  if (mWidgetListener) {
+    nsIPresShell* presShell = mWidgetListener->GetPresShell();
+    if (presShell) {
+      presShell->BackingScaleFactorChanged();
+    }
+  }
+}
+
 nsresult
 nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                          nsIWidget::TouchPointerState aPointerState,
