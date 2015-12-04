@@ -105,7 +105,8 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 	@# support for defines tracking in process_install_manifest.
 	@touch install_$(subst /,_,$*)
 	$(PYTHON) -m mozbuild.action.process_install_manifest \
-		--track install_$(subst /,_,$*).track \
+		--no-remove \
+		--no-remove-empty-directories \
 		$(TOPOBJDIR)/$* \
 		-DAB_CD=en-US \
 		-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
