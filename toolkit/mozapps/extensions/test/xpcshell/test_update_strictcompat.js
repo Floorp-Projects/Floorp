@@ -1022,7 +1022,7 @@ for (let test of testParams) {
     });
   });
 
-  add_task(function cleanup() {
+  add_task(function* cleanup() {
     let addons = yield new Promise(resolve => {
       AddonManager.getAddonsByTypes(["extension"], resolve);
     });

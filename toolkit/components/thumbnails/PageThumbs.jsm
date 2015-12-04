@@ -257,7 +257,7 @@ this.PageThumbs = {
   // participate in this service's telemetry, which is why this method exists.
   _captureToCanvas: function (aBrowser, aCanvas, aCallback) {
     if (aBrowser.isRemoteBrowser) {
-      Task.spawn(function () {
+      Task.spawn(function* () {
         let data =
           yield this._captureRemoteThumbnail(aBrowser, aCanvas);
         let canvas = data.thumbnail;
@@ -361,7 +361,7 @@ this.PageThumbs = {
       originalURL = url;
     }
 
-    Task.spawn((function task() {
+    Task.spawn((function* task() {
       let isSuccess = true;
       try {
         let blob = yield this.captureToBlob(aBrowser);
@@ -417,7 +417,7 @@ this.PageThumbs = {
    * @return {Promise}
    */
   _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData, aNoOverwrite) {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       let telemetryStoreTime = new Date();
       yield PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
       Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
@@ -846,7 +846,7 @@ var PageThumbsExpiration = {
 
   expireThumbnails: function Expiration_expireThumbnails(aURLsToKeep) {
     let path = this.path;
-    let keep = [PageThumbsStorage.getLeafNameForURL(url) for (url of aURLsToKeep)];
+    let keep = aURLsToKeep.map(url => PageThumbsStorage.getLeafNameForURL(url));
     let msg = [
       PageThumbsStorage.path,
       keep,

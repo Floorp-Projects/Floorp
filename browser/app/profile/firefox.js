@@ -1043,6 +1043,10 @@ pref("browser.sessionstore.upgradeBackup.latestBuildID", "");
 pref("browser.sessionstore.upgradeBackup.maxUpgradeBackups", 3);
 // End-users should not run sessionstore in debug mode
 pref("browser.sessionstore.debug", false);
+// Causes SessionStore to ignore non-final update messages from
+// browser tabs that were not caused by a flush from the parent.
+// This is a testing flag and should not be used by end-users.
+pref("browser.sessionstore.debug.no_auto_updates", false);
 // Forget closed windows/tabs after two weeks
 pref("browser.sessionstore.cleanup.forget_closed_after", 1209600000);
 

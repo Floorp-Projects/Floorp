@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function runTests() {
+function* runTests() {
   let url = "http://www.example.com/";
   ok(!thumbnailExists(url), "Thumbnail should not be cached yet.");
 

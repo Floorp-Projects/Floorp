@@ -453,7 +453,7 @@ var SendScheduler = {
       this._sendsFailed = false;
       const sendStartTime = Policy.now();
       this._sendTaskState = "wait on ping sends";
-      yield TelemetrySendImpl.sendPings(current, [for (p of sending) p.id]);
+      yield TelemetrySendImpl.sendPings(current, sending.map(p => p.id));
       if (this._shutdown || (TelemetrySend.pendingPingCount == 0)) {
         this._log.trace("_doSendTask - bailing out after sending, shutdown: " + this._shutdown +
                         ", pendingPingCount: " + TelemetrySend.pendingPingCount);
@@ -1067,9 +1067,9 @@ var TelemetrySendImpl = {
    */
   promisePendingPingActivity: function () {
     this._log.trace("promisePendingPingActivity - Waiting for ping task");
-    let p = [for (p of this._pendingPingActivity) p.catch(ex => {
+    let p = Array.from(this._pendingPingActivity, p => p.catch(ex => {
       this._log.error("promisePendingPingActivity - ping activity had an error", ex);
-    })];
+    }));
     p.push(SendScheduler.waitOnSendTask());
     return Promise.all(p);
   },

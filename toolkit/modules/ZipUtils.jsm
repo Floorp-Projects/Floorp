@@ -79,11 +79,11 @@ function saveStreamAsync(aPath, aStream, aFile) {
         input.asyncWait(readData, 0, 0, Services.tm.currentThread);
       }, readFailed);
     }
-    catch (e if e.result == Cr.NS_BASE_STREAM_CLOSED) {
-      deferred.resolve(aFile.close());
-    }
     catch (e) {
-      readFailed(e);
+      if (e.result == Cr.NS_BASE_STREAM_CLOSED)
+        deferred.resolve(aFile.close());
+      else
+        readFailed(e);
     }
   }
 
@@ -115,7 +115,7 @@ this.ZipUtils = {
       return Promise.reject(e);
     }
 
-    return Task.spawn(function() {
+    return Task.spawn(function* () {
       // Get all of the entries in the zip and sort them so we create directories
       // before files
       let entries = zipReader.findEntries(null);
