@@ -64,10 +64,7 @@ nsTerminatorTelemetry.prototype = {
       let raw;
       try {
         raw = yield OS.File.read(PATH, { encoding: "utf-8" });
-      } catch (ex) {
-        if (!ex.becauseNoSuchFile) {
-          throw ex;
-        }
+      } catch (ex if ex.becauseNoSuchFile) {
         return;
       }
       // Let other errors be reported by Promise's error-reporting.

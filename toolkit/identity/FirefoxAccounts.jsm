@@ -11,7 +11,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "objectCopy",
@@ -36,18 +35,18 @@ var log = Log.repository.getLogger("Identity.FxAccounts");
 log.level = LOG_LEVEL;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
-if (AppConstants.MOZ_B2G) {
-  XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
-                                    "resource://gre/modules/FxAccountsManager.jsm",
-                                    "FxAccountsManager");
-  Cu.import("resource://gre/modules/FxAccountsCommon.js");
-} else {
-  log.warn("The FxAccountsManager is only functional in B2G at this time.");
-  var FxAccountsManager = null;
-  var ONVERIFIED_NOTIFICATION = null;
-  var ONLOGIN_NOTIFICATION = null;
-  var ONLOGOUT_NOTIFICATION = null;
-}
+#ifdef MOZ_B2G
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
+                                  "resource://gre/modules/FxAccountsManager.jsm",
+                                  "FxAccountsManager");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+#else
+log.warn("The FxAccountsManager is only functional in B2G at this time.");
+var FxAccountsManager = null;
+var ONVERIFIED_NOTIFICATION = null;
+var ONLOGIN_NOTIFICATION = null;
+var ONLOGOUT_NOTIFICATION = null;
+#endif
 
 function FxAccountsService() {
   Services.obs.addObserver(this, "quit-application-granted", false);

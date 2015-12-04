@@ -55,9 +55,7 @@ add_task(function* test_rejected_promise_args() {
   try {
     yield worker.post("bounce", message);
     do_throw("I shound have thrown an error by now");
-  } catch (ex) {
-    if (ex != error)
-      throw ex;
+  } catch (ex if ex == error) {
     do_print("I threw the right error");
   }
 });
