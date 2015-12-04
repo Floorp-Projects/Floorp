@@ -34,7 +34,7 @@ namespace mozilla {
 using namespace gfx;
 
 LazyLogModule gWebMDemuxerLog("WebMDemuxer");
-LazyLogModule gNesteggLog("Nestegg");
+extern LazyLogModule gNesteggLog;
 
 // How far ahead will we look when searching future keyframe. In microseconds.
 // This value is based on what appears to be a reasonable value as most webm
