@@ -41,7 +41,7 @@ config = {
     "pull_all_branches": True,
 
     "virtualenv_modules": [
-        "requests==2.2.1",
+        "requests==2.8.1",
     ],
 
     "post_merge_builders": [
