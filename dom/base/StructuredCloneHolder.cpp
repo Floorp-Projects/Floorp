@@ -555,8 +555,7 @@ namespace {
 // Recursive!
 already_AddRefed<BlobImpl>
 EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
-                               PBackgroundChild* aManager,
-                               ErrorResult& aRv)
+                               PBackgroundChild* aManager = nullptr)
 {
   MOZ_ASSERT(aBlobImpl);
   RefPtr<BlobImpl> blobImpl = aBlobImpl;
@@ -605,11 +604,7 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
 
     RefPtr<BlobImpl>& newSubBlobImpl = newSubBlobImpls[index];
 
-    newSubBlobImpl = EnsureBlobForBackgroundManager(subBlobImpl, aManager, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
+    newSubBlobImpl = EnsureBlobForBackgroundManager(subBlobImpl, aManager);
     MOZ_ASSERT(newSubBlobImpl);
 
     if (subBlobImpl != newSubBlobImpl) {
@@ -625,14 +620,9 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
       nsString name;
       blobImpl->GetName(name);
 
-      blobImpl = MultipartBlobImpl::Create(newSubBlobImpls, name,
-                                           contentType, aRv);
+      blobImpl = new MultipartBlobImpl(newSubBlobImpls, name, contentType);
     } else {
-      blobImpl = MultipartBlobImpl::Create(newSubBlobImpls, contentType, aRv);
-    }
-
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
+      blobImpl = new MultipartBlobImpl(newSubBlobImpls, contentType);
     }
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
@@ -650,13 +640,7 @@ ReadBlob(JSContext* aCx,
   MOZ_ASSERT(aIndex < aHolder->BlobImpls().Length());
   RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
 
-  ErrorResult rv;
-  blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return nullptr;
-  }
-
+  blobImpl = EnsureBlobForBackgroundManager(blobImpl);
   MOZ_ASSERT(blobImpl);
 
   // RefPtr<File> needs to go out of scope before toObjectOrNull() is
@@ -684,14 +668,7 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aHolder);
 
-  ErrorResult rv;
-  RefPtr<BlobImpl> blobImpl =
-    EnsureBlobForBackgroundManager(aBlob->Impl(), nullptr, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return false;
-  }
-
+  RefPtr<BlobImpl> blobImpl = EnsureBlobForBackgroundManager(aBlob->Impl());
   MOZ_ASSERT(blobImpl);
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
@@ -737,13 +714,7 @@ ReadFileList(JSContext* aCx,
       RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[index];
       MOZ_ASSERT(blobImpl->IsFile());
 
-      ErrorResult rv;
-      blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        rv.SuppressException();
-        return nullptr;
-      }
-
+      blobImpl = EnsureBlobForBackgroundManager(blobImpl);
       MOZ_ASSERT(blobImpl);
 
       RefPtr<File> file = File::Create(aHolder->ParentDuringRead(), blobImpl);
@@ -782,22 +753,14 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
     return false;
   }
 
-  ErrorResult rv;
-  nsTArray<RefPtr<BlobImpl>> blobImpls;
-
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
     RefPtr<BlobImpl> blobImpl =
-      EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl(), nullptr, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return false;
-    }
-
+      EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl());
     MOZ_ASSERT(blobImpl);
-    blobImpls.AppendElement(blobImpl);
+
+    aHolder->BlobImpls().AppendElement(blobImpl);
   }
 
-  aHolder->BlobImpls().AppendElements(blobImpls);
   return true;
 }
 
@@ -841,12 +804,7 @@ ReadFormData(JSContext* aCx,
           File::Create(aHolder->ParentDuringRead(), blobImpl);
         MOZ_ASSERT(file);
 
-        ErrorResult rv;
-        formData->Append(name, *file, thirdArg, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          return nullptr;
-        }
-
+        formData->Append(name, *file, thirdArg);
       } else {
         MOZ_ASSERT(tag == 0);
 
@@ -858,11 +816,7 @@ ReadFormData(JSContext* aCx,
           return nullptr;
         }
 
-        ErrorResult rv;
-        formData->Append(name, value, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          return nullptr;
-        }
+        formData->Append(name, value);
       }
     }
 

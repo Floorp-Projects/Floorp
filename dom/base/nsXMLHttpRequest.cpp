@@ -798,7 +798,7 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
 }
 
 void
-nsXMLHttpRequest::CreatePartialBlob(ErrorResult& aRv)
+nsXMLHttpRequest::CreatePartialBlob()
 {
   if (mDOMBlob) {
     // Use progress info to determine whether load is complete, but use
@@ -807,8 +807,9 @@ nsXMLHttpRequest::CreatePartialBlob(ErrorResult& aRv)
     if (mLoadTotal == mLoadTransferred) {
       mResponseBlob = mDOMBlob;
     } else {
+      ErrorResult rv;
       mResponseBlob = mDOMBlob->CreateSlice(0, mDataAvailable,
-                                            EmptyString(), aRv);
+                                            EmptyString(), rv);
     }
     return;
   }
@@ -823,7 +824,7 @@ nsXMLHttpRequest::CreatePartialBlob(ErrorResult& aRv)
     mChannel->GetContentType(contentType);
   }
 
-  mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType, aRv);
+  mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType);
 }
 
 NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
@@ -1017,7 +1018,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx,
       }
 
       if (!mResponseBlob) {
-        CreatePartialBlob(aRv);
+        CreatePartialBlob();
       }
     }
 
@@ -2210,14 +2211,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       // Also, no-store response cannot be written in persistent cache.
       nsAutoCString contentType;
       mChannel->GetContentType(contentType);
-
-      ErrorResult rv;
-      mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType, rv);
+      mResponseBlob = mBlobSet->GetBlobInternal(GetOwner(), contentType);
       mBlobSet = nullptr;
-
-      if (NS_WARN_IF(rv.Failed())) {
-        return rv.StealNSResult();
-      }
     }
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
     NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
