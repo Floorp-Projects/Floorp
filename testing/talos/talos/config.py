@@ -304,6 +304,10 @@ def get_active_tests(config):
                    if i not in availableTests]
         raise ConfigurationError("No definition found for test(s): %s"
                                  % missing)
+
+    # disabled DAMP on winXP: frequent hangs, <3% of devtools users on winXP
+    if utils.PLATFORM_TYPE == 'win_':
+        activeTests = [i for i in activeTests if i != 'damp']
     return activeTests
 
 
