@@ -231,8 +231,8 @@ android::sp<android::GraphicBuffer>
 GetGraphicBufferFromDesc(SurfaceDescriptor aDesc)
 {
   MaybeMagicGrallocBufferHandle handle;
-  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
-    handle = aDesc.get_NewSurfaceDescriptorGralloc().buffer();
+  if (aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+    handle = aDesc.get_SurfaceDescriptorGralloc().buffer();
   }
   return GetGraphicBufferFrom(handle);
 }
