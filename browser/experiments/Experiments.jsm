@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
+                                  "resource://gre/modules/TelemetryUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
@@ -158,10 +160,6 @@ function loadJSONAsync(file, options) {
     }
     return data;
   });
-}
-
-function telemetryEnabled() {
-  return gPrefsTelemetry.get(PREF_TELEMETRY_ENABLED, false);
 }
 
 // Returns a promise that is resolved with the AddonInstall for that URL.
@@ -389,7 +387,7 @@ Experiments.Experiments.prototype = {
     this._shutdown = false;
     configureLogging();
 
-    gExperimentsEnabled = gPrefs.get(PREF_ENABLED, false);
+    gExperimentsEnabled = gPrefs.get(PREF_ENABLED, false) && TelemetryUtils.isTelemetryEnabled;
     this._log.trace("enabled=" + gExperimentsEnabled + ", " + this.enabled);
 
     gPrefs.observe(PREF_LOGGING, configureLogging);
@@ -580,7 +578,7 @@ Experiments.Experiments.prototype = {
   _toggleExperimentsEnabled: Task.async(function* (enabled) {
     this._log.trace("_toggleExperimentsEnabled(" + enabled + ")");
     let wasEnabled = gExperimentsEnabled;
-    gExperimentsEnabled = enabled && telemetryEnabled();
+    gExperimentsEnabled = enabled && TelemetryUtils.isTelemetryEnabled;
 
     if (wasEnabled == gExperimentsEnabled) {
       return;
