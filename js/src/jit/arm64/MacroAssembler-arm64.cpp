@@ -273,9 +273,6 @@ MacroAssemblerCompat::compareExchangeToTypedIntArray(Scalar::Type arrayType, con
       case Scalar::Uint8:
         compareExchange8ZeroExtend(mem, oldval, newval, output.gpr());
         break;
-      case Scalar::Uint8Clamped:
-        compareExchange8ZeroExtend(mem, oldval, newval, output.gpr());
-        break;
       case Scalar::Int16:
         compareExchange16SignExtend(mem, oldval, newval, output.gpr());
         break;
@@ -316,9 +313,6 @@ MacroAssemblerCompat::atomicExchangeToTypedIntArray(Scalar::Type arrayType, cons
         atomicExchange8SignExtend(mem, value, output.gpr());
         break;
       case Scalar::Uint8:
-        atomicExchange8ZeroExtend(mem, value, output.gpr());
-        break;
-      case Scalar::Uint8Clamped:
         atomicExchange8ZeroExtend(mem, value, output.gpr());
         break;
       case Scalar::Int16:

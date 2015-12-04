@@ -441,9 +441,12 @@ GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
   if (aCandidate.mInitDataTypes.WasPassed()) {
     nsTArray<nsString> initDataTypes;
     for (const nsString& candidate : aCandidate.mInitDataTypes.Value()) {
+      // All supported keySystems can handle "cenc" initDataType.
+      // ClearKey also supports "keyids" and "webm" initDataTypes.
       if (candidate.EqualsLiteral("cenc")) {
         initDataTypes.AppendElement(candidate);
-      } else if (candidate.EqualsLiteral("keyids") &&
+      } else if ((candidate.EqualsLiteral("keyids") ||
+                  candidate.EqualsLiteral("webm)")) &&
                  aKeySystem.EqualsLiteral("org.w3.clearkey")) {
         initDataTypes.AppendElement(candidate);
       }

@@ -152,8 +152,8 @@ FakeDirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
       // Just an arbitrary multiplier. Pretend that each character is
       // synthesized to 40 frames.
       uint32_t frames_length = 40 * mText.Length();
-      nsAutoArrayPtr<int16_t> frames(new int16_t[frames_length]());
-      mTask->SendAudioNative(frames, frames_length);
+      auto frames = MakeUnique<int16_t[]>(frames_length);
+      mTask->SendAudioNative(frames.get(), frames_length);
 
       mTask->SendAudioNative(nullptr, 0);
 

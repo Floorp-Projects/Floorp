@@ -94,6 +94,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_TELEMETRY_ON_BY_DEFAULT:
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+  true,
+#else
+  false,
+#endif
+
   MOZ_SERVICES_CLOUDSYNC:
 #ifdef MOZ_SERVICES_CLOUDSYNC
   true,
@@ -198,8 +205,8 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_B2G:
-#ifdef MOZ_B2G
+  MOZ_B2G_RIL:
+#ifdef MOZ_B2G_RIL
   true,
 #else
   false,
@@ -207,6 +214,13 @@ this.AppConstants = Object.freeze({
 
   MOZ_B2GDROID:
 #ifdef MOZ_B2GDROID
+  true,
+#else
+  false,
+#endif
+
+  MOZ_GRAPHENE:
+#ifdef MOZ_GRAPHENE
   true,
 #else
   false,
@@ -237,6 +251,8 @@ this.AppConstants = Object.freeze({
   INSTALL_LOCALE: "@AB_CD@",
   MOZ_WIDGET_TOOLKIT: "@MOZ_WIDGET_TOOLKIT@",
   ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",
+  MOZ_B2G_VERSION: @MOZ_B2G_VERSION@,
+  MOZ_B2G_OS_NAME: @MOZ_B2G_OS_NAME@,
 
   MOZ_ANDROID_APZ:
 #ifdef MOZ_ANDROID_APZ

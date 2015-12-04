@@ -642,6 +642,26 @@ void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
   }
 }
 
+void mozilla_sampler_get_gatherer(nsISupports** aRetVal)
+{
+  if (!aRetVal) {
+    return;
+  }
+
+  if (NS_WARN_IF(!profiler_is_active())) {
+    *aRetVal = nullptr;
+    return;
+  }
+
+  GeckoSampler *t = tlsTicker.get();
+  if (NS_WARN_IF(!t)) {
+    *aRetVal = nullptr;
+    return;
+  }
+
+  t->GetGatherer(aRetVal);
+}
+
 #endif
 
 void mozilla_sampler_save_profile_to_file(const char* aFilename)

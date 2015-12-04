@@ -183,6 +183,7 @@ app/Message.h
 app/MessageRunner.h
 arpa/inet.h
 arpa/nameser.h
+array
 asm/page.h
 asm/sigcontext.h
 asm/signal.h

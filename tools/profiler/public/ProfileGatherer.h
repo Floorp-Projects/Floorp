@@ -11,26 +11,30 @@ class GeckoSampler;
 
 namespace mozilla {
 
-class ProfileGatherer final : public nsISupports
+class ProfileGatherer final : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
-  ProfileGatherer(GeckoSampler* aTicker,
-                  double aSinceTime,
-                  mozilla::dom::Promise* aPromise);
+  explicit ProfileGatherer(GeckoSampler* aTicker);
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
-  void Start();
+  void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
+  void Cancel();
+  void OOPExitProfile(const nsCString& aProfile);
 
 private:
   ~ProfileGatherer() {};
   void Finish();
+  void Reset();
 
+  nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
   GeckoSampler* mTicker;
   double mSinceTime;
   uint32_t mPendingProfiles;
+  bool mGathering;
 };
 
 } // namespace mozilla
