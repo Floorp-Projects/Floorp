@@ -25,7 +25,7 @@ function getConnection(dbName, extraOptions={}) {
   return Sqlite.openConnection(options);
 }
 
-function getDummyDatabase(name, extraOptions={}) {
+function* getDummyDatabase(name, extraOptions={}) {
   const TABLES = {
     dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
     files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
@@ -39,7 +39,7 @@ function getDummyDatabase(name, extraOptions={}) {
     c._initialStatementCount++;
   }
 
-  throw new Task.Result(c);
+  return c;
 }
 
 function sleep(ms) {

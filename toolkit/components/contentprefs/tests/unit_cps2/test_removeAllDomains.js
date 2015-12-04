@@ -8,7 +8,7 @@ function run_test() {
 
 var tests = [
 
-  function nonexistent() {
+  function* nonexistent() {
     yield setGlobal("foo", 1);
     yield cps.removeAllDomains(null, makeCallback());
     yield dbOK([
@@ -17,7 +17,7 @@ var tests = [
     yield getGlobalOK(["foo"], 1);
   },
 
-  function domains() {
+  function* domains() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -38,7 +38,7 @@ var tests = [
     yield getOK(["b.com", "bar"], undefined);
   },
 
-  function privateBrowsing() {
+  function* privateBrowsing() {
     yield set("a.com", "foo", 1);
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
@@ -66,12 +66,12 @@ var tests = [
     yield getOK(["b.com", "foo"], undefined);
   },
 
-  function erroneous() {
+  function* erroneous() {
     do_check_throws(() => cps.removeAllDomains(null, "bogus"));
     yield true;
   },
 
-  function invalidateCache() {
+  function* invalidateCache() {
     yield set("a.com", "foo", 1);
     yield set("b.com", "bar", 2);
     yield setGlobal("baz", 3);

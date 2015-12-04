@@ -559,7 +559,7 @@ add_task(function* test_saveLoadPing() {
   }
 
   // We decode both requests to check for the |reason|.
-  let pings = [for (req of requests) decodeRequestPayload(req)];
+  let pings = Array.from(requests, decodeRequestPayload);
 
   // Check we have the correct two requests. Ordering is not guaranteed. The ping type
   // is encoded in the URL.

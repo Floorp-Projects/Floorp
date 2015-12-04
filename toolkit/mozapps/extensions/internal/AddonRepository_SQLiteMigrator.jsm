@@ -60,7 +60,7 @@ this.AddonRepository_SQLiteMigrator = {
 
     this._retrieveStoredData((results) => {
       this._closeConnection();
-      let resultArray = [addon for ([,addon] of Iterator(results))];
+      let resultArray = Object.values(results);
       logger.debug(resultArray.length + " addons imported.")
       aCallback(resultArray);
     });
