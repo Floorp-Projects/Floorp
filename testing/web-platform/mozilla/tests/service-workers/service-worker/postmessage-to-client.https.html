@@ -4,6 +4,7 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/test-helpers.sub.js"></script>
 <script>
+var frame;
 var t = async_test('postMessage from ServiceWorker to Client');
 t.step(function() {
     var scope = 'resources/blank.html';
@@ -14,7 +15,8 @@ t.step(function() {
           return wait_for_state(t, registration.installing, 'activated');
         })
       .then(function() { return with_iframe(scope); })
-      .then(function(frame) {
+      .then(function(f) {
+          frame = f;
           sw = frame.contentWindow.navigator.serviceWorker;
           sw.onmessage = t.step_func(onMessage);
           sw.controller.postMessage('ping');
@@ -34,6 +36,7 @@ t.step(function() {
       if (message === 'quit') {
         assert_array_equals(result, expected,
                             'Worker should post back expected messages.');
+        frame.remove();
         service_worker_unregister_and_done(t, scope);
       } else {
         result.push(message);

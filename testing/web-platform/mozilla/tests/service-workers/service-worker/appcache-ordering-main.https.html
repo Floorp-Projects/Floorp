@@ -13,6 +13,8 @@ var SERVICE_WORKER_SCRIPT = "resources/empty-worker.js";
 var resolve_install_appcache = undefined;
 var reject_install_appcache = undefined;
 
+var frames = [];
+
 // Called by the INSTALL_APPCACHE_URL child frame.
 function notify_appcache_installed(success) {
   if (success)
@@ -24,6 +26,7 @@ function notify_appcache_installed(success) {
 function install_appcache() {
   return new Promise(function(resolve, reject) {
       var frame = document.createElement('iframe');
+      frames.push(frame);
       frame.src = INSTALL_APPCACHE_URL;
       document.body.appendChild(frame);      
       resolve_install_appcache = function() {
@@ -47,6 +50,7 @@ function notify_is_appcached(is) {
 function is_appcached() {
   return new Promise(function(resolve) {
       var frame = document.createElement('iframe');
+      frames.push(frame);
       frame.src = IS_APPCACHED_URL;
       document.body.appendChild(frame);
       resolve_is_appcached = function(is) {
@@ -77,6 +81,7 @@ async_test(function(t) {
         })
       .then(function(result) {
           assert_false(result, 'but serviceworkers should take priority');
+          frames.forEach(function(f) { f.remove(); });
           service_worker_unregister_and_done(t, SERVICE_WORKER_SCOPE);
         })
       .catch(unreached_rejection(t));
