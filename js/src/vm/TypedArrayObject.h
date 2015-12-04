@@ -198,7 +198,7 @@ class TypedArrayObject : public NativeObject
     }
 
     bool isNeutered() const {
-        return !isSharedMemory() && (!bufferUnshared() || bufferUnshared()->isNeutered());
+        return !isSharedMemory() && bufferUnshared() && bufferUnshared()->isNeutered();
     }
 
   private:
