@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsKeyModule.h"
 #include "nsString.h"
-#include "ScopedNSSTypes.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -14,8 +13,7 @@ using namespace mozilla::psm;
 NS_IMPL_ISUPPORTS(nsKeyObject, nsIKeyObject)
 
 nsKeyObject::nsKeyObject()
-  : mKeyType(0), mSymKey(nullptr), mPrivateKey(nullptr),
-    mPublicKey(nullptr)
+  : mSymKey(nullptr)
 {
 }
 
@@ -38,104 +36,57 @@ nsKeyObject::virtualDestroyNSSReference()
 void
 nsKeyObject::destructorSafeDestroyNSSReference()
 {
-  switch (mKeyType) {
-    case nsIKeyObject::SYM_KEY:
-      PK11_FreeSymKey(mSymKey);
-      break;
-    
-    case nsIKeyObject::PRIVATE_KEY:
-      PK11_DeleteTokenPrivateKey(mPrivateKey, true /* force */);
-      break;
-
-    case nsIKeyObject::PUBLIC_KEY:
-      PK11_DeleteTokenPublicKey(mPublicKey);
-      break;
-    
-    default:
-      // probably not initialized, do nothing
-      break;
-  }
-  mKeyType = 0;
+  mSymKey = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObject
 
 NS_IMETHODIMP
-nsKeyObject::InitKey(int16_t aAlgorithm, void * aKey)
+nsKeyObject::InitKey(int16_t aAlgorithm, PK11SymKey* aKey)
 {
+  if (!aKey || aAlgorithm != nsIKeyObject::HMAC) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Clear previous key data if it exists
-  destructorSafeDestroyNSSReference();
-
-  switch (aAlgorithm) {
-    case nsIKeyObject::RC4:
-    case nsIKeyObject::HMAC:
-      mSymKey = reinterpret_cast<PK11SymKey*>(aKey);
-
-      if (!mSymKey) {
-        NS_ERROR("no symkey");
-        break;
-      }
-      mKeyType = nsIKeyObject::SYM_KEY;
-      break;
-
-    case nsIKeyObject::AES_CBC:
-      return NS_ERROR_NOT_IMPLEMENTED;
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  // One of these should have been created
-  if (!mSymKey && !mPrivateKey && !mPublicKey)
-    return NS_ERROR_FAILURE;
-
+  mSymKey = aKey;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsKeyObject::GetKeyObj(void * *_retval)
+nsKeyObject::GetKeyObj(PK11SymKey** _retval)
 {
+  if (!_retval) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *_retval = nullptr;
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mKeyType == 0)
+  if (!mSymKey) {
     return NS_ERROR_NOT_INITIALIZED;
-
-  switch (mKeyType) {
-    case nsIKeyObject::SYM_KEY:
-      *_retval = (void*)mSymKey;
-      break;
-
-    case nsIKeyObject::PRIVATE_KEY:
-      *_retval = (void*)mPublicKey;
-      break;
-
-    case nsIKeyObject::PUBLIC_KEY:
-      *_retval = (void*)mPrivateKey;
-      break;
-
-    default:
-      // unknown key type?  How did that happen?
-      return NS_ERROR_FAILURE;
   }
+
+  *_retval = mSymKey;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsKeyObject::GetType(int16_t *_retval)
 {
-  if (mKeyType == 0)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *_retval = mKeyType;
+  if (!_retval) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *_retval = nsIKeyObject::SYM_KEY;
   return NS_OK;
 }
 
@@ -149,50 +100,27 @@ nsKeyObjectFactory::nsKeyObjectFactory()
 }
 
 NS_IMETHODIMP
-nsKeyObjectFactory::LookupKeyByName(const nsACString & aName,
-                                    nsIKeyObject **_retval)
+nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
+                                  nsIKeyObject** _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
- 
-NS_IMETHODIMP
-nsKeyObjectFactory::UnwrapKey(int16_t aAlgorithm, const uint8_t *aWrappedKey,
-                              uint32_t aWrappedKeyLen, nsIKeyObject **_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  if (!_retval || aAlgorithm != nsIKeyObject::HMAC) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-NS_IMETHODIMP
-nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString & aKey,
-                                  nsIKeyObject **_retval)
-{
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  CK_MECHANISM_TYPE cipherMech;
-  CK_ATTRIBUTE_TYPE cipherOperation;
-  switch (aAlgorithm)
-  {
-  case nsIKeyObject::HMAC:
-    cipherMech = CKM_GENERIC_SECRET_KEY_GEN;
-    cipherOperation = CKA_SIGN;
-    break;
-
-  case nsIKeyObject::RC4:
-    cipherMech = CKM_RC4;
-    cipherOperation = CKA_ENCRYPT;
-    break;
-
-  default:
-    return NS_ERROR_INVALID_ARG;
-  }
+  CK_MECHANISM_TYPE cipherMech = CKM_GENERIC_SECRET_KEY_GEN;
+  CK_ATTRIBUTE_TYPE cipherOperation = CKA_SIGN;
 
   nsresult rv;
-  nsCOMPtr<nsIKeyObject> key =
-      do_CreateInstance(NS_KEYMODULEOBJECT_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIKeyObject> key(
+    do_CreateInstance(NS_KEYMODULEOBJECT_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Convert the raw string into a SECItem
   const nsCString& flatKey = PromiseFlatCString(aKey);
@@ -202,18 +130,20 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString & aKey,
 
   ScopedPK11SlotInfo slot(PK11_GetBestSlot(cipherMech, nullptr));
   if (!slot) {
-    NS_ERROR("no slot");
     return NS_ERROR_FAILURE;
   }
 
-  PK11SymKey* symKey = PK11_ImportSymKey(slot, cipherMech, PK11_OriginUnwrap,
-                                         cipherOperation, &keyItem, nullptr);
+  ScopedPK11SymKey symKey(PK11_ImportSymKey(slot, cipherMech,
+                                            PK11_OriginUnwrap, cipherOperation,
+                                            &keyItem, nullptr));
   if (!symKey) {
     return NS_ERROR_FAILURE;
   }
-  
-  rv = key->InitKey(aAlgorithm, (void*)symKey);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = key->InitKey(aAlgorithm, symKey.forget());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   key.swap(*_retval);
   return NS_OK;
