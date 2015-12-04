@@ -5,9 +5,10 @@
 #ifndef _NS_KEYMODULE_H_
 #define _NS_KEYMODULE_H_
 
-#include "nsIKeyModule.h"
-#include "pk11pub.h"
 #include "mozilla/Attributes.h"
+#include "nsIKeyModule.h"
+#include "nsNSSShutDown.h"
+#include "pk11pub.h"
 
 /* eae599aa-ecef-49c6-a8af-6ddcc6feb484 */
 #define NS_KEYMODULEOBJECT_CID   \
@@ -21,6 +22,7 @@
 "@mozilla.org/security/keyobjectfactory;1"
 
 class nsKeyObject final : public nsIKeyObject
+                        , public nsNSSShutDownObject
 {
 public:
   nsKeyObject();
@@ -42,12 +44,14 @@ private:
   SECKEYPrivateKey* mPrivateKey;
   SECKEYPublicKey* mPublicKey;
 
-  // Helper method to free memory used by keys.
-  void CleanUp();
+
+  virtual void virtualDestroyNSSReference() override;
+  void destructorSafeDestroyNSSReference();
 };
 
 
 class nsKeyObjectFactory final : public nsIKeyObjectFactory
+                               , public nsNSSShutDownObject
 {
 public:
   nsKeyObjectFactory();
@@ -60,6 +64,9 @@ private:
 
   // Disallow copy constructor
   nsKeyObjectFactory(nsKeyObjectFactory&);
+
+  // No NSS resources to release.
+  virtual void virtualDestroyNSSReference() override {}
 };
 
 #endif // _NS_KEYMODULE_H_
