@@ -174,8 +174,8 @@ add_task(function* removingTabGroupsFromJSONTest() {
 
 add_task(function* backupTest() {
   yield TabGroupsMigrator._createBackup(JSON.stringify(TEST_STATES.TWO_GROUPS));
-  let f = Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
-  f.append("Firefox-tabgroups-backup.json");
+  let f = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile);
+  f.append("tabgroups-session-backup.json");
   ok(f.exists(), "Should have created the file");
 
   let txt = (new TextDecoder()).decode(yield OS.File.read(f.path));

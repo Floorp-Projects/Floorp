@@ -131,8 +131,8 @@ this.TabGroupsMigrator = {
   },
 
   _createBackup(stateStr) {
-    let dest = Services.dirsvc.get("Desk", Ci.nsIFile);
-    dest.append("Firefox-tabgroups-backup.json");
+    let dest = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    dest.append("tabgroups-session-backup.json");
     let promise = OS.File.writeAtomic(dest.path, stateStr, {encoding: "utf-8"});
     AsyncShutdown.webWorkersShutdown.addBlocker("TabGroupsMigrator", promise);
     return promise;
