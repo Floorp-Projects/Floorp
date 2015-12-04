@@ -382,6 +382,9 @@ class CommonBackend(BuildBackend):
             "#define NAME ORIGINAL_VALUE" is turned into "#define NAME VALUE"
             "#undef UNKNOWN_NAME" is turned into "/* #undef UNKNOWN_NAME */"
             Whitespaces are preserved.
+
+        As a special rule, "#undef ALLDEFINES" is turned into "#define NAME
+        VALUE" for all the defined variables.
         '''
         with self._write_file(obj.output_path) as fh, \
              open(obj.input_path, 'rU') as input:
@@ -393,7 +396,18 @@ class CommonBackend(BuildBackend):
                     name = m.group('name')
                     value = m.group('value')
                     if name:
-                        if name in obj.config.defines:
+                        if name == 'ALLDEFINES':
+                            if cmd == 'define':
+                                raise Exception(
+                                    '`#define ALLDEFINES` is not allowed in a '
+                                    'CONFIGURE_DEFINE_FILE')
+                            defines = '\n'.join(sorted(
+                                '#define %s %s' % (name, val)
+                                for name, val in obj.config.defines.iteritems()
+                                if name not in obj.config.non_global_defines))
+                            l = l[:m.start('cmd') - 1] \
+                                + defines + l[m.end('name'):]
+                        elif name in obj.config.defines:
                             if cmd == 'define' and value:
                                 l = l[:m.start('value')] \
                                     + str(obj.config.defines[name]) \
