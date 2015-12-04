@@ -12,15 +12,22 @@ using mozilla::dom::Promise;
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS0(ProfileGatherer)
+/**
+ * When a subprocess exits before we've gathered profiles, we'll
+ * store profiles for those processes until gathering starts. We'll
+ * only store up to MAX_SUBPROCESS_EXIT_PROFILES. The buffer is
+ * circular, so as soon as we receive another exit profile, we'll
+ * bump the oldest one out of the buffer.
+ */
+static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 
-ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker,
-                                 double aSinceTime,
-                                 Promise* aPromise)
-  : mPromise(aPromise)
-  , mTicker(aTicker)
-  , mSinceTime(aSinceTime)
+NS_IMPL_ISUPPORTS(ProfileGatherer, nsIObserver)
+
+ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker)
+  : mTicker(aTicker)
+  , mSinceTime(0)
   , mPendingProfiles(0)
+  , mGathering(false)
 {
 }
 
@@ -28,6 +35,13 @@ void
 ProfileGatherer::GatheredOOPProfile()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mGathering) {
+    // If we're not actively gathering, then we don't actually
+    // care that we gathered a profile here. This can happen for
+    // processes that exit while profiling.
+    return;
+  }
+
   if (NS_WARN_IF(!mPromise)) {
     // If we're not holding on to a Promise, then someone is
     // calling us erroneously.
@@ -50,13 +64,29 @@ ProfileGatherer::WillGatherOOPProfile()
 }
 
 void
-ProfileGatherer::Start()
+ProfileGatherer::Start(double aSinceTime,
+                       Promise* aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mGathering) {
+    // If we're already gathering, reject the promise - this isn't going
+    // to end well.
+    if (aPromise) {
+      aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+    }
+    return;
+  }
+
+  mSinceTime = aSinceTime;
+  mPromise = aPromise;
+  mGathering = true;
+  mPendingProfiles = 0;
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    nsresult rv = os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
+    nsresult rv = os->AddObserver(this, "profiler-subprocess", false);
+    NS_WARN_IF(NS_FAILED(rv));
+    rv = os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
     NS_WARN_IF(NS_FAILED(rv));
   }
 
@@ -69,15 +99,25 @@ void
 ProfileGatherer::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTicker) {
+    // We somehow got called after we were cancelled! This shouldn't
+    // be possible, but doing a belt-and-suspenders check to be sure.
+    return;
+  }
+
   UniquePtr<char[]> buf = mTicker->ToJSON(mSinceTime);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    nsresult rv = os->RemoveObserver(this, "profiler-subprocess");
+    NS_WARN_IF(NS_FAILED(rv));
+  }
 
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
     // We're really hosed if we can't get a JS context for some reason.
-    // We'll tell the GeckoSampler that we've gathered the profile just
-    // so that it can drop the reference to this ProfileGatherer and maybe
-    // the user can try again.
-    mTicker->ProfileGathered();
+    Reset();
     return;
   }
 
@@ -104,7 +144,63 @@ ProfileGatherer::Finish()
     }
   }
 
-  mTicker->ProfileGathered();
+  Reset();
+}
+
+void
+ProfileGatherer::Reset()
+{
+  mSinceTime = 0;
+  mPromise = nullptr;
+  mPendingProfiles = 0;
+  mGathering = false;
+}
+
+void
+ProfileGatherer::Cancel()
+{
+  // The GeckoSampler is going away. If we have a Promise in flight, we
+  // should reject it.
+  if (mPromise) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  }
+
+  // Clear out the GeckoSampler reference, since it's being destroyed.
+  mTicker = nullptr;
+}
+
+void
+ProfileGatherer::OOPExitProfile(const nsCString& aProfile)
+{
+  if (mExitProfiles.Length() >= MAX_SUBPROCESS_EXIT_PROFILES) {
+    mExitProfiles.RemoveElementAt(0);
+  }
+  mExitProfiles.AppendElement(aProfile);
+
+  // If a process exited while gathering, we need to make
+  // sure we decrement the counter.
+  if (mGathering) {
+    GatheredOOPProfile();
+  }
+}
+
+NS_IMETHODIMP
+ProfileGatherer::Observe(nsISupports* aSubject,
+                         const char* aTopic,
+                         const char16_t *someData)
+{
+  if (!strcmp(aTopic, "profiler-subprocess")) {
+    nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
+    if (pse) {
+      for (size_t i = 0; i < mExitProfiles.Length(); ++i) {
+        if (!mExitProfiles[i].IsEmpty()) {
+          pse->AddSubProfile(mExitProfiles[i].get());
+        }
+      }
+      mExitProfiles.Clear();
+    }
+  }
+  return NS_OK;
 }
 
 } // namespace mozilla

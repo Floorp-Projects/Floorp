@@ -44,7 +44,7 @@ MP4Stream::BlockingReadIntoCache(int64_t aOffset, size_t aCount, Monitor* aToUnl
   MOZ_ASSERT(block.mCount >= bytesRead);
   block.mCount = bytesRead;
 
-  mCache.AppendElement(block);
+  mCache.AppendElement(Move(block));
   return true;
 }
 

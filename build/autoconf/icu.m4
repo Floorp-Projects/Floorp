@@ -20,10 +20,10 @@ if test -n "$MOZ_NATIVE_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_SHARED_ICU=1
 else
-    MOZ_ICU_CFLAGS="-I$_topsrcdir/intl/icu/source/common -I$_topsrcdir/intl/icu/source/i18n"
-    AC_SUBST_LIST(MOZ_ICU_CFLAGS)
+    MOZ_ICU_INCLUDES="/intl/icu/source/common /intl/icu/source/i18n"
 fi
 
+AC_SUBST_LIST(MOZ_ICU_INCLUDES)
 AC_SUBST(MOZ_NATIVE_ICU)
 
 MOZ_ARG_WITH_STRING(intl-api,

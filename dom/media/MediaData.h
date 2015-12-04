@@ -425,7 +425,7 @@ private:
   bool EnsureCapacity(size_t aSize);
   uint8_t* mData;
   size_t mSize;
-  nsAutoArrayPtr<uint8_t> mBuffer;
+  UniquePtr<uint8_t[]> mBuffer;
   uint32_t mCapacity;
   CryptoSample mCryptoInternal;
   MediaRawData(const MediaRawData&); // Not implemented
