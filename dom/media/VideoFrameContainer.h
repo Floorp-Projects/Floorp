@@ -78,6 +78,8 @@ public:
   B2G_ACL_EXPORT ImageContainer* GetImageContainer();
   void ForgetElement() { mElement = nullptr; }
 
+  uint32_t GetDroppedImageCount() { return mImageContainer->GetDroppedImageCount(); }
+
 protected:
   void SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicSize,
                               const nsTArray<ImageContainer::NonOwningImage>& aImages);
