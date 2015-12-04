@@ -29,12 +29,13 @@
     <key id="toolbox-key-toggle"
          key="&toggleToolbox.key;"
          command="toolbox-cmd-close"
-#ifdef XP_MACOSX
-         modifiers="accel,alt"
-#else
          modifiers="accel,shift"
-#endif
-        />
+         disabled="true"/>
+    <key id="toolbox-key-toggle-osx"
+         key="&toggleToolbox.key;"
+         command="toolbox-cmd-close"
+         modifiers="accel,alt"
+         disabled="true"/>
     <key id="toolbox-key-toggle-F12"
          keycode="&toggleToolboxF12.keycode;"
          keytext="&toggleToolboxF12.keytext;"

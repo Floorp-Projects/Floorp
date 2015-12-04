@@ -17,8 +17,9 @@ loop.shared.actions = (function() {
   function Action(name, schema, values) {
     var validatedData = new loop.validate.Validator(schema || {})
                                          .validate(values || {});
-    for (var prop in validatedData)
+    for (var prop in validatedData) {
       this[prop] = validatedData[prop];
+    }
 
     this.name = name;
   }
@@ -205,11 +206,9 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Used to start a screen share.
+     * Used to start a browser tab share.
      */
-    StartScreenShare: Action.define("startScreenShare", {
-      // The part of the screen to share, e.g. "window" or "browser".
-      type: String
+    StartBrowserShare: Action.define("startBrowserShare", {
     }),
 
     /**

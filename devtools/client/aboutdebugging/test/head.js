@@ -16,9 +16,13 @@ registerCleanupFunction(() => {
   DevToolsUtils.testing = false;
 });
 
-function openAboutDebugging() {
+function openAboutDebugging(page) {
   info("opening about:debugging");
-  return addTab("about:debugging").then(tab => {
+  let url = "about:debugging";
+  if (page) {
+    url += "#" + page;
+  }
+  return addTab(url).then(tab => {
     let browser = tab.linkedBrowser;
     return {
       tab,

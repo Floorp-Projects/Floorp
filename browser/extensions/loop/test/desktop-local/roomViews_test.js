@@ -400,10 +400,8 @@ describe("loop.roomViews", function() {
       expect(muteBtn.classList.contains("muted")).eql(true);
     });
 
-    it("should dispatch a `StartScreenShare` action when sharing is not active and the screen share button is pressed", function() {
+    it("should dispatch a `SetMute` action when the mute button is pressed", function() {
       view = mountTestComponent();
-
-      view.setState({ screenSharingState: SCREEN_SHARE_STATES.INACTIVE });
 
       var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
@@ -437,6 +435,15 @@ describe("loop.roomViews", function() {
 
           expectActionDispatched(component);
         });
+
+      it("should dispatch a `StartBrowserShare` action when the SESSION_CONNECTED state is entered", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
+        var component = mountTestComponent();
+
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
+
+        expectActionDispatched("startBrowserShare");
+      });
     });
 
     describe("#render", function() {
