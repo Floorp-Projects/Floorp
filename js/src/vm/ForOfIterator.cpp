@@ -53,7 +53,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     InvokeArgs args(cx);
     if (!args.init(0))
         return false;
-    args.setThis(ObjectValue(*iterableObj));
+    args.setThis(iterable);
 
     RootedValue callee(cx);
     RootedId iteratorId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
