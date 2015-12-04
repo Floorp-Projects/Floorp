@@ -700,6 +700,17 @@ TextCompositionArray::GetCompositionFor(nsIWidget* aWidget)
 }
 
 TextComposition*
+TextCompositionArray::GetCompositionFor(
+                        const WidgetCompositionEvent* aCompositionEvent)
+{
+  index_type i = IndexOf(aCompositionEvent->mNativeIMEContext);
+  if (i == NoIndex) {
+    return nullptr;
+  }
+  return ElementAt(i);
+}
+
+TextComposition*
 TextCompositionArray::GetCompositionFor(nsPresContext* aPresContext,
                                            nsINode* aNode)
 {

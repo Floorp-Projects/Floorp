@@ -413,7 +413,7 @@ protected:
    * EnsureComposition() should be called by composition event handlers.  This
    * tries to get the composition for the event and set it to mComposition.
    */
-  void EnsureComposition(mozilla::WidgetGUIEvent* aEvent);
+  void EnsureComposition(mozilla::WidgetCompositionEvent* aCompositionEvent);
 
   nsresult GetSelection(int16_t aSelectionType, nsISelection** aSelection);
 
