@@ -7,6 +7,7 @@
 #include "GMPLoader.h"
 #include <stdio.h>
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 #include "prenv.h"
@@ -247,12 +248,12 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     return false;
   }
 
-  nsAutoArrayPtr<wchar_t> widePath(new wchar_t[pathLen]);
-  if (MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, widePath, pathLen) == 0) {
+  auto widePath = MakeUnique<wchar_t[]>(pathLen);
+  if (MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, widePath.get(), pathLen) == 0) {
     return false;
   }
 
-  libSpec.value.pathname_u = widePath;
+  libSpec.value.pathname_u = widePath.get();
   libSpec.type = PR_LibSpec_PathnameU;
 #else
   libSpec.value.pathname = aUTF8LibPath;

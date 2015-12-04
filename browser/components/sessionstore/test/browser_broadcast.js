@@ -23,29 +23,6 @@ add_task(function flush_on_tabclose() {
 
 /**
  * This test ensures we won't lose tab data queued in the content script when
- * the application tries to quit.
- */
-add_task(function flush_on_quit_requested() {
-  let tab = yield createTabWithStorageData(["http://example.com"]);
-  let browser = tab.linkedBrowser;
-
-  yield modifySessionStorage(browser, {test: "on-quit-requested"});
-
-  // Note that sending quit-application-requested should not interfere with
-  // other tests and code. We're just notifying about a shutdown request but
-  // we will not send quit-application-granted. Observers will thus assume
-  // that some other observer has canceled the request.
-  sendQuitApplicationRequested();
-
-  let {storage} = JSON.parse(ss.getTabState(tab));
-  is(storage["http://example.com"].test, "on-quit-requested",
-    "sessionStorage data has been flushed when a quit is requested");
-
-  gBrowser.removeTab(tab);
-});
-
-/**
- * This test ensures we won't lose tab data queued in the content script when
  * duplicating a tab.
  */
 add_task(function flush_on_duplicate() {
@@ -151,10 +128,4 @@ function createTabWithStorageData(urls, win = window) {
 
     throw new Task.Result(tab);
   });
-}
-
-function sendQuitApplicationRequested() {
-  let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                     .createInstance(Ci.nsISupportsPRBool);
-  Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
 }

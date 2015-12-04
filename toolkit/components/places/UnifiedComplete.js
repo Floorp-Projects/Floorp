@@ -71,7 +71,7 @@ const FRECENCY_DEFAULT = 1000;
 // Remote matches are appended when local matches are below a given frecency
 // threshold (FRECENCY_DEFAULT) as soon as they arrive.  However we'll
 // always try to have at least MINIMUM_LOCAL_MATCHES local matches.
-const MINIMUM_LOCAL_MATCHES = 5;
+const MINIMUM_LOCAL_MATCHES = 6;
 
 // A regex that matches "single word" hostnames for whitelisting purposes.
 // The hostname will already have been checked for general validity, so we

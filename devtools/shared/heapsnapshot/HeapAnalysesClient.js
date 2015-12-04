@@ -52,6 +52,22 @@ HeapAnalysesClient.prototype.readHeapSnapshot = function (snapshotFilePath) {
 };
 
 /**
+ * Request the creation time given a snapshot file path. Returns `null`
+ * if snapshot does not exist.
+ *
+ * @param {String} snapshotFilePath
+ *        The path to the snapshot.
+ * @return {Number?}
+ *        The unix timestamp of the creation time of the snapshot, or null if
+ *        snapshot does not exist.
+ */
+HeapAnalysesClient.prototype.getCreationTime = function (snapshotFilePath) {
+  return this._worker.performTask("getCreationTime", snapshotFilePath);
+};
+
+/*** Censuses *****************************************************************/
+
+/**
  * Ask the worker to perform a census analysis on the heap snapshot with the
  * given path. The heap snapshot at the given path must have already been read
  * into memory by the worker (see `readHeapSnapshot`).
@@ -136,16 +152,65 @@ HeapAnalysesClient.prototype.takeCensusDiff = function (firstSnapshotFilePath,
   });
 };
 
+/*** Dominator Trees **********************************************************/
+
 /**
- * Request the creation time given a snapshot file path. Returns `null`
- * if snapshot does not exist.
+ * Compute the dominator tree of the heap snapshot loaded from the given file
+ * path. Returns the id of the computed dominator tree.
  *
  * @param {String} snapshotFilePath
- *        The path to the snapshot.
- * @return {Number?}
- *        The unix timestamp of the creation time of the snapshot, or null if
- *        snapshot does not exist.
+ *
+ * @returns {Promise<DominatorTreeId>}
  */
-HeapAnalysesClient.prototype.getCreationTime = function (snapshotFilePath) {
-  return this._worker.performTask("getCreationTime", snapshotFilePath);
+HeapAnalysesClient.prototype.computeDominatorTree = function (snapshotFilePath) {
+  return this._worker.performTask("computeDominatorTree", snapshotFilePath);
+};
+
+/**
+ * Get the initial, partial view of the dominator tree with the given id.
+ *
+ * @param {Object} opts
+ *        An object specifying options for this request.
+ *        - {DominatorTreeId} dominatorTreeId
+ *          The id of the dominator tree.
+ *        - {Number} maxDepth
+ *          The maximum depth to traverse down the tree to create this initial
+ *          view.
+ *        - {Number} maxSiblings
+ *          The maximum number of siblings to visit within each traversed node's
+ *          children.
+ *
+ * @returns {Promise<DominatorTreeNode>}
+ */
+HeapAnalysesClient.prototype.getDominatorTree = function (opts) {
+  return this._worker.performTask("getDominatorTree", opts);
+};
+
+/**
+ * Get a subset of a nodes children in the dominator tree.
+ *
+ * @param {Object} opts
+ *        An object specifying options for this request.
+ *        - {DominatorTreeId} dominatorTreeId
+ *          The id of the dominator tree.
+ *        - {NodeId} nodeId
+ *          The id of the node whose children are being found.
+ *        - {Number} startIndex
+ *          The starting index within the full set of immediately dominated
+ *          children of the children being requested. Children are always sorted
+ *          by greatest to least retained size.
+ *        - {Number} maxCount
+ *          The maximum number of children to return.
+ *
+ * @returns {Promise<Object>}
+ *          A promise of an object with the following properties:
+ *          - {Array<DominatorTreeNode>} nodes
+ *            The requested nodes that are immediately dominated by the node
+ *            identified by `opts.nodeId`.
+ *          - {Boolean} moreChildrenAvailable
+ *            True iff there are more children available after the returned
+ *            nodes.
+ */
+HeapAnalysesClient.prototype.getImmediatelyDominated = function (opts) {
+  return this._worker.performTask("getImmediatelyDominated", opts);
 };

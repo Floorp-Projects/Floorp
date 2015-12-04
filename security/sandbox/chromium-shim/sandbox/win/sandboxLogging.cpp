@@ -61,12 +61,12 @@ LogBlocked(const char* aFunctionName, const wchar_t* aContext)
 
 void
 LogBlocked(const char* aFunctionName, const wchar_t* aContext,
-           uint16_t aLength)
+           uint16_t aLengthInBytes)
 {
   if (sLogFunction) {
     // Skip an extra frame to allow for this function.
     LogBlocked(aFunctionName,
-               base::WideToUTF8(std::wstring(aContext, aLength)).c_str(),
+               base::WideToUTF8(std::wstring(aContext, aLengthInBytes / sizeof(wchar_t))).c_str(),
                /* aFramesToSkip */ 3);
   }
 }
@@ -90,11 +90,11 @@ LogAllowed(const char* aFunctionName, const wchar_t* aContext)
 
 void
 LogAllowed(const char* aFunctionName, const wchar_t* aContext,
-           uint16_t aLength)
+           uint16_t aLengthInBytes)
 {
   if (sLogFunction) {
     LogAllowed(aFunctionName,
-               base::WideToUTF8(std::wstring(aContext, aLength)).c_str());
+               base::WideToUTF8(std::wstring(aContext, aLengthInBytes / sizeof(wchar_t))).c_str());
   }
 }
 

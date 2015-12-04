@@ -47,14 +47,16 @@ module.exports = function(context) {
 
       var expression = context.getSource(node);
 
-      cpows.some(function(cpow) {
+      // Only report a single CPOW error per node -- so if checking
+      // |cpows| reports one, don't report another below.
+      var someCpowFound = cpows.some(function(cpow) {
         if (cpow.test(expression)) {
           showError(node, expression);
           return true;
         }
         return false;
       });
-      if (helpers.getIsGlobalScope(context)) {
+      if (!someCpowFound && helpers.getIsGlobalScope(context)) {
         if (/^content\./.test(expression)) {
           showError(node, expression);
           return;

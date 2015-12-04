@@ -6,6 +6,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransport.h"
@@ -263,7 +264,7 @@ ServeResourceEvent::Run() {
   // HTTP response headers sent below. A static_assert ensures
   // this where the buffer is used.
   const int buffer_size = 32768;
-  nsAutoArrayPtr<char> b(new char[buffer_size]);
+  auto b = MakeUnique<char[]>(buffer_size);
 
   // If we know the length of the resource, send a Content-Length header.
   int64_t contentlength = resource->GetLength() - start;
@@ -271,8 +272,8 @@ ServeResourceEvent::Run() {
     static_assert (buffer_size > 1024,
                    "buffer_size must be large enough "
                    "to hold response headers");
-    snprintf(b, buffer_size, "Content-Length: %" PRId64 "\r\n", contentlength);
-    rv = WriteAll(b, strlen(b));
+    snprintf(b.get(), buffer_size, "Content-Length: %" PRId64 "\r\n", contentlength);
+    rv = WriteAll(b.get(), strlen(b.get()));
     if (NS_FAILED(rv)) { Shutdown(); return NS_OK; }
   }
 
@@ -282,10 +283,10 @@ ServeResourceEvent::Run() {
     static_assert (buffer_size > 1024,
                    "buffer_size must be large enough "
                    "to hold response headers");
-    snprintf(b, buffer_size, "Content-Range: "
+    snprintf(b.get(), buffer_size, "Content-Range: "
              "bytes %" PRId64 "-%" PRId64 "/%" PRId64 "\r\n",
              start, resource->GetLength() - 1, resource->GetLength());
-    rv = WriteAll(b, strlen(b));
+    rv = WriteAll(b.get(), strlen(b.get()));
     if (NS_FAILED(rv)) { Shutdown(); return NS_OK; }
   }
 
@@ -297,7 +298,7 @@ ServeResourceEvent::Run() {
 
   // Read data from media resource
   uint32_t bytesRead = 0; // Number of bytes read/written to streams
-  rv = resource->ReadAt(start, b, buffer_size, &bytesRead);
+  rv = resource->ReadAt(start, b.get(), buffer_size, &bytesRead);
   while (NS_SUCCEEDED(rv) && bytesRead != 0) {
     // Keep track of what we think the starting position for the next read
     // is. This is used in subsequent ReadAt calls to ensure we are reading
@@ -306,10 +307,10 @@ ServeResourceEvent::Run() {
     start += bytesRead;
 
     // Write data obtained from media resource to output stream
-    rv = WriteAll(b, bytesRead);
+    rv = WriteAll(b.get(), bytesRead);
     if (NS_FAILED (rv)) break;
 
-    rv = resource->ReadAt(start, b, 32768, &bytesRead);
+    rv = resource->ReadAt(start, b.get(), 32768, &bytesRead);
   }
 
   Shutdown();

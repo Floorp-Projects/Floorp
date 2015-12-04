@@ -318,7 +318,7 @@ inDOMUtils::GetRelativeRuleLine(nsIDOMCSSRule* aRule, uint32_t* _retval)
 
   uint32_t lineNumber = rule->GetLineNumber();
   CSSStyleSheet* sheet = rule->GetStyleSheet();
-  if (sheet) {
+  if (sheet && lineNumber != 0) {
     nsINode* owningNode = sheet->GetOwnerNode();
     if (owningNode) {
       nsCOMPtr<nsIStyleSheetLinkingElement> link =

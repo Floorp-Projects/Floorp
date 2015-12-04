@@ -10,7 +10,6 @@ loop.shared.views = (function(_, mozL10n) {
   var sharedActions = loop.shared.actions;
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
-  var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   /**
    * Hang-up control button.
@@ -100,114 +99,6 @@ loop.shared.views = (function(_, mozL10n) {
         <button className={this._getClasses()}
                 onClick={this.handleClick}
                 title={this._getTitle()}></button>
-      );
-    }
-  });
-
-  /**
-   * Screen sharing control button.
-   *
-   * Required props:
-   * - {loop.Dispatcher} dispatcher  The dispatcher instance
-   * - {Boolean}         visible     Set to true to display the button
-   * - {String}          state       One of the screen sharing states, see
-   *                                 loop.shared.utils.SCREEN_SHARE_STATES
-   */
-  var ScreenShareControlButton = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin()],
-
-    propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      state: React.PropTypes.string.isRequired,
-      visible: React.PropTypes.bool.isRequired
-    },
-
-    getInitialState: function() {
-      var os = loop.shared.utils.getOS();
-      var osVersion = loop.shared.utils.getOSVersion();
-      // Disable screensharing on older OSX and Windows versions.
-      if ((os.indexOf("mac") > -1 && osVersion.major <= 10 && osVersion.minor <= 6) ||
-          (os.indexOf("win") > -1 && osVersion.major <= 5 && osVersion.minor <= 2)) {
-        return { windowSharingDisabled: true };
-      }
-      return { windowSharingDisabled: false };
-    },
-
-    handleClick: function() {
-      if (this.props.state === SCREEN_SHARE_STATES.ACTIVE) {
-        this.props.dispatcher.dispatch(
-          new sharedActions.EndScreenShare({}));
-      } else {
-        this.toggleDropdownMenu();
-      }
-    },
-
-    _startScreenShare: function(type) {
-      this.props.dispatcher.dispatch(new sharedActions.StartScreenShare({
-        type: type
-      }));
-    },
-
-    _handleShareTabs: function() {
-      this._startScreenShare("browser");
-      this.hideDropdownMenu();
-    },
-
-    _handleShareWindows: function() {
-      this._startScreenShare("window");
-      this.hideDropdownMenu();
-    },
-
-    _getTitle: function() {
-      var prefix = this.props.state === SCREEN_SHARE_STATES.ACTIVE ?
-        "active" : "inactive";
-
-      return mozL10n.get(prefix + "_screenshare_button_title");
-    },
-
-    render: function() {
-      if (!this.props.visible) {
-        return null;
-      }
-
-      var cx = classNames;
-
-      var isActive = this.props.state === SCREEN_SHARE_STATES.ACTIVE;
-      var screenShareClasses = cx({
-        "btn": true,
-        "btn-screen-share": true,
-        "transparent-button": true,
-        "menu-showing": this.state.showMenu,
-        "active": isActive,
-        "disabled": this.props.state === SCREEN_SHARE_STATES.PENDING
-      });
-      var dropdownMenuClasses = cx({
-        "screen-share-menu": true,
-        "dropdown-menu": true,
-        "hide": !this.state.showMenu
-      });
-      var windowSharingClasses = cx({
-        "dropdown-menu-item": true,
-        "disabled": this.state.windowSharingDisabled
-      });
-
-      return (
-        <div>
-          <button className={screenShareClasses}
-                  onClick={this.handleClick}
-                  ref="anchor"
-                  title={this._getTitle()}>
-            {isActive ? null : <span className="chevron"/>}
-          </button>
-          <ul className={dropdownMenuClasses} ref="menu">
-            <li className="dropdown-menu-item" onClick={this._handleShareTabs}>
-              {mozL10n.get("share_tabs_button_title2")}
-            </li>
-            <li className={windowSharingClasses} onClick={this._handleShareWindows}>
-              {mozL10n.get("share_windows_button_title")}
-            </li>
-          </ul>
-        </div>
       );
     }
   });
@@ -391,7 +282,6 @@ loop.shared.views = (function(_, mozL10n) {
       return {
         video: { enabled: true, visible: true },
         audio: { enabled: true, visible: true },
-        screenShare: { state: SCREEN_SHARE_STATES.INACTIVE, visible: false },
         settingsMenuItems: null,
         showHangup: true
       };
@@ -408,7 +298,6 @@ loop.shared.views = (function(_, mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       hangup: React.PropTypes.func.isRequired,
       publishStream: React.PropTypes.func.isRequired,
-      screenShare: React.PropTypes.object,
       settingsMenuItems: React.PropTypes.array,
       show: React.PropTypes.bool.isRequired,
       showHangup: React.PropTypes.bool,
@@ -524,11 +413,6 @@ loop.shared.views = (function(_, mozL10n) {
                                     scope="local" type="audio"
                                     visible={this.props.audio.visible}/>
             </div>
-          </li>
-          <li className="conversation-toolbar-btn-box">
-            <ScreenShareControlButton dispatcher={this.props.dispatcher}
-                                      state={this.props.screenShare.state}
-                                      visible={this.props.screenShare.visible} />
           </li>
           <li className="conversation-toolbar-btn-box btn-edit-entry">
             <SettingsControlButton menuItems={this.props.settingsMenuItems} />
@@ -1141,7 +1025,6 @@ loop.shared.views = (function(_, mozL10n) {
     MediaView: MediaView,
     LoadingView: LoadingView,
     SettingsControlButton: SettingsControlButton,
-    ScreenShareControlButton: ScreenShareControlButton,
     NotificationListView: NotificationListView
   };
 })(_, navigator.mozL10n || document.mozL10n);

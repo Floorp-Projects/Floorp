@@ -14,6 +14,8 @@
 #include "mozilla/Vector.h"
 #include <stdint.h>
 
+class nsISupports;
+
 namespace mozilla {
 class TimeStamp;
 
@@ -73,6 +75,7 @@ void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
                                                double* aInterval,
                                                mozilla::Vector<const char*>* aFilters,
                                                mozilla::Vector<const char*>* aFeatures);
+void mozilla_sampler_get_gatherer(nsISupports** aRetVal);
 #endif
 
 // Make this function easily callable from a debugger in a build without
