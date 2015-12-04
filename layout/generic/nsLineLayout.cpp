@@ -25,7 +25,7 @@
 #include "nsTextFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsBidiPresUtils.h"
-#include "nsRubyFrame.h"
+#include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextFrame.h"
 #include "RubyUtils.h"
 #include <algorithm>
@@ -1685,13 +1685,13 @@ nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
   MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
   nscoord requiredStartLeading = 0;
   nscoord requiredEndLeading = 0;
-  if (spanFrame->GetType() == nsGkAtoms::rubyFrame) {
+  if (spanFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
     // We may need to extend leadings here for ruby annotations as
     // required by section Line Spacing in the CSS Ruby spec.
     // See http://dev.w3.org/csswg/css-ruby/#line-height
-    auto rubyFrame = static_cast<nsRubyFrame*>(spanFrame);
+    auto rbc = static_cast<nsRubyBaseContainerFrame*>(spanFrame);
     nscoord startLeading, endLeading;
-    rubyFrame->GetBlockLeadings(startLeading, endLeading);
+    rbc->GetBlockLeadings(&startLeading, &endLeading);
     requiredStartLeading += startLeading;
     requiredEndLeading += endLeading;
   }
