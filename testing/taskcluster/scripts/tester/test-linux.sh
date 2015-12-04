@@ -27,6 +27,8 @@ if [[ -z ${MOZHARNESS_URL} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 
+mkdir -p ~/artifacts
+
 cleanup() {
     if [ -n "$xvfb_pid" ]; then
         kill $xvfb_pid || true
@@ -94,7 +96,7 @@ StartupNotify=false
 Terminal=false
 Type=Application
 EOF
-    gnome-session &
+    gnome-session > ~/artifacts/public/gnome-session.log 2>&1 &
     while [ ! -f $semaphore ]; do
         sleep 1
     done

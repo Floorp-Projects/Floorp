@@ -10,7 +10,7 @@ task:
         GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
         GECKO_HEAD_REV: '{{{head_rev}}}'
     artifacts:
-      'public/build':
+      'public/test':
         type: directory
         path: '/home/worker/artifacts/'
         expires: '{{#from_now}}1 year{{/from_now}}'
