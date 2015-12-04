@@ -41,7 +41,10 @@ var Agent = {
       let maxDate = new Date();
       maxDate.setSeconds(maxDate.getSeconds() - maxAge);
       return stat.lastModificationDate > maxDate;
-    } catch (ex if ex instanceof OS.File.Error) {
+    } catch (ex) {
+      if (!(ex instanceof OS.File.Error)) {
+        throw ex;
+      }
       // file doesn't exist (or can't be stat'd) - must be stale.
       return false;
     }
@@ -82,9 +85,13 @@ var Agent = {
 
     let skip = new Set(skipFiles);
 
-    return [entry
-            for (entry in iter)
-            if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name))];
+    let entries = [];
+    for (let entry in iter) {
+      if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name)) {
+        entries.push(entry);
+      }
+    }
+    return entries;
   },
 
   moveOrDeleteAllThumbnails:

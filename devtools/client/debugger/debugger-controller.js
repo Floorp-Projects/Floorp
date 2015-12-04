@@ -323,7 +323,11 @@ var DebuggerController = {
     this.ThreadState.connect();
     this.StackFrames.connect();
 
-    this._onNavigate();
+    // Load all of the sources. Note that the server will actually
+    // emit individual `newSource` notifications, which trigger
+    // separate actions, so this won't do anything other than force
+    // the server to traverse sources.
+    this.dispatch(actions.loadSources());
   },
 
   /**
@@ -378,11 +382,12 @@ var DebuggerController = {
     this.ThreadState.handleTabNavigation();
     this.StackFrames.handleTabNavigation();
 
-    // Load all of the sources. Note that the server will actually
-    // emit individual `newSource` notifications, which trigger
-    // separate actions, so this won't do anything other than force
-    // the server to traverse sources.
-
+    // TODO(jwl): We shouldn't need this call. We're already getting
+    // `newSource` notifications because we're already connected, but
+    // I'm not sure of the order those come in with regards to the
+    // navigation event.  Tests look for this action and it needs to
+    // indicate everything is done loading, so we should figure out
+    // another way to indicate that.
     this.dispatch(actions.loadSources());
   },
 

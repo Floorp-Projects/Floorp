@@ -111,6 +111,8 @@ IsTypeSupported(const nsAString& aType)
         return NS_OK;
       } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
         if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
+              (Preferences::GetBool("media.mediasource.webm.audio.enabled", true) &&
+               DecoderTraits::IsWebMAudioType(mimeTypeUTF8)) ||
               IsWebMForced())) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }

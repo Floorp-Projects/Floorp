@@ -33,7 +33,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   // Like the code, we check to see if nav-history-service exists
   // (i.e MOZ_PLACES is enabled), so that we don't run this test if it doesn't.

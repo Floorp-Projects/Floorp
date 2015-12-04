@@ -110,10 +110,9 @@ public:
     }
   }
 
-  // We cannot rely on nsTHashtable::GetEntry() in case we are enumerating the
-  // entries and returning PL_DHASH_REMOVE. Destructor is called before the
-  // entry is removed. Caller must call one of following methods to skip
-  // lookup in the hashtable.
+  // We cannot rely on nsTHashtable::GetEntry() in case we are removing entries
+  // while iterating. Destructor is called before the entry is removed. Caller
+  // must call one of following methods to skip lookup in the hashtable.
   void DoNotSearchInIndex()   { mDoNotSearchInIndex = true; }
   void DoNotSearchInUpdates() { mDoNotSearchInUpdates = true; }
 

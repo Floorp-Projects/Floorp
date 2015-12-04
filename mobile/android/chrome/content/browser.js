@@ -120,6 +120,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/Re
 
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
+  "@mozilla.org/gfx/fontenumerator;1",
+  "nsIFontEnumerator");
+
 var lazilyLoadedBrowserScripts = [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
@@ -456,6 +460,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Webapps:Load", false);
     Services.obs.addObserver(this, "Webapps:AutoUninstall", false);
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
+    Services.obs.addObserver(this, "Fonts:Reload", false);
+
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
     function showFullScreenWarning() {
@@ -2098,6 +2104,10 @@ var BrowserApp = {
         let data = JSON.parse(aData);
         let tab = this.getTabForId(data.tabId);
         tab.tilesData = data.payload;
+        break;
+
+      case "Fonts:Reload":
+        FontEnumerator.updateFontList();
         break;
 
       default:
@@ -7640,3 +7650,4 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
     }
   },
 });
+

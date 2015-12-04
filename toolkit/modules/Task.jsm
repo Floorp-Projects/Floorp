@@ -237,9 +237,10 @@ function createAsyncFunction(aTask) {
       try {
         // Let's call into the function ourselves.
         result = aTask.apply(this, arguments);
-      } catch (ex if ex instanceof Task.Result) {
-        return Promise.resolve(ex.value);
       } catch (ex) {
+        if (ex instanceof Task.Result) {
+          return Promise.resolve(ex.value);
+        }
         return Promise.reject(ex);
       }
     }
@@ -330,16 +331,18 @@ TaskImpl.prototype = {
           let yielded = aSendResolved ? this._iterator.send(aSendValue)
                                       : this._iterator.throw(aSendValue);
           this._handleResultValue(yielded);
-        } catch (ex if ex instanceof Task.Result) {
-          // The generator function threw the special exception that allows it to
-          // return a specific value on resolution.
-          this.deferred.resolve(ex.value);
-        } catch (ex if ex instanceof StopIteration) {
-          // The generator function terminated with no specific result.
-          this.deferred.resolve(undefined);
         } catch (ex) {
-          // The generator function failed with an uncaught exception.
-          this._handleException(ex);
+          if (ex instanceof Task.Result) {
+            // The generator function threw the special exception that allows it to
+            // return a specific value on resolution.
+            this.deferred.resolve(ex.value);
+          } else if (ex instanceof StopIteration) {
+            // The generator function terminated with no specific result.
+            this.deferred.resolve(undefined);
+          } else {
+            // The generator function failed with an uncaught exception.
+            this._handleException(ex);
+          }
         }
       }
     } finally {

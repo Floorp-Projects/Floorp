@@ -7,8 +7,6 @@
 #ifndef nsMathUtils_h__
 #define nsMathUtils_h__
 
-#define _USE_MATH_DEFINES /* needed for M_ constants on Win32 */
-
 #include "nscore.h"
 #include <cmath>
 #include <float.h>

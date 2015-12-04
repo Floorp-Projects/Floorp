@@ -5,7 +5,7 @@
  * These tests ensure that capturing a sites's thumbnail, saving it and
  * retrieving it from the cache works.
  */
-function runTests() {
+function* runTests() {
   // Create a tab with a red background.
   yield addTab("data:text/html,<body bgcolor=ff0000></body>");
   yield captureAndCheckColor(255, 0, 0, "we have a red thumbnail");

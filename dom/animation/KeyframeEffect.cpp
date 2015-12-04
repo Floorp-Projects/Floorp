@@ -9,6 +9,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
@@ -55,7 +56,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
   aRetVal.mEndTime
     = std::max(aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay, 0.0);
-  aRetVal.mLocalTime = dom::AnimationUtils::TimeDurationToDouble(aLocalTime);
+  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
   aRetVal.mProgress = aComputedTiming.mProgress;
   if (!aRetVal.mProgress.IsNull()) {
     // Convert the returned currentIteration into Infinity if we set
@@ -551,6 +552,12 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
     if (effectSet) {
       effectSet->RemoveEffect(*this);
+    }
+    // Any effects not in the effect set will not be included in the set of
+    // candidate effects for running on the compositor and hence they won't
+    // have their compositor status updated so we should do that now.
+    for (bool& isRunningOnCompositor : mIsPropertyRunningOnCompositor) {
+      isRunningOnCompositor = false;
     }
   }
 }
@@ -1984,7 +1991,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       nsCString message;
       message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
         "transforms is not supported.  See bug 779598");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -1998,7 +2005,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       message.AppendLiteral("Gecko bug: Async animation of "
         "'backface-visibility: hidden' transforms is not supported."
         "  See bug 1186204.");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -2007,7 +2014,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
       nsCString message;
       message.AppendLiteral("Gecko bug: Async 'transform' animations of "
         "aFrames with SVG transforms is not supported.  See bug 779599");
-      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+      AnimationUtils::LogAsyncAnimationFailure(message, aContent);
     }
     return false;
   }
@@ -2015,31 +2022,42 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   return true;
 }
 
-/* static */ bool
-KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
-  const nsIFrame* aFrame,
-  nsCSSProperty aProperty)
+bool
+KeyframeEffectReadOnly::ShouldBlockCompositorAnimations(const nsIFrame*
+                                                          aFrame) const
 {
+  // We currently only expect this method to be called when this effect
+  // is attached to a playing Animation. If that ever changes we'll need
+  // to update this to only return true when that is the case since paused,
+  // filling, cancelled Animations etc. shouldn't stop other Animations from
+  // running on the compositor.
+  MOZ_ASSERT(mAnimation && mAnimation->IsPlaying());
+
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
 
-  if (IsGeometricProperty(aProperty)) {
-    if (shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of "
-        "'transform' or 'opacity' not possible due to animation of geometric"
-        "properties on the same element");
-      AnimationCollection::LogAsyncAnimationFailure(message,
-                                                    aFrame->GetContent());
+  for (const AnimationProperty& property : mProperties) {
+    // Check for geometric properties
+    if (IsGeometricProperty(property.mProperty)) {
+      if (shouldLog) {
+        nsCString message;
+        message.AppendLiteral("Performance warning: Async animation of "
+          "'transform' or 'opacity' not possible due to animation of geometric"
+          "properties on the same element");
+        AnimationUtils::LogAsyncAnimationFailure(message, aFrame->GetContent());
+      }
+      return true;
     }
-    return false;
-  }
-  if (aProperty == eCSSProperty_transform) {
-    if (!CanAnimateTransformOnCompositor(aFrame,
-          shouldLog ? aFrame->GetContent() : nullptr)) {
-      return false;
+
+    // Check for unsupported transform animations
+    if (property.mProperty == eCSSProperty_transform) {
+      if (!CanAnimateTransformOnCompositor(aFrame,
+            shouldLog ? aFrame->GetContent() : nullptr)) {
+        return true;
+      }
     }
   }
-  return true;
+
+  return false;
 }
 
 } // namespace dom

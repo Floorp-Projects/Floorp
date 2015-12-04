@@ -126,7 +126,9 @@ add_task(function* test_schema_version() {
       yield db.setSchemaVersion(v);
       do_print("Schema version " + v + " should have been rejected");
       success = false;
-    } catch (ex if ex.message.startsWith("Schema version must be an integer.")) {
+    } catch (ex) {
+      if (!ex.message.startsWith("Schema version must be an integer."))
+        throw ex;
       success = true;
     }
     do_check_true(success);
@@ -918,7 +920,11 @@ add_task(function* test_cloneStorageConnection() {
   try {
     let clone = yield Sqlite.cloneStorageConnection({ connection: null });
     do_throw(new Error("Should throw on invalid connection"));
-  } catch (ex if ex.name == "TypeError") {}
+  } catch (ex) {
+    if (ex.name != "TypeError") {
+      throw ex;
+    }
+  }
 });
 
 // Test clone() method.

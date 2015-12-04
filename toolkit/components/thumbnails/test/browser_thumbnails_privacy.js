@@ -5,7 +5,7 @@ const PREF_DISK_CACHE_SSL = "browser.cache.disk_cache_ssl";
 const URL = "://example.com/browser/toolkit/components/thumbnails/" +
             "test/privacy_cache_control.sjs";
 
-function runTests() {
+function* runTests() {
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_DISK_CACHE_SSL);
   });

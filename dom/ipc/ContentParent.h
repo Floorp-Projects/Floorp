@@ -798,7 +798,8 @@ private:
 
     virtual bool RecvOpenNotificationSettings(const IPC::Principal& aPrincipal) override;
 
-    virtual bool RecvLoadURIExternal(const URIParams& uri) override;
+    virtual bool RecvLoadURIExternal(const URIParams& uri,
+                                     PBrowserParent* windowContext) override;
 
     virtual bool RecvSyncMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,

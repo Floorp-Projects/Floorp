@@ -186,12 +186,12 @@ var CharsetMenu = {
   },
 
   getCharsetInfo: function(charsets, sort=true) {
-    let list = [{
+    let list = Array.from(charsets, charset => ({
       label: this._getCharsetLabel(charset),
       accesskey: this._getCharsetAccessKey(charset),
       name: "charset",
       value: charset
-    } for (charset of charsets)];
+    }));
 
     if (sort) {
       list.sort(CharsetComparator);

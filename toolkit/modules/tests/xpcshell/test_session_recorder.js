@@ -53,7 +53,7 @@ add_test(function test_basic() {
   run_next_test();
 });
 
-add_task(function test_current_properties() {
+add_task(function* test_current_properties() {
   let now = new Date();
   let recorder = getRecorder("current_properties", now);
   yield sleep(25);
@@ -78,7 +78,7 @@ add_task(function test_current_properties() {
 
 // If startup info isn't present yet, we should install a timer and get
 // it eventually.
-add_task(function test_current_availability() {
+add_task(function* test_current_availability() {
   let recorder = new SessionRecorder("testing.current_availability.");
   let now = new Date();
 
@@ -156,7 +156,7 @@ add_test(function test_timer_clear_on_shutdown() {
   run_next_test();
 });
 
-add_task(function test_previous_clean() {
+add_task(function* test_previous_clean() {
   let now = new Date();
   let recorder = getRecorder("previous_clean", now);
   yield sleep(25);
@@ -196,7 +196,7 @@ add_task(function test_previous_clean() {
   recorder2.onShutdown();
 });
 
-add_task(function test_previous_abort() {
+add_task(function* test_previous_abort() {
   let now = new Date();
   let recorder = getRecorder("previous_abort", now);
   yield sleep(25);
@@ -222,7 +222,7 @@ add_task(function test_previous_abort() {
   recorder2.onShutdown();
 });
 
-add_task(function test_multiple_sessions() {
+add_task(function* test_multiple_sessions() {
   for (let i = 0; i < 10; i++) {
     let recorder = getRecorder("multiple_sessions");
     yield sleep(25);
@@ -264,7 +264,7 @@ add_task(function test_multiple_sessions() {
   recorder.onShutdown();
 });
 
-add_task(function test_record_activity() {
+add_task(function* test_record_activity() {
   let recorder = getRecorder("record_activity");
   yield sleep(25);
   recorder.onStartup();

@@ -140,7 +140,11 @@ var ContentPolicy = {
       try {
         // If e10s is disabled, this throws NS_NOINTERFACE for closed tabs.
         mm = ir.getInterface(Ci.nsIContentFrameMessageManager);
-      } catch (e if e.result == Cr.NS_NOINTERFACE) {}
+      } catch (e) {
+        if (e.result != Cr.NS_NOINTERFACE) {
+          throw e;
+        }
+      }
     }
 
     let data = {ids,

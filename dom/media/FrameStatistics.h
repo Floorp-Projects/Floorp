@@ -13,6 +13,8 @@ namespace mozilla {
 // Threadsafe.
 class FrameStatistics {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FrameStatistics);
+
   FrameStatistics() :
       mReentrantMonitor("FrameStats"),
       mParsedFrames(0),
@@ -80,6 +82,7 @@ public:
   }
 
 private:
+  ~FrameStatistics() {}
 
   // ReentrantMonitor to protect access of playback statistics.
   ReentrantMonitor mReentrantMonitor;

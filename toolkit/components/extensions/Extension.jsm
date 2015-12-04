@@ -350,7 +350,7 @@ var GlobalManager = {
       if (event.target != docShell.contentViewer.DOMDocument) {
         return;
       }
-      eventHandler.removeEventListener("unload", listener);
+      eventHandler.removeEventListener("unload", listener, true);
       context.unload();
     };
     eventHandler.addEventListener("unload", listener, true);
@@ -581,7 +581,7 @@ ExtensionData.prototype = {
       if (!locales.has(defaultLocale)) {
         this.manifestError('Value for "default_locale" property must correspond to ' +
                            'a directory in "_locales/". Not found: ' +
-                           JSON.stringify(`_locales/${default_locale}/`));
+                           JSON.stringify(`_locales/${this.manifest.default_locale}/`));
       }
     } else if (locales.size) {
       this.manifestError('The "default_locale" property is required when a ' +

@@ -1293,7 +1293,7 @@ var AddonManagerInternal = {
     }
 
     AddonManager.getAddonsByTypes(["plugin"], function(aPlugins) {
-      port.sendAsyncMessage("PluginList", [filterProperties(p) for (p of aPlugins)]);
+      port.sendAsyncMessage("PluginList", aPlugins.map(filterProperties));
     });
   },
 
@@ -2417,7 +2417,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aID must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    let promises = [for (p of this.providers) promiseCallProvider(p, "getAddonByID", aID)];
+    let promises = Array.from(this.providers,
+      p => promiseCallProvider(p, "getAddonByID", aID));
     return Promise.all(promises).then(aAddons => {
       return aAddons.find(a => !!a) || null;
     });
@@ -2482,7 +2483,7 @@ var AddonManagerInternal = {
       throw Components.Exception("aIDs must be an array",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    let promises = [AddonManagerInternal.getAddonByID(i) for (i of aIDs)];
+    let promises = aIDs.map(a => AddonManagerInternal.getAddonByID(a));
     return Promise.all(promises);
   },
 

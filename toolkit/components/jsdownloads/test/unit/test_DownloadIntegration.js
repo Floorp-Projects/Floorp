@@ -68,7 +68,7 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
  * Tests that the getSystemDownloadsDirectory returns a valid download
  * directory string path.
  */
-add_task(function test_getSystemDownloadsDirectory()
+add_task(function* test_getSystemDownloadsDirectory()
 {
   // Enable test mode for the getSystemDownloadsDirectory method to return
   // temp directory instead so we can check whether the desired directory
@@ -118,7 +118,7 @@ add_task(function test_getSystemDownloadsDirectory()
  * Tests that the getPreferredDownloadsDirectory returns a valid download
  * directory string path.
  */
-add_task(function test_getPreferredDownloadsDirectory()
+add_task(function* test_getPreferredDownloadsDirectory()
 {
   let folderListPrefName = "browser.download.folderList";
   let dirPrefName = "browser.download.dir";
@@ -181,7 +181,7 @@ add_task(function test_getPreferredDownloadsDirectory()
  * Tests that the getTemporaryDownloadsDirectory returns a valid download
  * directory string path.
  */
-add_task(function test_getTemporaryDownloadsDirectory()
+add_task(function* test_getTemporaryDownloadsDirectory()
 {
   let downloadDir = yield DownloadIntegration.getTemporaryDownloadsDirectory();
   do_check_neq(downloadDir, "");
@@ -202,7 +202,7 @@ add_task(function test_getTemporaryDownloadsDirectory()
  * Tests notifications prompts when observers are notified if there are public
  * and private active downloads.
  */
-add_task(function test_notifications()
+add_task(function* test_notifications()
 {
   enableObserversTestMode();
 
@@ -242,7 +242,7 @@ add_task(function test_notifications()
  * Tests that notifications prompts observers are not notified if there are no
  * public or private active downloads.
  */
-add_task(function test_no_notifications()
+add_task(function* test_no_notifications()
 {
   enableObserversTestMode();
 
@@ -272,7 +272,7 @@ add_task(function test_no_notifications()
  * Tests notifications prompts when observers are notified if there are public
  * and private active downloads at the same time.
  */
-add_task(function test_mix_notifications()
+add_task(function* test_mix_notifications()
 {
   enableObserversTestMode();
   mustInterruptResponses();
@@ -304,7 +304,7 @@ add_task(function test_mix_notifications()
  * Tests suspending and resuming as well as going offline and then online again.
  * The downloads should stop when suspending and start again when resuming.
  */
-add_task(function test_suspend_resume()
+add_task(function* test_suspend_resume()
 {
   enableObserversTestMode();
 
@@ -314,11 +314,11 @@ add_task(function test_suspend_resume()
 
   let addDownload = function(list)
   {
-    return Task.spawn(function () {
+    return Task.spawn(function* () {
       let download = yield promiseNewDownload(httpUrl("interruptible.txt"));
       download.start();
       list.add(download);
-      throw new Task.Result(download);
+      return download;
     });
   }
 
@@ -385,7 +385,7 @@ add_task(function test_suspend_resume()
  * Tests both the downloads list and the in-progress downloads are clear when
  * private browsing observer is notified.
  */
-add_task(function test_exit_private_browsing()
+add_task(function* test_exit_private_browsing()
 {
   enableObserversTestMode();
   mustInterruptResponses();

@@ -75,7 +75,7 @@ writeInstallRDFForExtension({
   name: "Test Addon 1",
 }, profileDir);
 
-add_task(function cancel_during_check() {
+add_task(function* cancel_during_check() {
   startupManager();
 
   let a1 = yield promiseAddonByID("addon1@tests.mozilla.org");
@@ -109,7 +109,7 @@ add_task(function cancel_during_check() {
 
 // Test that update check is cancelled if the XPI provider shuts down while
 // the update check is in progress
-add_task(function shutdown_during_check() {
+add_task(function* shutdown_during_check() {
   // Reset our HTTP listener
   httpReceived = Promise.defer();
 

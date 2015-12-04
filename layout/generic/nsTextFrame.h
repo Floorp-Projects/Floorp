@@ -446,6 +446,7 @@ public:
                          mozilla::WritingMode aWM,
                          const gfxPoint& aTextBaselinePt,
                          uint32_t aOffset, uint32_t aLength,
+                         const nscolor* aDecorationOverrideColor,
                          PropertyProvider& aProvider);
 
   virtual nscolor GetCaretColorAt(int32_t aOffset) override;
