@@ -193,6 +193,9 @@ WorkerActorList.prototype = {
     if (typeof onListChanged !== "function" && onListChanged !== null) {
       throw new Error("onListChanged must be either a function or null.");
     }
+    if (onListChanged === this._onListChanged) {
+      return;
+    }
 
     if (this._mustNotify) {
       if (this._onListChanged === null && onListChanged !== null) {

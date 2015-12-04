@@ -408,7 +408,23 @@ class ExecutableAllocator
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     static void cacheFlush(void* code, size_t size)
     {
-#if defined(__GNUC__)
+#if defined(_MIPS_ARCH_LOONGSON3A)
+        // On Loongson3-CPUs, The cache flushed automatically
+        // by hardware. Just need to execute an instruction hazard.
+        uintptr_t tmp;
+        asm volatile (
+            ".set   push \n"
+            ".set   noreorder \n"
+            "move   %[tmp], $ra \n"
+            "bal    1f \n"
+            "daddiu $ra, 8 \n"
+            "1: \n"
+            "jr.hb  $ra \n"
+            "move   $ra, %[tmp] \n"
+            ".set   pop\n"
+            :[tmp]"=&r"(tmp)
+        );
+#elif defined(__GNUC__)
         intptr_t end = reinterpret_cast<intptr_t>(code) + size;
         __builtin___clear_cache(reinterpret_cast<char*>(code), reinterpret_cast<char*>(end));
 #else

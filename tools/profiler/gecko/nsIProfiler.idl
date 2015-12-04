@@ -27,7 +27,7 @@ interface nsIProfilerStartParams : nsISupports
   [noscript, notxpcom, nostdcall] StringArrayRef getThreadFilterNames();
 };
 
-[scriptable, uuid(b373b360-c997-448a-b60d-4985b70dc810)]
+[scriptable, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
 interface nsIProfiler : nsISupports
 {
   boolean CanProfile();
@@ -65,6 +65,12 @@ interface nsIProfiler : nsISupports
    * If the profiler is not currently sampling, this will return null.
    */
   readonly attribute nsIProfilerStartParams startParams;
+
+  /**
+   * The profileGatherer will be null if the profiler is not currently
+   * active.
+   */
+  readonly attribute nsISupports profileGatherer;
 
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);

@@ -15,6 +15,7 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/layers/FenceUtils.h"
+#include "mozilla/UniquePtr.h"
 #include <ui/Fence.h>
 
 using namespace android;
@@ -112,7 +113,7 @@ private:
 
   // color converter
   android::I420ColorConverterHelper mColorConverter;
-  nsAutoArrayPtr<uint8_t> mColorConverterBuffer;
+  UniquePtr<uint8_t[]> mColorConverterBuffer;
   size_t mColorConverterBufferSize;
 
   android::sp<android::GonkNativeWindow> mNativeWindow;

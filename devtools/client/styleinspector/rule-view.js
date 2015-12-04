@@ -569,11 +569,12 @@ Rule.prototype = {
   getOriginalSourceStrings: function() {
     return this.domRule.getOriginalLocation().then(({href, line, mediaText}) => {
       let mediaString = mediaText ? " @" + mediaText : "";
+      let linePart = line > 0 ? (":" + line) : "";
 
       let sourceStrings = {
-        full: (href || CssLogic.l10n("rule.sourceInline")) + ":" +
-          line + mediaString,
-        short: CssLogic.shortSource({href: href}) + ":" + line + mediaString
+        full: (href || CssLogic.l10n("rule.sourceInline")) + linePart +
+          mediaString,
+        short: CssLogic.shortSource({href: href}) + linePart + mediaString
       };
 
       return sourceStrings;

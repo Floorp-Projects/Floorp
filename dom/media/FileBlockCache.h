@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "MediaCache.h"
 #include "nsDeque.h"
@@ -96,7 +97,7 @@ public:
     explicit BlockChange(const uint8_t* aData)
       : mSourceBlockIndex(-1)
     {
-      mData = new uint8_t[BLOCK_SIZE];
+      mData = MakeUnique<uint8_t[]>(BLOCK_SIZE);
       memcpy(mData.get(), aData, BLOCK_SIZE);
     }
 
@@ -105,7 +106,7 @@ public:
     explicit BlockChange(int32_t aSourceBlockIndex)
       : mSourceBlockIndex(aSourceBlockIndex) {}
 
-    nsAutoArrayPtr<uint8_t> mData;
+    UniquePtr<uint8_t[]> mData;
     const int32_t mSourceBlockIndex;
 
     bool IsMove() const {

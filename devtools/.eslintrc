@@ -254,9 +254,8 @@
     // Disallow trailing whitespace at the end of lines.
     "no-trailing-spaces": 2,
     // Disallow use of undeclared variables unless mentioned in a /*global */
-    // block.
-    // This should really be a 2, but until we define all globals in comments
-    // and .eslintrc, keeping this as a 1.
+    // block. Note that globals from head.js are automatically imported in tests
+    // by the import-headjs-globals rule form the mozilla eslint plugin.
     "no-undef": 2,
     // Allow dangling underscores in identifiers (for privates).
     "no-underscore-dangle": 0,

@@ -61,8 +61,12 @@ VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
     if(_captureDevice)
     {
         [_captureDevice registerOwner:nil];
-        [_captureDevice stopCapture];
-        [_captureDevice release];
+        [_captureDevice performSelectorOnMainThread:@selector(stopCapture)
+                        withObject:nil
+                        waitUntilDone:NO];
+        [_captureDevice performSelectorOnMainThread:@selector(release)
+                        withObject:nil
+                        waitUntilDone:NO];
     }
 
     if(_captureInfo)
