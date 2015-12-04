@@ -55,7 +55,7 @@ function executeSimpleSQLAsync(db, query, onResult) {
   return deferred.promise;
 }
 
-add_task(function test_create_and_add() {
+add_task(function* test_create_and_add() {
   let adb = yield openAsyncDatabase(getTestDB());
 
   let completion = yield executeSimpleSQLAsync(adb,
@@ -97,7 +97,7 @@ add_task(function test_create_and_add() {
 });
 
 
-add_task(function test_asyncClose_does_not_complete_before_statement() {
+add_task(function* test_asyncClose_does_not_complete_before_statement() {
   let adb = yield openAsyncDatabase(getTestDB());
   let executed = false;
 
@@ -121,11 +121,3 @@ add_task(function test_asyncClose_does_not_complete_before_statement() {
 
   yield asyncClose(adb);
 });
-
-////////////////////////////////////////////////////////////////////////////////
-//// Test Runner
-
-function run_test()
-{
-  run_next_test();
-}
