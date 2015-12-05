@@ -32,3 +32,5 @@ DIRS += ['../../xulrunner/tools/redit']
 TEST_DIRS += [
     'tests',
 ]
+
+SPHINX_TREES['fennec'] = 'docs'
