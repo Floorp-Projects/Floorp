@@ -26,9 +26,14 @@
 // Locale sensitive date and time format interface
 // 
 class nsIDateTimeFormat : public nsISupports {
+protected:
+  nsIDateTimeFormat() {}
+  virtual ~nsIDateTimeFormat() {}
 
 public: 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDATETIMEFORMAT_IID)
+
+  static already_AddRefed<nsIDateTimeFormat> Create();
 
   // performs a locale sensitive date formatting operation on the time_t parameter
   NS_IMETHOD FormatTime(nsILocale* locale, 
