@@ -72,9 +72,7 @@ private:
   static void RemoveFromCorsPreflightCache(nsIURI* aURI,
                                            nsIPrincipal* aRequestingPrincipal);
   static nsresult StartCORSPreflight(nsIChannel* aRequestChannel,
-                                     nsIPrincipal* aPrincipal,
                                      nsICorsPreflightCallback* aCallback,
-                                     bool aWithCredentials,
                                      nsTArray<nsCString>& aACUnsafeHeaders,
                                      nsIChannel** aPreflightChannel);
 
