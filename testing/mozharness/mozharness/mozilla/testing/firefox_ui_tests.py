@@ -260,7 +260,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             except Exception as e:
                 self.fatal('Download of tooltool manifest file failed: %s' % e.message)
 
-        super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
+        return super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
 
     @PostScriptRun
     def _upload_reports_post_run(self):

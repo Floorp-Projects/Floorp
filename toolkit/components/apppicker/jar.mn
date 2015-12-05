@@ -4,5 +4,5 @@
 
 toolkit.jar:
   content/global/appPicker.xul                     (content/appPicker.xul)
-* content/global/appPicker.js                      (content/appPicker.js)
+  content/global/appPicker.js                      (content/appPicker.js)
 

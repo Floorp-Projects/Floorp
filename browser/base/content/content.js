@@ -316,7 +316,6 @@ var AboutNetErrorListener = {
       }
     });
 
-    let failedChannel = docShell.failedChannel;
     let location = contentDoc.location.href;
 
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -436,21 +435,21 @@ var ClickEventHandler = {
                                        .QueryInterface(Ci.nsIDocShell);
     let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                      .getService(Ci.nsISerializationHelper);
-    let serializedSSLStatus = "";
+    let serializedSecurityInfo = "";
 
     try {
       let serializable =  docShell.failedChannel.securityInfo
-                                  .QueryInterface(Ci.nsISSLStatusProvider)
-                                  .SSLStatus
+                                  .QueryInterface(Ci.nsITransportSecurityInfo)
                                   .QueryInterface(Ci.nsISerializable);
-      serializedSSLStatus = serhelper.serializeToString(serializable);
+
+      serializedSecurityInfo = serhelper.serializeToString(serializable);
     } catch (e) { }
 
     sendAsyncMessage("Browser:CertExceptionError", {
       location: ownerDoc.location.href,
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
-      sslStatusAsString: serializedSSLStatus
+      securityInfoAsString: serializedSecurityInfo
     });
   },
 
@@ -520,7 +519,9 @@ var ClickEventHandler = {
     let href, baseURI;
     node = event.target;
     while (node && !href) {
-      if (node.nodeType == content.Node.ELEMENT_NODE) {
+      if (node.nodeType == content.Node.ELEMENT_NODE &&
+          (node.localName == "a" ||
+           node.namespaceURI == "http://www.w3.org/1998/Math/MathML")) {
         href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
         if (href) {
           baseURI = node.ownerDocument.baseURIObject;
@@ -551,6 +552,17 @@ addEventListener("DOMWebNotificationClicked", function(event) {
 addEventListener("DOMServiceWorkerFocusClient", function(event) {
   sendAsyncMessage("DOMServiceWorkerFocusClient", {});
 }, false);
+
+addEventListener("AboutCertErrorLoad", function(event) {
+  let originalTarget = event.originalTarget;
+  let ownerDoc = originalTarget.ownerDocument;
+  ClickEventHandler.onAboutCertError(originalTarget, ownerDoc);
+}, false, true);
+
+addMessageListener("AboutCertErrorDetails", function(message) {
+  let div = content.document.getElementById("certificateErrorText");
+  div.textContent = message.data.info;
+});
 
 ContentWebRTC.init();
 addMessageListener("rtcpeer:Allow", ContentWebRTC);

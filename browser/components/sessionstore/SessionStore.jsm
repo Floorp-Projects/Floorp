@@ -401,6 +401,20 @@ var SessionStoreInternal = {
   // that is being stored in _closedWindows for that tab.
   _closedWindowTabs: new WeakMap(),
 
+  // A set of window data that has the potential to be saved in the _closedWindows
+  // array for the session. We will remove window data from this set whenever
+  // forgetClosedWindow is called for the window, or when session history is
+  // purged, so that we don't accidentally save that data after the flush has
+  // completed. Closed tabs use a more complicated mechanism for this particular
+  // problem. When forgetClosedTab is called, the browser is removed from the
+  // _closedTabs map, so its data is not recorded. In the purge history case,
+  // the closedTabs array per window is overwritten so that once the flush is
+  // complete, the tab would only ever add itself to an array that SessionStore
+  // no longer cares about. Bug 1230636 has been filed to make the tab case
+  // work more like the window case, which is more explicit, and easier to
+  // reason about.
+  _saveableClosedWindowData: new WeakSet(),
+
   // A map (xul:browser -> object) that maps a browser that is switching
   // remoteness via navigateAndRestore, to the loadArguments that were
   // most recently passed when calling navigateAndRestore.
@@ -1270,6 +1284,10 @@ var SessionStoreInternal = {
       // clear this window from the list, since it has definitely been closed.
       delete this._windows[aWindow.__SSi];
 
+      // This window has the potential to be saved in the _closedWindows
+      // array (maybeSaveClosedWindows gets the final call on that).
+      this._saveableClosedWindowData.add(winData);
+
       // Now we have to figure out if this window is worth saving in the _closedWindows
       // Object.
       //
@@ -1352,6 +1370,7 @@ var SessionStoreInternal = {
     let mm = aWindow.getGroupMessageManager("browsers");
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
+    this._saveableClosedWindowData.delete(winData);
     delete aWindow.__SSi;
   },
 
@@ -1373,7 +1392,9 @@ var SessionStoreInternal = {
    *        a window flush).
    */
   maybeSaveClosedWindow(winData, isLastWindow) {
-    if (RunState.isRunning) {
+    // Make sure SessionStore is still running, and make sure that we
+    // haven't chosen to forget this window.
+    if (RunState.isRunning && this._saveableClosedWindowData.has(winData)) {
       // Determine whether the window has any tabs worth saving.
       let hasSaveableTabs = winData.tabs.some(this._shouldSaveTabState);
 
@@ -1546,6 +1567,7 @@ var SessionStoreInternal = {
     }
 
     this._clearRestoringWindows();
+    this._saveableClosedWindowData.clear();
   },
 
   /**
@@ -2190,7 +2212,9 @@ var SessionStoreInternal = {
     }
 
     // remove closed window from the array
+    let winData = this._closedWindows[aIndex];
     this._closedWindows.splice(aIndex, 1);
+    this._saveableClosedWindowData.delete(winData);
   },
 
   getWindowValue: function ssi_getWindowValue(aWindow, aKey) {

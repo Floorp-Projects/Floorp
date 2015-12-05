@@ -86,7 +86,7 @@ function test_getColumnIndex_different_case()
     do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
   }
   try {
-  do_check_eq(1, stmt.getColumnIndex("Id"));
+    do_check_eq(1, stmt.getColumnIndex("Id"));
     do_throw("should not get here");
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
@@ -179,9 +179,10 @@ function run_test()
 {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
-    
+  }
+
   cleanup();
 }
 

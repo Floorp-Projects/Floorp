@@ -1,0 +1,19 @@
+{
+  "extends": "../../.eslintrc",
+
+  "globals": {
+    // DOM window globals
+    "window": false,
+    "XMLHttpRequest": false,
+
+    "sendAsyncMessage": false,
+
+    "NetUtil": true,
+    "XPCOMUtils": true,
+
+    // Test harness globals
+    "add_task": false,
+    "ok": false,
+    "SimpleTest": false,
+  }
+}

@@ -1,3 +1,7 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");
@@ -6,7 +10,7 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
@@ -15,7 +19,7 @@ add_task(function* () {
       }, function(tabs) {
         browser.test.assertEq(tabs.length, 3, "should have three tabs");
 
-        tabs.sort(function (tab1, tab2) { return tab1.index - tab2.index; });
+        tabs.sort((tab1, tab2) => tab1.index - tab2.index);
 
         browser.test.assertEq(tabs[0].url, "about:blank", "first tab blank");
         tabs.shift();

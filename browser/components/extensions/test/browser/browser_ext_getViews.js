@@ -1,7 +1,10 @@
-function genericChecker()
-{
-  var kind = "background";
-  var path = window.location.pathname;
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+function genericChecker() {
+  let kind = "background";
+  let path = window.location.pathname;
   if (path.indexOf("popup") != -1) {
     kind = "popup";
   } else if (path.indexOf("tab") != -1) {
@@ -11,14 +14,14 @@ function genericChecker()
 
   browser.test.onMessage.addListener((msg, ...args) => {
     if (msg == kind + "-check-views") {
-      var views = browser.extension.getViews();
-      var counts = {
+      let views = browser.extension.getViews();
+      let counts = {
         "background": 0,
         "tab": 0,
-        "popup": 0
+        "popup": 0,
       };
-      for (var i = 0; i < views.length; i++) {
-        var view = views[i];
+      for (let i = 0; i < views.length; i++) {
+        let view = views[i];
         browser.test.assertTrue(view.kind in counts, "view type is valid");
         counts[view.kind]++;
         if (view.kind == "background") {
@@ -28,12 +31,12 @@ function genericChecker()
       }
       browser.test.sendMessage("counts", counts);
     } else if (msg == kind + "-open-tab") {
-      browser.tabs.create({windowId: args[0], url: chrome.runtime.getURL("tab.html")});
+      browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("tab.html")});
     } else if (msg == kind + "-close-tab") {
       browser.tabs.query({
         windowId: args[0],
       }, tabs => {
-        var tab = tabs.find(tab => tab.url.indexOf("tab.html") != -1);
+        let tab = tabs.find(tab => tab.url.indexOf("tab.html") != -1);
         browser.tabs.remove(tab.id, () => {
           browser.test.sendMessage("closed");
         });
@@ -52,7 +55,7 @@ add_task(function* () {
       "permissions": ["tabs"],
 
       "browser_action": {
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
       },
     },
 
@@ -83,7 +86,7 @@ add_task(function* () {
 
   info("started");
 
-  let {TabManager, WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let winId1 = WindowManager.getId(win1);
   let winId2 = WindowManager.getId(win2);
@@ -118,7 +121,7 @@ add_task(function* () {
 
     let evt = new CustomEvent("command", {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     node.dispatchEvent(evt);
 
