@@ -106,11 +106,9 @@ static MOZ_CONSTEXPR_VAR Register IntArgReg1 = rdx;
 static MOZ_CONSTEXPR_VAR Register IntArgReg2 = r8;
 static MOZ_CONSTEXPR_VAR Register IntArgReg3 = r9;
 static MOZ_CONSTEXPR_VAR uint32_t NumIntArgRegs = 4;
-// Use "const" instead of MOZ_CONSTEXPR_VAR here to work around a bug
-// of VS2015 Update 1. See bug 1229604.
-static const Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
+static MOZ_CONSTEXPR_VAR Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
 
-static const Register CallTempNonArgRegs[] = { rax, rdi, rbx, rsi };
+static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { rax, rdi, rbx, rsi };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
@@ -128,11 +126,9 @@ static MOZ_CONSTEXPR_VAR Register IntArgReg3 = rcx;
 static MOZ_CONSTEXPR_VAR Register IntArgReg4 = r8;
 static MOZ_CONSTEXPR_VAR Register IntArgReg5 = r9;
 static MOZ_CONSTEXPR_VAR uint32_t NumIntArgRegs = 6;
-static const Register IntArgRegs[NumIntArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
+static MOZ_CONSTEXPR_VAR Register IntArgRegs[NumIntArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
 
-// Use "const" instead of MOZ_CONSTEXPR_VAR here to work around a bug
-// of VS2015 Update 1. See bug 1229604.
-static const Register CallTempNonArgRegs[] = { rax, rbx };
+static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { rax, rbx };
 static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 
