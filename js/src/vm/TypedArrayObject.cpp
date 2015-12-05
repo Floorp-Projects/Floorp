@@ -722,15 +722,15 @@ TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
     RootedObject proto(cx);
 
     uint32_t len;
-    if (IsAnyTypedArray(other)) {
+    if (other->is<TypedArrayObject>()) {
         if (!GetPrototypeForInstance(cx, newTarget, &proto))
             return nullptr;
 
-        if (AnyTypedArrayIsDetached(other)) {
+        if (other->as<TypedArrayObject>().isNeutered()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
             return nullptr;
         }
-        len = AnyTypedArrayLength(other);
+        len = other->as<TypedArrayObject>().length();
     } else {
         if (!GetLengthProperty(cx, other, &len))
             return nullptr;
@@ -2266,12 +2266,12 @@ bool
 js::DefineTypedArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
                             Handle<PropertyDescriptor> desc, ObjectOpResult& result)
 {
-    MOZ_ASSERT(IsAnyTypedArray(obj));
+    MOZ_ASSERT(obj->is<TypedArrayObject>());
 
     // These are all substeps of 3.c.
     // Steps i-vi.
     // We (wrongly) ignore out of range defines with a value.
-    if (index >= AnyTypedArrayLength(obj))
+    if (index >= obj->as<TypedArrayObject>().length())
         return result.succeed();
 
     // Step vii.
