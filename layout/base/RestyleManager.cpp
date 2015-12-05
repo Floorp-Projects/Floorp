@@ -1233,6 +1233,7 @@ RestyleManager::AttributeWillChange(Element* aElement,
   RestyleHintData rsdata;
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
+                                                         aNameSpaceID,
                                                          aAttribute,
                                                          aModType,
                                                          false,
@@ -1324,6 +1325,7 @@ RestyleManager::AttributeChanged(Element* aElement,
   RestyleHintData rsdata;
   nsRestyleHint rshint =
     mPresContext->StyleSet()->HasAttributeDependentStyle(aElement,
+                                                         aNameSpaceID,
                                                          aAttribute,
                                                          aModType,
                                                          true,
