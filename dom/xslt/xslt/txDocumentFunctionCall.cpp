@@ -13,13 +13,16 @@
 #include "txXSLTFunctions.h"
 #include "txExecutionState.h"
 #include "txURIUtils.h"
+#include "nsIURI.h"
 
 /*
  * Creates a new DocumentFunctionCall.
  */
-DocumentFunctionCall::DocumentFunctionCall(const nsAString& aBaseURI)
-    : mBaseURI(aBaseURI)
+DocumentFunctionCall::DocumentFunctionCall(nsIURI* aBaseURI)
 {
+    nsCString spec;
+    aBaseURI->GetSpec(spec);
+    mBaseURI = NS_ConvertUTF8toUTF16(spec);
 }
 
 static void

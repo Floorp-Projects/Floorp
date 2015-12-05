@@ -166,6 +166,8 @@ private:
     void notifyError();
     nsresult ensureStylesheet();
 
+    nsIDocument* getLoaderDoc();
+
     nsCOMPtr<nsISupports> mOwner;
 
     RefPtr<txStylesheet> mStylesheet;
@@ -185,10 +187,10 @@ private:
 };
 
 extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-                             nsIDocument* aLoaderDocument,
-                             mozilla::net::ReferrerPolicy aReferrerPolicy);
+                             nsIDocument* aLoaderDocument);
 
 extern nsresult TX_CompileStylesheet(nsINode* aNode,
+                                     nsIDocument* aLoaderDocument,
                                      txMozillaXSLTProcessor* aProcessor,
                                      txStylesheet** aStylesheet);
 
