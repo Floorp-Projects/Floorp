@@ -3010,7 +3010,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
       EnumerateSelectors(cascade->mPossiblyNegatedIDSelectors, &data);
     }
 
-    if (aData->mAttribute == nsGkAtoms::_class) {
+    if (aData->mAttribute == nsGkAtoms::_class &&
+        aData->mNameSpaceID == kNameSpaceID_None) {
       const nsAttrValue* otherClasses = aData->mOtherValue;
       NS_ASSERTION(otherClasses ||
                    aData->mModType == nsIDOMMutationEvent::REMOVAL,
