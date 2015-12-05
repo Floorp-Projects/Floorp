@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222624
+-->
+<head>
+  <title>Test for Bug 1222624</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1222624">Mozilla Bug 1222624</a>
+<p id="display"></p>
+<iframe id="frame"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1222624 **/
+
+const transformRes = '<?xml version="1.0" encoding="UTF-8"?>\n<result><external/>doc1!doc2</result>';
+
+xhr = new XMLHttpRequest();
+xhr.open("GET", "file_bug1222624.xml", false);
+xhr.send();
+var xmlDoc = xhr.responseXML;
+
+xhr.open("GET", "file_bug1222624.xsl", false);
+xhr.send();
+var xslDoc = xhr.responseXML;
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xslDoc);
+var apiRes = new XMLSerializer().serializeToString(processor.transformToDocument(xmlDoc));
+
+is(apiRes, transformRes, "API transformation correct");
+
+SimpleTest.waitForExplicitFinish();
+
+var frame = $("frame");
+frame.src = "file_bug1222624.xml";
+frame.onload = function () {
+  var piRes = new XMLSerializer().serializeToString(frame.contentDocument);
+  is(piRes, transformRes, "processing-instruction transformation correct");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
