@@ -1,3 +1,10 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+/* globals content */
+/* eslint-disable mozilla/no-cpows-in-tests */
+
 add_task(function* () {
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
@@ -6,7 +13,7 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["contextMenus"]
+      "permissions": ["contextMenus"],
     },
 
     background: function() {
@@ -17,27 +24,27 @@ add_task(function* () {
 
       browser.contextMenus.create({ "contexts": ["all"], "type": "separator" });
 
-      var contexts = ["page", "selection", "image"];
-      for (var i = 0; i < contexts.length; i++) {
-        var context = contexts[i];
-        var title = context;
-        var id = browser.contextMenus.create({ "title": title, "contexts": [context], "id": "ext-" + context,
-                                               "onclick": genericOnClick });
+      let contexts = ["page", "selection", "image"];
+      for (let i = 0; i < contexts.length; i++) {
+        let context = contexts[i];
+        let title = context;
+        browser.contextMenus.create({ "title": title, "contexts": [context], "id": "ext-" + context,
+                                      "onclick": genericOnClick });
         if (context == "selection") {
           browser.contextMenus.update("ext-selection", { "title": "selection-edited" });
         }
       }
 
-      var parent = browser.contextMenus.create({ "title": "parent" });
-      var child1 = browser.contextMenus.create(
+      let parent = browser.contextMenus.create({ "title": "parent" });
+      browser.contextMenus.create(
         { "title": "child1", "parentId": parent, "onclick": genericOnClick });
-      var child2 = browser.contextMenus.create(
+      browser.contextMenus.create(
         { "title": "child2", "parentId": parent, "onclick": genericOnClick });
 
-      var parentToDel = browser.contextMenus.create({ "title": "parentToDel" });
-      var child1ToDel = browser.contextMenus.create(
+      let parentToDel = browser.contextMenus.create({ "title": "parentToDel" });
+      browser.contextMenus.create(
         { "title": "child1", "parentId": parentToDel, "onclick": genericOnClick });
-      var child2ToDel = browser.contextMenus.create(
+      browser.contextMenus.create(
         { "title": "child2", "parentId": parentToDel, "onclick": genericOnClick });
       browser.contextMenus.remove(parentToDel);
 
@@ -84,7 +91,7 @@ add_task(function* () {
   items = top.getElementsByAttribute("label", "parent");
   is(items.length, 1, "contextMenu item for parent was found (context=image)");
 
-  is(items.item(0).childNodes[0].childNodes.length, 2, "child items for parent were found (context=image)")
+  is(items.item(0).childNodes[0].childNodes.length, 2, "child items for parent were found (context=image)");
 
   // Click on ext-image item and check the results
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");

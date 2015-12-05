@@ -1,14 +1,18 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/"]
+      "permissions": ["http://mochi.test/"],
     },
 
     background: function() {
-      var ports_received = 0;
-      var port_messages_received = 0;
+      let ports_received = 0;
+      let port_messages_received = 0;
 
       browser.runtime.onConnect.addListener((port) => {
         browser.test.assertTrue(!!port, "port1 received");
@@ -19,9 +23,9 @@ add_task(function* () {
         port.onMessage.addListener((msg, sender) => {
           browser.test.assertEq("port message", msg, "listener1 port message received");
 
-          port_messages_received++
+          port_messages_received++;
           browser.test.assertEq(1, port_messages_received, "1 port message received");
-        })
+        });
       });
       browser.runtime.onConnect.addListener((port) => {
         browser.test.assertTrue(!!port, "port2 received");
@@ -32,7 +36,7 @@ add_task(function* () {
         port.onMessage.addListener((msg, sender) => {
           browser.test.assertEq("port message", msg, "listener2 port message received");
 
-          port_messages_received++
+          port_messages_received++;
           browser.test.assertEq(2, port_messages_received, "2 port messages received");
 
           browser.test.notifyPass("contentscript_connect.pass");
@@ -44,10 +48,10 @@ add_task(function* () {
 
     files: {
       "script.js": function() {
-        var port = browser.runtime.connect();
+        let port = browser.runtime.connect();
         port.postMessage("port message");
-      }
-    }
+      },
+    },
   });
 
   yield extension.startup();

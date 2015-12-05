@@ -53,6 +53,27 @@ body {
   flex: 1;
 }
 
+#certificateErrorDebugInformation {
+  display: none;
+  background-color: var(--in-content-box-background-hover) !important;
+  border-top: 1px solid var(--in-content-border-color);
+  position: absolute;
+  left: 0%;
+  top: 100%;
+  width: 65%;
+  padding: 1em 17.5%;
+}
+
+#certificateErrorText {
+  font-family: monospace;
+  white-space: pre-wrap;
+  padding: 1em 0;
+}
+
+#errorCode {
+  white-space: nowrap;
+}
+
 #returnButton {
   background-color: var(--in-content-primary-button-background);
   border: none;

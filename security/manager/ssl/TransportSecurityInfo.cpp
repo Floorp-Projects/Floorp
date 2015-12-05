@@ -882,7 +882,6 @@ AppendErrorTextCode(PRErrorCode errorCodeToReport,
   if (codeName)
   {
     nsCString error_id(codeName);
-    ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
     const char16_t *params[1];
@@ -890,7 +889,7 @@ AppendErrorTextCode(PRErrorCode errorCodeToReport,
 
     nsString formattedString;
     nsresult rv;
-    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
+    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix2",
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {

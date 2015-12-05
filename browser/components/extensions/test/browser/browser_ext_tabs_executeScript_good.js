@@ -1,35 +1,39 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
 function* testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
+  function background(contentSetup) {
+    browser.runtime.onMessage.addListener((msg, sender) => {
+      browser.test.assertEq(msg, "script ran", "script ran");
+      browser.test.notifyPass("executeScript");
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, "execute-script");
+
+      browser.tabs.executeScript({
+        file: "script.js",
+      });
+    });
+
+    contentSetup().then(() => {
+      browser.test.sendMessage("ready");
+    });
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: params.manifest,
 
-    background: `(${function(contentSetup) {
-      browser.runtime.onMessage.addListener((msg, sender) => {
-        browser.test.assertEq(msg, "script ran", "script ran");
-        browser.test.notifyPass("executeScript");
-      });
-
-      browser.test.onMessage.addListener(msg => {
-        browser.test.assertEq(msg, "execute-script");
-
-        browser.tabs.executeScript({
-          file: "script.js"
-        });
-      });
-
-      contentSetup().then(() => {
-        browser.test.sendMessage("ready");
-      });
-    }})(${contentSetup})`,
+    background: `(${background})(${contentSetup})`,
 
     files: {
       "script.js": function() {
         browser.runtime.sendMessage("script ran");
-      }
-    }
+      },
+    },
   });
 
   yield extension.startup();
@@ -50,17 +54,17 @@ add_task(function* testGoodPermissions() {
 
   info("Test explicit host permission");
   yield testHasPermission({
-    manifest: { "permissions": ["http://mochi.test/"] }
+    manifest: { "permissions": ["http://mochi.test/"] },
   });
 
   info("Test explicit host subdomain permission");
   yield testHasPermission({
-    manifest: { "permissions": ["http://*.mochi.test/"] }
+    manifest: { "permissions": ["http://*.mochi.test/"] },
   });
 
   info("Test explicit <all_urls> permission");
   yield testHasPermission({
-    manifest: { "permissions": ["<all_urls>"] }
+    manifest: { "permissions": ["<all_urls>"] },
   });
 
   info("Test activeTab permission with a browser action click");

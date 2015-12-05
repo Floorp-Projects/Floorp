@@ -1,3 +1,5 @@
+"use strict";
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -14,8 +16,7 @@ var notificationsMap = new WeakMap();
 var notificationCallbacksMap = new WeakMap();
 
 // Manages a notification popup (notifications API) created by the extension.
-function Notification(extension, id, options)
-{
+function Notification(extension, id, options) {
   this.extension = extension;
   this.id = id;
   this.options = options;
@@ -63,6 +64,7 @@ Notification.prototype = {
   },
 };
 
+/* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
   notificationsMap.set(extension, new Set());
   notificationCallbacksMap.set(extension, new Set());
@@ -75,6 +77,7 @@ extensions.on("shutdown", (type, extension) => {
   notificationsMap.delete(extension);
   notificationCallbacksMap.delete(extension);
 });
+/* eslint-enable mozilla/balanced-listeners */
 
 var nextId = 0;
 

@@ -78,14 +78,13 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
   {
     nsresult rv;
     nsCString error_id(nss_error_id_str);
-    ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
     const char16_t *params[1];
     params[0] = idU.get();
 
     nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
+    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix2",
                                                   params, 1, 
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {

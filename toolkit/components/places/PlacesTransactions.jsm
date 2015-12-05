@@ -680,8 +680,8 @@ function DefineTransaction(aRequiredProps = [], aOptionalProps = []) {
       let input = DefineTransaction.verifyInput(aInput, aRequiredProps,
                                                 aOptionalProps);
       let executeArgs = [this,
-                         ...[input[prop] for (prop of aRequiredProps)],
-                         ...[input[prop] for (prop of aOptionalProps)]];
+                         ...aRequiredProps.map(prop => input[prop]),
+                         ...aOptionalProps.map(prop => input[prop])];
       this.execute = Function.bind.apply(this.execute, executeArgs);
     }
     return TransactionsHistory.proxifyTransaction(this);
@@ -785,7 +785,7 @@ function (aName, aBasePropertyName) {
 
       // This also takes care of abandoning the global scope of the input
       // array (through Array.prototype).
-      return [for (e of aValue) baseProp.validateValue(e)];
+      return aValue.map(baseProp.validateValue);
     },
 
     // We allow setting either the array property itself (e.g. urls), or a
@@ -1040,8 +1040,8 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
     }
     if (annos.length > 0) {
       if (!aRestoring && aExcludingAnnotations.length > 0) {
-        annos = [for(a of annos)
-                 if (!aExcludingAnnotations.includes(a.name)) a];
+        annos = annos.filter(a => !aExcludingAnnotations.includes(a.name));
+
       }
 
       PlacesUtils.setAnnotationsForItem(itemId, annos);
@@ -1095,7 +1095,7 @@ PT.NewBookmark.prototype = Object.seal({
           PlacesUtils.setAnnotationsForItem(itemId, aAnnos);
         if (aTags.length > 0) {
           let currentTags = PlacesUtils.tagging.getTagsForURI(aURI);
-          aTags = [t for (t of aTags) if (!currentTags.includes(t))];
+          aTags = aTags.filter(t => !currentTags.includes(t));
           PlacesUtils.tagging.tagURI(aURI, aTags);
         }
 
@@ -1267,8 +1267,7 @@ PT.EditUrl.prototype = Object.seal({
         PlacesUtils.tagging.untagURI(oldURI, oldURITags);
 
       let currentNewURITags = PlacesUtils.tagging.getTagsForURI(aURI);
-      newURIAdditionalTags = [t for (t of oldURITags)
-                              if (!currentNewURITags.includes(t))];
+      newURIAdditionalTags = oldURITags.filter(t => !currentNewURITags.includes(t));
       if (newURIAdditionalTags)
         PlacesUtils.tagging.tagURI(aURI, newURIAdditionalTags);
     }
@@ -1434,7 +1433,11 @@ PT.Remove.prototype = {
                         guid + "). Ex: " + ex);
       }
     }
-    let toRestore = [for (guid of aGuids) yield promiseBookmarksTree(guid)];
+
+    let toRestore = [];
+    for (let guid of aGuids) {
+      toRestore.push(yield promiseBookmarksTree(guid));
+    }
 
     let removeThem = Task.async(function* () {
       for (let guid of aGuids) {
@@ -1505,7 +1508,7 @@ PT.Tag.prototype = {
       }
       else {
         let currentTags = PlacesUtils.tagging.getTagsForURI(currentURI);
-        let newTags = [t for (t of aTags) if (!currentTags.includes(t))];
+        let newTags = aTags.filter(t => !currentTags.includes(t));
         PlacesUtils.tagging.tagURI(currentURI, newTags);
         onUndo.unshift(() => {
           PlacesUtils.tagging.untagURI(currentURI, newTags);
@@ -1546,7 +1549,7 @@ PT.Untag.prototype = {
       let tagsToRemove;
       let tagsSet = PlacesUtils.tagging.getTagsForURI(currentURI);
       if (aTags.length > 0)
-        tagsToRemove = [t for (t of aTags) if (tagsSet.includes(t))];
+        tagsToRemove = aTags.filter(t => tagsSet.includes(t));
       else
         tagsToRemove = tagsSet;
       PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);

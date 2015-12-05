@@ -26,7 +26,7 @@ add_task(function* testPageActionPopup() {
     },
 
     background: function() {
-      let tabId
+      let tabId;
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         tabId = tabs[0].id;
         browser.pageAction.show(tabId);
@@ -53,7 +53,7 @@ add_task(function* testPageActionPopup() {
     } else {
       EventUtils.synthesizeMouseAtCenter(button, {}, window);
     }
-  };
+  }
 
   let promiseConsoleMessage = pattern => new Promise(resolve => {
     Services.console.registerListener(function listener(msg) {

@@ -1,3 +1,5 @@
+"use strict";
+
 extensions.registerAPI((extension, context) => {
   return {
     extension: {
@@ -29,7 +31,7 @@ extensions.registerAPI((extension, context) => {
 
       get inIncognitoContext() {
         return context.incognito;
-      }
+      },
     },
   };
 });

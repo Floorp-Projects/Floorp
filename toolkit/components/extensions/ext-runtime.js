@@ -1,3 +1,5 @@
+"use strict";
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -58,7 +60,8 @@ extensions.registerAPI((extension, context) => {
       },
 
       sendMessage: function(...args) {
-        let extensionId, message, options, responseCallback;
+        let options; // eslint-disable-line no-unused-vars
+        let extensionId, message, responseCallback;
         if (args.length == 1) {
           message = args[0];
         } else if (args.length == 2) {
@@ -87,7 +90,7 @@ extensions.registerAPI((extension, context) => {
         }
 
         let abi = Services.appinfo.XPCOMABI;
-        let [arch, compiler] = abi.split("-");
+        let [arch] = abi.split("-");
         if (arch == "x86") {
           arch = "x86-32";
         } else if (arch == "x86_64") {

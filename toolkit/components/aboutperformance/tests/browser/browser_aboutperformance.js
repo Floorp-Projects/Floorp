@@ -164,8 +164,8 @@ function frameScript() {
           return;
         }
 
-        let addonTitles = [for (eltContent of eltAddons.querySelectorAll("span.title")) eltContent.textContent];
-        let webTitles = [for (eltContent of eltWeb.querySelectorAll("span.title")) eltContent.textContent];
+        let addonTitles = Array.from(eltAddons.querySelectorAll("span.title"), elt => elt.textContent);
+        let webTitles = Array.from(eltWeb.querySelectorAll("span.title"), elt => elt.textContent);
 
         hasTitleInAddons = addonTitles.includes(title);
         hasTitleInWebpages = webTitles.includes(title);

@@ -61,7 +61,11 @@ add_task(function* reorder() {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     }
   ];
-  let sorted = [for (bm of bookmarks) yield PlacesUtils.bookmarks.insert(bm)]
+
+  let sorted = [];
+  for (let bm of bookmarks) {
+    sorted.push(yield PlacesUtils.bookmarks.insert(bm));
+  }
 
   // Check the initial append sorting.
   Assert.ok(sorted.every((bm, i) => bm.index == i),
@@ -87,7 +91,7 @@ add_task(function* reorder() {
   // The unspecified entries should retain the original order.
   sorted = [ sorted[1], sorted[0] ].concat(sorted.slice(2));
   let sortedGuids = [ sorted[0].guid, sorted[1].guid ];
-  dump("Expected order: " + [b.guid for (b of sorted)].join() + "\n");
+  dump("Expected order: " + sorted.map(b => b.guid).join() + "\n");
   yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
                                       sortedGuids);
   for (let i = 0; i < sorted.length; ++i) {

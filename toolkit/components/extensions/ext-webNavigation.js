@@ -1,3 +1,5 @@
+"use strict";
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,8 +19,7 @@ var {
 } = ExtensionUtils;
 
 // Similar to WebRequestEventManager but for WebNavigation.
-function WebNavigationEventManager(context, eventName)
-{
+function WebNavigationEventManager(context, eventName) {
   let name = `webNavigation.${eventName}`;
   let register = callback => {
     let listener = data => {
