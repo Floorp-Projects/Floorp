@@ -31,6 +31,7 @@ struct LoadInfoArgs
   PrincipalInfo    triggeringPrincipalInfo;
   uint32_t         securityFlags;
   uint32_t         contentPolicyType;
+  uint32_t         tainting;
   bool             upgradeInsecureRequests;
   bool             upgradeInsecurePreloads;
   uint64_t         innerWindowID;
