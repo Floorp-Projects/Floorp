@@ -395,11 +395,21 @@ int nr_transport_addr_is_loopback(nr_transport_addr *addr)
 
 int nr_transport_addr_is_link_local(nr_transport_addr *addr)
   {
-    if(addr->ip_version == NR_IPV6){
-      UINT4* addrTop = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr);
-      return ((*addrTop & htonl(0xFFC00000)) == htonl(0xFE800000));
-    } else {
-      assert(0);
+    switch(addr->ip_version){
+      case NR_IPV4:
+        /* RFC3927: 169.254/16 */
+        if ((ntohl(addr->u.addr4.sin_addr.s_addr) & 0xFFFF0000) == 0xA9FE0000)
+          return(1);
+        break;
+      case NR_IPV6:
+        {
+          UINT4* addrTop = (UINT4*)(addr->u.addr6.sin6_addr.s6_addr);
+          if ((*addrTop & htonl(0xFFC00000)) == htonl(0xFE800000))
+            return(2);
+        }
+        break;
+      default:
+        UNIMPLEMENTED;
     }
 
     return(0);
@@ -426,3 +436,37 @@ int nr_transport_addr_is_wildcard(nr_transport_addr *addr)
 
     return(0);
   }
+
+nr_transport_addr_mask nr_private_ipv4_addrs[] = {
+  /* RFC1918: 10/8 */
+  {0x0A000000, 0xFF000000},
+  /* RFC1918: 172.16/12 */
+  {0xAC100000, 0xFFF00000},
+  /* RFC1918: 192.168/16 */
+  {0xC0A80000, 0xFFFF0000},
+  /* RFC6598: 100.64/10 */
+  {0x64400000, 0xFFC00000}
+};
+
+int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
+  {
+    switch(addr->ip_version){
+      case NR_IPV4:
+        {
+          UINT4 ip = ntohl(addr->u.addr4.sin_addr.s_addr);
+          for (int i=0; i<(sizeof(nr_private_ipv4_addrs)/sizeof(nr_transport_addr_mask)); i++) {
+            if ((ip & nr_private_ipv4_addrs[i].mask) == nr_private_ipv4_addrs[i].addr)
+              return i + 1;
+          }
+        }
+        break;
+      case NR_IPV6:
+        return(0);
+      default:
+        UNIMPLEMENTED;
+    }
+
+    return(0);
+  }
+
+
