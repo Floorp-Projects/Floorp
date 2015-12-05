@@ -17,7 +17,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222624
 
 /** Test for Bug 1222624 **/
 
-const transformRes = '<?xml version="1.0" encoding="UTF-8"?>\n<result><external/>doc1!doc2</result>';
+const nl = navigator.platform == 'Win32' ? '\r\n' : '\n';
+
+const transformRes = '<?xml version="1.0" encoding="UTF-8"?>' + nl + '<result><external/>doc1!doc2</result>';
 
 xhr = new XMLHttpRequest();
 xhr.open("GET", "file_bug1222624.xml", false);
