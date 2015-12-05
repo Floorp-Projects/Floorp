@@ -41,6 +41,7 @@
 #undef Status
 #endif
 
+class AsyncVerifyRedirectCallbackForwarder;
 class nsFormData;
 class nsIJARChannel;
 class nsILoadGroup;
@@ -425,8 +426,7 @@ private:
     return Send(Nullable<RequestBody>(aBody));
   }
 
-  bool IsCrossSiteCORSRequest();
-  bool IsDeniedCrossSiteCORSRequest();
+  bool IsDeniedCrossSiteRequest();
 
   // Tell our channel what network interface ID we were told to use.
   // If it's an HTTP channel and we were told to use a non-default
@@ -620,9 +620,18 @@ protected:
 
   void ChangeStateToDone();
 
+  /**
+   * Check if aChannel is ok for a cross-site request by making sure no
+   * inappropriate headers are set, and no username/password is set.
+   *
+   * Also updates the XML_HTTP_REQUEST_USE_XSITE_AC bit.
+   */
+  void CheckChannelForCrossSiteRequest(nsIChannel* aChannel);
+
   void StartProgressEventTimer();
 
-  nsresult OnRedirectVerifyCallback(nsresult result);
+  friend class AsyncVerifyRedirectCallbackForwarder;
+  void OnRedirectVerifyCallback(nsresult result);
 
   nsresult Open(const nsACString& method, const nsACString& url, bool async,
                 const mozilla::dom::Optional<nsAString>& user,
@@ -831,7 +840,6 @@ private:
 // XMLHttpRequest via XPCOM stuff.
 class nsXMLHttpRequestXPCOMifier final : public nsIStreamListener,
                                          public nsIChannelEventSink,
-                                         public nsIAsyncVerifyRedirectCallback,
                                          public nsIProgressEventSink,
                                          public nsIInterfaceRequestor,
                                          public nsITimerCallback
@@ -856,7 +864,6 @@ public:
   NS_FORWARD_NSISTREAMLISTENER(mXHR->)
   NS_FORWARD_NSIREQUESTOBSERVER(mXHR->)
   NS_FORWARD_NSICHANNELEVENTSINK(mXHR->)
-  NS_FORWARD_NSIASYNCVERIFYREDIRECTCALLBACK(mXHR->)
   NS_FORWARD_NSIPROGRESSEVENTSINK(mXHR->)
   NS_FORWARD_NSITIMERCALLBACK(mXHR->)
 

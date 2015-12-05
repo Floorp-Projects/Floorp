@@ -691,12 +691,6 @@ bool NS_UsePrivateBrowsing(nsIChannel *channel);
 bool NS_GetOriginAttributes(nsIChannel *aChannel,
                             mozilla::NeckoOriginAttributes &aAttributes);
 
-/**
- * Returns true if the channel has visited any cross-origin URLs on any
- * URLs that it was redirected through.
- */
-bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
-
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.
 #define NECKO_NO_APP_ID 0

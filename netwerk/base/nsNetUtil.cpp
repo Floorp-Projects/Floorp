@@ -1252,55 +1252,6 @@ NS_GetAppInfo(nsIChannel *aChannel,
     return true;
 }
 
-bool
-NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
-{
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  MOZ_RELEASE_ASSERT(loadInfo, "Origin tracking only works for channels created with a loadinfo");
-
-  // Always treat tainted channels as cross-origin.
-  if (loadInfo->GetTainting() != LoadTainting::Basic) {
-    return true;
-  }
-
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->LoadingPrincipal();
-  uint32_t mode = loadInfo->GetSecurityMode();
-  bool dataInherits =
-    mode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS ||
-    mode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS ||
-    mode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-
-  bool aboutBlankInherits = dataInherits && loadInfo->GetAboutBlankInherits();
-
-  for (nsIPrincipal* principal : loadInfo->RedirectChain()) {
-    nsCOMPtr<nsIURI> uri;
-    principal->GetURI(getter_AddRefs(uri));
-    if (!uri) {
-      return true;
-    }
-
-    if (aboutBlankInherits && NS_IsAboutBlank(uri)) {
-      continue;
-    }
-
-    if (NS_FAILED(loadingPrincipal->CheckMayLoad(uri, aReport, dataInherits))) {
-      return true;
-    }
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  if (!uri) {
-    return true;
-  }
-
-  if (aboutBlankInherits && NS_IsAboutBlank(uri)) {
-    return false;
-  }
-
-  return NS_FAILED(loadingPrincipal->CheckMayLoad(uri, aReport, dataInherits));
-}
-
 nsresult
 NS_GetAppInfoFromClearDataNotification(nsISupports *aSubject,
                                        uint32_t *aAppID,

@@ -99,6 +99,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mDecodedBodySize(0)
   , mEncodedBodySize(0)
   , mRequireCORSPreflight(false)
+  , mWithCredentials(false)
   , mReportCollector(new ConsoleReportCollector())
   , mForceMainDocumentChannel(false)
 {
@@ -2609,7 +2610,11 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   // Preserve the CORS preflight information.
   nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
   if (mRequireCORSPreflight && httpInternal) {
-    httpInternal->SetCorsPreflightParameters(mUnsafeHeaders);
+    rv = httpInternal->SetCorsPreflightParameters(mUnsafeHeaders, mWithCredentials,
+                                                  mPreflightPrincipal);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   if (preserveMethod) {
@@ -3102,13 +3107,18 @@ HttpBaseChannel::EnsureSchedulingContextID()
     return true;
 }
 
-void
-HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHeaders)
+NS_IMETHODIMP
+HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHeaders,
+                                            bool aWithCredentials,
+                                            nsIPrincipal* aPrincipal)
 {
-  MOZ_RELEASE_ASSERT(!mRequestObserversCalled);
+  ENSURE_CALLED_BEFORE_CONNECT();
 
   mRequireCORSPreflight = true;
   mUnsafeHeaders = aUnsafeHeaders;
+  mWithCredentials = aWithCredentials;
+  mPreflightPrincipal = aPrincipal;
+  return NS_OK;
 }
 
 } // namespace net

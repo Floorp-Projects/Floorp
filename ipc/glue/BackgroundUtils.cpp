@@ -242,7 +242,6 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       triggeringPrincipalInfo,
       aLoadInfo->GetSecurityFlags(),
       aLoadInfo->InternalContentPolicyType(),
-      static_cast<uint32_t>(aLoadInfo->GetTainting()),
       aLoadInfo->GetUpgradeInsecureRequests(),
       aLoadInfo->GetUpgradeInsecurePreloads(),
       aLoadInfo->GetInnerWindowID(),
@@ -253,10 +252,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetIsInThirdPartyContext(),
       aLoadInfo->GetOriginAttributes(),
       redirectChainIncludingInternalRedirects,
-      redirectChain,
-      aLoadInfo->CorsUnsafeHeaders(),
-      aLoadInfo->GetForcePreflight(),
-      aLoadInfo->GetIsPreflight());
+      redirectChain);
 
   return NS_OK;
 }
@@ -302,7 +298,6 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           triggeringPrincipal,
                           loadInfoArgs.securityFlags(),
                           loadInfoArgs.contentPolicyType(),
-                          static_cast<LoadTainting>(loadInfoArgs.tainting()),
                           loadInfoArgs.upgradeInsecureRequests(),
                           loadInfoArgs.upgradeInsecurePreloads(),
                           loadInfoArgs.innerWindowID(),
@@ -313,10 +308,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.isInThirdPartyContext(),
                           loadInfoArgs.originAttributes(),
                           redirectChainIncludingInternalRedirects,
-                          redirectChain,
-                          loadInfoArgs.corsUnsafeHeaders(),
-                          loadInfoArgs.forcePreflight(),
-                          loadInfoArgs.isPreflight());
+                          redirectChain);
 
    loadInfo.forget(outLoadInfo);
    return NS_OK;
