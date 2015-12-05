@@ -17,7 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222624
 
 /** Test for Bug 1222624 **/
 
-const nl = navigator.platform == 'Win32' ? '\r\n' : '\n';
+const nl = (navigator.platform == 'Win32' ||
+            navigator.platform == 'Win64') ? '\r\n' : '\n';
 
 const transformRes = '<?xml version="1.0" encoding="UTF-8"?>' + nl + '<result><external/>doc1!doc2</result>';
 
