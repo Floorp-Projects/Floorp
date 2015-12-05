@@ -6,11 +6,12 @@
 #include "nsISupports.idl"
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
+[ref] native OptionalCorsPreflightArgsRef(mozilla::OptionalCorsPreflightArgs);
 
 interface nsIPrincipal;
 interface nsIURI;
 
-[uuid(81acb360-edd2-428e-935f-300a32efb649)]
+[uuid(893e29fb-2e84-454e-afc7-41fadbe93fd9)]
 interface nsIHttpChannelChild : nsISupports
 {
   void addCookiesToRequest();
@@ -21,6 +22,10 @@ interface nsIHttpChannelChild : nsISupports
 
   // Headers that the channel client has set via SetRequestHeader.
   readonly attribute RequestHeaderTuples clientSetRequestHeaders;
+
+  // Headers that the channel client has set via SetRequestHeader.
+  [notxpcom, nostdcall]
+  void GetClientSetCorsPreflightParameters(in OptionalCorsPreflightArgsRef args);
 
   // This method is called by nsCORSListenerProxy if we need to remove
   // an entry from the CORS preflight cache in the parent process.
