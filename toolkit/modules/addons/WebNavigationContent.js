@@ -1,19 +1,22 @@
+"use strict";
+
+/* globals docShell */
+
 var Ci = Components.interfaces;
 
-function getWindowId(window)
-{
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function getWindowId(window) {
   return window.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils)
                .outerWindowID;
 }
 
-function getParentWindowId(window)
-{
+function getParentWindowId(window) {
   return getWindowId(window.parent);
 }
 
-function loadListener(event)
-{
+function loadListener(event) {
   let document = event.target;
   let window = document.defaultView;
   let url = document.documentURI;
@@ -81,15 +84,7 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:LocationChange", data);
   },
 
-  QueryInterface: function QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIWebProgressListener) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports)) {
-        return this;
-    }
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
 };
 
 var disabled = false;

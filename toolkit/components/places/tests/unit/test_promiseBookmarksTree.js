@@ -57,7 +57,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   let expectedAnnos = PlacesUtils.getAnnotationsForItem(aItem.id);
   if (expectedAnnos.length > 0) {
     let annosToString = annos => {
-      return [(a.name + ":" + a.value) for (a of annos)].sort().join(",");
+      return annos.map(a => a.name + ":" + a.value).sort().join(",");
     };
     do_check_true(Array.isArray(aItem.annos))
     do_check_eq(annosToString(aItem.annos), annosToString(expectedAnnos));

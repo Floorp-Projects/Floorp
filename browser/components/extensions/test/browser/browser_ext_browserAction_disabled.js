@@ -3,14 +3,13 @@
 "use strict";
 
 add_task(function* testDisabled() {
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "browser_action": {}
+      "browser_action": {},
     },
 
-    background: function () {
-      var clicked = false;
+    background: function() {
+      let clicked = false;
 
       browser.browserAction.onClicked.addListener(() => {
         browser.test.log("Got click event");

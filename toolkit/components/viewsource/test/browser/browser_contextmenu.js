@@ -77,7 +77,7 @@ function* onViewSourceWindowOpen(aWindow, aIsTab) {
   expectedData.push(["span", false, false, null]);
 }
 
-function checkMenuItems(contextMenu, isTab, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
+function* checkMenuItems(contextMenu, isTab, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
 
   let browser = isTab ? gBrowser.selectedBrowser : gViewSourceWindow.gBrowser;
   yield ContentTask.spawn(browser, { selector: selector }, function* (arg) {

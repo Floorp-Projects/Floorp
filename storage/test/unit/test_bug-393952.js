@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Testcase for bug 393952:  crash when I try to VACUUM and one of the tables
-// has a UNIQUE text column.   StorageUnicodeFunctions::likeFunction() 
+// has a UNIQUE text column.   StorageUnicodeFunctions::likeFunction()
 // needs to handle null aArgv[0] and aArgv[1]
 
 function setup()
@@ -32,7 +32,7 @@ function run_test()
 
   for (var i = 0; i < tests.length; i++)
     tests[i]();
-    
+
   cleanup();
 }
 

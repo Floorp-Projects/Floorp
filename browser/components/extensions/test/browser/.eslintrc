@@ -1,0 +1,43 @@
+{
+  "extends": "../../.eslintrc",
+
+  "globals": {
+    // DOM window globals
+    "CustomEvent": false,
+    "document": false,
+    "ImageData": false,
+    "MouseEvent": false,
+    "window": false,
+    "XMLHttpRequest": false,
+
+    "gBrowser": false,
+
+    "sendAsyncMessage": false,
+
+    "NetUtil": true,
+    "XPCOMUtils": true,
+    "Task": true,
+
+    "browser": false,
+
+    // Test harness globals
+    "add_task": false,
+    "BrowserTestUtils": false,
+    "ContentTask": false,
+    "EventUtils": false,
+    "ExtensionTestUtils": false,
+    "info": false,
+    "is": false,
+    "ok": false,
+    "registerCleanupFunction": false,
+    "SimpleTest": false,
+    "SpecialPowers": false,
+    "waitForFocus": false,
+
+    "clickBrowserAction": true,
+    "clickPageAction": true,
+    "CustomizableUI": true,
+    "focusWindow": true,
+    "makeWidgetId": true,
+  }
+}

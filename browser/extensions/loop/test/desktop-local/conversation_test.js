@@ -29,6 +29,7 @@ describe("loop.conversation", function() {
       GetLoopPref: function(prefName) {
         switch (prefName) {
           case "debug.sdk":
+          case "debug.dispatcher":
             return false;
           default:
             return "http://fake";

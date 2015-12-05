@@ -155,7 +155,7 @@
     // "no-unused-vars": [2, {"vars": "all", "args": "none"}],
 
     // No using variables before defined
-    // "no-use-before-define": 2,
+    // "no-use-before-define": [2, "nofunc"],
 
     // No using with
     // "no-with": 2,

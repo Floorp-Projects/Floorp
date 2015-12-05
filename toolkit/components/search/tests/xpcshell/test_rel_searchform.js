@@ -26,7 +26,7 @@ add_task(function* test_rel_searchform() {
   // point of the ?search parameter is to avoid accidentally matching the value
   // returned as a last resort by Engine's searchForm getter, which is simply
   // the prePath of the engine's first HTML <Url>.
-  let items = [for (e of engineNames) { name: e, xmlFileName: e }];
+  let items = engineNames.map(e => ({ name: e, xmlFileName: e }));
   for (let engine of yield addTestEngines(items)) {
     do_check_eq(engine.searchForm, "http://" + engine.name + "/?search");
   }

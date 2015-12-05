@@ -1,0 +1,16 @@
+{
+  "extends": "../../../toolkit/components/extensions/.eslintrc",
+
+  "globals": {
+    "currentWindow": true,
+    "EventEmitter": true,
+    "IconDetails": true,
+    "openPanel": true,
+    "makeWidgetId": true,
+    "TabContext": true,
+    "AllWindowEvents": true,
+    "WindowEventManager": true,
+    "WindowListManager": true,
+    "WindowManager": true,
+  },
+}

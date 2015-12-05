@@ -1,3 +1,7 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
 
@@ -9,49 +13,49 @@ add_task(function* () {
       "content_scripts": [{
         "matches": ["http://mochi.test/*/context_tabs_onUpdated_page.html"],
         "js": ["content-script.js"],
-        "run_at": "document_start"
-      },],
+        "run_at": "document_start",
+      }],
     },
 
     background: function() {
-      var pageURL = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+      let pageURL = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
 
-      var expectedSequence = [
+      let expectedSequence = [
         { status: "loading" },
         { status: "loading", url: pageURL },
-        { status: "complete" }
+        { status: "complete" },
       ];
-      var collectedSequence = [];
+      let collectedSequence = [];
 
-      browser.tabs.onUpdated.addListener(function (tabId, updatedInfo) {
+      browser.tabs.onUpdated.addListener(function(tabId, updatedInfo) {
         collectedSequence.push(updatedInfo);
       });
 
-      browser.runtime.onMessage.addListener(function () {
-          if (collectedSequence.length !== expectedSequence.length) {
+      browser.runtime.onMessage.addListener(function() {
+        if (collectedSequence.length !== expectedSequence.length) {
+          browser.test.assertEq(
+            JSON.stringify(expectedSequence),
+            JSON.stringify(collectedSequence),
+            "got unexpected number of updateInfo data"
+          );
+        } else {
+          for (let i = 0; i < expectedSequence.length; i++) {
             browser.test.assertEq(
-              JSON.stringify(expectedSequence),
-              JSON.stringify(collectedSequence),
-              "got unexpected number of updateInfo data"
+              expectedSequence[i].status,
+              collectedSequence[i].status,
+              "check updatedInfo status"
             );
-          } else {
-            for (var i = 0; i < expectedSequence.length; i++) {
+            if (expectedSequence[i].url || collectedSequence[i].url) {
               browser.test.assertEq(
-                expectedSequence[i].status,
-                collectedSequence[i].status,
-                "check updatedInfo status"
+                expectedSequence[i].url,
+                collectedSequence[i].url,
+                "check updatedInfo url"
               );
-              if (expectedSequence[i].url || collectedSequence[i].url) {
-                browser.test.assertEq(
-                  expectedSequence[i].url,
-                  collectedSequence[i].url,
-                  "check updatedInfo url"
-                );
-              }
             }
           }
+        }
 
-          browser.test.notifyPass("tabs.onUpdated");
+        browser.test.notifyPass("tabs.onUpdated");
       });
 
       browser.tabs.create({ url: pageURL });
@@ -64,12 +68,12 @@ add_task(function* () {
           }
         }, true);
       `,
-    }
+    },
   });
 
   yield Promise.all([
     extension.startup(),
-    extension.awaitFinish("tabs.onUpdated")
+    extension.awaitFinish("tabs.onUpdated"),
   ]);
 
   yield extension.unload();
@@ -84,7 +88,7 @@ function* do_test_update(background) {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: background,
@@ -92,7 +96,7 @@ function* do_test_update(background) {
 
   yield Promise.all([
     yield extension.startup(),
-    yield extension.awaitFinish("finish")
+    yield extension.awaitFinish("finish"),
   ]);
 
   yield extension.unload();

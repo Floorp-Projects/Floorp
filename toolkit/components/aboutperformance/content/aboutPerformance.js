@@ -561,7 +561,7 @@ var View = {
       cachedElements.eltName.textContent = `Full name: ${delta.fullName}.`;
       cachedElements.eltLoaded.textContent = `Measure start: ${Math.round(delta.age/1000)} seconds ago.`
 
-      let processes = [for (proc of delta.diff.processes) `${proc.processId} (${proc.isChildProcess?"child":"parent"})`];
+      let processes = delta.diff.processes.map(proc => `${proc.processId} (${proc.isChildProcess?"child":"parent"})`);
       cachedElements.eltProcess.textContent = `Processes: ${processes.join(", ")}`;
       let jankSuffix = "";
       let cpowSuffix = "";

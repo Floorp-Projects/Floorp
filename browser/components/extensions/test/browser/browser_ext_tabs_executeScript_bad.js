@@ -5,38 +5,40 @@
 function* testHasNoPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
+  function background(contentSetup) {
+    browser.runtime.onMessage.addListener((msg, sender) => {
+      browser.test.assertEq(msg, "second script ran", "second script ran");
+      browser.test.notifyPass("executeScript");
+    });
+
+    browser.test.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, "execute-script");
+
+      browser.tabs.query({ activeWindow: true }, tabs => {
+        browser.tabs.executeScript({
+          file: "script.js",
+        });
+
+        // Execute a script we know we have permissions for in the
+        // second tab, in the hopes that it will execute after the
+        // first one. This has intermittent failure written all over
+        // it, but it's just about the best we can do until we
+        // support callbacks for executeScript.
+        browser.tabs.executeScript(tabs[1].id, {
+          file: "second-script.js",
+        });
+      });
+    });
+
+    contentSetup().then(() => {
+      browser.test.sendMessage("ready");
+    });
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: params.manifest,
 
-    background: `(${function(contentSetup) {
-      browser.runtime.onMessage.addListener((msg, sender) => {
-        browser.test.assertEq(msg, "second script ran", "second script ran");
-        browser.test.notifyPass("executeScript");
-      });
-
-      browser.test.onMessage.addListener(msg => {
-        browser.test.assertEq(msg, "execute-script");
-
-        browser.tabs.query({ activeWindow: true }, tabs => {
-          browser.tabs.executeScript({
-            file: "script.js"
-          });
-
-          // Execute a script we know we have permissions for in the
-          // second tab, in the hopes that it will execute after the
-          // first one. This has intermittent failure written all over
-          // it, but it's just about the best we can do until we
-          // support callbacks for executeScript.
-          browser.tabs.executeScript(tabs[1].id, {
-            file: "second-script.js"
-          });
-        });
-      });
-
-      contentSetup().then(() => {
-        browser.test.sendMessage("ready");
-      });
-    }})(${contentSetup})`,
+    background: `(${background})(${contentSetup})`,
 
     files: {
       "script.js": function() {
@@ -45,8 +47,8 @@ function* testHasNoPermission(params) {
 
       "second-script.js": function() {
         browser.runtime.sendMessage("second script ran");
-      }
-    }
+      },
+    },
   });
 
   yield extension.startup();
@@ -68,12 +70,12 @@ add_task(function* testBadPermissions() {
 
   info("Test no special permissions");
   yield testHasNoPermission({
-    manifest: { "permissions": ["http://example.com/"] }
+    manifest: { "permissions": ["http://example.com/"] },
   });
 
   info("Test tabs permissions");
   yield testHasNoPermission({
-    manifest: { "permissions": ["http://example.com/", "tabs"] }
+    manifest: { "permissions": ["http://example.com/", "tabs"] },
   });
 
   info("Test active tab, browser action, no click");
@@ -97,7 +99,7 @@ add_task(function* testBadPermissions() {
           resolve();
         });
       });
-    }
+    },
   });
 
   yield BrowserTestUtils.removeTab(tab2);

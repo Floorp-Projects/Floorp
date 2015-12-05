@@ -1,8 +1,8 @@
-# -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-#
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 function AppPicker() {};
 
@@ -117,20 +117,19 @@ AppPicker.prototype =
     * Retrieve the pretty description from the file
     */ 
     getFileDisplayName: function getFileDisplayName(file) {
-#ifdef XP_WIN
-      if (file instanceof Components.interfaces.nsILocalFileWin) {
-        try {
-          return file.getVersionInfoField("FileDescription");
-        } catch (e) {}
+      if (AppConstants.platform == "win") {
+        if (file instanceof Components.interfaces.nsILocalFileWin) {
+          try {
+            return file.getVersionInfoField("FileDescription");
+          } catch (e) {}
+        }
+      } else if (AppConstants.platform == "macosx") {
+        if (file instanceof Components.interfaces.nsILocalFileMac) {
+          try {
+            return file.bundleDisplayName;
+          } catch (e) {}
+        }
       }
-#endif
-#ifdef XP_MACOSX
-      if (file instanceof Components.interfaces.nsILocalFileMac) {
-        try {
-          return file.bundleDisplayName;
-        } catch (e) {}
-      }
-#endif
       return file.leafName;
     },
 
@@ -186,15 +185,13 @@ AppPicker.prototype =
       var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
                             .getService(Components.interfaces.nsIProperties);
       var startLocation;
-#ifdef XP_WIN
-    startLocation = "ProgF"; // Program Files
-#else
-#ifdef XP_MACOSX
-    startLocation = "LocApp"; // Local Applications
-#else
-    startLocation = "Home";
-#endif
-#endif
+      if (AppConstants.platform == "win") {
+        startLocation = "ProgF"; // Program Files
+      } else if (AppConstants.platform == "macosx") {
+        startLocation = "LocApp"; // Local Applications
+      } else {
+        startLocation = "Home";
+      }
       fp.displayDirectory = 
         fileLoc.get(startLocation, Components.interfaces.nsILocalFile);
       

@@ -8,10 +8,10 @@
 add_task(function* testDetailsObjects() {
   function background() {
     function getImageData(color) {
-      var canvas = document.createElement("canvas");
+      let canvas = document.createElement("canvas");
       canvas.width = 2;
       canvas.height = 2;
-      var canvasContext = canvas.getContext("2d");
+      let canvasContext = canvas.getContext("2d");
 
       canvasContext.clearRect(0, 0, canvas.width, canvas.height);
       canvasContext.fillStyle = color;
@@ -23,12 +23,13 @@ add_task(function* testDetailsObjects() {
       };
     }
 
-    var imageData = {
+    let imageData = {
       red: getImageData("red"),
       green: getImageData("green"),
     };
 
-    var iconDetails = [
+    /* eslint-disable comma-dangle, indent */
+    let iconDetails = [
       // Only paths.
       { details: { "path": "a.png" },
         resolutions: {
@@ -129,18 +130,18 @@ add_task(function* testDetailsObjects() {
     // Allow serializing ImageData objects for logging.
     ImageData.prototype.toJSON = () => "<ImageData>";
 
-    var tabId;
+    let tabId;
 
     browser.test.onMessage.addListener((msg, test) => {
       if (msg != "setIcon") {
         browser.test.fail("expecting 'setIcon' message");
       }
 
-      var details = iconDetails[test.index];
-      var expectedURL = details.resolutions[test.resolution];
+      let details = iconDetails[test.index];
+      let expectedURL = details.resolutions[test.resolution];
 
-      var detailString = JSON.stringify(details);
-      browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URL ${expectedURL}`)
+      let detailString = JSON.stringify(details);
+      browser.test.log(`Setting browerAction/pageAction to ${detailString} expecting URL ${expectedURL}`);
 
       browser.browserAction.setIcon(Object.assign({tabId}, details.details));
       browser.pageAction.setIcon(Object.assign({tabId}, details.details));
@@ -158,9 +159,9 @@ add_task(function* testDetailsObjects() {
     // objects without issue. Unfortunately, |cloneInto| implements a slightly
     // different algorithm than we use in web APIs, and does not handle them
     // correctly.
-    var tests = [];
-    for (var [idx, icon] of iconDetails.entries()) {
-      for (var res of Object.keys(icon.resolutions)) {
+    let tests = [];
+    for (let [idx, icon] of iconDetails.entries()) {
+      for (let res of Object.keys(icon.resolutions)) {
         tests.push({ index: idx, resolution: Number(res) });
       }
     }
@@ -221,19 +222,18 @@ add_task(function* testDetailsObjects() {
 });
 
 // Test that an error is thrown when providing invalid icon sizes
-add_task(function *testInvalidIconSizes() {
-
+add_task(function* testInvalidIconSizes() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {},
       "page_action": {},
     },
 
-    background: function () {
+    background: function() {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
-        var tabId = tabs[0].id;
+        let tabId = tabs[0].id;
 
-        for (var api of ["pageAction", "browserAction"]) {
+        for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
           let assertSetIconThrows = function(detail, error, message) {
             try {
@@ -246,10 +246,10 @@ add_task(function *testInvalidIconSizes() {
             } catch (e) {
               browser.test.succeed("setIcon with invalid icon size");
             }
-          }
+          };
 
           // test invalid icon size inputs
-          for (var type of ["path", "imageData"]) {
+          for (let type of ["path", "imageData"]) {
             assertSetIconThrows({ [type]: { "abcdef": "test.png" } });
             assertSetIconThrows({ [type]: { "48px": "test.png" } });
             assertSetIconThrows({ [type]: { "20.5": "test.png" } });
@@ -278,7 +278,7 @@ add_task(function *testInvalidIconSizes() {
 
 // Test that default icon details in the manifest.json file are handled
 // correctly.
-add_task(function *testDefaultDetails() {
+add_task(function* testDefaultDetails() {
   // TODO: Test localized variants.
   let icons = [
     "foo/bar.png",
@@ -297,9 +297,9 @@ add_task(function *testDefaultDetails() {
         "page_action": { "default_icon": icon },
       },
 
-      background: function () {
+      background: function() {
         browser.tabs.query({ active: true, currentWindow: true }, tabs => {
-          var tabId = tabs[0].id;
+          let tabId = tabs[0].id;
 
           browser.pageAction.show(tabId);
           browser.test.sendMessage("ready");
@@ -332,7 +332,6 @@ add_task(function *testDefaultDetails() {
 
 // Check that attempts to load a privileged URL as an icon image fail.
 add_task(function* testSecureURLsDenied() {
-
   // Test URLs passed to setIcon.
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -341,15 +340,15 @@ add_task(function* testSecureURLsDenied() {
       "page_action": {},
     },
 
-    background: function () {
+    background: function() {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
-        var tabId = tabs[0].id;
+        let tabId = tabs[0].id;
 
-        var urls = ["chrome://browser/content/browser.xul",
+        let urls = ["chrome://browser/content/browser.xul",
                     "javascript:true"];
 
-        for (var url of urls) {
-          for (var api of ["pageAction", "browserAction"]) {
+        for (let url of urls) {
+          for (let api of ["pageAction", "browserAction"]) {
             try {
               browser[api].setIcon({tabId, path: url});
 
