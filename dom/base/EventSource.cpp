@@ -678,7 +678,7 @@ EventSource::InitChannelAndRequestEventSource()
     nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
 
   if (mWithCredentials) {
-    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+    securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
   }
 
   nsCOMPtr<nsIChannel> channel;

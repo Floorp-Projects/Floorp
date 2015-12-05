@@ -43,7 +43,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(FetchDriver,
-                  nsIStreamListener, nsIInterfaceRequestor,
+                  nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
                   nsIThreadRetargetableStreamListener)
 
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
@@ -51,6 +51,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   : mPrincipal(aPrincipal)
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
+  , mHasBeenCrossSite(false)
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
 {
@@ -83,6 +84,61 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &FetchDriver::ContinueFetch);
   return NS_DispatchToCurrentThread(r);
+}
+
+nsresult
+FetchDriver::SetTainting()
+{
+  workers::AssertIsOnMainThread();
+
+  // If we've already been cross-site then we should be fully updated
+  if (mHasBeenCrossSite) {
+    return NS_OK;
+  }
+
+  nsAutoCString url;
+  mRequest->GetURL(url);
+  nsCOMPtr<nsIURI> requestURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(requestURI), url,
+                          nullptr, nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Begin Step 8 of the Main Fetch algorithm
+  // https://fetch.spec.whatwg.org/#fetching
+
+  // request's current url's origin is request's origin and the CORS flag is unset
+  // request's current url's scheme is "data" and request's same-origin data-URL flag is set
+  // request's current url's scheme is "about"
+
+  // We have to manually check about:blank here since it's not treated as
+  // an inheriting URL by CheckMayLoad.
+  if (NS_IsAboutBlank(requestURI) ||
+       NS_SUCCEEDED(mPrincipal->CheckMayLoad(requestURI, false /* report */,
+                                             true /*allowIfInheritsPrincipal*/))) {
+    // What the spec calls "basic fetch" is handled within our necko channel
+    // code.  Therefore everything goes through HTTP Fetch
+    return NS_OK;
+  }
+
+  mHasBeenCrossSite = true;
+
+  // request's mode is "same-origin"
+  if (mRequest->Mode() == RequestMode::Same_origin) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  // request's mode is "no-cors"
+  if (mRequest->Mode() == RequestMode::No_cors) {
+    mRequest->MaybeIncreaseResponseTainting(LoadTainting::Opaque);
+    // What the spec calls "basic fetch" is handled within our necko channel
+    // code.  Therefore everything goes through HTTP Fetch
+    return NS_OK;
+  }
+
+  // Otherwise
+  mRequest->MaybeIncreaseResponseTainting(LoadTainting::CORS);
+
+  return NS_OK;
 }
 
 nsresult
@@ -121,14 +177,8 @@ FetchDriver::HttpFetch()
                           ios);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Unsafe requests aren't allowed with when using no-core mode.
-  if (mRequest->Mode() == RequestMode::No_cors &&
-      mRequest->UnsafeRequest() &&
-      (!mRequest->HasSimpleMethod() ||
-       !mRequest->Headers()->HasOnlySimpleHeaders())) {
-    MOZ_ASSERT(false, "The API should have caught this");
-    return NS_ERROR_DOM_BAD_URI;
-  }
+  rv = SetTainting();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Step 2 deals with letting ServiceWorkers intercept requests. This is
   // handled by Necko after the channel is opened.
@@ -152,19 +202,35 @@ FetchDriver::HttpFetch()
   //    is unset or response tainting is "opaque"
   // is true, and unset otherwise."
 
+  // This is effectivetly the opposite of the use credentials flag in "HTTP
+  // network or cache fetch" in the spec and decides whether to transmit
+  // cookies and other identifying information. LOAD_ANONYMOUS also prevents
+  // new cookies sent by the server from being stored.  This value will
+  // propagate across redirects, which is what we want.
+  const nsLoadFlags credentialsFlag =
+    (mRequest->GetCredentialsMode() == RequestCredentials::Omit ||
+    (mHasBeenCrossSite &&
+     mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+     mRequest->Mode() == RequestMode::No_cors)) ?
+    nsIRequest::LOAD_ANONYMOUS : 0;
+
   // Set skip serviceworker flag.
   // While the spec also gates on the client being a ServiceWorker, we can't
   // infer that here. Instead we rely on callers to set the flag correctly.
   const nsLoadFlags bypassFlag = mRequest->SkipServiceWorker() ?
                                  nsIChannel::LOAD_BYPASS_SERVICE_WORKER : 0;
 
-  nsSecurityFlags secFlags = nsILoadInfo::SEC_ABOUT_BLANK_INHERITS;
-  if (mRequest->Mode() == RequestMode::Cors) {
-    secFlags |= nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+  nsSecurityFlags secFlags;
+  if (mRequest->Mode() == RequestMode::Cors &&
+      mRequest->GetCredentialsMode() == RequestCredentials::Include) {
+    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
+               nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+  } else if (mRequest->Mode() == RequestMode::Cors) {
+    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
   } else if (mRequest->Mode() == RequestMode::Same_origin) {
-    secFlags |= nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+    secFlags = nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
   } else if (mRequest->Mode() == RequestMode::No_cors) {
-    secFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected request mode!");
     return NS_ERROR_UNEXPECTED;
@@ -174,33 +240,20 @@ FetchDriver::HttpFetch()
     secFlags |= nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS;
   }
 
-  // This is handles the use credentials flag in "HTTP
-  // network or cache fetch" in the spec and decides whether to transmit
-  // cookies and other identifying information.
-  if (mRequest->GetCredentialsMode() == RequestCredentials::Include) {
-    secFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-  } else if (mRequest->GetCredentialsMode() == RequestCredentials::Omit) {
-    secFlags |= nsILoadInfo::SEC_COOKIES_OMIT;
-  } else if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin) {
-    secFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Unexpected credentials mode!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   // From here on we create a channel and set its properties with the
   // information from the InternalRequest. This is an implementation detail.
   MOZ_ASSERT(mLoadGroup);
   nsCOMPtr<nsIChannel> chan;
 
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL | credentialsFlag |
     bypassFlag | nsIChannel::LOAD_CLASSIFY_URI;
   if (mDocument) {
     MOZ_ASSERT(mDocument->NodePrincipal() == mPrincipal);
     rv = NS_NewChannel(getter_AddRefs(chan),
                        uri,
                        mDocument,
-                       secFlags,
+                       secFlags |
+                         nsILoadInfo::SEC_ABOUT_BLANK_INHERITS,
                        mRequest->ContentPolicyType(),
                        mLoadGroup,
                        nullptr, /* aCallbacks */
@@ -210,7 +263,8 @@ FetchDriver::HttpFetch()
     rv = NS_NewChannel(getter_AddRefs(chan),
                        uri,
                        mPrincipal,
-                       secFlags,
+                       secFlags |
+                         nsILoadInfo::SEC_ABOUT_BLANK_INHERITS,
                        mRequest->ContentPolicyType(),
                        mLoadGroup,
                        nullptr, /* aCallbacks */
@@ -220,6 +274,17 @@ FetchDriver::HttpFetch()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mLoadGroup = nullptr;
+
+  // Insert ourselves into the notification callbacks chain so we can handle
+  // cross-origin redirects.
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks;
+    chan->GetNotificationCallbacks(getter_AddRefs(notificationCallbacks));
+    MOZ_ASSERT(!notificationCallbacks);
+  }
+#endif
+  chan->SetNotificationCallbacks(this);
 
   // FIXME(nsm): Bug 1120715.
   // Step 3.4 "If request's cache mode is default and request's header list
@@ -345,11 +410,24 @@ FetchDriver::HttpFetch()
   // implementation is handled by the http channel calling into
   // nsCORSListenerProxy. We just inform it which unsafe headers are included
   // in the request.
-  if (mRequest->Mode() == RequestMode::Cors) {
+  if (IsUnsafeRequest()) {
+    if (mRequest->Mode() == RequestMode::No_cors) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
+
+    mRequest->SetRedirectMode(RequestRedirect::Error);
+
     nsAutoTArray<nsCString, 5> unsafeHeaders;
     mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);
-    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
-    loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
+
+    nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
+    NS_ENSURE_TRUE(internalChan, NS_ERROR_DOM_BAD_URI);
+
+    rv = internalChan->SetCorsPreflightParameters(
+      unsafeHeaders,
+      mRequest->GetCredentialsMode() == RequestCredentials::Include,
+      mPrincipal);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   rv = chan->AsyncOpen2(this);
@@ -357,6 +435,15 @@ FetchDriver::HttpFetch()
 
   // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
   return NS_OK;
+}
+
+bool
+FetchDriver::IsUnsafeRequest()
+{
+  return mHasBeenCrossSite &&
+         (mRequest->UnsafeRequest() &&
+          (!mRequest->HasSimpleMethod() ||
+           !mRequest->Headers()->HasOnlySimpleHeaders()));
 }
 
 already_AddRefed<InternalResponse>
@@ -472,23 +559,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aRequest);
 
-  // On a successful redirect we perform the following substeps of HTTP Fetch,
-  // step 5, "redirect status", step 11.
-
-  // Step 11.5 "Append locationURL to request's url list." so that when we set the
-  // Response's URL from the Request's URL in Main Fetch, step 15, we get the
-  // final value. Note, we still use a single URL value instead of a list.
-  // Because of that we only need to do this after the request finishes.
-  nsCOMPtr<nsIURI> newURI;
-  rv = NS_GetFinalChannelURI(channel, getter_AddRefs(newURI));
-  if (NS_FAILED(rv)) {
-    FailWithNetworkError();
-    return rv;
-  }
-  nsAutoCString newUrl;
-  newURI->GetSpec(newUrl);
-  mRequest->SetURL(newUrl);
-
   bool foundOpaqueRedirect = false;
 
   if (httpChannel) {
@@ -595,13 +665,18 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     return rv;
   }
 
+  LoadTainting channelTainting = LoadTainting::Basic;
+  if (loadInfo) {
+    channelTainting = loadInfo->GetTainting();
+  }
+
   // Propagate any tainting from the channel back to our response here.  This
   // step is not reflected in the spec because the spec is written such that
   // FetchEvent.respondWith() just passes the already-tainted Response back to
   // the outer fetch().  In gecko, however, we serialize the Response through
   // the channel and must regenerate the tainting from the channel in the
   // interception case.
-  mRequest->MaybeIncreaseResponseTainting(loadInfo->GetTainting());
+  mRequest->MaybeIncreaseResponseTainting(channelTainting);
 
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
@@ -674,6 +749,143 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
+// This is called when the channel is redirected.
+NS_IMETHODIMP
+FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                    nsIChannel* aNewChannel,
+                                    uint32_t aFlags,
+                                    nsIAsyncVerifyRedirectCallback *aCallback)
+{
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
+
+  if (NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) ||
+      NS_IsHSTSUpgradeRedirect(aOldChannel, aNewChannel, aFlags)) {
+    aCallback->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
+  }
+
+  // We should only ever get here if we use a "follow" redirect policy,
+  // or if if we set an "error" policy as a result of a CORS policy.
+  MOZ_ASSERT(mRequest->GetRedirectMode() == RequestRedirect::Follow ||
+             (mRequest->GetRedirectMode() == RequestRedirect::Error &&
+              IsUnsafeRequest()));
+
+  // HTTP Fetch step 5, "redirect status", step 1
+  if (NS_WARN_IF(mRequest->GetRedirectMode() == RequestRedirect::Error)) {
+    aOldChannel->Cancel(NS_BINDING_FAILED);
+    return NS_BINDING_FAILED;
+  }
+
+  // HTTP Fetch step 5, "redirect status", steps 2 through 6 are automatically
+  // handled by necko before calling AsyncOnChannelRedirect() with the new
+  // nsIChannel.
+
+  // HTTP Fetch step 5, "redirect status", steps 7 and 8 enforcing a redirect
+  // count are done by Necko.  The pref used is "network.http.redirection-limit"
+  // which is set to 20 by default.
+
+  // HTTP Fetch Step 9, "redirect status". This is enforced by the
+  // nsCORSListenerProxy. It forbids redirecting to data:
+
+  // HTTP Fetch step 5, "redirect status", step 10 requires us to halt the
+  // redirect, but successfully return an opaqueredirect Response to the
+  // initiating Fetch.
+
+  // The following steps are from HTTP Fetch step 5, "redirect status", step 11
+  // which requires the RequestRedirect to be "follow". We asserted that we're
+  // in either "follow" or "error" mode here.
+
+  // HTTP Fetch step 5, "redirect status", steps 11.1 and 11.2 block redirecting
+  // to a URL with credentials in CORS mode.  This is implemented in
+  // nsCORSListenerProxy.
+
+  // On a successful redirect we perform the following substeps of HTTP Fetch,
+  // step 5, "redirect status", step 11.
+
+  // Step 11.5 "Append locationURL to request's url list." so that when we set the
+  // Response's URL from the Request's URL in Main Fetch, step 15, we get the
+  // final value. Note, we still use a single URL value instead of a list.
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(rv);
+    return rv;
+  }
+
+  // We need to update our request's URL.
+  nsAutoCString newUrl;
+  newURI->GetSpec(newUrl);
+  mRequest->SetURL(newUrl);
+
+  // Implement Main Fetch step 8 again on redirect.
+  rv = SetTainting();
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(rv);
+    return rv;
+  }
+
+  // Requests that require preflight are not permitted to redirect.
+  // Fetch spec section 4.2 "HTTP Fetch", step 4.9 just uses the manual
+  // redirect flag to decide whether to execute step 4.10 or not. We do not
+  // represent it in our implementation.
+  // The only thing we do is to check if the request requires a preflight (part
+  // of step 4.9), in which case we abort. This part cannot be done by
+  // nsCORSListenerProxy since it does not have access to mRequest.
+  // which case. Step 4.10.3 is handled by OnRedirectVerifyCallback(), and all
+  // the other steps are handled by nsCORSListenerProxy.
+
+  if (IsUnsafeRequest()) {
+    // We can't handle redirects that require preflight yet.
+    // This is especially true for no-cors requests, which much always be
+    // blocked if they require preflight.
+
+    // Simply fire an error here.
+    aOldChannel->Cancel(NS_BINDING_FAILED);
+    return NS_BINDING_FAILED;
+  }
+
+  // Otherwise, we rely on necko and the CORS proxy to do the right thing
+  // as the redirect is followed.  In general this means http
+  // fetch.  If we've ever been CORS, we need to stay CORS.
+
+  // Possibly set the LOAD_ANONYMOUS flag on the channel.
+  if (mHasBeenCrossSite &&
+      mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+      mRequest->Mode() == RequestMode::No_cors) {
+    // In the case of a "no-cors" mode request with "same-origin" credentials,
+    // we have to set LOAD_ANONYMOUS manually here in order to avoid sending
+    // credentials on a cross-origin redirect.
+    nsLoadFlags flags;
+    rv = aNewChannel->GetLoadFlags(&flags);
+    if (NS_SUCCEEDED(rv)) {
+      flags |= nsIRequest::LOAD_ANONYMOUS;
+      rv = aNewChannel->SetLoadFlags(flags);
+    }
+    if (NS_FAILED(rv)) {
+      aOldChannel->Cancel(rv);
+      return rv;
+    }
+  }
+#ifdef DEBUG
+  {
+    // Make sure nothing in the redirect chain screws up our credentials
+    // settings. LOAD_ANONYMOUS must be set if we RequestCredentials is "omit"
+    // or "same-origin".
+    nsLoadFlags flags;
+    aNewChannel->GetLoadFlags(&flags);
+    bool shouldBeAnon =
+      mRequest->GetCredentialsMode() == RequestCredentials::Omit ||
+      (mHasBeenCrossSite &&
+       mRequest->GetCredentialsMode() == RequestCredentials::Same_origin);
+    MOZ_ASSERT(!!(flags & nsIRequest::LOAD_ANONYMOUS) == shouldBeAnon);
+  }
+#endif
+
+  aCallback->OnRedirectVerifyCallback(NS_OK);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 FetchDriver::CheckListenerChain()
 {
@@ -683,6 +895,12 @@ FetchDriver::CheckListenerChain()
 NS_IMETHODIMP
 FetchDriver::GetInterface(const nsIID& aIID, void **aResult)
 {
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    *aResult = static_cast<nsIChannelEventSink*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
   if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aResult = static_cast<nsIStreamListener*>(this);
     NS_ADDREF_THIS();

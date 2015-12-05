@@ -431,6 +431,7 @@ nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
 ////////////////////////////////////
 NS_IMPL_ISUPPORTS(nsScriptSecurityManager,
                   nsIScriptSecurityManager,
+                  nsIChannelEventSink,
                   nsIObserver)
 
 ///////////////////////////////////////////////////
@@ -1234,6 +1235,41 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
     SetPendingException(cx, errorMsg.get());
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
+
+/////////////////////////////////////////////
+// Method implementing nsIChannelEventSink //
+/////////////////////////////////////////////
+NS_IMETHODIMP
+nsScriptSecurityManager::AsyncOnChannelRedirect(nsIChannel* oldChannel, 
+                                                nsIChannel* newChannel,
+                                                uint32_t redirFlags,
+                                                nsIAsyncVerifyRedirectCallback *cb)
+{
+    nsCOMPtr<nsIPrincipal> oldPrincipal;
+    GetChannelResultPrincipal(oldChannel, getter_AddRefs(oldPrincipal));
+
+    nsCOMPtr<nsIURI> newURI;
+    newChannel->GetURI(getter_AddRefs(newURI));
+    nsCOMPtr<nsIURI> newOriginalURI;
+    newChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
+
+    NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
+
+    const uint32_t flags =
+        nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+        nsIScriptSecurityManager::DISALLOW_SCRIPT;
+    nsresult rv = CheckLoadURIWithPrincipal(oldPrincipal, newURI, flags);
+    if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
+        rv = CheckLoadURIWithPrincipal(oldPrincipal, newOriginalURI, flags);
+    }
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    cb->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
+}
+
 
 /////////////////////////////////////
 // Method implementing nsIObserver //
