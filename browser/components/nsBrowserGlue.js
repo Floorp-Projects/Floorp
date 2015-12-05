@@ -3172,6 +3172,7 @@ var E10SUINotification = {
       try {
         e10sPromptShownCount = Services.prefs.getIntPref(this.CURRENT_PROMPT_PREF);
       } catch(e) {}
+      e10sPromptShownCount = 5;
 
       let isHardwareAccelerated = true;
       // Linux and Windows are currently ok, mac not so much.
