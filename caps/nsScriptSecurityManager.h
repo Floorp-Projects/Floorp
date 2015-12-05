@@ -14,7 +14,6 @@
 #include "nsIAddonPolicyService.h"
 #include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
-#include "nsIChannelEventSink.h"
 #include "nsIObserver.h"
 #include "nsServiceManagerUtils.h"
 #include "plstr.h"
@@ -39,7 +38,6 @@ class PrincipalOriginAttributes;
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
 class nsScriptSecurityManager final : public nsIScriptSecurityManager,
-                                      public nsIChannelEventSink,
                                       public nsIObserver
 {
 public:
@@ -49,7 +47,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
-    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIOBSERVER
 
     static nsScriptSecurityManager*
