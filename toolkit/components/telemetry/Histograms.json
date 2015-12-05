@@ -1352,7 +1352,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap)"
+    "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap, 3=selected(alpn))"
   },
   "SSL_RESUMED_SESSION": {
     "expires_in_version": "never",
