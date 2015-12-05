@@ -571,6 +571,7 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              mozilla::dom::Element* aElement,
+                             int32_t aNameSpaceID,
                              nsIAtom* aAttribute,
                              int32_t aModType,
                              bool aAttrHasChanged,
@@ -578,6 +579,7 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
                              TreeMatchContext& aTreeMatchContext)
     : ElementDependentRuleProcessorData(aPresContext, aElement, nullptr,
                                         aTreeMatchContext),
+      mNameSpaceID(aNameSpaceID),
       mAttribute(aAttribute),
       mOtherValue(aOtherValue),
       mModType(aModType),
@@ -585,6 +587,7 @@ struct MOZ_STACK_CLASS AttributeRuleProcessorData :
   {
     NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
   }
+  int32_t mNameSpaceID; // Namespace of the attribute involved.
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   // non-null if we have the value.
   const nsAttrValue* mOtherValue;
