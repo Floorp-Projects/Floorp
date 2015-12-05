@@ -214,15 +214,14 @@ nsMultiplexInputStream::Available(uint64_t* aResult)
     return mStatus;
   }
 
-  nsresult rv;
   uint64_t avail = 0;
 
   uint32_t len = mStreams.Length();
   for (uint32_t i = mCurrentStream; i < len; i++) {
     uint64_t streamAvail;
-    rv = AvailableMaybeSeek(mStreams[i], &streamAvail);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    mStatus = AvailableMaybeSeek(mStreams[i], &streamAvail);
+    if (NS_WARN_IF(NS_FAILED(mStatus))) {
+      return mStatus;
     }
     avail += streamAvail;
   }

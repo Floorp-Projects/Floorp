@@ -382,7 +382,7 @@ function onFilesOpened(message) {
     testHasRun();
   };
   r.onload = function (event) {
-    todo(false, "nonexistent file shouldn't load! (FIXME: bug 1122788)");
+    is(false, "nonexistent file shouldn't load! (FIXME: bug 1122788)");
     testHasRun();
   };
   try {
