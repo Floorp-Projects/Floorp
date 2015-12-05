@@ -95,6 +95,24 @@ const unsigned int ICE_TEST_PEER_HIDE_NON_DEFAULT = (1 << 4);
 
 typedef std::string (*CandidateFilter)(const std::string& candidate);
 
+std::vector<std::string> split(const std::string &s, char delim) {
+  std::vector<std::string> elems;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+static std::string IsSrflxCandidate(const std::string& candidate) {
+  std::vector<std::string> tokens = split(candidate, ' ');
+  if ((tokens.at(6) == "typ") && (tokens.at(7) == "srflx")) {
+    return candidate;
+  }
+  return std::string();
+}
+
 static std::string IsRelayCandidate(const std::string& candidate) {
   if (candidate.find("typ relay") != std::string::npos) {
     return candidate;
@@ -118,6 +136,14 @@ static std::string IsTcpSoCandidate(const std::string& candidate) {
 
 static std::string IsLoopbackCandidate(const std::string& candidate) {
   if (candidate.find("127.0.0.") != std::string::npos) {
+    return candidate;
+  }
+  return std::string();
+}
+
+static std::string IsIpv4Candidate(const std::string& candidate) {
+  std::vector<std::string> tokens = split(candidate, ' ');
+  if (tokens.at(4).find(":") == std::string::npos) {
     return candidate;
   }
   return std::string();
@@ -448,7 +474,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     return attrs;
   }
 
-   std::vector<std::string> GetCandidates(size_t stream) {
+  std::vector<std::string> GetCandidates(size_t stream) {
     std::vector<std::string> v;
 
     RUN_ON_THREAD(
@@ -498,6 +524,32 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void SetExpectedRemoteCandidateAddr(const std::string& addr) {
     expected_remote_addr_ = addr;
+  }
+
+  int GetCandidatesPrivateIpv4Range(size_t stream) {
+    std::vector<std::string> candidates = GetCandidates(stream);
+
+    int host_net = 0;
+    for (auto c : candidates) {
+      if (c.find("typ host") != std::string::npos) {
+        nr_transport_addr addr;
+        std::vector<std::string> tokens = split(c, ' ');
+        int r = nr_str_port_to_transport_addr(tokens.at(4).c_str(), 0, IPPROTO_UDP, &addr);
+        MOZ_ASSERT(!r);
+        if (!r && (addr.ip_version == NR_IPV4)) {
+          int n = nr_transport_addr_get_private_addr_range(&addr);
+          if (n) {
+            if (host_net) {
+              // TODO: add support for multiple private interfaces
+              std::cerr << "This test doesn't support multiple private interfaces";
+              return -1;
+            }
+            host_net = n;
+          }
+        }
+      }
+    }
+    return host_net;
   }
 
   bool gathering_complete() { return gathering_complete_; }
@@ -2466,6 +2518,40 @@ void DelayRelayCandidates(
   }
 }
 
+void AddNonPairableCandidates(
+    std::vector<SchedulableTrickleCandidate*>& candidates,
+    IceTestPeer *peer, size_t stream, int net_type) {
+  for (int i=1; i<5; i++) {
+    if (net_type == i)
+      continue;
+    switch (i) {
+      case 1:
+        candidates.push_back(new SchedulableTrickleCandidate(peer, stream,
+                   "candidate:0 1 UDP 2113601790 10.0.0.1 12345 typ host"));
+        break;
+      case 2:
+        candidates.push_back(new SchedulableTrickleCandidate(peer, stream,
+                   "candidate:0 1 UDP 2113601791 172.16.1.1 12345 typ host"));
+        break;
+      case 3:
+        candidates.push_back(new SchedulableTrickleCandidate(peer, stream,
+                   "candidate:0 1 UDP 2113601792 192.168.0.1 12345 typ host"));
+        break;
+      case 4:
+        candidates.push_back(new SchedulableTrickleCandidate(peer, stream,
+                   "candidate:0 1 UDP 2113601793 100.64.1.1 12345 typ host"));
+        break;
+      default:
+        UNIMPLEMENTED;
+    }
+  }
+
+  for (auto i = candidates.rbegin(); i != candidates.rend(); ++i) {
+    std::cerr << "Scheduling candidate: " << (*i)->Candidate().c_str() << std::endl;
+    (*i)->Schedule(0);
+  }
+}
+
 void DropTrickleCandidates(
     std::vector<SchedulableTrickleCandidate*>& candidates) {
 }
@@ -2860,6 +2946,76 @@ TEST_F(IceConnectTest, TestPollCandPairsAfterConnect) {
   ASSERT_NE(0U, pairs.size());
   ASSERT_TRUE(p2_->CandidatePairsPriorityDescending(pairs));
   ASSERT_TRUE(ContainsSucceededPair(pairs));
+}
+
+TEST_F(IceConnectTest, TestHostCandPairingFilter) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(kDefaultTimeout, false));
+  SetCandidateFilter(IsIpv4Candidate);
+
+  int host_net = p1_->GetCandidatesPrivateIpv4Range(0);
+  if (host_net <= 0) {
+    // TODO bug 1226838: make this work with multiple private IPs
+    FAIL() << "This test needs exactly one private IPv4 host candidate to work" << std::endl;
+  }
+
+  ConnectTrickle();
+  AddNonPairableCandidates(p1_->ControlTrickle(0), p1_, 0, host_net);
+  AddNonPairableCandidates(p2_->ControlTrickle(0), p2_, 0, host_net);
+
+  std::vector<NrIceCandidatePair> pairs;
+  p1_->GetCandidatePairs(0, &pairs);
+  for (auto p : pairs) {
+    std::cerr << "Verifying pair:" << std::endl;
+    p1_->DumpCandidatePair(p);
+    nr_transport_addr addr;
+    nr_str_port_to_transport_addr(p.local.local_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) == host_net);
+    nr_str_port_to_transport_addr(p.remote.cand_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) == host_net);
+  }
+}
+
+TEST_F(IceConnectTest, TestSrflxCandPairingFilter) {
+  if (g_stun_server_address.empty()) {
+    return;
+  }
+
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather(kDefaultTimeout));
+  SetCandidateFilter(IsSrflxCandidate);
+
+  if (p1_->GetCandidatesPrivateIpv4Range(0) <= 0) {
+    // TODO bug 1226838: make this work with public IP addresses
+    std::cerr << "Don't run this test at IETF meetings!" << std::endl;
+    FAIL() << "This test needs one private IPv4 host candidate to work" << std::endl;
+  }
+
+  ConnectTrickle();
+  SimulateTrickleP1(0);
+  SimulateTrickleP2(0);
+
+  std::vector<NrIceCandidatePair> pairs;
+  p1_->GetCandidatePairs(0, &pairs);
+  for (auto p : pairs) {
+    std::cerr << "Verifying P1 pair:" << std::endl;
+    p1_->DumpCandidatePair(p);
+    nr_transport_addr addr;
+    nr_str_port_to_transport_addr(p.local.local_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) != 0);
+    nr_str_port_to_transport_addr(p.remote.cand_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) == 0);
+  }
+  p2_->GetCandidatePairs(0, &pairs);
+  for (auto p : pairs) {
+    std::cerr << "Verifying P2 pair:" << std::endl;
+    p2_->DumpCandidatePair(p);
+    nr_transport_addr addr;
+    nr_str_port_to_transport_addr(p.local.local_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) != 0);
+    nr_str_port_to_transport_addr(p.remote.cand_addr.host.c_str(), 0, IPPROTO_UDP, &addr);
+    ASSERT_TRUE(nr_transport_addr_get_private_addr_range(&addr) == 0);
+  }
 }
 
 TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
