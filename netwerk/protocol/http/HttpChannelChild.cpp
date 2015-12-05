@@ -1537,14 +1537,12 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   RequestHeaderTuples emptyHeaders;
   RequestHeaderTuples* headerTuples = &emptyHeaders;
   nsLoadFlags loadFlags = 0;
-  OptionalCorsPreflightArgs corsPreflightArgs = mozilla::void_t();
 
   nsCOMPtr<nsIHttpChannelChild> newHttpChannelChild =
       do_QueryInterface(mRedirectChannelChild);
   if (newHttpChannelChild && NS_SUCCEEDED(result)) {
     newHttpChannelChild->AddCookiesToRequest();
     newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples);
-    newHttpChannelChild->GetClientSetCorsPreflightParameters(corsPreflightArgs);
   }
 
   /* If the redirect was canceled, bypass OMR and send an empty API
@@ -1579,8 +1577,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   }
 
   if (mIPCOpen)
-    SendRedirect2Verify(result, *headerTuples, loadFlags, redirectURI,
-                        corsPreflightArgs);
+    SendRedirect2Verify(result, *headerTuples, loadFlags, redirectURI);
 
   return NS_OK;
 }
@@ -1849,7 +1846,18 @@ HttpChannelChild::ContinueAsyncOpen()
   }
 
   OptionalCorsPreflightArgs optionalCorsPreflightArgs;
-  GetClientSetCorsPreflightParameters(optionalCorsPreflightArgs);
+  if (mRequireCORSPreflight) {
+    CorsPreflightArgs args;
+    args.withCredentials() = mWithCredentials;
+    args.unsafeHeaders() = mUnsafeHeaders;
+    nsresult rv = PrincipalToPrincipalInfo(mPreflightPrincipal, &args.preflightPrincipal());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    optionalCorsPreflightArgs = args;
+  } else {
+    optionalCorsPreflightArgs = mozilla::void_t();
+  }
 
   // NB: This call forces us to cache mTopWindowURI if we haven't already.
   nsCOMPtr<nsIURI> uri;
@@ -2335,18 +2343,6 @@ NS_IMETHODIMP HttpChannelChild::GetClientSetRequestHeaders(RequestHeaderTuples *
 {
   *aRequestHeaders = &mClientSetRequestHeaders;
   return NS_OK;
-}
-
-void
-HttpChannelChild::GetClientSetCorsPreflightParameters(OptionalCorsPreflightArgs& aArgs)
-{
-  if (mRequireCORSPreflight) {
-    CorsPreflightArgs args;
-    args.unsafeHeaders() = mUnsafeHeaders;
-    aArgs = args;
-  } else {
-    aArgs = mozilla::void_t();
-  }
 }
 
 NS_IMETHODIMP

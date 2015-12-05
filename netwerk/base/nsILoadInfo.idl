@@ -15,21 +15,18 @@ interface nsIPrincipal;
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadTainting.h"
-
-class nsCString;
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
 native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
-[ref] native StringArrayRef(const nsTArray<nsCString>);
 
 typedef unsigned long nsSecurityFlags;
 
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(41e311d0-5894-4aaa-80b5-5b7099dfc404)]
+[scriptable, builtinclass, uuid(5a2dce9f-accd-45ae-98cc-319dec0ae4f0)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -89,21 +86,11 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_REQUIRE_CORS_DATA_INHERITS = (1<<4);
 
   /**
-   * Choose cookie policy. The default policy is equivalent to "INCLUDE" for
-   * SEC_REQUIRE_SAME_ORIGIN_* and SEC_ALLOW_CROSS_ORIGIN_* modes, and
-   * equivalent to "SAME_ORIGIN" for SEC_REQUIRE_CORS_DATA_INHERITS mode.
-   *
-   * This means that if you want to perform a CORS load with credentials, pass
-   * SEC_COOKIES_INCLUDE.
-   *
-   * Note that these flags are still subject to the user's cookie policies.
-   * For example, if the user is blocking 3rd party cookies, those cookies
-   * will be blocked no matter which of these flags are set.
+   * Use this flag in addition to SEC_REQUIRE_CORS_DATA_INHERITS
+   * to make cross-origin CORS loads happen with credentials
+   * (such as cookies and client side certs).
    */
-  const unsigned long SEC_COOKIES_DEFAULT = (0 << 5);
-  const unsigned long SEC_COOKIES_INCLUDE = (1 << 5);
-  const unsigned long SEC_COOKIES_SAME_ORIGIN = (2 << 5);
-  const unsigned long SEC_COOKIES_OMIT = (3 << 5);
+  const unsigned long SEC_REQUIRE_CORS_WITH_CREDENTIALS = (1<<5);
 
   /**
    * Force inheriting of the Principal. The resulting resource will use the
@@ -120,7 +107,7 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_SANDBOXED.
    */
-  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<7);
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<6);
 
   /**
    * Sandbox the load. The resulting resource will use a freshly created
@@ -132,17 +119,17 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_FORCE_INHERIT_PRINCIPAL.
    */
-  const unsigned long SEC_SANDBOXED = (1<<8);
+  const unsigned long SEC_SANDBOXED = (1<<7);
 
   /**
    * Inherit the Principal for about:blank.
    */
-  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<9);
+  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<8);
 
   /**
    * Allow access to chrome: packages that are content accessible.
    */
-  const unsigned long SEC_ALLOW_CHROME = (1<<10);
+  const unsigned long SEC_ALLOW_CHROME = (1<<9);
 
   /**
    * Don't follow redirects. Instead the redirect response is returned
@@ -155,7 +142,7 @@ interface nsILoadInfo : nsISupports
    * the response body might not be available.
    * This can happen if the redirect was cached.
    */
-  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<11);
+  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<10);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -254,12 +241,10 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean isInThirdPartyContext;
 
   /**
-   * See the SEC_COOKIES_* flags above. This attribute will never return
-   * SEC_COOKIES_DEFAULT, but will instead return what the policy resolves to.
-   * I.e. SEC_COOKIES_SAME_ORIGIN for CORS mode, and SEC_COOKIES_INCLUDE
-   * otherwise.
+   * Determines whether credentials are sent with CORS requests.
+   * Using this flag requires SEC_REQUIRE_CORS_DATA_INHERITS also to be set.
    */
-  [infallible] readonly attribute unsigned long cookiePolicy;
+  [infallible] readonly attribute boolean requireCorsWithCredentials;
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should
@@ -453,36 +438,6 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
   const_nsIPrincipalArray binaryRedirectChain();
-
-  /**
-   * Sets the list of unsafe headers according to CORS spec, as well as
-   * potentially forces a preflight.
-   * Note that you do not need to set the Content-Type header. That will be
-   * automatically detected as needed.
-   *
-   * Only call this function when using the SEC_REQUIRE_CORS_DATA_INHERITS mode.
-   */
-  [noscript, notxpcom, nostdcall]
-  void setCorsPreflightInfo(in StringArrayRef unsafeHeaders,
-                            in boolean forcePreflight);
-
-  /**
-   * A C++-friendly getter for the list of cors-unsafe headers.
-   * Please note that this array has the same lifetime as the
-   * loadInfo object - use with caution!
-   */
-  [noscript, notxpcom, nostdcall, binaryname(CorsUnsafeHeaders)]
-  StringArrayRef corsUnsafeHeaders();
-
-  /**
-   * Returns value set through setCorsPreflightInfo.
-   */
-  [infallible] readonly attribute boolean forcePreflight;
-
-  /**
-   * A C++ friendly getter for the forcePreflight flag.
-   */
-  [infallible] readonly attribute boolean isPreflight;
 
   /**
   * Constants reflecting the channel tainting.  These are mainly defined here
