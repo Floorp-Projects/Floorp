@@ -97,7 +97,7 @@ function test_backup_new_filename()
 {
   var backup = getService().backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME);
   do_check_eq(BACKUP_FILE_NAME, backup.leafName);
-  
+
   backup.remove(false);
 }
 
@@ -107,7 +107,7 @@ function test_backup_new_folder()
   parentDir.append("test_storage_temp");
   if (parentDir.exists())
     parentDir.remove(true);
-  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   do_check_true(parentDir.exists());
 
   var backup = getService().backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME,
@@ -133,9 +133,10 @@ var tests = [
 
 function run_test()
 {
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
-    
+  }
+
   cleanup();
 }
 

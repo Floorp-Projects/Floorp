@@ -254,7 +254,7 @@ function preference_exists(aURI)
 //// Test Functions
 
 // History
-function test_history_cleared_with_direct_match()
+function* test_history_cleared_with_direct_match()
 {
   const TEST_URI = uri("http://mozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
@@ -264,7 +264,7 @@ function test_history_cleared_with_direct_match()
   do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
-function test_history_cleared_with_subdomain()
+function* test_history_cleared_with_subdomain()
 {
   const TEST_URI = uri("http://www.mozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
@@ -274,7 +274,7 @@ function test_history_cleared_with_subdomain()
   do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
-function test_history_not_cleared_with_uri_contains_domain()
+function* test_history_not_cleared_with_uri_contains_domain()
 {
   const TEST_URI = uri("http://ilovemozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
@@ -424,7 +424,7 @@ function waitForPurgeNotification() {
 }
 
 // Content Preferences
-function test_content_preferences_cleared_with_direct_match()
+function* test_content_preferences_cleared_with_direct_match()
 {
   const TEST_URI = uri("http://mozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
@@ -435,7 +435,7 @@ function test_content_preferences_cleared_with_direct_match()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
-function test_content_preferences_cleared_with_subdomain()
+function* test_content_preferences_cleared_with_subdomain()
 {
   const TEST_URI = uri("http://www.mozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
@@ -446,7 +446,7 @@ function test_content_preferences_cleared_with_subdomain()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
-function test_content_preferences_not_cleared_with_uri_contains_domain()
+function* test_content_preferences_not_cleared_with_uri_contains_domain()
 {
   const TEST_URI = uri("http://ilovemozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
@@ -463,7 +463,7 @@ function test_content_preferences_not_cleared_with_uri_contains_domain()
 }
 
 // Push
-function test_push_cleared()
+function* test_push_cleared()
 {
   let ps;
   try {
@@ -550,7 +550,7 @@ function test_cache_cleared()
   do_test_pending();
 }
 
-function test_storage_cleared()
+function* test_storage_cleared()
 {
   function getStorageForURI(aURI)
   {

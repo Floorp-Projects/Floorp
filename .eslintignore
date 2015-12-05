@@ -42,31 +42,7 @@ rdf/**
 security/**
 services/**
 startupcache/**
-storage/**
 testing/**
-toolkit/components/**
-toolkit/content/**
-toolkit/crashreporter/**
-toolkit/forgetaboutsite/**
-toolkit/identity/**
-toolkit/library/**
-toolkit/locales/**
-toolkit/modules/**
-# This file contains preprocessor statements.
-toolkit/mozapps/extensions/internal/AddonConstants.jsm
-toolkit/mozapps/downloads/**
-toolkit/mozapps/handling/**
-toolkit/mozapps/installer/**
-toolkit/mozapps/preferences/**
-toolkit/mozapps/update/**
-toolkit/obsolete/**
-toolkit/pluginproblem/**
-toolkit/profile/**
-toolkit/system/**
-toolkit/themes/**
-toolkit/toolkit.mozbuild/**
-toolkit/webapps/**
-toolkit/xre/**
 tools/**
 uriloader/**
 view/**
@@ -196,3 +172,34 @@ mobile/android/components/Snippets.js
 
 # Bug 1178739: Ignore this file as a quick fix for "Illegal yield expression"
 mobile/android/modules/HomeProvider.jsm
+
+# toolkit/ exclusions
+
+# Not part of the default build
+toolkit/components/help/**
+
+# Intentionally invalid JS
+toolkit/components/workerloader/tests/moduleF-syntax-error.js
+
+# Tests old non-star function generators
+toolkit/modules/tests/xpcshell/test_task.js
+
+# Not yet updated
+toolkit/components/osfile/**
+toolkit/components/passwordmgr/**
+toolkit/components/places/**
+toolkit/mozapps/extensions/**
+
+# Uses preprocessing
+toolkit/content/contentAreaUtils.js
+toolkit/components/jsdownloads/src/DownloadIntegration.jsm
+toolkit/components/search/nsSearchService.js
+toolkit/components/url-classifier/**
+toolkit/components/urlformatter/nsURLFormatter.js
+toolkit/identity/FirefoxAccounts.jsm
+toolkit/modules/AppConstants.jsm
+toolkit/modules/SessionRecorder.jsm
+toolkit/mozapps/downloads/nsHelperAppDlg.js
+toolkit/mozapps/extensions/internal/AddonConstants.jsm
+toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
+toolkit/webapps/**

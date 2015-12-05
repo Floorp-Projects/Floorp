@@ -403,7 +403,7 @@ PerformanceMonitor.prototype = {
    * The names of probes activated in this monitor.
    */
   get probeNames() {
-    return [for (probe of this._probes) probe.name];
+    return this._probes.map(probe => probe.name);
   },
 
   /**
@@ -471,7 +471,7 @@ PerformanceMonitor.prototype = {
   promiseSnapshot: function(options = null) {
     let probes = this._checkBeforeSnapshot(options);
     return Task.spawn(function*() {
-      let childProcesses = yield Process.broadcastAndCollect("collect", {probeNames: [for (probe of probes) probe.name]});
+      let childProcesses = yield Process.broadcastAndCollect("collect", {probeNames: probes.map(p => p.name)});
       let xpcom = performanceStatsService.getSnapshot();
       return new ApplicationSnapshot({
         xpcom,
@@ -752,7 +752,7 @@ function PerformanceDiff(current, old = null) {
       // The stats don't contain data from this probe.
       continue;
     }
-    let data = [for (item of this._all) item[k]];
+    let data = this._all.map(item => item[k]);
     let probe = Probes[k];
     this[k] = probe.compose(data);
   }
@@ -762,10 +762,10 @@ PerformanceDiff.prototype = {
     return `[PerformanceDiff] ${this.key}`;
   },
   get windowIds() {
-    return [for (item of this._all) item.windowId].filter(x => !!x);
+    return this._all.map(item => item.windowId).filter(x => !!x);
   },
   get groupIds() {
-    return [for (item of this._all) item.groupId];
+    return this._all.map(item => item.groupId);
   },
   get key() {
     if (this.addonId) {
@@ -777,10 +777,10 @@ PerformanceDiff.prototype = {
     return this._all[0].groupId;
   },
   get names() {
-    return [for (item of this._all) item.name];
+    return this._all.map(item => item.name);
   },
   get processes() {
-    return [for (item of this._all) { isChildProcess: item.isChildProcess, processId: item.processId}];
+    return this._all.map(item => ({ isChildProcess: item.isChildProcess, processId: item.processId}));
   }
 };
 

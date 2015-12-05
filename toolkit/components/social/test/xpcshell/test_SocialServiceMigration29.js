@@ -41,7 +41,7 @@ function run_test() {
   runner.next();
 }
 
-function testMigration(manifest, next) {
+function* testMigration(manifest, next) {
   // look at social.activeProviders, we should have migrated into that, and
   // we should be set as a user level pref after migration
   do_check_true(Services.prefs.prefHasUserValue("social.enabled"));

@@ -1,3 +1,5 @@
+"use strict";
+
 Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
@@ -6,6 +8,7 @@ var {
 // WeakMap[Extension -> Set(callback)]
 var messageHandlers = new WeakMap();
 
+/* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
   messageHandlers.set(extension, new Set());
 });
@@ -20,6 +23,7 @@ extensions.on("test-message", (type, extension, ...args) => {
     handler(...args);
   }
 });
+/* eslint-enable mozilla/balanced-listeners */
 
 extensions.registerAPI((extension, context) => {
   return {
@@ -49,11 +53,11 @@ extensions.registerAPI((extension, context) => {
       },
 
       assertTrue: function(value, msg) {
-        extension.emit("test-result", value ? true : false, msg);
+        extension.emit("test-result", Boolean(value), msg);
       },
 
       assertFalse: function(value, msg) {
-        extension.emit("test-result", !value ? true : false, msg);
+        extension.emit("test-result", !value, msg);
       },
 
       assertEq: function(expected, actual, msg) {

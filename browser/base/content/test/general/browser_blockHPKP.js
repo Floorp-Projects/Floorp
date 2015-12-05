@@ -73,7 +73,7 @@ var certErrorProgressListener = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       let textElement = content.document.getElementById("errorShortDescText");
       let text = textElement.innerHTML;
-      ok(text.indexOf("mozilla_pkix_error_key_pinning_failure") > 0,
+      ok(text.indexOf("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE") > 0,
          "Got a pinning error page");
       gBrowser.removeProgressListener(this);
       gBrowser.selectedBrowser.addEventListener("load",

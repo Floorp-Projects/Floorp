@@ -5,8 +5,8 @@
 // Make sure that there are telemetry entries created by sqlite io
 
 function run_sql(d, sql) {
-  var stmt = d.createStatement(sql)
-  stmt.execute()
+  var stmt = d.createStatement(sql);
+  stmt.execute();
   stmt.finalize();
 }
 
@@ -24,7 +24,7 @@ function run_test()
   const file = new_file("telemetry.sqlite");
   var d = getDatabase(file);
   run_sql(d, "CREATE TABLE bloat(data varchar)");
-  run_sql(d, "DROP TABLE bloat")
-  do_check_true(read_hgram.snapshot().sum > old_sum)
+  run_sql(d, "DROP TABLE bloat");
+  do_check_true(read_hgram.snapshot().sum > old_sum);
 }
 

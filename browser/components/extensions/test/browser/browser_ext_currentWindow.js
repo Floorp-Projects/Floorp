@@ -1,7 +1,10 @@
-function genericChecker()
-{
-  var kind = "background";
-  var path = window.location.pathname;
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+function genericChecker() {
+  let kind = "background";
+  let path = window.location.pathname;
   if (path.indexOf("popup") != -1) {
     kind = "popup";
   } else if (path.indexOf("page") != -1) {
@@ -11,13 +14,13 @@ function genericChecker()
   browser.test.onMessage.addListener((msg, ...args) => {
     if (msg == kind + "-check-current1") {
       browser.tabs.query({
-        currentWindow: true
+        currentWindow: true,
       }, function(tabs) {
         browser.test.sendMessage("result", tabs[0].windowId);
       });
     } else if (msg == kind + "-check-current2") {
       browser.tabs.query({
-        windowId: browser.windows.WINDOW_ID_CURRENT
+        windowId: browser.windows.WINDOW_ID_CURRENT,
       }, function(tabs) {
         browser.test.sendMessage("result", tabs[0].windowId);
       });
@@ -26,12 +29,12 @@ function genericChecker()
         browser.test.sendMessage("result", window.id);
       });
     } else if (msg == kind + "-open-page") {
-      browser.tabs.create({windowId: args[0], url: chrome.runtime.getURL("page.html")});
+      browser.tabs.create({windowId: args[0], url: browser.runtime.getURL("page.html")});
     } else if (msg == kind + "-close-page") {
       browser.tabs.query({
         windowId: args[0],
       }, tabs => {
-        var tab = tabs.find(tab => tab.url.indexOf("page.html") != -1);
+        let tab = tabs.find(tab => tab.url.indexOf("page.html") != -1);
         browser.tabs.remove(tab.id, () => {
           browser.test.sendMessage("closed");
         });
@@ -58,7 +61,7 @@ add_task(function* () {
       "permissions": ["tabs"],
 
       "browser_action": {
-        "default_popup": "popup.html"
+        "default_popup": "popup.html",
       },
     },
 
@@ -87,7 +90,7 @@ add_task(function* () {
 
   yield Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
 
-  let {TabManager, WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let winId1 = WindowManager.getId(win1);
   let winId2 = WindowManager.getId(win2);
@@ -112,7 +115,7 @@ add_task(function* () {
 
     let evt = new CustomEvent("command", {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
     node.dispatchEvent(evt);
 
