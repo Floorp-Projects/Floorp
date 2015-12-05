@@ -123,6 +123,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
+                   LoadTainting aTainting,
                    bool aUpgradeInsecureRequests,
                    bool aUpgradeInsecurePreloads,
                    uint64_t aInnerWindowID,
@@ -141,7 +142,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
-  , mTainting(LoadTainting::Basic)
+  , mTainting(aTainting)
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
   , mUpgradeInsecurePreloads(aUpgradeInsecurePreloads)
   , mInnerWindowID(aInnerWindowID)
