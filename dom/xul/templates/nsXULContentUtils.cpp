@@ -49,7 +49,6 @@
 #include "rdf.h"
 #include "nsContentUtils.h"
 #include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
@@ -103,9 +102,9 @@ nsXULContentUtils::Init()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-    rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &gFormat);
-    if (NS_FAILED(rv)) {
-        return rv;
+    gFormat = nsIDateTimeFormat::Create().take();
+    if (!gFormat) {
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
