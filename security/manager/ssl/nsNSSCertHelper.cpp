@@ -17,6 +17,7 @@
 #include "nsNSSCertTrust.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSComponent.h"
+#include "nsIDateTimeFormat.h"
 #include "nsServiceManagerUtils.h"
 #include "prerror.h"
 #include "ScopedNSSTypes.h"
@@ -1637,11 +1638,9 @@ static nsresult
 ProcessTime(PRTime dispTime, const char16_t* displayName,
             nsIASN1Sequence* parentSequence)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = nsIDateTimeFormat::Create();
+  if (!dateFormatter) {
+    return NS_ERROR_FAILURE;
   }
 
   nsString text;
