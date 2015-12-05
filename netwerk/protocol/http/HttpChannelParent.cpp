@@ -476,11 +476,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   if (aCorsPreflightArgs.type() == OptionalCorsPreflightArgs::TCorsPreflightArgs) {
     const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
-    nsCOMPtr<nsIPrincipal> preflightPrincipal =
-      PrincipalInfoToPrincipal(args.preflightPrincipal());
-    rv = mChannel->SetCorsPreflightParameters(args.unsafeHeaders(),
-                                              args.withCredentials(),
-                                              preflightPrincipal);
+    rv = mChannel->SetCorsPreflightParameters(args.unsafeHeaders());
     if (NS_FAILED(rv)) {
       return SendFailedAsyncOpen(rv);
     }
