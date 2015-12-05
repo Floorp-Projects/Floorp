@@ -85,13 +85,6 @@ function handleRequest(request, response)
     return;
   }
 
-  // web worker resource
-  if (query["res"] == "worker") {
-    response.setHeader("Content-Type", "application/javascript", false);
-    response.write("worker script data...");
-    return;
-  }
-
   // internal stylesheet that loads an image from an external site
   if (query["res"] == "cssLoader") {
     let bgURL = thisSite + resource + '?redir=other&res=image&id=' + query["id"];

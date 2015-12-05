@@ -9,6 +9,7 @@
 
 #include "nsIContentSecurityManager.h"
 #include "nsIChannel.h"
+#include "nsIChannelEventSink.h"
 
 class nsIStreamListener;
 
@@ -19,10 +20,12 @@ class nsIStreamListener;
   { 0xa2, 0x94, 0xa6, 0x51, 0xfa, 0x35, 0x22, 0x7f } }
 
 class nsContentSecurityManager : public nsIContentSecurityManager
+                               , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTSECURITYMANAGER
+  NS_DECL_NSICHANNELEVENTSINK
 
   nsContentSecurityManager() {}
 
@@ -30,6 +33,8 @@ public:
                                          nsCOMPtr<nsIStreamListener>& aInAndOutListener);
 
 private:
+  static nsresult CheckChannel(nsIChannel* aChannel);
+
   virtual ~nsContentSecurityManager() {}
 
 };
