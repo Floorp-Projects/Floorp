@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.3.42';
-PDFJS.build = '84a47f8';
+PDFJS.version = '1.3.56';
+PDFJS.build = 'e2aca38';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -248,7 +248,6 @@ function error(msg) {
     console.log('Error: ' + msg);
     console.log(backtrace());
   }
-  UnsupportedManager.notify(UNSUPPORTED_FEATURES.unknown);
   throw new Error(msg);
 }
 
@@ -274,22 +273,6 @@ var UNSUPPORTED_FEATURES = PDFJS.UNSUPPORTED_FEATURES = {
   shadingPattern: 'shadingPattern',
   font: 'font'
 };
-
-var UnsupportedManager = PDFJS.UnsupportedManager =
-  (function UnsupportedManagerClosure() {
-  var listeners = [];
-  return {
-    listen: function (cb) {
-      listeners.push(cb);
-    },
-    notify: function (featureId) {
-      warn('Unsupported feature "' + featureId + '"');
-      for (var i = 0, ii = listeners.length; i < ii; i++) {
-        listeners[i](featureId);
-      }
-    }
-  };
-})();
 
 // Combines two URLs. The baseUrl shall be absolute URL. If the url is an
 // absolute URL, it will be returned as is.
@@ -1772,6 +1755,12 @@ var PDFDocumentLoadingTask = (function PDFDocumentLoadingTaskClosure() {
      * an {Object} with the properties: {number} loaded and {number} total.
      */
     this.onProgress = null;
+
+    /**
+     * Callback to when unsupported feature is used. The callback receives
+     * an {PDFJS.UNSUPPORTED_FEATURES} argument.
+     */
+    this.onUnsupportedFeature = null;
   }
 
   PDFDocumentLoadingTask.prototype =
@@ -2530,9 +2519,6 @@ var PDFWorker = (function PDFWorkerClosure() {
           messageHandler.on('console_error', function (data) {
             console.error.apply(console, data);
           });
-          messageHandler.on('_unsupported_feature', function (data) {
-            UnsupportedManager.notify(data);
-          });
 
           var testObj = new Uint8Array([PDFJS.postMessageTransfers ? 255 : 0]);
           // Some versions of Opera throw a DATA_CLONE_ERR on serializing the
@@ -2897,6 +2883,19 @@ var WorkerTransport = (function WorkerTransportClosure() {
         } else {
           error(data.error);
         }
+      }, this);
+
+      messageHandler.on('UnsupportedFeature',
+          function transportUnsupportedFeature(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+        var featureId = data.featureId;
+        var loadingTask = this.loadingTask;
+        if (loadingTask.onUnsupportedFeature) {
+          loadingTask.onUnsupportedFeature(featureId);
+        }
+        PDFJS.UnsupportedManager.notify(featureId);
       }, this);
 
       messageHandler.on('JpegDecode', function(data) {
@@ -3314,6 +3313,26 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
   };
 
   return InternalRenderTask;
+})();
+
+/**
+ * (Deprecated) Global observer of unsupported feature usages. Use
+ * onUnsupportedFeature callback of the {PDFDocumentLoadingTask} instance.
+ */
+PDFJS.UnsupportedManager = (function UnsupportedManagerClosure() {
+  var listeners = [];
+  return {
+    listen: function (cb) {
+      deprecated('Global UnsupportedManager.listen is used: ' +
+                 ' use PDFDocumentLoadingTask.onUnsupportedFeature instead');
+      listeners.push(cb);
+    },
+    notify: function (featureId) {
+      for (var i = 0, ii = listeners.length; i < ii; i++) {
+        listeners[i](featureId);
+      }
+    }
+  };
 })();
 
 
@@ -4352,6 +4371,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       composeSMask(this.ctx, this.current.activeSMask, groupCtx);
       this.ctx.restore();
+      copyCtxState(groupCtx, this.ctx);
     },
     save: function CanvasGraphics_save() {
       this.ctx.save();
@@ -5471,7 +5491,6 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     },
 
     paintXObject: function CanvasGraphics_paintXObject() {
-      UnsupportedManager.notify(UNSUPPORTED_FEATURES.unknown);
       warn('Unsupported \'paintXObject\' command.');
     },
 

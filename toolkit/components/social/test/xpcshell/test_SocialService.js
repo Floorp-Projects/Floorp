@@ -41,7 +41,7 @@ function run_test() {
   runner.next();
 }
 
-function testAddProviders(manifests, next) {
+function* testAddProviders(manifests, next) {
   do_check_false(SocialService.enabled);
   let provider = yield SocialService.addProvider(manifests[0], next);
   do_check_true(SocialService.enabled);
@@ -51,14 +51,14 @@ function testAddProviders(manifests, next) {
   do_check_false(provider.enabled);
 }
 
-function testRemoveProviders(manifests, next) {
+function* testRemoveProviders(manifests, next) {
   do_check_true(SocialService.enabled);
   yield SocialService.disableProvider(manifests[0].origin, next);
   yield SocialService.disableProvider(manifests[1].origin, next);
   do_check_false(SocialService.enabled);
 }
 
-function testGetProvider(manifests, next) {
+function* testGetProvider(manifests, next) {
   for (let i = 0; i < manifests.length; i++) {
     let manifest = manifests[i];
     let provider = yield SocialService.getProvider(manifest.origin, next);
@@ -70,7 +70,7 @@ function testGetProvider(manifests, next) {
   do_check_eq((yield SocialService.getProvider("bogus", next)), null);
 }
 
-function testGetProviderList(manifests, next) {
+function* testGetProviderList(manifests, next) {
   let providers = yield SocialService.getProviderList(next);
   do_check_true(providers.length >= manifests.length);
   for (let i = 0; i < manifests.length; i++) {
@@ -83,7 +83,7 @@ function testGetProviderList(manifests, next) {
   }
 }
 
-function testAddRemoveProvider(manifests, next) {
+function* testAddRemoveProvider(manifests, next) {
   var threw;
   try {
     // Adding a provider whose origin already exists should fail
@@ -116,7 +116,7 @@ function testAddRemoveProvider(manifests, next) {
   do_check_true(!newProvider);
 }
 
-function testIsSameOrigin(manifests, next) {
+function* testIsSameOrigin(manifests, next) {
   let providers = yield SocialService.getProviderList(next);
   let provider = providers[0];
   // provider.origin is a string.
@@ -134,7 +134,7 @@ function testIsSameOrigin(manifests, next) {
   do_check_false(provider.isSameOrigin(null));
 }
 
-function testResolveUri(manifests, next) {
+function* testResolveUri(manifests, next) {
   let providers = yield SocialService.getProviderList(next);
   let provider = providers[0];
   do_check_eq(provider.resolveUri(provider.origin).spec, provider.origin + "/");
@@ -144,7 +144,7 @@ function testResolveUri(manifests, next) {
   do_check_eq(provider.resolveUri("data:text/html,<p>hi").spec, "data:text/html,<p>hi");
 }
 
-function testOrderedProviders(manifests, next) {
+function* testOrderedProviders(manifests, next) {
   let providers = yield SocialService.getProviderList(next);
 
   // add visits for only one of the providers

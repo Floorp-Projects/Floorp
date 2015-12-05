@@ -1,19 +1,23 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
-      var messages_received = [];
+      let messages_received = [];
 
-      var tabId;
+      let tabId;
 
       browser.runtime.onConnect.addListener((port) => {
         browser.test.assertTrue(!!port, "tab to background port received");
-        browser.test.assertEq("tab-connection-name", port.name, "port name should be defined and equal to connectInfo.name")
+        browser.test.assertEq("tab-connection-name", port.name, "port name should be defined and equal to connectInfo.name");
         browser.test.assertTrue(!!port.sender.tab, "port.sender.tab should be defined");
         browser.test.assertEq(tabId, port.sender.tab.id, "port.sender.tab.id should be equal to the expected tabId");
 
@@ -31,17 +35,16 @@ add_task(function* () {
 
             browser.test.notifyPass("tabRuntimeConnect.pass");
           }
-        })
+        });
       });
 
-      browser.tabs.create({
-        url: "tab.html"
-      }, (tab) => { tabId = tab.id });
+      browser.tabs.create({ url: "tab.html" },
+                          (tab) => { tabId = tab.id; });
     },
 
     files: {
       "tab.js": function() {
-        var port = browser.runtime.connect({ name: "tab-connection-name"});
+        let port = browser.runtime.connect({ name: "tab-connection-name"});
         port.postMessage("tab to background port message");
         port.onMessage.addListener((msg) => {
           port.postMessage({ tabReceived: msg });
@@ -59,8 +62,8 @@ add_task(function* () {
             <h1>test tab extension page</h1>
           </body>
         </html>
-      `
-    }
+      `,
+    },
   });
 
   yield extension.startup();

@@ -673,7 +673,7 @@ var PlacesOrganizer = {
     }
     else if (!selectedNode && aNodeList[0]) {
       if (aNodeList.every(PlacesUtils.nodeIsURI)) {
-        let uris = [for (node of aNodeList) PlacesUtils._uri(node.uri)];
+        let uris = aNodeList.map(node => PlacesUtils._uri(node.uri));
         detailsDeck.selectedIndex = 1;
         gEditItemOverlay.initPanel({ uris
                                    , hiddenRows: ["folderPicker",

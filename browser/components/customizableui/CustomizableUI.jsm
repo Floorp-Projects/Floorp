@@ -39,6 +39,9 @@ const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
 const kPrefWebIDEInNavbar            = "devtools.webide.widget.inNavbarByDefault";
 
+const kExpectedWindowURL = "chrome://browser/content/browser.xul";
+
+
 /**
  * The keys are the handlers that are fired when the event type (the value)
  * is fired on the subview. A widget that provides a subview has the option
@@ -1300,6 +1303,9 @@ var CustomizableUIInternal = {
   },
 
   buildWidget: function(aDocument, aWidget) {
+    if (aDocument.documentURI != kExpectedWindowURL) {
+      throw new Error("buildWidget was called for a non-browser window!");
+    }
     if (typeof aWidget == "string") {
       aWidget = gPalette.get(aWidget);
     }

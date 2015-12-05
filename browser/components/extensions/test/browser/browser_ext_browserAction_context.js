@@ -3,7 +3,6 @@
 "use strict";
 
 add_task(function* testTabSwitchContext() {
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "browser_action": {
@@ -14,8 +13,8 @@ add_task(function* testTabSwitchContext() {
       "permissions": ["tabs"],
     },
 
-    background: function () {
-      var details = [
+    background: function() {
+      let details = [
         { "icon": browser.runtime.getURL("default.png"),
           "popup": browser.runtime.getURL("default.html"),
           "title": "Default Title",
@@ -51,9 +50,10 @@ add_task(function* testTabSwitchContext() {
           "badgeBackgroundColor": [0, 0xff, 0] },
       ];
 
-      var tabs = [];
+      let tabs = [];
 
-      var tests = [
+      let expectDefaults;
+      let tests = [
         expect => {
           browser.test.log("Initial state, expect default properties.");
           expectDefaults(details[0]).then(() => {
@@ -78,7 +78,7 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Change properties. Expect new properties.");
-          var tabId = tabs[1];
+          let tabId = tabs[1];
           browser.browserAction.setIcon({ tabId, path: "2.png" });
           browser.browserAction.setPopup({ tabId, popup: "2.html" });
           browser.browserAction.setTitle({ tabId, title: "Title 2" });
@@ -191,14 +191,14 @@ add_task(function* testTabSwitchContext() {
         });
       }
 
-      function expectDefaults(expecting) {
+      expectDefaults = expecting => {
         return checkDetails(expecting);
-      }
+      };
 
       // Runs the next test in the `tests` array, checks the results,
       // and passes control back to the outer test scope.
       function nextTest() {
-        var test = tests.shift();
+        let test = tests.shift();
 
         test(expecting => {
           // Check that the API returns the expected values, and then
@@ -247,11 +247,11 @@ add_task(function* testTabSwitchContext() {
 
     if (details.badge && details.badgeBackgroundColor) {
       let badge = button.ownerDocument.getAnonymousElementByAttribute(
-        button, 'class', 'toolbarbutton-badge');
+        button, "class", "toolbarbutton-badge");
 
       let badgeColor = window.getComputedStyle(badge).backgroundColor;
       let color = details.badgeBackgroundColor;
-      let expectedColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+      let expectedColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
 
       is(badgeColor, expectedColor, "badge color is correct");
     }
@@ -265,7 +265,7 @@ add_task(function* testTabSwitchContext() {
       checkDetails(expecting);
 
       if (testsRemaining) {
-        extension.sendMessage("runNextTest")
+        extension.sendMessage("runNextTest");
       } else {
         resolve();
       }

@@ -53,15 +53,15 @@ function execAsync(aStmt, aOptions, aResults)
   if (aResults == null) {
     resultsExpected = 0;
   }
-  else if (typeof(aResults) == "number") {
+  else if (typeof aResults == "number") {
     resultsExpected = aResults;
   }
-  else if (typeof(aResults) == "function") {
+  else if (typeof aResults == "function") {
     resultsChecker = aResults;
   }
   else { // array
     resultsExpected = aResults.length;
-    resultsChecker = function(aResultNum, aTup, aCaller) {
+    resultsChecker = function (aResultNum, aTup, aCaller) {
       aResults[aResultNum](aTup, aCaller);
     };
   }
@@ -83,7 +83,7 @@ function execAsync(aStmt, aOptions, aResults)
   let completed = false;
 
   let listener = {
-    handleResult: function(aResultSet)
+    handleResult(aResultSet)
     {
       let row, resultsSeenThisCall = 0;
       while ((row = aResultSet.getNextRow()) != null) {
@@ -96,13 +96,13 @@ function execAsync(aStmt, aOptions, aResults)
       if (!resultsSeenThisCall)
         do_throw("handleResult invoked with 0 result rows!");
     },
-    handleError: function(aError)
+    handleError(aError)
     {
       if (errorCodeSeen != false)
         do_throw("handleError called when we already had an error!");
       errorCodeSeen = aError.result;
     },
-    handleCompletion: function(aReason)
+    handleCompletion(aReason)
     {
       if (completed) // paranoia check
         do_throw("Received a second handleCompletion notification!", caller);
@@ -226,8 +226,7 @@ function test_get_data()
   );
   stmt.bindByIndex(0, INTEGER);
   execAsync(stmt, {}, [
-    function(tuple)
-    {
+    function (tuple) {
       do_check_neq(null, tuple);
 
       // Check that it's what we expect
@@ -254,7 +253,7 @@ function test_get_data()
       do_check_eq(BLOB.length, blobByName.length);
       var blobByIndex = tuple.getResultByIndex(3);
       do_check_eq(BLOB.length, blobByIndex.length);
-      for (var i = 0; i < BLOB.length; i++) {
+      for (let i = 0; i < BLOB.length; i++) {
         do_check_eq(BLOB[i], blobByName[i]);
         do_check_eq(BLOB[i], blobByIndex[i]);
       }
@@ -262,7 +261,7 @@ function test_get_data()
       var blob = { value: null };
       tuple.getBlob(3, count, blob);
       do_check_eq(BLOB.length, count.value);
-      for (var i = 0; i < BLOB.length; i++)
+      for (let i = 0; i < BLOB.length; i++)
         do_check_eq(BLOB[i], blob.value[i]);
       do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_BLOB,
                   tuple.getTypeOfIndex(3));
@@ -283,7 +282,7 @@ function test_tuple_out_of_bounds()
     "SELECT string FROM test"
   );
   execAsync(stmt, {}, [
-    function(tuple) {
+    function (tuple) {
       do_check_neq(null, tuple);
 
       // Check all out of bounds - should throw
@@ -367,19 +366,13 @@ function test_partial_listener_works()
   );
   stmt.bindByIndex(0, 0);
   stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-    }
+    handleResult(aResultSet) {}
   });
   stmt.executeAsync({
-    handleError: function(aError)
-    {
-    }
+    handleError(aError) {}
   });
   stmt.executeAsync({
-    handleCompletion: function(aReason)
-    {
-    }
+    handleCompletion(aReason) {}
   });
   stmt.finalize();
 
@@ -467,8 +460,9 @@ function test_finalized_statement_does_not_crash()
   // we are concerned about a crash here; an error is fine.
   try {
     stmt.executeAsync();
+  } catch (ex) {
+    // Do nothing.
   }
-  catch (ex) {}
 
   // Run the next test.
   run_next_test();
@@ -905,14 +899,13 @@ var testPass = TEST_PASS_SYNC;
  * @return a statement of the type under test per testPass.
  */
 function makeTestStatement(aSQL) {
-  if (testPass == TEST_PASS_SYNC)
+  if (testPass == TEST_PASS_SYNC) {
     return getOpenedDatabase().createStatement(aSQL);
-  else
-    return getOpenedDatabase().createAsyncStatement(aSQL);
+  }
+  return getOpenedDatabase().createAsyncStatement(aSQL);
 }
 
-var tests =
-[
+var tests = [
   test_illegal_sql_async_deferred,
   test_create_table,
   test_add_data,

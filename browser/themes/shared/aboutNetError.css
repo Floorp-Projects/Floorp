@@ -173,3 +173,9 @@ span#hostname {
 #automaticallyReportInFuture {
   cursor: pointer;
 }
+
+#errorCode {
+  color: var(--in-content-page-color);
+  cursor: text;
+  text-decoration: none;
+}

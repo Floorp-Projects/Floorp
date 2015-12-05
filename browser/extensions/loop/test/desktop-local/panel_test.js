@@ -56,7 +56,11 @@ describe("loop.panel", function() {
       GetPluralRule: sinon.stub(),
       SetLoopPref: sinon.stub(),
       GetLoopPref: function(prefName) {
-        return "unseen";
+        if (prefName === "gettingStarted.seen") {
+          return "unseen";
+        }
+
+        return false;
       },
       GetPluralForm: function() {
         return "fakeText";

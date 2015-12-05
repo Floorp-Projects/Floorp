@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This is testing the aboutCertError page (Bug 1207107).  It's a start,
-// but should be expanded to include cert_domain_link
+// This is testing the aboutCertError page (Bug 1207107).
 
 const GOOD_PAGE = "https://example.com/";
 const BAD_CERT = "https://expired.example.com/";
@@ -103,6 +102,138 @@ add_task(function* checkBadStsCert() {
   gBrowser.removeCurrentTab();
 });
 
+add_task(function* checkAdvancedDetails() {
+  info("Loading a bad cert page and verifying the advanced details section");
+  let browser;
+  let certErrorLoaded;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = waitForCertErrorLoad(browser);
+  }, false);
+
+  info("Loading and waiting for the cert error");
+  yield certErrorLoaded;
+
+  let message = yield ContentTask.spawn(browser, null, function* () {
+    let doc = content.document;
+    let advancedButton = doc.getElementById("advancedButton");
+    advancedButton.click();
+    let el = doc.getElementById("errorCode");
+    return { textContent: el.textContent, tagName: el.tagName };
+  });
+  is(message.textContent, "SEC_ERROR_EXPIRED_CERTIFICATE",
+     "Correct error message found");
+  is(message.tagName, "a", "Error message is a link");
+
+  message = yield ContentTask.spawn(browser, null, function* () {
+    let doc = content.document;
+    let errorCode = doc.getElementById("errorCode");
+    errorCode.click();
+    let div = doc.getElementById("certificateErrorDebugInformation");
+    let text = doc.getElementById("certificateErrorText");
+
+    let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell);
+    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                     .getService(Ci.nsISerializationHelper);
+    let serializable =  docShell.failedChannel.securityInfo
+                                .QueryInterface(Ci.nsITransportSecurityInfo)
+                                .QueryInterface(Ci.nsISerializable);
+    let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    return {
+      divDisplay: div.style.display,
+      text: text.textContent,
+      securityInfoAsString: serializedSecurityInfo
+    };
+  });
+  is(message.divDisplay, "block", "Debug information is visible");
+  ok(message.text.contains(BAD_CERT), "Correct URL found");
+  ok(message.text.contains("Certificate has expired"),
+     "Correct error message found");
+  ok(message.text.contains("HTTP Strict Transport Security: false"),
+     "Correct HSTS value found");
+  ok(message.text.contains("HTTP Public Key Pinning: false"),
+     "Correct HPKP value found");
+  let certChain = getCertChain(message.securityInfoAsString);
+  ok(message.text.contains(certChain), "Found certificate chain");
+
+  gBrowser.removeCurrentTab();
+});
+
+add_task(function* checkAdvancedDetailsForHSTS() {
+  info("Loading a bad STS cert page and verifying the advanced details section");
+  let browser;
+  let certErrorLoaded;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = gBrowser.addTab(BAD_STS_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = waitForCertErrorLoad(browser);
+  }, false);
+
+  info("Loading and waiting for the cert error");
+  yield certErrorLoaded;
+
+  let message = yield ContentTask.spawn(browser, null, function* () {
+    let doc = content.document;
+    let advancedButton = doc.getElementById("advancedButton");
+    advancedButton.click();
+    let ec = doc.getElementById("errorCode");
+    let cdl = doc.getElementById("cert_domain_link");
+    return {
+      ecTextContent: ec.textContent,
+      ecTagName: ec.tagName,
+      cdlTextContent: cdl.textContent,
+      cdlTagName: cdl.tagName
+    };
+  });
+
+  const badStsUri = Services.io.newURI(BAD_STS_CERT, null, null);
+  is(message.ecTextContent, "SSL_ERROR_BAD_CERT_DOMAIN",
+     "Correct error message found");
+  is(message.ecTagName, "a", "Error message is a link");
+  const url = badStsUri.prePath.slice(badStsUri.prePath.indexOf(".") + 1);
+  is(message.cdlTextContent, url,
+     "Correct cert_domain_link contents found");
+  is(message.cdlTagName, "a", "cert_domain_link is a link");
+
+  message = yield ContentTask.spawn(browser, null, function* () {
+    let doc = content.document;
+    let errorCode = doc.getElementById("errorCode");
+    errorCode.click();
+    let div = doc.getElementById("certificateErrorDebugInformation");
+    let text = doc.getElementById("certificateErrorText");
+
+    let docshell = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell);
+    let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                     .getService(Ci.nsISerializationHelper);
+    let serializable =  docShell.failedChannel.securityInfo
+                                .QueryInterface(Ci.nsITransportSecurityInfo)
+                                .QueryInterface(Ci.nsISerializable);
+    let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    return {
+      divDisplay: div.style.display,
+      text: text.textContent,
+      securityInfoAsString: serializedSecurityInfo
+    };
+  });
+  is(message.divDisplay, "block", "Debug information is visible");
+  ok(message.text.contains(badStsUri.spec), "Correct URL found");
+  ok(message.text.contains("requested domain name does not match the server's certificate"),
+     "Correct error message found");
+  ok(message.text.contains("HTTP Strict Transport Security: false"),
+     "Correct HSTS value found");
+  ok(message.text.contains("HTTP Public Key Pinning: true"),
+     "Correct HPKP value found");
+  let certChain = getCertChain(message.securityInfoAsString);
+  ok(message.text.contains(certChain), "Found certificate chain");
+
+  gBrowser.removeCurrentTab();
+});
+
 function waitForCertErrorLoad(browser) {
   return new Promise(resolve => {
     info("Waiting for DOMContentLoaded event");
@@ -111,4 +242,41 @@ function waitForCertErrorLoad(browser) {
       resolve();
     }, false, true);
   });
+}
+
+function getCertChain(securityInfoAsString) {
+  let certChain = "";
+  const serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
+                       .getService(Ci.nsISerializationHelper);
+  let securityInfo = serhelper.deserializeObject(securityInfoAsString);
+  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+  let certs = securityInfo.failedCertChain.getEnumerator();
+  while (certs.hasMoreElements()) {
+    let cert = certs.getNext();
+    cert.QueryInterface(Ci.nsIX509Cert);
+    certChain += getPEMString(cert);
+  }
+  return certChain;
+}
+
+function getDERString(cert)
+{
+  var length = {};
+  var derArray = cert.getRawDER(length);
+  var derString = '';
+  for (var i = 0; i < derArray.length; i++) {
+    derString += String.fromCharCode(derArray[i]);
+  }
+  return derString;
+}
+
+function getPEMString(cert)
+{
+  var derb64 = btoa(getDERString(cert));
+  // Wrap the Base64 string into lines of 64 characters,
+  // with CRLF line breaks (as specified in RFC 1421).
+  var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
+  return "-----BEGIN CERTIFICATE-----\r\n"
+         + wrapped
+         + "\r\n-----END CERTIFICATE-----\r\n";
 }
