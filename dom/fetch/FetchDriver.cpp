@@ -177,6 +177,15 @@ FetchDriver::HttpFetch()
                           ios);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Unsafe requests aren't allowed with when using no-core mode.
+  if (mRequest->Mode() == RequestMode::No_cors &&
+      mRequest->UnsafeRequest() &&
+      (!mRequest->HasSimpleMethod() ||
+       !mRequest->Headers()->HasOnlySimpleHeaders())) {
+    MOZ_ASSERT(false, "The API should have caught this");
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
   rv = SetTainting();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -410,21 +419,11 @@ FetchDriver::HttpFetch()
   // implementation is handled by the http channel calling into
   // nsCORSListenerProxy. We just inform it which unsafe headers are included
   // in the request.
-  if (IsUnsafeRequest()) {
-    if (mRequest->Mode() == RequestMode::No_cors) {
-      return NS_ERROR_DOM_BAD_URI;
-    }
-
-    mRequest->SetRedirectMode(RequestRedirect::Error);
-
+  if (mRequest->Mode() == RequestMode::Cors) {
     nsAutoTArray<nsCString, 5> unsafeHeaders;
     mRequest->Headers()->GetUnsafeHeaders(unsafeHeaders);
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
-    NS_ENSURE_TRUE(internalChan, NS_ERROR_DOM_BAD_URI);
-
-    rv = internalChan->SetCorsPreflightParameters(unsafeHeaders);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
+    loadInfo->SetCorsPreflightInfo(unsafeHeaders, false);
   }
 
   rv = chan->AsyncOpen2(this);
@@ -432,15 +431,6 @@ FetchDriver::HttpFetch()
 
   // Step 4 onwards of "HTTP Fetch" is handled internally by Necko.
   return NS_OK;
-}
-
-bool
-FetchDriver::IsUnsafeRequest()
-{
-  return mHasBeenCrossSite &&
-         (mRequest->UnsafeRequest() &&
-          (!mRequest->HasSimpleMethod() ||
-           !mRequest->Headers()->HasOnlySimpleHeaders()));
 }
 
 already_AddRefed<InternalResponse>
@@ -763,15 +753,9 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 
   // We should only ever get here if we use a "follow" redirect policy,
   // or if if we set an "error" policy as a result of a CORS policy.
-  MOZ_ASSERT(mRequest->GetRedirectMode() == RequestRedirect::Follow ||
-             (mRequest->GetRedirectMode() == RequestRedirect::Error &&
-              IsUnsafeRequest()));
+  MOZ_ASSERT(mRequest->GetRedirectMode() == RequestRedirect::Follow);
 
-  // HTTP Fetch step 5, "redirect status", step 1
-  if (NS_WARN_IF(mRequest->GetRedirectMode() == RequestRedirect::Error)) {
-    aOldChannel->Cancel(NS_BINDING_FAILED);
-    return NS_BINDING_FAILED;
-  }
+  // HTTP Fetch step 5, "redirect status", step 1 is done by necko
 
   // HTTP Fetch step 5, "redirect status", steps 2 through 6 are automatically
   // handled by necko before calling AsyncOnChannelRedirect() with the new
@@ -825,21 +809,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // Fetch spec section 4.2 "HTTP Fetch", step 4.9 just uses the manual
   // redirect flag to decide whether to execute step 4.10 or not. We do not
   // represent it in our implementation.
-  // The only thing we do is to check if the request requires a preflight (part
-  // of step 4.9), in which case we abort. This part cannot be done by
-  // nsCORSListenerProxy since it does not have access to mRequest.
-  // which case. Step 4.10.3 is handled by OnRedirectVerifyCallback(), and all
-  // the other steps are handled by nsCORSListenerProxy.
-
-  if (IsUnsafeRequest()) {
-    // We can't handle redirects that require preflight yet.
-    // This is especially true for no-cors requests, which much always be
-    // blocked if they require preflight.
-
-    // Simply fire an error here.
-    aOldChannel->Cancel(NS_BINDING_FAILED);
-    return NS_BINDING_FAILED;
-  }
+  // This is handled by nsCORSListenerProxy.
 
   // Otherwise, we rely on necko and the CORS proxy to do the right thing
   // as the redirect is followed.  In general this means http

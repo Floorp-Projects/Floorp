@@ -476,10 +476,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   if (aCorsPreflightArgs.type() == OptionalCorsPreflightArgs::TCorsPreflightArgs) {
     const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
-    rv = mChannel->SetCorsPreflightParameters(args.unsafeHeaders());
-    if (NS_FAILED(rv)) {
-      return SendFailedAsyncOpen(rv);
-    }
+    mChannel->SetCorsPreflightParameters(args.unsafeHeaders());
   }
 
   nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(uploadStream, fds);
@@ -726,7 +723,8 @@ bool
 HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const uint32_t& loadFlags,
-                                       const OptionalURIParams&   aAPIRedirectURI)
+                                       const OptionalURIParams& aAPIRedirectURI,
+                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs)
 {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%x]\n",
        this, result));
@@ -754,6 +752,14 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
       MOZ_ASSERT(loadFlags & nsIChannel::LOAD_REPLACE);
       if (loadFlags & nsIChannel::LOAD_REPLACE) {
         newHttpChannel->SetLoadFlags(loadFlags);
+      }
+
+      if (aCorsPreflightArgs.type() == OptionalCorsPreflightArgs::TCorsPreflightArgs) {
+        nsCOMPtr<nsIHttpChannelInternal> newInternalChannel =
+          do_QueryInterface(newHttpChannel);
+        MOZ_RELEASE_ASSERT(newInternalChannel);
+        const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
+        newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
       }
     }
   }

@@ -252,7 +252,10 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetIsInThirdPartyContext(),
       aLoadInfo->GetOriginAttributes(),
       redirectChainIncludingInternalRedirects,
-      redirectChain);
+      redirectChain,
+      aLoadInfo->CorsUnsafeHeaders(),
+      aLoadInfo->GetForcePreflight(),
+      aLoadInfo->GetIsPreflight());
 
   return NS_OK;
 }
@@ -308,7 +311,10 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.isInThirdPartyContext(),
                           loadInfoArgs.originAttributes(),
                           redirectChainIncludingInternalRedirects,
-                          redirectChain);
+                          redirectChain,
+                          loadInfoArgs.corsUnsafeHeaders(),
+                          loadInfoArgs.forcePreflight(),
+                          loadInfoArgs.isPreflight());
 
    loadInfo.forget(outLoadInfo);
    return NS_OK;
