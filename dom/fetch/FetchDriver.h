@@ -95,7 +95,6 @@ private:
   nsresult SetTainting();
   nsresult ContinueFetch();
   nsresult HttpFetch();
-  bool IsUnsafeRequest();
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>

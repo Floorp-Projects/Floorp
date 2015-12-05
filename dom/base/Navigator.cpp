@@ -1316,39 +1316,6 @@ Navigator::SendBeacon(const nsAString& aUrl,
   channel->SetLoadGroup(loadGroup);
 
   RefPtr<BeaconStreamListener> beaconListener = new BeaconStreamListener();
-
-  // Start a preflight if cross-origin and content type is not whitelisted
-  nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
-  rv = secMan->CheckSameOriginURI(documentURI, uri, false);
-  bool crossOrigin = NS_FAILED(rv);
-  nsAutoCString contentType, parsedCharset;
-  rv = NS_ParseRequestContentType(mimeType, contentType, parsedCharset);
-  if (crossOrigin &&
-      mimeType.Length() > 0 &&
-      !contentType.Equals(APPLICATION_WWW_FORM_URLENCODED) &&
-      !contentType.Equals(MULTIPART_FORM_DATA) &&
-      !contentType.Equals(TEXT_PLAIN)) {
-
-    // we need to set the sameOriginChecker as a notificationCallback
-    // so we can tell the channel not to follow redirects
-    nsCOMPtr<nsIInterfaceRequestor> soc = nsContentUtils::SameOriginChecker();
-    channel->SetNotificationCallbacks(soc);
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel =
-      do_QueryInterface(channel);
-    if (!internalChannel) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return false;
-    }
-    nsTArray<nsCString> unsafeHeaders;
-    unsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
-    rv = internalChannel->SetCorsPreflightParameters(unsafeHeaders);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return false;
-    }
-  }
-
   rv = channel->AsyncOpen2(beaconListener);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
