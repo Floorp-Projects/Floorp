@@ -5,7 +5,6 @@
 #include "nsNSSCertValidity.h"
 #include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNSSShutDown.h"
@@ -56,10 +55,10 @@ nsX509CertValidity::FormatTime(const PRTime& aTimeDate,
   if (!mTimesInitialized)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-     do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter = nsIDateTimeFormat::Create();
+  if (!dateFormatter) {
+    return NS_ERROR_FAILURE;
+  }
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(const_cast<PRTime&>(aTimeDate), aParamFn, &explodedTime);
