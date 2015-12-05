@@ -312,6 +312,7 @@ devtools.jar:
     skin/images/vview-lock@2x.png (themes/images/vview-lock@2x.png)
     skin/images/vview-open-inspector.png (themes/images/vview-open-inspector.png)
     skin/images/vview-open-inspector@2x.png (themes/images/vview-open-inspector@2x.png)
+    skin/images/sort-arrows.svg (themes/images/sort-arrows.svg)
     skin/images/cubic-bezier-swatch.png (themes/images/cubic-bezier-swatch.png)
     skin/images/cubic-bezier-swatch@2x.png (themes/images/cubic-bezier-swatch@2x.png)
     skin/images/undock@2x.png (themes/images/undock@2x.png)
