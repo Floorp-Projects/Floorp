@@ -1165,9 +1165,9 @@ RemoteInputStream::ReallyBlockAndWaitForStream()
 #ifdef DEBUG
   if (waited && mWeakSeekableStream) {
     int64_t position;
-    MOZ_ASSERT(NS_SUCCEEDED(mWeakSeekableStream->Tell(&position)),
-                "Failed to determine initial stream position!");
-    MOZ_ASSERT(!position, "Stream not starting at 0!");
+    if (NS_SUCCEEDED(mWeakSeekableStream->Tell(&position))) {
+      MOZ_ASSERT(!position, "Stream not starting at 0!");
+    }
   }
 #endif
 }
