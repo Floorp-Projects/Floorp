@@ -937,8 +937,13 @@ nsAppShell::CheckPowerKey()
     // If Power is pressed while we startup, mark safe mode.
     // Consumers of the b2g.safe_mode preference need to listen on this
     // preference change to prevent startup races.
-    Preferences::SetCString("b2g.safe_mode",
-                            (powerState == AKEY_STATE_DOWN) ? "yes" : "no");
+    nsCOMPtr<nsIRunnable> prefSetter = 
+    NS_NewRunnableFunction([powerState] () -> void {
+        Preferences::SetCString("b2g.safe_mode",
+                                (powerState == AKEY_STATE_DOWN) ? "yes" : "no");
+    });
+    NS_DispatchToMainThread(prefSetter.forget());
+
     mPowerKeyChecked = true;
 }
 
