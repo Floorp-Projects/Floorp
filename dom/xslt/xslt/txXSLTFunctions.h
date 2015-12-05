@@ -23,12 +23,14 @@ public:
     /**
      * Creates a new document() function call
     **/
-    explicit DocumentFunctionCall(nsIURI* aBaseURI);
+    explicit DocumentFunctionCall(nsIURI* aBaseURI)
+        : mBaseURI(aBaseURI)
+    {}
 
     TX_DECL_FUNCTION
 
 private:
-    nsString mBaseURI;
+    nsCOMPtr<nsIURI> mBaseURI;
 };
 
 /*

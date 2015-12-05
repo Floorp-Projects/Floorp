@@ -14,48 +14,32 @@
 #include "txExecutionState.h"
 #include "txURIUtils.h"
 #include "nsIURI.h"
-
-/*
- * Creates a new DocumentFunctionCall.
- */
-DocumentFunctionCall::DocumentFunctionCall(nsIURI* aBaseURI)
-{
-    nsCString spec;
-    aBaseURI->GetSpec(spec);
-    mBaseURI = NS_ConvertUTF8toUTF16(spec);
-}
+#include "nsNetUtil.h"
 
 static void
-retrieveNode(txExecutionState* aExecutionState, const nsAString& aUri,
-             const nsAString& aBaseUri, txNodeSet* aNodeSet)
+retrieveNode(txExecutionState* aExecutionState,
+             const nsAString& aUri,
+             nsIURI* aBaseUri,
+             txNodeSet* aNodeSet)
 {
-    nsAutoString absUrl;
-    URIUtils::resolveHref(aUri, aBaseUri, absUrl);
-
-    int32_t hash = absUrl.RFindChar(char16_t('#'));
-    uint32_t urlEnd, fragStart, fragEnd;
-    if (hash == kNotFound) {
-        urlEnd = absUrl.Length();
-        fragStart = 0;
-        fragEnd = 0;
-    }
-    else {
-        urlEnd = hash;
-        fragStart = hash + 1;
-        fragEnd = absUrl.Length();
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri, nullptr, aBaseUri);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
     }
 
-    nsDependentSubstring docUrl(absUrl, 0, urlEnd);
-    nsDependentSubstring frag(absUrl, fragStart, fragEnd);
+    nsAutoCString frag;
+    uri->GetRef(frag);
+    uri->SetRef(EmptyCString());
 
-    const txXPathNode* loadNode = aExecutionState->retrieveDocument(docUrl);
+    const txXPathNode* loadNode = aExecutionState->retrieveDocument(uri);
     if (loadNode) {
         if (frag.IsEmpty()) {
             aNodeSet->add(*loadNode);
         }
         else {
             txXPathTreeWalker walker(*loadNode);
-            if (walker.moveToElementById(frag)) {
+            if (walker.moveToElementById(NS_ConvertUTF8toUTF16(frag))) {
                 aNodeSet->add(walker.getCurrentPosition());
             }
         }
@@ -90,7 +74,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult1));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString baseURI;
+    nsCOMPtr<nsIURI> baseURI;
     bool baseURISet = false;
 
     if (mParams.Length() == 2) {
@@ -107,7 +91,8 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         baseURISet = true;
 
         if (!nodeSet2->isEmpty()) {
-            txXPathNodeUtils::getBaseURI(nodeSet2->get(0), baseURI);
+            txXPathNodeUtils::getBaseURI(nodeSet2->get(0),
+                                         getter_AddRefs(baseURI));
         }
     }
 
@@ -124,7 +109,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
             if (!baseURISet) {
                 // if the second argument wasn't specified, use
                 // the baseUri of node itself
-                txXPathNodeUtils::getBaseURI(node, baseURI);
+                txXPathNodeUtils::getBaseURI(node, getter_AddRefs(baseURI));
             }
             retrieveNode(es, uriStr, baseURI, nodeSet);
         }
@@ -137,8 +122,8 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     // The first argument is not a NodeSet
     nsAutoString uriStr;
     exprResult1->stringValue(uriStr);
-    const nsAString* base = baseURISet ? &baseURI : &mBaseURI;
-    retrieveNode(es, uriStr, *base, nodeSet);
+    nsIURI* base = baseURISet ? baseURI.get() : mBaseURI.get();
+    retrieveNode(es, uriStr, base, nodeSet);
 
     NS_ADDREF(*aResult = nodeSet);
 
