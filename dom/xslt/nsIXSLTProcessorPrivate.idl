@@ -5,9 +5,16 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(b8d727f7-67f4-4dc1-a318-ec0c87280816)]
+[scriptable, uuid(75d14f5d-293d-4872-8a26-e79268de592f)]
 interface nsIXSLTProcessorPrivate : nsISupports
 {
+  /**
+   * This needs to be called if the XSLTProcessor is instantiated
+   * through the XPCOM registry (i.e. using do_createInstance) and the
+   * stylesheet uses xsl:import/xsl:include or the document() xpath function.
+   */
+  void init(in nsISupports global);
+
   /**
    * Disables all loading of external documents, such as from
    * <xsl:import> and document()

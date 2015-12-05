@@ -23,7 +23,7 @@ public:
     /**
      * Creates a new document() function call
     **/
-    explicit DocumentFunctionCall(const nsAString& aBaseURI);
+    explicit DocumentFunctionCall(nsIURI* aBaseURI);
 
     TX_DECL_FUNCTION
 
