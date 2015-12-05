@@ -466,7 +466,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   {
     // credentials using the auth cache
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.withCredentials = true;
     // also, test mixed mode UI
     xhr.open("GET", "https://example.com/tests/dom/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
     xhr.send();
@@ -495,7 +494,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest5_d(test_id)
   {
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.withCredentials = true;
     xhr.open("GET", "https://example.com/tests/dom/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
     xhr.onloadend = function() {
@@ -523,7 +521,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   {
     // credentials using the auth cache
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.withCredentials = true;
     xhr.open("GET", "http://example.org/tests/dom/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
     xhr.send();
     xhr.onloadend = function() {
@@ -551,7 +548,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest5_f(test_id)
   {
     var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-    xhr.withCredentials = true;
     xhr.open("GET", "http://example.org/tests/dom/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
     xhr.onloadend = function() {

@@ -26,12 +26,6 @@ ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
     return NS_ERROR_FAILURE;
   }
 
-  // make sure that cors-with-credentials is only used in combination with CORS.
-  if (aLoadInfo->GetRequireCorsWithCredentials() &&
-      securityMode != nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-    MOZ_ASSERT(false, "can not use cors-with-credentials without cors");
-    return NS_ERROR_FAILURE;
-  }
   // all good, found the right security flags
   return NS_OK;
 }
@@ -115,7 +109,8 @@ DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
   RefPtr<nsCORSListenerProxy> corsListener =
     new nsCORSListenerProxy(aInAndOutListener,
                             loadingPrincipal,
-                            aLoadInfo->GetRequireCorsWithCredentials());
+                            aLoadInfo->GetCookiePolicy() ==
+                              nsILoadInfo::SEC_COOKIES_INCLUDE);
   // XXX: @arg: DataURIHandling::Allow
   // lets use  DataURIHandling::Allow for now and then decide on callsite basis. see also:
   // http://mxr.mozilla.org/mozilla-central/source/dom/security/nsCORSListenerProxy.h#33
@@ -422,6 +417,15 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   return NS_OK;
 }
 
+static void
+AddLoadFlags(nsIRequest *aRequest, nsLoadFlags aNewFlags)
+{
+  nsLoadFlags flags;
+  aRequest->GetLoadFlags(&flags);
+  flags |= aNewFlags;
+  aRequest->SetLoadFlags(flags);
+}
+
 /*
  * Check that this channel passes all security checks. Returns an error code
  * if this requesst should not be permitted.
@@ -432,6 +436,26 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   MOZ_ASSERT(loadInfo);
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Handle cookie policies
+  uint32_t cookiePolicy = loadInfo->GetCookiePolicy();
+  if (cookiePolicy == nsILoadInfo::SEC_COOKIES_SAME_ORIGIN) {
+    nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
+
+    // It doesn't matter what we pass for the third, data-inherits, argument.
+    // Any protocol which inherits won't pay attention to cookies anyway.
+    rv = loadingPrincipal->CheckMayLoad(uri, false, false);
+    if (NS_FAILED(rv)) {
+      AddLoadFlags(aChannel, nsIRequest::LOAD_ANONYMOUS);
+    }
+  }
+  else if (cookiePolicy == nsILoadInfo::SEC_COOKIES_OMIT) {
+    AddLoadFlags(aChannel, nsIRequest::LOAD_ANONYMOUS);
+  }
+
   nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
 
   // CORS mode is handled by nsCORSListenerProxy
@@ -441,11 +465,6 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
     }
     return NS_OK;
   }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
 
   // if none of the REQUIRE_SAME_ORIGIN flags are set, then SOP does not apply
   if ((securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS) ||
