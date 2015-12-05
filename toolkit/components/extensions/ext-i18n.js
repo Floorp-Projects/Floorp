@@ -1,3 +1,5 @@
+"use strict";
+
 extensions.registerAPI((extension, context) => {
   return {
     i18n: {

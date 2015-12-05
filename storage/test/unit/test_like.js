@@ -93,7 +93,7 @@ function test_like_2()
   stmt.reset();
   stmt.finalize();
 }
-    
+
 function test_like_3()
 {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
@@ -107,7 +107,7 @@ function test_like_3()
   stmt.reset();
   stmt.finalize();
 }
-   
+
 function test_like_4()
 {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
@@ -153,7 +153,7 @@ function test_like_6()
   stmt.reset();
   stmt.finalize();
 }
-    
+
 function test_like_7()
 {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
@@ -185,17 +185,18 @@ function test_like_8()
   stmt.reset();
   stmt.finalize();
 }
-    
-var tests = [test_count, test_like_1, test_like_2, test_like_3, test_like_4, 
+
+var tests = [test_count, test_like_1, test_like_2, test_like_3, test_like_4,
              test_like_5, test_like_6, test_like_7, test_like_8];
 
 function run_test()
 {
   setup();
 
-  for (var i = 0; i < tests.length; i++)
+  for (var i = 0; i < tests.length; i++) {
     tests[i]();
-    
+  }
+
   cleanup();
 }
 

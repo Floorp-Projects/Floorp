@@ -31,7 +31,7 @@ global.IconDetails = {
   //
   // If no context is specified, instead of throwing an error, this
   // function simply logs a warning message.
-  normalize(details, extension, context=null, localize=false) {
+  normalize(details, extension, context = null, localize = false) {
     let result = {};
 
     try {
@@ -112,14 +112,14 @@ global.IconDetails = {
     canvas.getContext("2d").putImageData(imageData, 0, 0);
 
     return canvas.toDataURL("image/png");
-  }
+  },
 };
 
 global.makeWidgetId = id => {
   id = id.toLowerCase();
   // FIXME: This allows for collisions.
   return id.replace(/[^a-z0-9_-]/g, "_");
-}
+};
 
 // Open a panel anchored to the given node, containing a browser opened
 // to the given URL, owned by the given extension. If |popupURL| is not
@@ -161,14 +161,16 @@ global.openPanel = (node, popupURL, extension) => {
 
   let titleChangedListener = () => {
     panel.setAttribute("aria-label", browser.contentTitle);
-  }
+  };
 
   let context;
-  panel.addEventListener("popuphidden", () => {
+  let popuphidden = () => {
+    panel.removeEventListener("popuphidden", popuphidden);
     browser.removeEventListener("DOMTitleChanged", titleChangedListener, true);
     context.unload();
     panel.remove();
-  });
+  };
+  panel.addEventListener("popuphidden", popuphidden);
 
   let loadListener = () => {
     panel.removeEventListener("load", loadListener);
@@ -216,7 +218,7 @@ global.openPanel = (node, popupURL, extension) => {
   panel.addEventListener("load", loadListener);
 
   return panel;
-}
+};
 
 // Manages tab-specific context data, and dispatching tab select events
 // across all windows.
@@ -230,7 +232,7 @@ global.TabContext = function TabContext(getDefaults, extension) {
   AllWindowEvents.addListener("TabSelect", this);
 
   EventEmitter.decorate(this);
-}
+};
 
 TabContext.prototype = {
   get(tab) {
@@ -311,7 +313,6 @@ ExtensionTabManager.prototype = {
 
   convert(tab) {
     let window = tab.ownerDocument.defaultView;
-    let windowActive = window == WindowManager.topWindow;
 
     let result = {
       id: TabManager.getId(tab),
@@ -411,16 +412,18 @@ let tabManagers = new WeakMap();
 
 // Returns the extension-specific tab manager for the given extension, or
 // creates one if it doesn't already exist.
-TabManager.for = function (extension) {
+TabManager.for = function(extension) {
   if (!tabManagers.has(extension)) {
     tabManagers.set(extension, new ExtensionTabManager(extension));
   }
   return tabManagers.get(extension);
 };
 
+/* eslint-disable mozilla/balanced-listeners */
 extensions.on("shutdown", (type, extension) => {
   tabManagers.delete(extension);
 });
+/* eslint-enable mozilla/balanced-listeners */
 
 // Manages mapping between XUL windows and extension window IDs.
 global.WindowManager = {
@@ -489,7 +492,7 @@ global.WindowListManager = {
 
   // Returns an iterator for all browser windows. Unless |includeIncomplete| is
   // true, only fully-loaded windows are returned.
-  *browserWindows(includeIncomplete = false) {
+  * browserWindows(includeIncomplete = false) {
     // The window type parameter is only available once the window's document
     // element has been created. This means that, when looking for incomplete
     // browser windows, we need to ignore the type entirely for windows which
@@ -654,15 +657,14 @@ AllWindowEvents.openListener = AllWindowEvents.openListener.bind(AllWindowEvents
 
 // Subclass of EventManager where we just need to call
 // add/removeEventListener on each XUL window.
-global.WindowEventManager = function(context, name, event, listener)
-{
+global.WindowEventManager = function(context, name, event, listener) {
   EventManager.call(this, context, name, fire => {
     let listener2 = (...args) => listener(fire, ...args);
     AllWindowEvents.addListener(event, listener2);
     return () => {
       AllWindowEvents.removeListener(event, listener2);
-    }
+    };
   });
-}
+};
 
 WindowEventManager.prototype = Object.create(EventManager.prototype);

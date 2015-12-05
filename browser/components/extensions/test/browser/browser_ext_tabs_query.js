@@ -1,3 +1,7 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 add_task(function* () {
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");
@@ -6,16 +10,16 @@ add_task(function* () {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
       browser.tabs.query({
-        lastFocusedWindow: true
+        lastFocusedWindow: true,
       }, function(tabs) {
         browser.test.assertEq(tabs.length, 3, "should have three tabs");
 
-        tabs.sort(function (tab1, tab2) { return tab1.index - tab2.index; });
+        tabs.sort((tab1, tab2) => tab1.index - tab2.index);
 
         browser.test.assertEq(tabs[0].url, "about:blank", "first tab blank");
         tabs.shift();
@@ -53,16 +57,16 @@ add_task(function* () {
   // test simple queries
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
       browser.tabs.query({
-        url: "<all_urls>"
+        url: "<all_urls>",
       }, function(tabs) {
         browser.test.assertEq(tabs.length, 3, "should have three tabs");
 
-        tabs.sort(function (tab1, tab2) { return tab1.index - tab2.index; });
+        tabs.sort((tab1, tab2) => tab1.index - tab2.index);
 
         browser.test.assertEq(tabs[0].url, "http://example.com/", "tab 0 url correct");
         browser.test.assertEq(tabs[1].url, "http://example.net/", "tab 1 url correct");
@@ -80,12 +84,12 @@ add_task(function* () {
   // match pattern
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
       browser.tabs.query({
-        url: "http://*/MochiKit*"
+        url: "http://*/MochiKit*",
       }, function(tabs) {
         browser.test.assertEq(tabs.length, 1, "should have one tab");
 
@@ -103,16 +107,16 @@ add_task(function* () {
   // match array of patterns
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["tabs"]
+      "permissions": ["tabs"],
     },
 
     background: function() {
       browser.tabs.query({
-        url: ["http://*/MochiKit*", "http://*.com/*"]
+        url: ["http://*/MochiKit*", "http://*.com/*"],
       }, function(tabs) {
         browser.test.assertEq(tabs.length, 2, "should have two tabs");
 
-        tabs.sort(function (tab1, tab2) { return tab1.index - tab2.index; });
+        tabs.sort((tab1, tab2) => tab1.index - tab2.index);
 
         browser.test.assertEq(tabs[0].url, "http://example.com/", "tab 0 url correct");
         browser.test.assertEq(tabs[1].url, "http://test1.example.org/MochiKit/", "tab 1 url correct");

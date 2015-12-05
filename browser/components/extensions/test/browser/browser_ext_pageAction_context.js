@@ -3,7 +3,6 @@
 "use strict";
 
 add_task(function* testTabSwitchContext() {
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "page_action": {
@@ -14,8 +13,8 @@ add_task(function* testTabSwitchContext() {
       "permissions": ["tabs"],
     },
 
-    background: function () {
-      var details = [
+    background: function() {
+      let details = [
         { "icon": browser.runtime.getURL("default.png"),
           "popup": browser.runtime.getURL("default.html"),
           "title": "Default Title" },
@@ -27,9 +26,9 @@ add_task(function* testTabSwitchContext() {
           "title": "Title 2" },
       ];
 
-      var tabs;
-      var tests;
-      var allTests = [
+      let tabs;
+      let tests;
+      let allTests = [
         expect => {
           browser.test.log("Initial state. No icon visible.");
           expect(null);
@@ -53,7 +52,7 @@ add_task(function* testTabSwitchContext() {
         },
         expect => {
           browser.test.log("Change properties. Expect new properties.");
-          var tabId = tabs[1];
+          let tabId = tabs[1];
           browser.pageAction.show(tabId);
           browser.pageAction.setIcon({ tabId, path: "2.png" });
           browser.pageAction.setPopup({ tabId, popup: "2.html" });
@@ -112,10 +111,10 @@ add_task(function* testTabSwitchContext() {
         return new Promise(resolve => {
           return browser.tabs.query({ active: true, currentWindow: true }, resolve);
         }).then(tabs => {
-          var tabId = tabs[0].id;
+          let tabId = tabs[0].id;
           return Promise.all([
             new Promise(resolve => browser.pageAction.getTitle({tabId}, resolve)),
-            new Promise(resolve => browser.pageAction.getPopup({tabId}, resolve))])
+            new Promise(resolve => browser.pageAction.getPopup({tabId}, resolve))]);
         }).then(details => {
           return Promise.resolve({ title: details[0],
                                    popup: details[1] });
@@ -126,7 +125,7 @@ add_task(function* testTabSwitchContext() {
       // Runs the next test in the `tests` array, checks the results,
       // and passes control back to the outer test scope.
       function nextTest() {
-        var test = tests.shift();
+        let test = tests.shift();
 
         test(expecting => {
           function finish() {
@@ -153,16 +152,6 @@ add_task(function* testTabSwitchContext() {
         });
       }
 
-      browser.test.onMessage.addListener((msg) => {
-        if (msg == "runTests") {
-          runTests();
-        } else if (msg == "runNextTest") {
-          nextTest();
-        } else {
-          browser.test.fail(`Unexpected message: ${msg}`);
-        }
-      });
-
       function runTests() {
         tabs = [];
         tests = allTests.slice();
@@ -173,6 +162,16 @@ add_task(function* testTabSwitchContext() {
           nextTest();
         });
       }
+
+      browser.test.onMessage.addListener((msg) => {
+        if (msg == "runTests") {
+          runTests();
+        } else if (msg == "runNextTest") {
+          nextTest();
+        } else {
+          browser.test.fail(`Unexpected message: ${msg}`);
+        }
+      });
 
       runTests();
     },
@@ -203,7 +202,7 @@ add_task(function* testTabSwitchContext() {
       checkDetails(expecting);
 
       if (testsRemaining) {
-        extension.sendMessage("runNextTest")
+        extension.sendMessage("runNextTest");
       } else if (testNewWindows) {
         testNewWindows--;
 
@@ -212,7 +211,7 @@ add_task(function* testTabSwitchContext() {
           currentWindow = window;
           return focusWindow(window);
         }).then(() => {
-          extension.sendMessage("runTests")
+          extension.sendMessage("runTests");
         });
       } else {
         resolve();
