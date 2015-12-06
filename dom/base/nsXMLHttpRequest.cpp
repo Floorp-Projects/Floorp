@@ -2895,8 +2895,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
       (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE)) {
     NS_ENSURE_TRUE(internalHttpChannel, NS_ERROR_DOM_BAD_URI);
 
-    rv = internalHttpChannel->SetCorsPreflightParameters(mCORSUnsafeHeaders,
-                                                         withCredentials, mPrincipal);
+    rv = internalHttpChannel->SetCorsPreflightParameters(mCORSUnsafeHeaders);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
