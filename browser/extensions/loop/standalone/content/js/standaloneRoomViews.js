@@ -163,6 +163,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
             { clientShortname: mozL10n.get("clientShortname2") });
         case FAILURE_DETAILS.ICE_FAILED:
           return mozL10n.get("rooms_ice_failure_message");
+        case FAILURE_DETAILS.COULD_NOT_CONNECT:
+          return mozL10n.get("rooms_server_unavailable_message");
         default:
           return mozL10n.get("status_error");
       }

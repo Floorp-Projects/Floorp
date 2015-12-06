@@ -101,6 +101,11 @@ loop.StandaloneMozLoop = (function(mozL10n) {
         }
       }.bind(this);
 
+      this._xhrReq.onerror = function() {
+        var request = this._xhrReq;
+        failureHandler(callback, request);
+      }.bind(this);
+
       this._xhrReq.send();
     },
 
