@@ -91,7 +91,7 @@ URIHasFlags(nsIURI* aURI, uint32_t aURIFlags)
 }
 
 static nsresult
-DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
+DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo, nsIChannel* aChannel)
 {
   if (aLoadInfo->GetAllowChrome() &&
       (URIHasFlags(aURI, nsIProtocolHandler::URI_IS_UI_RESOURCE) ||
@@ -100,19 +100,10 @@ DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     return DoCheckLoadURIChecks(aURI, aLoadInfo);
   }
 
-  nsIPrincipal* loadingPrincipal = aLoadInfo->LoadingPrincipal();
-  bool sameOriginDataInherits =
-    aLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+  NS_ENSURE_FALSE(NS_HasBeenCrossOrigin(aChannel, true),
+                  NS_ERROR_DOM_BAD_URI);
 
-  if (sameOriginDataInherits &&
-      aLoadInfo->GetAboutBlankInherits() &&
-      NS_IsAboutBlank(aURI)) {
-    return NS_OK;
-  }
-
-  return loadingPrincipal->CheckMayLoad(aURI,
-                                        true, // report to console
-                                        sameOriginDataInherits);
+  return NS_OK;
 }
 
 static nsresult
@@ -367,10 +358,9 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
     rv = DoCORSChecks(aChannel, loadInfo, aInAndOutListener);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else {
-    rv = CheckChannel(aChannel);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+
+  rv = CheckChannel(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> finalChannelURI;
   rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalChannelURI));
@@ -442,9 +432,13 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   MOZ_ASSERT(loadInfo);
 
-  // CORS mode is handled by nsCORSListenerProxy
   nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
+
+  // CORS mode is handled by nsCORSListenerProxy
   if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
+    if (NS_HasBeenCrossOrigin(aChannel)) {
+      loadInfo->MaybeIncreaseTainting(LoadTainting::CORS);
+    }
     return NS_OK;
   }
 
@@ -456,12 +450,15 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   // if none of the REQUIRE_SAME_ORIGIN flags are set, then SOP does not apply
   if ((securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS) ||
       (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED)) {
-    rv = DoSOPChecks(uri, loadInfo);
+    rv = DoSOPChecks(uri, loadInfo, aChannel);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if ((securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS) ||
       (securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL)) {
+    if (NS_HasBeenCrossOrigin(aChannel)) {
+      loadInfo->MaybeIncreaseTainting(LoadTainting::Opaque);
+    }
     // Please note that DoCheckLoadURIChecks should only be enforced for
     // cross origin requests. If the flag SEC_REQUIRE_CORS_DATA_INHERITS is set
     // within the loadInfo, then then CheckLoadURIWithPrincipal is performed

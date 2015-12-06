@@ -82,7 +82,6 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
-  bool mHasBeenCrossSite;
 
   DebugOnly<bool> mResponseAvailableCalled;
   DebugOnly<bool> mFetchCalled;
@@ -92,7 +91,6 @@ private:
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  nsresult SetTainting();
   nsresult ContinueFetch();
   nsresult HttpFetch();
   // Returns the filtered response sent to the observer.
