@@ -990,7 +990,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   NS_ENSURE_TRUE(fileSize64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   uint32_t fileSize = (uint32_t)fileSize64;
-  nsAutoArrayPtr<char> fileBuffer(new char[fileSize]);
+  auto fileBuffer = MakeUniqueFallible<char[]>(fileSize);
   if (fileBuffer == nullptr)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1003,10 +1003,10 @@ static nsresult openPrefFile(nsIFile* aFile)
   uint32_t offset = 0;
   for (;;) {
     uint32_t amtRead = 0;
-    rv = inStr->Read((char*)fileBuffer, fileSize, &amtRead);
+    rv = inStr->Read(fileBuffer.get(), fileSize, &amtRead);
     if (NS_FAILED(rv) || amtRead == 0)
       break;
-    if (!PREF_ParseBuf(&ps, fileBuffer, amtRead))
+    if (!PREF_ParseBuf(&ps, fileBuffer.get(), amtRead))
       rv2 = NS_ERROR_FILE_CORRUPTED;
     offset += amtRead;
     if (offset == fileSize) {
