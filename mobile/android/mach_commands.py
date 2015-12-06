@@ -123,7 +123,7 @@ class MachCommands(MachCommandBase):
         srcdir('base/build.gradle', 'mobile/android/gradle/base/build.gradle')
         srcdir('base/lint.xml', 'mobile/android/gradle/base/lint.xml')
         srcdir('base/src/main/AndroidManifest.xml', 'mobile/android/gradle/base/AndroidManifest.xml')
-        srcdir('base/src/main/java/org/mozilla/gecko', 'mobile/android/base')
+        srcdir('base/src/main/java/org/mozilla/gecko', 'mobile/android/base/java/org/mozilla/gecko')
         srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')
         srcdir('base/src/main/java/org/mozilla/search', 'mobile/android/search/java/org/mozilla/search')
         srcdir('base/src/main/java/org/mozilla/javaaddons', 'mobile/android/javaaddons/java/org/mozilla/javaaddons')
