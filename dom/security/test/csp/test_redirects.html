@@ -82,14 +82,12 @@ var testExpectedResults = { "font-src": true,
                             "script-src-redir": false,
                             "style-src": true,
                             "style-src-redir": false,
-                            "worker": true,
-                            "worker-redir": false,
                             "xhr-src": true,
                             "xhr-src-redir": false,
                             "from-worker": true,
-                            "script-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
-                            "xhr-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
-                            "fetch-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
+                            "script-src-redir-from-worker": true, // redir is allowed since policy isn't inherited
+                            "xhr-src-redir-from-worker": true, // redir is allowed since policy isn't inherited
+                            "fetch-src-redir-from-worker": true, // redir is allowed since policy isn't inherited
                             "from-blob-worker": true,
                             "script-src-redir-from-blob-worker": false,
                             "xhr-src-redir-from-blob-worker": false,

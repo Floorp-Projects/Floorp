@@ -8,7 +8,9 @@
 
 #include "mozilla/dom/Element.h"
 
-NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager)
+NS_IMPL_ISUPPORTS(nsContentSecurityManager,
+                  nsIContentSecurityManager,
+                  nsIChannelEventSink)
 
 static nsresult
 ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
@@ -342,20 +344,15 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
     return NS_ERROR_UNEXPECTED;
   }
 
+  // if dealing with a redirected channel then we have already installed
+  // streamlistener and redirect proxies and so we are done.
+  if (loadInfo->GetInitialSecurityCheckDone()) {
+    return NS_OK;
+  }
+
   // make sure that only one of the five security flags is set in the loadinfo
   // e.g. do not require same origin and allow cross origin at the same time
   nsresult rv = ValidateSecurityFlags(loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // lets store the initialSecurityCheckDone flag which indicates whether the channel
-  // was initialy evaluated by the contentSecurityManager. Once the inital
-  // asyncOpen() of the channel went through the contentSecurityManager then
-  // redirects do not have perform all the security checks, e.g. no reason
-  // to setup CORS again.
-  bool initialSecurityCheckDone = loadInfo->GetInitialSecurityCheckDone();
-
-  // now lets set the initalSecurityFlag for subsequent calls
-  rv = loadInfo->SetInitialSecurityCheckDone(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // since aChannel was openend using asyncOpen2() we have to make sure
@@ -366,23 +363,101 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   rv = loadInfo->SetEnforceSecurity(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (loadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
+    rv = DoCORSChecks(aChannel, loadInfo, aInAndOutListener);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    rv = CheckChannel(aChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<nsIURI> finalChannelURI;
   rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalChannelURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Perform all ContentPolicy checks (MixedContent, CSP, ...)
+  rv = DoContentSecurityChecks(finalChannelURI, loadInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // now lets set the initalSecurityFlag for subsequent calls
+  rv = loadInfo->SetInitialSecurityCheckDone(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // all security checks passed - lets allow the load
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                 nsIChannel* aNewChannel,
+                                                 uint32_t aRedirFlags,
+                                                 nsIAsyncVerifyRedirectCallback *aCb)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->GetLoadInfo();
+  // Are we enforcing security using LoadInfo?
+  if (loadInfo && loadInfo->GetEnforceSecurity()) {
+    nsresult rv = CheckChannel(aNewChannel);
+    if (NS_FAILED(rv)) {
+      aOldChannel->Cancel(rv);
+      return rv;
+    }
+  }
+
+  // Also verify that the redirecting server is allowed to redirect to the
+  // given URI
+  nsCOMPtr<nsIPrincipal> oldPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetChannelResultPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
+
+  nsCOMPtr<nsIURI> newURI;
+  aNewChannel->GetURI(getter_AddRefs(newURI));
+  nsCOMPtr<nsIURI> newOriginalURI;
+  aNewChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
+
+  NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
+
+  const uint32_t flags =
+      nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
+      nsIScriptSecurityManager::DISALLOW_SCRIPT;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+    CheckLoadURIWithPrincipal(oldPrincipal, newURI, flags);
+  if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
+      rv = nsContentUtils::GetSecurityManager()->
+        CheckLoadURIWithPrincipal(oldPrincipal, newOriginalURI, flags);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);  
+
+  aCb->OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
+
+/*
+ * Check that this channel passes all security checks. Returns an error code
+ * if this requesst should not be permitted.
+ */
+nsresult
+nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  MOZ_ASSERT(loadInfo);
+
+  // CORS mode is handled by nsCORSListenerProxy
   nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
+  if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 
   // if none of the REQUIRE_SAME_ORIGIN flags are set, then SOP does not apply
   if ((securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS) ||
       (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED)) {
-    rv = DoSOPChecks(finalChannelURI, loadInfo);
+    rv = DoSOPChecks(uri, loadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // if dealing with a redirected channel then we only enforce SOP
-  // and can return at this point.
-  if (initialSecurityCheckDone) {
-    return NS_OK;
   }
 
   if ((securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS) ||
@@ -391,23 +466,12 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
     // cross origin requests. If the flag SEC_REQUIRE_CORS_DATA_INHERITS is set
     // within the loadInfo, then then CheckLoadURIWithPrincipal is performed
     // within nsCorsListenerProxy
-    rv = DoCheckLoadURIChecks(finalChannelURI, loadInfo);
+    rv = DoCheckLoadURIChecks(uri, loadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
-    rv = DoCORSChecks(aChannel, loadInfo, aInAndOutListener);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Perform all ContentPolicy checks (MixedContent, CSP, ...)
-  rv = DoContentSecurityChecks(finalChannelURI, loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // all security checks passed - lets allow the load
   return NS_OK;
 }
-
 
 // ==== nsIContentSecurityManager implementation =====
 
