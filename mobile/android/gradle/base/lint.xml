@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<lint>
-    <!-- Enable relevant checks disabled by default -->
-    <issue id="NegativeMargin" severity="warning" />
-
-    <!-- We have a custom menu and don't conform to the recommended styles. -->
-    <issue id="IconColors" severity="ignore" />
-</lint>
