@@ -29,7 +29,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(b7b9830e-013e-4ba0-b6c6-a0fc669f4980)]
+[scriptable, builtinclass, uuid(41e311d0-5894-4aaa-80b5-5b7099dfc404)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -89,11 +89,21 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_REQUIRE_CORS_DATA_INHERITS = (1<<4);
 
   /**
-   * Use this flag in addition to SEC_REQUIRE_CORS_DATA_INHERITS
-   * to make cross-origin CORS loads happen with credentials
-   * (such as cookies and client side certs).
+   * Choose cookie policy. The default policy is equivalent to "INCLUDE" for
+   * SEC_REQUIRE_SAME_ORIGIN_* and SEC_ALLOW_CROSS_ORIGIN_* modes, and
+   * equivalent to "SAME_ORIGIN" for SEC_REQUIRE_CORS_DATA_INHERITS mode.
+   *
+   * This means that if you want to perform a CORS load with credentials, pass
+   * SEC_COOKIES_INCLUDE.
+   *
+   * Note that these flags are still subject to the user's cookie policies.
+   * For example, if the user is blocking 3rd party cookies, those cookies
+   * will be blocked no matter which of these flags are set.
    */
-  const unsigned long SEC_REQUIRE_CORS_WITH_CREDENTIALS = (1<<5);
+  const unsigned long SEC_COOKIES_DEFAULT = (0 << 5);
+  const unsigned long SEC_COOKIES_INCLUDE = (1 << 5);
+  const unsigned long SEC_COOKIES_SAME_ORIGIN = (2 << 5);
+  const unsigned long SEC_COOKIES_OMIT = (3 << 5);
 
   /**
    * Force inheriting of the Principal. The resulting resource will use the
@@ -110,7 +120,7 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_SANDBOXED.
    */
-  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<6);
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<7);
 
   /**
    * Sandbox the load. The resulting resource will use a freshly created
@@ -122,17 +132,17 @@ interface nsILoadInfo : nsISupports
    *
    * This flag can not be used together with SEC_FORCE_INHERIT_PRINCIPAL.
    */
-  const unsigned long SEC_SANDBOXED = (1<<7);
+  const unsigned long SEC_SANDBOXED = (1<<8);
 
   /**
    * Inherit the Principal for about:blank.
    */
-  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<8);
+  const unsigned long SEC_ABOUT_BLANK_INHERITS = (1<<9);
 
   /**
    * Allow access to chrome: packages that are content accessible.
    */
-  const unsigned long SEC_ALLOW_CHROME = (1<<9);
+  const unsigned long SEC_ALLOW_CHROME = (1<<10);
 
   /**
    * Don't follow redirects. Instead the redirect response is returned
@@ -145,7 +155,7 @@ interface nsILoadInfo : nsISupports
    * the response body might not be available.
    * This can happen if the redirect was cached.
    */
-  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<10);
+  const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<11);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.
@@ -244,10 +254,12 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute boolean isInThirdPartyContext;
 
   /**
-   * Determines whether credentials are sent with CORS requests.
-   * Using this flag requires SEC_REQUIRE_CORS_DATA_INHERITS also to be set.
+   * See the SEC_COOKIES_* flags above. This attribute will never return
+   * SEC_COOKIES_DEFAULT, but will instead return what the policy resolves to.
+   * I.e. SEC_COOKIES_SAME_ORIGIN for CORS mode, and SEC_COOKIES_INCLUDE
+   * otherwise.
    */
-  [infallible] readonly attribute boolean requireCorsWithCredentials;
+  [infallible] readonly attribute unsigned long cookiePolicy;
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should

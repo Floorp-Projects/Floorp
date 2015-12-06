@@ -269,14 +269,6 @@ LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult)
   return NS_OK;
 }
 
-void
-LoadInfo::SetWithCredentialsSecFlag()
-{
-  MOZ_ASSERT(!mEnforceSecurity,
-             "Request should not have been opened yet");
-  mSecurityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
-}
-
 NS_IMETHODIMP
 LoadInfo::GetSecurityMode(uint32_t* aFlags)
 {
@@ -296,12 +288,34 @@ LoadInfo::GetIsInThirdPartyContext(bool* aIsInThirdPartyContext)
   return NS_OK;
 }
 
+static const uint32_t sCookiePolicyMask =
+  nsILoadInfo::SEC_COOKIES_DEFAULT |
+  nsILoadInfo::SEC_COOKIES_INCLUDE |
+  nsILoadInfo::SEC_COOKIES_SAME_ORIGIN |
+  nsILoadInfo::SEC_COOKIES_OMIT;
+
 NS_IMETHODIMP
-LoadInfo::GetRequireCorsWithCredentials(bool* aResult)
+LoadInfo::GetCookiePolicy(uint32_t *aResult)
 {
-  *aResult =
-    (mSecurityFlags & nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS);
+  uint32_t policy = mSecurityFlags & sCookiePolicyMask;
+  if (policy == nsILoadInfo::SEC_COOKIES_DEFAULT) {
+    policy = (mSecurityFlags & SEC_REQUIRE_CORS_DATA_INHERITS) ?
+      nsILoadInfo::SEC_COOKIES_SAME_ORIGIN : nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
+
+  *aResult = policy;
   return NS_OK;
+}
+
+void
+LoadInfo::SetIncludeCookiesSecFlag()
+{
+  MOZ_ASSERT(!mEnforceSecurity,
+             "Request should not have been opened yet");
+  MOZ_ASSERT((mSecurityFlags & sCookiePolicyMask) ==
+             nsILoadInfo::SEC_COOKIES_DEFAULT);
+  mSecurityFlags = (mSecurityFlags & ~sCookiePolicyMask) |
+                   nsILoadInfo::SEC_COOKIES_INCLUDE;
 }
 
 NS_IMETHODIMP

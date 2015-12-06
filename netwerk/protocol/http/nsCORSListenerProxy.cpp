@@ -821,6 +821,8 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   rv = aChannel->GetOriginalURI(getter_AddRefs(originalURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+
   // exempt data URIs from the same origin check.
   if (aAllowDataURI == DataURIHandling::Allow && originalURI == uri) {
     bool dataScheme = false;
@@ -829,8 +831,6 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     if (dataScheme) {
       return NS_OK;
     }
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo && loadInfo->GetAboutBlankInherits() &&
         NS_IsAboutBlank(uri)) {
       return NS_OK;
@@ -904,8 +904,11 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Origin"), origin, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Make cookie-less if needed
-  if (!mWithCredentials) {
+  // Make cookie-less if needed. We don't need to do anything here if the
+  // channel was opened with AsyncOpen2, since then AsyncOpen2 will take
+  // care of the cookie policy for us.
+  if (!mWithCredentials &&
+      (!loadInfo || !loadInfo->GetEnforceSecurity())) {
     nsLoadFlags flags;
     rv = http->GetLoadFlags(&flags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1337,7 +1340,8 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
              "how did we end up here?");
 
   nsCOMPtr<nsIPrincipal> principal = originalLoadInfo->LoadingPrincipal();
-  bool withCredentials = originalLoadInfo->GetRequireCorsWithCredentials();
+  bool withCredentials = originalLoadInfo->GetCookiePolicy() ==
+    nsILoadInfo::SEC_COOKIES_INCLUDE;
 
   nsPreflightCache::CacheEntry* entry =
     sPreflightCache ?
