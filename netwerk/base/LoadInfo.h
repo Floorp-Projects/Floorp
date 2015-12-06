@@ -61,6 +61,8 @@ public:
   // when a separate request is made with the same security properties.
   already_AddRefed<nsILoadInfo> CloneForNewRequest() const;
 
+  void SetIsPreflight();
+
 private:
   // private constructor that is only allowed to be called from within
   // HttpChannelParent and FTPChannelParent declared as friends undeneath.
@@ -80,7 +82,10 @@ private:
            bool aIsThirdPartyRequest,
            const NeckoOriginAttributes& aOriginAttributes,
            nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
-           nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain);
+           nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
+           const nsTArray<nsCString>& aUnsafeHeaders,
+           bool aForcePreflight,
+           bool aIsPreflight);
   LoadInfo(const LoadInfo& rhs);
 
   friend nsresult
@@ -116,6 +121,9 @@ private:
   NeckoOriginAttributes            mOriginAttributes;
   nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChainIncludingInternalRedirects;
   nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChain;
+  nsTArray<nsCString>              mCorsUnsafeHeaders;
+  bool                             mForcePreflight;
+  bool                             mIsPreflight;
 };
 
 } // namespace mozilla

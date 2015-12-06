@@ -15,18 +15,21 @@ interface nsIPrincipal;
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadTainting.h"
+
+class nsCString;
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
 native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
+[ref] native StringArrayRef(const nsTArray<nsCString>);
 
 typedef unsigned long nsSecurityFlags;
 
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(5a2dce9f-accd-45ae-98cc-319dec0ae4f0)]
+[scriptable, builtinclass, uuid(b7b9830e-013e-4ba0-b6c6-a0fc669f4980)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -438,6 +441,36 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
   const_nsIPrincipalArray binaryRedirectChain();
+
+  /**
+   * Sets the list of unsafe headers according to CORS spec, as well as
+   * potentially forces a preflight.
+   * Note that you do not need to set the Content-Type header. That will be
+   * automatically detected as needed.
+   *
+   * Only call this function when using the SEC_REQUIRE_CORS_DATA_INHERITS mode.
+   */
+  [noscript, notxpcom, nostdcall]
+  void setCorsPreflightInfo(in StringArrayRef unsafeHeaders,
+                            in boolean forcePreflight);
+
+  /**
+   * A C++-friendly getter for the list of cors-unsafe headers.
+   * Please note that this array has the same lifetime as the
+   * loadInfo object - use with caution!
+   */
+  [noscript, notxpcom, nostdcall, binaryname(CorsUnsafeHeaders)]
+  StringArrayRef corsUnsafeHeaders();
+
+  /**
+   * Returns value set through setCorsPreflightInfo.
+   */
+  [infallible] readonly attribute boolean forcePreflight;
+
+  /**
+   * A C++ friendly getter for the forcePreflight flag.
+   */
+  [infallible] readonly attribute boolean isPreflight;
 
   /**
   * Constants reflecting the channel tainting.  These are mainly defined here
