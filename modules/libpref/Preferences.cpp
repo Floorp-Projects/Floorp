@@ -948,12 +948,13 @@ Preferences::WritePrefFile(nsIFile* aFile)
   // write out the file header
   outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
 
-  char** walker = valueArray.get();
-  for (uint32_t valueIdx = 0; valueIdx < gHashTable->EntryCount(); valueIdx++, walker++) {
-    if (*walker) {
-      outStream->Write(*walker, strlen(*walker), &writeAmount);
+  for (uint32_t valueIdx = 0; valueIdx < gHashTable->EntryCount(); valueIdx++) {
+    char*& pref = valueArray[valueIdx];
+    if (pref) {
+      outStream->Write(pref, strlen(pref), &writeAmount);
       outStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeAmount);
-      free(*walker);
+      free(pref);
+      pref = nullptr;
     }
   }
 
