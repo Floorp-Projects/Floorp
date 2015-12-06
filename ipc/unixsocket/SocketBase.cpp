@@ -145,7 +145,7 @@ UnixSocketRawData::~UnixSocketRawData()
 {
   MOZ_COUNT_DTOR_INHERITED(UnixSocketRawData, UnixSocketIOBuffer);
 
-  nsAutoArrayPtr<uint8_t> data(GetBuffer());
+  UniquePtr<uint8_t[]> data(GetBuffer());
   ResetBuffer(nullptr, 0, 0, 0);
 }
 
