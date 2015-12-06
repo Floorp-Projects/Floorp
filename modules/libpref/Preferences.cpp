@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "nsXULAppAPI.h"
 
@@ -937,20 +938,17 @@ Preferences::WritePrefFile(nsIFile* aFile)
   if (NS_FAILED(rv)) 
       return rv;  
 
-  nsAutoArrayPtr<char*> valueArray(new char*[gHashTable->EntryCount()]);
-  memset(valueArray, 0, gHashTable->EntryCount() * sizeof(char*));
-
   // get the lines that we're supposed to be writing to the file
-  pref_savePrefs(gHashTable, valueArray);
+  UniquePtr<char*[]> valueArray = pref_savePrefs(gHashTable);
 
   /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray, gHashTable->EntryCount(), sizeof(char *),
+  NS_QuickSort(valueArray.get(), gHashTable->EntryCount(), sizeof(char *),
                pref_CompareStrings, nullptr);
 
   // write out the file header
   outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
 
-  char** walker = valueArray;
+  char** walker = valueArray.get();
   for (uint32_t valueIdx = 0; valueIdx < gHashTable->EntryCount(); valueIdx++, walker++) {
     if (*walker) {
       outStream->Write(*walker, strlen(*walker), &writeAmount);
