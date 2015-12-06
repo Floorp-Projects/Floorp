@@ -1903,23 +1903,26 @@ function getAppCacheStatus(msg) {
 }
 
 // emulator callbacks
+var _emu_cb_id = 0;
 var _emu_cbs = {};
 
 function runEmulatorCmd(cmd, callback) {
   logger.info("listener runEmulatorCmd cmd=" + cmd);
   if (callback) {
-    _emu_cbs[asyncTestCommandId] = callback;
+    _emu_cbs[_emu_cb_id] = callback;
   }
   sendAsyncMessage("Marionette:runEmulatorCmd",
-      {command: cmd, id: asyncTestCommandId});
+      {command: cmd, id: _emu_cb_id});
+  _emu_cb_id += 1;
 }
 
 function runEmulatorShell(args, callback) {
   if (callback) {
-    _emu_cbs[asyncTestCommandId] = callback;
+    _emu_cbs[_emu_cb_id] = callback;
   }
   sendAsyncMessage("Marionette:runEmulatorShell",
-      {arguments: args, id: asyncTestCommandId});
+      {arguments: args, id: _emu_cb_id});
+  _emu_cb_id += 1;
 }
 
 function emulatorCmdResult(msg) {
