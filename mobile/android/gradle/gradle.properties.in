@@ -1,5 +1,0 @@
-#filter substitution
-#include gradle.properties
-
-topsrcdir=@topsrcdir@
-topobjdir=@topobjdir@
