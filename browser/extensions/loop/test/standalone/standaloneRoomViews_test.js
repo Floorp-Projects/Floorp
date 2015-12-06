@@ -346,6 +346,20 @@ describe("loop.standaloneRoomViews", function() {
         .eql("tos_failure_message");
     });
 
+    it("should display cannot connect to server on COULD_NOT_CONNECT", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.COULD_NOT_CONNECT });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("rooms_server_unavailable_message");
+    });
+
+    it("should display Something went wrong on UNKNOWN error", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.UNKNOWN });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("status_error");
+    });
+
     it("should not display a retry button when the failure reason is expired or invalid", function() {
       view = mountTestComponent({ failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID });
 
