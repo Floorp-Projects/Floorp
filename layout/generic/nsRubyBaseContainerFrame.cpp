@@ -210,7 +210,7 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
           gfxBreakPriority breakPriority =
             LineBreakBefore(baseFrame, aRenderingContext, nullptr, nullptr);
           if (breakPriority != gfxBreakPriority::eNoBreak) {
-            aData->OptionallyBreak(aRenderingContext);
+            aData->OptionallyBreak();
           }
         }
       }
