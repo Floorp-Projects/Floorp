@@ -42,6 +42,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mEnforceSecurity(false)
   , mInitialSecurityCheckDone(false)
   , mIsThirdPartyContext(true)
+  , mForcePreflight(false)
+  , mIsPreflight(false)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -111,6 +113,9 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mRedirectChainIncludingInternalRedirects(
       rhs.mRedirectChainIncludingInternalRedirects)
   , mRedirectChain(rhs.mRedirectChain)
+  , mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders)
+  , mForcePreflight(rhs.mForcePreflight)
+  , mIsPreflight(rhs.mIsPreflight)
 {
 }
 
@@ -128,7 +133,10 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aIsThirdPartyContext,
                    const NeckoOriginAttributes& aOriginAttributes,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
-                   nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain)
+                   nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
+                   const nsTArray<nsCString>& aCorsUnsafeHeaders,
+                   bool aForcePreflight,
+                   bool aIsPreflight)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mSecurityFlags(aSecurityFlags)
@@ -143,6 +151,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
   , mIsThirdPartyContext(aIsThirdPartyContext)
   , mOriginAttributes(aOriginAttributes)
+  , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
+  , mForcePreflight(aForcePreflight)
+  , mIsPreflight(aIsPreflight)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -495,6 +506,44 @@ const nsTArray<nsCOMPtr<nsIPrincipal>>&
 LoadInfo::RedirectChain()
 {
   return mRedirectChain;
+}
+
+void
+LoadInfo::SetCorsPreflightInfo(const nsTArray<nsCString>& aHeaders,
+                               bool aForcePreflight)
+{
+  MOZ_ASSERT(GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS);
+  MOZ_ASSERT(!mInitialSecurityCheckDone);
+  mCorsUnsafeHeaders = aHeaders;
+  mForcePreflight = aForcePreflight;
+}
+
+const nsTArray<nsCString>&
+LoadInfo::CorsUnsafeHeaders()
+{
+  return mCorsUnsafeHeaders;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetForcePreflight(bool* aForcePreflight)
+{
+  *aForcePreflight = mForcePreflight;
+  return NS_OK;
+}
+
+void
+LoadInfo::SetIsPreflight()
+{
+  MOZ_ASSERT(GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS);
+  MOZ_ASSERT(!mInitialSecurityCheckDone);
+  mIsPreflight = true;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsPreflight(bool* aIsPreflight)
+{
+  *aIsPreflight = mIsPreflight;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

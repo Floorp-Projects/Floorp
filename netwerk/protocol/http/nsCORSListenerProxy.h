@@ -80,6 +80,7 @@ private:
 
   nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI);
   nsresult CheckRequestApproved(nsIRequest* aRequest);
+  nsresult CheckPreflightNeeded(nsIChannel* aChannel);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   // The principal that originally kicked off the request

@@ -42,6 +42,9 @@ struct LoadInfoArgs
   NeckoOriginAttributes originAttributes;
   PrincipalInfo[]  redirectChainIncludingInternalRedirects;
   PrincipalInfo[]  redirectChain;
+  nsCString[]      corsUnsafeHeaders;
+  bool             forcePreflight;
+  bool             isPreflight;
 };
 
 /**
