@@ -1005,15 +1005,6 @@
  */
 
 /**
- * This contract ID will be gotten as a service and gets the opportunity to look
- * at and veto all redirects that are processed by necko.
- *
- * Must implement nsIChannelEventSink
- */
-#define NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID \
-  "@mozilla.org/netwerk/global-channel-event-sink;1"
-
-/**
  * This contract ID will be gotten as a service implementing nsINetworkLinkService
  * and monitored by IOService for automatic online/offline management.
  *

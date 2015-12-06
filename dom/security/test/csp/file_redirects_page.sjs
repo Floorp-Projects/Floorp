@@ -14,13 +14,8 @@ function handleRequest(request, response)
   var resource = "/tests/dom/security/test/csp/file_redirects_resource.sjs";
 
   // CSP header value
-  var additional = ""
-  if (query['testid'] == "worker") {
-    additional = "; script-src 'self' 'unsafe-inline'";
-  }
   response.setHeader("Content-Security-Policy",
-      "default-src 'self' blob: ; style-src 'self' 'unsafe-inline'" + additional,
-      false);
+      "default-src 'self' blob: ; style-src 'self' 'unsafe-inline'", false);
 
   // downloadable font that redirects to another site
   if (query["testid"] == "font-src") {
@@ -66,12 +61,6 @@ function handleRequest(request, response)
   // external stylesheet that redirects to another site
   if (query["testid"] == "style-src") {
     response.write('<link rel="stylesheet" type="text/css" href="'+resource+'?res=style&redir=other&id=style-src-redir"></link>');
-    return;
-  }
-
-  // worker script resource that redirects to another site
-  if (query["testid"] == "worker") {
-    response.write('<script>var worker = new Worker("'+resource+'?res=worker&redir=other&id=worker-redir");</script>');
     return;
   }
 
