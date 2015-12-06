@@ -65,8 +65,6 @@ union OptionalHttpResponseHead
 
 struct CorsPreflightArgs
 {
-  bool          withCredentials;
-  PrincipalInfo preflightPrincipal;
   nsCString[]   unsafeHeaders;
 };
 
