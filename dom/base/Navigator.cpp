@@ -1205,7 +1205,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
                      uri,
                      doc,
                      nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
-                     nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS,
+                       nsILoadInfo::SEC_COOKIES_INCLUDE,
                      nsIContentPolicy::TYPE_BEACON);
 
   if (NS_FAILED(rv)) {
