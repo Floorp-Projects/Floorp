@@ -295,7 +295,7 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mManager(aManager)
   , mType(aType)
   , mMonitor("MediaSourceTrackDemuxer")
-  , mLastSeek(Some(TimeUnit()))
+  , mReset(true)
 {
 }
 
@@ -328,7 +328,8 @@ MediaSourceTrackDemuxer::Reset()
   RefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction([self] () {
-      self->mLastSeek = Some(TimeUnit());
+      self->mNextSample.reset();
+      self->mReset = true;
       self->mManager->Seek(self->mType, TimeUnit(), TimeUnit());
       {
         MonitorAutoLock mon(self->mMonitor);
@@ -380,49 +381,58 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
 
   if (!buffered.Contains(aTime)) {
-    mLastSeek = Some(aTime);
     // We don't have the data to seek to.
     return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                         __func__);
   }
   TimeUnit seekTime =
     mManager->Seek(mType, aTime, MediaSourceDemuxer::EOS_FUZZ);
+  bool error;
+  RefPtr<MediaRawData> sample =
+    mManager->GetSample(mType,
+                        media::TimeUnit(),
+                        error);
+  MOZ_ASSERT(!error && sample);
+  mNextSample = Some(sample);
+  mReset = false;
   {
     MonitorAutoLock mon(mMonitor);
     mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
   }
-  mLastSeek = Some(aTime);
   return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
 
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 {
-  if (mLastSeek) {
+  if (mReset) {
     // If a seek (or reset) was recently performed, we ensure that the data
     // we are about to retrieve is still available.
     TimeIntervals buffered = mManager->Buffered(mType);
     buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
 
-    if (!buffered.Contains(mLastSeek.ref())) {
+    if (!buffered.Contains(TimeUnit::FromMicroseconds(0))) {
       return SamplesPromise::CreateAndReject(
         mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
                               DemuxerFailureReason::WAITING_FOR_DATA, __func__);
     }
-    mLastSeek.reset();
+    mReset = false;
   }
-  bool error;
-  RefPtr<MediaRawData> sample =
-    mManager->GetSample(mType,
-                        MediaSourceDemuxer::EOS_FUZZ,
-                        error);
-  if (!sample) {
-    if (error) {
-      return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+  bool error = false;
+  RefPtr<MediaRawData> sample;
+  if (mNextSample) {
+    sample = mNextSample.ref();
+    mNextSample.reset();
+  } else {
+    sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, error);
+    if (!sample) {
+      if (error) {
+        return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
+      }
+      return SamplesPromise::CreateAndReject(
+        mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
+                              DemuxerFailureReason::WAITING_FOR_DATA, __func__);
     }
-    return SamplesPromise::CreateAndReject(
-      mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
-                            DemuxerFailureReason::WAITING_FOR_DATA, __func__);
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->mSamples.AppendElement(sample);
