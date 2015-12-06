@@ -106,7 +106,7 @@ nsPrefetchNode::OpenChannel()
     } else {
       securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
       if (corsMode == CORS_USE_CREDENTIALS) {
-        securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+        securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
       }
     }
     nsresult rv = NS_NewChannelInternal(getter_AddRefs(mChannel),

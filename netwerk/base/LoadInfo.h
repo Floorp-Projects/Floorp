@@ -101,7 +101,7 @@ private:
   // This function is the *only* function which can change the securityflags
   // of a loadinfo. It only exists because of the XHR code. Don't call it
   // from anywhere else!
-  void SetWithCredentialsSecFlag();
+  void SetIncludeCookiesSecFlag();
   friend class ::nsXMLHttpRequest;
 
   // if you add a member, please also update the copy constructor
