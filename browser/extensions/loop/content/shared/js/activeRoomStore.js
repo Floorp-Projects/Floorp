@@ -358,6 +358,7 @@ loop.store.ActiveRoomStore = (function() {
       this.setStoreState({
         roomState: ROOM_STATES.GATHER,
         roomToken: actionData.token,
+        roomCryptoKey: actionData.cryptoKey,
         standalone: true
       });
 

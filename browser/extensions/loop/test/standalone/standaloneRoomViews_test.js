@@ -457,6 +457,29 @@ describe("loop.standaloneRoomViews", function() {
         expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
       });
 
+      it("should set document.title to brand name when state is READY and roomName is undefined", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
+        view = mountTestComponent();
+        activeRoomStore.setStoreState({ roomName: undefined, roomState: ROOM_STATES.READY });
+
+        expect(fakeWindow.document.title).to.equal("clientShortname2");
+      });
+
+      it("should set document.title to roomContectUrls[0] and brand name when state is READY and roomContextUrls is present", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
+        view = mountTestComponent();
+        activeRoomStore.setStoreState({
+          roomName: undefined,
+          roomContextUrls: [{
+            description: "fakeStartPage",
+            location: null
+          }],
+          roomState: ROOM_STATES.READY
+        });
+
+        expect(fakeWindow.document.title).to.equal("fakeStartPage — clientShortname2");
+      });
+
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
           activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });

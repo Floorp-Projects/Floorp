@@ -449,15 +449,19 @@ loop.standaloneRoomViews = (function(mozL10n) {
     componentWillUpdate: function(nextProps, nextState) {
       if (this.state.roomState !== ROOM_STATES.READY &&
           nextState.roomState === ROOM_STATES.READY) {
-        var roomName = nextState.roomName ||
-                       this.state.roomName ||
-                       this.state.roomContextUrls[0].description ||
-                       this.state.roomContextUrls[0].location;
-
-        this.setTitle(mozL10n.get("standalone_title_with_room_name", {
-          roomName: roomName,
-          clientShortname: mozL10n.get("clientShortname2")
-        }));
+        var roomName = nextState.roomName;
+        if (!roomName && nextState.roomContextUrls) {
+          roomName = nextState.roomContextUrls[0].description ||
+              nextState.roomContextUrls[0].location;
+        }
+        if (!roomName) {
+          this.setTitle(mozL10n.get("clientShortname2"));
+        } else {
+          this.setTitle(mozL10n.get("standalone_title_with_room_name", {
+            roomName: roomName,
+            clientShortname: mozL10n.get("clientShortname2")
+          }));
+        }
       }
 
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
