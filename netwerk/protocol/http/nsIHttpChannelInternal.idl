@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(23b3f883-ce09-4350-8f67-1d9858d619e1)]
+[scriptable, uuid(dad4b7b1-b7cc-484f-9cac-5267ab0835a2)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -262,7 +262,5 @@ interface nsIHttpChannelInternal : nsISupports
      * the CORS preflight parameters.
      */
     [noscript]
-    void setCorsPreflightParameters(in StringArrayRef unsafeHeaders,
-                                    in boolean withCredentials,
-                                    in nsIPrincipal preflightPrincipal);
+    void setCorsPreflightParameters(in StringArrayRef unsafeHeaders);
 };

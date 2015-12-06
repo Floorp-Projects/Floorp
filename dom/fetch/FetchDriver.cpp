@@ -423,10 +423,7 @@ FetchDriver::HttpFetch()
     nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
     NS_ENSURE_TRUE(internalChan, NS_ERROR_DOM_BAD_URI);
 
-    rv = internalChan->SetCorsPreflightParameters(
-      unsafeHeaders,
-      mRequest->GetCredentialsMode() == RequestCredentials::Include,
-      mPrincipal);
+    rv = internalChan->SetCorsPreflightParameters(unsafeHeaders);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
