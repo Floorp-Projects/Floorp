@@ -123,7 +123,7 @@ using namespace mozilla::dom;
 #define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 10) // Internal
 #define XML_HTTP_REQUEST_BACKGROUND     (1 << 13) // Internal
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 14) // Internal
-#define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE (1 << 15) // Internal
+#define XML_HTTP_REQUEST_HAD_UPLOAD_LISTENERS_ON_SEND (1 << 15) // Internal
 #define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 16) // Internal
 #define XML_HTTP_REQUEST_TIMED_OUT (1 << 17) // Internal
 #define XML_HTTP_REQUEST_DELETED (1 << 18) // Internal
@@ -1717,7 +1717,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mState &= ~(XML_HTTP_REQUEST_USE_XSITE_AC |
-              XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE);
+              XML_HTTP_REQUEST_HAD_UPLOAD_LISTENERS_ON_SEND);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
@@ -2794,17 +2794,6 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     }
   }
 
-  if (httpChannel) {
-    nsAutoCString contentTypeHeader;
-    rv = httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                       contentTypeHeader);
-    if (NS_SUCCEEDED(rv)) {
-      if (!nsContentUtils::IsAllowedNonCorsContentType(contentTypeHeader)) {
-        mCORSUnsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
-      }
-    }
-  }
-
   ResetResponse();
 
   CheckChannelForCrossSiteRequest(mChannel);
@@ -2881,22 +2870,16 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   mRequestSentTime = PR_Now();
   StartTimeoutTimer();
 
-  // Check if we need to do a preflight request.
-  if (!mCORSUnsafeHeaders.IsEmpty() ||
-      (mUpload && mUpload->HasListeners()) ||
-      (!method.LowerCaseEqualsLiteral("get") &&
-       !method.LowerCaseEqualsLiteral("post") &&
-       !method.LowerCaseEqualsLiteral("head"))) {
-    mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE;
+  // Check if we should enabled cross-origin upload listeners.
+  if (mUpload && mUpload->HasListeners()) {
+    mState |= XML_HTTP_REQUEST_HAD_UPLOAD_LISTENERS_ON_SEND;
   }
 
   // Set up the preflight if needed
-  if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
-      (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE)) {
-    NS_ENSURE_TRUE(internalHttpChannel, NS_ERROR_DOM_BAD_URI);
-
-    rv = internalHttpChannel->SetCorsPreflightParameters(mCORSUnsafeHeaders);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!IsSystemXHR()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    loadInfo->SetCorsPreflightInfo(mCORSUnsafeHeaders,
+                                   mState & XML_HTTP_REQUEST_HAD_UPLOAD_LISTENERS_ON_SEND);
   }
 
   mIsMappedArrayBuffer = false;
@@ -3066,7 +3049,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
 
     if (!safeHeader) {
-      if (!mCORSUnsafeHeaders.Contains(header)) {
+      if (!mCORSUnsafeHeaders.Contains(header, nsCaseInsensitiveCStringArrayComparator())) {
         mCORSUnsafeHeaders.AppendElement(header);
       }
     }
@@ -3380,13 +3363,6 @@ nsXMLHttpRequest::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
     CheckChannelForCrossSiteRequest(aNewChannel);
-
-    // Disable redirects for preflighted cross-site requests entirely for now
-    if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
-        (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE)) {
-       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-       return NS_ERROR_DOM_BAD_URI;
-    }
   }
 
   // Prepare to receive callback
@@ -3545,7 +3521,7 @@ bool
 nsXMLHttpRequest::AllowUploadProgress()
 {
   return !(mState & XML_HTTP_REQUEST_USE_XSITE_AC) ||
-    (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE);
+    (mState & XML_HTTP_REQUEST_HAD_UPLOAD_LISTENERS_ON_SEND);
 }
 
 /////////////////////////////////////////////////////

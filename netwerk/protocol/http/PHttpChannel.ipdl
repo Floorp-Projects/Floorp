@@ -9,15 +9,13 @@ include protocol PNecko;
 include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
+include NeckoChannelParams;
 
 include protocol PBlob; //FIXME: bug #792908
 
 include "mozilla/net/NeckoMessageUtils.h";
 
-using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
-using class nsHttpResponseHead from "nsHttpResponseHead.h";
-using struct nsHttpAtom from "nsHttp.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 
@@ -47,7 +45,8 @@ parent:
 
   // Reports approval/veto of redirect by child process redirect observers
   Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
-                  uint32_t loadFlags, OptionalURIParams apiRedirectTo);
+                  uint32_t loadFlags, OptionalURIParams apiRedirectTo,
+                  OptionalCorsPreflightArgs corsPreflightArgs);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow

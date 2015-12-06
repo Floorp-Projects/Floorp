@@ -881,6 +881,11 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     return NS_OK;
   }
 
+  // Check if we need to do a preflight, and if so set one up. This must be
+  // called once we know that the request is going, or has gone, cross-origin.
+  rv = CheckPreflightNeeded(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // It's a cross site load
   mHasBeenCrossSite = true;
 
@@ -909,6 +914,71 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     rv = http->SetLoadFlags(flags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel)
+{
+  // If this caller isn't using AsyncOpen2, or if this *is* a preflight channel,
+  // then we shouldn't initiate preflight for this channel.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo ||
+      loadInfo->GetSecurityMode() !=
+        nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS ||
+      loadInfo->GetIsPreflight()) {
+    return NS_OK;
+  }
+
+  bool doPreflight = loadInfo->GetForcePreflight();
+
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
+  NS_ENSURE_TRUE(http, NS_ERROR_DOM_BAD_URI);
+  nsAutoCString method;
+  http->GetRequestMethod(method);
+  if (!method.LowerCaseEqualsLiteral("get") &&
+      !method.LowerCaseEqualsLiteral("post") &&
+      !method.LowerCaseEqualsLiteral("head")) {
+    doPreflight = true;
+  }
+
+  // Avoid copying the array here
+  const nsTArray<nsCString>& loadInfoHeaders = loadInfo->CorsUnsafeHeaders();
+  if (!loadInfoHeaders.IsEmpty()) {
+    doPreflight = true;
+  }
+
+  // Add Content-Type header if needed
+  nsTArray<nsCString> headers;
+  nsAutoCString contentTypeHeader;
+  nsresult rv = http->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
+                                       contentTypeHeader);
+  // GetRequestHeader return an error if the header is not set. Don't add
+  // "content-type" to the list if that's the case.
+  if (NS_SUCCEEDED(rv) &&
+      !nsContentUtils::IsAllowedNonCorsContentType(contentTypeHeader) &&
+      !loadInfoHeaders.Contains(NS_LITERAL_CSTRING("content-type"),
+                                nsCaseInsensitiveCStringArrayComparator())) {
+    headers.AppendElements(loadInfoHeaders);
+    headers.AppendElement(NS_LITERAL_CSTRING("content-type"));
+    doPreflight = true;
+  }
+
+  if (!doPreflight) {
+    return NS_OK;
+  }
+
+  // A preflight is needed. But if we've already been cross-site, then
+  // we already did a preflight when that happened, and so we're not allowed
+  // to do another preflight again.
+  NS_ENSURE_FALSE(mHasBeenCrossSite, NS_ERROR_DOM_BAD_URI);
+
+  nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(http);
+  NS_ENSURE_TRUE(internal, NS_ERROR_DOM_BAD_URI);
+
+  internal->SetCorsPreflightParameters(
+    headers.IsEmpty() ? loadInfoHeaders : headers);
 
   return NS_OK;
 }
@@ -1284,6 +1354,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = static_cast<mozilla::LoadInfo*>
     (originalLoadInfo.get())->CloneForNewRequest();
+  static_cast<mozilla::LoadInfo*>(loadInfo.get())->SetIsPreflight();
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   rv = aRequestChannel->GetLoadGroup(getter_AddRefs(loadGroup));
