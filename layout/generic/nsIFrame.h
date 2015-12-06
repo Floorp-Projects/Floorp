@@ -1632,12 +1632,11 @@ public:
     // current line total is negative.  When it is, we need to ignore
     // optional breaks to prevent min-width from ending up bigger than
     // pref-width.
-    void ForceBreak(nsRenderingContext *aRenderingContext);
+    void ForceBreak();
 
     // If the break here is actually taken, aHyphenWidth must be added to the
     // width of the current line.
-    void OptionallyBreak(nsRenderingContext *aRenderingContext,
-                         nscoord aHyphenWidth = 0);
+    void OptionallyBreak(nscoord aHyphenWidth = 0);
 
     // The last text frame processed so far in the current line, when
     // the last characters in that text frame are relevant for line
@@ -1651,7 +1650,7 @@ public:
   };
 
   struct InlinePrefISizeData : public InlineIntrinsicISizeData {
-    void ForceBreak(nsRenderingContext *aRenderingContext);
+    void ForceBreak();
   };
 
   /**

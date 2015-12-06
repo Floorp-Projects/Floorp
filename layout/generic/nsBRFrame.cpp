@@ -170,7 +170,7 @@ BRFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinISizeData *aData)
 {
   if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
-    aData->ForceBreak(aRenderingContext);
+    aData->ForceBreak();
   }
 }
 
@@ -179,7 +179,7 @@ BRFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
   if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
-    aData->ForceBreak(aRenderingContext);
+    aData->ForceBreak();
   }
 }
 
