@@ -2457,9 +2457,9 @@ nsImageFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
     parent->StyleText()->WhiteSpaceCanWrap(parent) &&
     !IsInAutoWidthTableCellForQuirk(this);
 
-  if (canBreak)
-    aData->OptionallyBreak(aRenderingContext);
- 
+  if (canBreak) {
+    aData->OptionallyBreak();
+  }
   aData->trailingWhitespace = 0;
   aData->skipWhitespace = false;
   aData->trailingTextFrame = nullptr;
@@ -2467,7 +2467,7 @@ nsImageFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                             this, nsLayoutUtils::MIN_ISIZE);
   aData->atStartOfLine = false;
 
-  if (canBreak)
-    aData->OptionallyBreak(aRenderingContext);
-
+  if (canBreak) {
+    aData->OptionallyBreak();
+  }
 }
