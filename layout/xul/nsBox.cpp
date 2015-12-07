@@ -202,7 +202,7 @@ nsBox::Shutdown()
 }
 
 nsresult
-nsBox::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
+nsBox::RelayoutChildAtOrdinal(nsIFrame* aChild)
 {
   return NS_OK;
 }
@@ -452,11 +452,11 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState)
 }
 
 nscoord
-nsBox::GetFlex(nsBoxLayoutState& aState)
+nsBox::GetFlex()
 {
   nscoord flex = 0;
 
-  nsIFrame::AddCSSFlex(aState, this, flex);
+  nsIFrame::AddCSSFlex(this, flex);
 
   return flex;
 }
@@ -834,7 +834,7 @@ nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
 }
 
 bool
-nsIFrame::AddCSSFlex(nsBoxLayoutState& aState, nsIFrame* aBox, nscoord& aFlex)
+nsIFrame::AddCSSFlex(nsIFrame* aBox, nscoord& aFlex)
 {
     bool flexSet = false;
 
