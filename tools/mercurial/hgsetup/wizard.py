@@ -8,6 +8,7 @@ import difflib
 import errno
 import os
 import shutil
+import ssl
 import stat
 import sys
 import subprocess
@@ -466,7 +467,15 @@ class MercurialSetupWizard(object):
                     print('Cleaning up old repository: %s' % path)
                     shutil.rmtree(path)
 
-        c.add_mozilla_host_fingerprints()
+        # Python + Mercurial didn't have terrific TLS handling until Python
+        # 2.7.9 and Mercurial 3.4. For this reason, it was recommended to pin
+        # certificates in Mercurial config files. In modern versions of
+        # Mercurial, the system CA store is used and old, legacy TLS protocols
+        # are disabled. The default connection/security setting should
+        # be sufficient and pinning certificates is no longer needed.
+        have_modern_ssl = hasattr(ssl.SSLContext, 'load_default_certs')
+        if hg_version < LooseVersion('3.4') or not have_modern_ssl:
+            c.add_mozilla_host_fingerprints()
 
         # References to multiple version-control-tools checkouts can confuse
         # version-control-tools, since various Mercurial extensions resolve
