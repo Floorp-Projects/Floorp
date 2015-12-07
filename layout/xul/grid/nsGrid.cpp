@@ -571,12 +571,11 @@ nsGrid::GetBoxTotalMargin(nsIFrame* aBox, bool aIsHorizontal)
  * aLastIndex = -1
  */
 void
-nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState, 
-                          int32_t& aFirstIndex, 
-                          int32_t& aLastIndex, 
-                          nsGridRow*& aFirstRow,
-                          nsGridRow*& aLastRow,
-                          bool aIsHorizontal)
+nsGrid::GetFirstAndLastRow(int32_t& aFirstIndex,
+                           int32_t& aLastIndex,
+                           nsGridRow*& aFirstRow,
+                           nsGridRow*& aLastRow,
+                           bool aIsHorizontal)
 {
   aFirstRow = nullptr;
   aLastRow = nullptr;
@@ -625,7 +624,7 @@ nsGrid::GetFirstAndLastRow(nsBoxLayoutState& aState,
  * have a top or bottom margin. 
  */
 void
-nsGrid::GetRowOffsets(nsBoxLayoutState& aState, int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsHorizontal)
+nsGrid::GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsHorizontal)
 {
 
   RebuildIfNeeded();
@@ -698,7 +697,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, int32_t aIndex, nscoord& aTop, n
   int32_t lastIndex = 0;
   nsGridRow* firstRow = nullptr;
   nsGridRow* lastRow = nullptr;
-  GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, aIsHorizontal);
+  GetFirstAndLastRow(firstIndex, lastIndex, firstRow, lastRow, aIsHorizontal);
 
   if (aIndex == firstIndex || aIndex == lastIndex) {
     nscoord maxTop = 0;
@@ -818,7 +817,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHoriz
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
+  GetRowOffsets(aIndex, top, bottom, aIsHorizontal);
 
   // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid. 
@@ -829,7 +828,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHoriz
      {
        size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
-       nsGridLayout2::AddOffset(aState, box, size);
+       nsGridLayout2::AddOffset(box, size);
      }
 
      row->mPref = GET_HEIGHT(size, aIsHorizontal);
@@ -894,7 +893,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
+  GetRowOffsets(aIndex, top, bottom, aIsHorizontal);
 
   // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid. 
@@ -904,7 +903,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
      if (box) {
        size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
-       nsGridLayout2::AddOffset(aState, box, size);
+       nsGridLayout2::AddOffset(box, size);
      }
 
      row->mMin = GET_HEIGHT(size, aIsHorizontal) + top + bottom;
@@ -969,7 +968,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   // get the offsets so they are cached.
   nscoord top;
   nscoord bottom;
-  GetRowOffsets(aState, aIndex, top, bottom, aIsHorizontal);
+  GetRowOffsets(aIndex, top, bottom, aIsHorizontal);
 
   // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid. 
@@ -979,7 +978,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
      if (box) {
        size = box->GetPrefSize(aState);
        nsBox::AddMargin(box, size);
-       nsGridLayout2::AddOffset(aState, box, size);
+       nsGridLayout2::AddOffset(box, size);
      }
 
      row->mMax = GET_HEIGHT(size, aIsHorizontal);
@@ -1034,7 +1033,7 @@ nsGrid::IsGrid(nsIFrame* aBox)
  * tags are around us. Their flexibilty will affect ours.
  */
 nscoord
-nsGrid::GetRowFlex(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizontal)
+nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
 {
   RebuildIfNeeded();
 
@@ -1106,8 +1105,8 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizontal)
       // not flexible.
       if (parentsParent) {
         if (!IsGrid(parentsParent)) {
-          nscoord flex = parent->GetFlex(aState);
-          nsIFrame::AddCSSFlex(aState, parent, flex);
+          nscoord flex = parent->GetFlex();
+          nsIFrame::AddCSSFlex(parent, flex);
           if (flex == 0) {
             row->mFlex = 0;
             return row->mFlex;
@@ -1120,8 +1119,8 @@ nsGrid::GetRowFlex(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizontal)
     }
     
     // get the row flex.
-    row->mFlex = box->GetFlex(aState);
-    nsIFrame::AddCSSFlex(aState, box, row->mFlex);
+    row->mFlex = box->GetFlex();
+    nsIFrame::AddCSSFlex(box, row->mFlex);
   }
 
   return row->mFlex;

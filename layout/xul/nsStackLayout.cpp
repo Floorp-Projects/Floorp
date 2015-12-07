@@ -70,7 +70,7 @@ nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       AddMargin(child, pref);
       nsMargin offset;
-      GetOffset(aState, child, offset);
+      GetOffset(child, offset);
       pref.width += offset.LeftRight();
       pref.height += offset.TopBottom();
       AddLargestSize(prefSize, pref);
@@ -96,7 +96,7 @@ nsStackLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       AddMargin(child, min);
       nsMargin offset;
-      GetOffset(aState, child, offset);
+      GetOffset(child, offset);
       min.width += offset.LeftRight();
       min.height += offset.TopBottom();
       AddLargestSize(minSize, min);
@@ -125,7 +125,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       AddMargin(child, max);
       nsMargin offset;
-      GetOffset(aState, child, offset);
+      GetOffset(child, offset);
       max.width += offset.LeftRight();
       max.height += offset.TopBottom();
       AddSmallestSize(maxSize, max);
@@ -161,7 +161,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 uint8_t
-nsStackLayout::GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& aOffset)
+nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
 {
   aOffset = nsMargin(0, 0, 0, 0);
 
@@ -287,7 +287,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
           // obtain our offset from the top left border of the stack's content box.
           nsMargin offset;
-          uint8_t offsetSpecified = GetOffset(aState, child, offset);
+          uint8_t offsetSpecified = GetOffset(child, offset);
 
           // Set the position and size based on which offsets have been specified:
           //   left only - offset from left edge, preferred width

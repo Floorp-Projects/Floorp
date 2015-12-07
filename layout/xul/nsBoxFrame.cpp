@@ -885,12 +885,12 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nscoord
-nsBoxFrame::GetFlex(nsBoxLayoutState& aBoxLayoutState)
+nsBoxFrame::GetFlex()
 {
   if (!DoesNeedRecalc(mFlex))
      return mFlex;
 
-  mFlex = nsBox::GetFlex(aBoxLayoutState);
+  mFlex = nsBox::GetFlex();
 
   return mFlex;
 }
@@ -1226,7 +1226,6 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
       FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
   else if (aAttribute == nsGkAtoms::ordinal) {
-    nsBoxLayoutState state(PresContext());
     nsIFrame* parent = GetParentBox(this);
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
@@ -1235,7 +1234,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     // principal children.
     if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
         StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
-      parent->RelayoutChildAtOrdinal(state, this);
+      parent->RelayoutChildAtOrdinal(this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
         FrameNeedsReflow(parent, nsIPresShell::eStyleChange,
@@ -1502,8 +1501,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
         spacerSize = debugBorder.left - onePixel*4;
     }
 
-    nsBoxLayoutState state(GetPresContext());
-    nscoord flex = kid->GetFlex(state);
+    nscoord flex = kid->GetFlex();
 
     if (!kid->IsCollapsed()) {
       if (isHorizontal) 
@@ -1788,12 +1786,12 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     nsIFrame::AddCSSPrefSize(child, prefSizeCSS, widthSet, heightSet);
                     nsIFrame::AddCSSMinSize (state, child, minSizeCSS, widthSet, heightSet);
                     nsIFrame::AddCSSMaxSize (child, maxSizeCSS, widthSet, heightSet);
-                    nsIFrame::AddCSSFlex    (state, child, flexCSS);
+                    nsIFrame::AddCSSFlex    (child, flexCSS);
 
                     nsSize prefSize = child->GetPrefSize(state);
                     nsSize minSize = child->GetMinSize(state);
                     nsSize maxSize = child->GetMaxSize(state);
-                    nscoord flexSize = child->GetFlex(state);
+                    nscoord flexSize = child->GetFlex();
                     nscoord ascentSize = child->GetBoxAscent(state);
 
                     char min[100];
@@ -1940,7 +1938,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect
 }
 
 nsresult
-nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
+nsBoxFrame::RelayoutChildAtOrdinal(nsIFrame* aChild)
 {
   if (!SupportsOrdinalsInChildren())
     return NS_OK;
