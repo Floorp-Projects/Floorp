@@ -2886,8 +2886,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                     gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
             }
             if (boundary != ' ' ||
-                !aTextRun->SetSpaceGlyphIfSimple(this, aContext,
-                                                 aRunStart + i, ch,
+                !aTextRun->SetSpaceGlyphIfSimple(this, aRunStart + i, ch,
                                                  orientation)) {
                 // Currently, the only "boundary" characters we recognize are
                 // space and no-break space, which are both 8-bit, so we force

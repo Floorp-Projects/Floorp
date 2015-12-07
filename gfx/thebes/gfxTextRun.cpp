@@ -1321,8 +1321,7 @@ void
 gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
                           uint32_t aCharIndex, uint16_t aOrientation)
 {
-    if (SetSpaceGlyphIfSimple(aFont, aContext, aCharIndex, ' ',
-                              aOrientation)) {
+    if (SetSpaceGlyphIfSimple(aFont, aCharIndex, ' ', aOrientation)) {
         return;
     }
 
@@ -1350,9 +1349,8 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
 }
 
 bool
-gfxTextRun::SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
-                                  uint32_t aCharIndex, char16_t aSpaceChar,
-                                  uint16_t aOrientation)
+gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
+                                  char16_t aSpaceChar, uint16_t aOrientation)
 {
     uint32_t spaceGlyph = aFont->GetSpaceGlyph();
     if (!spaceGlyph || !CompressedGlyph::IsSimpleGlyphID(spaceGlyph)) {

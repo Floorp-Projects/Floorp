@@ -1,0 +1,26 @@
+$inherits:
+  from: 'tasks/tests/fx_desktop_unittest.yml'
+task:
+  payload:
+    command:
+      - --mochitesttest-suite=jetpack-addon
+    env:
+  scopes:
+    - 'docker-worker:capability:device:loopbackVideo'
+    - 'docker-worker:capability:device:loopbackAudio'
+  metadata:
+    name: '[TC] Linux64 mochitest-jetpack'
+    description: Mochitest jetpack run
+  payload:
+    capabilities:
+      devices:
+        loopbackVideo: true
+        loopbackAudio: true
+  extra:
+    suite:
+      name: mochitest
+      flavor: jetpack-package
+    treeherder:
+      groupName: Desktop mochitests
+      groupSymbol: tc-M
+      symbol: J

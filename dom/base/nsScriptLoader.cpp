@@ -298,7 +298,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
     : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
   if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
-    securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
   }
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 

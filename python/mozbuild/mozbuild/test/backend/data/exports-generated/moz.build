@@ -1,0 +1,12 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+EXPORTS += ['!bar.h', 'foo.h']
+EXPORTS.mozilla += ['!mozilla2.h', 'mozilla1.h']
+EXPORTS.mozilla.dom += ['!dom2.h', '!dom3.h', 'dom1.h']
+EXPORTS.gfx += ['gfx.h']
+
+GENERATED_FILES += ['bar.h']
+GENERATED_FILES += ['mozilla2.h']
+GENERATED_FILES += ['dom2.h']
+GENERATED_FILES += ['dom3.h']

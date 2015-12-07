@@ -162,7 +162,8 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     mContentClient->BeginPaintBuffer(this, flags);
   mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
-  if (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state)) {
+  DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state);
+  if (target && target->IsValid()) {
     // The area that became invalid and is visible needs to be repainted
     // (this could be the whole visible area if our buffer switched
     // from RGB to RGBA, because we might need to repaint with
@@ -183,16 +184,22 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     Mutated();
     ctx = nullptr;
     mContentClient->ReturnDrawTargetToBuffer(target);
+    target = nullptr;
 
     RenderTraceInvalidateEnd(this, "FFFF00");
   } else {
+    if (target) {
+      mContentClient->ReturnDrawTargetToBuffer(target);
+      target = nullptr;
+    }
+
     // It's possible that state.mRegionToInvalidate is nonempty here,
     // if we are shrinking the valid region to nothing. So use mRegionToDraw
     // instead.
     NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
                      "No context when we have something to draw, resource exhaustion?");
   }
-  
+
   for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
     ReadbackProcessor::Update& update = readbackUpdates[i];
     nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();

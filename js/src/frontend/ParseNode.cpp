@@ -282,7 +282,8 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_CLASSMETHOD:
       case PNK_NEWTARGET:
       case PNK_SETTHIS:
-      case PNK_FOR: {
+      case PNK_FOR:
+      case PNK_COMPREHENSIONFOR: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         stack->push(pn->pn_left);
         stack->push(pn->pn_right);
@@ -493,15 +494,16 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_CLASSMETHODLIST:
         return PushListNodeChildren(pn, stack);
 
-      // Array comprehension nodes are lists with a single child -- PNK_FOR for
-      // comprehensions, PNK_LEXICALSCOPE for legacy comprehensions.  Probably
-      // this should be a non-list eventually.
+      // Array comprehension nodes are lists with a single child:
+      // PNK_COMPREHENSIONFOR for comprehensions, PNK_LEXICALSCOPE for legacy
+      // comprehensions.  Probably this should be a non-list eventually.
       case PNK_ARRAYCOMP: {
 #ifdef DEBUG
         MOZ_ASSERT(pn->isKind(PNK_ARRAYCOMP));
         MOZ_ASSERT(pn->isArity(PN_LIST));
         MOZ_ASSERT(pn->pn_count == 1);
-        MOZ_ASSERT(pn->pn_head->isKind(PNK_LEXICALSCOPE) || pn->pn_head->isKind(PNK_FOR));
+        MOZ_ASSERT(pn->pn_head->isKind(PNK_LEXICALSCOPE) ||
+                   pn->pn_head->isKind(PNK_COMPREHENSIONFOR));
 #endif
         return PushListNodeChildren(pn, stack);
       }

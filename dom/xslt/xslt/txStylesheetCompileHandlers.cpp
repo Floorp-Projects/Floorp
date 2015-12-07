@@ -20,6 +20,7 @@
 #include "txNamespaceMap.h"
 #include "txURIUtils.h"
 #include "txXSLTFunctions.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 
@@ -756,10 +757,12 @@ txFnStartImport(int32_t aNamespaceID,
                       nsGkAtoms::href, true, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString absUri;
-    URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI,
-                          absUri);
-    rv = aState.loadImportedStylesheet(absUri, importPtr->mFrame);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), attr->mValue, nullptr,
+                   aState.mElementContext->mBaseURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aState.loadImportedStylesheet(uri, importPtr->mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aState.pushHandlerTable(gTxIgnoreHandler);
@@ -787,10 +790,12 @@ txFnStartInclude(int32_t aNamespaceID,
                                nsGkAtoms::href, true, &attr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString absUri;
-    URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI,
-                          absUri);
-    rv = aState.loadIncludedStylesheet(absUri);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), attr->mValue, nullptr,
+                   aState.mElementContext->mBaseURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aState.loadIncludedStylesheet(uri);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aState.pushHandlerTable(gTxIgnoreHandler);

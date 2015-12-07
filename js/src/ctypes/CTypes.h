@@ -7,6 +7,7 @@
 #define ctypes_CTypes_h
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 
 #include "ffi.h"
 #include "jsalloc.h"
@@ -25,14 +26,6 @@ namespace ctypes {
 ** Utility classes
 *******************************************************************************/
 
-// Container class for Vector, using SystemAllocPolicy.
-template<class T, size_t N = 0>
-class Array : public Vector<T, N, SystemAllocPolicy>
-{
-  static_assert(!mozilla::IsSame<T, JS::Value>::value,
-                "use JS::AutoValueVector instead");
-};
-
 // String and AutoString classes, based on Vector.
 typedef Vector<char16_t,  0, SystemAllocPolicy> String;
 typedef Vector<char16_t, 64, SystemAllocPolicy> AutoString;
@@ -42,7 +35,7 @@ typedef Vector<char,     64, SystemAllocPolicy> AutoCString;
 // Convenience functions to append, insert, and compare Strings.
 template <class T, size_t N, class AP, size_t ArrayLength>
 void
-AppendString(Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+AppendString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -56,7 +49,7 @@ AppendString(Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 
 template <class T, size_t N, class AP>
 void
-AppendChars(Vector<T, N, AP>& v, const char c, size_t count)
+AppendChars(mozilla::Vector<T, N, AP>& v, const char c, size_t count)
 {
   size_t vlen = v.length();
   if (!v.resize(vlen + count))
@@ -68,7 +61,7 @@ AppendChars(Vector<T, N, AP>& v, const char c, size_t count)
 
 template <class T, size_t N, class AP>
 void
-AppendUInt(Vector<T, N, AP>& v, unsigned n)
+AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
 {
   char array[16];
   size_t alen = JS_snprintf(array, 16, "%u", n);
@@ -82,14 +75,14 @@ AppendUInt(Vector<T, N, AP>& v, unsigned n)
 
 template <class T, size_t N, size_t M, class AP>
 void
-AppendString(Vector<T, N, AP>& v, Vector<T, M, AP>& w)
+AppendString(mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
 {
   v.append(w.begin(), w.length());
 }
 
 template <size_t N, class AP>
 void
-AppendString(Vector<char16_t, N, AP>& v, JSString* str)
+AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   JSLinearString* linear = str->ensureLinear(nullptr);
@@ -104,7 +97,7 @@ AppendString(Vector<char16_t, N, AP>& v, JSString* str)
 
 template <size_t N, class AP>
 void
-AppendString(Vector<char, N, AP>& v, JSString* str)
+AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -130,7 +123,7 @@ AppendString(Vector<char, N, AP>& v, JSString* str)
 
 template <class T, size_t N, class AP, size_t ArrayLength>
 void
-PrependString(Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+PrependString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -148,7 +141,7 @@ PrependString(Vector<T, N, AP>& v, const char (&array)[ArrayLength])
 
 template <size_t N, class AP>
 void
-PrependString(Vector<char16_t, N, AP>& v, JSString* str)
+PrependString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -306,12 +299,12 @@ struct FunctionInfo
 
   // A fixed array of known parameter types, excluding any variadic
   // parameters (if mIsVariadic).
-  Array<JS::Heap<JSObject*> > mArgTypes;
+  Vector<JS::Heap<JSObject*>, 0, SystemAllocPolicy> mArgTypes;
 
   // A variable array of ffi_type*s corresponding to both known parameter
   // types and dynamic (variadic) parameter types. Longer than mArgTypes
   // only if mIsVariadic.
-  Array<ffi_type*> mFFITypes;
+  Vector<ffi_type*, 0, SystemAllocPolicy> mFFITypes;
 
   // Flag indicating whether the function behaves like a C function with
   // ... as the final formal parameter.

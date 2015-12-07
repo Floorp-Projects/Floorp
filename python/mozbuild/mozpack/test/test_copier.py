@@ -421,6 +421,50 @@ class TestFileCopier(TestWithTmpDir):
         # existing when it does not.
         self.assertIn(self.tmppath('dest/foo/bar'), result.existing_files)
 
+    def test_remove_unaccounted_file_registry(self):
+        """Test FileCopier.copy(remove_unaccounted=FileRegistry())"""
+
+        dest = self.tmppath('dest')
+
+        copier = FileCopier()
+        copier.add('foo/bar/baz', GeneratedFile('foobarbaz'))
+        copier.add('foo/bar/qux', GeneratedFile('foobarqux'))
+        copier.add('foo/hoge/fuga', GeneratedFile('foohogefuga'))
+        copier.add('foo/toto/tata', GeneratedFile('footototata'))
+
+        os.makedirs(os.path.join(dest, 'bar'))
+        with open(os.path.join(dest, 'bar', 'bar'), 'w') as fh:
+            fh.write('barbar');
+        os.makedirs(os.path.join(dest, 'foo', 'toto'))
+        with open(os.path.join(dest, 'foo', 'toto', 'toto'), 'w') as fh:
+            fh.write('foototototo');
+
+        result = copier.copy(dest, remove_unaccounted=False)
+
+        self.assertEqual(self.all_files(dest),
+                         set(copier.paths()) | { 'foo/toto/toto', 'bar/bar'})
+        self.assertEqual(self.all_dirs(dest),
+                         {'foo/bar', 'foo/hoge', 'foo/toto', 'bar'})
+
+        copier2 = FileCopier()
+        copier2.add('foo/hoge/fuga', GeneratedFile('foohogefuga'))
+
+        # We expect only files copied from the first copier to be removed,
+        # not the extra file that was there beforehand.
+        result = copier2.copy(dest, remove_unaccounted=copier)
+
+        self.assertEqual(self.all_files(dest),
+                         set(copier2.paths()) | { 'foo/toto/toto', 'bar/bar'})
+        self.assertEqual(self.all_dirs(dest),
+                         {'foo/hoge', 'foo/toto', 'bar'})
+        self.assertEqual(result.updated_files,
+                         {self.tmppath('dest/foo/hoge/fuga')})
+        self.assertEqual(result.existing_files, set())
+        self.assertEqual(result.removed_files, {self.tmppath(p) for p in
+            ('dest/foo/bar/baz', 'dest/foo/bar/qux', 'dest/foo/toto/tata')})
+        self.assertEqual(result.removed_directories,
+                         {self.tmppath('dest/foo/bar')})
+
 
 class TestFilePurger(TestWithTmpDir):
     def test_file_purger(self):

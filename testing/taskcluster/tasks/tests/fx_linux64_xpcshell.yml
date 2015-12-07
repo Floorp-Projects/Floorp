@@ -1,13 +1,13 @@
 ---
 $inherits:
-  from: 'tasks/tests/fx_unittest_base.yml'
+  from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
   metadata:
     name: '[TC] Linux64 xpcshell {{chunk}}'
     description: XPCShell run {{chunk}}
   extra:
     chunks:
-      total: 2
+      total: 4
     suite:
       name: xpcshell
       flavor: xpcshell

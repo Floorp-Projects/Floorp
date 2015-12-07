@@ -4,6 +4,7 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/httpd.js");
 
 var server = new HttpServer();
@@ -53,16 +54,11 @@ NotificationCallbacks.prototype = {
 var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
 
 function setup_chan(path, isPrivate, callback) {
-  var uri = gIoService.newURI(gImgPath, null, null);
-  var chan = gIoService.newChannelFromURI2(uri,
-                                           null,      // aLoadingNode
-                                           Services.scriptSecurityManager.getSystemPrincipal(),
-                                           null,      // aTriggeringPrincipal
-                                           Ci.nsILoadInfo.SEC_NORMAL,
-                                           Ci.nsIContentPolicy.TYPE_OTHER);
+  var uri = NetUtil.newURI(gImgPath);
+  var chan =  NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
   chan.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var channelListener = new ChannelListener();
-  chan.asyncOpen(channelListener, null);
+  chan.asyncOpen2(channelListener);
 
   var listener = new ImageListener(null, callback);
   var outlistener = {};

@@ -335,7 +335,7 @@ gfxHarfBuzzShaper::HBGetGlyphHAdvance(hb_font_t *font, void *font_data,
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
     gfxFont *gfxfont = fcd->mShaper->GetFont();
     if (gfxfont->ProvidesGlyphWidths()) {
-        return gfxfont->GetGlyphWidth(*fcd->mContext->GetDrawTarget(), glyph);
+        return gfxfont->GetGlyphWidth(*fcd->mDrawTarget, glyph);
     }
     return fcd->mShaper->GetGlyphHAdvance(glyph);
 }
@@ -1475,7 +1475,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
         return false;
     }
 
-    mCallbackData.mContext = aContext;
+    mCallbackData.mDrawTarget = aContext->GetDrawTarget();
     mUseVerticalPresentationForms = false;
 
     if (!Initialize()) {

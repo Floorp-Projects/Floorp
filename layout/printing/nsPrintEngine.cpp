@@ -1519,7 +1519,7 @@ nsPrintEngine::FirePrintingErrorEvent(nsresult aPrintError)
 {
   nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
   nsCOMPtr<nsIDocument> doc = cv->GetDocument();
-  nsCOMPtr<nsIDOMCustomEvent> event =
+  RefPtr<CustomEvent> event =
     NS_NewDOMCustomEvent(doc, nullptr, nullptr);
 
   MOZ_ASSERT(event);

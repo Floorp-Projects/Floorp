@@ -339,6 +339,10 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newComprehensionFor(uint32_t begin, Node forHead, Node body) {
+        return NodeGeneric;
+    }
+
     Node newForHead(ParseNodeKind kind, Node decls, Node lhs, Node rhs, const TokenPos& pos) {
         return NodeGeneric;
     }

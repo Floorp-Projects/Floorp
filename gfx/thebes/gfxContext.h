@@ -367,13 +367,6 @@ public:
     gfxFloat CurrentMiterLimit() const;
 
     /**
-     ** Fill Properties
-     **/
-
-    void SetFillRule(FillRule rule);
-    FillRule CurrentFillRule() const;
-
-    /**
      * Sets the operator used for all further drawing. The operator affects
      * how drawing something will modify the destination. For example, the
      * OVER operator will do alpha blending of source and destination, while
@@ -496,8 +489,6 @@ private:
     AzureState()
       : op(mozilla::gfx::CompositionOp::OP_OVER)
       , color(0, 0, 0, 1.0f)
-      , clipWasReset(false)
-      , fillRule(mozilla::gfx::FillRule::FILL_WINDING)
       , aaMode(mozilla::gfx::AntialiasMode::SUBPIXEL)
       , patternTransformChanged(false)
     {}
@@ -517,11 +508,8 @@ private:
     };
     nsTArray<PushedClip> pushedClips;
     nsTArray<Float> dashPattern;
-    bool clipWasReset;
-    mozilla::gfx::FillRule fillRule;
     StrokeOptions strokeOptions;
     RefPtr<DrawTarget> drawTarget;
-    RefPtr<DrawTarget> parentTarget;
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;

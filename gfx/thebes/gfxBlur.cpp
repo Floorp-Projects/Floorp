@@ -919,6 +919,8 @@ gfxAlphaBoxBlur::GetInsetBlur(IntMargin& aExtendDestBy,
                               const RectCornerRadii& aInnerClipRadii,
                               const Color& aShadowColor,
                               const bool& aHasBorderRadius,
+                              const Point aShadowOffset,
+                              bool& aMovedOffset,
                               gfxContext* aDestinationCtx)
 {
   if (!gBlurCache) {
@@ -933,6 +935,19 @@ gfxAlphaBoxBlur::GetInsetBlur(IntMargin& aExtendDestBy,
                                 aShadowClipRect, aHasBorderRadius,
                                 aInnerClipRadii);
 
+  // If we have a shadow offset larger than the min rect,
+  // there's no clean way we can properly create a min rect with the offset
+  // in the correct place and still render correctly.  In those cases,
+  // fallback to just rendering the dest rect as is.
+  bool useDestRect = (std::abs(aShadowOffset.x) > aSlice.left) ||
+                     (std::abs(aShadowOffset.y) > aSlice.top);
+  aMovedOffset = false;
+  if (useDestRect) {
+    aDestinationRect.ToIntRect(&outerRect);
+    aShadowClipRect.ToIntRect(&innerRect);
+    aMovedOffset = true;
+  }
+
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
   BlurCacheData* cached =
       gBlurCache->LookupInsetBoxShadow(outerRect.Size(), innerRect.Size(),
@@ -940,7 +955,7 @@ gfxAlphaBoxBlur::GetInsetBlur(IntMargin& aExtendDestBy,
                                        &aInnerClipRadii, aShadowColor,
                                        aHasBorderRadius,
                                        destDrawTarget->GetBackendType());
-  if (cached) {
+  if (cached && !useDestRect) {
     aExtendDestBy = cached->mExtendDest;
     // Need to extend it twice: once for the outer rect and once for the inner rect.
     aSlice += aExtendDestBy;
@@ -985,14 +1000,22 @@ gfxAlphaBoxBlur::GetInsetBlur(IntMargin& aExtendDestBy,
 
   IntRect blurRect(topLeft, minInsetBlur->GetSize());
   aExtendDestBy = blurRect - outerRect;
-  aSlice += aExtendDestBy;
-  aSlice += aExtendDestBy;
 
-  CacheInsetBlur(outerRect.Size(), innerRect.Size(),
+  if (useDestRect) {
+    // Since we're just going to paint the actual rect to the destination
+    aSlice.SizeTo(0, 0, 0, 0);
+  } else {
+    aSlice += aExtendDestBy;
+    aSlice += aExtendDestBy;
+
+    CacheInsetBlur(outerRect.Size(), innerRect.Size(),
                  aBlurRadius, aSpreadRadius,
                  &aInnerClipRadii, aShadowColor,
                  aHasBorderRadius, destDrawTarget->GetBackendType(),
                  aExtendDestBy, minInsetBlur);
+
+  }
+
   return minInsetBlur.forget();
 }
 
@@ -1027,11 +1050,13 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
 
   IntMargin extendDest;
   IntMargin slice;
+  bool didMoveOffset;
   RefPtr<SourceSurface> minInsetBlur = GetInsetBlur(extendDest, slice,
                                                     aDestinationRect, aShadowClipRect,
                                                     aBlurRadius, aSpreadRadius,
                                                     aInnerClipRadii, aShadowColor,
-                                                    aHasBorderRadius, aDestinationCtx);
+                                                    aHasBorderRadius, aShadowOffset,
+                                                    didMoveOffset, aDestinationCtx);
   if (!minInsetBlur) {
     return;
   }
@@ -1041,13 +1066,15 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
   srcInner.Deflate(Margin(slice));
 
   Rect dstOuter(aDestinationRect);
-  dstOuter.MoveBy(aShadowOffset);
+  if (!didMoveOffset) {
+    dstOuter.MoveBy(aShadowOffset);
+  }
   dstOuter.Inflate(Margin(extendDest));
   Rect dstInner = dstOuter;
   dstInner.Deflate(Margin(slice));
 
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
-  if (srcOuter.IsEqualInterior(srcInner)) {
+  if (dstOuter.Size() == srcOuter.Size()) {
     destDrawTarget->DrawSurface(minInsetBlur, dstOuter, srcOuter);
   } else {
     DrawBoxShadows(*destDrawTarget, minInsetBlur,

@@ -601,10 +601,15 @@ struct BytecodeEmitter
     bool emitSelfHostedResumeGenerator(ParseNode* pn);
     bool emitSelfHostedForceInterpreter(ParseNode* pn);
 
+    bool emitComprehensionFor(ParseNode* compFor);
+    bool emitComprehensionForIn(ParseNode* pn);
+    bool emitComprehensionForInOrOfVariables(ParseNode* pn, bool* letBlockScope);
+    bool emitComprehensionForOf(ParseNode* pn);
+
     bool emitDo(ParseNode* pn);
     bool emitFor(ParseNode* pn);
     bool emitForIn(ParseNode* pn);
-    bool emitForInOrOfVariables(ParseNode* pn, bool* letDecl);
+    bool emitForInOrOfVariables(ParseNode* pn);
     bool emitCStyleFor(ParseNode* pn);
     bool emitWhile(ParseNode* pn);
 

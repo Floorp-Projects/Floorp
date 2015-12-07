@@ -1,0 +1,4 @@
+<?xml-stylesheet type="text/xsl" href="file_bug1222624.xsl"?>
+<root>
+  <load>file_bug1222624_data2.xml</load>
+</root>

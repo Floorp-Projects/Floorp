@@ -126,6 +126,7 @@ class PackedScopeCoordinate
     F(WHILE) \
     F(DOWHILE) \
     F(FOR) \
+    F(COMPREHENSIONFOR) \
     F(BREAK) \
     F(CONTINUE) \
     F(VAR) \
@@ -312,6 +313,8 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_FOR      binary      pn_left: either PNK_FORIN (for-in statement),
  *                            PNK_FOROF (for-of) or PNK_FORHEAD (for(;;))
  *                          pn_right: body
+ * PNK_COMPREHENSIONFOR     pn_left: either PNK_FORIN or PNK_FOROF
+ *              binary      pn_right: body
  * PNK_FORIN    ternary     pn_kid1: PNK_VAR to left of 'in', or nullptr
  *                          pn_kid2: PNK_NAME or destructuring expr
  *                            to left of 'in'; if pn_kid1, then this
@@ -619,7 +622,7 @@ class ParseNode
             ParseNode*  left;
             ParseNode*  right;
             union {
-                unsigned iflags;        /* JSITER_* flags for PNK_FOR node */
+                unsigned iflags;        /* JSITER_* flags for PNK_{COMPREHENSION,}FOR node */
                 ObjectBox* objbox;      /* only for PN_BINARY_OBJ */
                 bool isStatic;          /* only for PNK_CLASSMETHOD */
                 uint32_t offset;        /* for the emitter's use on PNK_CASE nodes */
@@ -836,7 +839,8 @@ class ParseNode
         ParseNode* callee = this->pn_head;
         ParseNode* body = callee->pn_body;
         MOZ_ASSERT(body->isKind(PNK_STATEMENTLIST));
-        MOZ_ASSERT(body->last()->isKind(PNK_LEXICALSCOPE) || body->last()->isKind(PNK_FOR));
+        MOZ_ASSERT(body->last()->isKind(PNK_LEXICALSCOPE) ||
+                   body->last()->isKind(PNK_COMPREHENSIONFOR));
         return body->last();
     }
 #endif
