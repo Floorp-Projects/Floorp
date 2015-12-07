@@ -224,3 +224,39 @@ class MercurialConfig(object):
             del ext['bundleclone']
         except KeyError:
             pass
+
+    def have_wip(self):
+        return 'wip' in self._c.get('alias', {})
+
+    def install_wip_alias(self):
+        """hg wip shows a concise view of work in progress."""
+        alias = self._c.setdefault('alias', {})
+        alias['wip'] = 'log --graph --rev=wip --template=wip'
+
+        revsetalias = self._c.setdefault('revsetalias', {})
+        revsetalias['wip'] = ('('
+                'parents(not public()) '
+                'or not public() '
+                'or . '
+                'or (head() and branch(default))'
+            ') and (not obsolete() or unstable()^) '
+            'and not closed()')
+
+        templates = self._c.setdefault('templates', {})
+        templates['wip'] = ("'"
+            # prefix with branch name
+            '{label("log.branch", branches)} '
+            # rev:node
+            '{label("changeset.{phase}", rev)}'
+            '{label("changeset.{phase}", ":")}'
+            '{label("changeset.{phase}", short(node))} '
+            # just the username part of the author, for brevity
+            '{label("grep.user", author|user)}'
+            # tags and bookmarks
+            '{label("log.tag", if(tags," {tags}"))} '
+            '{label("log.bookmark", if(bookmarks," {bookmarks}"))}'
+            '\\n'
+            # first line of commit message
+            '{label(ifcontains(rev, revset("."), "desc.here"),desc|firstline)}'
+            "'"
+        )
