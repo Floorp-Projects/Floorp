@@ -21,13 +21,13 @@
 
 class nsIPresShell;
 
-nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
 
 class nsStackLayout : public nsBoxLayout
 {
 public:
 
-  friend nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+  friend nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
   static void Shutdown();
 
   nsStackLayout();

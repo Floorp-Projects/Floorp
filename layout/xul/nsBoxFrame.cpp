@@ -133,7 +133,7 @@ nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
   nsCOMPtr<nsBoxLayout> layout = aLayoutManager;
 
   if (layout == nullptr) {
-    NS_NewSprocketLayout(PresContext()->PresShell(), layout);
+    NS_NewSprocketLayout(layout);
   }
 
   SetLayoutManager(layout);
