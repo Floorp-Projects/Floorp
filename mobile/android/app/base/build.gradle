@@ -27,8 +27,7 @@ android {
             manifest.srcFile "${topsrcdir}/mobile/android/base/AndroidManifest.xml"
 
             java {
-                srcDir "${topobjdir}/gradle/base/src"
-
+                srcDir "${topsrcdir}/mobile/android/base/java"
                 srcDir "${topsrcdir}/mobile/android/search/java"
                 srcDir "${topsrcdir}/mobile/android/javaaddons/java"
                 srcDir "${topsrcdir}/mobile/android/services/src/main/java"
@@ -130,6 +129,5 @@ apply plugin: 'idea'
 
 idea {
     module {
-        excludeDirs += file("${topobjdir}/gradle/base/src/org/mozilla/gecko/resources")
     }
 }
