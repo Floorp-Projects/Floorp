@@ -32,7 +32,7 @@ nsBoxLayout* nsSprocketLayout::gInstance = nullptr;
 
 
 nsresult
-NS_NewSprocketLayout( nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout)
+NS_NewSprocketLayout(nsCOMPtr<nsBoxLayout>& aNewLayout)
 {
   if (!nsSprocketLayout::gInstance) {
     nsSprocketLayout::gInstance = new nsSprocketLayout();

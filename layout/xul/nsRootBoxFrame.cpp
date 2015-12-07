@@ -119,7 +119,7 @@ nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext):
   mPopupSetFrame = nullptr;
 
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(PresContext()->PresShell(), layout);
+  NS_NewStackLayout(layout);
   SetLayoutManager(layout);
 }
 
