@@ -524,7 +524,8 @@ class PushToTry(MachCommandBase):
             sys.exit(1)
 
         try:
-            talos = self.normalise_list(kwargs["talos"]) if kwargs["talos"] else []
+            talos = (self.normalise_list(kwargs["talos"], allow_subitems=True)
+                     if kwargs["talos"] else [])
         except ValueError as e:
             print("Error parsing -t argument:\n%s" % e.message)
             sys.exit(1)
