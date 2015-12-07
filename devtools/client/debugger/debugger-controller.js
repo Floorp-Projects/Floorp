@@ -239,8 +239,6 @@ var DebuggerController = {
       return;
     }
 
-    yield this._settleAllRequests();
-
     DebuggerView.destroy();
     this.StackFrames.disconnect();
     this.ThreadState.disconnect();
@@ -252,24 +250,6 @@ var DebuggerController = {
 
     this._shutdown = true;
   }),
-
-  _settleAllRequests: function() {
-    const requests = this.getState().asyncRequests;
-
-    if (requests.length > 0) {
-      const deferred = promise.defer();
-      this.onChange('open-requests', function checkSettled(reqs) {
-        if (reqs.length === 0) {
-          deferred.resolve();
-        }
-
-        this.offChange('open-requests', checkSettled);
-      }.bind(this));
-      return deferred.promise;
-    }
-
-    return promise.resolve();
-  },
 
   /**
    * Initiates remote debugging based on the current target, wiring event

@@ -346,6 +346,20 @@ describe("loop.standaloneRoomViews", function() {
         .eql("tos_failure_message");
     });
 
+    it("should display cannot connect to server on COULD_NOT_CONNECT", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.COULD_NOT_CONNECT });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("rooms_server_unavailable_message");
+    });
+
+    it("should display Something went wrong on UNKNOWN error", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.UNKNOWN });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("status_error");
+    });
+
     it("should not display a retry button when the failure reason is expired or invalid", function() {
       view = mountTestComponent({ failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID });
 
@@ -441,6 +455,29 @@ describe("loop.standaloneRoomViews", function() {
         activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
         expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
+      });
+
+      it("should set document.title to brand name when state is READY and roomName is undefined", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
+        view = mountTestComponent();
+        activeRoomStore.setStoreState({ roomName: undefined, roomState: ROOM_STATES.READY });
+
+        expect(fakeWindow.document.title).to.equal("clientShortname2");
+      });
+
+      it("should set document.title to roomContectUrls[0] and brand name when state is READY and roomContextUrls is present", function() {
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
+        view = mountTestComponent();
+        activeRoomStore.setStoreState({
+          roomName: undefined,
+          roomContextUrls: [{
+            description: "fakeStartPage",
+            location: null
+          }],
+          roomState: ROOM_STATES.READY
+        });
+
+        expect(fakeWindow.document.title).to.equal("fakeStartPage — clientShortname2");
       });
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
