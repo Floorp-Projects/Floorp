@@ -320,7 +320,8 @@ class AutoTry(object):
                               for k,v in sorted(suites.items())) if suites else "none")
 
         parts.append("-t")
-        parts.append(",".join(talos) if talos else "none")
+        parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
+                              for k,v in sorted(talos.items())) if talos else "none")
 
         if tags:
             parts.append(' '.join('--tag %s' % t for t in tags))
