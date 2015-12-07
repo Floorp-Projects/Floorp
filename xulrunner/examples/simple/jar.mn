@@ -4,7 +4,7 @@
 
 simple.jar:
 % content simple %content/
-* content/simple.xul                (content/simple.xul)
+  content/simple.xul                (content/simple.xul)
   content/simple.js                 (content/simple.js)
 
 en-US.jar:
