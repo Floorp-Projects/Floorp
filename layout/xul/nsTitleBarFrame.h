@@ -26,8 +26,7 @@ public:
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual void MouseClicked(nsPresContext* aPresContext,
-                            mozilla::WidgetMouseEvent* aEvent);
+  virtual void MouseClicked(mozilla::WidgetMouseEvent* aEvent);
 
   void UpdateMouseThrough() override { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 
