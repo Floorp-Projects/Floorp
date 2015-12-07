@@ -519,7 +519,6 @@ private:
     mozilla::gfx::FillRule fillRule;
     StrokeOptions strokeOptions;
     RefPtr<DrawTarget> drawTarget;
-    RefPtr<DrawTarget> parentTarget;
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
