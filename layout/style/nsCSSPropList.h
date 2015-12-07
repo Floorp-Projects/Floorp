@@ -3029,7 +3029,8 @@ CSS_PROP_DISPLAY(
     Position,
     CSS_PROPERTY_PARSE_VALUE |
         // For position: sticky/fixed
-        CSS_PROPERTY_CREATES_STACKING_CONTEXT,
+        CSS_PROPERTY_CREATES_STACKING_CONTEXT |
+        CSS_PROPERTY_ABSPOS_CB,
     "",
     VARIANT_HK,
     kPositionKTable,
