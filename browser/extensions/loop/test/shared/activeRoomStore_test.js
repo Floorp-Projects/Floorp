@@ -120,6 +120,8 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should set the state to `FAILED` on generic error", function() {
+      // errno !== undefined
+      fakeError.errno = 999;
       store.roomFailure(new sharedActions.RoomFailure({
         error: fakeError,
         failedJoinRequest: false
@@ -127,6 +129,16 @@ describe("loop.store.ActiveRoomStore", function() {
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
       expect(store._storeState.failureReason).eql(FAILURE_DETAILS.UNKNOWN);
+    });
+
+    it("should set the state to `COULD_NOT_CONNECT` on undefined errno", function() {
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
+
+      expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
+      expect(store._storeState.failureReason).eql(FAILURE_DETAILS.COULD_NOT_CONNECT);
     });
 
     it("should set the failureReason to EXPIRED_OR_INVALID on server error: " +
