@@ -224,15 +224,13 @@ public:
     return !mFloatDamage.IsEmpty();
   }
 
-  void IncludeInDamage(mozilla::WritingMode aWM,
-                       nscoord aIntervalBegin, nscoord aIntervalEnd)
+  void IncludeInDamage(nscoord aIntervalBegin, nscoord aIntervalEnd)
   {
     mFloatDamage.IncludeInterval(aIntervalBegin + mBlockStart,
                                  aIntervalEnd + mBlockStart);
   }
 
-  bool IntersectsDamage(mozilla::WritingMode aWM,
-                        nscoord aIntervalBegin, nscoord aIntervalEnd) const
+  bool IntersectsDamage(nscoord aIntervalBegin, nscoord aIntervalEnd) const
   {
     return mFloatDamage.Intersects(aIntervalBegin + mBlockStart,
                                    aIntervalEnd + mBlockStart);

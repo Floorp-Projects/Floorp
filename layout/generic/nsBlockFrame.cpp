@@ -1946,9 +1946,9 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     nscoord lineBCoordCombinedAfter = lineBCoordCombinedBefore +
                                       overflow.BSize(wm);
 
-    bool isDirty = floatManager->IntersectsDamage(wm, lineBCoordBefore,
+    bool isDirty = floatManager->IntersectsDamage(lineBCoordBefore,
                                                   lineBCoordAfter) ||
-                   floatManager->IntersectsDamage(wm, lineBCoordCombinedBefore,
+                   floatManager->IntersectsDamage(lineBCoordCombinedBefore,
                                                   lineBCoordCombinedAfter);
     if (isDirty) {
       aLine->MarkDirty();
