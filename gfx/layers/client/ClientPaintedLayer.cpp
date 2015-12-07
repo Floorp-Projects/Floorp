@@ -80,6 +80,13 @@ ClientPaintedLayer::PaintThebes()
   bool didUpdate = false;
   RotatedContentBuffer::DrawIterator iter;
   while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
+    if (!target || !target->IsValid()) {
+      if (target) {
+        mContentClient->ReturnDrawTargetToBuffer(target);
+      }
+      continue;
+    }
+    
     SetAntialiasingFlags(this, target);
 
     RefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);

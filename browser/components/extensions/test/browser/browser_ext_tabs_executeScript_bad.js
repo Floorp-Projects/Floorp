@@ -14,7 +14,7 @@ function* testHasNoPermission(params) {
     browser.test.onMessage.addListener(msg => {
       browser.test.assertEq(msg, "execute-script");
 
-      browser.tabs.query({ activeWindow: true }, tabs => {
+      browser.tabs.query({ currentWindow: true }, tabs => {
         browser.tabs.executeScript({
           file: "script.js",
         });

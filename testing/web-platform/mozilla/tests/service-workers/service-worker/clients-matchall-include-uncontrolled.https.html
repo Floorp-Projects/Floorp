@@ -6,18 +6,24 @@
 <script>
 var base_url = 'resources/blank.html'; // This is out-of-scope.
 var scope = base_url + '?clients-matchAll-includeUncontrolled';
+var frames = [];
 
 // Creates 3 iframes, 2 for in-scope and 1 for out-of-scope.
 // The frame opened for scope + '#2' is returned via a promise.
-// FIXME: remove iframes when the test finishes.
 function create_iframes(scope) {
   return with_iframe(base_url)
     .then(function(frame0) {
+        frames.push(frame0);
         return with_iframe(scope + '#1');
       })
     .then(function(frame1) {
+        frames.push(frame1);
         return with_iframe(scope + '#2');
-      });
+      })
+    .then(function(frame2) {
+        frames.push(frame2);
+        return frame2;
+      })
 }
 
 var expected_without_include_uncontrolled = [
@@ -75,6 +81,7 @@ async_test(function(t) {
                                {includeUncontrolled:true});
         })
       .then(function() {
+          frames.forEach(function(f) { f.remove() });
           service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));

@@ -30,7 +30,7 @@ namespace js {
  * since the epoch.
  */
 extern JSObject*
-NewDateObjectMsec(JSContext* cx, JS::ClippedTime t);
+NewDateObjectMsec(JSContext* cx, JS::ClippedTime t, JS::HandleObject proto = nullptr);
 
 /*
  * Construct a new Date Object from an exploded local time value.

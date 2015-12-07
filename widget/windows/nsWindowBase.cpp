@@ -70,7 +70,7 @@ nsWindowBase::InitTouchInjection()
 }
 
 bool
-nsWindowBase::InjectTouchPoint(uint32_t aId, nsIntPoint& aPointerScreenPoint,
+nsWindowBase::InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint,
                                POINTER_FLAGS aFlags, uint32_t aPressure,
                                uint32_t aOrientation)
 {
@@ -108,7 +108,7 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, nsIntPoint& aPointerScreenPoint,
 nsresult
 nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                          nsIWidget::TouchPointerState aPointerState,
-                                         nsIntPoint aPointerScreenPoint,
+                                         ScreenIntPoint aPointerScreenPoint,
                                          double aPointerPressure,
                                          uint32_t aPointerOrientation,
                                          nsIObserver* aObserver)

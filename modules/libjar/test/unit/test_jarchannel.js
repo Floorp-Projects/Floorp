@@ -15,6 +15,7 @@ const {classes: Cc,
        } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const ios = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
@@ -75,23 +76,16 @@ Listener.prototype = {
  */
 function testAsync() {
     var uri = jarBase + "/inner40.zip";
-    var chan = ios.newChannel2(uri,
-                               null,
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     do_check_true(chan.contentLength < 0);
-    chan.asyncOpen(new Listener(function(l) {
+    chan.asyncOpen2(new Listener(function(l) {
         do_check_true(chan.contentLength > 0);
         do_check_true(l.gotStartRequest);
         do_check_true(l.gotStopRequest);
         do_check_eq(l.available, chan.contentLength);
 
         run_next_test();
-    }), null);
+    }));
 }
 
 add_test(testAsync);
@@ -104,15 +98,8 @@ add_test(testAsync);
  */
 function testZipEntry() {
     var uri = jarBase + "/inner40.zip";
-    var chan = ios.newChannel2(uri,
-                               null,
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER)
-                  .QueryInterface(Ci.nsIJARChannel);
+    var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
+                      .QueryInterface(Ci.nsIJARChannel);
     var entry = chan.zipEntry;
     do_check_true(entry.CRC32 == 0x8b635486);
     do_check_true(entry.realSize == 184);
@@ -132,15 +119,8 @@ if (!inChild) {
    */
   add_test(function testSync() {
       var uri = jarBase + "/inner40.zip";
-      var chan = ios.newChannel2(uri,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
-      var stream = chan.open();
+      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+      var stream = chan.open2();
       do_check_true(chan.contentLength > 0);
       do_check_eq(stream.available(), chan.contentLength);
       stream.close();
@@ -155,15 +135,8 @@ if (!inChild) {
    */
   add_test(function testSyncNested() {
       var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-      var chan = ios.newChannel2(uri,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
-      var stream = chan.open();
+      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+      var stream = chan.open2();
       do_check_true(chan.contentLength > 0);
       do_check_eq(stream.available(), chan.contentLength);
       stream.close();
@@ -177,22 +150,15 @@ if (!inChild) {
    */
   add_test(function testAsyncNested(next) {
       var uri = "jar:" + jarBase + "/inner40.zip!/foo";
-      var chan = ios.newChannel2(uri,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
-      chan.asyncOpen(new Listener(function(l) {
+      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+      chan.asyncOpen2(new Listener(function(l) {
           do_check_true(chan.contentLength > 0);
           do_check_true(l.gotStartRequest);
           do_check_true(l.gotStopRequest);
           do_check_eq(l.available, chan.contentLength);
 
           run_next_test();
-      }), null);
+      }));
   });
 
   /**
@@ -203,17 +169,9 @@ if (!inChild) {
       var copy = tmpDir.clone();
       copy.append(fileBase);
       file.copyTo(copy.parent, copy.leafName);
-
       var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-      var chan = ios.newChannel2(uri,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
-      var stream = chan.open();
+      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+      var stream = chan.open2();
       do_check_true(chan.contentLength > 0);
       stream.close();
 
@@ -240,15 +198,9 @@ if (!inChild) {
       file.copyTo(copy.parent, copy.leafName);
 
       var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
-      var chan = ios.newChannel2(uri,
-                                 null,
-                                 null,
-                                 null,      // aLoadingNode
-                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                 null,      // aTriggeringPrincipal
-                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                 Ci.nsIContentPolicy.TYPE_OTHER);
-      chan.asyncOpen(new Listener(function (l) {
+      var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+
+      chan.asyncOpen2(new Listener(function (l) {
           do_check_true(chan.contentLength > 0);
 
           // Drop any jar caches
@@ -262,7 +214,7 @@ if (!inChild) {
           }
 
           run_next_test();
-      }), null);
+      }));
   });
 
 } // if !inChild
@@ -281,32 +233,15 @@ if (inChild) {
         var num = 10;
         var chan = [];
         for (var i = 0; i < num; i++) {
-            chan[i] = ios.newChannel2(uri,
-                                      null,
-                                      null,
-                                      null,      // aLoadingNode
-                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                      null,      // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_OTHER)
-                         .QueryInterface(Ci.nsIJARChannel);
-            chan[i].asyncOpen(new Listener(function(l) {
-            }), null);
+            chan[i] = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
+                             .QueryInterface(Ci.nsIJARChannel);
+            chan[i].asyncOpen2(new Listener(function(l) {}));
         }
 
         // Open the last channel
-        var chan_last = ios.newChannel2(uri,
-                                        null,
-                                        null,
-                                        null,      // aLoadingNode
-                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
-                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_OTHER)
-                           .QueryInterface(Ci.nsIJARChannel);
-        chan_last.asyncOpen(new Listener(function(l) {
-            run_next_test();
-        }), null);
+        var chan_last = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
+                               .QueryInterface(Ci.nsIJARChannel);
+        chan_last.asyncOpen2(new Listener(function(l) { run_next_test(); }));
     });
 } // if inChild
 

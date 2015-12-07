@@ -3016,7 +3016,14 @@ static const JSFunctionSpec date_methods[] = {
 static bool
 NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t)
 {
-    JSObject* obj = NewDateObjectMsec(cx, t);
+    MOZ_ASSERT(args.isConstructing());
+
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    JSObject* obj = NewDateObjectMsec(cx, t, proto);
     if (!obj)
         return false;
 
@@ -3260,9 +3267,9 @@ const Class DateObject::protoClass_ = {
 };
 
 JSObject*
-js::NewDateObjectMsec(JSContext* cx, ClippedTime t)
+js::NewDateObjectMsec(JSContext* cx, ClippedTime t, HandleObject proto /* = nullptr */)
 {
-    JSObject* obj = NewBuiltinClassInstance(cx, &DateObject::class_);
+    JSObject* obj = NewObjectWithClassProto(cx, &DateObject::class_, proto);
     if (!obj)
         return nullptr;
     obj->as<DateObject>().setUTCTime(t);

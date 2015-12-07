@@ -82,7 +82,7 @@ NeedsConvertFromYUVtoRGB565(int aHalFormat)
 
 GrallocTextureHostBasic::GrallocTextureHostBasic(
   TextureFlags aFlags,
-  const NewSurfaceDescriptorGralloc& aDescriptor)
+  const SurfaceDescriptorGralloc& aDescriptor)
   : TextureHost(aFlags)
   , mGrallocHandle(aDescriptor)
   , mSize(0, 0)

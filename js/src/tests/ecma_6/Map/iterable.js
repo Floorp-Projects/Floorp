@@ -7,9 +7,22 @@ let iterable = {
    next() { length = arguments.length; return {done: true}; }
 };
 
-let m = new Map(iterable);
+new Map(iterable);
 // ensure no arguments are passed to next() during construction (Bug 1197095)
 assertEq(length, 0);
+
+let typeofThis;
+Object.defineProperty(Number.prototype, Symbol.iterator, {
+  value() {
+    "use strict";
+    typeofThis = typeof this;
+    return { next() { return {done: true}; } };
+  }
+});
+
+new Map(0);
+// ensure that iterable objects retain their type (Bug 1197094)
+assertEq(typeofThis, "number");
 
 if (typeof reportCompare === "function")
   reportCompare(0, 0);

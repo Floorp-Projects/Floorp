@@ -32,12 +32,12 @@ class txInScopeVariable;
 class txElementContext : public txObject
 {
 public:
-    explicit txElementContext(const nsAString& aBaseURI);
+    explicit txElementContext();
     txElementContext(const txElementContext& aOther);
 
     bool mPreserveWhitespace;
     bool mForwardsCompatibleParsing;
-    nsString mBaseURI;
+    nsCOMPtr<nsIURI> mBaseURI;
     RefPtr<txNamespaceMap> mMappings;
     nsTArray<int32_t> mInstructionNamespaces;
     int32_t mDepth;
@@ -49,9 +49,8 @@ public:
     NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
     NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 
-    virtual nsresult loadURI(const nsAString& aUri,
-                             const nsAString& aReferrerUri,
-                             mozilla::net::ReferrerPolicy aReferrerPolicy,
+    virtual nsresult loadURI(nsIURI* aUri,
+                             nsIPrincipal* aReferrerPrincipal,
                              txStylesheetCompiler* aCompiler) = 0;
     virtual void onDoneCompiling(txStylesheetCompiler* aCompiler,
                                  nsresult aResult,
@@ -60,8 +59,8 @@ public:
 };
 
 #define TX_DECL_ACOMPILEOBSERVER \
-  nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
-                   mozilla::net::ReferrerPolicy aReferrerPolicy, \
+  nsresult loadURI(nsIURI* aUri, \
+                   nsIPrincipal* aReferrerPrincipal, \
                    txStylesheetCompiler* aCompiler); \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const char16_t *aErrorText = nullptr, \
@@ -73,9 +72,8 @@ public:
     explicit txStylesheetCompilerState(txACompileObserver* aObserver);
     ~txStylesheetCompilerState();
     
-    nsresult init(const nsAString& aStylesheetURI,
-                  mozilla::net::ReferrerPolicy aReferrerPolicy,
-                  txStylesheet* aStylesheet, txListIterator* aInsertPosition);
+    nsresult init(const nsString& aFragment, txStylesheet* aStylesheet,
+                  txListIterator* aInsertPosition);
 
     // Embedded stylesheets state
     bool handleEmbeddedSheet()
@@ -116,8 +114,8 @@ public:
     nsresult openInstructionContainer(txInstructionContainer* aContainer);
     void closeInstructionContainer();
     nsresult addInstruction(nsAutoPtr<txInstruction>&& aInstruction);
-    nsresult loadIncludedStylesheet(const nsAString& aURI);
-    nsresult loadImportedStylesheet(const nsAString& aURI,
+    nsresult loadIncludedStylesheet(nsIURI* aURI);
+    nsresult loadImportedStylesheet(nsIURI* aURI,
                                     txStylesheet::ImportFrame* aFrame);
     
     // misc
@@ -166,6 +164,7 @@ public:
     uint16_t mDisAllowed;
 
 protected:
+    nsCOMPtr<nsIPrincipal> mStylesheetPrincipal;
     RefPtr<txACompileObserver> mObserver;
     nsTArray<txInScopeVariable*> mInScopeVariables;
     nsTArray<txStylesheetCompiler*> mChildCompilerList;
@@ -178,7 +177,6 @@ protected:
         eInEmbed,
         eHasEmbed
     } mEmbedStatus;
-    nsString mStylesheetURI;
     bool mIsTopCompiler;
     bool mDoneWithThisStylesheet;
     txStack mObjectStack;
@@ -189,7 +187,6 @@ private:
     txInstruction** mNextInstrPtr;
     txListIterator mToplevelIterator;
     nsTArray<txInstruction**> mGotoTargetPointers;
-    mozilla::net::ReferrerPolicy mReferrerPolicy;
 };
 
 struct txStylesheetAttr
@@ -207,16 +204,15 @@ public:
     friend class txStylesheetCompilerState;
     friend bool TX_XSLTFunctionAvailable(nsIAtom* aName,
                                            int32_t aNameSpaceID);
-    txStylesheetCompiler(const nsAString& aStylesheetURI,
-                         mozilla::net::ReferrerPolicy  aReferrerPolicy,
+    txStylesheetCompiler(const nsString& aFragment,
                          txACompileObserver* aObserver);
-    txStylesheetCompiler(const nsAString& aStylesheetURI,
+    txStylesheetCompiler(const nsString& aFragment,
                          txStylesheet* aStylesheet,
                          txListIterator* aInsertPosition,
-                         mozilla::net::ReferrerPolicy aReferrerPolicy,
                          txACompileObserver* aObserver);
 
-    void setBaseURI(const nsString& aBaseURI);
+    void setBaseURI(nsIURI* aBaseURI);
+    void setPrincipal(nsIPrincipal* aPrincipal);
 
     nsresult startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
                           nsIAtom* aPrefix, txStylesheetAttr* aAttributes,

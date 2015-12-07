@@ -85,6 +85,11 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
 /* static */ already_AddRefed<gfxContext>
 gfxContext::ContextForDrawTarget(DrawTarget* aTarget)
 {
+  if (!aTarget || !aTarget->IsValid()) {
+    gfxWarning() << "Invalid target in gfxContext::ContextForDrawTarget";
+    return nullptr;
+  }
+
   Matrix transform = aTarget->GetTransform();
   RefPtr<gfxContext> result = new gfxContext(aTarget);
   result->SetMatrix(ThebesMatrix(transform));
@@ -99,10 +104,6 @@ gfxContext::~gfxContext()
   for (int i = mStateStack.Length() - 1; i >= 0; i--) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
       mDT->PopClip();
-    }
-
-    if (mStateStack[i].clipWasReset) {
-      break;
     }
   }
   mDT->Flush();
@@ -157,7 +158,6 @@ gfxContext::Save()
 {
   CurrentState().transform = mTransform;
   mStateStack.AppendElement(AzureState(CurrentState()));
-  CurrentState().clipWasReset = false;
   CurrentState().pushedClips.Clear();
 }
 
@@ -166,11 +166,6 @@ gfxContext::Restore()
 {
   for (unsigned int c = 0; c < CurrentState().pushedClips.Length(); c++) {
     mDT->PopClip();
-  }
-
-  if (CurrentState().clipWasReset &&
-      CurrentState().drawTarget == mStateStack[mStateStack.Length() - 2].drawTarget) {
-    PushClipsToDT(mDT);
   }
 
   mStateStack.RemoveElementAt(mStateStack.Length() - 1);
@@ -537,18 +532,6 @@ gfxContext::CurrentMiterLimit() const
   return CurrentState().strokeOptions.mMiterLimit;
 }
 
-void
-gfxContext::SetFillRule(FillRule rule)
-{
-  CurrentState().fillRule = rule;
-}
-
-FillRule
-gfxContext::CurrentFillRule() const
-{
-  return CurrentState().fillRule;
-}
-
 // clipping
 void
 gfxContext::Clip(const Rect& rect)
@@ -625,9 +608,6 @@ gfxContext::HasComplexClip() const
         return true;
       }
     }
-    if (mStateStack[i].clipWasReset) {
-      break;
-    }
   }
   return false;
 }
@@ -635,15 +615,7 @@ gfxContext::HasComplexClip() const
 bool
 gfxContext::ExportClip(ClipExporter& aExporter)
 {
-  unsigned int lastReset = 0;
-  for (int i = mStateStack.Length() - 1; i > 0; i--) {
-    if (mStateStack[i].clipWasReset) {
-      lastReset = i;
-      break;
-    }
-  }
-
-  for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
       AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
       gfx::Matrix transform = clip.transform;
@@ -669,20 +641,12 @@ gfxContext::ExportClip(ClipExporter& aExporter)
 bool
 gfxContext::ClipContainsRect(const gfxRect& aRect)
 {
-  unsigned int lastReset = 0;
-  for (int i = mStateStack.Length() - 2; i > 0; i--) {
-    if (mStateStack[i].clipWasReset) {
-      lastReset = i;
-      break;
-    }
-  }
-
   // Since we always return false when the clip list contains a
   // non-rectangular clip or a non-rectilinear transform, our 'total' clip
   // is always a rectangle if we hit the end of this function.
   Rect clipBounds(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
 
-  for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
       AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
       if (clip.path || !clip.transform.IsRectilinear()) {
@@ -1039,18 +1003,18 @@ gfxContext::EnsurePath()
       Matrix mat = mTransform;
       mat.Invert();
       mat = mPathTransform * mat;
-      mPathBuilder = mPath->TransformedCopyToBuilder(mat, CurrentState().fillRule);
+      mPathBuilder = mPath->TransformedCopyToBuilder(mat);
       mPath = mPathBuilder->Finish();
       mPathBuilder = nullptr;
 
       mTransformChanged = false;
     }
 
-    if (CurrentState().fillRule == mPath->GetFillRule()) {
+    if (FillRule::FILL_WINDING == mPath->GetFillRule()) {
       return;
     }
 
-    mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
+    mPathBuilder = mPath->CopyToBuilder();
 
     mPath = mPathBuilder->Finish();
     mPathBuilder = nullptr;
@@ -1071,13 +1035,13 @@ gfxContext::EnsurePathBuilder()
 
   if (mPath) {
     if (!mTransformChanged) {
-      mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
+      mPathBuilder = mPath->CopyToBuilder();
       mPath = nullptr;
     } else {
       Matrix invTransform = mTransform;
       invTransform.Invert();
       Matrix toNewUS = mPathTransform * invTransform;
-      mPathBuilder = mPath->TransformedCopyToBuilder(toNewUS, CurrentState().fillRule);
+      mPathBuilder = mPath->TransformedCopyToBuilder(toNewUS);
     }
     return;
   }
@@ -1085,7 +1049,7 @@ gfxContext::EnsurePathBuilder()
   DebugOnly<PathBuilder*> oldPath = mPathBuilder.get();
 
   if (!mPathBuilder) {
-    mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
+    mPathBuilder = mDT->CreatePathBuilder(FillRule::FILL_WINDING);
 
     if (mPathIsRect) {
       mPathBuilder->MoveTo(mRect.TopLeft());
@@ -1108,7 +1072,7 @@ gfxContext::EnsurePathBuilder()
     Matrix toNewUS = mPathTransform * invTransform;
 
     RefPtr<Path> path = mPathBuilder->Finish();
-    mPathBuilder = path->TransformedCopyToBuilder(toNewUS, CurrentState().fillRule);
+    mPathBuilder = path->TransformedCopyToBuilder(toNewUS);
   }
 
   mPathIsRect = false;
@@ -1140,22 +1104,10 @@ gfxContext::FillAzure(const Pattern& aPattern, Float aOpacity)
 void
 gfxContext::PushClipsToDT(DrawTarget *aDT)
 {
-  // Tricky, we have to restore all clips -since the last time- the clip
-  // was reset. If we didn't reset the clip, just popping the clips we
-  // added was fine.
-  unsigned int lastReset = 0;
-  for (int i = mStateStack.Length() - 2; i > 0; i--) {
-    if (mStateStack[i].clipWasReset) {
-      lastReset = i;
-      break;
-    }
-  }
-
   // Don't need to save the old transform, we'll be setting a new one soon!
 
-  // Push all clips from the last state on the stack where the clip was
-  // reset to the clip before ours.
-  for (unsigned int i = lastReset; i < mStateStack.Length() - 1; i++) {
+  // Push all clips from the bottom of the stack to the clip before ours.
+  for (unsigned int i = 0; i < mStateStack.Length() - 1; i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
       aDT->SetTransform(mStateStack[i].pushedClips[c].transform * GetDeviceTransform());
       if (mStateStack[i].pushedClips[c].path) {
@@ -1229,8 +1181,8 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
       mRect = toNewUS.TransformBounds(mRect);
       mRect.NudgeToIntegers();
     } else {
-      mPathBuilder = mDT->CreatePathBuilder(CurrentState().fillRule);
-      
+      mPathBuilder = mDT->CreatePathBuilder(FillRule::FILL_WINDING);
+
       mPathBuilder->MoveTo(toNewUS * mRect.TopLeft());
       mPathBuilder->LineTo(toNewUS * mRect.TopRight());
       mPathBuilder->LineTo(toNewUS * mRect.BottomRight());
@@ -1255,17 +1207,9 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
 Rect
 gfxContext::GetAzureDeviceSpaceClipBounds()
 {
-  unsigned int lastReset = 0;
-  for (int i = mStateStack.Length() - 1; i > 0; i--) {
-    if (mStateStack[i].clipWasReset) {
-      lastReset = i;
-      break;
-    }
-  }
-
   Rect rect(CurrentState().deviceOffset.x, CurrentState().deviceOffset.y,
             Float(mDT->GetSize().width), Float(mDT->GetSize().height));
-  for (unsigned int i = lastReset; i < mStateStack.Length(); i++) {
+  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
       AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
       if (clip.path) {

@@ -101,9 +101,7 @@ for (var v of SOME_PRIMITIVE_VALUES.concat(nonConstructors)) {
 // creates a real array object.
 function someConstructor() {}
 var result = Reflect.construct(Array, [], someConstructor);
-assertEq(Reflect.getPrototypeOf(result),
-         Array.prototype, // should be someConstructor.prototype, per ES6 22.1.1.1 Array()
-        "Congratulations on implementing Array subclassing! Fix this test for +1 karma point.");
+assertEq(Reflect.getPrototypeOf(result), someConstructor.prototype);
 assertEq(result.length, 0);
 assertEq(Array.isArray(result), true);
 

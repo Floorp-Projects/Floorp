@@ -1,0 +1,31 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+      - --test-type=testharness
+      - --total-chunk={{total_chunks}}
+      - --this-chunk={{chunk}}
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/web_platform_tests.py'
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/web_platform_tests/prod_config.py
+          mozharness/configs/remove_executables.py
+  metadata:
+    name: '[TC] Linux64 web-platform-tests {{chunk}}'
+    description: Web platform tests run {{chunk}}
+  extra:
+    chunks:
+      total: 8
+    suite:
+      name: web-platform-tests
+      flavor: web-platform-tests
+    treeherder:
+      groupName: Desktop web-platform-tests
+      groupSymbol: tc-W
+      symbol: {{chunk}}

@@ -192,7 +192,7 @@ async_test(function(t) {
           assert_equals(frame.contentDocument.body.textContent,
                         'POST:application/x-www-form-urlencoded:' +
                         'testName1=testValue1&testName2=testValue2');
-          document.body.removeChild(frame);
+          frame.remove();
           return service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));

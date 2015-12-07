@@ -240,7 +240,7 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
   NS_ENSURE_ARG(attribute);
 
   ErrorResult rv;
-  *aReturn = SetNamedItem(*attribute, rv).take();
+  *aReturn = SetNamedItemNS(*attribute, rv).take();
   return rv.StealNSResult();
 }
 
@@ -256,9 +256,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
 }
 
 already_AddRefed<Attr>
-nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
-                                        bool aWithNS,
-                                        ErrorResult& aError)
+nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
 {
   NS_ENSURE_TRUE(mContent, nullptr);
 
@@ -293,24 +291,18 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
   // Get nodeinfo and preexisting attribute (if it exists)
   RefPtr<NodeInfo> oldNi;
 
-  if (!aWithNS) {
-    nsAutoString name;
-    aAttr.GetName(name);
-    oldNi = mContent->GetExistingAttrNameFromQName(name);
-  } else {
-    uint32_t i, count = mContent->GetAttrCount();
-    for (i = 0; i < count; ++i) {
-      const nsAttrName* name = mContent->GetAttrNameAt(i);
-      int32_t attrNS = name->NamespaceID();
-      nsIAtom* nameAtom = name->LocalName();
+  uint32_t i, count = mContent->GetAttrCount();
+  for (i = 0; i < count; ++i) {
+    const nsAttrName* name = mContent->GetAttrNameAt(i);
+    int32_t attrNS = name->NamespaceID();
+    nsIAtom* nameAtom = name->LocalName();
 
-      // we're purposefully ignoring the prefix.
-      if (aAttr.NodeInfo()->Equals(nameAtom, attrNS)) {
-        oldNi = mContent->NodeInfo()->NodeInfoManager()->
-          GetNodeInfo(nameAtom, name->GetPrefix(), aAttr.NodeInfo()->NamespaceID(),
-                      nsIDOMNode::ATTRIBUTE_NODE);
-        break;
-      }
+    // we're purposefully ignoring the prefix.
+    if (aAttr.NodeInfo()->Equals(nameAtom, attrNS)) {
+      oldNi = mContent->NodeInfo()->NodeInfoManager()->
+        GetNodeInfo(nameAtom, name->GetPrefix(), aAttr.NodeInfo()->NamespaceID(),
+                    nsIDOMNode::ATTRIBUTE_NODE);
+      break;
     }
   }
 

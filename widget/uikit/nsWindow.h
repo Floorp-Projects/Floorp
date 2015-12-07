@@ -91,7 +91,7 @@ public:
     }
 
     void WillPaintWindow();
-    bool PaintWindow(nsIntRegion aRegion);
+    bool PaintWindow(LayoutDeviceIntRegion aRegion);
 
     bool HasModalDescendents() { return false; }
 

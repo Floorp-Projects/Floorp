@@ -30,9 +30,9 @@ CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
   }
 #endif
 #ifdef MOZ_WIDGET_GONK
-  if (aDesc.type() == SurfaceDescriptor::TNewSurfaceDescriptorGralloc) {
-      const NewSurfaceDescriptorGralloc& desc =
-        aDesc.get_NewSurfaceDescriptorGralloc();
+  if (aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+      const SurfaceDescriptorGralloc& desc =
+        aDesc.get_SurfaceDescriptorGralloc();
     return MakeAndAddRef<GrallocTextureHostBasic>(aFlags, desc);
     }
 #endif

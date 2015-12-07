@@ -112,6 +112,12 @@ AnyTypedArrayByteLength(const JSObject* obj)
 }
 
 inline bool
+AnyTypedArrayIsDetached(const JSObject* obj)
+{
+    return obj->as<TypedArrayObject>().isNeutered();
+}
+
+inline bool
 IsAnyTypedArrayClass(const Class* clasp)
 {
     return IsTypedArrayClass(clasp);

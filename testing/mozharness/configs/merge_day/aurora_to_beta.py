@@ -65,7 +65,7 @@ config = {
     "migration_behavior": "aurora_to_beta",
 
     "virtualenv_modules": [
-        "requests==2.2.1",
+        "requests==2.8.1",
     ],
 
     "post_merge_builders": [

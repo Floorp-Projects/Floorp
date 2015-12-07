@@ -2044,7 +2044,7 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   RefPtr<nsNSSSocketInfo> info(
     reinterpret_cast<nsNSSSocketInfo*>(socket->higher->secret));
 
-  CERTCertificate* serverCert = SSL_PeerCertificate(socket);
+  ScopedCERTCertificate serverCert(SSL_PeerCertificate(socket));
   if (!serverCert) {
     NS_NOTREACHED("Missing server certificate should have been detected during "
                   "server cert authentication.");

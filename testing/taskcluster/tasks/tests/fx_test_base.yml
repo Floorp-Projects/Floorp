@@ -1,0 +1,23 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  payload:
+    image: '{{#docker_image}}desktop-test{{/docker_image}}'
+    env:
+        NEED_WINDOW_MANAGER: true
+        NEED_PULSEAUDIO: true
+        GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
+        GECKO_HEAD_REV: '{{{head_rev}}}'
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      tier: 2
+    treeherderEnv:
+      - production
+      - staging

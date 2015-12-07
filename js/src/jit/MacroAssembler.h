@@ -735,7 +735,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
 
-    inline void add64(Register64 src, Register64 dest) DEFINED_ON(x86, x64, arm, arm64, mips64);
+    inline void add64(Register64 src, Register64 dest) PER_ARCH;
 
     // ===============================================================
     // Shift functions

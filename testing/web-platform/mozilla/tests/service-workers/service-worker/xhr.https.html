@@ -22,6 +22,7 @@ async_test(function(t) {
         return new Promise(function(resolve, reject) {
           function onMessage(e) {
             assert_false(e.data.xhr);
+            frame.remove();
             service_worker_unregister_and_done(t, scope);
           }
           var channel = new MessageChannel();

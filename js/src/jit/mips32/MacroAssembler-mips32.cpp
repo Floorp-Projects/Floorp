@@ -964,7 +964,7 @@ void
 MacroAssemblerMIPSCompat::load32(wasm::SymbolicAddress address, Register dest)
 {
     movePtr(address, ScratchRegister);
-    load32(Address(ScratchRegister, 0), address);
+    load32(Address(ScratchRegister, 0), dest);
 }
 
 void

@@ -4770,20 +4770,7 @@ js::DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject newTarget(cx, &args.newTarget().toObject());
-    RootedValue protoVal(cx);
-
-    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protoVal))
-        return false;
-
-    RootedObject proto(cx);
-    if (!protoVal.isObject()) {
-        if (!GetBuiltinPrototype(cx, JSProto_Object, &proto))
-            return false;
-    } else {
-        proto = &protoVal.toObject();
-    }
-
-    JSObject* obj = NewObjectWithGivenProto(cx, &PlainObject::class_, proto);
+    JSObject* obj = CreateThis(cx, &PlainObject::class_, newTarget);
     if (!obj)
         return false;
 

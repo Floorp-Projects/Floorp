@@ -23,6 +23,7 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TaggedAnonymousMemory.h"
+#include "mozilla/Vector.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -1132,7 +1133,7 @@ AsmJSModule::Name::clone(ExclusiveContext* cx, Name* out) const
 
 template <class T, size_t N>
 size_t
-SerializedVectorSize(const Vector<T, N, SystemAllocPolicy>& vec)
+SerializedVectorSize(const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
 {
     size_t size = sizeof(uint32_t);
     for (size_t i = 0; i < vec.length(); i++)
@@ -1142,7 +1143,7 @@ SerializedVectorSize(const Vector<T, N, SystemAllocPolicy>& vec)
 
 template <class T, size_t N>
 uint8_t*
-SerializeVector(uint8_t* cursor, const Vector<T, N, SystemAllocPolicy>& vec)
+SerializeVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
 {
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     for (size_t i = 0; i < vec.length(); i++)
@@ -1152,7 +1153,8 @@ SerializeVector(uint8_t* cursor, const Vector<T, N, SystemAllocPolicy>& vec)
 
 template <class T, size_t N>
 const uint8_t*
-DeserializeVector(ExclusiveContext* cx, const uint8_t* cursor, Vector<T, N, SystemAllocPolicy>* vec)
+DeserializeVector(ExclusiveContext* cx, const uint8_t* cursor,
+                  mozilla::Vector<T, N, SystemAllocPolicy>* vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -1167,8 +1169,8 @@ DeserializeVector(ExclusiveContext* cx, const uint8_t* cursor, Vector<T, N, Syst
 
 template <class T, size_t N>
 bool
-CloneVector(ExclusiveContext* cx, const Vector<T, N, SystemAllocPolicy>& in,
-            Vector<T, N, SystemAllocPolicy>* out)
+CloneVector(ExclusiveContext* cx, const mozilla::Vector<T, N, SystemAllocPolicy>& in,
+            mozilla::Vector<T, N, SystemAllocPolicy>* out)
 {
     if (!out->resize(in.length()))
         return false;
@@ -1179,27 +1181,27 @@ CloneVector(ExclusiveContext* cx, const Vector<T, N, SystemAllocPolicy>& in,
     return true;
 }
 
-template <class T, size_t N, class AllocPolicy, class ThisVector>
+template <class T, size_t N, class AllocPolicy>
 size_t
-SerializedPodVectorSize(const mozilla::VectorBase<T, N, AllocPolicy, ThisVector>& vec)
+SerializedPodVectorSize(const mozilla::Vector<T, N, AllocPolicy>& vec)
 {
     return sizeof(uint32_t) +
            vec.length() * sizeof(T);
 }
 
-template <class T, size_t N, class AllocPolicy, class ThisVector>
+template <class T, size_t N, class AllocPolicy>
 uint8_t*
-SerializePodVector(uint8_t* cursor, const mozilla::VectorBase<T, N, AllocPolicy, ThisVector>& vec)
+SerializePodVector(uint8_t* cursor, const mozilla::Vector<T, N, AllocPolicy>& vec)
 {
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     cursor = WriteBytes(cursor, vec.begin(), vec.length() * sizeof(T));
     return cursor;
 }
 
-template <class T, size_t N, class AllocPolicy, class ThisVector>
+template <class T, size_t N, class AllocPolicy>
 const uint8_t*
 DeserializePodVector(ExclusiveContext* cx, const uint8_t* cursor,
-                     mozilla::VectorBase<T, N, AllocPolicy, ThisVector>* vec)
+                     mozilla::Vector<T, N, AllocPolicy>* vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -1211,8 +1213,8 @@ DeserializePodVector(ExclusiveContext* cx, const uint8_t* cursor,
 
 template <class T, size_t N>
 bool
-ClonePodVector(ExclusiveContext* cx, const Vector<T, N, SystemAllocPolicy>& in,
-               Vector<T, N, SystemAllocPolicy>* out)
+ClonePodVector(ExclusiveContext* cx, const mozilla::Vector<T, N, SystemAllocPolicy>& in,
+               mozilla::Vector<T, N, SystemAllocPolicy>* out)
 {
     if (!out->resize(in.length()))
         return false;

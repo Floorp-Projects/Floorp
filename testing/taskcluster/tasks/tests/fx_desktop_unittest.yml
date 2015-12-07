@@ -1,9 +1,8 @@
 ---
 $inherits:
-  from: 'tasks/test.yml'
+  from: 'tasks/tests/fx_test_base.yml'
 task:
   payload:
-    image: '{{#docker_image}}desktop-test{{/docker_image}}'
     command:
       - bash
       - /home/worker/bin/test.sh
@@ -15,22 +14,8 @@ task:
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}
     env:
-        NEED_WINDOW_MANAGER: true
-        NEED_PULSEAUDIO: true
-        GECKO_HEAD_REPOSITORY: '{{{head_repository}}}'
-        GECKO_HEAD_REV: '{{{head_rev}}}'
         MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
         # TODO move linux_unittest.py to a platform specific config
         MOZHARNESS_CONFIG: >
           mozharness/configs/unittests/linux_unittest.py
           mozharness/configs/remove_executables.py
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
-
-  extra:
-    treeherderEnv:
-      - production
-      - staging

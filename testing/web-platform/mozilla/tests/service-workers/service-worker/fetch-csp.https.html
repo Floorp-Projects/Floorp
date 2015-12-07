@@ -19,6 +19,7 @@ async_test(function(t) {
               var channel = new MessageChannel();
               channel.port1.onmessage = t.step_func(function(e) {
                   assert_equals(e.data.results, 'finish');
+                  frame.remove();
                   service_worker_unregister_and_done(t, SCOPE);
                 });
               frame.contentWindow.postMessage({},

@@ -9,6 +9,7 @@
   var worker = 'resources/fetch-rewrite-worker.js';
   var path = base_path() + 'resources/fetch-access-control.py';
   var host_info = get_host_info();
+  var frame;
 
   async_test(function(t) {
     var scope = 'resources/fetch-header-visibility-iframe.html';
@@ -17,7 +18,7 @@
         return wait_for_state(t, reg.installing, 'activated');
       })
       .then(function() {
-        var frame = document.createElement('iframe');
+        frame = document.createElement('iframe');
         frame.src = scope;
         document.body.appendChild(frame);
 
@@ -42,6 +43,7 @@
         });
       })
       .then(function(result) {
+        frame.remove();
         return service_worker_unregister_and_done(t, scope);
       })
       .catch(unreached_rejection(t));

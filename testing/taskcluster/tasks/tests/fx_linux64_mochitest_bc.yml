@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/tests/fx_unittest_base.yml'
+  from: 'tasks/tests/fx_desktop_unittest.yml'
 task:
   scopes:
     - 'docker-worker:capability:device:loopbackVideo'

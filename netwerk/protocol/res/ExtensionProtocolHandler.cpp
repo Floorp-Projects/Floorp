@@ -18,6 +18,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIPipe.h"
 #include "nsNetUtil.h"
+#include "LoadInfo.h"
 
 namespace mozilla {
 
@@ -120,6 +121,10 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
     rv = convService->AsyncConvertData(kFromType, kToType, listener,
                                        aURI, getter_AddRefs(converter));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsILoadInfo> loadInfo =
+      static_cast<mozilla::LoadInfo*>(aLoadInfo)->CloneForNewRequest();
+    (*result)->SetLoadInfo(loadInfo);
 
     rv = (*result)->AsyncOpen2(converter);
   } else {

@@ -182,7 +182,7 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
  * @param aPt the offset of this frame, relative to the rendering reference
  * frame
  */
-void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
+void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
 {
   if (mFocused != this) return;
 
@@ -232,7 +232,7 @@ void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
                             LookAndFeel::eColorID_WidgetSelectForeground :
                             LookAndFeel::eColorID_WidgetSelectBackground);
 
-  nsCSSRendering::PaintFocus(presContext, aRC, fRect, color);
+  nsCSSRendering::PaintFocus(presContext, aDrawTarget, fRect, color);
 }
 
 void

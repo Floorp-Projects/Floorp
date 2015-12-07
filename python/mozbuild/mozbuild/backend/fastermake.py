@@ -138,7 +138,8 @@ class FasterMakeBackend(CommonBackend):
         for jarinfo in pp.out:
             install_target = obj.install_target
             if jarinfo.base:
-                install_target = mozpath.join(install_target, jarinfo.base)
+                install_target = mozpath.normpath(
+                    mozpath.join(install_target, jarinfo.base))
             for e in jarinfo.entries:
                 if e.is_locale:
                     if jarinfo.relativesrcdir:

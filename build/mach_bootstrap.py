@@ -73,6 +73,7 @@ SEARCH_PATHS = [
     'testing/xpcshell',
     'testing/web-platform',
     'testing/web-platform/harness',
+    'testing/web-platform/tests/tools/wptserve',
     'testing/marionette/client',
     'testing/marionette/client/marionette/runner/mixins/browsermob-proxy-py',
     'testing/marionette/transport',

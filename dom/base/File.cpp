@@ -257,7 +257,7 @@ Blob::ToFile()
 }
 
 already_AddRefed<File>
-Blob::ToFile(const nsAString& aName) const
+Blob::ToFile(const nsAString& aName, ErrorResult& aRv) const
 {
   nsAutoTArray<RefPtr<BlobImpl>, 1> blobImpls;
   blobImpls.AppendElement(mImpl);
@@ -266,7 +266,10 @@ Blob::ToFile(const nsAString& aName) const
   mImpl->GetType(contentType);
 
   RefPtr<MultipartBlobImpl> impl =
-    new MultipartBlobImpl(blobImpls, aName, contentType);
+    MultipartBlobImpl::Create(blobImpls, aName, contentType, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   RefPtr<File> file = new File(mParent, impl);
   return file.forget();
@@ -347,7 +350,11 @@ Blob::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl();
 
-  impl->InitializeBlob();
+  impl->InitializeBlob(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(!impl->IsFile());
 
   RefPtr<Blob> blob = Blob::Create(aGlobal.GetAsSupports(), impl);
@@ -851,7 +858,7 @@ BlobImplFile::GetMozFullPathInternal(nsAString& aFilename, ErrorResult& aRv) con
 uint64_t
 BlobImplFile::GetSize(ErrorResult& aRv)
 {
-  if (IsSizeUnknown()) {
+  if (BlobImplBase::IsSizeUnknown()) {
     NS_ASSERTION(mWholeFile,
                  "Should only use lazy size when using the whole file");
     int64_t fileSize;
@@ -902,7 +909,7 @@ int64_t
 BlobImplFile::GetLastModified(ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
-  if (IsDateUnknown()) {
+  if (BlobImplBase::IsDateUnknown()) {
     PRTime msecs;
     aRv = mFile->GetLastModifiedTime(&msecs);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -1121,11 +1128,19 @@ BlobImplTemporaryBlob::GetInternalStream(nsIInputStream** aStream,
 // BlobSet implementation
 
 already_AddRefed<Blob>
-BlobSet::GetBlobInternal(nsISupports* aParent, const nsACString& aContentType)
+BlobSet::GetBlobInternal(nsISupports* aParent,
+                         const nsACString& aContentType,
+                         ErrorResult& aRv)
 {
-  RefPtr<Blob> blob = Blob::Create(aParent,
-    new MultipartBlobImpl(GetBlobImpls(),
-                          NS_ConvertASCIItoUTF16(aContentType)));
+  RefPtr<BlobImpl> blobImpl =
+    MultipartBlobImpl::Create(GetBlobImpls(),
+                              NS_ConvertASCIItoUTF16(aContentType),
+                              aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<Blob> blob = Blob::Create(aParent, blobImpl);
   return blob.forget();
 }
 

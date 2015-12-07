@@ -1,0 +1,8 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_test_base.yml'
+task:
+  payload:
+    command:
+      - bash
+      - /home/worker/bin/test.sh

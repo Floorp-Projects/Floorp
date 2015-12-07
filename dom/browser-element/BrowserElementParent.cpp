@@ -119,8 +119,7 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   // Dispatch the event.
   // We don't initialize aStatus here, as our callers have already done so.
   nsresult rv =
-    EventDispatcher::DispatchDOMEvent(aFrameElement, nullptr,
-                                      static_cast<Event*>(event),
+    EventDispatcher::DispatchDOMEvent(aFrameElement, nullptr, event,
                                       presContext, aStatus);
   return NS_SUCCEEDED(rv);
 }

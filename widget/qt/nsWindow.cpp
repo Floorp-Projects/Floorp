@@ -875,7 +875,8 @@ nsWindow::OnPaint()
 
     switch (GetLayerManager()->GetBackendType()) {
         case mozilla::layers::LayersBackend::LAYERS_CLIENT: {
-            nsIntRegion region(nsIntRect(0, 0, mWidget->width(), mWidget->height()));
+            LayoutDeviceIntRegion region(
+              LayoutDeviceIntRect(0, 0, mWidget->width(), mWidget->height()));
             listener->PaintWindow(this, region);
             break;
         }

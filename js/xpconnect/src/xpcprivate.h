@@ -592,7 +592,7 @@ public:
     void RemoveGCCallback(xpcGCCallback cb);
 
     struct EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
-        bool invoke(JS::HandleObject scope, Closure& closure) override;
+        void invoke(JS::HandleObject scope, Closure& closure) override;
     };
     EnvironmentPreparer mEnvironmentPreparer;
 
