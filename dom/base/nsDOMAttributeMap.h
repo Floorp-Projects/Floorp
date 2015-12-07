@@ -158,10 +158,8 @@ public:
   RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
                     ErrorResult& aError);
 
-  void GetSupportedNames(unsigned, nsTArray<nsString>& aNames)
-  {
-    // No supported names we want to show up in iteration.
-  }
+  void
+  GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
