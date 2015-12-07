@@ -1,0 +1,17 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+
+<script>
+
+function boom()
+{
+  document.getElementById("l").value="פיל\n";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function(){setTimeout(boom, 30)}, 0);
+
+</script>
+  <hbox dir="rtl">
+    <label id="l" />
+  </hbox>
+</window>
