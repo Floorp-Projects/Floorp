@@ -702,7 +702,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
       }
     
 
-      flex = child->GetFlex(aState);
+      flex = child->GetFlex();
 
       currentBox->flex = flex;
       currentBox->collapsed = child->IsCollapsed();
@@ -786,7 +786,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
           prefWidth = pref.height;
       }
 
-      nscoord flex = child->GetFlex(aState);
+      nscoord flex = child->GetFlex();
 
       // set them if you collapsed you are not flexible.
       if (collapsed) {
@@ -1387,7 +1387,7 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         
         // if the child is not flexible then
         // its min size is its pref size.
-        if (child->GetFlex(aState) == 0) {
+        if (child->GetFlex() == 0) {
             pref = child->GetPrefSize(aState);
             if (isHorizontal)
                min.width = pref.width;
