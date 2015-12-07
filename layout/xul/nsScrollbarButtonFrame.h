@@ -35,8 +35,7 @@ public:
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  static nsresult GetChildWithTag(nsPresContext* aPresContext,
-                                  nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
+  static nsresult GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
   bool HandleButtonPress(nsPresContext* aPresContext,
