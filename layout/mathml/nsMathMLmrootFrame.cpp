@@ -51,7 +51,7 @@ nsMathMLmrootFrame::Init(nsIContent*       aContent,
   // The Style System will use Get/SetAdditionalStyleContext() to keep it
   // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
-  mSqrChar.SetData(presContext, sqrChar);
+  mSqrChar.SetData(sqrChar);
   ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mSqrChar);
 }
 
