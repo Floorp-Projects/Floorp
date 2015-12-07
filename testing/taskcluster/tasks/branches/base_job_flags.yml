@@ -138,7 +138,6 @@ flags:
     - mochitest-oop
     - mochitest-other
     - mochitest-push
-    - mochitest-webgl
     #- mochitest-webgl -- disabled per bug 1227637 / bug 1220658
     - mozmill
     - reftest
