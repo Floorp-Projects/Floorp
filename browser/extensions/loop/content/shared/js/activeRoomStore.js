@@ -169,6 +169,9 @@ loop.store.ActiveRoomStore = (function() {
           case REST_ERRNOS.INVALID_TOKEN:
           case REST_ERRNOS.EXPIRED:
             return FAILURE_DETAILS.EXPIRED_OR_INVALID;
+          case undefined:
+            // XHR errors reach here with errno as undefined
+            return FAILURE_DETAILS.COULD_NOT_CONNECT;
           default:
             return FAILURE_DETAILS.UNKNOWN;
         }
@@ -355,6 +358,7 @@ loop.store.ActiveRoomStore = (function() {
       this.setStoreState({
         roomState: ROOM_STATES.GATHER,
         roomToken: actionData.token,
+        roomCryptoKey: actionData.cryptoKey,
         standalone: true
       });
 
