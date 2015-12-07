@@ -608,12 +608,9 @@ class TreeMetadataEmitter(LoggingMixin):
         for obj in self._process_sources(context, passthru):
             yield obj
 
-        exports = context.get('EXPORTS')
-        if exports:
-            yield Exports(context, exports,
-                dist_install=dist_install is not False)
-
+        generated_files = set()
         for obj in self._process_generated_files(context):
+            generated_files.add(obj.output)
             yield obj
 
         for obj in self._process_test_harness_files(context):
@@ -653,6 +650,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         components = []
         for var, cls in (
+            ('EXPORTS', Exports),
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),
             ('TESTING_FILES', TestingFiles),
@@ -674,11 +672,23 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == 'res':
                     has_resources = True
                 for f in files:
-                    path = f.full_path
-                    if not os.path.exists(path):
+                    if (var == 'FINAL_TARGET_PP_FILES' and
+                        not isinstance(f, SourcePath)):
                         raise SandboxValidationError(
-                            'File listed in %s does not exist: %s'
-                            % (var, path), context)
+                                ('Only source directory paths allowed in ' +
+                                'FINAL_TARGET_PP_FILES: %s')
+                                % (f,), context)
+                    if not isinstance(f, ObjDirPath):
+                        path = f.full_path
+                        if not os.path.exists(path):
+                            raise SandboxValidationError(
+                                'File listed in %s does not exist: %s'
+                                % (var, path), context)
+                    else:
+                        if mozpath.basename(f.full_path) not in generated_files:
+                            raise SandboxValidationError(
+                                ('Objdir file listed in %s not in ' +
+                                 'GENERATED_FILES: %s') % (var, path), context)
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory

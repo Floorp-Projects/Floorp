@@ -85,6 +85,8 @@ class InstallManifest(object):
 
     FIELD_SEPARATOR = '\x1f'
 
+    # Negative values are reserved for non-actionable items, that is, metadata
+    # that doesn't describe files in the destination.
     SYMLINK = 1
     COPY = 2
     REQUIRED_EXISTS = 3
@@ -163,8 +165,11 @@ class InstallManifest(object):
                     silence_missing_directive_warnings=bool(int(warnings)))
                 continue
 
-            raise UnreadableInstallManifest('Unknown record type: %d' %
-                record_type)
+            # Don't fail for non-actionable items, allowing
+            # forward-compatibility with those we will add in the future.
+            if record_type >= 0:
+                raise UnreadableInstallManifest('Unknown record type: %d' %
+                    record_type)
 
     def __len__(self):
         return len(self._dests)

@@ -342,7 +342,7 @@ class nsHtml5Highlighter
     /**
      * Memory for element handles.
      */
-    nsAutoArrayPtr<nsIContent*> mHandles;
+    mozilla::UniquePtr<nsIContent*[]> mHandles;
 
     /**
      * Number of handles used in mHandles
@@ -352,7 +352,7 @@ class nsHtml5Highlighter
     /**
      * A holder for old contents of mHandles
      */
-    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
+    nsTArray<mozilla::UniquePtr<nsIContent*[]>> mOldHandles;
 
     /**
      * The element stack.

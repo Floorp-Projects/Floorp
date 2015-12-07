@@ -72,9 +72,7 @@ private:
   static void RemoveFromCorsPreflightCache(nsIURI* aURI,
                                            nsIPrincipal* aRequestingPrincipal);
   static nsresult StartCORSPreflight(nsIChannel* aRequestChannel,
-                                     nsIPrincipal* aPrincipal,
                                      nsICorsPreflightCallback* aCallback,
-                                     bool aWithCredentials,
                                      nsTArray<nsCString>& aACUnsafeHeaders,
                                      nsIChannel** aPreflightChannel);
 
@@ -82,6 +80,7 @@ private:
 
   nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI);
   nsresult CheckRequestApproved(nsIRequest* aRequest);
+  nsresult CheckPreflightNeeded(nsIChannel* aChannel);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   // The principal that originally kicked off the request

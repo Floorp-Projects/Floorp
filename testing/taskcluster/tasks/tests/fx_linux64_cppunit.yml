@@ -1,0 +1,26 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+      - --cppunittest-suite=cppunittest
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/unittests/linux_unittest.py
+          mozharness/configs/remove_executables.py
+  metadata:
+    name: '[TC] Linux64 cppunit'
+    description: CPP unit tests
+  extra:
+    suite:
+      name: cppunittest
+      flavor: cppunittest
+    treeherder:
+      groupName: Desktop cppunit
+      symbol: Cpp

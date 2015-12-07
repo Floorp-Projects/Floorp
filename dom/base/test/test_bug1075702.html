@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1075702
   document.documentElement.setAttributeNode(a1);
   document.documentElement.setAttributeNode(a2);
 
-  is(document.documentElement.getAttributeNS("", "aa"), null, "Should be NULL!");
+  is(document.documentElement.getAttributeNS("", "aa"), "lowercase", "Should be lowercase!");
   is(document.documentElement.getAttributeNS("", "AA"), "UPPERCASE", "Should be UPPERCASE!");
 
   var a3 = document.createAttribute("AA");

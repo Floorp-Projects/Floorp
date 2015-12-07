@@ -24,6 +24,10 @@ SOURCES += [
     '!xpcAccEvents.cpp',
 ]
 
+EXPORTS += [
+    '!xpcAccEvents.h',
+]
+
 LOCAL_INCLUDES += [
     '/accessible/base',
     '/accessible/generic',

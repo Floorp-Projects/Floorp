@@ -24,7 +24,7 @@ class GrallocTextureHostBasic : public TextureHost
 {
 public:
   GrallocTextureHostBasic(TextureFlags aFlags,
-                          const NewSurfaceDescriptorGralloc& aDescriptor);
+                          const SurfaceDescriptorGralloc& aDescriptor);
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
@@ -66,7 +66,7 @@ public:
 protected:
   RefPtr<BasicCompositor> mCompositor;
   RefPtr<DataTextureSource> mTextureSource;
-  NewSurfaceDescriptorGralloc mGrallocHandle;
+  SurfaceDescriptorGralloc mGrallocHandle;
   // gralloc buffer size.
   gfx::IntSize mSize;
   // Size reported by TextureClient, can be different in some cases (video?),

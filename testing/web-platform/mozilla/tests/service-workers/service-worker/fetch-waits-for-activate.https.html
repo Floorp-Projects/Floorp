@@ -54,6 +54,7 @@ async_test(function(t) {
                   expected_url, 'frame should now be loaded and controlled');
     assert_equals(registration.active.state, 'activated',
                   'active worker should be in activated state');
+    frame.remove();
     return service_worker_unregister_and_done(t, scope);
   }).catch(unreached_rejection(t));
 }, 'Fetch events should wait for the activate event to complete.');

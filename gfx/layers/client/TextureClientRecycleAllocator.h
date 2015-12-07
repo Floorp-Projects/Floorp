@@ -16,9 +16,32 @@
 namespace mozilla {
 namespace layers {
 
-class ISurfaceAllocator;
 class TextureClientHolder;
 
+class ITextureClientAllocationHelper
+{
+public:
+  ITextureClientAllocationHelper(gfx::SurfaceFormat aFormat,
+                                 gfx::IntSize aSize,
+                                 BackendSelector aSelector,
+                                 TextureFlags aTextureFlags,
+                                 TextureAllocationFlags aAllocationFlags)
+    : mFormat(aFormat)
+    , mSize(aSize)
+    , mSelector(aSelector)
+    , mTextureFlags(aTextureFlags | TextureFlags::RECYCLE) // Set recycle flag
+    , mAllocationFlags(aAllocationFlags)
+  {}
+
+  virtual already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) = 0;
+  virtual bool IsCompatible(TextureClient* aTextureClient) = 0;
+
+  const gfx::SurfaceFormat mFormat;
+  const gfx::IntSize mSize;
+  const BackendSelector mSelector;
+  const TextureFlags mTextureFlags;
+  const TextureAllocationFlags mAllocationFlags;
+};
 
 /**
  * TextureClientRecycleAllocator provides TextureClients allocation and
@@ -49,6 +72,9 @@ public:
                   TextureFlags aTextureFlags,
                   TextureAllocationFlags flags = ALLOC_DEFAULT);
 
+  already_AddRefed<TextureClient>
+  CreateOrRecycle(ITextureClientAllocationHelper& aHelper);
+
 protected:
   virtual already_AddRefed<TextureClient>
   Allocate(gfx::SurfaceFormat aFormat,
@@ -61,6 +87,7 @@ protected:
 
 private:
   friend class TextureClient;
+  friend class DefaultTextureClientAllocationHelper;
   void RecycleTextureClient(TextureClient* aClient);
 
   static const uint32_t kMaxPooledSized = 2;

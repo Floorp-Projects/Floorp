@@ -338,6 +338,11 @@ Error(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    // ES6 19.5.1.1 mandates the .prototype lookup happens before the toString
+    RootedObject proto(cx);
+    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        return false;
+
     /* Compute the error message, if any. */
     RootedString message(cx, nullptr);
     if (args.hasDefined(0)) {
@@ -389,7 +394,7 @@ Error(JSContext* cx, unsigned argc, Value* vp)
     JSExnType exnType = JSExnType(args.callee().as<JSFunction>().getExtendedSlot(0).toInt32());
 
     RootedObject obj(cx, ErrorObject::create(cx, exnType, stack, fileName,
-                                             lineNumber, columnNumber, nullptr, message));
+                                             lineNumber, columnNumber, nullptr, message, proto));
     if (!obj)
         return false;
 

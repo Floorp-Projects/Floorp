@@ -27,7 +27,9 @@ function handleRequest(request, response)
     var curHop = hops[query.hop - 1];
     query.allowOrigin = curHop.allowOrigin;
     query.allowHeaders = curHop.allowHeaders;
+    query.allowMethods = curHop.allowMethods;
     query.allowCred = curHop.allowCred;
+    query.noAllowPreflight = curHop.noAllowPreflight;
     if (curHop.setCookie) {
       query.setCookie = unescape(curHop.setCookie);
     }

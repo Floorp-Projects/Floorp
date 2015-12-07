@@ -17,6 +17,7 @@
 #include "nsHtml5RefPtr.h"
 #include "nsIScriptError.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsHtml5Highlighter.h"
 #include "expat_config.h"
 #include "expat.h"
@@ -300,7 +301,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
   mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
   if (mSniffingBuffer) {
     uint32_t writeCount;
-    rv = WriteStreamBytes(mSniffingBuffer, mSniffingLength, &writeCount);
+    rv = WriteStreamBytes(mSniffingBuffer.get(), mSniffingLength, &writeCount);
     NS_ENSURE_SUCCESS(rv, rv);
     mSniffingBuffer = nullptr;
   }
@@ -783,13 +784,13 @@ nsHtml5StreamParser::SniffStreamBytes(const uint8_t* aFromSegment,
   }
 
   if (!mSniffingBuffer) {
-    mSniffingBuffer = new (mozilla::fallible)
-      uint8_t[NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE];
+    mSniffingBuffer =
+      MakeUniqueFallible<uint8_t[]>(NS_HTML5_STREAM_PARSER_SNIFFING_BUFFER_SIZE);
     if (!mSniffingBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  memcpy(mSniffingBuffer + mSniffingLength, aFromSegment, aCount);
+  memcpy(&mSniffingBuffer[mSniffingLength], aFromSegment, aCount);
   mSniffingLength += aCount;
   *aWriteCount = aCount;
   return NS_OK;
@@ -1126,20 +1127,20 @@ class nsHtml5DataAvailable : public nsRunnable
 {
   private:
     nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
-    nsAutoArrayPtr<uint8_t>            mData;
+    UniquePtr<uint8_t[]>               mData;
     uint32_t                           mLength;
   public:
     nsHtml5DataAvailable(nsHtml5StreamParser* aStreamParser,
-                         uint8_t*             aData,
+                         UniquePtr<uint8_t[]> aData,
                          uint32_t             aLength)
       : mStreamParser(aStreamParser)
-      , mData(aData)
+      , mData(Move(aData))
       , mLength(aLength)
     {}
     NS_IMETHODIMP Run()
     {
       mozilla::MutexAutoLock autoLock(mStreamParser->mTokenizerMutex);
-      mStreamParser->DoDataAvailable(mData, mLength);
+      mStreamParser->DoDataAvailable(mData.get(), mLength);
       return NS_OK;
     }
 };
@@ -1160,7 +1161,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
   uint32_t totalRead;
   // Main thread to parser thread dispatch requires copying to buffer first.
   if (NS_IsMainThread()) {
-    nsAutoArrayPtr<uint8_t> data(new (mozilla::fallible) uint8_t[aLength]);
+    auto data = MakeUniqueFallible<uint8_t[]>(aLength);
     if (!data) {
       return mExecutor->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
     }
@@ -1170,7 +1171,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
     NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
 
     nsCOMPtr<nsIRunnable> dataAvailable = new nsHtml5DataAvailable(this,
-                                                                   data.forget(),
+                                                                   Move(data),
                                                                    totalRead);
     if (NS_FAILED(mThread->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Dispatching DataAvailable event failed.");

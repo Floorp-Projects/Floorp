@@ -107,6 +107,9 @@ class GlobalObject : public NativeObject
         COLLATOR_PROTO,
         NUMBER_FORMAT_PROTO,
         DATE_TIME_FORMAT_PROTO,
+        MODULE_PROTO,
+        IMPORT_ENTRY_PROTO,
+        EXPORT_ENTRY_PROTO,
         REGEXP_STATICS,
         WARNED_ONCE_FLAGS,
         RUNTIME_CODEGEN_ENABLED,
@@ -466,6 +469,18 @@ class GlobalObject : public NativeObject
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initDateTimeFormatProto);
     }
 
+    JSObject* getModulePrototype() {
+        return &getSlot(MODULE_PROTO).toObject();
+    }
+
+    JSObject* getImportEntryPrototype() {
+        return &getSlot(IMPORT_ENTRY_PROTO).toObject();
+    }
+
+    JSObject* getExportEntryPrototype() {
+        return &getSlot(EXPORT_ENTRY_PROTO).toObject();
+    }
+
     static JSFunction*
     getOrCreateTypedArrayConstructor(JSContext* cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_TypedArray))
@@ -679,6 +694,11 @@ class GlobalObject : public NativeObject
     static bool initCollatorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initNumberFormatProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initDateTimeFormatProto(JSContext* cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtin/ModuleObject.cpp
+    static bool initModuleProto(JSContext* cx, Handle<GlobalObject*> global);
+    static bool initImportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
+    static bool initExportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/TypedObject.cpp
     static bool initTypedObjectModule(JSContext* cx, Handle<GlobalObject*> global);

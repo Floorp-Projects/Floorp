@@ -174,6 +174,8 @@ protected:
                  const RectCornerRadii& aInnerClipRadii,
                  const mozilla::gfx::Color& aShadowColor,
                  const bool& aHasBorderRadius,
+                 const mozilla::gfx::Point aShadowOffset,
+                 bool& aMovedOffset,
                  gfxContext* aDestinationCtx);
 
     /**

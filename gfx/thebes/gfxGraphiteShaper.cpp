@@ -34,7 +34,6 @@ gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
       mGrFont(nullptr), mFallbackToSmallCaps(false)
 {
     mCallbackData.mFont = aFont;
-    mCallbackData.mShaper = this;
 }
 
 gfxGraphiteShaper::~gfxGraphiteShaper()
@@ -50,8 +49,7 @@ gfxGraphiteShaper::GrGetAdvance(const void* appFontHandle, uint16_t glyphid)
 {
     const CallbackData *cb =
         static_cast<const CallbackData*>(appFontHandle);
-    return FixedToFloat(cb->mFont->GetGlyphWidth(*cb->mContext->GetDrawTarget(),
-                                                 glyphid));
+    return FixedToFloat(cb->mFont->GetGlyphWidth(*cb->mDrawTarget, glyphid));
 }
 
 static inline uint32_t
@@ -97,7 +95,7 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
         return false;
     }
 
-    mCallbackData.mContext = aContext;
+    mCallbackData.mDrawTarget = aContext->GetDrawTarget();
 
     const gfxFontStyle *style = mFont->GetStyle();
 

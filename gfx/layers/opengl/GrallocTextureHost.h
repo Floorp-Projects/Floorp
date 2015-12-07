@@ -20,7 +20,7 @@ class GrallocTextureHostOGL : public TextureHost
   friend class GrallocBufferActor;
 public:
   GrallocTextureHostOGL(TextureFlags aFlags,
-                        const NewSurfaceDescriptorGralloc& aDescriptor);
+                        const SurfaceDescriptorGralloc& aDescriptor);
 
   virtual ~GrallocTextureHostOGL();
 
@@ -63,7 +63,7 @@ public:
 private:
   void DestroyEGLImage();
 
-  NewSurfaceDescriptorGralloc mGrallocHandle;
+  SurfaceDescriptorGralloc mGrallocHandle;
   RefPtr<GLTextureSource> mGLTextureSource;
   RefPtr<CompositorOGL> mCompositor;
   // Size reported by the GraphicBuffer

@@ -84,13 +84,17 @@ js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
 /* static */ ErrorObject*
 js::ErrorObject::create(JSContext* cx, JSExnType errorType, HandleObject stack,
                         HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
-                        ScopedJSFreePtr<JSErrorReport>* report, HandleString message)
+                        ScopedJSFreePtr<JSErrorReport>* report, HandleString message,
+                        HandleObject protoArg /* = nullptr */)
 {
     AssertObjectIsSavedFrameOrWrapper(cx, stack);
 
-    Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType));
-    if (!proto)
-        return nullptr;
+    RootedObject proto(cx, protoArg);
+    if (!proto) {
+        proto = GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType);
+        if (!proto)
+            return nullptr;
+    }
 
     Rooted<ErrorObject*> errObject(cx);
     {

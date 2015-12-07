@@ -1233,9 +1233,11 @@ Element::GetAttributeNode(const nsAString& aName)
 already_AddRefed<Attr>
 Element::SetAttributeNode(Attr& aNewAttr, ErrorResult& aError)
 {
+  // XXXbz can we just remove this warning and the one in setAttributeNodeNS and
+  // alias setAttributeNode to setAttributeNodeNS?
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
-  return Attributes()->SetNamedItem(aNewAttr, aError);
+  return Attributes()->SetNamedItemNS(aNewAttr, aError);
 }
 
 already_AddRefed<Attr>

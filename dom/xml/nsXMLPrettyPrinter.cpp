@@ -171,7 +171,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
     event->SetTrusted(true);
     bool dummy;
-    rv = rootCont->DispatchEvent(static_cast<Event*>(event), &dummy);
+    rv = rootCont->DispatchEvent(event, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Observe the document so we know when to switch to "normal" view

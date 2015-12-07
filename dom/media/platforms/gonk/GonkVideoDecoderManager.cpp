@@ -41,6 +41,59 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 
 namespace mozilla {
 
+class GonkTextureClientAllocationHelper : public layers::ITextureClientAllocationHelper
+{
+public:
+  GonkTextureClientAllocationHelper(uint32_t aGrallocFormat,
+                                    gfx::IntSize aSize)
+    : ITextureClientAllocationHelper(gfx::SurfaceFormat::UNKNOWN,
+                                     aSize,
+                                     BackendSelector::Content,
+                                     TextureFlags::DEALLOCATE_CLIENT,
+                                     ALLOC_DISALLOW_BUFFERTEXTURECLIENT)
+    , mGrallocFormat(aGrallocFormat)
+  {}
+
+  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override
+  {
+    uint32_t usage = android::GraphicBuffer::USAGE_SW_READ_OFTEN |
+                     android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
+                     android::GraphicBuffer::USAGE_HW_TEXTURE;
+
+    GrallocTextureData* texData = GrallocTextureData::Create(mSize, mGrallocFormat,
+                                                             gfx::BackendType::NONE,
+                                                             usage, aAllocator);
+    if (!texData) {
+      return nullptr;
+    }
+    sp<GraphicBuffer> graphicBuffer = texData->GetGraphicBuffer();
+    if (!graphicBuffer.get()) {
+      return nullptr;
+    }
+    RefPtr<TextureClient> textureClient =
+      TextureClient::CreateWithData(texData, TextureFlags::DEALLOCATE_CLIENT, aAllocator);
+    return textureClient.forget();
+  }
+
+  bool IsCompatible(TextureClient* aTextureClient) override
+  {
+    if (!aTextureClient) {
+      return false;
+    }
+    sp<GraphicBuffer> graphicBuffer =
+      static_cast<GrallocTextureData*>(aTextureClient->GetInternalData())->GetGraphicBuffer();
+    if (!graphicBuffer.get() ||
+        static_cast<uint32_t>(graphicBuffer->getPixelFormat()) != mGrallocFormat ||
+        aTextureClient->GetSize() != mSize) {
+      return false;
+    }
+    return true;
+  }
+
+private:
+  uint32_t mGrallocFormat;
+};
+
 GonkVideoDecoderManager::GonkVideoDecoderManager(
   mozilla::layers::ImageContainer* aImageContainer,
   const VideoInfo& aConfig)
@@ -269,6 +322,36 @@ Align(int aX, int aAlign)
   return (aX + aAlign - 1) & ~(aAlign - 1);
 }
 
+// Venus formats are doucmented in kernel/include/media/msm_media_info.h:
+// * Y_Stride : Width aligned to 128
+// * UV_Stride : Width aligned to 128
+// * Y_Scanlines: Height aligned to 32
+// * UV_Scanlines: Height/2 aligned to 16
+// * Total size = align((Y_Stride * Y_Scanlines
+// *          + UV_Stride * UV_Scanlines + 4096), 4096)
+static void
+CopyVenus(uint8_t* aSrc, uint8_t* aDest, uint32_t aWidth, uint32_t aHeight)
+{
+  size_t yStride = Align(aWidth, 128);
+  uint8_t* s = aSrc;
+  uint8_t* d = aDest;
+  for (size_t i = 0; i < aHeight; i++) {
+    memcpy(d, s, aWidth);
+    s += yStride;
+    d += yStride;
+  }
+  size_t uvStride = yStride;
+  size_t uvLines = (aHeight + 1) / 2;
+  size_t ySize = yStride * Align(aHeight, 32);
+  s = aSrc + ySize;
+  d = aDest + ySize;
+  for (size_t i = 0; i < uvLines; i++) {
+    memcpy(d, s, aWidth);
+    s += uvStride;
+    d += uvStride;
+  }
+}
+
 static void
 CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination)
 {
@@ -281,7 +364,7 @@ CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination)
   // Build PlanarYCbCrData for source buffer.
   PlanarYCbCrData srcData;
   switch (aSource->getPixelFormat()) {
-    case HAL_PIXEL_FORMAT_YV12:
+    case HAL_PIXEL_FORMAT_YV12: {
       // Android YV12 format is defined in system/core/include/system/graphics.h
       srcData.mYChannel = static_cast<uint8_t*>(srcPtr);
       srcData.mYSkip = 0;
@@ -297,46 +380,37 @@ CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination)
       srcData.mCrSkip = 0;
       srcData.mCbChannel = srcData.mCrChannel + (srcData.mCbCrStride * srcData.mCbCrSize.height);
       srcData.mCbSkip = 0;
+
+      // Build PlanarYCbCrData for destination buffer.
+      PlanarYCbCrData destData;
+      destData.mYChannel = static_cast<uint8_t*>(destPtr);
+      destData.mYSkip = 0;
+      destData.mYSize.width = aDestination->getWidth();
+      destData.mYSize.height = aDestination->getHeight();
+      destData.mYStride = aDestination->getStride();
+      // 4:2:0.
+      destData.mCbCrSize.width = destData.mYSize.width / 2;
+      destData.mCbCrSize.height = destData.mYSize.height / 2;
+      destData.mCrChannel = destData.mYChannel + (destData.mYStride * destData.mYSize.height);
+      // Aligned to 16 bytes boundary.
+      destData.mCbCrStride = Align(destData.mYStride / 2, 16);
+      destData.mCrSkip = 0;
+      destData.mCbChannel = destData.mCrChannel + (destData.mCbCrStride * destData.mCbCrSize.height);
+      destData.mCbSkip = 0;
+
+      CopyYUV(srcData, destData);
       break;
+    }
     case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
-      // Venus formats are doucmented in kernel/include/media/msm_media_info.h:
-      srcData.mYChannel = static_cast<uint8_t*>(srcPtr);
-      srcData.mYSkip = 0;
-      srcData.mYSize.width = aSource->getWidth();
-      srcData.mYSize.height = aSource->getHeight();
-      // - Y & UV Width aligned to 128
-      srcData.mYStride = aSource->getStride();
-      srcData.mCbCrSize.width = (srcData.mYSize.width + 1) / 2;
-      srcData.mCbCrSize.height = (srcData.mYSize.height + 1) / 2;
-      // - Y height aligned to 32
-      srcData.mCbChannel = srcData.mYChannel + (srcData.mYStride * Align(srcData.mYSize.height, 32));
-      // Interleaved VU plane.
-      srcData.mCbSkip = 1;
-      srcData.mCrChannel = srcData.mCbChannel + 1;
-      srcData.mCrSkip = 1;
-      srcData.mCbCrStride = srcData.mYStride;
+      CopyVenus(static_cast<uint8_t*>(srcPtr),
+                static_cast<uint8_t*>(destPtr),
+                aSource->getWidth(),
+                aSource->getHeight());
       break;
     default:
       NS_ERROR("Unsupported input gralloc image type. Should never be here.");
   }
-  // Build PlanarYCbCrData for destination buffer.
-  PlanarYCbCrData destData;
-  destData.mYChannel = static_cast<uint8_t*>(destPtr);
-  destData.mYSkip = 0;
-  destData.mYSize.width = aDestination->getWidth();
-  destData.mYSize.height = aDestination->getHeight();
-  destData.mYStride = aDestination->getStride();
-  // 4:2:0.
-  destData.mCbCrSize.width = destData.mYSize.width / 2;
-  destData.mCbCrSize.height = destData.mYSize.height / 2;
-  destData.mCrChannel = destData.mYChannel + (destData.mYStride * destData.mYSize.height);
-  // Aligned to 16 bytes boundary.
-  destData.mCbCrStride = Align(destData.mYStride / 2, 16);
-  destData.mCrSkip = 0;
-  destData.mCbChannel = destData.mCrChannel + (destData.mCbCrStride * destData.mCbCrSize.height);
-  destData.mCbSkip = 0;
 
-  CopyYUV(srcData, destData);
 
   aSource->unlock();
   aDestination->unlock();
@@ -359,19 +433,13 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
       return nullptr;
     }
 
-    gfx::IntSize size(Align(aPicture.width, 2) , Align(aPicture.height, 2));
-    textureClient =
-      mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV, size,
-                                      BackendSelector::Content,
-                                      TextureFlags::DEFAULT,
-                                      ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
+    gfx::IntSize size(srcBuffer->getWidth(), srcBuffer->getHeight());
+    GonkTextureClientAllocationHelper helper(srcBuffer->getPixelFormat(), size);
+    textureClient = mCopyAllocator->CreateOrRecycle(helper);
     if (!textureClient) {
       GVDM_LOG("Copy buffer allocation failed!");
       return nullptr;
     }
-    // Update size to match buffer's.
-    aPicture.width = size.width;
-    aPicture.height = size.height;
 
     sp<GraphicBuffer> destBuffer =
       static_cast<GrallocTextureData*>(textureClient->GetInternalData())->GetGraphicBuffer();

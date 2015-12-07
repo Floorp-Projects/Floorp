@@ -1,7 +1,7 @@
 marionette-driver >= 1.1.1
 browsermob-proxy >= 0.6.0
 manifestparser >= 1.1
-mozhttpd >= 0.7
+wptserve >= 1.3.0
 mozinfo >= 0.8
 mozprocess >= 0.9
 mozrunner >= 6.9

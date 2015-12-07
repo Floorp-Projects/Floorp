@@ -22,6 +22,7 @@ t.step(function() {
           assert_true(controller instanceof w.ServiceWorker,
                       'controller should be a ServiceWorker object');
           assert_equals(controller.scriptURL, normalizeURL(url));
+          frame.remove();
           service_worker_unregister_and_done(t, scope);
         }))
       .catch(unreached_rejection(t));

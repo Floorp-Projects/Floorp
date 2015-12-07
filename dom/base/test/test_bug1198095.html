@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1198095
+-->
+  <title>Test for Bug 1198095</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1198095">Mozilla Bug 1198095</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+var fileData1 = '1234567890';
+var fileData2 = '43210';
+var r, firstBlob;
+
+var openerURL = SimpleTest.getTestFileURL("file_bug1198095.js");
+
+var opener = SpecialPowers.loadChromeScript(openerURL);
+opener.addMessageListener("file.opened", onFileOpened);
+opener.addMessageListener("file.modified", onFileModified);
+opener.sendAsyncMessage("file.open", fileData1);
+
+function onLoadEnd1(e) {
+  e.target.removeEventListener('loadend', onLoadEnd1);
+
+  is(e.target, r, "Target and r are ok");
+  ok(e.target.readyState, FileReader.DONE, "The file has been read.");
+  ok(e.target.result instanceof ArrayBuffer, "The result is an ArrayBuffer");
+
+  var view = new Uint8Array(e.target.result);
+  is(view.length, fileData1.length, "File data length matches");
+  for (var i = 0; i < fileData1.length; ++i) {
+    is(String.fromCharCode(view[i]), fileData1[i], "Byte matches");
+  }
+
+  opener.sendAsyncMessage("file.modify", fileData2);
+}
+
+function onLoadEnd2(e) {
+  e.target.removeEventListener('loadend', onLoadEnd2);
+  ok(false, "This method should not be called - loadEnd2!");
+}
+
+function onError1(e) {
+  ok(false, "This method should not be called - error1!");
+}
+
+function onError2(e) {
+  e.target.removeEventListener('error', onError2);
+  SimpleTest.finish();
+}
+
+function onFileOpened(blob) {
+  firstBlob = blob;
+  r = new FileReader();
+  r.addEventListener("loadend", onLoadEnd1, false);
+  r.addEventListener("error", onError1, false);
+  r.readAsArrayBuffer(firstBlob);
+}
+
+function onFileModified(blob) {
+  r.addEventListener("loadend", onLoadEnd2, false);
+  r.removeEventListener('error', onError1);
+  r.addEventListener("error", onError2, false);
+  r.readAsArrayBuffer(firstBlob);
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body> </html>

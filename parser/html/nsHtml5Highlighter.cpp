@@ -57,7 +57,7 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mCurrentRun(nullptr)
  , mAmpersand(nullptr)
  , mSlash(nullptr)
- , mHandles(new nsIContent*[NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH])
+ , mHandles(MakeUnique<nsIContent*[]>(NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH))
  , mHandlesUsed(0)
  , mSeenBase(false)
 {
@@ -641,8 +641,8 @@ nsIContent**
 nsHtml5Highlighter::AllocateContentHandle()
 {
   if (mHandlesUsed == NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH) {
-    mOldHandles.AppendElement(mHandles.forget());
-    mHandles = new nsIContent*[NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH];
+    mOldHandles.AppendElement(Move(mHandles));
+    mHandles = MakeUnique<nsIContent*[]>(NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH);
     mHandlesUsed = 0;
   }
 #ifdef DEBUG

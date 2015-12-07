@@ -966,3 +966,10 @@ nsViewSourceChannel::SetIsMainDocumentChannel(bool aValue)
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetIsMainDocumentChannel(aValue);
 }
+
+// Have to manually forward SetCorsPreflightParameters since it's [notxpcom]
+void
+nsViewSourceChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHeaders)
+{
+  mHttpChannelInternal->SetCorsPreflightParameters(aUnsafeHeaders);
+}

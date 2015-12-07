@@ -96,7 +96,7 @@ nsIWidgetListener::WillPaintWindow(nsIWidget* aWidget)
 
 bool
 nsIWidgetListener::PaintWindow(nsIWidget* aWidget,
-                               nsIntRegion aRegion)
+                               LayoutDeviceIntRegion aRegion)
 {
   return false;
 }

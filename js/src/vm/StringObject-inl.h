@@ -33,9 +33,9 @@ StringObject::init(JSContext* cx, HandleString str)
 }
 
 inline StringObject*
-StringObject::create(JSContext* cx, HandleString str, NewObjectKind newKind)
+StringObject::create(JSContext* cx, HandleString str, HandleObject proto, NewObjectKind newKind)
 {
-    JSObject* obj = NewBuiltinClassInstance(cx, &class_, newKind);
+    JSObject* obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
     if (!obj)
         return nullptr;
     Rooted<StringObject*> strobj(cx, &obj->as<StringObject>());

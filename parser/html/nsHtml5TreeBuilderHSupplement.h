@@ -14,9 +14,9 @@
     nsTArray<nsHtml5TreeOperation>         mOpQueue;
     nsTArray<nsHtml5SpeculativeLoad>       mSpeculativeLoadQueue;
     nsAHtml5TreeOpSink*                    mOpSink;
-    nsAutoArrayPtr<nsIContent*>            mHandles;
+    mozilla::UniquePtr<nsIContent*[]>      mHandles;
     int32_t                                mHandlesUsed;
-    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
+    nsTArray<mozilla::UniquePtr<nsIContent*[]>> mOldHandles;
     nsHtml5TreeOpStage*                    mSpeculativeLoadStage;
     nsresult                               mBroken;
     bool                                   mCurrentHtmlScriptIsAsyncOrDefer;

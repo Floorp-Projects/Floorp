@@ -55,7 +55,6 @@ private:
 };
 
 class FetchDriver final : public nsIStreamListener,
-                          public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
                           public nsIThreadRetargetableStreamListener
 {
@@ -63,7 +62,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
@@ -82,7 +80,6 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
-  bool mHasBeenCrossSite;
 
   DebugOnly<bool> mResponseAvailableCalled;
   DebugOnly<bool> mFetchCalled;
@@ -92,10 +89,8 @@ private:
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  nsresult SetTainting();
   nsresult ContinueFetch();
   nsresult HttpFetch();
-  bool IsUnsafeRequest();
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>

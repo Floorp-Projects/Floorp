@@ -122,7 +122,8 @@ protected:
   // nsIWidgetListener
   virtual void WindowRaised(nsIWidget* aWidget);
   virtual void WindowLowered(nsIWidget* aWidget);
-  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) override;
+  virtual bool PaintWindow(nsIWidget* aWidget,
+                           mozilla::LayoutDeviceIntRegion aRegion) override;
 
 protected:
   RefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;

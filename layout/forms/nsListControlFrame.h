@@ -193,7 +193,8 @@ public:
    * @param aPt the offset of this frame, relative to the rendering reference
    * frame
    */
-  void PaintFocus(nsRenderingContext& aRC, nsPoint aPt);
+  void PaintFocus(mozilla::gfx::DrawTarget* aDrawTarget, nsPoint aPt);
+
   /**
    * If this frame IsFocused(), invalidates an area that includes anything
    * that PaintFocus will or could have painted --- basically the whole

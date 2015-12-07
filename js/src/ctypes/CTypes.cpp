@@ -9,6 +9,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NumericLimits.h"
+#include "mozilla/Vector.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -40,6 +41,7 @@
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
 #include "gc/Zone.h"
+#include "js/Vector.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -2658,7 +2660,7 @@ jsvalToPtrExplicit(JSContext* cx, Value val, uintptr_t* result)
 
 template<class IntegerType, class CharType, size_t N, class AP>
 void
-IntegerToString(IntegerType i, int radix, Vector<CharType, N, AP>& result)
+IntegerToString(IntegerType i, int radix, mozilla::Vector<CharType, N, AP>& result)
 {
   JS_STATIC_ASSERT(NumericLimits<IntegerType>::is_exact);
 
@@ -3654,7 +3656,7 @@ BuildTypeSource(JSContext* cx,
 
     const FieldInfoHash* fields = StructType::GetFieldInfo(typeObj);
     size_t length = fields->count();
-    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    Vector<const FieldInfoHash::Entry*, 64, SystemAllocPolicy> fieldsArray;
     if (!fieldsArray.resize(length))
       break;
 
@@ -3812,7 +3814,7 @@ BuildDataSource(JSContext* cx,
     // be able to ImplicitConvert successfully.
     const FieldInfoHash* fields = StructType::GetFieldInfo(typeObj);
     size_t length = fields->count();
-    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    Vector<const FieldInfoHash::Entry*, 64, SystemAllocPolicy> fieldsArray;
     if (!fieldsArray.resize(length))
       return false;
 
@@ -6510,7 +6512,7 @@ FunctionType::ConstructData(JSContext* cx,
   return JS_FreezeObject(cx, dataObj);
 }
 
-typedef Array<AutoValue, 16> AutoValueAutoArray;
+typedef Vector<AutoValue, 16, SystemAllocPolicy> AutoValueAutoArray;
 
 static bool
 ConvertArgument(JSContext* cx,
@@ -6932,7 +6934,12 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
   JSRuntime* rt = argClosure.cinfo->rt;
   RootedObject fun(rt, argClosure.cinfo->jsfnObj);
-  (void) js::PrepareScriptEnvironmentAndInvoke(rt, fun, argClosure);
+
+  // Arbitrarily choose a cx in which to run this code. This is bad, as
+  // JSContexts are stateful and have options. The hope is to eliminate
+  // JSContexts (see bug 650361).
+  js::PrepareScriptEnvironmentAndInvoke(rt->contextList.getFirst(), fun,
+                                        argClosure);
 }
 
 bool CClosure::ArgClosure::operator()(JSContext* cx)
@@ -7025,11 +7032,14 @@ bool CClosure::ArgClosure::operator()(JSContext* cx)
       size_t copySize = CType::GetSize(fninfo->mReturnType);
       MOZ_ASSERT(copySize <= rvSize);
       memcpy(result, cinfo->errResult, copySize);
+
+      // We still want to return false here, so that
+      // PrepareScriptEnvironmentAndInvoke will report the exception.
     } else {
       // Bad case: not much we can do here. The rv is already zeroed out, so we
       // just return and hope for the best.
-      return false;
     }
+    return false;
   }
 
   // Small integer types must be returned as a word-sized ffi_arg. Coerce it

@@ -385,6 +385,7 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
   if (AnimListMirrorsBaseList()) {
     DOMSVGPathSegList *animVal =
       GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+    MOZ_ASSERT(animVal, "animVal should be a valid pointer");
     if (!animVal->mItems.SetCapacity(
           animVal->mItems.Length() + 1, fallible)) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);

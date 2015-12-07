@@ -1268,7 +1268,7 @@ VARIABLES = {
         into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
         """, None),
 
-    'EXPORTS': (HierarchicalStringList, list,
+    'EXPORTS': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be exported, and in which subdirectories.
 
         ``EXPORTS`` is generally used to list the include files to be exported to
@@ -1281,6 +1281,10 @@ VARIABLES = {
 
            EXPORTS += ['foo.h']
            EXPORTS.mozilla.dom += ['bar.h']
+
+        Entries in ``EXPORTS`` are paths, so objdir paths may be used, but
+        any files listed from the objdir must also be listed in
+        ``GENERATED_FILES``.
         """, None),
 
     'PROGRAM' : (unicode, unicode,

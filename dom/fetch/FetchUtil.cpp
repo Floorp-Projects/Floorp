@@ -203,7 +203,9 @@ public:
   bool URLParamsIterator(const nsString& aName,
                          const nsString& aValue) override
   {
-    mFormData->Append(aName, aValue);
+    ErrorResult rv;
+    mFormData->Append(aName, aValue, rv);
+    MOZ_ASSERT(!rv.Failed());
     return true;
   }
 
@@ -392,7 +394,9 @@ private:
     NS_ConvertUTF8toUTF16 name(mName);
 
     if (mFilename.IsVoid()) {
-      mFormData->Append(name, NS_ConvertUTF8toUTF16(body));
+      ErrorResult rv;
+      mFormData->Append(name, NS_ConvertUTF8toUTF16(body), rv);
+      MOZ_ASSERT(!rv.Failed());
     } else {
       // Unfortunately we've to copy the data first since all our strings are
       // going to free it. We also need fallible alloc, so we can't just use
@@ -417,7 +421,11 @@ private:
                                NS_ConvertUTF8toUTF16(mFilename),
                                NS_ConvertUTF8toUTF16(mContentType), /* aLastModifiedDate */ 0);
       Optional<nsAString> dummy;
-      mFormData->Append(name, *file, dummy);
+      ErrorResult rv;
+      mFormData->Append(name, *file, dummy, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return false;
+      }
     }
 
     return true;

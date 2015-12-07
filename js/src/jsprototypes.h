@@ -102,9 +102,6 @@ IF_BDATA(real,imaginary)(SIMD,                  41,     InitSIMDClass, OCLASP(SI
     real(TypedArray,            43,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics,                 44,     InitAtomicsClass, OCLASP(Atomics)) \
     real(SavedFrame,            45,      InitViaClassSpec,      &js::SavedFrame::class_) \
-    real(Module,                46,      InitModuleClass,       OCLASP(Module)) \
-    real(ImportEntry,           47,      InitImportEntryClass,  OCLASP(ImportEntry)) \
-    real(ExportEntry,           48,      InitExportEntryClass,  OCLASP(ExportEntry)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

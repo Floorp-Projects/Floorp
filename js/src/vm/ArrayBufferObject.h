@@ -213,8 +213,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     static ArrayBufferObject* create(JSContext* cx, uint32_t nbytes,
                                      BufferContents contents,
                                      OwnsState ownsState = OwnsData,
+                                     HandleObject proto = nullptr,
                                      NewObjectKind newKind = GenericObject);
     static ArrayBufferObject* create(JSContext* cx, uint32_t nbytes,
+                                     HandleObject proto = nullptr,
                                      NewObjectKind newKind = GenericObject);
 
     static JSObject* createSlice(JSContext* cx, Handle<ArrayBufferObject*> arrayBuffer,

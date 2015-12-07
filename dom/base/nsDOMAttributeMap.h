@@ -141,11 +141,6 @@ public:
   Attr* NamedGetter(const nsAString& aAttrName, bool& aFound);
   bool NameIsEnumerable(const nsAString& aName);
   already_AddRefed<Attr>
-  SetNamedItem(Attr& aAttr, ErrorResult& aError)
-  {
-    return SetNamedItemInternal(aAttr, false, aError);
-  }
-  already_AddRefed<Attr>
   RemoveNamedItem(mozilla::dom::NodeInfo* aNodeInfo, ErrorResult& aError);
   already_AddRefed<Attr>
   RemoveNamedItem(const nsAString& aName, ErrorResult& aError);
@@ -158,10 +153,7 @@ public:
   GetNamedItemNS(const nsAString& aNamespaceURI,
                  const nsAString& aLocalName);
   already_AddRefed<Attr>
-  SetNamedItemNS(Attr& aNode, ErrorResult& aError)
-  {
-    return SetNamedItemInternal(aNode, true, aError);
-  }
+  SetNamedItemNS(Attr& aNode, ErrorResult& aError);
   already_AddRefed<Attr>
   RemoveNamedItemNS(const nsAString& aNamespaceURI, const nsAString& aLocalName,
                     ErrorResult& aError);
@@ -183,13 +175,6 @@ private:
    * Cache of Attrs.
    */
   AttrCache mAttributeCache;
-
-  /**
-   * SetNamedItem() (aWithNS = false) and SetNamedItemNS() (aWithNS =
-   * true) implementation.
-   */
-  already_AddRefed<Attr>
-  SetNamedItemInternal(Attr& aNode, bool aWithNS, ErrorResult& aError);
 
   already_AddRefed<mozilla::dom::NodeInfo>
   GetAttrNodeInfo(const nsAString& aNamespaceURI,

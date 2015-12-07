@@ -565,6 +565,19 @@ class FullParseHandler
         return pn;
     }
 
+    ParseNode* newComprehensionFor(uint32_t begin, ParseNode* forHead, ParseNode* body) {
+        // A PNK_COMPREHENSIONFOR node is binary: left is loop control, right
+        // is the body.
+        MOZ_ASSERT(forHead->isKind(PNK_FORIN) || forHead->isKind(PNK_FOROF));
+        JSOp op = forHead->isKind(PNK_FORIN) ? JSOP_ITER : JSOP_NOP;
+        BinaryNode* pn = new_<BinaryNode>(PNK_COMPREHENSIONFOR, op,
+                                          TokenPos(begin, body->pn_pos.end), forHead, body);
+        if (!pn)
+            return null();
+        pn->pn_iflags = JSOP_ITER;
+        return pn;
+    }
+
     ParseNode* newForHead(ParseNodeKind kind, ParseNode* pn1, ParseNode* pn2, ParseNode* pn3,
                           const TokenPos& pos)
     {

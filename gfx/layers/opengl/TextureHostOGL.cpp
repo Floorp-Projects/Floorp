@@ -89,9 +89,9 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-    case SurfaceDescriptor::TNewSurfaceDescriptorGralloc: {
-      const NewSurfaceDescriptorGralloc& desc =
-        aDesc.get_NewSurfaceDescriptorGralloc();
+    case SurfaceDescriptor::TSurfaceDescriptorGralloc: {
+      const SurfaceDescriptorGralloc& desc =
+        aDesc.get_SurfaceDescriptorGralloc();
       result = new GrallocTextureHostOGL(aFlags, desc);
       break;
     }

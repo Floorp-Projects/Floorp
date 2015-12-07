@@ -537,7 +537,7 @@ struct Callback {
 };
 
 template<typename F>
-class CallbackVector : public Vector<Callback<F>, 4, SystemAllocPolicy> {};
+using CallbackVector = Vector<Callback<F>, 4, SystemAllocPolicy>;
 
 template <typename T, typename Iter0, typename Iter1>
 class ChainedIter

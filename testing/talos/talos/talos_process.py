@@ -40,11 +40,17 @@ class Reader(object):
     def __init__(self, event):
         self.output = []
         self.got_end_timestamp = False
+        self.got_timeout = False
+        self.timeout_message = ''
         self.event = event
 
     def __call__(self, line):
         if line.find('__endTimestamp') != -1:
             self.got_end_timestamp = True
+            self.event.set()
+        elif line == 'TART: TIMEOUT':
+            self.got_timeout = True
+            self.timeout_message = 'TART'
             self.event.set()
 
         if not (line.startswith('JavaScript error:') or
@@ -108,6 +114,8 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
                     "Browser shutdown timed out after {0} seconds, terminating"
                     " process.".format(wait_for_quit_timeout)
                 )
+        elif reader.got_timeout:
+            raise TalosError('TIMEOUT: %s' % reader.timeout_message)
     finally:
         # this also handle KeyboardInterrupt
         # ensure early the process is really terminated

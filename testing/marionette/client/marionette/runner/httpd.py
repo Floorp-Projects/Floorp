@@ -4,7 +4,7 @@
 
 import os
 
-from mozhttpd import MozHttpd
+from wptserve import server, handlers, routes as default_routes
 
 
 class FixtureServer(object):
@@ -20,8 +20,14 @@ class FixtureServer(object):
     def start(self, block=False):
         if self.alive:
             return
-        self._server = MozHttpd(host=self.host, port=self.port, docroot=self.root, urlhandlers=[
-                                {"method": "POST", "path": "/file_upload", "function": upload_handler}])
+        routes = [("POST", "/file_upload", upload_handler)]
+        routes.extend(default_routes.routes)
+        self._server = server.WebTestHttpd(
+            port=self.port,
+            doc_root=self.root,
+            routes=routes,
+            host=self.host,
+        )
         self._server.start(block=block)
         self.port = self._server.httpd.server_port
         self.base_url = self.get_url()
@@ -42,18 +48,19 @@ class FixtureServer(object):
         return self._server.get_url(path)
 
     @property
-    def urlhandlers(self):
-        return self._server.urlhandlers
+    def routes(self):
+        return self._server.router.routes
 
 
-def upload_handler(query, postdata=None):
-    return (200, {}, query.headers.getheader("Content-Type"))
+@handlers.handler
+def upload_handler(request, response):
+    return 200, [], [request.headers.get("Content-Type")] or []
 
 
 if __name__ == "__main__":
     here = os.path.abspath(os.path.dirname(__file__))
-    root = os.path.join(os.path.dirname(here), "www")
-    httpd = FixtureServer(root, port=2829)
+    doc_root = os.path.join(os.path.dirname(here), "www")
+    httpd = FixtureServer(doc_root, port=2829)
     print "Started fixture server on http://%s:%d/" % (httpd.host, httpd.port)
     try:
         httpd.start(True)

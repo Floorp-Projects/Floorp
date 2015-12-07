@@ -94,6 +94,8 @@ XPIDL_MODULE = 'dom_media'
 
 EXPORTS += [
     'AbstractMediaDecoder.h',
+    'ADTSDecoder.h',
+    'ADTSDemuxer.h',
     'AudioBufferUtils.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
@@ -190,6 +192,8 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'ADTSDecoder.cpp',
+    'ADTSDemuxer.cpp',
     'AudioCaptureStream.cpp',
     'AudioChannelFormat.cpp',
     'AudioCompactor.cpp',

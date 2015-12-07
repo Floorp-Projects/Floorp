@@ -1,0 +1,59 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "extensionTypes",
+    "description": "The <code>browser.extensionTypes</code> API contains type declarations for WebExtensions.",
+    "types": [
+      {
+        "id": "ImageFormat",
+        "type": "string",
+        "enum": ["jpeg", "png"],
+        "description": "The format of an image."
+      },
+      {
+        "id": "ImageDetails",
+        "type": "object",
+        "description": "Details about the format and quality of an image.",
+        "properties": {
+          "format": {
+            "$ref": "ImageFormat",
+            "optional": true,
+            "description": "The format of the resulting image.  Default is <code>\"jpeg\"</code>."
+          },
+          "quality": {
+            "type": "integer",
+            "optional": true,
+            "minimum": 0,
+            "maximum": 100,
+            "description": "When format is <code>\"jpeg\"</code>, controls the quality of the resulting image.  This value is ignored for PNG images.  As quality is decreased, the resulting image will have more visual artifacts, and the number of bytes needed to store it will decrease."
+          }
+        }
+      },
+      {
+        "id": "RunAt",
+        "type": "string",
+        "enum": ["document_start", "document_end", "document_idle"],
+        "description": "The soonest that the JavaScript or CSS will be injected into the tab."
+      },
+      {
+        "id": "InjectDetails",
+        "type": "object",
+        "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time.",
+        "properties": {
+          "code": {"type": "string", "optional": true, "description": "JavaScript or CSS code to inject.<br><br><b>Warning:</b><br>Be careful using the <code>code</code> parameter. Incorrect use of it may open your extension to <a href=\"https://en.wikipedia.org/wiki/Cross-site_scripting\">cross site scripting</a> attacks."},
+          "file": {"type": "string", "optional": true, "description": "JavaScript or CSS file to inject."},
+          "allFrames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
+          "matchAboutBlank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "runAt": {
+            "$ref": "RunAt",
+            "optional": true,
+            "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          }
+        }
+      }
+    ]
+  }
+]

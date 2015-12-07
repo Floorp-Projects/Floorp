@@ -17,30 +17,6 @@ using mozilla::LoadInfo;
  * A set of utilities for handling URIs
 **/
 
-/**
- * Resolves the given href argument, using the given documentBase
- * if necessary.
- * The new resolved href will be appended to the given dest String
-**/
-void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
-                           nsAString& dest) {
-    if (base.IsEmpty()) {
-        dest.Append(href);
-        return;
-    }
-    if (href.IsEmpty()) {
-        dest.Append(base);
-        return;
-    }
-    nsCOMPtr<nsIURI> pURL;
-    nsAutoString resultHref;
-    nsresult result = NS_NewURI(getter_AddRefs(pURL), base);
-    if (NS_SUCCEEDED(result)) {
-        NS_MakeAbsoluteURI(resultHref, href, pURL);
-        dest.Append(resultHref);
-    }
-} //-- resolveHref
-
 // static
 void
 URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)

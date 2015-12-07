@@ -11,6 +11,7 @@ async_test(function(t) {
     var frame_window;
     var controller;
     var registration;
+    var frame;
 
     service_worker_unregister_and_register(t, worker_url, scope)
       .then(function(r) {
@@ -20,7 +21,8 @@ async_test(function(t) {
       .then(function() {
           return with_iframe(scope);
         })
-      .then(function(frame) {
+      .then(function(f) {
+          frame = f;
           frame_window = frame.contentWindow;
           controller = frame_window.navigator.serviceWorker.controller;
           assert_true(controller instanceof frame_window.ServiceWorker,
@@ -36,6 +38,7 @@ async_test(function(t) {
       .then(function(response) {
           assert_equals(response, 'intercepted by service worker',
                         'controller should intercept requests');
+          frame.remove();
           t.done();
         })
       .catch(unreached_rejection(t));
@@ -45,6 +48,7 @@ async_test(function(t) {
     var scope =
         'resources/unregister-controller-page.html?load-after-unregister';
     var registration;
+    var frame;
 
     service_worker_unregister_and_register(t, worker_url, scope)
       .then(function(r) {
@@ -57,7 +61,8 @@ async_test(function(t) {
       .then(function() {
           return with_iframe(scope);
         })
-      .then(function(frame) {
+      .then(function(f) {
+          frame = f;
           var frame_window = frame.contentWindow;
           assert_equals(frame_window.navigator.serviceWorker.controller, null,
                         'document should not have a controller');
@@ -66,6 +71,7 @@ async_test(function(t) {
       .then(function(response) {
           assert_equals(response, 'a simple text file\n',
                         'requests should not be intercepted');
+          frame.remove();
           t.done();
         })
       .catch(unreached_rejection(t));
@@ -94,6 +100,7 @@ async_test(function(t) {
           assert_equals(frame.contentWindow.navigator.serviceWorker.controller,
                         null,
                         'document should not have a controller');
+          frame.remove();
           t.done();
         })
       .catch(unreached_rejection(t));

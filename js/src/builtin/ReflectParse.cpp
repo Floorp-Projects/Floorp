@@ -2495,6 +2495,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
       }
 
       case PNK_FOR:
+      case PNK_COMPREHENSIONFOR:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2759,12 +2760,12 @@ ASTSerializer::comprehension(ParseNode* pn, MutableHandleValue dst)
     // They have slightly different parse trees and scoping.
     bool isLegacy = pn->isKind(PNK_LEXICALSCOPE);
     ParseNode* next = isLegacy ? pn->pn_expr : pn;
-    LOCAL_ASSERT(next->isKind(PNK_FOR));
+    LOCAL_ASSERT(next->isKind(PNK_COMPREHENSIONFOR));
 
     NodeVector blocks(cx);
     RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
     while (true) {
-        if (next->isKind(PNK_FOR)) {
+        if (next->isKind(PNK_COMPREHENSIONFOR)) {
             RootedValue block(cx);
             if (!comprehensionBlock(next, &block) || !blocks.append(block))
                 return false;
@@ -2802,12 +2803,12 @@ ASTSerializer::generatorExpression(ParseNode* pn, MutableHandleValue dst)
     // expression.
     bool isLegacy = pn->isKind(PNK_LEXICALSCOPE);
     ParseNode* next = isLegacy ? pn->pn_expr : pn;
-    LOCAL_ASSERT(next->isKind(PNK_FOR));
+    LOCAL_ASSERT(next->isKind(PNK_COMPREHENSIONFOR));
 
     NodeVector blocks(cx);
     RootedValue filter(cx, MagicValue(JS_SERIALIZE_NO_NODE));
     while (true) {
-        if (next->isKind(PNK_FOR)) {
+        if (next->isKind(PNK_COMPREHENSIONFOR)) {
             RootedValue block(cx);
             if (!comprehensionBlock(next, &block) || !blocks.append(block))
                 return false;

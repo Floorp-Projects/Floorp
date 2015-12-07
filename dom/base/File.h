@@ -118,7 +118,8 @@ public:
 
   // This method creates a new File object with the given name and the same
   // BlobImpl.
-  already_AddRefed<File> ToFile(const nsAString& aName) const;
+  already_AddRefed<File> ToFile(const nsAString& aName,
+                                ErrorResult& aRv) const;
 
   already_AddRefed<Blob>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
@@ -797,6 +798,10 @@ public:
   void SetPath(const nsAString& aFullPath);
 
   virtual void LookupAndCacheIsDirectory() override;
+
+  // We always have size and date for this kind of blob.
+  virtual bool IsSizeUnknown() const override { return false; }
+  virtual bool IsDateUnknown() const override { return false; }
 
 protected:
   virtual ~BlobImplFile() {
