@@ -538,7 +538,7 @@ You can set this by:
             if self.test_packages_url:
                 self.error('Test data will be downloaded from "%s", the specified test '
                            ' package data at "%s" will be ignored.' %
-                           (self.config('test_url'), self.test_packages_url))
+                           (self.config.get('test_url'), self.test_packages_url))
 
             self._download_test_zip()
             self._extract_test_zip(target_unzip_dirs=target_unzip_dirs)
