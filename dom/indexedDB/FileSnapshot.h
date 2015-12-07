@@ -157,8 +157,7 @@ private:
   SetLazyData(const nsAString& aName,
               const nsAString& aContentType,
               uint64_t aLength,
-              int64_t aLastModifiedDate,
-              BlobDirState aDirState) override
+              int64_t aLastModifiedDate) override
   {
     MOZ_CRASH("This should never be called!");
   }
