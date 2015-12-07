@@ -92,8 +92,7 @@ void  nsTableRowGroupFrame::AdjustRowIndices(int32_t aRowIndex,
   }
 }
 nsresult
-nsTableRowGroupFrame::InitRepeatedFrame(nsPresContext*        aPresContext,
-                                        nsTableRowGroupFrame* aHeaderFooterFrame)
+nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame)
 {
   nsTableRowFrame* copyRowFrame = GetFirstRow();
   nsTableRowFrame* originalRowFrame = aHeaderFooterFrame->GetFirstRow();

@@ -586,8 +586,7 @@ void
 AnimationCollection::UpdateCheckGeneration(
   nsPresContext* aPresContext)
 {
-  mCheckGeneration =
-    aPresContext->RestyleManager()->GetAnimationGeneration();
+  mCheckGeneration = aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
 nsPresContext*

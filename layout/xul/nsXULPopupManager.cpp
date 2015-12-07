@@ -2320,7 +2320,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
   while (currFrame) {
     // See if it's a menu item.
     nsIContent* currFrameContent = currFrame->GetContent();
-    if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
+    if (IsValidMenuItem(currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
@@ -2339,7 +2339,7 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
   while (currFrame && currFrame != aStart) {
     // See if it's a menu item.
     nsIContent* currFrameContent = currFrame->GetContent();
-    if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
+    if (IsValidMenuItem(currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
@@ -2383,7 +2383,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
   while (currFrame) {
     // See if it's a menu item.
     nsIContent* currFrameContent = currFrame->GetContent();
-    if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
+    if (IsValidMenuItem(currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
@@ -2404,7 +2404,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
   while (currFrame && currFrame != aStart) {
     // See if it's a menu item.
     nsIContent* currFrameContent = currFrame->GetContent();
-    if (IsValidMenuItem(presContext, currFrameContent, aIsPopup)) {
+    if (IsValidMenuItem(currFrameContent, aIsPopup)) {
       return do_QueryFrame(currFrame);
     }
     if (currFrameContent->IsXULElement(nsGkAtoms::menugroup) &&
@@ -2424,9 +2424,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
 }
 
 bool
-nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
-                                   nsIContent* aContent,
-                                   bool aOnPopup)
+nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
 {
   if (aContent->IsXULElement()) {
     if (!aContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {

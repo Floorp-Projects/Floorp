@@ -715,7 +715,7 @@ nsGlyphTableList::GetGlyphTableFor(const nsAString& aFamily)
 // -----------------------------------------------------------------------------
 
 static nsresult
-InitGlobals(nsPresContext* aPresContext)
+InitCharGlobals()
 {
   NS_ASSERTION(!gGlyphTableInitialized, "Error -- already initialized");
   gGlyphTableInitialized = true;
@@ -776,11 +776,10 @@ nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
 }
 
 void
-nsMathMLChar::SetData(nsPresContext* aPresContext,
-                      nsString&       aData)
+nsMathMLChar::SetData(nsString& aData)
 {
   if (!gGlyphTableInitialized) {
-    InitGlobals(aPresContext);
+    InitCharGlobals();
   }
   mData = aData;
   // some assumptions until proven otherwise
@@ -878,7 +877,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
 #define NS_MATHML_DELIMITER_SHORTFALL_POINTS   5.0f
 
 static bool
-IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, uint32_t aHint)
+IsSizeOK(nscoord a, nscoord b, uint32_t aHint)
 {
   // Normal: True if 'a' is around +/-10% of the target 'b' (10% is
   // 1-DelimiterFactor). This often gives a chance to the base size to
@@ -1243,8 +1242,7 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
   }
 
   return haveBetter &&
-    (largeopOnly ||
-     IsSizeOK(mPresContext, bestSize, mTargetSize, mStretchHint));
+    (largeopOnly || IsSizeOK(bestSize, mTargetSize, mStretchHint));
 }
 
 // 3. Build by parts.
@@ -1415,7 +1413,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
     mChar->mBmData[i] = bmdata[i];
   }
 
-  return IsSizeOK(mPresContext, computedSize, mTargetSize, mStretchHint);
+  return IsSizeOK(computedSize, mTargetSize, mStretchHint);
 }
 
 // This is called for each family, whether it exists or not
@@ -1640,7 +1638,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     // and not a largeop in display mode; we're done if size fits
     if ((targetSize <= 0) || 
         ((isVertical && charSize >= targetSize) ||
-         IsSizeOK(aPresContext, charSize, targetSize, aStretchHint)))
+         IsSizeOK(charSize, targetSize, aStretchHint)))
       done = true;
   }
 
