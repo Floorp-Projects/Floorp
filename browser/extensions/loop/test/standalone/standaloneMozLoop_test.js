@@ -107,6 +107,19 @@ describe("loop.StandaloneMozLoop", function() {
 
       return promise;
     });
+
+    it("should call the callback on xhr error", function() {
+      var promise = loop.request("Rooms:Get", "fakeToken").then(function(result) {
+        expect(result.isError).eql(true);
+        expect(/HTTP 0/.test(result.message)).eql(true);
+      });
+
+      // Method to mock network failure
+      // https://github.com/sinonjs/sinon/issues/361
+      requests[0].respond(0, {}, "");
+
+      return promise;
+    });
   });
 
   describe("#rooms.join", function() {
