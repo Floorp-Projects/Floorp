@@ -309,8 +309,17 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
             if c.get("test_packages_url"):
                 self.test_packages_url = c['test_packages_url']
 
+            # This supports original Buildbot to Buildbot mode
             if self.buildbot_config['sourcestamp']['changes']:
                 self.find_artifacts_from_buildbot_changes()
+
+            # This supports TaskCluster/BBB task to Buildbot job
+            elif 'testPackagesUrl' in self.buildbot_config['properties'] and \
+                 'packageUrl' in self.buildbot_config['properties']:
+                self.installer_url = self.buildbot_config['properties']['packageUrl']
+                self.test_packages_url = self.buildbot_config['properties']['testPackagesUrl']
+
+            # This supports TaskCluster/BBB task to TaskCluster/BBB task
             elif 'taskId' in self.buildbot_config['properties']:
                 self.find_artifacts_from_taskcluster()
 
