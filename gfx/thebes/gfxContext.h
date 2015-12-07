@@ -496,7 +496,6 @@ private:
     AzureState()
       : op(mozilla::gfx::CompositionOp::OP_OVER)
       , color(0, 0, 0, 1.0f)
-      , clipWasReset(false)
       , fillRule(mozilla::gfx::FillRule::FILL_WINDING)
       , aaMode(mozilla::gfx::AntialiasMode::SUBPIXEL)
       , patternTransformChanged(false)
@@ -517,7 +516,6 @@ private:
     };
     nsTArray<PushedClip> pushedClips;
     nsTArray<Float> dashPattern;
-    bool clipWasReset;
     mozilla::gfx::FillRule fillRule;
     StrokeOptions strokeOptions;
     RefPtr<DrawTarget> drawTarget;
