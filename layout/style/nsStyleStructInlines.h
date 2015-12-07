@@ -154,8 +154,11 @@ nsStyleDisplay::IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
-  return ((IsAbsolutelyPositionedStyle() || IsRelativelyPositionedStyle()) &&
-          !aContextFrame->IsSVGText()) || IsFixedPosContainingBlock(aContextFrame);
+  return ((IsAbsolutelyPositionedStyle() ||
+           IsRelativelyPositionedStyle() ||
+           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_ABSPOS_CB)) &&
+          !aContextFrame->IsSVGText()) ||
+         IsFixedPosContainingBlock(aContextFrame);
 }
 
 bool
