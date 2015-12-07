@@ -28,7 +28,7 @@ const Cu = Components.utils;
 SimpleTest.waitForExplicitFinish();
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 var httpserver = new HttpServer();
 
 var cookieSetPath = "/setcookie";
@@ -94,15 +94,8 @@ function cookieCheckHandler(metadata, response) {
 }
 
 function setupChannel(path) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2("http://localhost:4444" + path,
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  var url = NetUtil.newURI("http://localhost:4444" + path);
+  var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
   chan.notificationCallbacks = cookies[counter].loadContext;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
@@ -111,7 +104,7 @@ function setupChannel(path) {
 function setCookie() {
   var channel = setupChannel(cookieSetPath);
   channel.setRequestHeader("foo-set-cookie", cookies[counter].cookieName, false);
-  channel.asyncOpen(new ChannelListener(setNextCookie, null), null);
+  channel.asyncOpen2(new ChannelListener(setNextCookie, null));
 }
 
 function setNextCookie(request, data, context) {
