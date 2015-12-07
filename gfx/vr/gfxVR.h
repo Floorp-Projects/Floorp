@@ -32,15 +32,6 @@ enum class VRHMDType : uint16_t {
 };
 
 struct VRFieldOfView {
-  static VRFieldOfView FromCSSPerspectiveInfo(double aPerspectiveDistance,
-                                              const Point& aPerspectiveOrigin,
-                                              const Point& aTransformOrigin,
-                                              const Rect& aContentRectangle)
-  {
-    /**/
-    return VRFieldOfView();
-  }
-
   VRFieldOfView() {}
   VRFieldOfView(double up, double right, double down, double left)
     : upDegrees(up), rightDegrees(right), downDegrees(down), leftDegrees(left)
