@@ -33,7 +33,7 @@ nsStackFrame::nsStackFrame(nsStyleContext* aContext):
   nsBoxFrame(aContext)
 {
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(PresContext()->PresShell(), layout);
+  NS_NewStackLayout(layout);
   SetLayoutManager(layout);
 }
 
