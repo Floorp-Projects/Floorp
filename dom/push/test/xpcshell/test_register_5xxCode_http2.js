@@ -82,15 +82,19 @@ add_task(function* test1() {
     db
   });
 
-  let newRecord = yield PushNotificationService.register(
-    'https://example.com/retry5xxCode',
-    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
-  );
+  let originAttributes = ChromeUtils.originAttributesToSuffix({
+    appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
+    inBrowser: false,
+  });
+  let newRecord = yield PushService.register({
+    scope: 'https://example.com/retry5xxCode',
+    originAttributes: originAttributes,
+  });
 
   var subscriptionUri = serverURL + '/subscription';
   var pushEndpoint = serverURL + '/pushEndpoint';
   var pushReceiptEndpoint = serverURL + '/receiptPushEndpoint';
-  equal(newRecord.pushEndpoint, pushEndpoint,
+  equal(newRecord.endpoint, pushEndpoint,
     'Wrong push endpoint in registration record');
 
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,

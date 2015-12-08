@@ -56,15 +56,16 @@ add_task(function* test_pushSubscriptionSuccess() {
     db
   });
 
-  let newRecord = yield PushNotificationService.register(
-    'https://example.org/1',
-    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
-  );
+  let newRecord = yield PushService.register({
+    scope: 'https://example.org/1',
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+  });
 
   var subscriptionUri = serverURL + '/pushSubscriptionSuccesss';
   var pushEndpoint = serverURL + '/pushEndpointSuccess';
   var pushReceiptEndpoint = serverURL + '/receiptPushEndpointSuccess';
-  equal(newRecord.pushEndpoint, pushEndpoint,
+  equal(newRecord.endpoint, pushEndpoint,
     'Wrong push endpoint in registration record');
 
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
@@ -95,15 +96,16 @@ add_task(function* test_pushSubscriptionMissingLink2() {
     db
   });
 
-  let newRecord = yield PushNotificationService.register(
-    'https://example.org/no_receiptEndpoint',
-    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
-  );
+  let newRecord = yield PushService.register({
+    scope: 'https://example.org/no_receiptEndpoint',
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+  });
 
   var subscriptionUri = serverURL + '/subscriptionMissingLink2';
   var pushEndpoint = serverURL + '/pushEndpointMissingLink2';
   var pushReceiptEndpoint = '';
-  equal(newRecord.pushEndpoint, pushEndpoint,
+  equal(newRecord.endpoint, pushEndpoint,
     'Wrong push endpoint in registration record');
 
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
