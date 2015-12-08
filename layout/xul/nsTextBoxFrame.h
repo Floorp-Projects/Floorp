@@ -94,12 +94,10 @@ protected:
 
   explicit nsTextBoxFrame(nsStyleContext* aContext);
 
-  nscoord CalculateTitleForWidth(nsPresContext*      aPresContext,
-                                 nsRenderingContext& aRenderingContext,
+  nscoord CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                                  nscoord              aWidth);
 
-  void GetTextSize(nsPresContext*      aPresContext,
-                   nsRenderingContext& aRenderingContext,
+  void GetTextSize(nsRenderingContext& aRenderingContext,
                    const nsString&      aString,
                    nsSize&              aSize,
                    nscoord&             aAscent);

@@ -1179,7 +1179,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
     nsPresContext* presContext = PresContext();
     nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
     nsIFrame* topFrame = nullptr;
-    fc->CreateListBoxContent(presContext, this, nullptr, startContent,
+    fc->CreateListBoxContent(this, nullptr, startContent,
                              &topFrame, isAppend, false, nullptr);
     mTopFrame = topFrame;
     if (mTopFrame) {
@@ -1232,7 +1232,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
       
         nsPresContext* presContext = PresContext();
         nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
-        fc->CreateListBoxContent(presContext, this, prevFrame, nextContent,
+        fc->CreateListBoxContent(this, prevFrame, nextContent,
                                  &result, isAppend, false, nullptr);
 
         if (result) {
@@ -1339,8 +1339,8 @@ nsListBoxBodyFrame::ListBoxInsertFrames(nsIFrame* aPrevFrame,
 // 
 // Called by nsCSSFrameConstructor when a new listitem content is inserted.
 //
-void 
-nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* aChildContent)
+void
+nsListBoxBodyFrame::OnContentInserted(nsIContent* aChildContent)
 {
   if (mRowCount >= 0)
     ++mRowCount;
