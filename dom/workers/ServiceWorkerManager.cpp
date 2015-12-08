@@ -996,7 +996,7 @@ protected:
   // Done() with the failure code instead.
   // Callers MUST hold a strong ref before calling this!
   void
-  Fail(ErrorResult& aRv)
+  FailWithErrorResult(ErrorResult& aRv)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mRegistration);
@@ -1050,7 +1050,7 @@ protected:
   Fail(nsresult aRv)
   {
     ErrorResult rv(aRv);
-    Fail(rv);
+    FailWithErrorResult(rv);
   }
 };
 
@@ -1276,6 +1276,22 @@ public:
       swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UpdateJob);
+
+      // If a different script spec has been registered between when this update
+      // was scheduled and it running now, then simply abort.
+      RefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
+      if (newest && !mScriptSpec.Equals(newest->ScriptSpec())) {
+
+        // Done() must always be called async from Start()
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethodWithArg<nsresult>(
+            this,
+            &ServiceWorkerRegisterJob::Fail,
+            NS_ERROR_DOM_ABORT_ERR);
+          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable)));
+
+        return;
+      }
     }
 
     Update();
@@ -1396,7 +1412,7 @@ private:
       NS_ConvertUTF8toUTF16 scriptSpec(mScriptSpec);
       NS_ConvertUTF8toUTF16 scope(mRegistration->mScope);
       error.ThrowTypeError<MSG_SW_SCRIPT_THREW>(scriptSpec, scope);
-      return Fail(error);
+      return FailWithErrorResult(error);
     }
 
     RefPtr<ServiceWorkerInstallJob> job =
