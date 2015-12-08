@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.Telephony;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
@@ -267,7 +268,6 @@ public class GeckoSmsManager
   extends BroadcastReceiver
   implements ISmsManager
 {
-  public final static String ACTION_SMS_RECEIVED  = "android.provider.Telephony.SMS_RECEIVED";
   public final static String ACTION_SMS_SENT      = "org.mozilla.gecko.SMS_SENT";
   public final static String ACTION_SMS_DELIVERED = "org.mozilla.gecko.SMS_DELIVERED";
 
@@ -297,12 +297,12 @@ public class GeckoSmsManager
 
   private final static int kMaxMessageSize    = 160;
 
-  private final static Uri kSmsContentUri        = Uri.parse("content://sms");
-  private final static Uri kSmsSentContentUri    = Uri.parse("content://sms/sent");
-  private final static Uri kSmsThreadsContentUri = Uri.parse("content://sms/conversations");
+  private final static Uri kSmsContentUri        = Telephony.Sms.Inbox.CONTENT_URI;
+  private final static Uri kSmsSentContentUri    = Telephony.Sms.Sent.CONTENT_URI;
+  private final static Uri kSmsThreadsContentUri = Telephony.Sms.Conversations.CONTENT_URI;
 
-  private final static int kSmsTypeInbox      = 1;
-  private final static int kSmsTypeSentbox    = 2;
+  private final static int kSmsTypeInbox      = Telephony.Sms.MESSAGE_TYPE_INBOX;
+  private final static int kSmsTypeSentbox    = Telephony.Sms.MESSAGE_TYPE_SENT;
 
   /*
    * Keep the following state codes in syng with |DeliveryState| in:
@@ -326,15 +326,6 @@ public class GeckoSmsManager
   private final static int kDeliveryStatusError         = 3;
 
   /*
-   * android.provider.Telephony.Sms.STATUS_*. Duplicated because they're not
-   * part of Android public API.
-   */
-  private final static int kInternalDeliveryStatusNone     = -1;
-  private final static int kInternalDeliveryStatusComplete = 0;
-  private final static int kInternalDeliveryStatusPending  = 32;
-  private final static int kInternalDeliveryStatusFailed   = 64;
-
-  /*
    * Keep the following values in sync with |MessageClass| in:
    * dom/mobilemessage/Types.h
    */
@@ -355,44 +346,90 @@ public class GeckoSmsManager
   private static final long UNSIGNED_INTEGER_MAX_VALUE = Integer.MAX_VALUE * 2L + 1L;
 
   public GeckoSmsManager() {
-    SmsIOThread.getInstance().start();
+    if (SmsIOThread.getInstance().getState() == Thread.State.NEW) {
+      SmsIOThread.getInstance().start();
+    }
+  }
+
+  private boolean isDefaultSmsApp(Context context) {
+    String myPackageName = context.getPackageName();
+    return Telephony.Sms.getDefaultSmsPackage(context).equals(myPackageName);
   }
 
   @Override
   public void start() {
     IntentFilter smsFilter = new IntentFilter();
-    smsFilter.addAction(ACTION_SMS_RECEIVED);
+    smsFilter.addAction(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
     smsFilter.addAction(ACTION_SMS_SENT);
     smsFilter.addAction(ACTION_SMS_DELIVERED);
 
     GeckoAppShell.getContext().registerReceiver(this, smsFilter);
   }
 
+  /**
+   * Build up the SMS message body from the SmsMessage array of received SMS
+   *
+   * @param msgs The SmsMessage array of the received SMS
+   * @return The text message body
+   */
+  private static String buildMessageBodyFromPdus(SmsMessage[] msgs) {
+    if (msgs.length == 1) {
+      // There is only one part, so grab the body directly.
+      return replaceFormFeeds(msgs[0].getDisplayMessageBody());
+    } else {
+      // Build up the body from the parts.
+      StringBuilder body = new StringBuilder();
+      for (SmsMessage msg : msgs) {
+        // getDisplayMessageBody() can NPE if mWrappedMessage inside is null.
+        body.append(msg.getDisplayMessageBody());
+      }
+      return replaceFormFeeds(body.toString());
+    }
+  }
+
+  // Some providers send formfeeds in their messages. Convert those formfeeds to newlines.
+  private static String replaceFormFeeds(String s) {
+    return s == null ? "" : s.replace('\f', '\n');
+  }
+
   @Override
   public void onReceive(Context context, Intent intent) {
-    if (intent.getAction().equals(ACTION_SMS_RECEIVED)) {
-      // TODO: Try to find the receiver number to be able to populate
-      //       SmsMessage.receiver.
-      // TODO: Get the id and the date from the stock app saved message.
-      //       Using the stock app saved message require us to wait for it to
-      //       be saved which can lead to race conditions.
-
-      Bundle bundle = intent.getExtras();
-
-      if (bundle == null) {
+    if (intent.getAction().equals(Telephony.Sms.Intents.SMS_DELIVER_ACTION) ||
+        intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
+      // If we're the default SMS, ignore SMS_RECEIVED intents since we'll handle
+      // the SMS_DELIVER intent instead.
+      if (isDefaultSmsApp(GeckoAppShell.getContext()) && intent.getAction().equals(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)) {
         return;
       }
 
-      Object[] pdus = (Object[]) bundle.get("pdus");
-
-      for (int i=0; i<pdus.length; ++i) {
-        SmsMessage msg = SmsMessage.createFromPdu((byte[])pdus[i]);
-
-        notifySmsReceived(msg.getDisplayOriginatingAddress(),
-                          msg.getDisplayMessageBody(),
-                          getGeckoMessageClass(msg.getMessageClass()),
-                          System.currentTimeMillis());
+      // TODO: Try to find the receiver number to be able to populate
+      //       SmsMessage.receiver.
+      SmsMessage[] messages = Telephony.Sms.Intents.getMessagesFromIntent(intent);
+      if (messages == null || messages.length == 0) {
+        return;
       }
+
+      SmsMessage sms = messages[0];
+      String body = buildMessageBodyFromPdus(messages);
+      long timestamp = System.currentTimeMillis();
+
+      int id = 0;
+      // We only need to save the message if we're the default SMS app
+      if (intent.getAction().equals(Telephony.Sms.Intents.SMS_DELIVER_ACTION)) {
+        id = saveReceivedMessage(context,
+                               sms.getDisplayOriginatingAddress(),
+                               body,
+                               sms.getTimestampMillis(),
+                               timestamp,
+                               sms.getPseudoSubject());
+      }
+
+      notifySmsReceived(id,
+                        sms.getDisplayOriginatingAddress(),
+                        body,
+                        getGeckoMessageClass(sms.getMessageClass()),
+                        sms.getTimestampMillis(),
+                        timestamp);
 
       return;
     }
@@ -447,7 +484,9 @@ public class GeckoSmsManager
 
       if (envelope.isFailing(part)) {
         if (part == Envelope.SubParts.SENT_PART) {
-          notifySmsSendFailed(envelope.getError(), bundle.getInt("requestId"));
+          if (bundle.getBoolean("shouldNotify")) {
+            notifySmsSendFailed(envelope.getError(), bundle.getInt("requestId"));
+          }
           Log.i("GeckoSmsManager", "SMS sending failed!");
         } else {
           notifySmsDelivery(envelope.getMessageId(),
@@ -463,16 +502,24 @@ public class GeckoSmsManager
           String message = bundle.getString("message");
           long timestamp = System.currentTimeMillis();
 
-          int id = saveSentMessage(number, message, timestamp);
+          // save message only if we're default SMS app, otherwise sendTextMessage does it for us
+          int id = 0;
+          if (isDefaultSmsApp(GeckoAppShell.getContext())) {
+            id = saveSentMessage(number, message, timestamp);
+          }
 
-          notifySmsSent(id, number, message, timestamp,
-                        bundle.getInt("requestId"));
+          if (bundle.getBoolean("shouldNotify")) {
+            notifySmsSent(id, number, message, timestamp, bundle.getInt("requestId"));
+          }
 
           envelope.setMessageId(id);
           envelope.setMessageTimestamp(timestamp);
 
           Log.i("GeckoSmsManager", "SMS sending was successful!");
         } else {
+          Uri id = ContentUris.withAppendedId(kSmsContentUri, envelope.getMessageId());
+          updateMessageStatus(id, Telephony.Sms.STATUS_COMPLETE);
+
           notifySmsDelivery(envelope.getMessageId(),
                             kDeliveryStatusSuccess,
                             bundle.getString("number"),
@@ -491,19 +538,22 @@ public class GeckoSmsManager
   }
 
   @Override
-  public void send(String aNumber, String aMessage, int aRequestId) {
+  public void send(String aNumber, String aMessage, int aRequestId, boolean aShouldNotify) {
     int envelopeId = Postman.kUnknownEnvelopeId;
 
     try {
       SmsManager sm = SmsManager.getDefault();
 
-      Intent sentIntent = new Intent(ACTION_SMS_SENT);
-      Intent deliveredIntent = new Intent(ACTION_SMS_DELIVERED);
+      Intent sentIntent = new Intent(GeckoAppShell.getContext(), GeckoSmsManager.class);
+      sentIntent.setAction(ACTION_SMS_SENT);
+      Intent deliveredIntent = new Intent(GeckoAppShell.getContext(), GeckoSmsManager.class);
+      deliveredIntent.setAction(ACTION_SMS_DELIVERED);
 
       Bundle bundle = new Bundle();
       bundle.putString("number", aNumber);
       bundle.putString("message", aMessage);
       bundle.putInt("requestId", aRequestId);
+      bundle.putBoolean("shouldNotify", aShouldNotify);
 
       if (aMessage.length() <= kMaxMessageSize) {
         envelopeId = Postman.getInstance().createEnvelope(1);
@@ -533,7 +583,7 @@ public class GeckoSmsManager
                                      pendingIntentGuid.incrementAndGet(), deliveredIntent,
                                      PendingIntent.FLAG_CANCEL_CURRENT);
 
-        sm.sendTextMessage(aNumber, "", aMessage,
+        sm.sendTextMessage(aNumber, null, aMessage,
                            sentPendingIntent, deliveredPendingIntent);
       } else {
         ArrayList<String> parts = sm.divideMessage(aMessage);
@@ -562,7 +612,7 @@ public class GeckoSmsManager
           );
         }
 
-        sm.sendMultipartTextMessage(aNumber, "", parts, sentPendingIntents,
+        sm.sendMultipartTextMessage(aNumber, null, parts, sentPendingIntents,
                                     deliveredPendingIntents);
       }
     } catch (Exception e) {
@@ -579,11 +629,13 @@ public class GeckoSmsManager
   public int saveSentMessage(String aRecipient, String aBody, long aDate) {
     try {
       ContentValues values = new ContentValues();
-      values.put("address", aRecipient);
-      values.put("body", aBody);
-      values.put("date", aDate);
+      values.put(Telephony.Sms.ADDRESS, aRecipient);
+      values.put(Telephony.Sms.BODY, aBody);
+      values.put(Telephony.Sms.DATE, aDate);
       // Always 'PENDING' because we always request status report.
-      values.put("status", kInternalDeliveryStatusPending);
+      values.put(Telephony.Sms.STATUS, Telephony.Sms.STATUS_PENDING);
+      values.put(Telephony.Sms.SEEN, 0);
+      values.put(Telephony.Sms.READ, 0);
 
       ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
       Uri uri = cr.insert(kSmsSentContentUri, values);
@@ -604,6 +656,41 @@ public class GeckoSmsManager
       Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message", e);
       return -1;
     }
+  }
+
+  public void updateMessageStatus(Uri aId, int aStatus) {
+    ContentValues values = new ContentValues(1);
+    values.put(Telephony.Sms.STATUS, aStatus);
+
+    ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
+    if (cr.update(aId, values, null, null) != 1) {
+      Log.i("GeckoSmsManager", "Failed to update message status!");
+    }
+  }
+
+  public int saveReceivedMessage(Context aContext, String aSender, String aBody, long aDateSent, long aDate, String aSubject) {
+    ContentValues values = new ContentValues();
+    values.put(Telephony.Sms.Inbox.ADDRESS, aSender);
+    values.put(Telephony.Sms.Inbox.BODY, aBody);
+    values.put(Telephony.Sms.Inbox.DATE_SENT, aDateSent);
+    values.put(Telephony.Sms.Inbox.DATE, aDate);
+    values.put(Telephony.Sms.Inbox.STATUS, Telephony.Sms.STATUS_COMPLETE);
+    values.put(Telephony.Sms.Inbox.READ, 0);
+    values.put(Telephony.Sms.Inbox.SEEN, 0);
+
+    ContentResolver cr = aContext.getContentResolver();
+    Uri uri = cr.insert(kSmsContentUri, values);
+
+    long id = ContentUris.parseId(uri);
+
+    // The DOM API takes a 32bits unsigned int for the id. It's unlikely that
+    // we happen to need more than that but it doesn't cost to check.
+    if (id > UNSIGNED_INTEGER_MAX_VALUE) {
+      Log.i("GeckoSmsManager", "The id we received is higher than the higher allowed value.");
+      return -1;
+    }
+
+    return (int)id;
   }
 
   @Override
@@ -1079,13 +1166,13 @@ public class GeckoSmsManager
   }
 
   private int getGeckoDeliveryStatus(int aDeliveryStatus) {
-    if (aDeliveryStatus == kInternalDeliveryStatusNone) {
+    if (aDeliveryStatus == Telephony.Sms.STATUS_NONE) {
       return kDeliveryStatusNotApplicable;
     }
-    if (aDeliveryStatus >= kInternalDeliveryStatusFailed) {
+    if (aDeliveryStatus >= Telephony.Sms.STATUS_FAILED) {
       return kDeliveryStatusError;
     }
-    if (aDeliveryStatus >= kInternalDeliveryStatusPending) {
+    if (aDeliveryStatus >= Telephony.Sms.STATUS_PENDING) {
       return kDeliveryStatusPending;
     }
     return kDeliveryStatusSuccess;
@@ -1127,7 +1214,7 @@ public class GeckoSmsManager
   }
 
   @WrapForJNI
-  private static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
+  public static native void notifySmsReceived(int aId, String aSender, String aBody, int aMessageClass, long aSentTimestamp, long aTimestamp);
   @WrapForJNI
   private static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
   @WrapForJNI
