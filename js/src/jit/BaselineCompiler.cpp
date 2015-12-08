@@ -3099,6 +3099,12 @@ BaselineCompiler::emit_JSOP_CALL()
 }
 
 bool
+BaselineCompiler::emit_JSOP_CALLITER()
+{
+    return emitCall();
+}
+
+bool
 BaselineCompiler::emit_JSOP_NEW()
 {
     return emitCall();
