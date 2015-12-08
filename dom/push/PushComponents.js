@@ -105,6 +105,7 @@ Object.assign(PushServiceParent.prototype, {
     "Push:Register",
     "Push:Registration",
     "Push:Unregister",
+    "Push:Clear",
     "Push:RegisterEventNotificationListener",
     "Push:NotificationForOriginShown",
     "Push:NotificationForOriginClosed",
@@ -140,6 +141,17 @@ Object.assign(PushServiceParent.prototype, {
       this._deliverSubscription(callback, result);
     }, error => {
       callback.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
+    }).catch(Cu.reportError);
+  },
+
+  clearForDomain(domain, callback) {
+    let principal = Services.scriptSecurityManager.getSystemPrincipal();
+    return this._handleRequest("Push:Clear", principal, {
+      domain: domain,
+    }).then(result => {
+      callback.onClear(Cr.NS_OK);
+    }, error => {
+      callback.onClear(Cr.NS_ERROR_FAILURE);
     }).catch(Cu.reportError);
   },
 
@@ -210,6 +222,10 @@ Object.assign(PushServiceParent.prototype, {
       return Promise.reject(new Error("Invalid request: missing principal"));
     }
 
+    if (name == "Push:Clear") {
+      return this._service.clear(data);
+    }
+
     let pageRecord;
     try {
       pageRecord = this._toPageRecord(principal, data);
@@ -264,6 +280,8 @@ Object.assign(PushServiceContent.prototype, {
     "PushService:Registration:KO",
     "PushService:Unregister:OK",
     "PushService:Unregister:KO",
+    "PushService:Clear:OK",
+    "PushService:Clear:KO",
   ],
 
   // nsIPushService methods
@@ -290,6 +308,14 @@ Object.assign(PushServiceContent.prototype, {
       scope: scope,
       requestID: requestId,
     }, null, principal);
+  },
+
+  clearForDomain(domain, callback) {
+    let requestId = this._addRequest(callback);
+    this._mm.sendAsyncMessage("Push:Clear", {
+      domain: domain,
+      requestID: requestId,
+    });
   },
 
   // nsIPushQuotaManager methods
@@ -346,6 +372,14 @@ Object.assign(PushServiceContent.prototype, {
 
       case "PushService:Unregister:KO":
         request.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
+        break;
+
+      case "PushService:Clear:OK":
+        request.onClear(Cr.NS_OK);
+        break;
+
+      case "PushService:Clear:KO":
+        request.onClear(Cr.NS_ERROR_FAILURE);
         break;
 
       default:
