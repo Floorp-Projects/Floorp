@@ -76,9 +76,11 @@ add_task(function* test_register_flush() {
     }
   });
 
-  let newRecord = yield PushNotificationService.register(
-    'https://example.com/page/2', '');
-  equal(newRecord.pushEndpoint, 'https://example.org/update/2',
+  let newRecord = yield PushService.register({
+    scope: 'https://example.com/page/2',
+    originAttributes: '',
+  });
+  equal(newRecord.endpoint, 'https://example.org/update/2',
     'Wrong push endpoint in record');
 
   let {data: scope} = yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
