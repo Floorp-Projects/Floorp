@@ -28,7 +28,7 @@ public class SmsManager {
         void stop();
         void shutdown();
 
-        void send(String aNumber, String aMessage, int aRequestId);
+        void send(String aNumber, String aMessage, int aRequestId, boolean aShouldNotify);
         void getMessage(int aMessageId, int aRequestId);
         void deleteMessage(int aMessageId, int aRequestId);
         void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId);
