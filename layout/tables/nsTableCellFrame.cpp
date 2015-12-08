@@ -825,10 +825,9 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 // it is the bsize (minus border, padding) of the cell's first in flow during its final
 // reflow without an unconstrained bsize.
 static nscoord
-CalcUnpaginatedBSize(nsPresContext*     aPresContext,
-                      nsTableCellFrame& aCellFrame,
-                      nsTableFrame&     aTableFrame,
-                      nscoord           aBlockDirBorderPadding)
+CalcUnpaginatedBSize(nsTableCellFrame& aCellFrame,
+                     nsTableFrame&     aTableFrame,
+                     nscoord           aBlockDirBorderPadding)
 {
   const nsTableCellFrame* firstCellInFlow =
     static_cast<nsTableCellFrame*>(aCellFrame.FirstInFlow());
@@ -852,7 +851,7 @@ CalcUnpaginatedBSize(nsPresContext*     aPresContext,
       break;
     }
     else if (rowX >= rowIndex) {
-      computedBSize += row->GetUnpaginatedBSize(aPresContext);
+      computedBSize += row->GetUnpaginatedBSize();
     }
   }
   return computedBSize;
@@ -910,7 +909,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
   else if (aPresContext->IsPaginated()) {
     nscoord computedUnpaginatedBSize =
-      CalcUnpaginatedBSize(aPresContext, (nsTableCellFrame&)*this,
+      CalcUnpaginatedBSize((nsTableCellFrame&)*this,
                            *tableFrame, borderPadding.BStartEnd(wm));
     if (computedUnpaginatedBSize > 0) {
       const_cast<nsHTMLReflowState&>(aReflowState).SetComputedBSize(computedUnpaginatedBSize);

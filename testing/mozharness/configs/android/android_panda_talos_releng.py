@@ -40,18 +40,8 @@ config = {
         "local.yml"
     ],
     "all_talos_suites": {
-        "remote-troboprovider":  ["--activeTests=tprovider", "--noChrome", "--fennecIDs=../fennec_ids.txt"],
-        "remote-ts":  ["--activeTests=ts", "--mozAfterPaint", "--noChrome"],
-        #currently disabled
         "remote-tsvgx":  ["--activeTests=tsvgx", "--noChrome", '--tppagecycles', '10'],
-        "remote-tcanvasmark":  ["--activeTests=tcanvasmark", "--noChrome"],
-        "remote-tsspider":  ["--activeTests=tsspider", "--noChrome"],
-        #end currently disabled
-        "remote-trobopan":  ["--activeTests=trobopan", "--noChrome", "--fennecIDs=../fennec_ids.txt"],
-        "remote-tsvg":  ["--activeTests=tsvg", "--noChrome"],
         "remote-tp4m_nochrome":  ["--activeTests=tp4m", "--noChrome", "--rss"],
-        "remote-trobocheck2":  ["--activeTests=tcheck2", "--noChrome", "--fennecIDs=../fennec_ids.txt"],
-        "remote-tspaint": ["--activeTests=ts_paint", "--mozAfterPaint"],
     },
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",

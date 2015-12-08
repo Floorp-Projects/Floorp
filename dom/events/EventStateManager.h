@@ -400,11 +400,8 @@ protected:
    */
   void UpdateDragDataTransfer(WidgetDragEvent* dragEvent);
 
-  nsresult SetClickCount(nsPresContext* aPresContext,
-                         WidgetMouseEvent* aEvent,
-                         nsEventStatus* aStatus);
-  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext,
-                                    WidgetMouseEvent* aEvent,
+  nsresult SetClickCount(WidgetMouseEvent* aEvent, nsEventStatus* aStatus);
+  nsresult CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
                                     nsEventStatus* aStatus);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);

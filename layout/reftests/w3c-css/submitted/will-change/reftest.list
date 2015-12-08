@@ -14,5 +14,6 @@ test-pref(layout.css.contain.enabled,true) == will-change-fixpos-cb-contain-1.ht
 == will-change-fixpos-cb-filter-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-height-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-perspective-1.html green-square-100-by-100-offset-ref.html
+== will-change-fixpos-cb-position-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-transform-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-transform-style-1.html green-square-100-by-100-offset-ref.html

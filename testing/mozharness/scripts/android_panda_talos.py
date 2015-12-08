@@ -65,7 +65,7 @@ class PandaTalosTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixi
             "type": "string",
             "help": "Specify which talos suite to run. "
                     "Suites are defined in the config file\n."
-                    "Examples: 'remote-trobocheck', 'remote-trobocheck2', 'remote-trobopan', 'remote-troboprovider', 'remote-tsvg', 'tpn', 'ts'",
+                    "Examples: 'remote-tsvgx', 'remote-tp4m'",
         }],
         [["--branch-name"], {
             "action": "store",

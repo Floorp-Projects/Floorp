@@ -372,7 +372,7 @@ GetWindowsTheme(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
 }
 
 static nsresult
-GetOperatinSystemVersion(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
+GetOperatingSystemVersion(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                          nsCSSValue& aResult)
 {
     aResult.Reset();
@@ -715,7 +715,7 @@ nsMediaFeatures::features[] = {
         nsMediaFeature::eIdent,
         nsMediaFeature::eNoRequirements,
         { nullptr },
-        GetOperatinSystemVersion
+        GetOperatingSystemVersion
     },
 
     {

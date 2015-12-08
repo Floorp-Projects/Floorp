@@ -292,7 +292,7 @@ InitOperators(void)
 }
 
 static nsresult
-InitGlobals()
+InitOperatorGlobals()
 {
   gGlobalsInitialized = true;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -348,7 +348,7 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
                                   float*                aTrailingSpace)
 {
   if (!gGlobalsInitialized) {
-    InitGlobals();
+    InitOperatorGlobals();
   }
   if (gOperatorTable) {
     NS_ASSERTION(aFlags && aLeadingSpace && aTrailingSpace, "bad usage");
@@ -393,7 +393,7 @@ nsMathMLOperators::LookupOperators(const nsString&       aOperator,
                                    float*                aTrailingSpace)
 {
   if (!gGlobalsInitialized) {
-    InitGlobals();
+    InitOperatorGlobals();
   }
 
   aFlags[NS_MATHML_OPERATOR_FORM_INFIX] = 0;
