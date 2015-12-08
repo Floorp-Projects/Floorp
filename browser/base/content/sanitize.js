@@ -549,9 +549,13 @@ Sanitizer.prototype = {
 
         // Clear all push notification subscriptions
         try {
-          var push = Cc["@mozilla.org/push/NotificationService;1"]
-                      .getService(Ci.nsIPushNotificationService);
-          push.clearAll();
+          var push = Cc["@mozilla.org/push/Service;1"]
+                       .getService(Ci.nsIPushService);
+          push.clearForDomain("*", status => {
+            if (!Components.isSuccessCode(status)) {
+              dump("Error clearing Web Push data: " + status + "\n");
+            }
+          });
         } catch (e) {
           dump("Web Push may not be available.\n");
         }
