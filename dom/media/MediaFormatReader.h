@@ -127,6 +127,22 @@ private:
   // Decode any pending already demuxed samples.
   bool DecodeDemuxedSamples(TrackType aTrack,
                             MediaRawData* aSample);
+
+  struct SeekTarget {
+    SeekTarget(const media::TimeUnit& aTime, bool aDropTarget)
+      : mTime(aTime)
+      , mDropTarget(aDropTarget)
+      , mWaiting(false)
+    {}
+
+    media::TimeUnit mTime;
+    bool mDropTarget;
+    bool mWaiting;
+  };
+  // Perform an internal seek to aTime. If aDropTarget is true then
+  // the first sample past the target will be dropped.
+  void InternalSeek(TrackType aTrack, const SeekTarget& aTarget);
+
   // Drain the current decoder.
   void DrainDecoder(TrackType aTrack);
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
@@ -261,8 +277,11 @@ private:
     bool mDraining;
     bool mDrainComplete;
     // If set, all decoded samples prior mTimeThreshold will be dropped.
-    // Used for internal seeking when a change of stream is detected.
-    Maybe<media::TimeUnit> mTimeThreshold;
+    // Used for internal seeking when a change of stream is detected or when
+    // encountering data discontinuity.
+    Maybe<SeekTarget> mTimeThreshold;
+    // Time of last sample returned.
+    Maybe<media::TimeUnit> mLastSampleTime;
 
     // Decoded samples returned my mDecoder awaiting being returned to
     // state machine upon request.
@@ -300,6 +319,7 @@ private:
       mDraining = false;
       mDrainComplete = false;
       mTimeThreshold.reset();
+      mLastSampleTime.reset();
       mOutput.Clear();
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
@@ -316,6 +336,7 @@ private:
     uint32_t mLastStreamSourceID;
     Maybe<uint32_t> mNextStreamSourceID;
     media::TimeIntervals mTimeRanges;
+    Maybe<media::TimeUnit> mLastTimeRangesEnd;
     RefPtr<SharedTrackInfo> mInfo;
   };
 
