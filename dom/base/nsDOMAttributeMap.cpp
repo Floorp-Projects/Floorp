@@ -212,7 +212,30 @@ nsDOMAttributeMap::NamedGetter(const nsAString& aAttrName, bool& aFound)
 bool
 nsDOMAttributeMap::NameIsEnumerable(const nsAString& aName)
 {
-  return true;
+  return false;
+}
+
+void
+nsDOMAttributeMap::GetSupportedNames(unsigned aFlags,
+                                     nsTArray<nsString>& aNames)
+{
+  if (!(aFlags & JSITER_HIDDEN)) {
+    return;
+  }
+
+  const uint32_t count = mContent->GetAttrCount();
+  bool seenNonAtomName = false;
+  for (uint32_t i = 0; i < count; i++) {
+    const nsAttrName* name = mContent->GetAttrNameAt(i);
+    seenNonAtomName = seenNonAtomName || !name->IsAtom();
+    nsString qualifiedName;
+    name->GetQualifiedName(qualifiedName);
+
+    if (seenNonAtomName && aNames.Contains(qualifiedName)) {
+      continue;
+    }
+    aNames.AppendElement(qualifiedName);
+  }
 }
 
 Attr*

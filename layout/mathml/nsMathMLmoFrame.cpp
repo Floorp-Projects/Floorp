@@ -133,7 +133,7 @@ nsMathMLmoFrame::ProcessTextData()
   nsPresContext* presContext = PresContext();
   if (mFrames.GetLength() != 1) {
     data.Truncate(); // empty data to reset the char
-    mMathMLChar.SetData(presContext, data);
+    mMathMLChar.SetData(data);
     ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar);
     return;
   }
@@ -177,7 +177,7 @@ nsMathMLmoFrame::ProcessTextData()
   }
 
   // cache the operator
-  mMathMLChar.SetData(presContext, data);
+  mMathMLChar.SetData(data);
 
   // cache the native direction -- beware of bug 133429...
   // mEmbellishData.direction must always retain our native direction, whereas

@@ -1455,6 +1455,9 @@ Notification::ShowInternal()
   } else {
     permission = GetPermissionInternal(GetOwner(), result);
   }
+  // We rely on GetPermissionInternal returning Denied on all failure codepaths.
+  MOZ_ASSERT_IF(result.Failed(), permission == NotificationPermission::Denied);
+  result.SuppressException();
   if (permission != NotificationPermission::Granted || !alertService) {
     if (mWorkerPrivate) {
       RefPtr<NotificationEventWorkerRunnable> r =

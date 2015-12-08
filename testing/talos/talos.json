@@ -108,12 +108,6 @@
                 "--tppagecycles", "7"
             ]
         },
-        "remote-trobocheck2": {
-            "tests": ["tcheck2"],
-            "talos_options": [
-                "--fennecIDs", "../fennec_ids.txt"
-            ]
-        },
         "remote-tp4m_nochrome": {
             "tests": ["tp4m"]
         }

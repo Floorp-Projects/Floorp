@@ -620,8 +620,7 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext,
 }
 
 nscoord
-nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
-                                       nsRenderingContext& aRenderingContext,
+nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
     if (mTitle.IsEmpty()) {
@@ -1016,8 +1015,7 @@ nsTextBoxFrame::MarkIntrinsicISizesDirty()
 }
 
 void
-nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
-                            nsRenderingContext& aRenderingContext,
+nsTextBoxFrame::GetTextSize(nsRenderingContext& aRenderingContext,
                             const nsString& aString,
                             nsSize& aSize, nscoord& aAscent)
 {
@@ -1033,14 +1031,11 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
 void
 nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 {
-    if (mNeedsRecalc)
-    {
+    if (mNeedsRecalc) {
         nsSize size;
-        nsPresContext* presContext = aBoxLayoutState.PresContext();
         nsRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
-            GetTextSize(presContext, *rendContext,
-                        mTitle, size, mAscent);
+            GetTextSize(*rendContext, mTitle, size, mAscent);
             if (GetWritingMode().IsVertical()) {
                 Swap(size.width, size.height);
             }
@@ -1061,13 +1056,11 @@ nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
     textRect.Deflate(wm, LogicalMargin(wm, borderPadding));
 
     // determine (cropped) title and underline position
-    nsPresContext* presContext = PresContext();
     // determine (cropped) title which fits in aRect, and its width
     // (where "width" is the text measure along its baseline, i.e. actually
     // a physical height in vertical writing modes)
     nscoord titleWidth =
-        CalculateTitleForWidth(presContext, aRenderingContext,
-                               textRect.ISize(wm));
+        CalculateTitleForWidth(aRenderingContext, textRect.ISize(wm));
 
 #ifdef ACCESSIBILITY
     // Make sure to update the accessible tree in case when cropped title is

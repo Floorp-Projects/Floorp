@@ -244,6 +244,7 @@ enum class StyleBoxSizing : uint8_t {
 #define NS_STYLE_WILL_CHANGE_SCROLL             (1<<2)
 #define NS_STYLE_WILL_CHANGE_OPACITY            (1<<3)
 #define NS_STYLE_WILL_CHANGE_FIXPOS_CB          (1<<4)
+#define NS_STYLE_WILL_CHANGE_ABSPOS_CB          (1<<5)
 
 // See AnimationEffectReadOnly.webidl
 // and mozilla/dom/AnimationEffectReadOnlyBinding.h
