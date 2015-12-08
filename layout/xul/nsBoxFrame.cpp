@@ -185,8 +185,9 @@ nsBoxFrame::Init(nsIContent*       aContent,
 
 #ifdef DEBUG_LAYOUT
     // if we are root and this
-  if (mState & NS_STATE_IS_ROOT) 
-      GetDebugPref(GetPresContext());
+  if (mState & NS_STATE_IS_ROOT) {
+    GetDebugPref();
+  }
 #endif
 
   UpdateMouseThrough();
@@ -1259,9 +1260,9 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
+nsBoxFrame::GetDebugPref()
 {
-    gDebug = Preferences::GetBool("xul.debug.box");
+  gDebug = Preferences::GetBool("xul.debug.box");
 }
 
 class nsDisplayXULDebug : public nsDisplayItem {
@@ -1408,13 +1409,13 @@ nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
   bool isHorizontal = IsHorizontal();
 
   GetDebugBorder(debugBorder);
-  PixelMarginToTwips(GetPresContext(), debugBorder);
+  PixelMarginToTwips(debugBorder);
 
   GetDebugMargin(debugMargin);
-  PixelMarginToTwips(GetPresContext(), debugMargin);
+  PixelMarginToTwips(debugMargin);
 
   GetDebugPadding(debugPadding);
-  PixelMarginToTwips(GetPresContext(), debugPadding);
+  PixelMarginToTwips(debugPadding);
 
   nsRect inner(mRect);
   inner.MoveTo(aPt);
@@ -1468,7 +1469,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
 
   nsMargin debugMargin;
   GetDebugMargin(debugMargin);
-  PixelMarginToTwips(GetPresContext(), debugMargin);
+  PixelMarginToTwips(debugMargin);
 
   nsRect inner(mRect);
   inner.MoveTo(aPt);
@@ -1671,7 +1672,7 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 }
 
 void 
-nsBoxFrame::PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels)
+nsBoxFrame::PixelMarginToTwips(nsMargin& aMarginPixels)
 {
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   aMarginPixels.left   *= onePixel;
@@ -1742,10 +1743,10 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
     nsMargin m;
     nsMargin m2;
     GetDebugBorder(m);
-    PixelMarginToTwips(aPresContext, m);
+    PixelMarginToTwips(m);
 
     GetDebugMargin(m2);
-    PixelMarginToTwips(aPresContext, m2);
+    PixelMarginToTwips(m2);
 
     m += m2;
 

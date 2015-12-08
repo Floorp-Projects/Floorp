@@ -155,8 +155,7 @@ public:
    * @param aHeaderFooterFrame the original header or footer row group frame
    * that was repeated
    */
-  nsresult  InitRepeatedFrame(nsPresContext*        aPresContext,
-                              nsTableRowGroupFrame* aHeaderFooterFrame);
+  nsresult  InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame);
 
 
   /**

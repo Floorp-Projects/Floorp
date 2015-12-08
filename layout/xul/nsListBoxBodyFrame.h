@@ -122,7 +122,7 @@ public:
   bool ContinueReflow(nscoord height);
   NS_IMETHOD ListBoxAppendFrames(nsFrameList& aFrameList);
   NS_IMETHOD ListBoxInsertFrames(nsIFrame* aPrevFrame, nsFrameList& aFrameList);
-  void OnContentInserted(nsPresContext* aPresContext, nsIContent* aContent);
+  void OnContentInserted(nsIContent* aContent);
   void OnContentRemoved(nsPresContext* aPresContext,  nsIContent* aContainer,
                         nsIFrame* aChildFrame, nsIContent* aOldNextSibling);
 
