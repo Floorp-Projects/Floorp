@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: |waiting| event when source data is missing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    .then(function() {
+      // Set appendWindowEnd to ensure we only have about 6 frames worth.
+      // We must feed at least 6 frames to pass the MDSM pre-roll.
+      videosb.appendWindowEnd = .4;
+      return fetchAndLoad(videosb, 'bipbop/bipbop_video', ['1'], '.m4s');
+    })
+    .then(function() {
+      info("Invoking play()");
+      var promises = [];
+      promises.push(once(el, 'playing'));
+      el.play();
+      return Promise.all(promises);
+    })
+    .then(function() {
+      info("got playing");
+      return once(el, 'waiting');
+    }).then(function() {
+      info("got waiting");
+      info("Loading more data");
+      // Waiting will be fired on the last frame +- 40ms.
+      isfuzzy(el.currentTime, videosb.buffered.end(0) - 1/30,
+              0.04, "Got a waiting event at " + el.currentTime);
+      videosb.appendWindowEnd = 1;
+      var p = once(el, 'ended');
+      var loads = fetchAndLoad(videosb, 'bipbop/bipbop_video', [1], '.m4s');
+      loads.then(() => ms.endOfStream());
+      return p;
+    }).then(function() {
+      // These fuzz factors are bigger than they should be. We should investigate
+      // and fix them in bug 1137574.
+      is(el.duration, 0.801666, "Video has correct duration: " + el.duration);
+      is(el.currentTime, el.duration, "Video has correct currentTime.");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

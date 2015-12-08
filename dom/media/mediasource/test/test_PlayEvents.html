@@ -37,9 +37,6 @@ runWithMSE(function(ms, el) {
        var promises = [];
        promises.push(once(el, 'loadeddata'));
        promises.push(once(el, 'canplay'));
-       // Load [0, 1.601666). We must ensure that we load over 25 frames as the
-       // windows H264 decoder will not produce a sample until then
-       // (bug 1191138).
        promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', range(1, 3), '.m4s'));
        return Promise.all(promises);
     })
