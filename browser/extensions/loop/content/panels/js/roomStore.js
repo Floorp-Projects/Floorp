@@ -487,7 +487,7 @@ loop.store = loop.store || {};
         var roomData = {};
         var context = result.decryptedContext;
         var oldRoomName = context.roomName;
-        var newRoomName = actionData.newRoomName.trim();
+        var newRoomName = (actionData.newRoomName || "").trim();
         if (newRoomName && oldRoomName !== newRoomName) {
           roomData.roomName = newRoomName;
         }
@@ -496,10 +496,9 @@ loop.store = loop.store || {};
         // Since we want to prevent storing falsy (i.e. empty) values for context
         // data, there's no need to send that to the server as an update.
         var newRoomURL = loop.shared.utils.stripFalsyValues({
-          location: actionData.newRoomURL ? actionData.newRoomURL.trim() : "",
-          thumbnail: actionData.newRoomURL ? actionData.newRoomThumbnail.trim() : "",
-          description: actionData.newRoomDescription ?
-            actionData.newRoomDescription.trim() : ""
+          location: (actionData.newRoomURL || "").trim(),
+          thumbnail: (actionData.newRoomThumbnail || "").trim(),
+          description: (actionData.newRoomDescription || "").trim()
         });
         // Only attach a context to the room when
         // 1) there was already a URL set,

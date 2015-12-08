@@ -59,6 +59,8 @@ loop.store.ActiveRoomStore = (function() {
     socialShareProviders: "socialShareProviders"
   };
 
+  var updateContextTimer = null;
+
   /**
    * Active room store.
    *
@@ -921,6 +923,27 @@ loop.store.ActiveRoomStore = (function() {
       } else {
         console.error("Unexpectedly received windowId for browser sharing when pending");
       }
+
+      // The browser being shared changed, so update to the new context
+      loop.request("GetSelectedTabMetadata").then(function(meta) {
+        if (!meta) {
+          return;
+        }
+
+        if (updateContextTimer) {
+          clearTimeout(updateContextTimer);
+        }
+
+        updateContextTimer = setTimeout(function() {
+          this.dispatchAction(new sharedActions.UpdateRoomContext({
+            newRoomDescription: meta.title || meta.description || meta.url,
+            newRoomThumbnail: meta.favicon,
+            newRoomURL: meta.url,
+            roomToken: this.getStoreState().roomToken
+          }));
+          updateContextTimer = null;
+        }.bind(this), 500);
+      }.bind(this));
     },
 
     /**
