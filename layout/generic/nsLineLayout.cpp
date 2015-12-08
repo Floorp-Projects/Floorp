@@ -2329,6 +2329,32 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
                                                   lineWM.IsLineInverted());
         nscoord blockEnd = blockStart + minimumLineBSize;
 
+        if (mStyleText->HasTextEmphasis()) {
+          nscoord fontMaxHeight = fm->MaxHeight();
+          nscoord emphasisHeight =
+            GetBSizeOfEmphasisMarks(spanFrame, inflation);
+          nscoord delta = fontMaxHeight + emphasisHeight - minimumLineBSize;
+          if (delta > 0) {
+            if (minimumLineBSize < fontMaxHeight) {
+              // If the leadings are negative, fill them first.
+              nscoord ascent = fm->MaxAscent();
+              nscoord descent = fm->MaxDescent();
+              if (lineWM.IsLineInverted()) {
+                Swap(ascent, descent);
+              }
+              blockStart = -ascent;
+              blockEnd = descent;
+              delta = emphasisHeight;
+            }
+            LogicalSide side = mStyleText->TextEmphasisSide(lineWM);
+            if (side == eLogicalSideBStart) {
+              blockStart -= delta;
+            } else {
+              blockEnd += delta;
+            }
+          }
+        }
+
         if (blockStart < minBCoord) minBCoord = blockStart;
         if (blockEnd > maxBCoord) maxBCoord = blockEnd;
 
