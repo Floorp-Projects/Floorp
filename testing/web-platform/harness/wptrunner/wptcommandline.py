@@ -338,12 +338,25 @@ def check_args(kwargs):
 
     return kwargs
 
+def check_args_update(kwargs):
+    set_from_config(kwargs)
 
-def create_parser_update():
+    if kwargs["product"] is None:
+        kwargs["product"] = "firefox"
+
+def create_parser_update(product_choices=None):
     from mozlog.structured import commandline
+
+    import products
+
+    if product_choices is None:
+        config_data = config.load()
+        product_choices = products.products_enabled(config_data)
 
     parser = argparse.ArgumentParser("web-platform-tests-update",
                                      description="Update script for web-platform-tests tests.")
+    parser.add_argument("--product", action="store", choices=product_choices,
+                        default=None, help="Browser for which metadata is being updated")
     parser.add_argument("--config", action="store", type=abs_path, help="Path to config file")
     parser.add_argument("--metadata", action="store", type=abs_path, dest="metadata_root",
                         help="Path to the folder containing test metadata"),
@@ -386,7 +399,7 @@ def parse_args():
 def parse_args_update():
     parser = create_parser_update()
     rv = vars(parser.parse_args())
-    set_from_config(rv)
+    check_args_update(rv)
     return rv
 
 
