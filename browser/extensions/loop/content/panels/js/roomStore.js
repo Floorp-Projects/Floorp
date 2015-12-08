@@ -209,7 +209,6 @@ loop.store = loop.store || {};
 
     /**
      * Executed when the user switches accounts.
-     *
      */
     _onRoomsRefresh: function() {
       this.dispatchAction(new sharedActions.UpdateRoomList({
@@ -340,7 +339,7 @@ loop.store = loop.store || {};
     emailRoomUrl: function(actionData) {
       var from = actionData.from;
       loop.shared.utils.composeCallUrlEmail(actionData.roomUrl, null,
-        actionData.roomDescription, from);
+        actionData.roomDescription);
 
       var bucket = this._constants.SHARING_ROOM_URL["EMAIL_FROM_" + (from || "").toUpperCase()];
       if (typeof bucket === "undefined") {
@@ -386,10 +385,8 @@ loop.store = loop.store || {};
 
     /**
      * Open the share panel to add a Social share provider.
-     *
-     * @param {sharedActions.AddSocialShareProvider} actionData The action data.
      */
-    addSocialShareProvider: function(actionData) {
+    addSocialShareProvider: function() {
       loop.request("AddSocialShareProvider");
     },
 

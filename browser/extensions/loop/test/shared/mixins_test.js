@@ -144,7 +144,7 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.DocumentVisibilityMixin", function() {
-    var comp, TestComp, onDocumentVisibleStub, onDocumentHiddenStub;
+    var TestComp, onDocumentVisibleStub, onDocumentHiddenStub;
 
     beforeEach(function() {
       onDocumentVisibleStub = sandbox.stub();
@@ -175,7 +175,7 @@ describe("loop.shared.mixins", function() {
       function() {
         setupFakeVisibilityEventDispatcher({ target: { hidden: false } });
 
-        comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
+        TestUtils.renderIntoDocument(React.createElement(TestComp));
 
         // Twice, because it's also called when the component was mounted.
         sinon.assert.calledTwice(onDocumentVisibleStub);
@@ -185,7 +185,7 @@ describe("loop.shared.mixins", function() {
       function() {
         setupFakeVisibilityEventDispatcher({ target: { hidden: true } });
 
-        comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
+        TestUtils.renderIntoDocument(React.createElement(TestComp));
 
         sinon.assert.calledOnce(onDocumentHiddenStub);
       });
@@ -221,7 +221,7 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.AudioMixin", function() {
-    var view, fakeAudio, getAudioBlobStub, TestComp;
+    var TestComp, getAudioBlobStub, fakeAudio;
 
     beforeEach(function() {
       getAudioBlobStub = sinon.stub().returns(
@@ -256,7 +256,7 @@ describe("loop.shared.mixins", function() {
     });
 
     it("should not play a failure sound when doNotDisturb true", function() {
-      view = TestUtils.renderIntoDocument(React.createElement(TestComp));
+      TestUtils.renderIntoDocument(React.createElement(TestComp));
       sinon.assert.notCalled(getAudioBlobStub);
       sinon.assert.notCalled(fakeAudio.play);
     });
@@ -265,7 +265,7 @@ describe("loop.shared.mixins", function() {
       LoopMochaUtils.stubLoopRequest({
         GetDoNotDisturb: function() { return false; }
       });
-      view = TestUtils.renderIntoDocument(React.createElement(TestComp));
+      TestUtils.renderIntoDocument(React.createElement(TestComp));
       sinon.assert.calledOnce(getAudioBlobStub);
       sinon.assert.calledWithExactly(getAudioBlobStub, "failure");
       sinon.assert.calledOnce(fakeAudio.play);
@@ -274,7 +274,7 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.RoomsAudioMixin", function() {
-    var view, fakeAudioMixin, comp;
+    var comp;
 
     function createTestComponent(initialState) {
       var TestComp = React.createClass({
