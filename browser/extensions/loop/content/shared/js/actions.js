@@ -321,8 +321,8 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     UpdateRoomContext: Action.define("updateRoomContext", {
-      roomToken: String,
-      newRoomName: String
+      roomToken: String
+      // newRoomName: String, Optional.
       // newRoomDescription: String, Optional.
       // newRoomThumbnail: String, Optional.
       // newRoomURL: String Optional.
