@@ -186,7 +186,8 @@ function PushEndpointCallback(pushManager, resolve, reject) {
 
 PushEndpointCallback.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushEndpointCallback]),
-  onPushEndpoint: function(ok, endpoint, keyLen, key) {
+  onPushEndpoint: function(ok, endpoint, keyLen, key,
+                           authSecretLen, authSecretIn) {
     let {pushManager} = this;
     if (!Components.isSuccessCode(ok)) {
       this.reject(new pushManager._window.DOMException(
@@ -208,9 +209,17 @@ PushEndpointCallback.prototype = {
       keyView.set(key);
     }
 
+    let authSecret = null;
+    if (authSecretLen) {
+      authSecret = new ArrayBuffer(authSecretLen);
+      let secretView = new Uint8Array(authSecret);
+      secretView.set(authSecretIn);
+    }
+
     let sub = new pushManager._window.PushSubscription(endpoint,
                                                        pushManager._scope,
-                                                       publicKey);
+                                                       publicKey,
+                                                       authSecret);
     sub.setPrincipal(pushManager._principal);
     this.resolve(sub);
   },

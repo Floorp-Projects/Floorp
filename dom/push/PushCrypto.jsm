@@ -13,10 +13,16 @@ this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
                          'getEncryptionKeyParams', 'getEncryptionParams',
                          'base64UrlDecode'];
 
-var ENCRYPT_INFO = new TextEncoder('utf-8').encode('Content-Encoding: aesgcm128');
-var NONCE_INFO = new TextEncoder('utf-8').encode('Content-Encoding: nonce');
+var UTF8 = new TextEncoder('utf-8');
+var ENCRYPT_INFO = UTF8.encode('Content-Encoding: aesgcm128');
+var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
+var AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
+var P256DH_INFO = UTF8.encode('P-256\0');
 
 this.getEncryptionKeyParams = function(encryptKeyField) {
+  if (!encryptKeyField) {
+    return null;
+  }
   var params = encryptKeyField.split(',');
   return params.reduce((m, p) => {
     var pmap = p.split(';').reduce(parseHeaderFieldParams, {});
@@ -41,7 +47,7 @@ var parseHeaderFieldParams = (m, v) => {
     // A quoted string with internal quotes is invalid for all the possible
     // values of this header field.
     m[v.substring(0, i).trim()] = v.substring(i + 1).trim()
-                                    .replace(/^"(.*)"$/, '$1');
+                                   .replace(/^"(.*)"$/, '$1');
   }
   return m;
 };
@@ -115,7 +121,7 @@ function hkdf(salt, ikm) {
     .then(prk => new hmac(prk));
 }
 
-hkdf.prototype.generate = function(info, len) {
+hkdf.prototype.extract = function(info, len) {
   var input = concatArray([info, new Uint8Array([1])]);
   return this.prkhPromise
     .then(prkh => prkh.hash(input))
@@ -127,10 +133,10 @@ hkdf.prototype.generate = function(info, len) {
     });
 };
 
-/* generate a 96-bit IV for use in GCM, 48-bits of which are populated */
+/* generate a 96-bit nonce for use in GCM, 48-bits of which are populated */
 function generateNonce(base, index) {
   if (index >= Math.pow(2, 48)) {
-    throw new Error('Error generating IV - index is too large.');
+    throw new Error('Error generating nonce - index is too large.');
   }
   var nonce = base.slice(0, 12);
   nonce = new Uint8Array(nonce);
@@ -142,7 +148,11 @@ function generateNonce(base, index) {
 
 this.PushCrypto = {
 
-  generateKeys: function() {
+  generateAuthenticationSecret() {
+    return crypto.getRandomValues(new Uint8Array(12));
+  },
+
+  generateKeys() {
     return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256'},
                                      true,
                                      ['deriveBits'])
@@ -154,7 +164,8 @@ this.PushCrypto = {
          ]));
   },
 
-  decodeMsg: function(aData, aPrivateKey, aRemotePublicKey, aSalt, aRs) {
+  decodeMsg(aData, aPrivateKey, aPublicKey, aSenderPublicKey,
+            aSalt, aRs, aAuthenticationSecret) {
 
     if (aData.byteLength === 0) {
       // Zero length messages will be passed as null.
@@ -167,8 +178,9 @@ this.PushCrypto = {
       return Promise.reject(new Error('Data truncated'));
     }
 
+    let senderKey = base64UrlDecode(aSenderPublicKey)
     return Promise.all([
-      crypto.subtle.importKey('raw', base64UrlDecode(aRemotePublicKey),
+      crypto.subtle.importKey('raw', senderKey,
                               { name: 'ECDH', namedCurve: 'P-256' },
                               false,
                               ['deriveBits']),
@@ -177,18 +189,12 @@ this.PushCrypto = {
                               false,
                               ['deriveBits'])
     ])
-    .then(keys =>
-      crypto.subtle.deriveBits({ name: 'ECDH', public: keys[0] }, keys[1], 256))
-    .then(rawKey => {
-      var kdf = new hkdf(base64UrlDecode(aSalt), new Uint8Array(rawKey));
-      return Promise.all([
-        kdf.generate(ENCRYPT_INFO, 16)
-          .then(gcmBits =>
-                crypto.subtle.importKey('raw', gcmBits, 'AES-GCM', false,
-                                        ['decrypt'])),
-        kdf.generate(NONCE_INFO, 12)
-      ])
-    })
+    .then(keys => crypto.subtle.deriveBits({ name: 'ECDH', public: keys[0] }, keys[1], 256))
+    .then(ikm => this._deriveKeyAndNonce(new Uint8Array(ikm),
+                                         base64UrlDecode(aSalt),
+                                         base64UrlDecode(aPublicKey),
+                                         senderKey,
+                                         aAuthenticationSecret))
     .then(r =>
       // AEAD_AES_128_GCM expands ciphertext to be 16 octets longer.
       Promise.all(chunkArray(aData, aRs + 16).map((slice, index) =>
@@ -196,11 +202,57 @@ this.PushCrypto = {
     .then(r => concatArray(r));
   },
 
-  _decodeChunk: function(aSlice, aIndex, aNonce, aKey) {
-    return crypto.subtle.decrypt({name: 'AES-GCM',
-                                  iv: generateNonce(aNonce, aIndex)
-                                 },
-                                 aKey, aSlice)
+  _deriveKeyAndNonce(ikm, salt, receiverKey, senderKey, authenticationSecret) {
+    var kdfPromise;
+    var context;
+    // The authenticationSecret, when present, is mixed with the ikm using HKDF.
+    // This is its primary purpose.  However, since the authentication secret
+    // was added at the same time that the info string was changed, we also use
+    // its presence to change how the final info string is calculated:
+    //
+    // 1. When there is no authenticationSecret, the context string is simply
+    // "Content-Encoding: <blah>". This corresponds to old, deprecated versions
+    // of the content encoding.  This should eventually be removed: bug 1230038.
+    //
+    // 2. When there is an authenticationSecret, the context string is:
+    // "Content-Encoding: <blah>\0P-256\0" then the length and value of both the
+    // receiver key and sender key.
+    if (authenticationSecret) {
+      // Since we are using an authentication secret, we need to run an extra
+      // round of HKDF with the authentication secret as salt.
+      var authKdf = new hkdf(authenticationSecret, ikm);
+      kdfPromise = authKdf.extract(AUTH_INFO, 32)
+        .then(ikm2 => new hkdf(salt, ikm2));
+
+      // We also use the presence of the authentication secret to indicate that
+      // we have extra context to add to the info parameter.
+      context = concatArray([
+        new Uint8Array([0]), P256DH_INFO,
+        this._encodeLength(receiverKey), receiverKey,
+        this._encodeLength(senderKey), senderKey
+      ]);
+    } else {
+      kdfPromise = Promise.resolve(new hkdf(salt, ikm));
+      context = new Uint8Array(0);
+    }
+    return kdfPromise.then(kdf => Promise.all([
+      kdf.extract(concatArray([ENCRYPT_INFO, context]), 16)
+        .then(gcmBits => crypto.subtle.importKey('raw', gcmBits, 'AES-GCM', false,
+                                                 ['decrypt'])),
+      kdf.extract(concatArray([NONCE_INFO, context]), 12)
+    ]));
+  },
+
+  _encodeLength(buffer) {
+    return new Uint8Array([0, buffer.byteLength]);
+  },
+
+  _decodeChunk(aSlice, aIndex, aNonce, aKey) {
+    let params = {
+      name: 'AES-GCM',
+      iv: generateNonce(aNonce, aIndex)
+    };
+    return crypto.subtle.decrypt(params, aKey, aSlice)
       .then(decoded => {
         decoded = new Uint8Array(decoded);
         if (decoded.length == 0) {

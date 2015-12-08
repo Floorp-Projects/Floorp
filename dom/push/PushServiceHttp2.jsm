@@ -151,10 +151,17 @@ PushChannelListener.prototype = {
     if (Components.isSuccessCode(aStatusCode) &&
         this._mainListener &&
         this._mainListener._pushService) {
+      let requiresAuthenticationSecret = true;
 
-      var keymap = encryptKeyFieldParser(aRequest);
+      var keymap = encryptKeyFieldParser(aRequest, "Crypto-Key");
       if (!keymap) {
-        return;
+        // Backward compatibility: use the absence of Crypto-Key to indicate
+        // that the authentication secret isn't used.
+        requiresAuthenticationSecret = false;
+        keymap = encryptKeyFieldParser(aRequest, "Encryption-Key");
+        if (!keymap) {
+          return;
+        }
       }
       var enc = encryptFieldParser(aRequest);
       if (!enc || !enc.keyid) {
@@ -169,19 +176,24 @@ PushChannelListener.prototype = {
 
       var msg = concatArray(this._message);
 
+      let cryptoParams = {
+        dh: dh,
+        salt: salt,
+        rs: rs,
+        auth: requiresAuthenticationSecret,
+      };
+
       this._mainListener._pushService._pushChannelOnStop(this._mainListener.uri,
                                                          this._ackUri,
                                                          msg,
-                                                         dh,
-                                                         salt,
-                                                         rs);
+                                                         cryptoParams);
     }
   }
 };
 
-function encryptKeyFieldParser(aRequest) {
+function encryptKeyFieldParser(aRequest, name) {
   try {
-    var encryptKeyField = aRequest.getRequestHeader("Encryption-Key");
+    var encryptKeyField = aRequest.getRequestHeader(name);
     return getEncryptionKeyParams(encryptKeyField);
   } catch(e) {
     // getRequestHeader can throw.
@@ -490,9 +502,10 @@ this.PushServiceHttp2 = {
     })
     .then(result =>
       PushCrypto.generateKeys()
-      .then(exportedKeys => {
-        result.p256dhPublicKey = exportedKeys[0];
-        result.p256dhPrivateKey = exportedKeys[1];
+        .then(([publicKey, privateKey]) => {
+        result.p256dhPublicKey = publicKey;
+        result.p256dhPrivateKey = privateKey;
+        result.authenticationSecret = PushCrypto.generateAuthenticationSecret();
         this._conns[result.subscriptionUri] = {
           channel: null,
           listener: null,
@@ -673,7 +686,7 @@ this.PushServiceHttp2 = {
 
     for (let i = 0; i < aSubscriptions.length; i++) {
       let record = aSubscriptions[i];
-      this._mainPushService.ensureP256dhKey(record).then(record => {
+      this._mainPushService.ensureCrypto(record).then(record => {
         this._startSingleConnection(record);
       }, error => {
         console.error("startConnections: Error updating record",
@@ -800,14 +813,9 @@ this.PushServiceHttp2 = {
     }
   },
 
-  _pushChannelOnStop: function(aUri, aAckUri, aMessage, dh, salt, rs) {
+  _pushChannelOnStop: function(aUri, aAckUri, aMessage, cryptoParams) {
     console.debug("pushChannelOnStop()");
 
-    let cryptoParams = {
-      dh: dh,
-      salt: salt,
-      rs: rs,
-    };
     this._mainPushService.receivedPushMessage(
       aUri, aMessage, cryptoParams, record => {
         // Always update the stored record.

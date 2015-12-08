@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushSubscriptionBinding.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
@@ -124,11 +125,13 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    const nsAString& aEndpoint,
                                    const nsAString& aScope,
-                                   const nsTArray<uint8_t>& aRawP256dhKey)
+                                   const nsTArray<uint8_t>& aRawP256dhKey,
+                                   const nsTArray<uint8_t>& aAuthSecret)
   : mGlobal(aGlobal)
   , mEndpoint(aEndpoint)
   , mScope(aScope)
   , mRawP256dhKey(aRawP256dhKey)
+  , mAuthSecret(aAuthSecret)
 {
 }
 
@@ -145,14 +148,18 @@ PushSubscription::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 PushSubscription::GetKey(JSContext* aCx,
                          PushEncryptionKeyName aType,
-                         JS::MutableHandle<JSObject*> aP256dhKey)
+                         JS::MutableHandle<JSObject*> aKey)
 {
   if (aType == PushEncryptionKeyName::P256dh && !mRawP256dhKey.IsEmpty()) {
-    aP256dhKey.set(ArrayBuffer::Create(aCx,
-                                       mRawP256dhKey.Length(),
-                                       mRawP256dhKey.Elements()));
+    aKey.set(ArrayBuffer::Create(aCx,
+                                 mRawP256dhKey.Length(),
+                                 mRawP256dhKey.Elements()));
+  } else if (aType == PushEncryptionKeyName::Auth && !mAuthSecret.IsEmpty()) {
+    aKey.set(ArrayBuffer::Create(aCx,
+                                 mAuthSecret.Length(),
+                                 mAuthSecret.Elements()));
   } else {
-    aP256dhKey.set(nullptr);
+    aKey.set(nullptr);
   }
 }
 
@@ -169,6 +176,7 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
                               const nsAString& aEndpoint,
                               const nsAString& aScope,
                               const Nullable<ArrayBuffer>& aP256dhKey,
+                              const Nullable<ArrayBuffer>& aAuthSecret,
                               ErrorResult& aRv)
 {
   MOZ_ASSERT(!aEndpoint.IsEmpty());
@@ -180,13 +188,20 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
   if (!aP256dhKey.IsNull()) {
     const ArrayBuffer& key = aP256dhKey.Value();
     key.ComputeLengthAndData();
-    rawKey.SetLength(key.Length());
-    rawKey.ReplaceElementsAt(0, key.Length(), key.Data(), key.Length());
+    rawKey.InsertElementsAt(0, key.Data(), key.Length());
+  }
+
+  nsTArray<uint8_t> authSecret;
+  if (!aAuthSecret.IsNull()) {
+    const ArrayBuffer& sekrit = aAuthSecret.Value();
+    sekrit.ComputeLengthAndData();
+    authSecret.InsertElementsAt(0, sekrit.Data(), sekrit.Length());
   }
   RefPtr<PushSubscription> sub = new PushSubscription(global,
-                                                        aEndpoint,
-                                                        aScope,
-                                                        rawKey);
+                                                      aEndpoint,
+                                                      aScope,
+                                                      rawKey,
+                                                      authSecret);
 
   return sub.forget();
 }
@@ -259,8 +274,12 @@ NS_INTERFACE_MAP_END
 
 WorkerPushSubscription::WorkerPushSubscription(const nsAString& aEndpoint,
                                                const nsAString& aScope,
-                                               const nsTArray<uint8_t>& aRawP256dhKey)
-  : mEndpoint(aEndpoint), mScope(aScope), mRawP256dhKey(aRawP256dhKey)
+                                               const nsTArray<uint8_t>& aRawP256dhKey,
+                                               const nsTArray<uint8_t>& aAuthSecret)
+  : mEndpoint(aEndpoint)
+  , mScope(aScope)
+  , mRawP256dhKey(aRawP256dhKey)
+  , mAuthSecret(aAuthSecret)
 {
   MOZ_ASSERT(!aScope.IsEmpty());
   MOZ_ASSERT(!aEndpoint.IsEmpty());
@@ -281,6 +300,7 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal,
                                     const nsAString& aEndpoint,
                                     const nsAString& aScope,
                                     const Nullable<ArrayBuffer>& aP256dhKey,
+                                    const Nullable<ArrayBuffer>& aAuthSecret,
                                     ErrorResult& aRv)
 {
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
@@ -294,9 +314,19 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal,
     rawKey.SetLength(key.Length());
     rawKey.ReplaceElementsAt(0, key.Length(), key.Data(), key.Length());
   }
+
+  nsTArray<uint8_t> authSecret;
+  if (!aAuthSecret.IsNull()) {
+    const ArrayBuffer& sekrit = aAuthSecret.Value();
+    sekrit.ComputeLengthAndData();
+    authSecret.SetLength(sekrit.Length());
+    authSecret.ReplaceElementsAt(0, sekrit.Length(),
+                                 sekrit.Data(), sekrit.Length());
+  }
   RefPtr<WorkerPushSubscription> sub = new WorkerPushSubscription(aEndpoint,
-                                                                    aScope,
-                                                                    rawKey);
+                                                                  aScope,
+                                                                  rawKey,
+                                                                  authSecret);
 
   return sub.forget();
 }
@@ -304,15 +334,20 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal,
 void
 WorkerPushSubscription::GetKey(JSContext* aCx,
                                PushEncryptionKeyName aType,
-                               JS::MutableHandle<JSObject*> aP256dhKey)
+                               JS::MutableHandle<JSObject*> aKey)
 {
   if (aType == mozilla::dom::PushEncryptionKeyName::P256dh &&
       !mRawP256dhKey.IsEmpty()) {
-    aP256dhKey.set(ArrayBuffer::Create(aCx,
-                                       mRawP256dhKey.Length(),
-                                       mRawP256dhKey.Elements()));
+    aKey.set(ArrayBuffer::Create(aCx,
+                                 mRawP256dhKey.Length(),
+                                 mRawP256dhKey.Elements()));
+  } else if (aType == mozilla::dom::PushEncryptionKeyName::Auth &&
+             !mAuthSecret.IsEmpty()) {
+    aKey.set(ArrayBuffer::Create(aCx,
+                                 mAuthSecret.Length(),
+                                 mAuthSecret.Elements()));
   } else {
-    aP256dhKey.set(nullptr);
+    aKey.set(nullptr);
   }
 }
 
@@ -500,13 +535,15 @@ public:
                                 nsresult aStatus,
                                 const nsAString& aEndpoint,
                                 const nsAString& aScope,
-                                const nsTArray<uint8_t>& aRawP256dhKey)
+                                const nsTArray<uint8_t>& aRawP256dhKey,
+                                const nsTArray<uint8_t>& aAuthSecret)
     : WorkerRunnable(aProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
     , mProxy(aProxy)
     , mStatus(aStatus)
     , mEndpoint(aEndpoint)
     , mScope(aScope)
     , mRawP256dhKey(aRawP256dhKey)
+    , mAuthSecret(aAuthSecret)
   { }
 
   bool
@@ -518,7 +555,8 @@ public:
         promise->MaybeResolve(JS::NullHandleValue);
       } else {
         RefPtr<WorkerPushSubscription> sub =
-          new WorkerPushSubscription(mEndpoint, mScope, mRawP256dhKey);
+            new WorkerPushSubscription(mEndpoint, mScope,
+                                       mRawP256dhKey, mAuthSecret);
         promise->MaybeResolve(sub);
       }
     } else {
@@ -537,6 +575,7 @@ private:
   nsString mEndpoint;
   nsString mScope;
   nsTArray<uint8_t> mRawP256dhKey;
+  nsTArray<uint8_t> mAuthSecret;
 };
 
 class GetSubscriptionCallback final : public nsIPushEndpointCallback
@@ -554,7 +593,9 @@ public:
   OnPushEndpoint(nsresult aStatus,
                  const nsAString& aEndpoint,
                  uint32_t aKeyLen,
-                 uint8_t* aKey) override
+                 uint8_t* aKey,
+                 uint32_t aAuthSecretLen,
+                 uint8_t* aAuthSecret) override
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mProxy, "OnPushEndpoint() called twice?");
@@ -572,15 +613,29 @@ public:
     nsTArray<uint8_t> rawP256dhKey(aKeyLen);
     rawP256dhKey.ReplaceElementsAt(0, aKeyLen, aKey, aKeyLen);
 
+    nsTArray<uint8_t> authSecret(aAuthSecretLen);
+    authSecret.ReplaceElementsAt(0, aAuthSecretLen,
+                                 aAuthSecret, aAuthSecretLen);
+
     RefPtr<GetSubscriptionResultRunnable> r =
       new GetSubscriptionResultRunnable(proxy,
                                         aStatus,
                                         aEndpoint,
                                         mScope,
-                                        rawP256dhKey);
+                                        rawP256dhKey,
+                                        authSecret);
     r->Dispatch(jsapi.cx());
     return NS_OK;
   }
+
+  // Convenience method for use in this file.
+  void
+  OnPushEndpointError(nsresult aStatus)
+  {
+    Unused << NS_WARN_IF(NS_FAILED(
+        OnPushEndpoint(aStatus, EmptyString(), 0, nullptr, 0, nullptr)));
+  }
+
 
 protected:
   ~GetSubscriptionCallback()
@@ -619,23 +674,23 @@ public:
     PushPermissionState state;
     nsresult rv = GetPermissionState(principal, state);
     if (NS_FAILED(rv)) {
-      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString(), 0, nullptr);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     if (state != PushPermissionState::Granted) {
       if (mAction == WorkerPushManager::GetSubscriptionAction) {
-        callback->OnPushEndpoint(NS_OK, EmptyString(), 0, nullptr);
+        callback->OnPushEndpointError(NS_OK);
         return NS_OK;
       }
-      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString(), 0, nullptr);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     nsCOMPtr<nsIPushClient> client =
       do_CreateInstance("@mozilla.org/push/PushClient;1");
     if (!client) {
-      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString(), 0, nullptr);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
@@ -647,7 +702,7 @@ public:
     }
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString(), 0, nullptr);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 

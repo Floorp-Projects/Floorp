@@ -63,9 +63,14 @@ function getCryptoParams(headers) {
   if (!headers) {
     return null;
   }
-  var keymap = getEncryptionKeyParams(headers.encryption_key);
+  var requiresAuthenticationSecret = true;
+  var keymap = getEncryptionKeyParams(headers.crypto_key);
   if (!keymap) {
-    return null;
+    requiresAuthenticationSecret = false;
+    keymap = getEncryptionKeyParams(headers.encryption_key);
+    if (!keymap) {
+      return null;
+    }
   }
   var enc = getEncryptionParams(headers.encryption);
   if (!enc || !enc.keyid) {
@@ -77,7 +82,7 @@ function getCryptoParams(headers) {
   if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
     return null;
   }
-  return {dh, salt, rs};
+  return {dh, salt, rs, auth: requiresAuthenticationSecret};
 }
 
 /**
@@ -802,7 +807,7 @@ this.PushServiceWebSocket = {
       if (this._dataEnabled) {
         this._mainPushService.getAllUnexpired().then(records =>
           Promise.all(records.map(record =>
-            this._mainPushService.ensureP256dhKey(record).catch(error => {
+            this._mainPushService.ensureCrypto(record).catch(error => {
               console.error("finishHandshake: Error updating record",
                 record.keyID, error);
             })
@@ -1014,6 +1019,7 @@ this.PushServiceWebSocket = {
           .then(([publicKey, privateKey]) => {
             record.p256dhPublicKey = publicKey;
             record.p256dhPrivateKey = privateKey;
+            record.authenticationSecret = PushCrypto.generateAuthenticationSecret();
             return record;
           });
       });
