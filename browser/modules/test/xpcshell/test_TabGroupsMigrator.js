@@ -54,7 +54,32 @@ const TEST_STATES = {
         },
       },
     ]
-  }
+  },
+  NAMED_ACTIVE_GROUP: {
+    selectedWindow: 1,
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{
+              url: "about:mozilla",
+              title: "Mozilla 1",
+            }],
+            index: 1,
+            hidden: false,
+            extData: {
+              "tabview-tab": "{\"groupID\":2,\"active\":true}",
+            },
+          },
+        ],
+        extData: {
+          "tabview-group": "{\"2\":{\"title\":\"Foopy\"}}",
+          "tabview-groups": "{\"nextID\":20,\"activeGroupId\":2,\"totalNumber\":1}",
+          "tabview-visibility": "false"
+        },
+      }
+    ],
+  },
 };
 
 add_task(function* gatherGroupDataTest() {
@@ -66,13 +91,13 @@ add_task(function* gatherGroupDataTest() {
   Assert.ok(!!group2, "group 2 should exist");
   if (group2) {
     Assert.equal(group2.tabs.length, 2, "2 tabs in group 2");
-    Assert.equal(group2.title, "", "We don't assign titles to untitled groups");
+    Assert.equal(group2.tabGroupsMigrationTitle, "", "We don't assign titles to untitled groups");
     Assert.equal(group2.anonGroupID, "1", "We mark an untitled group with an anonymous id");
   }
   let group13 = singleWinGroups.get("13");
   if (group13) {
     Assert.equal(group13.tabs.length, 1, "1 tabs in group 13");
-    Assert.equal(group13.title, "Foopy", "Group with title has correct title");
+    Assert.equal(group13.tabGroupsMigrationTitle, "Foopy", "Group with title has correct title");
     Assert.ok(!("anonGroupID" in group13), "We don't mark a titled group with an anonymous id");
   }
 });
@@ -112,6 +137,26 @@ add_task(function* bookmarkingTest() {
       gBrowserBundle.GetStringFromName("tabgroups.migration.tabGroupBookmarkFolderName"),
       "Should have the right title");
   });
+});
+
+add_task(function* bookmarkNamedActiveGroup() {
+  let stateClone = JSON.parse(JSON.stringify(TEST_STATES.NAMED_ACTIVE_GROUP));
+  let groupInfo = TabGroupsMigrator._gatherGroupData(stateClone);
+  let removedGroups = TabGroupsMigrator._removeHiddenTabGroupsFromState(stateClone, groupInfo);
+  yield TabGroupsMigrator._bookmarkAllGroupsFromState(groupInfo);
+  let bmParents = {};
+  let bmCounter = 0;
+  let onResult = bm => {
+    bmCounter++;
+    bmParents[bm.parentGuid] = (bmParents[bm.parentGuid] || 0) + 1;
+    Assert.ok(bm.title.startsWith("Mozilla "), "Bookmark title (" + bm.title + ")  should start with 'Mozilla '");
+  };
+  yield PlacesUtils.bookmarks.fetch({url: "about:mozilla"}, onResult);
+  Assert.equal(bmCounter, 1, "Should have seen 1 bookmarks");
+  let parentPromise = PlacesUtils.bookmarks.fetch({guid: Object.keys(bmParents)[0]}, bm => {
+    Assert.equal(bm.title, "Foopy", "Group with 1 kid has right title");
+  });
+  yield parentPromise;
 });
 
 add_task(function* removingTabGroupsFromJSONTest() {
