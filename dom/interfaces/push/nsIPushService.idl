@@ -42,15 +42,25 @@ interface nsIPushSubscription : nsISupports
  };
 
 /**
- * Called by the |unsubscribe| method. A non-success |status| indicates that
- * there was a problem unsubscribing, and the |success| argument should be
- * ignored. Otherwise, |success| is true if unsubscribing was successful, and
- * false if the subscription does not exist.
+ * Called by |unsubscribe|. A non-success |status| indicates that there was
+ * a problem unsubscribing, and the |success| argument should be ignored.
+ * Otherwise, |success| is true if unsubscribing was successful, and false if
+ * the subscription does not exist.
  */
 [scriptable, uuid(d574118f-61a9-4270-b1f6-4461aa85c4f5), function]
 interface nsIUnsubscribeResultCallback : nsISupports
 {
   void onUnsubscribe(in nsresult status, in bool success);
+};
+
+/**
+ * Called by |clearForDomain|. A non-success |status| indicates that there was
+ * a problem clearing subscriptions for the given domain.
+ */
+[scriptable, uuid(bd47b38e-8bfa-4f92-834e-832a4431e05e), function]
+interface nsIPushClearResultCallback : nsISupports
+{
+  void onClear(in nsresult status);
 };
 
 /**
@@ -60,7 +70,7 @@ interface nsIUnsubscribeResultCallback : nsISupports
  * and allows privileged code to receive messages without migrating to service
  * workers.
  */
-[scriptable, uuid(cf46905d-fb55-4f21-8927-31f821c371b6)]
+[scriptable, uuid(678ef584-bf25-47aa-ac84-03efc0865b68)]
 interface nsIPushService : nsISupports
 {
   /**
@@ -96,6 +106,13 @@ interface nsIPushService : nsISupports
    */
   void getSubscription(in DOMString scope, in nsIPrincipal principal,
                        in nsIPushSubscriptionCallback callback);
+
+  /**
+   * Drops every subscription for the given |domain|, or all domains if
+   * |domain| is "*".
+   */
+  void clearForDomain(in DOMString domain,
+                      in nsIPushClearResultCallback callback);
 };
 
 [scriptable, uuid(a2555e70-46f8-4b52-bf02-d978b979d143)]
