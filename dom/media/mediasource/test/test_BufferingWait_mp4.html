@@ -41,18 +41,16 @@ runWithMSE(function(ms, v) {
     /* Note - Missing |bipbop4| segment here corresponding to (2.41, 3.20]  */
     .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['5'], '.m4s'))
     .then(function() {
-        // Some decoders (Windows in particular) may keep up to 25 frames queued
-        // before returning a sample. 0.7 is 1.62s - 25 * 0.03333
-        var promise = waitUntilTime(0.7);
+        // last audio sample has a start time of 1.578956s
+        var promise = waitUntilTime(1.57895);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
       }).then(function() {
         window.firstStop = Date.now();
         fetchAndLoad(sb, 'bipbop/bipbop', ['3'], '.m4s');
-        // Some decoders (Windows in particular) may keep up to 25 frames queued
-        // before returning a sample. 1.5 is 2.41s - 25 * 0.03333
-        return waitUntilTime(1.5);
+        // last audio sample has a start time of 2.368435
+        return waitUntilTime(2.36843);
       }).then(function() {
         var waitDuration = (Date.now() - window.firstStop) / 1000;
         ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
