@@ -1676,10 +1676,18 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
   }
 }
 
+static nscoord
+GetBSizeOfEmphasisMarks(nsIFrame* aSpanFrame, float aInflation)
+{
+  RefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsOfEmphasisMarks(
+    aSpanFrame->StyleContext(), getter_AddRefs(fm), aInflation);
+  return fm->MaxHeight();
+}
+
 void
 nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
-                             const nsStyleText* aStyleText,
-                             nsFontMetrics* aFontMetrics,
+                             const nsStyleText* aStyleText, float aInflation,
                              bool* aZeroEffectiveSpanBox)
 {
   MOZ_ASSERT(spanFrame == psd->mFrame->mFrame);
@@ -1696,17 +1704,14 @@ nsLineLayout::AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
     requiredEndLeading += endLeading;
   }
   if (aStyleText->HasTextEmphasis()) {
-    // Emphasis marks are symbols rendered using the same font settings
-    // as the element with its size scaled down to 50%, so we add half
-    // height of the font metrics to the specified side as leading.
-    nscoord halfHeight = aFontMetrics->MaxHeight() / 2;
+    nscoord bsize = GetBSizeOfEmphasisMarks(spanFrame, aInflation);
     LogicalSide side = aStyleText->TextEmphasisSide(mRootSpan->mWritingMode);
     if (side == eLogicalSideBStart) {
-      requiredStartLeading += halfHeight;
+      requiredStartLeading += bsize;
     } else {
       MOZ_ASSERT(side == eLogicalSideBEnd,
                  "emphasis marks must be in block axis");
-      requiredEndLeading += halfHeight;
+      requiredEndLeading += bsize;
     }
   }
 
@@ -1920,7 +1925,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     psd->mBStartLeading = leading / 2;
     psd->mBEndLeading = leading - psd->mBStartLeading;
     psd->mLogicalBSize = logicalBSize;
-    AdjustLeadings(spanFrame, psd, styleText, fm, &zeroEffectiveSpanBox);
+    AdjustLeadings(spanFrame, psd, styleText, inflation,
+                   &zeroEffectiveSpanBox);
 
     if (zeroEffectiveSpanBox) {
       // When the span-box is to be ignored, zero out the initial
