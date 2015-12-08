@@ -46,12 +46,12 @@ function init() {
     return;
   }
 
-  let pns = undefined;
+  let ps = undefined;
   try {
-    pns = Cc["@mozilla.org/push/NotificationService;1"]
-            .getService(Ci.nsIPushNotificationService);
+    ps = Cc["@mozilla.org/push/Service;1"]
+           .getService(Ci.nsIPushService);
   } catch(e) {
-    dump("Could not acquire PushNotificationService\n");
+    dump("Could not acquire PushService\n");
   }
 
   for (let i = 0; i < length; ++i) {
@@ -61,11 +61,11 @@ function init() {
       continue;
     }
 
-    display(info, pns);
+    display(info, ps);
   }
 }
 
-function display(info, pushNotificationService) {
+function display(info, pushService) {
   let parent = document.getElementById("serviceworkers");
 
   let div = document.createElement('div');
@@ -124,13 +124,14 @@ function display(info, pushNotificationService) {
   createItem(bundle.GetStringFromName('waitingCacheName'), waitingCacheName);
 
   let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));
-  if (pushNotificationService) {
-    pushNotificationService.registration(info.scope, info.principal.originAttributes)
-      .then(pushRecord => {
+  if (pushService) {
+    pushService.getRegistration(info.scope, info.principal, (status, pushRecord) => {
+      if (Components.isSuccessCode(status)) {
         pushItem.data = JSON.stringify(pushRecord);
-      }).catch(error => {
+      } else {
         dump("about:serviceworkers - retrieving push registration failed\n");
-      });
+      }
+    });
   }
 
   let updateButton = document.createElement("button");
