@@ -40,9 +40,8 @@ runWithMSE(function(ms, el) {
       // currentTime is based on the current video frame, so if the audio ends just before
       // the next video frame, currentTime can be up to 1 frame's worth earlier than
       // min(audioEnd, videoEnd).
-      // Some decoders (Windows in particular) may keep up to 25 frames queued.
-      isfuzzy(el.currentTime, Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 1/60,
-              25 * 1/30, "Got a waiting event at " + el.currentTime);
+      isfuzzy(el.currentTime, Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 1/30,
+              0.04, "Got a waiting event at " + el.currentTime);
       info("Loading more data");
       var p = once(el, 'ended');
       var loads = Promise.all([fetchAndLoad(audiosb, 'bipbop/bipbop_audio', [5], '.m4s'),
