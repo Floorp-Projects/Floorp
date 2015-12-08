@@ -43,12 +43,6 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
 
 const prefs = new Preferences("dom.push.");
 
-const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
-                                 "Push:Registration", "Push:RegisterEventNotificationListener",
-                                 "Push:NotificationForOriginShown",
-                                 "Push:NotificationForOriginClosed",
-                                 "child-process-shutdown"];
-
 const PUSH_SERVICE_UNINIT = 0;
 const PUSH_SERVICE_INIT = 1; // No serverURI
 const PUSH_SERVICE_ACTIVATING = 2;//activating db
@@ -105,7 +99,7 @@ this.PushService = {
   // reduce the quota for a record. Used for testing purposes.
   _updateQuotaTestCallback: null,
 
-  _childListeners: [],
+  _childListeners: new Set(),
 
   // When serverURI changes (this is used for testing), db is cleaned up and a
   // a new db is started. This events must be sequential.
@@ -379,7 +373,7 @@ this.PushService = {
           this._setState(PUSH_SERVICE_INIT);
           return Promise.resolve();
         }
-        return this._startService(service, uri, event)
+        return this._startService(service, uri)
           .then(_ => this._stateChangeProcessEnqueue(_ =>
             this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
           );
@@ -390,7 +384,7 @@ this.PushService = {
           if (this._state == PUSH_SERVICE_INIT) {
             this._setState(PUSH_SERVICE_ACTIVATING);
             // The service has not been running - start it.
-            return this._startService(service, uri, STARTING_SERVICE_EVENT)
+            return this._startService(service, uri)
               .then(_ => this._stateChangeProcessEnqueue(_ =>
                 this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
               );
@@ -402,7 +396,7 @@ this.PushService = {
             // check is called in changeStateConnectionEnabledEvent function)
             return this._stopService(CHANGING_SERVICE_EVENT)
               .then(_ =>
-                 this._startService(service, uri, CHANGING_SERVICE_EVENT)
+                 this._startService(service, uri)
               )
               .then(_ => this._stateChangeProcessEnqueue(_ =>
                 this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
@@ -458,7 +452,7 @@ this.PushService = {
       }
 
       // Start service.
-      this._startService(service, uri, false, options).then(_ => {
+      this._startService(service, uri, options).then(_ => {
         // Before completing the activation check prefs. This will first check
         // connection.enabled pref and then check offline state.
         this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"));
@@ -515,22 +509,11 @@ this.PushService = {
     Services.obs.addObserver(this, "perm-changed", false);
   },
 
-  _startService: function(service, serverURI, event, options = {}) {
+  _startService: function(service, serverURI, options = {}) {
     console.debug("startService()");
 
     if (this._state != PUSH_SERVICE_ACTIVATING) {
       return;
-    }
-
-    if (event != CHANGING_SERVICE_EVENT) {
-      // if only serverURL is changed we can keep listening for broadcast
-      // messages and queue them.
-      let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                   .getService(Ci.nsIMessageBroadcaster);
-
-      kCHILD_PROCESS_MESSAGES.forEach(msgName =>
-        ppmm.addMessageListener(msgName, this)
-      );
     }
 
     this._service = service;
@@ -563,15 +546,6 @@ this.PushService = {
 
     this.stopAlarm();
     this._stopObservers();
-
-    if (event != CHANGING_SERVICE_EVENT) {
-      let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-                   .getService(Ci.nsIMessageBroadcaster);
-
-      kCHILD_PROCESS_MESSAGES.forEach(
-        msgName => ppmm.removeMessageListener(msgName, this)
-      );
-    }
 
     this._service.disconnect();
     this._service.uninit();
@@ -616,7 +590,7 @@ this.PushService = {
   uninit: function() {
     console.debug("uninit()");
 
-    this._childListeners = [];
+    this._childListeners.clear();
 
     if (this._state == PUSH_SERVICE_UNINIT) {
       return;
@@ -725,14 +699,14 @@ this.PushService = {
   },
 
   _notifyListeners: function(name, data) {
-    if (this._childListeners.length > 0) {
+    if (this._childListeners.size > 0) {
       // Try to send messages to all listeners, but remove any that fail since
       // the receiver is likely gone away.
-      for (var i = this._childListeners.length - 1; i >= 0; --i) {
+      for (let listener of this._childListeners) {
         try {
-          this._childListeners[i].sendAsyncMessage(name, data);
+          listener.sendAsyncMessage(name, data);
         } catch(e) {
-          this._childListeners.splice(i, 1);
+          this._childListeners.delete(listener);
         }
       }
     } else {
@@ -944,7 +918,7 @@ this.PushService = {
     });
   },
 
-  _notificationForOriginShown(origin) {
+  notificationForOriginShown(origin) {
     console.debug("notificationForOriginShown()", origin);
     let count;
     if (this._visibleNotifications.has(origin)) {
@@ -955,7 +929,7 @@ this.PushService = {
     this._visibleNotifications.set(origin, count + 1);
   },
 
-  _notificationForOriginClosed(origin) {
+  notificationForOriginClosed(origin) {
     console.debug("notificationForOriginClosed()", origin);
     let count;
     if (this._visibleNotifications.has(origin)) {
@@ -1106,99 +1080,27 @@ this.PushService = {
     throw reply.error;
   },
 
-  receiveMessage: function(aMessage) {
-    console.debug("receiveMessage()", aMessage.name);
-
-    if (kCHILD_PROCESS_MESSAGES.indexOf(aMessage.name) == -1) {
-      console.debug("receiveMessage: Invalid message from child",
-        aMessage.name);
-      return;
-    }
-
-    if (aMessage.name === "Push:RegisterEventNotificationListener") {
-      console.debug("receiveMessage: Adding child listener");
-      this._childListeners.push(aMessage.target);
-      return;
-    }
-
-    if (aMessage.name === "child-process-shutdown") {
-      console.debug("receiveMessage: Possibly removing child listener");
-      for (var i = this._childListeners.length - 1; i >= 0; --i) {
-        if (this._childListeners[i] == aMessage.target) {
-          console.debug("receiveMessage: Removed child listener");
-          this._childListeners.splice(i, 1);
-        }
-      }
-      console.debug("receiveMessage: Clearing notifications from child");
-      this._visibleNotifications.clear();
-      return;
-    }
-
-    if (aMessage.name === "Push:NotificationForOriginShown") {
-      console.debug("receiveMessage: Notification shown from child");
-      this._notificationForOriginShown(aMessage.data);
-      return;
-    }
-
-    if (aMessage.name === "Push:NotificationForOriginClosed") {
-      console.debug("receiveMessage: Notification closed from child");
-      this._notificationForOriginClosed(aMessage.data);
-      return;
-    }
-
-    if (!aMessage.target.assertPermission("push")) {
-      console.debug("receiveMessage: Got message from a child process that",
-        "does not have 'push' permission");
-      return null;
-    }
-
-    let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
-
-    let name = aMessage.name.slice("Push:".length);
-    Promise.resolve().then(_ => {
-      let pageRecord = this._validatePageRecord(aMessage);
-      return this[name.toLowerCase()](pageRecord);
-    }).then(result => {
-      mm.sendAsyncMessage("PushService:" + name + ":OK", {
-        requestID: aMessage.data.requestID,
-        result: result,
-      });
-    }, error => {
-      console.error("receiveMessage: Error handling message", aMessage, error);
-      mm.sendAsyncMessage("PushService:" + name + ":KO", {
-        requestID: aMessage.data.requestID,
-      });
-    }).catch(error => {
-      console.error("receiveMessage: Error sending reply", error);
-    });
+  registerListener(listener) {
+    console.debug("registerListener: Adding child listener");
+    this._childListeners.add(listener);
   },
 
-  _validatePageRecord: function(aMessage) {
-    let principal = aMessage.principal;
-    if (!principal) {
-      throw new Error("Missing message principal");
-    }
+  unregisterListener(listener) {
+    console.debug("unregisterListener: Possibly removing child listener");
+    this._childListeners.delete(listener);
+    this._visibleNotifications.clear();
+  },
 
-    let pageRecord = aMessage.data;
-    if (!pageRecord.scope) {
-      throw new Error("Missing page record scope");
-    }
-
-    pageRecord.originAttributes =
-      ChromeUtils.originAttributesToSuffix(principal.originAttributes);
-
-    return pageRecord;
+  _getByPageRecord(pageRecord) {
+    return this._checkActivated().then(_ =>
+      this._db.getByIdentifiers(pageRecord)
+    );
   },
 
   register: function(aPageRecord) {
     console.debug("register()", aPageRecord);
 
-    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject(new Error("Invalid page record"));
-    }
-
-    return this._checkActivated()
-      .then(_ => this._db.getByIdentifiers(aPageRecord))
+    return this._getByPageRecord(aPageRecord)
       .then(record => {
         if (!record) {
           return this._lookupOrPutPendingRequest(aPageRecord);
@@ -1245,12 +1147,7 @@ this.PushService = {
   unregister: function(aPageRecord) {
     console.debug("unregister()", aPageRecord);
 
-    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject(new Error("Invalid page record"));
-    }
-
-    return this._checkActivated()
-      .then(_ => this._db.getByIdentifiers(aPageRecord))
+    return this._getByPageRecord(aPageRecord)
       .then(record => {
         if (record === undefined) {
           return false;
@@ -1313,12 +1210,8 @@ this.PushService = {
 
   registration: function(aPageRecord) {
     console.debug("registration()");
-    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject(new Error("Invalid page record"));
-    }
 
-    return this._checkActivated()
-      .then(_ => this._db.getByIdentifiers(aPageRecord))
+    return this._getByPageRecord(aPageRecord)
       .then(record => {
         if (!record) {
           return null;
