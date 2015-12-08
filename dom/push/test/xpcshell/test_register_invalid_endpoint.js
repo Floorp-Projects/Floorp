@@ -49,9 +49,11 @@ add_task(function* test_register_invalid_endpoint() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-endpoint',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-endpoint',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for invalid endpoint'
   );
 
