@@ -1160,6 +1160,13 @@ this.PushService = {
       });
   },
 
+  clear: function(info) {
+    if (info.domain == "*") {
+      return this._clearAll();
+    }
+    return this._clearForDomain(info.domain);
+  },
+
   _clearAll: function _clearAll() {
     return this._checkActivated()
       .then(_ => this._db.drop())
