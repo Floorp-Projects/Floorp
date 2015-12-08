@@ -127,6 +127,8 @@ private:
   // Decode any pending already demuxed samples.
   bool DecodeDemuxedSamples(TrackType aTrack,
                             MediaRawData* aSample);
+  void InternalSeek(TrackType aTrack, const media::TimeUnit& aTime);
+
   // Drain the current decoder.
   void DrainDecoder(TrackType aTrack);
   void NotifyNewOutput(TrackType aTrack, MediaData* aSample);
@@ -261,8 +263,11 @@ private:
     bool mDraining;
     bool mDrainComplete;
     // If set, all decoded samples prior mTimeThreshold will be dropped.
-    // Used for internal seeking when a change of stream is detected.
+    // Used for internal seeking when a change of stream is detected or when
+    // encountering data discontinuity.
     Maybe<media::TimeUnit> mTimeThreshold;
+    // End time of last sample output.
+    Maybe<media::TimeUnit> mLastSampleTime;
 
     // Decoded samples returned my mDecoder awaiting being returned to
     // state machine upon request.
@@ -300,6 +305,7 @@ private:
       mDraining = false;
       mDrainComplete = false;
       mTimeThreshold.reset();
+      mLastSampleTime.reset();
       mOutput.Clear();
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
