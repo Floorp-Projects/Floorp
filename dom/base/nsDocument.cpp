@@ -379,20 +379,6 @@ CustomDefinitionsTraverse(CustomElementHashKey* aKey,
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-CandidatesTraverse(CustomElementHashKey* aKey,
-                   nsTArray<RefPtr<Element>>* aData,
-                   void* aArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  for (size_t i = 0; i < aData->Length(); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mCandidatesMap->Element");
-    cb->NoteXPCOMChild(aData->ElementAt(i));
-  }
-  return PL_DHASH_NEXT;
-}
-
 struct CustomDefinitionTraceArgs
 {
   const TraceCallbacks& callbacks;
@@ -421,13 +407,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Registry)
   tmp->mCustomDefinitions.EnumerateRead(CustomDefinitionsTraverse, &cb);
-  tmp->mCandidatesMap.EnumerateRead(CandidatesTraverse, &cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Registry)
   tmp->mCustomDefinitions.Clear();
-  tmp->mCandidatesMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Registry)
@@ -5916,16 +5900,16 @@ nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
     return NS_OK;
   }
 
-  nsTArray<RefPtr<Element>>* unresolved;
+  nsTArray<nsWeakPtr>* unresolved;
   mRegistry->mCandidatesMap.Get(&key, &unresolved);
   if (!unresolved) {
-    unresolved = new nsTArray<RefPtr<Element>>();
+    unresolved = new nsTArray<nsWeakPtr>();
     // Ownership of unresolved is taken by mCandidatesMap.
     mRegistry->mCandidatesMap.Put(&key, unresolved);
   }
 
-  RefPtr<Element>* elem = unresolved->AppendElement();
-  *elem = aElement;
+  nsWeakPtr* elem = unresolved->AppendElement();
+  *elem = do_GetWeakReference(aElement);
   aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
 
   return NS_OK;
@@ -6309,11 +6293,14 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   definitions.Put(&key, definition);
 
   // Do element upgrade.
-  nsAutoPtr<nsTArray<RefPtr<Element>>> candidates;
+  nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
   mRegistry->mCandidatesMap.RemoveAndForget(&key, candidates);
   if (candidates) {
     for (size_t i = 0; i < candidates->Length(); ++i) {
-      Element *elem = candidates->ElementAt(i);
+      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
+      if (!elem) {
+        continue;
+      }
 
       elem->RemoveStates(NS_EVENT_STATE_UNRESOLVED);
 
