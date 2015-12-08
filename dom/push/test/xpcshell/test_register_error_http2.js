@@ -46,9 +46,11 @@ add_task(function* test_pushSubscriptionNoConnection() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for not being able to establish connecion.'
   );
 
@@ -84,9 +86,11 @@ add_task(function* test_pushSubscriptionMissingLocation() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for the missing location header.'
   );
 
@@ -108,9 +112,11 @@ add_task(function* test_pushSubscriptionMissingLink() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for the missing link header.'
   );
 
@@ -132,9 +138,11 @@ add_task(function* test_pushSubscriptionMissingLink1() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for the missing push endpoint.'
   );
 
@@ -156,9 +164,11 @@ add_task(function* test_pushSubscriptionLocationBogus() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for the bogus location'
   );
 
@@ -180,9 +190,11 @@ add_task(function* test_pushSubscriptionNot2xxCode() {
   });
 
   yield rejects(
-    PushNotificationService.register(
-      'https://example.net/page/invalid-response',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/page/invalid-response',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for not 201 responce code.'
   );
 
