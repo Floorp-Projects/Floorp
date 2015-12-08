@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
   });
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "PushService",
+  "@mozilla.org/push/Service;1", "nsIPushService");
+
 const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
 
 /**
@@ -51,8 +54,6 @@ Push.prototype = {
     this.initDOMRequestHelper(aWindow);
 
     this._principal = aWindow.document.nodePrincipal;
-
-    this._client = Cc["@mozilla.org/push/PushClient;1"].createInstance(Ci.nsIPushClient);
   },
 
   setScope: function(scope){
@@ -96,8 +97,8 @@ Push.prototype = {
     histogram.add(true);
     return this.askPermission().then(() =>
       this.createPromise((resolve, reject) => {
-        let callback = new PushEndpointCallback(this, resolve, reject);
-        this._client.subscribe(this._scope, this._principal, callback);
+        let callback = new PushSubscriptionCallback(this, resolve, reject);
+        PushService.subscribe(this._scope, this._principal, callback);
       })
     );
   },
@@ -106,8 +107,8 @@ Push.prototype = {
     console.debug("getSubscription()", this._scope);
 
     return this.createPromise((resolve, reject) => {
-      let callback = new PushEndpointCallback(this, resolve, reject);
-      this._client.getSubscription(this._scope, this._principal, callback);
+      let callback = new PushSubscriptionCallback(this, resolve, reject);
+      PushService.getSubscription(this._scope, this._principal, callback);
     });
   },
 
@@ -178,16 +179,16 @@ Push.prototype = {
   },
 };
 
-function PushEndpointCallback(pushManager, resolve, reject) {
+function PushSubscriptionCallback(pushManager, resolve, reject) {
   this.pushManager = pushManager;
   this.resolve = resolve;
   this.reject = reject;
 }
 
-PushEndpointCallback.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushEndpointCallback]),
-  onPushEndpoint: function(ok, endpoint, keyLen, key,
-                           authSecretLen, authSecretIn) {
+PushSubscriptionCallback.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPushSubscriptionCallback]),
+
+  onPushSubscription: function(ok, subscription) {
     let {pushManager} = this;
     if (!Components.isSuccessCode(ok)) {
       this.reject(new pushManager._window.DOMException(
@@ -197,31 +198,31 @@ PushEndpointCallback.prototype = {
       return;
     }
 
-    if (!endpoint) {
+    if (!subscription) {
       this.resolve(null);
       return;
     }
 
-    let publicKey = null;
-    if (keyLen) {
-      publicKey = new ArrayBuffer(keyLen);
-      let keyView = new Uint8Array(publicKey);
-      keyView.set(key);
-    }
-
-    let authSecret = null;
-    if (authSecretLen) {
-      authSecret = new ArrayBuffer(authSecretLen);
-      let secretView = new Uint8Array(authSecret);
-      secretView.set(authSecretIn);
-    }
-
-    let sub = new pushManager._window.PushSubscription(endpoint,
+    let publicKey = this._getKey(subscription, "p256dh");
+    let authSecret = this._getKey(subscription, "auth");
+    let sub = new pushManager._window.PushSubscription(subscription.endpoint,
                                                        pushManager._scope,
                                                        publicKey,
                                                        authSecret);
     sub.setPrincipal(pushManager._principal);
     this.resolve(sub);
+  },
+
+  _getKey: function(subscription, name) {
+    let outKeyLen = {};
+    let rawKey = subscription.getKey(name, outKeyLen);
+    if (!outKeyLen.value) {
+      return null;
+    }
+    let key = new ArrayBuffer(outKeyLen.value);
+    let keyView = new Uint8Array(key);
+    keyView.set(rawKey);
+    return key;
   },
 };
 

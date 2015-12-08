@@ -1,0 +1,117 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+
+/**
+ * A push subscription, passed as an argument to a subscription callback.
+ * Similar to the `PushSubscription` WebIDL interface.
+ */
+[scriptable, uuid(1de32d5c-ea88-4c9e-9626-b032bd87f415)]
+interface nsIPushSubscription : nsISupports
+{
+  readonly attribute DOMString endpoint;
+  readonly attribute long long pushCount;
+  readonly attribute long long lastPush;
+  readonly attribute long quota;
+
+  bool quotaApplies();
+  bool isExpired();
+
+  void getKey(in DOMString name,
+              [optional] out uint32_t keyLen,
+              [array, size_is(keyLen), retval] out uint8_t key);
+};
+
+/**
+ * Called by methods that return a push subscription. A non-success
+ * |status| indicates that there was a problem returning the
+ * subscription, and the |subscription| argument should be ignored. Otherwise,
+ * |subscription| will point to a valid push subscription, or |null| if the
+ * subscription does not exist.
+ */
+ [scriptable, uuid(1799c074-9d52-46b0-ab3c-c09790732f6f), function]
+ interface nsIPushSubscriptionCallback : nsISupports
+ {
+   void onPushSubscription(in nsresult status,
+                           in nsIPushSubscription subscription);
+ };
+
+/**
+ * Called by the |unsubscribe| method. A non-success |status| indicates that
+ * there was a problem unsubscribing, and the |success| argument should be
+ * ignored. Otherwise, |success| is true if unsubscribing was successful, and
+ * false if the subscription does not exist.
+ */
+[scriptable, uuid(d574118f-61a9-4270-b1f6-4461aa85c4f5), function]
+interface nsIUnsubscribeResultCallback : nsISupports
+{
+  void onUnsubscribe(in nsresult status, in bool success);
+};
+
+/**
+ * A service for components to subscribe and receive push messages from web
+ * services. This functionality is exposed to content via the Push DOM API,
+ * which uses service workers. This interface exists to support the DOM API,
+ * and allows privileged code to receive messages without migrating to service
+ * workers.
+ */
+[scriptable, uuid(cf46905d-fb55-4f21-8927-31f821c371b6)]
+interface nsIPushService : nsISupports
+{
+  /**
+   * Creates a push subscription for the given |scope| URL and |principal|.
+   * If a subscription already exists for this |(scope, principal)| pair,
+   * the callback will receive the existing record as the second argument.
+   *
+   * The |endpoint| property of the subscription record is a URL string
+   * that can be used to send push messages to subscribers.
+   *
+   * Each incoming message fires a `push-notification` observer
+   * notification, with an `nsIPushObserverNotification` as the subject and
+   * the |scope| as the data.
+   *
+   * If the server drops a subscription, a `push-subscription-change` observer
+   * will be fired, with the subject set to `null` and the data set to |scope|.
+   * Servers may drop subscriptions at any time, so callers should recreate
+   * subscriptions if desired.
+   */
+  void subscribe(in DOMString scope, in nsIPrincipal principal,
+                 in nsIPushSubscriptionCallback callback);
+
+  /**
+   * Removes a push subscription for the given |scope|.
+   */
+  void unsubscribe(in DOMString scope, in nsIPrincipal principal,
+                   in nsIUnsubscribeResultCallback callback);
+
+  /**
+   * Retrieves the subscription record associated with the given
+   * |(scope, principal)| pair. If the subscription does not exist, the
+   * callback will receive |null| as the second argument.
+   */
+  void getSubscription(in DOMString scope, in nsIPrincipal principal,
+                       in nsIPushSubscriptionCallback callback);
+};
+
+[scriptable, uuid(a2555e70-46f8-4b52-bf02-d978b979d143)]
+interface nsIPushQuotaManager : nsISupports
+{
+  /**
+   * Informs the quota manager that a notification
+   * for the given origin has been shown. Used to
+   * determine if push quota should be relaxed.
+   */
+  void notificationForOriginShown(in string origin);
+
+  /**
+   * Informs the quota manager that a notification
+   * for the given origin has been closed. Used to
+   * determine if push quota should be relaxed.
+   */
+  void notificationForOriginClosed(in string origin);
+};
