@@ -35,7 +35,7 @@ add_test(function test_retry_after_failed_push_reg() {
     yield deferredRegistrations.get(LOOP_SESSION_TYPE.GUEST).then(() => {
       Assert.ok(true, "The retry of registration succeeded");
     },
-    (error) => {
+    () => {
       Assert.ok(false, "The retry of registration should have succeeded");
     });
 
