@@ -337,14 +337,6 @@ public:
     mPromiseProxy->CleanUp(aCx);
     return true;
   }
-
-  void
-  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aSuccess)
-  {
-    if (!aSuccess) {
-      mStatus.SuppressException();
-    }
-  }
 };
 
 class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
