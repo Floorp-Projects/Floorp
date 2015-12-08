@@ -781,8 +781,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 nsIFrame*
-nsMathMLmtableOuterFrame::GetRowFrameAt(nsPresContext* aPresContext,
-                                        int32_t         aRowIndex)
+nsMathMLmtableOuterFrame::GetRowFrameAt(int32_t aRowIndex)
 {
   int32_t rowCount = GetRowCount();
 
@@ -846,7 +845,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   nscoord blockSize = aDesiredSize.BSize(wm);
   nsIFrame* rowFrame = nullptr;
   if (rowIndex) {
-    rowFrame = GetRowFrameAt(aPresContext, rowIndex);
+    rowFrame = GetRowFrameAt(rowIndex);
     if (rowFrame) {
       // translate the coordinates to be relative to us and in our writing mode
       nsIFrame* frame = rowFrame;

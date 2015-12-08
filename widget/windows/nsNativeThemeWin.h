@@ -101,13 +101,10 @@ protected:
                                nsIFrame* aFrame,
                                uint8_t aWidgetType,
                                nsIntMargin* aResult);
-  nsresult ClassicGetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                       uint8_t aWidgetType,
+  nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame, uint8_t aWidgetType,
                                        mozilla::LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
-  bool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
-                                  nsIFrame* aFrame,
-                                  uint8_t aWidgetType);
+  bool ClassicThemeSupportsWidget(nsIFrame* aFrame, uint8_t aWidgetType);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
   uint32_t GetWidgetNativeDrawingFlags(uint8_t aWidgetType);

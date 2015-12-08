@@ -108,8 +108,7 @@ void
 AbortablePromise::DoAbort()
 {
   if (mAbortCallback.HasWebIDLCallback()) {
-    ErrorResult rv;
-    mAbortCallback.GetWebIDLCallback()->Call(rv);
+    mAbortCallback.GetWebIDLCallback()->Call();
     return;
   }
   mAbortCallback.GetXPCOMCallback()->Call();

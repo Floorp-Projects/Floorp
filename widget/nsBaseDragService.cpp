@@ -596,14 +596,14 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
     HTMLCanvasElement *canvas = HTMLCanvasElement::FromContentOrNull(content);
     if (canvas) {
-      return DrawDragForImage(*aPresContext, nullptr, canvas, sx, sy,
+      return DrawDragForImage(nullptr, canvas, sx, sy,
                               aScreenDragRect, aSurface);
     }
 
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      return DrawDragForImage(*aPresContext, imageLoader, nullptr, sx, sy,
+      return DrawDragForImage(imageLoader, nullptr, sx, sy,
                               aScreenDragRect, aSurface);
     }
 
@@ -642,8 +642,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 }
 
 nsresult
-nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
-                                    nsIImageLoadingContent* aImageLoader,
+nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
                                     HTMLCanvasElement* aCanvas,
                                     int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,

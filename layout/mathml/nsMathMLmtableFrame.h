@@ -53,8 +53,7 @@ protected:
   // 1..n means the first row down to the last row, -1..-n means the last row
   // up to the first row. Used for alignments that are relative to a given row
   nsIFrame*
-  GetRowFrameAt(nsPresContext* aPresContext,
-                int32_t         aRowIndex);
+  GetRowFrameAt(int32_t aRowIndex);
 }; // class nsMathMLmtableOuterFrame
 
 // --------------
