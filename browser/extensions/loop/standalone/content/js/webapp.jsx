@@ -11,10 +11,7 @@ loop.webapp = (function(_, OT, mozL10n) {
 
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
-  var sharedModels = loop.shared.models;
-  var sharedViews = loop.shared.views;
   var sharedUtils = loop.shared.utils;
-  var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
   /**
    * Homepage view.
@@ -175,11 +172,10 @@ loop.webapp = (function(_, OT, mozL10n) {
    * App initialization.
    */
   function init() {
-    var standaloneMozLoop = new loop.StandaloneMozLoop({
+    loop.StandaloneMozLoop({
       baseServerUrl: loop.config.serverUrl
     });
 
-    // New flux items.
     var dispatcher = new loop.Dispatcher();
     var sdkDriver = new loop.OTSdkDriver({
       // For the standalone, always request data channels. If they aren't

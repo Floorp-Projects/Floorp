@@ -694,7 +694,7 @@ loop.OTSdkDriver = (function() {
             }
           }.bind(this),
 
-          close: function(e) {
+          close: function() {
             // XXX We probably want to dispatch and handle this somehow.
             console.log("Subscribed data channel closed!");
           }
@@ -713,10 +713,8 @@ loop.OTSdkDriver = (function() {
      * that the remote client is setup for data
      * channels. Getting the data channel for the subscriber is handled
      * separately when the subscription completes.
-     *
-     * @param {OT.SignalEvent} event Details of the signal received.
      */
-    _onReadyForDataChannel: function(event) {
+    _onReadyForDataChannel: function() {
       // If we don't want data channels, just ignore the message. We haven't
       // send the other side a message, so it won't display anything.
       if (!this._useDataChannels) {
@@ -734,7 +732,7 @@ loop.OTSdkDriver = (function() {
         this._publisherChannel = channel;
 
         channel.on({
-          close: function(e) {
+          close: function() {
             // XXX We probably want to dispatch and handle this somehow.
             console.log("Published data channel closed!");
           }
@@ -991,12 +989,10 @@ loop.OTSdkDriver = (function() {
      * which to copy the stream when attaching it to visible video element
      * that the views control directly.
      *
-     * @param event {OT.VideoEnabledChangedEvent} from the SDK
-     *
      * @see https://tokbox.com/opentok/libraries/client/js/reference/VideoEnabledChangedEvent.html
      * @private
      */
-    _onVideoEnabled: function(event) {
+    _onVideoEnabled: function() {
       var sdkSubscriberVideo = this._mockSubscribeEl.querySelector("video");
       if (!sdkSubscriberVideo) {
         console.error("sdkSubscriberVideo unexpectedly falsy!");
@@ -1011,12 +1007,10 @@ loop.OTSdkDriver = (function() {
      * Handle the SDK disabling of remote video by dispatching the
      * appropriate event.
      *
-     * @param event {OT.VideoEnabledChangedEvent) from the SDK
-     *
      * @see https://tokbox.com/opentok/libraries/client/js/reference/VideoEnabledChangedEvent.html
      * @private
      */
-    _onVideoDisabled: function(event) {
+    _onVideoDisabled: function() {
       this.dispatcher.dispatch(new sharedActions.RemoteVideoStatus({
         videoEnabled: false
       }));

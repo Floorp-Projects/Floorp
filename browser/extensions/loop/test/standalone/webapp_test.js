@@ -73,7 +73,7 @@ describe("loop.webapp", function() {
   });
 
   describe("WebappRootView", function() {
-    var sdk, conversationModel, client, props, standaloneAppStore;
+    var sdk, standaloneAppStore;
     var activeRoomStore;
 
     function mountTestComponent() {
@@ -160,7 +160,7 @@ describe("loop.webapp", function() {
       });
 
       it("should render when not using Firefox", function() {
-        var comp = TestUtils.renderIntoDocument(
+        TestUtils.renderIntoDocument(
           React.createElement(loop.webapp.PromoteFirefoxView, {
               isFirefox: false
         }));

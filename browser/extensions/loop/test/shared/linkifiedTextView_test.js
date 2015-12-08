@@ -118,7 +118,6 @@ describe("loop.shared.views.LinkifiedTextView", function() {
 
         it("should cause sendReferrer and suppressTarget props to be ignored",
           function() {
-            var fakeUrl = "http://example.com";
             var linkClickHandler = function() {};
 
             var markup = renderToMarkup("http://example.com", {

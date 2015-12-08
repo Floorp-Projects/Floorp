@@ -5,7 +5,6 @@
 describe("loop.store.StandaloneMetricsStore", function() {
   "use strict";
 
-  var expect = chai.expect;
   var sandbox, dispatcher, store, fakeActiveRoomStore;
 
   var sharedActions = loop.shared.actions;
