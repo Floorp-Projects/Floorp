@@ -6084,8 +6084,10 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               NS_STYLE_WILL_CHANGE_STACKING_CONTEXT;
           }
           if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_FIXPOS_CB)) {
-            display->mWillChangeBitField |=
-              NS_STYLE_WILL_CHANGE_FIXPOS_CB;
+            display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_FIXPOS_CB;
+          }
+          if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_ABSPOS_CB)) {
+            display->mWillChangeBitField |= NS_STYLE_WILL_CHANGE_ABSPOS_CB;
           }
         }
       }

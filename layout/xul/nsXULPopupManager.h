@@ -348,9 +348,7 @@ public:
   // returns true if the menu item aContent is a valid menuitem which may
   // be navigated to. aIsPopup should be true for items on a popup, or false
   // for items on a menubar.
-  static bool IsValidMenuItem(nsPresContext* aPresContext,
-                                nsIContent* aContent,
-                                bool aOnPopup);
+  static bool IsValidMenuItem(nsIContent* aContent, bool aOnPopup);
 
   // inform the popup manager that a menu bar has been activated or deactivated,
   // either because one of its menus has opened or closed, or that the menubar

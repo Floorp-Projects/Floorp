@@ -123,8 +123,7 @@ public:
           bool                     aRTL);
 
   void
-  SetData(nsPresContext* aPresContext,
-          nsString&       aData);
+  SetData(nsString& aData);
 
   void
   GetData(nsString& aData) {

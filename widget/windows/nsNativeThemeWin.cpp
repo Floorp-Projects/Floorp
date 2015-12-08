@@ -2258,9 +2258,9 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   *aIsOverridable = true;
 
   HANDLE theme = GetTheme(aWidgetType);
-  if (!theme)
-    return ClassicGetMinimumWidgetSize(aPresContext, aFrame, aWidgetType, aResult, aIsOverridable);
-
+  if (!theme) {
+    return ClassicGetMinimumWidgetSize(aFrame, aWidgetType, aResult, aIsOverridable);
+  }
   switch (aWidgetType) {
     case NS_THEME_GROUPBOX:
     case NS_THEME_NUMBER_INPUT:
@@ -2300,7 +2300,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_DROPDOWN_BUTTON:
-      return ClassicGetMinimumWidgetSize(aPresContext, aFrame, aWidgetType, aResult, aIsOverridable);
+      return ClassicGetMinimumWidgetSize(aFrame, aWidgetType, aResult, aIsOverridable);
 
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
@@ -2611,14 +2611,14 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
     theme = GetTheme(NS_THEME_RADIO);
   else
     theme = GetTheme(aWidgetType);
-    
+
   if (theme && aWidgetType == NS_THEME_RESIZER)
     return true;
 
-  if ((theme) || (!theme && ClassicThemeSupportsWidget(aPresContext, aFrame, aWidgetType)))
+  if ((theme) || (!theme && ClassicThemeSupportsWidget(aFrame, aWidgetType)))
     // turn off theming for some HTML widgets styled by the page
     return (!IsWidgetStyled(aPresContext, aFrame, aWidgetType));
-  
+
   return false;
 }
 
@@ -2735,10 +2735,9 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 
 /* Windows 9x/NT/2000/Classic XP Theme Support */
 
-bool 
-nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
-                                      nsIFrame* aFrame,
-                                      uint8_t aWidgetType)
+bool
+nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
+                                             uint8_t aWidgetType)
 {
   switch (aWidgetType) {
     case NS_THEME_RESIZER:
@@ -2914,9 +2913,10 @@ nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
 }
 
 nsresult
-nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                       uint8_t aWidgetType,
-                                       LayoutDeviceIntSize* aResult, bool* aIsOverridable)
+nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
+                                              uint8_t aWidgetType,
+                                              LayoutDeviceIntSize* aResult,
+                                              bool* aIsOverridable)
 {
   (*aResult).width = (*aResult).height = 0;
   *aIsOverridable = true;

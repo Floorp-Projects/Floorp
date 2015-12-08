@@ -222,7 +222,7 @@ private:
 #ifdef DEBUG_LAYOUT
     nsresult SetDebug(nsPresContext* aPresContext, bool aDebug);
     bool GetInitialDebug(bool& aDebug);
-    void GetDebugPref(nsPresContext* aPresContext);
+    void GetDebugPref();
 
     void GetDebugBorder(nsMargin& aInset);
     void GetDebugPadding(nsMargin& aInset);
@@ -230,7 +230,7 @@ private:
 
     nsresult GetFrameSizeWithMargin(nsIFrame* aBox, nsSize& aSize);
 
-    void PixelMarginToTwips(nsPresContext* aPresContext, nsMargin& aMarginPixels);
+    void PixelMarginToTwips(nsMargin& aMarginPixels);
 
     void GetValue(nsPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsPresContext* aPresContext, int32_t a, int32_t b, char* value);

@@ -184,11 +184,14 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
             const void* font2 = ::CFDictionaryGetValue(runAttr, kCTFontAttributeName);
             if (font1 != font2) {
                 // ...except that if the fallback was only for a variation
-                // selector that is otherwise unsupported, we just ignore it.
-                if (range.length == 1 &&
-                    gfxFontUtils::IsVarSelector(aText[range.location -
-                                                      startOffset])) {
-                    continue;
+                // selector or join control that is otherwise unsupported,
+                // we just ignore it.
+                if (range.length == 1) {
+                    char16_t ch = aText[range.location - startOffset];
+                    if (gfxFontUtils::IsJoinControl(ch) ||
+                        gfxFontUtils::IsVarSelector(ch)) {
+                        continue;
+                    }
                 }
                 NS_WARNING("unexpected font fallback in Core Text");
                 success = false;
