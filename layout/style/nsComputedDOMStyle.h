@@ -179,8 +179,7 @@ private:
   mozilla::dom::CSSValue* GetGridLineNames(const nsTArray<nsString>& aLineNames);
   mozilla::dom::CSSValue* GetGridTrackSize(const nsStyleCoord& aMinSize,
                                            const nsStyleCoord& aMaxSize);
-  mozilla::dom::CSSValue* GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList,
-                                                     const nsTArray<nscoord>* aTrackSizes);
+  mozilla::dom::CSSValue* GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList);
   mozilla::dom::CSSValue* GetGridLine(const nsStyleGridLine& aGridLine);
 
   bool GetLineHeightCoord(nscoord& aCoord);
