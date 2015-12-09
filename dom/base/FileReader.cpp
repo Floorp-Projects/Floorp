@@ -70,19 +70,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileReader)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(FileReader, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(FileReader, DOMEventTargetHelper)
-
-NS_IMPL_EVENT_HANDLER(FileReader, abort)
-NS_IMPL_EVENT_HANDLER(FileReader, error)
-NS_IMPL_EVENT_HANDLER(FileReader, progress)
-NS_IMPL_EVENT_HANDLER(FileReader, load)
-NS_IMPL_EVENT_HANDLER(FileReader, loadend)
-NS_IMPL_EVENT_HANDLER(FileReader, loadstart)
 
 void
 FileReader::RootResultArrayBuffer()
@@ -92,14 +84,15 @@ FileReader::RootResultArrayBuffer()
 
 //FileReader constructors/initializers
 
-FileReader::FileReader()
-  : mFileData(nullptr)
+FileReader::FileReader(nsPIDOMWindow* aWindow)
+  : DOMEventTargetHelper(aWindow)
+  , mFileData(nullptr)
   , mDataLen(0)
   , mDataFormat(FILE_AS_BINARY)
   , mResultArrayBuffer(nullptr)
   , mProgressEventWasDelayed(false)
   , mTimerIsActive(false)
-  , mReadyState(0)
+  , mReadyState(EMPTY)
   , mTotal(0)
   , mTransferred(0)
 {
@@ -113,32 +106,20 @@ FileReader::~FileReader()
   DropJSObjects(this);
 }
 
-/**
- * This Init method is called from the factory constructor.
- */
-nsresult
-FileReader::Init()
-{
-  // Instead of grabbing some random global from the context stack,
-  // let's use the default one (junk scope) for now.
-  // We should move away from this Init...
-  BindToOwner(xpc::NativeGlobal(xpc::PrivilegedJunkScope()));
-  return NS_OK;
-}
-
 /* static */ already_AddRefed<FileReader>
 FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<FileReader> fileReader = new FileReader();
-
+  // The owner can be null when this object is used by chrome code.
   nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!owner) {
-    NS_WARNING("Unexpected owner");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+  RefPtr<FileReader> fileReader = new FileReader(owner);
+
+  if (!owner && nsContentUtils::IsCallerChrome()) {
+    // Instead of grabbing some random global from the context stack,
+    // let's use the default one (junk scope) for now.
+    // We should move away from this Init...
+    fileReader->BindToOwner(xpc::NativeGlobal(xpc::PrivilegedJunkScope()));
   }
 
-  fileReader->BindToOwner(owner);
   return fileReader.forget();
 }
 
@@ -150,104 +131,37 @@ FileReader::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-// nsIDOMFileReader
-
-NS_IMETHODIMP
-FileReader::GetReadyState(uint16_t *aReadyState)
-{
-  *aReadyState = ReadyState();
-  return NS_OK;
-}
-
 void
-FileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+FileReader::GetResult(JSContext* aCx,
+                      JS::MutableHandle<JS::Value> aResult,
                       ErrorResult& aRv)
 {
-  aRv = GetResult(aCx, aResult);
-}
-
-NS_IMETHODIMP
-FileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
-{
   JS::Rooted<JS::Value> result(aCx);
+
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    if (mReadyState == nsIDOMFileReader::DONE && mResultArrayBuffer) {
+    if (mReadyState == DONE && mResultArrayBuffer) {
       result.setObject(*mResultArrayBuffer);
     } else {
       result.setNull();
     }
+
     if (!JS_WrapValue(aCx, &result)) {
-      return NS_ERROR_FAILURE;
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
+
     aResult.set(result);
-    return NS_OK;
+    return;
   }
 
   nsString tmpResult = mResult;
   if (!xpc::StringToJsval(aCx, tmpResult, aResult)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-FileReader::GetError(nsISupports** aError)
-{
-  NS_IF_ADDREF(*aError = GetError());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FileReader::ReadAsArrayBuffer(nsIDOMBlob* aBlob, JSContext* aCx)
-{
-  NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
-  ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
-  ReadAsArrayBuffer(aCx, *blob, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-FileReader::ReadAsBinaryString(nsIDOMBlob* aBlob)
-{
-  NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
-  ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
-  ReadAsBinaryString(*blob, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-FileReader::ReadAsText(nsIDOMBlob* aBlob,
-                            const nsAString &aCharset)
-{
-  NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
-  ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
-  ReadAsText(*blob, aCharset, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-FileReader::ReadAsDataURL(nsIDOMBlob* aBlob)
-{
-  NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
-  ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
-  ReadAsDataURL(*blob, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-FileReader::Abort()
-{
-  ErrorResult rv;
-  Abort(rv);
-  return rv.StealNSResult();
-}
-
-static
-NS_METHOD
+static NS_IMETHODIMP
 ReadFuncBinaryString(nsIInputStream* in,
                      void* closure,
                      const char* fromRawSegment,
@@ -390,12 +304,15 @@ FileReader::ReadFileContent(Blob& aBlob,
                             ErrorResult& aRv)
 {
   //Implicit abort to clear any other activity going on
-  Abort();
+  ErrorResult error;
+  Abort(error);
+  error.SuppressException();
+
   mError = nullptr;
   SetDOMStringToNull(mResult);
   mTransferred = 0;
   mTotal = 0;
-  mReadyState = nsIDOMFileReader::EMPTY;
+  mReadyState = EMPTY;
   FreeFileData();
 
   mBlob = &aBlob;
@@ -403,7 +320,6 @@ FileReader::ReadFileContent(Blob& aBlob,
   CopyUTF16toUTF8(aCharset, mCharset);
 
   nsresult rv;
-
   nsCOMPtr<nsIStreamTransportService> sts =
     do_GetService(kStreamTransportServiceCID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -418,23 +334,21 @@ FileReader::ReadFileContent(Blob& aBlob,
   }
 
   nsCOMPtr<nsITransport> transport;
-  rv = sts->CreateInputTransport(stream,
-                                 /* aStartOffset */ 0,
-                                 /* aReadLimit */ -1,
-                                 /* aCloseWhenDone */ true,
-                                 getter_AddRefs(transport));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+  aRv = sts->CreateInputTransport(stream,
+                                  /* aStartOffset */ 0,
+                                  /* aReadLimit */ -1,
+                                  /* aCloseWhenDone */ true,
+                                  getter_AddRefs(transport));
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   nsCOMPtr<nsIInputStream> wrapper;
-  rv = transport->OpenInputStream(/* aFlags */ 0,
-                                  /* aSegmentSize */ 0,
-                                  /* aSegmentCount */ 0,
-                                  getter_AddRefs(wrapper));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+  aRv = transport->OpenInputStream(/* aFlags */ 0,
+                                   /* aSegmentSize */ 0,
+                                   /* aSegmentCount */ 0,
+                                   getter_AddRefs(wrapper));
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -447,14 +361,16 @@ FileReader::ReadFileContent(Blob& aBlob,
     return;
   }
 
-  rv = DoAsyncWait(mAsyncStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+  aRv = mAsyncStream->AsyncWait(this,
+                                /* aFlags*/ 0,
+                                /* aRequestedCount */ 0,
+                                NS_GetCurrentThread());
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
   //FileReader should be in loading state here
-  mReadyState = nsIDOMFileReader::LOADING;
+  mReadyState = LOADING;
   DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
 
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
@@ -514,7 +430,7 @@ FileReader::GetAsDataURL(Blob *aBlob,
 {
   aResult.AssignLiteral("data:");
 
-  nsString contentType;
+  nsAutoString contentType;
   aBlob->GetType(contentType);
   if (!contentType.IsEmpty()) {
     aResult.Append(contentType);
@@ -630,7 +546,7 @@ FileReader::Notify(nsITimer* aTimer)
 NS_IMETHODIMP
 FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
 {
-  if (mReadyState != 1 || aStream != mAsyncStream) {
+  if (mReadyState != LOADING || aStream != mAsyncStream) {
     return NS_OK;
   }
 
@@ -642,7 +558,10 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = DoAsyncWait(aStream);
+    rv = aStream->AsyncWait(this,
+                            /* aFlags*/ 0,
+                            /* aRequestedCount */ 0,
+                            NS_GetCurrentThread());
   }
 
   if (NS_FAILED(rv) || !aCount) {
@@ -674,9 +593,9 @@ FileReader::OnLoadEnd(nsresult aStatus)
   ClearProgressEventTimer();
 
   // FileReader must be in DONE stage after an operation
-  mReadyState = 2;
+  mReadyState = DONE;
 
-  nsString successEvent, termEvent;
+  nsAutoString successEvent, termEvent;
   nsresult rv = DoOnLoadEnd(aStatus, successEvent, termEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -693,19 +612,10 @@ FileReader::OnLoadEnd(nsresult aStatus)
   return NS_OK;
 }
 
-nsresult
-FileReader::DoAsyncWait(nsIAsyncInputStream* aStream)
-{
-  return aStream->AsyncWait(this,
-                            /* aFlags*/ 0,
-                            /* aRequestedCount */ 0,
-                            NS_GetCurrentThread());
-}
-
 void
 FileReader::Abort(ErrorResult& aRv)
 {
-  if (mReadyState != 1) {
+  if (mReadyState != LOADING) {
     // XXX The spec doesn't say this
     aRv.Throw(NS_ERROR_DOM_FILE_ABORT_ERR);
     return;
@@ -713,8 +623,8 @@ FileReader::Abort(ErrorResult& aRv)
 
   ClearProgressEventTimer();
 
-  mReadyState = 2; // There are DONE constants on multiple interfaces,
-                   // but they all have value 2.
+  mReadyState = DONE;
+
   // XXX The spec doesn't say this
   mError = new DOMError(GetOwner(), NS_LITERAL_STRING("AbortError"));
 
