@@ -11,11 +11,13 @@ interface Principal;
 
 enum PushEncryptionKeyName
 {
-  "p256dh"
+  "p256dh",
+  "auth"
 };
 
 [Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled",
- ChromeConstructor(DOMString pushEndpoint, DOMString scope, ArrayBuffer? key)]
+ ChromeConstructor(DOMString pushEndpoint, DOMString scope,
+                   ArrayBuffer? key, ArrayBuffer? authSecret)]
 interface PushSubscription
 {
     readonly attribute USVString endpoint;

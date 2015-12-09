@@ -24,14 +24,16 @@ namespace mozilla {
 
 /*static*/
 void
-SmsManager::NotifySmsReceived(jni::String::Param aSender,
+SmsManager::NotifySmsReceived(int32_t aId,
+                              jni::String::Param aSender,
                               jni::String::Param aBody,
                               int32_t aMessageClass,
+                              int64_t aSentTimestamp,
                               int64_t aTimestamp)
 {
     // TODO Need to correct the message `threadId` parameter value. Bug 859098
     SmsMessageData message;
-    message.id() = 0;
+    message.id() = aId;
     message.threadId() = 0;
     message.iccId() = EmptyString();
     message.delivery() = eDeliveryState_Received;
@@ -41,7 +43,7 @@ SmsManager::NotifySmsReceived(jni::String::Param aSender,
     message.body() = aBody ? nsString(aBody) : EmptyString();
     message.messageClass() = static_cast<MessageClass>(aMessageClass);
     message.timestamp() = aTimestamp;
-    message.sentTimestamp() = aTimestamp;
+    message.sentTimestamp() = aSentTimestamp;
     message.deliveryTimestamp() = aTimestamp;
     message.read() = false;
 

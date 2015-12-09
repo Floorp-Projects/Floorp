@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja" class="reftest-wait">
+<meta charset="UTF-8">
+<title>Bug 1229278 - Dynamic change to text-emphasis-style</title>
+<style>
+  div {
+    line-height: 5;
+    text-emphasis-style: filled triangle;
+  }
+  .reftest-wait div {
+    text-emphasis-style: filled circle;
+  }
+</style>
+<div>テスト</div>
+<script>
+  document.addEventListener("MozReftestInvalidate", function() {
+    document.documentElement.className = "";
+  });
+</script>
+</html>

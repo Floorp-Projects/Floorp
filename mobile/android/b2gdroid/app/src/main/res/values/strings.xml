@@ -3,4 +3,9 @@
 
   <string name="b2g">Firefox OS developer preview</string>
 
+  <!-- If MMS discovers there isn't much space left on the device, it will show a toast with this message. -->
+  <string name="low_memory" product="tablet">Tablet storage is full! Delete some files to free space.</string>
+  <!-- If MMS discovers there isn't much space left on the device, it will show a toast with this message. -->
+  <string name="low_memory" product="default">Phone storage is full! Delete some files to free space.</string>
+
 </resources>

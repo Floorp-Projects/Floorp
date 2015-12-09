@@ -22,6 +22,7 @@
 #include "mozilla/Maybe.h"
 
 #include "signaling/src/sdp/SdpEnum.h"
+#include "signaling/src/common/EncodingConstraints.h"
 
 namespace mozilla
 {
@@ -828,38 +829,6 @@ public:
     : SdpAttribute(kRidAttribute)
   {}
 
-  struct Constraints
-  {
-    Constraints() :
-      maxWidth(0),
-      maxHeight(0),
-      maxFps(0),
-      maxFs(0),
-      maxBr(0),
-      maxPps(0)
-    {}
-
-    bool Parse(std::istream& is, std::string* error);
-    bool ParseDepend(std::istream& is, std::string* error);
-    bool ParseFormats(std::istream& is, std::string* error);
-    void Serialize(std::ostream& os) const;
-    bool IsSet() const
-    {
-      return !formats.empty() || maxWidth || maxHeight || maxFps || maxFs ||
-             maxBr || maxPps || !dependIds.empty();
-    }
-
-    std::vector<uint16_t> formats; // Empty implies all
-    uint32_t maxWidth;
-    uint32_t maxHeight;
-    uint32_t maxFps;
-    uint32_t maxFs;
-    uint32_t maxBr;
-    uint32_t maxPps;
-    std::vector<std::string> dependIds;
-    // We do not bother trying to store constraints we don't understand.
-  };
-
   struct Rid
   {
     Rid() :
@@ -867,11 +836,30 @@ public:
     {}
 
     bool Parse(std::istream& is, std::string* error);
+    bool ParseParameters(std::istream& is, std::string* error);
+    bool ParseDepend(std::istream& is, std::string* error);
+    bool ParseFormats(std::istream& is, std::string* error);
     void Serialize(std::ostream& os) const;
+    void SerializeParameters(std::ostream& os) const;
+    bool HasFormat(const std::string& format) const;
+    bool HasParameters() const
+    {
+      return !formats.empty() ||
+        constraints.maxWidth ||
+        constraints.maxHeight ||
+        constraints.maxFps ||
+        constraints.maxFs ||
+        constraints.maxBr ||
+        constraints.maxPps ||
+        !dependIds.empty();
+    }
+
 
     std::string id;
     sdp::Direction direction;
-    Constraints constraints;
+    std::vector<uint16_t> formats; // Empty implies all
+    EncodingConstraints constraints;
+    std::vector<std::string> dependIds;
   };
 
   virtual void Serialize(std::ostream& os) const override;
