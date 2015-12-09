@@ -46,8 +46,8 @@ include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifdef MOZ_EXTERNAL_SIGNING_FORMAT
-# We can't use osslsigncode on mar files
-MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out osslsigncode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
+# We can't use sha2signcode on mar files
+MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out sha2signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
 MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
 endif
 
