@@ -783,6 +783,17 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
                self->WaitRequestRef(aRejection.mType).Complete();
              }));
 
+    // We are out of data to decode and will enter buffering mode soon.
+    // We want to play the frames we have already decoded, so we stop pre-rolling
+    // and ensure that loadeddata is fired as required.
+    if (isAudio) {
+      StopPrerollingAudio();
+    } else {
+      StopPrerollingVideo();
+    }
+    if (mState == DECODER_STATE_BUFFERING || mState == DECODER_STATE_DECODING) {
+        MaybeFinishDecodeFirstFrame();
+    }
     return;
   }
 
@@ -1482,7 +1493,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
     return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
   }
 
-  NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
+  MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA,
                "We should have got duration already");
 
   if (mState < DECODER_STATE_DECODING ||

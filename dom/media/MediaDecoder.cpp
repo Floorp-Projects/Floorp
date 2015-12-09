@@ -790,6 +790,7 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
 
   UpdateDormantState(false /* aDormantTimeout */, true /* aActivity */);
 
+  MOZ_ASSERT(!mIsDormant, "should be out of dormant by now");
   MOZ_ASSERT(aTime >= 0.0, "Cannot seek to a negative value.");
 
   int64_t timeUsecs = 0;
