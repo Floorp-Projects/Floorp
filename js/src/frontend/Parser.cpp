@@ -2360,8 +2360,8 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
                 // Under non-strict mode, try ES6 Annex B.3.3 semantics. If
                 // making an additional 'var' binding of the same name does
                 // not throw an early error, do so. This 'var' binding would
-                // be assigned the function object in situ, e.g., when its
-                // declaration is reached, not at the start of the block.
+                // be assigned the function object when its declaration is
+                // reached, not at the start of the block.
 
                 annexDef = pc->decls().lookupFirst(funName);
                 if (annexDef) {
