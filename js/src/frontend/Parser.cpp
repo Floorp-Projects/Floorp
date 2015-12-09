@@ -3827,23 +3827,27 @@ Parser<ParseHandler>::noteNameUse(HandlePropertyName name, Node pn)
 
 template <>
 bool
-Parser<FullParseHandler>::bindUninitialized(BindData<FullParseHandler>* data, ParseNode* pn)
+Parser<FullParseHandler>::bindUninitialized(BindData<FullParseHandler>* data, HandlePropertyName name,
+                                            ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isKind(PNK_NAME));
-
-    RootedPropertyName name(context, pn->pn_atom->asPropertyName());
-
     data->setNameNode(pn);
-    if (!data->bind(name, this))
-        return false;
-    return true;
+    return data->bind(name, this);
 }
 
 template <>
 bool
-Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, ParseNode* pn)
+Parser<FullParseHandler>::bindUninitialized(BindData<FullParseHandler>* data, ParseNode* pn)
 {
-    if (!bindUninitialized(data, pn))
+    RootedPropertyName name(context, pn->name());
+    return bindUninitialized(data, name, pn);
+}
+
+template <>
+bool
+Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, HandlePropertyName name,
+                                          ParseNode* pn)
+{
+    if (!bindUninitialized(data, name, pn))
         return false;
 
     /*
@@ -3862,6 +3866,14 @@ Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, Pars
 
     pn->markAsAssigned();
     return true;
+}
+
+template <>
+bool
+Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, ParseNode* pn)
+{
+    RootedPropertyName name(context, pn->name());
+    return bindInitialized(data, name, pn);
 }
 
 template <>
@@ -4522,21 +4534,31 @@ CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 }
 
 template <>
-ParseNode*
-Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name, bool isConst,
-                                                        const TokenPos& pos)
+bool
+Parser<FullParseHandler>::prepareAndBindInitializedLexicalWithNode(HandlePropertyName name,
+                                                                   bool isConst,
+                                                                   ParseNode* pn,
+                                                                   const TokenPos& pos)
 {
     BindData<FullParseHandler> data(context);
     if (!checkAndPrepareLexical(isConst, pos))
         return null();
     data.initLexical(HoistVars, isConst ? JSOP_DEFCONST : JSOP_DEFLET,
                      CurrentLexicalStaticBlock(pc), JSMSG_TOO_MANY_LOCALS);
+    return bindInitialized(&data, name, pn);
+}
+
+template <>
+ParseNode*
+Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name, bool isConst,
+                                                        const TokenPos& pos)
+{
     ParseNode* dn = newBindingNode(name, false);
     if (!dn)
         return null();
     handler.setPosition(dn, pos);
 
-    if (!bindInitialized(&data, dn))
+    if (!prepareAndBindInitializedLexicalWithNode(name, isConst, dn, pos))
         return null();
 
     return dn;
