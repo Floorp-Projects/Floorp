@@ -3164,6 +3164,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     CancelAnimation();
 
     mFrameMetrics = aLayerMetrics;
+    if (scrollOffsetUpdated) {
+      AcknowledgeScrollUpdate();
+    }
     mLastDispatchedPaintMetrics = aLayerMetrics;
     ShareCompositorFrameMetrics();
 
@@ -3223,19 +3226,21 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
         ToString(mFrameMetrics.GetScrollOffset()).c_str(),
         ToString(aLayerMetrics.GetScrollOffset()).c_str());
 
+      // Send an acknowledgement with the new scroll generation so that any
+      // repaint requests later in this function go through.
+      // Because of the scroll generation update, any inflight paint requests are
+      // going to be ignored by layout, and so mLastDispatchedPaintMetrics
+      // becomes incorrect for the purposes of calculating the LD transform. To
+      // correct this we need to update mLastDispatchedPaintMetrics to be the
+      // last thing we know was painted by Gecko.
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
+      AcknowledgeScrollUpdate();
+      mLastDispatchedPaintMetrics = aLayerMetrics;
 
       // Cancel the animation (which might also trigger a repaint request)
       // after we update the scroll offset above. Otherwise we can be left
       // in a state where things are out of sync.
       CancelAnimation();
-
-      // Because of the scroll offset update, any inflight paint requests are
-      // going to be ignored by layout, and so mLastDispatchedPaintMetrics
-      // becomes incorrect for the purposes of calculating the LD transform. To
-      // correct this we need to update mLastDispatchedPaintMetrics to be the
-      // last thing we know was painted by Gecko.
-      mLastDispatchedPaintMetrics = aLayerMetrics;
 
       // Since the scroll offset has changed, we need to recompute the
       // displayport margins and send them to layout. Otherwise there might be
@@ -3257,37 +3262,35 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
       Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
 
-    CancelAnimation();
-
-    // It's important to not send repaint requests between this
-    // CopySmoothScrollInfo call and the sending of the scroll update
-    // acknowledgement below, otherwise that repaint request will get rejected
-    // on the main thread but mLastPaintRequestMetrics will have the new scroll
-    // generation; this would leave the main thread out of date.
+    // See comment on the similar code in the |if (scrollOffsetUpdated)| block
+    // above.
     mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
+    AcknowledgeScrollUpdate();
     mLastDispatchedPaintMetrics = aLayerMetrics;
+
+    CancelAnimation();
     StartSmoothScroll(ScrollSource::DOM);
-
-    scrollOffsetUpdated = true; // Ensure that AcknowledgeScrollUpdate is called
-  }
-
-  if (scrollOffsetUpdated) {
-    // Once layout issues a scroll offset update, it becomes impervious to
-    // scroll offset updates from APZ until we acknowledge the update it sent.
-    // This prevents APZ updates from clobbering scroll updates from other
-    // more "legitimate" sources like content scripts.
-    RefPtr<GeckoContentController> controller = GetGeckoContentController();
-    if (controller) {
-      APZC_LOG("%p sending scroll update acknowledgement with gen %u\n", this, aLayerMetrics.GetScrollGeneration());
-      controller->AcknowledgeScrollUpdate(aLayerMetrics.GetScrollId(),
-                                          aLayerMetrics.GetScrollGeneration());
-    }
   }
 
   if (needContentRepaint) {
     RequestContentRepaint();
   }
   UpdateSharedCompositorFrameMetrics();
+}
+
+void
+AsyncPanZoomController::AcknowledgeScrollUpdate() const
+{
+  // Once layout issues a scroll offset update, it becomes impervious to
+  // scroll offset updates from APZ until we acknowledge the update it sent.
+  // This prevents APZ updates from clobbering scroll updates from other
+  // more "legitimate" sources like content scripts.
+  RefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    APZC_LOG("%p sending scroll update acknowledgement with gen %u\n", this, mFrameMetrics.GetScrollGeneration());
+    controller->AcknowledgeScrollUpdate(mFrameMetrics.GetScrollId(),
+                                        mFrameMetrics.GetScrollGeneration());
+  }
 }
 
 const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() const {
