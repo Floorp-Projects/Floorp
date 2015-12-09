@@ -903,7 +903,7 @@ nsSliderMediator::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 bool
-nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
+nsSliderFrame::StartAPZDrag()
 {
   if (!gfxPlatform::GetPlatform()->SupportsApzDragInput()) {
     return false;
@@ -1020,7 +1020,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 
   mDragStart = pos - mThumbStart;
 
-  mScrollingWithAPZ = StartAPZDrag(event);
+  mScrollingWithAPZ = StartAPZDrag();
 
 #ifdef DEBUG_SLIDER
   printf("Pressed mDragStart=%d\n",mDragStart);
