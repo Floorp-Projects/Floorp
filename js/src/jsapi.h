@@ -4867,7 +4867,8 @@ GetSymbolDescription(HandleSymbol symbol);
     macro(iterator) \
     macro(match) \
     macro(species) \
-    macro(toPrimitive)
+    macro(toPrimitive) \
+    macro(unscopables)
 
 enum class SymbolCode : uint32_t {
     // There is one SymbolCode for each well-known symbol.

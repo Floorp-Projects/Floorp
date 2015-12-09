@@ -9045,6 +9045,14 @@ DebuggerEnv_getVariable(JSContext* cx, unsigned argc, Value* vp)
         /* This can trigger getters. */
         ErrorCopier ec(ac);
 
+        bool found;
+        if (!HasProperty(cx, env, id, &found))
+            return false;
+        if (!found) {
+            args.rval().setUndefined();
+            return true;
+        }
+
         // For DebugScopeObjects, we get sentinel values for optimized out
         // slots and arguments instead of throwing (the default behavior).
         //
