@@ -53,7 +53,6 @@ struct StmtInfoPC : public StmtInfoBase
     {}
 };
 
-typedef HashSet<JSAtom*, DefaultHasher<JSAtom*>, LifoAllocPolicy<Fallible>> FuncStmtSet;
 class SharedContext;
 
 typedef Vector<Definition*, 16> DeclVector;
@@ -236,10 +235,6 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
   public:
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
-    FuncStmtSet*    funcStmts;     /* Set of (non-top-level) function statements
-                                       that will alias any top-level bindings with
-                                       the same name. */
-
     // All inner functions in this context. Only filled in when parsing syntax.
     Rooted<TraceableVector<JSFunction*>> innerFunctions;
 
@@ -277,7 +272,6 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         parserPC(&prs->pc),
         oldpc(prs->pc),
         lexdeps(prs->context),
-        funcStmts(nullptr),
         innerFunctions(prs->context, TraceableVector<JSFunction*>(prs->context)),
         newDirectives(newDirectives),
         inDeclDestructuring(false)
@@ -728,7 +722,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                     InvokedPrediction invoked = PredictUninvoked);
+                     InvokedPrediction invoked = PredictUninvoked,
+                     Node* assignmentForAnnexBOut = nullptr);
     bool functionArgsAndBody(InHandling inHandling, Node pn, HandleFunction fun,
                              FunctionSyntaxKind kind, GeneratorKind generatorKind,
                              Directives inheritedDirectives, Directives* newDirectives);
@@ -794,8 +789,10 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node newThisName();
 
     bool makeDefIntoUse(Definition* dn, Node pn, HandleAtom atom);
+    bool bindLexicalFunctionName(HandlePropertyName funName, ParseNode* pn);
+    bool bindBodyLevelFunctionName(HandlePropertyName funName, ParseNode** pn);
     bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
-                                 bool* pbodyProcessed);
+                                 bool* pbodyProcessed, Node* assignmentForAnnexBOut);
     bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);
     bool addFreeVariablesFromLazyFunction(JSFunction* fun, ParseContext<ParseHandler>* pc);
 
