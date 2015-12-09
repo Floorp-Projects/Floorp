@@ -121,7 +121,7 @@ add_test(function test_reconnect_no_registration() {
 add_test(function test_ping_websocket() {
   let pingReceived = false,
       socketClosed = false;
-  mockWebSocket.defaultMsgHandler = (msg) => {
+  mockWebSocket.defaultMsgHandler = () => {
     pingReceived = true;
     // Do not send a ping response.
   };
@@ -133,7 +133,7 @@ add_test(function test_ping_websocket() {
   MozLoopPushHandler.initialize({ mockWebSocket: mockWebSocket });
   MozLoopPushHandler.register(
     "test-chan",
-    function(err, url) {
+    function(err) {
       Assert.equal(err, null, "err should be null to indicate success");
       waitForCondition(() => pingReceived).then(() => {
         waitForCondition(() => socketClosed).then(() => {

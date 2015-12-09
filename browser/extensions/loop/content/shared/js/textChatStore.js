@@ -8,8 +8,6 @@ loop.store = loop.store || {};
 loop.store.TextChatStore = (function() {
   "use strict";
 
-  var sharedActions = loop.shared.actions;
-
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES = {
     RECEIVED: "recv",
     SENT: "sent",

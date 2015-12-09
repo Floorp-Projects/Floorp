@@ -19,15 +19,13 @@ describe("loop.shared.models", function() {
   });
 
   describe("NotificationCollection", function() {
-    var collection, notifData, testNotif;
+    var collection;
 
     beforeEach(function() {
       collection = new sharedModels.NotificationCollection();
       sandbox.stub(l10n, "get", function(x, y) {
         return "translated:" + x + (y ? ":" + y : "");
       });
-      notifData = { level: "error", message: "plop" };
-      testNotif = new sharedModels.NotificationModel(notifData);
     });
 
     describe("#warn", function() {
