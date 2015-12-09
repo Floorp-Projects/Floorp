@@ -68,7 +68,7 @@
 #include "nsContentCreatorFunctions.h"
 
 // DOM includes
-#include "nsDOMFileReader.h"
+#include "mozilla/dom/FileReader.h"
 
 #include "nsFormData.h"
 #include "nsHostObjectProtocolHandler.h"
@@ -301,7 +301,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(XPathEvaluator)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(FileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlobProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaStreamProtocolHandler)
@@ -1059,7 +1059,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, nullptr, XPathEvaluatorConstructor },
   { &kTRANSFORMIIX_NODESET_CID, false, nullptr, txNodeSetAdaptorConstructor },
   { &kNS_XMLSERIALIZER_CID, false, nullptr, nsDOMSerializerConstructor },
-  { &kNS_FILEREADER_CID, false, nullptr, nsDOMFileReaderConstructor },
+  { &kNS_FILEREADER_CID, false, nullptr, FileReaderConstructor },
   { &kNS_FORMDATA_CID, false, nullptr, nsFormDataConstructor },
   { &kNS_BLOBPROTOCOLHANDLER_CID, false, nullptr, nsBlobProtocolHandlerConstructor },
   { &kNS_MEDIASTREAMPROTOCOLHANDLER_CID, false, nullptr, nsMediaStreamProtocolHandlerConstructor },
