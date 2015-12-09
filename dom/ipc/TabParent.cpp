@@ -184,7 +184,7 @@ private:
         // Our TabParent may have been destroyed already.  If so, don't send any
         // fds over, just go back to the IO thread and close them.
         if (!tabParent->IsDestroyed()) {
-            mozilla::Unused << tabParent->SendCacheFileDescriptor(mPath, fd);
+            Unused << tabParent->SendCacheFileDescriptor(mPath, fd);
         }
 
         if (!mFD) {
@@ -232,7 +232,7 @@ private:
             // Intentionally leak the runnable (but not the fd) rather
             // than crash when trying to release a main thread object
             // off the main thread.
-            mozilla::Unused << mTabParent.forget();
+            Unused << mTabParent.forget();
             CloseFile();
         }
     }
@@ -387,6 +387,11 @@ TabParent::AddWindowListeners()
       mPresShellWithRefreshListener = shell;
       shell->AddPostRefreshObserver(this);
     }
+
+    RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
+    if (acs) {
+      acs->RegisterTabParent(this);
+    }
   }
 }
 
@@ -404,6 +409,11 @@ TabParent::RemoveWindowListeners()
   if (mPresShellWithRefreshListener) {
     mPresShellWithRefreshListener->RemovePostRefreshObserver(this);
     mPresShellWithRefreshListener = nullptr;
+  }
+
+  RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
+  if (acs) {
+    acs->UnregisterTabParent(this);
   }
 }
 
@@ -2636,7 +2646,6 @@ TabParent::RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
     nsAutoCString topic;
     topic.Assign("audiochannel-activity-");
     topic.Append(AudioChannelService::GetAudioChannelTable()[aAudioChannel].tag);
@@ -3395,6 +3404,33 @@ TabParent::GetShowInfo()
 
   return ShowInfo(EmptyString(), false, false, false,
                   mDPI, mDefaultScale.scale);
+}
+
+void
+TabParent::AudioChannelChangeNotification(nsPIDOMWindow* aWindow,
+                                          AudioChannel aAudioChannel,
+                                          float aVolume,
+                                          bool aMuted)
+{
+  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = mFrameElement->OwnerDoc()->GetWindow();
+  while (window) {
+    if (window == aWindow) {
+      Unused << SendAudioChannelChangeNotification(static_cast<uint32_t>(aAudioChannel),
+                                                   aVolume, aMuted);
+      break;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> win = window->GetScriptableParent();
+    if (window == win) {
+      break;
+    }
+
+    window = win;
+  }
 }
 
 NS_IMETHODIMP
