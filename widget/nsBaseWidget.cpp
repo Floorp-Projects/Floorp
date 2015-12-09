@@ -1768,6 +1768,16 @@ nsBaseWidget::GetTextEventDispatcher()
 
 #ifdef ACCESSIBILITY
 
+// defined in nsAppRunner.cpp
+extern const char* kAccessibilityLastRunDatePref;
+
+static inline uint32_t
+PRTimeToSeconds(PRTime t_usec)
+{
+  PRTime usec_per_sec = PR_USEC_PER_SEC;
+  return uint32_t(t_usec /= usec_per_sec);
+}
+
 a11y::Accessible*
 nsBaseWidget::GetRootAccessible()
 {
@@ -1786,6 +1796,8 @@ nsBaseWidget::GetRootAccessible()
   nsCOMPtr<nsIAccessibilityService> accService =
     services::GetAccessibilityService();
   if (accService) {
+    uint32_t now = PRTimeToSeconds(PR_Now());
+    Preferences::SetInt(kAccessibilityLastRunDatePref, now);
     return accService->GetRootDocumentAccessible(presShell, nsContentUtils::IsSafeToRunScript());
   }
 
