@@ -299,6 +299,7 @@
     macro(match, match, "match") \
     macro(species, species, "species") \
     macro(toPrimitive, toPrimitive, "toPrimitive") \
+    macro(unscopables, unscopables, "unscopables") \
     /* Same goes for the descriptions of the well-known symbols. */ \
     macro(Symbol_hasInstance, Symbol_hasInstance, "Symbol.hasInstance") \
     macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
@@ -306,7 +307,6 @@
     macro(Symbol_match,    Symbol_match,    "Symbol.match") \
     macro(Symbol_species,  Symbol_species,  "Symbol.species") \
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
-    macro(Symbol_toStringTag, Symbol_toStringTag, "Symbol.toStringTag") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
     /* Function names for properties named by symbols. */ \
     macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
