@@ -97,8 +97,7 @@
     return query;
   }
 
-  var queryDialog =
-    'Search: <input type="text" style="width: 10em" class="CodeMirror-search-field"/> <span style="color: #888" class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>';
+  var queryDialog;
 
   function startSearch(cm, state, query) {
     state.queryText = query;
@@ -113,6 +112,22 @@
   }
 
   function doSearch(cm, rev, persistent) {
+    if (!queryDialog) {
+      let doc = cm.getWrapperElement().ownerDocument;
+      let inp = doc.createElement("input");
+
+      inp.type = "search";
+      inp.placeholder = cm.l10n("findCmd.promptMessage");
+      inp.style.MozMarginStart = "1em";
+      inp.style.MozMarginEnd = "1em";
+      inp.style.flexGrow = "1";
+      inp.addEventListener("focus", () => inp.select());
+
+      queryDialog = doc.createElement("div");
+      queryDialog.appendChild(inp);
+      queryDialog.style.display = "flex";
+    }
+
     var state = getSearchState(cm);
     if (state.query) return findNext(cm, rev);
     var q = cm.getSelection() || state.lastQuery;
