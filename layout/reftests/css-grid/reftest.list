@@ -94,3 +94,4 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003-ref.html
 == grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html
 == grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001-ref.html
+== grid-clamping-001.html grid-clamping-001-ref.html
