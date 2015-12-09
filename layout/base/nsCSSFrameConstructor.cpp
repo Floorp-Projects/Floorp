@@ -7895,6 +7895,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
     *aDestroyedFramesFor = aChild;
   }
 
+  if (aChild->IsHTMLElement(nsGkAtoms::body) ||
+      (!aContainer && aChild->IsElement())) {
+    // This might be the element we propagated viewport scrollbar
+    // styles from.  Recompute those.
+    mPresShell->GetPresContext()->UpdateViewportScrollbarStylesOverride();
+  }
+
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 

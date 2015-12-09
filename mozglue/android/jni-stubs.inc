@@ -362,16 +362,16 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass ar
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived_t)(JNIEnv *, jclass, jstring, jstring, jint, jlong);
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived_t)(JNIEnv *, jclass, jint, jstring, jstring, jint, jlong, jlong);
 static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived;
 extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3, jint arg4, jlong arg5) {
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(JNIEnv * arg0, jclass arg1, jint arg2, jstring arg3, jstring arg4, jint arg5, jlong arg6, jlong arg7) {
     if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
         return ;
     }
-     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(arg0, arg1, arg2, arg3, arg4, arg5);
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 #endif
 

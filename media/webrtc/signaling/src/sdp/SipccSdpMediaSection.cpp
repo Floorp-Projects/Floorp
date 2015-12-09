@@ -136,6 +136,10 @@ SipccSdpMediaSection::Load(sdp_t* sdp, uint16_t level,
     return false;
   }
 
+  if (!ValidateSimulcast(sdp, level, errorHolder)) {
+    return false;
+  }
+
   if (!mBandwidths.Load(sdp, level, errorHolder)) {
     return false;
   }
@@ -220,6 +224,68 @@ SipccSdpMediaSection::LoadFormats(sdp_t* sdp,
     }
   }
 
+  return true;
+}
+
+bool
+SipccSdpMediaSection::ValidateSimulcast(sdp_t* sdp, uint16_t level,
+                                        SdpErrorHolder& errorHolder) const
+{
+  if (!GetAttributeList().HasAttribute(SdpAttribute::kSimulcastAttribute)) {
+    return true;
+  }
+
+  const SdpSimulcastAttribute& simulcast(GetAttributeList().GetSimulcast());
+  if (!ValidateSimulcastVersions(
+        sdp, level, simulcast.sendVersions, sdp::kSend, errorHolder)) {
+    return false;
+  }
+  if (!ValidateSimulcastVersions(
+        sdp, level, simulcast.recvVersions, sdp::kRecv, errorHolder)) {
+    return false;
+  }
+  return true;
+}
+
+bool
+SipccSdpMediaSection::ValidateSimulcastVersions(
+    sdp_t* sdp,
+    uint16_t level,
+    const SdpSimulcastAttribute::Versions& versions,
+    sdp::Direction direction,
+    SdpErrorHolder& errorHolder) const
+{
+  if (versions.IsSet() && !(direction & GetDirectionAttribute().mValue)) {
+    errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                              "simulcast attribute has a direction that is "
+                              "inconsistent with the direction of this media "
+                              "section.");
+    return false;
+  }
+
+  for (const SdpSimulcastAttribute::Version& version : versions) {
+    for (const std::string& id : version.choices) {
+      if (versions.type == SdpSimulcastAttribute::Versions::kRid) {
+        const SdpRidAttributeList::Rid* ridAttr = FindRid(id);
+        if (!ridAttr || (ridAttr->direction != direction)) {
+          std::ostringstream os;
+          os << "No rid attribute for \'" << id << "\'";
+          errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                    os.str());
+          return false;
+        }
+      } else if (versions.type == SdpSimulcastAttribute::Versions::kPt) {
+        if (std::find(mFormats.begin(), mFormats.end(), id)
+            == mFormats.end()) {
+          std::ostringstream os;
+          os << "No pt for \'" << id << "\'";
+          errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                    os.str());
+          return false;
+        }
+      }
+    }
+  }
   return true;
 }
 

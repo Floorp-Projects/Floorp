@@ -4,6 +4,7 @@
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepCodecDescription.h"
+#include "signaling/src/jsep/JsepTrackEncoding.h"
 
 #include <algorithm>
 
@@ -16,7 +17,14 @@ JsepTrack::GetNegotiatedPayloadTypes(std::vector<uint16_t>* payloadTypes)
     return;
   }
 
-  GetPayloadTypes(mNegotiatedDetails->mCodecs.values, payloadTypes);
+  for (const auto* encoding : mNegotiatedDetails->mEncodings.values) {
+    GetPayloadTypes(encoding->GetCodecs(), payloadTypes);
+  }
+
+  // Prune out dupes
+  std::sort(payloadTypes->begin(), payloadTypes->end());
+  auto newEnd = std::unique(payloadTypes->begin(), payloadTypes->end());
+  payloadTypes->erase(newEnd, payloadTypes->end());
 }
 
 /* static */
@@ -95,14 +103,17 @@ void
 JsepTrack::AddToOffer(SdpMediaSection* offer) const
 {
   AddToMsection(mPrototypeCodecs.values, offer);
+  if (mDirection == sdp::kSend) {
+    AddToMsection(mJsEncodeConstraints, sdp::kSend, offer);
+  }
 }
 
 void
 JsepTrack::AddToAnswer(const SdpMediaSection& offer,
                        SdpMediaSection* answer) const
 {
-  // We do not modify mPrototypeCodecs here, since we're only creating an answer. Once
-  // offer/answer concludes, we will update mPrototypeCodecs.
+  // We do not modify mPrototypeCodecs here, since we're only creating an
+  // answer. Once offer/answer concludes, we will update mPrototypeCodecs.
   PtrVector<JsepCodecDescription> codecs;
   codecs.values = GetCodecClones();
   NegotiateCodecs(offer, &codecs.values);
@@ -111,6 +122,14 @@ JsepTrack::AddToAnswer(const SdpMediaSection& offer,
   }
 
   AddToMsection(codecs.values, answer);
+
+  if (mDirection == sdp::kSend) {
+    std::vector<JsConstraints> constraints;
+    std::vector<SdpRidAttributeList::Rid> rids;
+    GetRids(offer, sdp::kRecv, &rids);
+    NegotiateRids(rids, &constraints);
+    AddToMsection(constraints, sdp::kSend, answer);
+  }
 }
 
 void
@@ -132,6 +151,149 @@ JsepTrack::AddToMsection(const std::vector<JsepCodecDescription*>& codecs,
     msection->SetSending(true);
   } else {
     msection->SetReceiving(true);
+  }
+}
+
+// Updates the |id| values in |constraintsList| with the rid values in |rids|,
+// where necessary.
+void
+JsepTrack::NegotiateRids(const std::vector<SdpRidAttributeList::Rid>& rids,
+                         std::vector<JsConstraints>* constraintsList) const
+{
+  for (const SdpRidAttributeList::Rid& rid : rids) {
+    if (!FindConstraints(rid.id, *constraintsList)) {
+      // Pair up the first JsConstraints with an empty id, if it exists.
+      JsConstraints* constraints = FindConstraints("", *constraintsList);
+      if (constraints) {
+        constraints->rid = rid.id;
+      }
+    }
+  }
+}
+
+/* static */
+void
+JsepTrack::AddToMsection(const std::vector<JsConstraints>& constraintsList,
+                         sdp::Direction direction,
+                         SdpMediaSection* msection)
+{
+  UniquePtr<SdpSimulcastAttribute> simulcast(new SdpSimulcastAttribute);
+  UniquePtr<SdpRidAttributeList> rids(new SdpRidAttributeList);
+  for (const JsConstraints& constraints : constraintsList) {
+    if (!constraints.rid.empty()) {
+      SdpRidAttributeList::Rid rid;
+      rid.id = constraints.rid;
+      rid.direction = direction;
+      rids->mRids.push_back(rid);
+
+      SdpSimulcastAttribute::Version version;
+      version.choices.push_back(constraints.rid);
+      if (direction == sdp::kSend) {
+        simulcast->sendVersions.push_back(version);
+      } else {
+        simulcast->recvVersions.push_back(version);
+      }
+    }
+  }
+
+  if (!rids->mRids.empty()) {
+    msection->GetAttributeList().SetAttribute(simulcast.release());
+    msection->GetAttributeList().SetAttribute(rids.release());
+  }
+}
+
+void
+JsepTrack::GetRids(const SdpMediaSection& msection,
+                   sdp::Direction direction,
+                   std::vector<SdpRidAttributeList::Rid>* rids) const
+{
+  rids->clear();
+  if (!msection.GetAttributeList().HasAttribute(
+        SdpAttribute::kSimulcastAttribute)) {
+    return;
+  }
+
+  const SdpSimulcastAttribute& simulcast(
+      msection.GetAttributeList().GetSimulcast());
+
+  const SdpSimulcastAttribute::Versions* versions = nullptr;
+  switch (direction) {
+    case sdp::kSend:
+      versions = &simulcast.sendVersions;
+      break;
+    case sdp::kRecv:
+      versions = &simulcast.recvVersions;
+      break;
+  }
+
+  if (!versions->IsSet()) {
+    return;
+  }
+
+  if (versions->type != SdpSimulcastAttribute::Versions::kRid) {
+    // No support for PT-based simulcast, yet.
+    return;
+  }
+
+  for (const SdpSimulcastAttribute::Version& version : *versions) {
+    if (!version.choices.empty()) {
+      // We validate that rids are present (and sane) elsewhere.
+      rids->push_back(*msection.FindRid(version.choices[0]));
+    }
+  }
+}
+
+JsepTrack::JsConstraints*
+JsepTrack::FindConstraints(const std::string& id,
+                           std::vector<JsConstraints>& constraintsList) const
+{
+  for (JsConstraints& constraints : constraintsList) {
+    if (constraints.rid == id) {
+      return &constraints;
+    }
+  }
+  return nullptr;
+}
+
+void
+JsepTrack::CreateEncodings(
+    const SdpMediaSection& remote,
+    const std::vector<JsepCodecDescription*>& negotiatedCodecs,
+    JsepTrackNegotiatedDetails* negotiatedDetails)
+{
+  std::vector<SdpRidAttributeList::Rid> rids;
+  GetRids(remote, sdp::kRecv, &rids); // Get rids we will send
+  NegotiateRids(rids, &mJsEncodeConstraints);
+  if (rids.empty()) {
+    // Add dummy value with an empty id to make sure we get a single unicast
+    // stream.
+    rids.push_back(SdpRidAttributeList::Rid());
+  }
+
+  // For each rid in the remote, make sure we have an encoding, and configure
+  // that encoding appropriately.
+  for (size_t i = 0; i < rids.size(); ++i) {
+    if (i == negotiatedDetails->mEncodings.values.size()) {
+      negotiatedDetails->mEncodings.values.push_back(new JsepTrackEncoding);
+    }
+
+    JsepTrackEncoding* encoding = negotiatedDetails->mEncodings.values[i];
+
+    for (const JsepCodecDescription* codec : negotiatedCodecs) {
+      if (rids[i].HasFormat(codec->mDefaultPt)) {
+        encoding->AddCodec(*codec);
+      }
+    }
+
+    encoding->mRid = rids[i].id;
+    // If we end up supporting params for rid, we would handle that here.
+
+    // Incorporate the corresponding JS encoding constraints, if they exist
+    for (const JsConstraints& jsConstraints : mJsEncodeConstraints) {
+      if (jsConstraints.rid == rids[i].id) {
+        encoding->mConstraints = jsConstraints.constraints;
+      }
+    }
   }
 }
 
@@ -209,13 +371,12 @@ void
 JsepTrack::Negotiate(const SdpMediaSection& answer,
                      const SdpMediaSection& remote)
 {
-  UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
-      MakeUnique<JsepTrackNegotiatedDetails>();
+  PtrVector<JsepCodecDescription> negotiatedCodecs;
+  negotiatedCodecs.values = GetCodecClones();
 
-  negotiatedDetails->mCodecs.values = GetCodecClones();
   std::map<std::string, std::string> formatChanges;
   NegotiateCodecs(remote,
-                  &negotiatedDetails->mCodecs.values,
+                  &negotiatedCodecs.values,
                   &answer,
                   &formatChanges);
 
@@ -234,6 +395,11 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
   }
 
   EnsureNoDuplicatePayloadTypes(&mPrototypeCodecs.values);
+
+  UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
+      MakeUnique<JsepTrackNegotiatedDetails>();
+
+  CreateEncodings(remote, negotiatedCodecs.values, negotiatedDetails.get());
 
   if (answer.GetAttributeList().HasAttribute(SdpAttribute::kExtmapAttribute)) {
     for (auto& extmapAttr : answer.GetAttributeList().GetExtmap().mExtmaps) {

@@ -235,7 +235,7 @@ public class Launcher extends FragmentActivity
             try {
                 obj.put("action", "view");
                 obj.put("url", intent.getDataString());
-            } catch(Exception ex) {
+            } catch(JSONException ex) {
                 Log.wtf(LOGTAG, "Error building Android:Launcher view message", ex);
             }
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Android:Launcher", obj.toString());
@@ -265,6 +265,21 @@ public class Launcher extends FragmentActivity
             try {
                 obj.put("action", message);
             } catch(JSONException ex) {
+                Log.wtf(LOGTAG, "Error building Android:Launcher message", ex);
+            }
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("Android:Launcher", obj.toString());
+            GeckoAppShell.sendEventToGecko(e);
+        } else if (Intent.ACTION_SENDTO.equals(action) ||
+                   Intent.ACTION_SEND.equals(action)) {
+            Log.d(LOGTAG, "Sending new SMS intent to Gecko");
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("action", "send_sms");
+                if (Intent.ACTION_SENDTO.equals(action)) {
+                    obj.put("number", intent.getData().getPath());
+                }
+                obj.put("body", intent.getStringExtra("sms_body"));
+            } catch (JSONException ex) {
                 Log.wtf(LOGTAG, "Error building Android:Launcher message", ex);
             }
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Android:Launcher", obj.toString());
