@@ -10060,12 +10060,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts number of times a certain plugin has been activated."
   },
-  "YOUTUBE_EMBED_SEEN": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "48",
-    "kind": "flag",
-    "description": "Flag activated whenever a youtube flash embed is seen during a session."
-  },
   "WEB_NOTIFICATION_CLICKED": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
@@ -10164,5 +10158,12 @@
     "kind": "boolean",
     "bug_numbers": [1188391],
     "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
+  },
+  "YOUTUBE_REWRITABLE_EMBED_SEEN": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "48",
+    "kind": "flag",
+    "bug_numbers": [1229971],
+    "description": "Flag activated whenever a rewritable youtube flash embed is seen during a session."
   }
 }

@@ -428,8 +428,13 @@ static void clearIdentifiers()
 
 static void addRange(InstanceData* instanceData, const char* range)
 {
-  char rangestr[16];
-  strncpy(rangestr, range, sizeof(rangestr));
+  /*
+  increased rangestr size from 16 to 17, the 17byte is only for
+  null terminated value, maybe for actual capacity it needs 16 bytes
+  */
+  char rangestr[17];
+  memset(rangestr, 0, sizeof(rangestr));
+  strncpy(rangestr, range, sizeof(rangestr) - sizeof(char));
   const char* str1 = strtok(rangestr, ",");
   const char* str2 = str1 ? strtok(nullptr, ",") : nullptr;
   if (str1 && str2) {

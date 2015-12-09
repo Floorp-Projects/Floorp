@@ -504,11 +504,13 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
+  , mSampleRate(0)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
   , mAudioChannel(aGraphImpl->AudioChannel())
   , mInCallback(false)
   , mPauseRequested(false)
+  , mMicrophoneActive(false)
 #ifdef XP_MACOSX
   , mCallbackReceivedWhileSwitching(0)
 #endif

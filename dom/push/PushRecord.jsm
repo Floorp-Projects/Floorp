@@ -36,6 +36,7 @@ function PushRecord(props) {
   this.lastPush = props.lastPush || 0;
   this.p256dhPublicKey = props.p256dhPublicKey;
   this.p256dhPrivateKey = props.p256dhPrivateKey;
+  this.authenticationSecret = props.authenticationSecret;
   this.setQuota(props.quota);
   this.ctime = (typeof props.ctime === "number") ? props.ctime : 0;
 }
@@ -220,6 +221,7 @@ PushRecord.prototype = {
       lastPush: this.lastPush,
       pushCount: this.pushCount,
       p256dhKey: this.p256dhPublicKey,
+      authenticationSecret: this.authenticationSecret,
     };
   },
 };

@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "signaling/src/common/EncodingConstraints.h"
+
 namespace mozilla {
 
 /**
@@ -57,11 +59,6 @@ struct VideoCodecConfigH264
     char       sprop_parameter_sets[MAX_SPROP_LEN];
     int        packetization_mode;
     int        profile_level_id;
-    int        max_mbps;
-    int        max_fs;
-    int        max_cpb;
-    int        max_dpb;
-    int        max_br;
     int        tias_bw;
 };
 
@@ -81,11 +78,7 @@ public:
   std::vector<std::string> mNackFbTypes;
   std::vector<std::string> mCcmFbTypes;
 
-  unsigned int mMaxFrameSize;
-  unsigned int mMaxFrameRate;
-  unsigned int mMaxMBPS;    // in macroblocks-per-second
-  unsigned int mMaxBitrate;
-  // max_cpb & max_dpb would be streaming/mode-2 only
+  EncodingConstraints mEncodingConstraints;
   std::string mSpropParameterSets;
   uint8_t mProfile;
   uint8_t mConstraints;
@@ -95,26 +88,17 @@ public:
 
   VideoCodecConfig(int type,
                    std::string name,
-                   unsigned int max_fs = 0,
-                   unsigned int max_fr = 0,
+                   const EncodingConstraints& constraints,
                    const struct VideoCodecConfigH264 *h264 = nullptr) :
     mType(type),
     mName(name),
-    mMaxFrameSize(max_fs), // may be overridden
-    mMaxFrameRate(max_fr),
-    mMaxMBPS(0),
-    mMaxBitrate(0),
+    mEncodingConstraints(constraints),
     mProfile(0x42),
     mConstraints(0xE0),
     mLevel(0x0C),
     mPacketizationMode(1)
   {
     if (h264) {
-      if (max_fs == 0 || (h264->max_fs != 0 && (unsigned int) h264->max_fs < max_fs)) {
-        mMaxFrameSize = h264->max_fs;
-      }
-      mMaxMBPS = h264->max_mbps;
-      mMaxBitrate = h264->max_br;
       mProfile = (h264->profile_level_id & 0x00FF0000) >> 16;
       mConstraints = (h264->profile_level_id & 0x0000FF00) >> 8;
       mLevel = (h264->profile_level_id & 0x000000FF);

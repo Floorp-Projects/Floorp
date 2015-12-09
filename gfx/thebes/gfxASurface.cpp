@@ -208,9 +208,10 @@ void
 gfxASurface::Init(cairo_surface_t* surface, bool existingSurface)
 {
     SetSurfaceWrapper(surface, this);
+    MOZ_ASSERT(surface, "surface should be a valid pointer");
 
     mSurface = surface;
-    mSurfaceValid = surface && !cairo_surface_status(surface);
+    mSurfaceValid = !cairo_surface_status(surface);
     if (!mSurfaceValid) {
         gfxWarning() << "ASurface Init failed with Cairo status " << cairo_surface_status(surface) << " on " << hexa(surface);
     }

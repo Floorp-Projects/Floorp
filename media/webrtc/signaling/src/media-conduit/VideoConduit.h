@@ -253,14 +253,14 @@ public:
 
   unsigned int SendingMaxFs() override {
     if(mCurSendCodecConfig) {
-      return mCurSendCodecConfig->mMaxFrameSize;
+      return mCurSendCodecConfig->mEncodingConstraints.maxFs;
     }
     return 0;
   }
 
   unsigned int SendingMaxFr() override {
     if(mCurSendCodecConfig) {
-      return mCurSendCodecConfig->mMaxFrameRate;
+      return mCurSendCodecConfig->mEncodingConstraints.maxFps;
     }
     return 0;
   }

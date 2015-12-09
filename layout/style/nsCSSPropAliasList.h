@@ -313,26 +313,6 @@ CSS_PROP_ALIAS(-webkit-border-image,
                border_image,
                WebkitBorderImage,
                WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-border-image-outset,
-               border_image_outset,
-               WebkitBorderImageOutset,
-               WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-border-image-repeat,
-               border_image_repeat,
-               WebkitBorderImageRepeat,
-               WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-border-image-slice,
-               border_image_slice,
-               WebkitBorderImageSlice,
-               WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-border-image-source,
-               border_image_source,
-               WebkitBorderImageSource,
-               WEBKIT_PREFIX_PREF)
-CSS_PROP_ALIAS(-webkit-border-image-width,
-               border_image_width,
-               WebkitBorderImageWidth,
-               WEBKIT_PREFIX_PREF)
 
 CSS_PROP_ALIAS(-webkit-box-shadow,
                box_shadow,
