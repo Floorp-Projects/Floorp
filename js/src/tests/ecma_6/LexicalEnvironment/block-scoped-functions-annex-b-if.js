@@ -30,4 +30,13 @@ function f(x) {
 f(true);
 f(false);
 
-reportCompare(log, "g0g2g2g4g1g1g3g3");
+try {
+  eval(`
+    if (1)
+      l: function foo() {}
+  `);
+} catch (e) {
+  log += "e";
+}
+
+reportCompare(log, "g0g2g2g4g1g1g3g3e");
