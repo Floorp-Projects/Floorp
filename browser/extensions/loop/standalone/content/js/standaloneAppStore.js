@@ -12,7 +12,6 @@ loop.store = loop.store || {};
 loop.store.StandaloneAppStore = (function() {
   "use strict";
 
-  var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
 
   var CALL_REGEXP = /\/c\/([\w\-]+)$/;

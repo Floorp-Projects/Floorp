@@ -57,7 +57,7 @@ add_test(function test_register_success() {
   });
   MozLoopService.promiseRegisteredWithServers().then(() => {
     run_next_test();
-  }, err => {
+  }, () => {
     do_throw("shouldn't error on a successful request");
   });
 });

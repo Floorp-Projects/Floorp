@@ -34,6 +34,7 @@ function TabSources(threadActor, allowSourceFn=() => true) {
 
   this.blackBoxedSources = new Set();
   this.prettyPrintedSources = new Map();
+  this.neverAutoBlackBoxSources = new Set();
 
   // generated Debugger.Source -> promise of SourceMapConsumer
   this._sourceMaps = new Map();
@@ -169,8 +170,12 @@ TabSources.prototype = {
     this._thread.threadLifetimePool.addActor(actor);
     sourceActorStore.setReusableActorId(source, originalUrl, actor.actorID);
 
-    if (this._autoBlackBox && this._isMinifiedURL(actor.url)) {
+    if (this._autoBlackBox &&
+        !this.neverAutoBlackBoxSources.has(actor.url) &&
+        this._isMinifiedURL(actor.url)) {
+
       this.blackBox(actor.url);
+      this.neverAutoBlackBoxSources.add(actor.url);
     }
 
     if (source) {

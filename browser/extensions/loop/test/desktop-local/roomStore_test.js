@@ -493,7 +493,7 @@ describe("loop.store.RoomStore", function() {
 
         sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
         sinon.assert.calledWith(sharedUtils.composeCallUrlEmail,
-          "http://invalid", null, undefined, "conversation");
+          "http://invalid", null, undefined);
       });
 
       it("should call composeUrlEmail differently with context", function() {
@@ -509,7 +509,7 @@ describe("loop.store.RoomStore", function() {
 
         sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
         sinon.assert.calledWithExactly(sharedUtils.composeCallUrlEmail,
-          url, null, description, "conversation");
+          url, null, description);
       });
     });
 

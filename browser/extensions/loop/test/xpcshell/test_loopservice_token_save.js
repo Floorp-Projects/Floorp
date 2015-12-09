@@ -29,7 +29,7 @@ add_test(function test_registration_returns_hawk_session_token() {
       " Hawk-Session-Token header contents in loop.hawk-session-token pref");
 
     run_next_test();
-  }, err => {
+  }, () => {
     do_throw("shouldn't error on a successful request");
   });
 });

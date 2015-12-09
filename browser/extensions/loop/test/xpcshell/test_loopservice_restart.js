@@ -23,8 +23,6 @@ const LOOP_INITIAL_DELAY_PREF = "loop.initialDelay";
  */
 
 add_task(function* test_initialize_with_no_guest_rooms_and_no_auth_token() {
-  // Set time to be 2 seconds in the past.
-  var nowSeconds = Date.now() / 1000;
   Services.prefs.setBoolPref(LOOP_CREATED_ROOM_PREF, false);
   Services.prefs.clearUserPref(LOOP_FXA_TOKEN_PREF);
 
@@ -73,7 +71,7 @@ add_task(function* test_initialize_with_invalid_fxa_token() {
   yield MozLoopService.initialize().then(() => {
     Assert.ok(false, "Initializing with an invalid token should reject the promise");
   },
-  (error) => {
+  () => {
     Assert.equal(MozLoopServiceInternal.pushHandler.registrationPushURL, kEndPointUrl, "Push URL should match");
     Assert.equal(Services.prefs.getCharPref(LOOP_FXA_TOKEN_PREF), "",
                  "FXA pref should be cleared if token was invalid");

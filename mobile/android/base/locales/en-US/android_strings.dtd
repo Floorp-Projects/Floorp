@@ -224,7 +224,7 @@
 <!ENTITY pref_tap_to_load_images_title2 "Show images">
 <!ENTITY pref_tap_to_load_images_enabled "Always">
 <!ENTITY pref_tap_to_load_images_data "Only over Wi-Fi">
-<!ENTITY pref_tap_to_load_images_disabled "Never">
+<!ENTITY pref_tap_to_load_images_disabled2 "Blocked">
 
 <!ENTITY pref_tracking_protection_title "Tracking protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
