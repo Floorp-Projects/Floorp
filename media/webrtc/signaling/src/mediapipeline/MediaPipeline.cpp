@@ -189,6 +189,30 @@ MediaPipeline::UpdateTransport_s(int level,
   }
 }
 
+void
+MediaPipeline::SelectSsrc_m(size_t ssrc_index)
+{
+  RUN_ON_THREAD(sts_thread_,
+                WrapRunnable(
+                    this,
+                    &MediaPipeline::SelectSsrc_s,
+                    ssrc_index),
+                NS_DISPATCH_NORMAL);
+}
+
+void
+MediaPipeline::SelectSsrc_s(size_t ssrc_index)
+{
+  filter_ = new MediaPipelineFilter;
+  if (ssrc_index < ssrcs_received_.size()) {
+    filter_->AddRemoteSSRC(ssrcs_received_[ssrc_index]);
+  } else {
+    MOZ_MTLOG(ML_WARNING, "SelectSsrc called with " << ssrc_index << " but we "
+                          << "have only seen " << ssrcs_received_.size()
+                          << " ssrcs");
+  }
+}
+
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
   TransportInfo* info = GetTransportInfo_s(flow);
   MOZ_ASSERT(info);
@@ -474,12 +498,18 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
     return;
   }
 
-  if (filter_) {
-    webrtc::RTPHeader header;
-    if (!rtp_parser_->Parse(data, len, &header) ||
-        !filter_->Filter(header)) {
-      return;
-    }
+  webrtc::RTPHeader header;
+  if (!rtp_parser_->Parse(data, len, &header)) {
+    return;
+  }
+
+  if (std::find(ssrcs_received_.begin(), ssrcs_received_.end(), header.ssrc) ==
+      ssrcs_received_.end()) {
+    ssrcs_received_.push_back(header.ssrc);
+  }
+
+  if (filter_ && !filter_->Filter(header)) {
+    return;
   }
 
   // Make a copy rather than cast away constness

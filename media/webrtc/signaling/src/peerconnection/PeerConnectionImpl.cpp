@@ -2214,6 +2214,24 @@ PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
   return NS_OK;
 }
 
+nsresult
+PeerConnectionImpl::SelectSsrc(MediaStreamTrack& aRecvTrack,
+                               unsigned short aSsrcIndex)
+{
+  for (size_t i = 0; i < mMedia->RemoteStreamsLength(); ++i) {
+    if (mMedia->GetRemoteStreamByIndex(i)->GetMediaStream()->
+        HasTrack(aRecvTrack)) {
+      auto& pipelines = mMedia->GetRemoteStreamByIndex(i)->GetPipelines();
+      std::string trackId = PeerConnectionImpl::GetTrackId(aRecvTrack);
+      auto it = pipelines.find(trackId);
+      if (it != pipelines.end()) {
+        it->second->SelectSsrc_m(aSsrcIndex);
+      }
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
