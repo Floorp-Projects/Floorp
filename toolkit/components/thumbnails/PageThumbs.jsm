@@ -83,9 +83,9 @@ const TaskUtils = {
    */
   readBlob: function readBlob(blob) {
     let deferred = Promise.defer();
-    let reader = Cc["@mozilla.org/files/filereader;1"].createInstance(Ci.nsIDOMFileReader);
+    let reader = new FileReader();
     reader.onloadend = function onloadend() {
-      if (reader.readyState != Ci.nsIDOMFileReader.DONE) {
+      if (reader.readyState != FileReader.DONE) {
         deferred.reject(reader.error);
       } else {
         deferred.resolve(reader.result);
@@ -305,8 +305,7 @@ this.PageThumbs = {
       mm.removeMessageListener("Browser:Thumbnail:Response", thumbFunc);
       let imageBlob = aMsg.data.thumbnail;
       let doc = aBrowser.parentElement.ownerDocument;
-      let reader = Cc["@mozilla.org/files/filereader;1"].
-                   createInstance(Ci.nsIDOMFileReader);
+      let reader = new FileReader();
       reader.addEventListener("loadend", function() {
         let image = doc.createElementNS(PageThumbUtils.HTML_NAMESPACE, "img");
         image.onload = function () {

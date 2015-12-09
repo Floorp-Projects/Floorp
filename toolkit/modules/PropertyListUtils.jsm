@@ -100,8 +100,7 @@ this.PropertyListUtils = Object.freeze({
           file = new File(file);
         }
 
-        let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                         createInstance(Ci.nsIDOMFileReader);
+        let fileReader = new FileReader();
         let onLoadEnd = function() {
           let root = null;
           try {

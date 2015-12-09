@@ -545,8 +545,7 @@ Cookies.prototype = {
   },
 
   _readCookieFile(aFile, aCallback) {
-    let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                     createInstance(Ci.nsIDOMFileReader);
+    let fileReader = new FileReader();
     let onLoadEnd = () => {
       fileReader.removeEventListener("loadend", onLoadEnd, false);
 

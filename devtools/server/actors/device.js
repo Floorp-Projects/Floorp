@@ -25,7 +25,6 @@ var DeviceActor = exports.DeviceActor = protocol.ActorClass({
   getWallpaper: method(function() {
     let deferred = promise.defer();
     getSetting("wallpaper.image").then((blob) => {
-      let FileReader = CC("@mozilla.org/files/filereader;1");
       let reader = new FileReader();
       let conn = this.conn;
       reader.addEventListener("load", function() {
