@@ -120,13 +120,12 @@ nsClipboard::SetData(nsITransferable *aTransferable,
                  (flavorStr.EqualsLiteral(kNativeImageMime) ||
                   flavorStr.EqualsLiteral(kPNGImageMime) ||
                   flavorStr.EqualsLiteral(kJPEGImageMime) ||
-                  flavorStr.EqualsLiteral(kJPGImageMime) ||
-                  flavorStr.EqualsLiteral(kGIFImageMime))) {
-        // image/[png|jpeg|jpg|gif] or application/x-moz-nativeimage
+                  flavorStr.EqualsLiteral(kJPGImageMime))) {
+        // image/[png|jpeg|jpg] or application/x-moz-nativeimage
 
         // Look through our transfer data for the image.
         static const char* const imageMimeTypes[] = {
-          kNativeImageMime, kPNGImageMime, kJPEGImageMime, kJPGImageMime, kGIFImageMime };
+          kNativeImageMime, kPNGImageMime, kJPEGImageMime, kJPGImageMime };
 
         nsCOMPtr<nsISupportsInterfacePointer> imgPtr;
         for (uint32_t i = 0; !imgPtr && i < ArrayLength(imageMimeTypes); ++i) {
@@ -259,11 +258,10 @@ nsClipboard::GetData(nsITransferable *aTransferable,
         break;
       }
 
-      // image/[png|jpeg|jpg|gif]
+      // image/[png|jpeg|jpg]
       if ((flavorStr.EqualsLiteral(kPNGImageMime) ||
            flavorStr.EqualsLiteral(kJPEGImageMime) ||
-           flavorStr.EqualsLiteral(kJPGImageMime) ||
-           flavorStr.EqualsLiteral(kGIFImageMime)) &&
+           flavorStr.EqualsLiteral(kJPGImageMime)) &&
           mClipboard->HasImage() ) {
         // Get image buffer from clipboard.
         RefPtr<gfx::DataSourceSurface> image = mClipboard->GetImage();
@@ -328,8 +326,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
         *aHasType = true;
       } else if (!strcmp(flavor, kJPEGImageMime) ||
                  !strcmp(flavor, kJPGImageMime) ||
-                 !strcmp(flavor, kPNGImageMime) ||
-                 !strcmp(flavor, kGIFImageMime)) {
+                 !strcmp(flavor, kPNGImageMime)) {
         // We will encode the image into any format you want, so we don't
         // need to check each specific format
         if (mClipboard->HasImage()) {
