@@ -468,6 +468,13 @@ public:
   GetParameters(dom::MediaStreamTrack& aTrack,
                 std::vector<JsepTrack::JsConstraints>* aOutConstraints);
 
+  NS_IMETHODIMP_TO_ERRORRESULT(SelectSsrc, ErrorResult &rv,
+                               dom::MediaStreamTrack& aRecvTrack,
+                               unsigned short aSsrcIndex)
+  {
+    rv = SelectSsrc(aRecvTrack, aSsrcIndex);
+  }
+
   nsresult GetPeerIdentity(nsAString& peerIdentity)
   {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)

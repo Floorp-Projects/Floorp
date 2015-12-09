@@ -57,6 +57,8 @@ interface PeerConnectionImpl  {
   sequence<MediaStream> getLocalStreams();
   sequence<MediaStream> getRemoteStreams();
 
+  void selectSsrc(MediaStreamTrack recvTrack, unsigned short ssrcIndex);
+
   /* As the ICE candidates roll in this one should be called each time
    * in order to keep the candidate list up-to-date for the next SDP-related
    * call PeerConnectionImpl does not parse ICE candidates, just sticks them
