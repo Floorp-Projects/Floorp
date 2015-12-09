@@ -173,6 +173,7 @@ BindVar(JSContext* cx, HandleObject scopeChain)
     JSObject* obj = scopeChain;
     while (!obj->isQualifiedVarObj())
         obj = obj->enclosingScope();
+    MOZ_ASSERT(obj);
     return obj;
 }
 

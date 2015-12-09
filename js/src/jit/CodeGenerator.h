@@ -329,6 +329,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitSetDOMProperty(LSetDOMProperty* lir);
     void visitCallDOMNative(LCallDOMNative* lir);
     void visitCallGetIntrinsicValue(LCallGetIntrinsicValue* lir);
+    void visitCallBindVar(LCallBindVar* lir);
     void visitIsCallable(LIsCallable* lir);
     void visitOutOfLineIsCallable(OutOfLineIsCallable* ool);
     void visitIsObject(LIsObject* lir);
