@@ -13,7 +13,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIDOMFileReader.h"
 #include "nsIStreamListener.h"
 #include "nsISupportsUtils.h"
 #include "nsIInterfaceRequestor.h"
@@ -34,29 +33,22 @@ class Blob;
 extern const uint64_t kUnknownSize;
 
 class FileReader final : public DOMEventTargetHelper,
-                         public nsIDOMFileReader,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
                          public nsIInputStreamCallback,
                          public nsITimerCallback
 {
 public:
-  FileReader();
+  explicit FileReader(nsPIDOMWindow* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_NSIDOMFILEREADER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader, DOMEventTargetHelper)
 
-  nsPIDOMWindow* GetParentObject() const
-  {
-    return GetOwner();
-  }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
@@ -81,7 +73,7 @@ public:
 
   uint16_t ReadyState() const
   {
-    return mReadyState;
+    return static_cast<uint16_t>(mReadyState);
   }
 
   DOMError* GetError() const
@@ -104,10 +96,15 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
-  nsresult Init();
-
 private:
   virtual ~FileReader();
+
+  // This must be in sync with dom/webidl/FileReader.webidl
+  enum eReadyState {
+    EMPTY = 0,
+    LOADING = 1,
+    DONE = 2
+  };
 
   enum eDataFormat {
     FILE_AS_ARRAYBUFFER,
@@ -128,7 +125,6 @@ private:
                         uint32_t aDataLen, nsAString &aResult);
 
   nsresult OnLoadEnd(nsresult aStatus);
-  nsresult DoAsyncWait(nsIAsyncInputStream* aStream);
 
   void StartProgressEventTimer();
   void ClearProgressEventTimer();
@@ -166,7 +162,7 @@ private:
 
   RefPtr<DOMError> mError;
 
-  uint16_t mReadyState;
+  eReadyState mReadyState;
 
   uint64_t mTotal;
   uint64_t mTransferred;

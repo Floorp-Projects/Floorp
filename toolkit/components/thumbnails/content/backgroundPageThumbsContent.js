@@ -141,8 +141,7 @@ const backgroundPageThumbsContent = {
 
   _finishCurrentCapture: function () {
     let capture = this._currentCapture;
-    let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                     createInstance(Ci.nsIDOMFileReader);
+    let fileReader = new FileReader();
     fileReader.onloadend = () => {
       sendAsyncMessage("BackgroundPageThumbs:didCapture", {
         id: capture.id,

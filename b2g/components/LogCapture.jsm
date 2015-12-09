@@ -198,9 +198,7 @@ var LogCapture = {
     try {
       this.ensureLoaded();
 
-      let fr = Cc["@mozilla.org/files/filereader;1"]
-                  .createInstance(Ci.nsIDOMFileReader);
-
+      let fr = new FileReader();
       fr.onload = function(evt) {
         deferred.resolve(new Uint8Array(evt.target.result));
       };

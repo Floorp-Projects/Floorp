@@ -851,8 +851,7 @@ WebappsActor.prototype = {
       }
 
       // Convert the blog to a base64 encoded data URI
-      let reader = Cc["@mozilla.org/files/filereader;1"]
-                     .createInstance(Ci.nsIDOMFileReader);
+      let reader = new FileReader();
       reader.onload = function () {
         deferred.resolve({
           url: reader.result

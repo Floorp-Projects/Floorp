@@ -44,11 +44,6 @@ function childFrameScript() {
     sendAsyncMessage(messageName, { op: "done", result: result });
   }
 
-  function createFileReader() {
-    return Cc["@mozilla.org/files/filereader;1"]
-             .createInstance(Ci.nsIDOMFileReader);
-  }
-
   function grabAndContinue(arg) {
     testGenerator.send(arg);
   }
@@ -65,7 +60,7 @@ function childFrameScript() {
 
     info("Reading blob");
 
-    let reader = createFileReader();
+    let reader = new FileReader();
     reader.addEventListener("load", grabAndContinue);
     reader.readAsText(blob);
 
@@ -84,7 +79,7 @@ function childFrameScript() {
 
     info("Reading slice");
 
-    reader = createFileReader();
+    reader = new FileReader();
     reader.addEventListener("load", grabAndContinue);
     reader.readAsText(slice);
 

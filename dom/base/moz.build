@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIDOMDOMCursor.idl',
     'nsIDOMDOMRequest.idl',
     'nsIDOMFileList.idl',
-    'nsIDOMFileReader.idl',
     'nsIDOMFormData.idl',
     'nsIDOMParser.idl',
     'nsIDOMSerializer.idl',
