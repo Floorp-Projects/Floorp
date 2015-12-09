@@ -797,6 +797,12 @@ public:
 
     return true;
   }
+
+  void SetDestination(const nsPoint& aNewDestination) {
+    mXAxisModel.SetDestination(static_cast<int32_t>(aNewDestination.x));
+    mYAxisModel.SetDestination(static_cast<int32_t>(aNewDestination.y));
+  }
+
 private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
@@ -3258,9 +3264,10 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // thread.  This flag will be reset by the main thread when it receives
     // the scroll update acknowledgement.
 
-    APZC_LOG("%p smooth scrolling from %s to %s\n", this,
+    APZC_LOG("%p smooth scrolling from %s to %s in state %d\n", this,
       Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
-      Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
+      Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str(),
+      mState);
 
     // See comment on the similar code in the |if (scrollOffsetUpdated)| block
     // above.
@@ -3268,8 +3275,16 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     AcknowledgeScrollUpdate();
     mLastDispatchedPaintMetrics = aLayerMetrics;
 
-    CancelAnimation();
-    StartSmoothScroll(ScrollSource::DOM);
+    if (mState == SMOOTH_SCROLL && mAnimation) {
+      APZC_LOG("%p updating destination on existing animation\n", this);
+      RefPtr<SmoothScrollAnimation> animation(
+        static_cast<SmoothScrollAnimation*>(mAnimation.get()));
+      animation->SetDestination(
+        CSSPoint::ToAppUnits(aLayerMetrics.GetSmoothScrollOffset()));
+    } else {
+      CancelAnimation();
+      StartSmoothScroll(ScrollSource::DOM);
+    }
   }
 
   if (needContentRepaint) {
