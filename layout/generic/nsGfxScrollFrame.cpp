@@ -2121,10 +2121,30 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
         }
 
         if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter)) {
+          if (mApzSmoothScrollDestination == mDestination &&
+              mScrollGeneration == sScrollGenerationCounter) {
+            // If we already sent APZ a smooth-scroll request to this
+            // destination with this generation (i.e. it was the last request
+            // we sent), then don't send another one because it is redundant.
+            // This is to avoid a scenario where pages do repeated scrollBy
+            // calls, incrementing the generation counter, and blocking APZ from
+            // syncing the scroll offset back to the main thread.
+            // Note that if we get two smooth-scroll requests to the same
+            // destination with some other scroll in between, mDestination will
+            // get reset and so we shouldn't have the problem where this check
+            // discards a legitimate smooth-scroll.
+            // Note: if there are two separate scrollframes both getting smooth
+            // scrolled at the same time, sScrollGenerationCounter can get
+            // incremented and this early-exit won't get taken. Bug 1231177 is
+            // on file for this.
+            return;
+          }
+
           // The animation will be handled in the compositor, pass the
           // information needed to start the animation and skip the main-thread
           // animation for this scroll.
           mLastSmoothScrollOrigin = aOrigin;
+          mApzSmoothScrollDestination = mDestination;
           mScrollGeneration = ++sScrollGenerationCounter;
 
           if (!nsLayoutUtils::GetDisplayPort(mOuter->GetContent())) {
