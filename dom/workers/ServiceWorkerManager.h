@@ -64,6 +64,9 @@ public:
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
   nsCString mScope;
+  // The scriptURL for the registration. This may be completely different from
+  // the URLs of the following three workers.
+  nsCString mScriptSpec;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
@@ -90,7 +93,7 @@ public:
                                 nsIPrincipal* aPrincipal);
 
   already_AddRefed<ServiceWorkerInfo>
-  Newest() const
+  Newest()
   {
     RefPtr<ServiceWorkerInfo> newest;
     if (mInstallingWorker) {
@@ -313,7 +316,6 @@ class ServiceWorkerManager final
   friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
   friend class ServiceWorkerJobBase;
-  friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
 
