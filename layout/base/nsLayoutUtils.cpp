@@ -374,10 +374,7 @@ bool
 nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
                                           nsCSSProperty aProperty)
 {
-  // XXX Bug 1230056 - Add EffectCompositor::HasAnimationsForCompositor to
-  // avoid allocating an array here only to throw it away.
-  return !EffectCompositor::GetAnimationsForCompositor(aFrame,
-                                                       aProperty).IsEmpty();
+  return !EffectCompositor::HasAnimationsForCompositor(aFrame, aProperty);
 }
 
 template<typename TestType>
