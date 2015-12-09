@@ -52,7 +52,7 @@ if (!this.runTest) {
       enableExperimental();
     }
 
-    Cu.importGlobalProperties(["indexedDB", "Blob", "File"]);
+    Cu.importGlobalProperties(["indexedDB", "Blob", "File", "FileReader"]);
 
     do_test_pending();
     testGenerator.next();
