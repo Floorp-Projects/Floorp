@@ -212,7 +212,7 @@
   <string name="pref_tap_to_load_images_title2">&pref_tap_to_load_images_title2;</string>
   <string name="pref_tap_to_load_images_enabled">&pref_tap_to_load_images_enabled;</string>
   <string name="pref_tap_to_load_images_data">&pref_tap_to_load_images_data;</string>
-  <string name="pref_tap_to_load_images_disabled">&pref_tap_to_load_images_disabled;</string>
+  <string name="pref_tap_to_load_images_disabled2">&pref_tap_to_load_images_disabled2;</string>
 
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>

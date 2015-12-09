@@ -170,11 +170,11 @@
     <string-array name="pref_browser_image_blocking_entries">
         <item>@string/pref_tap_to_load_images_enabled</item>
         <item>@string/pref_tap_to_load_images_data</item>
-        <item>@string/pref_tap_to_load_images_disabled</item>
+        <item>@string/pref_tap_to_load_images_disabled2</item>
     </string-array>
     <string-array name="pref_browser_image_blocking_values">
         <item>1</item> <!-- Always -->
         <item>2</item> <!-- Wifi-only -->
-        <item>0</item> <!-- Never -->
+        <item>0</item> <!-- Blocked -->
     </string-array>
 </resources>

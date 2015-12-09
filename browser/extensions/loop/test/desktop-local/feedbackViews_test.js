@@ -23,7 +23,7 @@ describe("loop.feedbackViews", function() {
 
   describe("FeedbackView", function() {
     var openURLStub, getLoopPrefStub, feedbackReceivedStub;
-    var fakeURL = "fake.form", mozLoop, view;
+    var fakeURL = "fake.form", view;
 
     function mountTestComponent(props) {
       props = _.extend({
