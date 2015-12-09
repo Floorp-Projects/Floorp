@@ -61,7 +61,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.importGlobalProperties(['File']);
+Cu.importGlobalProperties(['File', 'FileReader']);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",

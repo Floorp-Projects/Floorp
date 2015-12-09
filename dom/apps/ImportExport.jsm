@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/MessageBroadcaster.jsm");
 
-Cu.importGlobalProperties(['File']);
+Cu.importGlobalProperties(['File', 'FileReader']);
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
