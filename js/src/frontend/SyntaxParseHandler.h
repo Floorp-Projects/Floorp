@@ -333,6 +333,7 @@ class SyntaxParseHandler
     Node newFunctionDefinition() { return NodeHoistableDeclaration; }
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox* funbox) {}
+    Node newFunctionDefinitionForAnnexB(Node pn, Node assignment) { return NodeHoistableDeclaration; }
     void addFunctionArgument(Node pn, Node argpn) {}
 
     Node newForStatement(uint32_t begin, Node forHead, Node body, unsigned iflags) {
@@ -354,7 +355,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
+    bool finishInitializerAssignment(Node pn, Node init) { return true; }
     void setLexicalDeclarationOp(Node pn, JSOp op) {}
 
     void setBeginPosition(Node pn, Node oth) {}
