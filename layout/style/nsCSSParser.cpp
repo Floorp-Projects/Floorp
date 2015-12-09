@@ -10316,7 +10316,7 @@ IsWebkitGradientCoordLarger(const nsCSSValue& aStartCoord,
 //
 // Note: linear gradients progress along a line between two points.  The
 // -webkit-gradient(linear, ...) syntax lets the author precisely specify the
-// starting and ending point point. However, our internal gradient structures
+// starting and ending point. However, our internal gradient structures
 // only store one point, and the other point is implicitly its reflection
 // across the painted area's center. (The legacy -moz-linear-gradient syntax
 // also lets us store an angle.)
