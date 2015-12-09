@@ -4379,7 +4379,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
              * i' to be hoisted out of the loop.
              */
             MOZ_ASSERT(binding->isOp(JSOP_NOP));
-            MOZ_ASSERT(emitOption != DefineVars);
+            MOZ_ASSERT(emitOption != DefineVars && emitOption != AnnexB);
 
             /*
              * To allow the front end to rewrite var f = x; as f = x; when a
@@ -4440,13 +4440,18 @@ BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode
             op == JSOP_STRICTSETGNAME)
         {
             MOZ_ASSERT(emitOption != PushInitialValues);
-            JSOp bindOp;
-            if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
-                bindOp = JSOP_BINDNAME;
-            else
-                bindOp = JSOP_BINDGNAME;
-            if (!emitIndex32(bindOp, atomIndex))
-                return false;
+            if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME) {
+                if (!emitIndex32(JSOP_BINDGNAME, atomIndex))
+                    return false;
+            } else if (emitOption == AnnexB) {
+                // Annex B vars always go on the nearest variable environment,
+                // even if scopes on the chain contain same-named bindings.
+                if (!emit1(JSOP_BINDVAR))
+                    return false;
+            } else {
+                if (!emitIndex32(JSOP_BINDNAME, atomIndex))
+                    return false;
+            }
         }
 
         bool oldEmittingForInit = emittingForInit;
@@ -4470,7 +4475,7 @@ BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode
 
     // If we are not initializing, nothing to pop. If we are initializing
     // lets, we must emit the pops.
-    if (emitOption == InitializeVars) {
+    if (emitOption == InitializeVars || emitOption == AnnexB) {
         MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
         if (!binding->pn_scopecoord.isFree()) {
             if (!emitVarOp(binding, op))
@@ -6233,12 +6238,13 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         // definitions are seen for the second time, we need to emit the
         // assignment that assigns the function to the outer 'var' binding.
         if (assignmentForAnnexB) {
-            if (!emitTree(assignmentForAnnexB))
-                return false;
-
-            // If we did not synthesize a new binding and only a simple
-            // assignment, manually pop the result.
-            if (assignmentForAnnexB->isKind(PNK_ASSIGN)) {
+            if (assignmentForAnnexB->isKind(PNK_VAR)) {
+                if (!emitVariables(assignmentForAnnexB, AnnexB))
+                    return false;
+            } else {
+                MOZ_ASSERT(assignmentForAnnexB->isKind(PNK_ASSIGN));
+                if (!emitTree(assignmentForAnnexB))
+                    return false;
                 if (!emit1(JSOP_POP))
                     return false;
             }
