@@ -140,7 +140,6 @@ class TraceableVectorOperations
     const T* begin() const { return vec().begin(); }
     const T* end() const { return vec().end(); }
     const T& back() const { return vec().back(); }
-    bool canAppendWithoutRealloc(size_t aNeeded) const { return vec().canAppendWithoutRealloc(); }
 
     JS::Handle<T> operator[](size_t aIndex) const {
         return JS::Handle<T>::fromMarkedLocation(&vec().operator[](aIndex));
