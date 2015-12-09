@@ -114,6 +114,8 @@ class JsepCodecDescription {
   bool mEnabled;
   bool mStronglyPreferred;
   sdp::Direction mDirection;
+  // Will hold constraints from both fmtp and rid
+  EncodingConstraints mConstraints;
 };
 
 class JsepAudioCodecDescription : public JsepCodecDescription {
@@ -146,13 +148,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
                             bool enabled = true)
       : JsepCodecDescription(mozilla::SdpMediaSection::kVideo, defaultPt, name,
                              clock, 0, enabled),
-        mMaxFs(0),
-        mMaxFr(0),
-        mPacketizationMode(0),
-        mMaxMbps(0),
-        mMaxCpb(0),
-        mMaxDpb(0),
-        mMaxBr(0)
+        mPacketizationMode(0)
   {
     // Add supported rtcp-fb types
     mNackFbTypes.push_back("");
@@ -188,11 +184,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         }
       } else {
         // Parameters that only apply to what we receive
-        h264Params.max_mbps = mMaxMbps;
-        h264Params.max_fs = mMaxFs;
-        h264Params.max_cpb = mMaxCpb;
-        h264Params.max_dpb = mMaxDpb;
-        h264Params.max_br = mMaxBr;
+        h264Params.max_mbps = mConstraints.maxMbps;
+        h264Params.max_fs = mConstraints.maxFs;
+        h264Params.max_cpb = mConstraints.maxCpb;
+        h264Params.max_dpb = mConstraints.maxDpb;
+        h264Params.max_br = mConstraints.maxBr;
         strncpy(h264Params.sprop_parameter_sets,
                 mSpropParameterSets.c_str(),
                 sizeof(h264Params.sprop_parameter_sets) - 1);
@@ -212,8 +208,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         SdpFmtpAttributeList::VP8Parameters vp8Params(
             GetVP8Parameters(mDefaultPt, msection));
 
-        vp8Params.max_fs = mMaxFs;
-        vp8Params.max_fr = mMaxFr;
+        vp8Params.max_fs = mConstraints.maxFs;
+        vp8Params.max_fr = mConstraints.maxFps;
         msection.SetFmtp(
             SdpFmtpAttributeList::Fmtp(mDefaultPt, "", vp8Params));
       }
@@ -322,11 +318,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
       if (mDirection == sdp::kSend) {
         // Remote values of these apply only to the send codec.
-        mMaxFs = h264Params.max_fs;
-        mMaxMbps = h264Params.max_mbps;
-        mMaxCpb = h264Params.max_cpb;
-        mMaxDpb = h264Params.max_dpb;
-        mMaxBr = h264Params.max_br;
+        mConstraints.maxFs = h264Params.max_fs;
+        mConstraints.maxMbps = h264Params.max_mbps;
+        mConstraints.maxCpb = h264Params.max_cpb;
+        mConstraints.maxDpb = h264Params.max_dpb;
+        mConstraints.maxBr = h264Params.max_br;
         mSpropParameterSets = h264Params.sprop_parameter_sets;
         // Only do this if we didn't symmetrically negotiate above
         if (h264Params.level_asymmetry_allowed) {
@@ -342,8 +338,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         SdpFmtpAttributeList::VP8Parameters vp8Params(
             GetVP8Parameters(mDefaultPt, remoteMsection));
 
-        mMaxFs = vp8Params.max_fs;
-        mMaxFr = vp8Params.max_fr;
+        mConstraints.maxFs = vp8Params.max_fs;
+        mConstraints.maxFps = vp8Params.max_fr;
       }
     }
 
@@ -553,16 +549,9 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   std::vector<std::string> mNackFbTypes;
   std::vector<std::string> mCcmFbTypes;
 
-  uint32_t mMaxFs;
-
   // H264-specific stuff
   uint32_t mProfileLevelId;
-  uint32_t mMaxFr;
   uint32_t mPacketizationMode;
-  uint32_t mMaxMbps;
-  uint32_t mMaxCpb;
-  uint32_t mMaxDpb;
-  uint32_t mMaxBr;
   std::string mSpropParameterSets;
 };
 

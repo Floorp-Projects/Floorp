@@ -663,8 +663,7 @@ protected:
                   nsHTMLReflowMetrics& aMetrics);
 
   void AdjustLeadings(nsIFrame* spanFrame, PerSpanData* psd,
-                      const nsStyleText* aStyleText,
-                      nsFontMetrics* aFontMetrics,
+                      const nsStyleText* aStyleText, float aInflation,
                       bool* aZeroEffectiveSpanBox);
 
   void VerticalAlignFrames(PerSpanData* psd);

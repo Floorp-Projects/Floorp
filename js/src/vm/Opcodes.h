@@ -1474,7 +1474,16 @@
      *   Stack: val => val
      */ \
     macro(JSOP_SETINTRINSIC,  144, "setintrinsic",  NULL, 5,  1,  1, JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
-    macro(JSOP_UNUSED145,     145, "unused145",     NULL, 1,  0,  0, JOF_BYTE) \
+    /*
+     * Like JSOP_CALL, but used as part of for-of and destructuring bytecode
+     * to provide better error messages.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc (must be 0)
+     *   Stack: callee, this => rval
+     *   nuses: 2
+     */ \
+    macro(JSOP_CALLITER,      145, "calliter",      NULL, 3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     /*
      * Initialize a non-configurable, non-writable, non-enumerable data-property on an object.
      *

@@ -1029,15 +1029,15 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
             int32_t maxBr = 0; // Unlimited
             branch->GetIntPref("media.navigator.video.h264.max_br", &maxBr);
-            videoCodec.mMaxBr = maxBr;
+            videoCodec.mConstraints.maxBr = maxBr;
 
             int32_t maxMbps = 0; // Unlimited
 #ifdef MOZ_WEBRTC_OMX
+            // Level 1.2; but let's allow CIF@30 or QVGA@30+ by default
             maxMbps = 11880;
 #endif
-            branch->GetIntPref("media.navigator.video.h264.max_mbps",
-                               &maxMbps);
-            videoCodec.mMaxBr = maxMbps;
+            branch->GetIntPref("media.navigator.video.h264.max_mbps", &maxMbps);
+            videoCodec.mConstraints.maxMbps = maxMbps;
 
             // Might disable it, but we set up other params anyway
             videoCodec.mEnabled = h264Enabled;
@@ -1061,14 +1061,14 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
             if (maxFs <= 0) {
               maxFs = 12288; // We must specify something other than 0
             }
-            videoCodec.mMaxFs = maxFs;
+            videoCodec.mConstraints.maxFs = maxFs;
 
             int32_t maxFr = 0;
             branch->GetIntPref("media.navigator.video.max_fr", &maxFr);
             if (maxFr <= 0) {
               maxFr = 60; // We must specify something other than 0
             }
-            videoCodec.mMaxFr = maxFr;
+            videoCodec.mConstraints.maxFps = maxFr;
 
           }
 
@@ -1148,20 +1148,18 @@ PeerConnectionImpl::GetDatachannelParameters(
     MOZ_ASSERT(sendDataChannel == recvDataChannel);
 
     if (sendDataChannel) {
+      // This will release assert if there is no such index, and that's ok
+      const JsepTrackEncoding& encoding =
+        trackPair.mSending->GetNegotiatedDetails()->GetEncoding(0);
 
-      if (!trackPair.mSending->GetNegotiatedDetails()->GetCodecCount()) {
+      if (encoding.GetCodecs().empty()) {
         CSFLogError(logTag, "%s: Negotiated m=application with no codec. "
                             "This is likely to be broken.",
                             __FUNCTION__);
         return NS_ERROR_FAILURE;
       }
 
-      for (size_t i = 0;
-           i < trackPair.mSending->GetNegotiatedDetails()->GetCodecCount();
-           ++i) {
-        const JsepCodecDescription* codec =
-          trackPair.mSending->GetNegotiatedDetails()->GetCodec(i);
-
+      for (const JsepCodecDescription* codec : encoding.GetCodecs()) {
         if (codec->mType != SdpMediaSection::kApplication) {
           CSFLogError(logTag, "%s: Codec type for m=application was %u, this "
                               "is a bug.",

@@ -175,6 +175,7 @@
          './src/jsep/JsepSessionImpl.h',
          './src/jsep/JsepTrack.cpp',
          './src/jsep/JsepTrack.h',
+         './src/jsep/JsepTrackEncoding.h',
          './src/jsep/JsepTransport.h'
       ],
 

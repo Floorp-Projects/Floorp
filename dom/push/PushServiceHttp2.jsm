@@ -22,8 +22,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 const {
   PushCrypto,
   concatArray,
-  getEncryptionKeyParams,
-  getEncryptionParams,
+  getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
@@ -151,48 +150,25 @@ PushChannelListener.prototype = {
     if (Components.isSuccessCode(aStatusCode) &&
         this._mainListener &&
         this._mainListener._pushService) {
-
-      var keymap = encryptKeyFieldParser(aRequest);
-      if (!keymap) {
-        return;
-      }
-      var enc = encryptFieldParser(aRequest);
-      if (!enc || !enc.keyid) {
-        return;
-      }
-      var dh = keymap[enc.keyid];
-      var salt = enc.salt;
-      var rs = (enc.rs)? parseInt(enc.rs, 10) : 4096;
-      if (!dh || !salt || isNaN(rs) || (rs <= 1)) {
-        return;
-      }
-
-      var msg = concatArray(this._message);
+      let headers = {
+        encryption_key: getHeaderField(aRequest, "Encryption-Key"),
+        crypto_key: getHeaderField(aRequest, "Crypto-Key"),
+        encryption: getHeaderField(aRequest, "Encryption"),
+      };
+      let cryptoParams = getCryptoParams(headers);
+      let msg = concatArray(this._message);
 
       this._mainListener._pushService._pushChannelOnStop(this._mainListener.uri,
                                                          this._ackUri,
                                                          msg,
-                                                         dh,
-                                                         salt,
-                                                         rs);
+                                                         cryptoParams);
     }
   }
 };
 
-function encryptKeyFieldParser(aRequest) {
+function getHeaderField(aRequest, name) {
   try {
-    var encryptKeyField = aRequest.getRequestHeader("Encryption-Key");
-    return getEncryptionKeyParams(encryptKeyField);
-  } catch(e) {
-    // getRequestHeader can throw.
-    return null;
-  }
-}
-
-function encryptFieldParser(aRequest) {
-  try {
-    var encryptField = aRequest.getRequestHeader("Encryption");
-    return getEncryptionParams(encryptField);
+    return aRequest.getRequestHeader(name);
   } catch(e) {
     // getRequestHeader can throw.
     return null;
@@ -490,9 +466,10 @@ this.PushServiceHttp2 = {
     })
     .then(result =>
       PushCrypto.generateKeys()
-      .then(exportedKeys => {
-        result.p256dhPublicKey = exportedKeys[0];
-        result.p256dhPrivateKey = exportedKeys[1];
+        .then(([publicKey, privateKey]) => {
+        result.p256dhPublicKey = publicKey;
+        result.p256dhPrivateKey = privateKey;
+        result.authenticationSecret = PushCrypto.generateAuthenticationSecret();
         this._conns[result.subscriptionUri] = {
           channel: null,
           listener: null,
@@ -673,7 +650,7 @@ this.PushServiceHttp2 = {
 
     for (let i = 0; i < aSubscriptions.length; i++) {
       let record = aSubscriptions[i];
-      this._mainPushService.ensureP256dhKey(record).then(record => {
+      this._mainPushService.ensureCrypto(record).then(record => {
         this._startSingleConnection(record);
       }, error => {
         console.error("startConnections: Error updating record",
@@ -800,14 +777,9 @@ this.PushServiceHttp2 = {
     }
   },
 
-  _pushChannelOnStop: function(aUri, aAckUri, aMessage, dh, salt, rs) {
+  _pushChannelOnStop: function(aUri, aAckUri, aMessage, cryptoParams) {
     console.debug("pushChannelOnStop()");
 
-    let cryptoParams = {
-      dh: dh,
-      salt: salt,
-      rs: rs,
-    };
     this._mainPushService.receivedPushMessage(
       aUri, aMessage, cryptoParams, record => {
         // Always update the stored record.

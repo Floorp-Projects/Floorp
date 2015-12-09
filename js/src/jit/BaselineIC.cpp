@@ -6142,10 +6142,16 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
         res.set(vp[0]);
     } else {
         MOZ_ASSERT(op == JSOP_CALL ||
+                   op == JSOP_CALLITER ||
                    op == JSOP_FUNCALL ||
                    op == JSOP_FUNAPPLY ||
                    op == JSOP_EVAL ||
                    op == JSOP_STRICTEVAL);
+        if (op == JSOP_CALLITER && callee.isPrimitive()) {
+            MOZ_ASSERT(argc == 0, "thisv must be on top of the stack");
+            ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, thisv, nullptr);
+            return false;
+        }
         if (!Invoke(cx, thisv, callee, argc, args, res))
             return false;
     }

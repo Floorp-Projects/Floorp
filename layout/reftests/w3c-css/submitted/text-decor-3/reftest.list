@@ -115,3 +115,20 @@ skip-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == text-emphasis-style-proper
 == text-emphasis-ruby-004.html text-emphasis-ruby-004-ref.html
 == text-emphasis-ruby-004a.html text-emphasis-ruby-004-ref.html
 # END tests from support/generate-text-emphasis-ruby-tests.py
+
+# text-emphasis line height
+# START tests from support/generate-text-emphasis-line-height-tests.py
+== text-emphasis-line-height-001a.html text-emphasis-line-height-001-ref.html
+== text-emphasis-line-height-001b.html text-emphasis-line-height-001-ref.html
+== text-emphasis-line-height-002a.html text-emphasis-line-height-002-ref.html
+== text-emphasis-line-height-002b.html text-emphasis-line-height-002-ref.html
+== text-emphasis-line-height-003a.html text-emphasis-line-height-003-ref.html
+== text-emphasis-line-height-003b.html text-emphasis-line-height-003-ref.html
+== text-emphasis-line-height-003c.html text-emphasis-line-height-003-ref.html
+== text-emphasis-line-height-003d.html text-emphasis-line-height-003-ref.html
+== text-emphasis-line-height-004a.html text-emphasis-line-height-004-ref.html
+== text-emphasis-line-height-004b.html text-emphasis-line-height-004-ref.html
+== text-emphasis-line-height-004c.html text-emphasis-line-height-004-ref.html
+== text-emphasis-line-height-004d.html text-emphasis-line-height-004-ref.html
+# END tests from support/generate-text-emphasis-line-height-tests.py
+== text-emphasis-line-height-001z.html text-emphasis-line-height-001-ref.html

@@ -314,14 +314,43 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
     return NS_ERROR_FAILURE;
   }
 
-  nr_ice_cand_pair *p1;
+  nr_ice_cand_pair *p1, *p2;
   out_pairs->clear();
 
-  TAILQ_FOREACH(p1, &peer_stream->check_list, entry) {
+  TAILQ_FOREACH(p1, &peer_stream->check_list, check_queue_entry) {
     MOZ_ASSERT(p1);
     MOZ_ASSERT(p1->local);
     MOZ_ASSERT(p1->remote);
     NrIceCandidatePair pair;
+
+    p2 = TAILQ_FIRST(&peer_stream->check_list);
+    while (p2) {
+      if (p1 == p2) {
+        /* Don't compare with our self. */
+        p2=TAILQ_NEXT(p2, check_queue_entry);
+        continue;
+      }
+      if (strncmp(p1->codeword,p2->codeword,sizeof(p1->codeword))==0) {
+        /* In case of duplicate pairs we only report the one winning pair */
+        if (
+            ((p2->remote->component && (p2->remote->component->active == p2)) &&
+             !(p1->remote->component && (p1->remote->component->active == p1))) ||
+            ((p2->peer_nominated || p2->nominated) &&
+             !(p1->peer_nominated || p1->nominated)) ||
+            (p2->priority > p1->priority) ||
+            ((p2->state == NR_ICE_PAIR_STATE_SUCCEEDED) &&
+             (p1->state != NR_ICE_PAIR_STATE_SUCCEEDED))
+            ) {
+          /* p2 is a better pair. */
+          break;
+        }
+      }
+      p2=TAILQ_NEXT(p2, check_queue_entry);
+    }
+    if (p2) {
+      /* p2 points to a duplicate but better pair so skip this one */
+      continue;
+    }
 
     switch (p1->state) {
       case NR_ICE_PAIR_STATE_FROZEN:

@@ -787,17 +787,29 @@ this.PushService = {
     });
   },
 
-  ensureP256dhKey: function(record) {
-    if (record.p256dhPublicKey && record.p256dhPrivateKey) {
+  ensureCrypto: function(record) {
+    if (record.authenticationSecret &&
+        record.p256dhPublicKey &&
+        record.p256dhPrivateKey) {
       return Promise.resolve(record);
+    }
+
+    let keygen = Promise.resolve([]);
+    if (!record.p256dhPublicKey || !record.p256dhPrivateKey) {
+      keygen = PushCrypto.generateKeys();
     }
     // We do not have a encryption key. so we need to generate it. This
     // is only going to happen on db upgrade from version 4 to higher.
-    return PushCrypto.generateKeys()
-      .then(exportedKeys => {
+    return keygen
+      .then(([pubKey, privKey]) => {
         return this.updateRecordAndNotifyApp(record.keyID, record => {
-          record.p256dhPublicKey = exportedKeys[0];
-          record.p256dhPrivateKey = exportedKeys[1];
+          if (!record.p256dhPublicKey || !record.p256dhPrivateKey) {
+            record.p256dhPublicKey = pubKey;
+            record.p256dhPrivateKey = privKey;
+          }
+          if (!record.authenticationSecret) {
+            record.authenticationSecret = PushCrypto.generateAuthenticationSecret();
+          }
           return record;
         });
       }, error => {
@@ -873,9 +885,11 @@ this.PushService = {
         decodedPromise = PushCrypto.decodeMsg(
           message,
           record.p256dhPrivateKey,
+          record.p256dhPublicKey,
           cryptoParams.dh,
           cryptoParams.salt,
-          cryptoParams.rs
+          cryptoParams.rs,
+          cryptoParams.auth ? record.authenticationSecret : null
         );
       } else {
         decodedPromise = Promise.resolve(null);
@@ -889,6 +903,8 @@ this.PushService = {
         setTimeout(() => this._updateQuota(keyID),
           prefs.get("quotaUpdateDelay"));
         return notified;
+      }, error => {
+        console.error("receivedPushMessage: Error decrypting message", error);
       });
     }).catch(error => {
       console.error("receivedPushMessage: Error notifying app", error);

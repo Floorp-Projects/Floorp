@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    var b = document.createElement("body");
+    b.style.overflow = "scroll";
+    var h = document.documentElement;
+    h.insertBefore(b, h.firstChild);
+    b.offsetWidth;
+    b.remove();
+  </script>
+</html>
