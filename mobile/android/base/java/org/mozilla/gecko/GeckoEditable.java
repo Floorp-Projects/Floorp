@@ -1005,7 +1005,8 @@ final class GeckoEditable extends JNIObject
            number to denote "end of the text". Fix that here */
         final int oldEnd = unboundedOldEnd > mText.length() ? mText.length() : unboundedOldEnd;
         // new end should always match text
-        if (start != 0 && unboundedNewEnd != (start + text.length())) {
+        if (unboundedOldEnd < Integer.MAX_VALUE / 2 &&
+                unboundedNewEnd != (start + text.length())) {
             Log.e(LOGTAG, "newEnd does not match text: " + unboundedNewEnd + " vs " +
                   (start + text.length()));
             throw new IllegalArgumentException("newEnd does not match text");
