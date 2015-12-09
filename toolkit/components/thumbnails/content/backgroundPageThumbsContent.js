@@ -4,7 +4,7 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.importGlobalProperties(['Blob']);
+Cu.importGlobalProperties(['Blob', 'FileReader']);
 
 Cu.import("resource://gre/modules/PageThumbUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

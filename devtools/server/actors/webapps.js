@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/UserCustomizations.jsm");
+Cu.importGlobalProperties(["FileReader"]);
 
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
