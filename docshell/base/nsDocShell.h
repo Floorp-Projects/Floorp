@@ -793,7 +793,6 @@ protected:
   nsIntRect mBounds;
   nsString mName;
   nsString mTitle;
-  nsString mCustomUserAgent;
 
   /**
    * Content-Type Hint of the most-recently initiated load. Used for
