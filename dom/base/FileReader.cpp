@@ -22,6 +22,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
+#include "mozilla/dom/ProgressEvent.h"
 #include "xpcpublic.h"
 #include "nsDOMJSUtils.h"
 
@@ -30,28 +31,36 @@
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
+#define ABORT_STR "abort"
 #define LOAD_STR "load"
 #define LOADSTART_STR "loadstart"
 #define LOADEND_STR "loadend"
+#define ERROR_STR "error"
+#define PROGRESS_STR "progress"
+
+const uint64_t kUnknownSize = uint64_t(-1);
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FileReader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileReader,
-                                                  FileIOObject)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlob)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProgressNotifier)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileReader,
-                                                FileIOObject)
+                                                DOMEventTargetHelper)
   tmp->mResultArrayBuffer = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlob)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mProgressNotifier)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(FileReader,
                                                DOMEventTargetHelper)
@@ -59,20 +68,21 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(FileReader,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileReader)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(FileReader, FileIOObject)
-NS_IMPL_RELEASE_INHERITED(FileReader, FileIOObject)
+NS_IMPL_ADDREF_INHERITED(FileReader, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FileReader, DOMEventTargetHelper)
 
+NS_IMPL_EVENT_HANDLER(FileReader, abort)
+NS_IMPL_EVENT_HANDLER(FileReader, error)
+NS_IMPL_EVENT_HANDLER(FileReader, progress)
 NS_IMPL_EVENT_HANDLER(FileReader, load)
 NS_IMPL_EVENT_HANDLER(FileReader, loadend)
 NS_IMPL_EVENT_HANDLER(FileReader, loadstart)
-NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, abort, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, progress, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, error, FileIOObject)
 
 void
 FileReader::RootResultArrayBuffer()
@@ -83,9 +93,15 @@ FileReader::RootResultArrayBuffer()
 //FileReader constructors/initializers
 
 FileReader::FileReader()
-  : mFileData(nullptr),
-    mDataLen(0), mDataFormat(FILE_AS_BINARY),
-    mResultArrayBuffer(nullptr)
+  : mFileData(nullptr)
+  , mDataLen(0)
+  , mDataFormat(FILE_AS_BINARY)
+  , mResultArrayBuffer(nullptr)
+  , mProgressEventWasDelayed(false)
+  , mTimerIsActive(false)
+  , mReadyState(0)
+  , mTotal(0)
+  , mTransferred(0)
 {
   SetDOMStringToNull(mResult);
 }
@@ -94,9 +110,8 @@ FileReader::~FileReader()
 {
   FreeFileData();
   mResultArrayBuffer = nullptr;
-  mozilla::DropJSObjects(this);
+  DropJSObjects(this);
 }
-
 
 /**
  * This Init method is called from the factory constructor.
@@ -227,25 +242,8 @@ NS_IMETHODIMP
 FileReader::Abort()
 {
   ErrorResult rv;
-  FileIOObject::Abort(rv);
+  Abort(rv);
   return rv.StealNSResult();
-}
-
-/* virtual */ void
-FileReader::DoAbort(nsAString& aEvent)
-{
-  // Revert status and result attributes
-  SetDOMStringToNull(mResult);
-  mResultArrayBuffer = nullptr;
-
-  mAsyncStream = nullptr;
-  mBlob = nullptr;
-
-  //Clean up memory buffer
-  FreeFileData();
-
-  // Tell the base class which event to dispatch
-  aEvent = NS_LITERAL_STRING(LOADEND_STR);
 }
 
 static
@@ -303,7 +301,7 @@ FileReader::DoOnLoadEnd(nsresult aStatus,
   switch (mDataFormat) {
     case FILE_AS_ARRAYBUFFER: {
       AutoJSAPI jsapi;
-      if (NS_WARN_IF(!jsapi.Init(mozilla::DOMEventTargetHelper::GetParentObject()))) {
+      if (NS_WARN_IF(!jsapi.Init(DOMEventTargetHelper::GetParentObject()))) {
         FreeFileData();
         return NS_ERROR_FAILURE;
       }
@@ -541,3 +539,199 @@ FileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return FileReaderBinding::Wrap(aCx, this, aGivenProto);
 }
+
+void
+FileReader::StartProgressEventTimer()
+{
+  if (!mProgressNotifier) {
+    mProgressNotifier = do_CreateInstance(NS_TIMER_CONTRACTID);
+  }
+
+  if (mProgressNotifier) {
+    mProgressEventWasDelayed = false;
+    mTimerIsActive = true;
+    mProgressNotifier->Cancel();
+    mProgressNotifier->InitWithCallback(this, NS_PROGRESS_EVENT_INTERVAL,
+                                        nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+void
+FileReader::ClearProgressEventTimer()
+{
+  mProgressEventWasDelayed = false;
+  mTimerIsActive = false;
+  if (mProgressNotifier) {
+    mProgressNotifier->Cancel();
+  }
+}
+
+void
+FileReader::DispatchError(nsresult rv, nsAString& finalEvent)
+{
+  // Set the status attribute, and dispatch the error event
+  switch (rv) {
+  case NS_ERROR_FILE_NOT_FOUND:
+    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("NotFoundError"));
+    break;
+  case NS_ERROR_FILE_ACCESS_DENIED:
+    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("SecurityError"));
+    break;
+  default:
+    mError = new DOMError(GetOwner(), NS_LITERAL_STRING("NotReadableError"));
+    break;
+  }
+
+  // Dispatch error event to signify load failure
+  DispatchProgressEvent(NS_LITERAL_STRING(ERROR_STR));
+  DispatchProgressEvent(finalEvent);
+}
+
+nsresult
+FileReader::DispatchProgressEvent(const nsAString& aType)
+{
+  ProgressEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mLoaded = mTransferred;
+
+  if (mTotal != kUnknownSize) {
+    init.mLengthComputable = true;
+    init.mTotal = mTotal;
+  } else {
+    init.mLengthComputable = false;
+    init.mTotal = 0;
+  }
+  RefPtr<ProgressEvent> event =
+    ProgressEvent::Constructor(this, aType, init);
+  event->SetTrusted(true);
+
+  return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+}
+
+// nsITimerCallback
+NS_IMETHODIMP
+FileReader::Notify(nsITimer* aTimer)
+{
+  nsresult rv;
+  mTimerIsActive = false;
+
+  if (mProgressEventWasDelayed) {
+    rv = DispatchProgressEvent(NS_LITERAL_STRING("progress"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    StartProgressEventTimer();
+  }
+
+  return NS_OK;
+}
+
+// InputStreamCallback
+NS_IMETHODIMP
+FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  if (mReadyState != 1 || aStream != mAsyncStream) {
+    return NS_OK;
+  }
+
+  uint64_t aCount;
+  nsresult rv = aStream->Available(&aCount);
+
+  if (NS_SUCCEEDED(rv) && aCount) {
+    rv = DoReadData(aStream, aCount);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoAsyncWait(aStream);
+  }
+
+  if (NS_FAILED(rv) || !aCount) {
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      rv = NS_OK;
+    }
+    return OnLoadEnd(rv);
+  }
+
+  mTransferred += aCount;
+
+  //Notify the timer is the appropriate timeframe has passed
+  if (mTimerIsActive) {
+    mProgressEventWasDelayed = true;
+  } else {
+    rv = DispatchProgressEvent(NS_LITERAL_STRING(PROGRESS_STR));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    StartProgressEventTimer();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+FileReader::OnLoadEnd(nsresult aStatus)
+{
+  // Cancel the progress event timer
+  ClearProgressEventTimer();
+
+  // FileReader must be in DONE stage after an operation
+  mReadyState = 2;
+
+  nsString successEvent, termEvent;
+  nsresult rv = DoOnLoadEnd(aStatus, successEvent, termEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the status field as appropriate
+  if (NS_FAILED(aStatus)) {
+    DispatchError(aStatus, termEvent);
+    return NS_OK;
+  }
+
+  // Dispatch event to signify end of a successful operation
+  DispatchProgressEvent(successEvent);
+  DispatchProgressEvent(termEvent);
+
+  return NS_OK;
+}
+
+nsresult
+FileReader::DoAsyncWait(nsIAsyncInputStream* aStream)
+{
+  return aStream->AsyncWait(this,
+                            /* aFlags*/ 0,
+                            /* aRequestedCount */ 0,
+                            NS_GetCurrentThread());
+}
+
+void
+FileReader::Abort(ErrorResult& aRv)
+{
+  if (mReadyState != 1) {
+    // XXX The spec doesn't say this
+    aRv.Throw(NS_ERROR_DOM_FILE_ABORT_ERR);
+    return;
+  }
+
+  ClearProgressEventTimer();
+
+  mReadyState = 2; // There are DONE constants on multiple interfaces,
+                   // but they all have value 2.
+  // XXX The spec doesn't say this
+  mError = new DOMError(GetOwner(), NS_LITERAL_STRING("AbortError"));
+
+  // Revert status and result attributes
+  SetDOMStringToNull(mResult);
+  mResultArrayBuffer = nullptr;
+
+  mAsyncStream = nullptr;
+  mBlob = nullptr;
+
+  //Clean up memory buffer
+  FreeFileData();
+
+  // Dispatch the events
+  DispatchProgressEvent(NS_LITERAL_STRING(ABORT_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+}
+
+} // dom namespace
+} // mozilla namespace
