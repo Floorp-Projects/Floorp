@@ -464,6 +464,8 @@ struct BytecodeEmitter
     MOZ_NEVER_INLINE bool emitFunction(ParseNode* pn, bool needsProto = false);
     MOZ_NEVER_INLINE bool emitObject(ParseNode* pn);
 
+    bool emitHoistedFunctionsInList(ParseNode* pn);
+
     bool emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, PropListType type);
 
     // To catch accidental misuse, emitUint16Operand/emit3 assert that they are

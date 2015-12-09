@@ -2344,6 +2344,10 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         MOZ_ASSERT(pn->pn_count == 1);
         return checkSideEffects(pn->pn_head, answer);
 
+      case PNK_ANNEXB_FUNCTION:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        return checkSideEffects(pn->pn_left, answer);
+
       case PNK_ARGSBODY:
         *answer = true;
         return true;
@@ -5292,6 +5296,23 @@ BytecodeEmitter::emitLetBlock(ParseNode* pnLet)
     return true;
 }
 
+bool
+BytecodeEmitter::emitHoistedFunctionsInList(ParseNode* list)
+{
+    MOZ_ASSERT(list->pn_xflags & PNX_FUNCDEFS);
+
+    for (ParseNode* pn = list->pn_head; pn; pn = pn->pn_next) {
+        if (pn->isKind(PNK_ANNEXB_FUNCTION) ||
+            (pn->isKind(PNK_FUNCTION) && pn->functionIsHoisted()))
+        {
+            if (!emitTree(pn))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool
@@ -5303,7 +5324,17 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     if (!enterBlockScope(&stmtInfo, pn->pn_objbox, JSOP_UNINITIALIZED, 0))
         return false;
 
-    if (!emitTree(pn->pn_expr))
+    ParseNode* body = pn->pn_expr;
+
+    if (body->isKind(PNK_STATEMENTLIST) && body->pn_xflags & PNX_FUNCDEFS) {
+        // This block contains function statements whose definitions are
+        // hoisted to the top of the block. Emit these as a separate pass
+        // before the rest of the block.
+        if (!emitHoistedFunctionsInList(body))
+            return false;
+    }
+
+    if (!emitTree(body))
         return false;
 
     if (!leaveNestedScope(&stmtInfo))
@@ -6164,6 +6195,12 @@ BytecodeEmitter::emitComprehensionFor(ParseNode* compFor)
 MOZ_NEVER_INLINE bool
 BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 {
+    ParseNode* assignmentForAnnexB = nullptr;
+    if (pn->isKind(PNK_ANNEXB_FUNCTION)) {
+        assignmentForAnnexB = pn->pn_right;
+        pn = pn->pn_left;
+    }
+
     FunctionBox* funbox = pn->pn_funbox;
     RootedFunction fun(cx, funbox->function());
     MOZ_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
@@ -6174,9 +6211,24 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * function will be seen by emitFunction in two places.
      */
     if (funbox->wasEmitted) {
+        // Annex B block-scoped functions are hoisted like any other
+        // block-scoped function to the top of their scope. When their
+        // definitions are seen for the second time, we need to emit the
+        // assignment that assigns the function to the outer 'var' binding.
+        if (assignmentForAnnexB) {
+            if (!emitTree(assignmentForAnnexB))
+                return false;
+
+            // If we did not synthesize a new binding and only a simple
+            // assignment, manually pop the result.
+            if (assignmentForAnnexB->isKind(PNK_ASSIGN)) {
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
+        }
+
         MOZ_ASSERT_IF(fun->hasScript(), fun->nonLazyScript());
         MOZ_ASSERT(pn->functionIsHoisted());
-        MOZ_ASSERT(sc->isFunctionBox());
         return true;
     }
 
@@ -6284,7 +6336,15 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * For modules, we record the function and instantiate the binding during
      * ModuleDeclarationInstantiation(), before the script is run.
      */
-    if (sc->isGlobalContext()) {
+    if (!atBodyLevel()) {
+        if (!emitIndexOp(JSOP_LAMBDA, index))
+            return false;
+        MOZ_ASSERT(pn->getOp() == JSOP_INITLEXICAL);
+        if (!emitVarOp(pn, pn->getOp()))
+            return false;
+        if (!emit1(JSOP_POP))
+            return false;
+    } else if (sc->isGlobalContext()) {
         MOZ_ASSERT(pn->pn_scopecoord.isFree());
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
         MOZ_ASSERT(atBodyLevel());
@@ -7924,7 +7984,6 @@ BytecodeEmitter::emitArgsBody(ParseNode *pn)
     // Carefully emit everything in the right order:
     // 1. Defaults and Destructuring for each argument
     // 2. Functions
-    ParseNode* pnchild = pnlast->pn_head;
     bool hasDefaults = sc->asFunctionBox()->hasDefaults();
     ParseNode* rest = nullptr;
     bool restIsDefn = false;
@@ -7985,21 +8044,11 @@ BytecodeEmitter::emitArgsBody(ParseNode *pn)
         }
     }
     if (pnlast->pn_xflags & PNX_FUNCDEFS) {
-        // This block contains top-level function definitions. To ensure
-        // that we emit the bytecode defining them before the rest of code
-        // in the block we use a separate pass over functions. During the
-        // main pass later the emitter will add JSOP_NOP with source notes
-        // for the function to preserve the original functions position
-        // when decompiling.
-        //
-        // Currently this is used only for functions, as compile-as-we go
-        // mode for scripts does not allow separate emitter passes.
-        for (ParseNode* pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-            if (pn2->isKind(PNK_FUNCTION) && pn2->functionIsHoisted()) {
-                if (!emitTree(pn2))
-                    return false;
-            }
-        }
+        // This function contains top-level inner function definitions. To
+        // ensure that we emit the bytecode defining them before the rest
+        // of code in the block we use a separate pass over functions.
+        if (!emitHoistedFunctionsInList(pnlast))
+            return false;
     }
     return emitTree(pnlast);
 }
@@ -8218,6 +8267,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
     switch (pn->getKind()) {
       case PNK_FUNCTION:
+      case PNK_ANNEXB_FUNCTION:
         if (!emitFunction(pn))
             return false;
         break;
