@@ -156,5 +156,21 @@ SdpMediaSection::AddMsid(const std::string& id, const std::string& appdata)
   GetAttributeList().SetAttribute(msids.release());
 }
 
+const SdpRidAttributeList::Rid*
+SdpMediaSection::FindRid(const std::string& id) const
+{
+  if (!GetAttributeList().HasAttribute(SdpAttribute::kRidAttribute)) {
+    return nullptr;
+  }
+
+  for (const auto& rid : GetAttributeList().GetRid().mRids) {
+    if (rid.id == id) {
+      return &rid;
+    }
+  }
+
+  return nullptr;
+}
+
 } // namespace mozilla
 

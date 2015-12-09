@@ -2391,13 +2391,15 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
+                int32_t,
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
                 int32_t,
+                int64_t,
                 int64_t> Args;
         static constexpr char name[] = "notifySmsReceived";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;IJ)V";
+                "(ILjava/lang/String;Ljava/lang/String;IJJ)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =

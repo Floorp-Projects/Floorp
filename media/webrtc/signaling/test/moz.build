@@ -8,6 +8,7 @@
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
     GeckoCppUnitTests([
         'jsep_session_unittest',
+        'jsep_track_unittest',
         'mediaconduit_unittests',
         'mediapipeline_unittest',
         'sdp_file_parser',
