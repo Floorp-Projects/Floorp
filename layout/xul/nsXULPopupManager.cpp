@@ -885,7 +885,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
 
   // use a weak frame as the popup will set an open attribute if it is a menu
   nsWeakFrame weakFrame(aPopupFrame);
-  aPopupFrame->ShowPopup(aIsContextMenu, aSelectFirstItem);
+  aPopupFrame->ShowPopup(aIsContextMenu);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   // popups normally hide when an outside click occurs. Panels may use
