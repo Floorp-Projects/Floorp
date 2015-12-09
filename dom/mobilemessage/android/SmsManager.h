@@ -16,9 +16,11 @@ private:
     SmsManager();
 
 public:
-    static void NotifySmsReceived(jni::String::Param aSender,
+    static void NotifySmsReceived(int32_t aId,
+                                  jni::String::Param aSender,
                                   jni::String::Param aBody,
                                   int32_t aMessageClass,
+                                  int64_t aSentTimestamp,
                                   int64_t aTimestamp);
     static void NotifySmsSent(int32_t aId,
                               jni::String::Param aReceiver,
