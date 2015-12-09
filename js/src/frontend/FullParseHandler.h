@@ -445,17 +445,39 @@ class FullParseHandler
     }
 
     template <typename PC>
+    bool isFunctionStmt(ParseNode* stmt, PC* pc) {
+        if (!pc->sc->strict()) {
+            while (stmt->isKind(PNK_LABEL))
+                stmt = stmt->as<LabeledStatement>().statement();
+        }
+
+        return stmt->isKind(PNK_FUNCTION) || stmt->isKind(PNK_ANNEXB_FUNCTION);
+    }
+
+    template <typename PC>
     void addStatementToList(ParseNode* list, ParseNode* stmt, PC* pc) {
         MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
 
-        if (stmt->isKind(PNK_FUNCTION) || stmt->isKind(PNK_ANNEXB_FUNCTION)) {
+        list->append(stmt);
+
+        if (isFunctionStmt(stmt, pc)) {
             // PNX_FUNCDEFS notifies the emitter that the block contains
             // body-level function definitions that should be processed
             // before the rest of nodes.
             list->pn_xflags |= PNX_FUNCDEFS;
         }
+    }
 
-        list->append(stmt);
+    template <typename PC>
+    void addCaseStatementToList(ParseNode* list, ParseNode* casepn, PC* pc) {
+        MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
+        MOZ_ASSERT(casepn->isKind(PNK_CASE));
+        MOZ_ASSERT(casepn->pn_right->isKind(PNK_STATEMENTLIST));
+
+        list->append(casepn);
+
+        if (casepn->pn_right->pn_xflags & PNX_FUNCDEFS)
+            list->pn_xflags |= PNX_FUNCDEFS;
     }
 
     bool prependInitialYield(ParseNode* stmtList, ParseNode* genName) {

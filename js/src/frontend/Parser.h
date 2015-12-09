@@ -289,6 +289,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
+    StmtInfoPC* innermostNonLabelStmt() const { return stmtStack.innermostNonLabel(); }
     JSObject* innermostStaticScope() const {
         if (StmtInfoPC* stmt = innermostScopeStmt())
             return stmt->staticScope;
@@ -302,19 +303,23 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     //   function f1() { function f2() { } }
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
-    bool atBodyLevel() {
+    bool atBodyLevel(StmtInfoPC* stmt) {
         // 'eval' and non-syntactic scripts are always under an invisible
         // lexical scope, but since it is not syntactic, it should still be
         // considered at body level.
         if (sc->staticScope()->is<StaticEvalObject>()) {
-            bool bl = !innermostStmt()->enclosing;
-            MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
-            MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
-                                             ->template as<StaticBlockObject>()
-                                             .enclosingStaticScope() == sc->staticScope());
+            bool bl = !stmt->enclosing;
+            MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
+            MOZ_ASSERT_IF(bl, stmt->staticScope
+                                  ->template as<StaticBlockObject>()
+                                  .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
-        return !innermostStmt();
+        return !stmt;
+    }
+
+    bool atBodyLevel() {
+        return atBodyLevel(innermostStmt());
     }
 
     bool atGlobalLevel() {
@@ -841,10 +846,17 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node objectLiteral(YieldHandling yieldHandling);
 
-    bool checkAndPrepareLexical(bool isConst, const TokenPos& errorPos);
-    bool prepareAndBindInitializedLexicalWithNode(HandlePropertyName name, bool isConst,
+    enum PrepareLexicalKind {
+        PrepareLet,
+        PrepareConst,
+        PrepareFunction
+    };
+    bool checkAndPrepareLexical(PrepareLexicalKind prepareWhat, const TokenPos& errorPos);
+    bool prepareAndBindInitializedLexicalWithNode(HandlePropertyName name,
+                                                  PrepareLexicalKind prepareWhat,
                                                   ParseNode* pn, const TokenPos& pos);
-    Node makeInitializedLexicalBinding(HandlePropertyName name, bool isConst, const TokenPos& pos);
+    Node makeInitializedLexicalBinding(HandlePropertyName name, PrepareLexicalKind prepareWhat,
+                                       const TokenPos& pos);
 
     Node newBindingNode(PropertyName* name, bool functionScope, VarContext varContext = HoistVars);
 

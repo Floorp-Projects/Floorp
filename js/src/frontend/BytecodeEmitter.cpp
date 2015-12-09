@@ -1372,20 +1372,20 @@ BytecodeEmitter::emitVarIncDec(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::atBodyLevel() const
+BytecodeEmitter::atBodyLevel(StmtInfoBCE* stmt) const
 {
     // 'eval' and non-syntactic scripts are always under an invisible lexical
     // scope, but since it is not syntactic, it should still be considered at
     // body level.
     if (sc->staticScope()->is<StaticEvalObject>()) {
-        bool bl = !innermostStmt()->enclosing;
-        MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
-        MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
-                                         ->as<StaticBlockObject>()
-                                         .enclosingStaticScope() == sc->staticScope());
+        bool bl = !stmt->enclosing;
+        MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
+        MOZ_ASSERT_IF(bl, stmt->staticScope
+                              ->as<StaticBlockObject>()
+                              .enclosingStaticScope() == sc->staticScope());
         return bl;
     }
-    return !innermostStmt() || sc->isModuleBox();
+    return !stmt || sc->isModuleBox();
 }
 
 uint32_t
@@ -3088,11 +3088,23 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         if (!enterBlockScope(&stmtInfo, cases->pn_objbox, JSOP_UNINITIALIZED, 0))
             return false;
 
-        stmtInfo.type = StmtType::SWITCH;
-        stmtInfo.update = top = offset();
-
         // Advance |cases| to refer to the switch case list.
         cases = cases->expr();
+
+        // A switch statement may contain hoisted functions inside its
+        // cases. The PNX_FUNCDEFS flag is propagated from the STATEMENTLIST
+        // bodies of the cases to the case list.
+        if (cases->pn_xflags & PNX_FUNCDEFS) {
+            for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
+                if (caseNode->pn_right->pn_xflags & PNX_FUNCDEFS) {
+                    if (!emitHoistedFunctionsInList(caseNode->pn_right))
+                        return false;
+                }
+            }
+        }
+
+        stmtInfo.type = StmtType::SWITCH;
+        stmtInfo.update = top = offset();
     } else {
         MOZ_ASSERT(cases->isKind(PNK_STATEMENTLIST));
         top = offset();
@@ -5302,6 +5314,11 @@ BytecodeEmitter::emitHoistedFunctionsInList(ParseNode* list)
     MOZ_ASSERT(list->pn_xflags & PNX_FUNCDEFS);
 
     for (ParseNode* pn = list->pn_head; pn; pn = pn->pn_next) {
+        if (!sc->strict()) {
+            while (pn->isKind(PNK_LABEL))
+                pn = pn->as<LabeledStatement>().statement();
+        }
+
         if (pn->isKind(PNK_ANNEXB_FUNCTION) ||
             (pn->isKind(PNK_FUNCTION) && pn->functionIsHoisted()))
         {
@@ -6336,7 +6353,18 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * For modules, we record the function and instantiate the binding during
      * ModuleDeclarationInstantiation(), before the script is run.
      */
-    if (!atBodyLevel()) {
+
+    // Check for functions that were parsed under labeled statements per ES6
+    // Annex B.3.2.
+    bool blockScopedFunction = !atBodyLevel();
+    if (!sc->strict() && blockScopedFunction) {
+        StmtInfoBCE* stmt = innermostStmt();
+        while (stmt && stmt->type == StmtType::LABEL)
+            stmt = stmt->enclosing;
+        blockScopedFunction = !atBodyLevel(stmt);
+    }
+
+    if (blockScopedFunction) {
         if (!emitIndexOp(JSOP_LAMBDA, index))
             return false;
         MOZ_ASSERT(pn->getOp() == JSOP_INITLEXICAL);
@@ -6347,7 +6375,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     } else if (sc->isGlobalContext()) {
         MOZ_ASSERT(pn->pn_scopecoord.isFree());
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
-        MOZ_ASSERT(atBodyLevel());
         switchToPrologue();
         if (!emitIndex32(JSOP_DEFFUN, index))
             return false;
