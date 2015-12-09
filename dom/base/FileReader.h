@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMFileReader_h__
-#define nsDOMFileReader_h__
+#ifndef mozilla_dom_FileReader_h
+#define mozilla_dom_FileReader_h
 
 #include "mozilla/Attributes.h"
 #include "nsISupportsUtils.h"
@@ -27,27 +27,22 @@
 
 namespace mozilla {
 namespace dom {
+
 class Blob;
-} // namespace dom
-} // namespace mozilla
 
-class nsDOMFileReader final : public mozilla::dom::FileIOObject,
-                              public nsIDOMFileReader,
-                              public nsIInterfaceRequestor,
-                              public nsSupportsWeakReference
+class FileReader final : public FileIOObject,
+                         public nsIDOMFileReader,
+                         public nsIInterfaceRequestor,
+                         public nsSupportsWeakReference
 {
-  typedef mozilla::ErrorResult ErrorResult;
-  typedef mozilla::dom::GlobalObject GlobalObject;
-  typedef mozilla::dom::Blob Blob;
-
 public:
-  nsDOMFileReader();
+  FileReader();
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIDOMFILEREADER
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::DOMEventTargetHelper)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   // nsIInterfaceRequestor 
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -67,7 +62,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
-  static already_AddRefed<nsDOMFileReader>
+  static already_AddRefed<FileReader>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
   void ReadAsArrayBuffer(JSContext* aCx, Blob& aBlob, ErrorResult& aRv)
   {
@@ -111,12 +106,12 @@ public:
 
   nsresult Init();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMFileReader,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
                                                          FileIOObject)
   void RootResultArrayBuffer();
 
 protected:
-  virtual ~nsDOMFileReader();
+  virtual ~FileReader();
 
   enum eDataFormat {
     FILE_AS_ARRAYBUFFER,
@@ -152,4 +147,7 @@ protected:
   JS::Heap<JSObject*> mResultArrayBuffer;
 };
 
-#endif
+} // dom namespace
+} // mozilla namespace
+
+#endif // mozilla_dom_FileReader_h
