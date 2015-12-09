@@ -2326,7 +2326,30 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         MOZ_ASSERT(assignmentForAnnexBOut);
         *assignmentForAnnexBOut = nullptr;
 
-        if (pc->atBodyLevel()) {
+        // In sloppy mode, ES6 Annex B.3.2 allows labelled function
+        // declarations. Otherwise it is a parse error.
+        bool bodyLevelFunction = pc->atBodyLevel();
+        if (!bodyLevelFunction) {
+            StmtInfoPC* stmt = pc->innermostStmt();
+            if (stmt->type == StmtType::LABEL) {
+                if (pc->sc->strict()) {
+                    report(ParseError, false, null(), JSMSG_FUNCTION_LABEL);
+                    return false;
+                }
+
+                stmt = pc->innermostNonLabelStmt();
+                // A switch statement is always braced, so it's okay to label
+                // functions in sloppy mode under switch.
+                if (stmt && stmt->type != StmtType::BLOCK && stmt->type != StmtType::SWITCH) {
+                    report(ParseError, false, null(), JSMSG_SLOPPY_FUNCTION_LABEL);
+                    return false;
+                }
+
+                bodyLevelFunction = pc->atBodyLevel(stmt);
+            }
+        }
+
+        if (bodyLevelFunction) {
             if (!bindBodyLevelFunctionName(funName, pn_))
                 return false;
         } else {
@@ -2334,11 +2357,11 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
             Node synthesizedDeclarationList = null();
 
             if (!pc->sc->strict()) {
-                // Under non-strict mode, try Annex B.3.3 semantics. If making
-                // an additional 'var' binding of the same name does not throw
-                // an early error, do so. This 'var' binding would be assigned
-                // the function object in situ, e.g., when its declaration is
-                // reached, not at the start of the block.
+                // Under non-strict mode, try ES6 Annex B.3.3 semantics. If
+                // making an additional 'var' binding of the same name does
+                // not throw an early error, do so. This 'var' binding would
+                // be assigned the function object in situ, e.g., when its
+                // declaration is reached, not at the start of the block.
 
                 annexDef = pc->decls().lookupFirst(funName);
                 if (annexDef) {
@@ -3109,16 +3132,16 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
     Maybe<AutoPushStmtInfoPC> synthesizedStmtInfoForAnnexB;
     Node synthesizedBlockForAnnexB = null();
     StmtInfoPC *stmt = pc->innermostStmt();
-    if (!pc->sc->strict() && stmt &&
-        (stmt->type == StmtType::IF || stmt->type == StmtType::ELSE))
-    {
-        if (!abortIfSyntaxParser())
-            return null();
+    if (!pc->sc->strict() && stmt) {
+        if (stmt->type == StmtType::IF || stmt->type == StmtType::ELSE) {
+            if (!abortIfSyntaxParser())
+                return null();
 
-        synthesizedStmtInfoForAnnexB.emplace(*this, StmtType::BLOCK);
-        synthesizedBlockForAnnexB = pushLexicalScope(*synthesizedStmtInfoForAnnexB);
-        if (!synthesizedBlockForAnnexB)
-            return null();
+            synthesizedStmtInfoForAnnexB.emplace(*this, StmtType::BLOCK);
+            synthesizedBlockForAnnexB = pushLexicalScope(*synthesizedStmtInfoForAnnexB);
+            if (!synthesizedBlockForAnnexB)
+                return null();
+        }
     }
 
     RootedPropertyName name(context);
@@ -4550,28 +4573,45 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
 
 template <>
 bool
-Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& errorPos)
+Parser<FullParseHandler>::checkAndPrepareLexical(PrepareLexicalKind prepareWhat,
+                                                 const TokenPos& errorPos)
 {
     /*
-     * This is a lexical declaration. We must be directly under a block, but
-     * not an implicit block created due to 'for (let ...)'. If we pass this
-     * error test, make the enclosing StmtInfoPC be our scope. Further let
-     * declarations in this block will find this scope statement and use the
-     * same block object.
+     * This is a lexical declaration. We must be directly under a block for
+     * 'let' and 'const' declarations. If we pass this error test, make the
+     * enclosing StmtInfoPC be our scope. Further let declarations in this
+     * block will find this scope statement and use the same block object.
+     *
+     * Function declarations behave like 'let', except that they are allowed
+     * per ES6 Annex B.3.2 to be labeled, unlike plain 'let' and 'const'
+     * declarations.
      *
      * If we are the first let declaration in this block (i.e., when the
      * enclosing maybe-scope StmtInfoPC isn't yet a scope statement) then
      * we also need to set pc->blockNode to be our PNK_LEXICALSCOPE.
      */
-    StmtInfoPC* stmt = pc->innermostStmt();
+
+    // ES6 Annex B.3.2 does not apply in strict mode, and labeled functions in
+    // strict mode should have been rejected by checkFunctionDefinition.
+    MOZ_ASSERT_IF(pc->innermostStmt() &&
+                  pc->innermostStmt()->type == StmtType::LABEL &&
+                  prepareWhat == PrepareFunction,
+                  !pc->sc->strict());
+
+    StmtInfoPC* stmt = prepareWhat == PrepareFunction
+                       ? pc->innermostNonLabelStmt()
+                       : pc->innermostStmt();
     if (stmt && (!stmt->maybeScope() || stmt->isForLetBlock)) {
-        reportWithOffset(ParseError, false, errorPos.begin, JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
-                         isConst ? "const" : "lexical");
+        reportWithOffset(ParseError, false, errorPos.begin,
+                         stmt->type == StmtType::LABEL
+                         ? JSMSG_LEXICAL_DECL_LABEL
+                         : JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
+                         prepareWhat == PrepareConst ? "const" : "lexical");
         return false;
     }
 
     if (!stmt) {
-        MOZ_ASSERT(pc->atBodyLevel());
+        MOZ_ASSERT_IF(prepareWhat != PrepareFunction, pc->atBodyLevel());
 
         /*
          * Self-hosted code must be usable against *any* global object,
@@ -4582,7 +4622,7 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
         bool isGlobal = !pc->sc->isFunctionBox() && stmt == pc->innermostScopeStmt();
         if (options().selfHostingMode && isGlobal) {
             report(ParseError, false, null(), JSMSG_SELFHOSTED_TOP_LEVEL_LEXICAL,
-                   isConst ? "'const'" : "'let'");
+                   prepareWhat == PrepareConst ? "'const'" : "'let'");
             return false;
         }
         return true;
@@ -4608,8 +4648,12 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
          * catch block (catch is a lexical scope by definition).
          */
         MOZ_ASSERT(stmt->canBeBlockScope() && stmt->type != StmtType::CATCH);
-
-        pc->stmtStack.makeInnermostLexicalScope(*blockObj);
+        if (prepareWhat == PrepareFunction) {
+            stmt->isBlockScope = true;
+            pc->stmtStack.linkAsInnermostScopeStmt(stmt, *blockObj);
+        } else {
+            pc->stmtStack.makeInnermostLexicalScope(*blockObj);
+        }
         MOZ_ASSERT(!blockScopes[stmt->blockid]);
         blockScopes[stmt->blockid].set(blockObj);
 
@@ -4641,21 +4685,22 @@ CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 template <>
 bool
 Parser<FullParseHandler>::prepareAndBindInitializedLexicalWithNode(HandlePropertyName name,
-                                                                   bool isConst,
+                                                                   PrepareLexicalKind prepareWhat,
                                                                    ParseNode* pn,
                                                                    const TokenPos& pos)
 {
     BindData<FullParseHandler> data(context);
-    if (!checkAndPrepareLexical(isConst, pos))
+    if (!checkAndPrepareLexical(prepareWhat, pos))
         return false;
-    data.initLexical(HoistVars, isConst ? JSOP_DEFCONST : JSOP_DEFLET,
+    data.initLexical(HoistVars, prepareWhat == PrepareConst ? JSOP_DEFCONST : JSOP_DEFLET,
                      CurrentLexicalStaticBlock(pc), JSMSG_TOO_MANY_LOCALS);
     return bindInitialized(&data, name, pn);
 }
 
 template <>
 ParseNode*
-Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name, bool isConst,
+Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name,
+                                                        PrepareLexicalKind prepareWhat,
                                                         const TokenPos& pos)
 {
     ParseNode* dn = newBindingNode(name, false);
@@ -4663,7 +4708,7 @@ Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name,
         return null();
     handler.setPosition(dn, pos);
 
-    if (!prepareAndBindInitializedLexicalWithNode(name, isConst, dn, pos))
+    if (!prepareAndBindInitializedLexicalWithNode(name, prepareWhat, dn, pos))
         return null();
 
     return dn;
@@ -4676,7 +4721,7 @@ Parser<FullParseHandler>::bindLexicalFunctionName(HandlePropertyName funName,
 {
     MOZ_ASSERT(!pc->atBodyLevel());
     pn->pn_blockid = pc->blockid();
-    return prepareAndBindInitializedLexicalWithNode(funName, /* isConst = */ false, pn, pos());
+    return prepareAndBindInitializedLexicalWithNode(funName, PrepareFunction, pn, pos());
 }
 
 template <>
@@ -4685,7 +4730,7 @@ Parser<FullParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool i
 {
     handler.disableSyntaxParser();
 
-    if (!checkAndPrepareLexical(isConst, pos()))
+    if (!checkAndPrepareLexical(isConst ? PrepareConst : PrepareLet, pos()))
         return null();
 
     /*
@@ -5197,7 +5242,7 @@ Parser<FullParseHandler>::exportDeclaration()
           default:
             tokenStream.ungetToken();
             RootedPropertyName name(context, context->names().starDefaultStar);
-            binding = makeInitializedLexicalBinding(name, true, pos());
+            binding = makeInitializedLexicalBinding(name, PrepareConst, pos());
             if (!binding)
                 return null();
             kid = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
@@ -5944,7 +5989,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
                     afterReturn = true;
                 }
             }
-            handler.addList(body, stmt);
+            handler.addStatementToList(body, stmt, pc);
         }
 
         // In ES6, lexical bindings cannot be accessed until initialized. If
@@ -5963,7 +6008,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
         Node casepn = handler.newCaseOrDefault(caseBegin, caseExpr, body);
         if (!casepn)
             return null();
-        handler.addList(caseList, casepn);
+        handler.addCaseStatementToList(caseList, casepn, pc);
     }
 
     /*
@@ -6790,7 +6835,7 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
     ParseNode* nameNode = null();
     ParseNode* methodsOrBlock = classMethods;
     if (name) {
-        ParseNode* innerBinding = makeInitializedLexicalBinding(name, true, namePos);
+        ParseNode* innerBinding = makeInitializedLexicalBinding(name, PrepareConst, namePos);
         if (!innerBinding)
             return null();
 
@@ -6801,7 +6846,7 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
         ParseNode* outerBinding = null();
         if (classContext == ClassStatement) {
-            outerBinding = makeInitializedLexicalBinding(name, false, namePos);
+            outerBinding = makeInitializedLexicalBinding(name, PrepareLet, namePos);
             if (!outerBinding)
                 return null();
         }
