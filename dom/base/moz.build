@@ -245,7 +245,6 @@ UNIFIED_SOURCES += [
     'Element.cpp',
     'EventSource.cpp',
     'File.cpp',
-    'FileIOObject.cpp',
     'FileList.cpp',
     'FileReader.cpp',
     'FragmentOrElement.cpp',
