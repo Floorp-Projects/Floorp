@@ -8,32 +8,37 @@
 #define mozilla_dom_FileReader_h
 
 #include "mozilla/Attributes.h"
-#include "nsISupportsUtils.h"
-#include "nsString.h"
-#include "nsWeakReference.h"
-#include "nsIStreamListener.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsJSUtils.h"
-#include "nsTArray.h"
-#include "prtime.h"
-#include "nsITimer.h"
-#include "nsIAsyncInputStream.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DOMError.h"
 
-#include "nsIDOMFileReader.h"
-#include "nsIDOMFileList.h"
 #include "nsCOMPtr.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIDOMFileReader.h"
+#include "nsIStreamListener.h"
+#include "nsISupportsUtils.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsITimer.h"
+#include "nsJSUtils.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsWeakReference.h"
+#include "prtime.h"
 
-#include "FileIOObject.h"
+#define NS_PROGRESS_EVENT_INTERVAL 50
 
 namespace mozilla {
 namespace dom {
 
 class Blob;
 
-class FileReader final : public FileIOObject,
+extern const uint64_t kUnknownSize;
+
+class FileReader final : public DOMEventTargetHelper,
                          public nsIDOMFileReader,
                          public nsIInterfaceRequestor,
-                         public nsSupportsWeakReference
+                         public nsSupportsWeakReference,
+                         public nsIInputStreamCallback,
+                         public nsITimerCallback
 {
 public:
   FileReader();
@@ -41,19 +46,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIDOMFILEREADER
-
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
-
-  // nsIInterfaceRequestor 
+  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  // FileIOObject overrides
-  virtual void DoAbort(nsAString& aEvent) override;
-
-  virtual nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount) override;
-
-  virtual nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
-                               nsAString& aTerminationEvent) override;
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader, DOMEventTargetHelper)
 
   nsPIDOMWindow* GetParentObject() const
   {
@@ -79,23 +77,26 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
 
-  using FileIOObject::Abort;
+  void Abort(ErrorResult& aRv);
 
-  // Inherited ReadyState().
+  uint16_t ReadyState() const
+  {
+    return mReadyState;
+  }
+
+  DOMError* GetError() const
+  {
+    return mError;
+  }
 
   void GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                  ErrorResult& aRv);
 
-  using FileIOObject::GetError;
-
   IMPL_EVENT_HANDLER(loadstart)
-  using FileIOObject::GetOnprogress;
-  using FileIOObject::SetOnprogress;
+  IMPL_EVENT_HANDLER(progress)
   IMPL_EVENT_HANDLER(load)
-  using FileIOObject::GetOnabort;
-  using FileIOObject::SetOnabort;
-  using FileIOObject::GetOnerror;
-  using FileIOObject::SetOnerror;
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(loadend)
 
   void ReadAsBinaryString(Blob& aBlob, ErrorResult& aRv)
@@ -103,14 +104,9 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
-
   nsresult Init();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
-                                                         FileIOObject)
-  void RootResultArrayBuffer();
-
-protected:
+private:
   virtual ~FileReader();
 
   enum eDataFormat {
@@ -119,6 +115,8 @@ protected:
     FILE_AS_TEXT,
     FILE_AS_DATAURL
   };
+
+  void RootResultArrayBuffer();
 
   void ReadFileContent(Blob& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
@@ -129,7 +127,21 @@ protected:
   nsresult GetAsDataURL(Blob *aBlob, const char *aFileData,
                         uint32_t aDataLen, nsAString &aResult);
 
-  void FreeFileData() {
+  nsresult OnLoadEnd(nsresult aStatus);
+  nsresult DoAsyncWait(nsIAsyncInputStream* aStream);
+
+  void StartProgressEventTimer();
+  void ClearProgressEventTimer();
+  void DispatchError(nsresult rv, nsAString& finalEvent);
+  nsresult DispatchProgressEvent(const nsAString& aType);
+
+  nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount);
+
+  nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
+                       nsAString& aTerminationEvent);
+
+  void FreeFileData()
+  {
     free(mFileData);
     mFileData = nullptr;
     mDataLen = 0;
@@ -145,6 +157,19 @@ protected:
   nsString mResult;
 
   JS::Heap<JSObject*> mResultArrayBuffer;
+
+  nsCOMPtr<nsITimer> mProgressNotifier;
+  bool mProgressEventWasDelayed;
+  bool mTimerIsActive;
+
+  nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
+
+  RefPtr<DOMError> mError;
+
+  uint16_t mReadyState;
+
+  uint64_t mTotal;
+  uint64_t mTransferred;
 };
 
 } // dom namespace
