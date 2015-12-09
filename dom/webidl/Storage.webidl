@@ -29,4 +29,7 @@ interface Storage {
 
   [Throws]
   void clear();
+
+  [ChromeOnly]
+  readonly attribute boolean isSessionOnly;
 };
