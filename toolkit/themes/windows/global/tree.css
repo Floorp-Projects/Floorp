@@ -317,12 +317,11 @@ treechildren::-moz-tree-twisty {
   -moz-padding-end: 4px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd");
 }
 
 treechildren::-moz-tree-twisty(open) {
-  width: 9px; /* The image's width is 9 pixels */
-  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
+  list-style-image: url("chrome://global/skin/tree/twisty.svg#open");
 }
 
 treechildren::-moz-tree-indentation {
@@ -373,31 +372,30 @@ treechildren::-moz-tree-cell-text(selected, editing) {
 
   treechildren::-moz-tree-twisty {
     -moz-padding-end: 1px;
-    width: 9px;
   }
 
   treechildren::-moz-tree-twisty(hover) {
-    list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover");
   }
 
   treechildren::-moz-tree-twisty(hover, open) {
-    list-style-image: url("chrome://global/skin/tree/twisty-open-hover.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover");
   }
 
   treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty {
-    list-style-image: url("chrome://global/skin/tree/twisty-clsd-rtl.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-rtl");
   }
 
   treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(open) {
-    list-style-image: url("chrome://global/skin/tree/twisty-open-rtl.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-rtl");
   }
 
   treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover) {
-    list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover-rtl.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#clsd-hover-rtl");
   }
 
   treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(hover, open) {
-    list-style-image: url("chrome://global/skin/tree/twisty-open-hover-rtl.png");
+    list-style-image: url("chrome://global/skin/tree/twisty.svg#open-hover-rtl");
   }
 
   @media (-moz-windows-default-theme) {
