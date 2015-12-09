@@ -5,7 +5,7 @@
 var loop = loop || {};
 loop.shared = loop.shared || {};
 loop.shared.views = loop.shared.views || {};
-loop.shared.views.LinkifiedTextView = (function(mozL10n) {
+loop.shared.views.LinkifiedTextView = (function() {
   "use strict";
 
   /**
@@ -113,4 +113,4 @@ loop.shared.views.LinkifiedTextView = (function(mozL10n) {
 
   return LinkifiedTextView;
 
-})(navigator.mozL10n || document.mozL10n);
+})();

@@ -6,7 +6,7 @@ describe("loop.crypto", function() {
   "use strict";
 
   var expect = chai.expect;
-  var sandbox, oldCrypto;
+  var sandbox;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();

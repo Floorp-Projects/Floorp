@@ -751,8 +751,7 @@ describe("loop.OTSdkDriver", function() {
   });
 
   describe("Events: general media", function() {
-    var fakeConnection, fakeStream, fakeSubscriberObject,
-      fakeSdkContainerWithVideo, videoElement;
+    var fakeConnection, fakeStream, fakeSubscriberObject, videoElement;
 
     beforeEach(function() {
       fakeConnection = "fakeConnection";
@@ -769,10 +768,6 @@ describe("loop.OTSdkDriver", function() {
         session: { connection: fakeConnection },
         stream: fakeStream
       }, Backbone.Events);
-
-      fakeSdkContainerWithVideo = {
-        querySelector: sinon.stub().returns(videoElement)
-      };
 
       // use a real video element so that these tests correctly reflect
       // test behavior when run in firefox or chrome
@@ -1826,18 +1821,12 @@ describe("loop.OTSdkDriver", function() {
   });
 
   describe("Events: screenshare:", function() {
-    var videoElement;
-
     beforeEach(function() {
       driver.connectSession(sessionData);
 
       driver.startScreenShare({
         videoSource: "window"
       });
-
-      // use a real video element so that these tests correctly reflect
-      // code behavior when run in whatever browser
-      videoElement = document.createElement("video");
     });
 
     describe("accessAllowed", function() {

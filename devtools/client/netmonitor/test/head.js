@@ -324,9 +324,9 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     domainTooltip, "The tooltip domain is correct.");
 
   if (status !== undefined) {
-    let value = target.querySelector(".requests-menu-status").getAttribute("code");
+    let value = target.querySelector(".requests-menu-status-icon").getAttribute("code");
     let codeValue = target.querySelector(".requests-menu-status-code").getAttribute("value");
-    let tooltip = target.querySelector(".requests-menu-status-and-method").getAttribute("tooltiptext");
+    let tooltip = target.querySelector(".requests-menu-status").getAttribute("tooltiptext");
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);

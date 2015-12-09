@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['locales']
-SPHINX_TREES['fennec'] = 'docs'
 
 include('android-services.mozbuild')
 
