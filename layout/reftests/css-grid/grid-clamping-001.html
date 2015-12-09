@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1229999</title>
+    <style type="text/css">
+html,body { color:black; background-color:white; font-size:16px; padding:0; margin:0; }
+	
+.grid {
+  position: fixed;
+  bottom: 0;
+  display: grid;
+  grid-auto-rows: 1px;
+  grid-auto-columns: 10px;
+  border: 1px solid;
+}
+
+x {
+  position: absolute;
+  grid-row-start: span 2;
+  top:0; bottom:0; left:10px; width:20px;
+  background: grey;
+}
+y { background:blue; }
+y:nth-of-type(2n+1) { background:lime; }
+    </style>
+</head>
+<body>
+
+    <div class="grid">
+        <span style="grid-row-start: A -4;"></span>
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+    <div class="grid" style="left:50px;">
+        <span style="grid-row-start: A -3;"></span>
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+    <div class="grid" style="left:100px;">
+        <span style="grid-row-start: A -2;"></span>
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+    <div class="grid" style="left:150px;">
+        <span style="grid-row-start: A -1;"></span>
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+    <div class="grid" style="left:150px;">
+        <span style="grid-row-start: 1;"></span>
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+    <div class="grid" style="left:200px;">
+        <span style="grid-row-end: span 134217729; background:yellow"></span>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <y></y><y></y><y></y><y></y><y></y><y></y>
+        <x></x>
+    </div>
+
+
+</body>
+</html>
