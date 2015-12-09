@@ -845,6 +845,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node objectLiteral(YieldHandling yieldHandling);
 
     bool checkAndPrepareLexical(bool isConst, const TokenPos& errorPos);
+    bool prepareAndBindInitializedLexicalWithNode(HandlePropertyName name, bool isConst,
+                                                  ParseNode* pn, const TokenPos& pos);
     Node makeInitializedLexicalBinding(HandlePropertyName name, bool isConst, const TokenPos& pos);
 
     Node newBindingNode(PropertyName* name, bool functionScope, VarContext varContext = HoistVars);
@@ -860,7 +862,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
     bool checkDestructuringName(BindData<ParseHandler>* data, Node expr);
 
+    bool bindInitialized(BindData<ParseHandler>* data, HandlePropertyName name, Node pn);
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
+    bool bindUninitialized(BindData<ParseHandler>* data, HandlePropertyName name, Node pn);
     bool bindUninitialized(BindData<ParseHandler>* data, Node pn);
     bool makeSetCall(Node node, unsigned errnum);
     Node cloneDestructuringDefault(Node opn);
