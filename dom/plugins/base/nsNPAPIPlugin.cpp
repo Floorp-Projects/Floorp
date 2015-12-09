@@ -1251,12 +1251,21 @@ _retainobject(NPObject* npobj)
 void
 _releaseobject(NPObject* npobj)
 {
+  // If nothing is passed, just return, even if we're on the wrong thread.
+  if (!npobj) {
+    return;
+  }
+
+  // If releaseobject is called off the main thread and we have a valid pointer,
+  // we at least know it was created on the main thread (see _createobject
+  // implementation). However, forwarding the deletion back to the main thread
+  // without careful checking could cause bad memory management races. So, for
+  // now, we leak by warning and then just returning early. But it should fix
+  // java 7 crashes.
   if (!NS_IsMainThread()) {
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_releaseobject called from the wrong thread\n"));
-    MOZ_CRASH("NPN_releaseobject called from the wrong thread");
-  }
-  if (!npobj)
     return;
+  }
 
   int32_t refCnt = PR_ATOMIC_DECREMENT((int32_t*)&npobj->referenceCount);
   NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
