@@ -101,19 +101,26 @@ PushClient.prototype = {
 
   _deliverPushEndpoint: function(request, registration) {
     if (!registration) {
-      request.onPushEndpoint(Cr.NS_OK, "", 0, null);
-      return;
-    }
-    if (registration.p256dhKey) {
-      let key = new Uint8Array(registration.p256dhKey);
-      request.onPushEndpoint(Cr.NS_OK,
-                             registration.pushEndpoint,
-                             key.length,
-                             key);
+      request.onPushEndpoint(Cr.NS_OK, "", 0, null, 0, null);
       return;
     }
 
-    request.onPushEndpoint(Cr.NS_OK, registration.pushEndpoint, 0, null);
+    let key;
+    if (registration.p256dhKey) {
+      key = new Uint8Array(registration.p256dhKey);
+    }
+
+    let authSecret;
+    if (registration.authSecret) {
+      authSecret = new Uint8Array(registration.authSecret);
+    }
+
+    request.onPushEndpoint(Cr.NS_OK,
+                           registration.pushEndpoint,
+                           key ? key.length : 0,
+                           key,
+                           authSecret ? authSecret.length : 0,
+                           authSecret);
   },
 
   receiveMessage: function(aMessage) {
@@ -135,7 +142,7 @@ PushClient.prototype = {
 
       case "PushService:Register:KO":
       case "PushService:Registration:KO":
-        request.onPushEndpoint(Cr.NS_ERROR_FAILURE, "", 0, null);
+        request.onPushEndpoint(Cr.NS_ERROR_FAILURE, "", 0, null, 0, null);
         break;
 
       case "PushService:Unregister:OK":

@@ -909,10 +909,15 @@ class IceTestPeer : public sigslot::has_slots<> {
         DumpCandidatePair(pairs[p]);
         return false;
       } else if (priority == pairs[p].priority) {
-        std::cerr << "Duplicate priority in subseqent pairs:" << std::endl;
-        DumpCandidatePair(pairs[p-1]);
-        DumpCandidatePair(pairs[p]);
-        return false;
+        if (!IceCandidatePairCompare()(pairs[p], pairs[p-1]) &&
+            !IceCandidatePairCompare()(pairs[p-1], pairs[p])) {
+          std::cerr << "Ignoring identical pair from trigger check" << std::endl;
+        } else {
+          std::cerr << "Duplicate priority in subseqent pairs:" << std::endl;
+          DumpCandidatePair(pairs[p-1]);
+          DumpCandidatePair(pairs[p]);
+          return false;
+        }
       }
       priority = pairs[p].priority;
     }
@@ -2120,7 +2125,7 @@ TEST_F(IceConnectTest, TestLoopbackOnlySortOf) {
   Init(true, false);
   AddStream("first", 1);
   SetCandidateFilter(IsLoopbackCandidate);
-  ASSERT_TRUE(Gather());
+  ASSERT_TRUE(Gather(kDefaultTimeout, false));
   SetExpectedRemoteCandidateAddr("127.0.0.1");
   Connect();
 }

@@ -704,6 +704,57 @@ int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *co
     return 0;
   }
 
+static int nr_ice_component_pair_matches_check(nr_ice_component *comp, nr_ice_cand_pair *pair, nr_transport_addr *local_addr, nr_stun_server_request *req)
+  {
+    if(pair->remote->component->component_id!=comp->component_id)
+      return(0);
+
+    if(nr_transport_addr_cmp(&pair->local->base,local_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
+      return(0);
+
+    if(nr_transport_addr_cmp(&pair->remote->addr,&req->src_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
+      return(0);
+
+    return(1);
+  }
+
+static int nr_ice_component_handle_triggered_check(nr_ice_component *comp, nr_ice_cand_pair *pair, nr_stun_server_request *req, int *error)
+  {
+    nr_stun_message *sreq=req->request;
+    int r=0,_status;
+
+    if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_USE_CANDIDATE,0)){
+      if(comp->stream->pctx->controlling){
+        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
+      }
+      else{
+        /* If this is the first time we've noticed this is nominated...*/
+        pair->peer_nominated=1;
+
+        if(pair->state==NR_ICE_PAIR_STATE_SUCCEEDED && !pair->nominated){
+          pair->nominated=1;
+
+          if(r=nr_ice_component_nominated_pair(pair->remote->component, pair)) {
+            *error=(r==R_NO_MEMORY)?500:400;
+            ABORT(r);
+          }
+        }
+      }
+    }
+
+    /* Note: the RFC says to trigger first and then nominate. But in that case
+     * the canceled trigger pair would get nominated and the cloned trigger pair
+     * would not get the nomination status cloned with it.*/
+    if(r=nr_ice_candidate_pair_do_triggered_check(comp->stream->pctx,pair)) {
+      *error=(r==R_NO_MEMORY)?500:400;
+      ABORT(r);
+    }
+
+    _status=0;
+  abort:
+    return(r);
+  }
+
 /* Section 7.2.1 */
 static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_transport_addr *local_addr, nr_stun_server_request *req, int *error)
   {
@@ -711,12 +762,8 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     nr_ice_candidate *pcand=0;
     nr_stun_message *sreq=req->request;
     nr_stun_message_attribute *attr;
-    int component_id_matched;
-    int local_addr_matched;
-    int remote_addr_matched;
-    nr_ice_cand_pair *found_invalid=0;
     int r=0,_status;
-    int new_pcand_created=0;
+    int found_valid=0;
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): received request from %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,req->src_addr.as_string);
 
@@ -767,157 +814,84 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
     pair=TAILQ_FIRST(&comp->stream->check_list);
     while(pair){
-      component_id_matched = 0;
-      local_addr_matched = 0;
-      remote_addr_matched = 0;
-
-      if(pair->remote->component->component_id!=comp->component_id)
-        goto next_pair;
-      component_id_matched = 1;
-
-      if(nr_transport_addr_cmp(&pair->local->base,local_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-        goto next_pair;
-      local_addr_matched=1;
-
-
-      if(nr_transport_addr_cmp(&pair->remote->addr,&req->src_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-        goto next_pair;
-      remote_addr_matched = 1;
-
-      if(pair->state==NR_ICE_PAIR_STATE_FAILED){
-        found_invalid=pair;
-        goto next_pair;
-      }
-
-      if (local_addr_matched && remote_addr_matched){
+      /* Since triggered checks create duplicate pairs (in this implementation)
+       * we are willing to handle multiple matches here. */
+      if(nr_ice_component_pair_matches_check(comp, pair, local_addr, req)){
         r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND_PAIR(%s): Found a matching pair for received check: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
-        break; /* OK, this is a known pair */
-      }
-
-    next_pair:
-      pair=TAILQ_NEXT(pair,entry);
-    }
-
-    if(!pair){
-      if(!found_invalid){
-        /* First find our local component candidate */
-        nr_ice_candidate *cand;
-
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): no matching pair",comp->stream->pctx->label);
-        cand=TAILQ_FIRST(&comp->local_component->candidates);
-        while(cand){
-          if(!nr_transport_addr_cmp(&cand->addr,local_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-            break;
-
-          cand=TAILQ_NEXT(cand,entry_comp);
-        }
-
-        /* Well, this really shouldn't happen, but it's an error from the
-           other side, so we just throw an error and keep going */
-        if(!cand){
-          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): stun request to unknown local address %s, discarding",comp->stream->pctx->label,local_addr->as_string);
-
-          *error=400;
-          ABORT(R_NOT_FOUND);
-        }
-
-        /* Try to find matching peer active tcp candidate */
-        pcand=TAILQ_FIRST(&comp->candidates);
-        while(pcand){
-          if(pcand->tcp_type == TCP_TYPE_ACTIVE) {
-            if(!nr_transport_addr_cmp(&pcand->addr,&req->src_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-              break;
-          }
-
-          pcand=TAILQ_NEXT(pcand,entry_comp);
-        }
-
-        if (!pcand){
-          /* We now need to make a peer reflexive */
-          if(r=nr_ice_peer_peer_rflx_candidate_create(comp->stream->pctx->ctx,"prflx",comp,&req->src_addr,&pcand)) {
-            *error=(r==R_NO_MEMORY)?500:400;
-            ABORT(r);
-          }
-          new_pcand_created=1;
-          if(!nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_PRIORITY,&attr)){
-            r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): Rejecting stun request without priority",comp->stream->pctx->label);
-            *error=487;
-            ABORT(R_BAD_DATA);
-          }
-          pcand->priority=attr->u.priority;
-        }
-
-        pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;
-
-        if(r=nr_ice_candidate_pair_create(comp->stream->pctx,cand,pcand,
-             &pair)) {
-          *error=(r==R_NO_MEMORY)?500:400;
+        if(r=nr_ice_component_handle_triggered_check(comp, pair, req, error))
           ABORT(r);
-        }
-        nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);
-
-        if(r=nr_ice_component_insert_pair(comp,pair)) {
-          *error=(r==R_NO_MEMORY)?500:400;
-          nr_ice_candidate_pair_destroy(&pair);
-          ABORT(r);
-        }
-
-        /* Do this last, since any call to ABORT will destroy pcand */
-        if (new_pcand_created){
-          TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
-          pcand=0;
-        }
+        ++found_valid;
       }
-      else{
-        /* OK, there was a pair, it's just invalid: According to Section
-           7.2.1.4, we need to resurrect it
-        */
-        if(found_invalid->state == NR_ICE_PAIR_STATE_FAILED){
-          pair=found_invalid;
-
-          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair, resurrecting: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
-          nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_WAITING);
-        }
-        else{
-          /* This shouldn't happen */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair that was not in state FAILED; this should not happen: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
-          *error=500;
-          ABORT(R_BAD_DATA);
-        }
-      }
+      pair=TAILQ_NEXT(pair,check_queue_entry);
     }
 
-    /* OK, we've got a pair to work with. Turn it on */
-    assert(pair);
-    if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_USE_CANDIDATE,0)){
-      if(comp->stream->pctx->controlling){
-        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
+    if(!found_valid){
+      /* There were no matching pairs, so we need to create a new peer
+       * reflexive candidate pair. */
+
+      if(!nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_PRIORITY,&attr)){
+        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): Rejecting stun request without priority",comp->stream->pctx->label);
+        *error=400;
+        ABORT(R_BAD_DATA);
       }
-      else{
-        /* If this is the first time we've noticed this is nominated...*/
-        pair->peer_nominated=1;
 
-        if(pair->state==NR_ICE_PAIR_STATE_SUCCEEDED && !pair->nominated){
-          pair->nominated=1;
+      /* Find our local component candidate */
+      nr_ice_candidate *cand;
 
-          if(r=nr_ice_component_nominated_pair(pair->remote->component, pair)) {
-            *error=(r==R_NO_MEMORY)?500:400;
-            ABORT(r);
-          }
-        }
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): no matching pair",comp->stream->pctx->label);
+      cand=TAILQ_FIRST(&comp->local_component->candidates);
+      while(cand){
+        if(!nr_transport_addr_cmp(&cand->addr,local_addr,NR_TRANSPORT_ADDR_CMP_MODE_ALL))
+          break;
+
+        cand=TAILQ_NEXT(cand,entry_comp);
       }
-    }
 
-    if(r=nr_ice_candidate_pair_do_triggered_check(comp->stream->pctx,pair)) {
-      *error=(r==R_NO_MEMORY)?500:400;
-      ABORT(r);
+      /* Well, this really shouldn't happen, but it's an error from the
+         other side, so we just throw an error and keep going */
+      if(!cand){
+        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): stun request to unknown local address %s, discarding",comp->stream->pctx->label,local_addr->as_string);
+
+        *error=400;
+        ABORT(R_NOT_FOUND);
+      }
+
+      /* Now make a peer reflexive (remote) candidate */
+      if(r=nr_ice_peer_peer_rflx_candidate_create(comp->stream->pctx->ctx,"prflx",comp,&req->src_addr,&pcand)) {
+        *error=(r==R_NO_MEMORY)?500:400;
+        ABORT(r);
+      }
+      pcand->priority=attr->u.priority;
+      pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;
+
+      /* Finally, create the candidate pair, insert into the check list, and
+       * apply the incoming check to it. */
+      if(r=nr_ice_candidate_pair_create(comp->stream->pctx,cand,pcand,
+           &pair)) {
+        *error=(r==R_NO_MEMORY)?500:400;
+        ABORT(r);
+      }
+
+      nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FROZEN);
+      if(r=nr_ice_component_insert_pair(comp,pair)) {
+        *error=(r==R_NO_MEMORY)?500:400;
+        nr_ice_candidate_pair_destroy(&pair);
+        ABORT(r);
+      }
+
+      /* Do this last, since any call to ABORT will destroy pcand */
+      TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
+      pcand=0;
+
+      /* Finally start the trigger check if needed */
+      if(r=nr_ice_component_handle_triggered_check(comp, pair, req, error))
+        ABORT(r);
     }
 
     _status=0;
   abort:
     if(_status){
-      if (new_pcand_created)
-        nr_ice_candidate_destroy(&pcand);
+      nr_ice_candidate_destroy(&pcand);
       assert(*error != 0);
       if(r!=R_NO_MEMORY) assert(*error != 500);
     }
@@ -1012,6 +986,14 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
       if (lcand->tcp_type == TCP_TYPE_PASSIVE)
         continue;
       if(pcand->addr.ip_version != lcand->addr.ip_version)
+        continue;
+      /* This prevents our ice_unittest from pairing a loopback with a host
+       * candidate. */
+      if(nr_transport_addr_is_loopback(&lcand->addr) &&
+         !nr_transport_addr_is_loopback(&pcand->addr))
+        continue;
+      if(!nr_transport_addr_is_loopback(&lcand->addr) &&
+         nr_transport_addr_is_loopback(&pcand->addr))
         continue;
 
       /*
@@ -1124,15 +1106,11 @@ static int nr_ice_component_stun_server_default_cb(void *cb_arg,nr_stun_server_c
 int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pair)
   {
     int r,_status;
-    int fire_cb=0;
     nr_ice_cand_pair *p2;
-
-    if(!comp->nominated)
-      fire_cb=1;
 
     /* Are we changing what the nominated pair is? */
     if(comp->nominated){
-      if(comp->nominated->priority > pair->priority)
+      if(comp->nominated->priority >= pair->priority)
         return(0);
       r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): replacing pair %s with CAND-PAIR(%s)",comp->stream->pctx->label,comp->stream->label,comp->component_id,comp->nominated->codeword,comp->nominated->as_string,pair->codeword);
     }
@@ -1146,19 +1124,33 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling all pairs but %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
 
     /* Cancel checks in WAITING and FROZEN per ICE S 8.1.2 */
+    p2=TAILQ_FIRST(&comp->stream->trigger_check_queue);
+    while(p2){
+      if((p2 != pair) &&
+         (p2->remote->component->component_id == comp->component_id)) {
+        assert(p2->state == NR_ICE_PAIR_STATE_WAITING ||
+               p2->state == NR_ICE_PAIR_STATE_CANCELLED);
+        r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s in trigger check queue because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
+
+        if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2,0))
+          ABORT(r);
+      }
+
+      p2=TAILQ_NEXT(p2,triggered_check_queue_entry);
+    }
     p2=TAILQ_FIRST(&comp->stream->check_list);
     while(p2){
       if((p2 != pair) &&
          (p2->remote->component->component_id == comp->component_id) &&
          ((p2->state == NR_ICE_PAIR_STATE_FROZEN) ||
-	  (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
+          (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
         r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
 
-        if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2))
+        if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2,0))
           ABORT(r);
       }
 
-      p2=TAILQ_NEXT(p2,entry);
+      p2=TAILQ_NEXT(p2,check_queue_entry);
     }
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): cancelling done",comp->stream->pctx->label,comp->stream->label,comp->component_id);
 
@@ -1193,7 +1185,7 @@ static int nr_ice_component_have_all_pairs_failed(nr_ice_component *comp)
         }
       }
 
-      p2=TAILQ_NEXT(p2,entry);
+      p2=TAILQ_NEXT(p2,check_queue_entry);
     }
 
     return(1);
@@ -1233,7 +1225,7 @@ int nr_ice_component_select_pair(nr_ice_peer_ctx *pctx, nr_ice_component *comp)
       if (comp->component_id == pair->local->component_id)
           ct++;
 
-      pair=TAILQ_NEXT(pair,entry);
+      pair=TAILQ_NEXT(pair,check_queue_entry);
     }
 
     /* Make and fill the array */
@@ -1246,7 +1238,7 @@ int nr_ice_component_select_pair(nr_ice_peer_ctx *pctx, nr_ice_component *comp)
       if (comp->component_id == pair->local->component_id)
           pairs[ct++]=pair;
 
-      pair=TAILQ_NEXT(pair,entry);
+      pair=TAILQ_NEXT(pair,check_queue_entry);
     }
 
     if (pctx->handler) {

@@ -169,6 +169,7 @@ public:
   void SetSsrcs(const std::vector<uint32_t>& ssrcs,
                 const std::string& cname);
   void AddMsid(const std::string& id, const std::string& appdata);
+  const SdpRidAttributeList::Rid* FindRid(const std::string& id) const;
 
 private:
   size_t mLevel;

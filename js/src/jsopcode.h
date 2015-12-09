@@ -76,7 +76,7 @@ enum {
     JOF_CHECKSLOPPY     = 1 << 19,  /* Op can only be generated in sloppy mode */
     JOF_CHECKSTRICT     = 1 << 20,  /* Op can only be generated in strict mode */
     JOF_INVOKE          = 1 << 21,  /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
-                                       JSOP_NEW, JSOP_EVAL */
+                                       JSOP_NEW, JSOP_EVAL, JSOP_CALLITER */
     /* 1 << 22 is unused */
     /* 1 << 23 is unused */
     /* 1 << 24 is unused */

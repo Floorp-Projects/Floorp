@@ -56,6 +56,8 @@ struct nr_ice_cand_pair_ {
                                          on this check */
   UCHAR nominated;                    /* Is this nominated or not */
 
+  UCHAR triggered;            /* Ignore further trigger check requests */
+
   UINT8 priority;                  /* The priority for this pair */
   nr_ice_candidate *local;            /* The local candidate */
   nr_ice_candidate *remote;           /* The remote candidate */
@@ -68,7 +70,8 @@ struct nr_ice_cand_pair_ {
   void *restart_role_change_cb_timer;
   void *restart_nominated_cb_timer;
 
-  TAILQ_ENTRY(nr_ice_cand_pair_) entry;
+  TAILQ_ENTRY(nr_ice_cand_pair_) check_queue_entry;   /* the check list */
+  TAILQ_ENTRY(nr_ice_cand_pair_) triggered_check_queue_entry;  /* the trigger check queue */
 };
 
 int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,nr_ice_candidate *rcand,nr_ice_cand_pair **pairp);
@@ -76,10 +79,11 @@ int nr_ice_candidate_pair_unfreeze(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair
 int nr_ice_candidate_pair_start(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair);
 int nr_ice_candidate_pair_set_state(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair, int state);
 int nr_ice_candidate_pair_dump_state(nr_ice_cand_pair *pair, FILE *out);
-int nr_ice_candidate_pair_cancel(nr_ice_peer_ctx *pctx,nr_ice_cand_pair *pair);
+int nr_ice_candidate_pair_cancel(nr_ice_peer_ctx *pctx,nr_ice_cand_pair *pair, int move_to_wait_state);
 int nr_ice_candidate_pair_select(nr_ice_cand_pair *pair);
 int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair);
 int nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair);
+int nr_ice_candidate_pair_trigger_check_append(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair);
 void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void *cb_arg);
 int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp);
 void nr_ice_candidate_pair_role_change(nr_ice_cand_pair *pair);

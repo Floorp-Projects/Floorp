@@ -1195,8 +1195,7 @@ const std::string kBasicAudioVideoOffer =
 "a=ssrc:1111 foo:bar" CRLF
 "a=imageattr:120 send * recv *" CRLF
 "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
-"a=simulcast:send pt=120;121" CRLF
-"a=rid:foo send" CRLF
+"a=simulcast:recv pt=120;121" CRLF
 "a=rid:bar recv pt=96;max-width=800;max-height=600" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
@@ -1778,16 +1777,13 @@ TEST_P(NewSdpTest, CheckRid)
   const SdpRidAttributeList& rids =
     mSdp->GetMediaSection(1).GetAttributeList().GetRid();
 
-  ASSERT_EQ(2U, rids.mRids.size());
-  ASSERT_EQ("foo", rids.mRids[0].id);
-  ASSERT_EQ(sdp::kSend, rids.mRids[0].direction);
-  ASSERT_EQ(0U, rids.mRids[0].constraints.formats.size());
-  ASSERT_EQ("bar", rids.mRids[1].id);
-  ASSERT_EQ(sdp::kRecv, rids.mRids[1].direction);
-  ASSERT_EQ(1U, rids.mRids[1].constraints.formats.size());
-  ASSERT_EQ(96U, rids.mRids[1].constraints.formats[0]);
-  ASSERT_EQ(800U, rids.mRids[1].constraints.maxWidth);
-  ASSERT_EQ(600U, rids.mRids[1].constraints.maxHeight);
+  ASSERT_EQ(1U, rids.mRids.size());
+  ASSERT_EQ("bar", rids.mRids[0].id);
+  ASSERT_EQ(sdp::kRecv, rids.mRids[0].direction);
+  ASSERT_EQ(1U, rids.mRids[0].formats.size());
+  ASSERT_EQ(96U, rids.mRids[0].formats[0]);
+  ASSERT_EQ(800U, rids.mRids[0].constraints.maxWidth);
+  ASSERT_EQ(600U, rids.mRids[0].constraints.maxHeight);
 }
 
 TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
@@ -2099,14 +2095,14 @@ TEST_P(NewSdpTest, CheckSimulcast)
   const SdpSimulcastAttribute& simulcast =
     mSdp->GetMediaSection(1).GetAttributeList().GetSimulcast();
 
-  ASSERT_EQ(0U, simulcast.recvVersions.size());
-  ASSERT_EQ(2U, simulcast.sendVersions.size());
-  ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
-  ASSERT_EQ("120", simulcast.sendVersions[0].choices[0]);
-  ASSERT_EQ(1U, simulcast.sendVersions[1].choices.size());
-  ASSERT_EQ("121", simulcast.sendVersions[1].choices[0]);
+  ASSERT_EQ(2U, simulcast.recvVersions.size());
+  ASSERT_EQ(0U, simulcast.sendVersions.size());
+  ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
+  ASSERT_EQ("120", simulcast.recvVersions[0].choices[0]);
+  ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
+  ASSERT_EQ("121", simulcast.recvVersions[1].choices[0]);
   ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
-            simulcast.sendVersions.type);
+            simulcast.recvVersions.type);
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {
@@ -2610,6 +2606,81 @@ TEST_P(NewSdpTest, CheckMalformedImageattr)
   }
 
   ParseSdp(kMalformedImageattr, false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: send rid=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: recv rid=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: send pt=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=recvonly" CRLF
+           "a=simulcast: send pt=120" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendonly" CRLF
+           "a=simulcast: recv pt=120" CRLF,
+           false);
   ASSERT_NE("", GetParseErrors());
 }
 
@@ -3680,378 +3751,6 @@ TEST(NewSdpTestNoFixture, CheckSimulcastInvalidParse)
   ParseInvalid<SdpSimulcastAttribute>(" recv pt=8 recv ", 15);
 }
 
-static SdpRidAttributeList::Constraints
-ParseRidConstraints(const std::string& input)
-{
-  std::istringstream is(input);
-  std::string error;
-  SdpRidAttributeList::Constraints constraints;
-  EXPECT_TRUE(constraints.Parse(is, &error)) << error
-              << " for input \'" << input << "\'" ;
-  EXPECT_TRUE(is.eof());
-  return constraints;
-}
-
-TEST(NewSdpTestNoFixture, CheckRidConstraintsValidParse)
-{
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints(""));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("pt=96"));
-    ASSERT_EQ(1U, constraints.formats.size());
-    ASSERT_EQ(96U, constraints.formats[0]);
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  // This is not technically permitted by the BNF, but the parse code is simpler
-  // if we allow it. If we decide to stop allowing this, this will need to be
-  // converted to an invalid parse test-case.
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-br=30000;pt=96"));
-    ASSERT_EQ(1U, constraints.formats.size());
-    ASSERT_EQ(96U, constraints.formats[0]);
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(30000U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("pt=96,97,98"));
-    ASSERT_EQ(3U, constraints.formats.size());
-    ASSERT_EQ(96U, constraints.formats[0]);
-    ASSERT_EQ(97U, constraints.formats[1]);
-    ASSERT_EQ(98U, constraints.formats[2]);
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-width=800"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(800U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-height=640"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(640U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-fps=30"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(30U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-fs=3600"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(3600U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-br=30000"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(30000U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-pps=9216000"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(9216000U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("depend=foo"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(1U, constraints.dependIds.size());
-    ASSERT_EQ("foo", constraints.dependIds[0]);
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-foo=20"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("depend=foo,bar"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(0U, constraints.maxWidth);
-    ASSERT_EQ(0U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(2U, constraints.dependIds.size());
-    ASSERT_EQ("foo", constraints.dependIds[0]);
-    ASSERT_EQ("bar", constraints.dependIds[1]);
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-width=800;max-height=600"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(800U, constraints.maxWidth);
-    ASSERT_EQ(600U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("pt=96,97;max-width=800;max-height=600"));
-    ASSERT_EQ(2U, constraints.formats.size());
-    ASSERT_EQ(96U, constraints.formats[0]);
-    ASSERT_EQ(97U, constraints.formats[1]);
-    ASSERT_EQ(800U, constraints.maxWidth);
-    ASSERT_EQ(600U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("depend=foo,bar;max-width=800;max-height=600"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(800U, constraints.maxWidth);
-    ASSERT_EQ(600U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(2U, constraints.dependIds.size());
-    ASSERT_EQ("foo", constraints.dependIds[0]);
-    ASSERT_EQ("bar", constraints.dependIds[1]);
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints(
-        ParseRidConstraints("max-foo=20;max-width=800;max-height=600"));
-    ASSERT_EQ(0U, constraints.formats.size());
-    ASSERT_EQ(800U, constraints.maxWidth);
-    ASSERT_EQ(600U, constraints.maxHeight);
-    ASSERT_EQ(0U, constraints.maxFps);
-    ASSERT_EQ(0U, constraints.maxFs);
-    ASSERT_EQ(0U, constraints.maxBr);
-    ASSERT_EQ(0U, constraints.maxPps);
-    ASSERT_EQ(0U, constraints.dependIds.size());
-  }
-}
-
-TEST(NewSdpTestNoFixture, CheckRidConstraintsInvalidParse)
-{
-  ParseInvalid<SdpRidAttributeList::Constraints>(" ", 1);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt", 2);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt=", 3);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt=x", 3);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt=-1", 3);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt=96,", 6);
-  ParseInvalid<SdpRidAttributeList::Constraints>("pt=196", 6);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width", 9);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width=", 10);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width=x", 10);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width=-1", 10);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width=800;", 14);
-  ParseInvalid<SdpRidAttributeList::Constraints>("max-width=800; ", 15);
-  ParseInvalid<SdpRidAttributeList::Constraints>("depend=", 7);
-  ParseInvalid<SdpRidAttributeList::Constraints>("depend=,", 7);
-  ParseInvalid<SdpRidAttributeList::Constraints>("depend=1,", 9);
-}
-
-TEST(NewSdpTestNoFixture, CheckRidConstraintsSerialize)
-{
-  {
-    SdpRidAttributeList::Constraints constraints;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ("", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.formats.push_back(96);
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" pt=96", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.formats.push_back(96);
-    constraints.formats.push_back(97);
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" pt=96,97", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxWidth = 800;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-width=800", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxHeight = 600;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-height=600", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxFps = 30;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-fps=30", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxFs = 3600;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-fs=3600", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxBr = 30000;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-br=30000", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.maxPps = 9216000;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" max-pps=9216000", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.dependIds.push_back("foo");
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" depend=foo", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.dependIds.push_back("foo");
-    constraints.dependIds.push_back("bar");
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" depend=foo,bar", os.str());
-  }
-
-  {
-    SdpRidAttributeList::Constraints constraints;
-    constraints.formats.push_back(96);
-    constraints.maxBr = 30000;
-    std::ostringstream os;
-    constraints.Serialize(os);
-    ASSERT_EQ(" pt=96;max-br=30000", os.str());
-  }
-}
-
 static SdpRidAttributeList::Rid
 ParseRid(const std::string& input)
 {
@@ -4069,46 +3768,46 @@ TEST(NewSdpTestNoFixture, CheckRidValidParse)
     SdpRidAttributeList::Rid rid(ParseRid("1 send"));
     ASSERT_EQ("1", rid.id);
     ASSERT_EQ(sdp::kSend, rid.direction);
-    ASSERT_EQ(0U, rid.constraints.formats.size());
+    ASSERT_EQ(0U, rid.formats.size());
     ASSERT_EQ(0U, rid.constraints.maxWidth);
     ASSERT_EQ(0U, rid.constraints.maxHeight);
     ASSERT_EQ(0U, rid.constraints.maxFps);
     ASSERT_EQ(0U, rid.constraints.maxFs);
     ASSERT_EQ(0U, rid.constraints.maxBr);
     ASSERT_EQ(0U, rid.constraints.maxPps);
-    ASSERT_EQ(0U, rid.constraints.dependIds.size());
+    ASSERT_EQ(0U, rid.dependIds.size());
   }
 
   {
     SdpRidAttributeList::Rid rid(ParseRid("1 send pt=96;max-width=800"));
     ASSERT_EQ("1", rid.id);
     ASSERT_EQ(sdp::kSend, rid.direction);
-    ASSERT_EQ(1U, rid.constraints.formats.size());
-    ASSERT_EQ(96U, rid.constraints.formats[0]);
+    ASSERT_EQ(1U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
     ASSERT_EQ(800U, rid.constraints.maxWidth);
     ASSERT_EQ(0U, rid.constraints.maxHeight);
     ASSERT_EQ(0U, rid.constraints.maxFps);
     ASSERT_EQ(0U, rid.constraints.maxFs);
     ASSERT_EQ(0U, rid.constraints.maxBr);
     ASSERT_EQ(0U, rid.constraints.maxPps);
-    ASSERT_EQ(0U, rid.constraints.dependIds.size());
+    ASSERT_EQ(0U, rid.dependIds.size());
   }
 
   {
     SdpRidAttributeList::Rid rid(ParseRid("1 send pt=96,97,98;max-width=800"));
     ASSERT_EQ("1", rid.id);
     ASSERT_EQ(sdp::kSend, rid.direction);
-    ASSERT_EQ(3U, rid.constraints.formats.size());
-    ASSERT_EQ(96U, rid.constraints.formats[0]);
-    ASSERT_EQ(97U, rid.constraints.formats[1]);
-    ASSERT_EQ(98U, rid.constraints.formats[2]);
+    ASSERT_EQ(3U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
+    ASSERT_EQ(97U, rid.formats[1]);
+    ASSERT_EQ(98U, rid.formats[2]);
     ASSERT_EQ(800U, rid.constraints.maxWidth);
     ASSERT_EQ(0U, rid.constraints.maxHeight);
     ASSERT_EQ(0U, rid.constraints.maxFps);
     ASSERT_EQ(0U, rid.constraints.maxFs);
     ASSERT_EQ(0U, rid.constraints.maxBr);
     ASSERT_EQ(0U, rid.constraints.maxPps);
-    ASSERT_EQ(0U, rid.constraints.dependIds.size());
+    ASSERT_EQ(0U, rid.dependIds.size());
   }
 
   {
@@ -4116,16 +3815,251 @@ TEST(NewSdpTestNoFixture, CheckRidValidParse)
         ParseRid("0123456789az-_ recv max-width=800"));
     ASSERT_EQ("0123456789az-_", rid.id);
     ASSERT_EQ(sdp::kRecv, rid.direction);
-    ASSERT_EQ(0U, rid.constraints.formats.size());
+    ASSERT_EQ(0U, rid.formats.size());
     ASSERT_EQ(800U, rid.constraints.maxWidth);
     ASSERT_EQ(0U, rid.constraints.maxHeight);
     ASSERT_EQ(0U, rid.constraints.maxFps);
     ASSERT_EQ(0U, rid.constraints.maxFs);
     ASSERT_EQ(0U, rid.constraints.maxBr);
     ASSERT_EQ(0U, rid.constraints.maxPps);
-    ASSERT_EQ(0U, rid.constraints.dependIds.size());
+    ASSERT_EQ(0U, rid.dependIds.size());
   }
 
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send pt=96"));
+    ASSERT_EQ(1U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  // This is not technically permitted by the BNF, but the parse code is simpler
+  // if we allow it. If we decide to stop allowing this, this will need to be
+  // converted to an invalid parse test-case.
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-br=30000;pt=96"));
+    ASSERT_EQ(1U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(30000U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send pt=96,97,98"));
+    ASSERT_EQ(3U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
+    ASSERT_EQ(97U, rid.formats[1]);
+    ASSERT_EQ(98U, rid.formats[2]);
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-width=800"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-height=640"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(640U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-fps=30"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(30U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-fs=3600"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(3600U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-br=30000"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(30000U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-pps=9216000"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(9216000U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send depend=foo"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(1U, rid.dependIds.size());
+    ASSERT_EQ("foo", rid.dependIds[0]);
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-foo=20"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send depend=foo,bar"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(0U, rid.constraints.maxWidth);
+    ASSERT_EQ(0U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(2U, rid.dependIds.size());
+    ASSERT_EQ("foo", rid.dependIds[0]);
+    ASSERT_EQ("bar", rid.dependIds[1]);
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-width=800;max-height=600"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(600U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send pt=96,97;max-width=800;max-height=600"));
+    ASSERT_EQ(2U, rid.formats.size());
+    ASSERT_EQ(96U, rid.formats[0]);
+    ASSERT_EQ(97U, rid.formats[1]);
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(600U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send depend=foo,bar;max-width=800;max-height=600"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(600U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(2U, rid.dependIds.size());
+    ASSERT_EQ("foo", rid.dependIds[0]);
+    ASSERT_EQ("bar", rid.dependIds[1]);
+  }
+
+  {
+    SdpRidAttributeList::Rid rid(
+        ParseRid("foo send max-foo=20;max-width=800;max-height=600"));
+    ASSERT_EQ(0U, rid.formats.size());
+    ASSERT_EQ(800U, rid.constraints.maxWidth);
+    ASSERT_EQ(600U, rid.constraints.maxHeight);
+    ASSERT_EQ(0U, rid.constraints.maxFps);
+    ASSERT_EQ(0U, rid.constraints.maxFs);
+    ASSERT_EQ(0U, rid.constraints.maxBr);
+    ASSERT_EQ(0U, rid.constraints.maxPps);
+    ASSERT_EQ(0U, rid.dependIds.size());
+  }
 }
 
 TEST(NewSdpTestNoFixture, CheckRidInvalidParse)
@@ -4138,6 +4072,22 @@ TEST(NewSdpTestNoFixture, CheckRidInvalidParse)
   ParseInvalid<SdpRidAttributeList::Rid>("foo bar", 7);
   ParseInvalid<SdpRidAttributeList::Rid>("foo recv ", 9);
   ParseInvalid<SdpRidAttributeList::Rid>("foo recv pt=", 12);
+  ParseInvalid<SdpRidAttributeList::Rid>(" ", 0);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt", 11);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt=", 12);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt=x", 12);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt=-1", 12);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt=96,", 15);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send pt=196", 15);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width", 18);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width=", 19);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width=x", 19);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width=-1", 19);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width=800;", 23);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send max-width=800; ", 24);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=",16);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=,", 16);
+  ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=1,", 18);
 }
 
 TEST(NewSdpTestNoFixture, CheckRidSerialize)
@@ -4149,6 +4099,128 @@ TEST(NewSdpTestNoFixture, CheckRidSerialize)
     std::ostringstream os;
     rid.Serialize(os);
     ASSERT_EQ("foo send", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.formats.push_back(96);
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send pt=96", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.formats.push_back(96);
+    rid.formats.push_back(97);
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send pt=96,97", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxWidth = 800;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-width=800", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxHeight = 600;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-height=600", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxFps = 30;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-fps=30", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxFs = 3600;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-fs=3600", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxBr = 30000;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-br=30000", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.constraints.maxPps = 9216000;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send max-pps=9216000", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.dependIds.push_back("foo");
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send depend=foo", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.dependIds.push_back("foo");
+    rid.dependIds.push_back("bar");
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send depend=foo,bar", os.str());
+  }
+
+  {
+    SdpRidAttributeList::Rid rid;
+    rid.id = "foo";
+    rid.direction = sdp::kSend;
+    rid.formats.push_back(96);
+    rid.constraints.maxBr = 30000;
+    std::ostringstream os;
+    rid.Serialize(os);
+    ASSERT_EQ("foo send pt=96;max-br=30000", os.str());
   }
 }
 

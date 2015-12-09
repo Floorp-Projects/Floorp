@@ -6884,41 +6884,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "border-image",
     subproperties: [ "border-image-source", "border-image-slice", "border-image-width",  "border-image-outset", "border-image-repeat" ],
   };
-  gCSSProperties["-webkit-border-image-outset"] = {
-    domProp: "webkitBorderImageOutset",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "border-image-outset",
-    subproperties: [ "border-image-outset" ],
-  };
-  gCSSProperties["-webkit-border-image-repeat"] = {
-    domProp: "webkitBorderImageRepeat",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "border-image-repeat",
-    subproperties: [ "border-image-repeat" ],
-  };
-  gCSSProperties["-webkit-border-image-slice"] = {
-    domProp: "webkitBorderImageSlice",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "border-image-slice",
-    subproperties: [ "border-image-slice" ],
-  };
-  gCSSProperties["-webkit-border-image-source"] = {
-    domProp: "webkitBorderImageSource",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "border-image-source",
-    subproperties: [ "border-image-source" ],
-  };
-  gCSSProperties["-webkit-border-image-width"] = {
-    domProp: "webkitBorderImageWidth",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "border-image-width",
-    subproperties: [ "border-image-width" ],
-  };
   gCSSProperties["-webkit-box-shadow"] = {
     domProp: "webkitBoxShadow",
     inherited: false,

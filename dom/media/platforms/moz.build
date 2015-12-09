@@ -27,7 +27,10 @@ UNIFIED_SOURCES += [
     'wrappers/H264Converter.cpp'
 ]
 
-DIRS += ['agnostic/gmp']
+DIRS += [
+    'agnostic/gmp',
+    'omx'
+]
 
 if CONFIG['MOZ_WMF']:
     DIRS += [ 'wmf' ];

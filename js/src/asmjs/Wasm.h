@@ -411,7 +411,11 @@ class HeapAccess
     void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
 };
 #elif defined(JS_CODEGEN_NONE)
-class HeapAccess { };
+class HeapAccess {
+  public:
+    void offsetInsnOffsetBy(uint32_t) { MOZ_CRASH(); }
+    uint32_t insnOffset() const { MOZ_CRASH(); }
+};
 #endif
 
 typedef Vector<HeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
