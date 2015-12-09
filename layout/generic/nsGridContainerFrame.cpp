@@ -813,16 +813,29 @@ IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
   return IsNameWithSuffix(aString, NS_LITERAL_STRING("-start"), aIndex);
 }
 
+enum class GridLineSide {
+  eBeforeGridGap,
+  eAfterGridGap,
+};
+
 static nscoord
-GridLinePosition(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes)
+GridLineEdge(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes,
+             GridLineSide aSide)
 {
-  if (aTrackSizes.Length() == 0) {
+  if (MOZ_UNLIKELY(aTrackSizes.IsEmpty())) {
     // https://drafts.csswg.org/css-grid/#grid-definition
     // "... the explicit grid still contains one grid line in each axis."
     MOZ_ASSERT(aLine == 0, "We should only resolve line 1 in an empty grid");
     return nscoord(0);
   }
   MOZ_ASSERT(aLine <= aTrackSizes.Length(), "aTrackSizes is too small");
+  if (aSide == GridLineSide::eBeforeGridGap) {
+    if (aLine == 0) {
+      return aTrackSizes[0].mPosition;
+    }
+    const TrackSize& sz = aTrackSizes[aLine - 1];
+    return sz.mPosition + sz.mBase;
+  }
   if (aLine == aTrackSizes.Length()) {
     const TrackSize& sz = aTrackSizes[aLine - 1];
     return sz.mPosition + sz.mBase;
@@ -2784,13 +2797,15 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
       // done
     } else {
       const nscoord endPos = *aPos + *aLength;
-      nscoord startPos = ::GridLinePosition(mStart, aTrackSizes);
+      nscoord startPos =
+        ::GridLineEdge(mStart, aTrackSizes, GridLineSide::eAfterGridGap);
       *aPos = aGridOrigin + startPos;
       *aLength = std::max(endPos - *aPos, 0);
     }
   } else {
     if (mStart == kAutoLine) {
-      nscoord endPos = ::GridLinePosition(mEnd, aTrackSizes);
+      nscoord endPos =
+        ::GridLineEdge(mEnd, aTrackSizes, GridLineSide::eBeforeGridGap);
       *aLength = std::max(aGridOrigin + endPos, 0);
     } else {
       nscoord pos;
