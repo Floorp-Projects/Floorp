@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMFileReader.h"
+#include "FileReader.h"
 
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
@@ -39,50 +39,50 @@ using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
+NS_IMPL_CYCLE_COLLECTION_CLASS(FileReader)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileReader,
                                                   FileIOObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBlob)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMFileReader,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileReader,
                                                 FileIOObject)
   tmp->mResultArrayBuffer = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBlob)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMFileReader,
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(FileReader,
                                                DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMFileReader)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, FileIOObject)
-NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, FileIOObject)
+NS_IMPL_ADDREF_INHERITED(FileReader, FileIOObject)
+NS_IMPL_RELEASE_INHERITED(FileReader, FileIOObject)
 
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, load)
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, loadend)
-NS_IMPL_EVENT_HANDLER(nsDOMFileReader, loadstart)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, abort, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, progress, FileIOObject)
-NS_IMPL_FORWARD_EVENT_HANDLER(nsDOMFileReader, error, FileIOObject)
+NS_IMPL_EVENT_HANDLER(FileReader, load)
+NS_IMPL_EVENT_HANDLER(FileReader, loadend)
+NS_IMPL_EVENT_HANDLER(FileReader, loadstart)
+NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, abort, FileIOObject)
+NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, progress, FileIOObject)
+NS_IMPL_FORWARD_EVENT_HANDLER(FileReader, error, FileIOObject)
 
 void
-nsDOMFileReader::RootResultArrayBuffer()
+FileReader::RootResultArrayBuffer()
 {
   mozilla::HoldJSObjects(this);
 }
 
-//nsDOMFileReader constructors/initializers
+//FileReader constructors/initializers
 
-nsDOMFileReader::nsDOMFileReader()
+FileReader::FileReader()
   : mFileData(nullptr),
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
     mResultArrayBuffer(nullptr)
@@ -90,7 +90,7 @@ nsDOMFileReader::nsDOMFileReader()
   SetDOMStringToNull(mResult);
 }
 
-nsDOMFileReader::~nsDOMFileReader()
+FileReader::~FileReader()
 {
   FreeFileData();
   mResultArrayBuffer = nullptr;
@@ -102,7 +102,7 @@ nsDOMFileReader::~nsDOMFileReader()
  * This Init method is called from the factory constructor.
  */
 nsresult
-nsDOMFileReader::Init()
+FileReader::Init()
 {
   // Instead of grabbing some random global from the context stack,
   // let's use the default one (junk scope) for now.
@@ -111,10 +111,10 @@ nsDOMFileReader::Init()
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsDOMFileReader>
-nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+/* static */ already_AddRefed<FileReader>
+FileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<nsDOMFileReader> fileReader = new nsDOMFileReader();
+  RefPtr<FileReader> fileReader = new FileReader();
 
   nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.GetAsSupports());
   if (!owner) {
@@ -130,7 +130,7 @@ nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 // nsIInterfaceRequestor
 
 NS_IMETHODIMP
-nsDOMFileReader::GetInterface(const nsIID & aIID, void **aResult)
+FileReader::GetInterface(const nsIID & aIID, void **aResult)
 {
   return QueryInterface(aIID, aResult);
 }
@@ -138,21 +138,21 @@ nsDOMFileReader::GetInterface(const nsIID & aIID, void **aResult)
 // nsIDOMFileReader
 
 NS_IMETHODIMP
-nsDOMFileReader::GetReadyState(uint16_t *aReadyState)
+FileReader::GetReadyState(uint16_t *aReadyState)
 {
   *aReadyState = ReadyState();
   return NS_OK;
 }
 
 void
-nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-                           ErrorResult& aRv)
+FileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                      ErrorResult& aRv)
 {
   aRv = GetResult(aCx, aResult);
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
+FileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
 {
   JS::Rooted<JS::Value> result(aCx);
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
@@ -176,14 +176,14 @@ nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::GetError(nsISupports** aError)
+FileReader::GetError(nsISupports** aError)
 {
   NS_IF_ADDREF(*aError = GetError());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aBlob, JSContext* aCx)
+FileReader::ReadAsArrayBuffer(nsIDOMBlob* aBlob, JSContext* aCx)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
@@ -193,7 +193,7 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aBlob, JSContext* aCx)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aBlob)
+FileReader::ReadAsBinaryString(nsIDOMBlob* aBlob)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
@@ -203,7 +203,7 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aBlob)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsText(nsIDOMBlob* aBlob,
+FileReader::ReadAsText(nsIDOMBlob* aBlob,
                             const nsAString &aCharset)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
@@ -214,7 +214,7 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aBlob,
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aBlob)
+FileReader::ReadAsDataURL(nsIDOMBlob* aBlob)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
@@ -224,7 +224,7 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aBlob)
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::Abort()
+FileReader::Abort()
 {
   ErrorResult rv;
   FileIOObject::Abort(rv);
@@ -232,7 +232,7 @@ nsDOMFileReader::Abort()
 }
 
 /* virtual */ void
-nsDOMFileReader::DoAbort(nsAString& aEvent)
+FileReader::DoAbort(nsAString& aEvent)
 {
   // Revert status and result attributes
   SetDOMStringToNull(mResult);
@@ -271,9 +271,9 @@ ReadFuncBinaryString(nsIInputStream* in,
 }
 
 nsresult
-nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
-                             nsAString& aSuccessEvent,
-                             nsAString& aTerminationEvent)
+FileReader::DoOnLoadEnd(nsresult aStatus,
+                        nsAString& aSuccessEvent,
+                        nsAString& aTerminationEvent)
 {
   // Make sure we drop all the objects that could hold files open now.
   nsCOMPtr<nsIAsyncInputStream> stream;
@@ -344,7 +344,7 @@ nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
 }
 
 nsresult
-nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
+FileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
 {
   MOZ_ASSERT(aStream);
 
@@ -386,10 +386,10 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
 // Helper methods
 
 void
-nsDOMFileReader::ReadFileContent(Blob& aBlob,
-                                 const nsAString &aCharset,
-                                 eDataFormat aDataFormat,
-                                 ErrorResult& aRv)
+FileReader::ReadFileContent(Blob& aBlob,
+                            const nsAString &aCharset,
+                            eDataFormat aDataFormat,
+                            ErrorResult& aRv)
 {
   //Implicit abort to clear any other activity going on
   Abort();
@@ -469,11 +469,11 @@ nsDOMFileReader::ReadFileContent(Blob& aBlob,
 }
 
 nsresult
-nsDOMFileReader::GetAsText(Blob *aBlob,
-                           const nsACString &aCharset,
-                           const char *aFileData,
-                           uint32_t aDataLen,
-                           nsAString& aResult)
+FileReader::GetAsText(Blob *aBlob,
+                      const nsACString &aCharset,
+                      const char *aFileData,
+                      uint32_t aDataLen,
+                      nsAString& aResult)
 {
   // The BOM sniffing is baked into the "decode" part of the Encoding
   // Standard, which the File API references.
@@ -509,10 +509,10 @@ nsDOMFileReader::GetAsText(Blob *aBlob,
 }
 
 nsresult
-nsDOMFileReader::GetAsDataURL(Blob *aBlob,
-                              const char *aFileData,
-                              uint32_t aDataLen,
-                              nsAString& aResult)
+FileReader::GetAsDataURL(Blob *aBlob,
+                         const char *aFileData,
+                         uint32_t aDataLen,
+                         nsAString& aResult)
 {
   aResult.AssignLiteral("data:");
 
@@ -537,7 +537,7 @@ nsDOMFileReader::GetAsDataURL(Blob *aBlob,
 }
 
 /* virtual */ JSObject*
-nsDOMFileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return FileReaderBinding::Wrap(aCx, this, aGivenProto);
 }
