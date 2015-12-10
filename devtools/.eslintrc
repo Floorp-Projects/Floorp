@@ -36,16 +36,16 @@
     "block-scoped-var": 2,
     // Enforce one true brace style (opening brace on the same line) and avoid
     // start and end braces on the same line.
-    "brace-style": [2, "1tbs", {"allowSingleLine": false}],
+    "brace-style": [1, "1tbs", {"allowSingleLine": false}],
     // Require camel case names
-    "camelcase": 2,
+    "camelcase": 1,
     // Allow trailing commas for easy list extension.  Having them does not
     // impair readability, but also not required either.
     "comma-dangle": 0,
     // Enforce spacing before and after comma
-    "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-spacing": [1, {"before": false, "after": true}],
     // Enforce one true comma style.
-    "comma-style": [2, "last"],
+    "comma-style": [1, "last"],
     // Warn about cyclomatic complexity in functions.
     "complexity": 1,
     // Require return statements to either always or never specify values.
@@ -84,7 +84,7 @@
     // Only useful in a node environment.
     "handle-callback-err": 0,
     // Tab width.
-    "indent": [2, 2, {"SwitchCase": 1}],
+    "indent": [1, 2, {"SwitchCase": 1}],
     // Enforces spacing between keys and values in object literal properties.
     "key-spacing": [1, {"beforeColon": false, "afterColon": true}],
     // Allow mixed 'LF' and 'CRLF' as linebreaks.
@@ -168,7 +168,7 @@
     // Allow unnecessary parentheses, as they may make the code more readable.
     "no-extra-parens": 0,
     // Disallow unnecessary semicolons.
-    "no-extra-semi": 2,
+    "no-extra-semi": 1,
     // Deprecated, will be removed in 1.0.
     "no-extra-strict": 0,
     // Disallow fallthrough of case statements, except if there is a comment.
