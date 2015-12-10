@@ -55,6 +55,7 @@ class ViEReceiver : public RtpData {
 
   uint32_t GetRemoteSsrc() const;
   int GetCsrcs(uint32_t* csrcs) const;
+  void GetRID(char rid[256]) const;
 
   void SetRtpRtcpModule(RtpRtcp* module);
 
@@ -65,6 +66,7 @@ class ViEReceiver : public RtpData {
   bool SetReceiveTimestampOffsetStatus(bool enable, int id);
   bool SetReceiveAbsoluteSendTimeStatus(bool enable, int id);
   bool SetReceiveVideoRotationStatus(bool enable, int id);
+  bool SetReceiveRIDStatus(bool enable, int id);
 
   void StartReceive();
   void StopReceive();
@@ -129,6 +131,7 @@ class ViEReceiver : public RtpData {
   bool restored_packet_in_use_;
   bool receiving_ast_enabled_;
   bool receiving_cvo_enabled_;
+  bool receiving_rid_enabled_;
   int64_t last_packet_log_ms_;
 };
 
