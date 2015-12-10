@@ -2536,11 +2536,11 @@ class MTableSwitch final
         return successors_.length();
     }
 
-    size_t addSuccessor(MBasicBlock* successor) {
+    bool addSuccessor(MBasicBlock* successor, size_t* index) {
         MOZ_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
         MOZ_ASSERT(!successors_.empty());
-        successors_.append(successor);
-        return successors_.length() - 1;
+        *index = successors_.length();
+        return successors_.append(successor);
     }
 
     MBasicBlock* getSuccessor(size_t i) const override {
@@ -2581,14 +2581,15 @@ class MTableSwitch final
         return high() - low() + 1;
     }
 
-    size_t addDefault(MBasicBlock* block) {
+    bool addDefault(MBasicBlock* block, size_t* index = nullptr) {
         MOZ_ASSERT(successors_.empty());
-        successors_.append(block);
-        return 0;
+        if (index)
+            *index = 0;
+        return successors_.append(block);
     }
 
-    void addCase(size_t successorIndex) {
-        cases_.append(successorIndex);
+    bool addCase(size_t successorIndex) {
+        return cases_.append(successorIndex);
     }
 
     MBasicBlock* getBlock(size_t i) const {
@@ -2596,8 +2597,8 @@ class MTableSwitch final
         return blocks_[i];
     }
 
-    void addBlock(MBasicBlock* block) {
-        blocks_.append(block);
+    bool addBlock(MBasicBlock* block) {
+        return blocks_.append(block);
     }
 
     MDefinition* getOperand(size_t index) const override {
@@ -10646,8 +10647,8 @@ class MDispatchInstruction
     }
 
   public:
-    void addCase(JSFunction* func, ObjectGroup* funcGroup, MBasicBlock* block) {
-        map_.append(Entry(func, funcGroup, block));
+    bool addCase(JSFunction* func, ObjectGroup* funcGroup, MBasicBlock* block) {
+        return map_.append(Entry(func, funcGroup, block));
     }
     uint32_t numCases() const {
         return map_.length();

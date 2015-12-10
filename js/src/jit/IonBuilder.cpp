@@ -3422,8 +3422,12 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote* sn)
     MBasicBlock* defaultcase = newBlock(current, defaultpc);
     if (!defaultcase)
         return ControlStatus_Error;
-    tableswitch->addDefault(defaultcase);
-    tableswitch->addBlock(defaultcase);
+
+    if (!tableswitch->addDefault(defaultcase))
+        return ControlStatus_Error;
+
+    if (!tableswitch->addBlock(defaultcase))
+        return ControlStatus_Error;
 
     // Create cases
     jsbytecode* casepc = nullptr;
@@ -3451,14 +3455,22 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote* sn)
             if (!caseblock)
                 return ControlStatus_Error;
 
-            tableswitch->addBlock(caseblock);
+            if (!tableswitch->addBlock(caseblock))
+                return ControlStatus_Error;
+
             // Add constant to indicate which case this is for use by
             // processNextTableSwitchCase.
             MConstant* constant = MConstant::New(alloc(), Int32Value(i + low));
             caseblock->add(constant);
         }
 
-        tableswitch->addCase(tableswitch->addSuccessor(caseblock));
+        size_t caseIndex;
+        if (!tableswitch->addSuccessor(caseblock, &caseIndex))
+            return ControlStatus_Error;
+
+        if (!tableswitch->addCase(caseIndex))
+            return ControlStatus_Error;
+
         pc2 += JUMP_OFFSET_LEN;
     }
 
@@ -5884,7 +5896,8 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
 
         // Connect the inline path to the returnBlock.
         ObjectGroup* funcGroup = target->isSingleton() ? nullptr : target->group();
-        dispatch->addCase(target, funcGroup, inlineBlock);
+        if (!dispatch->addCase(target, funcGroup, inlineBlock))
+            return false;
 
         MDefinition* retVal = inlineReturnBlock->peek(-1);
         retPhi->addInput(retVal);
