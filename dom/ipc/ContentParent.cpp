@@ -271,11 +271,6 @@ using namespace mozilla::system;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
-#if defined(XP_WIN)
-// e10s forced enable pref, defined in nsAppRunner.cpp
-extern const char* kForceEnableE10sPref;
-#endif
-
 using base::ChildPrivileges;
 using base::KillProcess;
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -1560,15 +1555,7 @@ ContentParent::Init()
     // If accessibility is running in chrome process then start it in content
     // process.
     if (nsIPresShell::IsAccessibilityActive()) {
-#if !defined(XP_WIN)
         Unused << SendActivateA11y();
-#else
-        // On Windows we currently only enable a11y in the content process
-        // for testing purposes.
-        if (Preferences::GetBool(kForceEnableE10sPref, false)) {
-            Unused << SendActivateA11y();
-        }
-#endif
     }
 #endif
 
@@ -3347,15 +3334,7 @@ ContentParent::Observe(nsISupports* aSubject,
     // gets initiated in chrome process.
     else if (aData && (*aData == '1') &&
              !strcmp(aTopic, "a11y-init-or-shutdown")) {
-#if !defined(XP_WIN)
         Unused << SendActivateA11y();
-#else
-        // On Windows we currently only enable a11y in the content process
-        // for testing purposes.
-        if (Preferences::GetBool(kForceEnableE10sPref, false)) {
-            Unused << SendActivateA11y();
-        }
-#endif
     }
 #endif
     else if (!strcmp(aTopic, "app-theme-changed")) {
