@@ -84,8 +84,8 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
       // With containerless scrolling, the offending post-scale is on the
       // parent layer of the displayport-ancestor, which we don't reach in this
       // loop, so we don't need to worry about it.
-      const FrameMetrics& metrics = iter.Metrics();
-      transform.PostScale(metrics.GetPresShellResolution(), metrics.GetPresShellResolution(), 1.f);
+      float presShellResolution = iter.GetPresShellResolution();
+      transform.PostScale(presShellResolution, presShellResolution, 1.0f);
     }
   }
   return ViewAs<LayerToParentLayerMatrix4x4>(transform);

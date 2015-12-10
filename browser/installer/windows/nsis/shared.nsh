@@ -774,6 +774,11 @@ ${EndIf}
     ; installation.
     WriteRegStr HKLM "$R0\0" "name" "${CERTIFICATE_NAME}"
     WriteRegStr HKLM "$R0\0" "issuer" "${CERTIFICATE_ISSUER}"
+    ; These values associate the allowed certificates for the previous
+    ;  installation, so that we can update from it cleanly using the
+    ;  old updater.exe (which will still have this signature).
+    WriteRegStr HKLM "$R0\1" "name" "${CERTIFICATE_NAME_PREVIOUS}"
+    WriteRegStr HKLM "$R0\1" "issuer" "${CERTIFICATE_ISSUER_PREVIOUS}"
     ${If} ${RunningX64}
       SetRegView lastused
     ${EndIf}

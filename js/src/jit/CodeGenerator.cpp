@@ -8428,6 +8428,16 @@ CodeGenerator::visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint* ool
     masm.jump(ool->rejoin());
 }
 
+typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
+static const VMFunction BindVarInfo = FunctionInfo<BindVarFn>(jit::BindVar);
+
+void
+CodeGenerator::visitCallBindVar(LCallBindVar* lir)
+{
+    pushArg(ToRegister(lir->scopeChain()));
+    callVM(BindVarInfo, lir);
+}
+
 typedef bool (*GetPropertyFn)(JSContext*, HandleValue, HandlePropertyName, MutableHandleValue);
 static const VMFunction GetPropertyInfo = FunctionInfo<GetPropertyFn>(GetProperty);
 

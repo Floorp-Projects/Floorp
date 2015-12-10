@@ -370,16 +370,6 @@ FloatLogicalValuesEnabledPrefChangeCallback(const char* aPrefName,
     isFloatLogicalValuesEnabled ? eCSSKeyword_inline_end : eCSSKeyword_UNKNOWN;
 }
 
-bool
-nsLayoutUtils::HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                          nsCSSProperty aProperty)
-{
-  // XXX Bug 1230056 - Add EffectCompositor::HasAnimationsForCompositor to
-  // avoid allocating an array here only to throw it away.
-  return !EffectCompositor::GetAnimationsForCompositor(aFrame,
-                                                       aProperty).IsEmpty();
-}
-
 template<typename TestType>
 static bool
 HasMatchingCurrentAnimations(const nsIFrame* aFrame, TestType&& aTest)

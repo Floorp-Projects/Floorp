@@ -26,9 +26,7 @@
           return;
         }
 
-        let reader =
-          Components.classes["@mozilla.org/files/filereader;1"]
-                    .createInstance(Components.interfaces.nsIDOMFileReader);
+        let reader = new FileReader();
         reader.addEventListener("load", function() {
           let response = reader.result == "this is a great success!" ?
                          message.json :

@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/UserCustomizations.jsm");
+Cu.importGlobalProperties(["FileReader"]);
 
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -851,8 +852,7 @@ WebappsActor.prototype = {
       }
 
       // Convert the blog to a base64 encoded data URI
-      let reader = Cc["@mozilla.org/files/filereader;1"]
-                     .createInstance(Ci.nsIDOMFileReader);
+      let reader = new FileReader();
       reader.onload = function () {
         deferred.resolve({
           url: reader.result

@@ -5775,6 +5775,22 @@ class LBindNameCache : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LCallBindVar : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(CallBindVar)
+
+    explicit LCallBindVar(const LAllocation& scopeChain) {
+        setOperand(0, scopeChain);
+    }
+    const LAllocation* scopeChain() {
+        return getOperand(0);
+    }
+    const MCallBindVar* mir() const {
+        return mir_->toCallBindVar();
+    }
+};
+
 // Load a value from an object's dslots or a slots vector.
 class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

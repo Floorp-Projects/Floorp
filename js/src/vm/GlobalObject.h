@@ -96,6 +96,7 @@ class GlobalObject : public NativeObject
 
         /* One-off properties stored after slots for built-ins. */
         LEXICAL_SCOPE,
+        ITERATOR_PROTO,
         ARRAY_ITERATOR_PROTO,
         STRING_ITERATOR_PROTO,
         LEGACY_GENERATOR_OBJECT_PROTO,
@@ -453,7 +454,7 @@ class GlobalObject : public NativeObject
 
     TypedObjectModuleObject& getTypedObjectModule() const;
 
-    JSObject* getIteratorPrototype() {
+    JSObject* getLegacyIteratorPrototype() {
         return &getPrototype(JSProto_Iterator).toObject();
     }
 
@@ -509,13 +510,9 @@ class GlobalObject : public NativeObject
     }
 
   public:
-    static NativeObject* getOrCreateIteratorPrototype(JSContext* cx,
-                                                      Handle<GlobalObject*> global)
+    static NativeObject* getOrCreateIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global)
     {
-        if (!ensureConstructor(cx, global, JSProto_Iterator))
-            return nullptr;
-        size_t slot = APPLICATION_SLOTS + JSProto_LIMIT + JSProto_Iterator;
-        return &global->getSlot(slot).toObject().as<NativeObject>();
+        return MaybeNativeObject(global->getOrCreateObject(cx, ITERATOR_PROTO, initIteratorProto));
     }
 
     static NativeObject* getOrCreateArrayIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global)
@@ -678,6 +675,7 @@ class GlobalObject : public NativeObject
     bool valueIsEval(Value val);
 
     // Implemented in jsiter.cpp.
+    static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
 

@@ -2208,6 +2208,16 @@ Engine.prototype = {
      *   [other]/engine.xml
      */
 
+    const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
+    const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+    const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
+
+    const knownDirs = {
+      app: NS_XPCOM_CURRENT_PROCESS_DIR,
+      profile: NS_APP_USER_PROFILE_50_DIR,
+      distribution: XRE_APP_DISTRIBUTION_DIR
+    };
+
     let leafName = this._shortName;
     if (!leafName)
       return "null";
@@ -2226,6 +2236,25 @@ Engine.prototype = {
         packageName = uri.hostPort;
         uri = gChromeReg.convertChromeURL(uri);
       }
+
+#ifdef ANDROID
+      // On Android the omni.ja file isn't at the same path as the binary
+      // used to start the process. We tweak the path here so that the code
+      // shared with Desktop will correctly identify files from the omni.ja
+      // file as coming from the [app] folder.
+      let appPath = Services.io.getProtocolHandler("resource")
+                            .QueryInterface(Ci.nsIResProtocolHandler)
+                            .getSubstitution("android");
+      if (appPath) {
+        appPath = appPath.spec;
+        let spec = uri.spec;
+        if (spec.includes(appPath)) {
+          let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
+          uri = NetUtil.newURI(spec.replace(appPath, appURI.spec));
+        }
+      }
+#endif
+
       if (uri instanceof Ci.nsINestedURI) {
         prefix = "jar:";
         suffix = "!" + packageName + "/" + leafName;
@@ -2244,16 +2273,6 @@ Engine.prototype = {
 
     let id;
     let enginePath = file.path;
-
-    const NS_XPCOM_CURRENT_PROCESS_DIR = "XCurProcD";
-    const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-    const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
-
-    const knownDirs = {
-      app: NS_XPCOM_CURRENT_PROCESS_DIR,
-      profile: NS_APP_USER_PROFILE_50_DIR,
-      distribution: XRE_APP_DISTRIBUTION_DIR
-    };
 
     for (let key in knownDirs) {
       let path;
