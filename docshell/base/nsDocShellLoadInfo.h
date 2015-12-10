@@ -33,8 +33,8 @@ protected:
 protected:
   nsCOMPtr<nsIURI> mReferrer;
   nsCOMPtr<nsIURI> mOriginalURI;
-  bool mLoadReplace;
   nsCOMPtr<nsISupports> mOwner;
+  bool mLoadReplace;
   bool mInheritOwner;
   bool mOwnerIsExplicit;
   bool mSendReferrer;
