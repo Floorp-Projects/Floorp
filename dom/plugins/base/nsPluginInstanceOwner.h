@@ -256,6 +256,11 @@ public:
   void NotifyHostCreateWidget();
   void NotifyDestroyPending();
 
+#if defined(XP_WIN)
+  // See QUIRK_FLASH_FIXUP_MOUSE_CURSOR
+  void ResetWidgetCursorCaching();
+#endif
+
 private:
   virtual ~nsPluginInstanceOwner();
 

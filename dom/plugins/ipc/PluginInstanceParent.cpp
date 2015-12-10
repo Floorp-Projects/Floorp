@@ -2368,6 +2368,23 @@ PluginInstanceParent::Cast(NPP aInstance, PluginAsyncSurrogate** aSurrogate)
     return instancePtr;
 }
 
+bool
+PluginInstanceParent::RecvPluginDidSetCursor()
+{
+#if defined(OS_WIN)
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (!owner) {
+        return true;
+    }
+    owner->ResetWidgetCursorCaching();
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceParent::RecvPluginDidSetCursor not implemented!");
+    return false;
+#endif
+}
+
+
 void
 PluginInstanceParent::RecordDrawingModel()
 {
