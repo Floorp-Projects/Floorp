@@ -968,14 +968,10 @@ final class GeckoEditable extends JNIObject
     }
 
     private void geckoReplaceText(int start, int oldEnd, CharSequence newText) {
-        if (AppConstants.Versions.preHC) {
-            // Don't use replace() because Gingerbread has a bug where if the replaced text
-            // has the same spans as the original text, the spans will end up being deleted
-            mText.delete(start, oldEnd);
-            mText.insert(start, newText);
-        } else {
-            mText.replace(start, oldEnd, newText);
-        }
+        // Don't use replace() because Gingerbread has a bug where if the replaced text
+        // has the same spans as the original text, the spans will end up being deleted
+        mText.delete(start, oldEnd);
+        mText.insert(start, newText);
     }
 
     private boolean isSameText(int start, int oldEnd, CharSequence newText) {
@@ -1005,8 +1001,7 @@ final class GeckoEditable extends JNIObject
            number to denote "end of the text". Fix that here */
         final int oldEnd = unboundedOldEnd > mText.length() ? mText.length() : unboundedOldEnd;
         // new end should always match text
-        if (unboundedOldEnd < Integer.MAX_VALUE / 2 &&
-                unboundedNewEnd != (start + text.length())) {
+        if (start != 0 && unboundedNewEnd != (start + text.length())) {
             Log.e(LOGTAG, "newEnd does not match text: " + unboundedNewEnd + " vs " +
                   (start + text.length()));
             throw new IllegalArgumentException("newEnd does not match text");
@@ -1018,42 +1013,62 @@ final class GeckoEditable extends JNIObject
             // Simply replace the text for newly-focused editors.
             mText.replace(0, mText.length(), text);
 
-        } else if (action != null &&
-                action.mType == Action.TYPE_REPLACE_TEXT &&
-                start <= action.mStart &&
-                oldEnd >= action.mEnd &&
-                newEnd >= action.mStart + action.mSequence.length()) {
+        } else {
+            mChangedText.clearSpans();
+            mChangedText.replace(0, mChangedText.length(), text);
+            // Preserve as many spans as possible
+            TextUtils.copySpansFrom(mText, start, Math.min(oldEnd, newEnd),
+                                    Object.class, mChangedText, 0);
 
-            // actionNewEnd is the new end of the original replacement action
-            final int actionNewEnd = action.mStart + action.mSequence.length();
+            if (action != null &&
+                    action.mType == Action.TYPE_REPLACE_TEXT &&
+                    start <= action.mStart &&
+                    action.mStart + action.mSequence.length() <= newEnd) {
 
-            // Replace old spans with new spans
-            if (start == action.mStart && oldEnd == action.mEnd && newEnd == actionNewEnd) {
-                // The new text exactly matches our sequence, so do a direct replace.
-                geckoReplaceText(start, oldEnd, action.mSequence);
+                // actionNewEnd is the new end of the original replacement action
+                final int actionNewEnd = action.mStart + action.mSequence.length();
+                int selStart = Selection.getSelectionStart(mText);
+                int selEnd = Selection.getSelectionEnd(mText);
+
+                // Replace old spans with new spans
+                mChangedText.replace(action.mStart - start, actionNewEnd - start,
+                                     action.mSequence);
+                geckoReplaceText(start, oldEnd, mChangedText);
+
+                // delete/insert above might have moved our selection to somewhere else
+                // this happens when the Gecko text change covers a larger range than
+                // the original replacement action. Fix selection here
+                if (selStart >= start && selStart <= oldEnd) {
+                    selStart = selStart < action.mStart ? selStart :
+                               selStart < action.mEnd   ? actionNewEnd :
+                                                          selStart + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_START, selStart, selStart,
+                                  Spanned.SPAN_POINT_POINT);
+                }
+                if (selEnd >= start && selEnd <= oldEnd) {
+                    selEnd = selEnd < action.mStart ? selEnd :
+                             selEnd < action.mEnd   ? actionNewEnd :
+                                                      selEnd + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
+                                  Spanned.SPAN_POINT_POINT);
+                }
+
+                // Ignore the next selection change because the selection change is a
+                // side-effect of the replace-text event we sent.
+                mIgnoreSelectionChange = true;
+
             } else {
-                mChangedText.clearSpans();
-                mChangedText.replace(0, mChangedText.length(), mText, start, oldEnd);
-                mChangedText.replace(action.mStart - start, action.mEnd - start, action.mSequence);
+                // Gecko side initiated the text change.
+                if (isSameText(start, oldEnd, mChangedText)) {
+                    // Nothing to do because the text is the same. This could happen when
+                    // the composition is updated for example. Ignore the next selection
+                    // change because the selection change is a side-effect of the
+                    // update-composition event we sent.
+                    mIgnoreSelectionChange = true;
+                    return;
+                }
                 geckoReplaceText(start, oldEnd, mChangedText);
             }
-
-            // Ignore the next selection change because the selection change is a
-            // side-effect of the replace-text event we sent.
-            mIgnoreSelectionChange = true;
-
-        } else {
-            // Gecko side initiated the text change.
-            if (isSameText(start, oldEnd, text)) {
-                // Nothing to do because the text is the same. This could happen when
-                // the composition is updated for example. Ignore the next selection
-                // change because the selection change is a side-effect of the
-                // update-composition event we sent.
-                mIgnoreSelectionChange = true;
-                return;
-            }
-
-            geckoReplaceText(start, oldEnd, text);
         }
 
         geckoPostToIc(new Runnable() {
