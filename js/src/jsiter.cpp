@@ -1109,7 +1109,6 @@ const Class ArrayIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec array_iterator_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1131,7 +1130,6 @@ const Class StringIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec string_iterator_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "StringIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1462,13 +1460,32 @@ const Class StopIterationObject::class_ = {
     stopiter_hasInstance
 };
 
+static const JSFunctionSpec iterator_proto_methods[] = {
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
+    JS_FS_END
+};
+
+/* static */ bool
+GlobalObject::initIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
+{
+    if (global->getReservedSlot(ITERATOR_PROTO).isObject())
+        return true;
+
+    RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
+    if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_proto_methods))
+        return false;
+
+    global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+    return true;
+}
+
 /* static */ bool
 GlobalObject::initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
 {
     if (global->getReservedSlot(ARRAY_ITERATOR_PROTO).isObject())
         return true;
 
-    RootedObject iteratorProto(cx, GlobalObject::getOrCreateLegacyIteratorPrototype(cx, global));
+    RootedObject iteratorProto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
     if (!iteratorProto)
         return false;
 
@@ -1487,8 +1504,12 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
     if (global->getReservedSlot(STRING_ITERATOR_PROTO).isObject())
         return true;
 
+    RootedObject iteratorProto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+    if (!iteratorProto)
+        return false;
+
     const Class* cls = &StringIteratorPrototypeClass;
-    RootedObject proto(cx, global->createBlankPrototype(cx, cls));
+    RootedObject proto(cx, global->createBlankPrototypeInheriting(cx, cls, iteratorProto));
     if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, string_iterator_methods))
         return false;
 

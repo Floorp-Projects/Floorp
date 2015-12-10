@@ -118,7 +118,6 @@ const Class MapIteratorObject::class_ = {
 };
 
 const JSFunctionSpec MapIteratorObject::methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "MapIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -141,14 +140,12 @@ MapIteratorObject::kind() const
 bool
 GlobalObject::initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Rooted<JSObject*> base(cx, GlobalObject::getOrCreateLegacyIteratorPrototype(cx, global));
+    Rooted<JSObject*> base(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
     if (!base)
         return false;
-    Rooted<MapIteratorObject*> proto(cx,
-        NewObjectWithGivenProto<MapIteratorObject>(cx, base));
+    RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, base));
     if (!proto)
         return false;
-    proto->setSlot(MapIteratorObject::RangeSlot, PrivateValue(nullptr));
     if (!JS_DefineFunctions(cx, proto, MapIteratorObject::methods))
         return false;
     global->setReservedSlot(MAP_ITERATOR_PROTO, ObjectValue(*proto));
@@ -844,7 +841,6 @@ const Class SetIteratorObject::class_ = {
 };
 
 const JSFunctionSpec SetIteratorObject::methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -866,14 +862,12 @@ SetIteratorObject::kind() const
 bool
 GlobalObject::initSetIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Rooted<JSObject*> base(cx, GlobalObject::getOrCreateLegacyIteratorPrototype(cx, global));
+    Rooted<JSObject*> base(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
     if (!base)
         return false;
-    Rooted<SetIteratorObject*> proto(cx,
-        NewObjectWithGivenProto<SetIteratorObject>(cx, base));
+    RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, base));
     if (!proto)
         return false;
-    proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(nullptr));
     if (!JS_DefineFunctions(cx, proto, SetIteratorObject::methods))
         return false;
     global->setReservedSlot(SET_ITERATOR_PROTO, ObjectValue(*proto));
