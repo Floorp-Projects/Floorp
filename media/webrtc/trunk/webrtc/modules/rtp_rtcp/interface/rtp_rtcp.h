@@ -218,6 +218,11 @@ class RtpRtcp : public Module {
     virtual void SetCsrcs(const std::vector<uint32_t>& csrcs) = 0;
 
     /*
+    *   Set RID value for the RID header extension or RTCP SDES
+    */
+    virtual int32_t SetRID(const char *rid) = 0;
+
+    /*
     * Turn on/off sending RTX (RFC 4588). The modes can be set as a combination
     * of values of the enumerator RtxMode.
     */
