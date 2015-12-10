@@ -3186,6 +3186,27 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
 }
 
 void
+ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aDoc);
+  // We perform these success path navigation update steps when the
+  // document tells us its more or less done loading.  This avoids
+  // slowing down page load and also lets pages consistently get
+  // updatefound events when they fire.
+  //
+  // 9.8.20 If respondWithEntered is false, then:
+  // 9.8.22 Else: (respondWith was entered and succeeded)
+  //    If request is a non-subresource request, then: Invoke Soft Update
+  //    algorithm.
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  mControlledDocuments.Get(aDoc, getter_AddRefs(registration));
+  if (registration) {
+    registration->MaybeScheduleUpdate();
+  }
+}
+
+void
 ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
                                                 nsIDocument* aDoc,
                                                 const nsAString& aDocumentId)
