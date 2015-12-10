@@ -4902,6 +4902,9 @@ pref("layout.accessiblecaret.use_long_tap_injector", true);
 // events hide AccessibleCarets by default.
 pref("layout.accessiblecaret.extendedvisibility", false);
 
+// Optionally provide haptic feedback on longPress selection events.
+pref("layout.accessiblecaret.hapticfeedback", false);
+
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
