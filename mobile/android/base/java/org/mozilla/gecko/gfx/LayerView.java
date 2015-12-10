@@ -237,6 +237,11 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mToolbarAnimator != null && mToolbarAnimator.onInterceptTouchEvent(event)) {
             return true;
         }
+        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+            // If gecko isn't loaded yet, don't try sending events to the
+            // native code because it's just going to crash
+            return true;
+        }
         if (mPanZoomController != null && mPanZoomController.onTouchEvent(event)) {
             return true;
         }
@@ -262,6 +267,11 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
         if (AndroidGamepadManager.handleMotionEvent(event)) {
+            return true;
+        }
+        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+            // If gecko isn't loaded yet, don't try sending events to the
+            // native code because it's just going to crash
             return true;
         }
         if (mPanZoomController != null && mPanZoomController.onMotionEvent(event)) {
@@ -370,6 +380,11 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+            // If gecko isn't loaded yet, don't try sending events to the
+            // native code because it's just going to crash
+            return true;
+        }
         if (mPanZoomController != null && mPanZoomController.onKeyEvent(event)) {
             return true;
         }
