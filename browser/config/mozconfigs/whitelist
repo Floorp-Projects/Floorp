@@ -67,6 +67,7 @@ whitelist['nightly']['win32'] += [
 whitelist['nightly']['win64'] += [
     '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
     '. "$topsrcdir/build/mozconfig.cache"',
+    '. "$topsrcdir/build/mozconfig.rust"',
 ]
 
 for platform in all_platforms:
