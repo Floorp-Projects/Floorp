@@ -2259,6 +2259,26 @@ BaselineCompiler::emit_JSOP_BINDGNAME()
     return emit_JSOP_BINDNAME();
 }
 
+typedef JSObject* (*BindVarFn)(JSContext*, HandleObject);
+static const VMFunction BindVarInfo = FunctionInfo<BindVarFn>(jit::BindVar);
+
+bool
+BaselineCompiler::emit_JSOP_BINDVAR()
+{
+    frame.syncStack(0);
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+
+    if (!callVM(BindVarInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
 bool
 BaselineCompiler::emit_JSOP_SETPROP()
 {

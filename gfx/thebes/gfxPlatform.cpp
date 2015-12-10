@@ -120,6 +120,7 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 
+#include "nsAlgorithm.h"
 #include "nsIGfxInfo.h"
 #include "nsIXULRuntime.h"
 #include "VsyncSource.h"
@@ -1067,11 +1068,10 @@ gfxPlatform::ComputeTileSize()
   if (gfxPrefs::LayersTilesAdjust()) {
     gfx::IntSize screenSize = GetScreenSize();
     if (screenSize.width > 0) {
-      // For the time being tiles larger than 512 probably do not make much
-      // sense. This is due to e.g. increased rasterisation time outweighing
-      // the decreased composition time, or large increases in memory usage
-      // for screens slightly wider than a higher power of two.
-      w = h = screenSize.width >= 512 ? 512 : 256;
+      // Choose a size so that there are between 2 and 4 tiles per screen width.
+      // FIXME: we should probably make sure this is within the max texture size,
+      // but I think everything should at least support 1024
+      w = h = clamped(NextPowerOfTwo(screenSize.width) / 4, 256, 1024);
     }
 
 #ifdef MOZ_WIDGET_GONK

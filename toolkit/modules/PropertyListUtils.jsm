@@ -61,7 +61,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.importGlobalProperties(['File']);
+Cu.importGlobalProperties(['File', 'FileReader']);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
@@ -100,8 +100,7 @@ this.PropertyListUtils = Object.freeze({
           file = new File(file);
         }
 
-        let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                         createInstance(Ci.nsIDOMFileReader);
+        let fileReader = new FileReader();
         let onLoadEnd = function() {
           let root = null;
           try {

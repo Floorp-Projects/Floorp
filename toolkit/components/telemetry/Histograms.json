@@ -1352,7 +1352,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap)"
+    "description": "NPN Results (0=none, 1=negotiated, 2=no-overlap, 3=selected(alpn))"
   },
   "SSL_RESUMED_SESSION": {
     "expires_in_version": "never",
@@ -1584,6 +1584,11 @@
     "kind": "enumerated",
     "n_values": 32,
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
+  },
+  "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Fraction of sockets that used a nsConnectionEntry with history - size 300."
   },
   "DISK_CACHE_CORRUPT_DETAILS": {
     "expires_in_version": "40",

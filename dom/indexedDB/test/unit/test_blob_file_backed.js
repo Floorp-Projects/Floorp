@@ -7,11 +7,6 @@ var disableWorkerTest = "This test uses SpecialPowers";
 
 var testGenerator = testSteps();
 
-function createFileReader() {
-  return SpecialPowers.Cc["@mozilla.org/files/filereader;1"]
-                      .createInstance(SpecialPowers.Ci.nsIDOMFileReader);
-}
-
 function testSteps()
 {
   const fileIOFlags = 0x02 | // PR_WRONLY
@@ -48,7 +43,7 @@ function testSteps()
   is(file.size, fileData.length, "Correct size");
   is(file.type, fileType, "Correct type");
 
-  let fileReader = createFileReader();
+  let fileReader = new FileReader();
   fileReader.onload = grabEventAndContinueHandler;
   fileReader.readAsText(file);
 
@@ -85,7 +80,7 @@ function testSteps()
   is(file.size, fileData.length, "Correct size");
   is(file.type, fileType, "Correct type");
 
-  fileReader = createFileReader();
+  fileReader = new FileReader();
   fileReader.onload = grabEventAndContinueHandler;
   fileReader.readAsText(file);
 

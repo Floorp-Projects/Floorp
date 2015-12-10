@@ -6,6 +6,7 @@
 #include "nsNativeThemeCocoa.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Helpers.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
 #include "nsObjCExceptions.h"
@@ -2428,19 +2429,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
   if (nativeWidgetRect.IsEmpty())
     return NS_OK; // Don't attempt to draw invisible widgets.
 
-  gfxContext* thebesCtx = aContext->ThebesContext();
-  if (!thebesCtx)
-    return NS_ERROR_FAILURE;
-
-  gfxContextMatrixAutoSaveRestore save(thebesCtx);
+  AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
 
   bool hidpi = IsHiDPIContext(aFrame->PresContext());
   if (hidpi) {
     // Use high-resolution drawing.
     nativeWidgetRect.Scale(0.5f);
     nativeDirtyRect.Scale(0.5f);
-    thebesCtx->SetMatrix(
-      thebesCtx->CurrentMatrix().Scale(2.0f, 2.0f));
+    aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(2.0f, 2.0f));
   }
 
   gfxQuartzNativeDrawing nativeDrawing(aDrawTarget, nativeDirtyRect);

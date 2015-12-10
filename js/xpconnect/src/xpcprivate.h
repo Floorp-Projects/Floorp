@@ -3424,6 +3424,7 @@ struct GlobalProperties {
     bool rtcIdentityProvider : 1;
     bool fetch : 1;
     bool caches : 1;
+    bool fileReader: 1;
 };
 
 // Infallible.

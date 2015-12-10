@@ -53,6 +53,7 @@ whitelist['nightly']['macosx-universal'] += [
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
+    '. "$topsrcdir/build/macosx/mozconfig.rust"',
 ]
 
 whitelist['nightly']['win32'] += [

@@ -7,7 +7,7 @@
 #define GFX_LAYERSLOGGING_H
 
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "mozilla/gfx/MatrixFwd.h"      // for Matrix4x4
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, etc
 #include "mozilla/gfx/Types.h"          // for Filter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
@@ -185,9 +185,26 @@ void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix& m,
                const char* pfx="", const char* sfx="");
 
+template<class SourceUnits, class TargetUnits>
 void
-AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix4x4& m,
-               const char* pfx="", const char* sfx="");
+AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& m,
+               const char* pfx="", const char* sfx="")
+{
+  if (m.Is2D()) {
+    mozilla::gfx::Matrix matrix = m.As2D();
+    AppendToString(aStream, matrix, pfx, sfx);
+    return;
+  }
+
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "[ %g %g %g %g; %g %g %g %g; %g %g %g %g; %g %g %g %g; ]",
+    m._11, m._12, m._13, m._14,
+    m._21, m._22, m._23, m._24,
+    m._31, m._32, m._33, m._34,
+    m._41, m._42, m._43, m._44).get();
+  aStream << sfx;
+}
 
 void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix5x4& m,

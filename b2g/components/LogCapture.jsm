@@ -10,6 +10,7 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+Cu.importGlobalProperties(['FileReader']);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
@@ -198,9 +199,7 @@ var LogCapture = {
     try {
       this.ensureLoaded();
 
-      let fr = Cc["@mozilla.org/files/filereader;1"]
-                  .createInstance(Ci.nsIDOMFileReader);
-
+      let fr = new FileReader();
       fr.onload = function(evt) {
         deferred.resolve(new Uint8Array(evt.target.result));
       };
