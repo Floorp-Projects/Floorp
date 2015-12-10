@@ -44,8 +44,8 @@ class MediaStreamAudioSourceNode : public AudioNode,
                                    public DOMMediaStream::PrincipalChangeObserver
 {
 public:
-  MediaStreamAudioSourceNode(AudioContext* aContext,
-                             DOMMediaStream* aMediaStream);
+  static already_AddRefed<MediaStreamAudioSourceNode>
+  Create(AudioContext* aContext, DOMMediaStream* aStream, ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode, AudioNode)
@@ -67,6 +67,8 @@ public:
   virtual void PrincipalChanged(DOMMediaStream* aMediaStream) override;
 
 protected:
+  explicit MediaStreamAudioSourceNode(AudioContext* aContext);
+  void Init(DOMMediaStream* aMediaStream, ErrorResult& aRv);
   virtual ~MediaStreamAudioSourceNode();
 
 private:
