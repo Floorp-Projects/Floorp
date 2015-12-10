@@ -765,26 +765,6 @@ exports.testPerTabEvents = function*(assert) {
   assert.equal(eventCount, 2, "both listeners were notified.");
 };
 
-exports.testAttachOnOpen = function (assert, done) {
-  // Take care that attach has to be called on tab ready and not on tab open.
-  open().then(focus).then(window => {
-    tabs.open({
-      url: "data:text/html;charset=utf-8,foobar",
-      onOpen: function (tab) {
-        let worker = tab.attach({
-          contentScript: 'self.postMessage(document.location.href); ',
-          onMessage: function (msg) {
-            assert.equal(msg, "about:blank",
-              "Worker document url is about:blank on open");
-            worker.destroy();
-            close(window).then(done).then(null, assert.fail);
-          }
-        });
-      }
-    });
-  }).then(null, assert.fail);
-}
-
 exports.testAttachOnMultipleDocuments = function (assert, done) {
   // Example of attach that process multiple tab documents
   open().then(focus).then(window => {
