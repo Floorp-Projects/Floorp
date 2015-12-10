@@ -204,6 +204,10 @@ FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         }
     }
 
+    // We do our own explicit checking for |this|
+    if (name == cx->names().dotThis)
+        return true;
+
     // NAME operations are the slow paths already, so unconditionally check
     // for uninitialized lets.
     return CheckUninitializedLexical(cx, name, vp);
