@@ -20,6 +20,7 @@ sourceSets {
             srcDir "${topsrcdir}/mobile/android/locales"
             srcDir "${topsrcdir}/mobile/android/modules"
             srcDir "${topsrcdir}/mobile/android/themes"
+            srcDir "${topsrcdir}/toolkit"
         }
     }
 }
