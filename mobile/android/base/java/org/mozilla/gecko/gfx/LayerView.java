@@ -252,10 +252,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             return false;
         }
 
-        if (AppConstants.MOZ_ANDROID_APZ && mPanZoomController != null && mPanZoomController.onTouchEvent(event)) {
-            return true;
-        }
-
         return sendEventToGecko(event);
     }
 
