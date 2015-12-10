@@ -199,10 +199,6 @@ function String_iterator() {
     return iterator;
 }
 
-function StringIteratorIdentity() {
-    return this;
-}
-
 function StringIteratorNext() {
     if (!IsObject(this) || !IsStringIterator(this)) {
         return callFunction(CallStringIteratorMethodIfWrapped, this,

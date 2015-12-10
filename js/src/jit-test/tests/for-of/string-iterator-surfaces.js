@@ -53,15 +53,13 @@ assertBuiltinFunction(String.prototype, Symbol.iterator, 0);
 var iter = ""[Symbol.iterator]();
 var iterProto = Object.getPrototypeOf(iter);
 
-// StringIterator.prototype inherits from Object.prototype
-assertEq(Object.getPrototypeOf(iterProto), Object.prototype);
+// StringIterator.prototype inherits from %IteratorPrototype%. Check it's the
+// same object as %ArrayIteratorPrototype%'s proto.
+assertEq(Object.getPrototypeOf(iterProto),
+         Object.getPrototypeOf(Object.getPrototypeOf([][Symbol.iterator]())));
 
 // Own properties for StringIterator.prototype: "next"
 arraysEqual(Object.getOwnPropertyNames(iterProto).sort(), ["next"]);
-assertEq(iterProto.hasOwnProperty(Symbol.iterator), true);
-
-// StringIterator.prototype[@@iterator] is a built-in function
-assertBuiltinFunction(iterProto, Symbol.iterator, 0);
 
 // StringIterator.prototype.next is a built-in function
 assertBuiltinFunction(iterProto, "next", 0);
