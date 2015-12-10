@@ -40,6 +40,7 @@
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCIdentityProviderRegistrar.h"
 #endif
+#include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
@@ -892,6 +893,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             fetch = true;
         } else if (!strcmp(name.ptr(), "caches")) {
             caches = true;
+        } else if (!strcmp(name.ptr(), "FileReader")) {
+            fileReader = true;
         } else {
             JS_ReportError(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -958,6 +961,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         return false;
 
     if (caches && !dom::cache::CacheStorage::DefineCaches(cx, obj))
+        return false;
+
+    if (fileReader && !dom::FileReaderBinding::GetConstructorObject(cx, obj))
         return false;
 
     return true;

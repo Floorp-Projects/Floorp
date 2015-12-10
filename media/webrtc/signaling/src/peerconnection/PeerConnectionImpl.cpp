@@ -652,10 +652,10 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aThread);
-#ifndef MOZILLA_EXTERNAL_LINKAGE
-  mThread = do_QueryInterface(aThread);
-#endif
-  MOZ_ASSERT(mThread);
+  if (!mThread) {
+    mThread = do_QueryInterface(aThread);
+    MOZ_ASSERT(mThread);
+  }
   CheckThread();
 
   mPCObserver = do_GetWeakReference(&aObserver);

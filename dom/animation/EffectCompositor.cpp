@@ -17,11 +17,28 @@ using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
 
-/* static */ nsTArray<RefPtr<dom::Animation>>
-EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
-                                             nsCSSProperty aProperty)
+// Helper function to factor out the common logic from
+// GetAnimationsForCompositor and HasAnimationsForCompositor.
+//
+// Takes an optional array to fill with eligible animations.
+//
+// Returns true if there are eligible animations, false otherwise.
+bool
+FindAnimationsForCompositor(const nsIFrame* aFrame,
+                            nsCSSProperty aProperty,
+                            nsTArray<RefPtr<dom::Animation>>* aMatches /*out*/)
 {
-  nsTArray<RefPtr<dom::Animation>> result;
+  MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
+             "Matches array, if provided, should be empty");
+
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects || effects->IsEmpty()) {
+    return false;
+  }
+
+  if (aFrame->RefusedAsyncAnimation()) {
+    return false;
+  }
 
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
@@ -30,18 +47,10 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
                             "disabled");
       AnimationUtils::LogAsyncAnimationFailure(message);
     }
-    return result;
+    return false;
   }
 
-  if (aFrame->RefusedAsyncAnimation()) {
-    return result;
-  }
-
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (!effects) {
-    return result;
-  }
-
+  bool foundSome = false;
   for (KeyframeEffectReadOnly* effect : *effects) {
     MOZ_ASSERT(effect && effect->GetAnimation());
     Animation* animation = effect->GetAnimation();
@@ -51,16 +60,46 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
     }
 
     if (effect->ShouldBlockCompositorAnimations(aFrame)) {
-      result.Clear();
-      return result;
+      if (aMatches) {
+        aMatches->Clear();
+      }
+      return false;
     }
 
     if (!effect->HasAnimationOfProperty(aProperty)) {
       continue;
     }
 
-    result.AppendElement(animation);
+    if (aMatches) {
+      aMatches->AppendElement(animation);
+    }
+    foundSome = true;
   }
+
+  MOZ_ASSERT(!foundSome || !aMatches || !aMatches->IsEmpty(),
+             "If return value is true, matches array should be non-empty");
+  return foundSome;
+}
+
+/* static */ bool
+EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty)
+{
+  return FindAnimationsForCompositor(aFrame, aProperty, nullptr);
+}
+
+/* static */ nsTArray<RefPtr<dom::Animation>>
+EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty)
+{
+  nsTArray<RefPtr<dom::Animation>> result;
+
+#ifdef DEBUG
+  bool foundSome =
+#endif
+    FindAnimationsForCompositor(aFrame, aProperty, &result);
+  MOZ_ASSERT(!foundSome || !result.IsEmpty(),
+             "If return value is true, matches array should be non-empty");
 
   return result;
 }

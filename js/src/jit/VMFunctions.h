@@ -588,6 +588,7 @@ bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
                                 uint32_t extra, uint32_t earlyCheck);
 
+JSObject* BindVar(JSContext* cx, HandleObject scopeChain);
 bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs);

@@ -9,6 +9,8 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Hal.h"
 
+using namespace mozilla::dom;
+
 /**
  * This class is used by nsGlobalWindow to implement window.orientation
  * and window.onorientationchange. This class is defined in its own file

@@ -1942,6 +1942,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_BINDNAME:
         return jsop_bindname(info().getName(pc));
 
+      case JSOP_BINDVAR:
+        return jsop_bindvar();
+
       case JSOP_DUP:
         current->pushSlot(current->stackDepth() - 1);
         return true;
@@ -8399,6 +8402,16 @@ IonBuilder::jsop_bindname(PropertyName* name)
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_bindvar()
+{
+    MOZ_ASSERT(analysis().usesScopeChain());
+    MCallBindVar* ins = MCallBindVar::New(alloc(), current->scopeChain());
+    current->add(ins);
+    current->push(ins);
+    return true;
 }
 
 static MIRType

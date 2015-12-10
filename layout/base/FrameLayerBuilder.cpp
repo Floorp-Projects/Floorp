@@ -35,6 +35,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "mozilla/LayerTimelineMarker.h"
 
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/Move.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/gfx/2D.h"
@@ -5107,7 +5108,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
     // for animation
     if (aContainerItem &&
         aContainerItem->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
-        nsLayoutUtils::HasAnimationsForCompositor(
+        EffectCompositor::HasAnimationsForCompositor(
           aContainerFrame, eCSSProperty_transform)) {
       // Use the size of the nearest widget as the maximum size.  This
       // is important since it might be a popup that is bigger than the

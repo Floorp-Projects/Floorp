@@ -27,7 +27,7 @@ if [[ -z ${MOZHARNESS_URL} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
 if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 
-mkdir -p ~/artifacts
+mkdir -p ~/artifacts/public
 
 cleanup() {
     if [ -n "$xvfb_pid" ]; then
