@@ -52,13 +52,9 @@ their language.
 <!-- LOCALIZATION NOTE: The following 'tabgroupsmigration' strings are for
      the tab groups (panorama) migration page, not about:sessionrestore -->
 <!ENTITY tabgroupsmigration.tabtitle            "Migrate your other Tab Groups">
-<!ENTITY tabgroupsmigration.pagetitle           "Tab Groups are no more. Sorry.">
-<!-- LOCALIZATION NOTE (tabgroupsmigration.learnMoreLink):
-     This is inserted into tabgroupsmigration.description. -->
-<!ENTITY tabgroupsmigration.learnMoreLink       "Learn More">
-<!-- LOCALIZATION NOTE (tabgroupsmigration.description):
-     &#37;S will be replaced with a link labeled with tabgroupsmigration.learnMoreLink -->
-<!ENTITY tabgroupsmigration.description         "&brandShortName; has bookmarked all your groups, so you have not lost anything. &#37;S">
+<!ENTITY tabgroupsmigration.pagetitle2          "We've removed Tab Groups, but saved your tabs">
+<!ENTITY tabgroupsmigration.learnaboutaddons    "Learn about Tab Groups replacement add-ons.">
+<!ENTITY tabgroupsmigration.description2        "&brandShortName; has bookmarked all your groups so you haven't lost anything.">
 <!ENTITY tabgroupsmigration.bookmarkbutton      "Show Bookmarked Tab Groups">
 <!ENTITY tabgroupsmigration.restoredescription  "You can also choose to restore some or all background groups into windows now:">
 
