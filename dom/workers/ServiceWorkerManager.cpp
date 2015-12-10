@@ -4854,13 +4854,16 @@ ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
 
   nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aScope);
   if (timer) {
-    timer->Cancel();
-    data->mUpdateTimers.Remove(aScope);
-  } else {
-    timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+    // There is already a timer scheduled.  In this case just use the original
+    // schedule time.  We don't want to push it out to a later time since that
+    // could allow updates to be starved forever if events are continuously
+    // fired.
+    return;
+  }
+
+  timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
 
   nsCOMPtr<nsITimerCallback> callback = new UpdateTimerCallback(aPrincipal,
