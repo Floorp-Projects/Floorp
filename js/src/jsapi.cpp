@@ -1225,7 +1225,7 @@ JS_GetIteratorPrototype(JSContext* cx)
 {
     CHECK_REQUEST(cx);
     Rooted<GlobalObject*> global(cx, cx->global());
-    return GlobalObject::getOrCreateIteratorPrototype(cx, global);
+    return GlobalObject::getOrCreateLegacyIteratorPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject*)
