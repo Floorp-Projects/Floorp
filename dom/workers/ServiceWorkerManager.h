@@ -316,6 +316,7 @@ class ServiceWorkerManager final
   friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
   friend class ServiceWorkerJobBase;
+  friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
 
