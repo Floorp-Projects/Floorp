@@ -877,13 +877,15 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
                 ungetChar('*');
                 break;
             }
-            tokenbuf.append(c);
+            if (!tokenbuf.append(c))
+                return false;
         }
 
-        if (tokenbuf.empty())
+        if (tokenbuf.empty()) {
             // The directive's URL was missing, but this is not quite an
             // exception that we should stop and drop everything for.
             return true;
+        }
 
         size_t length = tokenbuf.length();
 
