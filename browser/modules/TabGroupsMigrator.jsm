@@ -83,7 +83,7 @@ this.TabGroupsMigrator = {
    * Returns a Map from window state objects to per-window group data.
    * Specifically, the values in the Map are themselves Maps from group IDs to
    * JS Objects which have these properties:
-   *  - title: the title of the group (or empty string)
+   *  - tabGroupsMigrationTitle: the title of the group (or empty string)
    *  - tabs: an array of the tabs objects in this group.
    */
   _gatherGroupData(state) {
@@ -114,7 +114,7 @@ this.TabGroupsMigrator = {
             let title = (groupInfo[group] && groupInfo[group].title) || "";
             groupData = {
               tabs: [],
-              title,
+              tabGroupsMigrationTitle: title,
             };
             if (!title) {
               groupData.anonGroupID = ++globalAnonGroupID;
@@ -131,8 +131,8 @@ this.TabGroupsMigrator = {
   },
 
   _createBackup(stateStr) {
-    let dest = Services.dirsvc.get("Desk", Ci.nsIFile);
-    dest.append("Firefox-tabgroups-backup.json");
+    let dest = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    dest.append("tabgroups-session-backup.json");
     let promise = OS.File.writeAtomic(dest.path, stateStr, {encoding: "utf-8"});
     AsyncShutdown.webWorkersShutdown.addBlocker("TabGroupsMigrator", promise);
     return promise;
@@ -215,8 +215,6 @@ this.TabGroupsMigrator = {
         for (let groupID of hiddenGroupIDs) {
           let group = groupInfoForWindow.get("" + groupID);
           if (group) {
-            group.tabGroupsMigrationTitle = group.title;
-            delete group.title;
             stateToReturn.windows.push(group);
           }
         }

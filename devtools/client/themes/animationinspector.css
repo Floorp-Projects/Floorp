@@ -15,10 +15,16 @@
 :root {
   /* How high should toolbars be */
   --toolbar-height: 20px;
-  /* How wide should the sidebar be */
-  --timeline-sidebar-width: 150px;
+  /* How wide should the sidebar be (should be wide enough to contain long
+     property names like 'border-bottom-right-radius' without ellipsis) */
+  --timeline-sidebar-width: 200px;
   /* How high should animations displayed in the timeline be */
   --timeline-animation-height: 20px;
+  /* The size of a keyframe marker in the keyframes diagram */
+  --keyframes-marker-size: 10px;
+  /* The color of the time graduation borders. This should match the the color
+     devtools/client/animationinspector/utils.js */
+  --time-graduation-border-color: rgba(128, 136, 144, .5);
 }
 
 html {
@@ -166,21 +172,29 @@ body {
   background-image: -moz-element(#time-graduations);
   background-repeat: repeat-y;
   /* Make the background be 100% of the timeline area so that it resizes with
-     it*/
-  background-size: calc(100% - var(--timeline-sidebar-width)) 100%;
+     it and subtract the width of the sidebar and the buffer at the right of the
+     timeline */
+  background-size: calc(100% - var(--timeline-sidebar-width) - var(--keyframes-marker-size)) 100%;
   background-position: var(--timeline-sidebar-width) 0;
   display: flex;
   flex-direction: column;
 }
 
-.animation-timeline .scrubber-wrapper {
+/* Useful for positioning animations or keyframes in the timeline */
+.animation-timeline .track-container {
   position: absolute;
   top: 0;
-  bottom: 0;
   left: var(--timeline-sidebar-width);
-  right: 0;
+  /* Leave the width of a marker right of a track so the 100% markers can be
+     selected easily */
+  right: var(--keyframes-marker-size);
+  height: var(--timeline-animation-height);
+}
+
+.animation-timeline .scrubber-wrapper {
   z-index: 1;
   pointer-events: none;
+  height: 100%;
 }
 
 .animation-timeline .scrubber {
@@ -216,13 +230,7 @@ body {
 }
 
 .animation-timeline .time-header {
-  margin-left: var(--timeline-sidebar-width);
   min-height: var(--toolbar-height);
-  overflow: hidden;
-  position: relative;
-  /* This is the same color as the time graduations in
-     devtools/client/animationinspector/utils.js */
-  border-bottom: 1px solid rgba(128, 136, 144, .5);
   cursor: col-resize;
   -moz-user-select: none;
 }
@@ -234,33 +242,37 @@ body {
 
 .animation-timeline .animations {
   width: 100%;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  margin: 0;
+  /* Leave some space for the header */
+  margin-top: var(--timeline-animation-height);
   padding: 0;
   list-style-type: none;
+  border-top: 1px solid var(--time-graduation-border-color);
 }
 
 /* Animation block widgets */
 
 .animation-timeline .animation {
-  padding: 2px 0;
+  margin: 2px 0;
   height: var(--timeline-animation-height);
   position: relative;
 }
 
-.animation-timeline .animation:nth-child(2n) {
+/* We want animations' background colors to alternate, but each animation has
+   a sibling (hidden by default) that contains the animated properties and
+   keyframes, so we need to alternate every 4 elements. */
+.animation-timeline .animation:nth-child(4n+1) {
   background-color: var(--even-animation-timeline-background-color);
-}
-
-.animation-timeline .animation.selected {
-  background-color: var(--theme-selection-background-semitransparent);
 }
 
 .animation-timeline .animation .target {
   width: var(--timeline-sidebar-width);
-  overflow: hidden;
   height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
 .animation-timeline .animation-target {
@@ -268,11 +280,6 @@ body {
 }
 
 .animation-timeline .animation .time-block {
-  position: absolute;
-  top: 2px;
-  left: var(--timeline-sidebar-width);
-  right: 0;
-  height: var(--timeline-animation-height);
   cursor: pointer;
 }
 
@@ -384,7 +391,7 @@ body {
 
 .animation-target {
   background-color: var(--theme-toolbar-background);
-  padding: 1px 4px;
+  padding: 0 4px;
   box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -412,31 +419,99 @@ body {
   filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
-/* Animation title gutter, contains the name, duration, iteration */
+/* Inline keyframes info in the timeline */
 
-.animation-title {
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  padding: 1px 4px;
-  word-wrap: break-word;
-  overflow: auto;
+.animation-timeline .animated-properties:not(.selected) {
+  display: none;
 }
 
-.animation-title .meta-data {
-  float: right;
+.animation-timeline .animated-properties {
+  background-color: var(--theme-selection-background-semitransparent);
 }
 
-.animation-title strong {
-  margin: 0 .5em;
+.animation-timeline .animated-properties ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
 }
 
-.animation-title .meta-data .compositor-icon {
-    display: none;
-    background-image: url("images/animation-fast-track.svg");
-    background-repeat: no-repeat;
-    padding-left: 12px;
-    /* Make sure the icon is positioned above the timeline range input so that
-       its tooltip appears on hover */
-    z-index: 1;
-    position: relative;
+.animation-timeline .animated-properties .property {
+  height: var(--timeline-animation-height);
+  position: relative;
+}
+
+.animation-timeline .animated-properties .property:nth-child(2n) {
+  background-color: var(--even-animation-timeline-background-color);
+}
+
+.animation-timeline .animated-properties .name {
+  width: var(--timeline-sidebar-width);
+  padding-right: var(--keyframes-marker-size);
+  box-sizing: border-box;
+  height: 100%;
+  color: var(--theme-body-color-alt);
+  white-space: nowrap;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.animation-timeline .animated-properties .name div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animation-timeline .animated-properties .frames {
+  /* The frames list is absolutely positioned and the left and width properties
+     are dynamically set from javascript to match the animation's startTime and
+     duration */
+  position: absolute;
+  top: 0;
+  height: 100%;
+  /* Using flexbox to vertically center the frames */
+  display: flex;
+  align-items: center;
+}
+
+/* Keyframes diagram, displayed below the timeline, inside the animation-details
+   element. */
+
+.keyframes {
+  /* Actual keyframe markers are positioned absolutely within this container and
+     their position is relative to its size (we know the offset of each frame
+     in percentage) */
+  position: relative;
+  width: 100%;
+  height: 0;
+}
+
+.keyframes.cssanimation {
+  background-color: var(--theme-contrast-background);
+}
+
+.keyframes.csstransition {
+  background-color: var(--theme-highlight-blue);
+}
+
+.keyframes .frame {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  background-color: inherit;
+  cursor: pointer;
+}
+
+.keyframes .frame::before {
+  content: "";
+  display: block;
+  transform:
+    translateX(calc(var(--keyframes-marker-size) * -.5))
+    /* The extra pixel on the Y axis is so that markers are centered on the
+       horizontal line in the keyframes diagram. */
+    translateY(calc(var(--keyframes-marker-size) * -.5 + 1px));
+  width: var(--keyframes-marker-size);
+  height: var(--keyframes-marker-size);
+  border-radius: 100%;
+  background-color: inherit;
 }

@@ -188,7 +188,6 @@ toolkit/modules/tests/xpcshell/test_task.js
 toolkit/components/osfile/**
 toolkit/components/passwordmgr/**
 toolkit/components/places/**
-toolkit/mozapps/extensions/**
 
 # Uses preprocessing
 toolkit/content/contentAreaUtils.js
