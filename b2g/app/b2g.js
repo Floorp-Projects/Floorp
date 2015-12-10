@@ -1012,10 +1012,6 @@ pref("osfile.reset_worker_delay", 5000);
 pref("apz.allow_zooming", true);
 #endif
 
-// Gaia relies heavily on scroll events for now, so lets fire them
-// more often than the default value (100).
-pref("apz.pan_repaint_interval", 16);
-
 // APZ physics settings, tuned by UX designers
 pref("apz.fling_curve_function_x1", "0.41");
 pref("apz.fling_curve_function_y1", "0.0");
