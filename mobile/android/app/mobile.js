@@ -911,6 +911,9 @@ pref("layout.accessiblecaret.use_long_tap_injector", false);
 // or misc internal events.
 pref("layout.accessiblecaret.extendedvisibility", true);
 
+// Optionally provide haptic feedback on longPress selection events.
+pref("layout.accessiblecaret.hapticfeedback", true);
+
 // Disable sending console to logcat on release builds.
 #ifdef RELEASE_BUILD
 pref("consoleservice.logcat", false);
