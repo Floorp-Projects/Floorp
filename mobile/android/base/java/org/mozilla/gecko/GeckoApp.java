@@ -2161,6 +2161,7 @@ public abstract class GeckoApp
             "PrivateBrowsing:Data",
             "Session:StatePurged",
             "Share:Text",
+            "Snackbar:Show",
             "SystemUI:Visibility",
             "ToggleChrome:Focus",
             "ToggleChrome:Hide",
