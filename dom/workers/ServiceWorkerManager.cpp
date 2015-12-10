@@ -952,6 +952,32 @@ protected:
   ~ServiceWorkerJobBase()
   { }
 
+  void
+  Succeed()
+  {
+    AssertIsOnMainThread();
+    // We don't have a callback for soft updates.
+    if (mCallback) {
+      mCallback->UpdateSucceeded(mRegistration);
+      mCallback = nullptr;
+    }
+  }
+};
+
+// Base type for jobs that work with a specific service worker script.
+class ServiceWorkerScriptJobBase : public ServiceWorkerJobBase
+{
+protected:
+  ServiceWorkerScriptJobBase(ServiceWorkerJobQueue* aQueue,
+                             ServiceWorkerJob::Type aJobType,
+                             ServiceWorkerUpdateFinishCallback* aCallback,
+                             ServiceWorkerRegistrationInfo* aRegistration,
+                             ServiceWorkerInfo* aServiceWorkerInfo)
+    : ServiceWorkerJobBase(aQueue, aJobType, aCallback, aRegistration,
+                           aServiceWorkerInfo)
+  {
+  }
+
   // This MUST only be called when the job is still performing actions related
   // to registration or update. After the spec resolves the update promise, use
   // Done() with the failure code instead.
@@ -1013,20 +1039,9 @@ protected:
     ErrorResult rv(aRv);
     Fail(rv);
   }
-
-  void
-  Succeed()
-  {
-    AssertIsOnMainThread();
-    // We don't have a callback for soft updates.
-    if (mCallback) {
-      mCallback->UpdateSucceeded(mRegistration);
-      mCallback = nullptr;
-    }
-  }
 };
 
-class ServiceWorkerInstallJob final : public ServiceWorkerJobBase
+class ServiceWorkerInstallJob final : public ServiceWorkerScriptJobBase
 {
   friend class ContinueInstallTask;
 
@@ -1035,8 +1050,8 @@ public:
                           ServiceWorkerUpdateFinishCallback* aCallback,
                           ServiceWorkerRegistrationInfo* aRegistration,
                           ServiceWorkerInfo* aServiceWorkerInfo)
-    : ServiceWorkerJobBase(aQueue, Type::InstallJob, aCallback,
-                           aRegistration, aServiceWorkerInfo)
+    : ServiceWorkerScriptJobBase(aQueue, Type::InstallJob, aCallback,
+                                 aRegistration, aServiceWorkerInfo)
   {
     MOZ_ASSERT(aRegistration);
   }
@@ -1161,7 +1176,7 @@ public:
   }
 };
 
-class ServiceWorkerRegisterJob final : public ServiceWorkerJobBase,
+class ServiceWorkerRegisterJob final : public ServiceWorkerScriptJobBase,
                                        public serviceWorkerScriptCache::CompareCallback
 {
   friend class ContinueUpdateRunnable;
@@ -1184,7 +1199,8 @@ public:
                            ServiceWorkerUpdateFinishCallback* aCallback,
                            nsIPrincipal* aPrincipal,
                            nsILoadGroup* aLoadGroup)
-    : ServiceWorkerJobBase(aQueue, Type::RegisterJob, aCallback)
+    : ServiceWorkerScriptJobBase(aQueue, Type::RegisterJob, aCallback, nullptr,
+                                 nullptr)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
     , mPrincipal(aPrincipal)
@@ -1199,8 +1215,8 @@ public:
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
                            ServiceWorkerRegistrationInfo* aRegistration,
                            ServiceWorkerUpdateFinishCallback* aCallback)
-    : ServiceWorkerJobBase(aQueue, Type::UpdateJob, aCallback,
-                           aRegistration, nullptr)
+    : ServiceWorkerScriptJobBase(aQueue, Type::UpdateJob, aCallback,
+                                 aRegistration, nullptr)
   {
     AssertIsOnMainThread();
   }
