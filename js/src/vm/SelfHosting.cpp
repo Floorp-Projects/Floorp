@@ -448,7 +448,7 @@ intrinsic_GetIteratorPrototype(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    JSObject* obj = GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
+    JSObject* obj = GlobalObject::getOrCreateLegacyIteratorPrototype(cx, cx->global());
     if (!obj)
         return false;
 
@@ -513,7 +513,7 @@ intrinsic_NewListIterator(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    RootedObject proto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, cx->global()));
+    RootedObject proto(cx, GlobalObject::getOrCreateLegacyIteratorPrototype(cx, cx->global()));
     if (!proto)
         return false;
 
