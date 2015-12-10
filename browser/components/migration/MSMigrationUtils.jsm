@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/LoginHelper.jsm");
 
 Cu.importGlobalProperties(['FileReader']);
@@ -275,9 +274,9 @@ CtypesVaultHelpers.prototype = {
 function hostIsIPAddress(aHost) {
   try {
     Services.eTLD.getBaseDomainFromHost(aHost);
-  } catch (e if e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
-    return true;
-  } catch (e) {}
+  } catch (e) {
+    return e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS;
+  }
   return false;
 }
 
@@ -514,7 +513,7 @@ Cookies.prototype = {
   migrate(aCallback) {
     this.ctypesKernelHelpers = new CtypesKernelHelpers();
 
-    let cookiesGenerator = (function genCookie() {
+    let cookiesGenerator = (function* genCookie() {
       let success = false;
       let folders = this._migrationType == MSMigrationUtils.MIGRATION_TYPE_EDGE ?
                       this.__cookiesFolders : [this.__cookiesFolder];
@@ -792,12 +791,21 @@ WindowsVaultFormPasswords.prototype = {
           if (!_isIEOrEdgePassword(item.contents.schemaId.id)) {
             continue;
           }
+          let url = item.contents.pResourceElement.contents.itemValue.readString();
+          let realURL;
+          try {
+            realURL = Services.io.newURI(url, null, null);
+          } catch (ex) { /* leave realURL as null */ }
+          if (!realURL || ["http", "https", "ftp"].indexOf(realURL.scheme) == -1) {
+            // Ignore items for non-URLs or URLs that aren't HTTP(S)/FTP
+            continue;
+          }
+
           // if aOnlyCheckExists is set to true, the purpose of the call is to return true if there is at
           // least a password which is true in this case because a password was by now already found
           if (aOnlyCheckExists) {
             return true;
           }
-          let url = item.contents.pResourceElement.contents.itemValue.readString();
           let username = item.contents.pIdentityElement.contents.itemValue.readString();
           // the current login credential object
           let credential = new ctypesVaultHelpers._structs.VAULT_ELEMENT.ptr;
@@ -824,7 +832,7 @@ WindowsVaultFormPasswords.prototype = {
           // create a new login
           let login = {
             username, password,
-            hostname: NetUtil.newURI(url).prePath,
+            hostname: realURL.prePath,
             timeCreated: creation,
           };
           LoginHelper.maybeImportLogin(login);
