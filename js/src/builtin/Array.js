@@ -685,9 +685,6 @@ function CreateArrayIterator(obj, kind) {
     return CreateArrayIteratorAt(obj, kind, 0);
 }
 
-function ArrayIteratorIdentity() {
-    return this;
-}
 
 function ArrayIteratorNext() {
     if (!IsObject(this) || !IsArrayIterator(this)) {
