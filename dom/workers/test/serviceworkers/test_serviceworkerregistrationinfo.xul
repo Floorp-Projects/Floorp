@@ -47,43 +47,15 @@
 
             return waitForServiceWorkerRegistrationChange(registration, function  () {
               is(registration.scriptSpec, EXAMPLE_URL + "worker.js");
-
-              return waitForServiceWorkerRegistrationChange(registration, function () {
-                ok(registration.installingWorker !== null);
-                ok(registration.waitingWorker === null);
-                ok(registration.activeWorker === null);
-
-                return waitForServiceWorkerRegistrationChange(registration, function () {
-                  ok(registration.installingWorker === null);
-                  ok(registration.waitingWorker !== null);
-                  ok(registration.activeWorker === null);
-
-                  return waitForServiceWorkerRegistrationChange(registration, function () {
-                    ok(registration.installingWorker === null);
-                    ok(registration.waitingWorker === null);
-                    ok(registration.activeWorker !== null);
-
-                    return registration;
-                  });
-                });
-              });
-            });
-          });
-          iframe.contentWindow.postMessage("register", "*");
-          let registration = yield promise;
-
-          promise = waitForServiceWorkerRegistrationChange(registration, function () {
-            is(registration.scriptSpec, EXAMPLE_URL + "worker2.js");
-
-            return waitForServiceWorkerRegistrationChange(registration, function () {
               ok(registration.installingWorker !== null);
+              is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker.js");
               ok(registration.waitingWorker === null);
-              ok(registration.activeWorker !== null);
+              ok(registration.activeWorker === null);
 
               return waitForServiceWorkerRegistrationChange(registration, function () {
                 ok(registration.installingWorker === null);
                 ok(registration.waitingWorker !== null);
-                ok(registration.activeWorker !== null);
+                ok(registration.activeWorker === null);
 
                 return waitForServiceWorkerRegistrationChange(registration, function () {
                   ok(registration.installingWorker === null);
@@ -93,7 +65,30 @@
                   return registration;
                 });
               });
+            });
+          });
+          iframe.contentWindow.postMessage("register", "*");
+          let registration = yield promise;
 
+          promise = waitForServiceWorkerRegistrationChange(registration, function () {
+            is(registration.scriptSpec, EXAMPLE_URL + "worker2.js");
+            ok(registration.installingWorker !== null);
+            is(registration.installingWorker.scriptSpec, EXAMPLE_URL + "worker2.js");
+            ok(registration.waitingWorker === null);
+            ok(registration.activeWorker !== null);
+
+            return waitForServiceWorkerRegistrationChange(registration, function () {
+              ok(registration.installingWorker === null);
+              ok(registration.waitingWorker !== null);
+              ok(registration.activeWorker !== null);
+
+              return waitForServiceWorkerRegistrationChange(registration, function () {
+                ok(registration.installingWorker === null);
+                ok(registration.waitingWorker === null);
+                ok(registration.activeWorker !== null);
+
+                return registration;
+              });
             });
           });
           iframe.contentWindow.postMessage("register", "*");
