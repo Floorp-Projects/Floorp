@@ -2255,27 +2255,6 @@ TabChild::RecvHandleAccessKey(nsTArray<uint32_t>&& aCharCodes,
 }
 
 bool
-TabChild::RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
-                                             const float& aVolume,
-                                             const bool& aMuted)
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(WebNavigation());
-  if (window) {
-    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-    MOZ_ASSERT(service);
-
-    service->SetAudioChannelVolume(window,
-                                   static_cast<AudioChannel>(aAudioChannel),
-                                   aVolume);
-    service->SetAudioChannelMuted(window,
-                                  static_cast<AudioChannel>(aAudioChannel),
-                                  aMuted);
-  }
-
-  return true;
-}
-
-bool
 TabChild::RecvDestroy()
 {
   MOZ_ASSERT(mDestroyed == false);
