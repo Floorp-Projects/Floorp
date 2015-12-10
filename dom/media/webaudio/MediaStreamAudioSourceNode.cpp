@@ -31,16 +31,35 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(MediaStreamAudioSourceNode, AudioNode)
 
-MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(AudioContext* aContext,
-                                                       DOMMediaStream* aMediaStream)
+MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(AudioContext* aContext)
   : AudioNode(aContext,
               2,
               ChannelCountMode::Max,
-              ChannelInterpretation::Speakers),
-    mInputStream(aMediaStream)
+              ChannelInterpretation::Speakers)
 {
+}
+
+/* static */ already_AddRefed<MediaStreamAudioSourceNode>
+MediaStreamAudioSourceNode::Create(AudioContext* aContext,
+                                   DOMMediaStream* aStream, ErrorResult& aRv)
+{
+  RefPtr<MediaStreamAudioSourceNode> node =
+    new MediaStreamAudioSourceNode(aContext);
+
+  node->Init(aStream, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  return node.forget();
+}
+
+void
+MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream, ErrorResult& aRv)
+{
+  mInputStream = aMediaStream;
   AudioNodeEngine* engine = new MediaStreamAudioSourceNodeEngine(this);
-  mStream = AudioNodeExternalInputStream::Create(aContext->Graph(), engine);
+  mStream = AudioNodeExternalInputStream::Create(Context()->Graph(), engine);
   ProcessedMediaStream* outputStream = static_cast<ProcessedMediaStream*>(mStream.get());
   mInputPort = outputStream->AllocateInputPort(aMediaStream->GetPlaybackStream());
   mInputStream->AddConsumerToKeepAlive(static_cast<nsIDOMEventTarget*>(this));

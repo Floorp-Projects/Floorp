@@ -10,10 +10,24 @@
 namespace mozilla {
 namespace dom {
 
-MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext,
-                                                         DOMMediaStream* aStream)
-  : MediaStreamAudioSourceNode(aContext, aStream)
+MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext)
+  : MediaStreamAudioSourceNode(aContext)
 {
+}
+
+/* static */ already_AddRefed<MediaElementAudioSourceNode>
+MediaElementAudioSourceNode::Create(AudioContext* aContext,
+                                    DOMMediaStream* aStream, ErrorResult& aRv)
+{
+  RefPtr<MediaElementAudioSourceNode> node =
+    new MediaElementAudioSourceNode(aContext);
+
+  node->Init(aStream, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  return node.forget();
 }
 
 JSObject*
