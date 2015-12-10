@@ -235,7 +235,6 @@ Feed.prototype = {
     generator: ["generator"],
     authors : ["authors"],
     contributors: ["contributors"],
-    title: ["title","rss1:title", "atom03:title","atom:title"],
     link:  [["link",strToURI],["rss1:link",strToURI]],
     categories: ["categories", "dc:subject"],
     rights: ["atom03:rights","atom:rights"],
