@@ -1020,16 +1020,16 @@ void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &regi
     static void ensure_memcpy(uint8_t *dst, uint8_t *src, size_t n, uint8_t *bitmap, int stride, int height)
     {
         if (src + n > bitmap + stride*height) {
-            MOZ_CRASH("long src memcpy");
+            MOZ_CRASH("GFX: long src memcpy");
         }
         if (src < bitmap) {
-            MOZ_CRASH("short src memcpy");
+            MOZ_CRASH("GFX: short src memcpy");
         }
         if (dst + n > bitmap + stride*height) {
-            MOZ_CRASH("long dst mempcy");
+            MOZ_CRASH("GFX: long dst mempcy");
         }
         if (dst < bitmap) {
-            MOZ_CRASH("short dst mempcy");
+            MOZ_CRASH("GFX: short dst mempcy");
         }
     }
 
