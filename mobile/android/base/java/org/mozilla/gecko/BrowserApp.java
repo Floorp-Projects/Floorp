@@ -68,6 +68,7 @@ import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -3050,6 +3051,8 @@ public class BrowserApp extends GeckoApp
         final MenuItem forward = aMenu.findItem(R.id.forward);
         final MenuItem share = aMenu.findItem(R.id.share);
         final MenuItem quickShare = aMenu.findItem(R.id.quickshare);
+        final MenuItem bookmarksList = aMenu.findItem(R.id.bookmarks_list);
+        final MenuItem historyList = aMenu.findItem(R.id.history_list);
         final MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         final MenuItem print = aMenu.findItem(R.id.print);
         final MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
@@ -3259,6 +3262,11 @@ public class BrowserApp extends GeckoApp
             MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
         }
 
+        if (!SwitchBoard.isInExperiment(this, Experiments.BOOKMARKS_HISTORY_MENU)) {
+            bookmarksList.setVisible(false);
+            historyList.setVisible(false);
+        }
+
         return true;
     }
 
@@ -3384,6 +3392,20 @@ public class BrowserApp extends GeckoApp
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null)
                 tab.doForward();
+            return true;
+        }
+
+        if (itemId == R.id.bookmarks_list) {
+            final String url = AboutPages.getURLForBuiltinPanelType(PanelType.BOOKMARKS);
+            Tabs.getInstance().loadUrl(url);
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
+            return true;
+        }
+
+        if (itemId == R.id.history_list) {
+            final String url = AboutPages.getURLForBuiltinPanelType(PanelType.HISTORY);
+            Tabs.getInstance().loadUrl(url);
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
             return true;
         }
 

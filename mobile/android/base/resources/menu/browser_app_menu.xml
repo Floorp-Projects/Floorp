@@ -39,6 +39,12 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
+    <item android:id="@+id/bookmarks_list"
+          android:title="@string/bookmarks_title"/>
+
+    <item android:id="@+id/history_list"
+          android:title="@string/history_title"/>
+
     <item android:id="@+id/page"
           android:title="@string/page">
 
