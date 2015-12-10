@@ -21,6 +21,7 @@
 #include "nsIMutableArray.h"
 #include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
+#include "nsITimer.h"
 #include "nsIUploadChannel2.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptLoader.h"
@@ -135,6 +136,9 @@ struct ServiceWorkerManager::RegistrationDataPerPrincipal final
 
   // Maps scopes to job queues.
   nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
+
+  // Map scopes to scheduled update timers.
+  nsInterfaceHashtable<nsCStringHashKey, nsITimer> mUpdateTimers;
 };
 
 struct ServiceWorkerManager::PendingOperation final
@@ -428,9 +432,10 @@ ServiceWorkerRegistrationInfo::Clear()
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
                                                              nsIPrincipal* aPrincipal)
   : mControlledDocumentsCounter(0)
+  , mUpdateState(NoUpdate)
+  , mLastUpdateCheckTime(0)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
-  , mLastUpdateCheckTime(0)
   , mUpdating(false)
   , mPendingUninstall(false)
 {}
@@ -2741,6 +2746,54 @@ ServiceWorkerRegistrationInfo::NotifyListenersOnChange()
 }
 
 void
+ServiceWorkerRegistrationInfo::MaybeScheduleTimeCheckAndUpdate()
+{
+  AssertIsOnMainThread();
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // shutting down, do nothing
+    return;
+  }
+
+  if (mUpdateState == NoUpdate) {
+    mUpdateState = NeedTimeCheckAndUpdate;
+  }
+
+  swm->ScheduleUpdateTimer(mPrincipal, mScope);
+}
+
+void
+ServiceWorkerRegistrationInfo::MaybeScheduleUpdate()
+{
+  AssertIsOnMainThread();
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // shutting down, do nothing
+    return;
+  }
+
+  mUpdateState = NeedUpdate;
+
+  swm->ScheduleUpdateTimer(mPrincipal, mScope);
+}
+
+bool
+ServiceWorkerRegistrationInfo::CheckAndClearIfUpdateNeeded()
+{
+  AssertIsOnMainThread();
+
+  bool result = mUpdateState == NeedUpdate ||
+               (mUpdateState == NeedTimeCheckAndUpdate &&
+                IsLastUpdateCheckTimeOverOneDay());
+
+  mUpdateState = NoUpdate;
+
+  return result;
+}
+
+void
 ServiceWorkerManager::LoadRegistration(
                              const ServiceWorkerRegistrationData& aRegistration)
 {
@@ -3065,6 +3118,12 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   RegistrationDataPerPrincipal* data;
   if (!swm->mRegistrationInfos.Get(scopeKey, &data)) {
     return;
+  }
+
+  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aRegistration->mScope);
+  if (timer) {
+    timer->Cancel();
+    data->mUpdateTimers.Remove(aRegistration->mScope);
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> info;
@@ -4162,6 +4221,13 @@ ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistratio
     queue->CancelJobs();
   }
 
+  nsCOMPtr<nsITimer> timer =
+    aRegistrationData->mUpdateTimers.Get(aRegistration->mScope);
+  if (timer) {
+    timer->Cancel();
+    aRegistrationData->mUpdateTimers.Remove(aRegistration->mScope);
+  }
+
   // Since Unregister is async, it is ok to call it in an enumeration.
   Unregister(aRegistration->mPrincipal, nullptr, NS_ConvertUTF8toUTF16(aRegistration->mScope));
 }
@@ -4491,6 +4557,14 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mShuttingDown = true;
 
+    for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+      for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done(); it2.Next()) {
+        nsCOMPtr<nsITimer> timer = it2.UserData();
+        timer->Cancel();
+      }
+      it1.UserData()->mUpdateTimers.Clear();
+    }
+
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -4693,6 +4767,140 @@ ServiceWorkerManager::RemoveNavigationInterception(const nsACString& aScope,
       mNavigationInterceptions.RemoveAndForget(aScope, doomed);
     }
   }
+}
+
+class UpdateTimerCallback final : public nsITimerCallback
+{
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  const nsCString mScope;
+
+  ~UpdateTimerCallback()
+  {
+  }
+
+public:
+  UpdateTimerCallback(nsIPrincipal* aPrincipal, const nsACString& aScope)
+    : mPrincipal(aPrincipal)
+    , mScope(aScope)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mPrincipal);
+    MOZ_ASSERT(!mScope.IsEmpty());
+  }
+
+  NS_IMETHOD
+  Notify(nsITimer* aTimer) override
+  {
+    AssertIsOnMainThread();
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (!swm) {
+      // shutting down, do nothing
+      return NS_OK;
+    }
+
+    swm->UpdateTimerFired(mPrincipal, mScope);
+    return NS_OK;
+  }
+
+  NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(UpdateTimerCallback, nsITimerCallback)
+
+void
+ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
+                                          const nsACString& aScope)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(!aScope.IsEmpty());
+
+  if (mShuttingDown) {
+    return;
+  }
+
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  RegistrationDataPerPrincipal* data;
+  if (!mRegistrationInfos.Get(scopeKey, &data)) {
+    return;
+  }
+
+  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aScope);
+  if (timer) {
+    timer->Cancel();
+    data->mUpdateTimers.Remove(aScope);
+  } else {
+    timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
+
+  nsCOMPtr<nsITimerCallback> callback = new UpdateTimerCallback(aPrincipal,
+                                                                aScope);
+
+  const uint32_t UPDATE_DELAY_MS = 1000;
+
+  rv = timer->InitWithCallback(callback, UPDATE_DELAY_MS,
+                               nsITimer::TYPE_ONE_SHOT);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  data->mUpdateTimers.Put(aScope, timer);
+}
+
+void
+ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
+                                       const nsACString& aScope)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(!aScope.IsEmpty());
+
+  if (mShuttingDown) {
+    return;
+  }
+
+  // First cleanup the timer.
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  RegistrationDataPerPrincipal* data;
+  if (!mRegistrationInfos.Get(scopeKey, &data)) {
+    return;
+  }
+
+  nsCOMPtr<nsITimer> timer = data->mUpdateTimers.Get(aScope);
+  if (timer) {
+    timer->Cancel();
+    data->mUpdateTimers.Remove(aScope);
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  data->mInfos.Get(aScope, getter_AddRefs(registration));
+  if (!registration) {
+    return;
+  }
+
+  if (!registration->CheckAndClearIfUpdateNeeded()) {
+    return;
+  }
+
+  PrincipalOriginAttributes attrs =
+    mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+
+  // Then trigger an update to fire asynchronously now.
+  PropagateSoftUpdate(attrs, NS_ConvertUTF8toUTF16(aScope));
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerInfo, nsIServiceWorkerInfo)
