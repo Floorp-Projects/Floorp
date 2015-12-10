@@ -1827,13 +1827,6 @@ pref("network.proxy.socks_remote_dns",      false);
 pref("network.proxy.proxy_over_tls",        true);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
-
-// If this value is 'true' and a PAC or all given proxies are inaccessible or
-// failing, Firefox will attempt to connect to the server DIRECTly. Meaning
-// without a proxy. If set 'false', Firefox will not try to access without
-// proxy.
-pref("network.proxy.use_direct_on_fail",    true);
-
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign
 #ifdef ANDROID
