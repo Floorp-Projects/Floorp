@@ -19,6 +19,9 @@ class Animation;
 class EffectCompositor
 {
 public:
+  static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
+                                         nsCSSProperty aProperty);
+
   static nsTArray<RefPtr<dom::Animation>>
   GetAnimationsForCompositor(const nsIFrame* aFrame,
                              nsCSSProperty aProperty);

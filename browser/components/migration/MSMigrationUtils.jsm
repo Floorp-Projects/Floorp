@@ -16,6 +16,8 @@ Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/LoginHelper.jsm");
 
+Cu.importGlobalProperties(['FileReader']);
+
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
@@ -545,8 +547,7 @@ Cookies.prototype = {
   },
 
   _readCookieFile(aFile, aCallback) {
-    let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                     createInstance(Ci.nsIDOMFileReader);
+    let fileReader = new FileReader();
     let onLoadEnd = () => {
       fileReader.removeEventListener("loadend", onLoadEnd, false);
 

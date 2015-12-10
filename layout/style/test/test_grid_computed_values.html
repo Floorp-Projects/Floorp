@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test computed grid values</title>
+  <link rel="author" title="Tobias Schneider" href="mailto:schneider@jancona.com">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+  <style>
+  
+    #grid {
+      display: grid;
+      width: 500px;
+      height: 400px;
+      grid-template-columns:
+        [a]     auto
+        [b]     minmax(min-content, 1fr)
+        [b c d] repeat(2, [e] 40px)
+                repeat(5, auto);
+      grid-template-rows:
+        [a]       minmax(min-content, 1fr)
+        [b]       auto
+        [b c d e] 30px 30px
+                  auto auto;
+      grid-auto-columns: 3fr;
+      grid-auto-rows: 2fr;
+    }
+  
+  </style>
+</head>
+<body>
+
+<div>
+  <div id="grid">
+    <div style="grid-column-start:1; width:50px"></div>
+    <div style="grid-column-start:9; width:50px"></div>
+  </div>
+<div>
+
+<script>
+
+  var gridElement = document.getElementById("grid");
+
+  function test_grid_template(assert_fn, width, height, desc) {
+    test(function() {
+      assert_fn(getComputedStyle(gridElement).gridTemplateColumns,
+                "[a] 50px [b] " + width + "px [b c d e] 40px [e] 40px 0px 0px 0px 0px 50px");
+      assert_fn(getComputedStyle(gridElement).gridTemplateRows,
+                "[a] " + height + "px [b] 0px [b c d e] 30px 30px 0px 0px");
+    }, desc);
+  }
+
+  test_grid_template(assert_equals, 320, 340, "test computed grid-template-{columns,rows} values");
+
+  gridElement.style.overflow = 'scroll';
+  var v_scrollbar = gridElement.offsetWidth - gridElement.clientWidth;
+  var h_scrollbar = gridElement.offsetHeight - gridElement.clientHeight;
+  test_grid_template(assert_equals, 320 - v_scrollbar, 340 - h_scrollbar,
+                     "test computed grid-template-{columns,rows} values, overflow: scroll");
+
+  gridElement.style.width = '600px';
+  gridElement.style.overflow = 'visible';
+  test_grid_template(assert_equals, 420, 340,
+                     "test computed grid-template-{columns,rows} values, after reflow");
+
+  gridElement.style.display = 'none';
+  test_grid_template(assert_not_equals, 420, 340,
+                     "test computed grid-template-{columns,rows} values, display: none");
+
+  gridElement.style.display = 'grid';
+  gridElement.parentNode.style.display = 'none';
+  test_grid_template(assert_not_equals, 420, 340,
+                     "test computed grid-template-{columns,rows} values, display: none on parent");
+
+  test(function() {
+    assert_equals(getComputedStyle(gridElement).gridAutoColumns, "3fr");
+    assert_equals(getComputedStyle(gridElement).gridAutoRows, "2fr");
+  }, "test computed grid-auto-{columns,rows} values");
+
+</script>
+</body>
+</html>

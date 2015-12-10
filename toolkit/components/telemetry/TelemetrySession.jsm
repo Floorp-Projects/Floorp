@@ -969,11 +969,11 @@ var Impl = {
         Math.floor((monotonicNow - this._subsessionStartTimeMonotonic) / 1000),
     };
 
-    // TODO: Remove this when bug 1124128 lands.
+    // TODO: Remove this when bug 1201837 lands.
     if (this._addons)
       ret.addons = this._addons;
 
-    // TODO: Remove this when bug 1124128 lands.
+    // TODO: Remove this when bug 1201837 lands.
     let flashVersion = this.getFlashVersion();
     if (flashVersion)
       ret.flashVersion = flashVersion;

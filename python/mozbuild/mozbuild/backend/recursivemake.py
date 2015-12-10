@@ -710,7 +710,7 @@ class RecursiveMakeBackend(CommonBackend):
         root_mk.add_statement('compile_targets := %s' % ' '.join(sorted(
             set(self._compile_graph.keys()) | all_compile_deps)))
 
-        root_mk.add_statement('$(call include_deps,root-deps.mk)')
+        root_mk.add_statement('include root-deps.mk')
 
         with self._write_file(
                 mozpath.join(self.environment.topobjdir, 'root.mk')) as root:

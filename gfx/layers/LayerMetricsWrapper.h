@@ -368,6 +368,17 @@ public:
     return sNoClipRect;
   }
 
+  float GetPresShellResolution() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (AtTopLayer() && mLayer->AsContainerLayer()) {
+      return mLayer->AsContainerLayer()->GetPresShellResolution();
+    }
+
+    return 1.0f;
+  }
+
   EventRegionsOverride GetEventRegionsOverride() const
   {
     MOZ_ASSERT(IsValid());

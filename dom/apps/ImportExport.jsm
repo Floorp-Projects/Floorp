@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/MessageBroadcaster.jsm");
 
-Cu.importGlobalProperties(['File']);
+Cu.importGlobalProperties(['File', 'FileReader']);
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
@@ -262,8 +262,7 @@ this.ImportExport = {
     debug("_writeBlobToTempFile");
     let path;
     return new Promise((aResolve, aReject) => {
-      let reader = Cc['@mozilla.org/files/filereader;1']
-                     .createInstance(Ci.nsIDOMFileReader);
+      let reader = new FileReader();
       reader.onloadend = () => {
         path = OS.Path.join(OS.Constants.Path.tmpDir, "app-blob.zip");
         debug("onloadend path=" + path);
