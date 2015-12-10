@@ -6724,13 +6724,6 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     MOZ_ASSERT_IF(iter, !scope);
     MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
 
-    if (iter && iter->script()->isDerivedClassConstructor()) {
-        MOZ_ASSERT(iter->isFunctionFrame() && iter->calleeTemplate()->isClassConstructor());
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DISABLED_DERIVED_CLASS,
-                             "debugger eval");
-        return false;
-    }
-
     /* Check the first argument, the eval code string. */
     if (!code.isString()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
