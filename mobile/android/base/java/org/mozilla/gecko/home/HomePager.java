@@ -17,6 +17,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -287,6 +288,9 @@ public class HomePager extends ViewPager {
      *  * HomePager has not loaded yet
      *  * Panel with the given panelId cannot be found
      *
+     * If you're trying to open a built-in panel, consider loading the panel url directly with
+     * {@link org.mozilla.gecko.AboutPages#getURLForBuiltinPanelType(HomeConfig.PanelType)}.
+     *
      * @param panelId of the home panel to be shown.
      */
     public void showPanel(String panelId) {
@@ -525,6 +529,7 @@ public class HomePager extends ViewPager {
             Telemetry.stopUISession(mCurrentPanelSession, mCurrentPanelSessionSuffix);
             mCurrentPanelSession = null;
             mCurrentPanelSessionSuffix = null;
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
         }
     }
 }
