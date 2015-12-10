@@ -609,8 +609,10 @@ pref("apz.zoom_animation_duration_ms", 250);
 
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 // Mobile prefs
+pref("apz.allow_zooming", true);
 pref("apz.fling_repaint_interval", 75);
 pref("apz.smooth_scroll_repaint_interval", 75);
+pref("apz.touch_move_tolerance", "0.03");
 pref("apz.x_skate_size_multiplier", "1.25");
 pref("apz.y_skate_size_multiplier", "1.5");
 pref("apz.x_stationary_size_multiplier", "1.5");
