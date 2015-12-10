@@ -582,11 +582,11 @@ pref("apz.minimap.enabled", false);
 pref("apz.num_paint_duration_samples", 3);
 pref("apz.overscroll.enabled", false);
 pref("apz.overscroll.min_pan_distance_ratio", "1.0");
-pref("apz.overscroll.stretch_factor", "0.5");
-pref("apz.overscroll.spring_stiffness", "0.001");
 pref("apz.overscroll.spring_friction", "0.015");
+pref("apz.overscroll.spring_stiffness", "0.0018");
 pref("apz.overscroll.stop_distance_threshold", "5.0");
 pref("apz.overscroll.stop_velocity_threshold", "0.01");
+pref("apz.overscroll.stretch_factor", "0.35");
 pref("apz.pan_repaint_interval", 16);
 
 // Whether to print the APZC tree for debugging
@@ -594,8 +594,8 @@ pref("apz.printtree", false);
 
 pref("apz.smooth_scroll_repaint_interval", 16);
 pref("apz.test.logging_enabled", false);
-pref("apz.touch_start_tolerance", "0.2222222");  // 0.2222222 came from 1.0/4.5
-pref("apz.touch_move_tolerance", "0.0");
+pref("apz.touch_start_tolerance", "0.1");
+pref("apz.touch_move_tolerance", "0.03");
 pref("apz.use_paint_duration", true);
 pref("apz.velocity_bias", "1.0");
 pref("apz.velocity_relevance_time_ms", 150);
@@ -610,9 +610,9 @@ pref("apz.zoom_animation_duration_ms", 250);
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 // Mobile prefs
 pref("apz.allow_zooming", true);
+pref("apz.enlarge_displayport_when_clipped", true);
 pref("apz.fling_repaint_interval", 75);
 pref("apz.smooth_scroll_repaint_interval", 75);
-pref("apz.touch_move_tolerance", "0.03");
 pref("apz.x_skate_size_multiplier", "1.25");
 pref("apz.y_skate_size_multiplier", "1.5");
 pref("apz.x_stationary_size_multiplier", "1.5");
