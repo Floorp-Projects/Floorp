@@ -73,7 +73,7 @@ add_task(function* test_default_behavior_host() {
   do_print("Restrict history, bookmark, autoFill.typed = false, should autoFill");
   yield check_autocomplete({
     search: "bo",
-    matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ], style: [ "autofill", "heuristic" ],
+    matches: [ { uri: uri3, title: "bookmarked", style: [ "autofill", "heuristic" ],
                  icon: "chrome://global/skin/icons/error-16.png" } ],
     autofilled: "bookmarked/",
     completed: "bookmarked/"

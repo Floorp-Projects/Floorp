@@ -145,7 +145,7 @@ function* testImportedBookmarks() {
 function* checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
-  return Task.spawn(function() {
+  return Task.spawn(function* () {
     for (prop in aExpected) {
       switch (prop) {
         case "type":

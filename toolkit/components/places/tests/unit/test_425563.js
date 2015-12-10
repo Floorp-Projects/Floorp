@@ -42,12 +42,12 @@ add_task(function* test_execute()
   ]);
 
   // check that all links are marked as visited
-  count_visited_URIs.forEach(function (visited_uri) {
+  for (let visited_uri of count_visited_URIs) {
     do_check_true(yield promiseIsURIVisited(uri(visited_uri)));
-  });
-  notcount_visited_URIs.forEach(function (visited_uri) {
+  }
+  for (let visited_uri of notcount_visited_URIs) {
     do_check_true(yield promiseIsURIVisited(uri(visited_uri)));
-  });
+  }
 
   // check that visit_count does not take in count embed and downloads
   // maxVisits query are directly binded to visit_count

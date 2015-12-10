@@ -211,17 +211,17 @@ function* test_promiseBookmarksTreeAgainstResult(aItemGuid = "",
 add_task(function* () {
   // Add some bookmarks to cover various use cases.
   yield new_bookmark({ parentGuid: PlacesUtils.bookmarks.toolbarGuid });
-  yield new_folder({ parentGuid: PlacesUtils.bookmarks.menuGuid
-                   , annotations: [{ name: "TestAnnoA", value: "TestVal"
-                                   , name: "TestAnnoB", value: 0 }]});
+  yield new_folder({ parentGuid: PlacesUtils.bookmarks.menuGuid,
+                     annotations: [{ name: "TestAnnoA", value: "TestVal" },
+                                   { name: "TestAnnoB", value: 0 }]});
   let sepInfo = { parentGuid: PlacesUtils.bookmarks.menuGuid };
   yield PlacesTransactions.NewSeparator(sepInfo).transact();
   let folderGuid = yield new_folder({ parentGuid: PlacesUtils.bookmarks.menuGuid });
-  yield new_bookmark({ title: null
-                     , parentGuid: folderGuid
-                     , keyword: "test_keyword"
-                     , tags: ["TestTagA", "TestTagB"]
-                     , annotations: [{ name: "TestAnnoA", value: "TestVal2"}]});
+  yield new_bookmark({ title: null,
+                       parentGuid: folderGuid,
+                       keyword: "test_keyword",
+                       tags: ["TestTagA", "TestTagB"],
+                       annotations: [{ name: "TestAnnoA", value: "TestVal2"}]});
   let urlWithCharsetAndFavicon = uri("http://charset.and.favicon");
   yield new_bookmark({ parentGuid: folderGuid, url: urlWithCharsetAndFavicon });
   yield PlacesUtils.setCharsetForURI(urlWithCharsetAndFavicon, "UTF-8");

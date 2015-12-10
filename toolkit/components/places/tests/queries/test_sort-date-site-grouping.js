@@ -154,7 +154,7 @@ add_task(function* test_sort_date_site_grouping()
   }
 
   // Test live updating.
-  testDataAddedLater.forEach(function(visit) {
+  for (let visit of testDataAddedLater) {
     yield task_populateDB([visit]);
     let oldLength = testData.length;
     let i = visit.levels[0];
@@ -163,7 +163,7 @@ add_task(function* test_sort_date_site_grouping()
     leveledTestData[i][j].push(oldLength);
     compareArrayToResult(leveledTestData[i][j].
                          map(x => testData[x]), roots[i][j]);
-  });
+  }
 
   for (let i = 0; i < roots.length; i++) {
     for (let j = 0; j < roots[i].length; j++)

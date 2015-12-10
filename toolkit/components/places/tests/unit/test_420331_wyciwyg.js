@@ -17,7 +17,10 @@ add_task(function* test_execute()
   {
     yield PlacesTestUtils.addVisits(testURI);
     do_throw("Should have generated an exception.");
-  } catch (ex if ex && ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+  } catch (ex) {
+    if (ex.result != Cr.NS_ERROR_ILLEGAL_VALUE) {
+      throw ex;
+    }
     // Adding wyciwyg URIs should raise NS_ERROR_ILLEGAL_VALUE.
   }
 });

@@ -266,7 +266,7 @@ function run_test() {
   if (func)
     func();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     // Iterate over all tasks and execute them
     for (let [, [fn, args]] in Iterator(gNextTestSetupTasks)) {
       yield fn.apply(this, args);
@@ -302,7 +302,7 @@ function markTyped(aURIs, aTitle)
   gNextTestSetupTasks.push([task_markTyped, arguments]);
 }
 
-function task_markTyped(aURIs, aTitle)
+function* task_markTyped(aURIs, aTitle)
 {
   for (let uri of aURIs) {
     yield PlacesTestUtils.addVisits({

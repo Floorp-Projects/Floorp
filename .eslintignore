@@ -73,7 +73,6 @@ browser/components/downloads/**
 browser/components/feeds/**
 browser/components/migration/**
 browser/components/*.js
-browser/components/places/**
 browser/components/pocket/**
 browser/components/preferences/**
 browser/components/privatebrowsing/**
@@ -162,7 +161,6 @@ toolkit/modules/tests/xpcshell/test_task.js
 # Not yet updated
 toolkit/components/osfile/**
 toolkit/components/passwordmgr/**
-toolkit/components/places/**
 
 # Uses preprocessing
 toolkit/content/contentAreaUtils.js
