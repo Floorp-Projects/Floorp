@@ -41,6 +41,7 @@ struct AudioTimelineEvent final
                      double aDuration = 0.0, const float* aCurve = nullptr,
                      uint32_t aCurveLength = 0)
     : mType(aType)
+    , mCurve(nullptr)
     , mTimeConstant(aTimeConstant)
     , mDuration(aDuration)
 #ifdef DEBUG

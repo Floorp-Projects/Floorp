@@ -209,14 +209,18 @@ def write_cpp(eventname, iface, fd):
     for a in attributes:
         writeAttributeGetter(fd, classname, a)
 
-def gen_header_file(fd, conf_file):
+def get_conf(conf_file):
     conf = Configuration(conf_file)
-    inc_dir = mozpath.join(buildconfig.topobjdir, 'dist', 'idl')
+    inc_dir = [
+        mozpath.join(buildconfig.topsrcdir, 'accessible', 'interfaces'),
+        mozpath.join(buildconfig.topsrcdir, 'xpcom', 'base'),
+    ]
+    return conf, inc_dir
 
-    return print_header_file(fd, conf, [inc_dir])
+def gen_header_file(fd, conf_file):
+    conf, inc_dir = get_conf(conf_file)
+    return print_header_file(fd, conf, inc_dir)
 
 def gen_cpp_file(fd, conf_file):
-    conf = Configuration(conf_file)
-    inc_dir = mozpath.join(buildconfig.topobjdir, 'dist', 'idl')
-
-    return print_cpp_file(fd, conf, [inc_dir])
+    conf, inc_dir = get_conf(conf_file)
+    return print_cpp_file(fd, conf, inc_dir)

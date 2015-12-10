@@ -13,6 +13,5 @@ add_task(function*() {
   let {panel} = yield openAnimationInspector();
   is(panel.animationsTimelineComponent.animations.length, 1,
     "One animation is handled by the timeline after init");
-  is(panel.animationsTimelineComponent.animationsEl.childNodes.length, 1,
-    "One animation is displayed after init");
+  assertAnimationsDisplayed(panel, 1, "One animation is displayed after init");
 });

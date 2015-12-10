@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: Check that playback only starts once we have data at time = 0</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  el.addEventListener("loadeddata", function() {
+    ok(el.buffered.length > 0, "data is buffered");
+    is(el.buffered.start(0), 0, "must fire loadeddata when data has been loaded");
+    is(el.currentTime, 0, "must fire loadeddata at start");
+  });
+  el.addEventListener("playing", function() {
+    ok(el.buffered.length > 0, "data is buffered");
+    is(el.buffered.start(0), 0, "must fire playing when data has been loaded");
+    is(el.currentTime, 0, "must fire playing at start");
+  });
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    .then(once.bind(null, el, "loadedmetadata"))
+    .then(function() {
+      videosb.appendWindowStart = 2;
+      videosb.appendWindowEnd = 4;
+      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      // Load [2.4, 3.968344). 2.4 as it's the first keyframe after 2s and
+      // 3.968344 as the last frame ends after 4s.
+      return fetchAndLoad(videosb, 'bipbop/bipbop_video', range(1, 8), '.m4s');
+    })
+    .then(function() {
+      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      // test that appendWindowEnd did its job.
+      ok(el.buffered.start(0) >= 2, "no data can be found prior appendWindowStart");
+      ok(el.buffered.end(el.buffered.length-1) <= 4, "no data can be found beyond appendWindowEnd");
+      el.play();
+      return once(el, "play");
+    })
+    .then(function() {
+      videosb.appendWindowStart = 0;
+      var promises = [];
+      // Load [0, 3.971666).
+      promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', range(1, 8), '.m4s'));
+      // playback can only start now.
+      promises.push(once(el, "playing"));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      ok(true, "playing");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

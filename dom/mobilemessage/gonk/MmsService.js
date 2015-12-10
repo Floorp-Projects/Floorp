@@ -8,7 +8,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.importGlobalProperties(['Blob']);
+Cu.importGlobalProperties(['Blob', 'FileReader']);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
@@ -1303,8 +1303,7 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
           return;
         }
 
-        let fileReader = Cc["@mozilla.org/files/filereader;1"]
-                         .createInstance(Ci.nsIDOMFileReader);
+        let fileReader = new FileReader();
         fileReader.addEventListener("loadend", (aEvent) => {
           let arrayBuffer = aEvent.target.result;
           aPart.content = new Uint8Array(arrayBuffer);

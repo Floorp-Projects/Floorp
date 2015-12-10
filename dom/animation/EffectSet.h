@@ -118,6 +118,7 @@ public:
   {
     return Iterator::EndIterator(mEffects.Iter());
   }
+  bool IsEmpty() const { return mEffects.IsEmpty(); }
 
   static nsIAtom** GetEffectSetPropertyAtoms();
 

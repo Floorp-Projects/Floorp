@@ -626,6 +626,12 @@ private:
     AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
 
+    // If one load info cancels or hits an error, it can race with the start
+    // callback coming from another load info.
+    if (mCanceledMainThread || !mCacheCreator) {
+      return NS_ERROR_FAILURE;
+    }
+
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);

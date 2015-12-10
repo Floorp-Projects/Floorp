@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Yay! Keyframes!</title>
+  <style>
+    div {
+      animation: wow 10s forwards;
+    }
+    @keyframes wow {
+      0% {
+        width: 100px;
+        height: 100px;
+        border-radius: 0px;
+        background: #f06;
+      }
+      10% {
+        border-radius: 2px;
+      }
+      20% {
+        transform: rotate(13deg);
+      }
+      30% {
+        background: gold;
+      }
+      40% {
+        filter: blur(40px);
+      }
+      50% {
+        transform: rotate(720deg) translateX(300px) skew(-13deg);
+      }
+      60% {
+        width: 200px;
+        height: 200px;
+      }
+      70% {
+        border-radius: 10px;
+      }
+      80% {
+        background: #333;
+      }
+      90% {
+        border-radius: 50%;
+      }
+      100% {
+        width: 500px;
+        height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div></div>
+</body>
+</html>
