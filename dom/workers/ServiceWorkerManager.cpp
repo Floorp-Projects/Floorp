@@ -1218,9 +1218,10 @@ public:
   // [[Update]]
   ServiceWorkerRegisterJob(ServiceWorkerJobQueue* aQueue,
                            ServiceWorkerRegistrationInfo* aRegistration,
-                           ServiceWorkerUpdateFinishCallback* aCallback)
+                           ServiceWorkerUpdateFinishCallback* aCallback,
+                           const nsACString& aScriptSpec)
     : ServiceWorkerScriptJobBase(aQueue, Type::UpdateJob, aCallback,
-                                 aRegistration, nullptr, EmptyCString())
+                                 aRegistration, nullptr, aScriptSpec)
   {
     AssertIsOnMainThread();
   }
@@ -3638,7 +3639,8 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
     MOZ_ASSERT(queue);
 
     RefPtr<ServiceWorkerRegisterJob> job =
-      new ServiceWorkerRegisterJob(queue, registration, nullptr);
+      new ServiceWorkerRegisterJob(queue, registration, nullptr,
+                                   newest->ScriptSpec());
     queue->Append(job);
   }
 }
@@ -3692,7 +3694,8 @@ ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
   // "Invoke Update algorithm, or its equivalent, with client, registration as
   // its argument."
   RefPtr<ServiceWorkerRegisterJob> job =
-    new ServiceWorkerRegisterJob(queue, registration, aCallback);
+    new ServiceWorkerRegisterJob(queue, registration, aCallback,
+                                 newest->ScriptSpec());
   queue->Append(job);
 }
 
