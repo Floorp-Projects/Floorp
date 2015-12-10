@@ -1097,8 +1097,7 @@ void
 LIRGenerator::visitToId(MToId* ins)
 {
     LToIdV* lir = new(alloc()) LToIdV(tempDouble());
-    useBox(lir, LToIdV::Object, ins->lhs());
-    useBox(lir, LToIdV::Index, ins->rhs());
+    useBox(lir, LToIdV::Index, ins->input());
     defineBox(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -4329,6 +4328,19 @@ LIRGenerator::visitCheckReturn(MCheckReturn* ins)
     assignSnapshot(lir, Bailout_BadDerivedConstructorReturn);
     add(lir, ins);
     redefine(ins, retVal);
+}
+
+void
+LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins)
+{
+    MDefinition* checkVal = ins->checkValue();
+    MOZ_ASSERT(checkVal->type() == MIRType_Value);
+
+    LCheckObjCoercible* lir = new(alloc()) LCheckObjCoercible();
+    useBoxAtStart(lir, LCheckObjCoercible::CheckValue, checkVal);
+    redefine(ins, checkVal);
+    add(lir, ins);
+    assignSafepoint(lir, ins);
 }
 
 static void
