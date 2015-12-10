@@ -10177,5 +10177,13 @@
     "kind": "flag",
     "bug_numbers": [1229971],
     "description": "Flag activated whenever a rewritable youtube flash embed is seen during a session."
+  },
+  "PLUGIN_DRAWING_MODEL": {
+    "alert_emails": ["danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "bug_numbers": [1229961],
+    "n_values": 12,
+    "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   }
 }
