@@ -68,22 +68,22 @@ function run_test()
           do_print("Must have been an expected nothrow, so no need to try again");
           tryAgain = false;
         }
-        catch(ex if ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
-          do_print(`Caught an expected exception: ${ex.name}`);
-
-          do_print("Moving on to the next test..");
-          tryAgain = false;
-        }
-        catch(ex if ex.result == Cr.NS_ERROR_XPC_NEED_OUT_OBJECT) {
-          let pos = Number(ex.message.match(/object arg (\d+)/)[1]);
-          do_print(`Function call expects an out object at ${pos}`);
-          args[pos] = {};
-        }
-        catch(ex if ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-          do_print(`Method not implemented exception: ${ex.name}`);
-
-          do_print("Moving on to the next test..");
-          tryAgain = false;
+        catch(ex) {
+          if (ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
+            do_print(`Caught an expected exception: ${ex.name}`);
+            do_print("Moving on to the next test..");
+            tryAgain = false;
+          } else if (ex.result == Cr.NS_ERROR_XPC_NEED_OUT_OBJECT) {
+            let pos = Number(ex.message.match(/object arg (\d+)/)[1]);
+            do_print(`Function call expects an out object at ${pos}`);
+            args[pos] = {};
+          } else if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
+            do_print(`Method not implemented exception: ${ex.name}`);
+            do_print("Moving on to the next test..");
+            tryAgain = false;
+          } else {
+            throw ex;
+          }
         }
       }
     }

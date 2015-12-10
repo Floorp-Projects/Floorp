@@ -239,7 +239,7 @@
             // Walk the list backwards (opening from the root of the hierarchy)
             // opening each folder as we go.
             for (var i = parents.length - 1; i >= 0; --i) {
-              var index = view.treeIndexForNode(parents[i]);
+              let index = view.treeIndexForNode(parents[i]);
               if (index != Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE &&
                   view.isContainer(index) && !view.isContainerOpen(index))
                 view.toggleOpenState(index);
@@ -247,7 +247,7 @@
             // Select the specified node...
           }
 
-          var index = view.treeIndexForNode(node);
+          let index = view.treeIndexForNode(node);
           if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
             return;
 
@@ -659,10 +659,10 @@
           selection.selectEventsSuppressed = true;
           selection.clearSelection();
           // Open nodes containing found items
-          for (var i = 0; i < nodesToOpen.length; i++) {
+          for (let i = 0; i < nodesToOpen.length; i++) {
             nodesToOpen[i].containerOpen = true;
           }
-          for (var i = 0; i < nodes.length; i++) {
+          for (let i = 0; i < nodes.length; i++) {
             var index = resultview.treeIndexForNode(nodes[i]);
             if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
               continue;

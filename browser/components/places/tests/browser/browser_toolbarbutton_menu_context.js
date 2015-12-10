@@ -5,7 +5,7 @@ var contextMenu = document.getElementById("placesContext");
 var newBookmarkItem = document.getElementById("placesContext_new:bookmark");
 
 waitForExplicitFinish();
-add_task(function testPopup() {
+add_task(function* testPopup() {
   info("Checking popup context menu before moving the bookmarks button");
   yield checkPopupContextMenu();
   let pos = CustomizableUI.getPlacementOfWidget("bookmarks-menu-button").position;
