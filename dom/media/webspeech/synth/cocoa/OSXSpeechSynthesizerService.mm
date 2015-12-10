@@ -79,6 +79,11 @@ SpeechTaskCallback::OnPause()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   [mSpeechSynthesizer pauseSpeakingAtBoundary:NSSpeechImmediateBoundary];
+  if (!mTask) {
+    // When calling pause() on child porcess, it may not receive end event
+    // from chrome process yet.
+    return NS_ERROR_FAILURE;
+  }
   mTask->DispatchPause(GetTimeDurationFromStart(), mCurrentIndex);
   return NS_OK;
 
@@ -91,6 +96,11 @@ SpeechTaskCallback::OnResume()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   [mSpeechSynthesizer continueSpeaking];
+  if (!mTask) {
+    // When calling resume() on child porcess, it may not receive end event
+    // from chrome process yet.
+    return NS_ERROR_FAILURE;
+  }
   mTask->DispatchResume(GetTimeDurationFromStart(), mCurrentIndex);
   return NS_OK;
 
@@ -120,6 +130,9 @@ void
 SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex)
 {
   mCurrentIndex = aIndex;
+  if (!mTask) {
+    return;
+  }
   mTask->DispatchBoundary(NS_LITERAL_STRING("word"),
                           GetTimeDurationFromStart(), mCurrentIndex);
 }
@@ -127,6 +140,9 @@ SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex)
 void
 SpeechTaskCallback::OnError(uint32_t aIndex)
 {
+  if (!mTask) {
+    return;
+  }
   mTask->DispatchError(GetTimeDurationFromStart(), aIndex);
 }
 
