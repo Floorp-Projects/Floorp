@@ -1311,6 +1311,15 @@ BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame)
     return ThrowUninitializedThis(cx, frame);
 }
 
+
+bool
+ThrowObjectCoercible(JSContext* cx, HandleValue v)
+{
+    MOZ_ASSERT(v.isUndefined() || v.isNull());
+    MOZ_ALWAYS_FALSE(ToObjectSlow(cx, v, false));
+    return false;
+}
+
 bool
 BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue res)
 {
