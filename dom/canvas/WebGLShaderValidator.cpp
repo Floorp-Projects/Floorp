@@ -242,6 +242,15 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
         return false;
     }
 
+    if (ShGetShaderVersion(prev->mHandle) != ShGetShaderVersion(mHandle)) {
+        nsPrintfCString error("Vertex shader version %d does not match"
+                              " fragment shader version %d.",
+                              ShGetShaderVersion(prev->mHandle),
+                              ShGetShaderVersion(mHandle));
+        *out_log = error;
+        return false;
+    }
+
     {
         const std::vector<sh::Uniform>* vertPtr = ShGetUniforms(prev->mHandle);
         const std::vector<sh::Uniform>* fragPtr = ShGetUniforms(mHandle);
