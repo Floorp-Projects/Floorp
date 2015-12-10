@@ -21,7 +21,7 @@ function test() {
       yield waitForSourceAndCaretAndScopes(gPanel, ".html", 14);
 
       navigateActiveTabTo(gPanel, "about:blank");
-      yield waitForDispatch(gPanel, constants.LOAD_SOURCES);
+      yield waitForNavigation(gPanel);
 
       isnot(gDebugger.gThreadClient.state, "paused",
             "Should not be paused after a tab navigation.");
