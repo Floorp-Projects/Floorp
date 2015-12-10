@@ -238,12 +238,6 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
         return false;
     }
 
-    if (evalType == DIRECT_EVAL && caller.script()->isDerivedClassConstructor()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DISABLED_DERIVED_CLASS,
-                             "direct eval");
-        return false;
-    }
-
     // ES5 15.1.2.1 step 1.
     if (args.length() < 1) {
         args.rval().setUndefined();

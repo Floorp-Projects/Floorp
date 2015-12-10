@@ -3475,10 +3475,34 @@ BytecodeEmitter::emitSetThis(ParseNode* pn)
 
     JSOp setOp = name->getOp();
 
+    // Handle the eval case. Only accept the strict variant, as eval in a
+    // derived class constructor must be strict.
+    if (setOp == JSOP_STRICTSETNAME) {
+        if (!emitAtomOp(name, JSOP_GETNAME))
+            return false;
+        if (!emit1(JSOP_CHECKTHISREINIT))
+            return false;
+        if (!emit1(JSOP_POP))
+            return false;
+
+        if (!emitAtomOp(name, JSOP_BINDNAME))
+            return false;
+        if (!emit1(JSOP_SWAP))
+            return false;
+
+        return emitAtomOp(name, setOp);
+    }
+
     JSOp getOp;
     switch (setOp) {
-      case JSOP_SETLOCAL:      getOp = JSOP_GETLOCAL;      break;
-      case JSOP_SETALIASEDVAR: getOp = JSOP_GETALIASEDVAR; break;
+      case JSOP_SETLOCAL:
+        getOp = JSOP_GETLOCAL;
+        setOp = JSOP_INITLEXICAL;
+        break;
+      case JSOP_SETALIASEDVAR:
+        getOp = JSOP_GETALIASEDVAR;
+        setOp = JSOP_INITALIASEDLEXICAL;
+        break;
       default: MOZ_CRASH("Unexpected op");
     }
 
