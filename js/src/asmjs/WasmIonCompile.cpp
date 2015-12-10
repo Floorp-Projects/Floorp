@@ -1129,12 +1129,20 @@ class FunctionCompiler
         if (!switchBlock)
             return true;
         MTableSwitch* mir = switchBlock->lastIns()->toTableSwitch();
-        size_t defaultIndex = mir->addDefault(defaultBlock);
+        size_t defaultIndex;
+        if (!mir->addDefault(defaultBlock, &defaultIndex))
+            return false;
         for (unsigned i = 0; i < cases.length(); i++) {
-            if (!cases[i])
-                mir->addCase(defaultIndex);
-            else
-                mir->addCase(mir->addSuccessor(cases[i]));
+            if (!cases[i]) {
+                if (!mir->addCase(defaultIndex))
+                    return false;
+            } else {
+                size_t caseIndex;
+                if (!mir->addSuccessor(cases[i], &caseIndex))
+                    return false;
+                if (!mir->addCase(caseIndex))
+                    return false;
+            }
         }
         if (curBlock_) {
             MBasicBlock* next;
