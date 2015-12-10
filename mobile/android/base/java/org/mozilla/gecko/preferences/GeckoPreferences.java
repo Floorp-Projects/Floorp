@@ -685,6 +685,15 @@ OnSharedPreferenceChangeListener
                 }
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
+                if (handlers.containsKey(key)) {
+                    PrefHandler handler = handlers.get(key);
+                    if (!handler.setupPref(this, pref)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                }
+
                 pref.setOnPreferenceChangeListener(this);
                 if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
                     if (!AppConstants.MOZ_UPDATER) {
@@ -853,15 +862,6 @@ OnSharedPreferenceChangeListener
 
                     final String url = getResources().getString(R.string.faq_link, VERSION, OS, LOCALE);
                     ((LinkPreference) pref).setUrl(url);
-                } else if (handlers.containsKey(key)) {
-                    // This should be the last task. We might have removed some of this preferences previously. We only
-                    // want to run the PrefHandler for a preference if it still exists.
-                    PrefHandler handler = handlers.get(key);
-                    if (!handler.setupPref(this, pref)) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,
