@@ -1024,24 +1024,6 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetAccessibilityIsBlacklistedForE10S(bool* aResult)
-{
-  *aResult = false;
-#if defined(ACCESSIBILITY)
-#if defined(XP_WIN)
-  if (GetAccService() && mozilla::a11y::Compatibility::IsBlacklistedForE10S()) {
-    *aResult = true;
-  }
-#elif defined(XP_MACOSX)
-  if (GetAccService()) {
-    *aResult = true;
-  }
-#endif
-#endif // defined(ACCESSIBILITY)
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::GetIs64Bit(bool* aResult)
 {
 #ifdef HAVE_64BIT_BUILD
