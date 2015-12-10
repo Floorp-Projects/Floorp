@@ -20,6 +20,7 @@
 #include "nsFrame.h"
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIHapticFeedback.h"
 
 namespace mozilla {
 
@@ -63,7 +64,8 @@ std::ostream& operator<<(std::ostream& aStream,
 
 /*static*/ bool
 AccessibleCaretManager::sCaretsExtendedVisibility = false;
-
+/*static*/ bool
+AccessibleCaretManager::sHapticFeedback = false;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
@@ -81,6 +83,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   if (!addedPrefs) {
     Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
                                  "layout.accessiblecaret.extendedvisibility");
+    Preferences::AddBoolVarCache(&sHapticFeedback,
+                                 "layout.accessiblecaret.hapticfeedback");
     addedPrefs = true;
   }
 }
@@ -366,6 +370,16 @@ AccessibleCaretManager::UpdateCaretsForTilt()
   }
 }
 
+void
+AccessibleCaretManager::ProvideHapticFeedback()
+{
+  if (sHapticFeedback) {
+    nsCOMPtr<nsIHapticFeedback> haptic =
+      do_GetService("@mozilla.org/widget/hapticfeedback;1");
+    haptic->PerformSimpleAction(haptic->LongPress);
+  }
+}
+
 nsresult
 AccessibleCaretManager::PressCaret(const nsPoint& aPoint)
 {
@@ -466,6 +480,7 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
     UpdateCarets();
+    ProvideHapticFeedback();
     DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
@@ -496,6 +511,8 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
 
   nsresult rv = SelectWord(ptFrame, ptInFrame);
   UpdateCarets();
+  ProvideHapticFeedback();
+
   return rv;
 }
 
