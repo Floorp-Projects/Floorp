@@ -6,6 +6,10 @@ Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource:///modules/TransientPrefs.jsm");
+#ifdef E10S_TESTING_ONLY
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
+#endif
 
 var gMainPane = {
   /**
@@ -97,7 +101,13 @@ var gMainPane = {
           e10sCheckbox.checked = true;
         } else {
           e10sCheckbox.disabled = true;
-          e10sCheckbox.label += " (disabled: " + e10sBlockedReason.data + ")";
+          let updateChannel = UpdateUtils.UpdateChannel;
+          // only add this label on developer channels
+          if (updateChannel == "default" ||
+              updateChannel == "nightly" ||
+              updateChannel == "aurora") {
+            e10sCheckbox.label += " (disabled: " + e10sBlockedReason.data + ")";
+          }
         }
       }
     }
