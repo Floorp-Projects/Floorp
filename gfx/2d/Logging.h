@@ -153,6 +153,7 @@ enum class LogReason : int {
   GlyphAllocFailedCairo,
   GlyphAllocFailedCG,
   InvalidRect,
+  CannotDraw3D, // 20
   // End
   MustBeLessThanThis = 101,
 };
