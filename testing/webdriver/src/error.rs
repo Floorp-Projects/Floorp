@@ -1,5 +1,5 @@
 use hyper::status::StatusCode;
-use rustc_serialize::json::{Json, ToJson, ParserError};
+use rustc_serialize::json::{Json, ToJson, ParserError, DecoderError};
 use std::collections::BTreeMap;
 use std::convert::From;
 use std::error::Error;
@@ -169,5 +169,13 @@ impl From<IoError> for WebDriverError {
     fn from(err: IoError) -> WebDriverError {
         WebDriverError::new(ErrorStatus::UnknownError,
                             err.description())
+    }
+}
+
+impl From<DecoderError> for WebDriverError {
+    fn from(err: DecoderError) -> WebDriverError {
+        WebDriverError::new(ErrorStatus::UnknownError,
+                            &format!(
+                                "Could not decode json string:\n{}", err.description())[..])
     }
 }
