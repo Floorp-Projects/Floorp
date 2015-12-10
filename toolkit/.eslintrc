@@ -101,7 +101,7 @@
     // "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
 
     // No unnecessary spacing
-    // "no-multi-spaces": 2,
+    // no-multi-spaces: [2, { exceptions: { "AssignmentExpression": true, "VariableDeclarator": true, "ArrayExpression": true } }],
 
     // No reassigning native JS objects
     // "no-native-reassign": 2,
