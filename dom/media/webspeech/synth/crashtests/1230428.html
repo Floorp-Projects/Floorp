@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+<script type="application/javascript">
+function f()
+{
+  var s = new SpeechSynthesisUtterance("hello world");
+  s.onend = function() {
+    document.documentElement.removeAttribute('class');
+  };
+  speechSynthesis.speak(s);
+  speechSynthesis.cancel();
+  speechSynthesis.pause();
+  speechSynthesis.resume();
+}
+  </script>
+</head>
+<body onload="f();">
+</body>
+</html>
