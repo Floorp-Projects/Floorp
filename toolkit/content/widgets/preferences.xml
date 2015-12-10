@@ -631,19 +631,22 @@
             var acceptButton = docElt.getButton("accept");
             acceptButton.hidden = true;
             var cancelButton  = docElt.getButton("cancel");
-#ifdef XP_MACOSX
-            // no buttons on Mac except Help
-            cancelButton.hidden = true;
-            // Move Help button to the end
-            document.getAnonymousElementByAttribute(this, "anonid", "spacer").hidden = true;         
-            // Also, don't fire onDialogAccept on enter
-            acceptButton.disabled = true;
-#else
-            // morph the Cancel button into the Close button
-            cancelButton.setAttribute ("icon", "close");
-            cancelButton.label = docElt.getAttribute("closebuttonlabel");
-            cancelButton.accesskey = docElt.getAttribute("closebuttonaccesskey");
-#endif
+
+            let { AppConstants } =
+                Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+            if (AppConstants.platform == "macosx") {
+              // no buttons on Mac except Help
+              cancelButton.hidden = true;
+              // Move Help button to the end
+              document.getAnonymousElementByAttribute(this, "anonid", "spacer").hidden = true;         
+              // Also, don't fire onDialogAccept on enter
+              acceptButton.disabled = true;
+            } else {
+              // morph the Cancel button into the Close button
+              cancelButton.setAttribute ("icon", "close");
+              cancelButton.label = docElt.getAttribute("closebuttonlabel");
+              cancelButton.accesskey = docElt.getAttribute("closebuttonaccesskey");
+            }
           }
         }
         this.setAttribute("animated", this._shouldAnimate ? "true" : "false");
@@ -813,11 +816,13 @@
         <parameter name="aPaneElement"/>
         <body>
         <![CDATA[
-#ifdef XP_MACOSX
-          var paneTitle = aPaneElement.label;
-          if (paneTitle != "")
-            document.title = paneTitle;
-#endif
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          if (AppConstants.platform == "macosx") {
+            var paneTitle = aPaneElement.label;
+            if (paneTitle != "")
+              document.title = paneTitle;
+          }
           var helpButton = document.documentElement.getButton("help");
           if (aPaneElement.helpTopic)
             helpButton.hidden = false;
@@ -887,13 +892,11 @@
       <property name="_shouldAnimate">
         <getter>
         <![CDATA[
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
-#ifdef XP_MACOSX
-          var animate = true;
-#else
-          var animate = false;
-#endif
+          var animate = AppConstants.platform == "macosx";
           try {
             animate = psvc.getBoolPref("browser.preferences.animateFadeIn");
           }
