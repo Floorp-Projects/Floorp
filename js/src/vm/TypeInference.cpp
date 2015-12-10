@@ -3875,7 +3875,11 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
     RootedFunction function(cx, this->function());
     Vector<uint32_t, 32> pcOffsets(cx);
     for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
-        pcOffsets.append(iter.script()->pcToOffset(iter.pc()));
+        {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))
+                oomUnsafe.crash("rollbackPartiallyInitializedObjects");
+        }
 
         if (!iter.isConstructing() || !iter.matchCallee(cx, function))
             continue;
