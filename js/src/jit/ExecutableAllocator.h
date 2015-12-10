@@ -354,9 +354,10 @@ class ExecutableAllocator
         // At this point, local |pool| is the owner.
 
         if (m_smallPools.length() < maxSmallPools) {
-            // We haven't hit the maximum number of live pools;  add the new pool.
-            m_smallPools.append(pool);
-            pool->addRef();
+            // We haven't hit the maximum number of live pools; add the new pool.
+            // If append() OOMs, we just return an unshared allocator.
+            if (m_smallPools.append(pool))
+                pool->addRef();
         } else {
             // Find the pool with the least space.
             int iMin = 0;
