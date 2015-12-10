@@ -1333,14 +1333,14 @@ BrowserGlue.prototype = {
       }
     }
 
-#ifdef E10S_TESTING_ONLY
-    E10SUINotification.checkStatus();
-#endif
-#ifdef XP_WIN
-    // Handles prompting to inform about incompatibilites when accessibility
-    // and e10s are active together.
-    E10SAccessibilityCheck.init();
-#endif
+    if (AppConstants.E10S_TESTING_ONLY) {
+      E10SUINotification.checkStatus();
+    }
+    if (AppConstants.XP_WIN) {
+      // Handles prompting to inform about incompatibilites when accessibility
+      // and e10s are active together.
+      E10SAccessibilityCheck.init();
+    }
   },
 
 #ifdef MOZ_DEV_EDITION
