@@ -104,7 +104,8 @@ class FunctionCompiler
             curBlock_->initSlot(info().localSlot(i.index()), ins);
             if (!mirGen_.ensureBallast())
                 return false;
-            localTypes_.append(args[i.index()]);
+            if (!localTypes_.append(args[i.index()]))
+                return false;
         }
 
         for (unsigned i = 0; i < func_.numVarInits(); i++) {
@@ -134,7 +135,8 @@ class FunctionCompiler
             curBlock_->initSlot(info().localSlot(firstVarSlot + i), ins);
             if (!mirGen_.ensureBallast())
                 return false;
-            localTypes_.append(v.type());
+            if (!localTypes_.append(v.type()))
+                return false;
         }
 
         return true;
