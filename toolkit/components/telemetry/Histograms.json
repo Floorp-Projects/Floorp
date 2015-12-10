@@ -6285,6 +6285,13 @@
     "n_values": 256,
     "description": "WMF media decoder error or success (0) codes."
   },
+  "MEDIA_OGG_LOADED_IS_CHAINED": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "boolean",
+    "description": "Whether Ogg audio/video encountered are chained or not.",
+    "bug_numbers": [1230295]
+  },
   "VIDEO_CAN_CREATE_AAC_DECODER": {
     "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "50",
