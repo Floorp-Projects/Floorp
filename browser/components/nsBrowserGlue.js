@@ -1335,10 +1335,7 @@ BrowserGlue.prototype = {
 
 #ifdef E10S_TESTING_ONLY
     E10SUINotification.checkStatus();
-#endif
-#ifdef XP_WIN
-    // Handles prompting to inform about incompatibilites when accessibility
-    // and e10s are active together.
+#else
     E10SAccessibilityCheck.init();
 #endif
   },
@@ -3088,9 +3085,16 @@ var E10SUINotification = {
   PREVIOUS_PROMPT_PREF: "browser.displayedE10SPrompt",
 
   checkStatus: function() {
-    let updateChannel = UpdateUtils.UpdateChannel;
-    let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
-    if (!channelAuthorized) {
+    let skipE10sChecks = false;
+    try {
+      let updateChannel = UpdateUtils.UpdateChannel;
+      let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
+
+      skipE10sChecks = !channelAuthorized ||
+                       Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y");
+    } catch(e) {}
+
+    if (skipE10sChecks) {
       return;
     }
 
@@ -3103,6 +3107,13 @@ var E10SUINotification = {
 
       if (!activationNoticeShown) {
         this._showE10sActivatedNotice();
+      }
+
+      // e10s doesn't work with accessibility, so we prompt to disable
+      // e10s if a11y is enabled, now or in the future.
+      Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
+      if (Services.appinfo.accessibilityIsBlacklistedForE10S) {
+        this._showE10sAccessibilityWarning();
       }
     } else {
       let displayFeedbackRequest = false;
@@ -3162,6 +3173,14 @@ var E10SUINotification = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  observe: function(subject, topic, data) {
+    if (topic == "a11y-init-or-shutdown"
+        && data == "1" &&
+        Services.appinfo.accessibilityIsBlacklistedForE10S) {
+      this._showE10sAccessibilityWarning();
+    }
+  },
 
   _showE10sActivatedNotice: function() {
     let win = RecentWindow.getMostRecentBrowserWindow();
@@ -3243,117 +3262,153 @@ var E10SUINotification = {
       highlightLabel.setAttribute("value", highlight);
       doorhangerExtraContent.appendChild(highlightLabel);
     }
-  }
-};
-#endif // E10S_TESTING_ONLY
-
-var E10SAccessibilityCheck = {
-  init: function() {
-    Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
-    Services.obs.addObserver(this, "quit-application-granted", true);
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-  get forcedOn() {
-    try {
-      return Services.prefs.getBoolPref("browser.tabs.remote.force-enable");
-    } catch (e) {}
-    return false;
-  },
-
-  observe: function(subject, topic, data) {
-    switch (topic) {
-      case "quit-application-granted":
-        // Tag the profile with a11y load state. We use this in nsAppRunner
-        // checks on the next start.
-        Services.prefs.setBoolPref("accessibility.loadedInLastSession",
-                                   Services.appinfo.accessibilityEnabled);
-        break;
-      case "a11y-init-or-shutdown":
-        if (data == "1") {
-          // Update this so users can check this while still running
-          Services.prefs.setBoolPref("accessibility.loadedInLastSession", true);
-          this._showE10sAccessibilityWarning();
-        }
-        break;
-    }
   },
 
   _warnedAboutAccessibility: false,
 
   _showE10sAccessibilityWarning: function() {
-    // We don't prompt about a11y incompat if e10s is off.
-    if (!Services.appinfo.browserTabsRemoteAutostart) {
-      return;
-    }
+    try {
+      if (!Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y")) {
+        // Only return if the pref exists and was set to false, but not
+        // if the pref didn't exist (which will throw).
+        return;
+      }
+    } catch (e) { }
 
-    // If the user set the forced pref and it's true, ignore a11y init.
-    // If the pref doesn't exist or if it's false, prompt.
-    if (this.forcedOn) {
-      return;
-    }
+    Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", true);
 
-    // Only prompt once per session
     if (this._warnedAboutAccessibility) {
       return;
     }
     this._warnedAboutAccessibility = true;
 
     let win = RecentWindow.getMostRecentBrowserWindow();
-    let browser = win.gBrowser.selectedBrowser;
     if (!win) {
-      Services.console.logStringMessage("Accessibility support is partially disabled due to compatibility issues with new features.");
+      // Just restart immediately.
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
       return;
     }
 
-    // We disable a11y for content and prompt on the chrome side letting
-    // a11y users know they need to disable e10s and restart.
+    let browser = win.gBrowser.selectedBrowser;
+
     let promptMessage = win.gNavigatorBundle.getFormattedString(
-                          "e10s.accessibilityNotice.mainMessage2",
+                          "e10s.accessibilityNotice.mainMessage",
                           [gBrandBundle.GetStringFromName("brandShortName")]
                         );
-    let notification;
-    let restartCallback  = function() {
-      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
-      if (cancelQuit.data) {
-        return; // somebody canceled our quit request
-      }
-      // Restart the browser
-      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
-    };
-    // main option: an Ok button, keeps running with content accessibility disabled
     let mainAction = {
-      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.label"),
-      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.accesskey"),
+      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.label"),
+      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.accesskey"),
       callback: function () {
-        // If the user invoked the button option remove the notification,
-        // otherwise keep the alert icon around in the address bar.
-        notification.remove();
-      },
-      dismiss: true
+        // Restart the app
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+        if (cancelQuit.data)
+          return; // somebody canceled our quit request
+        Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      }
     };
-    // secondary option: a restart now button. When we restart e10s will be disabled due to
-    // accessibility having been loaded in the previous session.
-    let secondaryActions = [{
-      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.enableAndRestart.label"),
-      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.enableAndRestart.accesskey"),
-      callback: restartCallback,
-    }];
+    let secondaryActions = [
+      {
+        label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.accesskey"),
+        callback: function () {
+          Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", false);
+        }
+      }
+    ];
     let options = {
       popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
-      learnMoreURL: "https://support.mozilla.org/kb/accessibility-and-ppt",
-      persistWhileVisible: true,
-      hideNotNow: true,
+      learnMoreURL: "https://wiki.mozilla.org/Electrolysis",
+      persistWhileVisible: true
     };
 
-    notification =
-      win.PopupNotifications.show(browser, "a11y_enabled_with_e10s",
-                                  promptMessage, null, mainAction,
-                                  secondaryActions, options);
+    win.PopupNotifications.show(browser, "a11y_enabled_with_e10s", promptMessage, null, mainAction, secondaryActions, options);
   },
 };
+
+#else // E10S_TESTING_ONLY
+
+var E10SAccessibilityCheck = {
+  init: function() {
+    Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
+    if (Services.appinfo.accessibilityEnabled) {
+      this._showE10sAccessibilityWarning();
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  observe: function(subject, topic, data) {
+    if (topic == "a11y-init-or-shutdown"
+        && data == "1") {
+      this._showE10sAccessibilityWarning();
+    }
+  },
+
+  _warnedAboutAccessibility: false,
+
+  _showE10sAccessibilityWarning: function() {
+    try {
+      if (!Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y")) {
+        // Only return if the pref exists and was set to false, but not
+        // if the pref didn't exist (which will throw).
+        return;
+      }
+    } catch (e) { }
+
+    Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", true);
+
+    if (this._warnedAboutAccessibility ||
+        !Services.appinfo.browserTabsRemoteAutostart) {
+      return;
+    }
+    this._warnedAboutAccessibility = true;
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win) {
+      // Just restart immediately.
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      return;
+    }
+
+    let browser = win.gBrowser.selectedBrowser;
+
+    let promptMessage = win.gNavigatorBundle.getFormattedString(
+                          "e10s.accessibilityNotice.mainMessage",
+                          [gBrandBundle.GetStringFromName("brandShortName")]
+                        );
+    let mainAction = {
+      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.label"),
+      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.accesskey"),
+      callback: function () {
+        // Restart the app
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+        if (cancelQuit.data)
+          return; // somebody canceled our quit request
+        Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      }
+    };
+    let secondaryActions = [
+      {
+        label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.accesskey"),
+        callback: function () {
+          Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", false);
+        }
+      }
+    ];
+    let options = {
+      popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
+      learnMoreURL: "https://wiki.mozilla.org/Electrolysis",
+      persistWhileVisible: true
+    };
+
+    win.PopupNotifications.show(browser, "a11y_enabled_with_e10s", promptMessage, null, mainAction, secondaryActions, options);
+  },
+};
+
+#endif // E10S_TESTING_ONLY
 
 var components = [BrowserGlue, ContentPermissionPrompt, AboutNewTabService];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
