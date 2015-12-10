@@ -352,6 +352,9 @@ public:
     static PluginInstanceParent* Cast(NPP instance,
                                       PluginAsyncSurrogate** aSurrogate = nullptr);
 
+    virtual bool
+    RecvPluginDidSetCursor() override;
+
 private:
     // Create an appropriate platform surface for a background of size
     // |aSize|.  Return true if successful.
