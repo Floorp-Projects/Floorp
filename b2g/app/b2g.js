@@ -1007,11 +1007,6 @@ pref("security.exthelperapp.disable_background_handling", true);
 // Inactivity time in milliseconds after which we shut down the OS.File worker.
 pref("osfile.reset_worker_delay", 5000);
 
-// APZC preferences.
-#ifdef MOZ_WIDGET_GONK
-pref("apz.allow_zooming", true);
-#endif
-
 // APZ physics settings, tuned by UX designers
 pref("apz.fling_curve_function_x1", "0.41");
 pref("apz.fling_curve_function_y1", "0.0");
@@ -1021,10 +1016,6 @@ pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.0019");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.touch_start_tolerance", "0.1");
-
-#ifdef MOZ_WIDGET_GONK
-pref("apz.touch_move_tolerance", "0.03");
-#endif
 
 // Tweak default displayport values to reduce the risk of running out of
 // memory when zooming in
