@@ -7509,7 +7509,9 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
               if (IsFileImage(file, type)) {
                 IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
                 item->flavor() = type;
-                SlurpFileToString(file, item->data());
+                nsAutoCString data;
+                SlurpFileToString(file, data);
+                item->data() = data;
               }
 
               continue;
