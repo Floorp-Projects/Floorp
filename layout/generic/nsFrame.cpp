@@ -87,6 +87,7 @@
 #include "nsIFrameInlines.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -1083,8 +1084,8 @@ nsIFrame::IsTransformed() const
           (StyleDisplay()->HasTransform(this) ||
            IsSVGTransformed() ||
            (mContent &&
-            nsLayoutUtils::HasAnimationsForCompositor(this,
-                                                      eCSSProperty_transform) &&
+            EffectCompositor::HasAnimationsForCompositor(
+              this, eCSSProperty_transform) &&
             IsFrameOfType(eSupportsCSSTransforms) &&
             mContent->GetPrimaryFrame() == this)));
 }
@@ -1097,8 +1098,8 @@ nsIFrame::HasOpacityInternal(float aThreshold) const
   return StyleDisplay()->mOpacity < aThreshold ||
          (displayStyle->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) ||
          (mContent &&
-           nsLayoutUtils::HasAnimationsForCompositor(this,
-                                                     eCSSProperty_opacity) &&
+           EffectCompositor::HasAnimationsForCompositor(
+             this, eCSSProperty_opacity) &&
            mContent->GetPrimaryFrame() == this);
 }
 

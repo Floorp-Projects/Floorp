@@ -446,44 +446,6 @@ esac
 
 AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
 
-dnl ========================================================
-dnl Special MacOS X checks
-dnl ========================================================
-
-if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
-  AC_MSG_CHECKING([rustc compatibility with MacOS X])
-  # Stock rustc doesn't support MacOS X 10.6 or earlier.
-  # https://github.com/rust-lang/rust/issues/25342
-  _MACOSX_TARGET_MINOR=`echo "$MACOSX_DEPLOYMENT_TARGET" | cut -d. -f2`
-  if test "$_MACOSX_TARGET_MINOR" -lt 7; then
-    dnl Test C linkage against rust code to see if the rust
-    dnl toolchain output is compatible.
-    cat > conftest.rs <<EOF
-      [#[no_mangle]]
-      pub extern fn rusty_answer() -> u8 { 42 }
-EOF
-    ac_try="$RUSTC --crate-type staticlib -o conftest.a conftest.rs >/dev/null"
-    AC_TRY_EVAL(ac_try)
-    save_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS conftest.a -lpthread -lm"
-    AC_TRY_LINK_FUNC([rusty_answer], [
-      AC_MSG_RESULT([$MACOSX_DEPLOYMENT_TARGET is ok with this rustc])
-    ], [
-      AC_MSG_RESULT([cannot link on $MACOSX_DEPLOYMENT_TARGET])
-      MOZ_RUST=
-    ])
-    LDFLAGS=$save_LDFLAGS
-    rm -rf conftest*
-  else
-    AC_MSG_RESULT([$MACOSX_DEPLOYMENT_TARGET is ok])
-  fi
-  if test -z "$MOZ_RUST"; then
-    AC_MSG_ERROR([rustc does not support MacOS X $MACOSX_DEPLOYMENT_TARGET
-      Add 'ac_add_options --enable-macos-target=10.7' (or later)
-      to mozconfig, disable Rust support, or use an alternate toolchain.])
-  fi
-fi
-
 AC_PROG_CPP
 AC_PROG_CXXCPP
 
@@ -1680,6 +1642,51 @@ fi
 AC_SUBST(HAVE_64BIT_BUILD)
 AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
+
+dnl ========================================================
+dnl Special rust checks
+dnl ========================================================
+
+if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
+  AC_MSG_CHECKING([if we're targeting 32-bit])
+  if test -z "$HAVE_64BIT_BUILD"; then
+    RUSTC="$RUSTC --target=i686-apple-darwin"
+    AC_MSG_RESULT([using $RUSTC])
+  else
+    AC_MSG_RESULT([no])
+  fi
+  AC_MSG_CHECKING([rustc compatibility with MacOS X])
+  # Stock rustc doesn't support MacOS X 10.6 or earlier.
+  # https://github.com/rust-lang/rust/issues/25342
+  _MACOSX_TARGET_MINOR=`echo "$MACOSX_DEPLOYMENT_TARGET" | cut -d. -f2`
+  if test "$_MACOSX_TARGET_MINOR" -lt 7; then
+    dnl Test C linkage against rust code to see if the rust
+    dnl toolchain output is compatible.
+    cat > conftest.rs <<EOF
+      [#[no_mangle]]
+      pub extern fn rusty_answer() -> u8 { 42 }
+EOF
+    ac_try="$RUSTC --crate-type staticlib -o conftest.a conftest.rs >/dev/null"
+    AC_TRY_EVAL(ac_try)
+    save_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS conftest.a -lpthread -lm"
+    AC_TRY_LINK_FUNC([rusty_answer], [
+      AC_MSG_RESULT([$MACOSX_DEPLOYMENT_TARGET is ok with this rustc])
+    ], [
+      AC_MSG_RESULT([cannot link for $MACOSX_DEPLOYMENT_TARGET])
+      MOZ_RUST=
+    ])
+    LDFLAGS=$save_LDFLAGS
+    rm -rf conftest*
+  else
+    AC_MSG_RESULT([$MACOSX_DEPLOYMENT_TARGET is ok])
+  fi
+  if test -z "$MOZ_RUST"; then
+    AC_MSG_ERROR([rustc does not support MacOS X $MACOSX_DEPLOYMENT_TARGET
+      Add 'ac_add_options --enable-macos-target=10.7' (or later)
+      to mozconfig, disable Rust support, or use an alternate toolchain.])
+  fi
+fi
 
 dnl ========================================================
 dnl = Use profiling compile flags

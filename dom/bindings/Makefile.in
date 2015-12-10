@@ -45,8 +45,7 @@ codegen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
-# The 1 is to make codegen.pp not optional.
-$(call include_deps,codegen.pp,1)
+include codegen.pp
 
 codegen.pp: $(codegen_dependencies)
 	$(call py_action,webidl,$(srcdir))

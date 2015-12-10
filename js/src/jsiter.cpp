@@ -543,7 +543,7 @@ Compare(T* a, T* b, size_t c)
     return true;
 }
 
-static bool iterator_next(JSContext* cx, unsigned argc, Value* vp);
+static bool legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp);
 
 static inline PropertyIteratorObject*
 NewPropertyIteratorObject(JSContext* cx, unsigned flags)
@@ -580,7 +580,7 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
         // next method on the prototype doesn't break cross-global for .. in.
         // We don't have to do this for JSITER_ENUMERATE because that object always
         // takes an optimized path.
-        RootedFunction next(cx, NewNativeFunction(cx, iterator_next, 0,
+        RootedFunction next(cx, NewNativeFunction(cx, legacy_iterator_next, 0,
                                                   HandlePropertyName(cx->names().next)));
         if (!next)
             return nullptr;
@@ -1017,7 +1017,7 @@ IsIterator(HandleValue v)
 }
 
 MOZ_ALWAYS_INLINE bool
-iterator_next_impl(JSContext* cx, const CallArgs& args)
+legacy_iterator_next_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsIterator(args.thisv()));
 
@@ -1040,15 +1040,15 @@ iterator_next_impl(JSContext* cx, const CallArgs& args)
 }
 
 static bool
-iterator_next(JSContext* cx, unsigned argc, Value* vp)
+legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsIterator, iterator_next_impl>(cx, args);
+    return CallNonGenericMethod<IsIterator, legacy_iterator_next_impl>(cx, args);
 }
 
-static const JSFunctionSpec iterator_methods[] = {
+static const JSFunctionSpec legacy_iterator_methods[] = {
     JS_SELF_HOSTED_SYM_FN(iterator, "LegacyIteratorShim", 0, 0),
-    JS_FN("next",      iterator_next,       0, 0),
+    JS_FN("next",      legacy_iterator_next,       0, 0),
     JS_FS_END
 };
 
@@ -1109,7 +1109,6 @@ const Class ArrayIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec array_iterator_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1131,7 +1130,6 @@ const Class StringIteratorObject::class_ = {
 };
 
 static const JSFunctionSpec string_iterator_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "StringIteratorIdentity", 0, 0),
     JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0),
     JS_FS_END
 };
@@ -1462,6 +1460,25 @@ const Class StopIterationObject::class_ = {
     stopiter_hasInstance
 };
 
+static const JSFunctionSpec iterator_proto_methods[] = {
+    JS_SELF_HOSTED_SYM_FN(iterator, "IteratorIdentity", 0, 0),
+    JS_FS_END
+};
+
+/* static */ bool
+GlobalObject::initIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
+{
+    if (global->getReservedSlot(ITERATOR_PROTO).isObject())
+        return true;
+
+    RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
+    if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, iterator_proto_methods))
+        return false;
+
+    global->setReservedSlot(ITERATOR_PROTO, ObjectValue(*proto));
+    return true;
+}
+
 /* static */ bool
 GlobalObject::initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
 {
@@ -1487,8 +1504,12 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
     if (global->getReservedSlot(STRING_ITERATOR_PROTO).isObject())
         return true;
 
+    RootedObject iteratorProto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+    if (!iteratorProto)
+        return false;
+
     const Class* cls = &StringIteratorPrototypeClass;
-    RootedObject proto(cx, global->createBlankPrototype(cx, cls));
+    RootedObject proto(cx, global->createBlankPrototypeInheriting(cx, cls, iteratorProto));
     if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, string_iterator_methods))
         return false;
 
@@ -1497,7 +1518,7 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
 }
 
 JSObject*
-js::InitIteratorClass(JSContext* cx, HandleObject obj)
+js::InitLegacyIteratorClass(JSContext* cx, HandleObject obj)
 {
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
@@ -1523,7 +1544,7 @@ js::InitIteratorClass(JSContext* cx, HandleObject obj)
         return nullptr;
     if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
         return nullptr;
-    if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, iterator_methods))
+    if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, legacy_iterator_methods))
         return nullptr;
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Iterator,
                                               ctor, iteratorProto))

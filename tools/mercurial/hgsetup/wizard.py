@@ -8,6 +8,7 @@ import difflib
 import errno
 import os
 import shutil
+import ssl
 import stat
 import sys
 import subprocess
@@ -41,7 +42,7 @@ are up to date and you won't have to do anything.
 To begin, press the enter/return key.
 '''.strip()
 
-OLDEST_NON_LEGACY_VERSION = LooseVersion('3.2.4')
+OLDEST_NON_LEGACY_VERSION = LooseVersion('3.5.2')
 LEGACY_MERCURIAL = '''
 You are running an out of date Mercurial client (%s).
 
@@ -119,7 +120,7 @@ Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
 '''.strip()
 
-REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.1')
+REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.3')
 
 REVIEWBOARD_INCOMPATIBLE = '''
 Your Mercurial is too old to use the reviewboard extension, which is necessary
@@ -161,7 +162,7 @@ if you have enabled 2 Factor Authentication in Bugzilla.
 All consumers formerly looking at these options should support API Keys.
 '''.lstrip()
 
-BZPOST_MINIMUM_VERSION = LooseVersion('3.1')
+BZPOST_MINIMUM_VERSION = LooseVersion('3.3')
 
 BZPOST_INFO = '''
 The bzpost extension automatically records the URLs of pushed commits to
@@ -172,7 +173,7 @@ referenced Bugzilla bugs after push.
 Would you like to activate bzpost
 '''.strip()
 
-FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.1')
+FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.3')
 
 FIREFOXTREE_INFO = '''
 The firefoxtree extension makes interacting with the multiple Firefox
@@ -211,6 +212,15 @@ they can push to try without depending on mq or other workarounds.
 Would you like to activate push-to-try
 '''.strip()
 
+CLONEBUNDLES_INFO = '''
+Mercurial 3.6 and hg.mozilla.org support transparently cloning from a CDN,
+making clones faster and more reliable.
+
+(Relevant config option: experimental.clonebundles)
+
+Would you like to activate this feature and have faster clones
+'''.strip()
+
 BUNDLECLONE_MINIMUM_VERSION = LooseVersion('3.1')
 
 BUNDLECLONE_INFO = '''
@@ -221,6 +231,31 @@ We highly recommend you activate this extension.
 (Relevant config option: extensions.bundleclone)
 
 Would you like to activate bundleclone
+'''.strip()
+
+WIP_INFO = '''
+It is common to want a quick view of changesets that are in progress.
+
+The ``hg wip`` command provides should a view.
+
+Example Usage:
+
+  $ hg wip
+  o   4084:fcfa34d0387b dminor  @
+  |  mozreview: use repository name when displaying treeherder results (bug 1230548) r=mcote
+  | @   4083:786baf6d476a gps
+  | |  mozreview: create child review requests from batch API
+  | o   4082:3f100fa4a94f gps
+  | |  mozreview: copy more read-only processing code; r?smacleod
+  | o   4081:939417680cbe gps
+  |/   mozreview: add web API to submit an entire series of commits (bug 1229468); r?smacleod
+
+(Not shown are the colors that help denote the state each changeset
+is in.)
+
+(Relevant config options: alias.wip, revsetalias.wip, templates.wip)
+
+Would you like to install the `hg wip` alias?
 '''.strip()
 
 FILE_PERMISSIONS_WARNING = '''
@@ -359,11 +394,21 @@ class MercurialSetupWizard(object):
         if hg_version >= FIREFOXTREE_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'firefoxtree', FIREFOXTREE_INFO)
 
-        if hg_version >= BUNDLECLONE_MINIMUM_VERSION:
+        # Functionality from bundleclone is experimental in Mercurial 3.6.
+        # There was a bug in 3.6, so look for 3.6.1.
+        if hg_version >= LooseVersion('3.6.1'):
+            if not c.have_clonebundles() and self._prompt_yn(CLONEBUNDLES_INFO):
+                c.activate_clonebundles()
+                print('Enabled the clonebundles feature.\n')
+        elif hg_version >= BUNDLECLONE_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'bundleclone', BUNDLECLONE_INFO)
 
         if hg_version >= PUSHTOTRY_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'push-to-try', PUSHTOTRY_INFO)
+
+        if not c.have_wip():
+            if self._prompt_yn(WIP_INFO):
+                c.install_wip_alias()
 
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
@@ -422,7 +467,15 @@ class MercurialSetupWizard(object):
                     print('Cleaning up old repository: %s' % path)
                     shutil.rmtree(path)
 
-        c.add_mozilla_host_fingerprints()
+        # Python + Mercurial didn't have terrific TLS handling until Python
+        # 2.7.9 and Mercurial 3.4. For this reason, it was recommended to pin
+        # certificates in Mercurial config files. In modern versions of
+        # Mercurial, the system CA store is used and old, legacy TLS protocols
+        # are disabled. The default connection/security setting should
+        # be sufficient and pinning certificates is no longer needed.
+        have_modern_ssl = hasattr(ssl.SSLContext, 'load_default_certs')
+        if hg_version < LooseVersion('3.4') or not have_modern_ssl:
+            c.add_mozilla_host_fingerprints()
 
         # References to multiple version-control-tools checkouts can confuse
         # version-control-tools, since various Mercurial extensions resolve

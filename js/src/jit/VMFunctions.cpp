@@ -167,14 +167,21 @@ CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
     return cx->runtime()->handleInterrupt(cx);
 }
 
+JSObject*
+BindVar(JSContext* cx, HandleObject scopeChain)
+{
+    JSObject* obj = scopeChain;
+    while (!obj->isQualifiedVarObj())
+        obj = obj->enclosingScope();
+    MOZ_ASSERT(obj);
+    return obj;
+}
+
 bool
 DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain)
 {
     // Given the ScopeChain, extract the VarObj.
-    RootedObject obj(cx, scopeChain);
-    while (!obj->isQualifiedVarObj())
-        obj = obj->enclosingScope();
-
+    RootedObject obj(cx, BindVar(cx, scopeChain));
     return DefVarOperation(cx, obj, dn, attrs);
 }
 
@@ -185,10 +192,7 @@ DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject sc
     Rooted<ClonedBlockObject*> lexical(cx, &NearestEnclosingExtensibleLexicalScope(scopeChain));
 
     // Find the variables object.
-    RootedObject varObj(cx, scopeChain);
-    while (!varObj->isQualifiedVarObj())
-        varObj = varObj->enclosingScope();
-
+    RootedObject varObj(cx, BindVar(cx, scopeChain));
     return DefLexicalOperation(cx, lexical, varObj, dn, attrs);
 }
 
@@ -853,9 +857,8 @@ bool
 InitGlobalOrEvalScopeObjects(JSContext* cx, BaselineFrame* frame)
 {
     RootedScript script(cx, frame->script());
-    RootedObject varObj(cx, frame->scopeChain());
-    while (!varObj->isQualifiedVarObj())
-        varObj = varObj->enclosingScope();
+    RootedObject scopeChain(cx, frame->scopeChain());
+    RootedObject varObj(cx, BindVar(cx, scopeChain));
 
     if (script->isForEval()) {
         // Strict eval needs its own call object.
@@ -866,13 +869,12 @@ InitGlobalOrEvalScopeObjects(JSContext* cx, BaselineFrame* frame)
             if (!frame->initStrictEvalScopeObjects(cx))
                 return false;
         } else {
-            RootedObject scopeChain(cx, frame->scopeChain());
             if (!CheckEvalDeclarationConflicts(cx, script, scopeChain, varObj))
                 return false;
         }
     } else {
         Rooted<ClonedBlockObject*> lexicalScope(cx,
-            &NearestEnclosingExtensibleLexicalScope(frame->scopeChain()));
+            &NearestEnclosingExtensibleLexicalScope(scopeChain));
         if (!CheckGlobalDeclarationConflicts(cx, script, lexicalScope, varObj))
             return false;
     }
