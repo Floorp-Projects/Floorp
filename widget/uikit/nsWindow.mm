@@ -836,7 +836,6 @@ nsWindow::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(mozilla::widget::InputContext)
 nsWindow::GetInputContext()
 {
-    mInputContext.mNativeIMEContext = nullptr;
     return mInputContext;
 }
 
@@ -879,6 +878,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_PLUGIN_PORT:
         // not implemented
         break;
+
+    case NS_NATIVE_IME_CONTEXT:
+      retVal = NS_ONLY_ONE_NATIVE_IME_CONTEXT;
+      break;
   }
 
   return retVal;

@@ -592,6 +592,20 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
       // and it doesn't matter so just return nullptr.
       NS_ERROR("Requesting NS_NATIVE_GRAPHIC on a top-level window!");
       break;
+    case NS_NATIVE_IME_CONTEXT: {
+      NSView* view = mWindow ? [mWindow contentView] : nil;
+      if (view) {
+        retVal = [view inputContext];
+      }
+      // If inputContext isn't available on this window, return this window's
+      // pointer instead of nullptr since if this returns nullptr,
+      // IMEStateManager cannot manage composition with TextComposition
+      // instance.  Although, this case shouldn't occur.
+      if (NS_WARN_IF(!retVal)) {
+        retVal = this;
+      }
+      break;
+    }
   }
 
   return retVal;

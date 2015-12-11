@@ -40,7 +40,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mNode(aNode)
   , mTabParent(aTabParent)
   , mNativeContext(
-      aCompositionEvent->widget->GetInputContext().mNativeIMEContext)
+      aCompositionEvent->widget->GetNativeData(NS_NATIVE_IME_CONTEXT))
   , mCompositionStartOffset(0)
   , mCompositionTargetOffset(0)
   , mIsSynthesizedForTests(aCompositionEvent->mFlags.mIsSynthesizedForTests)
@@ -69,7 +69,7 @@ TextComposition::Destroy()
 bool
 TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 {
-  return mNativeContext == aWidget->GetInputContext().mNativeIMEContext;
+  return mNativeContext == aWidget->GetNativeData(NS_NATIVE_IME_CONTEXT);
 }
 
 bool
