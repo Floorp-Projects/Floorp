@@ -2769,6 +2769,11 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
             return false;
     }
 
+    // Don't try to attach stubs that wish to be hidden. We don't know how to
+    // have different enumerability in the stubs for the moment.
+    if (op == JSOP_INITHIDDENELEM)
+        return true;
+
     // Overwrite the object on the stack (pushed for the decompiler) with the rhs.
     MOZ_ASSERT(stack[2] == objv);
     stack[2] = rhs;

@@ -128,15 +128,6 @@ class TcpTransport(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(self.socket_timeout)
 
-    def _recv_n_bytes(self, n):
-        data = ""
-        while len(data) < n:
-            chunk = self.sock.recv(n - len(data))
-            if chunk == "":
-                break
-            data += chunk
-        return data
-
     def _unmarshal(self, packet):
         msg = None
 

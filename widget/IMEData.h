@@ -10,6 +10,8 @@
 #include "nsRect.h"
 #include "nsStringGlue.h"
 
+class nsIWidget;
+
 namespace mozilla {
 
 class WritingMode;
@@ -223,11 +225,58 @@ struct IMEState final
   }
 };
 
+// NS_ONLY_ONE_NATIVE_IME_CONTEXT is a special value of native IME context.
+// If there can be only one IME composition in a process, this can be used.
+#define NS_ONLY_ONE_NATIVE_IME_CONTEXT \
+  (reinterpret_cast<void*>(static_cast<intptr_t>(-1)))
+
+struct NativeIMEContext final
+{
+  // Pointer to native IME context.  Typically this is the result of
+  // nsIWidget::GetNativeData(NS_RAW_NATIVE_IME_CONTEXT) in the parent process.
+  // See also NS_ONLY_ONE_NATIVE_IME_CONTEXT.
+  uintptr_t mRawNativeIMEContext;
+  // Process ID of the origin of mNativeIMEContext.
+  uint64_t mOriginProcessID;
+
+  NativeIMEContext()
+  {
+    Init(nullptr);
+  }
+
+  explicit NativeIMEContext(nsIWidget* aWidget)
+  {
+    Init(aWidget);
+  }
+
+  bool IsValid() const
+  {
+    return mRawNativeIMEContext &&
+           mOriginProcessID != static_cast<uintptr_t>(-1);
+  }
+
+  void Init(nsIWidget* aWidget);
+  void InitWithRawNativeIMEContext(const void* aRawNativeIMEContext)
+  {
+    InitWithRawNativeIMEContext(const_cast<void*>(aRawNativeIMEContext));
+  }
+  void InitWithRawNativeIMEContext(void* aRawNativeIMEContext);
+
+  bool operator==(const NativeIMEContext& aOther) const
+  {
+    return mRawNativeIMEContext == aOther.mRawNativeIMEContext &&
+           mOriginProcessID == aOther.mOriginProcessID;
+  }
+  bool operator!=(const NativeIMEContext& aOther) const
+  {
+    return !(*this == aOther);
+  }
+};
+
 struct InputContext final
 {
   InputContext()
-    : mNativeIMEContext(nullptr)
-    , mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
+    : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
     , mMayBeIMEUnaware(false)
   {
   }
@@ -247,11 +296,6 @@ struct InputContext final
 
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
-
-  /* Native IME context for the widget.  This doesn't come from the argument of
-     SetInputContext().  If there is only one context in the process, this may
-     be nullptr. */
-  void* mNativeIMEContext;
 
   /**
    * mOrigin indicates whether this focus event refers to main or remote

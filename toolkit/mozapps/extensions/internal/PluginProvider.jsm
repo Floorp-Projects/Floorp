@@ -449,7 +449,7 @@ PluginWrapper.prototype = {
 
   get pluginFullpath() {
     let paths = [];
-    for (let tag of aTags)
+    for (let tag of pluginFor(this).tags)
       paths.push(tag.fullpath);
     return paths;
   },

@@ -742,44 +742,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(JNIEnv * arg0, 
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t)(JNIEnv *, jobject, jint);
-static Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(JNIEnv * arg0, jobject arg1, jint arg2) {
-    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef jint (*Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t)(JNIEnv *, jobject);
-static Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode;
-extern "C" NS_EXPORT jint MOZ_JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv * arg0, jobject arg1) {
-    if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return 0;
-    }
-    return f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode", &f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_setIsLongpressEnabled_t)(JNIEnv *, jobject, jboolean);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_setIsLongpressEnabled_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setIsLongpressEnabled;
 extern "C" NS_EXPORT void MOZ_JNICALL
