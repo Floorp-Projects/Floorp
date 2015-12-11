@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for view-source linkability</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+function runTest() {
+  SimpleTest.doesThrow(function() {
+    window.open('view-source:' + location.href, "_blank");
+  }, "Trying to access view-source URL from unprivileged code should throw.");
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
+
+
