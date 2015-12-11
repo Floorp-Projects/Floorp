@@ -235,20 +235,19 @@ parent:
                                                IMENotification notification);
 
     /**
-     * Instructs chrome to end any pending composition
+     * Requests chrome to commit or cancel composition of IME.
      *
-     *  cancel       true if composition should be cancelled
-     *  noCompositionEvent   true if no composition event is fired by commit or
-     *                       cancel
-     *  composition  Text to commit before ending the composition
+     *  cancel                Set true if composition should be cancelled.
      *
-     *  if cancel is true,
-     *    widget should return empty string for composition
-     *  if cancel is false,
-     *    widget should return the current composition text
+     *  isCommitted           Returns true if the request causes composition
+     *                        being committed synchronously.
+     *  committedString       Returns committed string.  The may be non-empty
+     *                        string even if cancel is true because IME may
+     *                        try to restore selected string which was
+     *                        replaced with the composition.
      */
-    prio(urgent) sync EndIMEComposition(bool cancel)
-                        returns (bool noCompositionEvent, nsString composition);
+    prio(urgent) sync RequestIMEToCommitComposition(bool cancel)
+                        returns (bool isCommitted, nsString committedString);
 
     /**
      * OnEventNeedingAckHandled() is called after a child process dispatches a

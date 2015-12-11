@@ -161,6 +161,11 @@ PuppetWidget::CreateChild(const LayoutDeviceIntRect& aRect,
 NS_IMETHODIMP
 PuppetWidget::Destroy()
 {
+  if (mOnDestroyCalled) {
+    return NS_OK;
+  }
+  mOnDestroyCalled = true;
+
   Base::OnDestroy();
   Base::Destroy();
   mPaintTask.Revoke();
@@ -586,34 +591,51 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 }
 
 nsresult
-PuppetWidget::IMEEndComposition(bool aCancel)
+PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 {
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
+#ifdef MOZ_CROSS_PROCESS_IME
+  if (!mTabChild) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(!Destroyed());
 
   // There must not be composition which is caused by the PuppetWidget instance.
   if (NS_WARN_IF(!mNativeIMEContext.IsValid())) {
     return NS_OK;
   }
 
-  nsEventStatus status;
-  bool noCompositionEvent = true;
-  WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommit, this);
-  InitEvent(compositionCommitEvent, nullptr);
-  // SendEndIMEComposition is always called since ResetInputState
-  // should always be called even if we aren't composing something.
-  if (!mTabChild ||
-      !mTabChild->SendEndIMEComposition(aCancel, &noCompositionEvent,
-                                        &compositionCommitEvent.mData)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (noCompositionEvent) {
+  RefPtr<TextComposition> composition =
+    IMEStateManager::GetTextCompositionFor(this);
+  // This method shouldn't be called when there is no text composition instance.
+  if (NS_WARN_IF(!composition)) {
     return NS_OK;
   }
 
+  bool isCommitted = false;
+  nsAutoString committedString;
+  if (NS_WARN_IF(!mTabChild->SendRequestIMEToCommitComposition(
+                               aCancel, &isCommitted, &committedString))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If the composition wasn't committed synchronously, we need to wait async
+  // composition events for destroying the TextComposition instance.
+  if (!isCommitted) {
+    return NS_OK;
+  }
+
+  // Dispatch eCompositionCommit event.
+  WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommit, this);
+  InitEvent(compositionCommitEvent, nullptr);
+  compositionCommitEvent.mData = committedString;
+  nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&compositionCommitEvent, status);
+
+  // NOTE: PuppetWidget might be destroyed already.
+
+#endif // #ifdef MOZ_CROSS_PROCESS_IME
+
   return NS_OK;
 }
 
@@ -622,9 +644,9 @@ PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
-      return IMEEndComposition(false);
+      return RequestIMEToCommitComposition(false);
     case REQUEST_TO_CANCEL_COMPOSITION:
-      return IMEEndComposition(true);
+      return RequestIMEToCommitComposition(true);
     case NOTIFY_IME_OF_FOCUS:
     case NOTIFY_IME_OF_BLUR:
       return NotifyIMEOfFocusChange(aIMENotification);
