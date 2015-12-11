@@ -186,6 +186,30 @@ IMEContext::IMEContext(nsWindow* aWindow)
 {
 }
 
+void
+IMEContext::Init(HWND aWnd)
+{
+  Clear();
+  mWnd = aWnd;
+  mIMC = ::ImmGetContext(mWnd);
+}
+
+void
+IMEContext::Init(nsWindow* aWindow)
+{
+  Init(aWindow->GetWindowHandle());
+}
+
+void
+IMEContext::Clear()
+{
+  if (mWnd && mIMC) {
+    ::ImmReleaseContext(mWnd, mIMC);
+  }
+  mWnd = nullptr;
+  mIMC = nullptr;
+}
+
 /******************************************************************************
  * IMMHandler
  ******************************************************************************/

@@ -684,6 +684,17 @@ void* nsChildView::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_OFFSETY:
       retVal = 0;
       break;
+
+    case NS_RAW_NATIVE_IME_CONTEXT:
+      retVal = [mView inputContext];
+      // If input context isn't available on this widget, we should set |this|
+      // instead of nullptr since if this returns nullptr, IMEStateManager
+      // cannot manage composition with TextComposition instance.  Although,
+      // this case shouldn't occur.
+      if (NS_WARN_IF(!retVal)) {
+        retVal = this;
+      }
+      break;
   }
 
   return retVal;
@@ -1768,13 +1779,6 @@ nsChildView::GetInputContext()
     default:
       mInputContext.mIMEState.mOpen = IMEState::CLOSED;
       break;
-  }
-  mInputContext.mNativeIMEContext = [mView inputContext];
-  // If input context isn't available on this widget, we should set |this|
-  // instead of nullptr since nullptr means that the platform has only one
-  // context per process.
-  if (!mInputContext.mNativeIMEContext) {
-    mInputContext.mNativeIMEContext = this;
   }
   return mInputContext;
 }

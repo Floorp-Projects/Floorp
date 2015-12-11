@@ -1014,7 +1014,6 @@ class MOZ_STACK_CLASS ModuleValidator
             uint32_t ffiIndex_;
             struct {
                 Scalar::Type viewType_;
-                bool isSharedView_;
             } viewInfo;
             AsmJSMathBuiltinFunction mathBuiltinFunc_;
             AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
@@ -1071,14 +1070,6 @@ class MOZ_STACK_CLASS ModuleValidator
         Scalar::Type viewType() const {
             MOZ_ASSERT(isAnyArrayView());
             return u.viewInfo.viewType_;
-        }
-        bool viewIsSharedView() const {
-            MOZ_ASSERT(isAnyArrayView());
-            return u.viewInfo.isSharedView_;
-        }
-        void setViewIsSharedView() {
-            MOZ_ASSERT(isAnyArrayView());
-            u.viewInfo.isSharedView_ = true;
         }
         bool isMathFunction() const {
             return which_ == MathBuiltinFunction;
@@ -1402,18 +1393,16 @@ class MOZ_STACK_CLASS ModuleValidator
         global->u.varOrConst.type_ = Type::var(importType).which();
         return globals_.putNew(varName, global);
     }
-    bool addArrayView(PropertyName* varName, Scalar::Type vt, PropertyName* maybeField,
-                      bool isSharedView)
+    bool addArrayView(PropertyName* varName, Scalar::Type vt, PropertyName* maybeField)
     {
         if (!arrayViews_.append(ArrayView(varName, vt)))
             return false;
         Global* global = validationLifo_.new_<Global>(Global::ArrayView);
         if (!global)
             return false;
-        if (!module().addArrayView(vt, maybeField, isSharedView))
+        if (!module().addArrayView(vt, maybeField))
             return false;
         global->u.viewInfo.viewType_ = vt;
-        global->u.viewInfo.isSharedView_ = isSharedView;
         return globals_.putNew(varName, global);
     }
     bool addMathBuiltinFunction(PropertyName* varName, AsmJSMathBuiltinFunction func,
@@ -1497,14 +1486,13 @@ class MOZ_STACK_CLASS ModuleValidator
         global->u.changeHeap.srcEnd_ = fn->pn_pos.end;
         return globals_.putNew(name, global);
     }
-    bool addArrayViewCtor(PropertyName* varName, Scalar::Type vt, PropertyName* fieldName, bool isSharedView) {
+    bool addArrayViewCtor(PropertyName* varName, Scalar::Type vt, PropertyName* fieldName) {
         Global* global = validationLifo_.new_<Global>(Global::ArrayViewCtor);
         if (!global)
             return false;
-        if (!module().addArrayViewCtor(vt, fieldName, isSharedView))
+        if (!module().addArrayViewCtor(vt, fieldName))
             return false;
         global->u.viewInfo.viewType_ = vt;
-        global->u.viewInfo.isSharedView_ = isSharedView;
         return globals_.putNew(varName, global);
     }
     bool addFFI(PropertyName* varName, PropertyName* field) {
@@ -1610,6 +1598,10 @@ class MOZ_STACK_CLASS ModuleValidator
     }
     uint32_t minHeapLength() const {
         return module().minHeapLength();
+    }
+
+    bool usesSharedMemory() const {
+        return atomicsPresent_;
     }
 
     // Error handling.
@@ -1740,14 +1732,8 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     void startFunctionBodies() {
-        if (atomicsPresent_) {
-            for (GlobalMap::Range r = globals_.all() ; !r.empty() ; r.popFront()) {
-                Global* g = r.front().value();
-                if (g->isAnyArrayView())
-                    g->setViewIsSharedView();
-            }
+        if (atomicsPresent_)
             module().setViewsAreShared();
-        }
     }
 };
 
@@ -2472,10 +2458,9 @@ CheckGlobalVariableInitImport(ModuleValidator& m, PropertyName* varName, ParseNo
 }
 
 static bool
-IsArrayViewCtorName(ModuleValidator& m, PropertyName* name, Scalar::Type* type, bool* shared)
+IsArrayViewCtorName(ModuleValidator& m, PropertyName* name, Scalar::Type* type)
 {
     JSAtomState& names = m.cx()->names();
-    *shared = false;
     if (name == names.Int8Array) {
         *type = Scalar::Int8;
     } else if (name == names.Uint8Array) {
@@ -2526,7 +2511,6 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
 
     PropertyName* field;
     Scalar::Type type;
-    bool shared = false;
     if (ctorExpr->isKind(PNK_DOT)) {
         ParseNode* base = DotBase(ctorExpr);
 
@@ -2534,7 +2518,7 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
             return m.failName(base, "expecting '%s.*Array", globalName);
 
         field = DotMember(ctorExpr);
-        if (!IsArrayViewCtorName(m, field, &type, &shared))
+        if (!IsArrayViewCtorName(m, field, &type))
             return m.fail(ctorExpr, "could not match typed array name");
     } else {
         if (!ctorExpr->isKind(PNK_NAME))
@@ -2550,16 +2534,12 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
 
         field = nullptr;
         type = global->viewType();
-        shared = global->viewIsSharedView();
     }
 
     if (!CheckNewArrayViewArgs(m, ctorExpr, bufferName))
         return false;
 
-    if (!m.module().isValidViewSharedness(shared))
-        return m.failName(ctorExpr, "%s has different sharedness than previous view constructors", globalName);
-
-    return m.addArrayView(varName, type, field, shared);
+    return m.addArrayView(varName, type, field);
 }
 
 static bool
@@ -2695,12 +2675,8 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
             return m.addByteLength(varName);
 
         Scalar::Type type;
-        bool shared = false;
-        if (IsArrayViewCtorName(m, field, &type, &shared)) {
-            if (!m.module().isValidViewSharedness(shared))
-                return m.failName(initNode, "'%s' has different sharedness than previous view constructors", field);
-            return m.addArrayViewCtor(varName, type, field, shared);
-        }
+        if (IsArrayViewCtorName(m, field, &type))
+            return m.addArrayViewCtor(varName, type, field);
 
         return m.failName(initNode, "'%s' is not a standard constant or typed array name", field);
     }
@@ -6786,6 +6762,12 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
         return false;
 
     m.startFunctionBodies();
+
+#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
+    if (m.usesSharedMemory())
+        return m.failOffset(m.parser().tokenStream.currentToken().pos.begin,
+                            "shared memory and atomics not supported by this build");
+#endif
 
     if (!CheckFunctions(m))
         return false;

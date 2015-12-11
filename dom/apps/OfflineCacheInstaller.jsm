@@ -229,7 +229,7 @@ function installCache(app) {
     return;
 
   let principal =
-    Services.scriptSecurityManager.createCodebasePrincipal(app.origin, {appId: aApp.localId});
+    Services.scriptSecurityManager.createCodebasePrincipal(app.origin, {appId: app.localId});
 
   // If the build has been correctly configured, this should not happen!
   // If we install the cache anyway, it won't be updateable. If we don't install

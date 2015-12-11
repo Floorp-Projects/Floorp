@@ -306,8 +306,10 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!atomsCompartment || !atomsCompartment->init(nullptr))
         return false;
 
-    gc.zones.append(atomsZone.get());
-    atomsZone->compartments.append(atomsCompartment.get());
+    if (!gc.zones.append(atomsZone.get()))
+        return false;
+    if (!atomsZone->compartments.append(atomsCompartment.get()))
+        return false;
 
     atomsCompartment->setIsSystem(true);
 

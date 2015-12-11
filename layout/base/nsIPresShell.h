@@ -1416,7 +1416,12 @@ public:
   virtual nsresult SetResolution(float aResolution) = 0;
   float GetResolution() { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
-  virtual float GetCumulativeScaleResolution() = 0;
+
+  /**
+   * Calculate the cumulative scale resolution from this document up to
+   * but not including the root document.
+   */
+  virtual float GetCumulativeNonRootScaleResolution() = 0;
 
   /**
    * Was the current resolution set by the user or just default initialized?

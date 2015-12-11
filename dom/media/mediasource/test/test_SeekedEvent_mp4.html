@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: Check that seeked event is fired prior loadeddata</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  el._seeked = false;
+  el._loadeddata = false;
+  el._playing = false;
+  el.addEventListener("seeked", function() {
+    ok(true, "got seeked event");
+    is(el._loadeddata, false, "can't have received loadeddata prior seeked");
+    is(el._playing, false, "can't be playing prior seeked");
+    el._seeked = true;
+  });
+  el.addEventListener("loadeddata", function() {
+    ok(true, "got loadeddata event");
+    is(el._seeked, true, "must have received seeked prior loadeddata");
+    is(el._playing, false, "can't be playing prior playing");
+    el._loadeddata = true;
+  });
+  el.addEventListener("playing", function() {
+    ok(true, "got playing");
+    is(el._seeked, true, "must have received seeked prior playing");
+    is(el._loadeddata, true, "must have received loadeddata prior playing");
+    el._playing = true;
+  });
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    .then(once.bind(null, el, "loadedmetadata"))
+    .then(function() {
+      el.play();
+      videosb.timestampOffset = 2;
+      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      // Load [2, 3.606).
+      var promises = [];
+      promises.push(once(el, "play"));
+      promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['1'], '.m4s'));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      return fetchAndLoad(videosb, 'bipbop/bipbop_video', ['2'], '.m4s');
+    })
+    .then(function() {
+      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      el.currentTime = 2;
+      var promises = [];
+      promises.push(once(el, "seeked"));
+      promises.push(once(el, "playing"));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      ok(true, "completed seek");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

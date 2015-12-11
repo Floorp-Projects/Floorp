@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include "base/eintr_wrapper.h"
+
 #include "chrome/common/child_process_info.h"
 
 #include "mozilla/ipc/Transport.h"
@@ -41,6 +43,8 @@ CreateTransport(base::ProcessId aProcIdOne,
   fd1 = dup(fd1);
   fd2 = dup(fd2);
   if (fd1 < 0 || fd2 < 0) {
+    HANDLE_EINTR(close(fd1));
+    HANDLE_EINTR(close(fd2));
     return NS_ERROR_DUPLICATE_HANDLE;
   }
 
