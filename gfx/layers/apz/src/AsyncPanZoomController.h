@@ -824,10 +824,10 @@ private:
   void CancelAnimationAndGestureState();
 
   RefPtr<InputQueue> mInputQueue;
-  TouchBlockState* CurrentTouchBlock();
-  bool HasReadyTouchBlock();
+  TouchBlockState* CurrentTouchBlock() const;
+  bool HasReadyTouchBlock() const;
 
-  PanGestureBlockState* CurrentPanGestureBlock();
+  PanGestureBlockState* CurrentPanGestureBlock() const;
 
 private:
   /* ===================================================================
