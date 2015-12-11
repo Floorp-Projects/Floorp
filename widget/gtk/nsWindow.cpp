@@ -1737,7 +1737,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
     case NS_NATIVE_PLUGIN_OBJECT_PTR:
         return (void *) mPluginNativeWindow;
-    case NS_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT:
         // If IME context isn't available on this widget, we should set |this|
         // instead of nullptr since if we return nullptr, IMEStateManager
         // cannot manage composition with TextComposition instance.  Although,

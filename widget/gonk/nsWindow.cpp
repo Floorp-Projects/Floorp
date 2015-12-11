@@ -539,7 +539,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return mScreen->GetNativeWindow();
     case NS_NATIVE_OPENGL_CONTEXT:
         return mScreen->GetGLContext().take();
-    case NS_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT:
         // There is only one IME context on Gonk.
         return NS_ONLY_ONE_NATIVE_IME_CONTEXT;
     }

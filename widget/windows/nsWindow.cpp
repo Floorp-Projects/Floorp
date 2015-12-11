@@ -3150,7 +3150,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
       return (void*)::GetDC(mWnd);
 #endif
 
-    case NS_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT:
     case NS_NATIVE_TSF_THREAD_MGR:
     case NS_NATIVE_TSF_CATEGORY_MGR:
     case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:

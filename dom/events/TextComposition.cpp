@@ -39,8 +39,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   : mPresContext(aPresContext)
   , mNode(aNode)
   , mTabParent(aTabParent)
-  , mNativeContext(
-      aCompositionEvent->widget->GetNativeData(NS_NATIVE_IME_CONTEXT))
+  , mNativeContext(aCompositionEvent->mNativeIMEContext)
   , mCompositionStartOffset(0)
   , mCompositionTargetOffset(0)
   , mIsSynthesizedForTests(aCompositionEvent->mFlags.mIsSynthesizedForTests)
@@ -54,6 +53,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
       Preferences::GetBool("dom.compositionevent.allow_control_characters",
                            false))
 {
+  MOZ_ASSERT(aCompositionEvent->mNativeIMEContext.IsValid());
 }
 
 void
@@ -64,12 +64,6 @@ TextComposition::Destroy()
   mTabParent = nullptr;
   // TODO: If the editor is still alive and this is held by it, we should tell
   //       this being destroyed for cleaning up the stuff.
-}
-
-bool
-TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
-{
-  return mNativeContext == aWidget->GetNativeData(NS_NATIVE_IME_CONTEXT);
 }
 
 bool
@@ -114,6 +108,7 @@ TextComposition::CloneAndDispatchAs(
   compositionEvent.time = aCompositionEvent->time;
   compositionEvent.timeStamp = aCompositionEvent->timeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
+  compositionEvent.mNativeIMEContext = aCompositionEvent->mNativeIMEContext;
   compositionEvent.mOriginalMessage = aCompositionEvent->mMessage;
   compositionEvent.mFlags.mIsSynthesizedForTests =
     aCompositionEvent->mFlags.mIsSynthesizedForTests;
@@ -613,6 +608,7 @@ TextComposition::CompositionEventDispatcher::Run()
   switch (mEventMessage) {
     case eCompositionStart: {
       WidgetCompositionEvent compStart(true, eCompositionStart, widget);
+      compStart.mNativeIMEContext = mTextComposition->mNativeContext;
       WidgetQueryContentEvent selectedText(true, eQuerySelectedText, widget);
       ContentEventHandler handler(presContext);
       handler.OnQuerySelectedText(&selectedText);
@@ -629,6 +625,7 @@ TextComposition::CompositionEventDispatcher::Run()
     case eCompositionCommitAsIs:
     case eCompositionCommit: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
+      compEvent.mNativeIMEContext = mTextComposition->mNativeContext;
       if (mEventMessage != eCompositionCommitAsIs) {
         compEvent.mData = mData;
       }
@@ -650,14 +647,23 @@ TextComposition::CompositionEventDispatcher::Run()
  ******************************************************************************/
 
 TextCompositionArray::index_type
-TextCompositionArray::IndexOf(nsIWidget* aWidget)
+TextCompositionArray::IndexOf(const NativeIMEContext& aNativeIMEContext)
 {
+  if (!aNativeIMEContext.IsValid()) {
+    return NoIndex;
+  }
   for (index_type i = Length(); i > 0; --i) {
-    if (ElementAt(i - 1)->MatchesNativeContext(aWidget)) {
+    if (ElementAt(i - 1)->GetNativeIMEContext() == aNativeIMEContext) {
       return i - 1;
     }
   }
   return NoIndex;
+}
+
+TextCompositionArray::index_type
+TextCompositionArray::IndexOf(nsIWidget* aWidget)
+{
+  return IndexOf(aWidget->GetNativeIMEContext());
 }
 
 TextCompositionArray::index_type

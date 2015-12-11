@@ -96,7 +96,7 @@ IMEHandler::Terminate()
 void*
 IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType)
 {
-  if (aDataType == NS_NATIVE_IME_CONTEXT) {
+  if (aDataType == NS_RAW_NATIVE_IME_CONTEXT) {
 #ifdef NS_ENABLE_TSF
     if (IsTSFAvailable()) {
       return TSFTextStore::GetThreadManager();

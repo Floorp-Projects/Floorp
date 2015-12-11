@@ -134,6 +134,17 @@ TextEventDispatcher::InitEvent(WidgetGUIEvent& aEvent) const
   aEvent.time = PR_IntervalNow();
   aEvent.refPoint = LayoutDeviceIntPoint(0, 0);
   aEvent.mFlags.mIsSynthesizedForTests = mForTests;
+  if (aEvent.mClass != eCompositionEventClass) {
+    return;
+  }
+  // Currently, we should set special native IME context when composition
+  // events are dispatched from PuppetWidget since PuppetWidget may have not
+  // known actual native IME context yet and it caches native IME context
+  // when it dispatches every WidgetCompositionEvent.
+  if (XRE_IsContentProcess()) {
+    aEvent.AsCompositionEvent()->
+      mNativeIMEContext.InitWithRawNativeIMEContext(mWidget);
+  }
 }
 
 nsresult

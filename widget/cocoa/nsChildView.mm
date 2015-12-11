@@ -685,7 +685,7 @@ void* nsChildView::GetNativeData(uint32_t aDataType)
       retVal = 0;
       break;
 
-    case NS_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT:
       retVal = [mView inputContext];
       // If input context isn't available on this widget, we should set |this|
       // instead of nullptr since if this returns nullptr, IMEStateManager
