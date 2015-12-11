@@ -4,7 +4,7 @@
 "use strict";
 
 var {Ci,Cu,CC} = require("chrome");
-const promise = require("devtools/shared/deprecated-sync-thenables");
+const promise = require("promise");
 
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const Services = require("Services");
