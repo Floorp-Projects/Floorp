@@ -21,7 +21,7 @@ function test() {
     const constants = gDebugger.require('./content/constants');
 
     reloadActiveTab(gPanel);
-    waitForDispatch(gPanel, constants.LOAD_SOURCES)
+    waitForNavigation(gPanel)
       .then(testSourcesEmptyText)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {

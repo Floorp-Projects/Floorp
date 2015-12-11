@@ -385,7 +385,7 @@ struct InputContextAction final
   bool UserMightRequestOpenVKB() const
   {
     return (mFocusChange == FOCUS_NOT_CHANGED &&
-            mCause == CAUSE_MOUSE);
+            (mCause == CAUSE_MOUSE || mCause == CAUSE_TOUCH));
   }
 
   InputContextAction()

@@ -361,14 +361,6 @@ var DebuggerController = {
   _onNavigate: function() {
     this.ThreadState.handleTabNavigation();
     this.StackFrames.handleTabNavigation();
-
-    // TODO(jwl): We shouldn't need this call. We're already getting
-    // `newSource` notifications because we're already connected, but
-    // I'm not sure of the order those come in with regards to the
-    // navigation event.  Tests look for this action and it needs to
-    // indicate everything is done loading, so we should figure out
-    // another way to indicate that.
-    this.dispatch(actions.loadSources());
   },
 
   /**

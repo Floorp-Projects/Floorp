@@ -512,7 +512,6 @@ var gSyncSetup = {
   onWizardBack: function () {
     switch (this.wizard.pageIndex) {
       case NEW_ACCOUNT_START_PAGE:
-      case EXISTING_ACCOUNT_LOGIN_PAGE:
         this.wizard.pageIndex = INTRO_PAGE;
         return false;
       case EXISTING_ACCOUNT_CONNECT_PAGE:

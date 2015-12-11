@@ -9,6 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_event-listeners-02.html";
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    let gPanel = aPanel;
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
@@ -33,7 +34,7 @@ function test() {
       yield waitForSourceShown(aPanel, ".html");
       is(gEvents.itemCount, 0, "There should be no events before reloading.");
 
-      let reloaded = waitForSourcesAfterReload();
+      let reloaded = waitForNavigation(gPanel);
       gDebugger.DebuggerController._target.activeTab.reload();
 
       is(gEvents.itemCount, 0, "There should be no events while reloading.");
@@ -42,13 +43,5 @@ function test() {
 
       yield closeDebuggerAndFinish(aPanel);
     });
-
-    function waitForSourcesAfterReload() {
-      return promise.all([
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.NEW_SOURCE),
-        waitForDispatch(aPanel, gDebugger.constants.LOAD_SOURCES),
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCE_SHOWN)
-      ]);
-    }
   });
 }
