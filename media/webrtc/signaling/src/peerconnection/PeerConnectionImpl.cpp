@@ -1961,10 +1961,14 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   if(!mIceStartTime.IsNull()) {
     TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
     if (mIceConnectionState == PCImplIceConnectionState::Failed) {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME,
+      Telemetry::Accumulate((mIsLoop ?
+                             Telemetry::LOOP_ICE_LATE_TRICKLE_ARRIVAL_TIME :
+                             Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME),
                             timeDelta.ToMilliseconds());
     } else {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME,
+      Telemetry::Accumulate((mIsLoop ?
+                             Telemetry::LOOP_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME :
+                             Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME),
                             timeDelta.ToMilliseconds());
     }
   }
