@@ -107,7 +107,7 @@
                 <button id="requests-menu-status-button"
                         class="requests-menu-header-button requests-menu-status"
                         data-key="status"
-                        label="&netmonitorUI.toolbar.status2;"
+                        label="&netmonitorUI.toolbar.status3;"
                         flex="1">
                 </button>
               </hbox>
