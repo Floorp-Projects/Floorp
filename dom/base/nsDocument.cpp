@@ -5050,14 +5050,6 @@ nsDocument::DispatchContentLoadedEvents()
                                         true, true);
   }
 
-  if (mMaybeServiceWorkerControlled) {
-    using mozilla::dom::workers::ServiceWorkerManager;
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      swm->MaybeCheckNavigationUpdate(this);
-    }
-  }
-
   UnblockOnload(true);
 }
 
