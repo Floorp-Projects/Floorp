@@ -129,10 +129,7 @@ private:
   // Monitor protecting members below accessed from multiple threads.
   Monitor mMonitor;
   media::TimeUnit mNextRandomAccessPoint;
-  Maybe<RefPtr<MediaRawData>> mNextSample;
-  // Set to true following a reset. Ensure that the next sample demuxed
-  // is available at position 0.
-  bool mReset;
+  Maybe<media::TimeUnit> mLastSeek;
 };
 
 } // namespace mozilla
