@@ -9,7 +9,7 @@
 
 #include <vector>
 #include "nsAutoPtr.h"
-#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
+#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "APZUtils.h"         // for CancelAnimationFlags
 #include "Layers.h"           // for Layer::ScrollDirection
 #include "Units.h"            // for ScreenPoint
@@ -127,8 +127,6 @@ struct OverscrollHandoffState {
 
   ScrollSource mScrollSource;
 };
-// Don't pollute other files with this macro for now.
-#undef NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING
 
 } // namespace layers
 } // namespace mozilla
