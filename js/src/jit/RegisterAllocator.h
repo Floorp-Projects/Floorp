@@ -65,9 +65,13 @@ struct AllocationIntegrityState
 
         InstructionInfo(const InstructionInfo& o)
         {
-            inputs.appendAll(o.inputs);
-            temps.appendAll(o.temps);
-            outputs.appendAll(o.outputs);
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!inputs.appendAll(o.inputs) ||
+                !temps.appendAll(o.temps) ||
+                !outputs.appendAll(o.outputs))
+            {
+                oomUnsafe.crash("InstructionInfo::InstructionInfo");
+            }
         }
     };
     Vector<InstructionInfo, 0, SystemAllocPolicy> instructions;
@@ -76,7 +80,9 @@ struct AllocationIntegrityState
         Vector<InstructionInfo, 5, SystemAllocPolicy> phis;
         BlockInfo() {}
         BlockInfo(const BlockInfo& o) {
-            phis.appendAll(o.phis);
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!phis.appendAll(o.phis))
+                oomUnsafe.crash("BlockInfo::BlockInfo");
         }
     };
     Vector<BlockInfo, 0, SystemAllocPolicy> blocks;

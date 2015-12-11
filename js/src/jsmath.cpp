@@ -13,7 +13,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/unused.h"
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>
@@ -802,10 +801,15 @@ GenerateSeed(uint64_t* seedBuffer, size_t length)
     if (fd >= 0) {
         ssize_t size = length * sizeof(seedBuffer[0]);
         ssize_t nread = read(fd, (char *) seedBuffer, size);
-        MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
-        mozilla::Unused << nread;
         close(fd);
+        MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
+        if (nread == size)
+            return;
     }
+
+    // Use PRMJ_Now() if we couldn't read from /dev/urandom.
+    for (size_t i = 0; i < length; i++)
+        seedBuffer[i] = PRMJ_Now();
 #else
 # error "Platform needs to implement random_generateSeed()"
 #endif

@@ -761,7 +761,7 @@
                 }
 
                 // If the browser was playing audio, we should remove the playing state.
-                if (this.mTab.hasAttribute("soundplaying")) {
+                if (this.mTab.hasAttribute("soundplaying") && this.mBrowser.lastURI != aLocation) {
                   this.mTab.removeAttribute("soundplaying");
                   this.mTabBrowser._tabAttrModified(this.mTab, ["soundplaying"]);
                 }

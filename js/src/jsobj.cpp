@@ -2231,11 +2231,12 @@ js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name, HandleObject s
 
     // See note above RuntimeLexicalErrorObject.
     if (pobj == scope) {
-        if (IsUninitializedLexicalSlot(scope, shape)) {
+        if (name != cx->names().dotThis && IsUninitializedLexicalSlot(scope, shape)) {
             scope = RuntimeLexicalErrorObject::create(cx, scope, JSMSG_UNINITIALIZED_LEXICAL);
             if (!scope)
                 return false;
         } else if (scope->is<ScopeObject>() && !scope->is<DeclEnvObject>() && !shape->writable()) {
+            MOZ_ASSERT(name != cx->names().dotThis);
             scope = RuntimeLexicalErrorObject::create(cx, scope, JSMSG_BAD_CONST_ASSIGN);
             if (!scope)
                 return false;

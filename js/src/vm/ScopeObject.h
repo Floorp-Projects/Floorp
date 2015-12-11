@@ -953,7 +953,7 @@ class ClonedBlockObject : public BlockObject
 // Attempting to access anything on this scope throws the appropriate
 // ReferenceError.
 //
-// ES6 'const' bindings induce a runtime assignment when assigned to outside
+// ES6 'const' bindings induce a runtime error when assigned to outside
 // of initialization, regardless of strictness.
 class RuntimeLexicalErrorObject : public ScopeObject
 {

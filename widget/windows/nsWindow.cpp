@@ -656,6 +656,7 @@ nsWindow::Create(nsIWidget* aParent,
                                                        NOTIFY_FOR_THIS_SESSION);
   NS_ASSERTION(wtsRegistered, "WTSRegisterSessionNotification failed!\n");
 
+  mDefaultIMC.Init(this);
   IMEHandler::InitInputContext(this, mInputContext);
 
   // If the internal variable set by the config.trim_on_minimize pref has not
@@ -3149,10 +3150,11 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
       return (void*)::GetDC(mWnd);
 #endif
 
+    case NS_RAW_NATIVE_IME_CONTEXT:
     case NS_NATIVE_TSF_THREAD_MGR:
     case NS_NATIVE_TSF_CATEGORY_MGR:
     case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:
-      return IMEHandler::GetNativeData(aDataType);
+      return IMEHandler::GetNativeData(this, aDataType);
 
     default:
       break;

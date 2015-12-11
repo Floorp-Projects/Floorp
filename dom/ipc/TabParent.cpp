@@ -2321,16 +2321,19 @@ TabParent::GetRenderFrame()
 }
 
 bool
-TabParent::RecvEndIMEComposition(const bool& aCancel,
-                                 bool* aNoCompositionEvent,
-                                 nsString* aComposition)
+TabParent::RecvRequestIMEToCommitComposition(const bool& aCancel,
+                                             bool* aIsCommitted,
+                                             nsString* aCommittedString)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
+    *aIsCommitted = false;
     return true;
   }
-  *aNoCompositionEvent =
-    !mContentCache.RequestToCommitComposition(widget, aCancel, *aComposition);
+
+  *aIsCommitted =
+    mContentCache.RequestIMEToCommitComposition(widget, aCancel,
+                                                *aCommittedString);
   return true;
 }
 
@@ -2363,21 +2366,18 @@ TabParent::RecvSetPluginFocused(const bool& aFocused)
 
 bool
 TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
-                               int32_t* aIMEOpen,
-                               intptr_t* aNativeIMEContext)
+                               int32_t* aIMEOpen)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     *aIMEEnabled = IMEState::DISABLED;
     *aIMEOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
-    *aNativeIMEContext = 0;
     return true;
   }
 
   InputContext context = widget->GetInputContext();
   *aIMEEnabled = static_cast<int32_t>(context.mIMEState.mEnabled);
   *aIMEOpen = static_cast<int32_t>(context.mIMEState.mOpen);
-  *aNativeIMEContext = reinterpret_cast<intptr_t>(context.mNativeIMEContext);
   return true;
 }
 

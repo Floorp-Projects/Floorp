@@ -760,15 +760,17 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       if (content)
         mCurrentTargetContent = content;
 
-      // NOTE: Don't refer TextComposition::IsComposing() since DOM Level 3
-      //       Events defines that KeyboardEvent.isComposing is true when it's
+      // NOTE: Don't refer TextComposition::IsComposing() since UI Events
+      //       defines that KeyboardEvent.isComposing is true when it's
       //       dispatched after compositionstart and compositionend.
       //       TextComposition::IsComposing() is false even before
       //       compositionend if there is no composing string.
-      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      //       And also don't expose other document's composition state.
+      //       A native IME context is typically shared by multiple documents.
+      //       So, don't use GetTextCompositionFor(nsIWidget*) here.
       RefPtr<TextComposition> composition =
-        IMEStateManager::GetTextCompositionFor(keyEvent);
-      keyEvent->mIsComposing = !!composition;
+        IMEStateManager::GetTextCompositionFor(aPresContext);
+      aEvent->AsKeyboardEvent()->mIsComposing = !!composition;
     }
     break;
   case eWheel:

@@ -219,7 +219,8 @@ namespace jit {
     _(JSOP_INITHIDDENPROP_SETTER) \
     _(JSOP_INITHIDDENELEM)     \
     _(JSOP_INITHIDDENELEM_GETTER) \
-    _(JSOP_INITHIDDENELEM_SETTER)
+    _(JSOP_INITHIDDENELEM_SETTER) \
+    _(JSOP_CHECKOBJCOERCIBLE)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {

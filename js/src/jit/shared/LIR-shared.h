@@ -1276,7 +1276,7 @@ class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 1>
     }
 };
 
-class LToIdV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
+class LToIdV : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(ToIdV)
@@ -1286,8 +1286,7 @@ class LToIdV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
         setTemp(0, temp);
     }
 
-    static const size_t Object = 0;
-    static const size_t Index = BOX_PIECES;
+    static const size_t Index = 0;
 
     MToId* mir() const {
         return mir_->toToId();
@@ -7395,6 +7394,14 @@ class LCheckReturn : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0
     static const size_t ThisValue = BOX_PIECES;
 
     LIR_HEADER(CheckReturn)
+};
+
+class LCheckObjCoercible : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
+{
+  public:
+    static const size_t CheckValue = 0;
+
+    LIR_HEADER(CheckObjCoercible)
 };
 
 } // namespace jit

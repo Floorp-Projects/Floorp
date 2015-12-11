@@ -403,20 +403,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(JNIEnv* env, jo
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(JNIEnv* env, jobject instance, jint overscrollMode)
-{
-    // FIXME implement this
-}
-
-NS_EXPORT jint JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env, jobject instance)
-{
-    // FIXME implement this
-    return 0;
-}
-
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_setIsLongpressEnabled(JNIEnv* env, jobject instance, jboolean isLongpressEnabled)
 {
     APZCTreeManager::SetLongTapEnabled(isLongpressEnabled);
