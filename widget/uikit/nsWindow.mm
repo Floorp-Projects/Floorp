@@ -879,7 +879,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
         // not implemented
         break;
 
-    case NS_NATIVE_IME_CONTEXT:
+    case NS_RAW_NATIVE_IME_CONTEXT:
       retVal = NS_ONLY_ONE_NATIVE_IME_CONTEXT;
       break;
   }
