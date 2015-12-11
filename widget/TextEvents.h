@@ -366,6 +366,7 @@ public:
   WidgetCompositionEvent(bool aIsTrusted, EventMessage aMessage,
                          nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass)
+    , mNativeIMEContext(aWidget)
     , mOriginalMessage(eVoidEvent)
   {
     // XXX compositionstart is cancelable in draft of DOM3 Events.
@@ -392,6 +393,10 @@ public:
   nsString mData;
 
   RefPtr<TextRangeArray> mRanges;
+
+  // mNativeIMEContext stores the native IME context which causes the
+  // composition event.
+  widget::NativeIMEContext mNativeIMEContext;
 
   // If the instance is a clone of another event, mOriginalMessage stores
   // the another event's mMessage.

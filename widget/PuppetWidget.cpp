@@ -79,9 +79,9 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mMemoryPressureObserver(nullptr)
   , mDPI(-1)
   , mDefaultScale(-1)
-  , mNativeKeyCommandsValid(false)
   , mCursorHotspotX(0)
   , mCursorHotspotY(0)
+  , mNativeKeyCommandsValid(false)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 
@@ -317,6 +317,24 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
     if (keyEvent) {
       mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
     }
+  }
+
+  if (event->mClass == eCompositionEventClass) {
+    // Store the latest native IME context of parent process's widget or
+    // TextEventDispatcher if it's in this process.
+    WidgetCompositionEvent* compositionEvent = event->AsCompositionEvent();
+#ifdef DEBUG
+    if (mNativeIMEContext.IsValid() &&
+        mNativeIMEContext != compositionEvent->mNativeIMEContext) {
+      RefPtr<TextComposition> composition =
+        IMEStateManager::GetTextCompositionFor(this);
+      MOZ_ASSERT(!composition,
+        "When there is composition caused by old native IME context, "
+        "composition events caused by different native IME context are not "
+        "allowed");
+    }
+#endif // #ifdef DEBUG
+    mNativeIMEContext = compositionEvent->mNativeIMEContext;
   }
 
   aStatus = nsEventStatus_eIgnore;
@@ -574,6 +592,11 @@ PuppetWidget::IMEEndComposition(bool aCancel)
   return NS_OK;
 #endif
 
+  // There must not be composition which is caused by the PuppetWidget instance.
+  if (NS_WARN_IF(!mNativeIMEContext.IsValid())) {
+    return NS_OK;
+  }
+
   nsEventStatus status;
   bool noCompositionEvent = true;
   WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommit, this);
@@ -681,6 +704,12 @@ PuppetWidget::GetInputContext()
     context.mIMEState.mOpen = static_cast<IMEState::Open>(open);
   }
   return context;
+}
+
+NS_IMETHODIMP_(NativeIMEContext)
+PuppetWidget::GetNativeIMEContext()
+{
+  return mNativeIMEContext;
 }
 
 nsresult
@@ -1120,9 +1149,8 @@ PuppetWidget::GetNativeData(uint32_t aDataType)
   case NS_NATIVE_DISPLAY:
     // These types are ignored (see bug 1183828).
     break;
-  case NS_NATIVE_IME_CONTEXT:
-    // TODO: Implement this in next patch.
-    return nullptr;
+  case NS_RAW_NATIVE_IME_CONTEXT:
+    MOZ_CRASH("You need to call GetNativeIMEContext() instead");
   case NS_NATIVE_WINDOW:
   case NS_NATIVE_PLUGIN_PORT:
   case NS_NATIVE_GRAPHIC:

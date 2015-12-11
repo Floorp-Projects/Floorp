@@ -76,7 +76,10 @@ public:
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
 
-  bool MatchesNativeContext(nsIWidget* aWidget) const;
+  const widget::NativeIMEContext& GetNativeIMEContext() const
+  {
+    return mNativeContext;
+  }
 
   /**
    * This is called when IMEStateManager stops managing the instance.
@@ -191,7 +194,7 @@ private:
 
   // mNativeContext stores a opaque pointer.  This works as the "ID" for this
   // composition.  Don't access the instance, it may not be available.
-  void* mNativeContext;
+  widget::NativeIMEContext mNativeContext;
 
   // mEditorWeak is a weak reference to the focused editor handling composition.
   nsWeakPtr mEditorWeak;
@@ -400,6 +403,7 @@ class TextCompositionArray final :
   public nsAutoTArray<RefPtr<TextComposition>, 2>
 {
 public:
+  index_type IndexOf(const widget::NativeIMEContext& aNativeIMEContext);
   index_type IndexOf(nsIWidget* aWidget);
   index_type IndexOf(nsPresContext* aPresContext);
   index_type IndexOf(nsPresContext* aPresContext, nsINode* aNode);
