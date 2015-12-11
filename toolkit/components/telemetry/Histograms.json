@@ -6279,6 +6279,22 @@
     "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment.",
     "cpp_guard": "MOZ_RUST_MP4PARSE"
   },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser audio track results match.",
+    "cpp_guard": "MOZ_RUST_MP4PARSE"
+  },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser video track results match.",
+    "cpp_guard": "MOZ_RUST_MP4PARSE"
+  },
   "MEDIA_WMF_DECODE_ERROR": {
     "expires_in_version": "50",
     "kind": "enumerated",
