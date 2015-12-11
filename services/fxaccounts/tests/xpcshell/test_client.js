@@ -40,7 +40,7 @@ function deferredStop(server) {
   return deferred.promise;
 }
 
-add_task(function test_authenticated_get_request() {
+add_task(function* test_authenticated_get_request() {
   let message = "{\"msg\": \"Great Success!\"}";
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
@@ -65,7 +65,7 @@ add_task(function test_authenticated_get_request() {
   yield deferredStop(server);
 });
 
-add_task(function test_authenticated_post_request() {
+add_task(function* test_authenticated_post_request() {
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",
     key: "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=",
@@ -90,7 +90,7 @@ add_task(function test_authenticated_post_request() {
   yield deferredStop(server);
 });
 
-add_task(function test_500_error() {
+add_task(function* test_500_error() {
   let message = "<h1>Ooops!</h1>";
   let method = "GET";
 
@@ -113,7 +113,7 @@ add_task(function test_500_error() {
   yield deferredStop(server);
 });
 
-add_task(function test_backoffError() {
+add_task(function* test_backoffError() {
   let method = "GET";
   let server = httpd_setup({
     "/retryDelay": function(request, response) {
@@ -160,7 +160,7 @@ add_task(function test_backoffError() {
   yield deferredStop(server);
 });
 
-add_task(function test_signUp() {
+add_task(function* test_signUp() {
   let creationMessage_noKey = JSON.stringify({
     uid: "uid",
     sessionToken: "sessionToken"
@@ -238,7 +238,7 @@ add_task(function test_signUp() {
   yield deferredStop(server);
 });
 
-add_task(function test_signIn() {
+add_task(function* test_signIn() {
   let sessionMessage_noKey = JSON.stringify({
     sessionToken: FAKE_SESSION_TOKEN
   });
@@ -329,7 +329,7 @@ add_task(function test_signIn() {
   yield deferredStop(server);
 });
 
-add_task(function test_signOut() {
+add_task(function* test_signOut() {
   let signoutMessage = JSON.stringify({});
   let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
   let signedOut = false;
@@ -366,7 +366,7 @@ add_task(function test_signOut() {
   yield deferredStop(server);
 });
 
-add_task(function test_recoveryEmailStatus() {
+add_task(function* test_recoveryEmailStatus() {
   let emailStatus = JSON.stringify({verified: true});
   let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
   let tries = 0;
@@ -404,7 +404,7 @@ add_task(function test_recoveryEmailStatus() {
   yield deferredStop(server);
 });
 
-add_task(function test_resendVerificationEmail() {
+add_task(function* test_resendVerificationEmail() {
   let emptyMessage = "{}";
   let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
   let tries = 0;
@@ -441,7 +441,7 @@ add_task(function test_resendVerificationEmail() {
   yield deferredStop(server);
 });
 
-add_task(function test_accountKeys() {
+add_task(function* test_accountKeys() {
   // Four calls to accountKeys().  The first one should work correctly, and we
   // should get a valid bundle back, in exchange for our keyFetch token, from
   // which we correctly derive kA and wrapKB.  The subsequent three calls
@@ -522,7 +522,7 @@ add_task(function test_accountKeys() {
   yield deferredStop(server);
 });
 
-add_task(function test_signCertificate() {
+add_task(function* test_signCertificate() {
   let certSignMessage = JSON.stringify({cert: {bar: "baz"}});
   let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
   let tries = 0;
@@ -564,7 +564,7 @@ add_task(function test_signCertificate() {
   yield deferredStop(server);
 });
 
-add_task(function test_accountExists() {
+add_task(function* test_accountExists() {
   let sessionMessage = JSON.stringify({sessionToken: FAKE_SESSION_TOKEN});
   let existsMessage = JSON.stringify({error: "wrong password", code: 400, errno: 103});
   let doesntExistMessage = JSON.stringify({error: "no such account", code: 400, errno: 102});
@@ -617,6 +617,173 @@ add_task(function test_accountExists() {
 
   try {
     result = yield client.accountExists("i.break.things@example.com");
+    do_throw("Expected to catch an exception");
+  } catch(unexpectedError) {
+    do_check_eq(unexpectedError.code, 500);
+  }
+
+  yield deferredStop(server);
+});
+
+add_task(function* test_registerDevice() {
+  const DEVICE_ID = "device id";
+  const DEVICE_NAME = "device name";
+  const DEVICE_TYPE = "device type";
+  const ERROR_NAME = "test that the client promise rejects";
+
+  const server = httpd_setup({
+    "/account/device": function(request, response) {
+      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
+
+      if (body.id || !body.name || !body.type || Object.keys(body).length !== 2) {
+        response.setStatusLine(request.httpVersion, 400, "Invalid request");
+        return response.bodyOutputStream.write("{}", 2);
+      }
+
+      if (body.name === ERROR_NAME) {
+        response.setStatusLine(request.httpVersion, 500, "Alas");
+        return response.bodyOutputStream.write("{}", 2);
+      }
+
+      body.id = DEVICE_ID;
+      body.createdAt = Date.now();
+
+      const responseMessage = JSON.stringify(body);
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(responseMessage, responseMessage.length);
+    },
+  });
+
+  const client = new FxAccountsClient(server.baseURI);
+  const result = yield client.registerDevice(FAKE_SESSION_TOKEN, DEVICE_NAME, DEVICE_TYPE);
+
+  do_check_true(result);
+  do_check_eq(Object.keys(result).length, 4);
+  do_check_eq(result.id, DEVICE_ID);
+  do_check_eq(typeof result.createdAt, 'number');
+  do_check_true(result.createdAt > 0);
+  do_check_eq(result.name, DEVICE_NAME);
+  do_check_eq(result.type, DEVICE_TYPE);
+
+  try {
+    yield client.registerDevice(FAKE_SESSION_TOKEN, ERROR_NAME, DEVICE_TYPE);
+    do_throw("Expected to catch an exception");
+  } catch(unexpectedError) {
+    do_check_eq(unexpectedError.code, 500);
+  }
+
+  yield deferredStop(server);
+});
+
+add_task(function* test_updateDevice() {
+  const DEVICE_ID = "some other id";
+  const DEVICE_NAME = "some other name";
+  const ERROR_ID = "test that the client promise rejects";
+
+  const server = httpd_setup({
+    "/account/device": function(request, response) {
+      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
+
+      if (!body.id || !body.name || body.type || Object.keys(body).length !== 2) {
+        response.setStatusLine(request.httpVersion, 400, "Invalid request");
+        return response.bodyOutputStream.write("{}", 2);
+      }
+
+      if (body.id === ERROR_ID) {
+        response.setStatusLine(request.httpVersion, 500, "Alas");
+        return response.bodyOutputStream.write("{}", 2);
+      }
+
+      const responseMessage = JSON.stringify(body);
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(responseMessage, responseMessage.length);
+    },
+  });
+
+  const client = new FxAccountsClient(server.baseURI);
+  const result = yield client.updateDevice(FAKE_SESSION_TOKEN, DEVICE_ID, DEVICE_NAME);
+
+  do_check_true(result);
+  do_check_eq(Object.keys(result).length, 2);
+  do_check_eq(result.id, DEVICE_ID);
+  do_check_eq(result.name, DEVICE_NAME);
+
+  try {
+    yield client.updateDevice(FAKE_SESSION_TOKEN, ERROR_ID, DEVICE_NAME);
+    do_throw("Expected to catch an exception");
+  } catch(unexpectedError) {
+    do_check_eq(unexpectedError.code, 500);
+  }
+
+  yield deferredStop(server);
+});
+
+add_task(function* test_signOutAndDestroyDevice() {
+  const DEVICE_ID = "device id";
+  const ERROR_ID = "test that the client promise rejects";
+
+  const server = httpd_setup({
+    "/account/device/destroy": function(request, response) {
+      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
+
+      if (!body.id) {
+        response.setStatusLine(request.httpVersion, 400, "Invalid request");
+        return response.bodyOutputStream.write(emptyMessage, emptyMessage.length);
+      }
+
+      if (body.id === ERROR_ID) {
+        response.setStatusLine(request.httpVersion, 500, "Alas");
+        return response.bodyOutputStream.write("{}", 2);
+      }
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write("{}", 2);
+    },
+  });
+
+  const client = new FxAccountsClient(server.baseURI);
+  const result = yield client.signOutAndDestroyDevice(FAKE_SESSION_TOKEN, DEVICE_ID);
+
+  do_check_true(result);
+  do_check_eq(Object.keys(result).length, 0);
+
+  try {
+    yield client.signOutAndDestroyDevice(FAKE_SESSION_TOKEN, ERROR_ID);
+    do_throw("Expected to catch an exception");
+  } catch(unexpectedError) {
+    do_check_eq(unexpectedError.code, 500);
+  }
+
+  yield deferredStop(server);
+});
+
+add_task(function* test_getDeviceList() {
+  let canReturnDevices;
+
+  const server = httpd_setup({
+    "/account/devices": function(request, response) {
+      if (canReturnDevices) {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.bodyOutputStream.write("[]", 2);
+      } else {
+        response.setStatusLine(request.httpVersion, 500, "Alas");
+        response.bodyOutputStream.write("{}", 2);
+      }
+    },
+  });
+
+  const client = new FxAccountsClient(server.baseURI);
+
+  canReturnDevices = true;
+  const result = yield client.getDeviceList(FAKE_SESSION_TOKEN);
+  do_check_true(Array.isArray(result));
+  do_check_eq(result.length, 0);
+
+  try {
+    canReturnDevices = false;
+    yield client.getDeviceList(FAKE_SESSION_TOKEN);
     do_throw("Expected to catch an exception");
   } catch(unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
@@ -710,7 +877,7 @@ add_task(function* test_client_metrics() {
   yield deferredStop(server);
 });
 
-add_task(function test_email_case() {
+add_task(function* test_email_case() {
   let canonicalEmail = "greta.garbo@gmail.com";
   let clientEmail = "Greta.Garbo@gmail.COM";
   let attempts = 0;
