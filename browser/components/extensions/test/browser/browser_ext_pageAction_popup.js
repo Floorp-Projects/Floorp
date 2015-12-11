@@ -137,7 +137,7 @@ add_task(function* testPageActionPopup() {
       panel.hidePopup();
 
       panel = document.getElementById(panelId);
-      is(panel, undefined, "panel successfully removed from document after hiding");
+      is(panel, null, "panel successfully removed from document after hiding");
     }
 
     extension.sendMessage("next-test");
@@ -150,10 +150,10 @@ add_task(function* testPageActionPopup() {
   yield extension.unload();
 
   let node = document.getElementById(pageActionId);
-  is(node, undefined, "pageAction image removed from document");
+  is(node, null, "pageAction image removed from document");
 
   let panel = document.getElementById(panelId);
-  is(panel, undefined, "pageAction panel removed from document");
+  is(panel, null, "pageAction panel removed from document");
 });
 
 
@@ -197,7 +197,7 @@ add_task(function* testPageActionSecurity() {
 
   let pageActionId = makeWidgetId(extension.id) + "-page-action";
   let node = document.getElementById(pageActionId);
-  is(node, undefined, "pageAction image removed from document");
+  is(node, null, "pageAction image removed from document");
 
   SimpleTest.endMonitorConsole();
   yield waitForConsole;
