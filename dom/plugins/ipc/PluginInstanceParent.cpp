@@ -125,6 +125,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mIsWhitelistedForShumway(false)
     , mWindowType(NPWindowTypeWindow)
     , mDrawingModel(kDefaultDrawingModel)
+    , mLastRecordedDrawingModel(-1)
     , mFrameID(0)
 #if defined(OS_WIN)
     , mPluginHWND(nullptr)
@@ -809,6 +810,8 @@ PluginInstanceParent::SetCurrentImage(Image* aImage)
     nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(holder);
     mImageContainer->SetCurrentImages(imageList);
+
+    RecordDrawingModel();
 }
 
 bool
@@ -973,6 +976,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     PLUGIN_LOG_DEBUG(("   (RecvShow invalidated for surface %p)",
                       mFrontSurface.get()));
 
+    RecordDrawingModel();
     return true;
 }
 
@@ -1380,6 +1384,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         return NPERR_GENERIC_ERROR;
     }
 
+    RecordDrawingModel();
     return NPERR_NO_ERROR;
 }
 
@@ -2363,3 +2368,28 @@ PluginInstanceParent::Cast(NPP aInstance, PluginAsyncSurrogate** aSurrogate)
     return instancePtr;
 }
 
+void
+PluginInstanceParent::RecordDrawingModel()
+{
+    int mode = -1;
+    switch (mWindowType) {
+    case NPWindowTypeWindow:
+        // We use 0=windowed since there is no specific NPDrawingModel value.
+        mode = 0;
+        break;
+    case NPWindowTypeDrawable:
+        mode = mDrawingModel + 1;
+        break;
+    default:
+        MOZ_ASSERT_UNREACHABLE("bad window type");
+        return;
+    }
+
+    if (mode == mLastRecordedDrawingModel) {
+        return;
+    }
+    MOZ_ASSERT(mode >= 0);
+
+    Telemetry::Accumulate(Telemetry::PLUGIN_DRAWING_MODEL, mode);
+    mLastRecordedDrawingModel = mode;
+}

@@ -5330,13 +5330,16 @@ float PresShell::GetCumulativeResolution()
   return resolution;
 }
 
-float PresShell::GetCumulativeScaleResolution()
+float PresShell::GetCumulativeNonRootScaleResolution()
 {
   float resolution = 1.0;
   nsIPresShell* currentShell = this;
   while (currentShell) {
-    resolution *=  currentShell->ScaleToResolution() ? currentShell->GetResolution() : 1.0f;
-    nsPresContext* parentCtx = currentShell->GetPresContext()->GetParentPresContext();
+    nsPresContext* currentCtx = currentShell->GetPresContext();
+    if (currentCtx != currentCtx->GetRootPresContext()) {
+      resolution *=  currentShell->ScaleToResolution() ? currentShell->GetResolution() : 1.0f;
+    }
+    nsPresContext* parentCtx = currentCtx->GetParentPresContext();
     if (parentCtx) {
       currentShell = parentCtx->PresShell();
     } else {

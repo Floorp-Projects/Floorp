@@ -548,11 +548,12 @@ Pan(const RefPtr<InputReceiver>& aTarget,
     nsEventStatus (*aOutEventStatuses)[4] = nullptr,
     uint64_t* aOutInputBlockId = nullptr)
 {
-  // Reduce the touch start tolerance to a tiny value.
+  // Reduce the touch start and move tolerance to a tiny value.
   // We can't use a scoped pref because this value might be read at some later
   // time when the events are actually processed, rather than when we deliver
   // them.
   gfxPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
+  gfxPrefs::SetAPZTouchMoveTolerance(0.0f);
   const int OVERCOME_TOUCH_TOLERANCE = 1;
 
   const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(50);

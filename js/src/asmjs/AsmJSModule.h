@@ -100,7 +100,7 @@ class AsmJSModule
     class Global
     {
       public:
-        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, SharedArrayView, MathBuiltinFunction,
+        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction,
                      AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation, ByteLength };
         enum VarInitKind { InitConstant, InitImport };
         enum ConstantKind { GlobalConstant, MathConstant };
@@ -189,16 +189,12 @@ class AsmJSModule
         //   var i32 = new I32(buffer);
         // the second import has nothing to validate and thus has a null field.
         PropertyName* maybeViewName() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == SharedArrayView || pod.which_ == ArrayViewCtor);
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
             return name_;
         }
         Scalar::Type viewType() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == SharedArrayView || pod.which_ == ArrayViewCtor);
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
             return pod.u.viewType_;
-        }
-        void makeViewShared() {
-            MOZ_ASSERT(pod.which_ == ArrayView);
-            pod.which_ = SharedArrayView;
         }
         PropertyName* mathName() const {
             MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
@@ -910,20 +906,18 @@ class AsmJSModule
         g.pod.u.ffiIndex_ = *ffiIndex = pod.numFFIs_++;
         return globals_.append(g);
     }
-    bool addArrayView(Scalar::Type vt, PropertyName* maybeField, bool isSharedView) {
+    bool addArrayView(Scalar::Type vt, PropertyName* maybeField) {
         MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT(!pod.hasArrayView_ || (pod.isSharedView_ == isSharedView));
         pod.hasArrayView_ = true;
-        pod.isSharedView_ = isSharedView;
+        pod.isSharedView_ = false;
         Global g(Global::ArrayView, maybeField);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
-    bool addArrayViewCtor(Scalar::Type vt, PropertyName* field, bool isSharedView) {
+    bool addArrayViewCtor(Scalar::Type vt, PropertyName* field) {
         MOZ_ASSERT(!isFinished());
         MOZ_ASSERT(field);
-        MOZ_ASSERT(!pod.isSharedView_ || isSharedView);
-        pod.isSharedView_ = isSharedView;
+        pod.isSharedView_ = false;
         Global g(Global::ArrayViewCtor, field);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
@@ -978,19 +972,9 @@ class AsmJSModule
     Global& global(unsigned i) {
         return globals_[i];
     }
-    bool isValidViewSharedness(bool shared) const {
-        if (pod.hasArrayView_)
-            return pod.isSharedView_ == shared;
-        return !pod.isSharedView_ || shared;
-    }
     void setViewsAreShared() {
         if (pod.hasArrayView_)
             pod.isSharedView_ = true;
-        for (size_t i=0 ; i < globals_.length() ; i++) {
-            Global& g = globals_[i];
-            if (g.which() == Global::ArrayView)
-                g.makeViewShared();
-        }
     }
 
     /*************************************************************************/

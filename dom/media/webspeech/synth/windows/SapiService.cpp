@@ -76,6 +76,11 @@ SapiCallback::OnPause()
   if (FAILED(mSapiClient->Pause())) {
     return NS_ERROR_FAILURE;
   }
+  if (!mTask) {
+    // When calling pause() on child porcess, it may not receive end event
+    // from chrome process yet.
+    return NS_ERROR_FAILURE;
+  }
   mTask->DispatchPause(GetTickCount() - mStartingTime, mCurrentIndex);
   return NS_OK;
 }
@@ -84,6 +89,11 @@ NS_IMETHODIMP
 SapiCallback::OnResume()
 {
   if (FAILED(mSapiClient->Resume())) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!mTask) {
+    // When calling resume() on child porcess, it may not receive end event
+    // from chrome process yet.
     return NS_ERROR_FAILURE;
   }
   mTask->DispatchResume(GetTickCount() - mStartingTime, mCurrentIndex);

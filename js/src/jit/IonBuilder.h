@@ -738,6 +738,7 @@ class IonBuilder
     bool jsop_setaliasedvar(ScopeCoordinate sc);
     bool jsop_debugger();
     bool jsop_newtarget();
+    bool jsop_checkobjcoercible();
 
     /* Inlining. */
 

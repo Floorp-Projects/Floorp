@@ -448,11 +448,10 @@ ContentCacheInChild::SetSelection(nsIWidget* aWidget,
 
 ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
+  , mCommitStringByRequest(nullptr)
   , mCompositionStart(UINT32_MAX)
-  , mCompositionEventsDuringRequest(0)
   , mPendingEventsNeedingAck(0)
   , mIsComposing(false)
-  , mRequestedToCommitOrCancelComposition(false)
 {
 }
 
@@ -827,48 +826,34 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
     ("ContentCacheInParent: 0x%p OnCompositionEvent(aEvent={ "
      "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
      "mPendingEventsNeedingAck=%u, mIsComposing=%s, "
-     "mRequestedToCommitOrCancelComposition=%s",
+     "mCommitStringByRequest=0x%p",
      this, ToChar(aEvent.mMessage),
      NS_ConvertUTF16toUTF8(aEvent.mData).get(), aEvent.mData.Length(),
      aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
-     GetBoolName(mIsComposing),
-     GetBoolName(mRequestedToCommitOrCancelComposition)));
-
-  if (!aEvent.CausesDOMTextEvent()) {
-    MOZ_ASSERT(aEvent.mMessage == eCompositionStart);
-    mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
-    mCompositionStart = mSelection.StartOffset();
-    // XXX What's this case??
-    if (mRequestedToCommitOrCancelComposition) {
-      mCommitStringByRequest = aEvent.mData;
-      mCompositionEventsDuringRequest++;
-      return false;
-    }
-    mPendingEventsNeedingAck++;
-    return true;
-  }
-
-  // XXX Why do we ignore following composition events here?
-  //     TextComposition must handle following events correctly!
-
-  // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
-  // widget usually sends a eCompositionChange event to finalize or
-  // clear the composition, respectively.
-  // Because the event will not reach content in time, we intercept it
-  // here and pass the text as the DidRequestToCommitOrCancelComposition()
-  // return value.
-  if (mRequestedToCommitOrCancelComposition) {
-    mCommitStringByRequest = aEvent.mData;
-    mCompositionEventsDuringRequest++;
-    return false;
-  }
+     GetBoolName(mIsComposing), mCommitStringByRequest));
 
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
   if (!mIsComposing) {
     mCompositionStart = mSelection.StartOffset();
   }
+
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
+
+  // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
+  // widget usually sends a eCompositionChange and/or eCompositionCommit event
+  // to finalize or clear the composition, respectively.  In this time,
+  // we need to intercept all composition events here and pass the commit
+  // string for returning to the remote process as a result of
+  // RequestIMEToCommitComposition().  Then, eCommitComposition event will
+  // be dispatched with the committed string in the remote process internally.
+  if (mCommitStringByRequest) {
+    MOZ_ASSERT(aEvent.mMessage == eCompositionChange ||
+               aEvent.mMessage == eCompositionCommit);
+    *mCommitStringByRequest = aEvent.mData;
+    return false;
+  }
+
   mPendingEventsNeedingAck++;
   return true;
 }
@@ -912,29 +897,63 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   FlushPendingNotifications(aWidget);
 }
 
-uint32_t
-ContentCacheInParent::RequestToCommitComposition(nsIWidget* aWidget,
-                                                 bool aCancel,
-                                                 nsAString& aLastString)
+bool
+ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
+                                                    bool aCancel,
+                                                    nsAString& aCommittedString)
 {
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p RequestToCommitComposition(aWidget=%p, "
-     "aCancel=%s), mIsComposing=%s, mRequestedToCommitOrCancelComposition=%s, "
-     "mCompositionEventsDuringRequest=%u",
+     "aCancel=%s), mIsComposing=%s, mCommitStringByRequest=%p",
      this, aWidget, GetBoolName(aCancel), GetBoolName(mIsComposing),
-     GetBoolName(mRequestedToCommitOrCancelComposition),
-     mCompositionEventsDuringRequest));
+     mCommitStringByRequest));
 
-  mRequestedToCommitOrCancelComposition = true;
-  mCompositionEventsDuringRequest = 0;
+  MOZ_ASSERT(!mCommitStringByRequest);
+
+  RefPtr<TextComposition> composition =
+    IMEStateManager::GetTextCompositionFor(aWidget);
+  if (NS_WARN_IF(!composition)) {
+    MOZ_LOG(sContentCacheLog, LogLevel::Warning,
+      ("  ContentCacheInParent: 0x%p RequestToCommitComposition(), "
+       "does nothing due to no composition", this));
+    return false;
+  }
+
+  mCommitStringByRequest = &aCommittedString;
 
   aWidget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
                                                REQUEST_TO_COMMIT_COMPOSITION));
 
-  mRequestedToCommitOrCancelComposition = false;
-  aLastString = mCommitStringByRequest;
-  mCommitStringByRequest.Truncate(0);
-  return mCompositionEventsDuringRequest;
+  mCommitStringByRequest = nullptr;
+
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+    ("  ContentCacheInParent: 0x%p RequestToCommitComposition(), "
+     "mIsComposing=%s, the composition %s committed synchronously",
+     this, GetBoolName(mIsComposing),
+     composition->Destroyed() ? "WAS" : "has NOT been"));
+
+  if (!composition->Destroyed()) {
+    // When the composition isn't committed synchronously, the remote process's
+    // TextComposition instance will synthesize commit events and wait to
+    // receive delayed composition events.  When TextComposition instances both
+    // in this process and the remote process will be destroyed when delayed
+    // composition events received. TextComposition instance in the parent
+    // process will dispatch following composition events and be destroyed
+    // normally. On the other hand, TextComposition instance in the remote
+    // process won't dispatch following composition events and will be
+    // destroyed by IMEStateManager::DispatchCompositionEvent().
+    return false;
+  }
+
+  // When the composition is committed synchronously, the commit string will be
+  // returned to the remote process. Then, PuppetWidget will dispatch
+  // eCompositionCommit event with the returned commit string (i.e., the value
+  // is aCommittedString of this method).  Finally, TextComposition instance in
+  // the remote process will be destroyed by
+  // IMEStateManager::DispatchCompositionEvent() at receiving the
+  // eCompositionCommit event (Note that TextComposition instance in this
+  // process was already destroyed).
+  return true;
 }
 
 void

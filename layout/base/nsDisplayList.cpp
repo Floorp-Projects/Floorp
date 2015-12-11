@@ -4575,13 +4575,9 @@ nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
                              HitTestState* aState,
                              nsTArray<nsIFrame*> *aOutFrames)
 {
-#if defined(MOZ_SINGLE_PROCESS_APZ)
   nsIPresShell* presShell = mFrame->PresContext()->PresShell();
   nsRect rect = aRect.RemoveResolution(presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f);
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
-#else
-  mList.HitTest(aBuilder, aRect, aState, aOutFrames);
-#endif // MOZ_SINGLE_PROCESS_APZ
 }
 
 already_AddRefed<Layer>
