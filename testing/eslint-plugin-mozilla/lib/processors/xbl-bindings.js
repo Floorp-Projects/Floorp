@@ -94,7 +94,7 @@ function reindent(text) {
   let indents = lines.filter(s => s.trim().length > 0)
                      .map(s => s.length - s.trimLeft().length);
   // Find the smallest indent level in use
-  let minIndent = Math.min(...indents);
+  let minIndent = Math.min.apply(null, indents);
 
   // Strip off the found indent level and prepend the new indent level, but only
   // if the string isn't already empty.
