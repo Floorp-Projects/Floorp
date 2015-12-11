@@ -34,6 +34,9 @@ function test() {
   });
 
   function addExpressions() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1205353
+    // BZ#1205353 - wrong result for string replace with backslash-dollar.
+    gWatch.addExpression("'$$$'.replace(/\\$/, 'foo')");
     gWatch.addExpression("'a'");
     gWatch.addExpression("\"a\"");
     gWatch.addExpression("'a\"\"'");
@@ -61,6 +64,7 @@ function test() {
     gWatch.addExpression("throw new Error(\"bazinga\")");
     gWatch.addExpression("({ get error() { throw new Error(\"bazinga\") } }).error");
     gWatch.addExpression("throw { get name() { throw \"bazinga\" } }");
+
   }
 
   function performTest() {
@@ -68,8 +72,8 @@ function test() {
 
     is(gDebugger.document.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
-      "There should be 27 visible nodes in the watch expressions container");
+    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 28,
+      "There should be 28 visible nodes in the watch expressions container");
 
     test1(function() {
       test2(function() {
@@ -97,13 +101,13 @@ function test() {
   function finishTest() {
     is(gDebugger.document.querySelectorAll(".dbg-expression[hidden=true]").length, 0,
       "There should be 0 hidden nodes in the watch expressions container");
-    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 27,
-      "There should be 27 visible nodes in the watch expressions container");
+    is(gDebugger.document.querySelectorAll(".dbg-expression:not([hidden=true])").length, 28,
+      "There should be 28 visible nodes in the watch expressions container");
   }
 
   function test1(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(26, {
+      checkWatchExpressions(27, {
         a: "ReferenceError: a is not defined",
         this: { type: "object", class: "Object" },
         prop: { type: "object", class: "String" },
@@ -117,7 +121,7 @@ function test() {
 
   function test2(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(26, {
+      checkWatchExpressions(27, {
         a: { type: "undefined" },
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -133,7 +137,7 @@ function test() {
 
   function test3(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(26, {
+      checkWatchExpressions(27, {
         a: { type: "object", class: "Object" },
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -149,7 +153,7 @@ function test() {
 
   function test4(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(28, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -164,7 +168,7 @@ function test() {
 
   function test5(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(28, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -179,7 +183,7 @@ function test() {
 
   function test6(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(28, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -194,7 +198,7 @@ function test() {
 
   function test7(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(28, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -209,7 +213,7 @@ function test() {
 
   function test8(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
-      checkWatchExpressions(27, {
+      checkWatchExpressions(28, {
         a: 5,
         this: { type: "object", class: "Window" },
         prop: { type: "undefined" },
@@ -278,6 +282,7 @@ function test() {
     let w25 = scope.get("throw new Error(\"bazinga\")");
     let w26 = scope.get("({ get error() { throw new Error(\"bazinga\") } }).error");
     let w27 = scope.get("throw { get name() { throw \"bazinga\" } }");
+    let w28 = scope.get("'$$$'.replace(/\\$/, 'foo')");
 
     ok(w1, "The first watch expression should be present in the scope.");
     ok(w2, "The second watch expression should be present in the scope.");
@@ -306,6 +311,7 @@ function test() {
     ok(w25, "The 25th watch expression should be present in the scope.");
     ok(w26, "The 26th watch expression should be present in the scope.");
     ok(!w27, "The 27th watch expression should not be present in the scope.");
+    ok(w28, "The 28th watch expression should be present in the scope.");
 
     is(w1.value, "a", "The first value is correct.");
     is(w2.value, "a", "The second value is correct.");
@@ -367,5 +373,6 @@ function test() {
     is(w24.value, "RangeError: precision -4 out of range", "The 24th value is correct.");
     is(w25.value, "Error: bazinga", "The 25th value is correct.");
     is(w26.value, "Error: bazinga", "The 26th value is correct.");
+    is(w28.value, 'foo$$', "The 28th value is correct.");
   }
 }
