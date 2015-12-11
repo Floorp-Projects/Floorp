@@ -18,8 +18,15 @@ def slurper = new JsonSlurper()
 def json = slurper.parseText(standardOutput.toString())
 
 if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
-    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.");
+    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.")
 }
+
+// Set the Android SDK location.  This is the *least specific* mechanism, which
+// is unfortunate: we'd prefer to use the *most specific* mechanism.  That is,
+// local.properties (first 'sdk.dir', then 'android.dir') and then the
+// environment variable ANDROID_HOME will override this.  That's unfortunate,
+// but it's hard to automatically arrange better.
+System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 
 include ':app'
 include ':base'

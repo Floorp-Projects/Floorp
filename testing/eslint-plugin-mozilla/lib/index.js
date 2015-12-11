@@ -19,6 +19,7 @@ module.exports = {
   rules: {
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
     "components-imports": require("../lib/rules/components-imports"),
+    "import-globals-from": require("../lib/rules/import-globals-from"),
     "import-headjs-globals": require("../lib/rules/import-headjs-globals"),
     "mark-test-function-used": require("../lib/rules/mark-test-function-used"),
     "no-aArgs": require("../lib/rules/no-aArgs"),
@@ -28,6 +29,7 @@ module.exports = {
   rulesConfig: {
     "balanced-listeners": 0,
     "components-imports": 0,
+    "import-globals-from": 0,
     "import-headjs-globals": 0,
     "mark-test-function-used": 0,
     "no-aArgs": 0,

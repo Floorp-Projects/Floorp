@@ -471,17 +471,13 @@ update-generated-wrappers:
 .PHONY: update-generated-wrappers
 
 # This target is only used by IDE integrations. It rebuilds resources
-# that end up in omni.ja, does most of the packaging step, and then
-# updates omni.ja in place. If you're not using an IDE, you should be
-# using |mach build mobile/android && mach package|.
+# that end up in omni.ja using the equivalent of |mach build faster|,
+# does most of the packaging step, and then updates omni.ja in
+# place. If you're not using an IDE, you should be using |mach build
+# mobile/android && mach package|.
 $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(REPORT_BUILD)
-	$(MAKE) -C ../locales
-	$(MAKE) -C ../chrome
-	$(MAKE) -C ../components
-	$(MAKE) -C ../modules
-	$(MAKE) -C ../app
-	$(MAKE) -C ../themes/core
+	$(MAKE) -C ../../../faster
 	$(MAKE) -C ../installer stage-package
 	$(MKDIR) -p $(@D)
 	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@

@@ -634,7 +634,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-update-status > .toolbarbutton-icon,
 #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-fxa-icon > .toolbarbutton-icon,
-#PanelUI-remotetabs-syncnow > .toolbarbutton-icon,
 #PanelUI-customize > .toolbarbutton-icon,
 #PanelUI-help > .toolbarbutton-icon,
 #PanelUI-quit > .toolbarbutton-icon {
@@ -668,7 +667,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://branding/content/icon16.png);
 }
 
-#PanelUI-remotetabs-syncnow,
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon {
   list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
@@ -752,7 +750,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   visibility: collapse;
 }
 
-#PanelUI-remotetabs-syncnow[syncstatus="active"],
 #PanelUI-fxa-icon[syncstatus="active"] {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
@@ -782,7 +779,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
-#PanelUI-remotetabs-syncnow,
 #PanelUI-customize,
 #PanelUI-help,
 #PanelUI-quit {
@@ -1622,12 +1618,10 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   }
 
   #PanelUI-fxa-label,
-  #PanelUI-remotetabs-syncnow,
   #PanelUI-fxa-icon {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
 
-  #PanelUI-remotetabs-syncnow[syncstatus="active"],
   #PanelUI-fxa-icon[syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
@@ -1650,7 +1644,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 
   #PanelUI-fxa-label,
   #PanelUI-fxa-icon,
-  #PanelUI-remotetabs-syncnow,
   #PanelUI-customize,
   #PanelUI-help,
   #PanelUI-quit {
@@ -1660,7 +1653,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-update-status > .toolbarbutton-icon,
   #PanelUI-fxa-label > .toolbarbutton-icon,
   #PanelUI-fxa-icon > .toolbarbutton-icon,
-  #PanelUI-remotetabs-syncnow > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,
   #PanelUI-help > .toolbarbutton-icon,
   #PanelUI-quit > .toolbarbutton-icon {
