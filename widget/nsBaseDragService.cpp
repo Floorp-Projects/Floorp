@@ -555,7 +555,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     if (aRegion) {
       // the region's coordinates are relative to the root frame
       nsIFrame* rootFrame = presShell->GetRootFrame();
-      if (rootFrame && *aPresContext) {
+      if (rootFrame) {
         nsIntRect dragRect;
         aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
         dragRect = ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
