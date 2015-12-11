@@ -1053,10 +1053,11 @@ public:
   ServiceWorkerInstallJob(ServiceWorkerJobQueue* aQueue,
                           ServiceWorkerUpdateFinishCallback* aCallback,
                           ServiceWorkerRegistrationInfo* aRegistration,
-                          ServiceWorkerInfo* aServiceWorkerInfo)
+                          ServiceWorkerInfo* aServiceWorkerInfo,
+                          const nsACString& aScriptSpec)
     : ServiceWorkerScriptJobBase(aQueue, Type::InstallJob, aCallback,
                                  aRegistration, aServiceWorkerInfo,
-                                 EmptyCString())
+                                 aScriptSpec)
   {
     MOZ_ASSERT(aRegistration);
   }
@@ -1393,8 +1394,8 @@ private:
     }
 
     RefPtr<ServiceWorkerInstallJob> job =
-      new ServiceWorkerInstallJob(mQueue, mCallback,
-                                  mRegistration, mUpdateAndInstallInfo);
+      new ServiceWorkerInstallJob(mQueue, mCallback, mRegistration,
+                                  mUpdateAndInstallInfo, mScriptSpec);
     mQueue->Append(job);
     Done(NS_OK);
   }
