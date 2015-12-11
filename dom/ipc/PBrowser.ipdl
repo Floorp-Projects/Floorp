@@ -760,6 +760,13 @@ child:
      */
     HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
 
+    /**
+     * Propagate a refresh to the child process
+     */
+    AudioChannelChangeNotification(uint32_t aAudioChannel,
+                                   float aVolume,
+                                   bool aMuted);
+
 /*
  * FIXME: write protocol!
 
