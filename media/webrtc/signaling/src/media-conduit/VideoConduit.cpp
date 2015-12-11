@@ -20,6 +20,7 @@
 #include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/video_engine/include/vie_errors.h"
+#include "webrtc/video_engine/vie_defines.h"
 #include "browser_logging/WebRtcLog.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -1022,6 +1023,10 @@ SelectBandwidth(webrtc::VideoCodec& vie_codec,
     vie_codec.minBitrate = vie_codec.minBitrate * ((10-(framerate/2))/30);
     vie_codec.maxBitrate = vie_codec.maxBitrate * ((10-(framerate/2))/30);
   }
+
+  // If we try to set a minimum bitrate that is too low, ViE will reject it.
+  vie_codec.minBitrate = std::max((unsigned int) webrtc::kViEMinCodecBitrate,
+                                  vie_codec.minBitrate);
 }
 
 static void ConstrainPreservingAspectRatio(uint16_t max_width,
