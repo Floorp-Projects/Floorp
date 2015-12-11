@@ -502,11 +502,11 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       },
 
       executeScript: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, 'js', callback);
+        self.tabs._execute(tabId, details, "js", callback);
       },
 
       insertCss: function(tabId, details, callback) {
-        self.tabs._execute(tabId, details, 'css', callback);
+        self.tabs._execute(tabId, details, "css", callback);
       },
 
       connect: function(tabId, connectInfo) {

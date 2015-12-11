@@ -19,7 +19,7 @@ add_task(function*() {
   yield new Promise(resolve => whenDelayedStartupFinished(win, resolve));
 
   is(win.gBrowser.selectedBrowser.permanentKey, key, "Should have properly copied the permanentKey");
-  yield promiseWindowClosed(win);
+  yield BrowserTestUtils.closeWindow(win);
 
   is(SessionStore.getClosedWindowCount(), 1, "Should have restore data for the closed window");
 

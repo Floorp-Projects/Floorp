@@ -59,6 +59,9 @@ _OPT\.OBJ/
 # Gradle cache.
 ^.gradle/
 
+# Local Gradle configuration properties.
+^local.properties$
+
 # Python stuff installed at build time.
 ^python/psutil/.*\.so
 ^python/psutil/.*\.pyd

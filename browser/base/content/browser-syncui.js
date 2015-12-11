@@ -182,7 +182,7 @@ var gSyncUI = {
     if (++this._numActiveSyncTasks == 1) {
       let broadcaster = document.getElementById("sync-status");
       broadcaster.setAttribute("syncstatus", "active");
-      broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncing.label"));
+      broadcaster.setAttribute("label", this._stringBundle.GetStringFromName("syncing2.label"));
       broadcaster.setAttribute("disabled", "true");
     }
     this.updateUI();

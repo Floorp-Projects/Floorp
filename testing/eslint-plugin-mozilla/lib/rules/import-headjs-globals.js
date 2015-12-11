@@ -91,12 +91,11 @@ module.exports = function(context) {
         return;
       }
 
-      var testPath = this.getFilename();
-      var testFilename = path.basename(testPath);
-      var fullTestPath = path.resolve(testFilename);
-      var fullHeadjsPath = path.resolve("head.js");
+      var currentFilePath = helpers.getAbsoluteFilePath(context);
+      var dirName = path.dirname(currentFilePath);
+      var fullHeadjsPath = path.resolve(dirName, "head.js");
 
-      checkFile([fullTestPath, fullHeadjsPath]);
+      checkFile([currentFilePath, fullHeadjsPath]);
     }
   };
 };

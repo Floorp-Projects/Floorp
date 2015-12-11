@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* import-globals-from ../performance-controller.js */
+/* import-globals-from ../performance-view.js */
 "use strict";
 
 /**
@@ -115,7 +117,7 @@ var DetailsView = {
   }),
 
   /**
-   * Takes a view name and determines if the current recording 
+   * Takes a view name and determines if the current recording
    * can support the view.
    *
    * @param {string} viewName
