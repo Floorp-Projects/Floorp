@@ -19,7 +19,7 @@ function getJSON(data) {
 
 function handlePush(event) {
 
-  self.clients.matchAll().then(function(result) {
+  event.waitUntil(self.clients.matchAll().then(function(result) {
     if (event instanceof PushEvent) {
       if (!('data' in event)) {
         result[0].postMessage({type: "finished", okay: "yes"});
@@ -41,17 +41,24 @@ function handlePush(event) {
       return;
     }
     result[0].postMessage({type: "finished", okay: "no"});
-  });
+  }));
 }
 
 function handleMessage(event) {
-  // FIXME(kitcambridge): Enable when `ServiceWorkerMessageEvent` is
-  // implemented (bug 1143717).
-  /*
   if (event.data.type == "publicKey") {
-    self.registration.pushManager.getSubscription().then(subscription => {
-      event.ports[0].postMessage(subscription.getKey("p256dh"));
-    });
+    event.waitUntil(self.registration.pushManager.getSubscription().then(subscription => {
+      event.ports[0].postMessage({
+        p256dh: subscription.getKey("p256dh"),
+        auth: subscription.getKey("auth"),
+      });
+    }).catch(error => {
+      event.ports[0].postMessage({
+        error: String(error),
+      });
+    }));
+    return;
   }
-  */
+  event.ports[0].postMessage({
+    error: "Invalid message type: " + event.data.type,
+  });
 }
