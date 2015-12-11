@@ -39,7 +39,8 @@ static bool IsSafeToLinkForUntrustedContent(nsIAboutModule *aModule, nsIURI *aUR
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler,
+    nsIProtocolHandlerWithDynamicFlags, nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
@@ -62,6 +63,33 @@ NS_IMETHODIMP
 nsAboutProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
+{
+    // First use the default (which is "unsafe for content"):
+    GetProtocolFlags(aFlags);
+
+    // Now try to see if this URI overrides the default:
+    nsCOMPtr<nsIAboutModule> aboutMod;
+    nsresult rv = NS_GetAboutModule(aURI, getter_AddRefs(aboutMod));
+    if (NS_FAILED(rv)) {
+      // Swallow this and just tell the consumer the default:
+      return NS_OK;
+    }
+    uint32_t aboutModuleFlags = 0;
+    rv = aboutMod->GetURIFlags(aURI, &aboutModuleFlags);
+    // This should never happen, so pass back the error:
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // If marked as safe, and not marked unlinkable, pass 'safe' flags.
+    if ((aboutModuleFlags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) &&
+        !(aboutModuleFlags & nsIAboutModule::MAKE_UNLINKABLE)) {
+        *aFlags = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
+            URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
+    }
     return NS_OK;
 }
 
