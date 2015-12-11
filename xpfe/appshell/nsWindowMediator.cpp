@@ -311,7 +311,8 @@ nsWindowMediator::GetMostRecentNonPBWindow(const char16_t* aType, nsIDOMWindow**
 }
 
 nsWindowInfo*
-nsWindowMediator::MostRecentWindowInfo(const char16_t* inType, bool aSkipPrivateBrowsing)
+nsWindowMediator::MostRecentWindowInfo(const char16_t* inType,
+                                       bool aSkipPrivateBrowsingOrClosed)
 {
   int32_t       lastTimeStamp = -1;
   nsAutoString  typeString(inType);
@@ -334,11 +335,16 @@ nsWindowMediator::MostRecentWindowInfo(const char16_t* inType, bool aSkipPrivate
     if (!searchInfo->mWindow) {
       continue;
     }
-    if (aSkipPrivateBrowsing) {
+    if (aSkipPrivateBrowsingOrClosed) {
       nsCOMPtr<nsIDocShell> docShell;
       searchInfo->mWindow->GetDocShell(getter_AddRefs(docShell));
       nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
       if (!loadContext || loadContext->UsePrivateBrowsing()) {
+        continue;
+      }
+
+      nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(docShell->GetWindow());
+      if (!piwindow || piwindow->Closed()) {
         continue;
       }
     }

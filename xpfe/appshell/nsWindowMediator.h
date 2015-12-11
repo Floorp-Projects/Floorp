@@ -57,7 +57,7 @@ private:
   int32_t AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   int32_t RemoveEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo* MostRecentWindowInfo(const char16_t* inType,
-                                     bool aSkipPrivateBrowsing = false);
+                                     bool aSkipPrivateBrowsingOrClosed = false);
 
   nsresult      UnregisterWindow(nsWindowInfo *inInfo);
   nsWindowInfo *GetInfoFor(nsIXULWindow *aWindow);
