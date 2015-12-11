@@ -296,8 +296,7 @@ parent:
                           nsCString[] disabledCommands);
 
     prio(urgent) sync GetInputContext() returns (int32_t IMEEnabled,
-                                                 int32_t IMEOpen,
-                                                 intptr_t NativeIMEContext);
+                                                 int32_t IMEOpen);
 
     prio(urgent) async SetInputContext(int32_t IMEEnabled,
                                        int32_t IMEOpen,
