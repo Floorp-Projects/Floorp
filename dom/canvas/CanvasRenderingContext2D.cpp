@@ -2487,14 +2487,24 @@ CanvasRenderingContext2D::UpdateFilter()
 // rects
 //
 
-// bug 1074733
-// The canvas spec does not forbid rects with negative w or h, so given
-// corners (x, y), (x+w, y), (x+w, y+h), and (x, y+h) we must generate
-// the appropriate rect by flipping negative dimensions. This prevents
-// draw targets from receiving "empty" rects later on.
-static void
-NormalizeRect(double& aX, double& aY, double& aWidth, double& aHeight)
+static bool
+ValidateRect(double& aX, double& aY, double& aWidth, double& aHeight)
 {
+
+  // bug 1018527
+  // The values of canvas API input are in double precision, but Moz2D APIs are
+  // using float precision. Bypass canvas API calls when the input is out of
+  // float precision to avoid precision problem
+  if (!std::isfinite((float)aX) | !std::isfinite((float)aY) |
+      !std::isfinite((float)aWidth) | !std::isfinite((float)aHeight)) {
+    return false;
+  }
+
+  // bug 1074733
+  // The canvas spec does not forbid rects with negative w or h, so given
+  // corners (x, y), (x+w, y), (x+w, y+h), and (x, y+h) we must generate
+  // the appropriate rect by flipping negative dimensions. This prevents
+  // draw targets from receiving "empty" rects later on.
   if (aWidth < 0) {
     aWidth = -aWidth;
     aX -= aWidth;
@@ -2503,13 +2513,16 @@ NormalizeRect(double& aX, double& aY, double& aWidth, double& aHeight)
     aHeight = -aHeight;
     aY -= aHeight;
   }
+  return true;
 }
 
 void
 CanvasRenderingContext2D::ClearRect(double x, double y, double w,
                                     double h)
 {
-  NormalizeRect(x, y, w, h);
+  if(!ValidateRect(x, y, w, h)) {
+    return;
+  }
 
   EnsureTarget();
 
@@ -2524,7 +2537,9 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
 {
   const ContextState &state = CurrentState();
 
-  NormalizeRect(x, y, w, h);
+  if(!ValidateRect(x, y, w, h)) {
+    return;
+  }
 
   if (state.patternStyles[Style::FILL]) {
     CanvasPattern::RepeatMode repeat =
@@ -2599,7 +2614,10 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   if (!w && !h) {
     return;
   }
-  NormalizeRect(x, y, w, h);
+
+  if(!ValidateRect(x, y, w, h)) {
+    return;
+  }
 
   EnsureTarget();
   if (!IsTargetValid()) {
@@ -4375,8 +4393,10 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
 
   if (optional_argc == 6) {
-    NormalizeRect(sx, sy, sw, sh);
-    NormalizeRect(dx, dy, dw, dh);
+    if (!ValidateRect(sx, sy, sw, sh) ||
+        !ValidateRect(dx, dy, dw, dh)) {
+      return;
+    }
   }
 
   RefPtr<SourceSurface> srcSurf;

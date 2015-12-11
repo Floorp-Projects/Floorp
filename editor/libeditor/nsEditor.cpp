@@ -1987,14 +1987,14 @@ nsEditor::StopPreservingSelection()
 }
 
 void
-nsEditor::EnsureComposition(mozilla::WidgetGUIEvent* aEvent)
+nsEditor::EnsureComposition(mozilla::WidgetCompositionEvent* aCompositionEvent)
 {
   if (mComposition) {
     return;
   }
   // The compositionstart event must cause creating new TextComposition
   // instance at being dispatched by IMEStateManager.
-  mComposition = IMEStateManager::GetTextCompositionFor(aEvent);
+  mComposition = IMEStateManager::GetTextCompositionFor(aCompositionEvent);
   if (!mComposition) {
     MOZ_CRASH("IMEStateManager doesn't return proper composition");
   }

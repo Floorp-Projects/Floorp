@@ -252,7 +252,7 @@ private:
 
   // Set this media as being a chain and notifies the state machine that the
   // media is no longer seekable.
-  void SetChained(bool aIsChained);
+  void SetChained();
 
   // Returns the next Ogg packet for an bitstream/codec state. Returns a
   // pointer to an ogg_packet on success, or nullptr if the read failed.

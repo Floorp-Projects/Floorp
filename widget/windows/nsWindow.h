@@ -44,6 +44,8 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIIdleServiceInternal.h"
 
+#include "IMMHandler.h"
+
 /**
  * Forward class definitions
  */
@@ -71,6 +73,7 @@ class nsWindow : public nsWindowBase
   typedef mozilla::widget::TaskbarWindowPreview TaskbarWindowPreview;
   typedef mozilla::widget::NativeKey NativeKey;
   typedef mozilla::widget::MSGResult MSGResult;
+  typedef mozilla::widget::IMEContext IMEContext;
 
 public:
   nsWindow();
@@ -292,6 +295,8 @@ public:
 
   bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT);
 
+  const IMEContext& DefaultIMC() const { return mDefaultIMC; }
+
 protected:
   virtual ~nsWindow();
 
@@ -472,6 +477,7 @@ protected:
   HWND                  mTransitionWnd;
   WNDPROC               mPrevWndProc;
   HBRUSH                mBrush;
+  IMEContext            mDefaultIMC;
   bool                  mIsTopWidgetWindow;
   bool                  mInDtor;
   bool                  mIsVisible;

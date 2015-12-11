@@ -1263,6 +1263,11 @@ nsWindow::GetNativeData(uint32_t aDataType)
 
         case NS_NATIVE_WIDGET:
             return (void *) this;
+
+        case NS_RAW_NATIVE_IME_CONTEXT:
+            // We assume that there is only one context per process on Android
+            return NS_ONLY_ONE_NATIVE_IME_CONTEXT;
+
     }
 
     return nullptr;
@@ -2244,8 +2249,6 @@ nsWindow::Natives::GetInputContext()
 {
     InputContext context = mInputContext;
     context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
-    // We assume that there is only one context per process on Android
-    context.mNativeIMEContext = nullptr;
     return context;
 }
 

@@ -553,7 +553,6 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
                 return false;
             break;
           case AsmJSModule::Global::ArrayView:
-          case AsmJSModule::Global::SharedArrayView:
           case AsmJSModule::Global::ArrayViewCtor:
             if (!ValidateArrayView(cx, global, globalVal))
                 return false;
