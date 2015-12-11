@@ -125,11 +125,14 @@ public:
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
                  const nsAString& aManifestURL,
+                 mozIApplication* aParentApp,
                  nsTArray<RefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv);
 
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
+  NS_IMETHOD GetParentApplication(mozIApplication** aApplication) = 0;
+
   void InitBrowserElementAPI();
   nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
   nsTArray<RefPtr<dom::BrowserElementAudioChannel>> mBrowserElementAudioChannels;
