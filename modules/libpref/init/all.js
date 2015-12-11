@@ -3655,8 +3655,13 @@ pref("print.print_paper_size", 0);
 pref("print.print_extra_margin", 0); // twips
 
 // CSSOM-View scroll-behavior smooth scrolling requires the C++ APZC
+#ifdef MOZ_ANDROID_APZ
+pref("layout.css.scroll-behavior.enabled", true);
+pref("layout.css.scroll-behavior.property-enabled", true);
+#else
 pref("layout.css.scroll-behavior.enabled", false);
 pref("layout.css.scroll-behavior.property-enabled", false);
+#endif
 
 // CSS Scroll Snapping requires the C++ APZC
 pref("layout.css.scroll-snap.enabled", false);
