@@ -996,8 +996,8 @@ JS_snprintf(char* out, uint32_t outlen, const char* fmt, ...)
     va_list ap;
     int rv;
 
-    MOZ_ASSERT(int32_t(outlen) > 0);
-    if (int32_t(outlen) <= 0)
+    MOZ_ASSERT(outlen > 0);
+    if (outlen == 0)
         return 0;
 
     va_start(ap, fmt);
