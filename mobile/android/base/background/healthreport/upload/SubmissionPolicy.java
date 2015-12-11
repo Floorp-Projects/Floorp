@@ -103,9 +103,11 @@ public class SubmissionPolicy {
       // with one request.
       final String obsoleteId = tracker.getNextObsoleteId();
       if (obsoleteId == null) {
+        Logger.debug(LOG_TAG, "Upload disabled and nothing to delete.");
         return false;
       }
 
+      Logger.info(LOG_TAG, "Upload disabled. Deleting obsolete document.");
       Editor editor = editor();
       editor.setLastDeleteRequested(localTime); // Write committed by delegate.
       client.delete(localTime, obsoleteId, new DeleteDelegate(editor));
