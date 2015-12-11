@@ -10,6 +10,7 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1185544</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/dom/push/test/webpush.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -24,32 +25,47 @@ http://creativecommons.org/licenses/publicdomain/
 
 <script class="testbody" type="text/javascript">
 
-  var registration;
+  SimpleTest.registerCleanupFunction(() =>
+    new Promise(resolve => SpecialPowers.popPermissions(resolve))
+  );
 
-  function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
-    .then(swr => { registration = swr; return swr; });
-  }
+  var registration;
+  add_task(function* start() {
+    yield new Promise(resolve => {
+      SpecialPowers.pushPermissions([
+        { type: "desktop-notification", allow: true, context: document },
+        ], resolve);
+    });
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({"set": [
+        ["dom.push.enabled", true],
+        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+        ]}, resolve);
+    });
+
+    var url = "worker.js" + "?" + (Math.random());
+    registration = yield navigator.serviceWorker.register(url, {scope: "."});
+  });
 
   var controlledFrame;
-  function createControlledIFrame(swr) {
-    var p = new Promise(function(res, rej) {
+  add_task(function* createControlledIFrame() {
+    yield new Promise(function(res, rej) {
       var iframe = document.createElement('iframe');
       iframe.id = "controlledFrame";
       iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
 
-      iframe.onload = function() {
-        res(swr)
-      }
+      iframe.onload = () => res();
       controlledFrame = iframe;
       document.body.appendChild(iframe);
     });
-    return p;
-  }
+  });
 
-  function subscribe(swr) {
-    return swr.pushManager.subscribe();
-  }
+  var pushSubscription;
+  add_task(function* subscribe() {
+    pushSubscription = yield registration.pushManager.subscribe();
+  });
 
   function sendRequestToWorker(request) {
     return new Promise((resolve, reject) => {
@@ -61,21 +77,19 @@ http://creativecommons.org/licenses/publicdomain/
     });
   }
 
-  function comparePublicKey(pushSubscription) {
-    // FIXME(kitcambridge): Enable when `ServiceWorkerMessageEvent` is
-    // implemented (bug 1143717).
-    return Promise.resolve(pushSubscription);
-    /*
-    return sendRequestToWorker({ type: "publicKey" }).then(data => {
-      return registration.pushManager.getSubscription().then(
-        pushSubscription => {
-          isDeeply(pushSubscription.getKey("p256dh"), data,
-            "Mismatched key share");
-          return pushSubscription;
-      });
-    });
-    */
-  }
+  add_task(function* comparePublicKey() {
+    var data = yield sendRequestToWorker({ type: "publicKey" });
+    isDeeply(
+      new Uint8Array(pushSubscription.getKey("p256dh")),
+      new Uint8Array(data.p256dh),
+      "Mismatched key share"
+    );
+    isDeeply(
+      new Uint8Array(pushSubscription.getKey("auth")),
+      new Uint8Array(data.auth),
+      "Mismatched auth secret"
+    );
+  });
 
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
@@ -84,103 +98,79 @@ http://creativecommons.org/licenses/publicdomain/
     ]).then(([message]) => message);
   }
 
-  function sendPushMessageFromPage(pushSubscription) {
+  add_task(function* sendPushMessageFromPage() {
     var typedArray = new Uint8Array([226, 130, 40, 240, 40, 140, 188]);
     var json = { hello: "world" };
-    return waitForMessage(pushSubscription, "Text message from page")
-      .then(message => {
-        is(message.data.text, "Text message from page", "Wrong text message data");
-        return waitForMessage(
-          pushSubscription,
-          typedArray
-        );
-      }).then(message => {
-        isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
-          "Wrong array buffer message data");
-        return waitForMessage(
-          pushSubscription,
-          JSON.stringify(json)
-        );
-      }).then(message => {
-        ok(message.data.json.ok, "Unexpected error parsing JSON");
-        isDeeply(message.data.json.value, json, "Wrong JSON message data");
-        return waitForMessage(
-          pushSubscription,
-          ""
-        );
-      }).then(message => {
-        ok(message, "Should include data for empty messages");
-        is(message.data.text, "", "Wrong text for empty message");
-        is(message.data.arrayBuffer.byteLength, 0, "Wrong buffer length for empty message");
-        ok(!message.data.json.ok, "Expected JSON parse error for empty message");
-        return waitForMessage(
-          pushSubscription,
-          new Uint8Array([0x48, 0x69, 0x21, 0x20, 0xf0, 0x9f, 0x91, 0x80])
-        );
-      }).then(message => {
-        is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
-        return new Promise((resolve, reject) => {
-          var reader = new FileReader();
-          reader.onloadend = event => {
-            if (reader.error) {
-              reject(reader.error);
-            } else {
-              resolve(reader.result);
-            }
-          };
-          reader.readAsText(message.data.blob);
-        });
-      }).then(text => {
-        is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
-        is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
-        // Send a blank message.
-        return Promise.all([
-          controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
-          fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
-            method: "PUT",
-            headers: {
-              "X-Push-Method": "POST",
-              "X-Push-Server": pushSubscription.endpoint,
-            },
-          }),
-        ]).then(([message]) => message);
-      }).then(message => {
-        ok(!message.data, "Should exclude data for blank messages");
-        return pushSubscription;
-      });
-  }
 
-  function unsubscribe(pushSubscription) {
+    var message = yield waitForMessage(pushSubscription, "Text message from page");
+    is(message.data.text, "Text message from page", "Wrong text message data");
+
+    message = yield waitForMessage(
+      pushSubscription,
+      typedArray
+    );
+    isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
+      "Wrong array buffer message data");
+
+    message = yield waitForMessage(
+      pushSubscription,
+      JSON.stringify(json)
+    );
+    ok(message.data.json.ok, "Unexpected error parsing JSON");
+    isDeeply(message.data.json.value, json, "Wrong JSON message data");
+
+    message = yield waitForMessage(
+      pushSubscription,
+      ""
+    );
+    ok(message, "Should include data for empty messages");
+    is(message.data.text, "", "Wrong text for empty message");
+    is(message.data.arrayBuffer.byteLength, 0, "Wrong buffer length for empty message");
+    ok(!message.data.json.ok, "Expected JSON parse error for empty message");
+
+    message = yield waitForMessage(
+      pushSubscription,
+      new Uint8Array([0x48, 0x69, 0x21, 0x20, 0xf0, 0x9f, 0x91, 0x80])
+    );
+    is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
+    var text = yield new Promise((resolve, reject) => {
+      var reader = new FileReader();
+      reader.onloadend = event => {
+        if (reader.error) {
+          reject(reader.error);
+        } else {
+          resolve(reader.result);
+        }
+      };
+      reader.readAsText(message.data.blob);
+    });
+    is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+    is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+
+    // Send a blank message.
+    var [message] = yield Promise.all([
+      controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+      fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
+        method: "PUT",
+        headers: {
+          "X-Push-Method": "POST",
+          "X-Push-Server": pushSubscription.endpoint,
+        },
+      }),
+    ]);
+    ok(!message.data, "Should exclude data for blank messages");
+  });
+
+  add_task(function* unsubscribe() {
     controlledFrame.parentNode.removeChild(controlledFrame);
     controlledFrame = null;
-    return pushSubscription.unsubscribe();
-  }
+    yield pushSubscription.unsubscribe();
+  });
 
-  function unregister() {
-    return registration.unregister();
-  }
+  add_task(function* unregister() {
+    yield registration.unregister();
+  });
 
-  function runTest() {
-    start()
-    .then(createControlledIFrame)
-    .then(subscribe)
-    .then(comparePublicKey)
-    .then(sendPushMessageFromPage)
-    .then(unsubscribe)
-    .then(unregister)
-    .catch(function(e) {
-      ok(false, "Some test failed with error " + e);
-    }).then(SimpleTest.finish);
-  }
-
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true]
-    ]}, runTest);
-  SpecialPowers.addPermission("desktop-notification", true, document);
-  SimpleTest.waitForExplicitFinish();
 </script>
 </body>
 </html>
