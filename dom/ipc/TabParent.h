@@ -196,8 +196,7 @@ public:
                                     nsString* aCommitted) override;
     virtual bool RecvSetPluginFocused(const bool& aFocused) override;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
-                                     int32_t* aIMEOpen,
-                                     intptr_t* aNativeIMEContext) override;
+                                     int32_t* aIMEOpen) override;
     virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
                                      const int32_t& aIMEOpen,
                                      const nsString& aType,

@@ -223,11 +223,15 @@ struct IMEState final
   }
 };
 
+// NS_ONLY_ONE_NATIVE_IME_CONTEXT is a special value of native IME context.
+// If there can be only one IME composition in a process, this can be used.
+#define NS_ONLY_ONE_NATIVE_IME_CONTEXT \
+  (reinterpret_cast<void*>(static_cast<intptr_t>(-1)))
+
 struct InputContext final
 {
   InputContext()
-    : mNativeIMEContext(nullptr)
-    , mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
+    : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
     , mMayBeIMEUnaware(false)
   {
   }
@@ -247,11 +251,6 @@ struct InputContext final
 
   /* A hint for the action that is performed when the input is submitted */
   nsString mActionHint;
-
-  /* Native IME context for the widget.  This doesn't come from the argument of
-     SetInputContext().  If there is only one context in the process, this may
-     be nullptr. */
-  void* mNativeIMEContext;
 
   /**
    * mOrigin indicates whether this focus event refers to main or remote

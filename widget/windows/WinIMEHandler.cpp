@@ -94,8 +94,31 @@ IMEHandler::Terminate()
 
 // static
 void*
-IMEHandler::GetNativeData(uint32_t aDataType)
+IMEHandler::GetNativeData(nsWindow* aWindow, uint32_t aDataType)
 {
+  if (aDataType == NS_NATIVE_IME_CONTEXT) {
+#ifdef NS_ENABLE_TSF
+    if (IsTSFAvailable()) {
+      return TSFTextStore::GetThreadManager();
+    }
+#endif // #ifdef NS_ENABLE_TSF
+    IMEContext context(aWindow);
+    if (context.IsValid()) {
+      return context.get();
+    }
+    // If IMC isn't associated with the window, IME is disabled on the window
+    // now.  In such case, we should return default IMC instead.
+    const IMEContext& defaultIMC = aWindow->DefaultIMC();
+    if (defaultIMC.IsValid()) {
+      return defaultIMC.get();
+    }
+    // If there is no default IMC, we should return the pointer to the window
+    // since if we return nullptr, IMEStateManager cannot manage composition
+    // with TextComposition instance.  This is possible if no IME is installed,
+    // but composition may occur with dead key sequence.
+    return aWindow;
+  }
+
 #ifdef NS_ENABLE_TSF
   void* result = TSFTextStore::GetNativeData(aDataType);
   if (!result || !(*(static_cast<void**>(result)))) {
@@ -380,14 +403,11 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
   bool open = (adjustOpenState &&
     aInputContext.mIMEState.mOpen == IMEState::OPEN);
 
-  aInputContext.mNativeIMEContext = nullptr;
-
 #ifdef NS_ENABLE_TSF
   // Note that even while a plugin has focus, we need to notify TSF of that.
   if (sIsInTSFMode) {
     TSFTextStore::SetInputContext(aWindow, aInputContext, aAction);
     if (IsTSFAvailable()) {
-      aInputContext.mNativeIMEContext = TSFTextStore::GetThreadManager();
       if (sIsIMMEnabled) {
         // Associate IME context for IMM-IMEs.
         AssociateIMEContext(aWindow, enable);
@@ -413,15 +433,6 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
   if (adjustOpenState) {
     context.SetOpenState(open);
   }
-
-  if (aInputContext.mNativeIMEContext) {
-    return;
-  }
-
-  // The old InputContext must store the default IMC or old TextStore.
-  // When IME context is disassociated from the window, use it.
-  aInputContext.mNativeIMEContext = enable ?
-    static_cast<void*>(context.get()) : oldInputContext.mNativeIMEContext;
 }
 
 // static
@@ -452,8 +463,6 @@ IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
     TSFTextStore::SetInputContext(aWindow, aInputContext,
       InputContextAction(InputContextAction::CAUSE_UNKNOWN,
                          InputContextAction::GOT_FOCUS));
-    aInputContext.mNativeIMEContext = TSFTextStore::GetThreadManager();
-    MOZ_ASSERT(aInputContext.mNativeIMEContext);
     // IME context isn't necessary in pure TSF mode.
     if (!sIsIMMEnabled) {
       AssociateIMEContext(aWindow, false);
@@ -462,15 +471,11 @@ IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
   }
 #endif // #ifdef NS_ENABLE_TSF
 
-  // NOTE: mNativeIMEContext may be null if IMM module isn't installed.
+#ifdef DEBUG
+  // NOTE: IMC may be null if IMM module isn't installed.
   IMEContext context(aWindow);
-  aInputContext.mNativeIMEContext = static_cast<void*>(context.get());
-  MOZ_ASSERT(aInputContext.mNativeIMEContext || !CurrentKeyboardLayoutHasIME());
-  // If no IME context is available, we should set the widget's pointer since
-  // nullptr indicates there is only one context per process on the platform.
-  if (!aInputContext.mNativeIMEContext) {
-    aInputContext.mNativeIMEContext = static_cast<void*>(aWindow);
-  }
+  MOZ_ASSERT(context.IsValid() || !CurrentKeyboardLayoutHasIME());
+#endif // #ifdef DEBUG
 }
 
 #ifdef DEBUG

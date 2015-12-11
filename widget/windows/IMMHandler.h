@@ -26,21 +26,28 @@ struct MSGResult;
 class IMEContext final
 {
 public:
+  IMEContext()
+    : mWnd(nullptr)
+    , mIMC(nullptr)
+  {
+  }
+
   explicit IMEContext(HWND aWnd);
   explicit IMEContext(nsWindow* aWindow);
 
   ~IMEContext()
   {
-    if (mIMC) {
-      ::ImmReleaseContext(mWnd, mIMC);
-      mIMC = nullptr;
-    }
+    Clear();
   }
 
   HIMC get() const
   {
     return mIMC;
   }
+
+  void Init(HWND aWnd);
+  void Init(nsWindow* aWindow);
+  void Clear();
 
   bool IsValid() const
   {
@@ -90,11 +97,6 @@ public:
   }
 
 protected:
-  IMEContext()
-  {
-    MOZ_CRASH("Don't create IMEContext without window handle");
-  }
-
   IMEContext(const IMEContext& aOther)
   {
     MOZ_CRASH("Don't copy IMEContext");
