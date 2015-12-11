@@ -871,7 +871,7 @@ private:
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
-  // Helper function used by TakeOverFling() and HandleFlingOverscroll().
+  // Helper function used by AttemptFling().
   void AcceptFling(ParentLayerPoint& aVelocity,
                    const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                    bool aHandoff);
