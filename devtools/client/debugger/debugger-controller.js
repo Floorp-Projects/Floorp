@@ -1168,7 +1168,7 @@ StackFrames.prototype = {
               // Make sure all quotes are escaped in the expression's syntax,
               // and add a newline after the statement to avoid comments
               // breaking the code integrity inside the eval block.
-              aString.replace(/"/g, "\\$&") + "\" + " + "'\\n'" + " + \"" +
+              aString.replace(/\\/g, "\\\\").replace(/"/g, "\\$&") + "\" + " + "'\\n'" + " + \"" +
             "} catch (e) {" +
               "e.name + ': ' + e.message;" + // TODO: Bug 812765, 812764.
             "}" +
