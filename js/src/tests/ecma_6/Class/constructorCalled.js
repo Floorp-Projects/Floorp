@@ -1,8 +1,6 @@
 // The constructor specified should get called, regardless of order, or
 // other distractions
 
-var test = `
-
 var called = false;
 class a { constructor(x) { assertEq(x, 4); called = true } }
 new a(4);
@@ -34,18 +32,14 @@ new cExpr();
 assertEq(called, true);
 
 called = false;
-class d { [\"constructor\"]() { throw new Error(\"NO\"); } constructor() { called = true; } }
+class d { ["constructor"]() { throw new Error("NO"); } constructor() { called = true; } }
 new d();
 assertEq(called, true);
 
 called = false;
-var dExpr = class { [\"constructor\"]() { throw new Error(\"NO\"); } constructor() { called = true; } }
+var dExpr = class { ["constructor"]() { throw new Error("NO"); } constructor() { called = true; } }
 new dExpr();
 assertEq(called, true);
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

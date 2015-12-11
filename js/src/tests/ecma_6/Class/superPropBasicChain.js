@@ -1,5 +1,3 @@
-var test = `
-
 var o = {
     access() {
         super.foo.bar;
@@ -8,11 +6,6 @@ var o = {
 
 // Delazify
 assertThrowsInstanceOf(o.access, TypeError);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

@@ -1,5 +1,4 @@
 // Test errors due to duplicate exports
-
 load(libdir + "asserts.js");
 
 function testSyntaxError(source) {
@@ -16,7 +15,5 @@ testSyntaxError("export var default; export default function() {};");
 testSyntaxError("export var default; export default function foo() {};");
 testSyntaxError("var v; export {v}; export {v};");
 testSyntaxError("var v, x; export {v}; export {x as v};");
-if (classesEnabled()) {
-    testSyntaxError("export var default; export default export class { constructor() {} };");
-    testSyntaxError("export var default; export default export class foo { constructor() {} };");
-}
+testSyntaxError("export var default; export default export class { constructor() {} };");
+testSyntaxError("export var default; export default export class foo { constructor() {} };");

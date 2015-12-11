@@ -1,5 +1,3 @@
-var test = `
-
 // Since we (for now!) can't emit jitcode for derived class statements. Make
 // sure we can correctly invoke derived class constructors.
 
@@ -16,11 +14,6 @@ function intermediate() {
 
 for (let i = 0; i < 1100; i++)
     assertThrownErrorContains(intermediate, "|this|");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");
