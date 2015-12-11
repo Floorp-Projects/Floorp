@@ -129,7 +129,7 @@ add_task(function* testPageActionPopup() {
       panel.hidePopup();
 
       panel = document.getElementById(panelId);
-      is(panel, undefined, "panel successfully removed from document after hiding");
+      is(panel, null, "panel successfully removed from document after hiding");
     }
 
     extension.sendMessage("next-test");
@@ -141,5 +141,5 @@ add_task(function* testPageActionPopup() {
   yield extension.unload();
 
   let panel = document.getElementById(panelId);
-  is(panel, undefined, "browserAction panel removed from document");
+  is(panel, null, "browserAction panel removed from document");
 });
