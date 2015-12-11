@@ -1,5 +1,3 @@
-var test = `
-
 function base() { }
 
 class beforeSwizzle extends base {
@@ -23,11 +21,6 @@ Object.setPrototypeOf(beforeThrow, Math.sin);
 
 // Will throw that Math.sin is not a constructor before evaluating the args
 assertThrowsInstanceOf(() => new beforeThrow(), TypeError);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

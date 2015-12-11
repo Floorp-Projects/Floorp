@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     method() { return 1; }
     *gen() { return 2; }
@@ -15,11 +13,6 @@ assertEq(new base().method(), 1);
 assertEq(new base().gen().next().value, 2);
 assertEq(base.sMethod(), 3);
 assertEq(new base().answer, 42);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

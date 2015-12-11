@@ -1,5 +1,3 @@
-var test = `
-
 class base { constructor() { } }
 
 // lies and the lying liars who tell them
@@ -22,11 +20,6 @@ assertThrowsInstanceOf(()=>new new Proxy(inst, {get})(), TypeError);
 
 class defaultInst extends base {}
 assertThrowsInstanceOf(()=>new new Proxy(defaultInst, {get})(), TypeError);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

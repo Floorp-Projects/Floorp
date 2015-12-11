@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     constructor(a, b, c) {
         assertEq(a, 1);
@@ -9,13 +7,13 @@ class base {
     }
 }
 
-class test extends base {
+class doTest extends base {
     constructor(arr) {
         super(...arr);
     }
 }
 
-assertEq(new test([1,2,3]).calledBase, true);
+assertEq(new doTest([1,2,3]).calledBase, true);
 
 class testRest extends base {
    constructor(...args) {
@@ -24,11 +22,6 @@ class testRest extends base {
 }
 
 assertEq(new testRest(1,2,3).calledBase, true);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

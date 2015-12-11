@@ -1,5 +1,3 @@
-var test = `
-
 // Ensure that super lookups and sets skip over properties on the |this| object.
 // That is, super lookups start with the superclass, not the current class.
 
@@ -42,11 +40,6 @@ let instance = new derived();
 instance.testSkipGet();
 instance.testSkipDerivedOverrides();
 instance.testSkipSet();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");
