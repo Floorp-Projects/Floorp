@@ -1000,6 +1000,14 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
     return nullptr;
   }
 
+  // Avoid infinite update loops by ignoring update() calls during top
+  // level script evaluation.  See:
+  // https://github.com/slightlyoff/ServiceWorker/issues/800
+  if (worker->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    return promise.forget();
+  }
+
   RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);
   if (!proxy) {
     aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
