@@ -3654,17 +3654,16 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
-// CSSOM-View scroll-behavior smooth scrolling requires the C++ APZC
+// CSSOM-View scroll-behavior smooth scrolling and scroll snap requires the C++ APZC
 #ifdef MOZ_ANDROID_APZ
 pref("layout.css.scroll-behavior.enabled", true);
 pref("layout.css.scroll-behavior.property-enabled", true);
+pref("layout.css.scroll-snap.enabled", true);
 #else
 pref("layout.css.scroll-behavior.enabled", false);
 pref("layout.css.scroll-behavior.property-enabled", false);
-#endif
-
-// CSS Scroll Snapping requires the C++ APZC
 pref("layout.css.scroll-snap.enabled", false);
+#endif
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
