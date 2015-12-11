@@ -77,6 +77,8 @@ GetActionCauseName(InputContextAction::Cause aCause)
       return "CAUSE_KEY";
     case InputContextAction::CAUSE_MOUSE:
       return "CAUSE_MOUSE";
+    case InputContextAction::CAUSE_TOUCH:
+      return "CAUSE_TOUCH";
     default:
       return "illegal value";
   }
@@ -657,8 +659,13 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
     return; // should notify only first click event.
   }
 
-  InputContextAction action(InputContextAction::CAUSE_MOUSE,
-                            InputContextAction::FOCUS_NOT_CHANGED);
+  uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+  aMouseEvent->GetMozInputSource(&inputSource);
+  InputContextAction::Cause cause =
+    inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH ?
+      InputContextAction::CAUSE_TOUCH : InputContextAction::CAUSE_MOUSE;
+
+  InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);
   IMEState newState = GetNewIMEState(aPresContext, aContent);
   SetIMEState(newState, aContent, widget, action);
 }

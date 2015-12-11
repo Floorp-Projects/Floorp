@@ -45,7 +45,7 @@ function test() {
 
       yield doResume(gPanel);
       navigateActiveTabTo(gPanel, "about:blank");
-      yield waitForDispatch(gPanel, constants.LOAD_SOURCES);
+      yield waitForDispatch(gPanel, constants.UNLOAD);
       closeDebuggerAndFinish(gPanel);
     });
 

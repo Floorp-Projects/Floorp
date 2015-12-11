@@ -627,6 +627,7 @@ class CIBuild(object):
         help="Run the task with the interactive feature enabled")
     def create_ci_build(self, **params):
         from taskcluster_graph.templates import Templates
+        from taskcluster_graph.image_builder import docker_image
         import taskcluster_graph.build_task
 
         templates = Templates(ROOT)
