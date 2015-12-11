@@ -92,10 +92,17 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     public native void destroy();
     @Override
     public native boolean getRedrawHint();
+
     @Override
-    public native void setOverScrollMode(int overscrollMode);
+    public void setOverScrollMode(int overscrollMode) {
+        // FIXME implement this
+    }
+
     @Override
-    public native int getOverScrollMode();
+    public int getOverScrollMode() {
+        // FIXME implement this
+        return 0;
+    }
 
     @WrapForJNI(allowMultithread = true, stubName = "RequestContentRepaintWrapper")
     private void requestContentRepaint(float x, float y, float width, float height, float resolution) {

@@ -204,6 +204,10 @@ FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         }
     }
 
+    // We do our own explicit checking for |this|
+    if (name == cx->names().dotThis)
+        return true;
+
     // NAME operations are the slow paths already, so unconditionally check
     // for uninitialized lets.
     return CheckUninitializedLexical(cx, name, vp);
@@ -391,17 +395,13 @@ NegOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue val
 }
 
 static MOZ_ALWAYS_INLINE bool
-ToIdOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue objval,
-              HandleValue idval, MutableHandleValue res)
+ToIdOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue idval,
+              MutableHandleValue res)
 {
     if (idval.isInt32()) {
         res.set(idval);
         return true;
     }
-
-    JSObject* obj = ToObjectFromStack(cx, objval);
-    if (!obj)
-        return false;
 
     RootedId id(cx);
     if (!ToPropertyKey(cx, idval, &id))

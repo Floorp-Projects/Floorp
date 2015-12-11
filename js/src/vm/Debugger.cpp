@@ -4373,8 +4373,8 @@ Debugger::setupTraceLogger(JSContext* cx, unsigned argc, Value* vp)
         if (!GetProperty(cx, obj, obj, ids[i], &v))
             return false;
 
-        textIds.append(textId);
-        values.append(ToBoolean(v));
+        textIds.infallibleAppend(textId);
+        values.infallibleAppend(ToBoolean(v));
     }
 
     MOZ_ASSERT(ids.length() == textIds.length());
@@ -6723,13 +6723,6 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     /* Either we're specifying the frame, or a global. */
     MOZ_ASSERT_IF(iter, !scope);
     MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
-
-    if (iter && iter->script()->isDerivedClassConstructor()) {
-        MOZ_ASSERT(iter->isFunctionFrame() && iter->calleeTemplate()->isClassConstructor());
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DISABLED_DERIVED_CLASS,
-                             "debugger eval");
-        return false;
-    }
 
     /* Check the first argument, the eval code string. */
     if (!code.isString()) {

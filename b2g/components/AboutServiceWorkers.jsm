@@ -29,17 +29,12 @@ function serializeServiceWorkerInfo(aServiceWorkerInfo) {
 
   let result = {};
 
-  Object.keys(aServiceWorkerInfo).forEach(property => {
-    if (typeof aServiceWorkerInfo[property] == "function") {
-      return;
-    }
-    if (property === "principal") {
-      result.principal = {
-        origin: aServiceWorkerInfo.principal.originNoSuffix,
-        originAttributes: aServiceWorkerInfo.principal.originAttributes
-      };
-      return;
-    }
+  result.principal = {
+    origin: aServiceWorkerInfo.principal.originNoSuffix,
+    originAttributes: aServiceWorkerInfo.principal.originAttributes
+  };
+
+  ["scope", "scriptSpec"].forEach(property => {
     result[property] = aServiceWorkerInfo[property];
   });
 
