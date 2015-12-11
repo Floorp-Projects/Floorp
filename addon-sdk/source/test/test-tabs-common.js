@@ -174,24 +174,6 @@ exports.testTabClose_alt = function(assert, done) {
   });
 };
 
-exports.testAttachOnOpen_alt = function (assert, done) {
-  // Take care that attach has to be called on tab ready and not on tab open.
-  tabs.open({
-    url: "data:text/html;charset=utf-8,foobar",
-    onOpen: function (tab) {
-      let worker = tab.attach({
-        contentScript: 'self.postMessage(document.location.href); ',
-        onMessage: function (msg) {
-          assert.equal(msg, "about:blank",
-            "Worker document url is about:blank on open");
-          worker.destroy();
-          tab.close(done);
-        }
-      });
-    }
-  });
-};
-
 exports.testAttachOnMultipleDocuments_alt = function (assert, done) {
   // Example of attach that process multiple tab documents
   let firstLocation = "data:text/html;charset=utf-8,foobar";

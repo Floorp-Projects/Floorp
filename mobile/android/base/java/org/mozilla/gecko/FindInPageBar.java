@@ -159,7 +159,6 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
 
             // Repeat the find after a matchcase change.
             sendRequestToFinderHelper("FindInPage:Find", mFindText.getText().toString());
-            getInputMethodManager(mFindText).hideSoftInputFromWindow(mFindText.getWindowToken(), 0);
             return;
         }
 
