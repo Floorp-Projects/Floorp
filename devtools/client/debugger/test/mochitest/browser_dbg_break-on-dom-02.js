@@ -10,6 +10,7 @@ const TAB_URL = EXAMPLE_URL + "doc_event-listeners-02.html";
 
 function test() {
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    let gPanel = aPanel;
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
@@ -48,7 +49,7 @@ function test() {
         let fetched = waitForDispatch(aPanel, constants.FETCH_EVENT_LISTENERS);
 
         let reloading = once(gDebugger.gTarget, "will-navigate");
-        let reloaded = waitForSourcesAfterReload();
+        let reloaded = waitForNavigation(gPanel);
         gDebugger.DebuggerController._target.activeTab.reload();
 
         yield reloading;
@@ -99,7 +100,7 @@ function test() {
           "The variables tab should be selected.");
 
         let reloading = once(gDebugger.gTarget, "will-navigate");
-        let reloaded = waitForSourcesAfterReload();
+        let reloaded = waitForNavigation(gPanel);
         gDebugger.DebuggerController._target.activeTab.reload();
 
         yield reloading;
@@ -124,14 +125,6 @@ function test() {
         ok(true,
           "Event listeners were not added after the target finished navigating.");
       });
-    }
-
-    function waitForSourcesAfterReload() {
-      return promise.all([
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.NEW_SOURCE),
-        waitForDispatch(aPanel, constants.LOAD_SOURCES),
-        waitForDebuggerEvents(aPanel, gDebugger.EVENTS.SOURCE_SHOWN)
-      ]);
     }
   });
 }

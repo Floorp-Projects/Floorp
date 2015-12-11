@@ -32,7 +32,6 @@ function SourcesView(controller, DebuggerView) {
   dumpn("SourcesView was instantiated");
 
   utils.onReducerEvents(controller, {
-    "sources": this.renderSources,
     "source": this.renderSource,
     "blackboxed": this.renderBlackBoxed,
     "prettyprinted": this.updateToolbarButtonsState,
@@ -215,12 +214,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       }
     }
     this.sourcesDidUpdate();
-  },
-
-  renderSources: function(sources) {
-    if (Object.keys(sources).length === 0) {
-      this.emptyText = L10N.getStr("noSourcesText");
-    }
   },
 
   /**

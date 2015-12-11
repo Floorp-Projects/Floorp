@@ -128,6 +128,7 @@ devtools/client/webaudioeditor/lib/dagre-d3.js
 # Ignore codemirror
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
+devtools/client/sourceeditor/test/codemirror/*
 
 # Ignore jquery test libs
 devtools/client/markupview/test/lib_*
@@ -140,9 +141,12 @@ devtools/client/webide/webide-prefs.js
 # Ignore various libs
 devtools/shared/jsbeautify/*
 devtools/shared/acorn/*
-devtools/shared/tern/*
+devtools/client/sourceeditor/tern/*
 devtools/shared/pretty-fast/*
 devtools/shared/sourcemap/*
+devtools/shared/qrcode/decoder/*
+devtools/shared/qrcode/encoder/*
+devtools/client/shared/vendor/*
 
 # mobile/android/ exclusions
 mobile/android/chrome/content
