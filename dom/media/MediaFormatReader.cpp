@@ -691,7 +691,6 @@ MediaFormatReader::NotifyWaitingForData(TrackType aTrack)
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
   decoder.mWaitingForData = true;
-  decoder.mNeedDraining = true;
   ScheduleUpdate(aTrack);
 }
 
@@ -884,7 +883,6 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
           info->GetID());
       decoder.mInfo = info;
       decoder.mLastStreamSourceID = info->GetID();
-      decoder.mNextStreamSourceID.reset();
       // Flush will clear our array of queued samples. So make a copy now.
       nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
       Flush(aTrack);
@@ -894,11 +892,38 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         decoder.mQueuedSamples.AppendElements(Move(samples));
         NotifyDecodingRequested(aTrack);
       } else {
-        TimeUnit seekTime =
-          decoder.mTimeThreshold.refOr(TimeUnit::FromMicroseconds(sample->mTime));
+        MOZ_ASSERT(decoder.mTimeThreshold.isNothing());
         LOG("Stream change occurred on a non-keyframe. Seeking to:%lld",
-            seekTime.ToMicroseconds());
-        InternalSeek(aTrack, seekTime);
+            sample->mTime);
+        decoder.mTimeThreshold = Some(TimeUnit::FromMicroseconds(sample->mTime));
+        RefPtr<MediaFormatReader> self = this;
+        decoder.ResetDemuxer();
+        decoder.mSeekRequest.Begin(decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref())
+                   ->Then(OwnerThread(), __func__,
+                          [self, aTrack] (media::TimeUnit aTime) {
+                            auto& decoder = self->GetDecoderData(aTrack);
+                            decoder.mSeekRequest.Complete();
+                            self->NotifyDecodingRequested(aTrack);
+                          },
+                          [self, aTrack] (DemuxerFailureReason aResult) {
+                            auto& decoder = self->GetDecoderData(aTrack);
+                            decoder.mSeekRequest.Complete();
+                            switch (aResult) {
+                              case DemuxerFailureReason::WAITING_FOR_DATA:
+                                self->NotifyWaitingForData(aTrack);
+                                break;
+                              case DemuxerFailureReason::END_OF_STREAM:
+                                self->NotifyEndOfStream(aTrack);
+                                break;
+                              case DemuxerFailureReason::CANCELED:
+                              case DemuxerFailureReason::SHUTDOWN:
+                                break;
+                              default:
+                                self->NotifyError(aTrack);
+                                break;
+                            }
+                            decoder.mTimeThreshold.reset();
+                          }));
       }
       return;
     }
@@ -930,42 +955,6 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
 
   // We have serviced the decoder's request for more data.
   decoder.mInputExhausted = false;
-}
-
-void
-MediaFormatReader::InternalSeek(TrackType aTrack, const media::TimeUnit& aTime)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  auto& decoder = GetDecoderData(aTrack);
-  decoder.mTimeThreshold = Some(aTime);
-  RefPtr<MediaFormatReader> self = this;
-  decoder.ResetDemuxer();
-  decoder.mSeekRequest.Begin(decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref())
-             ->Then(OwnerThread(), __func__,
-                    [self, aTrack] (media::TimeUnit aTime) {
-                      auto& decoder = self->GetDecoderData(aTrack);
-                      decoder.mSeekRequest.Complete();
-                      self->NotifyDecodingRequested(aTrack);
-                    },
-                    [self, aTrack] (DemuxerFailureReason aResult) {
-                      auto& decoder = self->GetDecoderData(aTrack);
-                      decoder.mSeekRequest.Complete();
-                      switch (aResult) {
-                        case DemuxerFailureReason::WAITING_FOR_DATA:
-                          self->NotifyWaitingForData(aTrack);
-                          break;
-                        case DemuxerFailureReason::END_OF_STREAM:
-                          self->NotifyEndOfStream(aTrack);
-                          break;
-                        case DemuxerFailureReason::CANCELED:
-                        case DemuxerFailureReason::SHUTDOWN:
-                          break;
-                        default:
-                          self->NotifyError(aTrack);
-                          break;
-                      }
-                      decoder.mTimeThreshold.reset();
-                    }));
 }
 
 void
@@ -1017,8 +1006,7 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
-  if (!decoder.HasPromise() && decoder.mWaitingForData &&
-      !decoder.mDraining && !decoder.mNeedDraining) {
+  if (!decoder.HasPromise() && decoder.mWaitingForData) {
     // Nothing more we can do at present.
     LOGV("Still waiting for data.");
     return;
@@ -1048,47 +1036,32 @@ MediaFormatReader::Update(TrackType aTrack)
         RefPtr<MediaData> output = decoder.mOutput[0];
         decoder.mOutput.RemoveElementAt(0);
         decoder.mSizeOfQueue -= 1;
-        decoder.mLastSampleTime =
-          Some(media::TimeUnit::FromMicroseconds(output->GetEndTime()));
         if (decoder.mTimeThreshold.isNothing() ||
             media::TimeUnit::FromMicroseconds(output->mTime) >= decoder.mTimeThreshold.ref()) {
           ReturnOutput(output, aTrack);
           decoder.mTimeThreshold.reset();
           break;
         } else {
-          LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
-               TrackTypeToStr(aTrack),
+          LOGV("Internal Seeking: Dropping frame time:%f wanted:%f (kf:%d)",
                media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
                decoder.mTimeThreshold.ref().ToSeconds(),
                output->mKeyframe);
         }
       }
-    }
-  }
-  if (decoder.HasPromise() && decoder.mOutput.IsEmpty()) {
-    if (decoder.mError) {
-      decoder.RejectPromise(DECODE_ERROR, __func__);
-      return;
-    }
-    if (decoder.mDrainComplete) {
-      bool wasDraining = decoder.mDraining;
+    } else if (decoder.mDrainComplete) {
       decoder.mDrainComplete = false;
       decoder.mDraining = false;
-      if (decoder.mDemuxEOS) {
-        decoder.RejectPromise(END_OF_STREAM, __func__);
-        // We reached the end of the data stream. Nothing more to do.
+      if (decoder.mError) {
+        LOG("Decoding Error");
+        decoder.RejectPromise(DECODE_ERROR, __func__);
         return;
+      } else if (decoder.mDemuxEOS) {
+        decoder.RejectPromise(END_OF_STREAM, __func__);
       }
-      if (wasDraining && decoder.mLastSampleTime && !decoder.mNextStreamSourceID) {
-        // We have completed draining the decoder following WaitingForData.
-        // Set up the internal seek machinery to be able to resume from the
-        // last sample decoded.
-        LOG("Seeking to last sample time: %lld",
-            decoder.mLastSampleTime.ref().ToMicroseconds());
-        InternalSeek(aTrack, decoder.mLastSampleTime.ref());
-      }
-    }
-    if (decoder.mWaitingForData && !decoder.mDraining && !decoder.mNeedDraining) {
+    } else if (decoder.mError) {
+      decoder.RejectPromise(DECODE_ERROR, __func__);
+      return;
+    } else if (decoder.mWaitingForData) {
       LOG("Waiting For Data");
       decoder.RejectPromise(WAITING_FOR_DATA, __func__);
       return;
