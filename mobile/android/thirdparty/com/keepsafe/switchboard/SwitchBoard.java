@@ -221,7 +221,7 @@ public class SwitchBoard {
 			if(serverUrl != null) {
 				String params = "uuid="+uuid+"&device="+device+"&lang="+lang+"&country="+country
 						+"&manufacturer="+manufacturer+"&appId="+packageName+"&version="+versionName;
-				if(DEBUG) Log.d(TAG, "Read from server URL: " + serverUrl + params);
+				if(DEBUG) Log.d(TAG, "Read from server URL: " + serverUrl + "?" + params);
 				String serverConfig = readFromUrlGET(serverUrl, params);
 				
 				if(DEBUG) Log.d(TAG, serverConfig);
