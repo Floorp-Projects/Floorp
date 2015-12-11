@@ -56,7 +56,6 @@ function testName(C, name, hasValue, hasGetter, hasSetter, isFunction=false) {
     }
 }
 
-var test = `
 // ---- declaration ---
 
 class Decl {
@@ -243,10 +242,6 @@ let ExtendedExpr5 = class ExtendedExpr5 extends AnonWithGetterSetter {
 testName(ExtendedExpr5, "extend", false, true, false);
 delete ExtendedExpr5.name;
 testName(ExtendedExpr5, "base", false, false, false);
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

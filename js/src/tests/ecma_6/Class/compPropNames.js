@@ -239,5 +239,5 @@ assertEq(obj.hey, 1);
 assertEq(obj[4], 2);
 assertThrowsValue(() => { obj.x = 7; }, 3);
 
-
-reportCompare(0, 0, "ok");
+if (typeof reportCompare === 'function')
+    reportCompare(0, 0, "ok");

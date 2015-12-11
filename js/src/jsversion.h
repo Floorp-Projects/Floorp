@@ -39,9 +39,6 @@
 
 #ifdef NIGHTLY_BUILD
 
-/* Support for ES6 Classes. */
-#define JS_HAS_CLASSES 1
-
 /* Support for ES7 Exponentiation proposal. */
 #define JS_HAS_EXPONENTIATION 1
 

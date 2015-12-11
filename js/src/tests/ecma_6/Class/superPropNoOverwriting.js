@@ -1,5 +1,3 @@
-var test = `
-
 class X {
     constructor() {
         Object.defineProperty(this, "prop1", {
@@ -55,11 +53,6 @@ assertEq(x.prop3, undefined);
 
 assertThrowsInstanceOf(() => x.f4(), TypeError);
 assertEq(x.prop4, 20);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

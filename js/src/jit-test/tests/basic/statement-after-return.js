@@ -1,7 +1,5 @@
 // Warning should be shown for unreachable statement after return (bug 1151931).
 
-load(libdir + "class.js");
-
 function testWarn(code, lineNumber, columnNumber) {
   enableLastWarning();
   eval(code);
@@ -213,14 +211,12 @@ function* f() {
 `, 4, 4);
 
 // class
-if (classesEnabled()) {
-  testWarn(`
+testWarn(`
 function f() {
   return
     class A { constructor() {} };
 }
 `, 4, 4);
-}
 
 // unary expression
 testWarn(`

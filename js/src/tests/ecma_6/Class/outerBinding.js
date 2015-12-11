@@ -5,15 +5,14 @@
 //
 // A class statement creates a mutable lexical outer binding.
 
-var test = `
 class Foo { constructor() { } }
-assertEq(typeof Foo, \"function\");
+assertEq(typeof Foo, "function");
 Foo = 5;
 assertEq(Foo, 5);
 
 {
     class foo { constructor() { } }
-    assertEq(typeof foo, \"function\");
+    assertEq(typeof foo, "function");
     foo = 4;
     assertEq(foo, 4);
 }
@@ -35,16 +34,12 @@ assertEq(earlyError, true);
 function strictEvalShadows() {
     "use strict";
     let x = 4;
-    eval(\`class x { constructor() { } }
+    eval(`class x { constructor() { } }
            assertEq(typeof x, "function");
-         \`);
+         `);
     assertEq(x, 4);
 }
 strictEvalShadows()
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

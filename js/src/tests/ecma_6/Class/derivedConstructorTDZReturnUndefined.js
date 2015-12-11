@@ -1,5 +1,3 @@
-var test = `
-
 class foo extends null {
     constructor() {
         // Explicit returns of undefined should act the same as falling off the
@@ -10,11 +8,6 @@ class foo extends null {
 
 for (let i = 0; i < 1100; i++)
     assertThrownErrorContains(() => new foo(), "|this|");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");
