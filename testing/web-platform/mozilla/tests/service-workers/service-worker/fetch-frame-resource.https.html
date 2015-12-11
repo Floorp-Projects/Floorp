@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <title>Service Worker: Fetch for the frame loading.</title>
+<meta name=timeout content=long>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/get-host-info.sub.js"></script>
@@ -45,7 +46,7 @@ function getLoadedObject(win, contentFunc, closeFunc) {
             // use default empty string for cross-domain window
           }
           done(content);
-        }, 5000);
+        }, 10000);
 
       win.onload = function() {
           clearTimeout(timeout);
