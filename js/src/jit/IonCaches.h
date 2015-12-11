@@ -794,6 +794,9 @@ class NameIC : public IonCache
                           HandleObject scopeChain, HandleObject obj, HandleObject holder,
                           HandleShape shape, void* returnAddr);
 
+    bool attachTypeOfNoProperty(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                HandleObject scopeChain);
+
     static bool
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain,
            MutableHandleValue vp);
