@@ -52,7 +52,7 @@
 #endif
 
 #ifndef MOZ_SIMPLEPUSH
-#include "nsIPushService.h"
+#include "nsIPushNotificationService.h"
 #endif
 
 namespace mozilla {
@@ -1203,7 +1203,7 @@ NotificationObserver::AdjustPushQuota(const char* aTopic)
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
   nsCOMPtr<nsIPushQuotaManager> pushQuotaManager =
-    do_GetService("@mozilla.org/push/Service;1");
+    do_GetService("@mozilla.org/push/NotificationService;1");
   if (!pushQuotaManager) {
     return NS_ERROR_FAILURE;
   }

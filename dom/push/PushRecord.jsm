@@ -28,9 +28,6 @@ this.EXPORTED_SYMBOLS = ["PushRecord"];
 
 const prefs = new Preferences("dom.push.");
 
-/**
- * The push subscription record, stored in IndexedDB.
- */
 function PushRecord(props) {
   this.pushEndpoint = props.pushEndpoint;
   this.scope = props.scope;
@@ -220,12 +217,11 @@ PushRecord.prototype = {
 
   toSubscription() {
     return {
-      endpoint: this.pushEndpoint,
+      pushEndpoint: this.pushEndpoint,
       lastPush: this.lastPush,
       pushCount: this.pushCount,
       p256dhKey: this.p256dhPublicKey,
       authenticationSecret: this.authenticationSecret,
-      quota: this.quotaApplies() ? this.quota : -1,
     };
   },
 };

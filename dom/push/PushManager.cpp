@@ -19,7 +19,7 @@
 #include "nsIGlobalObject.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
-#include "nsIPushService.h"
+#include "nsIPushClient.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsFrameMessageManager.h"
@@ -104,9 +104,9 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
 {
   MOZ_ASSERT(mPrincipal);
 
-  nsCOMPtr<nsIPushService> service =
-    do_GetService("@mozilla.org/push/Service;1");
-  if (NS_WARN_IF(!service)) {
+  nsCOMPtr<nsIPushClient> client =
+    do_CreateInstance("@mozilla.org/push/PushClient;1");
+  if (NS_WARN_IF(!client)) {
     aRv = NS_ERROR_FAILURE;
     return nullptr;
   }
@@ -118,8 +118,7 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
 
   RefPtr<UnsubscribeResultCallback> callback =
     new UnsubscribeResultCallback(p);
-  Unused << NS_WARN_IF(NS_FAILED(
-    service->Unsubscribe(mScope, mPrincipal, callback)));
+  client->Unsubscribe(mScope, mPrincipal, callback);
   return p.forget();
 }
 
@@ -458,15 +457,15 @@ public:
     RefPtr<WorkerUnsubscribeResultCallback> callback =
       new WorkerUnsubscribeResultCallback(mProxy);
 
-    nsCOMPtr<nsIPushService> service =
-      do_GetService("@mozilla.org/push/Service;1");
-    if (!service) {
+    nsCOMPtr<nsIPushClient> client =
+      do_CreateInstance("@mozilla.org/push/PushClient;1");
+    if (!client) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
       return NS_OK;
     }
 
     nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
-    if (NS_WARN_IF(NS_FAILED(service->Unsubscribe(mScope, principal, callback)))) {
+    if (NS_WARN_IF(NS_FAILED(client->Unsubscribe(mScope, principal, callback)))) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
       return NS_OK;
     }
@@ -579,7 +578,7 @@ private:
   nsTArray<uint8_t> mAuthSecret;
 };
 
-class GetSubscriptionCallback final : public nsIPushSubscriptionCallback
+class GetSubscriptionCallback final : public nsIPushEndpointCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -591,11 +590,15 @@ public:
   {}
 
   NS_IMETHOD
-  OnPushSubscription(nsresult aStatus,
-                     nsIPushSubscription* aSubscription) override
+  OnPushEndpoint(nsresult aStatus,
+                 const nsAString& aEndpoint,
+                 uint32_t aKeyLen,
+                 uint8_t* aKey,
+                 uint32_t aAuthSecretLen,
+                 uint8_t* aAuthSecret) override
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mProxy, "OnPushSubscription() called twice?");
+    MOZ_ASSERT(mProxy, "OnPushEndpoint() called twice?");
 
     RefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
 
@@ -607,17 +610,17 @@ public:
     AutoJSAPI jsapi;
     jsapi.Init();
 
-    nsAutoString endpoint;
-    nsTArray<uint8_t> rawP256dhKey, authSecret;
-    if (NS_SUCCEEDED(aStatus)) {
-      aStatus = GetSubscriptionParams(aSubscription, endpoint, rawP256dhKey,
-                                      authSecret);
-    }
+    nsTArray<uint8_t> rawP256dhKey(aKeyLen);
+    rawP256dhKey.ReplaceElementsAt(0, aKeyLen, aKey, aKeyLen);
+
+    nsTArray<uint8_t> authSecret(aAuthSecretLen);
+    authSecret.ReplaceElementsAt(0, aAuthSecretLen,
+                                 aAuthSecret, aAuthSecretLen);
 
     RefPtr<GetSubscriptionResultRunnable> r =
       new GetSubscriptionResultRunnable(proxy,
                                         aStatus,
-                                        endpoint,
+                                        aEndpoint,
                                         mScope,
                                         rawP256dhKey,
                                         authSecret);
@@ -627,61 +630,23 @@ public:
 
   // Convenience method for use in this file.
   void
-  OnPushSubscriptionError(nsresult aStatus)
+  OnPushEndpointError(nsresult aStatus)
   {
     Unused << NS_WARN_IF(NS_FAILED(
-        OnPushSubscription(aStatus, nullptr)));
+        OnPushEndpoint(aStatus, EmptyString(), 0, nullptr, 0, nullptr)));
   }
+
 
 protected:
   ~GetSubscriptionCallback()
   {}
 
 private:
-  nsresult
-  GetSubscriptionParams(nsIPushSubscription* aSubscription,
-                        nsAString& aEndpoint,
-                        nsTArray<uint8_t>& aRawP256dhKey,
-                        nsTArray<uint8_t>& aSekrit)
-  {
-    if (!aSubscription) {
-      return NS_OK;
-    }
-
-    nsresult rv = aSubscription->GetEndpoint(aEndpoint);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    uint32_t keyLen;
-    uint8_t* key;
-    rv = aSubscription->GetKey(NS_LITERAL_STRING("p256dh"), &keyLen, &key);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    uint32_t authSecretLen;
-    uint8_t* authSecret;
-    rv = aSubscription->GetKey(NS_LITERAL_STRING("auth"), &authSecretLen,
-                               &authSecret);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    aRawP256dhKey.SetLength(keyLen);
-    aRawP256dhKey.ReplaceElementsAt(0, keyLen, key, keyLen);
-
-    aSekrit.SetLength(authSecretLen);
-    aSekrit.ReplaceElementsAt(0, authSecretLen, authSecret, authSecretLen);
-
-    return NS_OK;
-  }
-
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
 };
 
-NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushSubscriptionCallback)
+NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushEndpointCallback)
 
 class GetSubscriptionRunnable final : public nsRunnable
 {
@@ -709,35 +674,35 @@ public:
     PushPermissionState state;
     nsresult rv = GetPermissionState(principal, state);
     if (NS_FAILED(rv)) {
-      callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     if (state != PushPermissionState::Granted) {
       if (mAction == WorkerPushManager::GetSubscriptionAction) {
-        callback->OnPushSubscriptionError(NS_OK);
+        callback->OnPushEndpointError(NS_OK);
         return NS_OK;
       }
-      callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
-    nsCOMPtr<nsIPushService> service =
-      do_GetService("@mozilla.org/push/Service;1");
-    if (!service) {
-      callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPushClient> client =
+      do_CreateInstance("@mozilla.org/push/PushClient;1");
+    if (!client) {
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     if (mAction == WorkerPushManager::SubscribeAction) {
-      rv = service->Subscribe(mScope, principal, callback);
+      rv = client->Subscribe(mScope, principal, callback);
     } else {
       MOZ_ASSERT(mAction == WorkerPushManager::GetSubscriptionAction);
-      rv = service->GetSubscription(mScope, principal, callback);
+      rv = client->GetSubscription(mScope, principal, callback);
     }
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
+      callback->OnPushEndpointError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 

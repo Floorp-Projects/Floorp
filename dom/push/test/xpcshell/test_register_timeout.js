@@ -75,11 +75,8 @@ add_task(function* test_register_timeout() {
   });
 
   yield rejects(
-    PushService.register({
-      scope: 'https://example.net/page/timeout',
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-    }),
+    PushNotificationService.register('https://example.net/page/timeout',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     'Expected error for request timeout'
   );
 

@@ -75,11 +75,8 @@ add_task(function* test_register_rollback() {
 
   // Should return a rejected promise if storage fails.
   yield rejects(
-    PushService.register({
-      scope: 'https://example.com/storage-error',
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-    }),
+    PushNotificationService.register('https://example.com/storage-error',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     'Expected error for unregister database failure'
   );
 

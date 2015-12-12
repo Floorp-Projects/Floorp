@@ -53,11 +53,8 @@ add_task(function* test_register_no_id() {
   });
 
   yield rejects(
-    PushService.register({
-      scope: 'https://example.com/incomplete',
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-    }),
+    PushNotificationService.register('https://example.com/incomplete',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     'Expected error for incomplete register response'
   );
 
