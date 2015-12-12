@@ -647,12 +647,6 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                           mProxyOverTLS);
     }
 
-    // when proxies fail, try DIRECT
-    if (!pref || !strcmp(pref, PROXY_PREF("use_direct_on_fail"))) {
-        proxy_GetBoolPref(prefBranch, PROXY_PREF("use_direct_on_fail"),
-                          mFailoverToDirect);
-    }
-
     if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout")))
         proxy_GetIntPref(prefBranch, PROXY_PREF("failover_timeout"),
                          mFailedProxyTimeout);
@@ -1434,19 +1428,11 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
                                             nsresult       aStatus,
                                             nsIProxyInfo **aResult)
 {
-    if (mFailoverToDirect) {
-        if (mProxyConfig == PROXYCONFIG_DIRECT) {
-            return NS_ERROR_NOT_AVAILABLE;
-        }
-    } else {
-        // We only support failover when a PAC file is configured, either
-        // directly or via system settings
-        if (mProxyConfig != PROXYCONFIG_PAC &&
-            mProxyConfig != PROXYCONFIG_WPAD &&
-            mProxyConfig != PROXYCONFIG_SYSTEM) {
-            return NS_ERROR_NOT_AVAILABLE;
-        }
-    }
+    // We only support failover when a PAC file is configured, either
+    // directly or via system settings
+    if (mProxyConfig != PROXYCONFIG_PAC && mProxyConfig != PROXYCONFIG_WPAD &&
+        mProxyConfig != PROXYCONFIG_SYSTEM)
+        return NS_ERROR_NOT_AVAILABLE;
 
     // Verify that |aProxy| is one of our nsProxyInfo objects.
     nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(aProxy);
@@ -2050,24 +2036,23 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
             return;
     }
 
-    // Now, scan to the next proxy not disabled. If all proxies are disabled,
-    // return blank list to enforce a DIRECT rule.
+    // Now, scan to see if all remaining proxies are disabled.  If so, then
+    // we'll just bail and return them all.  Otherwise, we'll go and prune the
+    // disabled ones.
 
     bool allDisabled = true;
-    nsProxyInfo *iter;
 
-    if (!mFailoverToDirect) {
-        for (iter = head; iter; iter = iter->mNext) {
-            if (!IsProxyDisabled(iter)) {
-                allDisabled = false;
-                break;
-            }
+    nsProxyInfo *iter;
+    for (iter = head; iter; iter = iter->mNext) {
+        if (!IsProxyDisabled(iter)) {
+            allDisabled = false;
+            break;
         }
     }
 
-    if (!mFailoverToDirect && allDisabled) {
+    if (allDisabled)
         LOG(("All proxies are disabled, so trying all again"));
-    } else {
+    else {
         // remove any disabled proxies.
         nsProxyInfo *last = nullptr;
         for (iter = head; iter; ) {
@@ -2076,29 +2061,27 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
                 nsProxyInfo *reject = iter;
 
                 iter = iter->mNext;
-                if (last) {
+                if (last)
                     last->mNext = iter;
-                }
-            else
-                head = iter;
+                else
+                    head = iter;
 
                 reject->mNext = nullptr;
                 NS_RELEASE(reject);
                 continue;
             }
 
-            allDisabled = false;
+            // since we are about to use this proxy, make sure it is not on
+            // the disabled proxy list.  we'll add it back to that list if
+            // we have to (in GetFailoverForProxy).
+            //
+            // XXX(darin): It might be better to do this as a final pass.
+            //
             EnableProxy(iter);
 
             last = iter;
             iter = iter->mNext;
         }
-    }
-
-    if (mFailoverToDirect && allDisabled) {
-        LOG(("All proxies are disabled, try a DIRECT rule!"));
-        *list = nullptr;
-        return;
     }
 
     // if only DIRECT was specified then return no proxy info, and we're done.

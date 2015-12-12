@@ -194,9 +194,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     InitPopupMenuHook();
-    if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
-        SetUnityHooks();
-    }
+    InitSetCursorHook();
+    SetUnityHooks();
 #endif // OS_WIN
 }
 
@@ -1757,6 +1756,8 @@ PluginInstanceChild::HookSetWindowLongPtr()
 #endif
 }
 
+/* QUIRK_UNITY_FIXUP_MOUSE_CAPTURE */
+
 class SetCaptureHookData
 {
 public:
@@ -1890,7 +1891,7 @@ PluginInstanceChild::UnitySendMessageHookProc(int aCode, WPARAM aWparam,
     return CallNextHookEx(0, aCode, aWparam, aLParam);
 }
 
-/* windowless track popup menu helpers */
+/* QUIRK_WINLESS_TRACKPOPUP_HOOK */
 
 BOOL
 WINAPI
@@ -1989,6 +1990,38 @@ PluginInstanceChild::DestroyWinlessPopupSurrogate()
     if (mWinlessPopupSurrogateHWND)
         DestroyWindow(mWinlessPopupSurrogateHWND);
     mWinlessPopupSurrogateHWND = nullptr;
+}
+
+/* QUIRK_FLASH_FIXUP_MOUSE_CURSOR */
+
+typedef HCURSOR
+(WINAPI *User32SetCursor)(HCURSOR hCursor);
+static User32SetCursor sUser32SetCursorHookStub = nullptr;
+static bool sFlashChangedCursor;
+
+HCURSOR
+WINAPI
+PluginInstanceChild::SetCursorHookProc(HCURSOR hCursor)
+{
+    if (!sUser32SetCursorHookStub) {
+        NS_ERROR("SetCursor stub isn't set! Badness!");
+        return nullptr;
+    }
+    sFlashChangedCursor = true;
+    return sUser32SetCursorHookStub(hCursor);
+}
+
+
+void
+PluginInstanceChild::InitSetCursorHook()
+{
+  if (!(GetQuirks() & QUIRK_FLASH_FIXUP_MOUSE_CURSOR) ||
+      sUser32SetCursorHookStub) {
+      return;
+  }
+
+  sUser32Intercept.AddHook("SetCursor", reinterpret_cast<intptr_t>(SetCursorHookProc),
+                            (void**) &sUser32SetCursorHookStub);
 }
 
 int16_t
@@ -2175,9 +2208,22 @@ PluginInstanceChild::FlashThrottleAsyncMsg::Run()
     // ptrs around in FlashThrottleAsyncMsg msgs.
     if (!GetProc())
         return;
-  
-    // deliver the event to flash 
+
+    // Update the static cursor changed flag
+    sFlashChangedCursor = false;
+
+    // deliver the event to flash
     CallWindowProc(GetProc(), GetWnd(), GetMsg(), GetWParam(), GetLParam());
+
+    // Notify our parent that the cursor changed. It's possible for
+    // CallWindowProc to get wrapped up in message processing which
+    // might result in this code getting serviced by the wrong instance.
+    // In practice though this doesn't seem to happen even with multiple
+    // instances running in multiple windows.
+    if (!mWindowed && sFlashChangedCursor && mInstance) {
+        sFlashChangedCursor = false;
+        mInstance->SendPluginDidSetCursor();
+    }
 }
 
 void

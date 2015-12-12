@@ -337,6 +337,15 @@ public:
     mPromiseProxy->CleanUp(aCx);
     return true;
   }
+
+  void
+  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aSuccess) override
+  {
+    if (!aSuccess) {
+      mStatus.SuppressException();
+    }
+  }
 };
 
 class WorkerThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
@@ -989,6 +998,14 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
   if (aRv.Failed()) {
     return nullptr;
+  }
+
+  // Avoid infinite update loops by ignoring update() calls during top
+  // level script evaluation.  See:
+  // https://github.com/slightlyoff/ServiceWorker/issues/800
+  if (worker->LoadScriptAsPartOfLoadingServiceWorkerScript()) {
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    return promise.forget();
   }
 
   RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, promise);

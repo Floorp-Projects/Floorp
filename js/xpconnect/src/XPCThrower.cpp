@@ -78,6 +78,7 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
         format = "";
 
     sz = (char*) format;
+    NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)
         Verbosify(ccx, &sz, false);
@@ -119,6 +120,7 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
         sz = JS_smprintf("%s 0x%x (%s)", format, result, name);
     else
         sz = JS_smprintf("%s 0x%x", format, result);
+    NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)
         Verbosify(ccx, &sz, true);
@@ -140,6 +142,7 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
         format = "";
 
     sz = JS_smprintf("%s arg %d", format, paramNum);
+    NS_ENSURE_TRUE_VOID(sz);
 
     if (sz && sVerbose)
         Verbosify(ccx, &sz, true);

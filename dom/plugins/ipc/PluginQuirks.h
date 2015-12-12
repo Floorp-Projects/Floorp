@@ -58,6 +58,14 @@ enum PluginQuirks {
   QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 11,
   // Win: Addresses a Unity bug with mouse capture.
   QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 12,
+  // Win, Flash, windowless, e10s: Works around a bug where flash uses a
+  // delayed timer to update the cursor after a mouse move. If the mouse
+  // leaves a plugin frame associated with the plugin, the cursor may not
+  // get updated. With this quirk set, instances communicates cursor changes
+  // to the plugin frame, which reset cursor state caching on the PuppetWidget
+  // associated with the plugin. This in turn triggers cursor updates if the
+  // mouse is hovering over non-plugin content.
+  QUIRK_FLASH_FIXUP_MOUSE_CURSOR                  = 1 << 13,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,

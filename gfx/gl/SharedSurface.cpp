@@ -78,7 +78,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
                                                            dest->mSize,
                                                            true);
         } else {
-            MOZ_CRASH("Unhandled dest->mAttachType.");
+            MOZ_CRASH("GFX: Unhandled dest->mAttachType 1.");
         }
 
         if (srcNeedsUnlock)
@@ -123,7 +123,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
                                                            dest->mSize,
                                                            true);
         } else {
-            MOZ_CRASH("Unhandled src->mAttachType.");
+            MOZ_CRASH("GFX: Unhandled src->mAttachType 2.");
         }
 
         if (destNeedsUnlock)
@@ -163,7 +163,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             return;
         }
 
-        MOZ_CRASH("Unhandled dest->mAttachType.");
+        MOZ_CRASH("GFX: Unhandled dest->mAttachType 3.");
     }
 
     if (src->mAttachType == AttachmentType::GLRenderbuffer) {
@@ -190,10 +190,10 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             return;
         }
 
-        MOZ_CRASH("Unhandled dest->mAttachType.");
+        MOZ_CRASH("GFX: Unhandled dest->mAttachType 4.");
     }
 
-    MOZ_CRASH("Unhandled src->mAttachType.");
+    MOZ_CRASH("GFX: Unhandled src->mAttachType 5.");
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -470,7 +470,7 @@ ScopedReadbackFB::ScopedReadbackFB(SharedSurface* src)
             break;
         }
     default:
-        MOZ_CRASH("Unhandled `mAttachType`.");
+        MOZ_CRASH("GFX: Unhandled `mAttachType`.");
     }
 
     if (src->NeedsIndirectReads()) {

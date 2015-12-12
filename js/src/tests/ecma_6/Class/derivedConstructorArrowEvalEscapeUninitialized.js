@@ -1,5 +1,3 @@
-var test = `
-
 let superArrow;
 let thisArrow;
 
@@ -35,11 +33,6 @@ assertThrowsInstanceOf(superArrow, ReferenceError);
 
 // Oh look, |this| is populated, now.
 assertEq(thisArrow(), thisStash);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");
