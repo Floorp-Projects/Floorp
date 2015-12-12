@@ -16,10 +16,10 @@ let clearForPattern = Task.async(function* (testRecords, pattern) {
     let originSuffix = ChromeUtils.originAttributesToSuffix(
       test.originAttributes);
 
-    let registration = yield PushService.registration({
-      scope: test.scope,
-      originAttributes: originSuffix,
-    });
+    let registration = yield PushNotificationService.registration(
+      test.scope,
+      originSuffix
+    );
 
     let url = test.scope + originSuffix;
 
@@ -118,11 +118,10 @@ add_task(function* test_webapps_cleardata() {
   });
 
   yield Promise.all(testRecords.map(test =>
-    PushService.register({
-      scope: test.scope,
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        test.originAttributes),
-    })
+    PushNotificationService.register(
+      test.scope,
+      ChromeUtils.originAttributesToSuffix(test.originAttributes)
+    )
   ));
 
   // Removes records for all scopes with the same app ID. Excludes records

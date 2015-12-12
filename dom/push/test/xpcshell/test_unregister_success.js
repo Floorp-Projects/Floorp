@@ -53,10 +53,8 @@ add_task(function* test_unregister_success() {
     }
   });
 
-  yield PushService.unregister({
-    scope: 'https://example.com/page/unregister-success',
-    originAttributes: '',
-  });
+  yield PushNotificationService.unregister(
+    'https://example.com/page/unregister-success', '');
   let record = yield db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 

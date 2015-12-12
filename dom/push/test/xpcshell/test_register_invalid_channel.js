@@ -48,11 +48,8 @@ add_task(function* test_register_invalid_channel() {
   });
 
   yield rejects(
-    PushService.register({
-      scope: 'https://example.com/invalid-channel',
-      originAttributes: ChromeUtils.originAttributesToSuffix(
-        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-    }),
+    PushNotificationService.register('https://example.com/invalid-channel',
+      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
     'Expected error for invalid channel ID'
   );
 
