@@ -179,6 +179,21 @@ public class testInputConnection extends UITest {
             ic.deleteSurroundingText(1, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
+            // Bug 1051556, exception due to committing text changes during flushing.
+            ic.setComposingText("bad", 1);
+            assertTextAndSelectionAt("Can set the composing text", ic, "bad", 3);
+            js.asyncCall("test_reflush_changes");
+            // Wait for text change notifications to come in.
+            processGeckoEvents(ic);
+            assertTextAndSelectionAt("Can re-flush text changes", ic, "good", 4);
+            ic.setComposingText("done", 1);
+            assertTextAndSelectionAt("Can update composition after re-flushing", ic, "done", 4);
+            ic.finishComposingText();
+            assertTextAndSelectionAt("Can finish composing text", ic, "done", 4);
+
+            ic.deleteSurroundingText(4, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents(ic);
             processInputConnectionEvents();
