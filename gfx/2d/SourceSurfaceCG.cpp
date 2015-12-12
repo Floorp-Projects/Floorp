@@ -105,7 +105,7 @@ CreateCGImage(CGDataProviderReleaseDataCallback aCallback,
       break;
 
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: CreateCGImage");
   }
 
   size_t bufLen = BufferSizeFromStrideAndHeight(aStride, aSize.height);

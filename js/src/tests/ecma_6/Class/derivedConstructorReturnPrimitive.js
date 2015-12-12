@@ -1,5 +1,3 @@
-var test = `
-
 class foo extends null {
     constructor() {
         // Returning a primitive is a TypeError in derived constructors. This
@@ -12,11 +10,6 @@ class foo extends null {
 
 for (let i = 0; i < 1100; i++)
     assertThrownErrorContains(() => new foo(), "return");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

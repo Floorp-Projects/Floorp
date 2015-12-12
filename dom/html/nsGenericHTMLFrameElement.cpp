@@ -192,6 +192,35 @@ nsGenericHTMLFrameElement::GetFrameLoader()
 }
 
 NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetParentApplication(mozIApplication** aApplication)
+{
+  if (!aApplication) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aApplication = nullptr;
+
+  uint32_t appId;
+  nsIPrincipal *principal = NodePrincipal();
+  nsresult rv = principal->GetAppId(&appId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!appsService)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = appsService->GetAppByLocalId(appId, aApplication);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
 {
   // We don't support this yet

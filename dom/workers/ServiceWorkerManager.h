@@ -57,6 +57,15 @@ class ServiceWorkerRegistrationInfo final
 {
   uint32_t mControlledDocumentsCounter;
 
+  enum
+  {
+    NoUpdate,
+    NeedTimeCheckAndUpdate,
+    NeedUpdate
+  } mUpdateState;
+
+  uint64_t mLastUpdateCheckTime;
+
   virtual ~ServiceWorkerRegistrationInfo();
 
 public:
@@ -64,9 +73,6 @@ public:
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
   nsCString mScope;
-  // The scriptURL for the registration. This may be completely different from
-  // the URLs of the following three workers.
-  nsCString mScriptSpec;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
@@ -75,8 +81,6 @@ public:
   RefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
-
-  uint64_t mLastUpdateCheckTime;
 
   // According to the spec, Soft Update shouldn't queue an update job
   // if the registration queue is not empty. Because our job queue
@@ -93,7 +97,7 @@ public:
                                 nsIPrincipal* aPrincipal);
 
   already_AddRefed<ServiceWorkerInfo>
-  Newest()
+  Newest() const
   {
     RefPtr<ServiceWorkerInfo> newest;
     if (mInstallingWorker) {
@@ -152,6 +156,15 @@ public:
 
   void
   NotifyListenersOnChange();
+
+  void
+  MaybeScheduleTimeCheckAndUpdate();
+
+  void
+  MaybeScheduleUpdate();
+
+  bool
+  CheckAndClearIfUpdateNeeded();
 };
 
 class ServiceWorkerUpdateFinishCallback
@@ -316,8 +329,10 @@ class ServiceWorkerManager final
   friend class ServiceWorkerInstallJob;
   friend class ServiceWorkerRegisterJob;
   friend class ServiceWorkerJobBase;
+  friend class ServiceWorkerScriptJobBase;
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
+  friend class UpdateTimerCallback;
 
 public:
   NS_DECL_ISUPPORTS
@@ -480,6 +495,10 @@ public:
   NS_IMETHOD
   RemoveRegistrationEventListener(const nsAString& aScope,
                                   ServiceWorkerRegistrationListener* aListener);
+
+  void
+  MaybeCheckNavigationUpdate(nsIDocument* aDoc);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -658,6 +677,12 @@ private:
   void
   RemoveNavigationInterception(const nsACString& aScope,
                                nsIInterceptedChannel* aChannel);
+
+  void
+  ScheduleUpdateTimer(nsIPrincipal* aPrincipal, const nsACString& aScope);
+
+  void
+  UpdateTimerFired(nsIPrincipal* aPrincipal, const nsACString& aScope);
 };
 
 } // namespace workers

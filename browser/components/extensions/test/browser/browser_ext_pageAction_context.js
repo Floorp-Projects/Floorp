@@ -226,12 +226,12 @@ add_task(function* testTabSwitchContext() {
   yield extension.unload();
 
   let node = document.getElementById(pageActionId);
-  is(node, undefined, "pageAction image removed from document");
+  is(node, null, "pageAction image removed from document");
 
   currentWindow = null;
   for (let win of windows.splice(0)) {
     node = win.document.getElementById(pageActionId);
-    is(node, undefined, "pageAction image removed from second document");
+    is(node, null, "pageAction image removed from second document");
 
     yield BrowserTestUtils.closeWindow(win);
   }

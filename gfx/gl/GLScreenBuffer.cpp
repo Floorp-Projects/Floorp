@@ -172,7 +172,7 @@ GLScreenBuffer::BindAsFramebuffer(GLContext* const gl, GLenum target) const
         break;
 
     default:
-        MOZ_CRASH("Bad `target` for BindFramebuffer.");
+        MOZ_CRASH("GFX: Bad `target` for BindFramebuffer.");
     }
 }
 
@@ -443,7 +443,7 @@ GLScreenBuffer::AssureBlitted()
         } else if (mGL->IsExtensionSupported(GLContext::APPLE_framebuffer_multisample)) {
             mGL->fResolveMultisampleFramebufferAPPLE();
         } else {
-            MOZ_CRASH("No available blit methods.");
+            MOZ_CRASH("GFX: No available blit methods.");
         }
         // Done!
     }
@@ -657,7 +657,7 @@ GLScreenBuffer::SetDrawBuffer(GLenum mode)
         break;
 
     default:
-        MOZ_CRASH("Bad value.");
+        MOZ_CRASH("GFX: Bad value.");
     }
 
     mGL->MakeCurrent();
@@ -894,7 +894,7 @@ ReadBuffer::Create(GLContext* gl,
         colorRB = surf->ProdRenderbuffer();
         break;
     default:
-        MOZ_CRASH("Unknown attachment type?");
+        MOZ_CRASH("GFX: Unknown attachment type, create?");
     }
     MOZ_ASSERT(colorTex || colorRB);
 
@@ -952,7 +952,7 @@ ReadBuffer::Attach(SharedSurface* surf)
             colorRB = surf->ProdRenderbuffer();
             break;
         default:
-            MOZ_CRASH("Unknown attachment type?");
+            MOZ_CRASH("GFX: Unknown attachment type, attach?");
         }
 
         mGL->AttachBuffersToFB(colorTex, colorRB, 0, 0, mFB, target);
@@ -989,7 +989,7 @@ ReadBuffer::SetReadBuffer(GLenum userMode) const
         break;
 
     default:
-        MOZ_CRASH("Bad value.");
+        MOZ_CRASH("GFX: Bad value.");
     }
 
     mGL->MakeCurrent();

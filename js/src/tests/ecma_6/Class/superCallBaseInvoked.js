@@ -1,5 +1,3 @@
-var test = `
-
 function testBase(base) {
     class instance extends base {
         constructor(inst, one) {
@@ -52,11 +50,6 @@ testBase(p);
 
 handler.construct = (target, args, nt) => Reflect.construct(target, args, nt);
 testBase(p);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

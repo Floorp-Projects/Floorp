@@ -1,7 +1,4 @@
 // Super property accesses should play nice with the pretty printer.
-
-var test = `
-
 class testNonExistent {
     constructor() {
         super["prop"]();
@@ -15,11 +12,6 @@ assertThrownErrorContains(() => ol.testNonExistent(), "super.prop");
 
 var olElem = { testNonExistent() { var prop = "prop"; super[prop](); } };
 assertThrownErrorContains(() => olElem.testNonExistent(), "super[prop]");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

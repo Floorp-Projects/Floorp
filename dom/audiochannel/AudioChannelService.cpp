@@ -14,6 +14,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
@@ -219,6 +220,7 @@ AudioChannelService::Shutdown()
 
     gAudioChannelService->mWindows.Clear();
     gAudioChannelService->mPlayingChildren.Clear();
+    gAudioChannelService->mTabParents.Clear();
 #ifdef MOZ_WIDGET_GONK
     gAudioChannelService->mSpeakerManager.Clear();
 #endif
@@ -339,6 +341,21 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
   }
 
   MaybeSendStatusUpdate();
+}
+
+void
+AudioChannelService::RegisterTabParent(TabParent* aTabParent)
+{
+  MOZ_ASSERT(aTabParent);
+  MOZ_ASSERT(!mTabParents.Contains(aTabParent));
+  mTabParents.AppendElement(aTabParent);
+}
+
+void
+AudioChannelService::UnregisterTabParent(TabParent* aTabParent)
+{
+  MOZ_ASSERT(aTabParent);
+  mTabParents.RemoveElement(aTabParent);
 }
 
 void
@@ -561,6 +578,32 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void
+AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
+                                                     nsPIDOMWindow* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsOuterWindow());
+
+  nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
+  if (!topWindow) {
+    return;
+  }
+
+  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
+  if (!winData) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < mTabParents.Length(); ++i) {
+    mTabParents[i]->AudioChannelChangeNotification(aWindow, aAudioChannel,
+                                                   winData->mChannels[(uint32_t)aAudioChannel].mVolume,
+                                                   winData->mChannels[(uint32_t)aAudioChannel].mMuted);
+  }
+
+  RefreshAgentsVolume(aWindow);
+}
+
+void
 AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
 {
   MOZ_ASSERT(aWindow);
@@ -751,7 +794,7 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindow* aWindow,
 
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
-  RefreshAgentsVolume(aWindow);
+  RefreshAgentsVolumeAndPropagate(aAudioChannel, aWindow);
 }
 
 NS_IMETHODIMP
@@ -814,7 +857,7 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindow* aWindow,
 
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mMuted = aMuted;
-  RefreshAgentsVolume(aWindow);
+  RefreshAgentsVolumeAndPropagate(aAudioChannel, aWindow);
 }
 
 NS_IMETHODIMP

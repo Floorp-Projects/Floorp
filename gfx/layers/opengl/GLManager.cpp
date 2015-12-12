@@ -6,7 +6,6 @@
 #include "GLManager.h"
 #include "CompositorOGL.h"              // for CompositorOGL
 #include "GLContext.h"                  // for GLContext
-#include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/Compositor.h"  // for Compositor
