@@ -4,22 +4,36 @@
     <title>Robocop Input</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
-  <body onload="fillInput()">
+  <body>
     <p><input id="input" type="text"></p>
     <p><input id="resetting-input" type="text"></p>
-    <script>
-      function fillInput() {
-        // fill the input with the URL hash if provided
-        var input = document.getElementById("input");
-        input.value = window.location.hash.slice(1); // remove leading #
-        input.focus();
+    <script type="application/javascript;version=1.8" src="robocop_head.js"></script>
+    <script type="application/javascript;version=1.8">
+      let input = document.getElementById("input");
 
-        // An input that resets the editor on every input by resetting the value property.
-        var resetting_input = document.getElementById("resetting-input");
-        resetting_input.addEventListener('input', function () {
-            this.value = this.value;
-        });
-      }
+      // An input that resets the editor on every input by resetting the value property.
+      let resetting_input = document.getElementById("resetting-input");
+      resetting_input.addEventListener('input', function () {
+          this.value = this.value;
+      });
+
+      let test = {
+        focus_input: function(val) {
+          input.value = val;
+          input.focus();
+        },
+
+        focus_resetting_input: function(val) {
+          resetting_input.value = val;
+          resetting_input.focus();
+        },
+
+        finish_test: function() {
+          java.disconnect();
+        },
+      };
+
+      var java = new JavaBridge(test);
     </script>
   </body>
 </html>
