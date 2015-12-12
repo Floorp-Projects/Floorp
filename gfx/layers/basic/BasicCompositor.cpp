@@ -148,7 +148,7 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
                                               const CompositingRenderTarget *aSource,
                                               const IntPoint &aSourcePoint)
 {
-  MOZ_CRASH("Shouldn't be called!");
+  MOZ_CRASH("GFX: Shouldn't be called!");
   return nullptr;
 }
 

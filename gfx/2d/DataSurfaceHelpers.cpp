@@ -21,7 +21,7 @@ DataAtOffset(DataSourceSurface* aSurface,
              IntPoint aPoint)
 {
   if (!SurfaceContainsPoint(aSurface, aPoint)) {
-    MOZ_CRASH("sample position needs to be inside surface!");
+    MOZ_CRASH("GFX: sample position needs to be inside surface!");
   }
 
   MOZ_ASSERT(Factory::CheckSurfaceSize(aSurface->GetSize()),
@@ -31,7 +31,7 @@ DataAtOffset(DataSourceSurface* aSurface,
     aPoint.x * BytesPerPixel(aSurface->GetFormat());
 
   if (data < aMap->mData) {
-    MOZ_CRASH("out-of-range data access");
+    MOZ_CRASH("GFX: out-of-range data access");
   }
 
   return data;
@@ -238,7 +238,7 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
 {
   if (aSrcRect.Overflows() ||
       IntRect(aDestPoint, aSrcRect.Size()).Overflows()) {
-    MOZ_CRASH("we should never be getting invalid rects at this point");
+    MOZ_CRASH("GFX: we should never be getting invalid rects at this point");
   }
 
   MOZ_RELEASE_ASSERT(aSrc->GetFormat() == aDest->GetFormat(),

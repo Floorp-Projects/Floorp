@@ -1094,7 +1094,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     MOZ_ASSERT(mutex);
     HRESULT hr = mutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: D3D11 timeout");
     }
 
     mutex->ReleaseSync(0);
@@ -1518,7 +1518,7 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
   }
 
   if (aSeverity == Critical) {
-    MOZ_CRASH("Unrecoverable D3D11 error");
+    MOZ_CRASH("GFX: Unrecoverable D3D11 error");
   }
 
   if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {

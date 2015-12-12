@@ -15,28 +15,23 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-function classSyntax(code)
-{
-  return classesEnabled() ? "(class { constructor() {} " + code + " });" : "@";
-}
-
 function memberVariants(code)
 {
-  return [classesEnabled() ? "(class { constructor() {} " + code + " });" : "@",
+  return ["(class { constructor() {} " + code + " });",
           "({ " + code + " })"];
 }
 
 var badScripts =
   [
-   classSyntax("st\\u0061tic m() { return 0; }"),
-   classSyntax("st\\u0061tic get foo() { return 0; }"),
-   classSyntax("st\\u0061tic set foo(v) {}"),
-   classSyntax("st\\u0061tic get ['hi']() { return 0; }"),
-   classSyntax("st\\u0061tic set ['hi'](v) {}"),
-   classSyntax("st\\u0061tic get 'hi'() { return 0; }"),
-   classSyntax("st\\u0061tic set 'hi'(v) {}"),
-   classSyntax("st\\u0061tic get 42() { return 0; }"),
-   classSyntax("st\\u0061tic set 42(v) {}"),
+   "class { st\\u0061tic m() { return 0; } }",
+   "class { st\\u0061tic get foo() { return 0; } }",
+   "class { st\\u0061tic set foo(v) {} }",
+   "class { st\\u0061tic get ['hi']() { return 0; } }",
+   "class { st\\u0061tic set ['hi'](v) {} }",
+   "class { st\\u0061tic get 'hi'() { return 0; } }",
+   "class { st\\u0061tic set 'hi'(v) {} }",
+   "class { st\\u0061tic get 42() { return 0; } }",
+   "class { st\\u0061tic set 42(v) {} }",
    ...memberVariants("\\u0067et foo() { return 0; }"),
    ...memberVariants("\\u0073et foo() {}"),
    ...memberVariants("g\\u0065t foo() { return 0; }"),

@@ -1111,11 +1111,20 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
             if (negativeDivisor)
                 masm.negl(lhs);
         }
-    } else if (shift == 0 && negativeDivisor) {
-        // INT32_MIN / -1 overflows.
-        masm.negl(lhs);
-        if (!mir->isTruncated())
-            bailoutIf(Assembler::Overflow, ins->snapshot());
+    } else if (shift == 0) {
+        if (negativeDivisor) {
+            // INT32_MIN / -1 overflows.
+            masm.negl(lhs);
+            if (!mir->isTruncated())
+                bailoutIf(Assembler::Overflow, ins->snapshot());
+        }
+
+        else if (mir->isUnsigned() && !mir->isTruncated()) {
+            // Unsigned division by 1 can overflow if output is not
+            // truncated.
+            masm.test32(lhs, lhs);
+            bailoutIf(Assembler::Signed, ins->snapshot());
+        }
     }
 }
 

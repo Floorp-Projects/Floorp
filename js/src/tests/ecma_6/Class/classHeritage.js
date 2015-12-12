@@ -1,12 +1,10 @@
-var test = `
-
 // It's an error to have a non-constructor as your heritage
-assertThrowsInstanceOf(() => eval(\`class a extends Math.sin {
+assertThrowsInstanceOf(() => eval(`class a extends Math.sin {
                                         constructor() { }
-                                    }\`), TypeError);
-assertThrowsInstanceOf(() => eval(\`(class a extends Math.sin {
+                                    }`), TypeError);
+assertThrowsInstanceOf(() => eval(`(class a extends Math.sin {
                                         constructor() { }
-                                    })\`), TypeError);
+                                    })`), TypeError);
 
 // Unless it's null, in which case it works like a normal class, except that
 // the prototype object does not inherit from Object.prototype.
@@ -94,11 +92,6 @@ function stillNoExpr() {
 }
 assertThrowsInstanceOf(stillNo, TypeError);
 assertThrowsInstanceOf(stillNoExpr, TypeError);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

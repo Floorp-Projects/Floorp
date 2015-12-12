@@ -1,5 +1,3 @@
-var test = `
-
 class func extends Function { }
 let inst = new func("x", "return this.bar + x");
 
@@ -14,11 +12,6 @@ Object.setPrototypeOf(inst, null);
 bound = Function.prototype.bind.call(inst, {bar:1}, 3);
 assertEq(Object.getPrototypeOf(bound), null);
 assertEq(bound(), 4);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

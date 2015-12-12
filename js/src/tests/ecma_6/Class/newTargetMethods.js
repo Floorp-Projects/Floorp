@@ -1,5 +1,3 @@
-var test = `
-
 // Just like newTargetDirectInvoke, except to prove it works in functions
 // defined with method syntax as well. Note that methods, getters, and setters
 // are not constructible.
@@ -48,10 +46,6 @@ for (let i = 0; i < TEST_ITERATIONS; i++)
     clInst.cl;
 for (let i = 0; i < TEST_ITERATIONS; i++)
     clInst.cl = 4;
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0,0,"OK");

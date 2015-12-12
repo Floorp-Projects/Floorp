@@ -325,7 +325,7 @@ add_task(function* testDefaultDetails() {
     yield extension.unload();
 
     let node = document.getElementById(pageActionId);
-    is(node, undefined, "pageAction image removed from document");
+    is(node, null, "pageAction image removed from document");
   }
 });
 

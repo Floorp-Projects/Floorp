@@ -1,5 +1,3 @@
-var test = `
-
 function base() { this.prop = 42; }
 
 class testInitialize extends base {
@@ -42,11 +40,6 @@ class canCatchThrow extends base {
     }
 }
 assertEq(new canCatchThrow().prop, 42);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

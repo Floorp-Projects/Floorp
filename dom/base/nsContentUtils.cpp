@@ -162,6 +162,7 @@
 #include "nsIURIWithPrincipal.h"
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
+#include "nsIWindowMediator.h"
 #include "nsIWordBreaker.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -5165,6 +5166,23 @@ nsContentUtils::GetWindowProviderForContentProcess()
 {
   MOZ_ASSERT(XRE_IsContentProcess());
   return ContentChild::GetSingleton();
+}
+
+/* static */
+already_AddRefed<nsPIDOMWindow>
+nsContentUtils::GetMostRecentNonPBWindow()
+{
+  nsCOMPtr<nsIWindowMediator> windowMediator =
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+  nsCOMPtr<nsIWindowMediator_44> wm = do_QueryInterface(windowMediator);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  wm->GetMostRecentNonPBWindow(MOZ_UTF16("navigator:browser"),
+                               getter_AddRefs(window));
+  nsCOMPtr<nsPIDOMWindow> pwindow;
+  pwindow = do_QueryInterface(window);
+
+  return pwindow.forget();
 }
 
 /* static */

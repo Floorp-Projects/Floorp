@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     constructor() { }
 }
@@ -40,11 +38,6 @@ class derived extends base {
 let d = new derived();
 d.testProps();
 d.testElems();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

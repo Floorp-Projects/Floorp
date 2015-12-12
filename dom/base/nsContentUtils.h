@@ -1666,6 +1666,11 @@ public:
   static nsIWindowProvider*
   GetWindowProviderForContentProcess();
 
+  // Returns the browser window with the most recent time stamp that is
+  // not in private browsing mode.
+  static already_AddRefed<nsPIDOMWindow>
+  GetMostRecentNonPBWindow();
+
   /**
    * Call this function if !IsSafeToRunScript() and we fail to run the script
    * (rather than using AddScriptRunner as we usually do). |aDocument| is
