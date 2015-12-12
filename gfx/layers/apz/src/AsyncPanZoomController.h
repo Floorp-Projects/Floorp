@@ -867,7 +867,8 @@ private:
   // later in the handoff chain, or if there are no takers, continuing the
   // fling and entering an overscrolled state.
   void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                             const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 

@@ -143,6 +143,11 @@ struct FlingHandoffState {
   // Whether handoff has happened by this point, or we're still process
   // the original fling.
   bool mIsHandoff;
+
+  // The single APZC that was scrolled by the pan that started this fling.
+  // The fling is only allowed to scroll this APZC, too.
+  // Used only if immediate scroll handoff is disallowed.
+  RefPtr<const AsyncPanZoomController> mScrolledApzc;
 };
 
 } // namespace layers
