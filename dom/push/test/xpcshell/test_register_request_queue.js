@@ -45,16 +45,14 @@ add_task(function* test_register_request_queue() {
     }
   });
 
-  let firstRegister = PushService.register({
-    scope: 'https://example.com/page/1',
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-  });
-  let secondRegister = PushService.register({
-    scope: 'https://example.com/page/1',
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-  });
+  let firstRegister = PushNotificationService.register(
+    'https://example.com/page/1',
+    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+  );
+  let secondRegister = PushNotificationService.register(
+    'https://example.com/page/1',
+    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+  );
 
   yield waitForPromise(Promise.all([
     rejects(firstRegister, 'Should time out the first request'),

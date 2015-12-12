@@ -6,7 +6,8 @@
 EXTRA_COMPONENTS += [
     'Push.js',
     'Push.manifest',
-    'PushComponents.js',
+    'PushClient.js',
+    'PushNotificationService.js',
 ]
 
 EXTRA_JS_MODULES += [

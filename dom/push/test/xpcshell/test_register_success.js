@@ -56,12 +56,11 @@ add_task(function* test_register_success() {
     }
   });
 
-  let newRecord = yield PushService.register({
-    scope: 'https://example.org/1',
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
-  });
-  equal(newRecord.endpoint, 'https://example.com/update/1',
+  let newRecord = yield PushNotificationService.register(
+    'https://example.org/1',
+    ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
+  );
+  equal(newRecord.pushEndpoint, 'https://example.com/update/1',
     'Wrong push endpoint in registration record');
 
   let record = yield db.getByKeyID(channelID);
@@ -69,6 +68,6 @@ add_task(function* test_register_success() {
     'Wrong channel ID in database record');
   equal(record.pushEndpoint, 'https://example.com/update/1',
     'Wrong push endpoint in database record');
-  equal(record.quota, 16,
+  equal(record.quota, Infinity,
     'Wrong quota in database record');
 });
