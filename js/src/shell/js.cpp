@@ -12,6 +12,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #ifdef XP_WIN
 # include <direct.h>
@@ -1420,9 +1421,9 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         if (loadBytecode && assertEqBytecode) {
             if (saveLength != loadLength) {
                 char loadLengthStr[16];
-                JS_snprintf(loadLengthStr, sizeof(loadLengthStr), "%u", loadLength);
+                JS_snprintf(loadLengthStr, sizeof(loadLengthStr), "%" PRIu32, loadLength);
                 char saveLengthStr[16];
-                JS_snprintf(saveLengthStr, sizeof(saveLengthStr), "%u", saveLength);
+                JS_snprintf(saveLengthStr, sizeof(saveLengthStr), "%" PRIu32, saveLength);
 
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
                                      loadLengthStr, saveLengthStr);
