@@ -574,7 +574,6 @@ static const char* kPinset_twitterCom_sha256_Data[] = {
   kGeoTrust_Universal_CAFingerprint,
   kGeoTrust_Primary_Certification_Authority___G3Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
-  kVerisign_Class_3_Public_Primary_Certification_AuthorityFingerprint,
   kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
 };
 static const StaticFingerprints kPinset_twitterCom_sha256 = {
@@ -634,7 +633,6 @@ static const char* kPinset_twitterCDN_sha256_Data[] = {
   kGOOGLE_PIN_Entrust_SSLFingerprint,
   kGeoTrust_Primary_Certification_Authority___G3Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
-  kVerisign_Class_3_Public_Primary_Certification_AuthorityFingerprint,
   kGeoTrust_Primary_Certification_Authority___G2Fingerprint,
   kComodo_AAA_Services_rootFingerprint,
   kAddTrust_Qualified_Certificates_RootFingerprint,
@@ -1227,4 +1225,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1457783716013000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1458388670842000);
