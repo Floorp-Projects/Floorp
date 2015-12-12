@@ -1417,6 +1417,14 @@ void
 APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
                                FlingHandoffState& aHandoffState)
 {
+  // If immediate handoff is disallowed, do not allow handoff beyond the
+  // single APZC that's scrolled by the input block that triggered this fling.
+  if (aHandoffState.mIsHandoff &&
+      !gfxPrefs::APZAllowImmediateHandoff() &&
+      aHandoffState.mScrolledApzc == aPrev) {
+    return;
+  }
+
   const OverscrollHandoffChain* chain = aHandoffState.mChain;
   RefPtr<AsyncPanZoomController> current;
   uint32_t overscrollHandoffChainLength = chain->Length();
