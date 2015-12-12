@@ -39,7 +39,7 @@ static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 60000;
 
 namespace mozilla {
 
-// The amount of instability we tollerate in calls to
+// The amount of instability we tolerate in calls to
 // MediaDecoder::UpdateEstimatedMediaDuration(); changes of duration
 // less than this are ignored, as they're assumed to be the result of
 // instability in the duration estimation.
@@ -1649,13 +1649,11 @@ MediaDecoder::IsWaveEnabled()
 }
 #endif
 
-#ifdef MOZ_WEBM
 bool
 MediaDecoder::IsWebMEnabled()
 {
   return Preferences::GetBool("media.webm.enabled");
 }
-#endif
 
 #ifdef NECKO_PROTOCOL_rtsp
 bool
