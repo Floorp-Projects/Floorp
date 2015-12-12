@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "JobScheduler.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
@@ -270,7 +271,7 @@ WorkerThread::Run()
     if (status == JobStatus::Error) {
       // Don't try to handle errors for now, but that's open to discussions.
       // I expect errors to be mostly OOM issues.
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::JobStatusError) << "Invalid job status " << (int)status;
     }
   }
 }

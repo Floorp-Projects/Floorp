@@ -189,7 +189,8 @@ DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
   if (aMapType == MapType::READ) {
     options = D2D1_MAP_OPTIONS_READ;
   } else {
-    MOZ_CRASH("No support for Write maps on D2D1 DataSourceSurfaces yet!");
+    gfxDevCrash(LogReason::D2D1NoWriteMap) << "No support for Write maps on D2D1 DataSourceSurfaces yet!";
+    return false;
   }
 
   D2D1_MAPPED_RECT map;

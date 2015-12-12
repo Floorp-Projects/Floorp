@@ -1,15 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell)
 // Classes
-function classesEnabled() {
-    try {
-        Reflect.parse("class foo { constructor() { } }");
-        return true;
-    } catch (e) {
-        assertEq(e instanceof SyntaxError, true);
-        return false;
-    }
-}
-
 function testClasses() {
     function methodFun(id, kind, generator, args, body = []) {
         assertEq(generator && kind === "method", generator);
@@ -509,7 +499,4 @@ function testClasses() {
 
 }
 
-if (classesEnabled())
-    runtest(testClasses);
-else if (typeof reportCompare === 'function')
-    reportCompare(true, true);
+runtest(testClasses);

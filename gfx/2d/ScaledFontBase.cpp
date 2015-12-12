@@ -165,7 +165,7 @@ ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBu
   }
 #endif
 
-  MOZ_CRASH("The specified backend type is not supported by CopyGlyphsToBuilder");
+  MOZ_CRASH("GFX: The specified backend type is not supported by CopyGlyphsToBuilder");
 }
 
 #ifdef USE_CAIRO_SCALED_FONT

@@ -25,7 +25,7 @@ class nsIWindowMediatorListener;
 struct nsWindowInfo;
 
 class nsWindowMediator :
-  public nsIWindowMediator,
+  public nsIWindowMediator_44,
   public nsIObserver,
   public nsSupportsWeakReference
 {
@@ -47,6 +47,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWMEDIATOR
+  NS_DECL_NSIWINDOWMEDIATOR_44
   NS_DECL_NSIOBSERVER
 
   static nsresult GetDOMWindow(nsIXULWindow* inWindow,
@@ -55,7 +56,8 @@ public:
 private:
   int32_t AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   int32_t RemoveEnumerator(nsAppShellWindowEnumerator* inEnumerator);
-  nsWindowInfo *MostRecentWindowInfo(const char16_t* inType);
+  nsWindowInfo* MostRecentWindowInfo(const char16_t* inType,
+                                     bool aSkipPrivateBrowsingOrClosed = false);
 
   nsresult      UnregisterWindow(nsWindowInfo *inInfo);
   nsWindowInfo *GetInfoFor(nsIXULWindow *aWindow);

@@ -148,7 +148,6 @@
 #include "nsISystemMessagesInternal.h"
 #include "nsITimer.h"
 #include "nsIURIFixup.h"
-#include "nsIWindowMediator.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
 #include "nsIDOMChromeWindow.h"
@@ -270,6 +269,11 @@ using namespace mozilla::system;
 #endif
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
+
+#if defined(XP_WIN)
+// e10s forced enable pref, defined in nsAppRunner.cpp
+extern const char* kForceEnableE10sPref;
+#endif
 
 using base::ChildPrivileges;
 using base::KillProcess;
@@ -1555,7 +1559,15 @@ ContentParent::Init()
     // If accessibility is running in chrome process then start it in content
     // process.
     if (nsIPresShell::IsAccessibilityActive()) {
+#if !defined(XP_WIN)
         Unused << SendActivateA11y();
+#else
+        // On Windows we currently only enable a11y in the content process
+        // for testing purposes.
+        if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+            Unused << SendActivateA11y();
+        }
+#endif
     }
 #endif
 
@@ -3334,7 +3346,15 @@ ContentParent::Observe(nsISupports* aSubject,
     // gets initiated in chrome process.
     else if (aData && (*aData == '1') &&
              !strcmp(aTopic, "a11y-init-or-shutdown")) {
+#if !defined(XP_WIN)
         Unused << SendActivateA11y();
+#else
+        // On Windows we currently only enable a11y in the content process
+        // for testing purposes.
+        if (Preferences::GetBool(kForceEnableE10sPref, false)) {
+            Unused << SendActivateA11y();
+        }
+#endif
     }
 #endif
     else if (!strcmp(aTopic, "app-theme-changed")) {
@@ -5389,34 +5409,6 @@ ContentParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumen
   return true;
 }
 
-static already_AddRefed<nsPIDOMWindow>
-FindMostRecentOpenWindow()
-{
-    nsCOMPtr<nsIWindowMediator> windowMediator =
-        do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-    windowMediator->GetEnumerator(MOZ_UTF16("navigator:browser"),
-                                  getter_AddRefs(windowEnumerator));
-
-    nsCOMPtr<nsPIDOMWindow> latest;
-
-    bool hasMore = false;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->HasMoreElements(&hasMore)));
-    while (hasMore) {
-        nsCOMPtr<nsISupports> item;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->GetNext(getter_AddRefs(item))));
-        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(item);
-
-        if (window && !window->Closed()) {
-            latest = window;
-        }
-
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(windowEnumerator->HasMoreElements(&hasMore)));
-    }
-
-    return latest.forget();
-}
-
 bool
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
@@ -5490,7 +5482,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     // If we haven't found a chrome window to open in, just use the most recently
     // opened one.
     if (!parent) {
-        parent = FindMostRecentOpenWindow();
+        parent = nsContentUtils::GetMostRecentNonPBWindow();
         if (NS_WARN_IF(!parent)) {
             *aResult = NS_ERROR_FAILURE;
             return true;

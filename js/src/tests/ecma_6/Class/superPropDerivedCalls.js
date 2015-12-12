@@ -1,5 +1,3 @@
-var test = `
-
 let derivedInstance;
 
 class base {
@@ -74,11 +72,6 @@ derivedInstance = new derived();
 derivedInstance.test();
 derivedInstance.testInEval();
 derivedInstance.testInArrow();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

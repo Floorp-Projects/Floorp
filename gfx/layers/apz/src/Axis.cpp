@@ -194,7 +194,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
       nsPrintfCString message("composition end (%f) is not equal (within error) to page end (%f)\n",
                               GetCompositionEnd().value, GetPageEnd().value);
       NS_ASSERTION(false, message.get());
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Overscroll issue > 0");
     }
 #endif
     MOZ_ASSERT(mOverscroll >= 0);
@@ -204,7 +204,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
       nsPrintfCString message("composition origin (%f) is not equal (within error) to page origin (%f)\n",
                               GetOrigin().value, GetPageStart().value);
       NS_ASSERTION(false, message.get());
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Overscroll issue < 0");
     }
 #endif
     MOZ_ASSERT(mOverscroll <= 0);
@@ -221,7 +221,7 @@ ParentLayerCoord Axis::GetOverscroll() const {
     nsPrintfCString message("GetOverscroll() (%f) and first overscroll animation sample (%f) have different signs\n",
                             result.value, mFirstOverscrollAnimationSample.value);
     NS_ASSERTION(false, message.get());
-    MOZ_CRASH();
+    MOZ_CRASH("GFX: Overscroll issue");
   }
 #endif
 
