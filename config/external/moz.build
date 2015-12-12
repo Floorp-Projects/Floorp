@@ -29,7 +29,7 @@ if CONFIG['MOZ_TREMOR']:
 if CONFIG['MOZ_WEBM_ENCODER']:
     external_dirs += ['media/libmkv']
 
-if CONFIG['MOZ_VPX'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
+if not CONFIG['MOZ_NATIVE_LIBVPX']:
     external_dirs += ['media/libvpx']
 
 if not CONFIG['MOZ_NATIVE_PNG']:

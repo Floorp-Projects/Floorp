@@ -3714,7 +3714,6 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
-MOZ_VPX=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 MOZ_WEBSPEECH_MODELS=
@@ -4997,7 +4996,6 @@ if test -n "$MOZ_WEBRTC"; then
     dnl opt/production builds (via MOZ_CRASH())
     AC_DEFINE(MOZ_WEBRTC_ASSERT_ALWAYS)
     MOZ_RAW=1
-    MOZ_VPX=1
     MOZ_VPX_ERROR_CONCEALMENT=1
 
 dnl enable once Signaling lands
@@ -5141,8 +5139,6 @@ if test "${ac_cv_c_attribute_aligned}" != "0"; then
   AC_DEFINE_UNQUOTED([ATTRIBUTE_ALIGNED_MAX],
                      [${ac_cv_c_attribute_aligned}],[Maximum supported data alignment])
 fi
-
-MOZ_VPX=1
 
 dnl ========================================================
 dnl = Apple platform decoder support
@@ -5349,40 +5345,37 @@ MOZ_ARG_WITH_BOOL(system-libvpx,
 MOZ_LIBVPX_CFLAGS=
 MOZ_LIBVPX_LIBS=
 
-if test -n "$MOZ_VPX"; then
-    AC_DEFINE(MOZ_VPX)
-    if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
-        AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
-    fi
-
-    _SAVE_CFLAGS=$CFLAGS
-    _SAVE_LIBS=$LIBS
-    if test -n "$MOZ_NATIVE_LIBVPX"; then
-        dnl ============================
-        dnl === libvpx Version check ===
-        dnl ============================
-        dnl Check to see if we have a system libvpx package.
-        PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.3.0)
-
-        CFLAGS="$CFLAGS $MOZ_LIBVPX_CFLAGS"
-        LIBS="$LIBS $MOZ_LIBVPX_LIBS"
-
-        MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [],
-         [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
-
-        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [],
-         [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
-
-        MOZ_CHECK_HEADER([vpx_mem/vpx_mem.h],
-         [AC_CHECK_FUNC(vpx_mem_set_functions)])
-        if test "$ac_cv_header_vpx_mem_vpx_mem_h" = no -o \
-                "$ac_cv_func_vpx_mem_set_functions" = no; then
-            AC_DEFINE(MOZ_VPX_NO_MEM_REPORTING)
-        fi
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-    LIBS=$_SAVE_LIBS
+if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
+    AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
 fi
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LIBS=$LIBS
+if test -n "$MOZ_NATIVE_LIBVPX"; then
+    dnl ============================
+    dnl === libvpx Version check ===
+    dnl ============================
+    dnl Check to see if we have a system libvpx package.
+    PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.3.0)
+
+    CFLAGS="$CFLAGS $MOZ_LIBVPX_CFLAGS"
+    LIBS="$LIBS $MOZ_LIBVPX_LIBS"
+
+    MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [],
+     [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
+
+    AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [],
+     [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
+
+    MOZ_CHECK_HEADER([vpx_mem/vpx_mem.h],
+     [AC_CHECK_FUNC(vpx_mem_set_functions)])
+    if test "$ac_cv_header_vpx_mem_vpx_mem_h" = no -o \
+            "$ac_cv_func_vpx_mem_set_functions" = no; then
+        AC_DEFINE(MOZ_VPX_NO_MEM_REPORTING)
+    fi
+fi
+CFLAGS=$_SAVE_CFLAGS
+LIBS=$_SAVE_LIBS
 
 AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
@@ -5394,7 +5387,7 @@ else
     MOZ_TREMOR=1
 fi
 
-if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
+if test -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
@@ -8924,7 +8917,6 @@ AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
-AC_SUBST(MOZ_VPX)
 AC_SUBST(VPX_AS)
 AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
