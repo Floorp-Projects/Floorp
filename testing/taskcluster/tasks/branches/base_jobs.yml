@@ -74,6 +74,12 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_aries_eng.yml
+  aries-noril:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_noril_opt.yml
   flame-kk:
     platforms:
       - b2g

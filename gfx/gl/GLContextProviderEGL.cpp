@@ -393,7 +393,7 @@ GLContextEGL::RenewSurface() {
         return false;
     }
 #ifndef MOZ_WIDGET_ANDROID
-    MOZ_CRASH("unimplemented");
+    MOZ_CRASH("GFX: unimplemented");
     // to support this on non-Android platforms, need to keep track of the nsIWidget that
     // this GLContext was created for (with CreateForWindow) so that we know what to
     // pass again to CreateSurfaceForWindow below.
@@ -458,19 +458,19 @@ GLContextEGL::HoldSurface(gfxASurface *aSurf) {
 GLContextEGL::CreateSurfaceForWindow(nsIWidget* aWidget)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
-        MOZ_CRASH("Failed to load EGL library!\n");
+        MOZ_CRASH("GFX: Failed to load EGL library!\n");
         return nullptr;
     }
 
     EGLConfig config;
     if (!CreateConfig(&config, aWidget)) {
-        MOZ_CRASH("Failed to create EGLConfig!\n");
+        MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
         return nullptr;
     }
 
     EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
     if (!surface) {
-        MOZ_CRASH("Failed to create EGLSurface for window!\n");
+        MOZ_CRASH("GFX: Failed to create EGLSurface for window!\n");
         return nullptr;
     }
     return surface;
@@ -741,7 +741,7 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
-        MOZ_CRASH("Failed to load EGL library!\n");
+        MOZ_CRASH("GFX: Failed to load EGL library 2!\n");
         return nullptr;
     }
 
@@ -766,7 +766,7 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
-        MOZ_CRASH("Failed to load EGL library!\n");
+        MOZ_CRASH("GFX: Failed to load EGL library 3!\n");
         return nullptr;
     }
 
@@ -774,13 +774,13 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     EGLConfig config;
     if (!CreateConfig(&config, aWidget)) {
-        MOZ_CRASH("Failed to create EGLConfig!\n");
+        MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
         return nullptr;
     }
 
     EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
     if (!surface) {
-        MOZ_CRASH("Failed to create EGLSurface!\n");
+        MOZ_CRASH("GFX: Failed to create EGLSurface!\n");
         return nullptr;
     }
 
@@ -791,7 +791,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
                                       config, surface);
 
     if (!glContext) {
-        MOZ_CRASH("Failed to create EGLContext!\n");
+        MOZ_CRASH("GFX: Failed to create EGLContext!\n");
         mozilla::gl::DestroySurface(surface);
         return nullptr;
     }
@@ -807,12 +807,12 @@ EGLSurface
 GLContextProviderEGL::CreateEGLSurface(void* aWindow)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
-        MOZ_CRASH("Failed to load EGL library!\n");
+        MOZ_CRASH("GFX: Failed to load EGL library 4!\n");
     }
 
     EGLConfig config;
     if (!CreateConfig(&config, static_cast<nsIWidget*>(aWindow))) {
-        MOZ_CRASH("Failed to create EGLConfig!\n");
+        MOZ_CRASH("GFX: Failed to create EGLConfig 2!\n");
     }
 
     MOZ_ASSERT(aWindow);
@@ -820,7 +820,7 @@ GLContextProviderEGL::CreateEGLSurface(void* aWindow)
     EGLSurface surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, aWindow, 0);
 
     if (surface == EGL_NO_SURFACE) {
-        MOZ_CRASH("Failed to create EGLSurface!\n");
+        MOZ_CRASH("GFX: Failed to create EGLSurface 2!\n");
     }
 
     return surface;
@@ -830,7 +830,7 @@ void
 GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
-        MOZ_CRASH("Failed to load EGL library!\n");
+        MOZ_CRASH("GFX: Failed to load EGL library 5!\n");
     }
 
     sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);

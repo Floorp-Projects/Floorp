@@ -1,5 +1,3 @@
-var test = `
-
 // First, let's test the trivial. A chain of three works.
 class base {
     constructor() { }
@@ -55,11 +53,6 @@ inst.testChain();
 assertEq(inst.baseCalled, true);
 
 assertEq(inst.x, "yeehaw");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

@@ -289,6 +289,9 @@ parent:
 parent:
   intr PluginFocusChange(bool gotFocus);
 
+  // Notify the instance parent that this flash instance just set the cursor.
+  async PluginDidSetCursor();
+
 child:
   intr SetPluginFocus();
   intr UpdateWindow();

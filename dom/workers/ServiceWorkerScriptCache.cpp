@@ -263,12 +263,14 @@ public:
     mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result, &mSandbox);
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
+      Cleanup();
       return result.StealNSResult();
     }
 
     mCN = new CompareNetwork(this);
     nsresult rv = mCN->Initialize(aPrincipal, aURL, aLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
+      Cleanup();
       return rv;
     }
 
@@ -277,6 +279,7 @@ public:
       rv = mCC->Initialize(aPrincipal, aURL, aCacheName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         mCN->Abort();
+        Cleanup();
         return rv;
       }
     }

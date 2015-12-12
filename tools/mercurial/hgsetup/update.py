@@ -23,6 +23,7 @@ class MercurialUpdater(object):
     def __init__(self, state_dir):
         self.state_dir = os.path.normpath(state_dir)
         self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
+        self.hgwatchman_dir = os.path.join(self.state_dir, 'hgwatchman')
 
     def update_all(self):
         hg = get_hg_path()
@@ -34,6 +35,12 @@ class MercurialUpdater(object):
             self.vcs_tools_dir,
             'default',
             'Ensuring version-control-tools is up to date...')
+        self.update_mercurial_repo(
+            hg,
+            'https://bitbucket.org/facebook/hgwatchman',
+            self.hgwatchman_dir,
+            'default',
+            'Ensuring hgwatchman is up to date...')
         if repo_existed:
             print(FINISHED)
         return 0

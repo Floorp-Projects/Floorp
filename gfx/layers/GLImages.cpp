@@ -71,7 +71,7 @@ GLImage::GetAsSourceSurface()
 
   ScopedFramebufferForTexture autoFBForTex(sSnapshotContext, scopedTex.Texture());
   if (!autoFBForTex.IsComplete()) {
-      MOZ_CRASH("ScopedFramebufferForTexture failed.");
+      MOZ_CRASH("GFX: ScopedFramebufferForTexture failed.");
   }
 
   const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;

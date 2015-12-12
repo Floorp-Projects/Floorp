@@ -814,7 +814,7 @@ gfxPlatform::CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const IntSi
     return Factory::CreateDrawTargetForCairoCGContext(static_cast<gfxQuartzSurface*>(aSurface)->GetCGContext(), aSize);
   }
 #endif
-  MOZ_CRASH("unused function");
+  MOZ_CRASH("GFX: unused function");
   return nullptr;
 }
 

@@ -1,7 +1,6 @@
 // |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
-load(libdir + "class.js");
 
 assertAsmTypeFail(USE_ASM);
 assertAsmTypeFail(USE_ASM + 'return');
@@ -134,10 +133,8 @@ assertTypeFailInEval('function *f() { "use asm"; function g() {} return g }');
 assertTypeFailInEval('f => { "use asm"; function g() {} return g }');
 assertTypeFailInEval('var f = { method() {"use asm"; return {}} }');
 assertAsmTypeFail(USE_ASM + 'return {m() {}};');
-if (classesEnabled()) {
-    assertTypeFailInEval('class f { constructor() {"use asm"; return {}} }');
-    assertAsmTypeFail(USE_ASM + 'class c { constructor() {}}; return c;');
-}
+assertTypeFailInEval('class f { constructor() {"use asm"; return {}} }');
+assertAsmTypeFail(USE_ASM + 'class c { constructor() {}}; return c;');
 
 assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0; (i for (x in [1,2,3])) } return f');
 assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0; [i for (x in [1,2,3])] } return f');

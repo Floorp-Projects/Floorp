@@ -1,0 +1,63 @@
+<html>
+<head>
+<script type="text/javascript">
+
+  function ok(a, msg) {
+    alert((!!a ? "OK" : "KO") + " " + msg);
+  }
+
+  function is(a, b, msg) {
+    ok(a === b, msg);
+  }
+
+  function finish(a, b, msg) {
+    alert("DONE");
+  }
+
+  addEventListener('load', function(e) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    // set 'remote' to true here will make the the iframe remote in _inproc_
+    // test and in-process in _oop_  test.
+    iframe.setAttribute('remote', 'true');
+    iframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+
+    iframe.addEventListener('mozbrowserloadend', function(e) {
+      ok("mute" in iframe, "iframe.mute exists");
+      ok("unmute" in iframe, "iframe.unmute exists");
+      ok("getMuted" in iframe, "iframe.getMuted exists");
+      ok("getVolume" in iframe, "iframe.getVolume exists");
+      ok("setVolume" in iframe, "iframe.setVolume exists");
+
+      ok("allowedAudioChannels" in iframe, "allowedAudioChannels exist");
+      var channels = iframe.allowedAudioChannels;
+      is(channels.length, 1, "1 audio channel by default");
+
+      var ac = channels[0];
+
+      ok(ac instanceof BrowserElementAudioChannel, "Correct class");
+      ok("getVolume" in ac, "ac.getVolume exists");
+      ok("setVolume" in ac, "ac.setVolume exists");
+      ok("getMuted" in ac, "ac.getMuted exists");
+      ok("setMuted" in ac, "ac.setMuted exists");
+      ok("isActive" in ac, "ac.isActive exists");
+
+      ac.onactivestatechanged = function() {
+        ok("activestatechanged event received.");
+
+        ac.getVolume().onsuccess = function(e) {
+          ok(e.target.result, 1, "Default volume is 1");
+        };
+
+        finish();
+      }
+    });
+
+    document.body.appendChild(iframe);
+    iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/file_audio.html';
+  });
+</script>
+</head>
+<body>
+</body>
+</html>
