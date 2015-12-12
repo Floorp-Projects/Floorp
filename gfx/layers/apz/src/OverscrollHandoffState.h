@@ -128,6 +128,23 @@ struct OverscrollHandoffState {
   ScrollSource mScrollSource;
 };
 
+/*
+ * This class groups the state maintained during fling handoff.
+ */
+struct FlingHandoffState {
+  // The velocity of the fling being handed off.
+  ParentLayerPoint mVelocity;
+
+  // The chain of APZCs along which we hand off the fling.
+  // Unlike in OverscrollHandoffState, this is stored by RefPtr because
+  // otherwise it may not stay alive for the entire handoff.
+  RefPtr<const OverscrollHandoffChain> mChain;
+
+  // Whether handoff has happened by this point, or we're still process
+  // the original fling.
+  bool mIsHandoff;
+};
+
 } // namespace layers
 } // namespace mozilla
 

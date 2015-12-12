@@ -838,18 +838,17 @@ private:
    */
 public:
   /**
-   * Attempt a fling with the given velocity. If we are not pannable, the fling
-   * is handed off to the next APZC in the handoff chain via
-   * mTreeManager->DispatchFling(). Returns true iff. the entire velocity of
-   * the fling was consumed by this APZC. aVelocity is modified to contain any
+   * Attempt a fling with the velocity specified in |aHandoffState|.
+   * If we are not pannable, the fling is handed off to the next APZC in
+   * the handoff chain via mTreeManager->DispatchFling().
+   * Returns true iff. the entire velocity of the fling was consumed by
+   * this APZC. |aHandoffState.mVelocity| is modified to contain any
    * unused, residual velocity.
-   * |aHandoff| should be true iff. the fling was handed off from a previous
-   *            APZC, and determines whether acceleration is applied to the
-   *            fling.
+   * |aHandoffState.mIsHandoff| should be true iff. the fling was handed off
+   * from a previous APZC, and determines whether acceleration is applied
+   * to the fling.
    */
-  bool AttemptFling(ParentLayerPoint& aVelocity,
-                    const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                    bool aHandoff);
+  bool AttemptFling(FlingHandoffState& aHandoffState);
 
 private:
   friend class FlingAnimation;
@@ -873,9 +872,7 @@ private:
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
   // Helper function used by AttemptFling().
-  void AcceptFling(ParentLayerPoint& aVelocity,
-                   const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                   bool aHandoff);
+  void AcceptFling(FlingHandoffState& aHandoffState);
 
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);

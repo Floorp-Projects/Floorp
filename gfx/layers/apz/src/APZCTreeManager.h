@@ -47,6 +47,7 @@ class AsyncPanZoomController;
 class CompositorParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
+struct FlingHandoffState;
 class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
@@ -376,25 +377,26 @@ public:
    * first APZC to fling may not be the one that is receiving the touch events.
    *
    * @param aApzc the APZC that wants to start or hand off the fling
-   * @param aVelocity the current velocity of the fling, in |aApzc|'s screen
-   *                  pixels per millisecond
-   * @param aOverscrollHandoffChain the chain of APZCs along which the fling
-   *                                should be handed off
-   * @param aHandoff is true if |aApzc| is handing off an existing fling (in
-   *                 this case the fling is given to the next APZC in the
-   *                 handoff chain after |aApzc|), and false is |aApzc| wants
-   *                 start a fling (in this case the fling is given to the
-   *                 first APZC in the chain)
+   * @param aHandoffState a collection of state about the operation,
+   *                      which contains the following:
    *
-   * aVelocity will be modified depending on how much of that velocity has
-   * been consumed by APZCs in the overscroll hand-off chain. The caller can
-   * use this value to determine whether it should consume the excess velocity
-   * by going into an overscroll fling.
+   *        mVelocity the current velocity of the fling, in |aApzc|'s screen
+   *                  pixels per millisecond
+   *        mChain the chain of APZCs along which the fling
+   *                   should be handed off
+   *        mIsHandoff is true if |aApzc| is handing off an existing fling (in
+   *                   this case the fling is given to the next APZC in the
+   *                   handoff chain after |aApzc|), and false is |aApzc| wants
+   *                   start a fling (in this case the fling is given to the
+   *                   first APZC in the chain)
+   *
+   * aHandoffState.mVelocity will be modified depending on how much of that
+   * velocity has been consumed by APZCs in the overscroll hand-off chain.
+   * The caller can use this value to determine whether it should consume
+   * the excess velocity by going into an overscroll fling.
    */
   void DispatchFling(AsyncPanZoomController* aApzc,
-                     ParentLayerPoint& aVelocity,
-                     RefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
-                     bool aHandoff);
+                     FlingHandoffState& aHandoffState);
 
   void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                           const AsyncDragMetrics& aDragMetrics);
