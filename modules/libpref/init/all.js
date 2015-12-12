@@ -2428,7 +2428,7 @@ pref("layout.css.control-characters.visible", true);
 #endif
 
 // Is support for text-emphasis enabled?
-pref("layout.css.text-emphasis.enabled", true);
+pref("layout.css.text-emphasis.enabled", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
