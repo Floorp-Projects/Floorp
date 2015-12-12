@@ -3695,7 +3695,6 @@ MOZ_TREMOR=
 MOZ_WAVE=1
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
-MOZ_WEBM=1
 MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
@@ -5143,18 +5142,7 @@ if test "${ac_cv_c_attribute_aligned}" != "0"; then
                      [${ac_cv_c_attribute_aligned}],[Maximum supported data alignment])
 fi
 
-dnl ========================================================
-dnl = Disable VP8 decoder support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webm,
-[  --disable-webm          Disable support for WebM media (VP8 video and Vorbis audio)],
-    MOZ_WEBM=,
-    MOZ_WEBM=1)
-
-if test -n "$MOZ_WEBM"; then
-    AC_DEFINE(MOZ_WEBM)
-    MOZ_VPX=1
-fi;
+MOZ_VPX=1
 
 dnl ========================================================
 dnl = Apple platform decoder support
@@ -5400,12 +5388,10 @@ AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
 
-if test "$MOZ_WEBM"; then
-    if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
-        MOZ_VORBIS=1
-    else
-        MOZ_TREMOR=1
-    fi
+if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
+    MOZ_VORBIS=1
+else
+    MOZ_TREMOR=1
 fi
 
 if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
@@ -8929,7 +8915,6 @@ AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
-AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FMP4)

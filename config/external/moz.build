@@ -26,9 +26,6 @@ if CONFIG['MOZ_VORBIS']:
 if CONFIG['MOZ_TREMOR']:
     external_dirs += ['media/libtremor']
 
-if CONFIG['MOZ_WEBM']:
-    external_dirs += ['media/libnestegg']
-
 if CONFIG['MOZ_WEBM_ENCODER']:
     external_dirs += ['media/libmkv']
 
@@ -50,6 +47,7 @@ if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
 external_dirs += [
     'media/kiss_fft',
     'media/libcubeb',
+    'media/libnestegg',
     'media/libogg',
     'media/libopus',
     'media/libtheora',

@@ -16,11 +16,11 @@
 #include "WaveDecoder.h"
 #include "WaveReader.h"
 #endif
-#ifdef MOZ_WEBM
+
 #include "WebMDecoder.h"
 #include "WebMReader.h"
 #include "WebMDemuxer.h"
-#endif
+
 #ifdef MOZ_RAW
 #include "RawDecoder.h"
 #include "RawReader.h"
@@ -156,31 +156,23 @@ IsWaveType(const nsACString& aType)
 }
 #endif
 
-#ifdef MOZ_WEBM
 static bool
 IsWebMSupportedType(const nsACString& aType,
                     const nsAString& aCodecs = EmptyString())
 {
   return WebMDecoder::CanHandleMediaType(aType, aCodecs);
 }
-#endif
 
 /* static */ bool
 DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
 {
-#ifdef MOZ_WEBM
   return IsWebMSupportedType(aType);
-#endif
-  return false;
 }
 
 /* static */ bool
 DecoderTraits::IsWebMAudioType(const nsACString& aType)
 {
-#ifdef MOZ_WEBM
   return aType.EqualsASCII("audio/webm");
-#endif
-  return false;
 }
 
 #ifdef MOZ_GSTREAMER
@@ -623,12 +615,12 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     return decoder.forget();
   }
 #endif
-#ifdef MOZ_WEBM
+
   if (IsWebMSupportedType(aType)) {
     decoder = new WebMDecoder(aOwner);
     return decoder.forget();
   }
-#endif
+
 #ifdef MOZ_DIRECTSHOW
   // Note: DirectShow should come before WMF, so that we prefer DirectShow's
   // MP3 support over WMF's.
@@ -698,13 +690,13 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-#ifdef MOZ_WEBM
+
   if (IsWebMSupportedType(aType)) {
     decoderReader = Preferences::GetBool("media.format-reader.webm", true) ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()))) :
       new WebMReader(aDecoder);
   } else
-#endif
+
 #ifdef MOZ_DIRECTSHOW
   if (IsDirectShowSupportedType(aType)) {
     decoderReader = new DirectShowReader(aDecoder);
@@ -735,9 +727,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (IsOmxSupportedType(aType) &&
      !IsB2GSupportOnlyType(aType)) ||
 #endif
-#ifdef MOZ_WEBM
     IsWebMSupportedType(aType) ||
-#endif
 #ifdef MOZ_GSTREAMER
     IsGStreamerSupportedType(aType) ||
 #endif
