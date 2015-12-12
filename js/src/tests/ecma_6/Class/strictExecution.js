@@ -1,7 +1,6 @@
 // Classes are always strict mode. Check computed property names and heritage
 // expressions as well.
 
-var test = `
 class a { constructor() { Object.preventExtensions({}).prop = 0; } }
 assertThrowsInstanceOf(() => new a(), TypeError);
 var aExpr = class { constructor() { Object.preventExtensions().prop = 0; } };
@@ -34,10 +33,6 @@ function shouldThrowHeritageExpr() {
 }
 assertThrowsInstanceOf(shouldThrowHeritage, TypeError);
 assertThrowsInstanceOf(shouldThrowHeritageExpr, TypeError);
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

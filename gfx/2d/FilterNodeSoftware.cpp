@@ -646,7 +646,8 @@ FilterNodeSoftware::RequestInputRect(uint32_t aInputEnumIndex, const IntRect &aR
 
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
-    MOZ_CRASH();
+    gfxDevCrash(LogReason::FilterInputError) << "Invalid input " << inputIndex << " vs. " << NumberOfSetInputs();
+    return;
   }
   if (mInputSurfaces[inputIndex]) {
     return;
@@ -683,7 +684,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 #endif
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
-    MOZ_CRASH();
+    gfxDevCrash(LogReason::FilterInputData) << "Invalid data " << inputIndex << " vs. " << NumberOfSetInputs();
     return nullptr;
   }
 
@@ -794,7 +795,7 @@ FilterNodeSoftware::GetInputRectInRect(uint32_t aInputEnumIndex,
 
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
-    MOZ_CRASH();
+    gfxDevCrash(LogReason::FilterInputRect) << "Invalid rect " << inputIndex << " vs. " << NumberOfSetInputs();
     return IntRect();
   }
   if (mInputSurfaces[inputIndex]) {
@@ -881,7 +882,7 @@ FilterNodeSoftware::SetInput(uint32_t aInputEnumIndex,
 {
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0) {
-    MOZ_CRASH();
+    gfxDevCrash(LogReason::FilterInputSet) << "Invalid set " << inputIndex;
     return;
   }
   if ((uint32_t)inputIndex >= NumberOfSetInputs()) {
@@ -1499,7 +1500,8 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
       targetData += stride;
     }
   } else {
-    MOZ_CRASH();
+    gfxDevCrash(LogReason::FilterInputFormat) << "Bad format in flood render " << (int)format;
+    return nullptr;
   }
 
   return target.forget();
@@ -1667,7 +1669,7 @@ FilterNodeComponentTransferSoftware::SetAttribute(uint32_t aIndex,
       mDisableA = aDisable;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeComponentTransferSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -1834,7 +1836,7 @@ FilterNodeTableTransferSoftware::SetAttribute(uint32_t aIndex,
       mTableA = table;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeTableTransferSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -1903,7 +1905,7 @@ FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
       mTableA = discrete;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeDiscreteTransferSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -1992,7 +1994,7 @@ FilterNodeLinearTransferSoftware::SetAttribute(uint32_t aIndex,
       mInterceptA = aValue;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeLinearTransferSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -2086,7 +2088,7 @@ FilterNodeGammaTransferSoftware::SetAttribute(uint32_t aIndex,
       mOffsetA = aValue;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeGammaTransferSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -2174,7 +2176,7 @@ FilterNodeConvolveMatrixSoftware::SetAttribute(uint32_t aIndex, Float aValue)
       mBias = aValue;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeConvolveMatrixSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -2187,7 +2189,7 @@ FilterNodeConvolveMatrixSoftware::SetAttribute(uint32_t aIndex, const Size &aKer
       mKernelUnitLength = aKernelUnitLength;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeConvolveMatrixSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -2400,7 +2402,7 @@ TranslateDoubleToShifts(double aDouble, int32_t &aShiftL, int32_t &aShiftR)
   aShiftL = 0;
   aShiftR = 0;
   if (aDouble <= 0) {
-    MOZ_CRASH();
+    MOZ_CRASH("GFX: TranslateDoubleToShifts");
   }
   if (aDouble < 1) {
     while (1 << (aShiftR + 1) < 1 / aDouble) {
@@ -2580,7 +2582,7 @@ FilterNodeDisplacementMapSoftware::SetAttribute(uint32_t aIndex, uint32_t aValue
       mChannelY = static_cast<ColorChannel>(aValue);
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeDisplacementMapSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -2686,7 +2688,7 @@ FilterNodeTurbulenceSoftware::SetAttribute(uint32_t aIndex, const Size &aBaseFre
       mBaseFrequency = aBaseFrequency;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeTurbulenceSoftware::SetAttribute");
       break;
   }
   Invalidate();
@@ -2700,7 +2702,7 @@ FilterNodeTurbulenceSoftware::SetAttribute(uint32_t aIndex, const IntRect &aRect
       mRenderRect = aRect;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeTurbulenceSoftware::SetAttribute");
       break;
   }
   Invalidate();
@@ -2728,7 +2730,7 @@ FilterNodeTurbulenceSoftware::SetAttribute(uint32_t aIndex, uint32_t aValue)
       mType = static_cast<TurbulenceType>(aValue);
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeTurbulenceSoftware::SetAttribute");
       break;
   }
   Invalidate();
@@ -3034,7 +3036,7 @@ FilterNodeGaussianBlurSoftware::SetAttribute(uint32_t aIndex,
       mStdDeviation = ClampStdDeviation(aStdDeviation);
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeGaussianBlurSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -3058,7 +3060,7 @@ FilterNodeDirectionalBlurSoftware::SetAttribute(uint32_t aIndex,
       mStdDeviation = ClampStdDeviation(aStdDeviation);
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeDirectionalBlurSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -3072,7 +3074,7 @@ FilterNodeDirectionalBlurSoftware::SetAttribute(uint32_t aIndex,
       mBlurDirection = (BlurDirection)aBlurDirection;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeDirectionalBlurSoftware::SetAttribute");
   }
   Invalidate();
 }
@@ -3289,7 +3291,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(uint32_t aInde
     Invalidate();
     return;
   }
-  MOZ_CRASH();
+  MOZ_CRASH("GFX: FilterNodeLightingSoftware::SetAttribute point");
 }
 
 template<typename LightType, typename LightingType>
@@ -3306,7 +3308,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(uint32_t aInde
       mSurfaceScale = aValue;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeLightingSoftware::SetAttribute float");
   }
   Invalidate();
 }
@@ -3320,7 +3322,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::SetAttribute(uint32_t aInde
       mKernelUnitLength = aKernelUnitLength;
       break;
     default:
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: FilterNodeLightingSoftware::SetAttribute size");
   }
   Invalidate();
 }

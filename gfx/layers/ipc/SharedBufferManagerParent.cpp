@@ -295,7 +295,7 @@ void SharedBufferManagerParent::DropGrallocBuffer(ProcessId id, mozilla::layers:
   }
 
   if (PlatformThread::CurrentId() == mgr->mThread->thread_id()) {
-    MOZ_CRASH("SharedBufferManagerParent::DropGrallocBuffer should not be called on SharedBufferManagerParent thread");
+    MOZ_CRASH("GFX: SharedBufferManagerParent::DropGrallocBuffer should not be called on SharedBufferManagerParent thread");
   } else {
     mgr->mThread->message_loop()->PostTask(FROM_HERE,
                                       NewRunnableFunction(&DropGrallocBufferSync, mgr, aDesc));

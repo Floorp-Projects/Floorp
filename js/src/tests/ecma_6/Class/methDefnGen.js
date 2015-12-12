@@ -79,4 +79,5 @@ assertEq(a.b(1).next().value, 1);
 a = {*g() { yield 1; }}
 assertThrowsInstanceOf(() => { new a.g }, TypeError);
 
-reportCompare(0, 0, "ok");
+if (typeof reportCompare === 'function')
+    reportCompare(0, 0, "ok");

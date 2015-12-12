@@ -194,8 +194,11 @@ using mozilla::gfx::PointTyped;
  * http://mxr.mozilla.org/mozilla-central/source/layout/style/nsStyleStruct.cpp?rev=21282be9ad95#2462
  *
  * \li\b apz.fling_friction
- * Amount of friction applied during flings.
- *
+ * Amount of friction applied during flings. This is used in the following
+ * formula: v(t1) = v(t0) * (1 - f)^(t1 - t0), where v(t1) is the velocity
+ * for a new sample, v(t0) is the velocity at the previous sample, f is the
+ * value of this pref, and (t1 - t0) is the amount of time, in milliseconds,
+ * that has elapsed between the two samples.
  *
  * \li\b apz.fling_repaint_interval
  * Maximum amount of time flinging before sending a viewport change. This will

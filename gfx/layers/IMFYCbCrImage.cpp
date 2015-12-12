@@ -37,7 +37,7 @@ struct AutoLockTexture
     aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
     HRESULT hr = mMutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: IMFYCbCrImage timeout");
     }
 
     if (FAILED(hr)) {

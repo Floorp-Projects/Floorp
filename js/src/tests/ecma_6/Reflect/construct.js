@@ -30,24 +30,20 @@ var bound = f.bind(null, "carrot");
 assertDeepEq(Reflect.construct(bound, []), new bound);
 
 // Classes:
-if (classesEnabled()) {
-    eval(`{
-        class Base {
-            constructor(...args) {
-                this.args = args;
-                this.newTarget = new.target;
-            }
-        }
-        class Derived extends Base {
-            constructor(...args) { super(...args); }
-        }
-
-        assertDeepEq(Reflect.construct(Base, []), new Base);
-        assertDeepEq(Reflect.construct(Derived, [7]), new Derived(7));
-        g = Derived.bind(null, "q");
-        assertDeepEq(Reflect.construct(g, [8, 9]), new g(8, 9));
-    }`);
+class Base {
+    constructor(...args) {
+        this.args = args;
+        this.newTarget = new.target;
+    }
 }
+class Derived extends Base {
+    constructor(...args) { super(...args); }
+}
+
+assertDeepEq(Reflect.construct(Base, []), new Base);
+assertDeepEq(Reflect.construct(Derived, [7]), new Derived(7));
+g = Derived.bind(null, "q");
+assertDeepEq(Reflect.construct(g, [8, 9]), new g(8, 9));
 
 // Cross-compartment wrappers:
 var g = newGlobal();

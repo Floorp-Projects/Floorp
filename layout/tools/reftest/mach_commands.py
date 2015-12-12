@@ -159,7 +159,7 @@ class ReftestRunner(MozbuildObject):
                               "jstests.list")
         }
 
-        kwargs["extraProfileFiles"] = [os.path.join(self.topobjdir, "dist", "plugins")]
+        kwargs["extraProfileFiles"].append(os.path.join(self.topobjdir, "dist", "plugins"))
         kwargs["symbolsPath"] = os.path.join(self.topobjdir, "crashreporter-symbols")
 
         if not kwargs["tests"]:

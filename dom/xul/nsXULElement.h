@@ -412,6 +412,7 @@ public:
     virtual mozilla::EventStates IntrinsicState() const override;
 
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
+    nsresult GetParentApplication(mozIApplication** aApplication);
     nsresult SetIsPrerendered();
     nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 

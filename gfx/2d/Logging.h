@@ -140,6 +140,20 @@ enum class LogReason : int {
   D3D11FinalizeFrame,
   D3D10SyncLock,
   D3D11SyncLock,
+  D2D1NoWriteMap,
+  JobStatusError,
+  FilterInputError,
+  FilterInputData, // 10
+  FilterInputRect,
+  FilterInputSet,
+  FilterInputFormat,
+  FilterNodeD2D1Target,
+  FilterNodeD2D1Backend,
+  SourceSurfaceIncompatible,
+  GlyphAllocFailedCairo,
+  GlyphAllocFailedCG,
+  InvalidRect,
+  CannotDraw3D, // 20
   // End
   MustBeLessThanThis = 101,
 };

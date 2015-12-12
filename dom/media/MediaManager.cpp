@@ -1569,7 +1569,6 @@ MediaManager::Get() {
 
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
-      obs->AddObserver(sSingleton, "xpcom-will-shutdown", false);
       obs->AddObserver(sSingleton, "last-pb-context-exited", false);
       obs->AddObserver(sSingleton, "getUserMedia:privileged:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
@@ -2606,7 +2605,6 @@ MediaManager::Shutdown()
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
-  obs->RemoveObserver(this, "xpcom-will-shutdown");
   obs->RemoveObserver(this, "last-pb-context-exited");
   obs->RemoveObserver(this, "getUserMedia:privileged:allow");
   obs->RemoveObserver(this, "getUserMedia:response:allow");
@@ -2704,9 +2702,6 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       LOG(("%s: %dx%d @%dfps (min %d)", __FUNCTION__,
            mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
     }
-  } else if (!strcmp(aTopic, "xpcom-will-shutdown")) {
-    Shutdown();
-    return NS_OK;
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Clear memory of private-browsing-specific deviceIds. Fire and forget.
     media::SanitizeOriginKeys(0, true);

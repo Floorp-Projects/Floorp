@@ -1,5 +1,3 @@
-var test = `
-
 // This is super weird. A super property reference in the spec contains two
 // things. The first is the object to do the lookup on, the super base. This
 // should be unchanged, no matter what's going on: I can move the method to
@@ -27,10 +25,10 @@ derivedInstance.testCPN(derivedInstance);
 let obj = { test: derivedInstance.test };
 obj.test(obj);
 
-let test = derivedInstance.test;
+let testSolo = derivedInstance.test;
 // Hah! The engine is not prepared for non-object receivers, since this couldn't
 // happen before. Hope Waldo fixes this soon as he claims he will :)
-assertThrowsInstanceOf(() =>test(undefined), TypeError);
+assertThrowsInstanceOf(() =>testSolo(undefined), TypeError);
 
 let anotherObject = { };
 derivedInstance.test.call(anotherObject, anotherObject);
@@ -59,11 +57,6 @@ for (let exprBase of [base1, base2])
         test() { animals.push(super["test"]()); }
     }().test();
 assertDeepEq(animals, ["llama", "alpaca"]);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

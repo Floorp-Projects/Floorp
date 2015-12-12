@@ -1,10 +1,6 @@
 // Named class definitions should create an immutable inner binding.
 // Since all code in classes is in strict mode, attempts to mutate it
 // should throw.
-
-if (classesEnabled()) {
-
-var test = `
 class Foof { constructor() { }; tryBreak() { Foof = 4; } }
 for (let result of [Foof, class Bar { constructor() { }; tryBreak() { Bar = 4; } }])
     assertThrowsInstanceOf(() => new result().tryBreak(), TypeError);
@@ -16,15 +12,15 @@ for (let result of [Foof, class Bar { constructor() { }; tryBreak() { Bar = 4; }
 }
 
 // TDZ applies to inner bindings
-assertThrowsInstanceOf(()=>eval(\`class Bar {
+assertThrowsInstanceOf(()=>eval(`class Bar {
                                     constructor() { };
                                     [Bar] () { };
-                                 }\`), ReferenceError);
+                                 }`), ReferenceError);
 
-assertThrowsInstanceOf(()=>eval(\`(class Bar {
+assertThrowsInstanceOf(()=>eval(`(class Bar {
                                     constructor() { };
                                     [Bar] () { };
-                                 })\`), ReferenceError);
+                                 })`), ReferenceError);
 
 // There's no magic "inner binding" global
 {
@@ -84,13 +80,6 @@ assertEq(new class Foo {
     X = 13;
     assertEq(X, 13);
     new orig_X().f();
-}
-
-
-`;
-
-eval(test);
-
 }
 
 if (typeof reportCompare === "function")

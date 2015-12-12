@@ -3026,6 +3026,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   return NS_OK;
 }
 
+#if defined(XP_WIN)
+// See QUIRK_FLASH_FIXUP_MOUSE_CURSOR
+void
+nsPluginInstanceOwner::ResetWidgetCursorCaching()
+{
+  if (!mPluginFrame || !XRE_IsContentProcess()) {
+    return;
+  }
+  nsIWidget* aWidget = mPluginFrame->GetNearestWidget();
+  if (!aWidget) {
+    return;
+  }
+  aWidget->ClearCachedCursor();
+}
+#endif
+
 // Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
 
