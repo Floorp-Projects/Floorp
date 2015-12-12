@@ -2183,7 +2183,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
 void AsyncPanZoomController::HandlePanning(double aAngle) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   RefPtr<const OverscrollHandoffChain> overscrollHandoffChain =
-    GetInputQueue()->CurrentBlock()->GetOverscrollHandoffChain();
+    CurrentInputBlock()->GetOverscrollHandoffChain();
   bool canScrollHorizontal = !mX.IsAxisLocked() &&
     overscrollHandoffChain->CanScrollInDirection(this, Layer::HORIZONTAL);
   bool canScrollVertical = !mY.IsAxisLocked() &&
@@ -3430,6 +3430,12 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     // animation finishes.
     RequestContentRepaint(endZoomToMetrics);
   }
+}
+
+CancelableBlockState*
+AsyncPanZoomController::CurrentInputBlock() const
+{
+  return GetInputQueue()->CurrentBlock();
 }
 
 TouchBlockState*
