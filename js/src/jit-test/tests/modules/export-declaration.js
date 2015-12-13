@@ -1,6 +1,5 @@
 load(libdir + "match.js");
 load(libdir + "asserts.js");
-load(libdir + "class.js");
 
 var { Pattern, MatchError } = Match;
 
@@ -208,18 +207,16 @@ program([
     )
 ]).assert(parseAsModule("export function f() {}"));
 
-if (classesEnabled()) {
-    program([
-        exportDeclaration(
-            classDeclaration(
-                ident("Foo")
-            ),
-            null,
-            null,
-            false
-        )
-    ]).assert(parseAsModule("export class Foo { constructor() {} }"));
-}
+program([
+    exportDeclaration(
+        classDeclaration(
+            ident("Foo")
+        ),
+        null,
+        null,
+        false
+    )
+]).assert(parseAsModule("export class Foo { constructor() {} }"));
 
 program([
     exportDeclaration(
@@ -298,29 +295,27 @@ program([
     )
 ]).assert(parseAsModule("export default function foo() {}"));
 
-if (classesEnabled()) {
-    program([
-        exportDeclaration(
-            classDeclaration(
-                ident("*default*")
-            ),
-            null,
-            null,
-            true
-        )
-    ]).assert(parseAsModule("export default class { constructor() {} }"));
+program([
+    exportDeclaration(
+        classDeclaration(
+            ident("*default*")
+        ),
+        null,
+        null,
+        true
+    )
+]).assert(parseAsModule("export default class { constructor() {} }"));
 
-    program([
-        exportDeclaration(
-            classDeclaration(
-                ident("Foo")
-            ),
-            null,
-            null,
-            true
-        )
-    ]).assert(parseAsModule("export default class Foo { constructor() {} }"));
-}
+program([
+    exportDeclaration(
+        classDeclaration(
+            ident("Foo")
+        ),
+        null,
+        null,
+        true
+    )
+]).assert(parseAsModule("export default class Foo { constructor() {} }"));
 
 program([
     exportDeclaration(

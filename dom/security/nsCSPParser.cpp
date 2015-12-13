@@ -122,12 +122,15 @@ nsCSPParser::nsCSPParser(cspTokens& aTokens,
                          nsIURI* aSelfURI,
                          nsCSPContext* aCSPContext,
                          bool aDeliveredViaMetaTag)
- : mHasHashOrNonce(false)
+ : mCurChar(nullptr)
+ , mEndChar(nullptr)
+ , mHasHashOrNonce(false)
  , mUnsafeInlineKeywordSrc(nullptr)
  , mChildSrc(nullptr)
  , mFrameSrc(nullptr)
  , mTokens(aTokens)
  , mSelfURI(aSelfURI)
+ , mPolicy(nullptr)
  , mCSPContext(aCSPContext)
  , mDeliveredViaMetaTag(aDeliveredViaMetaTag)
 {

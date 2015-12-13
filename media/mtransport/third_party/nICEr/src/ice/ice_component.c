@@ -948,6 +948,46 @@ int nr_ice_component_service_pre_answer_requests(nr_ice_peer_ctx *pctx, nr_ice_c
      return(_status);
   }
 
+int nr_ice_component_can_candidate_tcptype_pair(nr_socket_tcp_type left, nr_socket_tcp_type right)
+  {
+    if (left && !right)
+      return(0);
+    if (!left && right)
+      return(0);
+    if (left == TCP_TYPE_ACTIVE && right != TCP_TYPE_PASSIVE)
+      return(0);
+    if (left == TCP_TYPE_SO && right != TCP_TYPE_SO)
+      return(0);
+    if (left == TCP_TYPE_PASSIVE)
+      return(0);
+
+    return(1);
+  }
+
+/* local vs. remote matters here because we allow private -> public pairing,
+ * but discourage public -> private pairing. */
+int nr_ice_component_can_candidate_addr_pair(nr_transport_addr *local, nr_transport_addr *remote)
+  {
+    int remote_range;
+
+    if(local->ip_version != remote->ip_version)
+      return(0);
+    if(nr_transport_addr_is_link_local(local) !=
+       nr_transport_addr_is_link_local(remote))
+      return(0);
+    /* This prevents our ice_unittest (or broken clients) from pairing a
+     * loopback with a host candidate. */
+    if(nr_transport_addr_is_loopback(local) !=
+       nr_transport_addr_is_loopback(remote))
+      return(0);
+    remote_range = nr_transport_addr_get_private_addr_range(remote);
+    if(remote_range && (nr_transport_addr_get_private_addr_range(local) !=
+       remote_range))
+      return(0);
+
+    return(1);
+  }
+
 int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pcomp, nr_ice_candidate *lcand, int pair_all_remote)
   {
     int r, _status;
@@ -975,25 +1015,9 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
     }
 
     TAILQ_FOREACH(pcand, &pcomp->candidates, entry_comp){
-      if (lcand->tcp_type && !pcand->tcp_type)
+      if(!nr_ice_component_can_candidate_addr_pair(&lcand->addr, &pcand->addr))
         continue;
-      if (!lcand->tcp_type && pcand->tcp_type)
-        continue;
-      if (lcand->tcp_type == TCP_TYPE_ACTIVE && pcand->tcp_type != TCP_TYPE_PASSIVE)
-        continue;
-      if (lcand->tcp_type == TCP_TYPE_SO && pcand->tcp_type != TCP_TYPE_SO)
-        continue;
-      if (lcand->tcp_type == TCP_TYPE_PASSIVE)
-        continue;
-      if(pcand->addr.ip_version != lcand->addr.ip_version)
-        continue;
-      /* This prevents our ice_unittest from pairing a loopback with a host
-       * candidate. */
-      if(nr_transport_addr_is_loopback(&lcand->addr) &&
-         !nr_transport_addr_is_loopback(&pcand->addr))
-        continue;
-      if(!nr_transport_addr_is_loopback(&lcand->addr) &&
-         nr_transport_addr_is_loopback(&pcand->addr))
+      if(!nr_ice_component_can_candidate_tcptype_pair(lcand->tcp_type, pcand->tcp_type))
         continue;
 
       /*

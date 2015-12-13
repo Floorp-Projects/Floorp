@@ -2778,7 +2778,7 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
                                          LOCAL_GL_RENDERBUFFER, src->ProdRenderbuffer());
                 break;
             default:
-                MOZ_CRASH("bad `src->mAttachType`.");
+                MOZ_CRASH("GFX: bad `src->mAttachType`.");
             }
 
             DebugOnly<GLenum> status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);

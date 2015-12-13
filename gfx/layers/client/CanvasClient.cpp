@@ -277,7 +277,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
       // [RR, GG, BB, AA]
       texClient = factory.CreateR8G8B8AX8();
     } else {
-      MOZ_CRASH("Bad `read{Format,Type}`.");
+      MOZ_CRASH("GFX: Bad `read{Format,Type}`.");
     }
 
     MOZ_ASSERT(texClient);

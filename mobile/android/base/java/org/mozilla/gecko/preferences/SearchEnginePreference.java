@@ -13,14 +13,15 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.design.widget.Snackbar;
 import android.text.SpannableString;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 /**
  * Represents an element in the list of search engines on the preferences menu.
@@ -91,7 +92,8 @@ public class SearchEnginePreference extends CustomListPreference {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getContext(), R.string.pref_search_last_toast, Toast.LENGTH_SHORT).show();
+                    Activity activity = (Activity)getContext();
+                    Snackbar.make(activity.findViewById(android.R.id.content), R.string.pref_search_last_toast, Snackbar.LENGTH_SHORT).show();
                 }
             });
             return;

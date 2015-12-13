@@ -1,5 +1,3 @@
-load(libdir + "class.js");
-
 // Test top-level module environment
 
 function testInitialEnvironment(source, expected) {
@@ -22,9 +20,6 @@ testInitialEnvironment('export let x = 1;', ['x']);
 testInitialEnvironment('export default function x() {};', ['x']);
 testInitialEnvironment('export default 1;', ['*default*']);
 testInitialEnvironment('export default function() {};', ['*default*']);
-
-if (classesEnabled()) {
-    testInitialEnvironment("class x { constructor() {} }", ['x']);
-    testInitialEnvironment('export default class x { constructor() {} };', ['x']);
-    testInitialEnvironment('export default class { constructor() {} };', ['*default*']);
-}
+testInitialEnvironment("class x { constructor() {} }", ['x']);
+testInitialEnvironment('export default class x { constructor() {} };', ['x']);
+testInitialEnvironment('export default class { constructor() {} };', ['*default*']);

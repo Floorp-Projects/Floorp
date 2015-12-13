@@ -1,5 +1,3 @@
-var test = `
-
 new class extends class { } {
     constructor() {
         assertEq(eval("super(); this"), this);
@@ -15,11 +13,6 @@ new class extends class { } {
         assertEq(this, (()=>this)());
     }
 }();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

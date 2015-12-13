@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     constructor() { }
     method() { this.methodCalled++; }
@@ -90,11 +88,6 @@ instance.testAssignElemPropValChange();
 instance.testAssignProp();
 
 instance.testCompoundAssignProp();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

@@ -189,7 +189,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel)
 
 #ifdef MOZ_B2G
     if (!sCurrentContext.init())
-      MOZ_CRASH("Tls init failed");
+      MOZ_CRASH("GFX: Tls init failed");
 #endif
 
 #ifdef XP_WIN

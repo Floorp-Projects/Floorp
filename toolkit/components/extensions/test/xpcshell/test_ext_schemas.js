@@ -25,7 +25,7 @@ let json = [
          prop1: {type: "integer"},
          prop2: {type: "array", items: {"$ref": "type1"}},
        },
-     }
+     },
    ],
 
    functions: [
@@ -113,9 +113,9 @@ let json = [
        parameters: [
          {name: "abc", type: "object", properties: {
            func: {type: "function", parameters: [
-             {name: "x", type: "integer"}
-           ]}
-         }}
+             {name: "x", type: "integer"},
+           ]},
+         }},
        ],
      },
 
@@ -141,9 +141,9 @@ let json = [
          name: "filter",
          type: "integer",
        }],
-     }
+     },
    ],
-  }
+  },
 ];
 
 let tallied = null;

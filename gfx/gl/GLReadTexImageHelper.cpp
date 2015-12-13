@@ -399,7 +399,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
         break;
     default:
-        MOZ_CRASH("Bad format.");
+        MOZ_CRASH("GFX: Bad format, read pixels.");
     }
     destPixelSize = BytesPerPixel(dest->GetFormat());
     MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
@@ -442,7 +442,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
                 break;
             }
             default: {
-                MOZ_CRASH("Bad read format.");
+                MOZ_CRASH("GFX: Bad read format, read format.");
             }
         }
 
@@ -463,7 +463,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
                 break;
             }
             default: {
-                MOZ_CRASH("Bad read type.");
+                MOZ_CRASH("GFX: Bad read type, read type.");
             }
         }
 

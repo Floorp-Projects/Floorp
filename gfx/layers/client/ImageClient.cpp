@@ -61,7 +61,7 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
     break;
 #endif
   default:
-    MOZ_CRASH("unhandled program type");
+    MOZ_CRASH("GFX: unhandled program type image");
   }
 
   NS_ASSERTION(result, "Failed to create ImageClient");

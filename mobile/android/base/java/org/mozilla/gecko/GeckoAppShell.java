@@ -106,6 +106,7 @@ import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Browser;
 import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -2534,14 +2535,14 @@ public class GeckoAppShell
     public static void downloadImageForIntent(final Intent intent) {
         final String src = ContextUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
         if (src == null) {
-            showImageShareFailureToast();
+            showImageShareFailureSnackbar();
             return;
         }
 
         final File dir = GeckoApp.getTempDirectory();
 
         if (dir == null) {
-            showImageShareFailureToast();
+            showImageShareFailureSnackbar();
             return;
         }
 
@@ -2600,11 +2601,9 @@ public class GeckoAppShell
     }
 
     // Don't fail silently, tell the user that we weren't able to share the image
-    private static final void showImageShareFailureToast() {
-        Toast toast = Toast.makeText(getContext(),
-                                     getContext().getResources().getString(R.string.share_image_failed),
-                                     Toast.LENGTH_SHORT);
-        toast.show();
+    private static final void showImageShareFailureSnackbar() {
+        View rootView = ((Activity)getContext()).findViewById(android.R.id.content);
+        Snackbar.make(rootView, R.string.share_image_failed, Snackbar.LENGTH_SHORT).show();
     }
 
     @WrapForJNI(allowMultithread = true)

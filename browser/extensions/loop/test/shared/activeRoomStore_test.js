@@ -15,13 +15,15 @@ describe("loop.store.ActiveRoomStore", function() {
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sandbox, dispatcher, store, requestStubs, fakeSdkDriver, fakeMultiplexGum;
   var standaloneMediaRestore;
+  var clock;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
-    sandbox.useFakeTimers();
+    clock = sandbox.useFakeTimers();
 
     LoopMochaUtils.stubLoopRequest(requestStubs = {
       GetLoopPref: sinon.stub(),
+      GetSelectedTabMetadata: sinon.stub(),
       SetLoopPref: sinon.stub(),
       AddConversationContext: sinon.stub(),
       AddBrowserSharingListener: sinon.stub().returns(42),
@@ -1548,13 +1550,32 @@ describe("loop.store.ActiveRoomStore", function() {
   });
 
   describe("#startBrowserShare", function() {
+    var getSelectedTabMetadataStub;
+
+    beforeEach(function() {
+      getSelectedTabMetadataStub = sinon.stub();
+      LoopMochaUtils.stubLoopRequest({
+        GetSelectedTabMetadata: getSelectedTabMetadataStub.returns({
+          title: "fakeTitle",
+          favicon: "fakeFavicon",
+          url: "http://www.fakeurl.com"
+        })
+      });
+
+      store.setStoreState({
+        roomState: ROOM_STATES.JOINED,
+        roomToken: "fakeToken",
+        sessionToken: "1627384950"
+      });
+
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
+    });
+
     afterEach(function() {
       store.endScreenShare();
     });
 
     it("should set the state to 'pending'", function() {
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
-
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,
         new sharedActions.ScreenSharingState({
@@ -1563,14 +1584,10 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should add a browser sharing listener for tab sharing", function() {
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
-
       sinon.assert.calledOnce(requestStubs.AddBrowserSharingListener);
     });
 
     it("should invoke the SDK driver with the correct options for tab sharing", function() {
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
-
       sinon.assert.calledOnce(fakeSdkDriver.startScreenShare);
       sinon.assert.calledWith(fakeSdkDriver.startScreenShare, {
         videoSource: "browser",
@@ -1579,6 +1596,36 @@ describe("loop.store.ActiveRoomStore", function() {
           scrollWithPage: true
         }
       });
+    });
+
+    it("should request the new metadata when the browser being shared change", function() {
+      clock.tick(500);
+      sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledWith(dispatcher.dispatch.getCall(1),
+        new sharedActions.UpdateRoomContext({
+          newRoomDescription: "fakeTitle",
+          newRoomThumbnail: "fakeFavicon",
+          newRoomURL: "http://www.fakeurl.com",
+          roomToken: store.getStoreState().roomToken
+      }));
+    });
+
+    it("should process only one request", function() {
+      // Simulates multiple requests.
+      LoopMochaUtils.publish("BrowserSwitch", 72);
+      LoopMochaUtils.publish("BrowserSwitch", 72);
+
+      clock.tick(500);
+      sinon.assert.calledThrice(getSelectedTabMetadataStub);
+      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledWith(dispatcher.dispatch.getCall(1),
+        new sharedActions.UpdateRoomContext({
+          newRoomDescription: "fakeTitle",
+          newRoomThumbnail: "fakeFavicon",
+          newRoomURL: "http://www.fakeurl.com",
+          roomToken: store.getStoreState().roomToken
+      }));
     });
   });
 

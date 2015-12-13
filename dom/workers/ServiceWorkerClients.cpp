@@ -615,10 +615,9 @@ private:
     }
 
     // Find the most recent browser window and open a new tab in it.
-    nsCOMPtr<nsIDOMWindow> browserWindow;
-    rv = wm->GetMostRecentWindow(MOZ_UTF16("navigator:browser"),
-                                 getter_AddRefs(browserWindow));
-    if (NS_WARN_IF(NS_FAILED(rv)) || !browserWindow) {
+    nsCOMPtr<nsPIDOMWindow> browserWindow =
+      nsContentUtils::GetMostRecentNonPBWindow();
+    if (!browserWindow) {
       // It is possible to be running without a browser window on Mac OS, so
       // we need to open a new chrome window.
       // TODO(catalinb): open new chrome window. Bug 1218080

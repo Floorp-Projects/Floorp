@@ -158,7 +158,7 @@ SharedSurface_ANGLEShareHandle::ProducerAcquireImpl()
     if (mKeyedMutex) {
         HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
         if (hr == WAIT_TIMEOUT) {
-            MOZ_CRASH();
+            MOZ_CRASH("GFX: ANGLE share handle timeout");
         }
     }
 }
@@ -214,7 +214,7 @@ SharedSurface_ANGLEShareHandle::ConsumerAcquireImpl()
     if (mConsumerKeyedMutex) {
       HRESULT hr = mConsumerKeyedMutex->AcquireSync(0, 10000);
       if (hr == WAIT_TIMEOUT) {
-        MOZ_CRASH();
+        MOZ_CRASH("GFX: ANGLE consumer mutex timeout");
       }
     }
 }
@@ -289,7 +289,7 @@ public:
         if (mMutex) {
             hr = mMutex->AcquireSync(0, 10000);
             if (hr == WAIT_TIMEOUT) {
-                MOZ_CRASH();
+                MOZ_CRASH("GFX: ANGLE scoped lock timeout");
             }
 
             if (FAILED(hr)) {

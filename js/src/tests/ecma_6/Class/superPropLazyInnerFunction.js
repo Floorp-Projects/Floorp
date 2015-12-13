@@ -1,4 +1,3 @@
-var test = `
 testcase();
 function testcase() {
     var tokenCodes  = {
@@ -15,10 +14,6 @@ function testcase() {
         if (tokenCodes[arr[i]] !== i) {};
     }
 }
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

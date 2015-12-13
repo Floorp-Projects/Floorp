@@ -69,7 +69,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
   } else {
-    MOZ_CRASH("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
+    MOZ_CRASH("GFX: CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);

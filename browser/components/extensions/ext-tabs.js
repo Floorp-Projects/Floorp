@@ -12,8 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-/* globals aboutNewTabService */
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {

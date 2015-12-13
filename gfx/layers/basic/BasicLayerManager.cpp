@@ -955,8 +955,7 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
     Matrix4x4();
   Matrix transform;
   if (!transform3d.CanDraw2D(&transform)) {
-    MOZ_CRASH("We should not have a 3D transform that CanDraw2D() is false!");
-    return;
+    gfxDevCrash(LogReason::CannotDraw3D) << "GFX: We should not have a 3D transform that CanDraw2D() is false!";
   }
   gfxMatrix oldTransform = aTarget->CurrentMatrix();
   transform *= ToMatrix(oldTransform);
