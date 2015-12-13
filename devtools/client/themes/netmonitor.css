@@ -83,19 +83,14 @@
   width: 7px;
 }
 
-.requests-menu-header-button[sorted] > .button-box > .button-icon,
-.requests-menu-header-button[sorted] #requests-menu-waterfall-image {
-  list-style-image: url('chrome://devtools/skin/images/sort-arrows.svg');
-}
-
 .requests-menu-header-button[sorted=ascending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=ascending] #requests-menu-waterfall-image {
-  -moz-image-region: rect(4px, 19px, 7px, 14px);
+  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#ascending");
 }
 
 .requests-menu-header-button[sorted=descending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=descending] #requests-menu-waterfall-image {
-  -moz-image-region: rect(5px, 8px, 8px, 3px);
+  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
 }
 
 .requests-menu-header-button > .button-box > .button-text,
