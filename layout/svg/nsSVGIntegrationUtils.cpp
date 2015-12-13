@@ -590,7 +590,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
 
     nsRegion dirtyRegion = aDirtyRect - offsetToBoundingBox;
     gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFrame);
-    nsFilterInstance::PaintFilteredFrame(aFrame, *target, tm, &callback, &dirtyRegion);
+    nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
+                                         tm, &callback, &dirtyRegion);
   } else {
     target->SetMatrix(matrixAutoSaveRestore.Matrix());
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(aLayerManager);
