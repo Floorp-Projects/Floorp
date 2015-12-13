@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(7615408c-1fb3-4128-8dd5-a3e2f3fa8842)]
+[builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,

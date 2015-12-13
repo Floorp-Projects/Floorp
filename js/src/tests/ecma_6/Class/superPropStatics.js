@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     constructor() { }
     static found() {
@@ -21,7 +19,7 @@ class derived extends base {
     static test() {
         assertEq(super["notFound"], undefined);
         super.found();
-        
+
         // foundCalled is set on |derived| specifically.
         let calledDesc = Object.getOwnPropertyDescriptor(derived, "foundCalled");
         assertEq(calledDesc.value, true);
@@ -31,11 +29,6 @@ class derived extends base {
 }
 
 derived.test();
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

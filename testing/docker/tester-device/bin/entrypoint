@@ -8,7 +8,7 @@ res=`curl --request POST -H "Content-Type: application/json" -d "$DEVICE_CAPABIL
 error=`echo $res | jq .error`
 
 if [ "$error" != "null" ]; then
-    echo $error
+    echo "[taskcluster:error] $error"
     exit -1
 fi
 

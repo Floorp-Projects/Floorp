@@ -955,7 +955,7 @@ GLBlitHelper::DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
         type = BlitTexRect;
         break;
     default:
-        MOZ_CRASH("Fatal Error: Bad `srcTarget`.");
+        MOZ_CRASH("GFX: Fatal Error: Bad `srcTarget`.");
         break;
     }
 

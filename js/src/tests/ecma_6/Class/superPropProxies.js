@@ -1,5 +1,3 @@
-var test = `
-
 class base {
     constructor() { }
 }
@@ -80,11 +78,6 @@ var wrappedBase = g.eval("({ method() { return this.__secretProp__; } })");
 var unwrappedDerived = { __secretProp__: 42, method() { return super.method(); } }
 Object.setPrototypeOf(unwrappedDerived, wrappedBase);
 assertEq(unwrappedDerived.method(), 42);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

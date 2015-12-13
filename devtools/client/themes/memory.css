@@ -141,6 +141,7 @@ html, body, #app, #memory-tool {
 
 .list {
   width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
   overflow-y: auto;
   margin: 0;
   padding: 0;

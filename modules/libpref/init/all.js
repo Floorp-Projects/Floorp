@@ -1695,6 +1695,13 @@ pref("network.dnsCacheExpirationGracePeriod", 60);
 // This preference can be used to turn off DNS prefetch.
 pref("network.dns.disablePrefetch", false);
 
+// This preference controls whether .onion hostnames are
+// rejected before being given to DNS. RFC 7686
+pref("network.dns.blockDotOnion", true);
+
+// These domains are treated as localhost equivalent
+pref("network.dns.localDomains", "");
+
 // Contols whether or not "localhost" should resolve when offline
 pref("network.dns.offline-localhost", true);
 
@@ -1827,13 +1834,6 @@ pref("network.proxy.socks_remote_dns",      false);
 pref("network.proxy.proxy_over_tls",        true);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
-
-// If this value is 'true' and a PAC or all given proxies are inaccessible or
-// failing, Firefox will attempt to connect to the server DIRECTly. Meaning
-// without a proxy. If set 'false', Firefox will not try to access without
-// proxy.
-pref("network.proxy.use_direct_on_fail",    true);
-
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign
 #ifdef ANDROID

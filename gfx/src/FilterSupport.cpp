@@ -1665,7 +1665,7 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
     case PrimitiveType::Flood:
     case PrimitiveType::Turbulence:
     case PrimitiveType::Image:
-      MOZ_CRASH("this shouldn't be called for filters without inputs");
+      MOZ_CRASH("GFX: this shouldn't be called for filters without inputs");
       return nsIntRegion();
 
     case PrimitiveType::Empty:

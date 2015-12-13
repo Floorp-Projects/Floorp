@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface mozIApplication;
 interface nsFrameLoader;
 interface nsIDocShell;
 interface nsIURI;
@@ -214,7 +215,7 @@ class nsFrameLoader;
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
-[scriptable, uuid(c4abebcf-55f3-47d4-af15-151311971255)]
+[scriptable, uuid(adc1b3ba-8deb-4943-8045-e6de0044f2ce)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**
@@ -222,6 +223,12 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
+
+  /**
+   * The principal of parent mozIApplication in case of nested mozbrowser
+   * iframes.
+   */
+  readonly attribute mozIApplication parentApplication;
 
   /**
    * Puts the FrameLoaderOwner in prerendering mode.

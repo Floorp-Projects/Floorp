@@ -11,10 +11,11 @@ const Cr = Components.results;
 
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
+/* globals Schemas */
+
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-function readJSON(uri)
-{
+function readJSON(uri) {
   return new Promise((resolve, reject) => {
     NetUtil.asyncFetch({uri, loadUsingSystemPrincipal: true}, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
@@ -39,8 +40,7 @@ function readJSON(uri)
   });
 }
 
-function getValueBaseType(value)
-{
+function getValueBaseType(value) {
   let t = typeof(value);
   if (t == "object") {
     if (value === null) {
@@ -69,7 +69,7 @@ class Entry {
   // callFunction, addListener, removeListener, and hasListener.
   inject(name, dest, wrapperFuncs) {
   }
-};
+}
 
 // Corresponds either to a type declared in the "types" section of the
 // schema or else to any type object used throughout the schema.
@@ -100,7 +100,7 @@ class Type extends Entry {
     }
     return {error: `Expected ${type} instead of ${JSON.stringify(value)}`};
   }
-};
+}
 
 // Type that allows any value.
 class AnyType extends Type {
@@ -111,7 +111,7 @@ class AnyType extends Type {
   checkBaseType(baseType) {
     return true;
   }
-};
+}
 
 // An untagged union type.
 class ChoiceType extends Type {
@@ -132,7 +132,7 @@ class ChoiceType extends Type {
   checkBaseType(baseType) {
     return this.choices.some(t => t.checkBaseType(baseType));
   }
-};
+}
 
 // This is a reference to another type--essentially a typedef.
 class RefType extends Type {
@@ -161,7 +161,7 @@ class RefType extends Type {
     }
     return type.checkBaseType(baseType);
   }
-};
+}
 
 class StringType extends Type {
   constructor(enumeration, minLength, maxLength) {
@@ -207,7 +207,7 @@ class StringType extends Type {
       }
     }
   }
-};
+}
 
 class UnrestrictedObjectType extends Type {
   normalize(value) {
@@ -217,7 +217,7 @@ class UnrestrictedObjectType extends Type {
   checkBaseType(baseType) {
     return baseType == "object";
   }
-};
+}
 
 class ObjectType extends Type {
   constructor(properties, additionalProperties) {
@@ -276,7 +276,7 @@ class ObjectType extends Type {
 
     return {value: result};
   }
-};
+}
 
 class NumberType extends Type {
   normalize(value) {
@@ -295,7 +295,7 @@ class NumberType extends Type {
   checkBaseType(baseType) {
     return baseType == "number" || baseType == "integer";
   }
-};
+}
 
 class IntegerType extends Type {
   constructor(minimum, maximum) {
@@ -328,7 +328,7 @@ class IntegerType extends Type {
   checkBaseType(baseType) {
     return baseType == "integer";
   }
-};
+}
 
 class BooleanType extends Type {
   normalize(value) {
@@ -338,7 +338,7 @@ class BooleanType extends Type {
   checkBaseType(baseType) {
     return baseType == "boolean";
   }
-};
+}
 
 class ArrayType extends Type {
   constructor(itemType) {
@@ -367,7 +367,7 @@ class ArrayType extends Type {
   checkBaseType(baseType) {
     return baseType == "array";
   }
-};
+}
 
 class FunctionType extends Type {
   constructor(parameters) {
@@ -382,7 +382,7 @@ class FunctionType extends Type {
   checkBaseType(baseType) {
     return baseType == "function";
   }
-};
+}
 
 // Represents a "property" defined in a schema namespace with a
 // particular value. Essentially this is a constant.
@@ -396,7 +396,7 @@ class ValueProperty extends Entry {
   inject(name, dest, wrapperFuncs) {
     dest[name] = this.value;
   }
-};
+}
 
 // Represents a "property" defined in a schema namespace that is not a
 // constant.
@@ -406,7 +406,7 @@ class TypeProperty extends Entry {
     this.name = name;
     this.type = type;
   }
-};
+}
 
 // This class is a base class for FunctionEntrys and Events. It takes
 // care of validating parameter lists (i.e., handling of optional
@@ -463,7 +463,7 @@ class CallEntry extends Entry {
       }
 
       return check(parameterIndex + 1, argIndex + 1);
-    }
+    };
 
     let success = check(0, 0);
     if (!success) {
@@ -486,7 +486,7 @@ class CallEntry extends Entry {
 
     return fixedArgs;
   }
-};
+}
 
 // Represents a "function" defined in a schema namespace.
 class FunctionEntry extends CallEntry {
@@ -503,10 +503,10 @@ class FunctionEntry extends CallEntry {
     let stub = (...args) => {
       let actuals = this.checkParameters(args, dest);
       return wrapperFuncs.callFunction(this.namespaceName, name, actuals);
-    }
+    };
     Cu.exportFunction(stub, dest, {defineAs: name});
   }
-};
+}
 
 // Represents an "event" defined in a schema namespace.
 class Event extends CallEntry {
@@ -550,7 +550,7 @@ class Event extends CallEntry {
     Cu.exportFunction(removeStub, obj, {defineAs: "removeListener"});
     Cu.exportFunction(hasStub, obj, {defineAs: "hasListener"});
   }
-};
+}
 
 this.Schemas = {
   // Map[<schema-name> -> Map[<symbol-name> -> Entry]]
@@ -577,7 +577,7 @@ this.Schemas = {
           throw new Error(`Internal error: Namespace ${namespaceName} has invalid type property "${prop}" in type "${type.name}"`);
         }
       }
-    };
+    }
 
     if ("choices" in type) {
       checkTypeProperties("choices");
@@ -586,10 +586,10 @@ this.Schemas = {
       return new ChoiceType(choices);
     } else if ("$ref" in type) {
       checkTypeProperties("$ref");
-      let ref = type["$ref"];
+      let ref = type.$ref;
       let ns = namespaceName;
-      if (ref.includes('.')) {
-        [ns, ref] = ref.split('.');
+      if (ref.includes(".")) {
+        [ns, ref] = ref.split(".");
       }
       return new RefType(ns, ref);
     }
@@ -604,7 +604,7 @@ this.Schemas = {
     if (type.type == "string") {
       checkTypeProperties("enum", "minLength", "maxLength");
 
-      let enumeration = type["enum"] || null;
+      let enumeration = type.enum || null;
       if (enumeration) {
         // The "enum" property is either a list of strings that are
         // valid values or else a list of {name, description} objects,
@@ -693,7 +693,7 @@ this.Schemas = {
 
   loadFunction(namespaceName, fun) {
     // We ignore this property for now.
-    let returns = fun.returns;
+    let returns = fun.returns;  // eslint-disable-line no-unused-vars
 
     let f = new FunctionEntry(namespaceName, fun.name,
                               this.parseType(namespaceName, fun,
@@ -713,8 +713,10 @@ this.Schemas = {
     });
 
     // We ignore these properties for now.
+    /* eslint-disable no-unused-vars */
     let returns = event.returns;
     let filters = event.filters;
+    /* eslint-enable no-unused-vars */
 
     let type = this.parseType(namespaceName, event,
                               ["name", "unsupported", "deprecated",

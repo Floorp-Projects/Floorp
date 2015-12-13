@@ -1,10 +1,9 @@
-var test = `
-class test {
+class testBasic {
     constructor() { }
     static constructor() { }
 }
 
-class testWithExtends {
+class testWithExtends extends null {
     constructor() { };
     static constructor() { };
 }
@@ -18,10 +17,6 @@ class testOrderWithExtends extends null {
     static constructor() { };
     constructor() { };
 }
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0,0,"OK");

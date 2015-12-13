@@ -6,8 +6,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-/* globals aboutNewTabService */
-
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,

@@ -1,7 +1,5 @@
-var test = `
-
 class testForIn {
-    constructor() { 
+    constructor() {
         let hits = 0;
         for (super.prop in { prop1: 1, prop2: 2 })
             hits++;
@@ -22,12 +20,6 @@ new testForIn();
         assertEq(hits, 2);
     }
 }).testForOf();
-
-`;
-
-if (classesEnabled())
-    eval(test);
-
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

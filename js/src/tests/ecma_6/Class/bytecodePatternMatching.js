@@ -1,6 +1,5 @@
 // Constructors can't be called so we can't pattern match
 // them in replace and sort.
-var test = `
 function a() {
     var b = {a: "A"};
 
@@ -25,10 +24,6 @@ function b() {
 
 a();
 b();
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

@@ -182,6 +182,7 @@
         "service-workers/service-worker/fetch-frame-resource.https.html": [
           {
             "path": "service-workers/service-worker/fetch-frame-resource.https.html",
+            "timeout": "long",
             "url": "/_mozilla/service-workers/service-worker/fetch-frame-resource.https.html"
           }
         ],

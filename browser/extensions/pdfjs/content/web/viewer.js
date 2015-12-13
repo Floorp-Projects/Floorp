@@ -1530,7 +1530,7 @@ var PDFLinkService = (function () {
           return pdfOpenParams;
         }
       }
-      return '';
+      return this.getAnchorUrl('');
     },
 
     /**

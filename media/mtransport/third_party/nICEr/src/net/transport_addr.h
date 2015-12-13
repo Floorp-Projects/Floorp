@@ -71,6 +71,11 @@ typedef struct nr_transport_addr_ {
   char as_string[56];
 } nr_transport_addr;
 
+typedef struct nr_transport_addr_mask_ {
+  UINT4 addr;
+  UINT4 mask;
+} nr_transport_addr_mask;
+
 int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int protocol, int keep, nr_transport_addr *addr);
 
 // addresses, ports in local byte order
@@ -88,6 +93,7 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
 
 int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
 int nr_transport_addr_is_loopback(nr_transport_addr *addr);
+int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr);
 int nr_transport_addr_is_link_local(nr_transport_addr *addr);
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
 int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr *from);
