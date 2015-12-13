@@ -111,10 +111,15 @@
 
 /* Network requests table: specific column dimensions */
 
-.requests-menu-status,
-.requests-menu-method-box,
-.requests-menu-method {
+.requests-menu-status {
   max-width: 6em;
+  text-align: center;
+  width: 10vw;
+}
+
+.requests-menu-method,
+.requests-menu-method-box {
+  max-width: 7em;
   text-align: center;
   width: 10vw;
 }
@@ -167,8 +172,13 @@
 }
 
 .requests-menu-type,
-.requests-menu-transferred,
 .requests-menu-size {
+  max-width: 6em;
+  text-align: center;
+  width: 8vw;
+}
+
+.requests-menu-transferred {
   max-width: 8em;
   text-align: center;
   width: 8vw;
