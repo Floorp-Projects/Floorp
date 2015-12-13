@@ -1209,46 +1209,44 @@
 }
 
 /* Table widget column header colors are taken from netmonitor.inc.css to match
-   the look of both the tables. This needs to be updated along with netmonitor
-   header colors in bug 951714 */
+   the look of both the tables. */
 
 .table-widget-column-header {
-  background: rgba(0,0,0,0);
   position: sticky;
   top: 0;
   width: 100%;
+  margin: 0;
   padding: 5px 0 0 !important;
   color: inherit;
   text-align: center;
   font-weight: inherit !important;
-  transition: background-color 0.1s ease-in-out;
+  border-bottom-width: 0 !important;
+  border-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
+  background-repeat: no-repeat;
 }
 
-.table-widget-column-header:hover {
-  background-image: linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10));
+.table-widget-column-header:not([sorted]):hover {
+  background-image: linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1));
 }
 
-.table-widget-column-header:hover:active {
-  background-image: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25));
+.table-widget-column-header[sorted] {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
+  box-shadow: -0.5px 0px 0px 0.5px var(--theme-splitter-color);
+  background-position: right 6px center;
 }
 
-.table-widget-column-header:not(:active)[sorted] {
-  background-image: linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
+.table-widget-column-header[sorted]:-moz-locale-dir(rtl) {
+  background-position: 6px center;
 }
 
-.table-widget-column-header:not(:active)[sorted=ascending] {
-  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3)),
-                    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
-  background-size: 100% 1px, auto;
-  background-repeat: no-repeat, repeat;
+.table-widget-column-header[sorted=ascending] {
+  background-image: url("chrome://devtools/skin/images/sort-arrows.svg#ascending");
 }
 
-.table-widget-column-header:not(:active)[sorted=descending] {
-  background-image: radial-gradient(farthest-side at center bottom, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3)),
-                    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15));
-  background-size: 100% 1px, auto;
-  background-repeat: no-repeat, repeat;
-  background-position: bottom;
+.table-widget-column-header[sorted=descending] {
+  background-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
 }
 
 /* Cells */
@@ -1262,6 +1260,10 @@
   margin-bottom: -1px !important;
   border-bottom: 1px solid transparent;
   color: var(--theme-body-color);
+}
+
+.table-widget-column-header + .table-widget-cell {
+  border-top: 1px solid var(--theme-splitter-color);
 }
 
 .table-widget-cell:last-child {
