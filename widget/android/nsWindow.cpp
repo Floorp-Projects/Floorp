@@ -241,6 +241,7 @@ public:
         , mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
         , mIMEUpdatingContext(false)
         , mIMESelectionChanged(false)
+        , mIMETextChangedDuringFlush(false)
     {}
 
     ~Natives();
@@ -316,11 +317,17 @@ private:
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     bool mIMEUpdatingContext;
     bool mIMESelectionChanged;
+    bool mIMETextChangedDuringFlush;
 
     void SendIMEDummyKeyEvents();
     void AddIMETextChange(const IMETextChange& aChange);
-    void PostFlushIMEChanges();
-    void FlushIMEChanges();
+
+    enum FlushChangesFlag {
+        FLUSH_FLAG_NONE,
+        FLUSH_FLAG_RETRY
+    };
+    void PostFlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
+    void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
 
 public:
     bool NotifyIME(const IMENotification& aIMENotification);
@@ -1981,6 +1988,10 @@ nsWindow::Natives::AddIMETextChange(const IMETextChange& aChange)
 {
     mIMETextChanges.AppendElement(aChange);
 
+    // We may not be in the middle of flushing,
+    // in which case this flag is meaningless.
+    mIMETextChangedDuringFlush = true;
+
     // Now that we added a new range we need to go back and
     // update all the ranges before that.
     // Ranges that have offsets which follow this new range
@@ -2039,9 +2050,10 @@ nsWindow::Natives::AddIMETextChange(const IMETextChange& aChange)
 }
 
 void
-nsWindow::Natives::PostFlushIMEChanges()
+nsWindow::Natives::PostFlushIMEChanges(FlushChangesFlag aFlags)
 {
-    if (!mIMETextChanges.IsEmpty() || mIMESelectionChanged) {
+    if (aFlags != FLUSH_FLAG_RETRY &&
+            (!mIMETextChanges.IsEmpty() || mIMESelectionChanged)) {
         // Already posted
         return;
     }
@@ -2049,15 +2061,15 @@ nsWindow::Natives::PostFlushIMEChanges()
     // Keep a strong reference to the window to keep 'this' alive.
     RefPtr<nsWindow> window(&this->window);
 
-    nsAppShell::gAppShell->PostEvent([this, window] {
+    nsAppShell::gAppShell->PostEvent([this, window, aFlags] {
         if (!window->Destroyed()) {
-            FlushIMEChanges();
+            FlushIMEChanges(aFlags);
         }
     });
 }
 
 void
-nsWindow::Natives::FlushIMEChanges()
+nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
 {
     // Only send change notifications if we are *not* masking events,
     // i.e. if we have a focused editor,
@@ -2073,9 +2085,20 @@ nsWindow::Natives::FlushIMEChanges()
     RefPtr<nsWindow> kungFuDeathGrip(&window);
     window.UserActivity();
 
-    for (uint32_t i = 0; i < mIMETextChanges.Length(); i++) {
-        IMETextChange &change = mIMETextChanges[i];
+    struct TextRecord {
+        nsString text;
+        int32_t start;
+        int32_t oldEnd;
+        int32_t newEnd;
+    };
+    nsAutoTArray<TextRecord, 4> textTransaction;
+    if (mIMETextChanges.Length() > textTransaction.Capacity()) {
+        textTransaction.SetCapacity(mIMETextChanges.Length());
+    }
 
+    mIMETextChangedDuringFlush = false;
+
+    for (const IMETextChange &change : mIMETextChanges) {
         if (change.mStart == change.mOldEnd &&
                 change.mStart == change.mNewEnd) {
             continue;
@@ -2092,12 +2115,32 @@ nsWindow::Natives::FlushIMEChanges()
             NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
         }
 
-        mEditable->OnTextChange(event.mReply.mString, change.mStart,
-                                change.mOldEnd, change.mNewEnd);
+        if (mIMETextChangedDuringFlush) {
+            // The query event above could have triggered more text changes to
+            // come in, as indicated by our flag. If that happens, try flushing
+            // IME changes again later.
+            if (!NS_WARN_IF(aFlags == FLUSH_FLAG_RETRY)) {
+                // Don't retry if already retrying, to avoid infinite loops.
+                PostFlushIMEChanges(FLUSH_FLAG_RETRY);
+            }
+            return;
+        }
+
+        textTransaction.AppendElement(
+                TextRecord{event.mReply.mString, change.mStart,
+                           change.mOldEnd, change.mNewEnd});
     }
+
     mIMETextChanges.Clear();
 
+    for (const TextRecord& record : textTransaction) {
+        mEditable->OnTextChange(record.text, record.start,
+                                record.oldEnd, record.newEnd);
+    }
+
     if (mIMESelectionChanged) {
+        mIMESelectionChanged = false;
+
         WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
         window.InitEvent(event, nullptr);
         window.DispatchEvent(&event);
@@ -2107,7 +2150,6 @@ nsWindow::Natives::FlushIMEChanges()
 
         mEditable->OnSelectionChange(int32_t(event.GetSelectionStart()),
                                      int32_t(event.GetSelectionEnd()));
-        mIMESelectionChanged = false;
     }
 }
 

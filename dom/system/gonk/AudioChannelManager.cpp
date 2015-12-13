@@ -213,8 +213,8 @@ AudioChannelManager::GetAllowedAudioChannels(
   }
 
   nsBrowserElement::GenerateAllowedAudioChannels(window, nullptr, nullptr,
-                                                 manifestURL, aAudioChannels,
-                                                 aRv);
+                                                 manifestURL, nullptr,
+                                                 aAudioChannels, aRv);
   NS_WARN_IF(aRv.Failed());
 }
 

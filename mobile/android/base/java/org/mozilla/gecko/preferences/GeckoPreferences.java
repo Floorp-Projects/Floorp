@@ -65,6 +65,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
+import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -77,7 +78,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -622,7 +623,7 @@ OnSharedPreferenceChangeListener
                 ThreadUtils.postToUiThread(new Runnable () {
                     @Override
                     public void run() {
-                        Toast.makeText(context, stringRes, Toast.LENGTH_SHORT).show();
+                        Snackbar.make(findViewById(android.R.id.content), stringRes, Snackbar.LENGTH_SHORT).show();
                     }
                 });
             }

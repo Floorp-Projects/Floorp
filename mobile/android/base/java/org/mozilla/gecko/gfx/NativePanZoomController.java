@@ -76,9 +76,9 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
 
     @Override
     public void notifyDefaultActionPrevented(boolean prevented) {
-        // This should never get called; there is a different
-        // codepath that notifies the APZ code of this.
-        throw new IllegalStateException("APZCCallbackHandler::NotifyDefaultPrevented should be getting called, not this!");
+        // no-op: This could get called if accessibility is enabled and the events
+        // are sent to Gecko directly without going through APZ. In this case
+        // we just want to ignore this callback.
     }
 
     @Override

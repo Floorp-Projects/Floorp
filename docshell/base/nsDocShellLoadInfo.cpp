@@ -12,7 +12,8 @@
 #include "mozilla/net/ReferrerPolicy.h"
 
 nsDocShellLoadInfo::nsDocShellLoadInfo()
-  : mInheritOwner(false)
+  : mLoadReplace(false)
+  , mInheritOwner(false)
   , mOwnerIsExplicit(false)
   , mSendReferrer(true)
   , mReferrerPolicy(mozilla::net::RP_Default)

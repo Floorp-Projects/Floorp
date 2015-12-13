@@ -212,46 +212,26 @@ public:
 
 NS_IMPL_ISUPPORTS0(KeepAliveHandler)
 
-class SoftUpdateRequest : public nsRunnable
+class RegistrationUpdateRunnable : public nsRunnable
 {
-protected:
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
+  const bool mNeedTimeCheck;
+
 public:
-  explicit SoftUpdateRequest(nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
+  RegistrationUpdateRunnable(nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
+                             bool aNeedTimeCheck)
     : mRegistration(aRegistration)
+    , mNeedTimeCheck(aNeedTimeCheck)
   {
-    MOZ_ASSERT(aRegistration);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD
+  Run() override
   {
-    AssertIsOnMainThread();
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    MOZ_ASSERT(swm);
-
-    PrincipalOriginAttributes attrs =
-      mozilla::BasePrincipal::Cast(mRegistration->mPrincipal)->OriginAttributesRef();
-
-    swm->PropagateSoftUpdate(attrs,
-                             NS_ConvertUTF8toUTF16(mRegistration->mScope));
-    return NS_OK;
-  }
-};
-
-class CheckLastUpdateTimeRequest final : public SoftUpdateRequest
-{
-public:
-  explicit CheckLastUpdateTimeRequest(
-    nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
-    : SoftUpdateRequest(aRegistration)
-  {}
-
-  NS_IMETHOD Run()
-  {
-    AssertIsOnMainThread();
-    if (mRegistration->IsLastUpdateCheckTimeOverOneDay()) {
-      SoftUpdateRequest::Run();
+    if (mNeedTimeCheck) {
+      mRegistration->MaybeScheduleTimeCheckAndUpdate();
+    } else {
+      mRegistration->MaybeScheduleUpdate();
     }
     return NS_OK;
   }
@@ -335,9 +315,9 @@ public:
   void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
   {
-    nsCOMPtr<nsIRunnable> runnable = new CheckLastUpdateTimeRequest(mRegistration);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
+    nsCOMPtr<nsIRunnable> runnable =
+      new RegistrationUpdateRunnable(mRegistration, true /* time check */);
+    NS_DispatchToMainThread(runnable.forget());
   }
 };
 
@@ -1281,14 +1261,19 @@ private:
       nsCOMPtr<nsIRunnable> runnable;
       if (event->DefaultPrevented(aCx)) {
         event->ReportCanceled();
-        runnable = new CancelChannelRunnable(mInterceptedChannel,
-                                             NS_ERROR_INTERCEPTION_FAILED);
       } else if (event->GetInternalNSEvent()->mFlags.mExceptionHasBeenRisen) {
         // Exception logged via the WorkerPrivate ErrorReporter
-        runnable = new CancelChannelRunnable(mInterceptedChannel,
-                                             NS_ERROR_INTERCEPTION_FAILED);
       } else {
         runnable = new ResumeRequest(mInterceptedChannel);
+      }
+
+      if (!runnable) {
+        nsCOMPtr<nsIRunnable> updateRunnable =
+          new RegistrationUpdateRunnable(mRegistration, false /* time check */);
+        NS_DispatchToMainThread(runnable.forget());
+
+        runnable = new CancelChannelRunnable(mInterceptedChannel,
+                                             NS_ERROR_INTERCEPTION_FAILED);
       }
 
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
@@ -1301,12 +1286,6 @@ private:
       waitUntilPromise->AppendNativeHandler(keepAliveHandler);
     }
 
-    // 9.8.22 If request is a non-subresource request, then: Invoke Soft Update algorithm
-    if (internalReq->IsNavigationRequest()) {
-      nsCOMPtr<nsIRunnable> runnable= new SoftUpdateRequest(mRegistration);
-
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
-    }
     return true;
   }
 

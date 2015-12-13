@@ -1,5 +1,3 @@
-var test = `
-
 class base1 {
     constructor() {
         this.base = 1;
@@ -31,11 +29,6 @@ class defaultInst extends base1 { }
 assertEq(new defaultInst().base, 1);
 Object.setPrototypeOf(defaultInst, base2);
 assertEq(new defaultInst().base, 2);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

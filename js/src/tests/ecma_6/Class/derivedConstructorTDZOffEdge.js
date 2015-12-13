@@ -1,5 +1,3 @@
-var test = `
-
 class foo extends null {
     constructor() {
         // Let it fall off the edge and throw.
@@ -8,11 +6,6 @@ class foo extends null {
 
 for (let i = 0; i < 1100; i++)
     assertThrownErrorContains(() => new foo(), "|this|");
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

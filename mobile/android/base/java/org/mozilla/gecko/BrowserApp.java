@@ -134,7 +134,6 @@ import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
 import com.keepsafe.switchboard.AsyncConfigLoader;
 import com.keepsafe.switchboard.SwitchBoard;
@@ -331,7 +330,7 @@ public class BrowserApp extends GeckoApp
                 showBookmarkAddedSnackbar();
                 break;
             case BOOKMARK_REMOVED:
-                showBookmarkRemovedToast();
+                showBookmarkRemovedSnackbar();
                 break;
             case READING_LIST_ADDED:
                 onAddedToReadingList(tab.getURL());
@@ -396,7 +395,7 @@ public class BrowserApp extends GeckoApp
 
     private void showBookmarkAddedSnackbar() {
         // This flow is from the option menu which has check to see if a bookmark was already added.
-        // So, it is safe here to show the toast that bookmark_added without any checks.
+        // So, it is safe here to show the snackbar that bookmark_added without any checks.
 
         final SnackbarCallback callback = new SnackbarCallback() {
             @Override
@@ -412,8 +411,8 @@ public class BrowserApp extends GeckoApp
                      callback);
     }
 
-    private void showBookmarkRemovedToast() {
-        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+    private void showBookmarkRemovedSnackbar() {
+        showSnackbar(getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_SHORT, null, null);
     }
 
     private void showSwitchToReadingListSnackbar(String message) {
@@ -439,7 +438,7 @@ public class BrowserApp extends GeckoApp
     }
 
     public void onRemovedFromReadingList(String url) {
-        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
+        showSnackbar(getResources().getString(R.string.reading_list_removed), Snackbar.LENGTH_SHORT, null, null);
     }
 
     @Override

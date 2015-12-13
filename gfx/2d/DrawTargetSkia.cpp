@@ -100,7 +100,8 @@ GetBitmapForSurface(SourceSurface* aSurface)
 
   RefPtr<DataSourceSurface> surf = aSurface->GetDataSurface();
   if (!surf) {
-    MOZ_CRASH("Non-skia SourceSurfaces need to be DataSourceSurfaces");
+    gfxDevCrash(LogReason::SourceSurfaceIncompatible) << "Non-skia SourceSurfaces need to be DataSourceSurfaces";
+    return result;
   }
 
   SkAlphaType alphaType = (surf->GetFormat() == SurfaceFormat::B8G8R8X8) ?

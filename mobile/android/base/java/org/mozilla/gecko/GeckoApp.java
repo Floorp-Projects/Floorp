@@ -105,6 +105,7 @@ import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -583,7 +584,7 @@ public abstract class GeckoApp
                     ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
+                            showSnackbar(getString(resId), Snackbar.LENGTH_SHORT, null, null);
                         }
                     });
                 }
@@ -1061,13 +1062,14 @@ public abstract class GeckoApp
             if (image != null) {
                 // Some devices don't have a DCIM folder and the Media.insertImage call will fail.
                 File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
                 if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
-                    Toast.makeText((Context) this, R.string.set_image_path_fail, Toast.LENGTH_SHORT).show();
+                    showSnackbar(getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT, null, null);
                     return;
                 }
                 String path = Media.insertImage(getContentResolver(),image, null, null);
                 if (path == null) {
-                    Toast.makeText((Context) this, R.string.set_image_path_fail, Toast.LENGTH_SHORT).show();
+                    showSnackbar(getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT, null, null);
                     return;
                 }
                 final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
@@ -1084,7 +1086,7 @@ public abstract class GeckoApp
                 };
                 ActivityHandlerHelper.startIntentForActivity(this, chooser, handler);
             } else {
-                Toast.makeText((Context) this, R.string.set_image_fail, Toast.LENGTH_SHORT).show();
+                showSnackbar(getString(R.string.set_image_fail), Snackbar.LENGTH_SHORT, null, null);
             }
         } catch(OutOfMemoryError ome) {
             Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);

@@ -1,4 +1,3 @@
-var test = `
 class TestClass {
     constructor() { }
     method() { }
@@ -35,11 +34,6 @@ var hasNoPrototype = [
 for (var fun of hasNoPrototype) {
     assertEq(fun.hasOwnProperty('prototype'), false);
 }
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0, "OK");

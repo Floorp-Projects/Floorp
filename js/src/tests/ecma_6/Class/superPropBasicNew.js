@@ -1,5 +1,3 @@
-var test = `
-
 class Base {
     constructor() {}
 }
@@ -14,11 +12,6 @@ class Derived extends Mid {
 let d = new Derived();
 var df = d.f();
 assertEq(df.constructor, Base);
-
-`;
-
-if (classesEnabled())
-    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

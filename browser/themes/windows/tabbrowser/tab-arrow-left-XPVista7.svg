@@ -3,10 +3,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg width="15" height="17" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fill" x1="50%" y1="0%" x2="50%" y2="100%">
-      <stop stop-color="#3f4f5a" offset="0"/>
-      <stop stop-color="#7e8c97" offset="1"/>
+    <linearGradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c2835"/>
+      <stop offset="60%" stop-color="#606e7b"/>
+      <stop offset="100%" stop-color="#465765"/>
     </linearGradient>
   </defs>
-  <path d="M11 4L9.5 2.5l-5.875 6 5.875 6L11 13 6.625 8.5z" fill="url(#fill)"/>
+  <path d="M11 4L9.5 2.5l-5.875 6 5.875 6L11 13 6.625 8.5z" fill="url(#gradient)"/>
 </svg>

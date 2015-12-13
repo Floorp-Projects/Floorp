@@ -56,6 +56,8 @@ private:
 
   void Shutdown();
 
+  nsresult FindCorrectWindow(nsIDOMWindow* aWindow);
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIAudioChannelAgentCallback> mCallback;
 
