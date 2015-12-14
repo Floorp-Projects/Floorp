@@ -14,10 +14,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-common/async.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
 
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
@@ -67,14 +63,14 @@ ClientEngine.prototype = {
   // Aggregate some stats on the composition of clients on this account
   get stats() {
     let stats = {
-      hasMobile: this.localType == DEVICE_TYPE_MOBILE,
+      hasMobile: this.localType == "mobile",
       names: [this.localName],
       numClients: 1,
     };
 
     for (let id in this._store._remoteClients) {
       let {name, type} = this._store._remoteClients[id];
-      stats.hasMobile = stats.hasMobile || type == DEVICE_TYPE_MOBILE;
+      stats.hasMobile = stats.hasMobile || type == "mobile";
       stats.names.push(name);
       stats.numClients++;
     }
@@ -120,15 +116,18 @@ ClientEngine.prototype = {
   },
 
   get localName() {
-    return this.localName = Utils.getDeviceName();
+    let localName = Svc.Prefs.get("client.name", "");
+    if (localName != "")
+      return localName;
+
+    return this.localName = Utils.getDefaultDeviceName();
   },
   set localName(value) {
     Svc.Prefs.set("client.name", value);
-    fxAccounts.updateDeviceRegistration();
   },
 
   get localType() {
-    return Utils.getDeviceType();
+    return Svc.Prefs.get("client.type", "desktop");
   },
   set localType(value) {
     Svc.Prefs.set("client.type", value);
@@ -136,7 +135,7 @@ ClientEngine.prototype = {
 
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])
-      return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
+      return this._store._remoteClients[id].type == "mobile";
     return false;
   },
 
@@ -414,13 +413,6 @@ ClientStore.prototype = {
 
     // Package the individual components into a record for the local client
     if (id == this.engine.localID) {
-      let cb = Async.makeSpinningCallback();
-      fxAccounts.getDeviceId().then(id => cb(null, id), cb);
-      try {
-        record.fxaDeviceId = cb.wait();
-      } catch(error) {
-        this._log.warn("failed to get fxa device id", error);
-      }
       record.name = this.engine.localName;
       record.type = this.engine.localType;
       record.commands = this.engine.localCommands;
