@@ -43,13 +43,9 @@ HDC
 gfxWindowsNativeDrawing::BeginNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_INIT) {
-        RefPtr<gfxASurface> surf;
-        
-        if (mContext->GetCairo()) {
-          surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
-        }
-
-        if (surf && surf->CairoStatus())
+        RefPtr<gfxASurface> surf =
+          mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
+        if (surf && surf->CairoStatus() != 0)
             return nullptr;
 
         gfxMatrix m = mContext->CurrentMatrix();
