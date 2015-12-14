@@ -18,8 +18,7 @@
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
-
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -1691,9 +1690,8 @@ MessageChannel::ReportConnectionError(const char* aChannelName, Message* aMsg) c
 
     if (aMsg) {
         char reason[512];
-        PR_snprintf(reason, sizeof(reason),
-                    "(msgtype=0x%lX,name=%s) %s",
-                    aMsg->type(), aMsg->name(), errorMsg);
+        snprintf_literal(reason,"(msgtype=0x%X,name=%s) %s",
+                         aMsg->type(), aMsg->name(), errorMsg);
 
         PrintErrorMessage(mSide, aChannelName, reason);
     } else {
@@ -1737,9 +1735,8 @@ MessageChannel::MaybeHandleError(Result code, const Message& aMsg, const char* c
     }
 
     char reason[512];
-    PR_snprintf(reason, sizeof(reason),
-                "(msgtype=0x%lX,name=%s) %s",
-                aMsg.type(), aMsg.name(), errorMsg);
+    snprintf_literal(reason,"(msgtype=0x%X,name=%s) %s",
+                     aMsg.type(), aMsg.name(), errorMsg);
 
     PrintErrorMessage(mSide, channelName, reason);
 
