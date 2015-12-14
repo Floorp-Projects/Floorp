@@ -111,6 +111,14 @@ DOMSVGTranslatePoint::MatrixTransform(SVGMatrix& matrix)
   return point.forget();
 }
 
+SVGView::SVGView()
+{
+  mZoomAndPan.Init(SVGSVGElement::ZOOMANDPAN,
+                   SVG_ZOOMANDPAN_MAGNIFY);
+  mViewBox.Init();
+  mPreserveAspectRatio.Init();
+}
+
 nsSVGElement::LengthInfo SVGSVGElement::sLengthInfo[4] =
 {
   { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
@@ -176,8 +184,7 @@ SVGSVGElement::SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo
                                 aFromParser == FROM_PARSER_XSLT),
     mImageNeedsTransformInvalidation(false),
     mIsPaintingSVGImageElement(false),
-    mHasChildrenOnlyTransform(false),
-    mUseCurrentView(false)
+    mHasChildrenOnlyTransform(false)
 {
 }
 
@@ -257,7 +264,7 @@ SVGSVGElement::ScreenPixelToMillimeterY()
 bool
 SVGSVGElement::UseCurrentView()
 {
-  return mUseCurrentView;
+  return mSVGView || mCurrentViewID;
 }
 
 float
@@ -452,12 +459,6 @@ SVGSVGElement::PreserveAspectRatio()
 uint16_t
 SVGSVGElement::ZoomAndPan()
 {
-  SVGViewElement* viewElement = GetCurrentViewElement();
-  if (viewElement && viewElement->mEnumAttributes[
-                       SVGViewElement::ZOOMANDPAN].IsExplicitlySet()) {
-    return viewElement->mEnumAttributes[
-             SVGViewElement::ZOOMANDPAN].GetAnimValue();
-  }
   return mEnumAttributes[ZOOMANDPAN].GetAnimValue();
 }
 
@@ -841,6 +842,9 @@ SVGSVGElement::GetViewBoxWithSynthesis(
   if (viewElement && viewElement->mViewBox.HasRect()) {
     return viewElement->mViewBox.GetAnimValue();
   }
+  if (mSVGView && mSVGView->mViewBox.HasRect()) {
+    return mSVGView->mViewBox.GetAnimValue();
+  }
   if (mViewBox.HasRect()) {
     return mViewBox.GetAnimValue();
   }
@@ -878,6 +882,7 @@ SVGSVGElement::GetPreserveAspectRatioWithOverride() const
   // We're just holding onto the viewElement that HasViewBoxRect() would look up,
   // so that we don't have to look it up again later.
   if (!((viewElement && viewElement->mViewBox.HasRect()) ||
+        (mSVGView && mSVGView->mViewBox.HasRect()) ||
         mViewBox.HasRect()) &&
       ShouldSynthesizeViewBox()) {
     // If we're synthesizing a viewBox, use preserveAspectRatio="none";
@@ -886,6 +891,9 @@ SVGSVGElement::GetPreserveAspectRatioWithOverride() const
 
   if (viewElement && viewElement->mPreserveAspectRatio.IsExplicitlySet()) {
     return viewElement->mPreserveAspectRatio.GetAnimValue();
+  }
+  if (mSVGView && mSVGView->mPreserveAspectRatio.IsExplicitlySet()) {
+    return mSVGView->mPreserveAspectRatio.GetAnimValue();
   }
   return mPreserveAspectRatio.GetAnimValue();
 }
@@ -904,6 +912,8 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
   // The logic here should match HasViewBoxRect().
   if (viewElement && viewElement->mViewBox.HasRect()) {
     viewbox = &viewElement->mViewBox.GetAnimValue();
+  } else if (mSVGView && mSVGView->mViewBox.HasRect()) {
+    viewbox = &mSVGView->mViewBox.GetAnimValue();
   } else if (mViewBox.HasRect()) {
     viewbox = &mViewBox.GetAnimValue();
   }
@@ -946,9 +956,12 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
 SVGSVGElement::PrependLocalTransformsTo(
   const gfxMatrix &aMatrix, SVGTransformTypes aWhich) const
 {
-  // 'transform' attribute:
+  // 'transform' attribute (or an override from a fragment identifier):
   gfxMatrix fromUserSpace =
-    SVGSVGElementBase::PrependLocalTransformsTo(aMatrix, aWhich);
+    SVGContentUtils::PrependLocalTransformsTo(
+      aMatrix, aWhich, mAnimateMotionTransform,
+      mSVGView && mSVGView->mTransforms ? mSVGView->mTransforms : mTransforms);
+
   if (aWhich == eUserSpaceToParent) {
     return fromUserSpace;
   }
@@ -973,6 +986,15 @@ SVGSVGElement::PrependLocalTransformsTo(
 
   // outer-<svg>, but inline in some other content:
   return ThebesMatrix(GetViewBoxTransform()) * fromUserSpace;
+}
+
+nsSVGAnimatedTransformList*
+SVGSVGElement::GetAnimatedTransformList(uint32_t aFlags)
+{
+  if (!(aFlags & DO_ALLOCATE) && mSVGView && mSVGView->mTransforms) {
+    return mSVGView->mTransforms;
+  }
+  return SVGSVGElementBase::GetAnimatedTransformList(aFlags);
 }
 
 /* virtual */ bool
@@ -1015,7 +1037,8 @@ bool
 SVGSVGElement::HasViewBoxRect() const
 {
   SVGViewElement* viewElement = GetCurrentViewElement();
-  if (viewElement && viewElement->mViewBox.HasRect()) {
+  if ((viewElement && viewElement->mViewBox.HasRect()) ||
+      (mSVGView && mSVGView->mViewBox.HasRect())) {
     return true;
   }
   return mViewBox.HasRect();
@@ -1134,106 +1157,6 @@ SVGSVGElement::FlushImageTransformInvalidation()
     InvalidateTransformNotifyFrame();
     mImageNeedsTransformInvalidation = false;
   }
-}
-
-bool
-SVGSVGElement::SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox)
-{
-  nsSVGViewBoxRect* pViewBoxOverridePtr = new nsSVGViewBoxRect(aViewBox);
-  nsresult rv = SetProperty(nsGkAtoms::viewBox,
-                            pViewBoxOverridePtr,
-                            nsINode::DeleteProperty<nsSVGViewBoxRect>,
-                            true);
-  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-             "Setting override value when it's already set...?");
-
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-    // property-insertion failed (e.g. OOM in property-table code)
-    delete pViewBoxOverridePtr;
-    return false;
-  }
-  return true;
-}
-
-const nsSVGViewBoxRect*
-SVGSVGElement::GetViewBoxProperty() const
-{
-  void* valPtr = GetProperty(nsGkAtoms::viewBox);
-  if (valPtr) {
-    return static_cast<nsSVGViewBoxRect*>(valPtr);
-  }
-  return nullptr;
-}
-
-bool
-SVGSVGElement::ClearViewBoxProperty()
-{
-  void* valPtr = UnsetProperty(nsGkAtoms::viewBox);
-  delete static_cast<nsSVGViewBoxRect*>(valPtr);
-  return valPtr;
-}
-
-bool
-SVGSVGElement::SetZoomAndPanProperty(uint16_t aValue)
-{
-  nsresult rv = SetProperty(nsGkAtoms::zoomAndPan,
-                            reinterpret_cast<void*>(aValue),
-                            nullptr, true);
-  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-             "Setting override value when it's already set...?");
-
-  return NS_SUCCEEDED(rv);
-}
-
-uint16_t
-SVGSVGElement::GetZoomAndPanProperty() const
-{
-  void* valPtr = GetProperty(nsGkAtoms::zoomAndPan);
-  if (valPtr) {
-    return reinterpret_cast<uintptr_t>(valPtr);
-  }
-  return SVG_ZOOMANDPAN_UNKNOWN;
-}
-
-bool
-SVGSVGElement::ClearZoomAndPanProperty()
-{
-  return UnsetProperty(nsGkAtoms::zoomAndPan);
-}
-
-bool
-SVGSVGElement::SetTransformProperty(const SVGTransformList& aTransform)
-{
-  SVGTransformList* pTransformOverridePtr = new SVGTransformList(aTransform);
-  nsresult rv = SetProperty(nsGkAtoms::transform,
-                            pTransformOverridePtr,
-                            nsINode::DeleteProperty<SVGTransformList>,
-                            true);
-  MOZ_ASSERT(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
-             "Setting override value when it's already set...?");
-
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-    // property-insertion failed (e.g. OOM in property-table code)
-    delete pTransformOverridePtr;
-    return false;
-  }
-  return true;
-}
-
-const SVGTransformList*
-SVGSVGElement::GetTransformProperty() const
-{
-  void* valPtr = GetProperty(nsGkAtoms::transform);
-  if (valPtr) {
-    return static_cast<SVGTransformList*>(valPtr);
-  }
-  return nullptr;
-}
-
-bool
-SVGSVGElement::ClearTransformProperty()
-{
-  return UnsetProperty(nsGkAtoms::transform);
 }
 
 int32_t
