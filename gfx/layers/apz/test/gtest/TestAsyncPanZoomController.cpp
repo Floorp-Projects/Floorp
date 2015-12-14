@@ -3131,7 +3131,10 @@ TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   parentApzc->AdvanceAnimationsUntilEnd();
 
   // Verify that the parent has not scrolled.
-  EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
+  // The first comparison needs to be an ASSERT_NEAR because the fling
+  // computations are such that the final scroll position can be within
+  // COORDINATE_EPSILON of the end rather than right at the end.
+  ASSERT_NEAR(50, childApzc->GetFrameMetrics().GetScrollOffset().y, COORDINATE_EPSILON);
   EXPECT_EQ(0, parentApzc->GetFrameMetrics().GetScrollOffset().y);
 
   // Pan again on the child. This time, since the child was scrolled to
