@@ -90,6 +90,9 @@ InputBlockState::IsTargetConfirmed() const
 void
 InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
 {
+  // An input block should only have one scrolled APZC.
+  MOZ_ASSERT(!mScrolledApzc || mScrolledApzc == aApzc);
+
   mScrolledApzc = aApzc;
 }
 
