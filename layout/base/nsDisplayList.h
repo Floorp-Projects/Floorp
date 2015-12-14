@@ -37,7 +37,6 @@
 
 class nsIContent;
 class nsRenderingContext;
-class nsDisplayList;
 class nsDisplayTableItem;
 class nsISelection;
 class nsDisplayLayerEventRegions;
