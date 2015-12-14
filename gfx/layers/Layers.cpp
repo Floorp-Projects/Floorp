@@ -774,8 +774,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   NS_ASSERTION(GetParent(), "This can't be called on the root!");
 
   // Find the layer creating the 3D context.
-  while (container->Extend3DContext() &&
-         !container->UseIntermediateSurface()) {
+  while (container->Extend3DContext()) {
     containerChild = container;
     container = container->GetParent();
     MOZ_ASSERT(container);
@@ -1313,8 +1312,7 @@ ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
 {
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->Extend3DContext() &&
-        !container->UseIntermediateSurface()) {
+    if (container && container->Extend3DContext()) {
       container->Collect3DContextLeaves(aToSort);
     } else {
       aToSort.AppendElement(l);
@@ -1329,8 +1327,7 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->Extend3DContext() &&
-        !container->UseIntermediateSurface()) {
+    if (container && container->Extend3DContext()) {
       container->Collect3DContextLeaves(toSort);
     } else {
       if (toSort.Length() > 0) {
