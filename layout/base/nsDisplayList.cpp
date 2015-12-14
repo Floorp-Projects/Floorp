@@ -573,17 +573,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     }
     nsPoint origin;
     if (aItem) {
-      // This branch is for display items to leverage the cache of
-      // nsDisplayListBuilder.
       origin = aItem->ToReferenceFrame();
     } else {
-      // This branch is running for restyling.
-      // Animations are animated at the coordination of the reference
-      // frame outside, not the given frame itself.  The given frame
-      // is also reference frame too, so the parent's reference frame
-      // are used.
-      nsIFrame* referenceFrame =
-        nsLayoutUtils::GetReferenceFrame(nsLayoutUtils::GetCrossDocParentFrame(aFrame));
+      nsIFrame* referenceFrame = nsLayoutUtils::GetReferenceFrame(aFrame);
       origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
     }
 
