@@ -445,39 +445,23 @@ class FullParseHandler
     }
 
     template <typename PC>
-    bool isFunctionStmt(ParseNode* stmt, PC* pc) {
-        if (!pc->sc->strict()) {
-            while (stmt->isKind(PNK_LABEL))
-                stmt = stmt->as<LabeledStatement>().statement();
-        }
-
-        return stmt->isKind(PNK_FUNCTION) || stmt->isKind(PNK_ANNEXB_FUNCTION);
-    }
-
-    template <typename PC>
     void addStatementToList(ParseNode* list, ParseNode* stmt, PC* pc) {
         MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
 
-        list->append(stmt);
-
-        if (isFunctionStmt(stmt, pc)) {
-            // PNX_FUNCDEFS notifies the emitter that the block contains
-            // body-level function definitions that should be processed
-            // before the rest of nodes.
-            list->pn_xflags |= PNX_FUNCDEFS;
+        if (stmt->isKind(PNK_FUNCTION)) {
+            if (pc->atBodyLevel()) {
+                // PNX_FUNCDEFS notifies the emitter that the block contains
+                // body-level function definitions that should be processed
+                // before the rest of nodes.
+                list->pn_xflags |= PNX_FUNCDEFS;
+            } else {
+                // General deoptimization was done in Parser::functionDef.
+                MOZ_ASSERT_IF(pc->sc->isFunctionBox(),
+                              pc->sc->asFunctionBox()->hasExtensibleScope());
+            }
         }
-    }
 
-    template <typename PC>
-    void addCaseStatementToList(ParseNode* list, ParseNode* casepn, PC* pc) {
-        MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
-        MOZ_ASSERT(casepn->isKind(PNK_CASE));
-        MOZ_ASSERT(casepn->pn_right->isKind(PNK_STATEMENTLIST));
-
-        list->append(casepn);
-
-        if (casepn->pn_right->pn_xflags & PNX_FUNCDEFS)
-            list->pn_xflags |= PNX_FUNCDEFS;
+        list->append(stmt);
     }
 
     bool prependInitialYield(ParseNode* stmtList, ParseNode* genName) {
@@ -672,11 +656,6 @@ class FullParseHandler
         MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
         pn->pn_funbox = funbox;
     }
-    ParseNode* newFunctionDefinitionForAnnexB(ParseNode* pn, ParseNode* assignment) {
-        MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
-        MOZ_ASSERT(assignment->isKind(PNK_ASSIGN) || assignment->isKind(PNK_VAR));
-        return new_<BinaryNode>(PNK_ANNEXB_FUNCTION, JSOP_NOP, pos(), pn, assignment);
-    }
     void addFunctionArgument(ParseNode* pn, ParseNode* argpn) {
         pn->pn_body->append(argpn);
     }
@@ -748,7 +727,7 @@ class FullParseHandler
         return node->isKind(PNK_SUPERBASE);
     }
 
-    inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init);
+    inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);
     inline void setLexicalDeclarationOp(ParseNode* pn, JSOp op);
 
     void setBeginPosition(ParseNode* pn, ParseNode* oth) {
@@ -1011,7 +990,7 @@ FullParseHandler::setLastFunctionArgumentDestructuring(ParseNode* funcpn, ParseN
 }
 
 inline bool
-FullParseHandler::finishInitializerAssignment(ParseNode* pn, ParseNode* init)
+FullParseHandler::finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op)
 {
     if (pn->isUsed()) {
         pn = makeAssignment(pn, init);

@@ -283,8 +283,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_NEWTARGET:
       case PNK_SETTHIS:
       case PNK_FOR:
-      case PNK_COMPREHENSIONFOR:
-      case PNK_ANNEXB_FUNCTION: {
+      case PNK_COMPREHENSIONFOR: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         stack->push(pn->pn_left);
         stack->push(pn->pn_right);
