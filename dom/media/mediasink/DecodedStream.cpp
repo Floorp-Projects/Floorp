@@ -455,8 +455,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
 
   // No need to create a source stream when there are no output streams. This
   // happens when RemoveOutput() is called immediately after StartPlayback().
-  // Also we don't create a source stream when MDSM has begun shutdown.
-  if (!mOutputStreamManager.Graph() || mShuttingDown) {
+  if (!mOutputStreamManager.Graph()) {
     // Resolve the promise to indicate the end of playback.
     aPromise.Resolve(true, __func__);
     return;
@@ -477,16 +476,30 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
       return NS_OK;
     }
   private:
+    virtual ~R()
+    {
+      // mData is not transferred when dispatch fails and Run() is not called.
+      // We need to dispatch a task to ensure DecodedStreamData is destroyed
+      // properly on the main thread.
+      if (mData) {
+        DecodedStreamData* data = mData.release();
+        RefPtr<DecodedStream> self = mThis.forget();
+        nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+          self->mOutputStreamManager.Disconnect();
+          delete data;
+        });
+        AbstractThread::MainThread()->Dispatch(r.forget());
+      }
+    }
     RefPtr<DecodedStream> mThis;
     Method mMethod;
     UniquePtr<DecodedStreamData> mData;
   };
 
   // Post a message to ensure |mData| is only updated on the worker thread.
-  // Note this must be done before MDSM's shutdown since dispatch could fail
-  // when the worker thread is shut down.
+  // Note this could fail when MDSM begin to shut down the worker thread.
   nsCOMPtr<nsIRunnable> r = new R(this, &DecodedStream::OnDataCreated, data);
-  mOwnerThread->Dispatch(r.forget());
+  mOwnerThread->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
 }
 
 bool
