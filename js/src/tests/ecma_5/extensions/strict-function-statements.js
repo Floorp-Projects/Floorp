@@ -9,41 +9,46 @@ assertEq(testLenientAndStrict("function f() { }",
                               parsesSuccessfully),
          true);
 
+// Function statements within blocks are forbidden in strict mode code.
+assertEq(testLenientAndStrict("{ function f() { } }",
+                              parsesSuccessfully,
+                              parseRaisesException(SyntaxError)),
+         true);
+
 // Lambdas are always permitted within blocks.
 assertEq(testLenientAndStrict("{ (function f() { }) }",
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
 
-// Function statements within unbraced blocks are forbidden in strict mode code.
-// They are allowed only under if statements in sloppy mode.
+// Function statements within any sort of statement are forbidden in strict mode code.
 assertEq(testLenientAndStrict("if (true) function f() { }",
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("while (true) function f() { }",
-                              parseRaisesException(SyntaxError),
+                              parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("do function f() { } while (true);",
-                              parseRaisesException(SyntaxError),
+                              parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("for(;;) function f() { }",
-                              parseRaisesException(SyntaxError),
+                              parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("for(x in []) function f() { }",
-                              parseRaisesException(SyntaxError),
+                              parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("with(o) function f() { }",
-                              parseRaisesException(SyntaxError),
+                              parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("switch(1) { case 1: function f() { } }",
                               parsesSuccessfully,
-                              parsesSuccessfully),
+                              parseRaisesException(SyntaxError)),
          true);
 assertEq(testLenientAndStrict("x: function f() { }",
                               parsesSuccessfully,
@@ -51,7 +56,7 @@ assertEq(testLenientAndStrict("x: function f() { }",
          true);
 assertEq(testLenientAndStrict("try { function f() { } } catch (x) { }",
                               parsesSuccessfully,
-                              parsesSuccessfully),
+                              parseRaisesException(SyntaxError)),
          true);
 
 // Lambdas are always permitted within any sort of statement.
@@ -64,7 +69,7 @@ assertEq(testLenientAndStrict("if (true) (function f() { })",
 assertEq(parsesSuccessfully("function f() { function g() { } }"),
          true);
 
-// Function statements are permitted in if statement within lenient functions.
+// Function statements are permitted in any statement within lenient functions.
 assertEq(parsesSuccessfully("function f() { if (true) function g() { } }"),
          true);
 
@@ -72,7 +77,8 @@ assertEq(parseRaisesException(SyntaxError)
          ("function f() { 'use strict'; if (true) function g() { } }"),
          true);
 
-assertEq(parsesSuccessfully("function f() { 'use strict'; { function g() { } } }"),
+assertEq(parseRaisesException(SyntaxError)
+         ("function f() { 'use strict'; { function g() { } } }"),
          true);
 
 assertEq(parsesSuccessfully("function f() { 'use strict'; if (true) (function g() { }) }"),
@@ -88,7 +94,7 @@ assertEq(testLenientAndStrict("function f() { }",
          true);
 assertEq(testLenientAndStrict("{ function f() { } }",
                               completesNormally,
-                              completesNormally),
+                              raisesException(SyntaxError)),
          true);
 
 reportCompare(true, true);

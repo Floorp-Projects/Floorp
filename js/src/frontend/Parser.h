@@ -53,6 +53,7 @@ struct StmtInfoPC : public StmtInfoBase
     {}
 };
 
+typedef HashSet<JSAtom*, DefaultHasher<JSAtom*>, LifoAllocPolicy<Fallible>> FuncStmtSet;
 class SharedContext;
 
 typedef Vector<Definition*, 16> DeclVector;
@@ -235,6 +236,10 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
   public:
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
+    FuncStmtSet*    funcStmts;     /* Set of (non-top-level) function statements
+                                       that will alias any top-level bindings with
+                                       the same name. */
+
     // All inner functions in this context. Only filled in when parsing syntax.
     Rooted<TraceableVector<JSFunction*>> innerFunctions;
 
@@ -272,6 +277,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         parserPC(&prs->pc),
         oldpc(prs->pc),
         lexdeps(prs->context),
+        funcStmts(nullptr),
         innerFunctions(prs->context, TraceableVector<JSFunction*>(prs->context)),
         newDirectives(newDirectives),
         inDeclDestructuring(false)
@@ -289,7 +295,6 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
 
     StmtInfoPC* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoPC* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
-    StmtInfoPC* innermostNonLabelStmt() const { return stmtStack.innermostNonLabel(); }
     JSObject* innermostStaticScope() const {
         if (StmtInfoPC* stmt = innermostScopeStmt())
             return stmt->staticScope;
@@ -303,23 +308,19 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     //   function f1() { function f2() { } }
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
-    bool atBodyLevel(StmtInfoPC* stmt) {
+    bool atBodyLevel() {
         // 'eval' and non-syntactic scripts are always under an invisible
         // lexical scope, but since it is not syntactic, it should still be
         // considered at body level.
         if (sc->staticScope()->is<StaticEvalObject>()) {
-            bool bl = !stmt->enclosing;
-            MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
-            MOZ_ASSERT_IF(bl, stmt->staticScope
-                                  ->template as<StaticBlockObject>()
-                                  .enclosingStaticScope() == sc->staticScope());
+            bool bl = !innermostStmt()->enclosing;
+            MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
+            MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
+                                             ->template as<StaticBlockObject>()
+                                             .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
-        return !stmt;
-    }
-
-    bool atBodyLevel() {
-        return atBodyLevel(innermostStmt());
+        return !innermostStmt();
     }
 
     bool atGlobalLevel() {
@@ -727,8 +728,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                     InvokedPrediction invoked = PredictUninvoked,
-                     Node* assignmentForAnnexBOut = nullptr);
+                     InvokedPrediction invoked = PredictUninvoked);
     bool functionArgsAndBody(InHandling inHandling, Node pn, HandleFunction fun,
                              FunctionSyntaxKind kind, GeneratorKind generatorKind,
                              Directives inheritedDirectives, Directives* newDirectives);
@@ -794,10 +794,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node newThisName();
 
     bool makeDefIntoUse(Definition* dn, Node pn, HandleAtom atom);
-    bool bindLexicalFunctionName(HandlePropertyName funName, ParseNode* pn);
-    bool bindBodyLevelFunctionName(HandlePropertyName funName, ParseNode** pn);
     bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
-                                 bool* pbodyProcessed, Node* assignmentForAnnexBOut);
+                                 bool* pbodyProcessed);
     bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);
     bool addFreeVariablesFromLazyFunction(JSFunction* fun, ParseContext<ParseHandler>* pc);
 
@@ -846,17 +844,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node objectLiteral(YieldHandling yieldHandling);
 
-    enum PrepareLexicalKind {
-        PrepareLet,
-        PrepareConst,
-        PrepareFunction
-    };
-    bool checkAndPrepareLexical(PrepareLexicalKind prepareWhat, const TokenPos& errorPos);
-    bool prepareAndBindInitializedLexicalWithNode(HandlePropertyName name,
-                                                  PrepareLexicalKind prepareWhat,
-                                                  ParseNode* pn, const TokenPos& pos);
-    Node makeInitializedLexicalBinding(HandlePropertyName name, PrepareLexicalKind prepareWhat,
-                                       const TokenPos& pos);
+    bool checkAndPrepareLexical(bool isConst, const TokenPos& errorPos);
+    Node makeInitializedLexicalBinding(HandlePropertyName name, bool isConst, const TokenPos& pos);
 
     Node newBindingNode(PropertyName* name, bool functionScope, VarContext varContext = HoistVars);
 
@@ -871,9 +860,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
     bool checkDestructuringName(BindData<ParseHandler>* data, Node expr);
 
-    bool bindInitialized(BindData<ParseHandler>* data, HandlePropertyName name, Node pn);
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
-    bool bindUninitialized(BindData<ParseHandler>* data, HandlePropertyName name, Node pn);
     bool bindUninitialized(BindData<ParseHandler>* data, Node pn);
     bool makeSetCall(Node node, unsigned errnum);
     Node cloneDestructuringDefault(Node opn);

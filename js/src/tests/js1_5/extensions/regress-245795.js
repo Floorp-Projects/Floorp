@@ -12,20 +12,23 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-function a()
+if (typeof uneval != 'undefined')
 {
-  b = function() {};
+  function a()
+  {
+    b = function() {};
+  }
+
+  var r = "function a() { b = function() {}; }";
+  eval(uneval(a));
+
+  var v = a.toString().replace(/[ \n]+/g, ' ');
+  print(v)
+ 
+  printStatus("[" + v + "]");
+
+  expect = r;
+  actual = v;
+
+  reportCompare(expect, actual, summary);
 }
-
-var r = "function a() { b = function() {}; }";
-eval(uneval(a));
-
-var v = a.toString().replace(/[ \n]+/g, ' ');
-print(v)
-
-printStatus("[" + v + "]");
-
-expect = r;
-actual = v;
-
-reportCompare(expect, actual, summary);
