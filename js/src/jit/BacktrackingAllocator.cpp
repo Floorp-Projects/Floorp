@@ -2228,26 +2228,30 @@ LiveRange::toString() const
     char* cursor = buf;
     char* end = cursor + sizeof(buf);
 
-    int n = JS_snprintf(cursor, end - cursor, "v%u [%u,%u)",
+    uint32_t n = JS_snprintf(cursor, end - cursor, "v%u [%u,%u)",
                         hasVreg() ? vreg() : 0, from().bits(), to().bits());
-    if (n < 0) MOZ_CRASH();
+    if (n >= uint32_t(end - cursor))
+        return "(truncated)";
     cursor += n;
 
     if (bundle() && !bundle()->allocation().isBogus()) {
         n = JS_snprintf(cursor, end - cursor, " %s", bundle()->allocation().toString());
-        if (n < 0) MOZ_CRASH();
+        if (n >= uint32_t(end - cursor))
+            return " (truncated)";
         cursor += n;
     }
 
     if (hasDefinition()) {
         n = JS_snprintf(cursor, end - cursor, " (def)");
-        if (n < 0) MOZ_CRASH();
+        if (n >= uint32_t(end - cursor))
+            return " (truncated)";
         cursor += n;
     }
 
     for (UsePositionIterator iter = usesBegin(); iter; iter++) {
         n = JS_snprintf(cursor, end - cursor, " %s@%u", iter->use->toString(), iter->pos.bits());
-        if (n < 0) MOZ_CRASH();
+        if (n >= uint32_t(end - cursor))
+            return " (truncated)";
         cursor += n;
     }
 
@@ -2264,10 +2268,11 @@ LiveBundle::toString() const
     char* end = cursor + sizeof(buf);
 
     for (LiveRange::BundleLinkIterator iter = rangesBegin(); iter; iter++) {
-        int n = JS_snprintf(cursor, end - cursor, "%s %s",
+        uint32_t n = JS_snprintf(cursor, end - cursor, "%s %s",
                             (iter == rangesBegin()) ? "" : " ##",
                             LiveRange::get(*iter)->toString());
-        if (n < 0) MOZ_CRASH();
+        if (n >= uint32_t(end - cursor))
+            return "(truncated)";
         cursor += n;
     }
 
