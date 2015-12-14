@@ -314,7 +314,6 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
                              MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
   : mOwnerThread(aOwnerThread)
-  , mShuttingDown(false)
   , mPlaying(false)
   , mSameOrigin(false)
   , mAudioQueue(aAudioQueue)
@@ -355,13 +354,6 @@ DecodedStream::OnEnded(TrackType aType)
   }
   // TODO: handle video track.
   return nullptr;
-}
-
-void
-DecodedStream::BeginShutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mShuttingDown = true;
 }
 
 void
