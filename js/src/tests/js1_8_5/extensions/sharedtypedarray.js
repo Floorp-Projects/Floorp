@@ -12,9 +12,10 @@
 // These tests cannot test that sharing works across workers.  There
 // are or will be tests, in dom/workers, that do that.
 
-if (!this.SharedArrayBuffer)
+if (!this.SharedArrayBuffer) {
     reportCompare(true,true);
     quit(0);
+}
 
 var b;
 
