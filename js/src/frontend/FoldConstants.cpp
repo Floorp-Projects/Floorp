@@ -100,11 +100,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         *result = false;
         return true;
 
-      case PNK_ANNEXB_FUNCTION:
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-        *result = false;
-        return true;
-
       case PNK_MODULE:
         *result = false;
         return true;
@@ -1787,9 +1782,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
 
       case PNK_FUNCTION:
         return FoldFunction(cx, pn, parser, inGenexpLambda);
-
-      case PNK_ANNEXB_FUNCTION:
-        return FoldFunction(cx, pn->pn_left, parser, inGenexpLambda);
 
       case PNK_MODULE:
         return FoldModule(cx, pn, parser);
