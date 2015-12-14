@@ -136,9 +136,7 @@ class nsDisplayListBuilder {
   public:
     typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
-    Preserves3DContext()
-      : mAccumulatedRectLevels(0)
-    {}
+    Preserves3DContext() {}
     Preserves3DContext(const Preserves3DContext &aOther)
       : mAccumulatedTransform()
       , mAccumulatedRect()
