@@ -1719,7 +1719,7 @@ skip-if(B2G||Mulet) == 729143-1.html 729143-1-ref.html # Initial mulet triage: p
 == 731521-1.html 731521-1-ref.html
 needs-focus == 731726-1.html 731726-1-ref.html
 == 735481-1.html 735481-1-ref.html
-fuzzy-if(cocoaWidget,1,300000) == 745934-1.html 745934-1-ref.html
+== 745934-1.html 745934-1-ref.html
 == 748692-1a.html 748692-1-ref.html
 == 748692-1b.html 748692-1-ref.html
 skip-if(B2G||Mulet) == 748803-1.html 748803-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

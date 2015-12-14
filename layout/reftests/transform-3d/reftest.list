@@ -18,7 +18,7 @@ fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidge
 == preserve3d-2b.html preserve3d-2-ref.html
 == preserve3d-2c.html preserve3d-2-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
-== preserve3d-3a.html preserve3d-3-ref.html
+fuzzy(4,100) == preserve3d-3a.html preserve3d-3-ref.html
 skip-if(B2G||Mulet) == preserve3d-4a.html green-rect.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(gtkWidget,4,200) fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
