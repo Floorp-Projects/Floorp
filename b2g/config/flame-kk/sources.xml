@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="8d83715f08b7849f16a0dfc88f78d5c3a89c0a54">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="d886e152b42e557db612470d3417fe2947cbdeee"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="ad15b4f1f50f4e28170a069f049e5bdeec8d15cc"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="fake-qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="939b377d55a2f081d94029a30a75d05e5a20daf3"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
@@ -126,7 +126,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="205ac4204bbbb2098a8046444acba551ba5dc75a"/>
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="b3531e28c2273ecdc37613ffd13dd8beb99123a8"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="1e562fa3ac618fe136d3515bb14a070b4153e0cd"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="d5e53ed6f22fa06052351dc03510af9473af01ea"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
