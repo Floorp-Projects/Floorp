@@ -164,9 +164,11 @@ WebGLTexture::MemoryUsage() const
     if (IsDeleted())
         return 0;
 
-    size_t result = 0;
-    MOZ_CRASH("todo");
-    return result;
+    size_t accum = 0;
+    for (const auto& cur : mImageInfoArr) {
+        accum += cur.MemoryUsage();
+    }
+    return accum;
 }
 
 void
