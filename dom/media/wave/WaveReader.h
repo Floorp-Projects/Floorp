@@ -76,8 +76,7 @@ private:
   // support U8.
   enum {
     FORMAT_U8,
-    FORMAT_S16,
-    FORMAT_S24
+    FORMAT_S16
   } mSampleFormat;
 
   // Size of PCM data stored in the WAVE as reported by the data chunk in
