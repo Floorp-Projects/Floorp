@@ -39,6 +39,8 @@ const SIMPLE_CANVAS_TRANSPARENT_URL = EXAMPLE_URL + "doc_simple-canvas-transpare
 const SIMPLE_CANVAS_DEEP_STACK_URL = EXAMPLE_URL + "doc_simple-canvas-deep-stack.html";
 const WEBGL_ENUM_URL = EXAMPLE_URL + "doc_webgl-enum.html";
 const WEBGL_BINDINGS_URL = EXAMPLE_URL + "doc_webgl-bindings.html";
+const WEBGL_DRAW_ARRAYS = EXAMPLE_URL + "doc_webgl-drawArrays.html";
+const WEBGL_DRAW_ELEMENTS = EXAMPLE_URL + "doc_webgl-drawElements.html";
 const RAF_BEGIN_URL = EXAMPLE_URL + "doc_raf-begin.html";
 
 // All tests are asynchronous.
