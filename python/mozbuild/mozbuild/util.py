@@ -426,6 +426,14 @@ def FlagsFactory(flags):
     return Flags
 
 
+class StrictOrderingOnAppendListWithFlags(StrictOrderingOnAppendList):
+    """A list with flags specialized for moz.build environments.
+
+    Each subclass has a set of typed flags; this class lets us use `isinstance`
+    for natural testing.
+    """
+
+
 def StrictOrderingOnAppendListWithFlagsFactory(flags):
     """Returns a StrictOrderingOnAppendList-like object, with optional
     flags on each item.
@@ -441,9 +449,9 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
         foo['a'].foo = True
         foo['b'].bar = 'bar'
     """
-    class StrictOrderingOnAppendListWithFlags(StrictOrderingOnAppendList):
+    class StrictOrderingOnAppendListWithFlagsSpecialization(StrictOrderingOnAppendListWithFlags):
         def __init__(self, iterable=[]):
-            StrictOrderingOnAppendList.__init__(self, iterable)
+            StrictOrderingOnAppendListWithFlags.__init__(self, iterable)
             self._flags_type = FlagsFactory(flags)
             self._flags = dict()
 
@@ -458,7 +466,50 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
             raise TypeError("'%s' object does not support item assignment" %
                             self.__class__.__name__)
 
-    return StrictOrderingOnAppendListWithFlags
+        def _update_flags(self, other):
+            if self._flags_type._flags != other._flags_type._flags:
+                raise ValueError('Expected a list of strings with flags like %s, not like %s' %
+                                 (self._flags_type._flags, other._flags_type._flags))
+            intersection = set(self._flags.keys()) & set(other._flags.keys())
+            if intersection:
+                raise ValueError('Cannot update flags: both lists of strings with flags configure %s' %
+                                 intersection)
+            self._flags.update(other._flags)
+
+        def extend(self, l):
+            result = super(StrictOrderingOnAppendList, self).extend(l)
+            if isinstance(l, StrictOrderingOnAppendListWithFlags):
+                self._update_flags(l)
+            return result
+
+        def __setslice__(self, i, j, sequence):
+            result = super(StrictOrderingOnAppendList, self).__setslice__(i, j, sequence)
+            # We may have removed items.
+            for name in set(self._flags.keys()) - set(self):
+                del self._flags[name]
+            if isinstance(sequence, StrictOrderingOnAppendListWithFlags):
+                self._update_flags(sequence)
+            return result
+
+        def __add__(self, other):
+            result = super(StrictOrderingOnAppendList, self).__add__(other)
+            if isinstance(other, StrictOrderingOnAppendListWithFlags):
+                # Result has flags from other but not from self, since
+                # internally we duplicate self and then extend with other, and
+                # only extend knows about flags.  Since we don't allow updating
+                # when the set of flag keys intersect, which we instance we pass
+                # to _update_flags here matters.  This needs to be correct but
+                # is an implementation detail.
+                result._update_flags(self)
+            return result
+
+        def __iadd__(self, other):
+            result = super(StrictOrderingOnAppendList, self).__iadd__(other)
+            if isinstance(other, StrictOrderingOnAppendListWithFlags):
+                self._update_flags(other)
+            return result
+
+    return StrictOrderingOnAppendListWithFlagsSpecialization
 
 
 class HierarchicalStringList(object):
