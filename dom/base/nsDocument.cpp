@@ -2678,6 +2678,16 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    // check baseChannel for CSP when loading a multipart channel
+    nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
+    if (multipart) {
+      nsCOMPtr<nsIChannel> baseChannel;
+      multipart->GetBaseChannel(getter_AddRefs(baseChannel));
+      httpChannel = do_QueryInterface(baseChannel);
+    }
+  }
+
   if (httpChannel) {
     httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("content-security-policy"),
