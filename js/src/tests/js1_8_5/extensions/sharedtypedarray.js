@@ -13,7 +13,6 @@
 // are or will be tests, in dom/workers, that do that.
 
 if (!this.SharedArrayBuffer)
-    reportCompare(true,true);
     quit(0);
 
 var b;
