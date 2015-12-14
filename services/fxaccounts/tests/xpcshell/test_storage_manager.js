@@ -97,7 +97,6 @@ add_storage_task(function* checkNewUser(sm) {
     uid: "uid",
     email: "someone@somewhere.com",
     kA: "kA",
-    deviceId: "device id"
   };
   sm.plainStorage = new MockedPlainStorage()
   if (sm.secureStorage) {
@@ -108,12 +107,10 @@ add_storage_task(function* checkNewUser(sm) {
   Assert.equal(accountData.uid, initialAccountData.uid);
   Assert.equal(accountData.email, initialAccountData.email);
   Assert.equal(accountData.kA, initialAccountData.kA);
-  Assert.equal(accountData.deviceId, initialAccountData.deviceId);
 
   // and it should have been written to storage.
   Assert.equal(sm.plainStorage.data.accountData.uid, initialAccountData.uid);
   Assert.equal(sm.plainStorage.data.accountData.email, initialAccountData.email);
-  Assert.equal(sm.plainStorage.data.accountData.deviceId, initialAccountData.deviceId);
   // check secure
   if (sm.secureStorage) {
     Assert.equal(sm.secureStorage.data.accountData.kA, initialAccountData.kA);
@@ -124,12 +121,7 @@ add_storage_task(function* checkNewUser(sm) {
 
 // Initialized without account data but storage has it available.
 add_storage_task(function* checkEverythingRead(sm) {
-  sm.plainStorage = new MockedPlainStorage({
-    uid: "uid",
-    email: "someone@somewhere.com",
-    deviceId: "wibble",
-    isDeviceStale: true
-  });
+  sm.plainStorage = new MockedPlainStorage({uid: "uid", email: "someone@somewhere.com"})
   if (sm.secureStorage) {
     sm.secureStorage = new MockedSecureStorage(null);
   }
@@ -138,27 +130,16 @@ add_storage_task(function* checkEverythingRead(sm) {
   Assert.ok(accountData, "read account data");
   Assert.equal(accountData.uid, "uid");
   Assert.equal(accountData.email, "someone@somewhere.com");
-  Assert.equal(accountData.deviceId, "wibble");
-  Assert.equal(accountData.isDeviceStale, true);
   // Update the data - we should be able to fetch it back and it should appear
   // in our storage.
-  yield sm.updateAccountData({
-    verified: true,
-    kA: "kA",
-    kB: "kB",
-    isDeviceStale: false
-  });
+  yield sm.updateAccountData({verified: true, kA: "kA", kB: "kB"});
   accountData = yield sm.getAccountData();
   Assert.equal(accountData.kB, "kB");
   Assert.equal(accountData.kA, "kA");
-  Assert.equal(accountData.deviceId, "wibble");
-  Assert.equal(accountData.isDeviceStale, false);
   // Check the new value was written to storage.
   yield sm._promiseStorageComplete; // storage is written in the background.
-  // "verified", "deviceId" and "isDeviceStale" are plain-text fields.
+  // "verified" is a plain-text field.
   Assert.equal(sm.plainStorage.data.accountData.verified, true);
-  Assert.equal(sm.plainStorage.data.accountData.deviceId, "wibble");
-  Assert.equal(sm.plainStorage.data.accountData.isDeviceStale, false);
   // "kA" and "foo" are secure
   if (sm.secureStorage) {
     Assert.equal(sm.secureStorage.data.accountData.kA, "kA");

@@ -86,7 +86,7 @@ MockStorageManager.prototype = {
   }
 }
 
-function MockFxAccountsClient(device) {
+function MockFxAccountsClient() {
   this._email = "nobody@example.com";
   this._verified = false;
   this._deletedOnServer = false; // for testing accountStatus
@@ -127,16 +127,7 @@ function MockFxAccountsClient(device) {
 
   this.signCertificate = function() { throw "no" };
 
-  this.signOut = () => Promise.resolve();
-
-  const { id: deviceId, name: deviceName, type: deviceType, sessionToken } = device;
-  this.registerDevice = (st, name, type) => Promise.resolve({ id: deviceId, name });
-  this.updateDevice = (st, id, name) => Promise.resolve({ id, name });
-  this.signOutAndDestroyDevice = () => Promise.resolve({});
-  this.getDeviceList = (st) =>
-    Promise.resolve([
-      { id: deviceId, name: deviceName, type: deviceType, isCurrentDevice: st === sessionToken }
-    ]);
+  this.signOut = function() { return Promise.resolve(); };
 
   FxAccountsClient.apply(this);
 }
@@ -150,9 +141,10 @@ MockFxAccountsClient.prototype = {
  * mock the now() method, so that we can simulate the passing of
  * time and verify that signatures expire correctly.
  */
-function MockFxAccounts(device = {}) {
+function MockFxAccounts() {
   return new FxAccounts({
     VERIFICATION_POLL_TIMEOUT_INITIAL: 100, // 100ms
+
     _getCertificateSigned_calls: [],
     _d_signCertificate: Promise.defer(),
     _now_is: new Date(),
@@ -170,10 +162,7 @@ function MockFxAccounts(device = {}) {
       this._getCertificateSigned_calls.push([sessionToken, serializedPublicKey]);
       return this._d_signCertificate.promise;
     },
-    _getDeviceName() {
-      return device.name || "mock device name";
-    },
-    fxAccountsClient: new MockFxAccountsClient(device)
+    fxAccountsClient: new MockFxAccountsClient()
   });
 }
 
@@ -189,15 +178,6 @@ function MakeFxAccounts(internal = {}) {
       storage.initialize(credentials);
       return new AccountState(storage);
     };
-  }
-  if (!internal._signOutServer) {
-    internal._signOutServer = () => Promise.resolve();
-  }
-  if (!internal._getDeviceName) {
-    internal._getDeviceName = () => "mock device name";
-  }
-  if (!internal._registerOrUpdateDevice) {
-    internal._registerOrUpdateDevice = () => Promise.resolve();
   }
   return new FxAccounts(internal);
 }
@@ -230,7 +210,7 @@ add_test(function test_non_https_remote_server_uri() {
   run_next_test();
 });
 
-add_task(function* test_get_signed_in_user_initially_unset() {
+add_task(function test_get_signed_in_user_initially_unset() {
   _("Check getSignedInUser initially and after signout reports no user");
   let account = MakeFxAccounts();
   let credentials = {
@@ -575,7 +555,7 @@ add_test(function test_overlapping_signins() {
   });
 });
 
-add_task(function* test_getAssertion() {
+add_task(function test_getAssertion() {
   let fxa = new MockFxAccounts();
 
   do_check_throws(function() {
@@ -695,7 +675,7 @@ add_task(function* test_getAssertion() {
   _("----- DONE ----\n");
 });
 
-add_task(function* test_resend_email_not_signed_in() {
+add_task(function test_resend_email_not_signed_in() {
   let fxa = new MockFxAccounts();
 
   try {
@@ -782,98 +762,21 @@ add_test(function test_resend_email() {
   });
 });
 
-add_task(function* test_sign_out_with_device() {
-  const fxa = new MockFxAccounts();
-
-  const credentials = getTestUser("alice");
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const user = yield fxa.internal.getUserAccountData();
-  do_check_true(user);
-  Object.keys(credentials).forEach(key => do_check_eq(credentials[key], user[key]));
-
-  const spy = {
-    signOut: { count: 0 },
-    signOutAndDeviceDestroy: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.signOut = function () {
-    spy.signOut.count += 1;
-    return Promise.resolve();
-  };
-  client.signOutAndDestroyDevice = function () {
-    spy.signOutAndDeviceDestroy.count += 1;
-    spy.signOutAndDeviceDestroy.args.push(arguments);
-    return Promise.resolve();
-  };
-
-  const promise = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, () => {
-      log.debug("test_sign_out_with_device observed onlogout");
-      // user should be undefined after sign out
-      fxa.internal.getUserAccountData().then(user2 => {
-        do_check_eq(user2, null);
-        do_check_eq(spy.signOut.count, 0);
-        do_check_eq(spy.signOutAndDeviceDestroy.count, 1);
-        do_check_eq(spy.signOutAndDeviceDestroy.args[0].length, 3);
-        do_check_eq(spy.signOutAndDeviceDestroy.args[0][0], credentials.sessionToken);
-        do_check_eq(spy.signOutAndDeviceDestroy.args[0][1], credentials.deviceId);
-        do_check_true(spy.signOutAndDeviceDestroy.args[0][2]);
-        do_check_eq(spy.signOutAndDeviceDestroy.args[0][2].service, "sync");
-        resolve();
-      });
+add_test(function test_sign_out() {
+  let fxa = new MockFxAccounts();
+  let remoteSignOutCalled = false;
+  let client = fxa.internal.fxAccountsClient;
+  client.signOut = function() { remoteSignOutCalled = true; return Promise.resolve(); };
+  makeObserver(ONLOGOUT_NOTIFICATION, function() {
+    log.debug("test_sign_out_with_remote_error observed onlogout");
+    // user should be undefined after sign out
+    fxa.internal.getUserAccountData().then(user => {
+      do_check_eq(user, null);
+      do_check_true(remoteSignOutCalled);
+      run_next_test();
     });
   });
-
-  yield fxa.signOut();
-
-  yield promise;
-});
-
-add_task(function* test_sign_out_without_device() {
-  const fxa = new MockFxAccounts();
-
-  const credentials = getTestUser("alice");
-  delete credentials.deviceId;
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const user = yield fxa.internal.getUserAccountData();
-
-  const spy = {
-    signOut: { count: 0, args: [] },
-    signOutAndDeviceDestroy: { count: 0 }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.signOut = function () {
-    spy.signOut.count += 1;
-    spy.signOut.args.push(arguments);
-    return Promise.resolve();
-  };
-  client.signOutAndDestroyDevice = function () {
-    spy.signOutAndDeviceDestroy.count += 1;
-    return Promise.resolve();
-  };
-
-  const promise = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, () => {
-      log.debug("test_sign_out_without_device observed onlogout");
-      // user should be undefined after sign out
-      fxa.internal.getUserAccountData().then(user2 => {
-        do_check_eq(user2, null);
-        do_check_eq(spy.signOut.count, 1);
-        do_check_eq(spy.signOut.args[0].length, 2);
-        do_check_eq(spy.signOut.args[0][0], credentials.sessionToken);
-        do_check_true(spy.signOut.args[0][1]);
-        do_check_eq(spy.signOut.args[0][1].service, "sync");
-        do_check_eq(spy.signOutAndDeviceDestroy.count, 0);
-        resolve();
-      });
-    });
-  });
-
-  yield fxa.signOut();
-
-  yield promise;
+  fxa.signOut();
 });
 
 add_test(function test_sign_out_with_remote_error() {
@@ -1184,11 +1087,7 @@ add_test(function test_getSignedInUserProfile() {
     },
     tearDown: function() {},
   };
-  let fxa = new FxAccounts({
-    _signOutServer() { return Promise.resolve(); },
-    _getDeviceName() { return "mock device name"; },
-    _registerOrUpdateDevice() { return Promise.resolve(); }
-  });
+  let fxa = new FxAccounts({});
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.internal._profile = mockProfile;
@@ -1261,343 +1160,6 @@ add_test(function test_getSignedInUserProfile_no_account_data() {
 
 });
 
-add_task(function* test_updateDeviceRegistration_with_new_device() {
-  const deviceName = "foo";
-  const deviceType = "bar";
-
-  const credentials = getTestUser("baz");
-  delete credentials.deviceId;
-  const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = {
-    registerDevice: { count: 0, args: [] },
-    updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.registerDevice = function () {
-    spy.registerDevice.count += 1;
-    spy.registerDevice.args.push(arguments);
-    return Promise.resolve({
-      id: "newly-generated device id",
-      createdAt: Date.now(),
-      name: deviceName,
-      type: deviceType
-    });
-  };
-  client.updateDevice = function () {
-    spy.updateDevice.count += 1;
-    spy.updateDevice.args.push(arguments);
-    return Promise.resolve({});
-  };
-  client.getDeviceList = function () {
-    spy.getDeviceList.count += 1;
-    spy.getDeviceList.args.push(arguments);
-    return Promise.resolve([]);
-  };
-
-  const result = yield fxa.updateDeviceRegistration();
-
-  do_check_eq(result, "newly-generated device id");
-  do_check_eq(spy.updateDevice.count, 0);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 3);
-  do_check_eq(spy.registerDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.registerDevice.args[0][1], deviceName);
-  do_check_eq(spy.registerDevice.args[0][2], "desktop");
-
-  const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
-
-  do_check_eq(data.deviceId, "newly-generated device id");
-  do_check_false(data.isDeviceStale);
-});
-
-add_task(function* test_updateDeviceRegistration_with_existing_device() {
-  const deviceName = "phil's device";
-  const deviceType = "desktop";
-
-  const credentials = getTestUser("pb");
-  const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = {
-    registerDevice: { count: 0, args: [] },
-    updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.registerDevice = function () {
-    spy.registerDevice.count += 1;
-    spy.registerDevice.args.push(arguments);
-    return Promise.resolve({});
-  };
-  client.updateDevice = function () {
-    spy.updateDevice.count += 1;
-    spy.updateDevice.args.push(arguments);
-    return Promise.resolve({
-      id: credentials.deviceId,
-      name: deviceName
-    });
-  };
-  client.getDeviceList = function () {
-    spy.getDeviceList.count += 1;
-    spy.getDeviceList.args.push(arguments);
-    return Promise.resolve([]);
-  };
-  const result = yield fxa.updateDeviceRegistration();
-
-  do_check_eq(result, credentials.deviceId);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-
-  const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
-
-  do_check_eq(data.deviceId, credentials.deviceId);
-  do_check_false(data.isDeviceStale);
-});
-
-add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
-  const deviceName = "foo";
-  const deviceType = "bar";
-
-  const credentials = getTestUser("baz");
-  const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = {
-    registerDevice: { count: 0, args: [] },
-    updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.registerDevice = function () {
-    spy.registerDevice.count += 1;
-    spy.registerDevice.args.push(arguments);
-    return Promise.resolve({
-      id: "a different newly-generated device id",
-      createdAt: Date.now(),
-      name: deviceName,
-      type: deviceType
-    });
-  };
-  client.updateDevice = function () {
-    spy.updateDevice.count += 1;
-    spy.updateDevice.args.push(arguments);
-    return Promise.reject({
-      code: 400,
-      errno: ERRNO_UNKNOWN_DEVICE
-    });
-  };
-  client.getDeviceList = function () {
-    spy.getDeviceList.count += 1;
-    spy.getDeviceList.args.push(arguments);
-    return Promise.resolve([]);
-  };
-
-  const result = yield fxa.updateDeviceRegistration();
-
-  do_check_null(result);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-
-  const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
-
-  do_check_null(data.deviceId);
-  do_check_false(data.isDeviceStale);
-});
-
-add_task(function* test_updateDeviceRegistration_with_device_session_conflict_error() {
-  const deviceName = "foo";
-  const deviceType = "bar";
-
-  const credentials = getTestUser("baz");
-  const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = {
-    registerDevice: { count: 0, args: [] },
-    updateDevice: { count: 0, args: [], times: [] },
-    getDeviceList: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.registerDevice = function () {
-    spy.registerDevice.count += 1;
-    spy.registerDevice.args.push(arguments);
-    return Promise.resolve({});
-  };
-  client.updateDevice = function () {
-    spy.updateDevice.count += 1;
-    spy.updateDevice.args.push(arguments);
-    spy.updateDevice.time = Date.now();
-    if (spy.updateDevice.count === 1) {
-      return Promise.reject({
-        code: 400,
-        errno: ERRNO_DEVICE_SESSION_CONFLICT
-      });
-    }
-    return Promise.resolve({
-      id: credentials.deviceId,
-      name: deviceName
-    });
-  };
-  client.getDeviceList = function () {
-    spy.getDeviceList.count += 1;
-    spy.getDeviceList.args.push(arguments);
-    spy.getDeviceList.time = Date.now();
-    return Promise.resolve([
-      { id: "ignore", name: "ignore", type: "ignore", isCurrentDevice: false },
-      { id: credentials.deviceId, name: deviceName, type: deviceType, isCurrentDevice: true }
-    ]);
-  };
-
-  const result = yield fxa.updateDeviceRegistration();
-
-  do_check_eq(result, credentials.deviceId);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 3);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-  do_check_eq(spy.getDeviceList.count, 1);
-  do_check_eq(spy.getDeviceList.args[0].length, 1);
-  do_check_eq(spy.getDeviceList.args[0][0], credentials.sessionToken);
-  do_check_true(spy.getDeviceList.time >= spy.updateDevice.time);
-
-  const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
-
-  do_check_eq(data.deviceId, credentials.deviceId);
-  do_check_true(data.isDeviceStale);
-});
-
-add_task(function* test_updateDeviceRegistration_with_unrecoverable_error() {
-  const deviceName = "foo";
-  const deviceType = "bar";
-
-  const credentials = getTestUser("baz");
-  delete credentials.deviceId;
-  const fxa = new MockFxAccounts({ name: deviceName });
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = {
-    registerDevice: { count: 0, args: [] },
-    updateDevice: { count: 0, args: [] },
-    getDeviceList: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.registerDevice = function () {
-    spy.registerDevice.count += 1;
-    spy.registerDevice.args.push(arguments);
-    return Promise.reject({
-      code: 400,
-      errno: ERRNO_TOO_MANY_CLIENT_REQUESTS
-    });
-  };
-  client.updateDevice = function () {
-    spy.updateDevice.count += 1;
-    spy.updateDevice.args.push(arguments);
-    return Promise.resolve({});
-  };
-  client.getDeviceList = function () {
-    spy.getDeviceList.count += 1;
-    spy.getDeviceList.args.push(arguments);
-    return Promise.resolve([]);
-  };
-
-  const result = yield fxa.updateDeviceRegistration();
-
-  do_check_null(result);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.updateDevice.count, 0);
-  do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 3);
-
-  const state = fxa.internal.currentAccountState;
-  const data = yield state.getUserAccountData();
-
-  do_check_null(data.deviceId);
-});
-
-add_task(function* test_getDeviceId_with_no_device_id_invokes_device_registration() {
-  const credentials = getTestUser("foo");
-  credentials.verified = true;
-  delete credentials.deviceId;
-  const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = { count: 0, args: [] };
-  fxa.internal._registerOrUpdateDevice = function () {
-    spy.count += 1;
-    spy.args.push(arguments);
-    return Promise.resolve("bar");
-  };
-
-  const result = yield fxa.internal.getDeviceId();
-
-  do_check_eq(spy.count, 1);
-  do_check_eq(spy.args[0].length, 1);
-  do_check_eq(spy.args[0][0].email, credentials.email);
-  do_check_null(spy.args[0][0].deviceId);
-  do_check_eq(result, "bar");
-});
-
-add_task(function* test_getDeviceId_with_device_id_and_stale_flag_invokes_device_registration() {
-  const credentials = getTestUser("foo");
-  credentials.verified = true;
-  const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = { count: 0, args: [] };
-  fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ deviceId: credentials.deviceId, isDeviceStale: true });
-  fxa.internal._registerOrUpdateDevice = function () {
-    spy.count += 1;
-    spy.args.push(arguments);
-    return Promise.resolve("wibble");
-  };
-
-  const result = yield fxa.internal.getDeviceId();
-
-  do_check_eq(spy.count, 1);
-  do_check_eq(spy.args[0].length, 1);
-  do_check_eq(spy.args[0][0].deviceId, credentials.deviceId);
-  do_check_eq(result, "wibble");
-});
-
-add_task(function* test_getDeviceId_with_device_id_and_no_stale_flag_doesnt_invoke_device_registration() {
-  const credentials = getTestUser("foo");
-  credentials.verified = true;
-  const fxa = new MockFxAccounts();
-  yield fxa.internal.setSignedInUser(credentials);
-
-  const spy = { count: 0 };
-  fxa.internal._registerOrUpdateDevice = function () {
-    spy.count += 1;
-    return Promise.resolve("bar");
-  };
-
-  const result = yield fxa.internal.getDeviceId();
-
-  do_check_eq(spy.count, 0);
-  do_check_eq(result, "foo's device id");
-});
-
 /*
  * End of tests.
  * Utility functions follow.
@@ -1618,7 +1180,6 @@ function getTestUser(name) {
   return {
     email: name + "@example.com",
     uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
-    deviceId: name + "'s device id",
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
