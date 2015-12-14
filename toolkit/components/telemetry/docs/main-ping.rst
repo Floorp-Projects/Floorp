@@ -90,7 +90,7 @@ Contains the statistics about the hangs in main and background threads. Note tha
 To avoid submitting overly large payloads, some limits are applied:
 
 * Identical, adjacent "(chrome script)" or "(content script)" stack entries are collapsed together. If a stack is reduced, the "(reduced stack)" frame marker is added as the oldest frame.
-* The depth of the reported stacks is limited to 11 entries. This value represents the 95th percentile of the thread hangs stack depths reported by Telemetry.
+* The depth of the reported stacks is limited to 11 entries. This value represents the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 
 Structure::
 
