@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.3.72';
-PDFJS.build = '4d6f3c8';
+PDFJS.version = '1.3.76';
+PDFJS.build = 'f7ec866';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -6404,8 +6404,6 @@ var TilingPattern = (function TilingPatternClosure() {
 })();
 
 
-PDFJS.disableFontFace = false;
-
 function FontLoader(docId) {
   this.docId = docId;
   this.styleElement = null;
@@ -6428,6 +6426,7 @@ FontLoader.prototype = {
     var styleElement = this.styleElement;
     if (styleElement) {
       styleElement.parentNode.removeChild(styleElement);
+      styleElement = this.styleElement = null;
     }
   },
   bind: function fontLoaderBind(fonts, callback) {

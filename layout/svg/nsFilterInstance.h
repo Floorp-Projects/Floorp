@@ -77,7 +77,7 @@ public:
    *   border box).
    */
   static nsresult PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                     gfxContext& aContext,
+                                     DrawTarget* aDrawTarget,
                                      const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion* aDirtyArea);
@@ -150,12 +150,12 @@ public:
   bool IsInitialized() const { return mInitialized; }
 
   /**
-   * Draws the filter output into aContext. The area that
+   * Draws the filter output into aDrawTarget. The area that
    * needs to be painted must have been specified before calling this method
    * by passing it as the aPostFilterDirtyRegion argument to the
    * nsFilterInstance constructor.
    */
-  nsresult Render(gfxContext* aContext);
+  nsresult Render(DrawTarget* aDrawTarget);
 
   const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
   {

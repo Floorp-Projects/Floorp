@@ -42,17 +42,6 @@ private:
   * @return true if there is a valid ViewSpec
   */
   static bool ProcessSVGViewSpec(const nsAString &aViewSpec, dom::SVGSVGElement *root);
-
-  // Save and restore things we override in case we want to go back e.g. the
-  // user presses the back button
-  static void SaveOldPreserveAspectRatio(dom::SVGSVGElement *root);
-  static void RestoreOldPreserveAspectRatio(dom::SVGSVGElement *root);
-  static void SaveOldViewBox(dom::SVGSVGElement *root);
-  static void RestoreOldViewBox(dom::SVGSVGElement *root);
-  static void SaveOldZoomAndPan(dom::SVGSVGElement *root);
-  static void RestoreOldZoomAndPan(dom::SVGSVGElement *root);
-  static void SaveOldTransform(dom::SVGSVGElement *root);
-  static void RestoreOldTransform(dom::SVGSVGElement *root);
 };
 
 } // namespace mozilla
