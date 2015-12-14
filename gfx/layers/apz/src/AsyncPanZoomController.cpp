@@ -105,6 +105,11 @@ using mozilla::gfx::PointTyped;
  * \li\b apz.allow_checkerboarding
  * Pref that allows or disallows checkerboarding
  *
+ * \li\b apz.allow_immediate_handoff
+ * If set to true, scroll can be handed off from one APZC to another within
+ * a single input block. If set to false, a single input block can only
+ * scroll one APZC.
+ *
  * \li\b apz.axis_lock.mode
  * The preferred axis locking style. See AxisLockMode for possible values.
  *
@@ -1717,7 +1722,16 @@ AsyncPanZoomController::CanScroll(Layer::ScrollDirection aDirection) const
 bool
 AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const
 {
-  return mInputQueue->AllowScrollHandoff();
+  bool result = mInputQueue->AllowScrollHandoff();
+  if (!gfxPrefs::APZAllowImmediateHandoff()) {
+    if (InputBlockState* currentBlock = CurrentInputBlock()) {
+      // Do not allow handoff beyond the first APZC to scroll.
+      if (currentBlock->GetScrolledApzc() == this) {
+        result = false;
+      }
+    }
+  }
+  return result;
 }
 
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
@@ -2294,6 +2308,11 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
 
     if (!IsZero(adjustedDisplacement)) {
       ScrollBy(adjustedDisplacement / mFrameMetrics.GetZoom());
+      if (!gfxPrefs::APZAllowImmediateHandoff()) {
+        if (InputBlockState* block = CurrentInputBlock()) {
+          block->SetScrolledApzc(this);
+        }
+      }
       ScheduleCompositeAndMaybeRepaint();
       UpdateSharedCompositorFrameMetrics();
     }

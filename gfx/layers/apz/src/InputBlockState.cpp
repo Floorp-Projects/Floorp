@@ -87,6 +87,18 @@ InputBlockState::IsTargetConfirmed() const
   return mTargetConfirmed;
 }
 
+void
+InputBlockState::SetScrolledApzc(AsyncPanZoomController* aApzc)
+{
+  mScrolledApzc = aApzc;
+}
+
+AsyncPanZoomController*
+InputBlockState::GetScrolledApzc() const
+{
+  return mScrolledApzc;
+}
+
 CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                                            bool aTargetConfirmed)
   : InputBlockState(aTargetApzc, aTargetConfirmed)
