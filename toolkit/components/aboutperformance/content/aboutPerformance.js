@@ -568,8 +568,8 @@ var View = {
       if (watcherAlerts) {
         let deltaAlerts = watcherAlerts.get(delta.diff.addonId);
         if (deltaAlerts) {
-          jankSuffix = ` (${deltaAlerts.alerts.longestDuration || 0} alerts)`;
-          cpowSuffix = ` (${deltaAlerts.alerts.totalCPOWTime || 0} alerts)`;
+          jankSuffix = ` (${deltaAlerts.get("longestDuration") || 0} alerts)`;
+          cpowSuffix = ` (${deltaAlerts.get("totalCPOWTime") || 0} alerts)`;
         }
       }
 
