@@ -30,7 +30,7 @@ private:
 public:
   static void PositioningPropertyMutated();
 
-  ScrollLinkedEffectDetector(nsIDocument* aDoc);
+  explicit ScrollLinkedEffectDetector(nsIDocument* aDoc);
   ~ScrollLinkedEffectDetector();
 
 private:
