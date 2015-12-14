@@ -26,8 +26,6 @@ task:
     - 'docker-worker:cache:tc-vcs'
 
   payload:
-    image: '{{#docker_image}}builder{{/docker_image}}'
-
     # Two hours is long but covers edge cases (and matches bb based infra)
     maxRunTime: 7200
 
