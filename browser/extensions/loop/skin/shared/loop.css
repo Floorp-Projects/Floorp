@@ -164,7 +164,7 @@
     -moz-appearance: none;
     height: 40px;
     background-color: #00a9dc;
-    box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+    box-shadow: 0 -1px 1px rgba(0,0,0,.4) inset;
   }
 
   notification[value="loop-sharing-notification"].paused {
@@ -184,18 +184,12 @@
     -moz-appearance: none;
     background-color: #fff;
     border: 0;
-    border-right: solid 1px #ebebeb;
     width: 100px;
     height: 40px;
     margin: 0;
     list-style-image: url(chrome://loop/content/shared/img/pause-12x12.svg);
-    box-shadow: 0 40px 1px rgba(0,0,0,.5) inset;
+    box-shadow: 0 -1px 1px rgba(0,0,0,.5) inset;
     text-shadow: none;
-  }
-
-  notification[value="loop-sharing-notification"] .notification-button:-moz-locale-dir(rtl) {
-    border-right: 0;
-    border-left: solid 1px #ebebeb;
   }
 
   notification[value="loop-sharing-notification"].paused .notification-button {
@@ -217,7 +211,6 @@
   notification[value="loop-sharing-notification"].paused .notification-button-default {
     color: #d92215;
     background-color: #fff;
-    border-right: 0;
     list-style-image: url(chrome://loop/content/shared/img/stop-12x12.svg);
   }
 
