@@ -154,6 +154,12 @@ savedPings
 ~~~~~~~~~~
 Integer count of the number of pings that need to be sent.
 
+activeTicks
+~~~~~~~~~~~
+Integer count of the number of five-second intervals ('ticks') the user was considered 'active' (sending UI events to the window). An extra event is fired immediately when the user becomes active after being inactive. This is for some mouse and gamepad events, and all touch, keyboard, wheel, and pointer events (see `EventStateManager.cpp <https://dxr.mozilla.org/mozilla-central/rev/e6463ae7eda2775bc84593bb4a0742940bb87379/dom/events/EventStateManager.cpp#549>`_).
+This measure might be useful to give a trend of how much a user actually interacts with the browser when compared to overall session duration. It does not take into account whether or not the window has focus or is in the foreground. Just if it is receiving these interaction events.
+Note that in ``main`` pings, this measure is reset on subsession splits, while in ``saved-session`` pings it covers the whole browser session.
+
 pingsOverdue
 ~~~~~~~~~~~~
 Integer count of pending pings that are overdue.
