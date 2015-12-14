@@ -853,10 +853,6 @@ public:
   const nsRect& GetAccumulatedRect() {
     return mPreserves3DCtx.mAccumulatedRect;
   }
-  /**
-   * The level is increased by one for items establishing 3D rendering
-   * context and starting a new accumulation.
-   */
   int GetAccumulatedRectLevels() {
     return mPreserves3DCtx.mAccumulatedRectLevels;
   }
@@ -1622,21 +1618,6 @@ public:
    */
   virtual nsDisplayList* GetSameCoordinateSystemChildren() { return nullptr; }
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) {}
-  /**
-   * Do UpdateBounds() for items with frames establishing or extending
-   * 3D rendering context.
-   *
-   * This function is called by UpdateBoundsFor3D() of
-   * nsDisplayTransform(), and it is called by
-   * BuildDisplayListForStackingContext() on transform items
-   * establishing 3D rendering context.
-   *
-   * The bounds of a transform item with the frame establishing 3D
-   * rendering context should be computed by calling
-   * DoUpdateBoundsPreserves3D() on all descendants that participate
-   * the same 3d rendering context.
-   */
-  virtual void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) {}
 
   /**
    * If this has a child list, return it, even if the children are in
@@ -3642,18 +3623,13 @@ class nsDisplayTransform: public nsDisplayItem
       nsDisplayWrapList(aBuilder, aFrame, aItem) {}
     virtual ~StoreList() {}
 
-    virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {
-      // For extending 3d rendering context, the bounds would be
-      // updated by DoUpdateBoundsPreserves3D(), not here.
-      if (!mFrame->Extend3DContext()) {
-        nsDisplayWrapList::UpdateBounds(aBuilder);
-      }
-    }
-    virtual void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
-      for (nsDisplayItem *i = mList.GetBottom(); i; i = i->GetAbove()) {
-        i->DoUpdateBoundsPreserves3D(aBuilder);
-      }
+    virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {}
+    virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                             bool* aSnap) override {
+      // The bounds should not be computed until now, because we don't
+      // get accmulated transform before.
       nsDisplayWrapList::UpdateBounds(aBuilder);
+      return nsDisplayWrapList::GetBounds(aBuilder, aSnap);
     }
   };
 
@@ -3895,54 +3871,7 @@ public:
   // See nsIFrame::BuildDisplayListForStackingContext()
   void SetNoExtendContext() { mNoExtendContext = true; }
 
-  virtual void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
-    MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors() ||
-               IsTransformSeparator());
-    // Updating is not going through to child 3D context.
-    ComputeBounds(aBuilder);
-  }
-
-  /**
-   * This function updates bounds for items with a frame establishing
-   * 3D rendering context.
-   *
-   * \see nsDisplayItem::DoUpdateBoundsPreserves3D()
-   */
-  void UpdateBoundsFor3D(nsDisplayListBuilder* aBuilder) {
-    if (!mFrame->Extend3DContext() ||
-        mFrame->Combines3DTransformWithAncestors() ||
-        IsTransformSeparator()) {
-      // Not an establisher of a 3D rendering context.
-      return;
-    }
-    // Always start updating from an establisher of a 3D rendering context.
-
-    nsDisplayListBuilder::AutoAccumulateRect accRect(aBuilder);
-    nsDisplayListBuilder::AutoAccumulateTransform accTransform(aBuilder);
-    accTransform.StartRoot();
-    ComputeBounds(aBuilder);
-    mBounds = aBuilder->GetAccumulatedRect();
-    mHasBounds = true;
-  }
-
-  /**
-   * This item is an additional item as the boundary between parent
-   * and child 3D rendering context.
-   * \see nsIFrame::BuildDisplayListForStackingContext().
-   */
-  bool IsTransformSeparator() { return mIsTransformSeparator; }
-  /**
-   * This item is the boundary between parent and child 3D rendering
-   * context.
-   */
-  bool IsLeafOf3DContext() {
-    return (IsTransformSeparator() ||
-            (!mFrame->Extend3DContext() &&
-             mFrame->Combines3DTransformWithAncestors()));
-  }
-
 private:
-  void ComputeBounds(nsDisplayListBuilder* aBuilder);
   void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);
   void Init(nsDisplayListBuilder* aBuilder);
 
@@ -3961,9 +3890,6 @@ private:
   ComputeTransformFunction mTransformGetter;
   nsRect mChildrenVisibleRect;
   uint32_t mIndex;
-  nsRect mBounds;
-  // True for mBounds is valid.
-  bool mHasBounds;
   // We wont know if we pre-render until the layer building phase where we can
   // check layers will-change budget.
   bool mMaybePrerender;
@@ -3974,9 +3900,8 @@ private:
   // the child preserves3d context doesn't create a transform item.
   // With this flags, we force the item not extending 3D context.
   bool mNoExtendContext;
-  // This item is a separator between 3D rendering contexts, and
   // mTransform have been presetted by the constructor.
-  bool mIsTransformSeparator;
+  bool mHasPresetTransform;
   // True if mTransformPreserves3D have been initialized.
   bool mTransformPreserves3DInited;
 };
