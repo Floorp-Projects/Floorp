@@ -2174,7 +2174,6 @@ MediaDecoderStateMachine::SeekCompleted()
 RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::BeginShutdown()
 {
-  mStreamSink->BeginShutdown();
   return InvokeAsync(OwnerThread(), this, __func__,
                      &MediaDecoderStateMachine::Shutdown);
 }
