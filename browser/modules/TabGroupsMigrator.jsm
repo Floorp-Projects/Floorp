@@ -144,6 +144,9 @@ this.TabGroupsMigrator = {
             };
             if (!title) {
               groupData.anonGroupID = ++globalAnonGroupID;
+              groupData.tabGroupsMigrationTitle =
+                gBrowserBundle.formatStringFromName("tabgroups.migration.anonGroup",
+                                                    [groupData.anonGroupID], 1);
             }
             // If this is the active group, set the active group ID and add
             // all the already-known tabs (that didn't list a group ID), if any.
@@ -179,6 +182,16 @@ this.TabGroupsMigrator = {
     return promise;
   },
 
+  _groupSorter(a, b) {
+    if (!a.anonGroupID) {
+      return -1;
+    }
+    if (!b.anonGroupID) {
+      return 1;
+    }
+    return a.anonGroupID - b.anonGroupID;
+  },
+
   _bookmarkAllGroupsFromState: Task.async(function*(groupData) {
     // First create a folder in which to put all these bookmarks:
     this.bookmarkedGroupsPromise = PlacesUtils.bookmarks.insert({
@@ -190,21 +203,12 @@ this.TabGroupsMigrator = {
     let tabgroupsFolder = yield this.bookmarkedGroupsPromise;
 
     for (let [, windowGroupMap] of groupData) {
-      let windowGroups = [... windowGroupMap.values()].sort((a, b) => {
-        if (!a.anonGroupID) {
-          return -1;
-        }
-        if (!b.anonGroupID) {
-          return 1;
-        }
-        return a.anonGroupID - b.anonGroupID;
-      });
+      let windowGroups = [... windowGroupMap.values()].sort(this._groupSorter);
       for (let group of windowGroups) {
         let groupFolder = yield PlacesUtils.bookmarks.insert({
           parentGuid: tabgroupsFolder.guid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
-          title: group.tabGroupsMigrationTitle ||
-            gBrowserBundle.formatStringFromName("tabgroups.migration.anonGroup", [group.anonGroupID], 1),
+          title: group.tabGroupsMigrationTitle
         }).catch(Cu.reportError);
 
         for (let tab of group.tabs) {
@@ -253,12 +257,15 @@ this.TabGroupsMigrator = {
       // We then convert any hidden groups into windows for the state object
       // we show in about:tabgroupsdata
       if (groupInfoForWindow) {
+        let windowsToReturn = [];
         for (let groupID of hiddenGroupIDs) {
           let group = groupInfoForWindow.get("" + groupID);
           if (group) {
-            stateToReturn.windows.push(group);
+            windowsToReturn.push(group);
           }
         }
+        windowsToReturn.sort(this._groupSorter);
+        stateToReturn.windows = stateToReturn.windows.concat(windowsToReturn);
       }
 
       // Finally we remove tab groups data from the window:
