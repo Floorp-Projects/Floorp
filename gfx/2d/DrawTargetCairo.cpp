@@ -333,6 +333,10 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface,
                                 bool aExistingOnly = false,
                                 const IntRect& aSubImage = IntRect())
 {
+  if (!aSurface) {
+    return nullptr;
+  }
+
   IntRect subimage = IntRect(IntPoint(), aSurface->GetSize());
   if (!aSubImage.IsEmpty()) {
     MOZ_ASSERT(!aExistingOnly);
@@ -792,7 +796,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
     return;
   }
 
-  if (!IsValid()) {
+  if (!IsValid() || !aSurface) {
     gfxCriticalNote << "DrawSurface with bad surface " << cairo_surface_status(mSurface);
     return;
   }
