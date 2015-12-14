@@ -123,7 +123,7 @@ groupbox.collapsable caption .caption-icon {
   background-position: center;
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
-  background-image: url("chrome://global/skin/tree/twisty.svg#open");
+  background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
 groupbox.collapsable[closed="true"] {
@@ -133,7 +133,7 @@ groupbox.collapsable[closed="true"] {
 }
 
 groupbox.collapsable[closed="true"] caption .caption-icon {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd");
+  background-image: url("chrome://global/skin/tree/twisty-clsd.png");
 }
 
 groupbox tree {
