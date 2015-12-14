@@ -6,6 +6,9 @@
 
 @template
 def GeneratedTestCertificate(name):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
     GENERATED_FILES += [name]
     props = GENERATED_FILES[name]
     props.script = '/security/manager/ssl/tests/unit/pycert.py'
@@ -20,6 +23,9 @@ def GeneratedTestCertificate(name):
 
 @template
 def GeneratedTestKey(name):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
     GENERATED_FILES += [name]
     props = GENERATED_FILES[name]
     props.script = '/security/manager/ssl/tests/unit/pykey.py'
