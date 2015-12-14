@@ -76,6 +76,8 @@ this.TabGroupsMigrator = {
       );
     }
 
+    // We always write this back to ensure that any spurious tab groups data is
+    // removed:
     stateAsSupportsString.data = JSON.stringify(state);
   },
 
@@ -99,15 +101,39 @@ this.TabGroupsMigrator = {
         }
 
         let windowGroupData = new Map();
+        let activeGroupID = null;
+        let tabsWithoutGroup = [];
         for (let tab of win.tabs) {
           let group;
           // Get a string group ID:
           try {
-            group = tab.extData && tab.extData["tabview-tab"] &&
-                    (JSON.parse(tab.extData["tabview-tab"]).groupID + "");
+            let tabViewData = tab.extData && tab.extData["tabview-tab"] &&
+                              JSON.parse(tab.extData["tabview-tab"]);
+            if (tabViewData && ("groupID" in tabViewData)) {
+              group = tabViewData.groupID + "";
+            }
           } catch (ex) {
-            // Ignore tabs with no group info
-            continue;
+            // Ignore errors reading group info, treat as active group
+          }
+          if (!group) {
+            // We didn't find group info. If we already have an active group,
+            // pretend this is part of that group:
+            if (activeGroupID) {
+              group = activeGroupID;
+            } else {
+              if (!tabsWithoutGroup) {
+                Cu.reportError("ERROR: the list of tabs without groups was " +
+                               "nulled out, but there's no active group ID? " +
+                               "This should never happen!");
+                tabsWithoutGroup = [];
+              }
+              // Otherwise, add to the list of tabs with no group and move to
+              // the next tab immediately. We'll add all these tabs at the
+              // beginning of the active group as soon as we find a tab in it,
+              // so as to preserve their order.
+              tabsWithoutGroup.push(tab);
+              continue;
+            }
           }
           let groupData = windowGroupData.get(group);
           if (!groupData) {
@@ -119,9 +145,24 @@ this.TabGroupsMigrator = {
             if (!title) {
               groupData.anonGroupID = ++globalAnonGroupID;
             }
+            // If this is the active group, set the active group ID and add
+            // all the already-known tabs (that didn't list a group ID), if any.
+            if (!activeGroupID && !tab.hidden) {
+              activeGroupID = group;
+              groupData.tabs = tabsWithoutGroup;
+              tabsWithoutGroup = null;
+            }
             windowGroupData.set(group, groupData);
           }
           groupData.tabs.push(tab);
+        }
+
+        // If we found tabs but no active group, assume there's just 1 group:
+        if (tabsWithoutGroup && tabsWithoutGroup.length) {
+          windowGroupData.set("active group", {
+            tabs: tabsWithoutGroup,
+            anonGroupID: ++globalAnonGroupID,
+          });
         }
 
         allGroupData.set(win, windowGroupData);
