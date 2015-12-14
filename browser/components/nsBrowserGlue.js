@@ -3087,6 +3087,26 @@ var E10SUINotification = {
   CURRENT_PROMPT_PREF: "browser.displayedE10SPrompt.1",
   PREVIOUS_PROMPT_PREF: "browser.displayedE10SPrompt",
 
+  get forcedOn() {
+    try {
+      return Services.prefs.getBoolPref("browser.tabs.remote.force-enable");
+    } catch (e) {}
+    return false;
+  },
+
+  get a11yRecentlyRan() {
+    try {
+      if (Services.prefs.getBoolPref("accessibility.loadedInLastSession")) {
+        return true;
+      }
+    } catch (e) {}
+    try {
+      Services.prefs.getBoolPref("accessibility.lastLoadDate");
+      return true;
+    } catch (e) {}
+    return false;
+  },
+
   checkStatus: function() {
     let updateChannel = UpdateUtils.UpdateChannel;
     let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
@@ -3095,6 +3115,9 @@ var E10SUINotification = {
     }
 
     if (Services.appinfo.browserTabsRemoteAutostart) {
+      if (this.forcedOn) {
+        return;
+      }
       let notice = 0;
       try {
         notice = Services.prefs.getIntPref("browser.displayedE10SNotice");
@@ -3126,6 +3149,11 @@ var E10SUINotification = {
         url += "?utm_source=tab&utm_campaign=e10sfeedback";
 
         win.openUILinkIn(url, "tab");
+        return;
+      }
+
+      // If accessibility recently ran, don't prompt about trying out e10s
+      if (this.a11yRecentlyRan) {
         return;
       }
 
