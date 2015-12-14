@@ -6432,7 +6432,7 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
   RefPtr<css::Declaration> declaration = new css::Declaration();
   mData.AssertInitialState();
   for (;;) {
-    bool changed;
+    bool changed = false;
     if (!ParseDeclaration(declaration, aFlags, true, &changed, aContext)) {
       if (!SkipDeclaration(checkForBraces)) {
         break;
