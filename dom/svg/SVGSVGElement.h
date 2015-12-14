@@ -33,6 +33,7 @@ class DOMSVGLength;
 class DOMSVGNumber;
 class EventChainPreVisitor;
 class SVGFragmentIdentifier;
+class AutoSVGViewHandler;
 
 namespace dom {
 class SVGAngle;
@@ -85,13 +86,29 @@ public:
   float height;
 };
 
+// Stores svgView arguments of SVG fragment identifiers.
+class SVGView {
+  friend class mozilla::AutoSVGViewHandler;
+  friend class mozilla::dom::SVGSVGElement;
+public:
+  SVGView();
+
+private:
+  nsSVGEnum                             mZoomAndPan;
+  nsSVGViewBox                          mViewBox;
+  SVGAnimatedPreserveAspectRatio        mPreserveAspectRatio;
+  nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
+};
+
 typedef SVGGraphicsElement SVGSVGElementBase;
 
 class SVGSVGElement final : public SVGSVGElementBase
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
+  friend class mozilla::dom::SVGView;
   friend class mozilla::SVGFragmentIdentifier;
+  friend class mozilla::AutoSVGViewHandler;
   friend class mozilla::AutoSVGRenderingState;
 
   SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
@@ -141,6 +158,8 @@ public:
   virtual gfxMatrix PrependLocalTransformsTo(
     const gfxMatrix &aMatrix,
     SVGTransformTypes aWhich = eAllTransforms) const override;
+  virtual nsSVGAnimatedTransformList*
+	  GetAnimatedTransformList(uint32_t aFlags = 0) override;
   virtual bool HasValidDimensions() const override;
 
   // SVGSVGElement methods:
@@ -286,19 +305,11 @@ private:
   void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
   void ClearImageOverridePreserveAspectRatio();
 
-  // Set/Clear properties to hold old or override versions of attributes
+  // Set/Clear properties to hold old version of preserveAspectRatio
+  // when it's being overridden by an <image> element that we are inside of.
   bool SetPreserveAspectRatioProperty(const SVGPreserveAspectRatio& aPAR);
   const SVGPreserveAspectRatio* GetPreserveAspectRatioProperty() const;
   bool ClearPreserveAspectRatioProperty();
-  bool SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox);
-  const nsSVGViewBoxRect* GetViewBoxProperty() const;
-  bool ClearViewBoxProperty();
-  bool SetZoomAndPanProperty(uint16_t aValue);
-  uint16_t GetZoomAndPanProperty() const;
-  bool ClearZoomAndPanProperty();
-  bool SetTransformProperty(const SVGTransformList& aValue);
-  const SVGTransformList* GetTransformProperty() const;
-  bool ClearTransformProperty();
 
   bool IsRoot() const {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
@@ -369,7 +380,10 @@ private:
   nsSVGViewBox                   mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
+  // mCurrentViewID and mSVGView are mutually exclusive; we can have
+  // at most one non-null.
   nsAutoPtr<nsString>            mCurrentViewID;
+  nsAutoPtr<SVGView>             mSVGView;
 
   // The size of the rectangular SVG viewport into which we render. This is
   // not (necessarily) the same as the content area. See:
@@ -401,7 +415,6 @@ private:
   bool     mImageNeedsTransformInvalidation;
   bool     mIsPaintingSVGImageElement;
   bool     mHasChildrenOnlyTransform;
-  bool     mUseCurrentView;
 };
 
 } // namespace dom
