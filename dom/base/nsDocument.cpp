@@ -1435,7 +1435,6 @@ nsIDocument::nsIDocument()
     mPostedFlushUserFontSet(false),
     mPartID(0),
     mDidFireDOMContentLoaded(true),
-    mHasScrollLinkedEffect(false),
     mUserHasInteracted(false)
 {
   SetInDocument();
@@ -1556,8 +1555,6 @@ nsDocument::~nsDocument()
         mixedContentLevel = MIXED_DISPLAY_CONTENT;
       }
       Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
-
-      Accumulate(Telemetry::SCROLL_LINKED_EFFECT_FOUND, mHasScrollLinkedEffect);
     }
   }
 
@@ -13288,18 +13285,4 @@ nsIDocument::Fonts()
     GetUserFontSet();  // this will cause the user font set to be created/updated
   }
   return mFontFaceSet;
-}
-
-void
-nsIDocument::ReportHasScrollLinkedEffect()
-{
-  if (mHasScrollLinkedEffect) {
-    // We already did this once for this document, don't do it again.
-    return;
-  }
-  mHasScrollLinkedEffect = true;
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Async Pan/Zoom"),
-                                  this, nsContentUtils::eLAYOUT_PROPERTIES,
-                                  "ScrollLinkedEffectFound");
 }
