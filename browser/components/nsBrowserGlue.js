@@ -798,6 +798,15 @@ BrowserGlue.prototype = {
     this._sanitizer.onStartup();
     // check if we're in safe mode
     if (Services.appinfo.inSafeMode) {
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1231112#c7 . We need to
+      // register the observer early if we have to migrate tab groups
+      let currentUIVersion = 0;
+      try {
+        currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
+      } catch(ex) {}
+      if (currentUIVersion < 35) {
+        this._maybeMigrateTabGroups();
+      }
       Services.ww.openWindow(null, "chrome://browser/content/safeMode.xul",
                              "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
@@ -2236,7 +2245,8 @@ BrowserGlue.prototype = {
       this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
 
-    if (currentUIVersion < 35) {
+    // Only do this outside of safe mode, because in safe mode we do this earlier.
+    if (currentUIVersion < 35 && !Services.appinfo.inSafeMode) {
       this._maybeMigrateTabGroups();
     }
 
