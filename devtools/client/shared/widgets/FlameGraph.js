@@ -18,6 +18,8 @@ loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
   "devtools/client/performance/modules/global", true);
 loader.lazyRequireGetter(this, "FrameUtils",
   "devtools/client/performance/modules/logic/frame-utils");
+loader.lazyRequireGetter(this, "demangle",
+  "devtools/client/shared/demangle");
 
 loader.lazyRequireGetter(this, "AbstractCanvasGraph",
   "devtools/client/shared/widgets/Graphs", true);
@@ -1242,7 +1244,7 @@ var FlameGraphUtils = {
    */
   _formatLabel: function (key, frame) {
     let { functionName, fileName, line } = FrameUtils.parseLocation(key, frame.line);
-    let label = functionName;
+    let label = FrameUtils.shouldDemangle(functionName) ? demangle(functionName) : functionName;
 
     if (fileName) {
       label += ` (${fileName}${line != null ? (":" + line) : ""})`;
