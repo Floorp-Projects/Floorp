@@ -651,9 +651,7 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
   }
 
   if(aTransform.IsSingular() ||
-     aTransform.HasPerspectiveComponent() ||
-     aTransform.HasNonTranslation() ||
-     !aTransform.HasNonIntegerTranslation()) {
+     (aTransform._14 != 0 || aTransform._24 != 0 || aTransform._34 != 0)) {
     // For a singular transform, there is no reversed matrix, so we
     // don't snap it.
     // For a perspective transform, the content is transformed in
