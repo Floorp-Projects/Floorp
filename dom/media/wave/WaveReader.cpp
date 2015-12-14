@@ -80,6 +80,20 @@ namespace {
     return result;
   }
 
+  int32_t
+  ReadInt24LE(const char** aBuffer)
+  {
+    int32_t result = int32_t((uint8_t((*aBuffer)[2]) << 16) |
+                             (uint8_t((*aBuffer)[1]) << 8 ) |
+                             (uint8_t((*aBuffer)[0])));
+    if (((*aBuffer)[2] & 0x80) == 0x80) {
+      result = (result | 0xff000000);
+    }
+
+    *aBuffer += 3 * sizeof(char);
+    return result;
+  }
+
   uint16_t
   ReadUint16LE(const char** aBuffer)
   {
@@ -148,6 +162,7 @@ nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
 
 template <typename T> T UnsignedByteToAudioSample(uint8_t aValue);
 template <typename T> T SignedShortToAudioSample(int16_t aValue);
+template <typename T> T Signed24bIntToAudioSample(int32_t aValue);
 
 template <> inline float
 UnsignedByteToAudioSample<float>(uint8_t aValue)
@@ -171,6 +186,18 @@ SignedShortToAudioSample<int16_t>(int16_t aValue)
   return aValue;
 }
 
+template <> inline float
+Signed24bIntToAudioSample<float>(int32_t aValue)
+{
+  return aValue / 8388608.0f;
+}
+
+template <> inline int16_t
+Signed24bIntToAudioSample<int16_t>(int32_t aValue)
+{
+  return aValue / 256;
+}
+
 bool WaveReader::DecodeAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -180,9 +207,12 @@ bool WaveReader::DecodeAudioData()
   int64_t remaining = len - pos;
   NS_ASSERTION(remaining >= 0, "Current wave position is greater than wave file length");
 
-  static const int64_t BLOCK_SIZE = 4096;
+  static const int64_t BLOCK_SIZE = 6144;
   int64_t readSize = std::min(BLOCK_SIZE, remaining);
   int64_t frames = readSize / mFrameSize;
+
+  MOZ_ASSERT(BLOCK_SIZE % 3 == 0);
+  MOZ_ASSERT(BLOCK_SIZE % 2 == 0);
 
   static_assert(uint64_t(BLOCK_SIZE) < UINT_MAX /
                 sizeof(AudioDataValue) / MAX_CHANNELS,
@@ -209,6 +239,9 @@ bool WaveReader::DecodeAudioData()
       } else if (mSampleFormat == FORMAT_S16) {
         int16_t v =  ReadInt16LE(&d);
         *s++ = SignedShortToAudioSample<AudioDataValue>(v);
+      } else if (mSampleFormat == FORMAT_S24) {
+        int32_t v =  ReadInt24LE(&d);
+        *s++ = Signed24bIntToAudioSample<AudioDataValue>(v);
       }
     }
   }
@@ -422,12 +455,13 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   // but the channels check is intentionally limited to mono or stereo
   // when the media is intended for direct playback because that's what the
   // audio backend currently supports.
-  unsigned int actualFrameSize = (sampleFormat == 8 ? 1 : 2) * channels;
+  unsigned int actualFrameSize = sampleFormat * channels / 8;
   if (rate < 100 || rate > 96000 ||
       (((channels < 1 || channels > MAX_CHANNELS) ||
-       (frameSize != 1 && frameSize != 2 && frameSize != 4)) &&
+       (frameSize != 1 && frameSize != 2 && frameSize != 3 &&
+        frameSize != 4 && frameSize != 6)) &&
        !mIgnoreAudioOutputFormat) ||
-       (sampleFormat != 8 && sampleFormat != 16) ||
+       (sampleFormat != 8 && sampleFormat != 16 && sampleFormat != 24) ||
       frameSize != actualFrameSize) {
     NS_WARNING("Invalid WAVE metadata");
     return false;
@@ -438,6 +472,8 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   mFrameSize = frameSize;
   if (sampleFormat == 8) {
     mSampleFormat = FORMAT_U8;
+  } else if (sampleFormat == 24) {
+    mSampleFormat = FORMAT_S24;
   } else {
     mSampleFormat = FORMAT_S16;
   }
