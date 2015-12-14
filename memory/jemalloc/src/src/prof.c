@@ -139,9 +139,16 @@ prof_tctx_comp(const prof_tctx_t *a, const prof_tctx_t *b)
 	uint64_t b_thr_uid = b->thr_uid;
 	int ret = (a_thr_uid > b_thr_uid) - (a_thr_uid < b_thr_uid);
 	if (ret == 0) {
-		uint64_t a_tctx_uid = a->tctx_uid;
-		uint64_t b_tctx_uid = b->tctx_uid;
-		ret = (a_tctx_uid > b_tctx_uid) - (a_tctx_uid < b_tctx_uid);
+		uint64_t a_thr_discrim = a->thr_discrim;
+		uint64_t b_thr_discrim = b->thr_discrim;
+		ret = (a_thr_discrim > b_thr_discrim) - (a_thr_discrim <
+		    b_thr_discrim);
+		if (ret == 0) {
+			uint64_t a_tctx_uid = a->tctx_uid;
+			uint64_t b_tctx_uid = b->tctx_uid;
+			ret = (a_tctx_uid > b_tctx_uid) - (a_tctx_uid <
+			    b_tctx_uid);
+		}
 	}
 	return (ret);
 }
@@ -202,7 +209,7 @@ prof_alloc_rollback(tsd_t *tsd, prof_tctx_t *tctx, bool updated)
 		 */
 		tdata = prof_tdata_get(tsd, true);
 		if (tdata != NULL)
-			prof_sample_threshold_update(tctx->tdata);
+			prof_sample_threshold_update(tdata);
 	}
 
 	if ((uintptr_t)tctx > (uintptr_t)1U) {
@@ -544,9 +551,9 @@ prof_gctx_create(tsd_t *tsd, prof_bt_t *bt)
 	/*
 	 * Create a single allocation that has space for vec of length bt->len.
 	 */
-	prof_gctx_t *gctx = (prof_gctx_t *)iallocztm(tsd, offsetof(prof_gctx_t,
-	    vec) + (bt->len * sizeof(void *)), false, tcache_get(tsd, true),
-	    true, NULL);
+	size_t size = offsetof(prof_gctx_t, vec) + (bt->len * sizeof(void *));
+	prof_gctx_t *gctx = (prof_gctx_t *)iallocztm(tsd, size,
+	    size2index(size), false, tcache_get(tsd, true), true, NULL, true);
 	if (gctx == NULL)
 		return (NULL);
 	gctx->lock = prof_gctx_mutex_choose();
@@ -587,7 +594,7 @@ prof_gctx_try_destroy(tsd_t *tsd, prof_tdata_t *tdata_self, prof_gctx_t *gctx,
 		prof_leave(tsd, tdata_self);
 		/* Destroy gctx. */
 		malloc_mutex_unlock(gctx->lock);
-		idalloctm(tsd, gctx, tcache_get(tsd, false), true);
+		idalloctm(tsd, gctx, tcache_get(tsd, false), true, true);
 	} else {
 		/*
 		 * Compensate for increment in prof_tctx_destroy() or
@@ -694,7 +701,7 @@ prof_tctx_destroy(tsd_t *tsd, prof_tctx_t *tctx)
 		prof_tdata_destroy(tsd, tdata, false);
 
 	if (destroy_tctx)
-		idalloctm(tsd, tctx, tcache_get(tsd, false), true);
+		idalloctm(tsd, tctx, tcache_get(tsd, false), true, true);
 }
 
 static bool
@@ -723,7 +730,8 @@ prof_lookup_global(tsd_t *tsd, prof_bt_t *bt, prof_tdata_t *tdata,
 		if (ckh_insert(tsd, &bt2gctx, btkey.v, gctx.v)) {
 			/* OOM. */
 			prof_leave(tsd, tdata);
-			idalloctm(tsd, gctx.v, tcache_get(tsd, false), true);
+			idalloctm(tsd, gctx.v, tcache_get(tsd, false), true,
+			    true);
 			return (true);
 		}
 		new_gctx = true;
@@ -782,8 +790,9 @@ prof_lookup(tsd_t *tsd, prof_bt_t *bt)
 
 		/* Link a prof_tctx_t into gctx for this thread. */
 		tcache = tcache_get(tsd, true);
-		ret.v = iallocztm(tsd, sizeof(prof_tctx_t), false, tcache, true,
-		    NULL);
+		ret.v = iallocztm(tsd, sizeof(prof_tctx_t),
+		    size2index(sizeof(prof_tctx_t)), false, tcache, true, NULL,
+		    true);
 		if (ret.p == NULL) {
 			if (new_gctx)
 				prof_gctx_try_destroy(tsd, tdata, gctx, tdata);
@@ -791,6 +800,7 @@ prof_lookup(tsd_t *tsd, prof_bt_t *bt)
 		}
 		ret.p->tdata = tdata;
 		ret.p->thr_uid = tdata->thr_uid;
+		ret.p->thr_discrim = tdata->thr_discrim;
 		memset(&ret.p->cnts, 0, sizeof(prof_cnt_t));
 		ret.p->gctx = gctx;
 		ret.p->tctx_uid = tdata->tctx_uid_next++;
@@ -802,7 +812,7 @@ prof_lookup(tsd_t *tsd, prof_bt_t *bt)
 		if (error) {
 			if (new_gctx)
 				prof_gctx_try_destroy(tsd, tdata, gctx, tdata);
-			idalloctm(tsd, ret.v, tcache, true);
+			idalloctm(tsd, ret.v, tcache, true, true);
 			return (NULL);
 		}
 		malloc_mutex_lock(gctx->lock);
@@ -1094,11 +1104,23 @@ prof_tctx_dump_iter(prof_tctx_tree_t *tctxs, prof_tctx_t *tctx, void *arg)
 {
 	bool propagate_err = *(bool *)arg;
 
-	if (prof_dump_printf(propagate_err,
-	    "  t%"FMTu64": %"FMTu64": %"FMTu64" [%"FMTu64": %"FMTu64"]\n",
-	    tctx->thr_uid, tctx->dump_cnts.curobjs, tctx->dump_cnts.curbytes,
-	    tctx->dump_cnts.accumobjs, tctx->dump_cnts.accumbytes))
-		return (tctx);
+	switch (tctx->state) {
+	case prof_tctx_state_initializing:
+	case prof_tctx_state_nominal:
+		/* Not captured by this dump. */
+		break;
+	case prof_tctx_state_dumping:
+	case prof_tctx_state_purgatory:
+		if (prof_dump_printf(propagate_err,
+		    "  t%"FMTu64": %"FMTu64": %"FMTu64" [%"FMTu64": "
+		    "%"FMTu64"]\n", tctx->thr_uid, tctx->dump_cnts.curobjs,
+		    tctx->dump_cnts.curbytes, tctx->dump_cnts.accumobjs,
+		    tctx->dump_cnts.accumbytes))
+			return (tctx);
+		break;
+	default:
+		not_reached();
+	}
 	return (NULL);
 }
 
@@ -1191,7 +1213,7 @@ prof_gctx_finish(tsd_t *tsd, prof_gctx_tree_t *gctxs)
 					tctx_tree_remove(&gctx->tctxs,
 					    to_destroy);
 					idalloctm(tsd, to_destroy,
-					    tcache_get(tsd, false), true);
+					    tcache_get(tsd, false), true, true);
 				} else
 					next = NULL;
 			} while (next != NULL);
@@ -1569,7 +1591,6 @@ prof_idump(void)
 {
 	tsd_t *tsd;
 	prof_tdata_t *tdata;
-	char filename[PATH_MAX + 1];
 
 	cassert(config_prof);
 
@@ -1585,6 +1606,7 @@ prof_idump(void)
 	}
 
 	if (opt_prof_prefix[0] != '\0') {
+		char filename[PATH_MAX + 1];
 		malloc_mutex_lock(&prof_dump_seq_mtx);
 		prof_dump_filename(filename, 'i', prof_dump_iseq);
 		prof_dump_iseq++;
@@ -1623,7 +1645,6 @@ prof_gdump(void)
 {
 	tsd_t *tsd;
 	prof_tdata_t *tdata;
-	char filename[DUMP_FILENAME_BUFSIZE];
 
 	cassert(config_prof);
 
@@ -1639,6 +1660,7 @@ prof_gdump(void)
 	}
 
 	if (opt_prof_prefix[0] != '\0') {
+		char filename[DUMP_FILENAME_BUFSIZE];
 		malloc_mutex_lock(&prof_dump_seq_mtx);
 		prof_dump_filename(filename, 'u', prof_dump_useq);
 		prof_dump_useq++;
@@ -1694,8 +1716,8 @@ prof_tdata_init_impl(tsd_t *tsd, uint64_t thr_uid, uint64_t thr_discrim,
 
 	/* Initialize an empty cache for this thread. */
 	tcache = tcache_get(tsd, true);
-	tdata = (prof_tdata_t *)iallocztm(tsd, sizeof(prof_tdata_t), false,
-	    tcache, true, NULL);
+	tdata = (prof_tdata_t *)iallocztm(tsd, sizeof(prof_tdata_t),
+	    size2index(sizeof(prof_tdata_t)), false, tcache, true, NULL, true);
 	if (tdata == NULL)
 		return (NULL);
 
@@ -1709,7 +1731,7 @@ prof_tdata_init_impl(tsd_t *tsd, uint64_t thr_uid, uint64_t thr_discrim,
 
 	if (ckh_new(tsd, &tdata->bt2tctx, PROF_CKH_MINITEMS,
 	    prof_bt_hash, prof_bt_keycomp)) {
-		idalloctm(tsd, tdata, tcache, true);
+		idalloctm(tsd, tdata, tcache, true, true);
 		return (NULL);
 	}
 
@@ -1764,9 +1786,9 @@ prof_tdata_destroy_locked(tsd_t *tsd, prof_tdata_t *tdata,
 
 	tcache = tcache_get(tsd, false);
 	if (tdata->thread_name != NULL)
-		idalloctm(tsd, tdata->thread_name, tcache, true);
+		idalloctm(tsd, tdata->thread_name, tcache, true, true);
 	ckh_delete(tsd, &tdata->bt2tctx);
-	idalloctm(tsd, tdata, tcache, true);
+	idalloctm(tsd, tdata, tcache, true, true);
 }
 
 static void
@@ -1927,7 +1949,8 @@ prof_thread_name_alloc(tsd_t *tsd, const char *thread_name)
 	if (size == 1)
 		return ("");
 
-	ret = iallocztm(tsd, size, false, tcache_get(tsd, true), true, NULL);
+	ret = iallocztm(tsd, size, size2index(size), false, tcache_get(tsd,
+	    true), true, NULL, true);
 	if (ret == NULL)
 		return (NULL);
 	memcpy(ret, thread_name, size);
@@ -1960,7 +1983,7 @@ prof_thread_name_set(tsd_t *tsd, const char *thread_name)
 
 	if (tdata->thread_name != NULL) {
 		idalloctm(tsd, tdata->thread_name, tcache_get(tsd, false),
-		    true);
+		    true, true);
 		tdata->thread_name = NULL;
 	}
 	if (strlen(s) > 0)
