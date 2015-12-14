@@ -421,29 +421,10 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
   // considering the file invalid.  This code skips any extension of the
   // "format" chunk.
   if (aChunkSize > WAVE_FORMAT_CHUNK_SIZE) {
-    char extLength[2];
-    const char* p = extLength;
-
-    if (!ReadAll(extLength, sizeof(extLength))) {
-      return false;
-    }
-
-    static_assert(sizeof(uint16_t) <= sizeof(extLength),
-                  "Reads would overflow extLength buffer.");
-    uint16_t extra = ReadUint16LE(&p);
-    if (aChunkSize - (WAVE_FORMAT_CHUNK_SIZE + 2) != extra) {
-      NS_WARNING("Invalid extended format chunk size");
-      return false;
-    }
+    uint16_t extra = aChunkSize - WAVE_FORMAT_CHUNK_SIZE;
     extra += extra % 2;
-
-    if (extra > 0) {
-      static_assert(UINT16_MAX + (UINT16_MAX % 2) < UINT_MAX / sizeof(char),
-                    "chunkExtension array too large for iterator.");
-      auto chunkExtension = MakeUnique<char[]>(extra);
-      if (!ReadAll(chunkExtension.get(), extra)) {
-        return false;
-      }
+    if (NS_FAILED(mResource.Seek(nsISeekableStream::NS_SEEK_CUR, extra))) {
+      return false;
     }
   }
 
