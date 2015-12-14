@@ -5,10 +5,9 @@
 
 #include "mozilla/layers/SingleTiledContentClient.h"
 
+#include "ClientTiledPaintedLayer.h"
+
 namespace mozilla {
-
-using namespace gfx;
-
 namespace layers {
 
 
@@ -41,14 +40,14 @@ SingleTiledContentClient::UpdatedBuffer(TiledBufferType aType)
 }
 
 /* static */ bool
-SingleTiledContentClient::ClientSupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager)
+SingleTiledContentClient::ClientSupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager)
 {
   int32_t maxTextureSize = aManager->GetMaxTextureSize();
   return aSize.width <= maxTextureSize && aSize.height <= maxTextureSize;
 }
 
 bool
-SingleTiledContentClient::SupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager) const
+SingleTiledContentClient::SupportsLayerSize(const gfx::IntSize& aSize, ClientLayerManager* aManager) const
 {
   return ClientSupportsLayerSize(aSize, aManager);
 }
@@ -93,7 +92,7 @@ ClientSingleTiledLayerBuffer::GetSurfaceDescriptorTiles()
 
   TileDescriptor tileDesc = mTile.GetTileDescriptor();
   tiles.AppendElement(tileDesc);
-  mTile.mUpdateRect = IntRect();
+  mTile.mUpdateRect = gfx::IntRect();
 
   return SurfaceDescriptorTiles(mValidRegion,
                                 tiles,
@@ -121,8 +120,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                           void* aCallbackData)
 {
   // Compare layer valid region size to current backbuffer size, discard if not matching.
-  IntSize size = aNewValidRegion.GetBounds().Size();
-  IntPoint origin = aNewValidRegion.GetBounds().TopLeft();
+  gfx::IntSize size = aNewValidRegion.GetBounds().Size();
+  gfx::IntPoint origin = aNewValidRegion.GetBounds().TopLeft();
   nsIntRegion paintRegion = aPaintRegion;
   if (mSize != size ||
       mTilingOrigin != origin) {
@@ -164,29 +163,29 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     return;
   }
 
-  RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
-  RefPtr<DrawTarget> dtOnWhite;
+  RefPtr<gfx::DrawTarget> dt = backBuffer->BorrowDrawTarget();
+  RefPtr<gfx::DrawTarget> dtOnWhite;
   if (backBufferOnWhite) {
     dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
   }
 
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
     nsIntRegionRectIterator iter(tileDirtyRegion);
-    const IntRect *iterRect;
+    const gfx::IntRect *iterRect;
     while ((iterRect = iter.Next())) {
       if (dtOnWhite) {
-        dt->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
-                     ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-        dtOnWhite->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
-                            ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+        dt->FillRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+                     gfx::ColorPattern(gfx::Color(0.0, 0.0, 0.0, 1.0)));
+        dtOnWhite->FillRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+                            gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)));
       } else {
-        dt->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
+        dt->ClearRect(gfx::Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
       }
     }
   }
 
   if (dtOnWhite) {
-    dt = Factory::CreateDualDrawTarget(dt, dtOnWhite);
+    dt = gfx::Factory::CreateDualDrawTarget(dt, dtOnWhite);
     dtOnWhite = nullptr;
   }
 
