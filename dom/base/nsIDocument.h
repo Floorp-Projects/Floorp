@@ -155,8 +155,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xce1f7627, 0x7109, 0x4977, \
-  { 0xba, 0x77, 0x49, 0x0f, 0xfd, 0xe0, 0x7a, 0xaa } }
+{ 0x13011a82, 0x46cd, 0x4c33, \
+  { 0x9d, 0x4e, 0x31, 0x41, 0xbb, 0x3f, 0x18, 0xe9 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -2652,8 +2652,6 @@ public:
     return mUserHasInteracted;
   }
 
-  void ReportHasScrollLinkedEffect();
-
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3053,8 +3051,6 @@ protected:
 
   uint32_t mBlockDOMContentLoaded;
   bool mDidFireDOMContentLoaded:1;
-
-  bool mHasScrollLinkedEffect:1;
 
   // Our live MediaQueryLists
   PRCList mDOMMediaQueryLists;

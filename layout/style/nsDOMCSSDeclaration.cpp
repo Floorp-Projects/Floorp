@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsContentUtils.h"
 #include "nsQueryObject.h"
-#include "mozilla/layers/ScrollLinkedEffectDetector.h"
 
 using namespace mozilla;
 
@@ -78,23 +77,6 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
                                       const nsAString& aValue)
 {
-  switch (aPropID) {
-    case eCSSProperty_background_position:
-    case eCSSProperty_transform:
-    case eCSSProperty_top:
-    case eCSSProperty_left:
-    case eCSSProperty_bottom:
-    case eCSSProperty_right:
-    case eCSSProperty_margin_top:
-    case eCSSProperty_margin_left:
-    case eCSSProperty_margin_bottom:
-    case eCSSProperty_margin_right:
-      mozilla::layers::ScrollLinkedEffectDetector::PositioningPropertyMutated();
-      break;
-    default:
-      break;
-  }
-
   if (aValue.IsEmpty()) {
     // If the new value of the property is an empty string we remove the
     // property.
