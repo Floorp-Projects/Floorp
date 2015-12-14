@@ -597,15 +597,29 @@ js::ZoneGlobalsAreAllGray(JS::Zone* zone)
     return true;
 }
 
+namespace {
+struct VisitGrayCallbackFunctor {
+    GCThingCallback callback_;
+    void* closure_;
+    VisitGrayCallbackFunctor(GCThingCallback callback, void* closure)
+      : callback_(callback), closure_(closure)
+    {}
+
+    using ReturnType = void;
+    template <class T>
+    ReturnType operator()(T tp) const {
+        if ((*tp)->isTenured() && (*tp)->asTenured().isMarked(gc::GRAY))
+            callback_(closure_, JS::GCCellPtr(*tp));
+    }
+};
+} // namespace (anonymous)
+
 JS_FRIEND_API(void)
 js::VisitGrayWrapperTargets(Zone* zone, GCThingCallback callback, void* closure)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-            gc::Cell* thing = e.front().key().wrapped;
-            if (thing->isTenured() && thing->asTenured().isMarked(gc::GRAY))
-                callback(closure, JS::GCCellPtr(thing, thing->asTenured().getTraceKind()));
-        }
+        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront())
+            e.front().mutableKey().applyToWrapped(VisitGrayCallbackFunctor(callback, closure));
     }
 }
 
