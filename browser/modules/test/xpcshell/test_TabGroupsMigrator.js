@@ -80,6 +80,91 @@ const TEST_STATES = {
       }
     ],
   },
+  TAB_WITHOUT_GROUP: {
+    selectedWindow: 1,
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 1",
+            }],
+            index: 1,
+            hidden: false,
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 2",
+            }],
+            index: 1,
+            hidden: false,
+            extData: {
+              "tabview-tab": "{\"groupID\":2}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 3",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+              "tabview-tab": "{\"groupID\":1}",
+            },
+          }
+        ],
+        extData: {
+          "tabview-group": "{\"2\":{}, \"1\": {}}",
+          "tabview-groups": "{\"nextID\":20,\"activeGroupId\":2,\"totalNumber\":2}",
+          "tabview-visibility": "false"
+        },
+      }
+    ],
+  },
+  ONLY_UNGROUPED_TABS: {
+    selectedWindow: 1,
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 1",
+            }],
+            index: 1,
+            hidden: false,
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 2",
+            }],
+            index: 1,
+            hidden: false,
+            extData: {
+              "tabview-tab": "{}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 3",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+            },
+          }
+        ],
+        extData: {
+          "tabview-group": "{\"2\":{}}",
+        },
+      }
+    ],
+  },
 };
 
 add_task(function* gatherGroupDataTest() {
@@ -89,17 +174,14 @@ add_task(function* gatherGroupDataTest() {
   Assert.equal(singleWinGroups.size, 2, "2 groups");
   let group2 = singleWinGroups.get("2");
   Assert.ok(!!group2, "group 2 should exist");
-  if (group2) {
-    Assert.equal(group2.tabs.length, 2, "2 tabs in group 2");
-    Assert.equal(group2.tabGroupsMigrationTitle, "", "We don't assign titles to untitled groups");
-    Assert.equal(group2.anonGroupID, "1", "We mark an untitled group with an anonymous id");
-  }
+  Assert.equal(group2.tabs.length, 2, "2 tabs in group 2");
+  Assert.equal(group2.tabGroupsMigrationTitle, "", "We don't assign titles to untitled groups");
+  Assert.equal(group2.anonGroupID, "1", "We mark an untitled group with an anonymous id");
   let group13 = singleWinGroups.get("13");
-  if (group13) {
-    Assert.equal(group13.tabs.length, 1, "1 tabs in group 13");
-    Assert.equal(group13.tabGroupsMigrationTitle, "Foopy", "Group with title has correct title");
-    Assert.ok(!("anonGroupID" in group13), "We don't mark a titled group with an anonymous id");
-  }
+  Assert.ok(!!group13, "group 13 should exist");
+  Assert.equal(group13.tabs.length, 1, "1 tabs in group 13");
+  Assert.equal(group13.tabGroupsMigrationTitle, "Foopy", "Group with title has correct title");
+  Assert.ok(!("anonGroupID" in group13), "We don't mark a titled group with an anonymous id");
 });
 
 add_task(function* bookmarkingTest() {
@@ -202,3 +284,27 @@ add_task(function* migrationPageDataTest() {
     },
     "Should have added expected tab at the end of the tab list.");
 });
+
+add_task(function* correctMissingTabGroupInfo() {
+  let stateClone = JSON.parse(JSON.stringify(TEST_STATES.TAB_WITHOUT_GROUP));
+  let groupInfo = TabGroupsMigrator._gatherGroupData(stateClone);
+  Assert.equal(groupInfo.size, 1, "Should have 1 window");
+  let windowGroups = [...groupInfo][0][1];
+  Assert.equal(windowGroups.size, 2, "Window should have 2 groups");
+  let group2 = windowGroups.get("2");
+  Assert.ok(group2, "Group 2 should exist");
+  Assert.equal(group2.tabs.length, 2, "There should be 2 tabs in group 2");
+  Assert.equal(group2.tabs[0].entries[0].title, "Robots 1", "The first tab of group 2 should be the tab with no group info.");
+});
+
+add_task(function* dealWithNoGroupInfo() {
+  let stateClone = JSON.parse(JSON.stringify(TEST_STATES.ONLY_UNGROUPED_TABS));
+  let groupInfo = TabGroupsMigrator._gatherGroupData(stateClone);
+  Assert.equal(groupInfo.size, 1, "Should have 1 window");
+  let windowGroups = [...groupInfo][0][1];
+  Assert.equal(windowGroups.size, 1, "Window should have 1 group");
+  let fallbackActiveGroup = windowGroups.get("active group");
+  Assert.ok(fallbackActiveGroup, "Fallback group should exist");
+  Assert.equal(fallbackActiveGroup.tabs.length, 3, "There should be 3 tabs in the fallback group");
+});
+
