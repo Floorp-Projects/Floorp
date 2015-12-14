@@ -1902,39 +1902,6 @@ CheckForApzAwareEventHandlers(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   }
 }
 
-/**
- * True if aDescendant participates the context aAncestor participating.
- */
-static bool
-Participate3DContextFrame(nsIFrame* aAncestor, nsIFrame* aDescendant) {
-  MOZ_ASSERT(aAncestor != aDescendant);
-  MOZ_ASSERT(aAncestor->Extend3DContext());
-  nsIFrame* frame;
-  for (frame = nsLayoutUtils::GetCrossDocParentFrame(aDescendant);
-       frame && aAncestor != frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
-    if (!frame->Extend3DContext()) {
-      return false;
-    }
-  }
-  MOZ_ASSERT(frame == aAncestor);
-  return true;
-}
-
-static void
-WrapSeparatorTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                       nsRect& aDirtyRect,
-                       nsDisplayList* aSource, nsDisplayList* aTarget,
-                       int aIndex) {
-  if (!aSource->IsEmpty()) {
-    nsDisplayTransform *sepIdItem =
-      new (aBuilder) nsDisplayTransform(aBuilder, aFrame, aSource,
-                                        aDirtyRect, Matrix4x4(), aIndex);
-    sepIdItem->SetNoExtendContext();
-    aTarget->AppendToTop(sepIdItem);
-  }
-}
-
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
@@ -2194,36 +2161,6 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * we find all the correct children.
    */
   if (isTransformed && !resultList.IsEmpty()) {
-    if (!resultList.IsEmpty() && Extend3DContext()) {
-      // Install dummy nsDisplayTransform as a leaf containing
-      // descendants not participating this 3D rendering context.
-      nsDisplayList nonparticipants;
-      nsDisplayList participants;
-      int index = 1;
-
-      while (nsDisplayItem* item = resultList.RemoveBottom()) {
-        if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
-            Participate3DContextFrame(this, item->Frame())) {
-          // The frame of this item participates the same 3D context.
-          WrapSeparatorTransform(aBuilder, this, dirtyRect,
-                                 &nonparticipants, &participants, index++);
-          participants.AppendToTop(item);
-        } else {
-          // The frame of the item doesn't participate the current
-          // context, or has no transform.
-          //
-          // For items participating but not transformed, they are add
-          // to nonparticipants to get a separator layer for handling
-          // clips, if there is, on an intermediate surface.
-          // \see ContainerLayer::DefaultComputeEffectiveTransforms().
-          nonparticipants.AppendToTop(item);
-        }
-      }
-      WrapSeparatorTransform(aBuilder, this, dirtyRect,
-                             &nonparticipants, &participants, index++);
-      resultList.AppendToTop(&participants);
-    }
-
     // Restore clip state now so nsDisplayTransform is clipped properly.
     clipState.Restore();
     // Revert to the dirtyrect coming in from the parent, without our transform
@@ -2240,6 +2177,51 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     nsDisplayTransform *transformItem =
       new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList, dirtyRect);
     resultList.AppendNewToTop(transformItem);
+
+    /*
+     * Create an additional transform item as a separator layer
+     * between current and parent's 3D context if necessary.
+     *
+     * Separator layers avoid improperly exteding 3D context by
+     * children.
+     */
+    {
+      bool needAdditionalTransform = false;
+      if (Extend3DContext()) {
+        if (outerReferenceFrame->Extend3DContext()) {
+          for (nsIFrame *f = nsLayoutUtils::GetCrossDocParentFrame(this);
+               f && f != outerReferenceFrame && !f->IsTransformed();
+               f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+            if (!f->Extend3DContext()) {
+              // The first one with transform in it's 3D context chain,
+              // and it is different 3D context with the outer reference
+              // frame.
+              needAdditionalTransform = true;
+              break;
+            }
+          }
+        }
+      } else if (outerReferenceFrame->Extend3DContext() &&
+                 outerReferenceFrame != nsLayoutUtils::GetCrossDocParentFrame(this)) {
+        // The content should be transformed and drawn on a buffer,
+        // then tranformed and drawn again for outerReferenceFrame.
+        // So, a separator layer is required.
+        needAdditionalTransform = true;
+      }
+      if (needAdditionalTransform) {
+        nsRect sepDirty = dirtyRectOutsideTransform;
+        // The separator item is with ID transform and is out of this
+        // frame, so it is in the coordination of the outer reference
+        // frame.  Here translate the dirty rect back.
+        sepDirty.MoveBy(toOuterReferenceFrame);
+        nsDisplayTransform *sepIdItem =
+          new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList,
+                                            sepDirty,
+                                            Matrix4x4(), 1);
+        sepIdItem->SetNoExtendContext();
+        resultList.AppendNewToTop(sepIdItem);
+      }
+    }
   }
 
   /* If we're doing VR rendering, then we need to wrap everything in a nsDisplayVR

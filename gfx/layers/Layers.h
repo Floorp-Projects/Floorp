@@ -1466,12 +1466,9 @@ public:
   bool Extend3DContext() {
     return GetContentFlags() & CONTENT_EXTEND_3D_CONTEXT;
   }
-  bool Combines3DTransformWithAncestors() {
-    return GetParent() &&
-      reinterpret_cast<Layer*>(GetParent())->Extend3DContext();
-  }
   bool Is3DContextLeaf() {
-    return !Extend3DContext() && Combines3DTransformWithAncestors();
+    return !Extend3DContext() && GetParent() &&
+      reinterpret_cast<Layer*>(GetParent())->Extend3DContext();
   }
   /**
    * It is true if the user can see the back of the layer and the
