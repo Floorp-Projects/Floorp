@@ -2783,7 +2783,7 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveBundle* bundle, LiveBu
 
 // When splitting a bundle according to a list of split positions, return
 // whether a use or range at |pos| should use a different bundle than the last
-// position this was called for. 
+// position this was called for.
 static bool
 UseNewBundle(const SplitPositionVector& splitPositions, CodePosition pos,
              size_t* activeSplitPosition)
