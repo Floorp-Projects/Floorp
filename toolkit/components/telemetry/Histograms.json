@@ -10086,6 +10086,13 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts number of times a certain plugin has been activated."
   },
+  "SCROLL_LINKED_EFFECT_FOUND": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1229052],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Attempt to determine prevalence of scroll-linked effects on the web."
+  },
   "WEB_NOTIFICATION_CLICKED": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
