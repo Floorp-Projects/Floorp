@@ -173,12 +173,6 @@ gfxWindowsSurface::~gfxWindowsSurface()
 }
 
 HDC
-gfxWindowsSurface::GetDCWithClip(gfxContext *ctx)
-{
-    return cairo_win32_get_dc_with_clip (ctx->GetCairo());
-}
-
-HDC
 gfxWindowsSurface::GetDC()
 {
     return cairo_win32_surface_get_dc (CairoSurface());
