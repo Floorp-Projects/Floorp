@@ -66,7 +66,11 @@ public enum Restrictable {
 
     CAMERA_MICROPHONE(18, "camera_microphone",
             R.string.restrictable_feature_camera_microphone,
-            R.string.restrictable_feature_camera_microphone_description);
+            R.string.restrictable_feature_camera_microphone_description),
+
+    BLOCK_LIST(19, "block_list",
+            R.string.restrictable_feature_block_list,
+            R.string.restrictable_feature_block_list_description);
 
     public final int id;
     public final String name;
