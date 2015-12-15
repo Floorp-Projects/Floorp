@@ -129,8 +129,6 @@ struct Describer
   static const char* medium;
   static const char* big;
 
-  using ReturnType = const char*;
-
   const char* match(const uint8_t&) { return little; }
   const char* match(const uint32_t&) { return medium; }
   const char* match(const uint64_t&) { return big; }
