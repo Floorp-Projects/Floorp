@@ -731,59 +731,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Arithmetic functions
 
-    inline void add32(Register src, Register dest) PER_SHARED_ARCH;
-    inline void add32(Imm32 imm, Register dest) PER_SHARED_ARCH;
-    inline void add32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
-    inline void add32(Imm32 imm, const AbsoluteAddress& dest) DEFINED_ON(x86_shared);
-
-    inline void addPtr(Register src, Register dest) PER_ARCH;
-    inline void addPtr(Register src1, Register src2, Register dest) DEFINED_ON(arm64);
-    inline void addPtr(Imm32 imm, Register dest) PER_ARCH;
-    inline void addPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
-    inline void addPtr(ImmWord imm, Register dest) PER_ARCH;
-    inline void addPtr(ImmPtr imm, Register dest);
-    inline void addPtr(Imm32 imm, const Address& dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
-    inline void addPtr(Imm32 imm, const AbsoluteAddress& dest) DEFINED_ON(x86, x64);
-    inline void addPtr(const Address& src, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
-
-    inline void add64(Register64 src, Register64 dest) PER_ARCH;
-    inline void add64(Imm32 imm, Register64 dest) PER_ARCH;
-
-    inline void addFloat32(FloatRegister src, FloatRegister dest) DEFINED_ON(x86_shared);
-
-    inline void addDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
-    inline void addConstantDouble(double d, FloatRegister dest) DEFINED_ON(x86);
-
     inline void sub32(const Address& src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Register src, Register dest) PER_SHARED_ARCH;
     inline void sub32(Imm32 imm, Register dest) PER_SHARED_ARCH;
 
-    inline void subPtr(Register src, Register dest) PER_ARCH;
-    inline void subPtr(Register src, const Address& dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
-    inline void subPtr(Imm32 imm, Register dest) PER_ARCH;
-    inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
-
-    inline void subDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
-
-    inline void mul32(Register src1, Register src2, Register dest, Label* onOver, Label* onZero) DEFINED_ON(arm64);
-
-    inline void mul64(Imm64 imm, const Register64& dest) PER_ARCH;
-
-    inline void mulBy3(Register src, Register dest) PER_ARCH;
-
-    inline void mulDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
-
-    inline void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
-
-    inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
-
-    inline void inc64(AbsoluteAddress dest) PER_ARCH;
-
-    inline void neg32(Register reg) PER_SHARED_ARCH;
-
-    inline void negateFloat(FloatRegister reg) DEFINED_ON(arm64, x86_shared);
-
-    inline void negateDouble(FloatRegister reg) PER_SHARED_ARCH;
+    inline void add64(Register64 src, Register64 dest) PER_ARCH;
 
     // ===============================================================
     // Shift functions
@@ -1050,7 +1002,12 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label* label);
 
-    inline void bumpKey(Int32Key* key, int diff);
+    void bumpKey(Int32Key* key, int diff) {
+        if (key->isRegister())
+            add32(Imm32(diff), key->reg());
+        else
+            key->bumpConstant(diff);
+    }
 
     void storeKey(const Int32Key& key, const Address& dest) {
         if (key.isRegister())

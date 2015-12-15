@@ -440,8 +440,7 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand& from, const MoveOperand& to,
             // this clobbers FLAGS!
             masm.Push(from.base());
             masm.Pop(toPopOperand(to));
-            MOZ_ASSERT(to.isMemoryOrEffectiveAddress());
-            masm.addPtr(Imm32(from.disp()), toAddress(to));
+            masm.addPtr(Imm32(from.disp()), toOperand(to));
         }
     }
 }

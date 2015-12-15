@@ -40,9 +40,9 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
         convertUInt32ToDouble(src.high, dest);
         movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), temp);
         loadDouble(Address(temp, 0), ScratchDoubleReg);
-        asMasm().mulDouble(ScratchDoubleReg, dest);
+        mulDouble(ScratchDoubleReg, dest);
         convertUInt32ToDouble(src.low, ScratchDoubleReg);
-        asMasm().addDouble(ScratchDoubleReg, dest);
+        addDouble(ScratchDoubleReg, dest);
         return;
     }
 
@@ -103,6 +103,16 @@ MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 }
 
 void
+MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
+{
+    Double* dbl = getDouble(d);
+    if (!dbl)
+        return;
+    masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
+    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
+}
+
+void
 MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 {
     if (maybeInlineFloat(f, dest))
@@ -111,6 +121,16 @@ MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
     if (!flt)
         return;
     masm.vmovss_mr(nullptr, dest.encoding());
+    propagateOOM(flt->uses.append(CodeOffset(masm.size())));
+}
+
+void
+MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
+{
+    Float* flt = getFloat(f);
+    if (!flt)
+        return;
+    masm.vaddss_mr(nullptr, dest.encoding(), dest.encoding());
     propagateOOM(flt->uses.append(CodeOffset(masm.size())));
 }
 
@@ -335,7 +355,7 @@ MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
-    asMasm().addPtr(ptr, temp);
+    addPtr(ptr, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               temp, Imm32(nursery.nurserySize()), label);
 }

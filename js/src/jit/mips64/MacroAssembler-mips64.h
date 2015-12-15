@@ -185,6 +185,14 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void convertInt32ToFloat32(Register src, FloatRegister dest);
     void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
+    void addDouble(FloatRegister src, FloatRegister dest);
+    void subDouble(FloatRegister src, FloatRegister dest);
+    void mulDouble(FloatRegister src, FloatRegister dest);
+    void divDouble(FloatRegister src, FloatRegister dest);
+
+    void negateDouble(FloatRegister reg);
+    void inc64(AbsoluteAddress dest);
+
     void movq(Register rs, Register rd);
 
     void computeScaledAddress(const BaseIndex& address, Register dest);
@@ -193,7 +201,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         ma_daddu(dest, address.base, Imm32(address.offset));
     }
 
-    inline void computeEffectiveAddress(const BaseIndex& address, Register dest);
+    void computeEffectiveAddress(const BaseIndex& address, Register dest) {
+        computeScaledAddress(address, dest);
+        if (address.offset) {
+            addPtr(Imm32(address.offset), dest);
+        }
+    }
 
     void j(Label* dest) {
         ma_b(dest);
@@ -243,7 +256,13 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         as_jr(ra);
         as_nop();
     }
-    inline void retn(Imm32 n);
+    void retn(Imm32 n) {
+        // pc <- [sp]; sp += n
+        loadPtr(Address(StackPointer, 0), ra);
+        addPtr(n, StackPointer);
+        as_jr(ra);
+        as_nop();
+    }
     void push(Imm32 imm) {
         ma_li(ScratchRegister, imm);
         ma_push(ScratchRegister);
@@ -319,6 +338,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void jump(JitCode* code) {
         branch(code);
+    }
+
+    void neg32(Register reg) {
+        ma_negu(reg, reg);
     }
 
     void splitTag(Register src, Register dest) {
@@ -587,7 +610,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_b(lhs, imm, label, cond);
     }
-    inline void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label);
+    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
+        subPtr(imm, lhs);
+        branchPtr(cond, lhs, Imm32(0), label);
+    }
 
     // higher level tag testing code
     Address ToPayload(Address value) {
@@ -1063,7 +1089,16 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
                                        Register temp, Register valueTemp, Register offsetTemp, Register maskTemp,
                                        AnyRegister output);
 
-    inline void incrementInt32Value(const Address& addr);
+    void add32(Register src, Register dest);
+    void add32(Imm32 imm, Register dest);
+    void add32(Imm32 imm, const Address& dest);
+    void add64(Imm32 imm, Register64 dest) {
+        ma_daddu(dest.reg, imm);
+    }
+
+    void incrementInt32Value(const Address& addr) {
+        add32(Imm32(1), addr);
+    }
 
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* overflow) {
@@ -1090,6 +1125,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
             MOZ_CRASH("NYI");
         }
     }
+
+    void addPtr(Register src, Register dest);
+    void subPtr(Register src, Register dest);
+    void addPtr(const Address& src, Register dest);
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
@@ -1227,7 +1266,36 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
 
     void clampIntToUint8(Register reg);
 
+    void subPtr(Imm32 imm, const Register dest);
+    void subPtr(const Address& addr, const Register dest);
+    void subPtr(Register src, const Address& dest);
+    void addPtr(Imm32 imm, const Register dest);
+    void addPtr(Imm32 imm, const Address& dest);
+    void addPtr(ImmWord imm, const Register dest) {
+        movePtr(imm, ScratchRegister);
+        addPtr(ScratchRegister, dest);
+    }
+    void addPtr(ImmPtr imm, const Register dest) {
+        addPtr(ImmWord(uintptr_t(imm.value)), dest);
+    }
+    void mulBy3(const Register& src, const Register& dest) {
+        as_daddu(dest, src, src);
+        as_daddu(dest, dest, src);
+    }
+
+    void mul64(Imm64 imm, const Register64& dest) {
+        MOZ_ASSERT(dest.reg != ScratchRegister);
+        mov(ImmWord(imm.value), ScratchRegister);
+        as_dmultu(dest.reg, ScratchRegister);
+        as_mflo(dest.reg);
+    }
+
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
+        movePtr(imm, ScratchRegister);
+        loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+        mulDouble(ScratchDoubleReg, dest);
+    }
 
     void breakpoint();
 

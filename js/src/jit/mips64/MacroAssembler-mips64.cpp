@@ -88,7 +88,7 @@ MacroAssemblerMIPS64Compat::convertUInt64ToDouble(Register64 src, Register temp,
     ma_or(ScratchRegister, SecondScratchReg);
     as_dmtc1(ScratchRegister, dest);
     as_cvtdl(dest, dest);
-    asMasm().addDouble(dest, dest);
+    addDouble(dest, dest);
     ma_b(&done, ShortJump);
 
     bind(&positive);
@@ -225,6 +225,45 @@ MacroAssemblerMIPS64Compat::convertInt32ToFloat32(const Address& src, FloatRegis
 {
     ma_ls(dest, src);
     as_cvtsw(dest, dest);
+}
+
+void
+MacroAssemblerMIPS64Compat::addDouble(FloatRegister src, FloatRegister dest)
+{
+    as_addd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::subDouble(FloatRegister src, FloatRegister dest)
+{
+    as_subd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    as_muld(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::divDouble(FloatRegister src, FloatRegister dest)
+{
+    as_divd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::negateDouble(FloatRegister reg)
+{
+    as_negd(reg, reg);
+}
+
+void
+MacroAssemblerMIPS64Compat::inc64(AbsoluteAddress dest)
+{
+    ma_li(ScratchRegister, ImmWord(uintptr_t(dest.addr)));
+    as_ld(SecondScratchReg, ScratchRegister, 0);
+    as_daddiu(SecondScratchReg, SecondScratchReg, 1);
+    as_sd(SecondScratchReg, ScratchRegister, 0);
 }
 
 void
@@ -859,6 +898,46 @@ MacroAssemblerMIPS64Compat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
+MacroAssemblerMIPS64Compat::add32(Register src, Register dest)
+{
+    as_addu(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::add32(Imm32 imm, Register dest)
+{
+    ma_addu(dest, dest, imm);
+}
+
+void
+
+MacroAssemblerMIPS64Compat::add32(Imm32 imm, const Address& dest)
+{
+    load32(dest, SecondScratchReg);
+    ma_addu(SecondScratchReg, imm);
+    store32(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPS64Compat::addPtr(Register src, Register dest)
+{
+    ma_daddu(dest, src);
+}
+
+void
+MacroAssemblerMIPS64Compat::addPtr(const Address& src, Register dest)
+{
+    loadPtr(src, ScratchRegister);
+    ma_daddu(dest, ScratchRegister);
+}
+
+void
+MacroAssemblerMIPS64Compat::subPtr(Register src, Register dest)
+{
+    as_dsubu(dest, dest, src);
+}
+
+void
 MacroAssemblerMIPS64Compat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -1246,6 +1325,41 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     bind(&done);
+}
+
+void
+MacroAssemblerMIPS64Compat::subPtr(Imm32 imm, const Register dest)
+{
+    ma_dsubu(dest, dest, imm);
+}
+
+void
+MacroAssemblerMIPS64Compat::subPtr(const Address& addr, const Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPS64Compat::subPtr(Register src, const Address& dest)
+{
+    loadPtr(dest, SecondScratchReg);
+    subPtr(src, SecondScratchReg);
+    storePtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPS64Compat::addPtr(Imm32 imm, const Register dest)
+{
+    ma_daddu(dest, imm);
+}
+
+void
+MacroAssemblerMIPS64Compat::addPtr(Imm32 imm, const Address& dest)
+{
+    loadPtr(dest, ScratchRegister);
+    addPtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, dest);
 }
 
 void
@@ -2210,7 +2324,7 @@ void
 MacroAssemblerMIPS64Compat::pushValue(ValueOperand val)
 {
     // Allocate stack slots for Value. One for each.
-    asMasm().subPtr(Imm32(sizeof(Value)), StackPointer);
+    subPtr(Imm32(sizeof(Value)), StackPointer);
     // Store Value
     storeValue(val, Address(StackPointer, 0));
 }
@@ -2318,7 +2432,7 @@ MacroAssemblerMIPS64Compat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + ABIStackAlignment) & ~(ABIStackAlignment - 1);
-    asMasm().subPtr(Imm32(size), StackPointer);
+    subPtr(Imm32(size), StackPointer);
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 
     // Call the handler.
@@ -2537,7 +2651,7 @@ MacroAssemblerMIPS64Compat::branchPtrInNurseryRange(Condition cond, Register ptr
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    asMasm().addPtr(ptr, SecondScratchReg);
+    addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
@@ -2553,7 +2667,7 @@ MacroAssemblerMIPS64Compat::branchValueIsNurseryObject(Condition cond, ValueOper
     Value start = ObjectValue(*reinterpret_cast<JSObject *>(nursery.start()));
 
     movePtr(ImmWord(-ptrdiff_t(start.asRawBits())), SecondScratchReg);
-    asMasm().addPtr(value.valueReg(), SecondScratchReg);
+    addPtr(value.valueReg(), SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
@@ -2621,7 +2735,7 @@ void
 MacroAssembler::reserveStack(uint32_t amount)
 {
     if (amount)
-        asMasm().subPtr(Imm32(amount), StackPointer);
+        subPtr(Imm32(amount), StackPointer);
     adjustFrame(amount);
 }
 
@@ -2637,7 +2751,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
     ma_move(scratch, StackPointer);
 
     // Force sp to be aligned
-    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
     storePtr(scratch, Address(StackPointer, 0));
 }
