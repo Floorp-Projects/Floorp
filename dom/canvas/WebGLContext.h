@@ -303,7 +303,7 @@ public:
     // Returns hex formatted version of glenum if glenum is unknown.
     static void EnumName(GLenum glenum, nsACString* out_name);
 
-    void DummyFramebufferOperation(const char* funcName);
+    void DummyReadFramebufferOperation(const char* funcName);
 
     WebGLTexture* ActiveBoundTextureForTarget(const TexTarget texTarget) const {
         switch (texTarget.get()) {
