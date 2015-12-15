@@ -3671,7 +3671,6 @@ struct IsDestComparatorFunctor {
     JS::GCCellPtr dst_;
     explicit IsDestComparatorFunctor(JS::GCCellPtr dst) : dst_(dst) {}
 
-    using ReturnType = bool;
     template <typename T> bool operator()(T* t) { return (*t) == dst_.asCell(); }
 };
 } // namespace (anonymous)
@@ -4379,9 +4378,8 @@ struct AddOutgoingEdgeFunctor {
       : needsEdge_(needsEdge), finder_(finder)
     {}
 
-    using ReturnType = void;
     template <typename T>
-    ReturnType operator()(T tp) {
+    void operator()(T tp) {
         TenuredCell& other = (*tp)->asTenured();
 
         /*

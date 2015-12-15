@@ -614,9 +614,8 @@ struct VisitGrayCallbackFunctor {
       : callback_(callback), closure_(closure)
     {}
 
-    using ReturnType = void;
     template <class T>
-    ReturnType operator()(T tp) const {
+    void operator()(T tp) const {
         if ((*tp)->isTenured() && (*tp)->asTenured().isMarked(gc::GRAY))
             callback_(closure_, JS::GCCellPtr(*tp));
     }
