@@ -20,7 +20,6 @@
 
 .memberLabelCell {
   padding: 2px 0 2px 0px;
-  vertical-align: top;
 }
 
 .memberValueCell {
@@ -31,7 +30,6 @@
 .memberLabel {
   cursor: default;
   overflow: hidden;
-  padding-left: 18px;
   white-space: nowrap;
 }
 
@@ -60,6 +58,11 @@
 
 /******************************************************************************/
 
+.memberRow.hasChildren > .memberLabelCell > .memberIcon:hover,
+.memberRow.cropped > .memberLabelCell > .memberIcon:hover {
+  cursor: pointer;
+}
+
 .memberRow.hasChildren > .memberLabelCell > .memberLabel:hover,
 .memberRow.cropped > .memberLabelCell > .memberLabel:hover {
   cursor: pointer;
@@ -69,6 +72,10 @@
 
 .memberRow:hover {
   background-color: #EFEFEF;
+}
+
+.memberRow {
+  padding: 3px 0 3px 0;
 }
 
 .panelNode-dom .memberRow td,
@@ -116,19 +123,38 @@
 /******************************************************************************/
 /* Twisties */
 
-.memberRow.hasChildren > .memberLabelCell > .memberLabel,
-.memberRow.cropped > .memberLabelCell > .memberLabel {
-  background-image: url(twisty-closed.svg);
-  background-repeat: no-repeat;
-  background-position: 2px calc(0.5em - 3px);
-  min-height: 12px;
+.memberRow > .memberLabelCell > .memberIcon {
+  height: 14px;
+  width: 14px;
+  display: inline-block;
+  line-height: 15px;
+  vertical-align: bottom;
+  padding-right: 2px;
+  margin-left: 3px;
 }
 
-.memberRow.hasChildren.opened > .memberLabelCell > .memberLabel,
-.memberRow.cropped.opened > .memberLabelCell > .memberLabel {
-  background-image: url(twisty-open.svg);
+.memberRow.hasChildren > .memberLabelCell > .memberIcon,
+.memberRow.cropped > .memberLabelCell > .memberIcon {
+  background-image: url("./twisty-closed.svg");
   background-repeat: no-repeat;
-  min-height: 12px;
+}
+
+.memberRow.hasChildren.opened > .memberLabelCell > .memberIcon,
+.memberRow.cropped.opened > .memberLabelCell > .memberIcon {
+  background-image: url("./twisty-open.svg");
+  background-repeat: no-repeat;
+}
+
+@media (min-resolution: 1.1dppx) {
+.memberRow.hasChildren > .memberLabelCell > .memberIcon,
+.memberRow.cropped > .memberLabelCell > .memberIcon {
+  background-image: url("./controls@2x.png");
+}
+
+.memberRow.hasChildren.opened > .memberLabelCell > .memberIcon,
+.memberRow.cropped.opened > .memberLabelCell > .memberIcon {
+  background-image: url("./controls@2x.png");
+}
 }
 
 /******************************************************************************/
@@ -140,7 +166,6 @@
 
 .memberLabelCell,
 .memberValueCell {
-  display: table-cell;
 }
 
 .memberLabelCell {
@@ -149,4 +174,43 @@
 
 .memberRow:hover {
   background-color: transparent !important;
+}
+
+/******************************************************************************/
+/* Themes */
+
+.theme-light .memberRow.hasChildren > .memberLabelCell > .memberIcon,
+.theme-light .memberRow.cropped > .memberLabelCell > .memberIcon {
+  background-image: url("./controls.png");
+  background-size: 56px 28px;
+  background-repeat: no-repeat;
+  background-position: 0 -14px;
+}
+
+.theme-light .memberRow.hasChildren.opened > .memberLabelCell > .memberIcon,
+.theme-light .memberRow.cropped.opened > .memberLabelCell > .memberIcon {
+  background-image: url("./controls.png");
+  background-size: 56px 28px;
+  background-repeat: no-repeat;
+  background-position: -14px -14px;
+}
+
+.theme-dark .memberRow.hasChildren > .memberLabelCell > .memberIcon,
+.theme-dark .memberRow.cropped > .memberLabelCell > .memberIcon {
+  background-image: url("./controls.png");
+  background-size: 56px 28px;
+  background-repeat: no-repeat;
+  background-position: -28px -14px;
+}
+
+.theme-dark .memberRow.hasChildren.opened > .memberLabelCell > .memberIcon,
+.theme-dark .memberRow.cropped.opened > .memberLabelCell > .memberIcon {
+  background-image: url("./controls.png");
+  background-size: 56px 28px;
+  background-repeat: no-repeat;
+  background-position: -42px -14px;
+}
+
+.theme-dark .memberRow:hover {
+  background-color: var(--theme-selection-background-semitransparent);
 }
