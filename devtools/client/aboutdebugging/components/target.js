@@ -41,7 +41,10 @@ exports.TargetComponent = React.createClass({
         let workerActor = this.props.target.actorID;
         client.attachWorker(workerActor, (response, workerClient) => {
           gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
-            "jsdebugger", Toolbox.HostType.WINDOW);
+            "jsdebugger", Toolbox.HostType.WINDOW)
+            .then(toolbox => {
+              toolbox.once("destroy", () => workerClient.detach());
+            });
         });
         break;
       default:
