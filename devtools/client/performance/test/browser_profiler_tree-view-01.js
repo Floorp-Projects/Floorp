@@ -31,27 +31,27 @@ function test() {
 
   is(container.childNodes[0].childNodes[0].getAttribute("type"), "duration",
     "The root node in the tree has a duration cell.");
-  is(container.childNodes[0].childNodes[0].getAttribute("value"), "20 ms",
+  is(container.childNodes[0].childNodes[0].textContent.trim(), "20 ms",
     "The root node in the tree has the correct duration cell value.");
 
   is(container.childNodes[0].childNodes[1].getAttribute("type"), "percentage",
     "The root node in the tree has a percentage cell.");
-  is(container.childNodes[0].childNodes[1].getAttribute("value"), "100%",
+  is(container.childNodes[0].childNodes[1].textContent.trim(), "100%",
     "The root node in the tree has the correct percentage cell value.");
 
   is(container.childNodes[0].childNodes[2].getAttribute("type"), "self-duration",
     "The root node in the tree has a self-duration cell.");
-  is(container.childNodes[0].childNodes[2].getAttribute("value"), "0 ms",
+  is(container.childNodes[0].childNodes[2].textContent.trim(), "0 ms",
     "The root node in the tree has the correct self-duration cell value.");
 
   is(container.childNodes[0].childNodes[3].getAttribute("type"), "self-percentage",
     "The root node in the tree has a self-percentage cell.");
-  is(container.childNodes[0].childNodes[3].getAttribute("value"), "0%",
+  is(container.childNodes[0].childNodes[3].textContent.trim(), "0%",
     "The root node in the tree has the correct self-percentage cell value.");
 
   is(container.childNodes[0].childNodes[4].getAttribute("type"), "samples",
     "The root node in the tree has an samples cell.");
-  is(container.childNodes[0].childNodes[4].getAttribute("value"), "0",
+  is(container.childNodes[0].childNodes[4].textContent.trim(), "0",
     "The root node in the tree has the correct samples cell value.");
 
   is(container.childNodes[0].childNodes[5].getAttribute("type"), "function",
