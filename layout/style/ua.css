@@ -170,6 +170,7 @@
   -moz-column-width: inherit;
   -moz-column-gap: inherit;
   -moz-column-rule: inherit;
+  -moz-column-fill: inherit;
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
