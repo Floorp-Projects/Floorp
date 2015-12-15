@@ -220,10 +220,8 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
     MakeContextCurrent();
 
     if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments()) {
-            ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
             return false;
-        }
     } else {
         ClearBackbufferIfNeeded();
     }
@@ -411,10 +409,8 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
     MakeContextCurrent();
 
     if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments()) {
-            ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
             return false;
-        }
     } else {
         ClearBackbufferIfNeeded();
     }
