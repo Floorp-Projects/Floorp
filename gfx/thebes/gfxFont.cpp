@@ -1642,10 +1642,10 @@ private:
 // the second draw occurs at a constant offset in device pixels.
 
 double
-gfxFont::CalcXScale(gfxContext *aContext)
+gfxFont::CalcXScale(DrawTarget* aDrawTarget)
 {
     // determine magnitude of a 1px x offset in device space
-    Size t = aContext->UserToDevice(Size(1.0, 0.0));
+    Size t = aDrawTarget->GetTransform() * Size(1.0, 0.0);
     if (t.width == 1.0 && t.height == 0.0) {
         // short-circuit the most common case to avoid sqrt() and division
         return 1.0;
@@ -1970,7 +1970,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     // Synthetic-bold strikes are each offset one device pixel in run direction.
     // (these values are only needed if IsSyntheticBold() is true)
     if (IsSyntheticBold()) {
-        double xscale = CalcXScale(aRunParams.context);
+        double xscale = CalcXScale(aRunParams.context->GetDrawTarget());
         fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
         if (xscale != 0.0) {
             // use as many strikes as needed for the the increased advance
@@ -2577,26 +2577,26 @@ gfxFont::ShapeText(gfxContext      *aContext,
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
 
-    PostShapingFixup(aContext, aText, aOffset, aLength, aVertical,
-                     aShapedText);
+    PostShapingFixup(aContext->GetDrawTarget(), aText, aOffset, aLength,
+                     aVertical, aShapedText);
 
     return ok;
 }
 
 void
-gfxFont::PostShapingFixup(gfxContext      *aContext,
-                          const char16_t *aText,
-                          uint32_t         aOffset,
-                          uint32_t         aLength,
-                          bool             aVertical,
-                          gfxShapedText   *aShapedText)
+gfxFont::PostShapingFixup(DrawTarget*     aDrawTarget,
+                          const char16_t* aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          bool            aVertical,
+                          gfxShapedText*  aShapedText)
 {
     if (IsSyntheticBold()) {
         const Metrics& metrics =
             GetMetrics(aVertical ? eVertical : eHorizontal);
         if (metrics.maxAdvance > metrics.aveCharWidth) {
             float synBoldOffset =
-                    GetSyntheticBoldOffset() * CalcXScale(aContext);
+                    GetSyntheticBoldOffset() * CalcXScale(aDrawTarget);
             aShapedText->AdjustAdvancesForSyntheticBold(synBoldOffset,
                                                         aOffset, aLength);
         }
