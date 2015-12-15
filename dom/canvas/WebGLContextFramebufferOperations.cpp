@@ -15,6 +15,8 @@ namespace mozilla {
 void
 WebGLContext::Clear(GLbitfield mask)
 {
+    const char funcName[] = "clear";
+
     if (IsContextLost())
         return;
 
@@ -22,7 +24,7 @@ WebGLContext::Clear(GLbitfield mask)
 
     uint32_t m = mask & (LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
     if (mask != m)
-        return ErrorInvalidValue("clear: invalid mask bits");
+        return ErrorInvalidValue("%s: invalid mask bits", funcName);
 
     if (mask == 0) {
         GenerateWarning("Calling gl.clear(0) has no effect.");
@@ -31,8 +33,8 @@ WebGLContext::Clear(GLbitfield mask)
     }
 
     if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->CheckAndInitializeAttachments())
-            return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return;
 
         gl->fClear(mask);
         return;
