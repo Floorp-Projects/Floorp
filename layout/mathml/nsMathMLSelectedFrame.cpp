@@ -157,20 +157,20 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                                     aDesiredSize.mBoundingMetrics);
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
   }
-  FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
+  FinalizeReflow(aReflowState.rendContext->GetDrawTarget(), aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }
 
 // Only place the selected child ...
 /* virtual */ nsresult
-nsMathMLSelectedFrame::Place(nsRenderingContext& aRenderingContext,
+nsMathMLSelectedFrame::Place(DrawTarget*          aDrawTarget,
                              bool                 aPlaceOrigin,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
   nsIFrame* childFrame = GetSelectedFrame();
 
   if (mInvalidMarkup) {
-    return ReflowError(aRenderingContext, aDesiredSize);
+    return ReflowError(aDrawTarget, aDesiredSize);
   }
 
   aDesiredSize.ClearSize();
