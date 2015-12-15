@@ -559,6 +559,8 @@ pref("layers.async-video.enabled", true);
 
 #ifdef MOZ_ANDROID_APZ
 pref("layers.async-pan-zoom.enabled", true);
+// APZ prefs that are different from B2G
+pref("apz.allow_immediate_handoff", false);
 // APZ physics settings, copied from B2G
 pref("apz.axis_lock.mode", 2); // Use "sticky" axis locking
 pref("apz.fling_curve_function_x1", "0.41");

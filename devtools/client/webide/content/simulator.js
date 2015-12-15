@@ -145,7 +145,7 @@ var SimulatorEditor = {
   // Select an available option, or set the "custom" option.
   updateSelector(selector, value) {
     selector.value = value;
-    if (selector[selector.selectedIndex].value !== value) {
+    if (selector.selectedIndex == -1) {
       selector.value = "custom";
       selector.classList.add("custom");
       selector[selector.selectedIndex].textContent = value;

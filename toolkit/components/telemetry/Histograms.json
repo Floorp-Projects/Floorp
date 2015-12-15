@@ -9531,6 +9531,20 @@
     "n_values": 7,
     "description": "The ICE connection state when the PC was closed"
   },
+  "LOOP_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived when ICE was not in a failure state (ie; a candidate that we could do something with, hence 'on time')"
+  },
+  "LOOP_ICE_LATE_TRICKLE_ARRIVAL_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
+  },
   "LOOP_ICE_SUCCESS_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -10071,6 +10085,13 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Counts number of times a certain plugin has been activated."
+  },
+  "SCROLL_LINKED_EFFECT_FOUND": {
+    "alert_emails": ["kgupta@mozilla.com"],
+    "bug_numbers": [1229052],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Attempt to determine prevalence of scroll-linked effects on the web."
   },
   "WEB_NOTIFICATION_CLICKED": {
     "alert_emails": ["firefox-dev@mozilla.org"],

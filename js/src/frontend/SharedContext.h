@@ -583,12 +583,6 @@ class MOZ_STACK_CLASS StmtInfoStack
 
     StmtInfo* innermost() const { return innermostStmt_; }
     StmtInfo* innermostScopeStmt() const { return innermostScopeStmt_; }
-    StmtInfo* innermostNonLabel() const {
-        StmtInfo* stmt = innermost();
-        while (stmt && stmt->type == StmtType::LABEL)
-            stmt = stmt->enclosing;
-        return stmt;
-    }
 
     void push(StmtInfo* stmt, StmtType type) {
         stmt->type = type;

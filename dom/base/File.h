@@ -332,8 +332,7 @@ public:
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType,
                            uint64_t aLength,
-                           int64_t aLastModifiedDate,
-                           BlobDirState aDirState) = 0;
+                           int64_t aLastModifiedDate) = 0;
 
   virtual bool IsMemoryFile() const = 0;
 
@@ -498,8 +497,7 @@ public:
 
   virtual void
   SetLazyData(const nsAString& aName, const nsAString& aContentType,
-              uint64_t aLength, int64_t aLastModifiedDate,
-              BlobDirState aDirState) override
+              uint64_t aLength, int64_t aLastModifiedDate) override
   {
     mName = aName;
     mContentType = aContentType;

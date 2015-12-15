@@ -53,8 +53,6 @@ public:
 
     HDC GetDC();
 
-    HDC GetDCWithClip(gfxContext *);
-
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
     nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);

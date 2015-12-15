@@ -112,7 +112,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         #ifdef GL_FRAGMENT_PRECISION_HIGH                   \n\
             precision highp float;                          \n\
         #else                                               \n\
-            prevision mediump float;                        \n\
+            precision mediump float;                        \n\
         #endif                                              \n\
         uniform sampler2D uTexUnit;                         \n\
                                                             \n\
