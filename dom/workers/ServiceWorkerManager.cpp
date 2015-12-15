@@ -1182,7 +1182,6 @@ public:
     mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
     mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
     mRegistration->NotifyListenersOnChange();
-    swm->StoreRegistration(mPrincipal, mRegistration);
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER | WhichServiceWorker::WAITING_WORKER);
 
@@ -1262,6 +1261,7 @@ public:
         mRegistration->mPendingUninstall = false;
         RefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
         if (newest && mScriptSpec.Equals(newest->ScriptSpec())) {
+          swm->StoreRegistration(mPrincipal, mRegistration);
           Succeed();
 
           // Done() must always be called async from Start()
@@ -1277,6 +1277,8 @@ public:
       } else {
         mRegistration = swm->CreateNewRegistration(mScope, mPrincipal);
       }
+
+      swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UpdateJob);
 
