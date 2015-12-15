@@ -5306,7 +5306,11 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
     }
 
     masm.load32(Address(ICStubReg, ICGetName_Scope::offsetOfOffset()), scratch);
-    masm.loadValue(BaseIndex(scope, scratch, TimesOne), R0);
+
+    // GETNAME needs to check for uninitialized lexicals.
+    BaseIndex slot(scope, scratch, TimesOne);
+    masm.branchTestMagic(Assembler::Equal, slot, &failure);
+    masm.loadValue(slot, R0);
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
