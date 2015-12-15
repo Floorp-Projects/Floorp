@@ -34,6 +34,14 @@ Base64Decode(const nsACString& aBinaryData, nsACString& aString);
 nsresult
 Base64Decode(const nsAString& aBinaryData, nsAString& aString);
 
+/**
+ * Converts |aData| to an unpadded, Base64 URL-encoded string per RFC 4648.
+ * Aims to encode the data in constant time. The caller may free |aData| once
+ * this function returns.
+ */
+nsresult
+Base64URLEncode(uint32_t aLength, const uint8_t* aData, nsACString& aString);
+
 } // namespace mozilla
 
 #endif
