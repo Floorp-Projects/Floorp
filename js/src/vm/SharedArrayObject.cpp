@@ -228,19 +228,8 @@ SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* 
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.isConstructing()) {
-        if (args.hasDefined(0)) {
-            ESClassValue cls;
-            if (!GetClassOfValue(cx, args[0], &cls))
-                return false;
-            if (cls == ESClass_SharedArrayBuffer) {
-                args.rval().set(args[0]);
-                return true;
-            }
-        }
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_OBJECT);
+    if (!ThrowIfNotConstructing(cx, args, "SharedArrayBuffer"))
         return false;
-    }
 
     // Bugs 1068458, 1161298: Limit length to 2^31-1.
     uint32_t length;

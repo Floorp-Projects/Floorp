@@ -356,11 +356,12 @@ Breakpoint::nextInSite()
 
 Debugger::Debugger(JSContext* cx, NativeObject* dbg)
   : object(dbg),
+    debuggees(cx->runtime()),
     uncaughtExceptionHook(nullptr),
     enabled(true),
     allowUnobservedAsmJS(false),
     collectCoverageInfo(false),
-    observedGCs(cx),
+    observedGCs(cx->runtime()),
     tenurePromotionsLog(cx),
     trackingTenurePromotions(false),
     maxTenurePromotionsLogLength(DEFAULT_MAX_LOG_LENGTH),
