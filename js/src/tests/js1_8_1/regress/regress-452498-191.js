@@ -32,7 +32,7 @@ function test()
   }
   reportCompare(expect, actual, summary);
 
-  expect = 'TypeError: redeclaration of let x';
+  expect = 'SyntaxError: redeclaration of let x';
   try
   {
     eval('{ let x; {var x;} }');
