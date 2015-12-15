@@ -313,15 +313,6 @@ MacroAssembler::hasSelfReference() const
     return selfReferencePatch_.bound();
 }
 
-// ===============================================================
-// Arithmetic functions
-
-void
-MacroAssembler::addPtr(ImmPtr imm, Register dest)
-{
-    addPtr(ImmWord(uintptr_t(imm.value)), dest);
-}
-
 //}}} check_macroassembler_style
 // ===============================================================
 
@@ -339,15 +330,6 @@ MacroAssembler::branchFunctionKind(Condition cond, JSFunction::FunctionKind kind
     load32(address, scratch);
     and32(Imm32(mask), scratch);
     branch32(cond, scratch, Imm32(bit), label);
-}
-
-void
-MacroAssembler::bumpKey(Int32Key* key, int diff)
-{
-    if (key->isRegister())
-        add32(Imm32(diff), key->reg());
-    else
-        key->bumpConstant(diff);
 }
 
 } // namespace jit

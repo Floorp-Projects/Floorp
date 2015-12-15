@@ -77,6 +77,51 @@ MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest
     as_addd(dest, dest, SecondScratchDoubleReg);
 }
 
+void
+MacroAssemblerMIPSCompat::mul64(Imm64 imm, const Register64& dest)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    ma_li(ScratchRegister, Imm32(imm.value & LOW_32_MASK));
+    as_multu(dest.high, ScratchRegister);
+    as_mflo(dest.high);
+
+    // mfhi:mflo = LOW(dest) * LOW(imm);
+    as_multu(dest.low, ScratchRegister);
+
+    // HIGH(dest) += mfhi;
+    as_mfhi(ScratchRegister);
+    as_addu(dest.high, dest.high, ScratchRegister);
+
+    if (((imm.value >> 32) & LOW_32_MASK) == 5) {
+        // Optimized case for Math.random().
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        as_sll(ScratchRegister, dest.low, 2);
+        as_addu(ScratchRegister, ScratchRegister, dest.low);
+        as_addu(dest.high, dest.high, ScratchRegister);
+
+        // LOW(dest) = mflo;
+        as_mflo(dest.low);
+    } else {
+        // tmp = mflo
+        as_mflo(SecondScratchReg);
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        ma_li(ScratchRegister, Imm32((imm.value >> 32) & LOW_32_MASK));
+        as_multu(dest.low, ScratchRegister);
+        as_mflo(ScratchRegister);
+        as_addu(dest.high, dest.high, ScratchRegister);
+
+        // LOW(dest) = tmp;
+        ma_move(dest.low, SecondScratchReg);
+    }
+}
+
 static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
 
 void
@@ -84,9 +129,9 @@ MacroAssemblerMIPSCompat::convertUInt64ToDouble(Register64 src, Register temp, F
 {
     convertUInt32ToDouble(src.high, dest);
     loadConstantDouble(TO_DOUBLE_HIGH_SCALE, ScratchDoubleReg);
-    asMasm().mulDouble(ScratchDoubleReg, dest);
+    mulDouble(ScratchDoubleReg, dest);
     convertUInt32ToDouble(src.low, ScratchDoubleReg);
-    asMasm().addDouble(ScratchDoubleReg, dest);
+    addDouble(ScratchDoubleReg, dest);
 }
 
 void
@@ -216,6 +261,54 @@ MacroAssemblerMIPSCompat::convertInt32ToFloat32(const Address& src, FloatRegiste
 {
     ma_ls(dest, src);
     as_cvtsw(dest, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::addDouble(FloatRegister src, FloatRegister dest)
+{
+    as_addd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::subDouble(FloatRegister src, FloatRegister dest)
+{
+    as_subd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    as_muld(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::divDouble(FloatRegister src, FloatRegister dest)
+{
+    as_divd(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::negateDouble(FloatRegister reg)
+{
+    as_negd(reg, reg);
+}
+
+void
+MacroAssemblerMIPSCompat::inc64(AbsoluteAddress dest)
+{
+    ma_li(ScratchRegister, Imm32((int32_t)dest.addr));
+    as_lw(SecondScratchReg, ScratchRegister, 0);
+
+    as_addiu(SecondScratchReg, SecondScratchReg, 1);
+    as_sw(SecondScratchReg, ScratchRegister, 0);
+
+    as_sltiu(SecondScratchReg, SecondScratchReg, 1);
+    as_lw(ScratchRegister, ScratchRegister, 4);
+
+    as_addu(SecondScratchReg, ScratchRegister, SecondScratchReg);
+
+    ma_li(ScratchRegister, Imm32((int32_t)dest.addr));
+    as_sw(SecondScratchReg, ScratchRegister, 4);
 }
 
 void
@@ -720,6 +813,46 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 }
 
 void
+MacroAssemblerMIPSCompat::add32(Register src, Register dest)
+{
+    as_addu(dest, dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::add32(Imm32 imm, Register dest)
+{
+    ma_addu(dest, dest, imm);
+}
+
+void
+
+MacroAssemblerMIPSCompat::add32(Imm32 imm, const Address& dest)
+{
+    load32(dest, SecondScratchReg);
+    ma_addu(SecondScratchReg, imm);
+    store32(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::addPtr(Register src, Register dest)
+{
+    ma_addu(dest, src);
+}
+
+void
+MacroAssemblerMIPSCompat::addPtr(const Address& src, Register dest)
+{
+    loadPtr(src, ScratchRegister);
+    ma_addu(dest, ScratchRegister);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
+{
+    as_subu(dest, dest, src);
+}
+
+void
 MacroAssemblerMIPSCompat::move32(Imm32 imm, Register dest)
 {
     ma_li(dest, imm);
@@ -1106,6 +1239,41 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     bind(&done);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(Imm32 imm, const Register dest)
+{
+    ma_subu(dest, dest, imm);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(const Address& addr, const Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(Register src, const Address& dest)
+{
+    loadPtr(dest, SecondScratchReg);
+    subPtr(src, SecondScratchReg);
+    storePtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::addPtr(Imm32 imm, const Register dest)
+{
+    ma_addu(dest, imm);
+}
+
+void
+MacroAssemblerMIPSCompat::addPtr(Imm32 imm, const Address& dest)
+{
+    loadPtr(dest, ScratchRegister);
+    addPtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, dest);
 }
 
 void
@@ -2007,7 +2175,7 @@ void
 MacroAssemblerMIPSCompat::pushValue(ValueOperand val)
 {
     // Allocate stack slots for type and payload. One for each.
-    asMasm().subPtr(Imm32(sizeof(Value)), StackPointer);
+    subPtr(Imm32(sizeof(Value)), StackPointer);
     // Store type and payload.
     storeValue(val, Address(StackPointer, 0));
 }
@@ -2125,7 +2293,7 @@ void
 MacroAssemblerMIPSCompat::alignStackPointer()
 {
     movePtr(StackPointer, SecondScratchReg);
-    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     asMasm().andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
     storePtr(SecondScratchReg, Address(StackPointer, 0));
 }
@@ -2161,7 +2329,7 @@ MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.
     int size = (sizeof(ResumeFromException) + ABIStackAlignment) & ~(ABIStackAlignment - 1);
-    asMasm().subPtr(Imm32(size), StackPointer);
+    subPtr(Imm32(size), StackPointer);
     ma_move(a0, StackPointer); // Use a0 since it is a first function argument
 
     // Call the handler.
@@ -2380,7 +2548,7 @@ MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, 
 
     const Nursery& nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
-    asMasm().addPtr(ptr, SecondScratchReg);
+    addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,
               SecondScratchReg, Imm32(nursery.nurserySize()), label);
 }
@@ -2479,7 +2647,7 @@ void
 MacroAssembler::reserveStack(uint32_t amount)
 {
     if (amount)
-        asMasm().subPtr(Imm32(amount), StackPointer);
+        subPtr(Imm32(amount), StackPointer);
     adjustFrame(amount);
 }
 
@@ -2495,7 +2663,7 @@ MacroAssembler::setupUnalignedABICall(Register scratch)
     ma_move(scratch, StackPointer);
 
     // Force sp to be aligned
-    asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+    subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
     ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
     storePtr(scratch, Address(StackPointer, 0));
 }
