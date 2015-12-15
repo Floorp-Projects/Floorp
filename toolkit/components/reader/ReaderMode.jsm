@@ -228,7 +228,18 @@ this.ReaderMode = {
             }
           }
         }
-        if (xhr.responseURL != url) {
+        let responseURL = xhr.responseURL;
+        let givenURL = url;
+        // Convert these to real URIs to make sure the escaping (or lack
+        // thereof) is identical:
+        try {
+          responseURL = Services.io.newURI(responseURL, null, null).spec;
+        } catch (ex) { /* Ignore errors - we'll use what we had before */ }
+        try {
+          givenURL = Services.io.newURI(givenURL, null, null).spec;
+        } catch (ex) { /* Ignore errors - we'll use what we had before */ }
+
+        if (responseURL != givenURL) {
           // We were redirected without a meta refresh tag.
           // Force redirect to the correct place:
           reject({newURL: xhr.responseURL});
