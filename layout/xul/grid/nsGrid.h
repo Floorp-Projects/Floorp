@@ -45,12 +45,12 @@ public:
   nsSize GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
   nsSize GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
   nsSize GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  nscoord GetRowFlex(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
+  nscoord GetRowFlex(int32_t aRowIndex, bool aIsHorizontal = true);
 
   nscoord GetPrefRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
   nscoord GetMinRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
   nscoord GetMaxRowHeight(nsBoxLayoutState& aBoxLayoutState, int32_t aRowIndex, bool aIsHorizontal = true);
-  void GetRowOffsets(nsBoxLayoutState& aState, int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsHorizontal = true);
+  void GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsHorizontal = true);
 
   void RowAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex, bool aIsHorizontal = true);
   void CellAddedOrRemoved(nsBoxLayoutState& aBoxLayoutState, int32_t aIndex, bool aIsHorizontal = true);
@@ -72,9 +72,8 @@ public:
   static nsIFrame* GetScrolledBox(nsIFrame* aChild);
   static nsIFrame* GetScrollBox(nsIFrame* aChild);
   static nsIGridPart* GetPartFromBox(nsIFrame* aBox);
-  void GetFirstAndLastRow(nsBoxLayoutState& aState, 
-                          int32_t& aFirstIndex, 
-                          int32_t& aLastIndex, 
+  void GetFirstAndLastRow(int32_t& aFirstIndex,
+                          int32_t& aLastIndex,
                           nsGridRow*& aFirstRow,
                           nsGridRow*& aLastRow,
                           bool aIsHorizontal);

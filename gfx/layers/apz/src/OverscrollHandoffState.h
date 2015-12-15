@@ -9,7 +9,7 @@
 
 #include <vector>
 #include "nsAutoPtr.h"
-#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
+#include "nsISupportsImpl.h"  // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "APZUtils.h"         // for CancelAnimationFlags
 #include "Layers.h"           // for Layer::ScrollDirection
 #include "Units.h"            // for ScreenPoint
@@ -127,8 +127,28 @@ struct OverscrollHandoffState {
 
   ScrollSource mScrollSource;
 };
-// Don't pollute other files with this macro for now.
-#undef NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING
+
+/*
+ * This class groups the state maintained during fling handoff.
+ */
+struct FlingHandoffState {
+  // The velocity of the fling being handed off.
+  ParentLayerPoint mVelocity;
+
+  // The chain of APZCs along which we hand off the fling.
+  // Unlike in OverscrollHandoffState, this is stored by RefPtr because
+  // otherwise it may not stay alive for the entire handoff.
+  RefPtr<const OverscrollHandoffChain> mChain;
+
+  // Whether handoff has happened by this point, or we're still process
+  // the original fling.
+  bool mIsHandoff;
+
+  // The single APZC that was scrolled by the pan that started this fling.
+  // The fling is only allowed to scroll this APZC, too.
+  // Used only if immediate scroll handoff is disallowed.
+  RefPtr<const AsyncPanZoomController> mScrolledApzc;
+};
 
 } // namespace layers
 } // namespace mozilla

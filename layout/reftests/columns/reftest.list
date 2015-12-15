@@ -34,3 +34,4 @@ skip-if(B2G||Mulet) == columnfill-overflow.html columnfill-overflow-ref.html # b
 == columnrule-overflow.html columnrule-overflow-ref.html
 == columns-table-caption-000.html columns-table-caption-000-ref.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501-ref.html
+== fieldset-columns-001.html fieldset-columns-001-ref.html

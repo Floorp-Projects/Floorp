@@ -770,7 +770,7 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
 }
 
 inline bool
-TryToOuterize(JSContext* cx, JS::MutableHandle<JS::Value> rval)
+TryToOuterize(JS::MutableHandle<JS::Value> rval)
 {
   if (js::IsWindow(&rval.toObject())) {
     JSObject* obj = js::ToWindowProxyIfWindow(&rval.toObject());
@@ -812,7 +812,7 @@ MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
   // We're same-compartment, but even then we might need to wrap
   // objects specially.  Check for that.
   if (IsDOMObject(obj)) {
-    return TryToOuterize(cx, rval);
+    return TryToOuterize(rval);
   }
 
   // It's not a WebIDL object.  But it might be an XPConnect one, in which case
@@ -1005,13 +1005,13 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
   bool sameCompartment =
     js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
   if (sameCompartment && couldBeDOMBinding) {
-    return TypeNeedsOuterization<T>::value ? TryToOuterize(cx, rval) : true;
+    return TypeNeedsOuterization<T>::value ? TryToOuterize(rval) : true;
   }
 
   if (wrapBehavior == eDontWrapIntoContextCompartment) {
     if (TypeNeedsOuterization<T>::value) {
       JSAutoCompartment ac(cx, obj);
-      return TryToOuterize(cx, rval);
+      return TryToOuterize(rval);
     }
 
     return true;

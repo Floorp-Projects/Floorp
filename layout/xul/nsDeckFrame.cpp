@@ -48,7 +48,7 @@ nsDeckFrame::nsDeckFrame(nsStyleContext* aContext)
   : nsBoxFrame(aContext), mIndex(0)
 {
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(PresContext()->PresShell(), layout);
+  NS_NewStackLayout(layout);
   SetLayoutManager(layout);
 }
 

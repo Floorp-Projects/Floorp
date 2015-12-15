@@ -6,7 +6,6 @@
 #define mozilla_dom_MediaKeySystemAccessManager_h
 
 #include "mozilla/dom/MediaKeySystemAccess.h"
-#include "mozilla/dom/GMPVideoDecoderTrialCreator.h"
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
@@ -76,8 +75,6 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   bool mAddedObservers;
-
-  RefPtr<GMPVideoDecoderTrialCreator> mTrialCreator;
 };
 
 } // namespace dom

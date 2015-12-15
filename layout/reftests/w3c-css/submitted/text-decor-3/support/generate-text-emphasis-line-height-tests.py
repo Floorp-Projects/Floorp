@@ -18,7 +18,7 @@ TEST_TEMPLATE = '''<!DOCTYPE html>
 <link rel="author" title="Mozilla" href="https://www.mozilla.org">
 <link rel="help" href="https://drafts.csswg.org/css-text-decor-3/#text-emphasis-position-property">
 <meta name="assert" content="text emphasis marks should expand the line height like ruby if necessary">
-<link rel="match" href="text-emphasis-position-property-{index:03}-ref.html">
+<link rel="match" href="text-emphasis-line-height-{index:03}-ref.html">
 <p>Pass if the emphasis marks are {dir} the black line:</p>
 {start}試験テスト{end}
 '''

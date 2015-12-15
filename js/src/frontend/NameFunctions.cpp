@@ -791,12 +791,6 @@ class NameResolver
                 return false;
             break;
 
-          case PNK_ANNEXB_FUNCTION:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (!resolve(cur->pn_left, prefix))
-                return false;
-            break;
-
           // Kinds that should be handled by parent node resolution.
 
           case PNK_IMPORT_SPEC: // by PNK_IMPORT_SPEC_LIST

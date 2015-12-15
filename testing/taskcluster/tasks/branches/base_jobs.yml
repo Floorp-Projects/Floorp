@@ -184,6 +184,8 @@ tests:
         task: tasks/tests/b2g_emulator_cpp_unit.yml
       tasks/builds/b2g_emulator_x86_kk_debug.yml:
         task: tasks/tests/b2g_emulator_cpp_unit.yml
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_cppunit.yml
   crashtest:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
@@ -222,6 +224,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_gaia_unit_oop.yml
+  jsreftest:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_jsreftest.yml
   mochitest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
@@ -232,6 +238,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_mochitest_oop.yml
+  mochitest-push:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_push.yml
   mochitest-webgl:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
@@ -244,3 +254,7 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_reftests_sanity_oop.yml
+  web-platform-tests-reftests:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_web_platform_tests_reftests.yml

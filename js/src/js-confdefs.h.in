@@ -6,7 +6,8 @@
 #ifndef js_confdefs_h
 #define js_confdefs_h
 
-@ALLDEFINES@
+// Expands to all the defines from configure.
+#undef ALLDEFINES
 
 #include "js/RequiredDefines.h"
 

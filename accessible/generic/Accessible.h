@@ -858,7 +858,7 @@ public:
   bool IsDefunct() const { return mStateFlags & eIsDefunct; }
 
   /**
-   * Return true if the accessible is no longer in the document.
+   * Return false if the accessible is no longer in the document.
    */
   bool IsInDocument() const { return !(mStateFlags & eIsNotInDocument); }
 
