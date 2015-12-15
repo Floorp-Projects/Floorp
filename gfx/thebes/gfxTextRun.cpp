@@ -1411,7 +1411,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     uint32_t glyphIndex = glyphData->GetSimpleGlyph();
                     if (!extents->IsGlyphKnown(glyphIndex)) {
                         if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefContext)) {
+                            if (!font->SetupCairoFont(aRefContext->GetDrawTarget())) {
                                 NS_WARNING("failed to set up font for glyph extents");
                                 break;
                             }
@@ -1437,7 +1437,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     uint32_t glyphIndex = details->mGlyphID;
                     if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
                         if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefContext)) {
+                            if (!font->SetupCairoFont(aRefContext->GetDrawTarget())) {
                                 NS_WARNING("failed to set up font for glyph extents");
                                 break;
                             }

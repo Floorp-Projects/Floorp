@@ -98,7 +98,7 @@ gfxGDIFont::ShapeText(gfxContext     *aContext,
     // creating a "toy" font internally (see bug 544617).
     // We must check that this succeeded, otherwise we risk cairo creating the
     // wrong kind of font internally as a fallback (bug 744480).
-    if (!SetupCairoFont(aContext)) {
+    if (!SetupCairoFont(aContext->GetDrawTarget())) {
         return false;
     }
 
@@ -125,7 +125,7 @@ gfxGDIFont::GetSpaceGlyph()
 }
 
 bool
-gfxGDIFont::SetupCairoFont(gfxContext *aContext)
+gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
     if (!mMetrics) {
         Initialize();
@@ -136,8 +136,7 @@ gfxGDIFont::SetupCairoFont(gfxContext *aContext)
         // the cairo_t, precluding any further drawing.
         return false;
     }
-    cairo_set_scaled_font(gfxContext::RefCairo(aContext->GetDrawTarget()),
-                          mScaledFont);
+    cairo_set_scaled_font(gfxContext::RefCairo(aDrawTarget), mScaledFont);
     return true;
 }
 

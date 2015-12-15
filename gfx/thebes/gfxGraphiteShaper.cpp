@@ -91,7 +91,7 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
                              gfxShapedText   *aShapedText)
 {
     // some font back-ends require this in order to get proper hinted metrics
-    if (!mFont->SetupCairoFont(aContext)) {
+    if (!mFont->SetupCairoFont(aContext->GetDrawTarget())) {
         return false;
     }
 
