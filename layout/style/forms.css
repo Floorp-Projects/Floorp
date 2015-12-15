@@ -11,13 +11,32 @@
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 *|*::-moz-fieldset-content {
-  display: block;
+  display: block; /* nsRuleNode::ComputeDisplayData overrules this in some cases */
   unicode-bidi: inherit;
   text-overflow: inherit;
   overflow: inherit;
   overflow-clip-box: inherit;
   padding: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
+  /* Please keep the Flex/Grid/Align sections below in sync with
+     ::-moz-scrolled-content in ua.css */
+  /* Flex container */
+  flex-direction: inherit;
+  flex-wrap: inherit;
+  /* Grid container */
+  grid-auto-columns: inherit;
+  grid-auto-rows: inherit;
+  grid-auto-flow: inherit;
+  grid-column-gap: inherit;
+  grid-row-gap: inherit;
+  grid-template-areas: inherit;
+  grid-template-columns: inherit;
+  grid-template-rows: inherit;
+  /* CSS Align */
+  align-content: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  justify-items: inherit;
 }
 
 /* miscellaneous form elements */

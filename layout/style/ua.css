@@ -163,6 +163,8 @@
      blocks with overflow: scroll; */
   unicode-bidi: inherit;
   text-overflow: inherit;
+  /* Please keep the Flex/Grid/Align sections below in sync with
+     ::-moz-fieldset-content in forms.css */
   /* Multicol container */
   -moz-column-count: inherit;
   -moz-column-width: inherit;
