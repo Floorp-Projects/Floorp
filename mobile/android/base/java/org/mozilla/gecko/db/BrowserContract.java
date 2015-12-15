@@ -249,6 +249,15 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "deleted-passwords");
     }
 
+    @RobocopTarget
+    public static final class GeckoDisabledHosts {
+        private GeckoDisabledHosts() {}
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/disabled-hosts";
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "disabled-hosts");
+
+        public static final String HOSTNAME = "hostname";
+    }
+
     public static final class FormHistory {
         private FormHistory() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(FORM_HISTORY_AUTHORITY_URI, "formhistory");
