@@ -12,13 +12,6 @@
     <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-
-        <!-- Gingerbread "More" menu background color; AppCompat sets this to
-             transparent by default: http://stackoverflow.com/a/31777488.
-             This color is set anecdotally to make all text colors, which change
-             by device, visible. Standard colors are #8D8D8D & #C8C8C8 (disabled)
-             and #000000 has also been seen. -->
-        <item name="android:panelBackground">@color/text_and_tabs_tray_grey</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">

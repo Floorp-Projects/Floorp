@@ -37,6 +37,17 @@ and in IntelliJ select File > Import project... and choose
 '''
 
 
+# NOTE python/mach/mach/commands/commandinfo.py references this function
+#      by name. If this function is renamed or removed, that file should
+#      be updated accordingly as well.
+def REMOVED(cls):
+    """Command no longer exists! Use the Gradle configuration rooted in the top source directory instead.
+
+    See https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build#Developing_Firefox_for_Android_in_Android_Studio_or_IDEA_IntelliJ.
+    """
+    return False
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('android', category='devenv',
@@ -61,106 +72,15 @@ class MachCommands(MachCommandBase):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
-        code = self.gradle_install(quiet=True)
-        if code:
-            return code
-
         return self.run_process(['./gradlew'] + args,
             pass_thru=True, # Allow user to run gradle interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topobjdir, 'mobile', 'android', 'gradle'))
+            cwd=mozpath.join(self.topsrcdir))
 
     @Command('gradle-install', category='devenv',
-        description='Install gradle environment.',
-        conditions=[conditions.is_android])
-    def gradle_install(self, quiet=False):
-        import mozpack.manifests
-        m = mozpack.manifests.InstallManifest()
-
-        def srcdir(dst, src):
-            m.add_symlink(os.path.join(self.topsrcdir, src), dst)
-
-        srcdir('build.gradle', 'mobile/android/gradle/build.gradle')
-        srcdir('settings.gradle', 'mobile/android/gradle/settings.gradle')
-
-        m.add_pattern_copy(os.path.join(self.topsrcdir, 'mobile/android/gradle/gradle/wrapper'), '**', 'gradle/wrapper')
-        m.add_copy(os.path.join(self.topsrcdir, 'mobile/android/gradle/gradlew'), 'gradlew')
-
-        defines = {
-            'topsrcdir': self.topsrcdir,
-            'topobjdir': self.topobjdir,
-            'ANDROID_SDK_ROOT': self.substs['ANDROID_SDK_ROOT'],
-        }
-        m.add_preprocess(os.path.join(self.topsrcdir, 'mobile/android/gradle/gradle.properties.in'),
-            'gradle.properties',
-            defines=defines,
-            deps=os.path.join(self.topobjdir, 'mobile/android/gradle/.deps/gradle.properties.pp'))
-        m.add_preprocess(os.path.join(self.topsrcdir, 'mobile/android/gradle/local.properties.in'),
-            'local.properties',
-            defines=defines,
-            deps=os.path.join(self.topobjdir, 'mobile/android/gradle/.deps/local.properties.pp'))
-
-        srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
-        srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
-        srcdir('thirdparty/src/main/java', 'mobile/android/thirdparty')
-
-        srcdir('omnijar/build.gradle', 'mobile/android/gradle/omnijar/build.gradle')
-        srcdir('omnijar/src/main/java/locales', 'mobile/android/locales')
-        srcdir('omnijar/src/main/java/chrome', 'mobile/android/chrome')
-        srcdir('omnijar/src/main/java/components', 'mobile/android/components')
-        srcdir('omnijar/src/main/java/modules', 'mobile/android/modules')
-        srcdir('omnijar/src/main/java/themes', 'mobile/android/themes')
-
-        srcdir('app/build.gradle', 'mobile/android/gradle/app/build.gradle')
-        srcdir('app/src/androidTest/res', 'mobile/android/tests/browser/robocop/res')
-        srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
-        # Test code.
-        srcdir('app/src/robocop', 'mobile/android/tests/browser/robocop/src')
-        srcdir('app/src/background', 'mobile/android/tests/background/junit3/src')
-        srcdir('app/src/browser', 'mobile/android/tests/browser/junit3/src')
-        srcdir('app/src/javaaddons', 'mobile/android/tests/javaaddons/src')
-
-        srcdir('base/build.gradle', 'mobile/android/gradle/base/build.gradle')
-        srcdir('base/lint.xml', 'mobile/android/gradle/base/lint.xml')
-        srcdir('base/src/main/AndroidManifest.xml', 'mobile/android/gradle/base/AndroidManifest.xml')
-        srcdir('base/src/main/java/org/mozilla/gecko', 'mobile/android/base/java/org/mozilla/gecko')
-        srcdir('base/src/main/java/org/mozilla/mozstumbler', 'mobile/android/stumbler/java/org/mozilla/mozstumbler')
-        srcdir('base/src/main/java/org/mozilla/search', 'mobile/android/search/java/org/mozilla/search')
-        srcdir('base/src/main/java/org/mozilla/javaaddons', 'mobile/android/javaaddons/java/org/mozilla/javaaddons')
-        srcdir('base/src/services', 'mobile/android/services/src/main')
-        srcdir('base/src/webrtc_audio_device/java', 'media/webrtc/trunk/webrtc/modules/audio_device/android/java/src')
-        srcdir('base/src/webrtc_video_capture/java', 'media/webrtc/trunk/webrtc/modules/video_capture/android/java/src')
-        srcdir('base/src/webrtc_video_render/java', 'media/webrtc/trunk/webrtc/modules/video_render/android/java/src')
-        srcdir('base/src/main/res', 'mobile/android/base/resources')
-        srcdir('base/src/main/assets', 'mobile/android/app/assets')
-        srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
-        srcdir('base/src/branding/res', os.path.join(self.substs['MOZ_BRANDING_DIRECTORY'], 'res'))
-        # JUnit 4 test code.
-        srcdir('base/src/background_junit4', 'mobile/android/tests/background/junit4/src')
-        srcdir('base/resources/background_junit4', 'mobile/android/tests/background/junit4/resources')
-
-        manifest_path = os.path.join(self.topobjdir, 'mobile', 'android', 'gradle.manifest')
-        with FileAvoidWrite(manifest_path) as f:
-            m.write(fileobj=f)
-
-        self.virtualenv_manager.ensure()
-        code = self.run_process([
-                self.virtualenv_manager.python_path,
-                os.path.join(self.topsrcdir, 'python/mozbuild/mozbuild/action/process_install_manifest.py'),
-                '--no-remove',
-                '--no-remove-all-directory-symlinks',
-                '--no-remove-empty-directories',
-                os.path.join(self.topobjdir, 'mobile', 'android', 'gradle'),
-                manifest_path],
-            pass_thru=True, # Allow user to run gradle interactively.
-            ensure_exit_code=False, # Don't throw on non-zero exit code.
-            cwd=mozpath.join(self.topsrcdir, 'mobile', 'android'))
-
-        if not quiet:
-            if not code:
-                print(SUCCESS.format(topobjdir=self.topobjdir))
-
-        return code
+        conditions=[REMOVED])
+    def gradle_install(self):
+        pass
 
 
 class ArtifactSubCommand(SubCommand):

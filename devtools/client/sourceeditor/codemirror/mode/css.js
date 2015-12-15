@@ -228,7 +228,7 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     if (type == "}" || type == "{") return popAndPass(type, stream, state);
     if (type == "(") return pushContext(state, stream, "parens");
 
-    if (type == "hash" && !/^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/.test(stream.current())) {
+    if (type == "hash" && !/^#([0-9a-fA-f]{3,4}|[0-9a-fA-f]{6}|[0-9a-fA-f]{8})$/.test(stream.current())) {
       override += " error";
     } else if (type == "word") {
       wordAsValue(stream);
@@ -274,6 +274,8 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     if (type == "(") return pushContext(state, stream, "atBlock_parens");
     if (type == "}" || type == ";") return popAndPass(type, stream, state);
     if (type == "{") return popContext(state) && pushContext(state, stream, allowNested ? "block" : "top");
+
+    if (type == "interpolation") return pushContext(state, stream, "interpolation");
 
     if (type == "word") {
       var word = stream.current().toLowerCase();
