@@ -3155,26 +3155,58 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                false, scrollFrame);
   }
 
+  nsContainerFrame* absPosContainer = nullptr;
+  if (fieldsetFrame->IsAbsPosContaininingBlock()) {
+    absPosContainer = fieldsetFrame;
+  }
+
   // Create the inner ::-moz-fieldset-content frame.
+  nsContainerFrame* contentFrameTop;
   nsContainerFrame* contentFrame;
+  auto parent = scrollFrame ? scrollFrame : fieldsetFrame;
   switch (fieldsetContentDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_FLEX:
       contentFrame = NS_NewFlexContainerFrame(mPresShell, fieldsetContentStyle);
+      InitAndRestoreFrame(aState, content, parent, contentFrame);
+      contentFrameTop = contentFrame;
       break;
     case NS_STYLE_DISPLAY_GRID:
       contentFrame = NS_NewGridContainerFrame(mPresShell, fieldsetContentStyle);
+      InitAndRestoreFrame(aState, content, parent, contentFrame);
+      contentFrameTop = contentFrame;
       break;
-    default:
+    default: {
       MOZ_ASSERT(fieldsetContentDisplay->mDisplay == NS_STYLE_DISPLAY_BLOCK,
                  "bug in nsRuleNode::ComputeDisplayData?");
-      contentFrame = NS_NewBlockFrame(mPresShell, fieldsetContentStyle,
+
+      nsContainerFrame* columnSetFrame = nullptr;
+      RefPtr<nsStyleContext> innerSC = fieldsetContentStyle;
+      const nsStyleColumn* columns = fieldsetContentStyle->StyleColumn();
+      if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO ||
+          columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
+        columnSetFrame =
+          NS_NewColumnSetFrame(mPresShell, fieldsetContentStyle, nsFrameState(0));
+        InitAndRestoreFrame(aState, content, parent, columnSetFrame);
+        innerSC = mPresShell->StyleSet()->ResolveAnonymousBoxStyle(
+                    nsCSSAnonBoxes::columnContent, fieldsetContentStyle);
+        if (absPosContainer) {
+          absPosContainer = columnSetFrame;
+        }
+      }
+      contentFrame = NS_NewBlockFrame(mPresShell, innerSC,
                                       NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
+      if (columnSetFrame) {
+        InitAndRestoreFrame(aState, content, columnSetFrame, contentFrame);
+        SetInitialSingleChild(columnSetFrame, contentFrame);
+        contentFrameTop = columnSetFrame;
+      } else {
+        InitAndRestoreFrame(aState, content, parent, contentFrame);
+        contentFrameTop = contentFrame;
+      }
       break;
+    }
   }
-  
-  InitAndRestoreFrame(aState, content,
-                      scrollFrame ? scrollFrame : fieldsetFrame,
-                      contentFrame);
+
   aState.AddChild(fieldsetFrame, aFrameItems, content, styleContext, aParentFrame);
 
   // Process children
@@ -3182,15 +3214,15 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   nsFrameItems                childItems;
 
   contentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  if (fieldsetFrame->IsAbsPosContaininingBlock()) {
-    aState.PushAbsoluteContainingBlock(contentFrame, fieldsetFrame, absoluteSaveState);
+  if (absPosContainer) {
+    aState.PushAbsoluteContainingBlock(contentFrame, absPosContainer, absoluteSaveState);
   }
 
   ProcessChildren(aState, content, styleContext, contentFrame, true,
                   childItems, true, aItem.mPendingBinding);
 
   nsFrameItems fieldsetKids;
-  fieldsetKids.AddChild(scrollFrame ? scrollFrame : contentFrame);
+  fieldsetKids.AddChild(scrollFrame ? scrollFrame : contentFrameTop);
 
   for (nsFrameList::Enumerator e(childItems); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
@@ -3213,7 +3245,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   }
 
   if (isScrollable) {
-    FinishBuildingScrollFrame(scrollFrame, contentFrame);
+    FinishBuildingScrollFrame(scrollFrame, contentFrameTop);
   }
 
   // Set the inner frame's initial child lists
@@ -3375,7 +3407,8 @@ IsFrameForFieldSet(nsIFrame* aFrame, nsIAtom* aFrameType)
 {
   nsIAtom* pseudo = aFrame->StyleContext()->GetPseudo();
   if (pseudo == nsCSSAnonBoxes::fieldsetContent ||
-      pseudo == nsCSSAnonBoxes::scrolledContent) {
+      pseudo == nsCSSAnonBoxes::scrolledContent ||
+      pseudo == nsCSSAnonBoxes::columnContent) {
     return IsFrameForFieldSet(aFrame->GetParent(), aFrame->GetParent()->GetType());
   }
   return aFrameType == nsGkAtoms::fieldSetFrame;
