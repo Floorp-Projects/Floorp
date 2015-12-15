@@ -308,7 +308,8 @@ protected:
   void CheckTextForBidi(nsAutoString& aText);
 
   void AdjustForCellText(nsAutoString& aText,
-                         int32_t aRowIndex,  nsTreeColumn* aColumn,
+                         int32_t aRowIndex,
+                         nsTreeColumn* aColumn,
                          nsRenderingContext& aRenderingContext,
                          nsFontMetrics& aFontMetrics,
                          nsRect& aTextRect);

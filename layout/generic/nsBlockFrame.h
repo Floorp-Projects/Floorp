@@ -230,7 +230,7 @@ public:
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
-  virtual nsRect ComputeTightBounds(gfxContext* aContext) const override;
+  virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
 
   virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
                                            nscoord* aX,

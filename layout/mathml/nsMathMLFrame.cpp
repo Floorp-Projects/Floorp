@@ -168,15 +168,15 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
 }
 
 /* static */ void
-nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
-                                nsFontMetrics*      aFontMetrics,
-                                nscoord&             aRuleThickness)
+nsMathMLFrame::GetRuleThickness(DrawTarget*    aDrawTarget,
+                                nsFontMetrics* aFontMetrics,
+                                nscoord&       aRuleThickness)
 {
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t overBar = 0x00AF;
   nsBoundingMetrics bm =
     nsLayoutUtils::AppUnitBoundsOfString(&overBar, 1, *aFontMetrics,
-                                         aRenderingContext);
+                                         aDrawTarget);
   aRuleThickness = bm.ascent + bm.descent;
   if (aRuleThickness <= 0 || aRuleThickness >= xHeight) {
     // fall-back to the other version
@@ -185,9 +185,9 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
 }
 
 /* static */ void
-nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
-                             nsFontMetrics*      aFontMetrics,
-                             nscoord&             aAxisHeight)
+nsMathMLFrame::GetAxisHeight(DrawTarget*    aDrawTarget,
+                             nsFontMetrics* aFontMetrics,
+                             nscoord&       aAxisHeight)
 {
   gfxFont* mathFont = aFontMetrics->GetThebesFontGroup()->GetFirstMathFont();
   if (mathFont) {
@@ -200,8 +200,7 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
   nscoord xHeight = aFontMetrics->XHeight();
   char16_t minus = 0x2212; // not '-', but official Unicode minus sign
   nsBoundingMetrics bm =
-    nsLayoutUtils::AppUnitBoundsOfString(&minus, 1, *aFontMetrics,
-                                         aRenderingContext);
+    nsLayoutUtils::AppUnitBoundsOfString(&minus, 1, *aFontMetrics, aDrawTarget);
   aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
   if (aAxisHeight <= 0 || aAxisHeight >= xHeight) {
     // fall-back to the other version

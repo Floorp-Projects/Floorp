@@ -153,7 +153,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // place and size children
-  FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
+  FinalizeReflow(aReflowState.rendContext->GetDrawTarget(), aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -163,7 +163,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
 /* virtual */ nsresult
-nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
+nsMathMLTokenFrame::Place(DrawTarget*          aDrawTarget,
                           bool                 aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
