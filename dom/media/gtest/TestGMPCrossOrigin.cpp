@@ -13,11 +13,6 @@
 #include "GMPVideoEncoderProxy.h"
 #include "GMPDecryptorProxy.h"
 #include "GMPServiceParent.h"
-#ifdef XP_WIN
-#include "GMPVideoDecoderTrialCreator.h"
-#include "mozilla/dom/MediaKeySystemAccess.h"
-#include "mozilla/Monitor.h"
-#endif
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
@@ -1494,65 +1489,3 @@ TEST(GeckoMediaPlugins, GMPStorageLongRecordNames) {
   RefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestLongRecordNames);
 }
-
-#ifdef XP_WIN
-class GMPTrialCreateTest
-{
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPStorageTest)
-
-  void DoTest() {
-    EnsureNSSInitializedChromeOrContent();
-    mCreator = new mozilla::dom::GMPVideoDecoderTrialCreator();
-    mCreator->MaybeAwaitTrialCreate(NS_LITERAL_STRING("broken"), nullptr, this, nullptr);
-    AwaitFinished();
-  }
-
-  GMPTrialCreateTest()
-    : mMonitor("GMPTrialCreateTest")
-    , mFinished(false)
-    , mPassed(false)
-  {
-  }
-
-  void MaybeResolve(mozilla::dom::MediaKeySystemAccess* aAccess) {
-    mPassed = false;
-    SetFinished();
-  }
-
-  void MaybeReject(nsresult aResult, const nsACString& aUnusedMessage) {
-    mPassed = true;
-    SetFinished();
-  }
-
-private:
-  ~GMPTrialCreateTest() { }
-
-  void Dummy() {
-    // Intentionally left blank.
-  }
-
-  void SetFinished() {
-    mFinished = true;
-    NS_DispatchToMainThread(NS_NewRunnableMethod(this, &GMPTrialCreateTest::Dummy));
-  }
-
-  void AwaitFinished() {
-    while (!mFinished) {
-      NS_ProcessNextEvent(nullptr, true);
-    }
-    mFinished = false;
-  }
-
-  RefPtr<mozilla::dom::GMPVideoDecoderTrialCreator> mCreator;
-
-  Monitor mMonitor;
-  Atomic<bool> mFinished;
-  bool mPassed;
-};
-
-TEST(GeckoMediaPlugins, GMPTrialCreateFail) {
-  RefPtr<GMPTrialCreateTest> runner = new GMPTrialCreateTest();
-  runner->DoTest();
-}
-
-#endif // XP_WIN
