@@ -190,7 +190,7 @@ Navigator implements NavigatorMobileId;
 
 // nsIDOMNavigator
 partial interface Navigator {
-  [Throws]
+  [Throws, Constant, Cached]
   readonly attribute DOMString oscpu;
   // WebKit/Blink support this; Trident/Presto do not.
   readonly attribute DOMString vendor;
@@ -200,7 +200,7 @@ partial interface Navigator {
   readonly attribute DOMString productSub;
   // WebKit/Blink/Trident/Presto support this.
   readonly attribute boolean cookieEnabled;
-  [Throws]
+  [Throws, Constant, Cached]
   readonly attribute DOMString buildID;
   [Throws, CheckAnyPermissions="power", UnsafeInPrerendering]
   readonly attribute MozPowerManager mozPower;
