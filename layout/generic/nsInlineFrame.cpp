@@ -292,13 +292,13 @@ nsInlineFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 }
 
 nsRect
-nsInlineFrame::ComputeTightBounds(gfxContext* aContext) const
+nsInlineFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
 {
   // be conservative
   if (StyleContext()->HasTextDecorationLines()) {
     return GetVisualOverflowRect();
   }
-  return ComputeSimpleTightBounds(aContext);
+  return ComputeSimpleTightBounds(aDrawTarget);
 }
 
 void

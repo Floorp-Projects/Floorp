@@ -3458,7 +3458,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     }
     mTextRun = mFontgrp->MakeTextRun(text,
                                      length,
-                                     mThebes,
+                                     mThebes->GetDrawTarget(),
                                      mAppUnitsPerDevPixel,
                                      flags,
                                      mMissingFonts);
@@ -3471,7 +3471,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                                                                mDoMeasureBoundingBox ?
                                                                  gfxFont::TIGHT_INK_EXTENTS :
                                                                  gfxFont::LOOSE_INK_EXTENTS,
-                                                               mThebes,
+                                                               mThebes->GetDrawTarget(),
                                                                nullptr);
 
     // this only measures the height; the total width is gotten from the
@@ -3507,7 +3507,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                               mDoMeasureBoundingBox ?
                                   gfxFont::TIGHT_INK_EXTENTS :
                                   gfxFont::LOOSE_INK_EXTENTS,
-                              mThebes,
+                              mThebes->GetDrawTarget(),
                               nullptr);
       inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:

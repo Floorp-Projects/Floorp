@@ -62,8 +62,8 @@ public:
     // Get glyph extents; a rectangle relative to the left baseline origin
     // Returns true on success. Can fail on OOM or when aContext is null
     // and extents were not (successfully) prefetched.
-    bool GetTightGlyphExtentsAppUnits(gfxFont *aFont,
-            gfxContext *aContext, uint32_t aGlyphID, gfxRect *aExtents);
+    bool GetTightGlyphExtentsAppUnits(gfxFont* aFont,
+            DrawTarget* aDrawTarget, uint32_t aGlyphID, gfxRect* aExtents);
 
     void SetContainedGlyphWidthAppUnits(uint32_t aGlyphID, uint16_t aWidth) {
         mContainedGlyphWidths.Set(aGlyphID, aWidth);
