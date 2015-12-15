@@ -605,12 +605,6 @@ var GMPProvider = {
       }
     }
 
-    if (Preferences.get("media.gmp-adobe-eme.enabled", false)) {
-      // Gather telemetry on how many Adobe-compatible installs have
-      // disabled EME.
-      telemetryService.getHistogramById("VIDEO_EME_DISABLED").add(!emeEnabled);
-    }
-
     AddonManagerPrivate.setTelemetryDetails("GMP", telemetry);
   },
 
