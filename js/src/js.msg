@@ -476,7 +476,6 @@ MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_RANGEERR, "argument {0} must be 
 MSG_DEF(JSMSG_TYPED_ARRAY_DETACHED,    0, JSEXN_TYPEERR, "attempting to access detached ArrayBuffer")
 
 // Shared array buffer
-MSG_DEF(JSMSG_SHARED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
 MSG_DEF(JSMSG_SHARED_ARRAY_BAD_LENGTH,  0, JSEXN_RANGEERR, "length argument out of range")
 
 // Shared typed array
