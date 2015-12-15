@@ -175,7 +175,7 @@
 
 .theme-dark .domLabel,
 .theme-light .domLabel {
-  color: var(--theme-highlight-bluegrey);
+  color: var(--theme-highlight-blue);
 }
 
 .theme-dark .objectBox-array .length,
@@ -207,7 +207,7 @@
 .theme-light .objectBox-object {
   font-family: Lucida Grande, sans-serif;
   font-weight: normal;
-  color: var(--theme-highlight-bluegrey);
+  color: var(--theme-highlight-blue);
   white-space: pre-wrap;
 }
 
@@ -215,5 +215,5 @@
 .theme-light .caption {
   font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: normal;
-  color: var(--theme-highlight-bluegrey);
+  color: var(--theme-highlight-blue);
 }
