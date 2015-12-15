@@ -2052,15 +2052,7 @@
     macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED211,     211, "unused211",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED212,     212, "unused212",    NULL,  1,  0,  0,  JOF_BYTE) \
-    /*
-     * Pushes the nearest 'var' environment.
-     *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
-     *   Operands:
-     *   Stack: => scope
-     */ \
-    macro(JSOP_BINDVAR,       213, "bindvar",      NULL,  1,  0,  1,  JOF_BYTE) \
+    macro(JSOP_UNUSED213,     213, "unused213",    NULL,  1,  0,  0,  JOF_BYTE) \
     /*
      * Pushes the global scope onto the stack if the script doesn't have a
      * non-syntactic global scope.  Otherwise will act like JSOP_BINDNAME.

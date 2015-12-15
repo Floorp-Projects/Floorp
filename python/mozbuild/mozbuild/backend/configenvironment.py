@@ -81,24 +81,20 @@ class ConfigEnvironment(object):
       - defines is a list of (name, value) tuples. In autoconf, these are
         set with AC_DEFINE and AC_DEFINE_UNQUOTED
       - non_global_defines are a list of names appearing in defines above
-        that are not meant to be exported in ACDEFINES and ALLDEFINES (see
-        below)
+        that are not meant to be exported in ACDEFINES (see below)
       - substs is a list of (name, value) tuples. In autoconf, these are
         set with AC_SUBST.
 
-    ConfigEnvironment automatically defines two additional substs variables
+    ConfigEnvironment automatically defines one additional substs variable
     from all the defines not appearing in non_global_defines:
       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
         preprocessor command lines. The order in which defines were given
         when creating the ConfigEnvironment is preserved.
-      - ALLDEFINES contains the defines in the form #define NAME VALUE, in
-        sorted order, for use in config files, for an automatic listing of
-        defines.
     and two other additional subst variables from all the other substs:
       - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
-        order, for use in autoconf.mk. It includes ACDEFINES, but doesn't
-        include ALLDEFINES. Only substs with a VALUE are included, such that
-        the resulting file doesn't change when new empty substs are added.
+        order, for use in autoconf.mk. It includes ACDEFINES
+        Only substs with a VALUE are included, such that the resulting file
+        doesn't change when new empty substs are added.
         This results in less invalidation of build dependencies in the case
         of autoconf.mk..
       - ALLEMPTYSUBSTS contains the substs with an empty value, in the form
@@ -117,6 +113,7 @@ class ConfigEnvironment(object):
             source = mozpath.join(topobjdir, 'config.status')
         self.source = source
         self.defines = ReadOnlyDict(defines)
+        self.non_global_defines = non_global_defines
         self.substs = dict(substs)
         self.topsrcdir = mozpath.abspath(topsrcdir)
         self.topobjdir = mozpath.abspath(topobjdir)
@@ -146,8 +143,6 @@ class ConfigEnvironment(object):
             serialize(self.substs[name])) for name in self.substs if self.substs[name]]))
         self.substs['ALLEMPTYSUBSTS'] = '\n'.join(sorted(['%s =' % name
             for name in self.substs if not self.substs[name]]))
-        self.substs['ALLDEFINES'] = '\n'.join(sorted(['#define %s %s' % (name,
-            self.defines[name]) for name in global_defines]))
 
         self.substs = ReadOnlyDict(self.substs)
 

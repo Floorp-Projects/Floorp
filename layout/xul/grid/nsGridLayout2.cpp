@@ -38,10 +38,10 @@ nsGridLayout2::~nsGridLayout2()
 
 // static
 void
-nsGridLayout2::AddOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsSize& aSize)
+nsGridLayout2::AddOffset(nsIFrame* aChild, nsSize& aSize)
 {
   nsMargin offset;
-  GetOffset(aState, aChild, offset);
+  GetOffset(aChild, offset);
   aSize.width += offset.left;
   aSize.height += offset.top;
 }
@@ -124,7 +124,7 @@ nsGridLayout2::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
     }
 
     AddMargin(aBox, total);
-    AddOffset(aState, aBox, total);
+    AddOffset(aBox, total);
     AddLargestSize(minSize, total);
   }
   
@@ -163,7 +163,7 @@ nsGridLayout2::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
     }
 
     AddMargin(aBox, total);
-    AddOffset(aState, aBox, total);
+    AddOffset(aBox, total);
     AddLargestSize(pref, total);
   }
 
@@ -204,7 +204,7 @@ nsGridLayout2::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
     }
 
     AddMargin(aBox, total);
-    AddOffset(aState, aBox, total);
+    AddOffset(aBox, total);
     AddSmallestSize(maxSize, total);
   }
 

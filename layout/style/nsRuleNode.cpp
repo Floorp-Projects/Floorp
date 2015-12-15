@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsFontMetrics.h"
 #include "gfxFont.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsThemeConstants.h"
 #include "PLDHashTable.h"
@@ -5964,6 +5965,24 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // for now.
       display->mOriginalDisplay = display->mDisplay = NS_STYLE_DISPLAY_INLINE;
       conditions.SetUncacheable();
+    }
+
+    // Inherit a <fieldset> grid/flex display type into its anon content frame.
+    if (pseudo == nsCSSAnonBoxes::fieldsetContent) {
+      MOZ_ASSERT(display->mDisplay == NS_STYLE_DISPLAY_BLOCK,
+                 "forms.css should have set 'display:block'");
+      switch (parentDisplay->mDisplay) {
+        case NS_STYLE_DISPLAY_GRID:
+        case NS_STYLE_DISPLAY_INLINE_GRID:
+          display->mDisplay = NS_STYLE_DISPLAY_GRID;
+          conditions.SetUncacheable();
+          break;
+        case NS_STYLE_DISPLAY_FLEX:
+        case NS_STYLE_DISPLAY_INLINE_FLEX:
+          display->mDisplay = NS_STYLE_DISPLAY_FLEX;
+          conditions.SetUncacheable();
+          break;
+      }
     }
 
     if (nsCSSPseudoElements::firstLetter == pseudo) {

@@ -44,7 +44,6 @@ from .data import (
     ExampleWebIDLInterface,
     ExternalStaticLibrary,
     ExternalSharedLibrary,
-    HeaderFileSubstitution,
     HostDefines,
     HostLibrary,
     HostProgram,
@@ -549,8 +548,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 path)
 
         for path in context['CONFIGURE_DEFINE_FILES']:
-            yield self._create_substitution(HeaderFileSubstitution, context,
-                path)
+            script = mozpath.join(mozpath.dirname(mozpath.dirname(__file__)),
+                                  'action', 'process_define_files.py')
+            yield GeneratedFile(context, script, 'process_define_file', path,
+                                [mozpath.join(context.srcdir, path + '.in')])
 
         for obj in self._process_xpidl(context):
             yield obj

@@ -2039,8 +2039,7 @@ public:
   SetLazyData(const nsAString& aName,
               const nsAString& aContentType,
               uint64_t aLength,
-              int64_t aLastModifiedDate,
-              BlobDirState aDirState) override;
+              int64_t aLastModifiedDate) override;
 
   virtual bool
   IsMemoryFile() const override;
@@ -2782,8 +2781,7 @@ BlobParent::
 RemoteBlobImpl::SetLazyData(const nsAString& aName,
                             const nsAString& aContentType,
                             uint64_t aLength,
-                            int64_t aLastModifiedDate,
-                            BlobDirState aDirState)
+                            int64_t aLastModifiedDate)
 {
   MOZ_CRASH("This should never be called!");
 }
@@ -3487,8 +3485,7 @@ BlobChild::SetMysteryBlobInfo(const nsString& aName,
   MOZ_ASSERT(mRemoteBlobImpl);
   MOZ_ASSERT(aLastModifiedDate != INT64_MAX);
 
-  mBlobImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate,
-                         aDirState);
+  mBlobImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate);
 
   FileBlobConstructorParams params(aName,
                                    aContentType,
@@ -3509,8 +3506,7 @@ BlobChild::SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength)
   nsString voidString;
   voidString.SetIsVoid(true);
 
-  mBlobImpl->SetLazyData(voidString, aContentType, aLength, INT64_MAX,
-                         BlobDirState::eUnknownIfDir);
+  mBlobImpl->SetLazyData(voidString, aContentType, aLength, INT64_MAX);
 
   NormalBlobConstructorParams params(aContentType,
                                      aLength,
@@ -4336,8 +4332,7 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
       mBlobImpl->SetLazyData(voidString,
                              params.contentType(),
                              params.length(),
-                             INT64_MAX,
-                             BlobDirState::eUnknownIfDir);
+                             INT64_MAX);
       return true;
     }
 
@@ -4362,8 +4357,7 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
       mBlobImpl->SetLazyData(params.name(),
                              params.contentType(),
                              params.length(),
-                             params.modDate(),
-                             BlobDirState(params.dirState()));
+                             params.modDate());
       return true;
     }
 

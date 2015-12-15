@@ -121,6 +121,7 @@ class LuciddreamTest(TestingMixin, MercurialScript, MozbaseMixin, BaseScript,
         self.emulator_url = c.get('emulator_url')
         self.binary_path = c.get('binary_path')
         self.test_url = c.get('test_url')
+        self.test_packages_url = c.get('test_packages_url')
 
         if c.get('structured_output'):
             self.parser_class = StructuredOutputParser

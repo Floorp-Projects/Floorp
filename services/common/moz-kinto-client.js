@@ -41,9 +41,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -77,7 +79,10 @@ var statements = {
 
   "getRecord": "\n    SELECT record\n      FROM collection_data\n        WHERE collection_name = :collection_name\n        AND record_id = :record_id;",
 
-  "listRecords": "\n    SELECT record\n      FROM collection_data\n        WHERE collection_name = :collection_name;"
+  "listRecords": "\n    SELECT record\n      FROM collection_data\n        WHERE collection_name = :collection_name;",
+
+  "importData": "\n    REPLACE INTO collection_data (collection_name, record_id, record)\n      VALUES (:collection_name, :record_id, :record);"
+
 };
 
 var createStatements = ["createCollectionData", "createCollectionMetadata", "createCollectionDataRecordIdIndex"];
@@ -229,6 +234,72 @@ var FirefoxAdapter = (function (_BaseAdapter) {
         return records;
       });
     }
+
+    /**
+     * Load a list of records into the local database.
+     *
+     * Note: The adapter is not in charge of filtering the already imported
+     * records. This is done in `Collection#loadDump()`, as a common behaviour
+     * between every adapters.
+     *
+     * @param  {Array} records.
+     * @return {Array} imported records.
+     */
+  }, {
+    key: "loadDump",
+    value: function loadDump(records) {
+      var connection = this._connection;
+      var collection_name = this.collection;
+      return Task.spawn(function* () {
+        yield connection.executeTransaction(function* doImport() {
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = records[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var record = _step2.value;
+
+              var _params = {
+                collection_name: collection_name,
+                record_id: record.id,
+                record: JSON.stringify(record)
+              };
+              yield connection.execute(statements.importData, _params);
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+                _iterator2["return"]();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+
+          var lastModified = Math.max.apply(Math, _toConsumableArray(records.map(record => record.last_modified)));
+          var params = {
+            collection_name: collection_name
+          };
+          var previousLastModified = yield connection.execute(statements.getLastModified, params).then(result => {
+            return result ? result[0].getResultByName('last_modified') : -1;
+          });
+          if (lastModified > previousLastModified) {
+            var _params2 = {
+              collection_name: collection_name,
+              last_modified: lastModified
+            };
+            yield connection.execute(statements.saveLastModified, _params2);
+          }
+        });
+        return records;
+      });
+    }
   }, {
     key: "saveLastModified",
     value: function saveLastModified(lastModified) {
@@ -284,7 +355,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x2, _x3, _x4) { var _again = true; _function: while (_again) { var object = _x2, property = _x3, receiver = _x4; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x2 = parent; _x3 = property; _x4 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x2, _x3, _x4) { var _again = true; _function: while (_again) { var object = _x2, property = _x3, receiver = _x4; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x2 = parent; _x3 = property; _x4 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 exports["default"] = loadKinto;
 
@@ -313,6 +384,7 @@ function loadKinto() {
 
   var EventEmitter = _Cu$import.EventEmitter;
 
+  Cu["import"]("resource://gre/modules/Timer.jsm");
   Cu.importGlobalProperties(['fetch']);
 
   var KintoFX = (function (_KintoBase) {
@@ -1941,6 +2013,18 @@ var BaseAdapter = (function () {
     value: function getLastModified() {
       throw new Error("Not Implemented.");
     }
+
+    /**
+     * Load a dump of records exported from a server.
+     *
+     * @abstract
+     * @return {Promise}
+     */
+  }, {
+    key: "loadDump",
+    value: function loadDump(records) {
+      throw new Error("Not Implemented.");
+    }
   }]);
 
   return BaseAdapter;
@@ -2433,7 +2517,7 @@ function createUUIDSchema() {
     },
 
     validate: function validate(id) {
-      return (0, _utils.isUUID4)(id);
+      return (0, _utils.isUUID)(id);
     }
   };
 }
@@ -2718,7 +2802,7 @@ var Collection = (function () {
      *
      * Options:
      * - {Boolean} virtual: When set to `true`, doesn't actually delete the record,
-     *   update its `_status` attribute to `deleted` instead.
+     *   update its `_status` attribute to `deleted` instead (default: true)
      *
      * @param  {String} id       The record's Id.
      * @param  {Object} options  The options object.
@@ -2834,7 +2918,8 @@ var Collection = (function () {
   }, {
     key: "_importChange",
     value: function _importChange(change) {
-      var _decodedChange, decodePromise;
+      var _decodedChange = undefined,
+          decodePromise = undefined;
       // if change is a deletion, skip decoding
       if (change.deleted) {
         decodePromise = Promise.resolve(change);
@@ -2931,7 +3016,7 @@ var Collection = (function () {
   }, {
     key: "resetSyncStatus",
     value: function resetSyncStatus() {
-      var _count;
+      var _count = undefined;
       return this.list({}, { includeDeleted: true }).then(res => {
         return Promise.all(res.data.map(r => {
           // Garbage collect deleted records.
@@ -2961,7 +3046,7 @@ var Collection = (function () {
   }, {
     key: "gatherLocalChanges",
     value: function gatherLocalChanges() {
-      var _toDelete;
+      var _toDelete = undefined;
       return this.list({}, { includeDeleted: true }).then(res => {
         return res.data.reduce((acc, record) => {
           if (record._status === "deleted" && !record.last_modified) {
@@ -3174,6 +3259,86 @@ var Collection = (function () {
         return this.pullChanges(result, options);
       });
     }
+
+    /**
+     * Load a list of records already synced with the remote server.
+     *
+     * The local records which are unsynced or whose timestamp is either missing
+     * or superior to those being loaded will be ignored.
+     *
+     * @param  {Array} records.
+     * @param  {Object} options Options.
+     * @return {Promise} with the effectively imported records.
+     */
+  }, {
+    key: "loadDump",
+    value: function loadDump(records) {
+      var reject = msg => Promise.reject(new Error(msg));
+      if (!Array.isArray(records)) {
+        return reject("Records is not an array.");
+      }
+
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = records[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var record = _step2.value;
+
+          if (!record.id || !this.idSchema.validate(record.id)) {
+            return reject("Record has invalid ID: " + JSON.stringify(record));
+          }
+
+          if (!record.last_modified) {
+            return reject("Record has no last_modified value: " + JSON.stringify(record));
+          }
+        }
+
+        // Fetch all existing records from local database,
+        // and skip those who are newer or not marked as synced.
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+            _iterator2["return"]();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+
+      return this.list({}, { includeDeleted: true }).then(res => {
+        return res.data.reduce((acc, record) => {
+          acc[record.id] = record;
+          return acc;
+        }, {});
+      }).then(existingById => {
+        return records.filter(record => {
+          var localRecord = existingById[record.id];
+          var shouldKeep =
+          // No local record with this id.
+          localRecord === undefined ||
+          // Or local record is synced
+          localRecord._status === "synced" &&
+          // And was synced from server
+          localRecord.last_modified !== undefined &&
+          // And is older than imported one.
+          record.last_modified > localRecord.last_modified;
+          return shouldKeep;
+        });
+      }).then(newRecords => {
+        return newRecords.map(record => {
+          return Object.assign({}, record, {
+            _status: "synced"
+          });
+        });
+      }).then(newRecords => this.db.loadDump(newRecords));
+    }
   }, {
     key: "name",
     get: function get() {
@@ -3296,9 +3461,21 @@ var HTTP = (function () {
     }
 
     /**
+     * Default options.
+     *
+     * @type {Object}
+     */
+  }, {
+    key: "defaultOptions",
+    get: function get() {
+      return { timeout: 5000, requestMode: "cors" };
+    }
+
+    /**
      * Constructor.
      *
      * Options:
+     * - {Number} timeout      The request timeout in ms (default: `5000`).
      * - {String} requestMode  The HTTP request mode (default: `"cors"`).
      *
      * @param {EventEmitter} events  The event handler.
@@ -3307,7 +3484,7 @@ var HTTP = (function () {
   }]);
 
   function HTTP(events) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? { requestMode: "cors" } : arguments[1];
+    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
     _classCallCheck(this, HTTP);
 
@@ -3321,12 +3498,20 @@ var HTTP = (function () {
     }
     this.events = events;
 
+    options = Object.assign({}, HTTP.defaultOptions, options);
+
     /**
      * The request mode.
      * @see  https://fetch.spec.whatwg.org/#requestmode
      * @type {String}
      */
     this.requestMode = options.requestMode;
+
+    /**
+     * The request timeout.
+     * @type {Number}
+     */
+    this.timeout = options.timeout;
   }
 
   /**
@@ -3350,11 +3535,32 @@ var HTTP = (function () {
     value: function request(url) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? { headers: {} } : arguments[1];
 
-      var response, status, statusText, headers;
+      var response = undefined,
+          status = undefined,
+          statusText = undefined,
+          headers = undefined,
+          _timeoutId = undefined,
+          hasTimedout = undefined;
       // Ensure default request headers are always set
       options.headers = Object.assign({}, HTTP.DEFAULT_REQUEST_HEADERS, options.headers);
       options.mode = this.requestMode;
-      return fetch(url, options).then(res => {
+      return new Promise((resolve, reject) => {
+        _timeoutId = setTimeout(() => {
+          hasTimedout = true;
+          reject(new Error("Request timeout."));
+        }, this.timeout);
+        fetch(url, options).then(res => {
+          if (!hasTimedout) {
+            clearTimeout(_timeoutId);
+            resolve(res);
+          }
+        })["catch"](err => {
+          if (!hasTimedout) {
+            clearTimeout(_timeoutId);
+            reject(err);
+          }
+        });
+      }).then(res => {
         response = res;
         headers = res.headers;
         status = res.status;
@@ -3401,7 +3607,7 @@ var HTTP = (function () {
       if (!alertHeader) {
         return;
       }
-      var alert;
+      var alert = undefined;
       try {
         alert = JSON.parse(alertHeader);
       } catch (err) {
@@ -3414,7 +3620,7 @@ var HTTP = (function () {
   }, {
     key: "_checkForBackoffHeader",
     value: function _checkForBackoffHeader(status, headers) {
-      var backoffMs;
+      var backoffMs = undefined;
       var backoffSeconds = parseInt(headers.get("Backoff"), 10);
       if (backoffSeconds > 0) {
         backoffMs = new Date().getTime() + backoffSeconds * 1000;
@@ -3444,12 +3650,12 @@ exports.sortObjects = sortObjects;
 exports.filterObjects = filterObjects;
 exports.reduceRecords = reduceRecords;
 exports.partition = partition;
-exports.isUUID4 = isUUID4;
+exports.isUUID = isUUID;
 exports.waterfall = waterfall;
 
 var _assert = require("assert");
 
-var RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+var RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Deeply checks if two structures are equals.
@@ -3577,13 +3783,13 @@ function partition(array, n) {
 }
 
 /**
- * Checks if a string is an UUID, according to RFC4122.
+ * Checks if a string is an UUID.
  *
  * @param  {String} uuid The uuid to validate.
  * @return {Boolean}
  */
 
-function isUUID4(uuid) {
+function isUUID(uuid) {
   return RE_UUID.test(uuid);
 }
 

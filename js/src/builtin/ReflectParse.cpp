@@ -2040,9 +2040,6 @@ ASTSerializer::declaration(ParseNode* pn, MutableHandleValue dst)
       case PNK_FUNCTION:
         return function(pn, AST_FUNC_DECL, dst);
 
-      case PNK_ANNEXB_FUNCTION:
-        return function(pn->pn_left, AST_FUNC_DECL, dst);
-
       case PNK_VAR:
         return variableDeclaration(pn, false, dst);
 
@@ -2413,9 +2410,6 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
       case PNK_FUNCTION:
       case PNK_VAR:
         return declaration(pn, dst);
-
-      case PNK_ANNEXB_FUNCTION:
-        return declaration(pn->pn_left, dst);
 
       case PNK_LETBLOCK:
         return letBlock(pn, dst);
