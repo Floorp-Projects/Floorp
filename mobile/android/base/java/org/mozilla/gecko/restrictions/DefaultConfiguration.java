@@ -12,10 +12,6 @@ package org.mozilla.gecko.restrictions;
 public class DefaultConfiguration implements RestrictionConfiguration {
     @Override
     public boolean isAllowed(Restrictable restrictable) {
-        if (restrictable == Restrictable.BLOCK_LIST) {
-            return false;
-        }
-
         return true;
     }
 

@@ -538,12 +538,6 @@ var BrowserApp = {
       Services.prefs.setBoolPref("xpinstall.enabled", true);
     }
 
-    if (ParentalControls.parentalControlsEnabled) {
-        let isBlockListEnabled = ParentalControls.isAllowed(ParentalControls.BLOCK_LIST);
-        Services.prefs.setBoolPref("browser.safebrowsing.forbiddenURIs.enabled", isBlockListEnabled);
-        Services.prefs.setBoolPref("browser.safebrowsing.allowOverride", !isBlockListEnabled);
-    }
-
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
     if (sysInfo.get("version") < 16) {
       let defaults = Services.prefs.getDefaultBranch(null);
