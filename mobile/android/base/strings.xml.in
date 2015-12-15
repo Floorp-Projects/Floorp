@@ -581,8 +581,6 @@
   <string name="restrictable_feature_camera_microphone_description">&restrictable_feature_camera_microphone_description;</string>
   <string name="restrictable_feature_data_choices">&restrictable_feature_data_choices;</string>
   <string name="restrictable_feature_data_choices_description">&restrictable_feature_data_choices_description;</string>
-  <string name="restrictable_feature_block_list">&restrictable_feature_block_list;</string>
-  <string name="restrictable_feature_block_list_description">&restrictable_feature_block_list_description;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
