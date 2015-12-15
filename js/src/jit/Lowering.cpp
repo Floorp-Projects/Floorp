@@ -3362,16 +3362,6 @@ LIRGenerator::visitBindNameCache(MBindNameCache* ins)
 }
 
 void
-LIRGenerator::visitCallBindVar(MCallBindVar* ins)
-{
-    MOZ_ASSERT(ins->scopeChain()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->type() == MIRType_Object);
-
-    LCallBindVar* lir = new(alloc()) LCallBindVar(useRegister(ins->scopeChain()));
-    define(lir, ins);
-}
-
-void
 LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins)
 {
     LGuardObjectIdentity* guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->obj()),

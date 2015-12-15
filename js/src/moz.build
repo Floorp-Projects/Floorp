@@ -61,9 +61,11 @@ TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 CONFIGURE_SUBST_FILES += [
     'devtools/rootAnalysis/Makefile',
-    'js-confdefs.h',
     'js-config',
     'js.pc',
+]
+CONFIGURE_DEFINE_FILES += [
+    'js-confdefs.h',
 ]
 
 if not CONFIG['JS_STANDALONE']:

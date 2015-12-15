@@ -390,13 +390,6 @@ public:
                                  bool aCanWordWrap,
                                  gfxBreakPriority *aBreakPriority);
 
-    /**
-     * Update the reference context.
-     * XXX this is a hack. New text frame does not call this. Use only
-     * temporarily for old text frame.
-     */
-    void SetContext(gfxContext *aContext) {}
-
     // Utility getters
 
     void *GetUserData() const { return mUserData; }

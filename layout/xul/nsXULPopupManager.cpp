@@ -885,7 +885,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
 
   // use a weak frame as the popup will set an open attribute if it is a menu
   nsWeakFrame weakFrame(aPopupFrame);
-  aPopupFrame->ShowPopup(aIsContextMenu, aSelectFirstItem);
+  aPopupFrame->ShowPopup(aIsContextMenu);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   // popups normally hide when an outside click occurs. Panels may use
@@ -1196,8 +1196,7 @@ nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
 }
 
 void
-nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
-                                    bool aDeselectMenu)
+nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames)
 {
   // Create a weak frame list. This is done in a separate array with the
   // right capacity predetermined, otherwise the array would get resized and
@@ -1271,7 +1270,7 @@ nsXULPopupManager::HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide)
     item = parent;
   }
 
-  HidePopupsInList(popupsToHide, true);
+  HidePopupsInList(popupsToHide);
 }
 
 void
@@ -1315,7 +1314,7 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
 
     // Now hide the popups. If the closemenu mode is auto, deselect the menu,
     // otherwise only one popup is closing, so keep the parent menu selected.
-    HidePopupsInList(popupsToHide, cmm == CloseMenuMode_Auto);
+    HidePopupsInList(popupsToHide);
   }
 
   aEvent->SetCloseMenuMode(cmm);
@@ -1792,7 +1791,7 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
     item = item->GetParent();
   }
 
-  HidePopupsInList(popupsToHide, false);
+  HidePopupsInList(popupsToHide);
 }
 
 bool

@@ -1778,7 +1778,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
         const bool respecifyTexture = true;
         const uint8_t zOffset = 0;
-        if (!ZeroTextureData(mContext, funcName, respecifyTexture, target, level,
+        if (!ZeroTextureData(mContext, funcName, respecifyTexture, mGLName, target, level,
                              dstUsage, 0, 0, zOffset, width, height, depth))
         {
             mContext->ErrorOutOfMemory("%s: Failed to zero texture data.", funcName);
@@ -1788,7 +1788,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
         if (!rwWidth || !rwHeight) {
             // There aren't any, so we're 'done'.
-            mContext->DummyFramebufferOperation(funcName);
+            mContext->DummyReadFramebufferOperation(funcName);
             return;
         }
 
@@ -1879,7 +1879,7 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
 
     if (!rwWidth || !rwHeight) {
         // There aren't any, so we're 'done'.
-        mContext->DummyFramebufferOperation(funcName);
+        mContext->DummyReadFramebufferOperation(funcName);
         return;
     }
 

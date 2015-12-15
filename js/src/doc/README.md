@@ -155,6 +155,6 @@ invoke the following commands:
 This ought to be integrated with mach
 -------------------------------------
 
-Indeed. It should somehow be unified with 'mach build-docs', which seems to
+Indeed. It should somehow be unified with 'mach doc', which seems to
 format in-tree docs of a different kind, and use a different markup
 language (ReStructuredText) and a different formatter (Sphinx).

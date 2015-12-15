@@ -3089,6 +3089,66 @@ TEST_F(APZOverscrollHandoffTester, ScrollgrabFlingAcceleration2) {
   TestFlingAcceleration();
 }
 
+TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
+  SCOPED_GFX_PREF(APZAllowImmediateHandoff, bool, false);
+
+  CreateOverscrollHandoffLayerTree1();
+
+  RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(root);
+  RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+
+  // Pan on the child, enough to scroll it to its end and have scroll
+  // left to hand off. Since immediate handoff is disallowed, we expect
+  // the leftover scroll not to be handed off.
+  Pan(childApzc, mcc, 60, 5);
+
+  // Verify that the parent has not scrolled.
+  EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(0, parentApzc->GetFrameMetrics().GetScrollOffset().y);
+
+  // Pan again on the child. This time, since the child was scrolled to
+  // its end when the gesture began, we expect the scroll to be handed off.
+  Pan(childApzc, mcc, 60, 50);
+
+  // Verify that the parent scrolled.
+  EXPECT_EQ(10, parentApzc->GetFrameMetrics().GetScrollOffset().y);
+}
+
+TEST_F(APZOverscrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
+  SCOPED_GFX_PREF(APZAllowImmediateHandoff, bool, false);
+
+  CreateOverscrollHandoffLayerTree1();
+
+  RefPtr<TestAsyncPanZoomController> parentApzc = ApzcOf(root);
+  RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+
+  // Pan on the child, enough to get very close to the end, so that the
+  // subsequent fling reaches the end and has leftover velocity to hand off.
+  Pan(childApzc, mcc, 60, 12);
+
+  // Allow the fling to run its course.
+  childApzc->AdvanceAnimationsUntilEnd();
+  parentApzc->AdvanceAnimationsUntilEnd();
+
+  // Verify that the parent has not scrolled.
+  // The first comparison needs to be an ASSERT_NEAR because the fling
+  // computations are such that the final scroll position can be within
+  // COORDINATE_EPSILON of the end rather than right at the end.
+  ASSERT_NEAR(50, childApzc->GetFrameMetrics().GetScrollOffset().y, COORDINATE_EPSILON);
+  EXPECT_EQ(0, parentApzc->GetFrameMetrics().GetScrollOffset().y);
+
+  // Pan again on the child. This time, since the child was scrolled to
+  // its end when the gesture began, we expect the scroll to be handed off.
+  Pan(childApzc, mcc, 60, 50);
+
+  // Allow the fling to run its course. The fling should also be handed off.
+  childApzc->AdvanceAnimationsUntilEnd();
+  parentApzc->AdvanceAnimationsUntilEnd();
+
+  // Verify that the parent scrolled from the fling.
+  EXPECT_GT(parentApzc->GetFrameMetrics().GetScrollOffset().y, 10);
+}
+
 class APZEventRegionsTester : public APZCTreeManagerTester {
 protected:
   UniquePtr<ScopedLayerTreeRegistration> registration;

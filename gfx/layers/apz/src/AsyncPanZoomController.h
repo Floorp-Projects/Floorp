@@ -824,10 +824,11 @@ private:
   void CancelAnimationAndGestureState();
 
   RefPtr<InputQueue> mInputQueue;
-  TouchBlockState* CurrentTouchBlock();
-  bool HasReadyTouchBlock();
+  CancelableBlockState* CurrentInputBlock() const;
+  TouchBlockState* CurrentTouchBlock() const;
+  bool HasReadyTouchBlock() const;
 
-  PanGestureBlockState* CurrentPanGestureBlock();
+  PanGestureBlockState* CurrentPanGestureBlock() const;
 
 private:
   /* ===================================================================
@@ -837,18 +838,17 @@ private:
    */
 public:
   /**
-   * Attempt a fling with the given velocity. If we are not pannable, the fling
-   * is handed off to the next APZC in the handoff chain via
-   * mTreeManager->DispatchFling(). Returns true iff. the entire velocity of
-   * the fling was consumed by this APZC. aVelocity is modified to contain any
+   * Attempt a fling with the velocity specified in |aHandoffState|.
+   * If we are not pannable, the fling is handed off to the next APZC in
+   * the handoff chain via mTreeManager->DispatchFling().
+   * Returns true iff. the entire velocity of the fling was consumed by
+   * this APZC. |aHandoffState.mVelocity| is modified to contain any
    * unused, residual velocity.
-   * |aHandoff| should be true iff. the fling was handed off from a previous
-   *            APZC, and determines whether acceleration is applied to the
-   *            fling.
+   * |aHandoffState.mIsHandoff| should be true iff. the fling was handed off
+   * from a previous APZC, and determines whether acceleration is applied
+   * to the fling.
    */
-  bool AttemptFling(ParentLayerPoint& aVelocity,
-                    const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                    bool aHandoff);
+  bool AttemptFling(FlingHandoffState& aHandoffState);
 
 private:
   friend class FlingAnimation;
@@ -867,14 +867,13 @@ private:
   // later in the handoff chain, or if there are no takers, continuing the
   // fling and entering an overscrolled state.
   void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                             const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
-  // Helper function used by TakeOverFling() and HandleFlingOverscroll().
-  void AcceptFling(ParentLayerPoint& aVelocity,
-                   const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                   bool aHandoff);
+  // Helper function used by AttemptFling().
+  void AcceptFling(FlingHandoffState& aHandoffState);
 
   // Start an overscroll animation with the given initial velocity.
   void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
