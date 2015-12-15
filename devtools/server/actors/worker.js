@@ -11,6 +11,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIWorkerDebuggerManager"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this, "swm",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
+
 function matchWorkerDebugger(dbg, options) {
   if ("type" in options && dbg.type !== options.type) {
     return false;
@@ -54,6 +60,14 @@ WorkerActor.prototype = {
     }
 
     if (!this._isAttached) {
+      // Automatically disable their internal timeout that shut them down
+      // Should be refactored by having actors specific to service workers
+      if (this._dbg.type == Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+        let worker = this._getServiceWorkerInfo();
+        if (worker) {
+          worker.attachDebugger();
+        }
+      }
       this._dbg.addListener(this);
       this._isAttached = true;
     }
@@ -115,11 +129,30 @@ WorkerActor.prototype = {
     reportError("ERROR:" + filename + ":" + lineno + ":" + message + "\n");
   },
 
+  _getServiceWorkerInfo: function () {
+    let info = swm.getRegistrationByPrincipal(this._dbg.principal, this._dbg.url);
+    return info.getWorkerByID(this._dbg.serviceWorkerID);
+  },
+
   _detach: function () {
     if (this._threadActor !== null) {
       this._transport.close();
       this._transport = null;
       this._threadActor = null;
+    }
+
+    // If the worker is already destroyed, nsIWorkerDebugger.type throws
+    // (_dbg.closed appears to be false when it throws)
+    let type;
+    try {
+      type = this._dbg.type;
+    } catch(e) {}
+
+    if (type == Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      let worker = this._getServiceWorkerInfo();
+      if (worker) {
+        worker.detachDebugger();
+      }
     }
 
     this._dbg.removeListener(this);

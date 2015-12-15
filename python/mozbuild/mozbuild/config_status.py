@@ -32,10 +32,11 @@ ANDROID_IDE_ADVERTISEMENT = '''
 =============
 ADVERTISEMENT
 
-You are building Firefox for Android. After your build completes, you
-should run `mach gradle-install` to prepare Gradle and IntelliJ/Android Studio
-integration. Then import the Gradle project at $OBJDIR/mobile/android/gradle
-into the IDE of your choice.
+You are building Firefox for Android. After your build completes, you can open
+the top source directory in IntelliJ or Android Studio directly and build using
+Gradle.  See the documentation at
+
+https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build
 
 PLEASE BE AWARE THAT GRADLE AND INTELLIJ/ANDROID STUDIO SUPPORT IS EXPERIMENTAL.
 You should verify any changes using |mach build|.
