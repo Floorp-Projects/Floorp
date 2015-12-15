@@ -42,7 +42,7 @@ interface nsIServiceWorkerRegistrationInfoListener : nsISupports
   void onChange();
 };
 
-[scriptable, builtinclass, uuid(72faba24-0a1b-4284-bad3-d44c044d6d95)]
+[scriptable, builtinclass, uuid(ddbc1fd4-2f2e-4fca-a395-6e010bbedfe3)]
 interface nsIServiceWorkerRegistrationInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
@@ -53,6 +53,12 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   readonly attribute nsIServiceWorkerInfo installingWorker;
   readonly attribute nsIServiceWorkerInfo waitingWorker;
   readonly attribute nsIServiceWorkerInfo activeWorker;
+
+  // Allows to get the related nsIServiceWorkerInfo for a given
+  // nsIWorkerDebugger. Over time we shouldn't need this anymore,
+  // and instead always control then nsIWorkerDebugger from
+  // nsIServiceWorkerInfo and not the other way around.
+  nsIServiceWorkerInfo getWorkerByID(in unsigned long long aID);
 
   void addListener(in nsIServiceWorkerRegistrationInfoListener listener);
 
@@ -67,7 +73,7 @@ interface nsIServiceWorkerManagerListener : nsISupports
   void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
 };
 
-[scriptable, builtinclass, uuid(a03f2b64-7aaf-423a-97b0-e1f733cce0f6)]
+[scriptable, builtinclass, uuid(12381ddf-9b51-4c0a-9123-9e7754393a5a)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -99,6 +105,9 @@ interface nsIServiceWorkerManager : nsISupports
 
   // Remove ready pending Promise
   void removeReadyPromise(in nsIDOMWindow aWindow);
+
+  nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
+                                                              in DOMString aScope);
 
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker
