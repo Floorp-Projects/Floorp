@@ -68,7 +68,12 @@ public class HealthReportUploadService extends BackgroundService {
       Logger.warn(LOG_TAG, "Got intent without uploadEnabled. Ignoring.");
       return;
     }
-    boolean uploadEnabled = intent.getBooleanExtra("uploadEnabled", false);
+
+    // We disabled Health Report uploads in Bug 1230206, because the service is being decommissioned.
+    // We chose this specific place to turn uploads off because we wish to preserve deletions in the
+    // interim, and this is the tested code path for when a user turns off upload, but still expects
+    // deletions to work.
+    boolean uploadEnabled = false;
 
     // Don't do anything if the device can't talk to the server.
     if (!backgroundDataIsEnabled()) {

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1223743 - CSP: Check baseChannel for CSP when loading multipart channel</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We apply a CSP to a multipart channel and then try to load an image
+ * within a segment making sure the image is blocked correctly by CSP.
+ */
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  is(event.data, "img-blocked", "image should be blocked");
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+// start the test
+document.getElementById("testframe").src = "file_multipart_testserver.sjs?doc";
+
+</script>
+</body>
+</html>

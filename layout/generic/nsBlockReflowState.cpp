@@ -998,7 +998,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     // shrunk.
     nscoord blockStart = std::min(region.BStart(wm), oldRegion.BStart(wm));
     nscoord blockEnd = std::max(region.BEnd(wm), oldRegion.BEnd(wm));
-    mFloatManager->IncludeInDamage(wm, blockStart, blockEnd);
+    mFloatManager->IncludeInDamage(blockStart, blockEnd);
   }
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {

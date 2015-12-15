@@ -10758,39 +10758,6 @@ class MBindNameCache
     }
 };
 
-class MCallBindVar
-  : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
-{
-    explicit MCallBindVar(MDefinition* scopeChain)
-      : MUnaryInstruction(scopeChain)
-    {
-        setResultType(MIRType_Object);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(CallBindVar)
-
-    static MCallBindVar* New(TempAllocator& alloc, MDefinition* scopeChain) {
-        return new(alloc) MCallBindVar(scopeChain);
-    }
-
-    MDefinition* scopeChain() const {
-        return getOperand(0);
-    }
-
-    bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isCallBindVar())
-            return false;
-        return congruentIfOperandsEqual(ins);
-    }
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
-};
-
 // Guard on an object's shape.
 class MGuardShape
   : public MUnaryInstruction,

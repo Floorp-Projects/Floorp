@@ -56,7 +56,7 @@ function test_collection_operations() {
   });
 
   // test removing records
-  add_task(function* test_kinto_create_new_get_existing() {
+  add_task(function* test_kinto_can_remove_some_records() {
     let adapter = do_get_kinto_adapter();
     yield adapter.open();
     // create a second record
@@ -138,6 +138,73 @@ function test_collection_operations() {
     // and should have saved correctly
     lastModified = yield adapter.getLastModified();
     do_check_eq(lastModified, intendedValue);
+    yield adapter.close();
+  });
+
+  // test loadDump(records)
+  add_task(function* test_kinto_import_records() {
+    let adapter = do_get_kinto_adapter();
+    yield adapter.open();
+    let record1 = {id: 1, foo: "bar"};
+    let record2 = {id: 2, foo: "baz"};
+    let impactedRecords = yield adapter.loadDump([
+      record1, record2
+    ]);
+    do_check_eq(impactedRecords.length, 2);
+    let newRecord1 = yield adapter.get("1");
+    // ensure the record is the same as when it was added
+    deepEqual(record1, newRecord1);
+    let newRecord2 = yield adapter.get("2");
+    // ensure the record is the same as when it was added
+    deepEqual(record2, newRecord2);
+    yield adapter.close();
+  });
+
+  add_task(function* test_kinto_import_records_should_override_existing() {
+    let adapter = do_get_kinto_adapter();
+    yield adapter.open();
+    yield adapter.clear();
+    records = yield adapter.list();
+    do_check_eq(records.length, 0);
+    let impactedRecords = yield adapter.loadDump([
+      {id: 1, foo: "bar"},
+      {id: 2, foo: "baz"},
+    ]);
+    do_check_eq(impactedRecords.length, 2);
+    yield adapter.loadDump([
+      {id: 1, foo: "baz"},
+      {id: 3, foo: "bab"},
+    ]);
+    records = yield adapter.list();
+    do_check_eq(records.length, 3);
+    let newRecord1 = yield adapter.get("1");
+    deepEqual(newRecord1.foo, "baz");
+    yield adapter.close();
+  });
+
+  add_task(function* test_import_updates_lastModified() {
+    let adapter = do_get_kinto_adapter();
+    yield adapter.open();
+    yield adapter.loadDump([
+      {id: 1, foo: "bar", last_modified: 1457896541},
+      {id: 2, foo: "baz", last_modified: 1458796542},
+    ]);
+    let lastModified = yield adapter.getLastModified();
+    do_check_eq(lastModified, 1458796542);
+    yield adapter.close();
+  });
+
+  add_task(function* test_import_preserves_older_lastModified() {
+    let adapter = do_get_kinto_adapter();
+    yield adapter.open();
+    yield adapter.saveLastModified(1458796543);
+
+    yield adapter.loadDump([
+      {id: 1, foo: "bar", last_modified: 1457896541},
+      {id: 2, foo: "baz", last_modified: 1458796542},
+    ]);
+    let lastModified = yield adapter.getLastModified();
+    do_check_eq(lastModified, 1458796543);
     yield adapter.close();
   });
 }

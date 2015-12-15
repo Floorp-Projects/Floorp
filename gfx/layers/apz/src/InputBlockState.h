@@ -48,6 +48,9 @@ public:
 
   bool IsTargetConfirmed() const;
 
+  void SetScrolledApzc(AsyncPanZoomController* aApzc);
+  AsyncPanZoomController* GetScrolledApzc() const;
+
 protected:
   virtual void UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc);
 
@@ -55,6 +58,13 @@ private:
   RefPtr<AsyncPanZoomController> mTargetApzc;
   bool mTargetConfirmed;
   const uint64_t mBlockId;
+
+  // The APZC that was actually scrolled by events in this input block.
+  // This is used in configurations where a single input block is only
+  // allowed to scroll a single APZC (configurations where gfxPrefs::
+  // APZAllowImmediateHandoff() is false).
+  // Set the first time an input event in this block scrolls an APZC.
+  RefPtr<AsyncPanZoomController> mScrolledApzc;
 protected:
   RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
 

@@ -37,6 +37,7 @@
 #include "nsIObserverService.h"
 #include "nsProxyRelease.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDocShell.h"
 #include "nsPerformance.h"
 #include "nsINetworkInterceptController.h"
 #include "mozIThirdPartyUtil.h"
@@ -253,7 +254,7 @@ NS_IMETHODIMP
 HttpBaseChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should only be called on the main thread.");
-  
+
   if (!CanSetLoadGroup(aLoadGroup)) {
     return NS_ERROR_FAILURE;
   }
@@ -292,6 +293,47 @@ HttpBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 
   mLoadFlags = aLoadFlags;
   mForceMainDocumentChannel = (aLoadFlags & LOAD_DOCUMENT_URI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetDocshellUserAgentOverride()
+{
+  // This sets the docshell specific user agent override, it will be overwritten
+  // by UserAgentOverrides.jsm if site-specific user agent overrides are set.
+  nsresult rv;
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(this, loadContext);
+  if (!loadContext) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
+  if (!domWindow) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> pDomWindow = do_QueryInterface(domWindow);
+  if (!pDomWindow) {
+    return NS_OK;
+  }
+
+  nsIDocShell* docshell = pDomWindow->GetDocShell();
+  if (!docshell) {
+    return NS_OK;
+  }
+
+  nsString customUserAgent;
+  docshell->GetCustomUserAgent(customUserAgent);
+  if (customUserAgent.IsEmpty()) {
+    return NS_OK;
+  }
+
+  NS_ConvertUTF16toUTF8 utf8CustomUserAgent(customUserAgent);
+  rv = SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), utf8CustomUserAgent, false);
+  if (NS_FAILED(rv)) return rv;
+
   return NS_OK;
 }
 
@@ -369,7 +411,7 @@ NS_IMETHODIMP
 HttpBaseChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should only be called on the main thread.");
-  
+
   if (!CanSetCallbacks(aCallbacks)) {
     return NS_ERROR_FAILURE;
   }
@@ -1379,7 +1421,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     if (eTLDService) {
       rv = eTLDService->GetBaseDomain(mURI, extraDomains, currentDomain);
       if (NS_FAILED(rv)) return rv;
-      rv = eTLDService->GetBaseDomain(clone, extraDomains, referrerDomain); 
+      rv = eTLDService->GetBaseDomain(clone, extraDomains, referrerDomain);
       if (NS_FAILED(rv)) return rv;
     }
 
@@ -2446,7 +2488,7 @@ void
 HttpBaseChannel::ReleaseListeners()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should only be called on the main thread.");
-  
+
   mListener = nullptr;
   mListenerContext = nullptr;
   mCallbacks = nullptr;
@@ -3113,4 +3155,3 @@ HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHe
 
 } // namespace net
 } // namespace mozilla
-

@@ -59,12 +59,12 @@ public:
   virtual void SetLayoutManager(nsBoxLayout* aLayout) override { mLayoutManager = aLayout; }
   virtual nsBoxLayout* GetLayoutManager() override { return mLayoutManager; }
 
-  virtual nsresult RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) override;
+  virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nscoord GetFlex() override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 #ifdef DEBUG_LAYOUT
   virtual nsresult SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;

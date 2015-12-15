@@ -164,9 +164,11 @@ WebGLTexture::MemoryUsage() const
     if (IsDeleted())
         return 0;
 
-    size_t result = 0;
-    MOZ_CRASH("todo");
-    return result;
+    size_t accum = 0;
+    for (const auto& cur : mImageInfoArr) {
+        accum += cur.MemoryUsage();
+    }
+    return accum;
 }
 
 void
@@ -588,8 +590,8 @@ WebGLTexture::InitializeImageData(const char* funcName, TexImageTarget target,
     const auto& height = imageInfo.mHeight;
     const auto& depth = imageInfo.mDepth;
 
-    if (!ZeroTextureData(mContext, funcName, respecifyTexture, target, level, usage, 0, 0,
-                         0, width, height, depth))
+    if (!ZeroTextureData(mContext, funcName, respecifyTexture, mGLName, target, level,
+                         usage, 0, 0, 0, width, height, depth))
     {
         return false;
     }

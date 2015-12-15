@@ -46,8 +46,8 @@ public:
    * Get the deferred tasks in |mDeferredTasks| and place them in |aTasks|. See
    * |mDeferredTasks| for more information.  Clears |mDeferredTasks|.
    */
-  void TakeDeferredTasks(Vector<Task*>& aTasks) {
-    mDeferredTasks.swap(aTasks);
+  Vector<Task*> TakeDeferredTasks() {
+    return Move(mDeferredTasks);
   }
 
   /**
