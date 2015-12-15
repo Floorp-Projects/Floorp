@@ -2363,7 +2363,6 @@ nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
             event.mOffset = uint32_t(aStart);
             event.mLength = uint32_t(aEnd - aStart);
             event.mExpandToClusterBoundary = false;
-            event.mReason = nsISelectionListener::IME_REASON;
             window.DispatchEvent(&event);
         }
 
@@ -2492,7 +2491,6 @@ nsWindow::Natives::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
         selEvent.mLength = std::max(aStart, aEnd) - selEvent.mOffset;
         selEvent.mReversed = aStart > aEnd;
         selEvent.mExpandToClusterBoundary = false;
-        selEvent.mReason = nsISelectionListener::IME_REASON;
 
         window.DispatchEvent(&selEvent);
         return;

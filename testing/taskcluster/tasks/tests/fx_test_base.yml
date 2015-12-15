@@ -2,6 +2,7 @@
 $inherits:
   from: 'tasks/test.yml'
 task:
+  workerType: desktop-test
   payload:
     image: '{{#docker_image}}desktop-test{{/docker_image}}'
     env:

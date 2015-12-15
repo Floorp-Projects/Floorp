@@ -62,8 +62,7 @@ public:
                            nsEventStatus* aEventStatus) override;
 
 protected:
-  virtual void MouseClicked(nsPresContext* aPresContext,
-                            mozilla::WidgetGUIEvent* aEvent) override;
+  virtual void MouseClicked(mozilla::WidgetGUIEvent* aEvent) override;
 
   void StartRepeat() {
     nsRepeatService::GetInstance()->Start(Notify, this);

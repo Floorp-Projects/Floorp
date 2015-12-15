@@ -162,7 +162,6 @@ namespace jit {
     _(GetPropertyPolymorphic)                                               \
     _(SetPropertyPolymorphic)                                               \
     _(BindNameCache)                                                        \
-    _(CallBindVar)                                                          \
     _(GuardShape)                                                           \
     _(GuardReceiverPolymorphic)                                             \
     _(GuardObjectGroup)                                                     \

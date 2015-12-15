@@ -35,8 +35,8 @@ class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
 
 class TestEnvironment(unittest.TestCase):
     def test_auto_substs(self):
-        '''Test the automatically set values of ACDEFINES, ALLDEFINES,
-        ALLSUBSTS and ALLEMPTYSUBSTS.
+        '''Test the automatically set values of ACDEFINES, ALLSUBSTS
+        and ALLEMPTYSUBSTS.
         '''
         env = ConfigEnvironment('.', '.',
                   defines = [ ('foo', 'bar'), ('baz', 'qux 42'),
@@ -45,16 +45,10 @@ class TestEnvironment(unittest.TestCase):
                   substs = [ ('FOO', 'bar'), ('FOOBAR', ''), ('ABC', 'def'),
                              ('bar', 'baz qux'), ('zzz', '"abc def"'),
                              ('qux', '') ])
-        # non_global_defines should be filtered out in ACDEFINES and
-        # ALLDEFINES.
+        # non_global_defines should be filtered out in ACDEFINES.
         # Original order of the defines need to be respected in ACDEFINES
         self.assertEqual(env.substs['ACDEFINES'], """-Dfoo=bar -Dbaz='qux 42' -Dabc='d'\\''e'\\''f'""")
-        # ALLDEFINES, on the other hand, needs to be sorted
-        self.assertEqual(env.substs['ALLDEFINES'], '''#define abc d'e'f
-#define baz qux 42
-#define foo bar''')
-        # Likewise for ALLSUBSTS, which also mustn't contain ALLDEFINES
-        # but contain ACDEFINES
+        # Likewise for ALLSUBSTS, which also must contain ACDEFINES
         self.assertEqual(env.substs['ALLSUBSTS'], '''ABC = def
 ACDEFINES = -Dfoo=bar -Dbaz='qux 42' -Dabc='d'\\''e'\\''f'
 FOO = bar

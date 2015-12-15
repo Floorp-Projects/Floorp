@@ -40,6 +40,9 @@ WebGLQuery::Delete()
 bool
 WebGLQuery::IsActive() const
 {
+    if (!HasEverBeenActive())
+        return false;
+
     WebGLRefPtr<WebGLQuery>& targetSlot = mContext->GetQuerySlotByTarget(mType);
 
     return targetSlot.get() == this;

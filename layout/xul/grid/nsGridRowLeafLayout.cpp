@@ -127,11 +127,10 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
         grid->GetMinRowHeight(aState, i, !isHorizontal);  // GetMinColumnWidth
       nscoord max = 
         grid->GetMaxRowHeight(aState, i, !isHorizontal);  // GetMaxColumnWidth
-      nscoord flex =
-        grid->GetRowFlex(aState, i, !isHorizontal);       // GetColumnFlex
+      nscoord flex = grid->GetRowFlex(i, !isHorizontal);  // GetColumnFlex
       nscoord left  = 0;
       nscoord right  = 0;
-      grid->GetRowOffsets(aState, i, left, right, !isHorizontal); // GetColumnOffsets
+      grid->GetRowOffsets(i, left, right, !isHorizontal); // GetColumnOffsets
       nsIFrame* box = column->GetBox();
       bool collapsed = false;
       nscoord topMargin = column->mTopMargin;
@@ -153,7 +152,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
       int32_t lastIndex = 0;
       nsGridRow* firstRow = nullptr;
       nsGridRow* lastRow = nullptr;
-      grid->GetFirstAndLastRow(aState, firstIndex, lastIndex, firstRow, lastRow, !isHorizontal);
+      grid->GetFirstAndLastRow(firstIndex, lastIndex, firstRow, lastRow, !isHorizontal);
 
       if (i == firstIndex || i == lastIndex) {
         nsMargin offset = GetTotalMargin(aBox, isHorizontal);

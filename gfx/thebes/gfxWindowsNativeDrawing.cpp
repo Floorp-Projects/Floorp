@@ -15,6 +15,9 @@
 #include "mozilla/gfx/Helpers.h"
 #include "gfx2DGlue.h"
 
+#include "cairo.h"
+#include "cairo-win32.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -44,12 +47,21 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_INIT) {
         RefPtr<gfxASurface> surf;
-        
-        if (mContext->GetCairo()) {
-          surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
+        DrawTarget* drawTarget = mContext->GetDrawTarget();
+        cairo_t* cairo = nullptr;
+        if (drawTarget->GetBackendType() == BackendType::CAIRO) {
+            cairo = static_cast<cairo_t*>
+                (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+            if (cairo) {
+                cairo_surface_t* s = cairo_get_target(cairo);
+                if (s) {
+                    mDeviceOffset = mContext->GetDeviceOffset();
+                    surf = gfxASurface::Wrap(s);
+                }
+            }
         }
 
-        if (surf && surf->CairoStatus())
+        if (surf && surf->CairoStatus() != 0)
             return nullptr;
 
         gfxMatrix m = mContext->CurrentMatrix();
@@ -73,7 +85,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
             // grab the DC. This can fail if there is a complex clipping path,
             // in which case we'll have to fall back.
             mWinSurface = static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()));
-            mDC = mWinSurface->GetDCWithClip(mContext);
+            mDC = cairo_win32_get_dc_with_clip(cairo);
 
             if (mDC) {
                 if (mTransformType == TRANSLATION_ONLY) {
@@ -150,8 +162,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         }
         GetViewportOrgEx(mDC, &mOrigViewportOrigin);
         SetViewportOrgEx(mDC,
-                         mOrigViewportOrigin.x + (int)mDeviceOffset.x,
-                         mOrigViewportOrigin.y + (int)mDeviceOffset.y,
+                         mOrigViewportOrigin.x - (int)mDeviceOffset.x,
+                         mOrigViewportOrigin.y - (int)mDeviceOffset.y,
                          nullptr);
 
         return mDC;

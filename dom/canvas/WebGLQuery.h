@@ -24,7 +24,7 @@ public:
 
     bool IsActive() const;
 
-    bool HasEverBeenActive() {
+    bool HasEverBeenActive() const {
         return mType != 0;
     }
 

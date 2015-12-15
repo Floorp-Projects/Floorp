@@ -7,8 +7,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementAudioChannelBinding.h"
 #include "mozilla/dom/DOMRequest.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -24,6 +22,16 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
+
+namespace {
+
+void
+AssertIsInMainProcess()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+}
+
+} // anonymous namespace
 
 namespace mozilla {
 namespace dom {
@@ -81,6 +89,7 @@ BrowserElementAudioChannel::BrowserElementAudioChannel(
   , mState(eStateUnknown)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -98,6 +107,7 @@ BrowserElementAudioChannel::BrowserElementAudioChannel(
 BrowserElementAudioChannel::~BrowserElementAudioChannel()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -163,6 +173,8 @@ AudioChannel
 BrowserElementAudioChannel::Name() const
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
+
   return mAudioChannel;
 }
 
@@ -349,6 +361,7 @@ already_AddRefed<dom::DOMRequest>
 BrowserElementAudioChannel::GetVolume(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   if (!mFrameWindow) {
     nsCOMPtr<nsIDOMDOMRequest> request;
@@ -374,6 +387,7 @@ already_AddRefed<dom::DOMRequest>
 BrowserElementAudioChannel::SetVolume(float aVolume, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   if (!mFrameWindow) {
     nsCOMPtr<nsIDOMDOMRequest> request;
@@ -406,6 +420,7 @@ already_AddRefed<dom::DOMRequest>
 BrowserElementAudioChannel::GetMuted(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   if (!mFrameWindow) {
     nsCOMPtr<nsIDOMDOMRequest> request;
@@ -431,6 +446,7 @@ already_AddRefed<dom::DOMRequest>
 BrowserElementAudioChannel::SetMuted(bool aMuted, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   if (!mFrameWindow) {
     nsCOMPtr<nsIDOMDOMRequest> request;
@@ -463,6 +479,7 @@ already_AddRefed<dom::DOMRequest>
 BrowserElementAudioChannel::IsActive(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  AssertIsInMainProcess();
 
   if (mState != eStateUnknown) {
     RefPtr<DOMRequest> domRequest = new DOMRequest(GetOwner());
@@ -576,29 +593,8 @@ BrowserElementAudioChannel::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  // This can be a nested iframe.
-  if (!wrapper) {
-    nsCOMPtr<nsITabParent> iTabParent = do_QueryInterface(aSubject);
-    if (!iTabParent) {
-      return NS_ERROR_FAILURE;
-    }
-
-    RefPtr<TabParent> tabParent = TabParent::GetFrom(iTabParent);
-    if (!tabParent) {
-      return NS_ERROR_FAILURE;
-    }
-
-    Element* element = tabParent->GetOwnerElement();
-    if (!element) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsPIDOMWindow> window = element->OwnerDoc()->GetWindow();
-    if (window == mFrameWindow) {
-      ProcessStateChanged(aData);
-    }
-
-    return NS_OK;
+  if (NS_WARN_IF(!wrapper)) {
+    return NS_ERROR_FAILURE;
   }
 
   uint64_t windowID;

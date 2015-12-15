@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1203668
+-->
+<head>
+  <title>Test for Bug 1203668</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1203668">Mozilla Bug 1203668</a>
+<p id="display"></p>
+<div id="content">
+  <select class="select" multiple>
+    <option value="foo" selected>foo</option>
+    <option value="bar" selected>bar</option>
+  </select>
+  <select class="select" multiple>
+    <option value="foo">foo</option>
+    <option value="bar" selected>bar</option>
+  </select>
+  <select class="select" multiple>
+    <option value="foo">foo</option>
+    <option value="bar">bar</option>
+  </select>
+  <select class="select" size=1>
+    <option value="foo">foo</option>
+    <option value="bar" selected>bar</option>
+  </select>
+  <select class="select" size=1>
+    <option value="foo">foo</option>
+    <option value="bar">bar</option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1203668 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var selects = document.querySelectorAll('.select');
+  for (i=0; i < selects.length; i++) {
+    var select = selects[i];
+    select.value = "bogus"
+    is(select.selectedIndex, -1, "no option is selected");
+    is(select.children[0].selected, false, "first option is not selected");
+    is(select.children[1].selected, false, "second option is not selected");
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTest);
+
+</script>
+</pre>
+</body>
+</html>

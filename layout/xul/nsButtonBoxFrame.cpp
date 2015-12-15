@@ -136,7 +136,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
       if (NS_VK_RETURN == keyEvent->keyCode) {
         nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
         if (buttonEl) {
-          MouseClicked(aPresContext, aEvent);
+          MouseClicked(aEvent);
           *aEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
@@ -160,7 +160,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
           EventStateManager* esm = aPresContext->EventStateManager();
           esm->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
           esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
-          MouseClicked(aPresContext, aEvent);
+          MouseClicked(aEvent);
         }
       }
       break;
@@ -169,7 +169,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseClick: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
       if (mouseEvent->IsLeftClickEvent()) {
-        MouseClicked(aPresContext, mouseEvent);
+        MouseClicked(mouseEvent);
       }
       break;
     }

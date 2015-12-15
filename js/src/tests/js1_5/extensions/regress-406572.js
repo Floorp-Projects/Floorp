@@ -22,14 +22,12 @@ if (typeof window != 'undefined')
     window = 1;
     reportCompare(windowString, String(window), "window should be readonly");
 
+    actual = ""; // We should reach this line, and throw an exception after it
+
     if (1)
       function window() { return 1; }
 
-    // We should reach this line without throwing. Annex B means the
-    // block-scoped function above gets an assignment to 'window' in the
-    // nearest 'var' environment, but since 'window' is read-only, the
-    // assignment silently fails.
-    actual = "";
+    actual = "FAIL: this line should never be reached";
 
     // The test harness might rely on window having its original value:
     // restore it.

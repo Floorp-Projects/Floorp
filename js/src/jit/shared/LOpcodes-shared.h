@@ -277,7 +277,6 @@
     _(GetPropertyPolymorphicV)      \
     _(GetPropertyPolymorphicT)      \
     _(BindNameCache)                \
-    _(CallBindVar)                  \
     _(CallGetProperty)              \
     _(GetNameCache)                 \
     _(CallGetIntrinsicValue)        \
