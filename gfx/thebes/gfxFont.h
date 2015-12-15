@@ -612,6 +612,8 @@ protected:
 
 class gfxFontShaper {
 public:
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
     explicit gfxFontShaper(gfxFont *aFont)
         : mFont(aFont)
     {
@@ -644,6 +646,10 @@ public:
                       void* aHandleFeatureData);
 
 protected:
+    // Work out whether cairo will snap inter-glyph spacing to pixels.
+    static void GetRoundOffsetsToPixels(DrawTarget* aDrawTarget,
+                                        bool* aRoundX, bool* aRoundY);
+
     // the font this shaper is working with. The font owns a nsAutoPtr reference
     // to this object, and will destroy it before it dies. Thus, mFont will always
     // be valid.
