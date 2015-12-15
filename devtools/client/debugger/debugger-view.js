@@ -46,6 +46,13 @@ var constants = require('./content/constants');
  * Object defining the debugger view components.
  */
 var DebuggerView = {
+
+  /**
+   * This is attached so tests can change it without needing to load an
+   * actual large file in automation
+   */
+  LARGE_FILE_SIZE: 1048576, // 1 MB in bytes
+
   /**
    * Initializes the debugger view.
    *
