@@ -328,8 +328,8 @@ GMPDecryptsAndDecodesH264(mozIGeckoMediaPluginService* aGMPS,
                         NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)));
   return HaveGMPFor(aGMPS,
                     NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                    NS_LITERAL_CSTRING("aac"));
+                    NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                    NS_LITERAL_CSTRING("h264"));
 }
 
 // If this keysystem's CDM explicitly says it doesn't support decoding,
