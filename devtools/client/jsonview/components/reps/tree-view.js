@@ -153,6 +153,7 @@ var TreeNode = React.createFactory(React.createClass({
     return (
       DOM.div({className: classNames.join(" "), onClick: this.onClick},
         DOM.span({className: "memberLabelCell"},
+          DOM.span({className: "memberIcon"}),
           DOM.span({className: "memberLabel " + member.type + "Label"},
             member.name)
         ),
