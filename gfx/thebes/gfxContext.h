@@ -86,10 +86,10 @@ public:
     }
 
     /**
-     * Return the raw cairo_t object.
-     * XXX this should go away at some point.
+     * Return the reference cairo_t object from aDT.
+     * XXX this should be moved into gfxFont at some point.
      */
-    cairo_t *GetCairo();
+    static cairo_t* RefCairo(mozilla::gfx::DrawTarget* aDT);
 
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 
