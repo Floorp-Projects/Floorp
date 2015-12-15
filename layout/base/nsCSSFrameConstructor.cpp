@@ -3155,28 +3155,42 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                false, scrollFrame);
   }
 
-  nsContainerFrame* blockFrame =
-    NS_NewBlockFrame(mPresShell, fieldsetContentStyle,
-                     NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
+  // Create the inner ::-moz-fieldset-content frame.
+  nsContainerFrame* contentFrame;
+  switch (fieldsetContentDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_FLEX:
+      contentFrame = NS_NewFlexContainerFrame(mPresShell, fieldsetContentStyle);
+      break;
+    case NS_STYLE_DISPLAY_GRID:
+      contentFrame = NS_NewGridContainerFrame(mPresShell, fieldsetContentStyle);
+      break;
+    default:
+      MOZ_ASSERT(fieldsetContentDisplay->mDisplay == NS_STYLE_DISPLAY_BLOCK,
+                 "bug in nsRuleNode::ComputeDisplayData?");
+      contentFrame = NS_NewBlockFrame(mPresShell, fieldsetContentStyle,
+                                      NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
+      break;
+  }
+  
   InitAndRestoreFrame(aState, content,
-    scrollFrame ? scrollFrame : fieldsetFrame, blockFrame);
-
+                      scrollFrame ? scrollFrame : fieldsetFrame,
+                      contentFrame);
   aState.AddChild(fieldsetFrame, aFrameItems, content, styleContext, aParentFrame);
 
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
 
-  blockFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  contentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   if (fieldsetFrame->IsAbsPosContaininingBlock()) {
-    aState.PushAbsoluteContainingBlock(blockFrame, fieldsetFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(contentFrame, fieldsetFrame, absoluteSaveState);
   }
 
-  ProcessChildren(aState, content, styleContext, blockFrame, true,
+  ProcessChildren(aState, content, styleContext, contentFrame, true,
                   childItems, true, aItem.mPendingBinding);
 
   nsFrameItems fieldsetKids;
-  fieldsetKids.AddChild(scrollFrame ? scrollFrame : blockFrame);
+  fieldsetKids.AddChild(scrollFrame ? scrollFrame : contentFrame);
 
   for (nsFrameList::Enumerator e(childItems); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
@@ -3192,18 +3206,18 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       fieldsetKids.InsertFrame(fieldsetFrame, nullptr, child);
       if (scrollFrame) {
         StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(
-            child, blockFrame);
+            child, contentFrame);
       }
       break;
     }
   }
 
   if (isScrollable) {
-    FinishBuildingScrollFrame(scrollFrame, blockFrame);
+    FinishBuildingScrollFrame(scrollFrame, contentFrame);
   }
 
   // Set the inner frame's initial child lists
-  blockFrame->SetInitialChildList(kPrincipalList, childItems);
+  contentFrame->SetInitialChildList(kPrincipalList, childItems);
 
   // Set the outer frame's initial child list
   fieldsetFrame->SetInitialChildList(kPrincipalList, fieldsetKids);
