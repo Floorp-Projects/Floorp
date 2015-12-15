@@ -51,7 +51,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 MediaKeySystemAccessManager::MediaKeySystemAccessManager(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
   , mAddedObservers(false)
-  , mTrialCreator(new GMPVideoDecoderTrialCreator())
 {
 }
 
