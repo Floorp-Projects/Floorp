@@ -3711,6 +3711,36 @@ WorkerDebugger::GetWindow(nsIDOMWindow** aResult)
 }
 
 NS_IMETHODIMP
+WorkerDebugger::GetPrincipal(nsIPrincipal** aResult)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aResult);
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIPrincipal> prin = mWorkerPrivate->GetPrincipal();
+  prin.forget(aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WorkerDebugger::GetServiceWorkerID(uint32_t* aResult)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aResult);
+
+  if (!mWorkerPrivate || !mWorkerPrivate->IsServiceWorker()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aResult = mWorkerPrivate->ServiceWorkerID();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
 {
   AssertIsOnMainThread();
