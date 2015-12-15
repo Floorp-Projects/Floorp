@@ -16,10 +16,16 @@ XPCOMUtils.defineLazyServiceGetter(
   'nsIToolkitProfileService'
 );
 
+const gManage = window.location.href.indexOf('?manage') != -1;
+
 const bundle = Services.strings.createBundle(
   'chrome://global/locale/aboutProfiles.properties');
 
 function refreshUI() {
+  if (gManage) {
+    document.getElementById('action-box').style.display = 'none';
+  }
+
   let parent = document.getElementById('profiles');
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
@@ -30,7 +36,7 @@ function refreshUI() {
     let profile = iter.getNext().QueryInterface(Ci.nsIToolkitProfile);
     display({ profile: profile,
               isDefault: profile == ProfileService.defaultProfile,
-              isCurrentProfile: profile == ProfileService.selectedProfile });
+              isCurrentProfile: !gManage && profile == ProfileService.selectedProfile });
   }
 
   let createButton = document.getElementById('create-button');
@@ -116,6 +122,15 @@ function display(profileData) {
     div.appendChild(defaultButton);
   }
 
+  if (gManage) {
+    let openButton = document.createElement('button');
+    openButton.appendChild(document.createTextNode(bundle.GetStringFromName('open')));
+    openButton.onclick = function() {
+      openProfile(profileData.profile);
+    };
+    div.appendChild(openButton);
+  }
+
   let sep = document.createElement('hr');
   div.appendChild(sep);
 }
@@ -193,6 +208,13 @@ function defaultProfile(profile) {
   ProfileService.defaultProfile = profile;
   ProfileService.flush();
   refreshUI();
+}
+
+function openProfile(profile) {
+  ProfileService.selectedProfile = profile;
+  ProfileService.flush();
+
+  dispatchEvent(new CustomEvent("startbrowser"));
 }
 
 function restart(safeMode) {
