@@ -443,9 +443,11 @@ FilterView.prototype = {
       this._searchbox.value = aOperator + this.DebuggerView.editor.getSelection();
       return;
     }
-    if (SEARCH_AUTOFILL.indexOf(aOperator) != -1) {
+
+    let content = this.DebuggerView.editor.getText();
+    if (content.length < this.DebuggerView.LARGE_FILE_SIZE &&
+        SEARCH_AUTOFILL.indexOf(aOperator) != -1) {
       let cursor = this.DebuggerView.editor.getCursor();
-      let content = this.DebuggerView.editor.getText();
       let location = this.DebuggerView.Sources.selectedItem.attachment.source.url;
       let source = this.Parser.get(content, location);
       let identifier = source.getIdentifierAt({ line: cursor.line+1, column: cursor.ch });
