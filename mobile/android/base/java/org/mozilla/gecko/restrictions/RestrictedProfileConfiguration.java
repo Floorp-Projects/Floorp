@@ -72,6 +72,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             return !cachedUserRestrictions.getBoolean(restrictable.name);
         }
 
+        if (!cachedAppRestrictions.containsKey(restrictable.name) && !configuration.containsKey(restrictable)) {
+            // Always allow features that are not in the configuration
+            return true;
+        }
+
         return cachedAppRestrictions.getBoolean(restrictable.name, configuration.get(restrictable));
     }
 
