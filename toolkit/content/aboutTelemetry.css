@@ -249,3 +249,9 @@ body[dir="rtl"] .copy-node {
   background-color:#d8d8d8;
   padding: 5px 10px;
 }
+
+/* addon subsection style */
+.addon-caption {
+  font-size: larger;
+  margin: 5px 0;
+}
