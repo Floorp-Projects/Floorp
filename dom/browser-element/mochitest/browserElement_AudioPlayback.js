@@ -68,9 +68,4 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
-addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [["b2g.system_manifest_url", "http://mochi.test:8888/manifest.webapp"]]},
-                            function() {
-    SimpleTest.executeSoon(runTest);
-  });
-});
+addEventListener('testready', runTest);
