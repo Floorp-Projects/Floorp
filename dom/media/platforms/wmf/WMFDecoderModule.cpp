@@ -163,17 +163,29 @@ CanCreateWMFDecoder()
   return result.value();
 }
 
+/* static */ bool
+WMFDecoderModule::HasH264()
+{
+  return CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>();
+}
+
+/* static */ bool
+WMFDecoderModule::HasAAC()
+{
+  return CanCreateWMFDecoder<CLSID_CMSAACDecMFT>();
+}
+
 bool
 WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   if ((aMimeType.EqualsLiteral("audio/mp4a-latm") ||
        aMimeType.EqualsLiteral("audio/mp4")) &&
-      CanCreateWMFDecoder<CLSID_CMSAACDecMFT>()) {
+       WMFDecoderModule::HasAAC()) {
     return true;
   }
   if ((aMimeType.EqualsLiteral("video/avc") ||
        aMimeType.EqualsLiteral("video/mp4")) &&
-      CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>()) {
+       WMFDecoderModule::HasH264()) {
     return true;
   }
   if (aMimeType.EqualsLiteral("audio/mpeg") &&
