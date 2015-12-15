@@ -19,7 +19,11 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
-public class FirstrunPane extends LinearLayout {
+/**
+ * A container for the pager and the entire first run experience.
+ * This is used for animation purposes.
+ */
+public class FirstrunAnimationContainer extends LinearLayout {
     public static final String PREF_FIRSTRUN_ENABLED = "startpane_enabled";
 
     public static interface OnFinishListener {
@@ -30,10 +34,10 @@ public class FirstrunPane extends LinearLayout {
     private boolean visible;
     private OnFinishListener onFinishListener;
 
-    public FirstrunPane(Context context) {
+    public FirstrunAnimationContainer(Context context) {
         this(context, null);
     }
-    public FirstrunPane(Context context, AttributeSet attrs) {
+    public FirstrunAnimationContainer(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
@@ -70,7 +74,7 @@ public class FirstrunPane extends LinearLayout {
         alphaAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                FirstrunPane.this.setVisibility(View.GONE);
+                FirstrunAnimationContainer.this.setVisibility(View.GONE);
             }
         });
 

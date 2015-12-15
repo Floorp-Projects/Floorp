@@ -27,6 +27,11 @@ import org.mozilla.gecko.home.TabMenuStrip;
 
 import java.util.List;
 
+/**
+ * ViewPager containing for our first run pages.
+ *
+ * @see FirstrunPanel for the first run pages that are used in this pager.
+ */
 public class FirstrunPager extends ViewPager {
 
     private Context context;
@@ -61,7 +66,7 @@ public class FirstrunPager extends ViewPager {
         super.addView(child, index, params);
     }
 
-    public void load(Context appContext, FragmentManager fm, final FirstrunPane.OnFinishListener onFinishListener) {
+    public void load(Context appContext, FragmentManager fm, final FirstrunAnimationContainer.OnFinishListener onFinishListener) {
         final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
 
         if (Restrictions.isUserRestricted(context)) {
