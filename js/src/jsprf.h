@@ -31,8 +31,8 @@
 
 /*
 ** sprintf into a fixed size buffer. Guarantees that a NUL is at the end
-** of the buffer. Returns the length of the written output, NOT including
-** the NUL, or (uint32_t)-1 if an error occurs.
+** of the buffer. The return value is the length of the written output,
+** NOT including the NUL, which is guaranteed less than "outlen" on success.
 */
 extern JS_PUBLIC_API(uint32_t) JS_snprintf(char* out, uint32_t outlen, const char* fmt, ...);
 

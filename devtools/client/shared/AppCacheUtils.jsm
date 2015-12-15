@@ -29,6 +29,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 var { Services }   = Cu.import("resource://gre/modules/Services.jsm", {});
+var { NetUtil }    = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var promise = require("promise");
@@ -186,20 +187,17 @@ AppCacheUtils.prototype = {
                         .createInstance(Ci.nsIScriptableInputStream);
     let deferred = promise.defer();
     let buffer = "";
-    let channel = Services.io.newChannel2(uri,
-                                          null,
-                                          null,
-                                          null,      // aLoadingNode
-                                          Services.scriptSecurityManager.getSystemPrincipal(),
-                                          null,      // aTriggeringPrincipal
-                                          Ci.nsILoadInfo.SEC_NORMAL,
-                                          Ci.nsIContentPolicy.TYPE_OTHER);
+    var channel = NetUtil.newChannel({
+                    uri: uri,
+                    loadUsingSystemPrincipal: true,
+                    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+                  });
 
     // Avoid the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
-    channel.asyncOpen({
+    channel.asyncOpen2({
       onStartRequest: function (request, context) {
         // This empty method is needed in order for onDataAvailable to be
         // called.
@@ -245,7 +243,7 @@ AppCacheUtils.prototype = {
           });
         }
       }
-    }, null);
+    });
     return deferred.promise;
   },
 

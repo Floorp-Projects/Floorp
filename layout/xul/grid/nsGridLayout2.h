@@ -59,7 +59,7 @@ public:
 
   virtual nsIGridPart* AsGridPart() override { return this; }
 
-  static void AddOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsSize& aSize);
+  static void AddOffset(nsIFrame* aChild, nsSize& aSize);
 
 protected:
 

@@ -210,6 +210,69 @@ add_task(function* test_kinto_list(){
 
 add_task(clear_collection);
 
+add_task(function* test_loadDump_ignores_already_imported_records(){
+  const collection = do_get_kinto_collection();
+  try {
+    yield collection.db.open();
+    const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
+    yield collection.loadDump([record]);
+    let impactedRecords = yield collection.loadDump([record]);
+    do_check_eq(impactedRecords.length, 0);
+  } finally {
+    yield collection.db.close();
+  }
+});
+
+add_task(clear_collection);
+
+add_task(function* test_loadDump_should_overwrite_old_records(){
+  const collection = do_get_kinto_collection();
+  try {
+    yield collection.db.open();
+    const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
+    yield collection.loadDump([record]);
+    const updated = Object.assign({}, record, {last_modified: 1457896543});
+    let impactedRecords = yield collection.loadDump([updated]);
+    do_check_eq(impactedRecords.length, 1);
+  } finally {
+    yield collection.db.close();
+  }
+});
+
+add_task(clear_collection);
+
+add_task(function* test_loadDump_should_not_overwrite_unsynced_records(){
+  const collection = do_get_kinto_collection();
+  try {
+    yield collection.db.open();
+    const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
+    yield collection.create({id: recordId, title: "foo"}, {useRecordId: true});
+    const record = {id: recordId, title: "bar", last_modified: 1457896541};
+    let impactedRecords = yield collection.loadDump([record]);
+    do_check_eq(impactedRecords.length, 0);
+  } finally {
+    yield collection.db.close();
+  }
+});
+
+add_task(clear_collection);
+
+add_task(function* test_loadDump_should_not_overwrite_records_without_last_modified(){
+  const collection = do_get_kinto_collection();
+  try {
+    yield collection.db.open();
+    const recordId = "41b71c13-17e9-4ee3-9268-6a41abf9730f";
+    yield collection.create({id: recordId, title: "foo"}, {synced: true});
+    const record = {id: recordId, title: "bar", last_modified: 1457896541};
+    let impactedRecords = yield collection.loadDump([record]);
+    do_check_eq(impactedRecords.length, 0);
+  } finally {
+    yield collection.db.close();
+  }
+});
+
+add_task(clear_collection);
+
 // Now do some sanity checks against a server - we're not looking to test
 // core kinto.js functionality here (there is excellent test coverage in
 // kinto.js), more making sure things are basically working as expected.

@@ -19,7 +19,7 @@ public:
   virtual nsSize GetPrefSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetMinSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetMaxSize(nsBoxLayoutState& aState) override;
-  virtual nscoord GetFlex(nsBoxLayoutState& aState) override;
+  virtual nscoord GetFlex() override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) override;
 
   virtual nsIAtom* GetType() const override;

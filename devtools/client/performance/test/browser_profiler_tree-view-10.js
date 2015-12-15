@@ -63,9 +63,9 @@ function test() {
     let [total, self, name] = def;
     name = name.trim();
 
-    is($$name(i).getAttribute("value"), name, `${name} has correct name.`);
-    is($$percentage(i).getAttribute("value"), `${total}%`, `${name} has correct total percent.`);
-    is($$selfpercentage(i).getAttribute("value"), `${self}%`, `${name} has correct self percent.`);
+    is($$name(i).textContent.trim(), name, `${name} has correct name.`);
+    is($$percentage(i).textContent.trim(), `${total}%`, `${name} has correct total percent.`);
+    is($$selfpercentage(i).textContent.trim(), `${self}%`, `${name} has correct self percent.`);
   });
 
   finish();

@@ -367,13 +367,8 @@ public class TabsPanel extends LinearLayout
 
         mAddTab.setVisibility(View.VISIBLE);
 
-        if (!HardwareUtils.hasMenuButton()) {
-            mMenuButton.setVisibility(View.VISIBLE);
-            mMenuButton.setEnabled(true);
-            mPopupMenu.setAnchor(mMenuButton);
-        } else {
-            mPopupMenu.setAnchor(mAddTab);
-        }
+        mMenuButton.setEnabled(true);
+        mPopupMenu.setAnchor(mMenuButton);
     }
 
     public int getVerticalPanelHeight() {

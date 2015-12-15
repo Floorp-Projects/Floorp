@@ -120,7 +120,6 @@ public:
   bool IsPlaying() const override;
 
   // TODO: fix these functions that don't fit into the interface of MediaSink.
-  void BeginShutdown();
   void AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   void RemoveOutput(MediaStream* aStream);
   void SetSameOrigin(bool aSameOrigin);
@@ -154,8 +153,6 @@ private:
    */
   // Data about MediaStreams that are being fed by the decoder.
   OutputStreamManager mOutputStreamManager;
-  // True if MDSM has begun shutdown.
-  bool mShuttingDown;
 
   /*
    * Worker thread only members.

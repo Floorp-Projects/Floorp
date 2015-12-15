@@ -1003,7 +1003,12 @@ SessionStore.prototype = {
     // we stop the load above
     let activeIndex = (aTabData.index || aTabData.entries.length) - 1;
     aHistory.getEntryAtIndex(activeIndex, true);
-    aHistory.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
+
+    try {
+      aHistory.QueryInterface(Ci.nsISHistory).reloadCurrentEntry();
+    } catch (e) {
+      // This will throw if the current entry is an error page.
+    }
   },
 
   /**

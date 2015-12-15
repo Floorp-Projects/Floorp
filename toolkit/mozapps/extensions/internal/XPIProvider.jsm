@@ -3825,18 +3825,18 @@ this.XPIProvider = {
   },
 
   /**
-   * Temporarily installs add-on from local directory.
+   * Temporarily installs add-on from a local XPI file or directory.
    * As this is intended for development, the signature is not checked and
    * the add-on does not persist on application restart.
    *
-   * @param aDirectory
-   *        The directory containing the unpacked add-on directory or XPI file
+   * @param aFile
+   *        An nsIFile for the unpacked add-on directory or XPI file.
    *
-   * @return a Promise that rejects if the add-on is not restartless
-   *         or an add-on with the same ID is already temporarily installed
+   * @return a Promise that rejects if the add-on is not a valid restartless
+   *         add-on or if the same ID is already temporarily installed
    */
-  installTemporaryAddon: Task.async(function*(aDirectory) {
-    let addon = yield loadManifestFromFile(aDirectory, TemporaryInstallLocation);
+  installTemporaryAddon: Task.async(function*(aFile) {
+    let addon = yield loadManifestFromFile(aFile, TemporaryInstallLocation);
 
     if (!addon.bootstrap) {
       throw new Error("Only restartless (bootstrap) add-ons"
@@ -3887,7 +3887,7 @@ this.XPIProvider = {
     XPIProvider.callBootstrapMethod(addon, file, "install",
                                     BOOTSTRAP_REASONS.ADDON_INSTALL);
     addon.state = AddonManager.STATE_INSTALLED;
-    logger.debug("Install of temporary addon in " + aDirectory.path + " completed.");
+    logger.debug("Install of temporary addon in " + aFile.path + " completed.");
     addon.visible = true;
     addon.enabled = true;
     addon.active = true;
@@ -7977,8 +7977,7 @@ Object.assign(SystemAddonInstallLocation.prototype, {
 });
 
 /**
- * An object which identifies a directory install location for temporary
- * add-ons.
+ * An object which identifies an install location for temporary add-ons.
  */
 const TemporaryInstallLocation = {
   locked: false,
