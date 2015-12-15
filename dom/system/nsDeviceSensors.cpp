@@ -25,6 +25,8 @@
 #include "mozilla/dom/DeviceProximityEvent.h"
 #include "mozilla/dom/UserProximityEvent.h"
 
+#include <cmath>
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace hal;
@@ -193,6 +195,61 @@ WindowCannotReceiveSensorEvent (nsPIDOMWindow* aWindow)
   return false;
 }
 
+// Holds the device orientation in Euler angle degrees (azimuth, pitch, roll).
+struct Orientation
+{
+  static Orientation RadToDeg(const Orientation& aOrient)
+  {
+    const static double kRadToDeg = 180.0 / M_PI;
+    return { aOrient.alpha * kRadToDeg,
+             aOrient.beta * kRadToDeg,
+             aOrient.gamma * kRadToDeg };
+  }
+
+  double alpha;
+  double beta;
+  double gamma;
+};
+
+static Orientation
+RotationVectorToOrientation(double aX, double aY, double aZ, double aW)
+{
+  static const double kFuzzyOne = 1.0 - 1e-6;
+  static const double kCircleRad = 2.0 * M_PI;
+
+  Orientation orient = { 2.0 * std::atan2(aY, aW),
+                         M_PI_2,
+                         0.0 };
+
+  const double sqX = aX * aX;
+  const double sqY = aY * aY;
+  const double sqZ = aZ * aZ;
+  const double sqW = aW * aW;
+  const double unitLength = sqX + sqY + sqZ + sqW;
+  const double xwyz = 2.0 * (aX * aW + aY * aZ) / unitLength;
+
+  if (xwyz < -kFuzzyOne) {
+    orient.alpha *= -1.0;
+    orient.beta *= -1.0;
+  } else if (xwyz <= kFuzzyOne) {
+    const double gammaX = -sqX - sqY + sqZ + sqW;
+    const double gammaY = 2.0 * (aY * aW - aX * aZ);
+    const double alphaX = -sqX + sqY - sqZ + sqW;
+    const double alphaY = 2.0 * (aZ * aW - aX * aY);
+    const double fac = gammaX > 0 ? 1.0 : -1.0;
+
+    orient.alpha = std::fmod(kCircleRad + std::atan2(fac * alphaY, fac * alphaX),
+                             kCircleRad);
+    orient.beta = fac * std::asin(xwyz);
+    orient.gamma = std::atan2(fac * gammaY, fac * gammaX);
+    if (fac < 0.0) {
+      orient.beta = fmod(M_PI + orient.beta, M_PI);
+    }
+  }
+
+  return Orientation::RadToDeg(orient);
+}
+
 void
 nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 {
@@ -203,6 +260,7 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
   double x = len > 0 ? values[0] : 0.0;
   double y = len > 1 ? values[1] : 0.0;
   double z = len > 2 ? values[2] : 0.0;
+  double w = len > 3 ? values[3] : 0.0;
 
   nsCOMArray<nsIDOMWindow> windowListeners;
   for (uint32_t i = 0; i < mWindowListeners[type]->Length(); i++) {
@@ -221,15 +279,18 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
       nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(windowListeners[i]);
       if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION ||
-        type == nsIDeviceSensorData::TYPE_GYROSCOPE)
+        type == nsIDeviceSensorData::TYPE_GYROSCOPE) {
         FireDOMMotionEvent(domDoc, target, type, x, y, z);
-      else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
+      } else if (type == nsIDeviceSensorData::TYPE_ORIENTATION) {
         FireDOMOrientationEvent(target, x, y, z);
-      else if (type == nsIDeviceSensorData::TYPE_PROXIMITY)
+      } else if (type == nsIDeviceSensorData::TYPE_ROTATION_VECTOR) {
+        const Orientation orient = RotationVectorToOrientation(x, y, z, w);
+        FireDOMOrientationEvent(target, orient.alpha, orient.beta, orient.gamma);
+      } else if (type == nsIDeviceSensorData::TYPE_PROXIMITY) {
         FireDOMProximityEvent(target, x, y, z);
-      else if (type == nsIDeviceSensorData::TYPE_LIGHT)
+      } else if (type == nsIDeviceSensorData::TYPE_LIGHT) {
         FireDOMLightEvent(target, x);
-
+      }
     }
   }
 }
