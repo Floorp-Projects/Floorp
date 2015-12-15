@@ -210,6 +210,7 @@ gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
     // what is set here.  It's too late to change things here as measuring has
     // already taken place.  We should really be measuring with a different
     // font for pdf and ps surfaces (bug 403513).
-    cairo_set_scaled_font(aContext->GetCairo(), cairoFont);
+    cairo_set_scaled_font(gfxContext::RefCairo(aContext->GetDrawTarget()),
+                          cairoFont);
     return true;
 }

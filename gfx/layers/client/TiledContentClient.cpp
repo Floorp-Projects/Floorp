@@ -56,7 +56,7 @@ static void DrawDebugOverlay(mozilla::gfx::DrawTarget* dt, int x, int y, int wid
 
   // Draw text using cairo toy text API
   // XXX: this drawing will silently fail if |dt| doesn't have a Cairo backend
-  cairo_t* cr = c.GetCairo();
+  cairo_t* cr = gfxContext::RefCairo(dt);
   cairo_set_font_size(cr, 25);
   cairo_text_extents_t extents;
   cairo_text_extents(cr, ss.str().c_str(), &extents);
