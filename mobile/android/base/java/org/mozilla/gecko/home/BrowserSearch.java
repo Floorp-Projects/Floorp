@@ -744,9 +744,11 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void showSuggestionsOptIn() {
-        // Return if the ViewStub was already inflated - an inflated ViewStub is removed from the
-        // View hierarchy so a second call to findViewById will return null.
+        // Only make the ViewStub visible again if it has already previously been shown.
+        // (An inflated ViewStub is removed from the View hierarchy so a second call to findViewById will return null,
+        // which also further necessitates handling this separately.)
         if (mSuggestionsOptInPrompt != null) {
+            mSuggestionsOptInPrompt.setVisibility(View.VISIBLE);
             return;
         }
 
