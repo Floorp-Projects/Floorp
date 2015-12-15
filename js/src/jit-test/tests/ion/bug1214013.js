@@ -1,4 +1,4 @@
-// |jit-test| error: TypeError
+// |jit-test| error: SyntaxError
 
 var hits = 0;
 with(f_arg => constructor.f_arg([3, 4, 5], null)) var length = 257751;
