@@ -857,6 +857,9 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
         'com/adjust/sdk/UnitTestActivity.java',
         'com/adjust/sdk/Util.java'
     ] ]
+    adjustjar.extra_jars += [
+        'sync-thirdparty.jar',
+    ]
 
 # Putting branding earlier allows branders to override default resources.
 ANDROID_RES_DIRS += [
