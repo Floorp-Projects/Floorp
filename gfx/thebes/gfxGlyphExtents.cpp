@@ -45,7 +45,7 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
             return false;
         }
 
-        if (aFont->SetupCairoFont(aContext)) {
+        if (aFont->SetupCairoFont(aContext->GetDrawTarget())) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
             ++gGlyphExtentsSetupLazyTight;
 #endif

@@ -781,7 +781,7 @@ gfxFont::~gfxFont()
 gfxFloat
 gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
 {
-    if (!SetupCairoFont(aCtx)) {
+    if (!SetupCairoFont(aCtx->GetDrawTarget())) {
         return 0;
     }
     if (ProvidesGlyphWidths()) {
