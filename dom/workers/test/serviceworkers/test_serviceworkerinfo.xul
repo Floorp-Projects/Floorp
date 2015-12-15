@@ -70,7 +70,21 @@
           info("Attach a debugger to the service worker, and check that the " +
                "service worker is restarted.");
           activeWorker.attachDebugger();
-          ok(activeWorker.debugger !== null);
+          let workerDebugger = activeWorker.debugger;
+          ok(workerDebugger !== null);
+
+          // Verify debugger properties
+          ok(workerDebugger.principal instanceof Ci.nsIPrincipal);
+          is(workerDebugger.url, EXAMPLE_URL + "worker.js");
+
+          info("Verify that getRegistrationByPrincipal return the same " +
+               "nsIServiceWorkerRegistrationInfo");
+          let reg = swm.getRegistrationByPrincipal(workerDebugger.principal,
+                                                   workerDebugger.url);
+          is(reg, registration);
+
+          info("Check that getWorkerByID returns the same nsIWorkerDebugger");
+          is(activeWorker, reg.getWorkerByID(workerDebugger.serviceWorkerID));
 
           info("Detach the debugger from the service worker, and check that " +
                "the service worker eventually shuts down again.");
