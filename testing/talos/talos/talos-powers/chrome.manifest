@@ -1,4 +1,5 @@
 content talos-powers chrome/
+content talos-powers-content content/ contentaccessible=yes
 component {f5d53443-d58d-4a2f-8df0-98525d4f91ad} components/TalosPowersService.js
 contract @mozilla.org/talos/talos-powers-service;1 {f5d53443-d58d-4a2f-8df0-98525d4f91ad}
 category profile-after-change TalosPowersService @mozilla.org/talos/talos-powers-service;1

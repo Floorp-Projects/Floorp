@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { interfaces: Ci } = Components;
+var { interfaces: Ci, utils: Cu } = Components;
 
 /**
  * Content that wants to quit the whole session should
@@ -21,4 +21,25 @@ addEventListener("TalosQuitApplication", event => {
   if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
     sendAsyncMessage("Talos:ForceQuit", event.detail);
   }
+});
+
+addEventListener("TalosContentProfilerCommand", (e) => {
+  let name = e.detail.name;
+  let data = e.detail.data;
+  sendAsyncMessage("TalosContentProfiler:Command", { name, data });
+});
+
+addMessageListener("TalosContentProfiler:Response", (msg) => {
+  let name = msg.data.name;
+  let data = msg.data.data;
+
+  let event = Cu.cloneInto({
+    bubbles: true,
+    detail: {
+      name: name,
+      data: data,
+    },
+  }, content);
+  content.dispatchEvent(
+    new content.CustomEvent("TalosContentProfilerResponse", event));
 });
