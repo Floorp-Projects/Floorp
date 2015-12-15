@@ -73,19 +73,6 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   Request(aPromise, aKeySystem, aConfigs, RequestType::Initial);
 }
 
-static bool
-ShouldTrialCreateGMP(const nsAString& aKeySystem)
-{
-  // Trial create where the CDM has a Windows Media Foundation decoder.
-#ifdef XP_WIN
-  return Preferences::GetBool("media.gmp.trial-create.enabled", false) &&
-         aKeySystem.EqualsLiteral("org.w3.clearkey") &&
-         IsVistaOrLater();
-#else
-  return false;
-#endif
-}
-
 void
 MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
                                      const nsAString& aKeySystem,
@@ -179,13 +166,6 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
       MediaKeySystemAccess::IsSupported(keySystem, aConfigs)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion), config));
-   if (ShouldTrialCreateGMP(keySystem)) {
-      // Ensure we have tried creating a GMPVideoDecoder for this
-      // keySystem, and that we can use it to decode. This ensures that we only
-      // report that we support this keySystem when the CDM us usable.
-      mTrialCreator->MaybeAwaitTrialCreate(keySystem, access, aPromise, mWindow);
-      return;
-    }
     aPromise->MaybeResolve(access);
     return;
   }
