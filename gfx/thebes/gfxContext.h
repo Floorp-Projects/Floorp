@@ -548,8 +548,6 @@ private:
   AzureState &CurrentState() { return mStateStack[mStateStack.Length() - 1]; }
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
-  cairo_t *mRefCairo;
-
   RefPtr<DrawTarget> mDT;
   RefPtr<DrawTarget> mOriginalDT;
 };
