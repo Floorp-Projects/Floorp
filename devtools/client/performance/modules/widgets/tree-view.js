@@ -235,7 +235,8 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", type);
     cell.setAttribute("crop", "end");
-    cell.setAttribute("value", value);
+    // Add a tabulation to the cell text in case it's is selected and copied.
+    cell.textContent = value + "\t";
     return cell;
   },
 
@@ -261,7 +262,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       nameNode.className = "plain call-tree-name";
       nameNode.setAttribute("flex", "1");
       nameNode.setAttribute("crop", "end");
-      nameNode.setAttribute("value", frameName);
+      nameNode.textContent = frameName;
       cell.appendChild(nameNode);
     }
 
@@ -276,6 +277,17 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       arrowNode.setAttribute("invisible", "");
     }
 
+    // Add a line break to the last description of the row in case it's selected
+    // and copied.
+    let lastDescription = cell.querySelector('description:last-of-type');
+    lastDescription.textContent = lastDescription.textContent + "\n";
+
+    // Add spaces as frameLevel indicators in case the row is selected and
+    // copied. These spaces won't be displayed in the cell content.
+    let firstDescription = cell.querySelector('description:first-of-type');
+    let levelIndicator = frameLevel > 0 ? " ".repeat(frameLevel) : "";
+    firstDescription.textContent = levelIndicator + firstDescription.textContent;
+
     return cell;
   },
 
@@ -285,7 +297,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       urlNode.className = "plain call-tree-url";
       urlNode.setAttribute("flex", "1");
       urlNode.setAttribute("crop", "end");
-      urlNode.setAttribute("value", frameInfo.fileName);
+      urlNode.textContent = frameInfo.fileName;
       urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
       urlNode.addEventListener("mousedown", this._onUrlClick);
       cell.appendChild(urlNode);
@@ -294,21 +306,21 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     if (frameInfo.line) {
       let lineNode = doc.createElement("description");
       lineNode.className = "plain call-tree-line";
-      lineNode.setAttribute("value", ":" + frameInfo.line);
+      lineNode.textContent = ":" + frameInfo.line;
       cell.appendChild(lineNode);
     }
 
     if (frameInfo.column) {
       let columnNode = doc.createElement("description");
       columnNode.className = "plain call-tree-column";
-      columnNode.setAttribute("value", ":" + frameInfo.column);
+      columnNode.textContent = ":" + frameInfo.column;
       cell.appendChild(columnNode);
     }
 
     if (frameInfo.host) {
       let hostNode = doc.createElement("description");
       hostNode.className = "plain call-tree-host";
-      hostNode.setAttribute("value", frameInfo.host);
+      hostNode.textContent = frameInfo.host;
       cell.appendChild(hostNode);
     }
 
@@ -320,7 +332,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       let categoryNode = doc.createElement("description");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
-      categoryNode.setAttribute("value", frameInfo.categoryData.label);
+      categoryNode.textContent = frameInfo.categoryData.label;
       cell.appendChild(categoryNode);
     }
   },

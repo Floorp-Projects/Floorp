@@ -118,15 +118,11 @@ class BrowserToolbarPhone extends BrowserToolbarPhoneBase {
         animator.attach(tabsCounter,
                         PropertyAnimator.Property.TRANSLATION_X,
                         curveTranslation);
-
-        if (!HardwareUtils.hasMenuButton()) {
-            animator.attach(menuButton,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            curveTranslation);
-
-            animator.attach(menuIcon,
-                            PropertyAnimator.Property.TRANSLATION_X,
-                            curveTranslation);
-        }
+        animator.attach(menuButton,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        curveTranslation);
+        animator.attach(menuIcon,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        curveTranslation);
     }
 }
