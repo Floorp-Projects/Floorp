@@ -116,11 +116,7 @@
 
 /* Network requests table: specific column dimensions */
 
-.requests-menu-status {
-  max-width: 4em;
-  width: 4vw;
-}
-
+.requests-menu-status,
 .requests-menu-method-box,
 .requests-menu-method {
   max-width: 6em;
@@ -180,10 +176,6 @@
 .requests-menu-size {
   max-width: 8em;
   text-align: center;
-  width: 8vw;
-}
-
-.requests-menu-transferred {
   width: 8vw;
 }
 
@@ -795,11 +787,12 @@
   }
 
   .requests-menu-status {
-    width: 4vw;
+    max-width: none;
+    width: 12vw;
   }
 
-  #requests-menu-status-button {
-    min-width: 26px;
+  .requests-menu-status-code {
+    width: auto;
   }
 
   .requests-menu-method,
@@ -809,20 +802,20 @@
   }
 
   .requests-menu-icon-and-file {
-    width: 30vw;
+    width: 22vw;
   }
 
   .requests-menu-security-and-domain {
-    width: 28vw;
+    width: 18vw;
   }
 
-  .requests-menu-type,
-  .requests-menu-transferred {
-    width: 12vw;
+  .requests-menu-type {
+    width: 10vw;
   }
 
+  .requests-menu-transferred,
   .requests-menu-size {
-    width: 16vw;
+    width: 12vw;
   }
 }
 
