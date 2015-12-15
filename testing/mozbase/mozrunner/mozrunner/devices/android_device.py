@@ -99,7 +99,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
     device_verified = False
     emulator = AndroidEmulator('*', substs=build_obj.substs)
     devices = emulator.dm.devices()
-    if len(devices) > 0:
+    if (len(devices) > 0) and ('device' in [d[1] for d in devices]):
         device_verified = True
     elif emulator.is_available():
         response = raw_input(
