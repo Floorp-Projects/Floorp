@@ -24,7 +24,7 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
-import org.mozilla.gecko.firstrun.FirstrunPane;
+import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
@@ -197,7 +197,7 @@ public class BrowserApp extends GeckoApp
     // We can't name the TabStrip class because it's not included on API 9.
     private Refreshable mTabStrip;
     private ToolbarProgressView mProgressView;
-    private FirstrunPane mFirstrunPane;
+    private FirstrunAnimationContainer mFirstrunAnimationContainer;
     private HomePager mHomePager;
     private TabsPanel mTabsPanel;
     private ViewGroup mHomePagerContainer;
@@ -790,12 +790,12 @@ public class BrowserApp extends GeckoApp
         try {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
 
-            if (prefs.getBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, false)) {
+            if (prefs.getBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false)) {
                 if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
                     showFirstrunPager();
                 }
                 // Don't bother trying again to show the v1 minimal first run.
-                prefs.edit().putBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, false).apply();
+                prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, false).apply();
             }
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
@@ -2130,7 +2130,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private boolean isFirstrunVisible() {
-        return (mFirstrunPane != null && mFirstrunPane.isVisible()
+        return (mFirstrunAnimationContainer != null && mFirstrunAnimationContainer.isVisible()
             && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
     }
 
@@ -2444,14 +2444,14 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
-        if (mFirstrunPane == null) {
+        if (mFirstrunAnimationContainer == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
-            mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
-            mFirstrunPane.load(getApplicationContext(), getSupportFragmentManager());
-            mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
+            mFirstrunAnimationContainer = (FirstrunAnimationContainer) firstrunPagerStub.inflate();
+            mFirstrunAnimationContainer.load(getApplicationContext(), getSupportFragmentManager());
+            mFirstrunAnimationContainer.registerOnFinishListener(new FirstrunAnimationContainer.OnFinishListener() {
                 @Override
                 public void onFinish() {
-                    if (mFirstrunPane.showBrowserHint()) {
+                    if (mFirstrunAnimationContainer.showBrowserHint()) {
                         enterEditingMode();
                     }
                 }
@@ -2559,7 +2559,7 @@ public class BrowserApp extends GeckoApp
             return false;
         }
 
-        mFirstrunPane.hide();
+        mFirstrunAnimationContainer.hide();
         return true;
     }
 
