@@ -1420,7 +1420,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
 #endif
-                        font->SetupGlyphExtents(aRefContext,
+                        font->SetupGlyphExtents(aRefContext->GetDrawTarget(),
                                                 glyphIndex, false, extents);
                     }
                 }
@@ -1446,7 +1446,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerTight;
 #endif
-                        font->SetupGlyphExtents(aRefContext,
+                        font->SetupGlyphExtents(aRefContext->GetDrawTarget(),
                                                 glyphIndex, true, extents);
                     }
                 }
