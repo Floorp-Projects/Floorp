@@ -4952,9 +4952,8 @@ NameIC::attachTypeOfNoProperty(JSContext* cx, HandleScript outerScript, IonScrip
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
 
-    // TODO: ICNameStub_TypeOfNoProperty
     return linkAndAttachStub(cx, masm, attacher, ion, "generic",
-                             JS::TrackedOutcome::ICNameStub_ReadSlot);
+                             JS::TrackedOutcome::ICNameStub_TypeOfNoProperty);
 }
 
 static bool
