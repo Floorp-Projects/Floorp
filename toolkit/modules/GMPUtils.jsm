@@ -138,7 +138,6 @@ this.GMPPrefs = {
   KEY_PLUGIN_VERSION:           "media.{0}.version",
   KEY_PLUGIN_AUTOUPDATE:        "media.{0}.autoupdate",
   KEY_PLUGIN_FORCEVISIBLE:      "media.{0}.forcevisible",
-  KEY_PLUGIN_TRIAL_CREATE:      "media.{0}.trial-create",
   KEY_PLUGIN_ABI:               "media.{0}.abi",
   KEY_URL:                      "media.gmp-manager.url",
   KEY_URL_OVERRIDE:             "media.gmp-manager.url.override",
