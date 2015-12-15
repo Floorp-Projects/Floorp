@@ -137,8 +137,6 @@ parseMessage(ZeroCopyInputStream& stream, uint32_t sizeOfMessage, MessageType& m
 template<typename CharT, typename InternedStringSet>
 struct GetOrInternStringMatcher
 {
-  using ReturnType = const CharT*;
-
   InternedStringSet& internedStrings;
 
   explicit GetOrInternStringMatcher(InternedStringSet& strings) : internedStrings(strings) { }
@@ -860,8 +858,6 @@ class TwoByteString : public Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName
 
   struct AsTwoByteStringMatcher
   {
-    using ReturnType = TwoByteString;
-
     TwoByteString match(JSAtom* atom) {
       return TwoByteString(atom);
     }
@@ -873,16 +869,12 @@ class TwoByteString : public Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName
 
   struct IsNonNullMatcher
   {
-    using ReturnType = bool;
-
     template<typename T>
     bool match(const T& t) { return t != nullptr; }
   };
 
   struct LengthMatcher
   {
-    using ReturnType = size_t;
-
     size_t match(JSAtom* atom) {
       MOZ_ASSERT(atom);
       JS::ubi::AtomOrTwoByteChars s(atom);
@@ -902,8 +894,6 @@ class TwoByteString : public Variant<JSAtom*, const char16_t*, JS::ubi::EdgeName
 
   struct CopyToBufferMatcher
   {
-    using ReturnType = size_t;
-
     RangedPtr<char16_t> destination;
     size_t              maxLength;
 
@@ -985,8 +975,6 @@ struct TwoByteString::HashPolicy {
   using Lookup = TwoByteString;
 
   struct HashingMatcher {
-    using ReturnType  = js::HashNumber;
-
     js::HashNumber match(const JSAtom* atom) {
       return js::DefaultHasher<const JSAtom*>::hash(atom);
     }
@@ -1009,7 +997,6 @@ struct TwoByteString::HashPolicy {
   }
 
   struct EqualityMatcher {
-    using ReturnType = bool;
     const TwoByteString& rhs;
     explicit EqualityMatcher(const TwoByteString& rhs) : rhs(rhs) { }
 
