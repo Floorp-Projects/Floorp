@@ -279,7 +279,8 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
     if (!fb)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
-    return fb->CheckFramebufferStatus().get();
+    nsCString fbErrorInfo;
+    return fb->CheckFramebufferStatus(&fbErrorInfo).get();
 }
 
 already_AddRefed<WebGLProgram>
@@ -1572,7 +1573,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
 
     if (!rwWidth || !rwHeight) {
         // There aren't any, so we're 'done'.
-        DummyFramebufferOperation("readPixels");
+        DummyReadFramebufferOperation("readPixels");
         return;
     }
 

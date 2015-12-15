@@ -1414,12 +1414,23 @@ WebGLContext::PresentScreenBuffer()
 }
 
 void
-WebGLContext::DummyFramebufferOperation(const char* funcName)
+WebGLContext::DummyReadFramebufferOperation(const char* funcName)
 {
-    FBStatus status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    if (!mBoundReadFramebuffer)
+        return; // Infallible.
+
+    nsCString fbStatusInfo;
+    const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(&fbStatusInfo);
+
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        ErrorInvalidFramebufferOperation("%s: incomplete framebuffer",
-                                         funcName);
+        nsCString errorText("Incomplete framebuffer");
+
+        if (fbStatusInfo.Length()) {
+            errorText += ": ";
+            errorText += fbStatusInfo;
+        }
+
+        ErrorInvalidFramebufferOperation("%s: %s.", funcName, errorText.BeginReading());
     }
 }
 
