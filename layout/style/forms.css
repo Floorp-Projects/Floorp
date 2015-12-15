@@ -18,8 +18,14 @@
   overflow-clip-box: inherit;
   padding: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
-  /* Please keep the Flex/Grid/Align sections below in sync with
+  /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
      ::-moz-scrolled-content in ua.css */
+  /* Multicol container */
+  -moz-column-count: inherit;
+  -moz-column-width: inherit;
+  -moz-column-gap: inherit;
+  -moz-column-rule: inherit;
+  -moz-column-fill: inherit;
   /* Flex container */
   flex-direction: inherit;
   flex-wrap: inherit;
