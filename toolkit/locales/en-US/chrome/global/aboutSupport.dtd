@@ -59,6 +59,8 @@ Windows/Mac use the term "Folder" instead of "Directory" -->
 <!-- LOCALIZATION NOTE the term "Service Workers" should not be translated. -->
 <!ENTITY aboutSupport.appBasicsServiceWorkers "Registered Service Workers">
 
+<!ENTITY aboutSupport.appBasicsProfiles "Profiles">
+
 <!ENTITY aboutSupport.appBasicsMultiProcessSupport "Multiprocess Windows">
 
 <!ENTITY aboutSupport.appBasicsSafeMode "Safe Mode">
