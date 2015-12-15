@@ -1568,7 +1568,9 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mDevToCssSize(aDevToCssSize)
     , mUserFontSet(aUserFontSet)
     , mTextPerf(aTextPerf)
+    , mLastPrefLang(eFontPrefLang_Western)
     , mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aStyle->language))
+    , mLastPrefFirstFont(false)
     , mSkipDrawing(false)
     , mSkipUpdateUserFonts(false)
 {
