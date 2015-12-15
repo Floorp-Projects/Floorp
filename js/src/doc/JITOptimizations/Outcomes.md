@@ -407,6 +407,11 @@ a scope chain object.
 An inline cache element which loads a bare variable name by calling a
 getter function on the global object.
 
+### ICNameStub_TypeOfNoProperty
+
+An inline cache element which loads undefined for the type
+of a missing property.
+
 ## Call Inlining Outcomes
 
 Optimization outcomes of attempts to inline function calls.
