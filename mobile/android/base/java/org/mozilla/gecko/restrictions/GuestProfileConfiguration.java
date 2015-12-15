@@ -25,8 +25,7 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             Restrictable.SET_IMAGE,
             Restrictable.MODIFY_ACCOUNTS,
             Restrictable.REMOTE_DEBUGGING,
-            Restrictable.IMPORT_SETTINGS,
-            Restrictable.BLOCK_LIST
+            Restrictable.IMPORT_SETTINGS
     );
 
     @SuppressWarnings("serial")
