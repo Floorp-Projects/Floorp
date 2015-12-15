@@ -265,6 +265,9 @@ def main():
                         help='Enable jar optimizations')
     parser.add_argument('--unify', default='',
                         help='Base directory of another build to unify with')
+    parser.add_argument('--disable-compression', action='store_false',
+                        dest='compress', default=True,
+                        help='Disable jar compression')
     parser.add_argument('manifest', default=None, nargs='?',
                         help='Manifest file name')
     parser.add_argument('source', help='Source directory')
@@ -286,10 +289,11 @@ def main():
     if args.format == 'flat':
         formatter = FlatFormatter(copier)
     elif args.format == 'jar':
-        formatter = JarFormatter(copier, optimize=args.optimizejars)
+        formatter = JarFormatter(copier, compress=args.compress, optimize=args.optimizejars)
     elif args.format == 'omni':
         formatter = OmniJarFormatter(copier,
                                      buildconfig.substs['OMNIJAR_NAME'],
+                                     compress=args.compress,
                                      optimize=args.optimizejars,
                                      non_resources=args.non_resource)
     else:
