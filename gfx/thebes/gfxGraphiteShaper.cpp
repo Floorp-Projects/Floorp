@@ -268,9 +268,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
         }
     }
 
-    bool roundX;
-    bool roundY;
-    aContext->GetRoundOffsetsToPixels(&roundX, &roundY);
+    bool roundX, roundY;
+    GetRoundOffsetsToPixels(aContext->GetDrawTarget(), &roundX, &roundY);
 
     gfxShapedText::CompressedGlyph *charGlyphs =
         aShapedText->GetCharacterGlyphs() + aOffset;
