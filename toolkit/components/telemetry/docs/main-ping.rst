@@ -84,7 +84,7 @@ This uses a monotonic clock, so this may mismatch with other measurements that a
 If ``sessionLength`` is ``-1``, the monotonic clock is not working.
 
 threadHangStats
-~~~~~~~~~~~~~~~
+---------------
 Contains the statistics about the hangs in main and background threads. Note that hangs in this section capture the [C++ pseudostack](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler#Native_stack_vs._Pseudo_stack) and an incomplete JS stack, which is not 100% precise.
 
 To avoid submitting overly large payloads, some limits are applied:
@@ -124,7 +124,7 @@ Structure::
      ]
 
 chromeHangs
-~~~~~~~~~~~
+-----------
 Contains the statistics about the hangs happening exclusively on the main thread of the parent process. Precise C++ stacks are reported. This is only available on Nightly Release on Windows, when building using "--enable-profiling" switch.
 
 Some limits are applied:
@@ -166,4 +166,43 @@ Structure::
         ],
         ...
       ]
+    },
+
+webrtc
+------
+Contains special statistics gathered by WebRTC releated components.
+
+So far only a bitmask for the ICE candidate type present in a successful or
+failed WebRTC connection is getting reported through C++ code as
+IceCandidatesStats, because the required bitmask is too big to be represented
+in a regular enum histogram. Further this data differentiates between Loop
+(aka Firefox Hello) connections and everything else, which is categorized as
+WebRTC.
+
+Note: in most cases the webrtc and loop dictionaries inside of
+IceCandidatesStats will simply be empty as the user has not used any WebRTC
+PeerConnection at all during the ping report time.
+
+Structure::
+
+    "webrtc": {
+      "IceCandidatesStats": {
+        "webrtc": {
+          "34526345": {
+            "successCount": 5
+          },
+          "2354353": {
+            "failureCount": 1
+          }
+        },
+        "loop": {
+          "2349346359": {
+            "successCount": 3
+          },
+          "73424": {
+            "successCount": 1,
+            "failureCount": 5
+          }
+        }
+      }
     },

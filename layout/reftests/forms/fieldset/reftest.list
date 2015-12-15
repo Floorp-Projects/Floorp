@@ -12,3 +12,5 @@ test-pref(layout.css.sticky.enabled,true) skip-if((B2G&&browserIsRemote)||Mulet)
 == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
+== fieldset-grid-001.html fieldset-grid-001-ref.html
+== fieldset-flexbox-001.html fieldset-flexbox-001-ref.html

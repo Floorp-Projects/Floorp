@@ -14,19 +14,12 @@
 namespace mozilla {
 
 static bool
-GetFBInfoForBlit(const WebGLFramebuffer* fb, WebGLContext* webgl,
-                 const char* const fbInfo, GLsizei* const out_samples,
+GetFBInfoForBlit(const WebGLFramebuffer* fb, const char* const fbInfo,
+                 GLsizei* const out_samples,
                  const webgl::FormatInfo** const out_colorFormat,
                  const webgl::FormatInfo** const out_depthFormat,
                  const webgl::FormatInfo** const out_stencilFormat)
 {
-    auto status = fb->PrecheckFramebufferStatus();
-    if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        webgl->ErrorInvalidOperation("blitFramebuffer: %s is not"
-                                     " framebuffer-complete.", fbInfo);
-        return false;
-    }
-
     *out_samples = 1; // TODO
     *out_colorFormat = nullptr;
     *out_depthFormat = nullptr;
@@ -85,6 +78,9 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
                                GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                GLbitfield mask, GLenum filter)
 {
+    if (IsContextLost())
+        return;
+
     const GLbitfield validBits = LOCAL_GL_COLOR_BUFFER_BIT |
                                  LOCAL_GL_DEPTH_BUFFER_BIT |
                                  LOCAL_GL_STENCIL_BUFFER_BIT;
@@ -122,15 +118,20 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
         return;
     }
 
+    if (!mBoundReadFramebuffer->ValidateAndInitAttachments("blitFramebuffer's READ_FRAMEBUFFER") ||
+        !mBoundDrawFramebuffer->ValidateAndInitAttachments("blitFramebuffer's DRAW_FRAMEBUFFER"))
+    {
+        return;
+    }
+
     GLsizei srcSamples;
     const webgl::FormatInfo* srcColorFormat = nullptr;
     const webgl::FormatInfo* srcDepthFormat = nullptr;
     const webgl::FormatInfo* srcStencilFormat = nullptr;
 
     if (mBoundReadFramebuffer) {
-        if (!GetFBInfoForBlit(mBoundReadFramebuffer, this, "READ_FRAMEBUFFER",
-                              &srcSamples, &srcColorFormat, &srcDepthFormat,
-                              &srcStencilFormat))
+        if (!GetFBInfoForBlit(mBoundReadFramebuffer, "READ_FRAMEBUFFER", &srcSamples,
+                              &srcColorFormat, &srcDepthFormat, &srcStencilFormat))
         {
             return;
         }
@@ -147,9 +148,8 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
     const webgl::FormatInfo* dstStencilFormat = nullptr;
 
     if (mBoundDrawFramebuffer) {
-        if (!GetFBInfoForBlit(mBoundDrawFramebuffer, this, "DRAW_FRAMEBUFFER",
-                              &dstSamples, &dstColorFormat, &dstDepthFormat,
-                              &dstStencilFormat))
+        if (!GetFBInfoForBlit(mBoundDrawFramebuffer, "DRAW_FRAMEBUFFER", &dstSamples,
+                              &dstColorFormat, &dstDepthFormat, &dstStencilFormat))
         {
             return;
         }

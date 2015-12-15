@@ -2,7 +2,7 @@
 // TODO NIT use do_check_eq(expected, actual) consistently, not sometimes eq(actual, expected)
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Turn off the authentication dialog blocking for this test.
 var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -275,19 +275,8 @@ var listener = {
 };
 
 function makeChan(url) {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
-
-  return chan;
 }
 
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
@@ -318,7 +307,7 @@ function test_noauth() {
   var chan = makeChan(URL + "/auth");
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -328,7 +317,7 @@ function test_returnfalse1() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 1);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -338,7 +327,7 @@ function test_wrongpw1() {
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 1);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -348,7 +337,7 @@ function test_prompt1() {
 
   chan.notificationCallbacks = new Requestor(0, 1);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -358,7 +347,7 @@ function test_returnfalse2() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -368,7 +357,7 @@ function test_wrongpw2() {
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -378,7 +367,7 @@ function test_prompt2() {
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -388,7 +377,7 @@ function test_ntlm() {
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -398,7 +387,7 @@ function test_basicrealm() {
 
   chan.notificationCallbacks = new RealmTestRequestor();
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -408,7 +397,7 @@ function test_digest_noauth() {
 
   //chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -418,7 +407,7 @@ function test_digest() {
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -427,7 +416,7 @@ function test_digest_bogus_user() {
   var chan = makeChan(URL + "/auth/digest");
   chan.notificationCallbacks =  new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -2030,7 +2019,7 @@ function test_large_realm() {
   var chan = makeChan(URL + "/largeRealm");
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -2039,7 +2028,7 @@ function test_large_domain() {
   var chan = makeChan(URL + "/largeDomain ");
 
   listener.expectedCode = 401; // Unauthorized
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }

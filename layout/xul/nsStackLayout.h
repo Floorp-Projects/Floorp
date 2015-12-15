@@ -21,13 +21,13 @@
 
 class nsIPresShell;
 
-nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
 
 class nsStackLayout : public nsBoxLayout
 {
 public:
 
-  friend nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+  friend nsresult NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
   static void Shutdown();
 
   nsStackLayout();
@@ -43,7 +43,7 @@ public:
   // bitfield mask of the SPECIFIED_LEFT, SPECIFIED_RIGHT, SPECIFIED_TOP and
   // SPECIFIED_BOTTOM offsets indicating which sides have been specified by
   // attributes.
-  static uint8_t GetOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsMargin& aMargin);
+  static uint8_t GetOffset(nsIFrame* aChild, nsMargin& aMargin);
 
 private:
   static nsBoxLayout* gInstance;

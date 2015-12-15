@@ -1753,6 +1753,7 @@ CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
 CASE(JSOP_UNUSED211)
 CASE(JSOP_UNUSED212)
+CASE(JSOP_UNUSED213)
 CASE(JSOP_UNUSED219)
 CASE(JSOP_UNUSED220)
 CASE(JSOP_UNUSED221)
@@ -2087,12 +2088,6 @@ CASE(JSOP_BINDNAME)
                   "We're sharing the END_CASE so the lengths better match");
 }
 END_CASE(JSOP_BINDNAME)
-
-CASE(JSOP_BINDVAR)
-{
-    PUSH_OBJECT(REGS.fp()->varObj());
-}
-END_CASE(JSOP_BINDVAR)
 
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \

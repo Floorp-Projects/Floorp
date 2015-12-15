@@ -26,11 +26,11 @@ task:
     artifacts:
       'public/logs/':
         type: directory
-        path: '/home/worker/build/upload/logs/'
+        path: '/home/worker/workspace/build/upload/logs/'
         expires: '{{#from_now}}1 year{{/from_now}}'
       'public/test_info/':
         type: directory
-        path: '/home/worker/build/blobber_upload_dir/'
+        path: '/home/worker/workspace/build/blobber_upload_dir/'
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:

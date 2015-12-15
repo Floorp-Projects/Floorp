@@ -365,9 +365,9 @@ nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState)
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetFlex(nsBoxLayoutState& aState)
+nsLeafBoxFrame::GetFlex()
 {
-    return nsBox::GetFlex(aState);
+    return nsBox::GetFlex();
 }
 
 /* virtual */ nscoord

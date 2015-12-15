@@ -294,7 +294,8 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             if (mBoundReadFramebuffer) {
-                FBStatus status = mBoundReadFramebuffer->CheckFramebufferStatus();
+                nsCString fbStatusInfoIgnored;
+                const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(&fbStatusInfoIgnored);
                 if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
                     ErrorInvalidOperation("getParameter: Read framebuffer must be"
                                           " complete before querying"
@@ -313,7 +314,8 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
             if (mBoundReadFramebuffer) {
-                FBStatus status = mBoundReadFramebuffer->CheckFramebufferStatus();
+                nsCString fbStatusInfoIgnored;
+                const auto status = mBoundReadFramebuffer->CheckFramebufferStatus(&fbStatusInfoIgnored);
                 if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
                     ErrorInvalidOperation("getParameter: Read framebuffer must be"
                                           " complete before querying"

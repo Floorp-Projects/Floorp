@@ -59,13 +59,13 @@ public:
 
 #define SET_COORD(aX, aY, coord, isHorizontal) if (isHorizontal) { aX = (coord); } else { aY  = (coord); }
 
-nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+nsresult NS_NewSprocketLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
 
 class nsSprocketLayout : public nsBoxLayout {
 
 public:
 
-  friend nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsBoxLayout>& aNewLayout);
+  friend nsresult NS_NewSprocketLayout(nsCOMPtr<nsBoxLayout>& aNewLayout);
   static void Shutdown();
 
   NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState) override;

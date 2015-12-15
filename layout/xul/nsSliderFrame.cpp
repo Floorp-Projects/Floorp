@@ -419,7 +419,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   nscoord& availableLength = IsHorizontal() ? clientRect.width : clientRect.height;
   nscoord& thumbLength = IsHorizontal() ? thumbSize.width : thumbSize.height;
 
-  if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetFlex(aState) > 0) {
+  if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetFlex() > 0) {
     float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
     thumbLength = std::max(thumbLength, NSToCoordRound(availableLength * ratio));
   }
@@ -903,7 +903,7 @@ nsSliderMediator::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 bool
-nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
+nsSliderFrame::StartAPZDrag()
 {
   if (!gfxPlatform::GetPlatform()->SupportsApzDragInput()) {
     return false;
@@ -1020,7 +1020,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 
   mDragStart = pos - mThumbStart;
 
-  mScrollingWithAPZ = StartAPZDrag(event);
+  mScrollingWithAPZ = StartAPZDrag();
 
 #ifdef DEBUG_SLIDER
   printf("Pressed mDragStart=%d\n",mDragStart);

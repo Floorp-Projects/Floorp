@@ -504,10 +504,6 @@ public:
                                      const bool& aIsTrusted,
                                      const int32_t& aModifierMask) override;
 
-    virtual bool RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
-                                                    const float& aVolume,
-                                                    const bool& aMuted) override;
-
     /**
      * Native widget remoting protocol for use with windowed plugins with e10s.
      */
