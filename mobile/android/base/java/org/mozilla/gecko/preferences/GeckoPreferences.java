@@ -137,7 +137,6 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_ADVANCED = NON_PREF_PREFIX + "advanced.enabled";
     private static final String PREFS_ACCESSIBILITY = NON_PREF_PREFIX + "accessibility.enabled";
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
-    private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking";
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
     private static final String PREFS_CLEAR_PRIVATE_DATA = NON_PREF_PREFIX + "privacy.clear";
@@ -835,12 +834,6 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_MP_ENABLED.equals(key)) {
                     if (!Restrictions.isAllowed(this, Restrictable.MASTER_PASSWORD)) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
-                } else if (PREFS_CUSTOMIZE_IMAGE_BLOCKING.equals(key)) {
-                    if (!AppConstants.NIGHTLY_BUILD) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

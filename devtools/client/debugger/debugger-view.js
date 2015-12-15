@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
 const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const STACK_FRAMES_SOURCE_URL_MAX_LENGTH = 15; // chars
 const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
@@ -47,6 +46,13 @@ var constants = require('./content/constants');
  * Object defining the debugger view components.
  */
 var DebuggerView = {
+
+  /**
+   * This is attached so tests can change it without needing to load an
+   * actual large file in automation
+   */
+  LARGE_FILE_SIZE: 1048576, // 1 MB in bytes
+
   /**
    * Initializes the debugger view.
    *
@@ -408,12 +414,6 @@ var DebuggerView = {
    *        The source text content.
    */
   _setEditorMode: function(aUrl, aContentType = "", aTextContent = "") {
-    // Avoid setting the editor mode for very large files.
-    // Is this still necessary? See bug 929225.
-    if (aTextContent.length >= SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-      return void this.editor.setMode(Editor.modes.text);
-    }
-
     // Use JS mode for files with .js and .jsm extensions.
     if (SourceUtils.isJavaScript(aUrl, aContentType)) {
       return void this.editor.setMode(Editor.modes.js);
