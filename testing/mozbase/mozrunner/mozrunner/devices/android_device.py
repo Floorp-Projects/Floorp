@@ -289,7 +289,8 @@ class AndroidEmulator(object):
         adb_path = _find_sdk_exe(substs, 'adb', False)
         if not adb_path:
             adb_path = 'adb'
-        self.dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1)
+        self.dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1,
+            deviceSerial='emulator-5554')
         self.dm.default_timeout = 10
         _log_debug("Emulator created with type %s" % self.avd_type)
 
