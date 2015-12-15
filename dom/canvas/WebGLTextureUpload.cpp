@@ -1770,7 +1770,8 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
     GLenum error;
     if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height)) {
-        error = DoCopyTexImage2D(gl, target, level, internalFormat, x, y, width, height,
+        MOZ_ASSERT(dstUsage->idealUnpack);
+        error = DoCopyTexImage2D(gl, target, level, dstUsage->idealUnpack->internalFormat, x, y, width, height,
                                  border);
     } else {
         // 1. Zero the texture data.

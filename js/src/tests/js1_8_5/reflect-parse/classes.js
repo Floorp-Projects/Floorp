@@ -199,15 +199,15 @@ function testClasses() {
     // Class statements bind lexically, so they should collide with other
     // in-block lexical bindings, but class expressions don't.
     let FooCtor = ctorWithName("Foo");
-    assertError("{ let Foo; class Foo { constructor() { } } }", TypeError);
+    assertError("{ let Foo; class Foo { constructor() { } } }", SyntaxError);
     assertStmt("{ let Foo; (class Foo { constructor() { } }) }",
                blockStmt([letDecl([{id: ident("Foo"), init: null}]),
                           exprStmt(classExpr(ident("Foo"), null, [FooCtor]))]));
-    assertError("{ const Foo = 0; class Foo { constructor() { } } }", TypeError);
+    assertError("{ const Foo = 0; class Foo { constructor() { } } }", SyntaxError);
     assertStmt("{ const Foo = 0; (class Foo { constructor() { } }) }",
                blockStmt([constDecl([{id: ident("Foo"), init: lit(0)}]),
                           exprStmt(classExpr(ident("Foo"), null, [FooCtor]))]));
-    assertError("{ class Foo { constructor() { } } class Foo { constructor() { } } }", TypeError);
+    assertError("{ class Foo { constructor() { } } class Foo { constructor() { } } }", SyntaxError);
     assertStmt(`{
                     (class Foo {
                         constructor() { }

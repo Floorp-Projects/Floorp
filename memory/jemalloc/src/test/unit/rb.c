@@ -21,7 +21,7 @@ struct node_s {
 };
 
 static int
-node_cmp(node_t *a, node_t *b) {
+node_cmp(const node_t *a, const node_t *b) {
 	int ret;
 
 	assert_u32_eq(a->magic, NODE_MAGIC, "Bad magic");
@@ -212,6 +212,15 @@ remove_reverse_iterate_cb(tree_t *tree, node_t *node, void *data)
 	return (ret);
 }
 
+static void
+destroy_cb(node_t *node, void *data)
+{
+	unsigned *nnodes = (unsigned *)data;
+
+	assert_u_gt(*nnodes, 0, "Destruction removed too many nodes");
+	(*nnodes)--;
+}
+
 TEST_BEGIN(test_rb_random)
 {
 #define	NNODES 25
@@ -278,7 +287,7 @@ TEST_BEGIN(test_rb_random)
 			}
 
 			/* Remove nodes. */
-			switch (i % 4) {
+			switch (i % 5) {
 			case 0:
 				for (k = 0; k < j; k++)
 					node_remove(&tree, &nodes[k], j - k);
@@ -313,6 +322,12 @@ TEST_BEGIN(test_rb_random)
 				} while (start != NULL);
 				assert_u_eq(nnodes, 0,
 				    "Removal terminated early");
+				break;
+			} case 4: {
+				unsigned nnodes = j;
+				tree_destroy(&tree, destroy_cb, &nnodes);
+				assert_u_eq(nnodes, 0,
+				    "Destruction terminated early");
 				break;
 			} default:
 				not_reached();
