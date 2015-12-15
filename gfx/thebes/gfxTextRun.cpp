@@ -211,8 +211,7 @@ gfxTextRun::ReleaseFontGroup()
 
 bool
 gfxTextRun::SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
-                                   uint8_t *aBreakBefore,
-                                   gfxContext *aRefContext)
+                                   uint8_t *aBreakBefore)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Overflow");
 
