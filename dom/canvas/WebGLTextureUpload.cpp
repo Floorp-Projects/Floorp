@@ -1788,7 +1788,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
         if (!rwWidth || !rwHeight) {
             // There aren't any, so we're 'done'.
-            mContext->DummyFramebufferOperation(funcName);
+            mContext->DummyReadFramebufferOperation(funcName);
             return;
         }
 
@@ -1879,7 +1879,7 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
 
     if (!rwWidth || !rwHeight) {
         // There aren't any, so we're 'done'.
-        mContext->DummyFramebufferOperation(funcName);
+        mContext->DummyReadFramebufferOperation(funcName);
         return;
     }
 
