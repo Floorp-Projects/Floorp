@@ -104,14 +104,18 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
 
   mVertexAttribType[index] = LOCAL_GL_INT;
 
-  if (index || gl->IsGLES()) {
-    MakeContextCurrent();
+  MakeContextCurrent();
+
+  if (index) {
     gl->fVertexAttribI4i(index, x, y, z, w);
   } else {
     mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
     mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
     mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
     mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
+    if (gl->IsGLES()) {
+      gl->fVertexAttribI4i(index, x, y, z, w);
+    }
   }
 }
 
@@ -126,14 +130,18 @@ WebGL2Context::VertexAttribI4iv(GLuint index, size_t length, const GLint* v)
 
   mVertexAttribType[index] = LOCAL_GL_INT;
 
-  if (index || gl->IsGLES()) {
-    MakeContextCurrent();
+  MakeContextCurrent();
+
+  if (index) {
     gl->fVertexAttribI4iv(index, v);
   } else {
     mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(v[0]);
     mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(v[1]);
     mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(v[2]);
     mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(v[3]);
+    if (gl->IsGLES()) {
+      gl->fVertexAttribI4iv(index, v);
+    }
   }
 }
 
@@ -154,14 +162,18 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
 
   mVertexAttribType[index] = LOCAL_GL_UNSIGNED_INT;
 
-  if (index || gl->IsGLES()) {
-    MakeContextCurrent();
+  MakeContextCurrent();
+
+  if (index) {
     gl->fVertexAttribI4ui(index, x, y, z, w);
   } else {
     mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(x);
     mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(y);
     mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(z);
     mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(w);
+    if (gl->IsGLES()) {
+      gl->fVertexAttribI4ui(index, x, y, z, w);
+    }
   }
 }
 
@@ -179,14 +191,18 @@ WebGL2Context::VertexAttribI4uiv(GLuint index, size_t length, const GLuint* v)
 
   mVertexAttribType[index] = LOCAL_GL_UNSIGNED_INT;
 
-  if (index || gl->IsGLES()) {
-    MakeContextCurrent();
+  MakeContextCurrent();
+
+  if (index) {
     gl->fVertexAttribI4uiv(index, v);
   } else {
     mVertexAttrib0Vector[0] = BitwiseCast<GLfloat>(v[0]);
     mVertexAttrib0Vector[1] = BitwiseCast<GLfloat>(v[1]);
     mVertexAttrib0Vector[2] = BitwiseCast<GLfloat>(v[2]);
     mVertexAttrib0Vector[3] = BitwiseCast<GLfloat>(v[3]);
+    if (gl->IsGLES()) {
+      gl->fVertexAttribI4uiv(index, v);
+    }
   }
 }
 

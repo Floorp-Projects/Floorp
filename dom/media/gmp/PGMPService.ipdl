@@ -22,8 +22,6 @@ parent:
                     nsString gmpName,
                     bool inPrivateBrowsing)
     returns (nsCString id);
-
-  async UpdateGMPTrialCreateState(nsString keySystem, uint32_t status);
 };
 
 } // namespace gmp

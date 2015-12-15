@@ -23,8 +23,10 @@ DIRS += [
 
 if not CONFIG['JS_STANDALONE']:
     CONFIGURE_SUBST_FILES += [
-        'mozilla-config.h',
         'tools/update-packaging/Makefile',
+    ]
+    CONFIGURE_DEFINE_FILES += [
+        'mozilla-config.h',
     ]
 
     DIRS += [

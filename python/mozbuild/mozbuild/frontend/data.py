@@ -127,10 +127,6 @@ class ConfigFileSubstitution(BaseConfigSubstitution):
     """Describes a config file that will be generated using substitutions."""
 
 
-class HeaderFileSubstitution(BaseConfigSubstitution):
-    """Describes a header file that will be generated using substitutions."""
-
-
 class VariablePassthru(ContextDerived):
     """A dict of variables to pass through to backend.mk unaltered.
 

@@ -309,7 +309,7 @@ public:
                                       int32_t aXPos, int32_t aYPos);
 
   // indicate that the popup should be opened
-  void ShowPopup(bool aIsContextMenu, bool aSelectFirstItem);
+  void ShowPopup(bool aIsContextMenu);
   // indicate that the popup should be hidden. The new state should either be
   // ePopupClosed or ePopupInvisible.
   void HidePopup(bool aDeselectMenu, nsPopupState aNewState);

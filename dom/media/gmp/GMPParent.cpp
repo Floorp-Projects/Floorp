@@ -73,8 +73,6 @@ GMPParent::GMPParent()
 
 GMPParent::~GMPParent()
 {
-  // Can't Close or Destroy the process here, since destruction is MainThread only
-  MOZ_ASSERT(NS_IsMainThread());
   LOGD("GMPParent dtor");
 
   MOZ_ASSERT(!mProcess);

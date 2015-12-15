@@ -1059,7 +1059,11 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   }
 
   function DoMapTypedSeqDepthN() {
-    var indices = new Uint32Array(depth);
+    // Simulate Uint32Array(depth) with a dumber (and more accessible)
+    // datastructure.
+    var indices = new List();
+    for (var i = 0; i < depth; i++)
+        callFunction(std_Array_push, indices, 0);
 
     for (var i = 0; i < totalLength; i++) {
       // Prepare input element and out pointer

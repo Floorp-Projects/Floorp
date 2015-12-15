@@ -173,7 +173,7 @@ private:
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
 private:
-  // The queue of touch blocks that have not yet been fully processed.
+  // The queue of input blocks that have not yet been fully processed.
   // This member must only be accessed on the controller/UI thread.
   nsTArray<UniquePtr<CancelableBlockState>> mInputBlockQueue;
 
