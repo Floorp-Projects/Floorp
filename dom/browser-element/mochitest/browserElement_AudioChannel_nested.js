@@ -72,8 +72,5 @@ function runTests() {
 }
 
 addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [["b2g.system_manifest_url", "http://mochi.test:8888/manifest.webapp"]]},
-                            function() {
-    SimpleTest.executeSoon(runTests);
-  });
+  SimpleTest.executeSoon(runTests);
 });
