@@ -3,8 +3,37 @@
   <link rel="stylesheet" type="text/css" href="ahem.css" />
 
   <style>
+html,body {
+    color:black; background-color:white; font-size:16px; padding:5px; margin:0;
+}
+mask {
+  position: absolute;
+  top:0; bottom:0; left:8px; width:5px;
+  background: black;
+}
+
+    .rel {
+      position: relative;
+    }
+    a {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      bottom: 0;
+      left: 0;
+      background: blue;
+    }
+    f {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      bottom: 0;
+      left: 100px;
+      background: lime;
+    }
     td.text {
-      width: 200px;
+      width: 12em;
+      height: 8em;
       text-align: left;
       font-family: ahem;
       font-size: 12pt;
@@ -12,7 +41,6 @@
     }
 
     table {
-      width: 100%;
       font-family: ahem;
       font-size: 12pt;
       line-height: 1.1;
@@ -21,12 +49,32 @@
 </head>
 
 <body>
-  <table cellpadding=0 cellspacing=0>
+  <table cellpadding=0 cellspacing=0 class="rel">
     <tr>
-      <td class="text" valign="top">
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed feugiat libero vel diam.</td>
-      <td class="text" valign="top">Pellentesque pulvinar commodo lacus. Sed fringilla. Sed lectus. Praesent laoreet orci</td>
-      <td valign="top" class="text">vitae nisi. Duis venenatis tristique massa. Sed commodo diam at mauris.</td>
+      <td class="text" valign="top"><a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed</td>
     </tr>
   </table>
+  <table cellpadding=0 cellspacing=0 class="rel">
+    <tr>
+      <td class="text" valign="top"><a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed</td>
+    </tr>
+  </table>
+  <table cellpadding=0 cellspacing=0 class="rel">
+    <tr>
+      <td class="text" valign="top"><f></f>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed</td>
+    </tr>
+  </table>
+  <table cellpadding=0 cellspacing=0>
+    <tr>
+      <td class="text" valign="top"><a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed</td>
+    </tr>
+  </table>
+  <table cellpadding=0 cellspacing=0>
+    <tr>
+      <td class="text" valign="top"><f style="left:120px"></f>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed</td>
+    </tr>
+  </table>
+
+<mask></mask>
 </body>
+</html>
