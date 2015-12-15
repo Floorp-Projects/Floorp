@@ -42,34 +42,34 @@ function test() {
   is($$fun(6).style.MozMarginStart, "48px",
     "The .A.E.F node's function cell has the correct indentation.");
 
-  is($$name(0).getAttribute("value"), "(root)",
+  is($$name(0).textContent.trim(), "(root)",
     "The root node's function cell displays the correct name.");
-  is($$name(1).getAttribute("value"), "A",
+  is($$name(1).textContent.trim(), "A",
     "The .A node's function cell displays the correct name.");
-  is($$name(2).getAttribute("value"), "B",
+  is($$name(2).textContent.trim(), "B",
     "The .A.B node's function cell displays the correct name.");
-  is($$name(3).getAttribute("value"), "D",
+  is($$name(3).textContent.trim(), "D",
     "The .A.B.D node's function cell displays the correct name.");
-  is($$name(4).getAttribute("value"), "C",
+  is($$name(4).textContent.trim(), "C",
     "The .A.B.C node's function cell displays the correct name.");
-  is($$name(5).getAttribute("value"), "E",
+  is($$name(5).textContent.trim(), "E",
     "The .A.E node's function cell displays the correct name.");
-  is($$name(6).getAttribute("value"), "F",
+  is($$name(6).textContent.trim(), "F",
     "The .A.E.F node's function cell displays the correct name.");
 
-  is($$duration(0).getAttribute("value"), "20 ms",
+  is($$duration(0).textContent.trim(), "20 ms",
     "The root node's function cell displays the correct duration.");
-  is($$duration(1).getAttribute("value"), "20 ms",
+  is($$duration(1).textContent.trim(), "20 ms",
     "The .A node's function cell displays the correct duration.");
-  is($$duration(2).getAttribute("value"), "15 ms",
+  is($$duration(2).textContent.trim(), "15 ms",
     "The .A.B node's function cell displays the correct duration.");
-  is($$duration(3).getAttribute("value"), "10 ms",
+  is($$duration(3).textContent.trim(), "10 ms",
     "The .A.B.D node's function cell displays the correct duration.");
-  is($$duration(4).getAttribute("value"), "5 ms",
+  is($$duration(4).textContent.trim(), "5 ms",
     "The .A.B.C node's function cell displays the correct duration.");
-  is($$duration(5).getAttribute("value"), "5 ms",
+  is($$duration(5).textContent.trim(), "5 ms",
     "The .A.E node's function cell displays the correct duration.");
-  is($$duration(6).getAttribute("value"), "5 ms",
+  is($$duration(6).textContent.trim(), "5 ms",
     "The .A.E.F node's function cell displays the correct duration.");
 
   finish();
@@ -108,4 +108,3 @@ var gThread = synthesizeProfileForTest([{
     { category: 256, location: "F (http://foo/bar/baz:99)" }
   ]
 }]);
-

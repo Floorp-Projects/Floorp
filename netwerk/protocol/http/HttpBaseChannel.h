@@ -100,6 +100,7 @@ public:
   NS_IMETHOD SetLoadGroup(nsILoadGroup *aLoadGroup) override;
   NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) override;
   NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) override;
+  NS_IMETHOD SetDocshellUserAgentOverride();
 
   // nsIChannel
   NS_IMETHOD GetOriginalURI(nsIURI **aOriginalURI) override;

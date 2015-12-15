@@ -31,7 +31,7 @@ function* spawnTest() {
   let rows = $$("#js-calltree-view .call-tree-item");
   is(rows.length, 4, "4 call tree rows exist");
   for (let row of rows) {
-    let name = $(".call-tree-name", row).value;
+    let name = $(".call-tree-name", row).textContent.trim();
     switch (name) {
       case "A":
         ok($(".opt-icon", row), "found an opt icon on a leaf node with opt data");
