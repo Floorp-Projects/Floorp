@@ -12,7 +12,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
 
-
 /**
  * This is an implementation of the Bagheera server.
  *
@@ -159,8 +158,7 @@ BagheeraServer.prototype = {
       if (ex instanceof HttpError) {
         this._log.info("HttpError thrown: " + ex.code + " " + ex.description);
       } else {
-        this._log.warn("Exception processing request: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Exception processing request", ex);
       }
 
       throw ex;

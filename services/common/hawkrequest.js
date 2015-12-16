@@ -168,7 +168,7 @@ this.Intl.prototype = {
       this._accepted = Services.prefs.getComplexValue(
         "intl.accept_languages", Ci.nsIPrefLocalizedString).data;
     } catch (err) {
-      this._log.error("Error reading intl.accept_languages pref: " + CommonUtils.exceptionStr(err));
+      this._log.error("Error reading intl.accept_languages pref", err);
     }
   },
 
