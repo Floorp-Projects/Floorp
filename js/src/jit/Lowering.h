@@ -310,6 +310,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGuardSharedTypedArray(MGuardSharedTypedArray* ins);
     void visitCheckReturn(MCheckReturn* ins);
     void visitCheckObjCoercible(MCheckObjCoercible* ins);
+    void visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins);
 };
 
 } // namespace jit
