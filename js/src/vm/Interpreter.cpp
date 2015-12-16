@@ -175,6 +175,22 @@ js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject scopeChain, MutableHan
     return true;
 }
 
+bool
+js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun)
+{
+#ifndef DEBUG
+    MOZ_CRASH("Self hosted checks should only be done in Debug builds");
+#endif
+
+    MOZ_ASSERT(fun.isObject());
+
+    MOZ_ASSERT(fun.toObject().is<JSFunction>());
+    MOZ_ASSERT(fun.toObject().as<JSFunction>().isSelfHostedOrIntrinsic());
+
+    // This is purely to police self-hosted code. There is no actual operation.
+    return true;
+}
+
 static inline bool
 GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, jsbytecode* pc,
                      MutableHandleValue lval, MutableHandleValue vp)
@@ -1740,7 +1756,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_UNUSED65)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED177)
 CASE(JSOP_UNUSED178)
 CASE(JSOP_UNUSED179)
 CASE(JSOP_UNUSED180)
@@ -3890,6 +3905,16 @@ CASE(JSOP_CHECKOBJCOERCIBLE)
         goto error;
 }
 END_CASE(JSOP_CHECKOBJCOERCIBLE)
+
+CASE(JSOP_DEBUGCHECKSELFHOSTED)
+{
+#ifdef DEBUG
+    ReservedRooted<Value> checkVal(&rootValue0, REGS.sp[-1]);
+    if (!Debug_CheckSelfHosted(cx, checkVal))
+        goto error;
+#endif
+}
+END_CASE(JSOP_DEBUGCHECKSELFHOSTED)
 
 DEFAULT()
 {

@@ -121,7 +121,7 @@ function TypedArrayEvery(callbackfn, thisArg = undefined) {
         var kValue = O[k];
 
         // Steps 9.d.iii-9.d.iv.
-        var testResult = callFunction(callbackfn, T, kValue, k, O);
+        var testResult = callContentFunction(callbackfn, T, kValue, k, O);
 
         // Step 9.d.v.
         if (!testResult)
@@ -212,7 +212,7 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
         // Steps 13.b-c.
         var kValue = O[k];
         // Steps 13.d-e.
-        var selected = ToBoolean(callFunction(callbackfn, T, kValue, k, O));
+        var selected = ToBoolean(callContentFunction(callbackfn, T, kValue, k, O));
         // Step 13.f.
         if (selected) {
             // Step 13.f.i.
@@ -264,7 +264,7 @@ function TypedArrayFind(predicate, thisArg = undefined) {
         // Steps a-c.
         var kValue = O[k];
         // Steps d-f.
-        if (callFunction(predicate, T, kValue, k, O))
+        if (callContentFunction(predicate, T, kValue, k, O))
             return kValue;
     }
 
@@ -299,7 +299,7 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
     // Steps a (implicit), and g.
     for (var k = 0; k < len; k++) {
         // Steps a-f.
-        if (callFunction(predicate, T, O[k], k, O))
+        if (callContentFunction(predicate, T, O[k], k, O))
             return k;
     }
 
@@ -311,8 +311,8 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 function TypedArrayForEach(callbackfn, thisArg = undefined) {
     // This function is not generic.
     if (!IsObject(this) || !IsTypedArray(this)) {
-	return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
-			    "TypedArrayForEach");
+        return callFunction(CallTypedArrayMethodIfWrapped, this, callbackfn, thisArg,
+                            "TypedArrayForEach");
     }
 
     // Step 1-2.
@@ -323,9 +323,9 @@ function TypedArrayForEach(callbackfn, thisArg = undefined) {
 
     // Step 5.
     if (arguments.length === 0)
-	ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
     if (!IsCallable(callbackfn))
-	ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
     var T = thisArg;
@@ -333,9 +333,9 @@ function TypedArrayForEach(callbackfn, thisArg = undefined) {
     // Step 7-8.
     // Step 7, 8a (implicit) and 8e.
     for (var k = 0; k < len; k++) {
-	// Step 8b-8c are unnecessary since the condition always holds true for TypedArray.
-	// Step 8d.
-	callFunction(callbackfn, T, O[k], k, O);
+        // Step 8b-8c are unnecessary since the condition always holds true for TypedArray.
+        // Step 8d.
+        callContentFunction(callbackfn, T, O[k], k, O);
     }
 
     // Step 9.
@@ -526,7 +526,7 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
     // Steps 12, 13.a (implicit) and 13.h.
     for (var k = 0; k < len; k++) {
         // Steps 13.d-e.
-        var mappedValue = callFunction(callbackfn, T, O[k], k, O);
+        var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
         // Steps 13.f-g.
         A[k] = mappedValue;
     }
@@ -567,7 +567,7 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
     // Step 11.
     // Omit steps 11.b-11.c and the 'if' clause in step 11.d, since there are no holes in typed arrays.
     for (; k < len; k++) {
-        accumulator = callFunction(callbackfn, undefined, accumulator, O[k], k, O);
+        accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
     }
 
     // Step 12.
@@ -606,7 +606,7 @@ function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
     // Step 11.
     // Omit steps 11.b-11.c and the 'if' clause in step 11.d, since there are no holes in typed arrays.
     for (; k >= 0; k--) {
-        accumulator = callFunction(callbackfn, undefined, accumulator, O[k], k, O);
+        accumulator = callContentFunction(callbackfn, undefined, accumulator, O[k], k, O);
     }
 
     // Step 12.
@@ -715,15 +715,15 @@ function SetFromNonTypedArray(target, array, targetOffset, targetLength, targetB
 
         // Step 24d.  This explicit check will be unnecessary when we implement
         // throw-on-getting/setting-element-in-detached-buffer semantics.
-	if (!isShared) {
+        if (!isShared) {
             if (targetBuffer === null) {
-		// A typed array previously using inline storage may acquire a
-		// buffer, so we must check with the source.
-		targetBuffer = ViewedArrayBufferIfReified(target);
+                // A typed array previously using inline storage may acquire a
+                // buffer, so we must check with the source.
+                targetBuffer = ViewedArrayBufferIfReified(target);
             }
             if (IsDetachedBuffer(targetBuffer))
-		ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-	}
+                ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
 
         // Step 24e.
         target[targetOffset] = kNumber;
@@ -892,7 +892,7 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
         var kValue = O[k];
 
         // Steps 9.d.iii-9.d.iv.
-        var testResult = callFunction(callbackfn, T, kValue, k, O);
+        var testResult = callContentFunction(callbackfn, T, kValue, k, O);
 
         // Step 9.d.v.
         if (testResult)
@@ -1074,7 +1074,7 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
         // Steps 10.d-e.
         while (true) {
             // Steps 10.e.i-ii.
-            var next = callFunction(iterator.next, iterator);
+            var next = callContentFunction(iterator.next, iterator);
             if (!IsObject(next))
                 ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
@@ -1098,7 +1098,7 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
             var kValue = values[k];
 
             // Steps 10.j.iii-iv.
-            var mappedValue = mapping ? callFunction(mapfn, T, kValue, k) : kValue;
+            var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
             // Steps 10.j.v-vi.
             targetObj[k] = mappedValue;
@@ -1132,7 +1132,7 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
         var kValue = arrayLike[k];
 
         // Steps 20.d-e.
-        var mappedValue = mapping ? callFunction(mapfn, T, kValue, k) : kValue;
+        var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
         // Steps 20.f-g.
         targetObj[k] = mappedValue;

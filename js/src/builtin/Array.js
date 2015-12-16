@@ -136,7 +136,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            if (!callFunction(callbackfn, T, O[k], k, O))
+            if (!callContentFunction(callbackfn, T, O[k], k, O))
                 return false;
         }
     }
@@ -177,7 +177,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            if (callFunction(callbackfn, T, O[k], k, O))
+            if (callContentFunction(callbackfn, T, O[k], k, O))
                 return true;
         }
     }
@@ -218,7 +218,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c. */
-            callFunction(callbackfn, T, O[k], k, O);
+            callContentFunction(callbackfn, T, O[k], k, O);
         }
     }
 
@@ -261,7 +261,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
         /* Step b */
         if (k in O) {
             /* Step c.i-iii. */
-            var mappedValue = callFunction(callbackfn, T, O[k], k, O);
+            var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
             _DefineDataProperty(A, k, mappedValue);
         }
     }
@@ -307,7 +307,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
             /* Steps 11.c.i-ii. */
             var kValue = O[k];
             /* Steps 11.c.iii-iv. */
-            var selected = callFunction(callbackfn, T, kValue, k, O);
+            var selected = callContentFunction(callbackfn, T, kValue, k, O);
             /* Step 11.c.v. */
             if (selected)
                 _DefineDataProperty(A, to++, kValue);
@@ -489,7 +489,7 @@ function ArrayFind(predicate/*, thisArg*/) {
         /* Steps a-c. */
         var kValue = O[k];
         /* Steps d-f. */
-        if (callFunction(predicate, T, kValue, k, O))
+        if (callContentFunction(predicate, T, kValue, k, O))
             return kValue;
     }
 
@@ -523,7 +523,7 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
      */
     for (var k = 0; k < len; k++) {
         /* Steps a-f. */
-        if (callFunction(predicate, T, O[k], k, O))
+        if (callContentFunction(predicate, T, O[k], k, O))
             return k;
     }
 
@@ -771,7 +771,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         // See <https://bugs.ecmascript.org/show_bug.cgi?id=2883>.
         while (true) {
             // Steps 6.g.i-iii.
-            var next = callFunction(iterator.next, iterator);
+            var next = callContentFunction(iterator.next, iterator);
             if (!IsObject(next))
                 ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
@@ -785,7 +785,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
             var nextValue = next.value;
 
             // Steps 6.g.vii-viii.
-            var mappedValue = mapping ? callFunction(mapfn, thisArg, nextValue, k) : nextValue;
+            var mappedValue = mapping ? callContentFunction(mapfn, thisArg, nextValue, k) : nextValue;
 
             // Steps 6.g.ix-xi.
             _DefineDataProperty(A, k++, mappedValue);
@@ -810,7 +810,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         var kValue = items[k];
 
         // Steps 16.d-e.
-        var mappedValue = mapping ? callFunction(mapfn, thisArg, kValue, k) : kValue;
+        var mappedValue = mapping ? callContentFunction(mapfn, thisArg, kValue, k) : kValue;
 
         // Steps 16.f-g.
         _DefineDataProperty(A, k, mappedValue);
@@ -834,5 +834,5 @@ function ArrayToString() {
     // Steps 5-6.
     if (!IsCallable(func))
         return callFunction(std_Object_toString, array);
-    return callFunction(func, array);
+    return callContentFunction(func, array);
 }

@@ -2099,6 +2099,19 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CHECKOBJCOERCIBLE:
         return jsop_checkobjcoercible();
 
+      case JSOP_DEBUGCHECKSELFHOSTED:
+      {
+#ifdef DEBUG
+        MDebugCheckSelfHosted* check = MDebugCheckSelfHosted::New(alloc(), current->pop());
+        current->add(check);
+        current->push(check);
+        if (!resumeAfter(check))
+            return false;
+#endif
+        return true;
+      }
+
+
 #ifdef DEBUG
       case JSOP_PUSHBLOCKSCOPE:
       case JSOP_FRESHENBLOCKSCOPE:
