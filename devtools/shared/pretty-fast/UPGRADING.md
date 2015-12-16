@@ -5,3 +5,5 @@
 2. Copy `pretty-fast/pretty-fast.js` to `devtools/shared/pretty-fast/pretty-fast.js`
 
 3. Copy `pretty-fast/test.js` to `devtools/shared/pretty-fast/tests/unit/test.js`
+
+4. If necessary, upgrade acorn (see devtools/shared/acorn/UPGRADING.md)
