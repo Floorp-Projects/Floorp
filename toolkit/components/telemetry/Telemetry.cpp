@@ -909,6 +909,7 @@ IsHistogramEnumId(Telemetry::ID aID)
 
 // List of histogram IDs which should have recording disabled initially.
 const Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
+  Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS,
 
   // The array must not be empty. Leave these item here.
   Telemetry::TELEMETRY_TEST_COUNT_INIT_NO_RECORD,
