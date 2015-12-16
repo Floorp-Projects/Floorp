@@ -435,7 +435,8 @@ You can set this by:
             for file_name in target_packages:
                 target_dir = test_install_dir
                 unzip_dirs = target_unzip_dirs
-                if "jsshell-" in file_name:
+                if "jsshell-" in file_name or file_name == "target.jsshell.zip":
+                    self.info("Special-casing the jsshell zip file")
                     unzip_dirs = None
                     target_dir = dirs['abs_test_bin_dir']
                 url = self.query_build_dir_url(file_name)
