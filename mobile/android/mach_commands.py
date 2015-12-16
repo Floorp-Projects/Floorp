@@ -255,6 +255,15 @@ class AndroidEmulatorCommands(MachCommandBase):
             self.log(logging.WARN, "emulator", {},
                      "Unable to verify that emulator is running.")
 
+        if conditions.is_android(self):
+            self.log(logging.INFO, "emulator", {},
+                     "Use 'mach install' to install or update Firefox on your emulator.")
+        else:
+            self.log(logging.WARN, "emulator", {},
+                     "No Firefox for Android build detected.\n"
+                     "Switch to a Firefox for Android build context or use 'mach bootstrap'\n"
+                     "to setup an Android build environment.")
+
         if wait:
             self.log(logging.INFO, "emulator", {},
                      "Waiting for Android emulator to close...")
