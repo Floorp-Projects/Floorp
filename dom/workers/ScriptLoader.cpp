@@ -600,6 +600,12 @@ private:
   {
     AssertIsOnMainThread();
 
+    // If one load info cancels or hits an error, it can race with the start
+    // callback coming from another load info.
+    if (mCanceledMainThread || !mCacheCreator) {
+      return NS_ERROR_FAILURE;
+    }
+
     nsCOMPtr<nsISupportsPRUint32> indexSupports(do_QueryInterface(aContext));
     MOZ_ASSERT(indexSupports, "This should never fail!");
 
